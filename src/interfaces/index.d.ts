@@ -16,3 +16,13 @@ export interface IPost {
 export type Nullable<T> = {
   [P in keyof T]: T[P] | null;
 };
+
+
+export interface ILocation {
+  PointID: string;
+  SiteID: string;
+  PublicRelease: boolean;
+  // title: string;
+  // status: IStatus;
+  // category: ICategory;
+}

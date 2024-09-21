@@ -17,7 +17,7 @@ import GlobalStyles from "@mui/material/GlobalStyles";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import { ThemeProvider } from "@mui/material/styles";
-import dataProvider from "@refinedev/simple-rest";
+// import dataProvider from "@refinedev/simple-rest";
 import routerProvider, {
   NavigateToResource,
   CatchAllNavigate,
@@ -29,7 +29,9 @@ import { useFormContext } from "react-hook-form";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
 
-import { PostList, PostCreate, PostEdit } from "../src/pages/posts";
+import {dataProvider} from "./providers/data-provider";
+// import { PostList, PostCreate, PostEdit } from "../src/pages/posts";
+import {LocationCreate, LocationEdit, LocationList} from "./pages/locations";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -179,14 +181,15 @@ const App: React.FC = () => {
 
   return (
     <BrowserRouter>
-      <GitHubBanner />
+      {/*<GitHubBanner />*/}
       <ThemeProvider theme={RefineThemes.Blue}>
         <CssBaseline />
         <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
         <RefineSnackbarProvider>
           <Refine
             authProvider={authProvider}
-            dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+            // dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+            dataProvider={dataProvider}
             routerProvider={routerProvider}
             notificationProvider={useNotificationProvider}
             resources={[
@@ -195,6 +198,12 @@ const App: React.FC = () => {
                 list: "/posts",
                 edit: "/posts/edit/:id",
                 create: "/posts/create",
+              },
+              {
+                name: "locations",
+                list: "/locations",
+                edit: "/locations/edit/:id",
+                create: "/locations/create",
               },
             ]}
             options={{
@@ -220,10 +229,15 @@ const App: React.FC = () => {
                   element={<NavigateToResource resource="posts" />}
                 />
 
-                <Route path="/posts">
-                  <Route index element={<PostList />} />
-                  <Route path="create" element={<PostCreate />} />
-                  <Route path="edit/:id" element={<PostEdit />} />
+                {/*<Route path="/posts">*/}
+                {/*  <Route index element={<PostList />} />*/}
+                {/*  <Route path="create" element={<PostCreate />} />*/}
+                {/*  <Route path="edit/:id" element={<PostEdit />} />*/}
+                {/*</Route>*/}
+                <Route path="/locations">
+                  <Route index element={<LocationList />} />
+                  <Route path="create" element={<LocationCreate />} />
+                  <Route path="edit/:id" element={<LocationEdit />} />
                 </Route>
               </Route>
 
