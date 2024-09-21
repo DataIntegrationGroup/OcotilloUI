@@ -26,3 +26,11 @@ export interface ILocation {
   // status: IStatus;
   // category: ICategory;
 }
+
+export interface IWell {
+  PointID: string;
+  OSEWellID: string;
+  OSEWelltagID: string;
+  formation: string;
+  construction_notes: string
+}

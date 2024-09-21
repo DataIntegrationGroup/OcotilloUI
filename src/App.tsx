@@ -32,6 +32,7 @@ import GoogleIcon from "@mui/icons-material/Google";
 import {dataProvider} from "./providers/data-provider";
 // import { PostList, PostCreate, PostEdit } from "../src/pages/posts";
 import {LocationCreate, LocationEdit, LocationList} from "./pages/locations";
+import {WellEdit, WellList} from "./pages/wells";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -194,10 +195,10 @@ const App: React.FC = () => {
             notificationProvider={useNotificationProvider}
             resources={[
               {
-                name: "posts",
-                list: "/posts",
-                edit: "/posts/edit/:id",
-                create: "/posts/create",
+                name: "wells",
+                list: "/wells",
+                edit: "/wells/edit/:id",
+                create: "/wells/create",
               },
               {
                 name: "locations",
@@ -229,11 +230,11 @@ const App: React.FC = () => {
                   element={<NavigateToResource resource="posts" />}
                 />
 
-                {/*<Route path="/posts">*/}
-                {/*  <Route index element={<PostList />} />*/}
-                {/*  <Route path="create" element={<PostCreate />} />*/}
-                {/*  <Route path="edit/:id" element={<PostEdit />} />*/}
-                {/*</Route>*/}
+                <Route path="/wells">
+                  <Route index element={<WellList />} />
+                  {/*<Route path="create" element={<PostCreate />} />*/}
+                  <Route path="edit/:id" element={<WellEdit />} />
+                </Route>
                 <Route path="/locations">
                   <Route index element={<LocationList />} />
                   <Route path="create" element={<LocationCreate />} />
