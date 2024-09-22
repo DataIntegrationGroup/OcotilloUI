@@ -22,6 +22,9 @@ export interface ILocation {
   PointID: string;
   SiteID: string;
   PublicRelease: boolean;
+  geometry: {coordinates: number[], type: string};
+  Easting: number;
+  Northing: number;
   // title: string;
   // status: IStatus;
   // category: ICategory;
@@ -38,4 +41,11 @@ export interface IWell {
 export interface ILookupTable {
   Code: string;
   Meaning: string;
+}
+
+export interface IManualWaterLevel {
+    PointID: string;
+    PublicRelease: boolean;
+    MeasurementDate: string;
+    DepthToWaterBGS: number;
 }

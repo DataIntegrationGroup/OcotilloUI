@@ -1,4 +1,4 @@
-// import { DevtoolsProvider, DevtoolsPanel } from "@refinedev/devtools";
+import { DevtoolsProvider, DevtoolsPanel } from "@refinedev/devtools";
 import {
   Refine,
   Authenticated,
@@ -99,6 +99,9 @@ const App: React.FC = () => {
 
   return (
     (<BrowserRouter>
+        <DevtoolsProvider>
+            <DevtoolsPanel/>
+
         <ColorModeContextProvider>
         <CssBaseline />
         <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
@@ -283,6 +286,8 @@ const App: React.FC = () => {
         </RefineSnackbarProvider>
           {/*</ThemeProvider>*/}
       </ColorModeContextProvider>
+        </DevtoolsProvider>
+
     </BrowserRouter>)
   );
 };

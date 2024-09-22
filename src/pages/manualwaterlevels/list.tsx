@@ -4,10 +4,10 @@ import React from "react";
 
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 
-import type { ICategory, ILocation } from "../../interfaces";
+import type { ICategory, IManualWaterLevel } from "../../interfaces";
 
-export const LocationList: React.FC = () => {
-  const { dataGridProps } = useDataGrid<ILocation>();
+export const ManualWaterLevelList: React.FC = () => {
+  const { dataGridProps } = useDataGrid<IManualWaterLevel>();
 
   // const categoryIds = dataGridProps.rows.map((item) => item.category.id);
   // const { data: categoriesData, isLoading } = useMany<ICategory>({
@@ -18,7 +18,7 @@ export const LocationList: React.FC = () => {
   //   },
   // });
 
-  const columns = React.useMemo<GridColDef<ILocation>[]>(
+  const columns = React.useMemo<GridColDef<IManualWaterLevel>[]>(
     () => [
       {
         field: "PointID",
@@ -26,40 +26,12 @@ export const LocationList: React.FC = () => {
         type: "string",
         minWidth: 150,
       },
-      {
-        field: "SiteID",
-        headerName: "Site ID",
-        type: "string",
-        minWidth: 150,
-      },
-        {
-            field: "Easting",
-            headerName: "Easting",
-            type: "string",
-        },
-        {
-            field: "Northing",
-            headerName: "Northing",
-            type: "string",
-        },
-        {
-            field: "latitude",
-            headerName: "Latitude",
-            type: "string",
-            minWidth: 150,
-            renderCell: function render({ row }) {
-                return row.geometry.coordinates[1];
-            }
-        },
-        {
-            field: "longitude",
-            headerName: "Longitude",
-            type: "string",
-            minWidth: 150,
-            renderCell: function render({ row }) {
-                return row.geometry.coordinates[0];
-            }
-        },
+      // {
+      //   field: "SiteID",
+      //   headerName: "Site ID",
+      //   type: "string",
+      //   minWidth: 150,
+      // },
       // { field: "title", headerName: "Title", minWidth: 400, flex: 1 },
       // {
       //   field: "category.id",
@@ -80,7 +52,7 @@ export const LocationList: React.FC = () => {
       //     return category?.title;
       //   },
       // },
-      { field: "PublicRelease", headerName: "Public", minWidth: 120, flex: 0.3 },
+      // { field: "PublicRelease", headerName: "Public", minWidth: 120, flex: 0.3 },
       {
         field: "actions",
         headerName: "Actions",

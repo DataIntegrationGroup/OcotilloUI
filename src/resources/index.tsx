@@ -17,6 +17,7 @@ import TableViewIcon from '@mui/icons-material/TableView';
 import Place from '@mui/icons-material/Place';
 import Plumbing from '@mui/icons-material/Plumbing';
 import Cable from '@mui/icons-material/Cable';
+import Water from '@mui/icons-material/Water';
 
 let base = [
     {
@@ -39,6 +40,10 @@ let base = [
         list: "/equipment",
         edit: "/equipment/edit/:id",
         create: "/equipment/create",
+    },
+    {   name: 'manualwaterlevels',
+        list: '/manualwaterlevels',
+        icon: <Water/>
     },
     {name: 'LookupTables',
     icon: <TableViewIcon/>}
