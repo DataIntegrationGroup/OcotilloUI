@@ -32,34 +32,34 @@ export const LocationList: React.FC = () => {
         type: "string",
         minWidth: 150,
       },
-        {
-            field: "Easting",
-            headerName: "Easting",
-            type: "string",
+      {
+        field: "Easting",
+        headerName: "Easting",
+        type: "string",
+      },
+      {
+        field: "Northing",
+        headerName: "Northing",
+        type: "string",
+      },
+      {
+        field: "latitude",
+        headerName: "Latitude",
+        type: "string",
+        minWidth: 150,
+        renderCell: function render({ row }) {
+          return row.geometry.coordinates[1];
         },
-        {
-            field: "Northing",
-            headerName: "Northing",
-            type: "string",
+      },
+      {
+        field: "longitude",
+        headerName: "Longitude",
+        type: "string",
+        minWidth: 150,
+        renderCell: function render({ row }) {
+          return row.geometry.coordinates[0];
         },
-        {
-            field: "latitude",
-            headerName: "Latitude",
-            type: "string",
-            minWidth: 150,
-            renderCell: function render({ row }) {
-                return row.geometry.coordinates[1];
-            }
-        },
-        {
-            field: "longitude",
-            headerName: "Longitude",
-            type: "string",
-            minWidth: 150,
-            renderCell: function render({ row }) {
-                return row.geometry.coordinates[0];
-            }
-        },
+      },
       // { field: "title", headerName: "Title", minWidth: 400, flex: 1 },
       // {
       //   field: "category.id",
@@ -80,30 +80,42 @@ export const LocationList: React.FC = () => {
       //     return category?.title;
       //   },
       // },
-      { field: "PublicRelease", headerName: "Public", minWidth: 120, flex: 0.3 },
+      {
+        field: "PublicRelease",
+        headerName: "Public",
+        minWidth: 120,
+        flex: 0.3,
+      },
       {
         field: "actions",
         headerName: "Actions",
         renderCell: function render({ row }) {
-          return <><EditButton hideText recordItemId={row.PointID} />
-              <ShowButton hideText recordItemId={row.PointID}/></>;
+          return (
+            <>
+              <EditButton hideText recordItemId={row.PointID} />
+              <ShowButton hideText recordItemId={row.PointID} />
+            </>
+          );
         },
         align: "center",
         headerAlign: "center",
         minWidth: 80,
-          flex: 0.3,
+        flex: 0.3,
       },
     ],
-      []
+    []
     // [categoriesData, isLoading],
   );
 
   return (
     <List>
-      <DataGrid {...dataGridProps}
-                rowHeight={25}
-                getRowId={(row) => row.PointID}
-                columns={columns} autoHeight />
+      <DataGrid
+        {...dataGridProps}
+        rowHeight={25}
+        getRowId={(row) => row.PointID}
+        columns={columns}
+        autoHeight
+      />
     </List>
   );
 };
