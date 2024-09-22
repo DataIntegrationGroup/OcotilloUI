@@ -16,9 +16,9 @@
 import {
     type AuthProvider,
 } from "@refinedev/core";
+import { sha256 } from "js-sha256";
 
 import {Fief, browser} from '@fief/fief'
-import {getCrypto} from "@fief/fief/src/crypto";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -28,12 +28,24 @@ const authCredentials = {
     password: "demodemo",
 };
 
-const fiefClient = new Fief({
+export const fiefConstants = {
     baseURL: 'https://fief.newmexicowaterdata.org',
-    clientId: 'buShmB5KqjE5kirVSz9J2g6of5O276OhHBzUcZLpGEA', });
-//
-// const crypto = getCrypto();
+    clientId: 'bJNVqsHEndupn6RpIE9rNHQNFtmaXnHBeYqNnXIwCM8'
+}
+
+const fiefClient = new Fief(fiefConstants);
 const fiefAuth = new browser.FiefAuth(fiefClient);
+
+const getAuthState = () => {
+    const item=sessionStorage.getItem('fief-authstate')
+    if(item){
+        return JSON.parse(item)
+    }
+}
+const gravatarUrl = (email) => {
+    let hash = email.trim().toLowerCase();
+    return `https://www.gravatar.com/avatar/${sha256(hash)}`;
+};
 
 export const authProvider: AuthProvider = {
     login: async ({ providerName, email}) => {
@@ -54,27 +66,7 @@ export const authProvider: AuthProvider = {
 
         if (providerName === "fief") {
             localStorage.setItem("email", email);
-            const fiefClient = new Fief({
-                baseURL: 'https://fief.newmexicowaterdata.org',
-                clientId: 'buShmB5KqjE5kirVSz9J2g6of5O276OhHBzUcZLpGEA', });
-
-            const crypto = getCrypto();
-            const fiefAuth = new browser.FiefAuth(fiefClient);
-            const redirectURI = `${window.location.protocol}//${window.location.host}/callback`;
-            const codeVerifier = await crypto.generateCodeVerifier();
-            const codeChallenge = await crypto.getCodeChallenge(codeVerifier, 'S256');
-
-            const url = await fiefClient.getAuthURL({
-                redirectURI,
-                // scope: parameters?.scope || ['openid'],
-                scope: ['openid'],
-                codeChallenge,
-                codeChallengeMethod: 'S256',
-                // ...parameters?.state ? { state: parameters.state } : {},
-                // ...parameters?.state ? { lang: parameters.lang } : {},
-                // ...parameters?.extrasParams ? { extrasParams: parameters.extrasParams } : {},
-            });
-            window.location.href = url;
+            await fiefAuth.redirectToLogin(`${window.location.protocol}//${window.location.host}/callback`);
             return {
                 success: true,
             };
@@ -88,6 +80,7 @@ export const authProvider: AuthProvider = {
             },
         };
     },
+
     register: async (params) => {
         if (params.email === authCredentials.email && params.password) {
             localStorage.setItem("email", params.email);
@@ -165,12 +158,12 @@ export const authProvider: AuthProvider = {
                 redirectTo: "/login",
             },
     getPermissions: async () => ["admin"],
-    getIdentity: async () => ({
-        id: 1,
-        name: "Jane Doe",
-        avatar:
-            "https://unsplash.com/photos/IWLOvomUmWU/download?force=true&w=640",
-    }),
+    getIdentity: async () => {
+        let authstate = getAuthState()
+        if(authstate){
+            return {avatar: gravatarUrl(authstate.userinfo.email)}
+        }
+    }
 };
 
 // ============= EOF =============================================

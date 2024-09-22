@@ -16,6 +16,7 @@
 import TableViewIcon from '@mui/icons-material/TableView';
 import Place from '@mui/icons-material/Place';
 import Plumbing from '@mui/icons-material/Plumbing';
+import Cable from '@mui/icons-material/Cable';
 
 let base = [
     {
@@ -32,14 +33,21 @@ let base = [
         edit: "/wells/edit/:id",
         create: "/wells/create",
     },
+    {
+        name: 'equipment',
+        icon: <Cable />,
+        list: "/equipment",
+        edit: "/equipment/edit/:id",
+        create: "/equipment/create",
+    },
     {name: 'LookupTables',
     icon: <TableViewIcon/>}
 
 ]
 
-let lookup = ['level_status', 'measurement_method', 'data_quality', 'measuring_agency', 'data_source']
+let lookupKeys = ['level_status', 'measurement_method', 'data_quality', 'measuring_agency', 'data_source']
 
-lookup = lookup.map((l) => {
+let lookup = lookupKeys.map((l) => {
     return {
         name: l,
         list: `/lu_${l}`,
@@ -48,21 +56,6 @@ lookup = lookup.map((l) => {
         }
     }
 })
-// {name: 'formations',
-//     list: "/lu_formations",
-//     meta: {
-//     parent: 'LookupTables'
-// }},
-// {name: 'level_status',
-//     list: "/lu_levelstatus",
-//     meta: {
-//     parent: 'LookupTables'
-// }},
-// {name: 'measurement_method',
-//     list: "/lu_measurement_method",
-//     meta: {
-//     parent: 'LookupTables'
-// }},
 
 export const resources= [...base, ...lookup]
 
