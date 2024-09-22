@@ -17,8 +17,9 @@
 
 import type { DataProvider } from "@refinedev/core";
 
-// const API_URL = "https://waterdata.nmt.edu/authorized/tabular";
-const API_URL = "http://localhost:8009/authorized/tabular";
+const API_URL = "https://waterdata.nmt.edu/authorized";
+// const API_URL = "http://localhost:8009/authorized/tabular";
+
 const fetcher = async (url: string, options?: RequestInit) => {
 
     const auth = sessionStorage.getItem("fief-authstate");
@@ -56,15 +57,30 @@ export const dataProvider: DataProvider = {
             });
         }
 
-        const response = await fetcher(`${resource}?${params.toString()}`);
+        let url;
+        console.log('getList', resource);
+        if (['formations', 'level_status',
+            'measurement_method', 'data_quality',
+            'measuring_agency', 'data_source'].includes(resource)) {
+            url = `lookuptable/${resource}`;
+        }else{
+            url = `tabular/${resource}`;
+        }
+
+        const response = await fetcher(`${url}?${params.toString()}`);
 
         if (response.status < 200 || response.status > 299) throw response;
 
         const resp = await response.json();
-        const data = resp.items;
-        const total = resp.total;
-        // const total = Number(response.headers.get("x-total-count"));
-        console.log(data, total);
+        let data;
+        let total;
+        if (['wells', 'locations'].includes(resource)) {
+            data = resp.items;
+            total = resp.total;
+        } else {
+            data = resp;
+            total = data.length;
+        }
 
         return {
             data,

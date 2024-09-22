@@ -34,3 +34,8 @@ export interface IWell {
   formation: string;
   construction_notes: string
 }
+
+export interface ILookupTable {
+  Code: string;
+  Meaning: string;
+}
