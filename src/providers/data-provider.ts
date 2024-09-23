@@ -16,17 +16,17 @@
 
 
 import type {DataProvider} from "@refinedev/core";
-import {getToken} from "./fief-provider";
+import {getAccessToken} from "./fief-provider";
 
-const API_URL = "https://waterdata.nmt.edu/authorized";
-// const API_URL = "http://localhost:8009/authorized/tabular";
+// const API_URL = "https://waterdata.nmt.edu/authorized";
+const API_URL = "http://localhost:8009/authorized";
 
 
 const fetcher = async (url: string, options?: RequestInit) => {
 
     // const auth = sessionStorage.getItem("fief-authstate");
     // const token = auth ? JSON.parse(auth).tokenInfo.access_token : "";
-    const token = getToken();
+    const token = getAccessToken();
 
     return fetch(`${API_URL}/${url}`, {
         ...options,
@@ -77,7 +77,7 @@ export const dataProvider: DataProvider = {
         const resp = await response.json();
         let data;
         let total;
-        if (['wells', 'locations'].includes(resource)) {
+        if (['wells', 'locations', 'equipment'].includes(resource)) {
             data = resp.items;
             total = resp.total;
         } else {

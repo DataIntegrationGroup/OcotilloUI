@@ -18,8 +18,19 @@ import Place from '@mui/icons-material/Place';
 import Plumbing from '@mui/icons-material/Plumbing';
 import Cable from '@mui/icons-material/Cable';
 import Water from '@mui/icons-material/Water';
+import AccessTime from '@mui/icons-material/AccessTime';
+import Diamond from '@mui/icons-material/Diamond';
 
-let base = [
+
+let base = [{name: 'Water',
+            icon: <Water/>},
+            {name: 'Geochronology',
+            icon: <AccessTime/>},
+            {name: 'Critical Mineral',
+            icon: <Cable/>},
+]
+
+let amp = [
     {
         name: "locations",
         icon: <Place/>,
@@ -41,6 +52,7 @@ let base = [
         list: "/equipment",
         edit: "/equipment/edit/:id",
         create: "/equipment/create",
+        show: "/equipment/show/:id",
     },
     {
         name: 'manualwaterlevels',
@@ -54,6 +66,15 @@ let base = [
 
 ]
 
+amp = amp.map((b) => {
+    return {
+        ...b,
+        meta: {
+            parent: 'Water'
+        }
+    }
+})
+
 let lookupKeys = ['level_status', 'measurement_method', 'data_quality', 'measuring_agency', 'data_source']
 
 let lookup = lookupKeys.map((l) => {
@@ -66,6 +87,21 @@ let lookup = lookupKeys.map((l) => {
     }
 })
 
-export const resources = [...base, ...lookup]
+let geochronology = [
+    {
+        name: 'geochronology',
+        list: '/geochronology',
+        icon: <AccessTime />
+    },
+]
+let criticalMineral = [
+    {
+        name: 'criticalmineral',
+        list: '/criticalmineral',
+        icon: <Diamond />
+    }
+]
+
+export const resources = [...base, ...amp, ...lookup, ...geochronology, ...criticalMineral]
 
 // ============= EOF =============================================

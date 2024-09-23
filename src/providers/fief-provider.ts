@@ -44,7 +44,7 @@ export const getAuthState = () => {
     }
 }
 
-export const getToken = () => {
+export const getAccessToken = () => {
     const authstate = getAuthState()
     return authstate?.tokenInfo.access_token
 }

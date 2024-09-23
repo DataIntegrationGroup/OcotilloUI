@@ -67,4 +67,19 @@ export interface IManualWaterLevel {
     DepthToWaterBGS: number;
 }
 
+export interface IMeasuringAgency {
+    Agency: string;
+    Description: string;
+    id: number;
+}
+
+export interface IEquipment {
+    ID: number;
+    PointID: string;
+    EquipmentType: string;
+    Model: string;
+    SerialNo: string;
+    DateInstalled: string;
+    DateRemoved: string;
+}
 // ============= EOF =============================================

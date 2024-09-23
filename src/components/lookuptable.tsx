@@ -19,8 +19,55 @@ import React from "react";
 
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 
-import type { ICategory, ILookupTable } from "../interfaces";
+import type {IMeasuringAgency, ILookupTable } from "../interfaces";
 
+export const MeasuringAgencyList: React.FC = () => {
+    const { dataGridProps } = useDataGrid<IMeasuringAgency>();
+
+    // const categoryIds = dataGridProps.rows.map((item) => item.category.id);
+    // const { data: categoriesData, isLoading } = useMany<ICategory>({
+    //   resource: "categories",
+    //   ids: categoryIds,
+    //   queryOptions: {
+    //     enabled: categoryIds.length > 0,
+    //   },
+    // });
+
+    const columns = React.useMemo<GridColDef<IMeasuringAgency>[]>(
+        () => [
+            {
+                field: "Agency",
+                headerName: "Code",
+                type: "string",
+                minWidth: 150,
+            },
+            {
+                field: "Description",
+                headerName: "Description",
+                type: "string",
+                minWidth: 150,
+                flex: 1
+            },
+            {
+                field: 'id',
+                headerName: 'ID',
+                type: 'number',
+                minWidth: 150,
+            }
+        ],
+        []
+    );
+
+    return (
+        <List>
+            <DataGrid {...dataGridProps}
+                      rowHeight={25}
+                      // getRowId={(row) => row.Code}
+                      columns={columns} autoHeight />
+        </List>
+    );
+
+}
 export const LookupTableList: React.FC = () => {
     const { dataGridProps } = useDataGrid<ILookupTable>();
 

@@ -15,23 +15,27 @@
 // ===============================================================================
 // export default accessControlProvider: ;
 
-import {getToken} from "./fief-provider";
+import {getAccessToken} from "./fief-provider";
 import {jwtDecode} from "jwt-decode";
 
 export const accessControlProvider = {
     can: async ({resource, action}) => {
-        const token = jwtDecode(getToken()?.access_token);
-        console.log('can', token)
-        const permissions = token['permissions'] ?? [];
-        console.log('can permissions', permissions)
-        if (permissions.includes(`${resource}:${action}`)) {
-            return {can: true}
-        } else {
-            return {
-                can: false,
-                reason: "You do not have the necessary permissions to perform this action."
-            }
-        }
+        // const token = jwtDecode(getAccessToken());
+        // const permissions = token['permissions'] ?? [];
+        // console.log('can permissions', permissions)
+
+        //access control disabled for now.
+        // need to defined permissions in fief
+        return {can: true};
+
+        // if (permissions.includes(`${resource}:${action}`)) {
+        //     return {can: true}
+        // } else {
+        //     return {
+        //         can: false,
+        //         reason: "You do not have the necessary permissions to perform this action."
+        //     }
+        // }
     }
 }
 //

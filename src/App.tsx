@@ -53,25 +53,24 @@ import {FiefAuthProvider, useFiefAuth} from "@fief/fief/react";
 import {dataProvider} from "./providers/data-provider";
 import {authProvider, fiefConstants} from "./providers/fief-provider";
 
-import {LocationCreate, LocationEdit, LocationList} from "./pages/locations";
+import {LocationCreate, LocationEdit, LocationList, LocationShow} from "./pages/locations";
 import {WellEdit, WellList} from "./pages/wells";
+import {EquipmentList, EquipmentShow} from "./pages/equipment";
 
 import {ThemedLayoutV2} from "./components/layout";
 import {ThemedHeaderV2} from "./components/layout/header";
 import {ThemedSiderV2} from "./components/layout/sider";
 import {ThemedTitleV2} from "./components/layout/title";
-import {LookupTableList} from "./components/lookuptable";
+import {LookupTableList, MeasuringAgencyList} from "./components/lookuptable";
 
 import {resources} from "./resources";
 import {ColorModeContextProvider} from "./contexts";
-import {LocationShow} from "./pages/locations/show";
 import {accessControlProvider} from "./providers/access-control-provider";
 
 const lookupRoutes = [
     "measurement_method",
     "level_status",
     "data_quality",
-    "measuring_agency",
     "data_source",
 ];
 
@@ -191,11 +190,20 @@ const App: React.FC = () => {
                                             <Route path="edit/:id" element={<LocationEdit/>}/>
                                             <Route path="show/:id" element={<LocationShow/>}/>
                                         </Route>
+                                        <Route path="/equipment">
+                                            <Route index element={<EquipmentList />}/>
+                                            <Route index element={<EquipmentShow />}/>
+                                        </Route>
+
+
                                         {lookupRoutes.map((route) => (
                                             <Route path={`/lu_${route}`}>
                                                 <Route index element={<LookupTableList/>}/>
                                             </Route>
                                         ))}
+                                        <Route path={`/lu_measuring_agency`}>
+                                            <Route index element={<MeasuringAgencyList />}/>
+                                        </Route>
                                     </Route>
                                     <Route
                                         // element={
