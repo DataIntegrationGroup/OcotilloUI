@@ -22,6 +22,7 @@ import React from "react";
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 
 import type {ILocation} from "../../interfaces";
+import {Chip} from "@mui/material";
 
 export const LocationList: React.FC = () => {
     const {dataGridProps} = useDataGrid<ILocation>();
@@ -39,7 +40,7 @@ export const LocationList: React.FC = () => {
         () => [
             {
                 field: "PointID",
-                headerName: "ID",
+                headerName: "PointID",
                 type: "string",
                 minWidth: 150,
             },
@@ -102,6 +103,19 @@ export const LocationList: React.FC = () => {
                 headerName: "Public",
                 minWidth: 120,
                 flex: 0.3,
+                renderCell: function render({row}) {
+                    return (
+                        <Chip
+                            sx={{
+                                backgroundColor: row.PublicRelease ? "green" : "red",
+                                "& .MuiChip-label": {
+                                    padding: 0,
+                                    margin: 5
+                                }
+                            }}
+                            label={row.PublicRelease ? "Yes" : "No"}/>
+                    )
+                }
             },
             {
                 field: "actions",
@@ -128,7 +142,7 @@ export const LocationList: React.FC = () => {
         <List>
             <DataGrid
                 {...dataGridProps}
-                rowHeight={25}
+                rowHeight={40}
                 getRowId={(row) => row.PointID}
                 columns={columns}
                 autoHeight

@@ -16,7 +16,7 @@
 import {
     type AuthProvider,
 } from "@refinedev/core";
-import { sha256 } from "js-sha256";
+import {sha256} from "js-sha256";
 
 import {Fief, browser} from '@fief/fief'
 
@@ -36,19 +36,26 @@ export const fiefConstants = {
 const fiefClient = new Fief(fiefConstants);
 const fiefAuth = new browser.FiefAuth(fiefClient);
 
-const getAuthState = () => {
-    const item=sessionStorage.getItem('fief-authstate')
-    if(item){
+
+export const getAuthState = () => {
+    const item = sessionStorage.getItem('fief-authstate')
+    if (item) {
         return JSON.parse(item)
     }
 }
+
+export const getToken = () => {
+    const authstate = getAuthState()
+    return authstate?.tokenInfo.access_token
+}
+
 const gravatarUrl = (email) => {
     let hash = email.trim().toLowerCase();
     return `https://www.gravatar.com/avatar/${sha256(hash)}`;
 };
 
 export const authProvider: AuthProvider = {
-    login: async ({ providerName, email}) => {
+    login: async ({providerName, email}) => {
 
         // if (providerName === "google") {
         //     window.location.href = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -141,7 +148,7 @@ export const authProvider: AuthProvider = {
             };
         }
 
-        return { error };
+        return {error};
     },
     check: async () =>
         localStorage.getItem("email")
@@ -160,7 +167,7 @@ export const authProvider: AuthProvider = {
     getPermissions: async () => ["admin"],
     getIdentity: async () => {
         let authstate = getAuthState()
-        if(authstate){
+        if (authstate) {
             return {avatar: gravatarUrl(authstate.userinfo.email)}
         }
     }

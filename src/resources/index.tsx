@@ -25,6 +25,7 @@ let base = [
         icon: <Place/>,
         list: "/locations",
         edit: "/locations/edit/:id",
+        show: "/locations/show/:id",
         create: "/locations/create",
     },
     {
@@ -36,17 +37,20 @@ let base = [
     },
     {
         name: 'equipment',
-        icon: <Cable />,
+        icon: <Cable/>,
         list: "/equipment",
         edit: "/equipment/edit/:id",
         create: "/equipment/create",
     },
-    {   name: 'manualwaterlevels',
+    {
+        name: 'manualwaterlevels',
         list: '/manualwaterlevels',
         icon: <Water/>
     },
-    {name: 'LookupTables',
-    icon: <TableViewIcon/>}
+    {
+        name: 'LookupTables',
+        icon: <TableViewIcon/>
+    }
 
 ]
 
@@ -62,6 +66,6 @@ let lookup = lookupKeys.map((l) => {
     }
 })
 
-export const resources= [...base, ...lookup]
+export const resources = [...base, ...lookup]
 
 // ============= EOF =============================================

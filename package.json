@@ -36,8 +36,11 @@
     "@refinedev/react-router-v6": "^4.6.0",
     "@refinedev/simple-rest": "^5.0.8",
     "js-sha256": "^0.11.0",
+    "jwt-decode": "^4.0.0",
+    "mapbox-gl": "^3.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "react-map-gl": "^7.1.7",
     "react-router-dom": "^6.8.1"
   },
   "devDependencies": {

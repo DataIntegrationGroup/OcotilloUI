@@ -64,6 +64,8 @@ import {LookupTableList} from "./components/lookuptable";
 
 import {resources} from "./resources";
 import {ColorModeContextProvider} from "./contexts";
+import {LocationShow} from "./pages/locations/show";
+import {accessControlProvider} from "./providers/access-control-provider";
 
 const lookupRoutes = [
     "measurement_method",
@@ -124,7 +126,6 @@ const App: React.FC = () => {
         return <p></p>;
     };
 
-
     return (
         <BrowserRouter>
             <DevtoolsProvider>
@@ -134,6 +135,7 @@ const App: React.FC = () => {
                     <GlobalStyles styles={{html: {WebkitFontSmoothing: "auto"}}}/>
                     <RefineSnackbarProvider>
                         <Refine
+                            accessControlProvider={accessControlProvider}
                             authProvider={authProvider}
                             dataProvider={dataProvider}
                             routerProvider={routerProvider}
@@ -187,6 +189,7 @@ const App: React.FC = () => {
                                             <Route index element={<LocationList/>}/>
                                             <Route path="create" element={<LocationCreate/>}/>
                                             <Route path="edit/:id" element={<LocationEdit/>}/>
+                                            <Route path="show/:id" element={<LocationShow/>}/>
                                         </Route>
                                         {lookupRoutes.map((route) => (
                                             <Route path={`/lu_${route}`}>

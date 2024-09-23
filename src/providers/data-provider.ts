@@ -15,15 +15,18 @@
 // ===============================================================================
 
 
-import type { DataProvider } from "@refinedev/core";
+import type {DataProvider} from "@refinedev/core";
+import {getToken} from "./fief-provider";
 
 const API_URL = "https://waterdata.nmt.edu/authorized";
 // const API_URL = "http://localhost:8009/authorized/tabular";
 
+
 const fetcher = async (url: string, options?: RequestInit) => {
 
-    const auth = sessionStorage.getItem("fief-authstate");
-    const token = auth ? JSON.parse(auth).tokenInfo.access_token : "";
+    // const auth = sessionStorage.getItem("fief-authstate");
+    // const token = auth ? JSON.parse(auth).tokenInfo.access_token : "";
+    const token = getToken();
 
     return fetch(`${API_URL}/${url}`, {
         ...options,
@@ -35,7 +38,7 @@ const fetcher = async (url: string, options?: RequestInit) => {
 }
 
 export const dataProvider: DataProvider = {
-    getList: async ({ resource, pagination, filters, sorters, meta }) => {
+    getList: async ({resource, pagination, filters, sorters, meta}) => {
         const params = new URLSearchParams();
 
         if (pagination) {
@@ -63,7 +66,7 @@ export const dataProvider: DataProvider = {
             'measurement_method', 'data_quality',
             'measuring_agency', 'data_source'].includes(resource)) {
             url = `lookuptable/${resource}`;
-        }else{
+        } else {
             url = `tabular/${resource}`;
         }
 
@@ -87,7 +90,7 @@ export const dataProvider: DataProvider = {
             total,
         };
     },
-    getMany: async ({ resource, ids, meta }) => {
+    getMany: async ({resource, ids, meta}) => {
         const params = new URLSearchParams();
 
         if (ids) {
@@ -102,18 +105,18 @@ export const dataProvider: DataProvider = {
 
         const data = await response.json();
 
-        return { data };
+        return {data};
     },
-    getOne: async ({ resource, id, meta }) => {
+    getOne: async ({resource, id, meta}) => {
         const response = await fetcher(`${resource}/${id}`);
 
         if (response.status < 200 || response.status > 299) throw response;
 
         const data = await response.json();
         console.log('getOne', data);
-        return { data };
+        return {data};
     },
-    create: async ({ resource, variables }) => {
+    create: async ({resource, variables}) => {
         const response = await fetcher(`${resource}`, {
             method: "POST",
             body: JSON.stringify(variables),
@@ -126,9 +129,9 @@ export const dataProvider: DataProvider = {
 
         const data = await response.json();
 
-        return { data };
+        return {data};
     },
-    update: async ({ resource, id, variables }) => {
+    update: async ({resource, id, variables}) => {
         const response = await fetcher(`${resource}/${id}`, {
             method: "PATCH",
             body: JSON.stringify(variables),
@@ -141,10 +144,12 @@ export const dataProvider: DataProvider = {
 
         const data = await response.json();
 
-        return { data };
+        return {data};
     },
     getApiUrl: () => API_URL,
-    deleteOne: () => { throw new Error("Not implemented"); },
+    deleteOne: () => {
+        throw new Error("Not implemented");
+    },
     /* ... */
 };
 
