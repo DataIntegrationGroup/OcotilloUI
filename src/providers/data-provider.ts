@@ -22,7 +22,7 @@ import {getAccessToken} from "./fief-provider";
 const API_URL = "http://localhost:8009/authorized";
 
 
-const fetcher = async (url: string, options?: RequestInit) => {
+export const fetcher = async (url: string, options?: RequestInit) => {
 
     // const auth = sessionStorage.getItem("fief-authstate");
     // const token = auth ? JSON.parse(auth).tokenInfo.access_token : "";
@@ -47,21 +47,22 @@ export const dataProvider: DataProvider = {
         }
 
         if (sorters && sorters.length > 0) {
-            params.append("_sort", sorters.map((sorter) => sorter.field).join(","));
-            params.append("_order", sorters.map((sorter) => sorter.order).join(","));
+            params.append("sort", sorters.map((sorter) => sorter.field).join(","));
+            params.append("order", sorters.map((sorter) => sorter.order).join(","));
         }
 
         if (filters && filters.length > 0) {
             filters.forEach((filter) => {
-                if ("field" in filter && filter.operator === "eq") {
-                    // Our fake API supports "eq" operator by simply appending the field name and value to the query string.
-                    params.append(filter.field, filter.value);
-                }
+                // if ("field" in filter && filter.operator === "eq") {
+                //     // Our fake API supports "eq" operator by simply appending the field name and value to the query string.
+                //     params.append(filter.field, filter.value);
+                // }
+                params.append('filter', JSON.stringify(filter));
             });
         }
 
         let url;
-        console.log('getList', resource);
+        console.log('getList', params.toString());
         if (['formations', 'level_status',
             'measurement_method', 'data_quality',
             'measuring_agency', 'data_source'].includes(resource)) {
@@ -77,14 +78,13 @@ export const dataProvider: DataProvider = {
         const resp = await response.json();
         let data;
         let total;
-        if (['wells', 'locations', 'equipment'].includes(resource)) {
+        if (['wells', 'locations', 'equipment', 'manualwaterlevels'].includes(resource)) {
             data = resp.items;
             total = resp.total;
         } else {
             data = resp;
             total = data.length;
         }
-
         return {
             data,
             total,

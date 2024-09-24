@@ -99,6 +99,11 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
         item;
       const isOpen = open[item.key || ""] || false;
 
+      let mlabel= label;
+      if (meta?.label){
+          mlabel = meta.label
+      }
+
       const isSelected = item.key === selectedKey;
       const isNested = !(
         pickNotDeprecated(meta?.parent, options?.parent, parentName) ===
@@ -117,7 +122,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
           >
             <div key={item.key}>
               <Tooltip
-                title={label ?? name}
+                title={mlabel ?? name}
                 placement="right"
                 disableHoverListener={!siderCollapsed}
                 arrow
@@ -150,7 +155,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
                     {icon ?? <ListOutlined />}
                   </ListItemIcon>
                   <ListItemText
-                    primary={label}
+                    primary={mlabel}
                     primaryTypographyProps={{
                       noWrap: true,
                       fontSize: "14px",
@@ -198,7 +203,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
           params={{ resource: item }}
         >
           <Tooltip
-            title={label ?? name}
+            title={mlabel ?? name}
             placement="right"
             disableHoverListener={!siderCollapsed}
             arrow
@@ -230,7 +235,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
                 {icon ?? <ListOutlined />}
               </ListItemIcon>
               <ListItemText
-                primary={label}
+                primary={mlabel}
                 primaryTypographyProps={{
                   noWrap: true,
                   fontSize: "14px",

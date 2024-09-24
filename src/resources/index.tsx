@@ -20,17 +20,35 @@ import Cable from '@mui/icons-material/Cable';
 import Water from '@mui/icons-material/Water';
 import AccessTime from '@mui/icons-material/AccessTime';
 import Diamond from '@mui/icons-material/Diamond';
+import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
+import Construction from '@mui/icons-material/Construction';
 
 
 let base = [{name: 'Water',
             icon: <Water/>},
-            {name: 'Geochronology',
-            icon: <AccessTime/>},
-            {name: 'Critical Mineral',
-            icon: <Cable/>},
+            // {name: 'Geochronology',
+            // icon: <AccessTime/>},
+            // {name: 'Critical Mineral',
+            // icon: <Cable/>},
 ]
 
 let amp = [
+    {
+        name: 'dashboard',
+        list: '/dashboard',
+        meta: {
+            label: "Dashboard",
+            icon: <DashboardOutlined />,
+        },
+    },
+    {
+        name: 'querybuilder',
+        list: '/querybuilder',
+        meta: {
+            label: "Query Builder",
+            icon: <Construction />,
+        },
+    },
     {
         name: "locations",
         icon: <Place/>,
@@ -44,6 +62,7 @@ let amp = [
         icon: <Plumbing/>,
         list: "/wells",
         edit: "/wells/edit/:id",
+        show: "/wells/show/:id",
         create: "/wells/create",
     },
     {
@@ -57,21 +76,31 @@ let amp = [
     {
         name: 'manualwaterlevels',
         list: '/manualwaterlevels',
-        icon: <Water/>
+        edit: '/manualwaterlevels/edit/:id',
+        create: '/manualwaterlevels/create',
+        show: '/manualwaterlevels/show/:id',
+        icon: <Water/>,
+        meta: {
+            label: "Manual Water Levels",
+        }
     },
     {
         name: 'LookupTables',
-        icon: <TableViewIcon/>
+        icon: <TableViewIcon/>,
+        meta: {
+            label: "Lookup Tables",
+        }
     }
 
 ]
 
-amp = amp.map((b) => {
+const ampResources = amp.map((b) => {
+
+    let meta = b.meta || {}
+    meta['parent'] = 'Water'
     return {
         ...b,
-        meta: {
-            parent: 'Water'
-        }
+        meta: meta
     }
 })
 
@@ -91,17 +120,23 @@ let geochronology = [
     {
         name: 'geochronology',
         list: '/geochronology',
-        icon: <AccessTime />
+        icon: <AccessTime />,
+        meta: {
+            label: "Geochronology",
+            }
     },
 ]
 let criticalMineral = [
     {
         name: 'criticalmineral',
         list: '/criticalmineral',
-        icon: <Diamond />
+        icon: <Diamond />,
+        meta: {
+            label: "Critical Minerals",
+            }
     }
 ]
 
-export const resources = [...base, ...amp, ...lookup, ...geochronology, ...criticalMineral]
+export const resources = [...base, ...ampResources, ...lookup, ...geochronology, ...criticalMineral]
 
 // ============= EOF =============================================

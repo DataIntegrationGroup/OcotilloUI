@@ -65,6 +65,12 @@ export interface IManualWaterLevel {
     PublicRelease: boolean;
     MeasurementDate: string;
     DepthToWaterBGS: number;
+    MeasuringAgency: string;
+    LevelStatus: string;
+    DataQuality: string;
+    DataSource: string;
+    MeasuredBy: string;
+    SiteNotes: string;
 }
 
 export interface IMeasuringAgency {

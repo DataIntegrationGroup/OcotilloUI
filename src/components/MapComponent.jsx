@@ -17,14 +17,20 @@
 import {useContext, useRef} from "react";
 import {Layer, Map, NavigationControl, Popup, Source} from "react-map-gl";
 import {ColorModeContext} from "../contexts";
+import DrawControl from "./DrawControl";
 
 import "mapbox-gl/dist/mapbox-gl.css";
+import GeocoderControl from "./GeocoderControl.jsx";
 
 const mapboxToken = "pk.eyJ1IjoiamFrZXJvc3N3ZGkiLCJhIjoiY2s3M3ZneGl4MGhkMDNrcjlocmNuNWg4bCJ9.4r1DRDQ_ja0fV2nnmlVT0A"
 
-export default function MapComponent() {
+const MapComponent = ({children,
+                          showDrawControls={show: true, position: "top-right"},
+                          showNavigation = { show: true, position: "top-right" },
+                            showGeocoder={show: true, position: "top-left" },
+                      }) => {
 
-    const {mode, setMode} = useContext(ColorModeContext);
+    const {mode} = useContext(ColorModeContext);
 
     const mapStyle = mode === 'dark' ? "mapbox://styles/mapbox/dark-v10" : "mapbox://styles/mapbox/light-v10";
     const style = {width: "100%", height: "650px"}
@@ -64,28 +70,33 @@ export default function MapComponent() {
                 {/*{dynamicLayers}*/}
 
                 {/*<ContextMenu model={mapContextMenu} ref={cmRef}/>*/}
-
-                {/*{showNavigation?.show && (*/}
-                {/*    <NavigationControl position={showNavigation?.position}/>*/}
-                {/*)}*/}
-                {/*{showDrawControls?.show && (*/}
-                {/*    <DrawControl*/}
-                {/*        displayControlsDefault={false}*/}
-                {/*        controls={{*/}
-                {/*            polygon: true,*/}
-                {/*            trash: true,*/}
-                {/*            combine_features: true,*/}
-                {/*            uncombine_features: true,*/}
-                {/*        }}*/}
-                {/*        defaultFeatures={defaultFeatures}*/}
-                {/*        onCreate={onUpdate}*/}
-                {/*        onUpdate={onUpdate}*/}
-                {/*        onDelete={onDelete}*/}
-                {/*        onModeChange={onModeChange}*/}
-                {/*        onSelectionChange={onselectionChange}*/}
-                {/*        position={showDrawControls?.position}*/}
-                {/*    />*/}
-                {/*)}*/}
+                {showGeocoder?.show && (
+                    <GeocoderControl
+                        token={mapboxToken}
+                        position={showGeocoder?.position}
+                    />
+                )}
+                {showNavigation?.show && (
+                    <NavigationControl position={showNavigation?.position}/>
+                )}
+                {showDrawControls?.show && (
+                    <DrawControl
+                        displayControlsDefault={false}
+                        controls={{
+                            polygon: true,
+                            trash: true,
+                            combine_features: true,
+                            uncombine_features: true,
+                        }}
+                        // defaultFeatures={defaultFeatures}
+                        // onCreate={onUpdate}
+                        // onUpdate={onUpdate}
+                        // onDelete={onDelete}
+                        // onModeChange={onModeChange}
+                        // onSelectionChange={onselectionChange}
+                        position={showDrawControls?.position}
+                    />
+                )}
 
                 {/*{popupContent !== undefined && (*/}
                 {/*    <Popup*/}
@@ -100,12 +111,7 @@ export default function MapComponent() {
                 {/*        {popupContent.children}*/}
                 {/*    </Popup>*/}
                 {/*)}*/}
-                {/*{showGeocoder?.show && (*/}
-                {/*    <GeocoderControl*/}
-                {/*        mapboxAccessToken={settings.mapbox.token}*/}
-                {/*        position={showGeocoder?.position}*/}
-                {/*    />*/}
-                {/*)}*/}
+
                 {/*<Source*/}
                 {/*  id={"highlightedPoint"}*/}
                 {/*  type={"geojson"}*/}
@@ -122,9 +128,11 @@ export default function MapComponent() {
                 {/*    }}*/}
                 {/*  />*/}
                 {/*</Source>*/}
+                {children}
             </Map>
         </div>
     )
 }
 
+export default MapComponent;
 // ============= EOF =============================================

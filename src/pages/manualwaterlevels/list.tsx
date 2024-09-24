@@ -20,12 +20,23 @@ export const ManualWaterLevelList: React.FC = () => {
 
   const columns = React.useMemo<GridColDef<IManualWaterLevel>[]>(
     () => [
+
       {
-        field: "PointID",
+        field: "OBJECTID",
         headerName: "ID",
         type: "string",
-        minWidth: 150,
+        minWidth: 50,
       },
+        {field: 'PointID', headerName: 'Point ID', minWidth: 50},
+        {field: 'DateMeasured', headerName: 'Measurement Date', minWidth: 150},
+        {field: 'DepthToWaterBGS', headerName: 'Depth to Water BGS (ft)', minWidth: 165},
+        {field: 'PublicRelease', headerName: 'Public Release', minWidth: 120},
+        {field: 'MeasuringAgency', headerName: 'Measuring Agency', minWidth: 150},
+        {field: 'LevelStatus', headerName: 'Status', minWidth: 50},
+        {field: 'DataQuality', headerName: 'Data Quality', minWidth: 50},
+        {field: 'DataSource', headerName: 'Data Source', minWidth: 50},
+        {field: 'MeasuredBy', headerName: 'MeasuredBy', minWidth: 50},
+        {field: 'SiteNotes', headerName: 'Notes', minWidth: 50},
       // {
       //   field: "SiteID",
       //   headerName: "Site ID",
@@ -74,7 +85,7 @@ export const ManualWaterLevelList: React.FC = () => {
     <List>
       <DataGrid {...dataGridProps}
                 rowHeight={25}
-                getRowId={(row) => row.PointID}
+                getRowId={(row) => row.OBJECTID}
                 columns={columns} autoHeight />
     </List>
   );

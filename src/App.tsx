@@ -54,7 +54,7 @@ import {dataProvider} from "./providers/data-provider";
 import {authProvider, fiefConstants} from "./providers/fief-provider";
 
 import {LocationCreate, LocationEdit, LocationList, LocationShow} from "./pages/locations";
-import {WellEdit, WellList} from "./pages/wells";
+import {WellEdit, WellList, WellShow} from "./pages/wells";
 import {EquipmentList, EquipmentShow} from "./pages/equipment";
 
 import {ThemedLayoutV2} from "./components/layout";
@@ -66,6 +66,10 @@ import {LookupTableList, MeasuringAgencyList} from "./components/lookuptable";
 import {resources} from "./resources";
 import {ColorModeContextProvider} from "./contexts";
 import {accessControlProvider} from "./providers/access-control-provider";
+import {ManualWaterLevelList, ManualWaterLevelShow} from "./pages/manualwaterlevels";
+import {Home} from "./pages/home";
+import {WaterDashboard} from "./pages/dashboard";
+import {Querybuilder} from "./pages/querybuilder";
 
 const lookupRoutes = [
     "measurement_method",
@@ -174,15 +178,14 @@ const App: React.FC = () => {
                                             </Authenticated>
                                         }
                                     >
-                                        <Route
-                                            index
-                                            element={<NavigateToResource resource="locations"/>}
-                                        />
-
+                                        <Route index element={<Home/>}/>
+                                        <Route path="/dashboard" element={<WaterDashboard />}/>
+                                        <Route path="/querybuilder" element={<Querybuilder />}/>
                                         <Route path="/wells">
                                             <Route index element={<WellList/>}/>
                                             {/*<Route path="create" element={<PostCreate />} />*/}
                                             <Route path="edit/:id" element={<WellEdit/>}/>
+                                            <Route path="show/:id" element={<WellShow/>}/>
                                         </Route>
                                         <Route path="/locations">
                                             <Route index element={<LocationList/>}/>
@@ -192,7 +195,13 @@ const App: React.FC = () => {
                                         </Route>
                                         <Route path="/equipment">
                                             <Route index element={<EquipmentList />}/>
-                                            <Route index element={<EquipmentShow />}/>
+                                            <Route path="show/:id" element={<EquipmentShow />}/>
+                                        </Route>
+                                        <Route path="/manualwaterlevels">
+                                            <Route index element={<ManualWaterLevelList />}/>
+                                            {/*<Route path="create" element={<PostCreate />} />*/}
+                                            {/*<Route path="edit/:id" element={<PostEdit />} />*/}
+                                            <Route path="show/:id" element={<ManualWaterLevelShow />}/>
                                         </Route>
 
 
