@@ -83,6 +83,9 @@ import {ProjectList} from "./pages/geochronology/projects";
 import {geochronologyDataProvider} from "./providers/geochronology-data-provider";
 import {SampleList} from "./pages/geochronology/samples";
 import {MaterialList} from "./pages/geochronology/materials";
+import {ProjectShow} from "./pages/geochronology/projects/show";
+import {MaterialShow} from "./pages/geochronology/materials/show";
+import {SampleShow} from "./pages/geochronology/samples/show";
 
 const App: React.FC = () => {
     const customTitleHandler = ({
@@ -230,16 +233,17 @@ const App: React.FC = () => {
                                                 <Route index element={<ProjectList/>}/>
                                                 {/*<Route path="create" element={<LocationCreate/>}/>*/}
                                                 {/*<Route path="edit/:id" element={<LocationEdit/>}/>*/}
-                                                {/*<Route path="show/:id" element={<LocationShow/>}/>*/}
+                                                <Route path="show/:id" element={<ProjectShow/>}/>
                                             </Route>
                                             <Route path="samples">
                                                 <Route index element={<SampleList/>}/>
                                             {/*    <Route path="create" element={<LocationCreate/>}/>*/}
                                             {/*    <Route path="edit/:id" element={<LocationEdit/>}/>*/}
-                                            {/*    <Route path="show/:id" element={<LocationShow/>}/>*/}
+                                                <Route path="show/:id" element={<SampleShow/>}/>
                                             </Route>
                                             <Route path='materials'>
                                                 <Route index element={<MaterialList/>}/>
+                                                <Route path="show/:id" element={<MaterialShow/>}/>
                                             </Route>
                                         </Route>
 

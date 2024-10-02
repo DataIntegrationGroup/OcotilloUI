@@ -14,21 +14,28 @@
 // limitations under the License.
 // ===============================================================================
 
+export interface IPrincipalInvestigator {
+    id: number;
+    name: string;
+}
 
 export interface IProject {
     id: number;
     name: string;
+    principalInvestigator: IPrincipalInvestigator;
 }
 
 export interface ISample {
     id: number;
     name: string;
     project: IProject;
+    material: IMaterial;
 }
 
 export interface IMaterial {
     id: number;
     name: string;
+    grainsize: string;
 }
 //
 // export type IStatus = "published" | "draft" | "rejected";

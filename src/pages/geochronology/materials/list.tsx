@@ -42,7 +42,12 @@ export const MaterialList: React.FC = () => {
                 type: "string",
                 minWidth: 300,
             },
-
+            {
+                field: 'grainsize',
+                headerName: 'Grain Size',
+                type: 'string',
+                minWidth: 200,
+            },
             {
                 field: "actions",
                 headerName: "Actions",

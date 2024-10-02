@@ -42,7 +42,32 @@ export const SampleList: React.FC = () => {
                 type: "string",
                 minWidth: 300,
             },
-
+            {
+                field: "material",
+                headerName: "Material",
+                type: "string",
+                minWidth: 200,
+                renderCell: function render({row}) {
+                    return (
+                        <a href={`materials/show/${row.material.id}`}>
+                            <Chip size='small' label={row.material.name}/>
+                        </a>
+                    )
+                },
+            },
+            {
+              field: "project",
+                headerName: "Project",
+                type: "string",
+                minWidth: 200,
+                renderCell: function render({row}) {
+                    return (
+                        <a href={`projects/show/${row.project.id}`}>
+                            <Chip size='small' label={row.project.name}/>
+                        </a>
+                    )
+                },
+            },
             {
                 field: "actions",
                 headerName: "Actions",

@@ -1,3 +1,3 @@
 export const settings = {
-    rowHeight: 23,
+    rowHeight: 27,
 }

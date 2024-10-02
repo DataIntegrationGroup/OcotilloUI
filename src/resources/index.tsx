@@ -19,6 +19,7 @@ import Plumbing from '@mui/icons-material/Plumbing';
 import Cable from '@mui/icons-material/Cable';
 import Water from '@mui/icons-material/Water';
 import WaterDropOutlined from '@mui/icons-material/WaterDropOutlined';
+import CookieOutlined from '@mui/icons-material/CookieOutlined';
 
 import AccessTime from '@mui/icons-material/AccessTime';
 import Diamond from '@mui/icons-material/Diamond';
@@ -132,18 +133,21 @@ let lookup = lookupKeys.map((l) => {
 const geochronology = [
     {name: 'projects',
         list: '/geochronology/projects',
+        show: '/geochronology/projects/show/:id',
         icon: <CategoryOutlined/>,
         meta: {'parent': 'geochronology',
                 'dataProviderName': 'geochronology'}
     },
-    {name: 'samples',
-        list: '/geochronology/samples',
-        icon: <ScienceOutlined/>,
-
-    },
     {name: 'materials',
         list: '/geochronology/materials',
+        show: '/geochronology/materials/show/:id',
         icon: <Science/>,
+
+    },
+    {name: 'samples',
+        list: '/geochronology/samples',
+        show: '/geochronology/samples/show/:id',
+        icon: <CookieOutlined/>,
 
     },
 ]
