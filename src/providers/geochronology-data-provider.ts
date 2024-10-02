@@ -17,27 +17,25 @@
 
 import type {DataProvider} from "@refinedev/core";
 import {getAccessToken} from "./fief-provider";
-
-// const API_URL = "https://waterdata.nmt.edu/authorized";
-const API_URL = "http://localhost:8009/authorized";
+const API_URL = "http://localhost:8000";
 
 
 export const fetcher = async (url: string, options?: RequestInit) => {
 
     // const auth = sessionStorage.getItem("fief-authstate");
     // const token = auth ? JSON.parse(auth).tokenInfo.access_token : "";
-    const token = getAccessToken();
+    // const token = getAccessToken();
 
     return fetch(`${API_URL}/${url}`, {
         ...options,
         headers: {
             ...options?.headers,
-            Authorization: `Bearer ${token}`,
+            // Authorization: `Bearer ${token}`,
         },
     });
 }
 
-export const dataProvider: DataProvider = {
+export const geochronologyDataProvider: DataProvider = {
     getList: async ({resource, pagination, filters, sorters, meta}) => {
         const params = new URLSearchParams();
 
@@ -53,38 +51,25 @@ export const dataProvider: DataProvider = {
 
         if (filters && filters.length > 0) {
             filters.forEach((filter) => {
-                // if ("field" in filter && filter.operator === "eq") {
-                //     // Our fake API supports "eq" operator by simply appending the field name and value to the query string.
-                //     params.append(filter.field, filter.value);
-                // }
                 params.append('filter', JSON.stringify(filter));
             });
         }
 
-        let url;
-        console.log('getList', params.toString());
-        if (['formations', 'level_status',
-            'measurement_method', 'data_quality',
-            'measuring_agency', 'data_source'].includes(resource)) {
-            url = `lookuptable/${resource}`;
-        } else {
-            url = `tabular/${resource}`;
-        }
-
-        const response = await fetcher(`${url}?${params.toString()}`);
-
+        const response = await fetcher(`${resource}?${params.toString()}`);
         if (response.status < 200 || response.status > 299) throw response;
-
         const resp = await response.json();
+
         let data;
         let total;
-        if (['wells', 'locations', 'equipment', 'manualwaterlevels'].includes(resource)) {
+        if (['projects', 'samples', 'materials', 'manualwaterlevels'].includes(resource)) {
             data = resp.items;
             total = resp.total;
         } else {
             data = resp;
             total = data.length;
         }
+
+        console.log('getList', resp);
         return {
             data,
             total,

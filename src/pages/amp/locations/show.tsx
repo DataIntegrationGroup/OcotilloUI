@@ -24,7 +24,7 @@ import {
     TextFieldComponent as TextField,
 } from "@refinedev/mui";
 
-import MapComponent from "../../components/MapComponent";
+import MapComponent from "../../../components/MapComponent";
 
 
 export const LocationShow = () => {

@@ -7,7 +7,7 @@ import { useForm } from "@refinedev/react-hook-form";
 
 import { Controller } from "react-hook-form";
 
-import type { IPost, ICategory, IStatus, Nullable } from "../../interfaces";
+import type { IPost, ICategory, IStatus, Nullable } from "../../interfaces/amp";
 
 export const PostEdit: React.FC = () => {
   const {

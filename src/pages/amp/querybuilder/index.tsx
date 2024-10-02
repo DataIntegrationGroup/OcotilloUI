@@ -13,18 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ===============================================================================
-import MapComponent from '../../components/MapComponent';
-import TextField from "@mui/material/TextField";
-import {Button} from "@mui/material";
+import MapComponent from '../../../components/MapComponent';
+// import TextField from "@mui/material/TextField";
+import {Button, Select} from "@mui/material";
 import React, {useState} from "react";
-import {fetcher} from "../../providers/data-provider";
+import {fetcher} from "../../../providers/amp-data-provider";
 import { Layer, Map, NavigationControl, Popup, Source } from "react-map-gl";
+import { useAutocomplete } from "@refinedev/mui";
+import { Autocomplete, TextField } from "@mui/material";
 
 import {useForm} from "@refinedev/react-hook-form";
 import {HttpError} from "@refinedev/core";
-import type {Nullable} from "../../interfaces";
+import type {Nullable} from "../../../interfaces/amp";
 import {Create} from "@refinedev/mui";
-import {dataProvider} from "../../providers/data-provider";
+import {ampDataProvider} from "../../../providers/amp-data-provider";
 // import {Layer, Source} from "mapbox-gl";
 
 // {...register("content", {
@@ -37,6 +39,11 @@ import {dataProvider} from "../../providers/data-provider";
 //     name: string;
 //     material: string;
 // };
+
+interface ICounty {
+    id: number;
+    name: string;
+}
 
 const toGeoJson = (data: any) => {
     return {'type': 'FeatureCollection',
@@ -51,7 +58,11 @@ const toGeoJson = (data: any) => {
 
 export const Querybuilder: React.FC= () => {
     const [PointID, setPointID] = useState<string>('');
+    const [county, setCounty] = useState<ICounty | null>(null);
     const [resultFeatureCollection, setResultFeatureCollection] = useState<any>({type: 'FeatureCollection', features: []})
+    const {autocompleteProps} = useAutocomplete<ICounty>({
+        resource: "counties",
+    });
     // const {
     //     saveButtonProps,
     //     register,
@@ -73,8 +84,16 @@ export const Querybuilder: React.FC= () => {
     //     },
     // });
     const handleSubmit = (e: any) => {
+        console.log('handleSubmit', county)
+
         let params = new URLSearchParams();
-        params.append('filter', JSON.stringify({field: 'PointID', operator: 'startswith', value: PointID}));
+        if (PointID !== '') {
+            params.append('filter', JSON.stringify({field: 'PointID', operator: 'startswith', value: PointID}));
+        }
+        if (county) {
+            params.append('county', county.name);
+        }
+
         let url = `tabular/locations?${params.toString()}`
         fetcher(url).then((response) => {return response.json()}).then((data) => {
             const geoJson = toGeoJson(data.items)
@@ -99,6 +118,25 @@ export const Querybuilder: React.FC= () => {
                     name="PointID"
                     label="PointID"
                     onChange={(e) => setPointID(e.target.value)}
+                />
+                <Autocomplete
+                    {...autocompleteProps}
+                    value={county}
+                    onChange={(e, value) => setCounty(value)}
+                    getOptionLabel={(item) => item.name}
+                    isOptionEqualToValue={(option, value) =>
+                        value === undefined ||
+                        option?.id?.toString() === (value?.id ?? value)?.toString()
+                    }
+                // placeholder="Select County"
+                renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        label="County"
+                        margin="normal"
+                        variant="outlined"
+                    />
+                )}
                 />
 
                <Button onClick={handleSubmit}

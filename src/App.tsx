@@ -50,12 +50,12 @@ import GoogleIcon from "@mui/icons-material/Google";
 
 import {FiefAuthProvider, useFiefAuth} from "@fief/fief/react";
 
-import {dataProvider} from "./providers/data-provider";
+import {ampDataProvider} from "./providers/amp-data-provider";
 import {authProvider, fiefConstants} from "./providers/fief-provider";
 
-import {LocationCreate, LocationEdit, LocationList, LocationShow} from "./pages/locations";
-import {WellEdit, WellList, WellShow} from "./pages/wells";
-import {EquipmentList, EquipmentShow} from "./pages/equipment";
+import {LocationCreate, LocationEdit, LocationList, LocationShow} from "./pages/amp/locations";
+import {WellEdit, WellList, WellShow} from "./pages/amp/wells";
+import {EquipmentList, EquipmentShow} from "./pages/amp/equipment";
 
 import {ThemedLayoutV2} from "./components/layout";
 import {ThemedHeaderV2} from "./components/layout/header";
@@ -66,10 +66,10 @@ import {LookupTableList, MeasuringAgencyList} from "./components/lookuptable";
 import {resources} from "./resources";
 import {ColorModeContextProvider} from "./contexts";
 import {accessControlProvider} from "./providers/access-control-provider";
-import {ManualWaterLevelList, ManualWaterLevelShow} from "./pages/manualwaterlevels";
+import {ManualWaterLevelList, ManualWaterLevelShow} from "./pages/amp/manualwaterlevels";
 import {Home} from "./pages/home";
-import {WaterDashboard} from "./pages/dashboard";
-import {Querybuilder} from "./pages/querybuilder";
+import {WaterDashboard} from "./pages/amp/dashboard";
+import {Querybuilder} from "./pages/amp/querybuilder";
 
 const lookupRoutes = [
     "measurement_method",
@@ -77,6 +77,12 @@ const lookupRoutes = [
     "data_quality",
     "data_source",
 ];
+
+
+import {ProjectList} from "./pages/geochronology/projects";
+import {geochronologyDataProvider} from "./providers/geochronology-data-provider";
+import {SampleList} from "./pages/geochronology/samples";
+import {MaterialList} from "./pages/geochronology/materials";
 
 const App: React.FC = () => {
     const customTitleHandler = ({
@@ -140,7 +146,10 @@ const App: React.FC = () => {
                         <Refine
                             accessControlProvider={accessControlProvider}
                             authProvider={authProvider}
-                            dataProvider={dataProvider}
+                            dataProvider={{default: ampDataProvider,
+                                amp: ampDataProvider,
+                                          geochronology: geochronologyDataProvider}}
+
                             routerProvider={routerProvider}
                             notificationProvider={useNotificationProvider}
                             resources={resources}
@@ -178,6 +187,7 @@ const App: React.FC = () => {
                                             </Authenticated>
                                         }
                                     >
+
                                         <Route index element={<Home/>}/>
                                         <Route path="/dashboard" element={<WaterDashboard />}/>
                                         <Route path="/querybuilder" element={<Querybuilder />}/>
@@ -213,7 +223,29 @@ const App: React.FC = () => {
                                         <Route path={`/lu_measuring_agency`}>
                                             <Route index element={<MeasuringAgencyList />}/>
                                         </Route>
+
+                                        //geochronology routes
+                                        <Route path="/geochronology">
+                                            <Route path="projects">
+                                                <Route index element={<ProjectList/>}/>
+                                                {/*<Route path="create" element={<LocationCreate/>}/>*/}
+                                                {/*<Route path="edit/:id" element={<LocationEdit/>}/>*/}
+                                                {/*<Route path="show/:id" element={<LocationShow/>}/>*/}
+                                            </Route>
+                                            <Route path="samples">
+                                                <Route index element={<SampleList/>}/>
+                                            {/*    <Route path="create" element={<LocationCreate/>}/>*/}
+                                            {/*    <Route path="edit/:id" element={<LocationEdit/>}/>*/}
+                                            {/*    <Route path="show/:id" element={<LocationShow/>}/>*/}
+                                            </Route>
+                                            <Route path='materials'>
+                                                <Route index element={<MaterialList/>}/>
+                                            </Route>
+                                        </Route>
+
                                     </Route>
+
+
                                     <Route
                                         // element={
                                         //   <Authenticated key="auth-pages" fallback={<Outlet />}>

@@ -14,27 +14,17 @@
 // limitations under the License.
 // ===============================================================================
 
-
-import {useMany} from "@refinedev/core";
 import {ShowButton, EditButton, List, useDataGrid} from "@refinedev/mui";
 import React from "react";
 
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 
-import type {ILocation} from "../../interfaces";
-import {Chip} from "@mui/material";
+import type {ILocation} from "../../../interfaces/amp";
+import {publicReleaseChip} from "../../../components/util";
+import {settings} from "../../../settings";
 
 export const LocationList: React.FC = () => {
     const {dataGridProps} = useDataGrid<ILocation>();
-
-    // const categoryIds = dataGridProps.rows.map((item) => item.category.id);
-    // const { data: categoriesData, isLoading } = useMany<ICategory>({
-    //   resource: "categories",
-    //   ids: categoryIds,
-    //   queryOptions: {
-    //     enabled: categoryIds.length > 0,
-    //   },
-    // });
 
     const columns = React.useMemo<GridColDef<ILocation>[]>(
         () => [
@@ -103,19 +93,7 @@ export const LocationList: React.FC = () => {
                 headerName: "Public",
                 minWidth: 120,
                 flex: 0.3,
-                renderCell: function render({row}) {
-                    return (
-                        <Chip
-                            sx={{
-                                backgroundColor: row.PublicRelease ? "green" : "red",
-                                "& .MuiChip-label": {
-                                    padding: 0,
-                                    margin: 5
-                                }
-                            }}
-                            label={row.PublicRelease ? "Yes" : "No"}/>
-                    )
-                }
+                renderCell: publicReleaseChip,
             },
             {
                 field: "actions",
@@ -142,7 +120,7 @@ export const LocationList: React.FC = () => {
         <List>
             <DataGrid
                 {...dataGridProps}
-                rowHeight={40}
+                rowHeight={settings.rowHeight}
                 getRowId={(row) => row.PointID}
                 columns={columns}
                 autoHeight

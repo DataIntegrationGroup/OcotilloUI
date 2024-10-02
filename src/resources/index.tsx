@@ -18,16 +18,28 @@ import Place from '@mui/icons-material/Place';
 import Plumbing from '@mui/icons-material/Plumbing';
 import Cable from '@mui/icons-material/Cable';
 import Water from '@mui/icons-material/Water';
+import WaterDropOutlined from '@mui/icons-material/WaterDropOutlined';
+
 import AccessTime from '@mui/icons-material/AccessTime';
 import Diamond from '@mui/icons-material/Diamond';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import Construction from '@mui/icons-material/Construction';
-
+import Science from '@mui/icons-material/Science';
+import ScienceOutlined from '@mui/icons-material/ScienceOutlined';
+import CategoryOutlined from '@mui/icons-material/CategoryOutlined';
+import DiamondOutlined from '@mui/icons-material/DiamondOutlined';
 
 let base = [{name: 'Water',
-            icon: <Water/>},
-            // {name: 'Geochronology',
-            // icon: <AccessTime/>},
+            icon: <WaterDropOutlined/>,
+            meta: {
+                label: 'Water',
+            }
+            },
+            {
+                name: 'geochronology',
+                meta: {label: 'Geochronology'},
+                icon: <AccessTime/>
+            },
             // {name: 'Critical Mineral',
             // icon: <Cable/>},
 ]
@@ -98,6 +110,7 @@ const ampResources = amp.map((b) => {
 
     let meta = b.meta || {}
     meta['parent'] = 'Water'
+    meta['dataProviderName'] = 'amp'
     return {
         ...b,
         meta: meta
@@ -116,27 +129,50 @@ let lookup = lookupKeys.map((l) => {
     }
 })
 
-let geochronology = [
-    {
-        name: 'geochronology',
-        list: '/geochronology',
-        icon: <AccessTime />,
-        meta: {
-            label: "Geochronology",
-            }
+const geochronology = [
+    {name: 'projects',
+        list: '/geochronology/projects',
+        icon: <CategoryOutlined/>,
+        meta: {'parent': 'geochronology',
+                'dataProviderName': 'geochronology'}
+    },
+    {name: 'samples',
+        list: '/geochronology/samples',
+        icon: <ScienceOutlined/>,
+
+    },
+    {name: 'materials',
+        list: '/geochronology/materials',
+        icon: <Science/>,
+
     },
 ]
+
+
+const geochronologyResources = geochronology.map((g) => {
+    let meta = g.meta || {}
+    meta['parent'] = 'geochronology'
+    meta['dataProviderName'] = 'geochronology'
+
+    return {
+        ...g,
+        meta: meta
+    }
+})
+
+
+
 let criticalMineral = [
     {
         name: 'criticalmineral',
         list: '/criticalmineral',
-        icon: <Diamond />,
+        icon: <DiamondOutlined />,
         meta: {
             label: "Critical Minerals",
             }
     }
 ]
 
-export const resources = [...base, ...ampResources, ...lookup, ...geochronology, ...criticalMineral]
+export const resources = [...base, ...ampResources, ...lookup, ...geochronologyResources, ...criticalMineral]
 
 // ============= EOF =============================================

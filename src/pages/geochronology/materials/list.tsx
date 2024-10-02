@@ -21,61 +21,36 @@ import React from "react";
 
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 
-import type {IEquipment} from "../../interfaces";
+import type {IMaterial} from "../../../interfaces/geochronology";
 import {Chip} from "@mui/material";
+import {settings} from "../../../settings";
 
-export const EquipmentList: React.FC = () => {
-    const {dataGridProps} = useDataGrid<IEquipment>();
 
-    const columns = React.useMemo<GridColDef<IEquipment>[]>(
+export const MaterialList: React.FC = () => {
+    const {dataGridProps} = useDataGrid<IMaterial>();
+
+    const columns = React.useMemo<GridColDef<IMaterial>[]>(
         () => [
-            {field: 'ID',
+            {field: 'id',
                 headerName: 'ID',
-                type: 'number',
+                type: 'integer',
                 minWidth: 50
             },
             {
-                field: "PointID",
-                headerName: "PointID",
+                field: "name",
+                headerName: "Name",
                 type: "string",
-                minWidth: 150,
+                minWidth: 300,
             },
-            {
-                field: "EquipmentType",
-                headerName: "EquipmentType",
-                type: "string",
-                minWidth: 150,
-            },
-            {
-                field: "Model",
-                headerName: "Model",
-                type: "string",
-                minWidth: 150,
-            },
-            {
-              field: "SerialNo",
-                headerName: "SerialNumber",
-                type: "string",
-            },
-            {
-              field: 'DateInstalled',
-                headerName: 'DateInstalled',
-                type: 'string',
-            },
-            {
-                field: 'DateRemoved',
-                headerName: 'DateRemoved',
-                type: 'string',
-                flex: 1
-            },
+
             {
                 field: "actions",
                 headerName: "Actions",
                 renderCell: function render({row}) {
                     return (
                         <>
-                            <EditButton hideText recordItemId={row.PointID}/>
-                            <ShowButton hideText recordItemId={row.PointID}/>
+                            <EditButton hideText recordItemId={row.id}/>
+                            <ShowButton hideText recordItemId={row.id}/>
                         </>
                     );
                 },
@@ -91,8 +66,8 @@ export const EquipmentList: React.FC = () => {
         <List>
             <DataGrid
                 {...dataGridProps}
-                rowHeight={40}
-                getRowId={(row) => row.ID}
+                rowHeight={settings.rowHeight}
+                getRowId={(row) => row.id}
                 columns={columns}
                 autoHeight
             />

@@ -19,7 +19,7 @@ import React from "react";
 
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 
-import type {IMeasuringAgency, ILookupTable } from "../interfaces";
+import type {IMeasuringAgency, ILookupTable } from "../interfaces/amp";
 
 export const MeasuringAgencyList: React.FC = () => {
     const { dataGridProps } = useDataGrid<IMeasuringAgency>();
@@ -51,7 +51,7 @@ export const MeasuringAgencyList: React.FC = () => {
             {
                 field: 'id',
                 headerName: 'ID',
-                type: 'number',
+                type: 'integer',
                 minWidth: 150,
             }
         ],

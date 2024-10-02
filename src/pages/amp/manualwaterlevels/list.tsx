@@ -4,10 +4,12 @@ import React from "react";
 
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 
-import type { ICategory, IWell } from "../../interfaces";
+import type { IManualWaterLevel } from "../../../interfaces/amp";
+import {publicReleaseChip} from "../../../components/util";
+import {settings} from "../../../settings";
 
-export const WellList: React.FC = () => {
-  const { dataGridProps } = useDataGrid<IWell>();
+export const ManualWaterLevelList: React.FC = () => {
+  const { dataGridProps } = useDataGrid<IManualWaterLevel>();
 
   // const categoryIds = dataGridProps.rows.map((item) => item.category.id);
   // const { data: categoriesData, isLoading } = useMany<ICategory>({
@@ -18,32 +20,26 @@ export const WellList: React.FC = () => {
   //   },
   // });
 
-  const columns = React.useMemo<GridColDef<IWell>[]>(
+  const columns = React.useMemo<GridColDef<IManualWaterLevel>[]>(
     () => [
+
       {
-        field: "PointID",
+        field: "OBJECTID",
         headerName: "ID",
         type: "string",
-        minWidth: 150,
+        minWidth: 50,
       },
-        {
-            field: "OSEWellID",
-            headerName: "OSEWellID",
-            type: "string",
-            minWidth: 150,
-        },
-        {
-            field: "OSEWelltagID",
-            headerName: "OSEWelltagID",
-            type: "string",
-            minWidth: 150,
-        },
-        {
-            field: "formation",
-            headerName: "Formation",
-            type: "string",
-            minWidth: 150,
-        },
+        {field: 'PointID', headerName: 'Point ID', minWidth: 50},
+        {field: 'DateMeasured', headerName: 'Measurement Date', minWidth: 150},
+        {field: 'DepthToWaterBGS', headerName: 'Depth to Water BGS (ft)', minWidth: 165},
+        {field: 'PublicRelease', headerName: 'Public Release',
+          renderCell: publicReleaseChip, minWidth: 120},
+        {field: 'MeasuringAgency', headerName: 'Measuring Agency', minWidth: 150},
+        {field: 'LevelStatus', headerName: 'Status', minWidth: 50},
+        {field: 'DataQuality', headerName: 'Data Quality', minWidth: 50},
+        {field: 'DataSource', headerName: 'Data Source', minWidth: 50},
+        {field: 'MeasuredBy', headerName: 'MeasuredBy', minWidth: 50},
+        {field: 'SiteNotes', headerName: 'Notes', minWidth: 50},
       // {
       //   field: "SiteID",
       //   headerName: "Site ID",
@@ -91,8 +87,8 @@ export const WellList: React.FC = () => {
   return (
     <List>
       <DataGrid {...dataGridProps}
-                rowHeight={25}
-                getRowId={(row) => row.PointID}
+                rowHeight={settings.rowHeight}
+                getRowId={(row) => row.OBJECTID}
                 columns={columns} autoHeight />
     </List>
   );
