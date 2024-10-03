@@ -7,18 +7,19 @@ import { useForm } from "@refinedev/react-hook-form";
 
 import { Controller } from "react-hook-form";
 
-import type { ILocation, ICategory, IStatus, Nullable } from "../../../interfaces/amp";
+import type { IManualWaterLevel } from "../../../interfaces/amp";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import {Switch} from "@mui/material";
+import {Nullable} from "../../../interfaces";
 
-export const LocationEdit: React.FC = () => {
+export const ManualWaterLevelsEdit: React.FC = () => {
   const {
     saveButtonProps,
     refineCore: { query: queryResult },
     register,
     control,
     formState: { errors },
-  } = useForm<ILocation, HttpError, Nullable<ILocation>>();
+  } = useForm<IManualWaterLevel, HttpError, Nullable<IManualWaterLevel>>();
 
   // const { autocompleteProps } = useAutocomplete<ICategory>({
   //   resource: "categories",
@@ -45,17 +46,7 @@ export const LocationEdit: React.FC = () => {
           autoFocus
           InputLabelProps={{ shrink: true }}
         />
-          <TextField
-              {...register("SiteID", {})}
-              error={!!errors.SiteID}
-              helperText={errors.SiteID?.message}
-              margin="normal"
-              fullWidth
-              label="SiteID"
-              name="SiteID"
-              autoFocus
-              InputLabelProps={{ shrink: true }}
-          />
+
         <Controller
             control={control}
             render={({field: {onChange, value}})=>{

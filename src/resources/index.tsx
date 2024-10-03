@@ -20,7 +20,7 @@ import Cable from '@mui/icons-material/Cable';
 import Water from '@mui/icons-material/Water';
 import WaterDropOutlined from '@mui/icons-material/WaterDropOutlined';
 import CookieOutlined from '@mui/icons-material/CookieOutlined';
-
+import PersonOutlined from '@mui/icons-material/PersonOutlined';
 import AccessTime from '@mui/icons-material/AccessTime';
 import Diamond from '@mui/icons-material/Diamond';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
@@ -131,9 +131,19 @@ let lookup = lookupKeys.map((l) => {
 })
 
 const geochronology = [
+    {name: 'principal_investigators',
+        list: '/geochronology/principal_investigators',
+        show: '/geochronology/principal_investigators/show/:id',
+        create: '/geochronology/principal_investigators/create',
+        icon: <PersonOutlined/>,
+        meta: {'parent': 'geochronology',
+            label: 'Principal Investigators',
+            'dataProviderName': 'geochronology'}
+    },
     {name: 'projects',
         list: '/geochronology/projects',
         show: '/geochronology/projects/show/:id',
+        create: '/geochronology/projects/create',
         icon: <CategoryOutlined/>,
         meta: {'parent': 'geochronology',
                 'dataProviderName': 'geochronology'}
@@ -141,12 +151,14 @@ const geochronology = [
     {name: 'materials',
         list: '/geochronology/materials',
         show: '/geochronology/materials/show/:id',
+        create: '/geochronology/materials/create',
         icon: <Science/>,
 
     },
     {name: 'samples',
         list: '/geochronology/samples',
         show: '/geochronology/samples/show/:id',
+        create: '/geochronology/samples/create',
         icon: <CookieOutlined/>,
 
     },

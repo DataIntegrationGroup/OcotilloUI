@@ -87,6 +87,7 @@ export const ManualWaterLevelList: React.FC = () => {
   return (
     <List>
       <DataGrid {...dataGridProps}
+                filterDebounceMs={settings.filterDebounceMs}
                 rowHeight={settings.rowHeight}
                 getRowId={(row) => row.OBJECTID}
                 columns={columns} autoHeight />

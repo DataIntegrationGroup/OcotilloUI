@@ -7,9 +7,11 @@ import { useForm } from "@refinedev/react-hook-form";
 
 import { Controller } from "react-hook-form";
 
-import type { ILocation, ICategory, IStatus, Nullable } from "../../../interfaces/amp";
+import type { ILocation} from "../../../interfaces/amp";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import {Switch} from "@mui/material";
+import {Nullable} from "../../../interfaces";
+
 
 export const LocationEdit: React.FC = () => {
   const {

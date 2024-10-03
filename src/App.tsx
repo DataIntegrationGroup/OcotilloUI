@@ -66,10 +66,27 @@ import {LookupTableList, MeasuringAgencyList} from "./components/lookuptable";
 import {resources} from "./resources";
 import {ColorModeContextProvider} from "./contexts";
 import {accessControlProvider} from "./providers/access-control-provider";
-import {ManualWaterLevelList, ManualWaterLevelShow} from "./pages/amp/manualwaterlevels";
+import {
+    ManualWaterLevelList,
+    ManualWaterLevelsCreate,
+    ManualWaterLevelsEdit,
+    ManualWaterLevelShow
+} from "./pages/amp/manualwaterlevels";
 import {Home} from "./pages/home";
 import {WaterDashboard} from "./pages/amp/dashboard";
 import {Querybuilder} from "./pages/amp/querybuilder";
+
+import {ProjectList, ProjectShow, ProjectCreate} from "./pages/geochronology/projects";
+import {geochronologyDataProvider} from "./providers/geochronology-data-provider";
+import {SampleList, SampleShow, SampleCreate} from "./pages/geochronology/samples";
+import {MaterialList, MaterialShow, MaterialCreate} from "./pages/geochronology/materials";
+
+import {
+    PrincipalInvestigatorCreate,
+    PrincipalInvestigatorList,
+    PrincipalInvestigatorShow
+} from "./pages/geochronology/principal_investigators";
+
 
 const lookupRoutes = [
     "measurement_method",
@@ -79,13 +96,7 @@ const lookupRoutes = [
 ];
 
 
-import {ProjectList} from "./pages/geochronology/projects";
-import {geochronologyDataProvider} from "./providers/geochronology-data-provider";
-import {SampleList} from "./pages/geochronology/samples";
-import {MaterialList} from "./pages/geochronology/materials";
-import {ProjectShow} from "./pages/geochronology/projects/show";
-import {MaterialShow} from "./pages/geochronology/materials/show";
-import {SampleShow} from "./pages/geochronology/samples/show";
+
 
 const App: React.FC = () => {
     const customTitleHandler = ({
@@ -212,8 +223,8 @@ const App: React.FC = () => {
                                         </Route>
                                         <Route path="/manualwaterlevels">
                                             <Route index element={<ManualWaterLevelList />}/>
-                                            {/*<Route path="create" element={<PostCreate />} />*/}
-                                            {/*<Route path="edit/:id" element={<PostEdit />} />*/}
+                                            <Route path="create" element={<ManualWaterLevelsCreate />} />
+                                            <Route path="edit/:id" element={<ManualWaterLevelsEdit />} />
                                             <Route path="show/:id" element={<ManualWaterLevelShow />}/>
                                         </Route>
 
@@ -229,20 +240,28 @@ const App: React.FC = () => {
 
                                         //geochronology routes
                                         <Route path="/geochronology">
+                                            <Route path="principal_investigators">
+                                                <Route index element={<PrincipalInvestigatorList/>}/>
+                                                <Route path="create" element={<PrincipalInvestigatorCreate/>}/>
+                                                {/*<Route path="edit/:id" element={<LocationEdit/>}/>*/}
+                                                <Route path="show/:id" element={<PrincipalInvestigatorShow/>}/>
+                                            </Route>
                                             <Route path="projects">
                                                 <Route index element={<ProjectList/>}/>
-                                                {/*<Route path="create" element={<LocationCreate/>}/>*/}
-                                                {/*<Route path="edit/:id" element={<LocationEdit/>}/>*/}
+                                                <Route path="create" element={<ProjectCreate/>}/>
+                                                {/*<Route path="edit/:id" element={<ProjectEdit/>}/>*/}
                                                 <Route path="show/:id" element={<ProjectShow/>}/>
                                             </Route>
                                             <Route path="samples">
                                                 <Route index element={<SampleList/>}/>
-                                            {/*    <Route path="create" element={<LocationCreate/>}/>*/}
-                                            {/*    <Route path="edit/:id" element={<LocationEdit/>}/>*/}
+                                                <Route path="create" element={<SampleCreate/>}/>
+                                            {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
                                                 <Route path="show/:id" element={<SampleShow/>}/>
                                             </Route>
                                             <Route path='materials'>
                                                 <Route index element={<MaterialList/>}/>
+                                                <Route path="create" element={<MaterialCreate/>}/>
+                                                {/*<Route path="edit/:id" element={<MaterialEdit/>}/>*/}
                                                 <Route path="show/:id" element={<MaterialShow/>}/>
                                             </Route>
                                         </Route>

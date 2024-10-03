@@ -7,15 +7,17 @@ import { useForm } from "@refinedev/react-hook-form";
 
 import { Controller } from "react-hook-form";
 
-import type { ILocation, ICategory, IStatus, Nullable } from "../../../interfaces/amp";
+import type { IManualWaterLevel,  } from "../../../interfaces/amp";
+import {Nullable} from "../../../interfaces";
 
-export const LocationCreate: React.FC = () => {
+
+export const ManualWaterLevelsCreate: React.FC = () => {
   const {
     saveButtonProps,
     register,
     control,
     formState: { errors },
-  } = useForm<ILocation, HttpError, Nullable<ILocation>>();
+  } = useForm<IManualWaterLevel, HttpError, Nullable<IManualWaterLevel>>();
 
   // const { autocompleteProps } = useAutocomplete<ICategory>({
   //   resource: "categories",
@@ -40,18 +42,7 @@ export const LocationCreate: React.FC = () => {
           name="PointID"
           autoFocus
         />
-          <TextField
-              {...register("SiteID", {
-                  required: "This field is required",
-              })}
-              error={!!errors.SiteID}
-              helperText={errors.SiteID?.message}
-              margin="normal"
-              fullWidth
-              label="SiteID"
-              name="SiteID"
-              autoFocus
-          />
+
         {/*<Controller*/}
         {/*  control={control}*/}
         {/*  name="status"*/}

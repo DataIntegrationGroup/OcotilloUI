@@ -7,7 +7,9 @@ import { useForm } from "@refinedev/react-hook-form";
 
 import { Controller } from "react-hook-form";
 
-import type { ILocation, ICategory, IStatus, Nullable } from "../../../interfaces/amp";
+import type { ILocation } from "../../../interfaces/amp";
+import {Nullable} from "../../../interfaces";
+
 
 export const LocationCreate: React.FC = () => {
   const {

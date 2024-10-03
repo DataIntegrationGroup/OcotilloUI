@@ -17,12 +17,14 @@
 export interface IPrincipalInvestigator {
     id: number;
     name: string;
+    first_initial: string;
+    last_name: string;
 }
 
 export interface IProject {
     id: number;
     name: string;
-    principalInvestigator: IPrincipalInvestigator;
+    principal_investigator: IPrincipalInvestigator;
 }
 
 export interface ISample {
@@ -30,6 +32,8 @@ export interface ISample {
     name: string;
     project: IProject;
     material: IMaterial;
+    latitude: number;
+    longitude: number;
 }
 
 export interface IMaterial {

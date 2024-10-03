@@ -25,6 +25,7 @@ import GeocoderControl from "./GeocoderControl.jsx";
 const mapboxToken = "pk.eyJ1IjoiamFrZXJvc3N3ZGkiLCJhIjoiY2s3M3ZneGl4MGhkMDNrcjlocmNuNWg4bCJ9.4r1DRDQ_ja0fV2nnmlVT0A"
 
 const MapComponent = ({children,
+                         onClick,
                           showDrawControls={show: true, position: "top-right"},
                           showNavigation = { show: true, position: "top-right" },
                             showGeocoder={show: true, position: "top-left" },
@@ -47,9 +48,7 @@ const MapComponent = ({children,
                 ref={mapRef}
                 mapboxAccessToken={mapboxToken}
                 initialViewState={initialViewState}
-                // onClick={(e) => (
-                //     console.log('map click', e)
-                // )}
+                onClick={onClick}
                 // fog={{
                 //   range: [0.8, 8],
                 //   // "color": "#f3dddd",

@@ -40,20 +40,41 @@ export const geochronologyDataProvider: DataProvider = {
         const params = new URLSearchParams();
 
         if (pagination) {
-            params.append("page", pagination.current.toString());
-            params.append("size", pagination.pageSize.toString());
+            if (meta?.pagination) {
+                params.append("page", meta.pagination.current.toString());
+                params.append("size", meta.pagination.pageSize.toString());
+            } else {
+                params.append("page", pagination.current.toString());
+                params.append("size", pagination.pageSize.toString());
+            }
         }
 
         if (sorters && sorters.length > 0) {
             params.append("sort", sorters.map((sorter) => sorter.field).join(","));
             params.append("order", sorters.map((sorter) => sorter.order).join(","));
         }
-
+        let convert_title = false
+        if (['principal_investigators', 'projects', 'materials'].includes(resource)) {
+            convert_title = true
+        }
         if (filters && filters.length > 0) {
             filters.forEach((filter) => {
+                if (filter['field'] == 'title' && convert_title) {
+                    if (resource=='principal_investigators') {
+                        filter['field'] = 'last_name'
+                    }
+                    if (resource=='projects') {
+                        filter['field'] = 'name'
+                    }
+                    if (resource=='materials') {
+                        filter['field'] = 'name'
+                    }
+                }
+
                 params.append('filter', JSON.stringify(filter));
             });
         }
+
 
         const response = await fetcher(`${resource}?${params.toString()}`);
         if (response.status < 200 || response.status > 299) throw response;
@@ -61,7 +82,7 @@ export const geochronologyDataProvider: DataProvider = {
 
         let data;
         let total;
-        if (['projects', 'samples', 'materials', 'manualwaterlevels'].includes(resource)) {
+        if (['projects', 'samples', 'materials', 'principal_investigators'].includes(resource)) {
             data = resp.items;
             total = resp.total;
         } else {
