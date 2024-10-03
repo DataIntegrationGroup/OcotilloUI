@@ -86,6 +86,7 @@ import {
     PrincipalInvestigatorList,
     PrincipalInvestigatorShow
 } from "./pages/geochronology/principal_investigators";
+import {GeochronologyDashboard} from "./pages/geochronology/dashboard";
 
 
 const lookupRoutes = [
@@ -203,43 +204,48 @@ const App: React.FC = () => {
                                     >
 
                                         <Route index element={<Home/>}/>
-                                        <Route path="/dashboard" element={<WaterDashboard />}/>
-                                        <Route path="/querybuilder" element={<Querybuilder />}/>
-                                        <Route path="/wells">
-                                            <Route index element={<WellList/>}/>
-                                            {/*<Route path="create" element={<PostCreate />} />*/}
-                                            <Route path="edit/:id" element={<WellEdit/>}/>
-                                            <Route path="show/:id" element={<WellShow/>}/>
-                                        </Route>
-                                        <Route path="/locations">
-                                            <Route index element={<LocationList/>}/>
-                                            <Route path="create" element={<LocationCreate/>}/>
-                                            <Route path="edit/:id" element={<LocationEdit/>}/>
-                                            <Route path="show/:id" element={<LocationShow/>}/>
-                                        </Route>
-                                        <Route path="/equipment">
-                                            <Route index element={<EquipmentList />}/>
-                                            <Route path="show/:id" element={<EquipmentShow />}/>
-                                        </Route>
-                                        <Route path="/manualwaterlevels">
-                                            <Route index element={<ManualWaterLevelList />}/>
-                                            <Route path="create" element={<ManualWaterLevelsCreate />} />
-                                            <Route path="edit/:id" element={<ManualWaterLevelsEdit />} />
-                                            <Route path="show/:id" element={<ManualWaterLevelShow />}/>
-                                        </Route>
-
-
-                                        {lookupRoutes.map((route) => (
-                                            <Route path={`/lu_${route}`}>
-                                                <Route index element={<LookupTableList/>}/>
+                                        // amp routes
+                                        <Route path="/amp">
+                                            <Route path="dashboard" element={<WaterDashboard />}/>
+                                            <Route path="querybuilder" element={<Querybuilder />}/>
+                                            <Route path="wells">
+                                                <Route index element={<WellList/>}/>
+                                                {/*<Route path="create" element={<PostCreate />} />*/}
+                                                <Route path="edit/:id" element={<WellEdit/>}/>
+                                                <Route path="show/:id" element={<WellShow/>}/>
                                             </Route>
-                                        ))}
-                                        <Route path={`/lu_measuring_agency`}>
-                                            <Route index element={<MeasuringAgencyList />}/>
+                                            <Route path="locations">
+                                                <Route index element={<LocationList/>}/>
+                                                <Route path="create" element={<LocationCreate/>}/>
+                                                <Route path="edit/:id" element={<LocationEdit/>}/>
+                                                <Route path="show/:id" element={<LocationShow/>}/>
+                                            </Route>
+                                            <Route path="equipment">
+                                                <Route index element={<EquipmentList />}/>
+                                                <Route path="show/:id" element={<EquipmentShow />}/>
+                                            </Route>
+                                            <Route path="manualwaterlevels">
+                                                <Route index element={<ManualWaterLevelList />}/>
+                                                <Route path="create" element={<ManualWaterLevelsCreate />} />
+                                                <Route path="edit/:id" element={<ManualWaterLevelsEdit />} />
+                                                <Route path="show/:id" element={<ManualWaterLevelShow />}/>
+                                            </Route>
+
+
+                                            {lookupRoutes.map((route) => (
+                                                <Route path={`lu_${route}`}>
+                                                    <Route index element={<LookupTableList/>}/>
+                                                </Route>
+                                            ))}
+                                            <Route path={`lu_measuring_agency`}>
+                                                <Route index element={<MeasuringAgencyList />}/>
+                                            </Route>
                                         </Route>
+
 
                                         //geochronology routes
                                         <Route path="/geochronology">
+                                            <Route path="dashboard" element={<GeochronologyDashboard />}/>
                                             <Route path="principal_investigators">
                                                 <Route index element={<PrincipalInvestigatorList/>}/>
                                                 <Route path="create" element={<PrincipalInvestigatorCreate/>}/>

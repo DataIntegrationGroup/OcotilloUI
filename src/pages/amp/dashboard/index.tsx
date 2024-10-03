@@ -14,10 +14,12 @@
 // limitations under the License.
 // ===============================================================================
 
+import Typography from "@mui/material/Typography";
+
 export const WaterDashboard = () => {
     return (
         <div>
-            <h1>Dashboard</h1>
+            <Typography variant={'h3'}>Water Dashboard</Typography>
         </div>
     )
 }

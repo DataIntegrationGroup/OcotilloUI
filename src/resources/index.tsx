@@ -48,7 +48,7 @@ let base = [{name: 'Water',
 let amp = [
     {
         name: 'dashboard',
-        list: '/dashboard',
+        list: '/amp/dashboard',
         meta: {
             label: "Dashboard",
             icon: <DashboardOutlined />,
@@ -56,7 +56,7 @@ let amp = [
     },
     {
         name: 'querybuilder',
-        list: '/querybuilder',
+        list: '/amp/querybuilder',
         meta: {
             label: "Query Builder",
             icon: <Construction />,
@@ -65,33 +65,33 @@ let amp = [
     {
         name: "locations",
         icon: <Place/>,
-        list: "/locations",
-        edit: "/locations/edit/:id",
-        show: "/locations/show/:id",
-        create: "/locations/create",
+        list: "/amp/locations",
+        edit: "/amp/locations/edit/:id",
+        show: "/amp/locations/show/:id",
+        create: "/amp/locations/create",
     },
     {
         name: "wells",
         icon: <Plumbing/>,
-        list: "/wells",
-        edit: "/wells/edit/:id",
-        show: "/wells/show/:id",
-        create: "/wells/create",
+        list: "/amp/wells",
+        edit: "/amp/wells/edit/:id",
+        show: "/amp/wells/show/:id",
+        create: "/amp/wells/create",
     },
     {
         name: 'equipment',
         icon: <Cable/>,
-        list: "/equipment",
-        edit: "/equipment/edit/:id",
-        create: "/equipment/create",
-        show: "/equipment/show/:id",
+        list: "/amp/equipment",
+        edit: "/amp/equipment/edit/:id",
+        create: "/amp/equipment/create",
+        show: "/amp/equipment/show/:id",
     },
     {
         name: 'manualwaterlevels',
-        list: '/manualwaterlevels',
-        edit: '/manualwaterlevels/edit/:id',
-        create: '/manualwaterlevels/create',
-        show: '/manualwaterlevels/show/:id',
+        list: '/amp/manualwaterlevels',
+        edit: '/amp/manualwaterlevels/edit/:id',
+        create: '/amp/manualwaterlevels/create',
+        show: '/amp/manualwaterlevels/show/:id',
         icon: <Water/>,
         meta: {
             label: "Manual Water Levels",
@@ -123,7 +123,7 @@ let lookupKeys = ['level_status', 'measurement_method', 'data_quality', 'measuri
 let lookup = lookupKeys.map((l) => {
     return {
         name: l,
-        list: `/lu_${l}`,
+        list: `/amp/lu_${l}`,
         meta: {
             parent: 'LookupTables'
         }
@@ -131,6 +131,14 @@ let lookup = lookupKeys.map((l) => {
 })
 
 const geochronology = [
+    {
+        name: 'dashboard',
+        list: '/geochronology/dashboard',
+        meta: {
+            label: "Dashboard",
+            icon: <DashboardOutlined />,
+        },
+    },
     {name: 'principal_investigators',
         list: '/geochronology/principal_investigators',
         show: '/geochronology/principal_investigators/show/:id',
