@@ -37,6 +37,7 @@ import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip";
 import type { RefineThemedLayoutV2SiderProps } from "@refinedev/mui";
 
+
 export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
   Title: TitleFromProps,
   render,
@@ -52,7 +53,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
 
   const drawerWidth = () => {
     if (siderCollapsed) return 56;
-    return 240;
+    return 300;
   };
 
   const t = useTranslate();
@@ -110,6 +111,8 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
         undefined
       );
 
+      const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0;
+
       if (children.length > 0) {
         return (
           <CanAccess
@@ -120,7 +123,8 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
               resource: item,
             }}
           >
-            <div key={item.key}>
+            <div key={item.key}
+                 >
               <Tooltip
                 title={mlabel ?? name}
                 placement="right"
@@ -139,7 +143,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
                     }
                   }}
                   sx={{
-                    pl: isNested ? 4 : 2,
+                    pl: isNested ? nestedLevel*4 : 2,
                     justifyContent: "center",
                   }}
                 >
@@ -217,7 +221,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
                 setMobileSiderOpen(false);
               }}
               sx={{
-                pl: isNested ? 4 : 2,
+                pl: isNested ? nestedLevel * 4 : 2,
                 py: isNested ? 1.25 : 1,
                 justifyContent: "center",
                 color: isSelected ? "primary.main" : "text.primary",

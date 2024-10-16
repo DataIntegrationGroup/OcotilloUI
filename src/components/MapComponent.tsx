@@ -16,18 +16,25 @@
 
 import {useContext, useRef} from "react";
 import {Layer, Map, NavigationControl, Popup, Source} from "react-map-gl";
-import {ColorModeContext} from "../contexts";
-import DrawControl from "./DrawControl";
-
+import {ColorModeContext} from "@/contexts";
+import DrawControl from "./DrawControl.jsx";
 import "mapbox-gl/dist/mapbox-gl.css";
 import GeocoderControl from "./GeocoderControl.jsx";
+import {ControlPosition} from "react-map-gl";
 
 const mapboxToken = "pk.eyJ1IjoiamFrZXJvc3N3ZGkiLCJhIjoiY2s3M3ZneGl4MGhkMDNrcjlocmNuNWg4bCJ9.4r1DRDQ_ja0fV2nnmlVT0A"
 
-const MapComponent = ({children,
+interface MapComponentProps {
+    children?: any;
+    onClick?: any;
+    showDrawControls?: {show: boolean, position: ControlPosition};
+    showNavigation?: {show: boolean, position: ControlPosition};
+    showGeocoder?: {show: boolean, position: ControlPosition};
+}
+const MapComponent: React.FC<MapComponentProps> = ({children,
                          onClick,
                           showDrawControls={show: true, position: "top-right"},
-                          showNavigation = { show: true, position: "top-right" },
+                          showNavigation = { show: true, position: "top-right" as ControlPosition},
                             showGeocoder={show: true, position: "top-left" },
                       }) => {
 
@@ -58,7 +65,7 @@ const MapComponent = ({children,
                 //   "star-intensity": 0.95,
                 // }}
                 terrain={{source: "mapbox-dem", exaggeration: 3}}
-                projection={"globe"}
+                // projection={"globe"}
                 style={style}
                 mapStyle={mapStyle}
                 // onMouseMove={onMouseMove}

@@ -19,23 +19,78 @@ import type {DataProvider} from "@refinedev/core";
 import {getAccessToken} from "./fief-provider";
 
 // const API_URL = "https://waterdata.nmt.edu/authorized";
-const API_URL = "http://localhost:8009/authorized";
+const API_URL = "http://localhost:8009/latest/authorized";
 
+import axios, {AxiosInstance, AxiosRequestConfig} from "axios";
+import createAuthRefreshInterceptor from 'axios-auth-refresh';
 
-export const fetcher = async (url: string, options?: RequestInit) => {
+export const axiosInstance: AxiosInstance = axios.create();
 
-    // const auth = sessionStorage.getItem("fief-authstate");
-    // const token = auth ? JSON.parse(auth).tokenInfo.access_token : "";
-    const token = getAccessToken();
+axiosInstance.interceptors.request.use(
+    async (config) => {
+        const token = await getAccessToken();
+        config.headers.Authorization = `Bearer ${token}`;
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    },
+);
 
-    return fetch(`${API_URL}/${url}`, {
-        ...options,
-        headers: {
-            ...options?.headers,
-            Authorization: `Bearer ${token}`,
-        },
-    });
+const refreshAuthLogic = async (failedRequest) => {
+    const token = getAccessToken(true);
+    failedRequest.response.config.headers['Authorization'] = 'Bearer ' + token;
+    return Promise.resolve();
+};
+
+createAuthRefreshInterceptor(axiosInstance, refreshAuthLogic);
+
+export const fetcher = async (url: string, config?: AxiosRequestConfig) => {
+    config = config || {};
+    config['method'] = 'GET';
+    return axiosCall(url,  config);
 }
+
+export const axiosCall = async (url: string, options: AxiosRequestConfig) => {
+    const config = {url: `${API_URL}/${url}`, ...options};
+    return axiosInstance(config);
+}
+
+
+const getPhotos = async (id) => {
+    const response = await fetcher(`wells/photos?pointid=${id}`);
+    console.log('getPhotos', response);
+    if (response.status < 200 || response.status > 299) throw response;
+
+    const data = await response.data;
+
+    console.log('asdfasdf', data)
+    let photos = await Promise.all(
+        data.map(async (photo) => {
+            try {
+                const resp = await fetcher(
+                        `wells/photo/${photo.OLEPath}`);
+                console.log('getPhoto', resp);
+
+                return {
+                    key: photo.OLEPath,
+                    src: URL.createObjectURL(await resp.data),
+                    caption: photo.OLEPath,
+                };
+            } catch (e) {
+                console.log("getPhoto error:", e);
+                return {
+                    key: photo.OLEPath,
+                    src: '',
+                    caption: photo.OLEPath,
+                };
+            }
+        }),
+    );
+
+    return {data: photos};
+}
+
 
 export const ampDataProvider: DataProvider = {
     getList: async ({resource, pagination, filters, sorters, meta}) => {
@@ -53,16 +108,11 @@ export const ampDataProvider: DataProvider = {
 
         if (filters && filters.length > 0) {
             filters.forEach((filter) => {
-                // if ("field" in filter && filter.operator === "eq") {
-                //     // Our fake API supports "eq" operator by simply appending the field name and value to the query string.
-                //     params.append(filter.field, filter.value);
-                // }
                 params.append('filter', JSON.stringify(filter));
             });
         }
 
-        let url;
-        console.log('getList', params.toString());
+        let url: string;
         if (['formations', 'level_status',
             'measurement_method', 'data_quality',
             'measuring_agency', 'data_source'].includes(resource)) {
@@ -72,19 +122,19 @@ export const ampDataProvider: DataProvider = {
         }
 
         const response = await fetcher(`${url}?${params.toString()}`);
-
         if (response.status < 200 || response.status > 299) throw response;
 
-        const resp = await response.json();
         let data;
         let total;
         if (['wells', 'locations', 'equipment', 'manualwaterlevels'].includes(resource)) {
-            data = resp.items;
-            total = resp.total;
+            data = response.data.items;
+            total = response.data.total;
         } else {
-            data = resp;
+            data = response.data;
             total = data.length;
         }
+        console.log('getList', resource, total, data);
+
         return {
             data,
             total,
@@ -103,23 +153,35 @@ export const ampDataProvider: DataProvider = {
 
         if (response.status < 200 || response.status > 299) throw response;
 
-        const data = await response.json();
-
-        return {data};
+        return await response.data;
     },
     getOne: async ({resource, id, meta}) => {
-        const response = await fetcher(`${resource}/${id}`);
+        if (resource=='photos') {
+            console.log('asdfasdffgetasdfsdf', id)
+            return await getPhotos(id)
+        }
+
+        let url;
+        if (resource=='dashboard') {
+            url = `tabular/dashboard`;
+        }
+        else{
+            url = `tabular/${resource}/${id}`;
+        }
+
+        console.log('getOne', url, resource, id, meta);
+        const response = await fetcher(url);
 
         if (response.status < 200 || response.status > 299) throw response;
 
-        const data = await response.json();
-        console.log('getOne', data);
+        const data = await response.data;
+        console.log('getOne data', data);
         return {data};
     },
     create: async ({resource, variables}) => {
-        const response = await fetcher(`${resource}`, {
+        const response = await axiosCall(`${resource}`, {
             method: "POST",
-            body: JSON.stringify(variables),
+            data: JSON.stringify(variables),
             headers: {
                 "Content-Type": "application/json",
             },
@@ -127,14 +189,14 @@ export const ampDataProvider: DataProvider = {
 
         if (response.status < 200 || response.status > 299) throw response;
 
-        const data = await response.json();
+        const data = await response.data;
 
         return {data};
     },
     update: async ({resource, id, variables}) => {
-        const response = await fetcher(`${resource}/${id}`, {
+        const response = await axiosCall(`${resource}/${id}`, {
             method: "PATCH",
-            body: JSON.stringify(variables),
+            data: JSON.stringify(variables),
             headers: {
                 "Content-Type": "application/json",
             },
@@ -142,7 +204,7 @@ export const ampDataProvider: DataProvider = {
 
         if (response.status < 200 || response.status > 299) throw response;
 
-        const data = await response.json();
+        const data = await response.data;
 
         return {data};
     },

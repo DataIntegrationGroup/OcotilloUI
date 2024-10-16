@@ -19,6 +19,7 @@ import {
 import {sha256} from "js-sha256";
 
 import {Fief, browser} from '@fief/fief'
+import {jwtDecode} from "jwt-decode";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -44,8 +45,16 @@ export const getAuthState = () => {
     }
 }
 
-export const getAccessToken = () => {
+export const getAccessToken = async (refresh: boolean=false) => {
     const authstate = getAuthState()
+    if (refresh) {
+        console.debug('refreshing token')
+        const refresh_token = authstate?.tokenInfo.refresh_token
+        const [tokenInfo, userinfo] = await fiefClient.authRefreshToken(refresh_token)
+        sessionStorage.setItem('fief-authstate', JSON.stringify({tokenInfo, userinfo}))
+        return tokenInfo.access_token
+    }
+
     return authstate?.tokenInfo.access_token
 }
 
@@ -73,7 +82,8 @@ export const authProvider: AuthProvider = {
 
         if (providerName === "fief") {
             localStorage.setItem("email", email);
-            await fiefAuth.redirectToLogin(`${window.location.protocol}//${window.location.host}/callback`);
+            await fiefAuth.redirectToLogin(`${window.location.protocol}//${window.location.host}/callback`,
+                {scope: ['offline_access', 'openid']});
             return {
                 success: true,
             };
@@ -88,52 +98,52 @@ export const authProvider: AuthProvider = {
         };
     },
 
-    register: async (params) => {
-        if (params.email === authCredentials.email && params.password) {
-            localStorage.setItem("email", params.email);
-            return {
-                success: true,
-                redirectTo: "/",
-            };
-        }
-        return {
-            success: false,
-            error: {
-                message: "Register failed",
-                name: "Invalid email or password",
-            },
-        };
-    },
-    updatePassword: async (params) => {
-        if (params.password === authCredentials.password) {
-            //we can update password here
-            return {
-                success: true,
-            };
-        }
-        return {
-            success: false,
-            error: {
-                message: "Update password failed",
-                name: "Invalid password",
-            },
-        };
-    },
-    forgotPassword: async (params) => {
-        if (params.email === authCredentials.email) {
-            //we can send email with reset password link here
-            return {
-                success: true,
-            };
-        }
-        return {
-            success: false,
-            error: {
-                message: "Forgot password failed",
-                name: "Invalid email",
-            },
-        };
-    },
+    // register: async (params) => {
+    //     if (params.email === authCredentials.email && params.password) {
+    //         localStorage.setItem("email", params.email);
+    //         return {
+    //             success: true,
+    //             redirectTo: "/",
+    //         };
+    //     }
+    //     return {
+    //         success: false,
+    //         error: {
+    //             message: "Register failed",
+    //             name: "Invalid email or password",
+    //         },
+    //     };
+    // },
+    // updatePassword: async (params) => {
+    //     if (params.password === authCredentials.password) {
+    //         //we can update password here
+    //         return {
+    //             success: true,
+    //         };
+    //     }
+    //     return {
+    //         success: false,
+    //         error: {
+    //             message: "Update password failed",
+    //             name: "Invalid password",
+    //         },
+    //     };
+    // },
+    // forgotPassword: async (params) => {
+    //     if (params.email === authCredentials.email) {
+    //         //we can send email with reset password link here
+    //         return {
+    //             success: true,
+    //         };
+    //     }
+    //     return {
+    //         success: false,
+    //         error: {
+    //             message: "Forgot password failed",
+    //             name: "Invalid email",
+    //         },
+    //     };
+    // },
     logout: async () => {
         localStorage.removeItem("email");
         await fiefAuth.logout(`${window.location.protocol}//${window.location.host}/login`);
@@ -144,27 +154,31 @@ export const authProvider: AuthProvider = {
     onError: async (error) => {
         if (error.response?.status === 401) {
             return {
-                logout: true,
+                logout: false,
             };
         }
 
         return {error};
     },
-    check: async () =>
-        localStorage.getItem("email")
-            ? {
-                authenticated: true,
-            }
-            : {
-                authenticated: false,
-                error: {
-                    message: "Check failed",
-                    name: "Not authenticated",
-                },
-                logout: true,
-                redirectTo: "/login",
-            },
-    getPermissions: async () => ["admin"],
+    check: async () => {return {authenticated: true}},
+        // localStorage.getItem("email")
+        //     ? {
+        //         authenticated: true,
+        //     }
+        //     : {
+        //         authenticated: false,
+        //         error: {
+        //             message: "Check failed",
+        //             name: "Not authenticated",
+        //         },
+        //         logout: true,
+        //         redirectTo: "/login",
+        //     },
+    getPermissions: async () => {
+        const access_token = await getAccessToken()
+        const token = jwtDecode(access_token);
+        return token['permissions'] || [];
+    },
     getIdentity: async () => {
         let authstate = getAuthState()
         if (authstate) {

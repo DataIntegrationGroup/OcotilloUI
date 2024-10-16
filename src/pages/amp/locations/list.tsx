@@ -14,18 +14,18 @@
 // limitations under the License.
 // ===============================================================================
 
-import {ShowButton, EditButton, List, useDataGrid} from "@refinedev/mui";
+import {ShowButton, EditButton, List, useDataGrid, ExportButton} from "@refinedev/mui";
 import React from "react";
 
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 
-import type {ILocation} from "../../../interfaces/amp";
-import {publicReleaseChip} from "../../../components/util";
-import {settings} from "../../../settings";
+import type {ILocation} from "@/interfaces/amp";
+import {publicReleaseChip} from "@/components/util";
+import {ListPage} from "@/components/ListPage";
+
 
 export const LocationList: React.FC = () => {
     const {dataGridProps} = useDataGrid<ILocation>();
-
     const columns = React.useMemo<GridColDef<ILocation>[]>(
         () => [
             {
@@ -116,16 +116,6 @@ export const LocationList: React.FC = () => {
         // [categoriesData, isLoading],
     );
 
-    return (
-        <List>
-            <DataGrid
-                {...dataGridProps}
-                rowHeight={settings.rowHeight}
-                getRowId={(row) => row.PointID}
-                columns={columns}
-                autoHeight
-            />
-        </List>
-    );
+    return ( <ListPage columns={columns} dataGridProps={dataGridProps} />);
 };
 // ============= EOF =============================================

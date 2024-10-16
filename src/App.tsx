@@ -87,6 +87,10 @@ import {
     PrincipalInvestigatorShow
 } from "./pages/geochronology/principal_investigators";
 import {GeochronologyDashboard} from "./pages/geochronology/dashboard";
+import {GeothermalDashboard} from "./pages/geothermal/dashboard";
+import {CriticalMineralsDashboard} from "./pages/criticalminerals/dashboard";
+import {ChemUpload} from "src/pages/amp/chemupload";
+import ManualWaterLevelsBatchUpload from "@/pages/amp/manualwaterlevels/batchupload";
 
 
 const lookupRoutes = [
@@ -208,6 +212,8 @@ const App: React.FC = () => {
                                         <Route path="/amp">
                                             <Route path="dashboard" element={<WaterDashboard />}/>
                                             <Route path="querybuilder" element={<Querybuilder />}/>
+                                            <Route path="chemupload" element={<ChemUpload />}/>
+
                                             <Route path="wells">
                                                 <Route index element={<WellList/>}/>
                                                 {/*<Route path="create" element={<PostCreate />} />*/}
@@ -229,6 +235,7 @@ const App: React.FC = () => {
                                                 <Route path="create" element={<ManualWaterLevelsCreate />} />
                                                 <Route path="edit/:id" element={<ManualWaterLevelsEdit />} />
                                                 <Route path="show/:id" element={<ManualWaterLevelShow />}/>
+                                                <Route path="batchupload" element={<ManualWaterLevelsBatchUpload />}/>
                                             </Route>
 
 
@@ -270,6 +277,16 @@ const App: React.FC = () => {
                                                 {/*<Route path="edit/:id" element={<MaterialEdit/>}/>*/}
                                                 <Route path="show/:id" element={<MaterialShow/>}/>
                                             </Route>
+                                        </Route>
+
+                                        //criticalminerals routes
+                                        <Route path='/criticalminerals'>
+                                            <Route path="dashboard" element={<CriticalMineralsDashboard />}/>
+                                        </Route>
+
+                                        //geothermal routes
+                                        <Route path='/geothermal'>
+                                            <Route path="dashboard" element={<GeothermalDashboard />}/>
                                         </Route>
 
                                     </Route>

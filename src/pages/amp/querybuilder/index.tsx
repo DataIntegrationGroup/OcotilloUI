@@ -22,11 +22,6 @@ import { Layer, Map, NavigationControl, Popup, Source } from "react-map-gl";
 import { useAutocomplete } from "@refinedev/mui";
 import { Autocomplete, TextField } from "@mui/material";
 
-import {useForm} from "@refinedev/react-hook-form";
-import {HttpError} from "@refinedev/core";
-import type {Nullable} from "../../../interfaces/amp";
-import {Create} from "@refinedev/mui";
-import {ampDataProvider} from "../../../providers/amp-data-provider";
 // import {Layer, Source} from "mapbox-gl";
 
 // {...register("content", {
@@ -60,6 +55,7 @@ export const Querybuilder: React.FC= () => {
     const [PointID, setPointID] = useState<string>('');
     const [county, setCounty] = useState<ICounty | null>(null);
     const [resultFeatureCollection, setResultFeatureCollection] = useState<any>({type: 'FeatureCollection', features: []})
+    const [countyFeature, setCountyFeature] = useState<any>()
     const {autocompleteProps} = useAutocomplete<ICounty>({
         resource: "counties",
     });
@@ -95,9 +91,16 @@ export const Querybuilder: React.FC= () => {
         }
 
         let url = `tabular/locations?${params.toString()}`
-        fetcher(url).then((response) => {return response.json()}).then((data) => {
+        fetcher(url).then((response) => {return response.data}).then((data) => {
             const geoJson = toGeoJson(data.items)
             setResultFeatureCollection(geoJson)
+        })
+        url = `tabular/counties/${county.name}`
+        fetcher(url).then((response) => {return response.data}).then((data) => {
+            // const geoJson = toGeoJson(data.items)
+            // setResultFeatureCollection(geoJson)
+            console.log('conasd', data)
+            setCountyFeature(data)
         })
 
 
@@ -142,6 +145,8 @@ export const Querybuilder: React.FC= () => {
                <Button onClick={handleSubmit}
                     sx={{margin: 3}}
                    variant={'contained'}>Submit</Button>
+
+
                 <MapComponent
                     showDrawControls={{show: true, position: 'top-right'}}
                 >
@@ -158,6 +163,21 @@ export const Querybuilder: React.FC= () => {
                                 'circle-color': '#B42222',
                                 'circle-stroke-color': '#ffffff',
                                 'circle-stroke-width': 1,
+                            }}
+                        />
+                    </Source>
+                    <Source
+                        key='county'
+                        id='countysource'
+                        type='geojson'
+                        data={countyFeature}>
+                        <Layer
+                            id="county"
+                            type="fill"
+                            paint={{
+                                "fill-color": "#9ab7d5",
+                                "fill-outline-color": "#000000",
+                                "fill-opacity": 0.25,
                             }}
                         />
                     </Source>

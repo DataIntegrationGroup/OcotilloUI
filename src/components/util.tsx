@@ -16,19 +16,35 @@
 
 import {Chip} from "@mui/material";
 import React from "react";
+import {ExportButton} from "@refinedev/mui";
 
 export function publicReleaseChip({row}) {
     return (
         <Chip
             size={"small"}
             sx={{
-                backgroundColor: row.PublicRelease ? "#8bd55c" : "#d86969",
+                backgroundColor: row?.PublicRelease ? "#8bd55c" : "#d86969",
                 "& .MuiChip-label": {
                     padding: 0,
                     margin: 3
                 }
             }}
-            label={row.PublicRelease ? "Yes" : "No"}/>
+            label={row?.PublicRelease ? "Yes" : "No"}/>
     )
 }
+
+
+// export function makeExportHeader({loading, onClick}){
+//     return ({defaultButtons}) => {
+//         return (
+//             <>
+//                 {defaultButtons}
+//                 <ExportButton
+//                     variant={'contained'}
+//                     loading={loading}
+//                     onClick={onClick} />
+//             </>
+//         )
+//     }
+// }
 // ============= EOF =============================================

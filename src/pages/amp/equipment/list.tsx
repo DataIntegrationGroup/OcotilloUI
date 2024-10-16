@@ -24,6 +24,7 @@ import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 import type {IEquipment} from "../../../interfaces/amp";
 import {Chip} from "@mui/material";
 import {settings} from "../../../settings";
+import {ListPage} from "@/components/ListPage";
 
 
 export const EquipmentList: React.FC = () => {
@@ -89,16 +90,11 @@ export const EquipmentList: React.FC = () => {
         []
     );
 
-    return (
-        <List>
-            <DataGrid
-                {...dataGridProps}
-                rowHeight={settings.rowHeight}
-                getRowId={(row) => row.ID}
-                columns={columns}
-                autoHeight
-            />
-        </List>
-    );
+    return ( <ListPage columns={columns}
+                       pageSize={50} // something weird with the database/API pagination for Equipment. pageSize
+                                     // >50 results in the API missing some results which
+                                    // prevents the useExport hook from ever completing.
+                       getRowId={(row) => row.ID}
+                       dataGridProps={dataGridProps} />);
 };
 // ============= EOF =============================================
