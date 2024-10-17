@@ -14,35 +14,18 @@
 // limitations under the License.
 // ===============================================================================
 
-import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
 
-let geothermal = [
-    {
-        name: 'dashboard',
-        list: '/geothermal/dashboard',
-        icon: <DashboardOutlined />,
-        meta: {
-            label: "Dashboard",
-        }
-    },
-    {
-        name: 'geothermal_wells',
-        list: '/geothermal/wells',
-        icon: <DashboardOutlined />,
-        meta: {
-            label: "Wells",
-        }
-    }
-]
 
-export const geothermalResources = geothermal.map((g) => {
-    let meta = g.meta || {}
-    meta['parent'] = 'geothermal'
-    meta['dataProviderName'] = 'geothermal'
+export interface IWell {
+    OBJECTID: integer;
+    // SiteID: string;
+    // PublicRelease: boolean;
+    // geometry: { coordinates: number[], type: string };
+    // Easting: number;
+    // Northing: number;
+    // title: string;
+    // status: IStatus;
+    // category: ICategory;
+}
 
-    return {
-        ...g,
-        meta: meta
-    }
-})
 // ============= EOF =============================================

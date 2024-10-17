@@ -21,9 +21,9 @@ import React from "react";
 
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 
-import type {ISample} from "../../../interfaces/geochronology";
+import type {ISample} from "@/interfaces/geochronology";
 import {Chip} from "@mui/material";
-import {settings} from "../../../settings";
+import {settings} from "@/settings";
 
 
 export const SampleList: React.FC = () => {

@@ -91,6 +91,8 @@ import {GeothermalDashboard} from "./pages/geothermal/dashboard";
 import {CriticalMineralsDashboard} from "./pages/criticalminerals/dashboard";
 import {ChemUpload} from "src/pages/amp/chemupload";
 import ManualWaterLevelsBatchUpload from "@/pages/amp/manualwaterlevels/batchupload";
+import {geothermalDataProvider} from "@/providers/geothermal-data-provider";
+import {GeoThermalWellList, GeoThermalWellShow} from "@/pages/geothermal/wells";
 
 
 const lookupRoutes = [
@@ -167,7 +169,8 @@ const App: React.FC = () => {
                             authProvider={authProvider}
                             dataProvider={{default: ampDataProvider,
                                 amp: ampDataProvider,
-                                          geochronology: geochronologyDataProvider}}
+                                          geochronology: geochronologyDataProvider,
+                            geothermal: geothermalDataProvider}}
 
                             routerProvider={routerProvider}
                             notificationProvider={useNotificationProvider}
@@ -287,6 +290,12 @@ const App: React.FC = () => {
                                         //geothermal routes
                                         <Route path='/geothermal'>
                                             <Route path="dashboard" element={<GeothermalDashboard />}/>
+                                            <Route path="wells">
+                                                <Route index element={<GeoThermalWellList/>}/>
+                                                {/*<Route path="create" element={<GeoThermalCreate/>}/>*/}
+                                                {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
+                                                <Route path="show/:id" element={<GeoThermalWellShow/>}/>
+                                            </Route>
                                         </Route>
 
                                     </Route>
