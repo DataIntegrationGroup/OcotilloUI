@@ -158,8 +158,8 @@ const App: React.FC = () => {
 
     return (
         <BrowserRouter>
-            <DevtoolsProvider>
-                <DevtoolsPanel/>
+            {/*<DevtoolsProvider>*/}
+            {/*    <DevtoolsPanel/>*/}
                 <ColorModeContextProvider>
                     <CssBaseline/>
                     <GlobalStyles styles={{html: {WebkitFontSmoothing: "auto"}}}/>
@@ -176,6 +176,7 @@ const App: React.FC = () => {
                             notificationProvider={useNotificationProvider}
                             resources={resources}
                             options={{
+                                disableTelemetry: true,
                                 syncWithLocation: true,
                                 warnWhenUnsavedChanges: true,
                                 projectId: "wCqQ1f-agx0FN-70pXIr",
@@ -418,7 +419,7 @@ const App: React.FC = () => {
                         </Refine>
                     </RefineSnackbarProvider>
                 </ColorModeContextProvider>
-            </DevtoolsProvider>
+            {/*</DevtoolsProvider>*/}
         </BrowserRouter>
     );
 };

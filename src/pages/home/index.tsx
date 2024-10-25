@@ -18,6 +18,16 @@ export const Home = () => {
     return (
         <div>
             <h1>Home</h1>
+
+            <p>
+                Welcome to the NMBGMR Data Management Portal. Use this tool to manage data from.
+                <ul>
+                    <li>NM_Aquifer</li>
+                    <li>Pychron</li>
+                    <li>NM_Wells</li>
+                </ul>
+            </p>
+
         </div>
     )
 }

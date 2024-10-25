@@ -21,7 +21,6 @@ import Plumbing from "@mui/icons-material/Plumbing";
 import Cable from "@mui/icons-material/Cable";
 import Water from "@mui/icons-material/Water";
 import TableViewIcon from "@mui/icons-material/TableView";
-import Science from "@mui/icons-material/Science.js";
 import ScienceOutlined from "@mui/icons-material/ScienceOutlined";
 import FileUploadOutlined from "@mui/icons-material/FileUploadOutlined";
 
@@ -105,7 +104,7 @@ let amp = [
     },
     // chemistry
     {name: 'Chemistry',
-        icon: <Science/>,
+        icon: <ScienceOutlined/>,
         meta: {
             label: "Chemistry"}
     },

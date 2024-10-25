@@ -23,6 +23,7 @@ export interface ILocation {
     geometry: { coordinates: number[], type: string };
     Easting: number;
     Northing: number;
+    site_type: string;
     // title: string;
     // status: IStatus;
     // category: ICategory;

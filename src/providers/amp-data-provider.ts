@@ -96,6 +96,13 @@ export const ampDataProvider: DataProvider = {
     getList: async ({resource, pagination, filters, sorters, meta}) => {
         const params = new URLSearchParams();
 
+        if (meta?.params!==undefined) {
+            Object.entries(meta['params']).forEach(([key, value]) => {
+                if (value===null || value===undefined) return;
+                params.append(key, String(value));
+            });
+        }
+
         if (pagination) {
             params.append("page", pagination.current.toString());
             params.append("size", pagination.pageSize.toString());

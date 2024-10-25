@@ -91,8 +91,8 @@ export const EquipmentList: React.FC = () => {
     );
 
     return ( <ListPage columns={columns}
-                       pageSize={50} // something weird with the database/API pagination for Equipment. pageSize
-                                     // >50 results in the API missing some results which
+                       exportProps={{pageSize: 50}} // something weird with the database/API pagination for Equipment.
+                                     // pageSize >50 results in the API missing some results which
                                     // prevents the useExport hook from ever completing.
                        getRowId={(row) => row.ID}
                        dataGridProps={dataGridProps} />);

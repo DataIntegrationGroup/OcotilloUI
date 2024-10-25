@@ -24,14 +24,18 @@ type ListPageProps = {
     columns: any
     dataGridProps: any
     getRowId?: any
-    pageSize?: number
+    exportProps?: any
+
 }
 
-export const ListPage: React.FC<ListPageProps> = ({columns, dataGridProps, getRowId, pageSize}) => {
+export const ListPage: React.FC<ListPageProps> = ({columns, dataGridProps, getRowId, exportProps}) => {
+    if (!exportProps) {
+        exportProps={pageSize: 1000}
+    }
+
+    
     const { triggerExport, isLoading} = useExport(
-        {
-            pageSize: pageSize || 1000,
-        }
+        exportProps
     );
     const headerButtons = ({defaultButtons}) => {
         return (

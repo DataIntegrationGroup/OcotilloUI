@@ -15,11 +15,11 @@
 // ===============================================================================
 
 
-import DashboardOutlined from "@mui/icons-material/DashboardOutlined.js";
-import PersonOutlined from "@mui/icons-material/PersonOutlined.js";
-import CategoryOutlined from "@mui/icons-material/CategoryOutlined.js";
-import Science from "@mui/icons-material/Science.js";
-import CookieOutlined from "@mui/icons-material/CookieOutlined.js";
+import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import CategoryOutlined from "@mui/icons-material/CategoryOutlined";
+import Science from "@mui/icons-material/Science";
+import CookieOutlined from "@mui/icons-material/CookieOutlined";
 
 const geochronology = [
     {

@@ -22,14 +22,15 @@
     ]
   },
   "dependencies": {
-    "@emotion/react": "^11.8.2",
-    "@emotion/styled": "^11.8.1",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
     "@fief/fief": "^0.15.0-beta.2",
     "@mapbox/mapbox-gl-draw": "^1.4.3",
     "@mapbox/mapbox-gl-geocoder": "^5.0.3",
+    "@mui/icons-material": "^6.1.5",
     "@mui/lab": "^5.0.0-alpha.85",
-    "@mui/material": "^5.14.2",
-    "@mui/x-data-grid": "^6.6.0",
+    "@mui/material": "^6.1.5",
+    "@mui/x-data-grid": "^7.21.0",
     "@refinedev/cli": "^2.16.38",
     "@refinedev/core": "^4.54.1",
     "@refinedev/devtools": "^1.2.8",
@@ -44,7 +45,8 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-map-gl": "^7.1.7",
-    "react-router-dom": "^6.8.1"
+    "react-router-dom": "^6.8.1",
+    "wkt": "^0.1.1"
   },
   "devDependencies": {
     "@types/node": "^18.16.2",
