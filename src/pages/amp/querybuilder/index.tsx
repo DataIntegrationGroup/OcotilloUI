@@ -24,7 +24,7 @@ import {Layer, Map, NavigationControl, Popup, Source} from "react-map-gl";
 import {ExportButton, useAutocomplete} from "@refinedev/mui";
 import LoadingButton from "@mui/lab/LoadingButton";
 import {Alert, Autocomplete, Dialog, FormControl, InputAdornment, InputLabel, TextField} from "@mui/material";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import {HttpError, useExport, useList, useMany} from "@refinedev/core";
 import {stringify, parse} from "wkt";
 import {ILocation} from "@/interfaces/amp";
@@ -113,7 +113,7 @@ export const Querybuilder: React.FC = () => {
     const [continuousAcousticLocations, setContinuousAcousticLocations] = useState<boolean>(false);
     const [county, setCounty] = useState<ICounty | null>(null);
     const [projectRegion, setProjectRegion] = useState<string>('');
-    const [exportConfig, setExportConfig] = useState({
+    const [exportConfig, setExportConfig] = useState<any>({
         use_water_levels: false,
         use_water_chemistry: false
     })
@@ -273,7 +273,7 @@ export const Querybuilder: React.FC = () => {
             </Dialog>
 
             <Grid container spacing={2}>
-                <Grid size={12}>
+                <Grid>
                     <FormControlLabel
                         control={<Checkbox
                             checked={onlyActiveLocations}
@@ -296,7 +296,7 @@ export const Querybuilder: React.FC = () => {
                         label="Continuous Acoustic Locations"
                     />
                 </Grid>
-                <Grid size={6}>
+                <Grid>
                     <Box mt={2}>
                         <FormControl fullWidth>
                             <InputLabel id="demo-simple-select-label">Location Type</InputLabel>
@@ -368,7 +368,7 @@ export const Querybuilder: React.FC = () => {
                         </FormControl>
                     </Box>
                 </Grid>
-                <Grid size={6}>
+                <Grid >
                     <Autocomplete
                         // clearIcon={true}
                         // clearOnEscape={true}
@@ -393,7 +393,7 @@ export const Querybuilder: React.FC = () => {
                 </Grid>
             </Grid>
             <Grid container spacing={2} mb={3}>
-                <Grid size={6}>
+                <Grid >
                     <LoadingButton
                         loadingPosition={'start'}
                         startIcon={<SearchOutlinedIcon/>}
@@ -405,7 +405,7 @@ export const Querybuilder: React.FC = () => {
                         Run Query
                     </LoadingButton>
                 </Grid>
-                <Grid size={6}>
+                <Grid >
                     <ExportButton
                         sx={{margin: 2}}
                         variant={'contained'}
@@ -415,11 +415,11 @@ export const Querybuilder: React.FC = () => {
                     </ExportButton>
                     <FormControlLabel control={<Checkbox
                     checked={exportConfig.use_water_levels}
-                    onChange={(e) => setExportConfig({use_water_levels: e.target.checked})}
+                    onChange={(e) => setExportConfig({use_water_levels: e.target.checked as boolean})}
                     />} label="With WaterLevels" />
                     <FormControlLabel control={<Checkbox
                         checked={exportConfig.use_water_chemistry}
-                        onChange={(e) => setExportConfig({use_water_chemistry: e.target.checked})}
+                        onChange={(e) => setExportConfig({use_water_chemistry: e.target.checked as boolean})}
                     />} label="With WaterChemistry" />
                 </Grid>
             </Grid>

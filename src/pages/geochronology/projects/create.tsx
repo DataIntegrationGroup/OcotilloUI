@@ -72,37 +72,37 @@ export const ProjectCreate: React.FC = () => {
             autoFocus
             />
 
-            <Controller
-            control={control}
-            name="principalInvestigator"
-            rules={{ required: "This field is required" }}
-            // eslint-disable-next-line
-            defaultValue={null as any}
-            render={({ field }) => (
-                <Autocomplete<IPrincipalInvestigator>
-                {...autocompleteProps}
-                {...field}
-                onChange={(_, value) => {
-                    field.onChange(value);
-                }}
-                getOptionLabel={piLabel}
-                isOptionEqualToValue={(option, value) => {
-                    return value === undefined || option?.id === value?.id;
-                }}
-                renderInput={(params) => (
-                    <TextField
-                    {...params}
-                    label="Principal Investigator"
-                    margin="normal"
-                    variant="outlined"
-                    error={!!errors.principalInvestigator}
-                    helperText={errors.principalInvestigator?.message}
-                    required
-                    />
-                )}
-                />
-            )}
-            />
+            {/*<Controller*/}
+            {/*control={control}*/}
+            {/*name="principalInvestigator"*/}
+            {/*rules={{ required: "This field is required" }}*/}
+            {/*// eslint-disable-next-line*/}
+            {/*defaultValue={null as any}*/}
+            {/*render={({ field }) => (*/}
+            {/*    <Autocomplete<IPrincipalInvestigator>*/}
+            {/*    {...autocompleteProps}*/}
+            {/*    {...field}*/}
+            {/*    onChange={(_, value) => {*/}
+            {/*        field.onChange(value);*/}
+            {/*    }}*/}
+            {/*    getOptionLabel={piLabel}*/}
+            {/*    isOptionEqualToValue={(option, value) => {*/}
+            {/*        return value === undefined || option?.id === value?.id;*/}
+            {/*    }}*/}
+            {/*    renderInput={(params) => (*/}
+            {/*        <TextField*/}
+            {/*        {...params}*/}
+            {/*        label="Principal Investigator"*/}
+            {/*        margin="normal"*/}
+            {/*        variant="outlined"*/}
+            {/*        error={!!errors.principalInvestigator}*/}
+            {/*        helperText={errors.principalInvestigator?.message}*/}
+            {/*        required*/}
+            {/*        />*/}
+            {/*    )}*/}
+            {/*    />*/}
+            {/*)}*/}
+            {/*/>*/}
         </Box>
         </Create>
     );
