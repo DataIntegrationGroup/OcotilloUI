@@ -298,16 +298,16 @@ const App: React.FC = () => {
                                                 <Route path="show/:id" element={<GeoThermalWellShow/>}/>
                                             </Route>
                                         </Route>
+                                    </Route>
 
 
-
-                                    {/*<Route*/}
-                                    {/*    // element={*/}
-                                    {/*    //   <Authenticated key="auth-pages" fallback={<Outlet />}>*/}
-                                    {/*    //     <NavigateToResource resource="posts" />*/}
-                                    {/*    //   </Authenticated>*/}
-                                    {/*    // }*/}
-                                    {/*>*/}
+                                    <Route
+                                        // element={
+                                        //   <Authenticated key="auth-pages" fallback={<Outlet />}>
+                                        //     <NavigateToResource resource="posts" />
+                                        //   </Authenticated>
+                                        // }
+                                    >
                                         <Route path="/callback" element={<Callback/>}/>
                                         <Route
                                             path="/login"
