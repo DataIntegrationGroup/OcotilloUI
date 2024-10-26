@@ -398,7 +398,7 @@ const App: React.FC = () => {
                                             path="/update-password"
                                             element={<AuthPage type="updatePassword"/>}
                                         />
-                                    {/*</Route>*/}
+                                    </Route>
 
                                     <Route
                                         element={
@@ -410,7 +410,6 @@ const App: React.FC = () => {
                                         }
                                     >
                                         <Route path="*" element={<ErrorComponent/>}/>
-                                    </Route>
                                     </Route>
                                 </Routes>
                             </FiefAuthProvider>
