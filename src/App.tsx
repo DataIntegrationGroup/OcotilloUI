@@ -299,7 +299,6 @@ const App: React.FC = () => {
                                             </Route>
                                         </Route>
 
-                                    </Route>
 
 
                                     {/*<Route*/}
@@ -411,6 +410,7 @@ const App: React.FC = () => {
                                         }
                                     >
                                         <Route path="*" element={<ErrorComponent/>}/>
+                                    </Route>
                                     </Route>
                                 </Routes>
                             </FiefAuthProvider>
