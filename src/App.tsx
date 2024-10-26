@@ -192,7 +192,7 @@ const App: React.FC = () => {
                                             <Authenticated
                                                 key="authenticated-routes"
                                                 fallback={<CatchAllNavigate to="/login"/>}
-                                            >
+                                                v3LegacyAuthProviderCompatible={true}>
                                                 <ThemedLayoutV2
                                                     Header={() => <ThemedHeaderV2 sticky/>}
                                                     Sider={ThemedSiderV2}
@@ -402,7 +402,9 @@ const App: React.FC = () => {
 
                                     <Route
                                         element={
-                                            <Authenticated key="catch-all">
+                                            <Authenticated
+                                                v3LegacyAuthProviderCompatible={true}
+                                                key="catch-all">
                                                 <ThemedLayoutV2>
                                                     <Outlet/>
                                                 </ThemedLayoutV2>
