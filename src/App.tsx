@@ -302,13 +302,13 @@ const App: React.FC = () => {
                                     </Route>
 
 
-                                    <Route
-                                        // element={
-                                        //   <Authenticated key="auth-pages" fallback={<Outlet />}>
-                                        //     <NavigateToResource resource="posts" />
-                                        //   </Authenticated>
-                                        // }
-                                    >
+                                    {/*<Route*/}
+                                    {/*    // element={*/}
+                                    {/*    //   <Authenticated key="auth-pages" fallback={<Outlet />}>*/}
+                                    {/*    //     <NavigateToResource resource="posts" />*/}
+                                    {/*    //   </Authenticated>*/}
+                                    {/*    // }*/}
+                                    {/*>*/}
                                         <Route path="/callback" element={<Callback/>}/>
                                         <Route
                                             path="/login"
@@ -399,7 +399,7 @@ const App: React.FC = () => {
                                             path="/update-password"
                                             element={<AuthPage type="updatePassword"/>}
                                         />
-                                    </Route>
+                                    {/*</Route>*/}
 
                                     <Route
                                         element={
