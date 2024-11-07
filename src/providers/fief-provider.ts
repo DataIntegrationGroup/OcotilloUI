@@ -20,6 +20,7 @@ import {sha256} from "js-sha256";
 
 import {Fief, browser} from '@fief/fief'
 import {jwtDecode} from "jwt-decode";
+import {settings} from "@/settings";
 
 /**
  *  mock auth credentials to simulate authentication
@@ -82,7 +83,7 @@ export const authProvider: AuthProvider = {
 
         if (providerName === "fief") {
             localStorage.setItem("email", email);
-            await fiefAuth.redirectToLogin(`${window.location.protocol}//${window.location.host}/callback`,
+            await fiefAuth.redirectToLogin(`${window.location.protocol}//${window.location.host}${settings.urlprefix}/callback`,
                 {scope: ['offline_access', 'openid']});
             return {
                 success: true,
@@ -146,7 +147,7 @@ export const authProvider: AuthProvider = {
     // },
     logout: async () => {
         localStorage.removeItem("email");
-        await fiefAuth.logout(`${window.location.protocol}//${window.location.host}/login`);
+        await fiefAuth.logout(`${window.location.protocol}//${window.location.host}${settings.urlprefix}/login`);
         return {
             success: true,
         };

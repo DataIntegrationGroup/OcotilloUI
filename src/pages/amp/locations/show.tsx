@@ -15,11 +15,11 @@
 // ===============================================================================
 
 
-import {Card, ImageList, ImageListItem, ImageListItemBar, Stack, Typography} from "@mui/material";
+import {Button, Card, ImageList, ImageListItem, ImageListItemBar, Stack, Typography} from "@mui/material";
 import {HttpError, useOne, useShow} from "@refinedev/core";
 import {
-    DateField,
-    MarkdownField,
+    DateField, EditButton, ListButton,
+    MarkdownField, RefreshButton,
     Show,
     TextFieldComponent as TextField,
 } from "@refinedev/mui";
@@ -29,6 +29,8 @@ import {ILocation, IWell} from "@/interfaces/amp";
 import {Layer, Source} from "react-map-gl";
 import React from "react";
 import {publicReleaseChip} from "@/components/util";
+import SummarizeIcon from '@mui/icons-material/Summarize';
+import SummarizeOutlinedIcon from '@mui/icons-material/SummarizeOutlined';
 
 
 export const LocationShow = () => {
@@ -93,8 +95,24 @@ export const LocationShow = () => {
             </Stack>
         )
     }
+
+    const handleMakeReport = () => {
+        console.log('make report');
+        alert('make report not yet implemented');
+    }
+
     return (
-        <Show isLoading={isFetchingLocation && isLoadingWells}>
+        <Show
+            headerButtons={<><ListButton />
+                <EditButton />
+                <RefreshButton />
+                <Button
+                    onClick={handleMakeReport}
+                    startIcon={<SummarizeOutlinedIcon/>}>Report</Button>
+            </>
+            }
+
+            isLoading={isFetchingLocation && isLoadingWells}>
             <Card sx={{margin: 1, padding: 1}}>
                 <Stack direction={'row'} gap={3}>
                     <Stack>

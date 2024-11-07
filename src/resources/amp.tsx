@@ -23,6 +23,7 @@ import Water from "@mui/icons-material/Water";
 import TableViewIcon from "@mui/icons-material/TableView";
 import ScienceOutlined from "@mui/icons-material/ScienceOutlined";
 import FileUploadOutlined from "@mui/icons-material/FileUploadOutlined";
+import CategoryOutlined from "@mui/icons-material/CategoryOutlined";
 
 let amp = [
     {
@@ -34,6 +35,14 @@ let amp = [
         },
     },
     {
+        name: 'reportbuilder',
+        list: '/amp/reportbuilder',
+        meta: {
+            label: "Report Builder",
+            icon: <Construction />,
+        },
+    },
+    {
         name: 'querybuilder',
         list: '/amp/querybuilder',
         meta: {
@@ -41,6 +50,12 @@ let amp = [
             icon: <Construction />,
         },
     },
+    {
+        name: 'projects',
+        list: '/amp/projects',
+        icon: <CategoryOutlined/>,
+    },
+
     {
         name: "locations",
         icon: <Place/>,

@@ -14,13 +14,14 @@
 // limitations under the License.
 // ===============================================================================
 
-import {useCallback, useContext, useRef, useState} from "react";
+import React, {useCallback, useContext, useRef, useState} from "react";
 import {Layer, Map, NavigationControl, Popup, Source} from "react-map-gl";
 import {ColorModeContext} from "@/contexts";
 import DrawControl from "./DrawControl.jsx";
 import "mapbox-gl/dist/mapbox-gl.css";
 import GeocoderControl from "./GeocoderControl.jsx";
 import {ControlPosition} from "react-map-gl";
+import {CircularProgress} from "@mui/material";
 
 const mapboxToken = "pk.eyJ1IjoiamFrZXJvc3N3ZGkiLCJhIjoiY2s3M3ZneGl4MGhkMDNrcjlocmNuNWg4bCJ9.4r1DRDQ_ja0fV2nnmlVT0A"
 
@@ -34,6 +35,7 @@ interface MapComponentProps {
     showDrawControls?: { show: boolean, position: ControlPosition };
     showNavigation?: { show: boolean, position: ControlPosition };
     showGeocoder?: { show: boolean, position: ControlPosition };
+    isLoading?: boolean;
 }
 
 const MapComponent: React.FC<MapComponentProps> = ({children,
@@ -42,6 +44,7 @@ const MapComponent: React.FC<MapComponentProps> = ({children,
                                                        setPopupContent,
                                                        onMouseMoveCallback,
                                                        setSelectionPolygons,
+                                                       isLoading=false,
                                                        showDrawControls = {show: true, position: "top-right"},
                                                        showNavigation = {
                                                            show: true,
@@ -196,7 +199,7 @@ const MapComponent: React.FC<MapComponentProps> = ({children,
                     />
                 )}
 
-                {popupContent !== null && (
+                {popupContent!==undefined && popupContent!==null && (
                     <Popup
                         latitude={popupContent.coordinates[1]}
                         longitude={popupContent.coordinates[0]}
@@ -226,6 +229,7 @@ const MapComponent: React.FC<MapComponentProps> = ({children,
                 {/*    }}*/}
                 {/*  />*/}
                 {/*</Source>*/}
+                {isLoading && <CircularProgress/>}
                 {children}
             </Map>
         </div>

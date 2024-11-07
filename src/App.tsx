@@ -13,9 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ===============================================================================
-
-
-import {DevtoolsProvider, DevtoolsPanel} from "@refinedev/devtools";
 import {Refine, Authenticated} from "@refinedev/core";
 import {
     ErrorComponent,
@@ -25,7 +22,6 @@ import {
 } from "@refinedev/mui";
 
 import routerProvider, {
-    NavigateToResource,
     CatchAllNavigate,
     UnsavedChangesNotifier,
     DocumentTitleHandler,
@@ -36,7 +32,6 @@ import {
     Route,
     Outlet,
     useNavigate,
-    useLocation,
 } from "react-router-dom";
 import {useFormContext} from "react-hook-form";
 import {useEffect} from "react";
@@ -50,49 +45,51 @@ import GoogleIcon from "@mui/icons-material/Google";
 
 import {FiefAuthProvider, useFiefAuth} from "@fief/fief/react";
 
-import {ampDataProvider} from "./providers/amp-data-provider";
-import {authProvider, fiefConstants} from "./providers/fief-provider";
+import {ampDataProvider} from "@/providers/amp-data-provider";
+import {authProvider, fiefConstants} from "@/providers/fief-provider";
 
-import {LocationCreate, LocationEdit, LocationList, LocationShow} from "./pages/amp/locations";
-import {WellEdit, WellList, WellShow} from "./pages/amp/wells";
-import {EquipmentList, EquipmentShow} from "./pages/amp/equipment";
+import {LocationCreate, LocationEdit, LocationList, LocationShow} from "@/pages/amp/locations";
+import {WellEdit, WellList, WellShow} from "@/pages/amp/wells";
+import {EquipmentList, EquipmentShow} from "@/pages/amp/equipment";
 
-import {ThemedLayoutV2} from "./components/layout";
-import {ThemedHeaderV2} from "./components/layout/header";
-import {ThemedSiderV2} from "./components/layout/sider";
-import {ThemedTitleV2} from "./components/layout/title";
-import {LookupTableList, MeasuringAgencyList} from "./components/lookuptable";
+import {ThemedLayoutV2} from "@/components/layout";
+import {ThemedHeaderV2} from "@/components/layout/header";
+import {ThemedSiderV2} from "@/components/layout/sider";
+import {ThemedTitleV2} from "@/components/layout/title";
+import {LookupTableList, MeasuringAgencyList} from "@/components/lookuptable";
 
-import {resources} from "./resources";
-import {ColorModeContextProvider} from "./contexts";
-import {accessControlProvider} from "./providers/access-control-provider";
+import {resources} from "@/resources";
+import {ColorModeContextProvider} from "@/contexts";
 import {
     ManualWaterLevelList,
     ManualWaterLevelsCreate,
     ManualWaterLevelsEdit,
     ManualWaterLevelShow
-} from "./pages/amp/manualwaterlevels";
-import {Home} from "./pages/home";
-import {WaterDashboard} from "./pages/amp/dashboard";
-import {Querybuilder} from "./pages/amp/querybuilder";
+} from "@/pages/amp/manualwaterlevels";
+import {Home} from "@/pages/home";
+import {WaterDashboard} from "@/pages/amp/dashboard";
+import {Querybuilder} from "@/pages/amp/querybuilder";
 
-import {ProjectList, ProjectShow, ProjectCreate} from "./pages/geochronology/projects";
-import {geochronologyDataProvider} from "./providers/geochronology-data-provider";
-import {SampleList, SampleShow, SampleCreate} from "./pages/geochronology/samples";
-import {MaterialList, MaterialShow, MaterialCreate} from "./pages/geochronology/materials";
+import {ProjectList, ProjectShow, ProjectCreate} from "@/pages/geochronology/projects";
+import {geochronologyDataProvider} from "@/providers/geochronology-data-provider";
+import {SampleList, SampleShow, SampleCreate} from "@/pages/geochronology/samples";
+import {MaterialList, MaterialShow, MaterialCreate} from "@/pages/geochronology/materials";
 
 import {
     PrincipalInvestigatorCreate,
     PrincipalInvestigatorList,
     PrincipalInvestigatorShow
-} from "./pages/geochronology/principal_investigators";
-import {GeochronologyDashboard} from "./pages/geochronology/dashboard";
-import {GeothermalDashboard} from "./pages/geothermal/dashboard";
-import {CriticalMineralsDashboard} from "./pages/criticalminerals/dashboard";
-import {ChemUpload} from "src/pages/amp/chemupload";
+} from "@/pages/geochronology/principal_investigators";
+import {GeochronologyDashboard} from "@/pages/geochronology/dashboard";
+import {GeothermalDashboard} from "@/pages/geothermal/dashboard";
+import {CriticalMineralsDashboard} from "@/pages/criticalminerals/dashboard";
+import {ChemUpload} from "@/pages/amp/chemupload";
 import ManualWaterLevelsBatchUpload from "@/pages/amp/manualwaterlevels/batchupload";
 import {geothermalDataProvider} from "@/providers/geothermal-data-provider";
 import {GeoThermalWellList, GeoThermalWellShow} from "@/pages/geothermal/wells";
+import {AMPProjectList} from "@/pages/amp/projects";
+import {ReportBuilder} from "@/pages/amp/reportbuilder";
+import {settings} from "@/settings";
 
 
 const lookupRoutes = [
@@ -103,7 +100,55 @@ const lookupRoutes = [
 ];
 
 
+const makeAMPRoutes = () => {
+    return (
+        <Route path="/amp">
+            <Route path="dashboard" element={<WaterDashboard/>}/>
+            <Route path="querybuilder" element={<Querybuilder/>}/>
+            <Route path='reportbuilder' element={<ReportBuilder/>}/>
+            <Route path="chemupload" element={<ChemUpload/>}/>
 
+            <Route path="wells">
+                <Route index element={<WellList/>}/>
+                {/*<Route path="create" element={<PostCreate />} />*/}
+                <Route path="edit/:id" element={<WellEdit/>}/>
+                <Route path="show/:id" element={<WellShow/>}/>
+            </Route>
+            <Route path="locations">
+                <Route index element={<LocationList/>}/>
+                <Route path="create" element={<LocationCreate/>}/>
+                <Route path="edit/:id" element={<LocationEdit/>}/>
+                <Route path="show/:id" element={<LocationShow/>}/>
+            </Route>
+            <Route path="equipment">
+                <Route index element={<EquipmentList/>}/>
+                <Route path="show/:id" element={<EquipmentShow/>}/>
+            </Route>
+            <Route path="manualwaterlevels">
+                <Route index element={<ManualWaterLevelList/>}/>
+                <Route path="create" element={<ManualWaterLevelsCreate/>}/>
+                <Route path="edit/:id" element={<ManualWaterLevelsEdit/>}/>
+                <Route path="show/:id" element={<ManualWaterLevelShow/>}/>
+                <Route path="batchupload" element={<ManualWaterLevelsBatchUpload/>}/>
+            </Route>
+            <Route path='projects'>
+                <Route index element={<AMPProjectList/>}/>
+                {/*<Route path="create" element={<ProjectCreate/>}/>*/}
+                {/*<Route path="edit/:id" element={<ProjectEdit/>}/>*/}
+                <Route path="show/:id" element={<ProjectShow/>}/>
+            </Route>
+
+            {lookupRoutes.map((route) => (
+                <Route path={`lu_${route}`}>
+                    <Route index element={<LookupTableList/>}/>
+                </Route>
+            ))}
+            <Route path={`lu_measuring_agency`}>
+                <Route index element={<MeasuringAgencyList/>}/>
+            </Route>
+        </Route>
+    )
+}
 
 const App: React.FC = () => {
     const customTitleHandler = ({
@@ -120,7 +165,7 @@ const App: React.FC = () => {
         return title;
     };
 
-    const RememeberMe = () => {
+    const RememberMe = () => {
         const {register} = useFormContext();
 
         return (
@@ -146,10 +191,10 @@ const App: React.FC = () => {
         useEffect(() => {
             fiefAuth
                 .authCallback(
-                    `${window.location.protocol}//${window.location.host}/callback`
+                    `${window.location.protocol}//${window.location.host}${settings.urlprefix}/callback`
                 )
                 .then(() => {
-                    navigate("/locations");
+                    navigate("/home");
                 });
         }, [fiefAuth, navigate]);
 
@@ -157,270 +202,228 @@ const App: React.FC = () => {
     };
 
     return (
-        <BrowserRouter>
-            {/*<DevtoolsProvider>*/}
-            {/*    <DevtoolsPanel/>*/}
-                <ColorModeContextProvider>
-                    <CssBaseline/>
-                    <GlobalStyles styles={{html: {WebkitFontSmoothing: "auto"}}}/>
-                    <RefineSnackbarProvider>
-                        <Refine
-                            accessControlProvider={accessControlProvider}
-                            authProvider={authProvider}
-                            dataProvider={{default: ampDataProvider,
-                                amp: ampDataProvider,
-                                          geochronology: geochronologyDataProvider,
-                            geothermal: geothermalDataProvider}}
-
-                            routerProvider={routerProvider}
-                            notificationProvider={useNotificationProvider}
-                            resources={resources}
-                            options={{
-                                disableTelemetry: true,
-                                syncWithLocation: true,
-                                warnWhenUnsavedChanges: true,
-                                projectId: "wCqQ1f-agx0FN-70pXIr",
-                            }}
+        <BrowserRouter basename={settings.urlprefix}>
+            <ColorModeContextProvider>
+                <CssBaseline/>
+                <GlobalStyles styles={{html: {WebkitFontSmoothing: "auto"}}}/>
+                <RefineSnackbarProvider>
+                    <Refine
+                        // accessControlProvider={accessControlProvider}
+                        authProvider={authProvider}
+                        dataProvider={{
+                            default: ampDataProvider,
+                            amp: ampDataProvider,
+                            geochronology: geochronologyDataProvider,
+                            geothermal: geothermalDataProvider
+                        }}
+                        routerProvider={routerProvider}
+                        notificationProvider={useNotificationProvider}
+                        resources={resources}
+                        options={{
+                            disableTelemetry: true,
+                            syncWithLocation: true,
+                            warnWhenUnsavedChanges: true,
+                            projectId: "wCqQ1f-agx0FN-70pXIr",
+                        }}
+                    >
+                        <FiefAuthProvider
+                            baseURL={fiefConstants.baseURL}
+                            clientId={fiefConstants.clientId}
                         >
-                            <FiefAuthProvider
-                                baseURL={fiefConstants.baseURL}
-                                clientId={fiefConstants.clientId}
-                            >
-                                <Routes>
-                                    <Route
-                                        element={
-                                            <Authenticated
-                                                key="authenticated-routes"
-                                                fallback={<CatchAllNavigate to="/login"/>}
-                                                v3LegacyAuthProviderCompatible={true}>
-                                                <ThemedLayoutV2
-                                                    Header={() => <ThemedHeaderV2 sticky/>}
-                                                    Sider={ThemedSiderV2}
-                                                    Title={({collapsed}) => (
-                                                        <ThemedTitleV2
-                                                            // collapsed is a boolean value that indicates whether the <Sidebar> is collapsed or not
-                                                            collapsed={collapsed}
-                                                            // icon={collapsed ? <MySmallIcon /> : <MyLargeIcon />}
-                                                            text="NMBGMR Data Manager"
-                                                        />
-                                                    )}
-                                                >
-                                                    <Outlet/>
-                                                </ThemedLayoutV2>
-                                            </Authenticated>
-                                        }
-                                    >
+                            <Routes>
+                                <Route
+                                    element={
+                                        <Authenticated
+                                            key="authenticated-routes"
+                                            fallback={<CatchAllNavigate to="/login"/>}
+                                            v3LegacyAuthProviderCompatible={true}>
+                                            <ThemedLayoutV2
+                                                Header={() => <ThemedHeaderV2 sticky/>}
+                                                Sider={ThemedSiderV2}
+                                                Title={({collapsed}) => (
+                                                    <ThemedTitleV2
+                                                        // collapsed is a boolean value that indicates whether the <Sidebar> is collapsed or not
+                                                        collapsed={collapsed}
+                                                        // icon={collapsed ? <MySmallIcon /> : <MyLargeIcon />}
+                                                        text="NMBGMR Data Manager"
+                                                    />
+                                                )}
+                                            >
+                                                <Outlet/>
+                                            </ThemedLayoutV2>
+                                        </Authenticated>
+                                    }
+                                >
+                                    <Route index element={<Home/>}/>
 
-                                        <Route index element={<Home/>}/>
-                                        // amp routes
-                                        <Route path="/amp">
-                                            <Route path="dashboard" element={<WaterDashboard />}/>
-                                            <Route path="querybuilder" element={<Querybuilder />}/>
-                                            <Route path="chemupload" element={<ChemUpload />}/>
+                                    // amp routes
+                                    {makeAMPRoutes()}
 
-                                            <Route path="wells">
-                                                <Route index element={<WellList/>}/>
-                                                {/*<Route path="create" element={<PostCreate />} />*/}
-                                                <Route path="edit/:id" element={<WellEdit/>}/>
-                                                <Route path="show/:id" element={<WellShow/>}/>
-                                            </Route>
-                                            <Route path="locations">
-                                                <Route index element={<LocationList/>}/>
-                                                <Route path="create" element={<LocationCreate/>}/>
-                                                <Route path="edit/:id" element={<LocationEdit/>}/>
-                                                <Route path="show/:id" element={<LocationShow/>}/>
-                                            </Route>
-                                            <Route path="equipment">
-                                                <Route index element={<EquipmentList />}/>
-                                                <Route path="show/:id" element={<EquipmentShow />}/>
-                                            </Route>
-                                            <Route path="manualwaterlevels">
-                                                <Route index element={<ManualWaterLevelList />}/>
-                                                <Route path="create" element={<ManualWaterLevelsCreate />} />
-                                                <Route path="edit/:id" element={<ManualWaterLevelsEdit />} />
-                                                <Route path="show/:id" element={<ManualWaterLevelShow />}/>
-                                                <Route path="batchupload" element={<ManualWaterLevelsBatchUpload />}/>
-                                            </Route>
-
-
-                                            {lookupRoutes.map((route) => (
-                                                <Route path={`lu_${route}`}>
-                                                    <Route index element={<LookupTableList/>}/>
-                                                </Route>
-                                            ))}
-                                            <Route path={`lu_measuring_agency`}>
-                                                <Route index element={<MeasuringAgencyList />}/>
-                                            </Route>
+                                    //geochronology routes
+                                    <Route path="/geochronology">
+                                        <Route path="dashboard" element={<GeochronologyDashboard/>}/>
+                                        <Route path="principal_investigators">
+                                            <Route index element={<PrincipalInvestigatorList/>}/>
+                                            <Route path="create" element={<PrincipalInvestigatorCreate/>}/>
+                                            {/*<Route path="edit/:id" element={<LocationEdit/>}/>*/}
+                                            <Route path="show/:id" element={<PrincipalInvestigatorShow/>}/>
                                         </Route>
-
-
-                                        //geochronology routes
-                                        <Route path="/geochronology">
-                                            <Route path="dashboard" element={<GeochronologyDashboard />}/>
-                                            <Route path="principal_investigators">
-                                                <Route index element={<PrincipalInvestigatorList/>}/>
-                                                <Route path="create" element={<PrincipalInvestigatorCreate/>}/>
-                                                {/*<Route path="edit/:id" element={<LocationEdit/>}/>*/}
-                                                <Route path="show/:id" element={<PrincipalInvestigatorShow/>}/>
-                                            </Route>
-                                            <Route path="projects">
-                                                <Route index element={<ProjectList/>}/>
-                                                <Route path="create" element={<ProjectCreate/>}/>
-                                                {/*<Route path="edit/:id" element={<ProjectEdit/>}/>*/}
-                                                <Route path="show/:id" element={<ProjectShow/>}/>
-                                            </Route>
-                                            <Route path="samples">
-                                                <Route index element={<SampleList/>}/>
-                                                <Route path="create" element={<SampleCreate/>}/>
+                                        <Route path="projects">
+                                            <Route index element={<ProjectList/>}/>
+                                            <Route path="create" element={<ProjectCreate/>}/>
+                                            {/*<Route path="edit/:id" element={<ProjectEdit/>}/>*/}
+                                            <Route path="show/:id" element={<ProjectShow/>}/>
+                                        </Route>
+                                        <Route path="samples">
+                                            <Route index element={<SampleList/>}/>
+                                            <Route path="create" element={<SampleCreate/>}/>
                                             {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
-                                                <Route path="show/:id" element={<SampleShow/>}/>
-                                            </Route>
-                                            <Route path='materials'>
-                                                <Route index element={<MaterialList/>}/>
-                                                <Route path="create" element={<MaterialCreate/>}/>
-                                                {/*<Route path="edit/:id" element={<MaterialEdit/>}/>*/}
-                                                <Route path="show/:id" element={<MaterialShow/>}/>
-                                            </Route>
+                                            <Route path="show/:id" element={<SampleShow/>}/>
                                         </Route>
-
-                                        //criticalminerals routes
-                                        <Route path='/criticalminerals'>
-                                            <Route path="dashboard" element={<CriticalMineralsDashboard />}/>
-                                        </Route>
-
-                                        //geothermal routes
-                                        <Route path='/geothermal'>
-                                            <Route path="dashboard" element={<GeothermalDashboard />}/>
-                                            <Route path="wells">
-                                                <Route index element={<GeoThermalWellList/>}/>
-                                                {/*<Route path="create" element={<GeoThermalCreate/>}/>*/}
-                                                {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
-                                                <Route path="show/:id" element={<GeoThermalWellShow/>}/>
-                                            </Route>
+                                        <Route path='materials'>
+                                            <Route index element={<MaterialList/>}/>
+                                            <Route path="create" element={<MaterialCreate/>}/>
+                                            {/*<Route path="edit/:id" element={<MaterialEdit/>}/>*/}
+                                            <Route path="show/:id" element={<MaterialShow/>}/>
                                         </Route>
                                     </Route>
 
-
-                                    <Route
-                                        // element={
-                                        //   <Authenticated key="auth-pages" fallback={<Outlet />}>
-                                        //     <NavigateToResource resource="posts" />
-                                        //   </Authenticated>
-                                        // }
-                                    >
-                                        <Route path="/callback" element={<Callback/>}/>
-                                        <Route
-                                            path="/login"
-                                            element={
-                                                <AuthPage
-                                                    type="login"
-                                                    rememberMe={<RememeberMe/>}
-                                                    // formProps={{
-                                                    //   defaultValues: {
-                                                    //     ...authCredentials,
-                                                    //   },
-                                                    // }}
-                                                    providers={[
-                                                        {
-                                                            name: "fief",
-                                                            label: "Sign in with Fief",
-                                                            // icon: (
-                                                            //     <GoogleIcon
-                                                            //         style={{
-                                                            //             fontSize: 24,
-                                                            //         }}
-                                                            //     />
-                                                            // ),
-                                                        },
-                                                        // {
-                                                        //   name: "google",
-                                                        //   label: "Sign in with Google",
-                                                        //   icon: (
-                                                        //     <GoogleIcon
-                                                        //       style={{
-                                                        //         fontSize: 24,
-                                                        //       }}
-                                                        //     />
-                                                        //   ),
-                                                        // },
-                                                        // {
-                                                        //   name: "github",
-                                                        //   label: "Sign in with GitHub",
-                                                        //   icon: (
-                                                        //     <GitHubIcon
-                                                        //       style={{
-                                                        //         fontSize: 24,
-                                                        //       }}
-                                                        //     />
-                                                        //   ),
-                                                        // },
-                                                    ]}
-                                                />
-                                            }
-                                        />
-                                        <Route
-                                            path="/register"
-                                            element={
-                                                <AuthPage
-                                                    type="register"
-                                                    providers={[
-                                                        {
-                                                            name: "google",
-                                                            label: "Sign in with Google",
-                                                            icon: (
-                                                                <GoogleIcon
-                                                                    style={{
-                                                                        fontSize: 24,
-                                                                    }}
-                                                                />
-                                                            ),
-                                                        },
-                                                        {
-                                                            name: "github",
-                                                            label: "Sign in with GitHub",
-                                                            icon: (
-                                                                <GitHubIcon
-                                                                    style={{
-                                                                        fontSize: 24,
-                                                                    }}
-                                                                />
-                                                            ),
-                                                        },
-                                                    ]}
-                                                />
-                                            }
-                                        />
-                                        <Route
-                                            path="/forgot-password"
-                                            element={<AuthPage type="forgotPassword"/>}
-                                        />
-                                        <Route
-                                            path="/update-password"
-                                            element={<AuthPage type="updatePassword"/>}
-                                        />
+                                    //criticalminerals routes
+                                    <Route path='/criticalminerals'>
+                                        <Route path="dashboard" element={<CriticalMineralsDashboard/>}/>
                                     </Route>
 
+                                    //geothermal routes
+                                    <Route path='/geothermal'>
+                                        <Route path="dashboard" element={<GeothermalDashboard/>}/>
+                                        <Route path="wells">
+                                            <Route index element={<GeoThermalWellList/>}/>
+                                            {/*<Route path="create" element={<GeoThermalCreate/>}/>*/}
+                                            {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
+                                            <Route path="show/:id" element={<GeoThermalWellShow/>}/>
+                                        </Route>
+                                    </Route>
+                                </Route>
+
+                                <Route
+                                    // element={
+                                    //   <Authenticated key="auth-pages" fallback={<Outlet />}>
+                                    //     <NavigateToResource resource="posts" />
+                                    //   </Authenticated>
+                                    // }
+                                >
+                                    <Route path="/callback" element={<Callback/>}/>
                                     <Route
+                                        path="/login"
                                         element={
-                                            <Authenticated
-                                                v3LegacyAuthProviderCompatible={true}
-                                                key="catch-all">
-                                                <ThemedLayoutV2>
-                                                    <Outlet/>
-                                                </ThemedLayoutV2>
-                                            </Authenticated>
+                                            <AuthPage
+                                                type="login"
+                                                rememberMe={<RememberMe/>}
+                                                // formProps={{
+                                                //   defaultValues: {
+                                                //     ...authCredentials,
+                                                //   },
+                                                // }}
+                                                providers={[
+                                                    {
+                                                        name: "fief",
+                                                        label: "Sign in with Fief",
+                                                        // icon: (
+                                                        //     <GoogleIcon
+                                                        //         style={{
+                                                        //             fontSize: 24,
+                                                        //         }}
+                                                        //     />
+                                                        // ),
+                                                    },
+                                                    // {
+                                                    //   name: "google",
+                                                    //   label: "Sign in with Google",
+                                                    //   icon: (
+                                                    //     <GoogleIcon
+                                                    //       style={{
+                                                    //         fontSize: 24,
+                                                    //       }}
+                                                    //     />
+                                                    //   ),
+                                                    // },
+                                                    // {
+                                                    //   name: "github",
+                                                    //   label: "Sign in with GitHub",
+                                                    //   icon: (
+                                                    //     <GitHubIcon
+                                                    //       style={{
+                                                    //         fontSize: 24,
+                                                    //       }}
+                                                    //     />
+                                                    //   ),
+                                                    // },
+                                                ]}
+                                            />
                                         }
-                                    >
-                                        <Route path="*" element={<ErrorComponent/>}/>
-                                    </Route>
-                                </Routes>
-                            </FiefAuthProvider>
-                            <UnsavedChangesNotifier/>
-                            <DocumentTitleHandler handler={customTitleHandler}/>
-                        </Refine>
-                    </RefineSnackbarProvider>
-                </ColorModeContextProvider>
-            {/*</DevtoolsProvider>*/}
+                                    />
+                                    <Route
+                                        path="/register"
+                                        element={
+                                            <AuthPage
+                                                type="register"
+                                                providers={[
+                                                    {
+                                                        name: "google",
+                                                        label: "Sign in with Google",
+                                                        icon: (
+                                                            <GoogleIcon
+                                                                style={{
+                                                                    fontSize: 24,
+                                                                }}
+                                                            />
+                                                        ),
+                                                    },
+                                                    {
+                                                        name: "github",
+                                                        label: "Sign in with GitHub",
+                                                        icon: (
+                                                            <GitHubIcon
+                                                                style={{
+                                                                    fontSize: 24,
+                                                                }}
+                                                            />
+                                                        ),
+                                                    },
+                                                ]}
+                                            />
+                                        }
+                                    />
+                                    <Route
+                                        path="/forgot-password"
+                                        element={<AuthPage type="forgotPassword"/>}
+                                    />
+                                    <Route
+                                        path="/update-password"
+                                        element={<AuthPage type="updatePassword"/>}
+                                    />
+                                </Route>
+
+                                <Route
+                                    element={
+                                        <Authenticated
+                                            v3LegacyAuthProviderCompatible={true}
+                                            key="catch-all">
+                                            <ThemedLayoutV2>
+                                                <Outlet/>
+                                            </ThemedLayoutV2>
+                                        </Authenticated>
+                                    }
+                                >
+                                    <Route path="*" element={<ErrorComponent/>}/>
+                                </Route>
+                            </Routes>
+                        </FiefAuthProvider>
+                        <UnsavedChangesNotifier/>
+                        <DocumentTitleHandler handler={customTitleHandler}/>
+                    </Refine>
+                </RefineSnackbarProvider>
+            </ColorModeContextProvider>
         </BrowserRouter>
     );
 };

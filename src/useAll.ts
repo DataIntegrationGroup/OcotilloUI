@@ -74,12 +74,12 @@ export const useAll = <
 
     const triggerAll = async () => {
         setIsLoading(true)
-        console.log('trigger allgasdf')
 
         let rawData = [];
 
         let current = 1;
         let preparingData = true;
+
         while (preparingData) {
             try {
                 const {data, total} = await getList({
@@ -104,7 +104,7 @@ export const useAll = <
                     preparingData = false;
                 }
 
-                if (total === rawData.length) {
+                if (total === rawData.length || data.length < pageSize) {
                     preparingData = false;
                 }
 

@@ -15,7 +15,7 @@
 // ===============================================================================
 
 import {Chip} from "@mui/material";
-import React from "react";
+import React, {useCallback, useEffect, useRef} from "react";
 import {ExportButton} from "@refinedev/mui";
 
 export function publicReleaseChip({row}) {
@@ -32,6 +32,28 @@ export function publicReleaseChip({row}) {
             label={row?.PublicRelease ? "Yes" : "No"}/>
     )
 }
+
+
+export const useDebounce = (callback, delay) => {
+    const handlerRef = useRef<ReturnType<typeof setTimeout>>();
+    const debouncedCallback = useCallback((...args) => {
+        if (handlerRef.current) {
+            clearTimeout(handlerRef.current);
+        }
+        handlerRef.current = setTimeout(() => {
+            callback(...args);
+        }, delay);
+    }, [callback, delay]);
+    // Cleanup
+    useEffect(() => {
+        return () => {
+            if (handlerRef.current) {
+                clearTimeout(handlerRef.current);
+            }
+        };
+    }, []);
+    return debouncedCallback;
+};
 
 
 // export function makeExportHeader({loading, onClick}){

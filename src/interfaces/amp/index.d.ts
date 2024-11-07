@@ -85,4 +85,9 @@ export interface IEquipment {
     DateInstalled: string;
     DateRemoved: string;
 }
+
+export interface IProject {
+    Project: string
+    PointIDPrefix: string
+}
 // ============= EOF =============================================

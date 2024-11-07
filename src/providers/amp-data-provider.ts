@@ -128,12 +128,15 @@ export const ampDataProvider: DataProvider = {
             url = `tabular/${resource}`;
         }
 
+        console.log('getlist', resource, url, params.toString());
         const response = await fetcher(`${url}?${params.toString()}`);
+
         if (response.status < 200 || response.status > 299) throw response;
 
         let data;
         let total;
-        if (['wells', 'locations', 'equipment', 'manualwaterlevels'].includes(resource)) {
+        if (['wells', 'locations', 'equipment',
+            'manualwaterlevels', 'projects'].includes(resource)) {
             data = response.data.items;
             total = response.data.total;
         } else {

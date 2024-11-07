@@ -18,12 +18,22 @@ import MapComponent from '../../../components/MapComponent';
 import Select, {SelectChangeEvent} from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {fetcher} from "../../../providers/amp-data-provider";
 import {Layer, Map, NavigationControl, Popup, Source} from "react-map-gl";
-import {ExportButton, useAutocomplete} from "@refinedev/mui";
+import {ExportButton, useAutocomplete, useDataGrid} from "@refinedev/mui";
 import LoadingButton from "@mui/lab/LoadingButton";
-import {Alert, Autocomplete, Dialog, FormControl, InputAdornment, InputLabel, TextField} from "@mui/material";
+import {
+    Alert,
+    Autocomplete,
+    Card,
+    CircularProgress,
+    Dialog,
+    FormControl,
+    InputAdornment,
+    InputLabel,
+    TextField
+} from "@mui/material";
 import Grid from "@mui/material/Grid";
 import {HttpError, useExport, useList, useMany} from "@refinedev/core";
 import {stringify, parse} from "wkt";
@@ -38,6 +48,13 @@ import {SetMapPopupContent} from "@/components/MapPopupComponent";
 import {CheckBox} from "@mui/icons-material";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
+import {DataGrid} from "@mui/x-data-grid";
+import {ExportControl} from "@/pages/amp/querybuilder/ExportControl";
+import {ClearableSelect} from "@/components/ClearableSelect";
+import {ANALYTES} from "@/components/enums";
+import FilterComponent from "@/components/FilterComponent";
+import {LegendComponent} from "@/components/LegendComponent";
+import {DataDrivenPropertyValueSpecification} from "mapbox-gl";
 
 // import {Layer, Source} from "mapbox-gl";
 
@@ -74,7 +91,7 @@ const ProjectRegions = [
     "Rio Chama Basin",
     "Rio Puerco Basin",
     "La Jencia Basin",
-    ]
+]
 
 const ProjectRegionWKTs = {
     "Pecos Valley Artesian Conservancy District": "POLYGON((-104.000000 33.000000, -104.000000 34.000000, -105.000000 34.000000, -105.000000 33.000000, -104.000000 33.000000))",
@@ -104,19 +121,34 @@ const toGeoJson = (data: any) => {
     }
 }
 
+// const FilterComponent = () => {
+//     // make a component with a select box for Well Depth and Hole Depth, a comparison operator, and a value
+//
+// }
+
+
 export const Querybuilder: React.FC = () => {
     const [popupContent, setPopupContent] = useState<any>(null);
+    const [analytes, setAnalytes] = useState<string[]>([]);
     const [alertOpen, setAlertOpen] = useState(false);
     // const [PointID, setPointID] = useState<string>('');
     const [onlyActiveLocations, setOnlyActiveLocations] = useState<boolean>(false);
     const [continuousPressureLocations, setContinuousLocation] = useState<boolean>(false);
     const [continuousAcousticLocations, setContinuousAcousticLocations] = useState<boolean>(false);
-    const [county, setCounty] = useState<ICounty | null>(null);
+    const [county, setCounty] = useState('')
     const [projectRegion, setProjectRegion] = useState<string>('');
-    const [exportConfig, setExportConfig] = useState<any>({
-        use_water_levels: false,
-        use_water_chemistry: false
-    })
+    const [projectName, setProjectName] = useState<string>('');
+    const [field, setField] = useState<string>('');
+    const [operator, setOperator] = useState<string>('');
+    const [value, setValue] = useState<string>('');
+    const [includeLegacyUSGS, setIncludeLegacyUSGS] = useState<boolean>(false);
+    const [includeLegacyTWDB, setIncludeLegacyTWDB] = useState<boolean>(false);
+
+    // const [exportConfig, setExportConfig] = useState<any>({
+    //     use_water_levels: false,
+    //     use_water_chemistry: false
+    // })
+
 
     const [resultFeatureCollection, setResultFeatureCollection] = useState<any>({
         type: 'FeatureCollection',
@@ -127,9 +159,30 @@ export const Querybuilder: React.FC = () => {
     const [countyFeature, setCountyFeature] = useState<any>()
     const [locationType, setLocationType] = useState<string>('');
 
-    const {autocompleteProps} = useAutocomplete<ICounty>({
-        resource: "counties",
-    });
+    const {
+        data: countiesObjects,
+        isLoading: isLoadingCounties,
+        isError: isErrorCounties
+    } = useList<ICounty, HttpError>({
+        resource: 'counties',
+    })
+
+    const {data: projects} = useList(
+        {
+            resource: 'projects',
+            dataProviderName: 'amp',
+            pagination: {current: 1, pageSize: 1000}
+        }
+    )
+    const ps = projects?.data ?? [];
+    const projectNames = ps.map((p) => {
+        return p.Project
+    })
+
+    const cs = countiesObjects?.data ?? [];
+    const countiesNames = cs.map((c) => {
+        return c.name
+    })
 
     let polygonKeys = Object.keys(selectionPolygons);
     let selectionPolygon = null;
@@ -145,23 +198,45 @@ export const Querybuilder: React.FC = () => {
         }
     }
 
+    const getFilter = () => {
+        if (field === '' || operator === '' || value === '') {
+            return ''
+        }
+        return JSON.stringify({field: field, operator: operator, value: value})
+    }
+
     const params = {
-        county: county?.name,
+        county: county,
         wkt: getWKT(),
         site_type: locationType,
         only_active_locations: onlyActiveLocations,
         continuous_pressure_locations: continuousPressureLocations,
-        continuous_acoustic_locations: continuousAcousticLocations
+        continuous_acoustic_locations: continuousAcousticLocations,
+        analytes: analytes.join(','),
+        filter: getFilter(),
+        project: projectName,
+        include_legacy_usgs: includeLegacyUSGS,
+        include_legacy_twdb: includeLegacyTWDB
     }
 
-    const {triggerExport, isLoading: isLoadingExport} = useExport({
-        resource: 'locations',
-        pageSize: 1000,
-        meta: {
-            params: params,
-            exportConfig: exportConfig
-        }
-    })
+    const wellEnabled = locationType === 'Well';
+    // let expand;
+    // if (exportType === 'WaterChemistry') {
+    //     expand = 'water_chemistry'
+    // }
+    // const exportParams = {
+    //     ...params,
+    //     // expand: expand
+    // }
+
+    // const {triggerExport, isLoading: isLoadingExport} = useExport({
+    //     resource: 'locations',
+    //     pageSize: 1000,
+    //     meta: {
+    //         params: params,
+    //         exportConfig: exportConfig
+    //     }
+    // })
 
     const {isLoading, triggerAll} = useAll({
         resource: 'locations',
@@ -169,52 +244,30 @@ export const Querybuilder: React.FC = () => {
             params: params
         }
     })
-    // console.log('useall', data)
-    // const {data, isLoading, isError} = useList<ILocation, HttpError>(
-    //     {
-    //     resource: 'locations',
-    //         meta: {
-    //             params: {county: county?.name,
-    //                      wkt: selectionPolygon? stringify(selectionPolygon): null},
-    //         }
-    //     }
-    // )
 
-    // const {
-    //     saveButtonProps,
-    //     register,
-    //     control,
-    //     formState: { errors },
-    // } = useForm<IQuery, HttpError, Nullable<IQuery>>();
+    const {dataGridProps} = useDataGrid(
+        {
+            resource: 'locations',
+            meta: {
+                params: params,
+            }
+        }
+    )
 
-    // const {
-    //     refineCore: { onFinish, formLoading, query },
-    //     register,
-    //     handleSubmit,
-    //     formState: { errors },
-    //     saveButtonProps,
-    // } = useForm<IQuery, HttpError, Nullable<IQuery>>({
-    //     refineCoreProps: {
-    //         // resource: "products",
-    //         // action: "edit",
-    //         // id: 123,
-    //     },
-    // });
-
-
-    const handleSubmit = async (e: any) => {
-        console.log('handleSubmit', county, locationType)
-
-        // only search if county or project region or polygon is selected
-        if (county === null && selectionPolygon === null && projectRegion === '') {
-            setAlertOpen(true)
+    const spatialFilterEnabled = county !== '' || selectionPolygon !== null || projectRegion !== '' || locationType !== '';
+    useEffect(() => {
+        if ((operator!='' || field!='') && value=='') {
             return
         }
 
-        let data = await triggerAll()
+        if (!spatialFilterEnabled && projectName === '') {
+            setResultFeatureCollection({type: 'FeatureCollection', features: []})
+            setCountyFeature(null)
+            return
+        }
 
-        if (county !== null) {
-            let county_url = `tabular/counties/${county.name}`
+        if (county !== '') {
+            let county_url = `tabular/counties/${county}`
             fetcher(county_url).then((response) => {
                 return response.data
             }).then((data) => {
@@ -223,38 +276,107 @@ export const Querybuilder: React.FC = () => {
         } else if (projectRegion !== '') {
             let data = parse(ProjectRegionWKTs[projectRegion])
             setCountyFeature(data)
-        }
-        else {
+        } else {
             setCountyFeature(null)
         }
 
-        const geoJson = toGeoJson(data)
-        setResultFeatureCollection(geoJson)
-    }
+        triggerAll().then((data) => {
+            const geoJson = toGeoJson(data)
+            setResultFeatureCollection(geoJson)
+        })
+
+    }, [county, selectionPolygon, projectRegion,
+        locationType, onlyActiveLocations, continuousPressureLocations, continuousAcousticLocations,
+        analytes, field, operator, value, projectName, includeLegacyUSGS, includeLegacyTWDB]);
+
+    // const {triggerExport: triggerExportCustom, isLoading: isLoadingExportCustom} = useExport({
+    //     resource: exportType.toLowerCase(),
+    //     pageSize: 1000,
+    //     meta: {
+    //         params: exportParams,
+    //         exportConfig: exportConfig
+    //     }
+    // })
 
     const handleClose = () => {
         setAlertOpen(false);
     };
 
     const onMouseMove = (e: any, features: any[], mapRef: any) => {
-        features = features.filter((f) => f.layer.id ==='location')
+        features = features.filter((f) => f.layer.id === 'location')
         if (features.length > 0) {
             mapRef.current.getCanvas().style.cursor = 'pointer'
             SetMapPopupContent({features, setPopupContent})
-        }else{
+        } else {
             mapRef.current.getCanvas().style.cursor = 'grab'
             setPopupContent(null)
         }
     }
 
-    const handleProjectRegion = (e)=>{
-        let pr = e.target.value as string
-        setProjectRegion(pr)
-        let data = parse(ProjectRegionWKTs[pr])
-        setCountyFeature(data)
+    // const handleProjectRegion = (e) => {
+    //     let pr = e.target.value as string
+    //     setProjectRegion(pr)
+    //     let data = parse(ProjectRegionWKTs[pr])
+    //     setCountyFeature(data)
+    //
+    // }
 
+    // const getLocationColumns = () => {
+    //     return
+    // }
+
+    const columns = [
+        {
+            field: 'PointID',
+            headerName: 'PointID',
+            type: 'string',
+            minWidth: 80
+        },
+        {
+            field: 'site_type',
+            headerName: 'Site Type',
+            type: 'string',
+            minWidth: 200
+        },
+        {
+            field: 'SiteNames',
+            headerName: 'Site Names',
+            type: 'string',
+            minWidth: 250
+        },
+        {
+            field: 'Easting',
+            headerName: 'Easting',
+            type: 'integer',
+            minWidth: 80
+        },
+        {
+            field: 'Northing',
+            headerName: 'Northing',
+            type: 'integer',
+            minWidth: 80
+        }
+    ]
+
+    const legendOptions = [
+        {label: 'Groundwater other than spring (well)', color: '#224bb4'},
+        {label: 'Spring', color: '#517938'},
+        {label: 'Ephemeral stream', color: '#b42722'},
+        {label: 'Perennial stream', color: '#d5633a'},
+        {label: 'Unknown', color: '#000000'}
+    ]
+    const getCircleColors = (): DataDrivenPropertyValueSpecification<string> => {
+        let style = ['match', ['get', 'site_type']]
+        legendOptions.forEach((item) => {
+            style.push(item.label)
+            style.push(item.color)
+        })
+        style.push('#000000')
+        return style as DataDrivenPropertyValueSpecification<string>
     }
 
+
+    console.log('daa', dataGridProps)
     return (
         <div>
             <h1>QueryBuilder</h1>
@@ -272,9 +394,55 @@ export const Querybuilder: React.FC = () => {
                 <Alert severity="error">Please select a County or a Project Region or draw a polygon on the map</Alert>
             </Dialog>
 
-            <Grid container spacing={2}>
-                <Grid>
+            <Grid container spacing={2} p={3}>
+                <Stack direction={'row'} sx={{width: 1}}>
+                    <ClearableSelect label={'Location Type'}
+                                     value={locationType} setValue={setLocationType} values={LocationTypes}/>
+                    <ClearableSelect label={'Project Region'}
+                                     value={projectRegion} setValue={setProjectRegion} values={ProjectRegions}/>
+                    <ClearableSelect label={'County'}
+                                     value={county} setValue={setCounty} values={countiesNames}/>
+                </Stack>
+                <Stack direction={"row"} sx={{width: 1}} pt={2}>
+                    <ClearableSelect label={'Analytes'}
+                                     value={analytes}
+                                     setValue={setAnalytes}
+                                     values={ANALYTES}
+                                     multiple={true}/>
+                    <FilterComponent
+                        field={field}
+                        setField={setField}
+                        operator={operator}
+                        setOperator={setOperator}
+                        value={value}
+                        setValue={setValue}
+                    />
+                </Stack>
+                <Stack direction={'row'} sx={{width: 1}} pt={2}>
+                    <ClearableSelect label={'Project Name'}
+                                     value={projectName}
+                                     setValue={setProjectName}
+                                     values={projectNames}/>
+                </Stack>
+
+                {/*well check boxes*/}
+                <Grid xs={12} p={1}>
                     <FormControlLabel
+                        control={<Checkbox
+                            checked={includeLegacyUSGS}
+                            onChange={(e) => setIncludeLegacyUSGS(e.target.checked)}
+                        />}
+                        label="Include Legacy USGS"
+                    />
+                    <FormControlLabel
+                        control={<Checkbox
+                            checked={includeLegacyTWDB}
+                            onChange={(e) => setIncludeLegacyTWDB(e.target.checked)}
+                        />}
+                        label="Include Legacy TWDB"
+                    />
+                    <FormControlLabel
+                        disabled={!wellEnabled}
                         control={<Checkbox
                             checked={onlyActiveLocations}
                             onChange={(e) => setOnlyActiveLocations(e.target.checked)}
@@ -282,6 +450,7 @@ export const Querybuilder: React.FC = () => {
                         label="Only Active Locations"
                     />
                     <FormControlLabel
+                        disabled={!wellEnabled}
                         control={<Checkbox
                             checked={continuousPressureLocations}
                             onChange={(e) => setContinuousLocation(e.target.checked)}
@@ -289,6 +458,7 @@ export const Querybuilder: React.FC = () => {
                         label="Continuous Pressure Locations"
                     />
                     <FormControlLabel
+                        disabled={!wellEnabled}
                         control={<Checkbox
                             checked={continuousAcousticLocations}
                             onChange={(e) => setContinuousAcousticLocations(e.target.checked)}
@@ -296,184 +466,80 @@ export const Querybuilder: React.FC = () => {
                         label="Continuous Acoustic Locations"
                     />
                 </Grid>
-                <Grid>
-                    <Box mt={2}>
-                        <FormControl fullWidth>
-                            <InputLabel id="demo-simple-select-label">Location Type</InputLabel>
-                            <Select
-                                variant={'outlined'}
-                                label="Location Type"
-                                value={locationType}
-                                onChange={(e: SelectChangeEvent) => {
-                                    setLocationType(e.target.value as string)
+
+                <Grid xs={12}>
+                    <Box border={1} p={2}>
+                        <ExportControl
+                            disabled={!spatialFilterEnabled}
+                            params={params}/>
+                    </Box>
+                </Grid>
+
+            </Grid>
+
+            <Grid container>
+                <Grid xs={6}>
+                    <DataGrid
+                        {...dataGridProps}
+                        rowHeight={25}
+                        getRowId={(row) => row.PointID}
+                        columns={columns}
+                    />
+                </Grid>
+                <Grid xs={6}>
+                    <LegendComponent items={legendOptions}/>
+                    <MapComponent
+                        isLoading={isLoading}
+                        showDrawControls={{show: true, position: 'top-right'}}
+                        setSelectionPolygons={setSelectionPolygons}
+                        setPopupContent={setPopupContent}
+                        popupContent={popupContent}
+                        onMouseMoveCallback={onMouseMove}
+                    >
+                        <Source
+                            key='foo'
+                            id='foo'
+                            type='geojson'
+                            data={resultFeatureCollection}>
+                            <Layer
+                                id="location"
+                                type="circle"
+                                paint={{
+                                    'circle-radius': 6,
+                                    'circle-color': getCircleColors(),
+                                    // [
+                                    //     'match',
+                                    //     ['get', 'site_type'],
+                                    //     'Groundwater other than spring (well)', '#224bb4',
+                                    //     'Spring', '#517938',
+                                    //     'Ephemeral stream', '#b42722',
+                                    //     'Perennial stream', '#d5633a',
+                                    //     '#000000'
+                                    // ],
+                                    'circle-stroke-color': '#ffffff',
+                                    'circle-stroke-width': 1,
                                 }}
-                                endAdornment={
-                                    locationType !== '' && (
-
-                                        <InputAdornment sx={{marginRight: "15px"}} position="end">
-                                            <IconButton
-                                                onClick={() => {
-                                                    setLocationType('');
-                                                }}
-                                            >
-                                                <ClearIcon fontSize="small"></ClearIcon>
-                                            </IconButton>
-                                        </InputAdornment>
-                                    )
-                                }
-                            >
-                                {
-                                    LocationTypes.map((lt) => {
-                                        return <MenuItem
-                                            key={lt}
-                                            value={lt}>{lt}</MenuItem>
-                                    })
-                                }
-                            </Select>
-                        </FormControl>
-                    </Box>
-                    <Box mt={2}>
-                        <FormControl fullWidth>
-                            <InputLabel>Project Region</InputLabel>
-                            <Select
-                                variant={'outlined'}
-                                label="Project Region"
-                                value={projectRegion}
-                                onChange={handleProjectRegion}
-                                // onChange={(e: SelectChangeEvent) => {
-                                //     setProjectRegion(e.target.value as string)
-                                // }}
-                                endAdornment={
-                                    projectRegion !== '' && (
-                                        <InputAdornment sx={{marginRight: "15px"}} position="end">
-                                            <IconButton
-                                                onClick={() => {
-                                                    setProjectRegion('');
-                                                }}
-                                            >
-                                                <ClearIcon fontSize="small"></ClearIcon>
-                                            </IconButton>
-                                        </InputAdornment>
-                                    )
-                                }
-                            >
-                                {
-                                    ProjectRegions.map((lt) => {
-                                        return <MenuItem
-                                            key={lt}
-                                            value={lt}>{lt}</MenuItem>
-                                    })
-                                }
-                            </Select>
-                        </FormControl>
-                    </Box>
-                </Grid>
-                <Grid >
-                    <Autocomplete
-                        // clearIcon={true}
-                        // clearOnEscape={true}
-                        {...autocompleteProps}
-                        value={county}
-                        onChange={(e, value) => setCounty(value)}
-                        getOptionLabel={(item) => item.name}
-                        isOptionEqualToValue={(option, value) =>
-                            value === undefined ||
-                            option?.id?.toString() === (value?.id ?? value)?.toString()
-                        }
-                        // placeholder="Select County"
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="County"
-                                margin="normal"
-                                variant="outlined"
                             />
-                        )}
-                    />
-                </Grid>
-            </Grid>
-            <Grid container spacing={2} mb={3}>
-                <Grid >
-                    <LoadingButton
-                        loadingPosition={'start'}
-                        startIcon={<SearchOutlinedIcon/>}
-                        onClick={handleSubmit}
-                        loading={isLoading}
-                        variant={'contained'}
-                        sx={{margin: 2}}
-                        >
-                        Run Query
-                    </LoadingButton>
-                </Grid>
-                <Grid >
-                    <ExportButton
-                        sx={{margin: 2}}
-                        variant={'contained'}
-                        loading={isLoadingExport}
-                        onClick={triggerExport}>
-                        Export Locations
-                    </ExportButton>
-                    <FormControlLabel control={<Checkbox
-                    checked={exportConfig.use_water_levels}
-                    onChange={(e) => setExportConfig({use_water_levels: e.target.checked as boolean})}
-                    />} label="With WaterLevels" />
-                    <FormControlLabel control={<Checkbox
-                        checked={exportConfig.use_water_chemistry}
-                        onChange={(e) => setExportConfig({use_water_chemistry: e.target.checked as boolean})}
-                    />} label="With WaterChemistry" />
+                        </Source>
+                        {countyFeature && <Source
+                            key='county'
+                            id='countysource'
+                            type='geojson'
+                            data={countyFeature}>
+                            <Layer
+                                id="county"
+                                type="fill"
+                                paint={{
+                                    "fill-color": "#9ab7d5",
+                                    "fill-outline-color": "#000000",
+                                    "fill-opacity": 0.25,
+                                }}
+                            />
+                        </Source>}
+                    </MapComponent>
                 </Grid>
             </Grid>
 
-
-
-            <MapComponent
-                showDrawControls={{show: true, position: 'top-right'}}
-                setSelectionPolygons={setSelectionPolygons}
-                setPopupContent={setPopupContent}
-                popupContent={popupContent}
-                onMouseMoveCallback={onMouseMove}
-            >
-                <Source
-                    key='foo'
-                    id='foo'
-                    type='geojson'
-                    data={resultFeatureCollection}>
-                    <Layer
-                        id="location"
-                        type="circle"
-                        paint={{
-                            'circle-radius': 6,
-                            'circle-color':
-                                [
-                                    'match',
-                                    ['get', 'site_type'],
-                                    'Groundwater other than spring (well)', '#224bb4',
-                                    'Spring', '#517938',
-                                    'Ephemeral stream', '#b42722',
-                                    'Perennial stream', '#d5633a',
-                                    '#000000'
-                                ],
-                            'circle-stroke-color': '#ffffff',
-                            'circle-stroke-width': 1,
-                        }}
-                    />
-                </Source>
-                {countyFeature && <Source
-                    key='county'
-                    id='countysource'
-                    type='geojson'
-                    data={countyFeature}>
-                    <Layer
-                        id="county"
-                        type="fill"
-                        paint={{
-                            "fill-color": "#9ab7d5",
-                            "fill-outline-color": "#000000",
-                            "fill-opacity": 0.25,
-                        }}
-                    />
-                </Source>}
-            </MapComponent>
 
         </div>
     )

@@ -22,10 +22,15 @@ import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 import type {ILocation} from "@/interfaces/amp";
 import {publicReleaseChip} from "@/components/util";
 import {ListPage} from "@/components/ListPage";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import {useForm} from "@refinedev/react-hook-form";
+import {Button} from "@mui/material";
+import Box from "@mui/material/Box";
 
 
 export const LocationList: React.FC = () => {
-    const {dataGridProps} = useDataGrid<ILocation>();
+    const {dataGridProps, search, filters} = useDataGrid<ILocation>();
     const columns = React.useMemo<GridColDef<ILocation>[]>(
         () => [
             {
@@ -116,6 +121,25 @@ export const LocationList: React.FC = () => {
         // [categoriesData, isLoading],
     );
 
-    return ( <ListPage columns={columns} dataGridProps={dataGridProps} />);
+    const {register, handleSubmit} = useForm()
+    return ( <Stack>
+        {/*<Box*/}
+        {/*    component="form"*/}
+        {/*    sx={{*/}
+        {/*        display: "flex",*/}
+        {/*        flexDirection: "column",*/}
+        {/*    }}*/}
+        {/*    autoComplete="off"*/}
+        {/*    onSubmit={handleSubmit(search)}*/}
+        {/*>*/}
+        {/*<TextField {...register('q')}*/}
+        {/*id={'q'}*/}
+        {/*/>*/}
+        {/*    <Button type="submit" variant="contained">*/}
+        {/*        Submit*/}
+        {/*    </Button>*/}
+        {/*</Box>*/}
+        <ListPage columns={columns} dataGridProps={dataGridProps} />
+    </Stack>);
 };
 // ============= EOF =============================================
