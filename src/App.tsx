@@ -13,67 +13,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ===============================================================================
-import {Refine, Authenticated} from "@refinedev/core";
-import {
-    ErrorComponent,
-    useNotificationProvider,
-    RefineSnackbarProvider,
-    AuthPage,
-} from "@refinedev/mui";
+import {Authenticated, Refine} from "@refinedev/core";
+import {AuthPage, ErrorComponent, RefineSnackbarProvider, useNotificationProvider,} from "@refinedev/mui";
 
 import routerProvider, {
     CatchAllNavigate,
-    UnsavedChangesNotifier,
     DocumentTitleHandler,
+    UnsavedChangesNotifier,
 } from "@refinedev/react-router-v6";
-import {
-    BrowserRouter,
-    Routes,
-    Route,
-    Outlet,
-    useNavigate,
-} from "react-router-dom";
-import {useFormContext} from "react-hook-form";
-import {useEffect} from "react";
+import {BrowserRouter, Outlet, Route, Routes,} from "react-router-dom";
 
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
 
-import {FiefAuthProvider, useFiefAuth} from "@fief/fief/react";
+import {FiefAuthProvider} from "@fief/fief/react";
 
 import {ampDataProvider} from "@/providers/amp-data-provider";
 import {authProvider, fiefConstants} from "@/providers/fief-provider";
-
-import {LocationCreate, LocationEdit, LocationList, LocationShow} from "@/pages/amp/locations";
-import {WellEdit, WellList, WellShow} from "@/pages/amp/wells";
-import {EquipmentList, EquipmentShow} from "@/pages/amp/equipment";
 
 import {ThemedLayoutV2} from "@/components/layout";
 import {ThemedHeaderV2} from "@/components/layout/header";
 import {ThemedSiderV2} from "@/components/layout/sider";
 import {ThemedTitleV2} from "@/components/layout/title";
-import {LookupTableList, MeasuringAgencyList} from "@/components/lookuptable";
 
 import {resources} from "@/resources";
 import {ColorModeContextProvider} from "@/contexts";
-import {
-    ManualWaterLevelList,
-    ManualWaterLevelsCreate,
-    ManualWaterLevelsEdit,
-    ManualWaterLevelShow
-} from "@/pages/amp/manualwaterlevels";
 import {Home} from "@/pages/home";
-import {WaterDashboard} from "@/pages/amp/dashboard";
-import {Querybuilder} from "@/pages/amp/querybuilder";
 
-import {ProjectList, ProjectShow, ProjectCreate} from "@/pages/geochronology/projects";
+import {ProjectCreate, ProjectList, ProjectShow} from "@/pages/geochronology/projects";
 import {geochronologyDataProvider} from "@/providers/geochronology-data-provider";
-import {SampleList, SampleShow, SampleCreate} from "@/pages/geochronology/samples";
-import {MaterialList, MaterialShow, MaterialCreate} from "@/pages/geochronology/materials";
+import {SampleCreate, SampleList, SampleShow} from "@/pages/geochronology/samples";
+import {MaterialCreate, MaterialList, MaterialShow} from "@/pages/geochronology/materials";
 
 import {
     PrincipalInvestigatorCreate,
@@ -83,72 +55,12 @@ import {
 import {GeochronologyDashboard} from "@/pages/geochronology/dashboard";
 import {GeothermalDashboard} from "@/pages/geothermal/dashboard";
 import {CriticalMineralsDashboard} from "@/pages/criticalminerals/dashboard";
-import {ChemUpload} from "@/pages/amp/chemupload";
-import ManualWaterLevelsBatchUpload from "@/pages/amp/manualwaterlevels/batchupload";
 import {geothermalDataProvider} from "@/providers/geothermal-data-provider";
 import {GeoThermalWellList, GeoThermalWellShow} from "@/pages/geothermal/wells";
-import {AMPProjectList} from "@/pages/amp/projects";
-import {ReportBuilder} from "@/pages/amp/reportbuilder";
 import {settings} from "@/settings";
+import {Callback, RememberMe} from "@/components/Auth";
+import {makeAMPRoutes} from "@/routes/amp";
 
-
-const lookupRoutes = [
-    "measurement_method",
-    "level_status",
-    "data_quality",
-    "data_source",
-];
-
-
-const makeAMPRoutes = () => {
-    return (
-        <Route path="/amp">
-            <Route path="dashboard" element={<WaterDashboard/>}/>
-            <Route path="querybuilder" element={<Querybuilder/>}/>
-            <Route path='reportbuilder' element={<ReportBuilder/>}/>
-            <Route path="chemupload" element={<ChemUpload/>}/>
-
-            <Route path="wells">
-                <Route index element={<WellList/>}/>
-                {/*<Route path="create" element={<PostCreate />} />*/}
-                <Route path="edit/:id" element={<WellEdit/>}/>
-                <Route path="show/:id" element={<WellShow/>}/>
-            </Route>
-            <Route path="locations">
-                <Route index element={<LocationList/>}/>
-                <Route path="create" element={<LocationCreate/>}/>
-                <Route path="edit/:id" element={<LocationEdit/>}/>
-                <Route path="show/:id" element={<LocationShow/>}/>
-            </Route>
-            <Route path="equipment">
-                <Route index element={<EquipmentList/>}/>
-                <Route path="show/:id" element={<EquipmentShow/>}/>
-            </Route>
-            <Route path="manualwaterlevels">
-                <Route index element={<ManualWaterLevelList/>}/>
-                <Route path="create" element={<ManualWaterLevelsCreate/>}/>
-                <Route path="edit/:id" element={<ManualWaterLevelsEdit/>}/>
-                <Route path="show/:id" element={<ManualWaterLevelShow/>}/>
-                <Route path="batchupload" element={<ManualWaterLevelsBatchUpload/>}/>
-            </Route>
-            <Route path='projects'>
-                <Route index element={<AMPProjectList/>}/>
-                {/*<Route path="create" element={<ProjectCreate/>}/>*/}
-                {/*<Route path="edit/:id" element={<ProjectEdit/>}/>*/}
-                <Route path="show/:id" element={<ProjectShow/>}/>
-            </Route>
-
-            {lookupRoutes.map((route) => (
-                <Route path={`lu_${route}`}>
-                    <Route index element={<LookupTableList/>}/>
-                </Route>
-            ))}
-            <Route path={`lu_measuring_agency`}>
-                <Route index element={<MeasuringAgencyList/>}/>
-            </Route>
-        </Route>
-    )
-}
 
 const App: React.FC = () => {
     const customTitleHandler = ({
@@ -163,42 +75,6 @@ const App: React.FC = () => {
             title = `${resource.label} | ${title}`;
         }
         return title;
-    };
-
-    const RememberMe = () => {
-        const {register} = useFormContext();
-
-        return (
-            <FormControlLabel
-                sx={{
-                    span: {
-                        fontSize: "12px",
-                        color: "text.secondary",
-                    },
-                }}
-                color="secondary"
-                control={
-                    <Checkbox size="small" id="rememberMe" {...register("rememberMe")} />
-                }
-                label="Remember me"
-            />
-        );
-    };
-
-    const Callback = () => {
-        const fiefAuth = useFiefAuth();
-        const navigate = useNavigate();
-        useEffect(() => {
-            fiefAuth
-                .authCallback(
-                    `${window.location.protocol}//${window.location.host}${settings.urlprefix}/callback`
-                )
-                .then(() => {
-                    navigate("/home");
-                });
-        }, [fiefAuth, navigate]);
-
-        return <p></p>;
     };
 
     return (
@@ -226,6 +102,10 @@ const App: React.FC = () => {
                             projectId: "wCqQ1f-agx0FN-70pXIr",
                         }}
                     >
+                        <UnsavedChangesNotifier/>
+                        <DocumentTitleHandler handler={customTitleHandler}/>
+
+
                         <FiefAuthProvider
                             baseURL={fiefConstants.baseURL}
                             clientId={fiefConstants.clientId}
@@ -255,6 +135,7 @@ const App: React.FC = () => {
                                     }
                                 >
                                     <Route index element={<Home/>}/>
+                                    <Route path={'/home'} element={<Home/>}/>
 
                                     // amp routes
                                     {makeAMPRoutes()}
@@ -419,8 +300,7 @@ const App: React.FC = () => {
                                 </Route>
                             </Routes>
                         </FiefAuthProvider>
-                        <UnsavedChangesNotifier/>
-                        <DocumentTitleHandler handler={customTitleHandler}/>
+
                     </Refine>
                 </RefineSnackbarProvider>
             </ColorModeContextProvider>

@@ -64,6 +64,10 @@ const gravatarUrl = (email) => {
     return `https://www.gravatar.com/avatar/${sha256(hash)}`;
 };
 
+export const fiefURL = (path: string) => {
+    return `${window.location.protocol}//${window.location.host}${settings.urlprefix}/${path}`
+}
+
 export const authProvider: AuthProvider = {
     login: async ({providerName, email}) => {
 
@@ -83,7 +87,7 @@ export const authProvider: AuthProvider = {
 
         if (providerName === "fief") {
             localStorage.setItem("email", email);
-            await fiefAuth.redirectToLogin(`${window.location.protocol}//${window.location.host}${settings.urlprefix}/callback`,
+            await fiefAuth.redirectToLogin(fiefURL('callback'),
                 {scope: ['offline_access', 'openid']});
             return {
                 success: true,
@@ -147,7 +151,7 @@ export const authProvider: AuthProvider = {
     // },
     logout: async () => {
         localStorage.removeItem("email");
-        await fiefAuth.logout(`${window.location.protocol}//${window.location.host}${settings.urlprefix}/login`);
+        await fiefAuth.logout(fiefURL('login'));
         return {
             success: true,
         };
