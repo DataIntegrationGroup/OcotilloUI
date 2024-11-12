@@ -36,11 +36,12 @@ export const fiefConstants = {
 }
 
 const fiefClient = new Fief(fiefConstants);
-const fiefAuth = new browser.FiefAuth(fiefClient);
+
 
 
 export const getAuthState = () => {
     const item = sessionStorage.getItem('fief-authstate')
+    // console.log('getAuthState', item, 'fief getAuthState', fiefAuth.getTokenInfo())
     if (item) {
         return JSON.parse(item)
     }
@@ -86,9 +87,20 @@ export const authProvider: AuthProvider = {
         // }
 
         if (providerName === "fief") {
-            localStorage.setItem("email", email);
+            const authstate = getAuthState()
+            console.log('authstate', authstate)
+            if (Boolean(authstate?.tokenInfo)) {
+                return {
+                    success: true,
+                    redirectTo: "/",
+                }
+            }
+            const fiefAuth = new browser.FiefAuth(fiefClient);
+
+            // console.log('redirecting to login')
             await fiefAuth.redirectToLogin(fiefURL('callback'),
-                {scope: ['offline_access', 'openid']});
+                                            {scope: ['offline_access', 'openid']});
+            // console.log('returned from redirect')
             return {
                 success: true,
             };
@@ -150,7 +162,8 @@ export const authProvider: AuthProvider = {
     //     };
     // },
     logout: async () => {
-        localStorage.removeItem("email");
+        const fiefAuth = new browser.FiefAuth(fiefClient);
+        sessionStorage.removeItem("fief-authstate");
         await fiefAuth.logout(fiefURL('login'));
         return {
             success: true,
@@ -165,7 +178,12 @@ export const authProvider: AuthProvider = {
 
         return {error};
     },
-    check: async () => {return {authenticated: true}},
+    check: async () => {
+        const authState = getAuthState()
+        console.log('check', authState)
+        return {authenticated: Boolean(authState.userinfo)}
+
+    },
         // localStorage.getItem("email")
         //     ? {
         //         authenticated: true,

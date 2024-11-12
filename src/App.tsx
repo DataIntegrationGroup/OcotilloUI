@@ -18,10 +18,10 @@ import {AuthPage, ErrorComponent, RefineSnackbarProvider, useNotificationProvide
 
 import routerProvider, {
     CatchAllNavigate,
-    DocumentTitleHandler,
+    DocumentTitleHandler, NavigateToResource,
     UnsavedChangesNotifier,
 } from "@refinedev/react-router-v6";
-import {BrowserRouter, Outlet, Route, Routes,} from "react-router-dom";
+import {BrowserRouter, Navigate, Outlet, Route, Routes,} from "react-router-dom";
 
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
@@ -105,18 +105,37 @@ const App: React.FC = () => {
                         <UnsavedChangesNotifier/>
                         <DocumentTitleHandler handler={customTitleHandler}/>
 
-
                         <FiefAuthProvider
                             baseURL={fiefConstants.baseURL}
                             clientId={fiefConstants.clientId}
                         >
                             <Routes>
                                 <Route
+                                element={<Authenticated key={'auth-pages'} fallback={<Outlet/>}>
+                                            <Navigate to="/home"/>
+                                        </Authenticated>
+                                }>
+                                    <Route path="/callback" element={<Callback/>}/>
+                                    <Route
+                                        path="/login"
+                                        element={
+                                            <AuthPage
+                                                type="login"
+                                                rememberMe={<RememberMe/>}
+                                                providers={[{name: "fief",
+                                                        label: "Sign in with Fief"},]}
+                                            />
+                                        }
+                                    />
+                                </Route>
+                                <Route
                                     element={
                                         <Authenticated
                                             key="authenticated-routes"
-                                            fallback={<CatchAllNavigate to="/login"/>}
-                                            v3LegacyAuthProviderCompatible={true}>
+                                            redirectOnFail={"/login"}
+                                            // fallback={<CatchAllNavigate to="/login"/>}
+                                            // v3LegacyAuthProviderCompatible={true}
+                                        >
                                             <ThemedLayoutV2
                                                 Header={() => <ThemedHeaderV2 sticky/>}
                                                 Sider={ThemedSiderV2}
@@ -140,7 +159,7 @@ const App: React.FC = () => {
                                     // amp routes
                                     {makeAMPRoutes()}
 
-                                    //geochronology routes
+                                    // geochronology routes
                                     <Route path="/geochronology">
                                         <Route path="dashboard" element={<GeochronologyDashboard/>}/>
                                         <Route path="principal_investigators">
@@ -169,12 +188,12 @@ const App: React.FC = () => {
                                         </Route>
                                     </Route>
 
-                                    //criticalminerals routes
+                                    // criticalminerals routes
                                     <Route path='/criticalminerals'>
                                         <Route path="dashboard" element={<CriticalMineralsDashboard/>}/>
                                     </Route>
 
-                                    //geothermal routes
+                                    // geothermal routes
                                     <Route path='/geothermal'>
                                         <Route path="dashboard" element={<GeothermalDashboard/>}/>
                                         <Route path="wells">
@@ -186,118 +205,117 @@ const App: React.FC = () => {
                                     </Route>
                                 </Route>
 
-                                <Route
-                                    // element={
-                                    //   <Authenticated key="auth-pages" fallback={<Outlet />}>
-                                    //     <NavigateToResource resource="posts" />
-                                    //   </Authenticated>
-                                    // }
-                                >
-                                    <Route path="/callback" element={<Callback/>}/>
-                                    <Route
-                                        path="/login"
-                                        element={
-                                            <AuthPage
-                                                type="login"
-                                                rememberMe={<RememberMe/>}
-                                                // formProps={{
-                                                //   defaultValues: {
-                                                //     ...authCredentials,
-                                                //   },
-                                                // }}
-                                                providers={[
-                                                    {
-                                                        name: "fief",
-                                                        label: "Sign in with Fief",
-                                                        // icon: (
-                                                        //     <GoogleIcon
-                                                        //         style={{
-                                                        //             fontSize: 24,
-                                                        //         }}
-                                                        //     />
-                                                        // ),
-                                                    },
-                                                    // {
-                                                    //   name: "google",
-                                                    //   label: "Sign in with Google",
-                                                    //   icon: (
-                                                    //     <GoogleIcon
-                                                    //       style={{
-                                                    //         fontSize: 24,
-                                                    //       }}
-                                                    //     />
-                                                    //   ),
-                                                    // },
-                                                    // {
-                                                    //   name: "github",
-                                                    //   label: "Sign in with GitHub",
-                                                    //   icon: (
-                                                    //     <GitHubIcon
-                                                    //       style={{
-                                                    //         fontSize: 24,
-                                                    //       }}
-                                                    //     />
-                                                    //   ),
-                                                    // },
-                                                ]}
-                                            />
-                                        }
-                                    />
-                                    <Route
-                                        path="/register"
-                                        element={
-                                            <AuthPage
-                                                type="register"
-                                                providers={[
-                                                    {
-                                                        name: "google",
-                                                        label: "Sign in with Google",
-                                                        icon: (
-                                                            <GoogleIcon
-                                                                style={{
-                                                                    fontSize: 24,
-                                                                }}
-                                                            />
-                                                        ),
-                                                    },
-                                                    {
-                                                        name: "github",
-                                                        label: "Sign in with GitHub",
-                                                        icon: (
-                                                            <GitHubIcon
-                                                                style={{
-                                                                    fontSize: 24,
-                                                                }}
-                                                            />
-                                                        ),
-                                                    },
-                                                ]}
-                                            />
-                                        }
-                                    />
-                                    <Route
-                                        path="/forgot-password"
-                                        element={<AuthPage type="forgotPassword"/>}
-                                    />
-                                    <Route
-                                        path="/update-password"
-                                        element={<AuthPage type="updatePassword"/>}
-                                    />
-                                </Route>
+                                {/*<Route*/}
+                                {/*    // element={*/}
+                                {/*    //   <Authenticated key="auth-pages" fallback={<Outlet />}>*/}
+                                {/*    //     <NavigateToResource resource="Water" />*/}
+                                {/*    //   </Authenticated>*/}
+                                {/*    // }*/}
+                                {/*>*/}
+                                {/*    <Route*/}
+                                {/*        path="/login"*/}
+                                {/*        element={*/}
+                                {/*            <AuthPage*/}
+                                {/*                type="login"*/}
+                                {/*                rememberMe={<RememberMe/>}*/}
+                                {/*                // formProps={{*/}
+                                {/*                //   defaultValues: {*/}
+                                {/*                //     ...authCredentials,*/}
+                                {/*                //   },*/}
+                                {/*                // }}*/}
+                                {/*                providers={[*/}
+                                {/*                    {*/}
+                                {/*                        name: "fief",*/}
+                                {/*                        label: "Sign in with Fief",*/}
+                                {/*                        // icon: (*/}
+                                {/*                        //     <GoogleIcon*/}
+                                {/*                        //         style={{*/}
+                                {/*                        //             fontSize: 24,*/}
+                                {/*                        //         }}*/}
+                                {/*                        //     />*/}
+                                {/*                        // ),*/}
+                                {/*                    },*/}
+                                {/*                    // {*/}
+                                {/*                    //   name: "google",*/}
+                                {/*                    //   label: "Sign in with Google",*/}
+                                {/*                    //   icon: (*/}
+                                {/*                    //     <GoogleIcon*/}
+                                {/*                    //       style={{*/}
+                                {/*                    //         fontSize: 24,*/}
+                                {/*                    //       }}*/}
+                                {/*                    //     />*/}
+                                {/*                    //   ),*/}
+                                {/*                    // },*/}
+                                {/*                    // {*/}
+                                {/*                    //   name: "github",*/}
+                                {/*                    //   label: "Sign in with GitHub",*/}
+                                {/*                    //   icon: (*/}
+                                {/*                    //     <GitHubIcon*/}
+                                {/*                    //       style={{*/}
+                                {/*                    //         fontSize: 24,*/}
+                                {/*                    //       }}*/}
+                                {/*                    //     />*/}
+                                {/*                    //   ),*/}
+                                {/*                    // },*/}
+                                {/*                ]}*/}
+                                {/*            />*/}
+                                {/*        }*/}
+                                {/*    />*/}
+                                {/*    <Route*/}
+                                {/*        path="/register"*/}
+                                {/*        element={*/}
+                                {/*            <AuthPage*/}
+                                {/*                type="register"*/}
+                                {/*                providers={[*/}
+                                {/*                    {*/}
+                                {/*                        name: "google",*/}
+                                {/*                        label: "Sign in with Google",*/}
+                                {/*                        icon: (*/}
+                                {/*                            <GoogleIcon*/}
+                                {/*                                style={{*/}
+                                {/*                                    fontSize: 24,*/}
+                                {/*                                }}*/}
+                                {/*                            />*/}
+                                {/*                        ),*/}
+                                {/*                    },*/}
+                                {/*                    {*/}
+                                {/*                        name: "github",*/}
+                                {/*                        label: "Sign in with GitHub",*/}
+                                {/*                        icon: (*/}
+                                {/*                            <GitHubIcon*/}
+                                {/*                                style={{*/}
+                                {/*                                    fontSize: 24,*/}
+                                {/*                                }}*/}
+                                {/*                            />*/}
+                                {/*                        ),*/}
+                                {/*                    },*/}
+                                {/*                ]}*/}
+                                {/*            />*/}
+                                {/*        }*/}
+                                {/*    />*/}
+                                {/*    <Route*/}
+                                {/*        path="/forgot-password"*/}
+                                {/*        element={<AuthPage type="forgotPassword"/>}*/}
+                                {/*    />*/}
+                                {/*    <Route*/}
+                                {/*        path="/update-password"*/}
+                                {/*        element={<AuthPage type="updatePassword"/>}*/}
+                                {/*    />*/}
+                                {/*</Route>*/}
 
-                                <Route
-                                    element={
-                                        <Authenticated
-                                            v3LegacyAuthProviderCompatible={true}
-                                            key="catch-all">
-                                            <ThemedLayoutV2>
-                                                <Outlet/>
-                                            </ThemedLayoutV2>
-                                        </Authenticated>
-                                    }
-                                >
-                                    <Route path="*" element={<ErrorComponent/>}/>
-                                </Route>
+                                {/*<Route*/}
+                                {/*    element={*/}
+                                {/*        <Authenticated*/}
+                                {/*            v3LegacyAuthProviderCompatible={true}*/}
+                                {/*            key="catch-all">*/}
+                                {/*            <ThemedLayoutV2>*/}
+                                {/*                <Outlet/>*/}
+                                {/*            </ThemedLayoutV2>*/}
+                                {/*        </Authenticated>*/}
+                                {/*    }*/}
+                                {/*>*/}
+                                {/*    <Route path="*" element={<ErrorComponent/>}/>*/}
+                                {/*</Route>*/}
                             </Routes>
                         </FiefAuthProvider>
 

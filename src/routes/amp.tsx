@@ -48,7 +48,6 @@ export const makeAMPRoutes = () => {
             <Route path="querybuilder" element={<Querybuilder/>}/>
             <Route path='reportbuilder' element={<ReportBuilder/>}/>
             <Route path="chemupload" element={<ChemUpload/>}/>
-
             <Route path="wells">
                 <Route index element={<WellList/>}/>
                 {/*<Route path="create" element={<PostCreate />} />*/}
@@ -80,7 +79,7 @@ export const makeAMPRoutes = () => {
             </Route>
 
             {lookupRoutes.map((route) => (
-                <Route path={`lu_${route}`}>
+                <Route key={route} path={`lu_${route}`}>
                     <Route index element={<LookupTableList/>}/>
                 </Route>
             ))}
