@@ -132,7 +132,7 @@ export const Querybuilder: React.FC = () => {
     const [analytes, setAnalytes] = useState<string[]>([]);
     const [alertOpen, setAlertOpen] = useState(false);
     // const [PointID, setPointID] = useState<string>('');
-    const [onlyActiveLocations, setOnlyActiveLocations] = useState<boolean>(false);
+    const [onlyActiveLocations, setOnlyActiveLocations] = useState<boolean>(true);
     const [continuousPressureLocations, setContinuousLocation] = useState<boolean>(false);
     const [continuousAcousticLocations, setContinuousAcousticLocations] = useState<boolean>(false);
     const [county, setCounty] = useState('')
@@ -254,13 +254,13 @@ export const Querybuilder: React.FC = () => {
         }
     )
 
-    const spatialFilterEnabled = county !== '' || selectionPolygon !== null || projectRegion !== '' || locationType !== '';
+    const spatialFilterEnabled = county !== '' || selectionPolygon !== null || projectRegion !== '';
     useEffect(() => {
         if ((operator!='' || field!='') && value=='') {
             return
         }
 
-        if (!spatialFilterEnabled && projectName === '') {
+        if (!spatialFilterEnabled && projectName === '' && locationType === '') {
             setResultFeatureCollection({type: 'FeatureCollection', features: []})
             setCountyFeature(null)
             return
