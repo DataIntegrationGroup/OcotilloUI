@@ -111,7 +111,8 @@ const App: React.FC = () => {
                         >
                             <Routes>
                                 <Route
-                                element={<Authenticated key={'auth-pages'} fallback={<Outlet/>}>
+                                element={<Authenticated key={'auth-pages'} fallback={<Outlet/>}
+                                                        v3LegacyAuthProviderCompatible={true}>
                                             <Navigate to="/home"/>
                                         </Authenticated>
                                 }>
@@ -134,7 +135,7 @@ const App: React.FC = () => {
                                             key="authenticated-routes"
                                             redirectOnFail={"/login"}
                                             // fallback={<CatchAllNavigate to="/login"/>}
-                                            // v3LegacyAuthProviderCompatible={true}
+                                            v3LegacyAuthProviderCompatible={true}
                                         >
                                             <ThemedLayoutV2
                                                 Header={() => <ThemedHeaderV2 sticky/>}
@@ -303,19 +304,19 @@ const App: React.FC = () => {
                                 {/*    />*/}
                                 {/*</Route>*/}
 
-                                {/*<Route*/}
-                                {/*    element={*/}
-                                {/*        <Authenticated*/}
-                                {/*            v3LegacyAuthProviderCompatible={true}*/}
-                                {/*            key="catch-all">*/}
-                                {/*            <ThemedLayoutV2>*/}
-                                {/*                <Outlet/>*/}
-                                {/*            </ThemedLayoutV2>*/}
-                                {/*        </Authenticated>*/}
-                                {/*    }*/}
-                                {/*>*/}
-                                {/*    <Route path="*" element={<ErrorComponent/>}/>*/}
-                                {/*</Route>*/}
+                                <Route
+                                    element={
+                                        <Authenticated
+                                            v3LegacyAuthProviderCompatible={true}
+                                            key="catch-all">
+                                            <ThemedLayoutV2>
+                                                <Outlet/>
+                                            </ThemedLayoutV2>
+                                        </Authenticated>
+                                    }
+                                >
+                                    <Route path="*" element={<ErrorComponent/>}/>
+                                </Route>
                             </Routes>
                         </FiefAuthProvider>
 
