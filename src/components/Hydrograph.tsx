@@ -44,9 +44,7 @@ export const Hydrograph: React.FC<{ name: string, observations: IHydrographObser
             text: name,
             left: 'center'
         },
-        xAxis: {
-            data: observations.map((obs)=> {return new Date(obs["dateTime"]).toLocaleDateString()})
-        },
+
         toolbox: {
             feature: {
                 dataZoom: {
@@ -80,13 +78,18 @@ export const Hydrograph: React.FC<{ name: string, observations: IHydrographObser
                 end: 100
             }
         ],
+        xAxis: {data: observations.map((obs)=> {return new Date(obs["dateTime"]).toLocaleDateString()}),
+            splitLine: {
+                show: true // This will display vertical grid lines
+            }},
         yAxis: {inverse: true,
-            name: 'Depth To Water Below Ground Surface (ft)',
-            nameLocation: 'center',
-            nameGap: 75,
-            scale: true},
+                name: 'Depth To Water Below Ground Surface (ft)',
+                nameLocation: 'center',
+                nameGap: 75,
+                scale: true},
         series : [
-            {name:'Depth To Water Below Ground Surface (ft)', type: 'line', data: results}
+                {name:'Depth To Water Below Ground Surface (ft)',
+                type: 'line', data: results}
         ]
     }
     return (

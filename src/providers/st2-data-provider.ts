@@ -30,17 +30,14 @@ export const st2DataProvider: DataProvider = {
     getList: async ({resource, pagination, filters, sorters, meta}) => {
         const params = new URLSearchParams();
         params.append("$count", "true")
-        console.log('masdf', meta?.filter)
+
         if (meta) {
-            if (meta.expand) {
-                params.append("$expand", meta.expand);
+            for (const obj of ['expand', 'filter', 'orderby']){
+                if (meta[obj]){
+                    params.append(`$${obj}`, meta[obj])
+                }
             }
-            if (meta.filter) {
-                params.append("$filter", meta.filter);
-            }
-            if (meta.orderby){
-                params.append("$orderby", meta.orderby);
-            }
+
             if (meta.id){
                 resource = `${resource}(${meta.id})`
             }

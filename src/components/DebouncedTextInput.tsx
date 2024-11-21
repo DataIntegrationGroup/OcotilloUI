@@ -14,15 +14,18 @@
 // limitations under the License.
 // ===============================================================================
 
-import {TextField} from "@mui/material";
+import {InputAdornment, TextField} from "@mui/material";
 import React, {useState} from "react";
 import {useDebounce} from "@/components/util";
 import type {IObservation} from "@/interfaces/st2";
+import IconButton from "@mui/material/IconButton";
+import ClearIcon from "@mui/icons-material/Clear";
 
 export const DebouncedTextInput: React.FC<{value: any,
     setValue: any,
     options?: any,
-    delay?: number}> = ({value, setValue, options, delay=500})=>{
+    clear?: boolean
+    delay?: number}> = ({value, setValue, options, delay=500, clear=true})=>{
     const [inputValue, setInputValue] = useState(value);
 
     const debounced = useDebounce((v) => {
@@ -30,9 +33,14 @@ export const DebouncedTextInput: React.FC<{value: any,
     }, delay);
 
     const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setInputValue(event.target.value);
-        debounced(event.target.value);
+        setInputValue(event.target.value)
+        debounced(event.target.value)
     };
+
+    const onClear = ()=>{
+        setInputValue('');
+        setValue('')
+    }
 
     if (!options){
         options={label: 'Value', variant: 'outlined'}
@@ -43,6 +51,29 @@ export const DebouncedTextInput: React.FC<{value: any,
             {...options}
             value={inputValue}
             onChange={handleValueChange}
+            InputProps={{
+            endAdornment:  inputValue ? (
+                        <InputAdornment sx={{marginRight: "15px"}} position="end">
+                            <IconButton
+                                onClick={() => {onClear();}}
+                            >
+                                <ClearIcon fontSize="small"></ClearIcon>
+                            </IconButton>
+                        </InputAdornment>
+                    ): undefined
+
+            }}
+            // endAdornment={
+            //     clear && (
+            //         <InputAdornment sx={{marginRight: "15px"}} position="end">
+            //             <IconButton
+            //                 onClick={() => {onSetValue('');}}
+            //             >
+            //                 <ClearIcon fontSize="small"></ClearIcon>
+            //             </IconButton>
+            //         </InputAdornment>
+            //     )
+            // }
         />
     )
 }

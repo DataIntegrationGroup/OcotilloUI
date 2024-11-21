@@ -31,6 +31,8 @@ import {DebouncedTextInput} from "@/components/DebouncedTextInput";
 
 const Agencies = ['BernCo', 'PVACD', 'EBID']
 const DatastreamKinds = ['Manual Groundwater Levels', 'Groundwater Levels']
+const SensorKinds = ['Manual', 'RadioTower', 'VuLink']
+
 export const ST2DatastreamList: React.FC = () => {
     const [datastreamId, setDatastreamId] = useState<BigInteger | null>(null);
     const [rows, setRows] = useState<IDatastream[]>([]);
@@ -39,6 +41,8 @@ export const ST2DatastreamList: React.FC = () => {
     const [agency, setAgency] = useState<string>('')
     const [datastreamKind, setDatastreamKind] = useState<string>('')
     const [filterLocationName, setFilterLocationName]= useState<string>('')
+    const [sensorKind, setSensorKind] = useState<string>('')
+
     const { isLoading, triggerAll } = useAll({
         resource: `Datastreams(${datastreamId})/Observations`,
         dataProviderName: 'st2',
@@ -54,6 +58,9 @@ export const ST2DatastreamList: React.FC = () => {
         }
         if (filterLocationName){
             fs.push(`startswith(Thing/Locations/name, '${filterLocationName}')`)
+        }
+        if (sensorKind){
+            fs.push(`Sensor/name eq '${sensorKind}'`)
         }
         return fs.join(' and ')
     }
@@ -181,12 +188,17 @@ export const ST2DatastreamList: React.FC = () => {
                         value={filterLocationName}
                         setValue={setFilterLocationName}
                         delay={1000}
-                        options={{style: {width: '60%'}}}
+                        options={{label: 'Location',
+                            style: {width: '60%'}}}
                         />
                         <ClearableSelect label={'Agency'}
                                      value={agency} setValue={setAgency} values={Agencies}/>
                         <ClearableSelect label={'Datastream Kind'}
                                      value={datastreamKind} setValue={setDatastreamKind} values={DatastreamKinds}/>
+                        <ClearableSelect label={'Sensor Kind'}
+                                         setValue={setSensorKind}
+                                         value={sensorKind}
+                                        values={SensorKinds}/>
                     </Stack>
                 </Card>
                 {/*<Card>*/}
