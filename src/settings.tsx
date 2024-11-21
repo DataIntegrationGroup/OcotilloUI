@@ -3,4 +3,5 @@ export const settings = {
     filterDebounceMs: 1000,
     urlprefix: import.meta.env.VITE_URLPREFIX || '',
     nmbgmr_api_url: import.meta.env.VITE_NMBGMR_API_URL || 'http://localhost:8009',
+    st2_url: "https://st2.newmexicowaterdata.org/FROST-Server/v1.1"
 }

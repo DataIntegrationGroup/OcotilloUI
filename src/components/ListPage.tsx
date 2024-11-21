@@ -17,7 +17,7 @@
 import {ExportButton, List} from "@refinedev/mui";
 import {DataGrid} from "@mui/x-data-grid";
 import {settings} from "@/settings";
-import React from "react";
+import React, {useState} from "react";
 import {useExport} from "@refinedev/core";
 
 type ListPageProps = {
@@ -25,16 +25,34 @@ type ListPageProps = {
     dataGridProps: any
     getRowId?: any
     exportProps?: any
+    children?: any
+    onSelectionChange?: any
+    isLoading?: any
 
 }
 
-export const ListPage: React.FC<ListPageProps> = ({columns, dataGridProps, getRowId, exportProps}) => {
+export const ListPage: React.FC<ListPageProps> = ({columns, dataGridProps, getRowId, exportProps,
+                                                  children, onSelectionChange, isLoading}) => {
     if (!exportProps) {
         exportProps={pageSize: 1000}
     }
+    const [selectedRow, setSelectedRow] = useState(null);
 
-    
-    const { triggerExport, isLoading} = useExport(
+    // console.log('asdfasdf', handleSelectionChange);
+    // if (!handleSelectionChange) {
+    const handleSelectionChangeWrapper = (selectionModel) => {
+            console.log('seelction model', selectionModel);
+            if (onSelectionChange) {
+                onSelectionChange(selectionModel);
+            }
+            // const selectedId = selectionModel[0];
+            // const selectedRowData = rows.find(row => row.id === selectedId);
+            // setSelectedRow(selectedRowData);
+    };
+
+    // console.log('asdfasdf', handleSelectionChange);
+
+    const { triggerExport, isLoading: exportIsLoading} = useExport(
         exportProps
     );
     const headerButtons = ({defaultButtons}) => {
@@ -43,21 +61,26 @@ export const ListPage: React.FC<ListPageProps> = ({columns, dataGridProps, getRo
                 {defaultButtons}
                 <ExportButton
                     variant={'contained'}
-                    loading={isLoading}
+                    loading={exportIsLoading}
                     onClick={triggerExport} />
             </>
         )
     }
+
     return (<>
         <List
             headerButtons={headerButtons}
         >
+            {children}
             <DataGrid
                 {...dataGridProps}
+                disableRowSelectionOnClick={false}
                 rowHeight={settings.rowHeight}
                 getRowId={getRowId? getRowId : (row) => row.PointID}
                 columns={columns}
                 autoHeight
+                onRowSelectionModelChange={handleSelectionChangeWrapper}
+                loading={isLoading}
             />
         </List>
         </>)

@@ -1,6 +1,6 @@
 {
   "name": "NMBGMRDataManager",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -43,6 +43,8 @@
     "@tiptap/react": "^2.9.1",
     "@tiptap/starter-kit": "^2.9.1",
     "axios-auth-refresh": "^3.3.6",
+    "echarts": "^5.5.1",
+    "echarts-for-react": "^3.0.2",
     "js-sha256": "^0.11.0",
     "jwt-decode": "^4.0.0",
     "mapbox-gl": "^3.0.0",

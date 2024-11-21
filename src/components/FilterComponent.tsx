@@ -18,14 +18,10 @@ import React, {ReactNode, useState} from 'react';
 import { TextField, MenuItem, Select, FormControl, InputLabel, Box } from '@mui/material';
 import {SelectChangeEvent} from "@mui/material/Select";
 import {useDebounce} from "@/components/util";
+import {DebouncedTextInput} from "@/components/DebouncedTextInput";
 
 
 const FilterComponent = ({field, setField, operator, setOperator, value, setValue}) => {
-    const [inputValue, setInputValue] = useState(value);
-
-    const debounced = useDebounce((v) => {
-        setValue(v);
-    }, 500);
 
     const handleFieldChange = (event: SelectChangeEvent<string>, child: ReactNode) => {
         setField(event.target.value as string);
@@ -35,10 +31,6 @@ const FilterComponent = ({field, setField, operator, setOperator, value, setValu
         setOperator(event.target.value as string);
     };
 
-    const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setInputValue(event.target.value);
-        debounced(event.target.value);
-    };
 
     return (
         <Box display="flex" alignItems="center" gap={2}>
@@ -71,12 +63,13 @@ const FilterComponent = ({field, setField, operator, setOperator, value, setValu
                 </Select>
             </FormControl>
 
-            <TextField
-                label="Value"
-                variant="outlined"
-                value={inputValue}
-                onChange={handleValueChange}
-            />
+            <DebouncedTextInput value={value} setValue={setValue}/>
+            {/*<TextField*/}
+            {/*    label="Value"*/}
+            {/*    variant="outlined"*/}
+            {/*    value={inputValue}*/}
+            {/*    onChange={handleValueChange}*/}
+            {/*/>*/}
         </Box>
     );
 };

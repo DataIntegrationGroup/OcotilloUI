@@ -60,6 +60,8 @@ import {GeoThermalWellList, GeoThermalWellShow} from "@/pages/geothermal/wells";
 import {settings} from "@/settings";
 import {Callback, RememberMe} from "@/components/Auth";
 import {makeAMPRoutes} from "@/routes/amp";
+import {st2DataProvider} from "@/providers/st2-data-provider";
+import {makeST2Routes} from "@/routes/st2";
 
 
 const App: React.FC = () => {
@@ -90,7 +92,8 @@ const App: React.FC = () => {
                             default: ampDataProvider,
                             amp: ampDataProvider,
                             geochronology: geochronologyDataProvider,
-                            geothermal: geothermalDataProvider
+                            geothermal: geothermalDataProvider,
+                            st2: st2DataProvider,
                         }}
                         routerProvider={routerProvider}
                         notificationProvider={useNotificationProvider}
@@ -159,6 +162,8 @@ const App: React.FC = () => {
 
                                     // amp routes
                                     {makeAMPRoutes()}
+                                    // st2 routes
+                                    {makeST2Routes()}
 
                                     // geochronology routes
                                     <Route path="/geochronology">

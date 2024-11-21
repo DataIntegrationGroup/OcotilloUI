@@ -14,6 +14,10 @@
 // limitations under the License.
 // ===============================================================================
 
+export interface IHydrographObservation {
+    dateTime: string;
+    result: number;
+}
 
 export interface ICategory {
     id: number;

@@ -22,6 +22,7 @@ import {ampResources, lookup} from '@/resources/amp'
 import {geochronologyResources} from '@/resources/geochronology'
 import {criticalMineralResources} from '@/resources/criticalminerals'
 import {geothermalResources} from '@/resources/geothermal'
+import {st2Resources} from "@/resources/st2";
 
 
 let base = [{name: 'Water',
@@ -40,14 +41,19 @@ let base = [{name: 'Water',
             icon: <HeatPumpOutlined/>,
             meta: {label: 'Geothermal'}
             },
+            {name: 'st2',
+            icon: <WaterDropOutlined/>,
+            meta: {label: 'NMWDI SensorThings'}
+            },
 ]
 
 
 export const resources = [...base,
     ...ampResources, ...lookup,
+    ...st2Resources,
     ...geochronologyResources,
     ...criticalMineralResources,
-    ...geothermalResources
+    ...geothermalResources,
 ]
 
 // ============= EOF =============================================

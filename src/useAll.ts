@@ -46,7 +46,7 @@ type UseAllOptionsType<
 
 type UseAllReturnType<TData> = {
     isLoading: boolean;
-    triggerAll: () => Promise<any[]>;
+    triggerAll: (props?: any) => Promise<any[]>;
 }
 
 export const useAll = <
@@ -72,7 +72,7 @@ export const useAll = <
         meta
     });
 
-    const triggerAll = async () => {
+    const triggerAll = async (props) => {
         setIsLoading(true)
 
         let rawData = [];
@@ -80,10 +80,16 @@ export const useAll = <
         let current = 1;
         let preparingData = true;
 
+        let resourceTag = resource?.name;
+        if (props){
+            resourceTag = props.resource ?? resource?.name;
+        }
+
         while (preparingData) {
             try {
                 const {data, total} = await getList({
-                    resource: resource?.name ?? "",
+                    resource: resourceTag.toString(),
+                    // resource: resource?.name ?? "",
                     // filters,
                     // sort: pickNotDeprecated(sorters, sorter),
                     // sorters: pickNotDeprecated(sorters, sorter),
