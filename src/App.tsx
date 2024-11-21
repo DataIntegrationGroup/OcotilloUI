@@ -62,6 +62,8 @@ import {Callback, RememberMe} from "@/components/Auth";
 import {makeAMPRoutes} from "@/routes/amp";
 import {st2DataProvider} from "@/providers/st2-data-provider";
 import {makeST2Routes} from "@/routes/st2";
+import {LocalizationProvider} from "@mui/x-date-pickers";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 
 
 const App: React.FC = () => {
@@ -107,7 +109,7 @@ const App: React.FC = () => {
                     >
                         <UnsavedChangesNotifier/>
                         <DocumentTitleHandler handler={customTitleHandler}/>
-
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <FiefAuthProvider
                             baseURL={fiefConstants.baseURL}
                             clientId={fiefConstants.clientId}
@@ -324,6 +326,7 @@ const App: React.FC = () => {
                                 </Route>
                             </Routes>
                         </FiefAuthProvider>
+                        </LocalizationProvider>
 
                     </Refine>
                 </RefineSnackbarProvider>

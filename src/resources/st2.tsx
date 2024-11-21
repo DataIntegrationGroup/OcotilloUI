@@ -24,6 +24,7 @@ import TableViewIcon from "@mui/icons-material/TableView";
 import ScienceOutlined from "@mui/icons-material/ScienceOutlined";
 import FileUploadOutlined from "@mui/icons-material/FileUploadOutlined";
 import CategoryOutlined from "@mui/icons-material/CategoryOutlined";
+import {WaterDrop, WaterOutlined} from "@mui/icons-material";
 
 let st2 = [
     {
@@ -60,7 +61,7 @@ let st2 = [
     },
     {
         name: "datastreams",
-        icon: <Plumbing/>,
+        icon: <WaterOutlined/>,
         list: "/st2/datastreams",
         edit: "/st2/datastreams/edit/:id",
         show: "/st2/datastreams/show/:id",

@@ -18,7 +18,7 @@ import React, { useEffect, useState } from "react";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import type { IDatastream, IObservation } from "@/interfaces/st2";
 import { ListPage } from "@/components/ListPage";
-import {Button, Card, TextField} from "@mui/material";
+import {Button, Card, InputLabel, TextField} from "@mui/material";
 import { useAll } from "@/useAll";
 // import Chart from "@/components/Chart";
 import {settings} from "@/settings";
@@ -27,7 +27,8 @@ import {ST2Hydrograph} from "@/components/Hydrograph";
 import {ClearableSelect} from "@/components/ClearableSelect";
 import Stack from "@mui/material/Stack";
 import {DebouncedTextInput} from "@/components/DebouncedTextInput";
-
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { Dayjs } from 'dayjs';
 
 const Agencies = ['BernCo', 'PVACD', 'EBID']
 const DatastreamKinds = ['Manual Groundwater Levels', 'Groundwater Levels']
@@ -42,9 +43,26 @@ export const ST2DatastreamList: React.FC = () => {
     const [datastreamKind, setDatastreamKind] = useState<string>('')
     const [filterLocationName, setFilterLocationName]= useState<string>('')
     const [sensorKind, setSensorKind] = useState<string>('')
+    const [minDate, setMinDate] = useState< Dayjs | null>(null)
+    const [maxDate, setMaxDate] = useState< Dayjs | null>(null)
+
+    const getObservationFilter = ()=>{
+        minDate ? `phenomenonTime gt ${minDate.toISOString()}`: ''
+        let fs = []
+        if (minDate){
+            fs.push(`phenomenonTime gt ${minDate.toISOString()}`)
+        }
+        if (maxDate){
+            fs.push(`phenomenonTime lt ${maxDate.toISOString()}`)
+        }
+        return fs.join(' and ')
+    }
 
     const { isLoading, triggerAll } = useAll({
         resource: `Datastreams(${datastreamId})/Observations`,
+        meta: {
+            filter: getObservationFilter()
+        },
         dataProviderName: 'st2',
     });
 
@@ -73,7 +91,7 @@ export const ST2DatastreamList: React.FC = () => {
             'filter': getFilter(),
             'orderby': 'id asc'
             // 'orderby': 'Thing/Locations/name asc'
-        }
+        },
     });
 
     useEffect(() => {
@@ -148,7 +166,7 @@ export const ST2DatastreamList: React.FC = () => {
                 setObservations(data)
             }
         );
-    }, [datastreamId]);
+    }, [datastreamId, minDate, maxDate]);
 
     const findDuplicates = async () => {
         const updatedRows = rows.map(async (row) => {
@@ -173,7 +191,7 @@ export const ST2DatastreamList: React.FC = () => {
             <ListPage
                 getRowId={(row) => row["@iot.id"]}
                 columns={columns}
-                dataGridProps={{ ...dataGridProps, rows }}
+                dataGridProps={{ ...dataGridProps, rows,  ...{checkboxSelection: false}}}
                 onSelectionChange={handleSelectionChange}
                 isLoading={isLoading}
             >
@@ -200,6 +218,19 @@ export const ST2DatastreamList: React.FC = () => {
                                          value={sensorKind}
                                         values={SensorKinds}/>
                     </Stack>
+                    <Stack direction={'row'} sx={{pt: 2}}>
+                        <DatePicker
+                            label={'Min. Date'}
+                            value={minDate}
+                            onChange={(newValue)=> setMinDate(newValue)}
+                        />
+                        <DatePicker
+                            label={'Max. Date'}
+                            value={maxDate}
+                            onChange={(newValue)=> setMaxDate(newValue)}
+                        />
+                    </Stack>
+
                 </Card>
                 {/*<Card>*/}
                 {/*    <Button onClick={findDuplicates}>Find Duplicates</Button>*/}
