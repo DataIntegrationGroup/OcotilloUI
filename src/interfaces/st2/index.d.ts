@@ -15,7 +15,7 @@
 // ===============================================================================
 
 export interface BaseSTEntity {
-    "@iot.id": string;
+    "@iot.id": number;
     name: string;
     properties: any;
 }
@@ -62,6 +62,17 @@ export interface IObservation {
     Datastream?: IDatastream;
 }
 
+
+export interface IHydrographObservation {
+    dateTime: string;
+    result: number;
+}
+
+export interface IHydrographDatasource {
+    id: number;
+    data: IObservation[]
+    name: string
+}
 //
 // export interface ILookupTable {
 //     Code: string;

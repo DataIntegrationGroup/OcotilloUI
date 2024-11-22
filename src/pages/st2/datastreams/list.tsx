@@ -16,7 +16,7 @@
 import {ShowButton, EditButton, List, useDataGrid} from "@refinedev/mui";
 import React, {useEffect, useState} from "react";
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
-import type {IDatastream, IObservation} from "@/interfaces/st2";
+import type {IDatastream, IHydrographDatasource, IObservation} from "@/interfaces/st2";
 import {ListPage} from "@/components/ListPage";
 import {Button, Card, InputLabel, TextField} from "@mui/material";
 import {useAll} from "@/useAll";
@@ -35,17 +35,18 @@ const DatastreamKinds = ['Manual Groundwater Levels', 'Groundwater Levels', 'Gro
 const SensorKinds = ['Manual', 'RadioTower', 'VuLink']
 
 export const ST2DatastreamList: React.FC = () => {
-    const [datastreamIds, setDatastreamIds] = useState<BigInteger[]>([]);
-    const [activeDatastreamId, setActiveDatastreamId] = useState<BigInteger| null>(null)
+    const [datastreamIds, setDatastreamIds] = useState<number[]>([]);
+    const [activeDatastreamId, setActiveDatastreamId] = useState<number>();
     const [rows, setRows] = useState<IDatastream[]>([]);
-    const [observations, setObservations] = useState<any>([])
-    const [locationName, setSelectedLocationName] = useState<string>('')
+    const [datasource, setDataSource] = useState<IHydrographDatasource[]>([])
+    // const [locationName, setSelectedLocationName] = useState<string>('')
     const [agency, setAgency] = useState<string>('BernCo')
     const [datastreamKind, setDatastreamKind] = useState<string>('Groundwater Levels')
     const [filterLocationName, setFilterLocationName] = useState<string>('')
     const [sensorKind, setSensorKind] = useState<string>('VuLink')
     const [minDate, setMinDate] = useState<Dayjs | null>(null)
     const [maxDate, setMaxDate] = useState<Dayjs | null>(null)
+    const [refreshHydrograph, setRefreshHydrograph] = useState(0)
 
     const getObservationFilter = () => {
         let fs = []
@@ -166,28 +167,76 @@ export const ST2DatastreamList: React.FC = () => {
 
     const handleSelectionChange = (selectionModel: any) => {
         const selectedRow = rows.find((row) => {
-            return row["@iot.id"] === selectionModel[0]
+            return row["@iot.id"] === selectionModel.at(-1)
         })
-        if (!selectedRow) return;
+        if (!selectedRow) {
+            setDataSource([])
+            setRefreshHydrograph((prev)=>prev+1)
+            return;
+        }
 
-        const name = selectedRow.Thing?.Locations?.map((loc) => loc.name).join(', ')
-        setSelectedLocationName(name)
         setDatastreamIds(selectionModel);
         setActiveDatastreamId(selectionModel.at(-1))
     };
 
     useEffect(() => {
-        if (datastreamIds.length===0) return;
+        const nobs = datasource.filter((o)=> datastreamIds.includes(o.id));
+        const ids = nobs.map((o)=>o.id)
 
-        // remove datastreams from observations that are not in datastreamIds
-        triggerAll(
-        ).then(
-            (data) => {
-                console.log('hydrograph data', data);
-                setObservations([...observations, ...[{name: activeDatastreamId, data: data}]])
+        const wrapper = async ()=> {
+            const f = (dsid) => {
+                // get row
+                const row = rows.find((row) => {
+                    return row['@iot.id'] === dsid
+                })
+
+                if (ids.includes(dsid)) {
+                    // may need data refreshed
+                    return datasource.find((d)=>d.id===dsid)
+                } else {
+                    return triggerAll().then((data) => {
+                        return {
+                            id: dsid,
+                            name: row.Thing?.Locations?.map((loc) => loc.name).join(', '),
+                            data: data
+                        }
+                    })
+                }
             }
-        );
-    }, [activeDatastreamId, minDate, maxDate]);
+            const ps = datastreamIds.map(f)
+            const sources = await Promise.all(ps)
+            setDataSource(sources)
+            setRefreshHydrograph((prev)=>prev+1)
+        }
+
+        wrapper()
+
+        // if (datastreamIds.length===0) return;
+        // remove datastreams from observations that are not in datastreamIds
+        // console.log('ff',datasource)
+        // console.log('aa',datastreamIds)
+        // const nobs = datasource.filter((o)=> datastreamIds.includes(o.id));
+        // console.log('nobas', nobs)
+        //
+        // const row = rows.find((row)=>{return row['@iot.id'] === activeDatastreamId})
+        // // if activeDatastreamId already in obs dont load
+        // if (datasource.map((o)=>{return o.id}).includes(activeDatastreamId)) {
+        //     console.log('setObasd', nobs)
+        //     setDataSource(nobs)
+        //     setRefreshHydrograph((prev)=>prev+1)
+        // } else {
+        //     triggerAll(
+        //     ).then(
+        //         (data) => {
+        //             console.log('hydrograph data', data);
+        //             setDataSource((prev)=>{return [...prev, ...[{id: activeDatastreamId,
+        //                                                         name: row.Thing?.Locations?.map((loc) => loc.name).join(', '),
+        //                                                         data: data}]]})
+        //         }
+        //     );
+        // }
+        //
+    }, [activeDatastreamId, datastreamIds, minDate, maxDate]);
 
     // const findDuplicates = async () => {
     //     const updatedRows = rows.map(async (row) => {
@@ -212,14 +261,15 @@ export const ST2DatastreamList: React.FC = () => {
             <ListPage
                 getRowId={(row) => row["@iot.id"]}
                 columns={columns}
-                dataGridProps={{ ...dataGridProps, rows,  ...{checkboxSelection: false}}}
+                dataGridProps={{ ...dataGridProps, rows,  ...{checkboxSelection: true}}}
                 onSelectionChange={handleSelectionChange}
                 isLoading={isLoading}
             >
                 <Card sx={{padding: 2, margin: 1}}>
                     <ST2Hydrograph
-                        name={locationName}
-                        observations={observations}/>
+                        // name={locationName}
+                        refresh={refreshHydrograph}
+                        datasource={datasource}/>
                 </Card>
                 <Card sx={{padding: 2, margin: 1}}>
                     <Stack direction={'row'}>

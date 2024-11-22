@@ -16,35 +16,29 @@
 
 import React, { useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react'
-import type {IObservation} from "@/interfaces/st2";
-import {IHydrographObservation} from "@/interfaces";
+import type {IHydrographDatasource, IObservation} from "@/interfaces/st2";
 
-export const ST2Hydrograph: React.FC<{ name: string, observations: IObservation[] }> = ({ name, observations }) => {
-    // if (observations.length === 0) {
-    //     observations = [{phenomenonTime: new Date().toString(), result: 0, "@iot.id": null}]
-    // }
-    //
-    // const hobs = observations.map((obs)=>{
-    //     return {dateTime: obs['phenomenonTime'], result: obs['result']}
-    // })
 
-    console.log('obbs', observations)
+export const ST2Hydrograph: React.FC<{datasource: IHydrographDatasource[], refresh: number}> = ({ datasource, refresh}) => {
+
     return (
-        <Hydrograph name={name} datasource={observations}/>
+        <Hydrograph datasource={datasource} refresh={refresh}/>
     )
 }
 
-export const Hydrograph: React.FC<{ name: string, datasource: any }> = ({ name, datasource }) => {
+export const Hydrograph: React.FC<{ datasource: any, refresh: number}> = ({ datasource, refresh }) => {
 
     const series = datasource.map((s)=>{
-        return {type: 'line', datasetId: s.name.toString(),}
+        return {type: 'line',
+            name: s.name,
+            datasetId: s.id.toString(),}
     })
     const useNormalization = true
     const xtag = 'phenomenonTime'
     const ytag = 'result'
     const dataset = datasource.map((s) => {
         const ref = s.data[0][ytag]
-        let obj = {id: s.name.toString()}
+        let obj = {id: s.id.toString()}
 
         if (useNormalization) {
             obj['source'] = s.data.map((obs) => [obs[xtag], obs[ytag] - ref])
@@ -54,13 +48,12 @@ export const Hydrograph: React.FC<{ name: string, datasource: any }> = ({ name, 
         return obj
     })
 
-    // console.log('da', dataset)
+    const seriesNames = datasource.map((d)=>d.name)
+    console.log('da', dataset)
+    console.log('sadf', seriesNames)
     // console.log('se', series)
     const option = {
-        title: {
-            text: name,
-            left: 'center'
-        },
+        animation: false,
         dataset: dataset,
         series: series,
         toolbox: {
@@ -71,6 +64,15 @@ export const Hydrograph: React.FC<{ name: string, datasource: any }> = ({ name, 
                 // restore: {},
                 saveAsImage: {}
             }
+        },
+        legend: {
+            orient: 'vertical',
+            left: '82%',
+            top: '20%',
+            data: seriesNames,
+        },
+        grid: {
+            right: '20%' // Adjust the right property to create space for the legend
         },
         tooltip: {
             trigger: 'axis',
@@ -107,11 +109,14 @@ export const Hydrograph: React.FC<{ name: string, datasource: any }> = ({ name, 
                 nameGap: 75,
                 scale: true},
     }
+
     return (
         <div style={{
             height: '400px',
             paddingBottom: 20}}>
-            <ReactECharts option={option}
+            <ReactECharts
+                key={refresh}
+                option={option}
                           style={{width: '100%', height: '100%'}}
             />
         </div>
