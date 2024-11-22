@@ -20,31 +20,49 @@ import type {IObservation} from "@/interfaces/st2";
 import {IHydrographObservation} from "@/interfaces";
 
 export const ST2Hydrograph: React.FC<{ name: string, observations: IObservation[] }> = ({ name, observations }) => {
-    if (observations.length === 0) {
-        observations = [{phenomenonTime: new Date().toString(), result: 0, "@iot.id": null}]
-    }
+    // if (observations.length === 0) {
+    //     observations = [{phenomenonTime: new Date().toString(), result: 0, "@iot.id": null}]
+    // }
+    //
+    // const hobs = observations.map((obs)=>{
+    //     return {dateTime: obs['phenomenonTime'], result: obs['result']}
+    // })
 
-    const hobs = observations.map((obs)=>{
-        return {dateTime: obs['phenomenonTime'], result: obs['result']}
-    })
-
+    console.log('obbs', observations)
     return (
-        <Hydrograph name={name} observations={hobs}/>
+        <Hydrograph name={name} datasource={observations}/>
     )
 }
 
-export const Hydrograph: React.FC<{ name: string, observations: IHydrographObservation[] }> = ({ name, observations }) => {
+export const Hydrograph: React.FC<{ name: string, datasource: any }> = ({ name, datasource }) => {
 
-    const results = observations.map((obs) => {
-        return Number(obs['result'].toFixed(2))
+    const series = datasource.map((s)=>{
+        return {type: 'line', datasetId: s.name.toString(),}
+    })
+    const useNormalization = true
+    const xtag = 'phenomenonTime'
+    const ytag = 'result'
+    const dataset = datasource.map((s) => {
+        const ref = s.data[0][ytag]
+        let obj = {id: s.name.toString()}
+
+        if (useNormalization) {
+            obj['source'] = s.data.map((obs) => [obs[xtag], obs[ytag] - ref])
+        } else {
+            obj['source'] = s.data.map((obs) => [obs[xtag], obs[ytag]])
+        }
+        return obj
     })
 
+    // console.log('da', dataset)
+    // console.log('se', series)
     const option = {
         title: {
             text: name,
             left: 'center'
         },
-
+        dataset: dataset,
+        series: series,
         toolbox: {
             feature: {
                 dataZoom: {
@@ -78,7 +96,8 @@ export const Hydrograph: React.FC<{ name: string, observations: IHydrographObser
                 end: 100
             }
         ],
-        xAxis: {data: observations.map((obs)=> {return new Date(obs["dateTime"]).toLocaleDateString()}),
+        xAxis: {
+            type: 'time',
             splitLine: {
                 show: true // This will display vertical grid lines
             }},
@@ -87,10 +106,6 @@ export const Hydrograph: React.FC<{ name: string, observations: IHydrographObser
                 nameLocation: 'center',
                 nameGap: 75,
                 scale: true},
-        series : [
-                {name:'Depth To Water Below Ground Surface (ft)',
-                type: 'line', data: results}
-        ]
     }
     return (
         <div style={{

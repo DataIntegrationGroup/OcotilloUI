@@ -23,36 +23,38 @@ import {useExport} from "@refinedev/core";
 type ListPageProps = {
     columns: any
     dataGridProps: any
-    getRowId?: any
     exportProps?: any
     children?: any
-    onSelectionChange?: any
+    onSelectionChange?: (selectionModel: any) => void;
+    getRowId?: (row: any) => number;
     isLoading?: any
 
 }
 
-export const ListPage: React.FC<ListPageProps> = ({columns, dataGridProps, getRowId, exportProps,
-                                                  children, onSelectionChange, isLoading}) => {
+export const ListPage: React.FC<ListPageProps> = ({
+                                                      columns, dataGridProps, getRowId, exportProps,
+                                                      children, onSelectionChange, isLoading
+                                                  }) => {
     if (!exportProps) {
-        exportProps={pageSize: 1000}
+        exportProps = {pageSize: 1000}
     }
-    const [selectedRow, setSelectedRow] = useState(null);
 
+    // const [selectedRow, setSelectedRow] = useState(null);
     // console.log('asdfasdf', handleSelectionChange);
     // if (!handleSelectionChange) {
     const handleSelectionChangeWrapper = (selectionModel) => {
-            console.log('seelction model', selectionModel);
-            if (onSelectionChange) {
-                onSelectionChange(selectionModel);
-            }
-            // const selectedId = selectionModel[0];
-            // const selectedRowData = rows.find(row => row.id === selectedId);
-            // setSelectedRow(selectedRowData);
+        console.log('seelction model', selectionModel);
+        if (onSelectionChange) {
+            onSelectionChange(selectionModel);
+        }
+        // const selectedId = selectionModel[0];
+        // const selectedRowData = rows.find(row => row.id === selectedId);
+        // setSelectedRow(selectedRowData);
     };
 
     // console.log('asdfasdf', handleSelectionChange);
 
-    const { triggerExport, isLoading: exportIsLoading} = useExport(
+    const {triggerExport, isLoading: exportIsLoading} = useExport(
         exportProps
     );
     const headerButtons = ({defaultButtons}) => {
@@ -62,7 +64,7 @@ export const ListPage: React.FC<ListPageProps> = ({columns, dataGridProps, getRo
                 <ExportButton
                     variant={'contained'}
                     loading={exportIsLoading}
-                    onClick={triggerExport} />
+                    onClick={triggerExport}/>
             </>
         )
     }
@@ -76,14 +78,14 @@ export const ListPage: React.FC<ListPageProps> = ({columns, dataGridProps, getRo
                 {...dataGridProps}
                 disableRowSelectionOnClick={false}
                 rowHeight={settings.rowHeight}
-                getRowId={getRowId? getRowId : (row) => row.PointID}
+                getRowId={getRowId ? getRowId : (row) => row.PointID}
                 columns={columns}
                 autoHeight
                 onRowSelectionModelChange={handleSelectionChangeWrapper}
                 loading={isLoading}
             />
         </List>
-        </>)
+    </>)
 }
 
 // ============= EOF =============================================

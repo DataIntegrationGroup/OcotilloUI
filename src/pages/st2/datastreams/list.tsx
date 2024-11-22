@@ -13,13 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ===============================================================================
-import { ShowButton, EditButton, List, useDataGrid } from "@refinedev/mui";
-import React, { useEffect, useState } from "react";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import type { IDatastream, IObservation } from "@/interfaces/st2";
-import { ListPage } from "@/components/ListPage";
+import {ShowButton, EditButton, List, useDataGrid} from "@refinedev/mui";
+import React, {useEffect, useState} from "react";
+import {DataGrid, type GridColDef} from "@mui/x-data-grid";
+import type {IDatastream, IObservation} from "@/interfaces/st2";
+import {ListPage} from "@/components/ListPage";
 import {Button, Card, InputLabel, TextField} from "@mui/material";
-import { useAll } from "@/useAll";
+import {useAll} from "@/useAll";
 // import Chart from "@/components/Chart";
 import {settings} from "@/settings";
 import ReactECharts from "echarts-for-react";
@@ -27,63 +27,63 @@ import {ST2Hydrograph} from "@/components/Hydrograph";
 import {ClearableSelect} from "@/components/ClearableSelect";
 import Stack from "@mui/material/Stack";
 import {DebouncedTextInput} from "@/components/DebouncedTextInput";
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Dayjs } from 'dayjs';
+import {DatePicker} from '@mui/x-date-pickers/DatePicker';
+import {Dayjs} from 'dayjs';
 
-const Agencies = ['BernCo', 'PVACD', 'EBID']
-const DatastreamKinds = ['Manual Groundwater Levels', 'Groundwater Levels']
+const Agencies = ['BernCo', 'PVACD', 'EBID', 'CABQ']
+const DatastreamKinds = ['Manual Groundwater Levels', 'Groundwater Levels', 'Groundwater Elevations']
 const SensorKinds = ['Manual', 'RadioTower', 'VuLink']
 
 export const ST2DatastreamList: React.FC = () => {
-    const [datastreamId, setDatastreamId] = useState<BigInteger | null>(null);
+    const [datastreamIds, setDatastreamIds] = useState<BigInteger[]>([]);
+    const [activeDatastreamId, setActiveDatastreamId] = useState<BigInteger| null>(null)
     const [rows, setRows] = useState<IDatastream[]>([]);
-    const [observations, setObservations] = useState<IObservation[]>([])
+    const [observations, setObservations] = useState<any>([])
     const [locationName, setSelectedLocationName] = useState<string>('')
-    const [agency, setAgency] = useState<string>('')
-    const [datastreamKind, setDatastreamKind] = useState<string>('')
-    const [filterLocationName, setFilterLocationName]= useState<string>('')
-    const [sensorKind, setSensorKind] = useState<string>('')
-    const [minDate, setMinDate] = useState< Dayjs | null>(null)
-    const [maxDate, setMaxDate] = useState< Dayjs | null>(null)
+    const [agency, setAgency] = useState<string>('BernCo')
+    const [datastreamKind, setDatastreamKind] = useState<string>('Groundwater Levels')
+    const [filterLocationName, setFilterLocationName] = useState<string>('')
+    const [sensorKind, setSensorKind] = useState<string>('VuLink')
+    const [minDate, setMinDate] = useState<Dayjs | null>(null)
+    const [maxDate, setMaxDate] = useState<Dayjs | null>(null)
 
-    const getObservationFilter = ()=>{
-        minDate ? `phenomenonTime gt ${minDate.toISOString()}`: ''
+    const getObservationFilter = () => {
         let fs = []
-        if (minDate){
+        if (minDate) {
             fs.push(`phenomenonTime gt ${minDate.toISOString()}`)
         }
-        if (maxDate){
+        if (maxDate) {
             fs.push(`phenomenonTime lt ${maxDate.toISOString()}`)
         }
         return fs.join(' and ')
     }
 
-    const { isLoading, triggerAll } = useAll({
-        resource: `Datastreams(${datastreamId})/Observations`,
+    const {isLoading, triggerAll} = useAll({
+        resource: `Datastreams(${activeDatastreamId})/Observations`,
         meta: {
             filter: getObservationFilter()
         },
         dataProviderName: 'st2',
     });
 
-    const getFilter = ()=>{
-        let fs = []
-        if (agency){
+    const getFilter = () => {
+        let fs = [`name ne 'OSERealTime Discharge'`, `name ne 'OSERealTime Gage Height'`]
+        if (agency) {
             fs.push(`Thing/properties/agency eq '${agency}'`)
         }
-        if (datastreamKind){
+        if (datastreamKind) {
             fs.push(`name eq '${datastreamKind}'`)
         }
-        if (filterLocationName){
+        if (filterLocationName) {
             fs.push(`startswith(Thing/Locations/name, '${filterLocationName}')`)
         }
-        if (sensorKind){
+        if (sensorKind) {
             fs.push(`Sensor/name eq '${sensorKind}'`)
         }
         return fs.join(' and ')
     }
 
-    const { dataGridProps } = useDataGrid<IDatastream>({
+    const {dataGridProps} = useDataGrid<IDatastream>({
         resource: "Datastreams",
         dataProviderName: "st2",
         meta: {
@@ -100,26 +100,44 @@ export const ST2DatastreamList: React.FC = () => {
 
     const columns = React.useMemo<GridColDef<IDatastream>[]>(
         () => [
-            { field: "@iot.id", headerName: "ID", type: "string", minWidth: 75 },
-            { field: "name", headerName: "name", type: "string", minWidth: 200 },
-            { field: "unitOfMeasurement", headerName: "Unit", valueGetter: params => params.row.unitOfMeasurement?.symbol, minWidth: 25 },
-            { field: "agency", headerName: "Agency", valueGetter: params => params.row.Thing?.properties?.agency, minWidth: 150 },
-            { field: "Location", headerName: "Location", valueGetter: params => params.row.Thing?.Locations?.map((loc) => loc.name).join(', '), minWidth: 300 },
-            { field: "sensor", headerName: "Sensor", valueGetter: params => params.row.Sensor?.name },
-            {field: "locationID", headerName: "Location ID",
+            {field: "@iot.id", headerName: "ID", type: "string", minWidth: 75},
+            {field: "name", headerName: "name", type: "string", minWidth: 200},
+            {
+                field: "unitOfMeasurement",
+                headerName: "Unit",
+                valueGetter: params => params.row.unitOfMeasurement?.symbol,
+                minWidth: 25
+            },
+            {
+                field: "agency",
+                headerName: "Agency",
+                valueGetter: params => params.row.Thing?.properties?.agency,
+                minWidth: 150
+            },
+            {
+                field: "Location",
+                headerName: "Location",
+                valueGetter: params => params.row.Thing?.Locations?.map((loc) => loc.name).join(', '),
+                minWidth: 300
+            },
+            {field: "sensor", headerName: "Sensor", valueGetter: params => params.row.Sensor?.name},
+            {
+                field: "locationID", headerName: "Location ID",
                 renderCell: function render({row}) {
                     const locationId = row.Thing.Locations[0]['@iot.id']
                     return (<div>
                         <a
-                        href={`${settings.st2_url}/Locations(${locationId})`}
+                            href={`${settings.st2_url}/Locations(${locationId})`}
                         >{locationId}</a>
                     </div>)
                 },
 
-            minWidth: 150},
-            {field: "ThingID", headerName: "Thing ID",
-                renderCell: function render({row}){
-                const thingId = row.Thing['@iot.id']
+                minWidth: 150
+            },
+            {
+                field: "ThingID", headerName: "Thing ID",
+                renderCell: function render({row}) {
+                    const thingId = row.Thing['@iot.id']
                     return (<div>
                         <a href={`${settings.st2_url}/Things(${thingId})`}>{thingId}</a>
                     </div>)
@@ -129,11 +147,11 @@ export const ST2DatastreamList: React.FC = () => {
             {
                 field: "actions",
                 headerName: "Actions",
-                renderCell: function render({ row }) {
+                renderCell: function render({row}) {
                     return (
                         <div>
-                            <EditButton hideText recordItemId={row['@iot.id']} />
-                            <ShowButton hideText recordItemId={row['@iot.id']} />
+                            <EditButton hideText recordItemId={row['@iot.id']}/>
+                            {/*<ShowButton hideText recordItemId={row['@iot.id']}/>*/}
                         </div>
                     );
                 },
@@ -146,45 +164,48 @@ export const ST2DatastreamList: React.FC = () => {
         []
     );
 
-    const handleSelectionChange = (selectionModel) => {
-        const selectedRow = rows.find((row)=>{
-            return row["@iot.id"]===selectionModel[0]
+    const handleSelectionChange = (selectionModel: any) => {
+        const selectedRow = rows.find((row) => {
+            return row["@iot.id"] === selectionModel[0]
         })
         if (!selectedRow) return;
 
-        const name =selectedRow.Thing?.Locations?.map((loc) => loc.name).join(', ')
+        const name = selectedRow.Thing?.Locations?.map((loc) => loc.name).join(', ')
         setSelectedLocationName(name)
-        setDatastreamId(selectionModel[0]);
+        setDatastreamIds(selectionModel);
+        setActiveDatastreamId(selectionModel.at(-1))
     };
 
     useEffect(() => {
-        if (!datastreamId) return;
+        if (datastreamIds.length===0) return;
 
-        triggerAll().then(
+        // remove datastreams from observations that are not in datastreamIds
+        triggerAll(
+        ).then(
             (data) => {
                 console.log('hydrograph data', data);
-                setObservations(data)
+                setObservations([...observations, ...[{name: activeDatastreamId, data: data}]])
             }
         );
-    }, [datastreamId, minDate, maxDate]);
+    }, [activeDatastreamId, minDate, maxDate]);
 
-    const findDuplicates = async () => {
-        const updatedRows = rows.map(async (row) => {
-            // row.Sensor.name = 'asdfs';
-            console.log('row', row['@iot.id']);
-
-            const data = await triggerAll({ resource: `Datastreams(${row['@iot.id']})/Observations` });
-            console.log('hydrograph data', row['@iot.id'], data);
-            if (data.length == 0) {
-                row.name = `${row.name} (Duplicate)`;
-            }
-
-            return row;
-        });
-
-
-        setRows(await Promise.all(updatedRows));
-    };
+    // const findDuplicates = async () => {
+    //     const updatedRows = rows.map(async (row) => {
+    //         // row.Sensor.name = 'asdfs';
+    //         console.log('row', row['@iot.id']);
+    //
+    //         const data = await triggerAll({resource: `Datastreams(${row['@iot.id']})/Observations`});
+    //         console.log('hydrograph data', row['@iot.id'], data);
+    //         if (data.length == 0) {
+    //             row.name = `${row.name} (Duplicate)`;
+    //         }
+    //
+    //         return row;
+    //     });
+    //
+    //
+    //     setRows(await Promise.all(updatedRows));
+    // };
 
     return (
         <>
@@ -198,43 +219,42 @@ export const ST2DatastreamList: React.FC = () => {
                 <Card sx={{padding: 2, margin: 1}}>
                     <ST2Hydrograph
                         name={locationName}
-                        observations={observations} />
+                        observations={observations}/>
                 </Card>
                 <Card sx={{padding: 2, margin: 1}}>
                     <Stack direction={'row'}>
                         <DebouncedTextInput
-                        value={filterLocationName}
-                        setValue={setFilterLocationName}
-                        delay={1000}
-                        options={{label: 'Location',
-                            style: {width: '60%'}}}
+                            value={filterLocationName}
+                            setValue={setFilterLocationName}
+                            delay={1000}
+                            options={{
+                                label: 'Location',
+                                style: {width: '60%'}
+                            }}
                         />
                         <ClearableSelect label={'Agency'}
-                                     value={agency} setValue={setAgency} values={Agencies}/>
+                                         value={agency} setValue={setAgency} values={Agencies}/>
                         <ClearableSelect label={'Datastream Kind'}
-                                     value={datastreamKind} setValue={setDatastreamKind} values={DatastreamKinds}/>
+                                         value={datastreamKind} setValue={setDatastreamKind} values={DatastreamKinds}/>
                         <ClearableSelect label={'Sensor Kind'}
                                          setValue={setSensorKind}
                                          value={sensorKind}
-                                        values={SensorKinds}/>
+                                         values={SensorKinds}/>
                     </Stack>
                     <Stack direction={'row'} sx={{pt: 2}}>
                         <DatePicker
                             label={'Min. Date'}
                             value={minDate}
-                            onChange={(newValue)=> setMinDate(newValue)}
+                            onChange={(newValue) => setMinDate(newValue)}
                         />
                         <DatePicker
                             label={'Max. Date'}
                             value={maxDate}
-                            onChange={(newValue)=> setMaxDate(newValue)}
+                            onChange={(newValue) => setMaxDate(newValue)}
                         />
                     </Stack>
 
                 </Card>
-                {/*<Card>*/}
-                {/*    <Button onClick={findDuplicates}>Find Duplicates</Button>*/}
-                {/*</Card>*/}
             </ListPage>
         </>
     );
