@@ -25,6 +25,8 @@ import ScienceOutlined from "@mui/icons-material/ScienceOutlined";
 import FileUploadOutlined from "@mui/icons-material/FileUploadOutlined";
 import CategoryOutlined from "@mui/icons-material/CategoryOutlined";
 import {WaterDrop, WaterOutlined} from "@mui/icons-material";
+import SensorsOutlinedIcon from '@mui/icons-material/SensorsOutlined';
+import BiotechOutlinedIcon from '@mui/icons-material/BiotechOutlined';
 
 let st2 = [
     {
@@ -47,26 +49,39 @@ let st2 = [
         name: "locations",
         icon: <Place/>,
         list: "/st2/locations",
-        edit: "/st2/locations/edit/:id",
-        show: "/st2/locations/show/:id",
-        create: "/st2/locations/create",
+        // edit: "/st2/locations/edit/:id",
+        // show: "/st2/locations/show/:id",
+        // create: "/st2/locations/create",
     },
     {
         name: "wells",
         icon: <Plumbing/>,
         list: "/st2/wells",
-        edit: "/st2/wells/edit/:id",
-        show: "/st2/wells/show/:id",
-        create: "/st2/wells/create",
+        // edit: "/st2/wells/edit/:id",
+        // show: "/st2/wells/show/:id",
+        // create: "/st2/wells/create",
     },
     {
         name: "datastreams",
         icon: <WaterOutlined/>,
         list: "/st2/datastreams",
-        edit: "/st2/datastreams/edit/:id",
-        show: "/st2/datastreams/show/:id",
-        create: "/st2/datastreams/create",
+        // edit: "/st2/datastreams/edit/:id",
+        // show: "/st2/datastreams/show/:id",
+        // create: "/st2/datastreams/create",
     },
+    {
+        name: "sensors",
+        icon: <SensorsOutlinedIcon/>,
+        list: "/st2/sensors",
+    },
+    {
+        name: "observedproperties",
+        list: "/st2/observedproperties",
+        meta: {
+            label: "ObservedProperties",
+            icon: <BiotechOutlinedIcon />,
+        },
+    }
 ]
 
 export const st2Resources = st2.map((b) => {

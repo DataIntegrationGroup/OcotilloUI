@@ -24,6 +24,8 @@ import {LocationCreate, LocationEdit, LocationList, LocationShow} from "@/pages/
 import {ST2LocationList} from "@/pages/st2/locations";
 import {ST2WellList} from "@/pages/st2/wells";
 import {ST2DatastreamList} from "@/pages/st2/datastreams";
+import {ST2SensorList} from "@/pages/st2/sensors";
+import {ST2ObservedPropertiesList} from "@/pages/st2/observedProperties";
 
 export const makeST2Routes = () => {
 
@@ -48,6 +50,18 @@ export const makeST2Routes = () => {
                 {/*<Route path="create" element={<LocationCreate/>}/>*/}
                 {/*<Route path="edit/:id" element={<LocationEdit/>}/>*/}
                 {/*<Route path="show/:id" element={<LocationShow/>}/>*/}
+            </Route>
+            <Route path="sensors">
+                <Route index element={<ST2SensorList/>}/>
+                {/*<Route path="create" element={<LocationCreate/>}/>*/}
+                {/*<Route path="edit/:id" element={<LocationEdit/>}/>*/}
+                {/*<Route path="show/:id" element={<LocationShow/>}/>*/}
+            </Route>
+            <Route path='observedproperties'>
+                <Route index element={<ST2ObservedPropertiesList/>}/>
+                {/*<Route path="create" element={<ObservedPropertyCreate />} />*/}
+                {/*<Route path="edit/:id" element={<ObservedPropertyEdit />} />*/}
+                {/*<Route path="show/:id" element={<ObservedPropertyShow />} />*/}
             </Route>
         </Route>
     )

@@ -16,7 +16,7 @@
 import {ShowButton, EditButton, List, useDataGrid} from "@refinedev/mui";
 import React, {useEffect, useState} from "react";
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
-import type {IDatastream, IHydrographDatasource, IObservation} from "@/interfaces/st2";
+import type {IDatastream, IHydrographDatasource, IHydrographOptions, IObservation} from "@/interfaces/st2";
 import {ListPage} from "@/components/ListPage";
 import {Button, Card, InputLabel, TextField} from "@mui/material";
 import {useAll} from "@/useAll";
@@ -29,6 +29,8 @@ import Stack from "@mui/material/Stack";
 import {DebouncedTextInput} from "@/components/DebouncedTextInput";
 import {DatePicker} from '@mui/x-date-pickers/DatePicker';
 import {Dayjs} from 'dayjs';
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 
 const Agencies = ['BernCo', 'PVACD', 'EBID', 'CABQ']
 const DatastreamKinds = ['Manual Groundwater Levels', 'Groundwater Levels', 'Groundwater Elevations']
@@ -47,6 +49,11 @@ export const ST2DatastreamList: React.FC = () => {
     const [minDate, setMinDate] = useState<Dayjs | null>(null)
     const [maxDate, setMaxDate] = useState<Dayjs | null>(null)
     const [refreshHydrograph, setRefreshHydrograph] = useState(0)
+    const [hydrographOptions, setHydrographOptions] = useState<IHydrographOptions>({
+        useNormalization: false,
+        useCompact: true,
+        dataZoom: '',
+    })
 
     const getObservationFilter = () => {
         let fs = []
@@ -62,7 +69,8 @@ export const ST2DatastreamList: React.FC = () => {
     const {isLoading, triggerAll} = useAll({
         resource: `Datastreams(${activeDatastreamId})/Observations`,
         meta: {
-            filter: getObservationFilter()
+            filter: getObservationFilter(),
+            orderby: 'resultTime asc'
         },
         dataProviderName: 'st2',
     });
@@ -91,7 +99,6 @@ export const ST2DatastreamList: React.FC = () => {
             'expand': 'Thing/Locations, Sensor',
             'filter': getFilter(),
             'orderby': 'id asc'
-            // 'orderby': 'Thing/Locations/name asc'
         },
     });
 
@@ -171,7 +178,7 @@ export const ST2DatastreamList: React.FC = () => {
         })
         if (!selectedRow) {
             setDataSource([])
-            setRefreshHydrograph((prev)=>prev+1)
+            setRefreshHydrograph((prev) => prev + 1)
             return;
         }
 
@@ -180,10 +187,10 @@ export const ST2DatastreamList: React.FC = () => {
     };
 
     useEffect(() => {
-        const nobs = datasource.filter((o)=> datastreamIds.includes(o.id));
-        const ids = nobs.map((o)=>o.id)
+        const nobs = datasource.filter((o) => datastreamIds.includes(o.id));
+        const ids = nobs.map((o) => o.id)
 
-        const wrapper = async ()=> {
+        const wrapper = async () => {
             const f = (dsid) => {
                 // get row
                 const row = rows.find((row) => {
@@ -192,7 +199,7 @@ export const ST2DatastreamList: React.FC = () => {
 
                 if (ids.includes(dsid)) {
                     // may need data refreshed
-                    return datasource.find((d)=>d.id===dsid)
+                    return datasource.find((d) => d.id === dsid)
                 } else {
                     return triggerAll().then((data) => {
                         return {
@@ -206,7 +213,7 @@ export const ST2DatastreamList: React.FC = () => {
             const ps = datastreamIds.map(f)
             const sources = await Promise.all(ps)
             setDataSource(sources)
-            setRefreshHydrograph((prev)=>prev+1)
+            setRefreshHydrograph((prev) => prev + 1)
         }
 
         wrapper()
@@ -261,13 +268,14 @@ export const ST2DatastreamList: React.FC = () => {
             <ListPage
                 getRowId={(row) => row["@iot.id"]}
                 columns={columns}
-                dataGridProps={{ ...dataGridProps, rows,  ...{checkboxSelection: true}}}
+                dataGridProps={{...dataGridProps, rows, ...{checkboxSelection: true}}}
                 onSelectionChange={handleSelectionChange}
                 isLoading={isLoading}
             >
                 <Card sx={{padding: 2, margin: 1}}>
                     <ST2Hydrograph
                         // name={locationName}
+                        options={hydrographOptions}
                         refresh={refreshHydrograph}
                         datasource={datasource}/>
                 </Card>
@@ -302,6 +310,25 @@ export const ST2DatastreamList: React.FC = () => {
                             value={maxDate}
                             onChange={(newValue) => setMaxDate(newValue)}
                         />
+                        <FormControlLabel control={
+                            <Checkbox checked={hydrographOptions.useNormalization}
+                                      onChange={(v) => setHydrographOptions({...hydrographOptions,
+                                          useCompact: false,
+                                          useNormalization: v.target.checked})}/>}
+                                          label="Use Normalization"/>
+                        <FormControlLabel control={
+                            <Checkbox checked={hydrographOptions.useCompact}
+                                      onChange={(v) => setHydrographOptions({...hydrographOptions,
+                                          useNormalization: false,
+                                          useCompact: v.target.checked})}/>}
+                                          label="Use Compact"/>
+                        <ClearableSelect label={'Data Zoom'}
+                                            value={hydrographOptions.dataZoom}
+                                            onClear={() => setHydrographOptions({...hydrographOptions, dataZoom: ''})}
+                                            setValue={(v) => setHydrographOptions({...hydrographOptions, dataZoom: v})}
+                                            values={['earliest', 'latest']}/>
+
+
                     </Stack>
 
                 </Card>

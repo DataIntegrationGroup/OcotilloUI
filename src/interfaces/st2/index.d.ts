@@ -18,6 +18,7 @@ export interface BaseSTEntity {
     "@iot.id": number;
     name: string;
     properties: any;
+    description: string;
 }
 
 
@@ -45,7 +46,6 @@ export interface IWell extends IThing {}
 export interface ISensor extends BaseSTEntity {
     encodingType: string;
     metadata: string;
-    description: string;
 }
 
 export interface IDatastream extends BaseSTEntity {
@@ -63,15 +63,22 @@ export interface IObservation {
 }
 
 
-export interface IHydrographObservation {
-    dateTime: string;
-    result: number;
-}
-
 export interface IHydrographDatasource {
     id: number;
     data: IObservation[]
     name: string
+}
+
+export interface IHydrographOptions {
+    useNormalization?: boolean;
+    useElevation?: boolean;
+    useCompact?: boolean;
+    dataZoom?: string;
+}
+
+export interface IObservedProperty extends BaseSTEntity {
+    definition: string;
+    name: string;
 }
 //
 // export interface ILookupTable {

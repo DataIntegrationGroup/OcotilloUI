@@ -19,22 +19,36 @@ import Select, {SelectChangeEvent} from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import IconButton from "@mui/material/IconButton";
 import ClearIcon from "@mui/icons-material/Clear";
+import React from "react";
 
-export const ClearableSelect = ({label, value, setValue, values,
-                                    multiple=false,
-                                    disabled=false,
-                                    showClear=true}) => {
+type IClearableSelect =  {
+    label: string;
+    value: string | string[];
+    setValue: (any) => void;
+    values: string[];
+    multiple?: boolean;
+    disabled?: boolean;
+    showClear?: boolean;
+    onClear?: () => void;
+}
+
+export const ClearableSelect: React.FC<IClearableSelect> = ({label, value, setValue, values,
+                                    multiple = false,
+                                    disabled = false,
+                                    showClear = true,
+                                    onClear = undefined,
+                                }) => {
 
     let clear = false;
-    if (showClear){
+    if (showClear) {
         if (multiple) {
             clear = value.length > 0
-        }else{
+        } else {
             clear = value !== ''
         }
     }
 
-
+    // console.log('label', label, 'clear', clear, 'value', value)
 
     return (
         <FormControl fullWidth>
@@ -54,11 +68,14 @@ export const ClearableSelect = ({label, value, setValue, values,
                         <InputAdornment sx={{marginRight: "15px"}} position="end">
                             <IconButton
                                 onClick={() => {
-
-                                    if (multiple) {
-                                        setValue([]);
-                                    }else {
-                                        setValue('');
+                                    if (onClear) {
+                                        onClear();
+                                    } else {
+                                        if (multiple) {
+                                            setValue([]);
+                                        } else {
+                                            setValue('');
+                                        }
                                     }
                                 }}
                             >

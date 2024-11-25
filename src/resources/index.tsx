@@ -23,11 +23,16 @@ import {geochronologyResources} from '@/resources/geochronology'
 import {criticalMineralResources} from '@/resources/criticalminerals'
 import {geothermalResources} from '@/resources/geothermal'
 import {st2Resources} from "@/resources/st2";
+import SensorsOutlinedIcon from "@mui/icons-material/SensorsOutlined";
 
 
 let base = [{name: 'Water',
             icon: <WaterDropOutlined/>,
             meta: {label: 'Water'}
+            },
+            {name: 'st2',
+                icon: <SensorsOutlinedIcon/>,
+                meta: {label: 'NMWDI SensorThings'}
             },
             {name: 'geochronology',
             icon: <AccessTime/>,
@@ -41,10 +46,7 @@ let base = [{name: 'Water',
             icon: <HeatPumpOutlined/>,
             meta: {label: 'Geothermal'}
             },
-            {name: 'st2',
-            icon: <WaterDropOutlined/>,
-            meta: {label: 'NMWDI SensorThings'}
-            },
+
 ]
 
 
