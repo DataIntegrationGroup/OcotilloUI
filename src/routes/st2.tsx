@@ -26,12 +26,13 @@ import {ST2WellList} from "@/pages/st2/wells";
 import {ST2DatastreamList} from "@/pages/st2/datastreams";
 import {ST2SensorList} from "@/pages/st2/sensors";
 import {ST2ObservedPropertiesList} from "@/pages/st2/observedProperties";
+import {ST2Dashboard} from "@/pages/st2/dashboard";
 
 export const makeST2Routes = () => {
 
     return (
         <Route path={'/st2'}>
-            {/*<Route path="dashboard" element={<WaterDashboard/>}/>*/}
+            <Route path="dashboard" element={<ST2Dashboard/>}/>
             {/*<Route path='reportbuilder' element={<ReportBuilder/>}/>*/}
             <Route path="wells">
                 <Route index element={<ST2WellList/>}/>

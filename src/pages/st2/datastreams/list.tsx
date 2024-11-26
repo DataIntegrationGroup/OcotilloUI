@@ -18,11 +18,9 @@ import React, {useEffect, useState} from "react";
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 import type {IDatastream, IHydrographDatasource, IHydrographOptions, IObservation} from "@/interfaces/st2";
 import {ListPage} from "@/components/ListPage";
-import {Button, Card, InputLabel, TextField} from "@mui/material";
+import {Accordion, AccordionDetails, AccordionSummary, Button, Card, InputLabel, TextField} from "@mui/material";
 import {useAll} from "@/useAll";
-// import Chart from "@/components/Chart";
 import {settings} from "@/settings";
-import ReactECharts from "echarts-for-react";
 import {ST2Hydrograph} from "@/components/Hydrograph";
 import {ClearableSelect} from "@/components/ClearableSelect";
 import Stack from "@mui/material/Stack";
@@ -31,6 +29,7 @@ import {DatePicker} from '@mui/x-date-pickers/DatePicker';
 import {Dayjs} from 'dayjs';
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const Agencies = ['BernCo', 'PVACD', 'EBID', 'CABQ']
 const DatastreamKinds = ['Manual Groundwater Levels', 'Groundwater Levels', 'Groundwater Elevations']
@@ -41,7 +40,6 @@ export const ST2DatastreamList: React.FC = () => {
     const [activeDatastreamId, setActiveDatastreamId] = useState<number>();
     const [rows, setRows] = useState<IDatastream[]>([]);
     const [datasource, setDataSource] = useState<IHydrographDatasource[]>([])
-    // const [locationName, setSelectedLocationName] = useState<string>('')
     const [agency, setAgency] = useState<string>('BernCo')
     const [datastreamKind, setDatastreamKind] = useState<string>('Groundwater Levels')
     const [filterLocationName, setFilterLocationName] = useState<string>('')
@@ -186,37 +184,37 @@ export const ST2DatastreamList: React.FC = () => {
         setActiveDatastreamId(selectionModel.at(-1))
     };
 
-    useEffect(() => {
-        const nobs = datasource.filter((o) => datastreamIds.includes(o.id));
-        const ids = nobs.map((o) => o.id)
+    const wrapper = async () => {
+        const ps = datastreamIds.map((dsid) => {
+            // get row
+            const row = rows.find((row) => {
+                return row['@iot.id'] === dsid
+            })
 
-        const wrapper = async () => {
-            const f = (dsid) => {
-                // get row
-                const row = rows.find((row) => {
-                    return row['@iot.id'] === dsid
+            const nobs = datasource.filter((o) => datastreamIds.includes(o.id));
+            const ids = nobs.map((o) => o.id)
+
+            if (ids.includes(dsid)) {
+                // may need data refreshed
+                return datasource.find((d) => d.id === dsid)
+            } else {
+                return triggerAll().then((data) => {
+                    return {
+                        id: dsid,
+                        name: row.Thing?.Locations?.map((loc) => loc.name).join(', '),
+                        data: data
+                    }
                 })
-
-                if (ids.includes(dsid)) {
-                    // may need data refreshed
-                    return datasource.find((d) => d.id === dsid)
-                } else {
-                    return triggerAll().then((data) => {
-                        return {
-                            id: dsid,
-                            name: row.Thing?.Locations?.map((loc) => loc.name).join(', '),
-                            data: data
-                        }
-                    })
-                }
             }
-            const ps = datastreamIds.map(f)
-            const sources = await Promise.all(ps)
-            setDataSource(sources)
-            setRefreshHydrograph((prev) => prev + 1)
-        }
+        })
+        const sources = await Promise.all(ps)
+        setDataSource(sources)
+        setRefreshHydrograph((prev) => prev + 1)
+        return
+    }
 
-        wrapper()
+    useEffect(() => {
+        wrapper().then()
 
         // if (datastreamIds.length===0) return;
         // remove datastreams from observations that are not in datastreamIds
@@ -272,66 +270,141 @@ export const ST2DatastreamList: React.FC = () => {
                 onSelectionChange={handleSelectionChange}
                 isLoading={isLoading}
             >
-                <Card sx={{padding: 2, margin: 1}}>
-                    <ST2Hydrograph
-                        // name={locationName}
-                        options={hydrographOptions}
-                        refresh={refreshHydrograph}
-                        datasource={datasource}/>
-                </Card>
-                <Card sx={{padding: 2, margin: 1}}>
-                    <Stack direction={'row'}>
-                        <DebouncedTextInput
-                            value={filterLocationName}
-                            setValue={setFilterLocationName}
-                            delay={1000}
-                            options={{
-                                label: 'Location',
-                                style: {width: '60%'}
-                            }}
-                        />
-                        <ClearableSelect label={'Agency'}
-                                         value={agency} setValue={setAgency} values={Agencies}/>
-                        <ClearableSelect label={'Datastream Kind'}
-                                         value={datastreamKind} setValue={setDatastreamKind} values={DatastreamKinds}/>
-                        <ClearableSelect label={'Sensor Kind'}
-                                         setValue={setSensorKind}
-                                         value={sensorKind}
-                                         values={SensorKinds}/>
-                    </Stack>
-                    <Stack direction={'row'} sx={{pt: 2}}>
-                        <DatePicker
-                            label={'Min. Date'}
-                            value={minDate}
-                            onChange={(newValue) => setMinDate(newValue)}
-                        />
-                        <DatePicker
-                            label={'Max. Date'}
-                            value={maxDate}
-                            onChange={(newValue) => setMaxDate(newValue)}
-                        />
-                        <FormControlLabel control={
-                            <Checkbox checked={hydrographOptions.useNormalization}
-                                      onChange={(v) => setHydrographOptions({...hydrographOptions,
-                                          useCompact: false,
-                                          useNormalization: v.target.checked})}/>}
-                                          label="Use Normalization"/>
-                        <FormControlLabel control={
-                            <Checkbox checked={hydrographOptions.useCompact}
-                                      onChange={(v) => setHydrographOptions({...hydrographOptions,
-                                          useNormalization: false,
-                                          useCompact: v.target.checked})}/>}
-                                          label="Use Compact"/>
-                        <ClearableSelect label={'Data Zoom'}
-                                            value={hydrographOptions.dataZoom}
-                                            onClear={() => setHydrographOptions({...hydrographOptions, dataZoom: ''})}
-                                            setValue={(v) => setHydrographOptions({...hydrographOptions, dataZoom: v})}
-                                            values={['earliest', 'latest']}/>
+                <Accordion>
+                    <AccordionSummary
+                        expandIcon={<ExpandMoreIcon/>}>
+                        <InputLabel>Hydrograph</InputLabel>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <Card sx={{padding: 2, margin: 1}}>
+                            <ST2Hydrograph
+                                // name={locationName}
+                                options={hydrographOptions}
+                                refresh={refreshHydrograph}
+                                datasource={datasource}/>
+                        </Card>
+                    </AccordionDetails>
+                </Accordion>
+                <Accordion>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
+                        <InputLabel>Observations</InputLabel>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <Card sx={{padding: 2, margin: 1}}>
+                            <DataGrid
+                                initialState={{pagination: {paginationModel: {pageSize: 10}}}}
+                                rowHeight={settings.rowHeight}
+                                rows={datasource.map((d) => {
+                                    return d.data.map((obs) => {
+                                        return {...obs, id: obs["@iot.id"], location: d.name}
+                                    })
+                                }).flat()}
+                                columns={[
+                                    // {field: 'resultTime', headerName: 'resultTime', type: 'dateTime', width: 200},
+                                    {
+                                        field: "location", headerName: "Location",
+                                        minWidth: 200
+
+                                    },
+                                    // {
+                                    //     field: 'id', headerName: 'ID',
+                                    //     type: 'number', width: 120,
+                                    //     valueFormatter: (params) => {
+                                    //         return params.id.toString().replace(/,/g, '');
+                                    //     }
+                                    // },
+                                    {
+                                        field: 'phenomenonTime',
+                                        headerName: 'Measurement Date Time',
+                                        type: 'dateTime',
+                                        width: 200,
+                                        valueGetter: (params) => {
+                                            return new Date(params.value)
+                                        }
+                                    },
+                                    {
+                                        field: 'result',
+                                        headerName: 'Depth To Water BGS (ft)',
+                                        type: 'number',
+                                        width: 200
+                                    },
+                                ]}
+                            />
+                        </Card>
+                    </AccordionDetails>
+                </Accordion>
+                <Accordion>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
+                        <InputLabel>Filter</InputLabel>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <Card sx={{padding: 2, margin: 1}}>
+                            <Stack direction={'row'}>
+                                <DebouncedTextInput
+                                    value={filterLocationName}
+                                    setValue={setFilterLocationName}
+                                    delay={1000}
+                                    options={{
+                                        label: 'Location',
+                                        style: {width: '60%'}
+                                    }}
+                                />
+                                <ClearableSelect label={'Agency'}
+                                                 value={agency} setValue={setAgency} values={Agencies}/>
+                                <ClearableSelect label={'Datastream Kind'}
+                                                 value={datastreamKind} setValue={setDatastreamKind}
+                                                 values={DatastreamKinds}/>
+                                <ClearableSelect label={'Sensor Kind'}
+                                                 setValue={setSensorKind}
+                                                 value={sensorKind}
+                                                 values={SensorKinds}/>
+                            </Stack>
+                            <Stack direction={'row'} sx={{pt: 2}}>
+                                <DatePicker
+                                    label={'Min. Date'}
+                                    value={minDate}
+                                    onChange={(newValue) => setMinDate(newValue)}
+                                />
+                                <DatePicker
+                                    label={'Max. Date'}
+                                    value={maxDate}
+                                    onChange={(newValue) => setMaxDate(newValue)}
+                                />
+                                <FormControlLabel control={
+                                    <Checkbox checked={hydrographOptions.useNormalization}
+                                              onChange={(v) => setHydrographOptions({
+                                                  ...hydrographOptions,
+                                                  useCompact: false,
+                                                  useNormalization: v.target.checked
+                                              })}/>}
+                                                  label="Use Normalization"/>
+                                <FormControlLabel control={
+                                    <Checkbox checked={hydrographOptions.useCompact}
+                                              onChange={(v) => setHydrographOptions({
+                                                  ...hydrographOptions,
+                                                  useNormalization: false,
+                                                  useCompact: v.target.checked
+                                              })}/>}
+                                                  label="Use Compact"/>
+                                <ClearableSelect label={'Data Zoom'}
+                                                 value={hydrographOptions.dataZoom}
+                                                 onClear={() => setHydrographOptions({
+                                                     ...hydrographOptions,
+                                                     dataZoom: ''
+                                                 })}
+                                                 setValue={(v) => setHydrographOptions({
+                                                     ...hydrographOptions,
+                                                     dataZoom: v
+                                                 })}
+                                                 values={['earliest', 'latest']}/>
 
 
-                    </Stack>
+                            </Stack>
 
-                </Card>
+                        </Card>
+                    </AccordionDetails>
+                </Accordion>
+
             </ListPage>
         </>
     );

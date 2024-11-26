@@ -17,44 +17,121 @@
 import Typography from "@mui/material/Typography";
 import {Card} from "@mui/material";
 import Stack from "@mui/material/Stack";
-import {useShow} from "@refinedev/core";
+import {useList, useShow} from "@refinedev/core";
 import Box from "@mui/material/Box";
+import {DataGrid} from "@mui/x-data-grid";
+import {Show} from "@refinedev/mui";
+import {alpha} from "@mui/system";
+import CircularProgress from "@mui/material/CircularProgress";
+import React from "react";
 
 
-export const WaterDashboard = () => {
+export const ST2Dashboard = () => {
 
-    const {query} = useShow({
-        resource: 'dashboard',
-        id: 'dashboard',
-        dataProviderName: 'amp'
+    const {data: Locations, isLoading: locationsLoading} = useList({
+        resource: 'Locations',
+        dataProviderName: 'st2'
     });
-    const stats = query.data?.data
-    console.log(query.data?.data)
 
+    const {data: Things, isLoading: thingsLoading} = useList({
+        resource: 'Things',
+        dataProviderName: 'st2'
+    });
+
+    const {data: Sensors, isLoading: sensorsLoading} = useList({
+        resource: 'Sensors',
+        dataProviderName: 'st2'
+    });
+
+    const {data: Observations, isLoading: observationsLoading} = useList({
+        resource: 'Observations',
+        dataProviderName: 'st2'
+    });
+
+    const {data: Datastreams, isLoading: datastreamsLoading} = useList({
+        resource: 'Datastreams',
+        dataProviderName: 'st2'
+    });
+
+    const {data: ObservedProperties, isLoading: observedPropertiesLoading} = useList({
+        resource: 'ObservedProperties',
+        dataProviderName: 'st2'
+    });
+
+    // const isLoading = locationsLoading || thingsLoading
+    // console.log('asdf', Things, Locations)
     return (
         <Box>
-            <Typography variant={'h3'}>Water Dashboard</Typography>
+            {/*{isLoading && (*/}
+            {/*    <Box*/}
+            {/*        sx={{*/}
+            {/*            position: "absolute",*/}
+            {/*            inset: 0,*/}
+            {/*            display: "flex",*/}
+            {/*            justifyContent: "center",*/}
+            {/*            alignItems: "center",*/}
+            {/*            zIndex: (theme) => theme.zIndex.drawer + 1,*/}
+            {/*            // this is needed to support custom themes, dark mode etc.*/}
+            {/*            bgcolor: (theme) => alpha(theme.palette.background.paper, 0.4),*/}
+            {/*        }}*/}
+            {/*    >*/}
+            {/*        <CircularProgress/>*/}
+            {/*    </Box>*/}
+            {/*)}*/}
+            <Typography variant={'h3'}>ST2 Dashboard</Typography>
             <Stack direction={'column'}
                    spacing={2}
                    sx={{justifyContent: 'space-between'}}>
-                <Card sx={{'p': 3}}>
-                    <Typography variant={'h5'}>Projects</Typography>
-                    <Typography variant={'body1'}>{stats?.projects}</Typography>
-                </Card>
-                <Card sx={{'p': 3}}>
-                    <Typography variant={'h5'}>Wells</Typography>
-                    <Typography variant={'body1'}>{stats?.wells}</Typography>
-                </Card>
-                <Card sx={{'p': 3}}>
-                    <Typography variant={'h5'}>Manual Measurements</Typography>
-                    <Typography variant={'body1'}>{stats?.manual_measurements.count}</Typography>
-                    <Typography variant={'h5'}>Last Measurement</Typography>
-                    <Typography variant={'body1'}>{stats?.manual_measurements.last_timestamp}</Typography>
-                </Card>
-                <Card sx={{'p': 3}}>
-                    <Typography variant={'h5'}>Continuous Measurements</Typography>
-                    <Typography variant={'body1'}>{stats?.continuous_measurements}</Typography>
-                </Card>
+                {/*<Card sx={{'p': 3}}>*/}
+                {/*    <DataGrid columns={[{field: 'id', headerName: 'ID', width: 90}]}*/}
+                {/*              rows={[]}/>*/}
+
+                {/*    /!*<Typography variant={'h5'}>Projects</Typography>*!/*/}
+                {/*    /!*<Typography variant={'body1'}>{stats?.agenc}</Typography>*!/*/}
+                {/*</Card>*/}
+                <Stack direction={'row'}>
+                    <Card sx={{'p': 3}}>
+                        <Typography variant={'h5'}>Locations</Typography>
+                        <Typography variant={'body1'}>{Locations?.total}</Typography>
+                    </Card>
+                    <Card sx={{'p': 3}}>
+                        <Typography variant={'h5'}>Things</Typography>
+                        <Typography variant={'body1'}>{Things?.total}</Typography>
+                    </Card>
+                </Stack>
+                <Stack direction={'row'}>
+                    <Card sx={{'p': 3}}>
+                        <Typography variant={'h5'}>Observations</Typography>
+                        <Typography variant={'body1'}>{Observations?.total}</Typography>
+                    </Card>
+
+                    <Card sx={{'p': 3}}>
+                        <Typography variant={'h5'}>Datastreams</Typography>
+                        <Typography variant={'body1'}>{Datastreams?.total}</Typography>
+                    </Card>
+                </Stack>
+
+                <Stack direction={'row'}>
+                    <Card sx={{'p': 3}}>
+                        <Typography variant={'h5'}>Sensors</Typography>
+                        <Typography variant={'body1'}>{Sensors?.total}</Typography>
+                    </Card>
+
+                    <Card sx={{'p': 3}}>
+                        <Typography variant={'h5'}>ObservedProperties</Typography>
+                        <Typography variant={'body1'}>{ObservedProperties?.total}</Typography>
+                    </Card>
+                </Stack>
+                {/*<Card sx={{'p': 3}}>*/}
+                {/*    <Typography variant={'h5'}>Manual Measurements</Typography>*/}
+                {/*    <Typography variant={'body1'}>{stats?.manual_measurements.count}</Typography>*/}
+                {/*    <Typography variant={'h5'}>Last Measurement</Typography>*/}
+                {/*    <Typography variant={'body1'}>{stats?.manual_measurements.last_timestamp}</Typography>*/}
+                {/*</Card>*/}
+                {/*<Card sx={{'p': 3}}>*/}
+                {/*    <Typography variant={'h5'}>Continuous Measurements</Typography>*/}
+                {/*    <Typography variant={'body1'}>{stats?.continuous_measurements}</Typography>*/}
+                {/*</Card>*/}
             </Stack>
         </Box>
     )
