@@ -13,16 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ===============================================================================
-import { useMany } from "@refinedev/core";
-import { ShowButton, EditButton, List, useDataGrid } from "@refinedev/mui";
+import {useMany} from "@refinedev/core";
+import {ShowButton, EditButton, List, useDataGrid} from "@refinedev/mui";
 import React from "react";
 
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 
-import type {IMeasuringAgency, ILookupTable } from "@/interfaces/amp";
+import type {IMeasuringAgency, ILookupTable} from "@/interfaces/amp";
 
 export const MeasuringAgencyList: React.FC = () => {
-    const { dataGridProps } = useDataGrid<IMeasuringAgency>();
+    const {dataGridProps} = useDataGrid<IMeasuringAgency>();
 
     // const categoryIds = dataGridProps.rows.map((item) => item.category.id);
     // const { data: categoriesData, isLoading } = useMany<ICategory>({
@@ -48,12 +48,12 @@ export const MeasuringAgencyList: React.FC = () => {
                 minWidth: 150,
                 flex: 1
             },
-            {
-                field: 'id',
-                headerName: 'ID',
-                type: 'number',
-                minWidth: 150,
-            }
+            // {
+            //     field: 'id',
+            //     headerName: 'ID',
+            //     type: 'number',
+            //     minWidth: 150,
+            // }
         ],
         []
     );
@@ -62,14 +62,17 @@ export const MeasuringAgencyList: React.FC = () => {
         <List>
             <DataGrid {...dataGridProps}
                       rowHeight={25}
-                      // getRowId={(row) => row.Code}
-                      columns={columns} />
+                      getRowId={(row) => row.Agency}
+                      columns={columns}
+                      getRowClassName={(params) =>
+                          params.indexRelativeToCurrentPage % 2 === 0 ? 'Mui-even' : 'Mui-odd'
+                      }/>
         </List>
     );
 
 }
 export const LookupTableList: React.FC = () => {
-    const { dataGridProps } = useDataGrid<ILookupTable>();
+    const {dataGridProps} = useDataGrid<ILookupTable>();
 
     // const categoryIds = dataGridProps.rows.map((item) => item.category.id);
     // const { data: categoriesData, isLoading } = useMany<ICategory>({
@@ -136,11 +139,12 @@ export const LookupTableList: React.FC = () => {
     return (
         <List>
             <DataGrid {...dataGridProps}
-    rowHeight={25}
-    getRowId={(row) => row.Code}
-    columns={columns} />
-    </List>
-);
+                      rowHeight={25}
+                      getRowId={(row) => row.Code}
+                      columns={columns}
+            />
+        </List>
+    );
     // return <div>LUFormationList</div>;
 };
 

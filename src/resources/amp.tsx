@@ -31,7 +31,7 @@ let amp = [
         list: '/amp/dashboard',
         meta: {
             label: "Dashboard",
-            icon: <DashboardOutlined />,
+            icon: <DashboardOutlined/>,
         },
     },
     {
@@ -39,7 +39,7 @@ let amp = [
         list: '/amp/reportbuilder',
         meta: {
             label: "Report Builder",
-            icon: <Construction />,
+            icon: <Construction/>,
         },
     },
     {
@@ -47,7 +47,7 @@ let amp = [
         list: '/amp/querybuilder',
         meta: {
             label: "Query Builder",
-            icon: <Construction />,
+            icon: <Construction/>,
         },
     },
     {
@@ -101,11 +101,14 @@ let amp = [
         }
     },
 
-    {   name: 'chemupload',
+    {
+        name: 'chemupload',
         list: '/amp/chemupload',
         icon: <ScienceOutlined/>,
-        meta: {parent: 'batchupload',
-            nestedLevel: 2}
+        meta: {
+            parent: 'batchupload',
+            nestedLevel: 2
+        }
     },
     {
         name: 'manualwaterlevels_batchupload',
@@ -118,10 +121,12 @@ let amp = [
         }
     },
     // chemistry
-    {name: 'Chemistry',
+    {
+        name: 'Chemistry',
         icon: <ScienceOutlined/>,
         meta: {
-            label: "Chemistry"}
+            label: "Chemistry"
+        }
     },
 
     // lookup tables
@@ -138,7 +143,7 @@ let amp = [
 export const ampResources = amp.map((b) => {
 
     let meta = b.meta || {}
-    if (!meta['parent']){
+    if (!meta['parent']) {
         meta['parent'] = 'Water'
     }
     meta['dataProviderName'] = 'amp'
@@ -148,15 +153,20 @@ export const ampResources = amp.map((b) => {
     }
 })
 
-const lookupKeys = ['level_status', 'measurement_method', 'data_quality', 'measuring_agency', 'data_source']
+const lookupKeys = [{key: 'level_status', label: 'Level Status'},
+    {key: 'measurement_method', label: 'Measurement Method'},
+    {key: 'data_quality', label: 'Data Quality'},
+    {key: 'measuring_agency', label: 'Measuring Agency'},
+    {key: 'data_source', label: 'Data Source'}]
 
 export const lookup = lookupKeys.map((l) => {
     return {
-        name: l,
-        list: `/amp/lu_${l}`,
+        name: l.key,
+        list: `/amp/lu_${l.key}`,
         meta: {
             parent: 'LookupTables',
             nestedLevel: 2,
+            label: l.label
         }
     }
 })

@@ -16,7 +16,7 @@
 import {ShowButton, EditButton, List, useDataGrid} from "@refinedev/mui";
 import React, {useEffect, useState} from "react";
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
-import type {IDatastream, IHydrographDatasource, IHydrographOptions, IObservation} from "@/interfaces/st2";
+import type {IDatastream, IHydrographDatasource, IHydrographOptions, IObservation, ISensor} from "@/interfaces/st2";
 import {ListPage} from "@/components/ListPage";
 import {Accordion, AccordionDetails, AccordionSummary, Button, Card, InputLabel, TextField} from "@mui/material";
 import {useAll} from "@/useAll";
@@ -30,10 +30,11 @@ import {Dayjs} from 'dayjs';
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {useSelect} from "@refinedev/core";
 
 const Agencies = ['BernCo', 'PVACD', 'EBID', 'CABQ']
 const DatastreamKinds = ['Manual Groundwater Levels', 'Groundwater Levels', 'Groundwater Elevations']
-const SensorKinds = ['Manual', 'RadioTower', 'VuLink']
+// const SensorKinds = ['Manual', 'RadioTower', 'VuLink']
 
 export const ST2DatastreamList: React.FC = () => {
     const [datastreamIds, setDatastreamIds] = useState<number[]>([]);
@@ -51,6 +52,13 @@ export const ST2DatastreamList: React.FC = () => {
         useNormalization: false,
         useCompact: true,
         dataZoom: '',
+    })
+
+    const {options: sensorKinds} = useSelect<ISensor>({
+        resource: 'Sensors',
+        dataProviderName: 'st2',
+        optionLabel: 'name',
+        optionValue: 'name',
     })
 
     const getObservationFilter = () => {
@@ -210,37 +218,10 @@ export const ST2DatastreamList: React.FC = () => {
         const sources = await Promise.all(ps)
         setDataSource(sources)
         setRefreshHydrograph((prev) => prev + 1)
-        return
     }
 
     useEffect(() => {
         wrapper().then()
-
-        // if (datastreamIds.length===0) return;
-        // remove datastreams from observations that are not in datastreamIds
-        // console.log('ff',datasource)
-        // console.log('aa',datastreamIds)
-        // const nobs = datasource.filter((o)=> datastreamIds.includes(o.id));
-        // console.log('nobas', nobs)
-        //
-        // const row = rows.find((row)=>{return row['@iot.id'] === activeDatastreamId})
-        // // if activeDatastreamId already in obs dont load
-        // if (datasource.map((o)=>{return o.id}).includes(activeDatastreamId)) {
-        //     console.log('setObasd', nobs)
-        //     setDataSource(nobs)
-        //     setRefreshHydrograph((prev)=>prev+1)
-        // } else {
-        //     triggerAll(
-        //     ).then(
-        //         (data) => {
-        //             console.log('hydrograph data', data);
-        //             setDataSource((prev)=>{return [...prev, ...[{id: activeDatastreamId,
-        //                                                         name: row.Thing?.Locations?.map((loc) => loc.name).join(', '),
-        //                                                         data: data}]]})
-        //         }
-        //     );
-        // }
-        //
     }, [activeDatastreamId, datastreamIds, minDate, maxDate]);
 
     // const findDuplicates = async () => {
@@ -357,7 +338,7 @@ export const ST2DatastreamList: React.FC = () => {
                                 <ClearableSelect label={'Sensor Kind'}
                                                  setValue={setSensorKind}
                                                  value={sensorKind}
-                                                 values={SensorKinds}/>
+                                                 values={sensorKinds.map((options) => options.value)}/>
                             </Stack>
                             <Stack direction={'row'} sx={{pt: 2}}>
                                 <DatePicker
