@@ -14,8 +14,7 @@
 // limitations under the License.
 // ===============================================================================
 
-import "./global.css"
-
+// import "./global.css"
 import {Authenticated, Refine} from "@refinedev/core";
 import {AuthPage, ErrorComponent, RefineSnackbarProvider, useNotificationProvider,} from "@refinedev/mui";
 

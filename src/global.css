@@ -1,7 +1,22 @@
-.MuiDataGrid-row:nth-of-type(even) {
-    background-color: #f5f5f5; /* Light gray for even rows */
+:root {
+    --even-row-light: #f5f5f5;
+    --odd-row-light: #ffffff;
+    --even-row-dark: #424242;
+    --odd-row-dark: #303030;
 }
 
-.MuiDataGrid-row:nth-of-type(odd) {
-    background-color: #ffffff; /* White for odd rows */
+[data-theme="light"] .MuiDataGrid-row:nth-of-type(even) {
+    background-color: var(--even-row-light);
+}
+
+[data-theme="light"] .MuiDataGrid-row:nth-of-type(odd) {
+    background-color: var(--odd-row-light);
+}
+
+[data-theme="dark"] .MuiDataGrid-row:nth-of-type(even) {
+    background-color: var(--even-row-dark);
+}
+
+[data-theme="dark"] .MuiDataGrid-row:nth-of-type(odd) {
+    background-color: var(--odd-row-dark);
 }
