@@ -23,8 +23,9 @@ export const Home = () => {
             </p>
             <ul>
                 <li>NM_Aquifer</li>
-                <li>Pychron</li>
+                <li><a href={'https://github.com/NMGRL/pychron'}>Pychron</a></li>
                 <li>NM_Wells</li>
+                <li><a href={'https://st2.newmexicowaterdata.org/FROST-Server'}>ST2</a></li>
             </ul>
 
 
