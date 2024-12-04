@@ -24,6 +24,7 @@ import TableViewIcon from "@mui/icons-material/TableView";
 import ScienceOutlined from "@mui/icons-material/ScienceOutlined";
 import FileUploadOutlined from "@mui/icons-material/FileUploadOutlined";
 import CategoryOutlined from "@mui/icons-material/CategoryOutlined";
+import Typography from "@mui/material/Typography";
 
 let amp = [
     {
@@ -38,7 +39,7 @@ let amp = [
         name: 'reportbuilder',
         list: '/amp/reportbuilder',
         meta: {
-            label: "Report Builder",
+            label: <>Report Builder <b>(Coming Soon)</b></>,
             icon: <Construction/>,
         },
     },
@@ -46,7 +47,7 @@ let amp = [
         name: 'querybuilder',
         list: '/amp/querybuilder',
         meta: {
-            label: "Query Builder",
+            label: "Query Builder (Beta)",
             icon: <Construction/>,
         },
     },
@@ -81,7 +82,7 @@ let amp = [
         show: "/amp/equipment/show/:id",
     },
     {
-        name: 'manualwaterlevels',
+        name: 'manual_waterlevels',
         list: '/amp/manualwaterlevels',
         edit: '/amp/manualwaterlevels/edit/:id',
         create: '/amp/manualwaterlevels/create',
@@ -107,7 +108,8 @@ let amp = [
         icon: <ScienceOutlined/>,
         meta: {
             parent: 'batchupload',
-            nestedLevel: 2
+            nestedLevel: 2,
+            label: "Chemistry Upload (Beta)"
         }
     },
     {
@@ -115,7 +117,7 @@ let amp = [
         list: '/amp/manualwaterlevels/batchupload',
         icon: <Water/>,
         meta: {
-            label: "Manual Water Levels",
+            label: "Manual Water Levels (Beta)",
             parent: "batchupload",
             nestedLevel: 2
         }

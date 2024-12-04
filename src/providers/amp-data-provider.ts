@@ -49,7 +49,7 @@ createAuthRefreshInterceptor(axiosInstance, refreshAuthLogic);
 export const fetcher = async (url: string, config?: AxiosRequestConfig) => {
     config = config || {};
     config['method'] = 'GET';
-    return axiosCall(url,  config);
+    return axiosCall(url, config);
 }
 
 export const axiosCall = async (url: string, options: AxiosRequestConfig) => {
@@ -70,7 +70,7 @@ const getPhotos = async (id) => {
         data.map(async (photo) => {
             try {
                 const resp = await fetcher(
-                        `wells/photo/${photo.OLEPath}`);
+                    `wells/photo/${photo.OLEPath}`);
                 console.log('getPhoto', resp);
 
                 return {
@@ -97,9 +97,9 @@ export const ampDataProvider: DataProvider = {
     getList: async ({resource, pagination, filters, sorters, meta}) => {
         const params = new URLSearchParams();
 
-        if (meta?.params!==undefined) {
+        if (meta?.params !== undefined) {
             Object.entries(meta['params']).forEach(([key, value]) => {
-                if (value===null || value===undefined) return;
+                if (value === null || value === undefined) return;
                 params.append(key, String(value));
             });
         }
@@ -137,7 +137,7 @@ export const ampDataProvider: DataProvider = {
         let data;
         let total;
         if (['wells', 'locations', 'equipment',
-            'manualwaterlevels', 'projects'].includes(resource)) {
+            'manual_waterlevels', 'projects'].includes(resource)) {
             data = response.data.items;
             total = response.data.total;
         } else {
@@ -167,16 +167,15 @@ export const ampDataProvider: DataProvider = {
         return await response.data;
     },
     getOne: async ({resource, id, meta}) => {
-        if (resource=='photos') {
+        if (resource == 'photos') {
             console.log('asdfasdffgetasdfsdf', id)
             return await getPhotos(id)
         }
 
         let url;
-        if (resource=='dashboard') {
+        if (resource == 'dashboard') {
             url = `tabular/dashboard`;
-        }
-        else{
+        } else {
             url = `tabular/${resource}/${id}`;
         }
 

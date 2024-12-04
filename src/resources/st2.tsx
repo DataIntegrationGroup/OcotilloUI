@@ -34,17 +34,17 @@ let st2 = [
         list: '/st2/dashboard',
         meta: {
             label: "Dashboard",
-            icon: <DashboardOutlined />,
+            icon: <DashboardOutlined/>,
         },
     },
-    {
-        name: 'querybuilder',
-        list: '/st2/querybuilder',
-        meta: {
-            label: "Query Builder",
-            icon: <Construction />,
-        },
-    },
+    // {
+    //     name: 'querybuilder',
+    //     list: '/st2/querybuilder',
+    //     meta: {
+    //         label: "Query Builder",
+    //         icon: <Construction />,
+    //     },
+    // },
     {
         name: "locations",
         icon: <Place/>,
@@ -79,7 +79,7 @@ let st2 = [
         list: "/st2/observedproperties",
         meta: {
             label: "ObservedProperties",
-            icon: <BiotechOutlinedIcon />,
+            icon: <BiotechOutlinedIcon/>,
         },
     }
 ]
@@ -87,7 +87,7 @@ let st2 = [
 export const st2Resources = st2.map((b) => {
 
     let meta = b.meta || {}
-    if (!meta['parent']){
+    if (!meta['parent']) {
         meta['parent'] = 'st2'
     }
     meta['dataProviderName'] = 'st2'
