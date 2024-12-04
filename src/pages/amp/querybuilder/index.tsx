@@ -256,7 +256,7 @@ export const Querybuilder: React.FC = () => {
 
     const spatialFilterEnabled = county !== '' || selectionPolygon !== null || projectRegion !== '';
     useEffect(() => {
-        if ((operator!='' || field!='') && value=='') {
+        if ((operator != '' || field != '') && value == '') {
             return
         }
 
@@ -378,7 +378,7 @@ export const Querybuilder: React.FC = () => {
 
     console.log('daa', dataGridProps)
     return (
-        <div>
+        <Card>
             <h1>QueryBuilder</h1>
 
             {/*<TextField*/}
@@ -479,69 +479,73 @@ export const Querybuilder: React.FC = () => {
 
             <Grid container>
                 <Grid xs={6}>
-                    <DataGrid
-                        {...dataGridProps}
-                        rowHeight={25}
-                        getRowId={(row) => row.PointID}
-                        columns={columns}
-                    />
+                    <Card sx={{p: 1}}>
+                        <DataGrid
+                            {...dataGridProps}
+                            rowHeight={25}
+                            getRowId={(row) => row.PointID}
+                            columns={columns}
+                        />
+                    </Card>
                 </Grid>
-                <Grid xs={6}>
-                    <LegendComponent items={legendOptions}/>
-                    <MapComponent
-                        isLoading={isLoading}
-                        showDrawControls={{show: true, position: 'top-right'}}
-                        setSelectionPolygons={setSelectionPolygons}
-                        setPopupContent={setPopupContent}
-                        popupContent={popupContent}
-                        onMouseMoveCallback={onMouseMove}
-                    >
-                        <Source
-                            key='foo'
-                            id='foo'
-                            type='geojson'
-                            data={resultFeatureCollection}>
-                            <Layer
-                                id="location"
-                                type="circle"
-                                paint={{
-                                    'circle-radius': 6,
-                                    'circle-color': getCircleColors(),
-                                    // [
-                                    //     'match',
-                                    //     ['get', 'site_type'],
-                                    //     'Groundwater other than spring (well)', '#224bb4',
-                                    //     'Spring', '#517938',
-                                    //     'Ephemeral stream', '#b42722',
-                                    //     'Perennial stream', '#d5633a',
-                                    //     '#000000'
-                                    // ],
-                                    'circle-stroke-color': '#ffffff',
-                                    'circle-stroke-width': 1,
-                                }}
-                            />
-                        </Source>
-                        {countyFeature && <Source
-                            key='county'
-                            id='countysource'
-                            type='geojson'
-                            data={countyFeature}>
-                            <Layer
-                                id="county"
-                                type="fill"
-                                paint={{
-                                    "fill-color": "#9ab7d5",
-                                    "fill-outline-color": "#000000",
-                                    "fill-opacity": 0.25,
-                                }}
-                            />
-                        </Source>}
-                    </MapComponent>
+                <Grid xs={6} p={1}>
+                    <Card sx={{p: 1}}>
+                        <LegendComponent items={legendOptions}/>
+                        <MapComponent
+                            isLoading={isLoading}
+                            showDrawControls={{show: true, position: 'top-right'}}
+                            setSelectionPolygons={setSelectionPolygons}
+                            setPopupContent={setPopupContent}
+                            popupContent={popupContent}
+                            onMouseMoveCallback={onMouseMove}
+                        >
+                            <Source
+                                key='foo'
+                                id='foo'
+                                type='geojson'
+                                data={resultFeatureCollection}>
+                                <Layer
+                                    id="location"
+                                    type="circle"
+                                    paint={{
+                                        'circle-radius': 6,
+                                        'circle-color': getCircleColors(),
+                                        // [
+                                        //     'match',
+                                        //     ['get', 'site_type'],
+                                        //     'Groundwater other than spring (well)', '#224bb4',
+                                        //     'Spring', '#517938',
+                                        //     'Ephemeral stream', '#b42722',
+                                        //     'Perennial stream', '#d5633a',
+                                        //     '#000000'
+                                        // ],
+                                        'circle-stroke-color': '#ffffff',
+                                        'circle-stroke-width': 1,
+                                    }}
+                                />
+                            </Source>
+                            {countyFeature && <Source
+                                key='county'
+                                id='countysource'
+                                type='geojson'
+                                data={countyFeature}>
+                                <Layer
+                                    id="county"
+                                    type="fill"
+                                    paint={{
+                                        "fill-color": "#9ab7d5",
+                                        "fill-outline-color": "#000000",
+                                        "fill-opacity": 0.25,
+                                    }}
+                                />
+                            </Source>}
+                        </MapComponent>
+                    </Card>
                 </Grid>
             </Grid>
 
 
-        </div>
+        </Card>
     )
 }
 // ============= EOF =============================================
