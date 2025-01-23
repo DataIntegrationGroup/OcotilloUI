@@ -32,6 +32,7 @@ import ManualWaterLevelsBatchUpload from "@/pages/amp/manualwaterlevels/batchupl
 import {AMPProjectList} from "@/pages/amp/projects";
 import {ProjectShow} from "@/pages/geochronology/projects";
 import {LookupTableList, MeasuringAgencyList} from "@/components/lookuptable";
+import {WellInventoryForm} from "@/pages/amp/wellinventoryform";
 
 const lookupRoutes = [
     "measurement_method",
@@ -77,6 +78,7 @@ export const makeAMPRoutes = () => {
                 {/*<Route path="edit/:id" element={<ProjectEdit/>}/>*/}
                 <Route path="show/:id" element={<ProjectShow/>}/>
             </Route>
+            <Route path={'wellinventoryform'} element={<WellInventoryForm/>}/>
 
             {lookupRoutes.map((route) => (
                 <Route key={route} path={`lu_${route}`}>

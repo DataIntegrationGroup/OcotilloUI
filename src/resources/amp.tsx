@@ -25,6 +25,7 @@ import ScienceOutlined from "@mui/icons-material/ScienceOutlined";
 import FileUploadOutlined from "@mui/icons-material/FileUploadOutlined";
 import CategoryOutlined from "@mui/icons-material/CategoryOutlined";
 import Typography from "@mui/material/Typography";
+import {DynamicFormTwoTone} from "@mui/icons-material";
 
 let amp = [
     {
@@ -49,6 +50,14 @@ let amp = [
         meta: {
             label: "Query Builder (Beta)",
             icon: <Construction/>,
+        },
+    },
+    {
+        name: 'wellinventoryform',
+        list: '/amp/wellinventoryform',
+        meta: {
+            label: "Well Inventory Form",
+            icon: <DynamicFormTwoTone/>,
         },
     },
     {
