@@ -29,6 +29,32 @@ export interface ILocation {
     // category: ICategory;
 }
 
+export interface IWellForm {
+    WellID: string;
+    SiteName: string;
+    DateTime: Date;
+    FieldStaff: string;
+    OwnerName: IWellOwner;
+    Address: {
+        Physical: string;
+        Mailing?: string;
+    }
+    IsWellLocatedAtPhysicalAddress: bool;
+    Email: string;
+    DirectionsToSite: string;
+    LocationOfWell: string;
+}
+
+export interface IWellOwner {
+    Name: string;
+    Phone: {
+        Home?: string;
+        Cell?: string;
+        Work?: string;
+        Other?: string;
+    }
+}
+
 export interface IWell {
     PointID: string;
 

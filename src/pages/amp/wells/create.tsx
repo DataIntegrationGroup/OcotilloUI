@@ -7,7 +7,7 @@ import { useForm } from "@refinedev/react-hook-form";
 
 import { Controller } from "react-hook-form";
 
-import type { ILocation, } from "../../../interfaces/amp";
+import type { IWellForm } from "../../../interfaces/amp";
 import {ICategory, Nullable} from "../../../interfaces";
 
 export const WellCreate: React.FC = () => {
@@ -16,7 +16,7 @@ export const WellCreate: React.FC = () => {
     register,
     control,
     formState: { errors },
-  } = useForm<ILocation, HttpError, Nullable<ILocation>>();
+  } = useForm<IWellForm, HttpError, Nullable<IWellForm>>();
 
   const { autocompleteProps } = useAutocomplete<ICategory>({
     resource: "categories",
@@ -30,105 +30,105 @@ export const WellCreate: React.FC = () => {
         autoComplete="off"
       >
         <TextField
-          {...register("PointID", {
+          {...register("WellID", {
             required: "This field is required",
           })}
-          error={!!errors.PointID}
-          helperText={errors.PointID?.message}
+          error={!!errors.WellID}
+          helperText={errors.WellID?.message}
           margin="normal"
           fullWidth
-          label="PointID"
-          name="PointID"
+          label="Well ID"
+          name="WellID"
           autoFocus
         />
-          <TextField
-              {...register("SiteID", {
-                  required: "This field is required",
-              })}
-              error={!!errors.SiteID}
-              helperText={errors.SiteID?.message}
-              margin="normal"
-              fullWidth
-              label="SiteID"
-              name="SiteID"
-              autoFocus
-          />
-        {/*<Controller*/}
-        {/*  control={control}*/}
-        {/*  name="status"*/}
-        {/*  rules={{ required: "This field is required" }}*/}
-        {/*  // eslint-disable-next-line*/}
-        {/*  defaultValue={null as any}*/}
-        {/*  render={({ field }) => (*/}
-        {/*    <Autocomplete<IStatus>*/}
-        {/*      options={["published", "draft", "rejected"]}*/}
-        {/*      {...field}*/}
-        {/*      onChange={(_, value) => {*/}
-        {/*        field.onChange(value);*/}
-        {/*      }}*/}
-        {/*      renderInput={(params) => (*/}
-        {/*        <TextField*/}
-        {/*          {...params}*/}
-        {/*          label="Status"*/}
-        {/*          margin="normal"*/}
-        {/*          variant="outlined"*/}
-        {/*          error={!!errors.status}*/}
-        {/*          helperText={errors.status?.message}*/}
-        {/*          required*/}
-        {/*        />*/}
-        {/*      )}*/}
-        {/*    />*/}
-        {/*  )}*/}
-        {/*/>*/}
-        {/*<Controller*/}
-        {/*  control={control}*/}
-        {/*  name="category"*/}
-        {/*  rules={{ required: "This field is required" }}*/}
-        {/*  // eslint-disable-next-line*/}
-        {/*  defaultValue={null as any}*/}
-        {/*  render={({ field }) => (*/}
-        {/*    <Autocomplete*/}
-        {/*      {...autocompleteProps}*/}
-        {/*      {...field}*/}
-        {/*      onChange={(_, value) => {*/}
-        {/*        field.onChange(value);*/}
-        {/*      }}*/}
-        {/*      getOptionLabel={(item) => {*/}
-        {/*        return (*/}
-        {/*          autocompleteProps?.options?.find(*/}
-        {/*            (p) => p?.id?.toString() === item?.id?.toString(),*/}
-        {/*          )?.title ?? ""*/}
-        {/*        );*/}
-        {/*      }}*/}
-        {/*      isOptionEqualToValue={(option, value) =>*/}
-        {/*        value === undefined ||*/}
-        {/*        option?.id?.toString() === (value?.id ?? value)?.toString()*/}
-        {/*      }*/}
-        {/*      renderInput={(params) => (*/}
-        {/*        <TextField*/}
-        {/*          {...params}*/}
-        {/*          label="Category"*/}
-        {/*          margin="normal"*/}
-        {/*          variant="outlined"*/}
-        {/*          error={!!errors.category}*/}
-        {/*          helperText={errors.category?.message}*/}
-        {/*          required*/}
-        {/*        />*/}
-        {/*      )}*/}
-        {/*    />*/}
-        {/*  )}*/}
-        {/*/>*/}
-        {/*<TextField*/}
-        {/*  {...register("content", {*/}
-        {/*    required: "This field is required",*/}
-        {/*  })}*/}
-        {/*  error={!!errors.content}*/}
-        {/*  helperText={errors.content?.message}*/}
-        {/*  margin="normal"*/}
-        {/*  label="Content"*/}
-        {/*  multiline*/}
-        {/*  rows={4}*/}
-        {/*/>*/}
+        <TextField
+          {...register("SiteName", {
+              required: "This field is required",
+          })}
+          error={!!errors.SiteName}
+          helperText={errors.SiteName?.message}
+          margin="normal"
+          fullWidth
+          label="Site Name"
+          name="Site Name"
+          autoFocus
+        />
+        <Controller
+          control={control}
+          name="status"
+          rules={{ required: "This field is required" }}
+          // eslint-disable-next-line
+          defaultValue={null as any}
+          render={({ field }) => (
+            <Autocomplete<IStatus>
+              options={["published", "draft", "rejected"]}
+              {...field}
+              onChange={(_, value) => {
+                field.onChange(value);
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Status"
+                  margin="normal"
+                  variant="outlined"
+                  error={!!errors.status}
+                  helperText={errors.status?.message}
+                  required
+                />
+              )}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="category"
+          rules={{ required: "This field is required" }}
+          // eslint-disable-next-line
+          defaultValue={null as any}
+          render={({ field }) => (
+            <Autocomplete
+              {...autocompleteProps}
+              {...field}
+              onChange={(_, value) => {
+                field.onChange(value);
+              }}
+              getOptionLabel={(item) => {
+                return (
+                  autocompleteProps?.options?.find(
+                    (p) => p?.id?.toString() === item?.id?.toString(),
+                  )?.title ?? ""
+                );
+              }}
+              isOptionEqualToValue={(option, value) =>
+                value === undefined ||
+                option?.id?.toString() === (value?.id ?? value)?.toString()
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Category"
+                  margin="normal"
+                  variant="outlined"
+                  error={!!errors.category}
+                  helperText={errors.category?.message}
+                  required
+                />
+              )}
+            />
+          )}
+        />
+        <TextField
+          {...register("content", {
+            required: "This field is required",
+          })}
+          error={!!errors.content}
+          helperText={errors.content?.message}
+          margin="normal"
+          label="Content"
+          multiline
+          rows={4}
+        />
       </Box>
     </Create>
   );
