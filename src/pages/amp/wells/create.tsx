@@ -8,7 +8,7 @@ import { useForm } from "@refinedev/react-hook-form";
 import { Controller } from "react-hook-form";
 
 import type { ILocation, } from "../../../interfaces/amp";
-import {Nullable} from "../../../interfaces";
+import {ICategory, Nullable} from "../../../interfaces";
 
 export const WellCreate: React.FC = () => {
   const {
@@ -18,9 +18,9 @@ export const WellCreate: React.FC = () => {
     formState: { errors },
   } = useForm<ILocation, HttpError, Nullable<ILocation>>();
 
-  // const { autocompleteProps } = useAutocomplete<ICategory>({
-  //   resource: "categories",
-  // });
+  const { autocompleteProps } = useAutocomplete<ICategory>({
+    resource: "categories",
+  });
 
   return (
     <Create saveButtonProps={saveButtonProps}>
