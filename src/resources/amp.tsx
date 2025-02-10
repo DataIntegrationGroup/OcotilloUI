@@ -48,7 +48,7 @@ let amp = [
         name: 'querybuilder',
         list: '/amp/querybuilder',
         meta: {
-            label: "Query Builder (Beta)",
+            label: <>Query Builder <b>(Beta)</b></>,
             icon: <Construction/>,
         },
     },
@@ -56,7 +56,7 @@ let amp = [
         name: 'wellinventoryform',
         list: '/amp/wellinventoryform',
         meta: {
-            label: "Well Inventory Form",
+            label: <>Well Inventory Form <b>(Beta)</b></>,
             icon: <DynamicFormTwoTone/>,
         },
     },

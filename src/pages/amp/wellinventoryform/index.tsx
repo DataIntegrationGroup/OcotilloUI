@@ -15,31 +15,25 @@
 // ===============================================================================
 
 import Typography from "@mui/material/Typography";
-import {Button, Card} from "@mui/material";
 import Stack from "@mui/material/Stack";
 import {useShow} from "@refinedev/core";
-import Box from "@mui/material/Box";
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import {useState, Fragment} from "react";
+import {useForm} from "@refinedev/react-hook-form";
+import {Button, Box, TextField} from "@mui/material";
+import {IWellInventoryForm} from "@/interfaces/amp";
+import {LocationStep} from "@/pages/amp/wellinventoryform/steps/location";
+import {WellStep} from "@/pages/amp/wellinventoryform/steps/well";
+
+import * as Yup from "yup";
+import {yupResolver} from "@hookform/resolvers/yup";
+
 
 const steps = ['Add Location', 'Add Well Details', 'Add Owner Info'];
 
-const LocationStep = () => {
-    return (
-        <Box>
-            <Typography variant={'h3'}>Location</Typography>
-        </Box>
-    )
-}
-const WellStep = () => {
-    return (
-        <Box>
-            <Typography variant={'h3'}>Well</Typography>
-        </Box>
-    )
-}
+
 const OwnerStep = () => {
     return (
         <Box>
@@ -56,6 +50,36 @@ export const WellInventoryForm = () => {
         return skipped.has(step);
     };
 
+    const schema = Yup.object().shape({
+        pointid: Yup.string().required('Point ID is required'),
+        latitude: Yup.number().required('Latitude is required').min(-90, 'Latitude must be between -90 and 90').max(90, 'Latitude must be between -90 and 90'),
+        longitude: Yup.number().required('Longitude is required').min(-180, 'Longitude must be between -180 and 180').max(180, 'Longitude must be between -180 and 180'),
+        northing: Yup.number().required('Northing is required'),
+        easting: Yup.number().required('Easting is required'),
+        elevation: Yup.number().required('Elevation is required'),
+        elevation_units: Yup.string().required('Elevation Units is required'),
+        elevation_datum: Yup.string().required('Elevation Datum is required'),
+        well_depth: Yup.number().required('Well Depth is required'),
+
+        // site_type: Yup.string().required('Site Type is required'),
+    });
+    const defaultValues: IWellInventoryForm = {
+        pointid: '',
+        latitude: 0,
+        longitude: 0,
+        northing: 0,
+        easting: 0,
+        elevation: 0,
+        elevation_units: '',
+        elevation_datum: '',
+        well_depth: 0,
+    }
+
+
+    const {register, formState, control, handleSubmit} = useForm<IWellInventoryForm>({
+        defaultValues: defaultValues,
+        resolver: yupResolver(schema)
+    });
     // const {query} = useShow({
     //     resource: 'dashboard',
     //     id: 'dashboard',
@@ -69,6 +93,8 @@ export const WellInventoryForm = () => {
     };
 
     const handleNext = () => {
+        console.log('handle next')
+
         let newSkipped = skipped;
         if (isStepSkipped(activeStep)) {
             newSkipped = new Set(newSkipped.values());
@@ -106,9 +132,9 @@ export const WellInventoryForm = () => {
     const getStepContent = () => {
         switch (activeStep) {
             case 0:
-                return <LocationStep/>;
+                return <LocationStep control={control} formState={formState} register={register}/>;
             case 1:
-                return <WellStep/>;
+                return <WellStep control={control} formState={formState} register={register}/>;
             case 2:
                 return <OwnerStep/>;
             default:
@@ -147,7 +173,9 @@ export const WellInventoryForm = () => {
                 <Fragment>
 
                     <Box sx={{backgroundColor: '#e6ecf2', margin: 2, borderRadius: 2, padding: 1}}>
-                        {getStepContent()}
+                        <form style={{display: "flex", flexDirection: "column"}}>
+                            {getStepContent()}
+                        </form>
                     </Box>
 
                     <Box sx={{display: 'flex', flexDirection: 'row', pt: 2}}>
@@ -165,7 +193,7 @@ export const WellInventoryForm = () => {
                                 Skip
                             </Button>
                         )}
-                        <Button onClick={handleNext}>
+                        <Button onClick={handleSubmit(handleNext)}>
                             {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
                         </Button>
                     </Box>
