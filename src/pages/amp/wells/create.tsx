@@ -5,6 +5,8 @@ import TextField from "@mui/material/TextField";
 import { useForm } from "@refinedev/react-hook-form";
 import type { IWellForm } from "../../../interfaces/amp";
 import { Nullable } from "../../../interfaces";
+import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 export const WellCreate: React.FC = () => {
   const {
@@ -17,7 +19,7 @@ export const WellCreate: React.FC = () => {
     <Create saveButtonProps={saveButtonProps}>
       <Box
         component="form"
-        sx={{ display: "flex", flexDirection: "column" }}
+        sx={{ display: "flex", flexDirection: "column", rowGap: "1rem" }}
         autoComplete="off"
       >
         <TextField
@@ -26,24 +28,38 @@ export const WellCreate: React.FC = () => {
           })}
           error={!!errors.WellID}
           helperText={errors.WellID?.message}
-          margin="normal"
           fullWidth
           label="Well ID"
           name="WellID"
           autoFocus
         />
         <TextField
-          {...register("SiteName", {
-            required: "This field is required",
-          })}
+          {...register("SiteName")}
           error={!!errors.SiteName}
           helperText={errors.SiteName?.message}
-          margin="normal"
           fullWidth
           label="Site Name"
           name="SiteName"
           autoFocus
         />
+        <TextField
+          {...register("FieldStaff")}
+          error={!!errors.FieldStaff}
+          helperText={errors.FieldStaff?.message}
+          fullWidth
+          label="Field Staff"
+          name="Field Staff"
+          autoFocus
+        />
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DateTimePicker
+            {...register("DateTime", {
+              required: "This field is required",
+            })}
+            label="Date Time"
+            name="DateTime"
+          />
+        </LocalizationProvider>
       </Box>
     </Create>
   );
