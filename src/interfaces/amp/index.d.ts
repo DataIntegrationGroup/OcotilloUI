@@ -34,7 +34,7 @@ export interface IWellForm {
   SiteName: string;
   DateTime: Dayjs;
   FieldStaff: string;
-  OwnerName: IWellOwner;
+  Owner: IWellOwner;
   Address: {
     Physical: string;
     Mailing?: string;
