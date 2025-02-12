@@ -116,13 +116,15 @@ export const GeoThermalWellList: React.FC = () => {
         []
         // [categoriesData, isLoading],
     );
-
-    return ( <ListPage columns={columns}
-                       getRowId={(row) => row.OBJECTID}
-                       dataGridProps={dataGridProps}
-                          exportProps={{pageSize: 1000,
-                              dataProviderName: "geothermal",
-                              resource: "wells"}}
+    console.log(dataGridProps)
+    return (<ListPage columns={columns}
+                      getRowId={(row) => row.OBJECTID}
+                      dataGridProps={dataGridProps}
+                      exportProps={{
+                          pageSize: 1000,
+                          dataProviderName: "geothermal",
+                          resource: "wells"
+                      }}
     />);
 };
 // ============= EOF =============================================

@@ -1,5 +1,5 @@
 // ===============================================================================
-// Copyright 2024 Jake Ross
+// Copyright 2025 Jake Ross
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,36 +14,21 @@
 // limitations under the License.
 // ===============================================================================
 
-import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
+import {Route} from "react-router-dom";
+import {GeothermalDashboard} from "@/pages/geothermal/dashboard";
+import {GeoThermalWellList, GeoThermalWellShow} from "@/pages/geothermal/wells";
 
-let geothermal = [
-    {
-        name: 'dashboard',
-        list: '/geothermal/dashboard',
-        icon: <DashboardOutlined/>,
-        meta: {
-            label: "Dashboard",
-        }
-    },
-    {
-        name: 'geothermal_wells',
-        list: '/geothermal/wells',
-        show: '/geothermal/wells/show/:id',
-        icon: <DashboardOutlined/>,
-        meta: {
-            label: "Wells",
-        }
-    }
-]
-
-export const geothermalResources = geothermal.map((g) => {
-    let meta = g.meta || {}
-    meta['parent'] = 'geothermal'
-    meta['dataProviderName'] = 'geothermal'
-
-    return {
-        ...g,
-        meta: meta
-    }
-})
+export const makeGeothermalRoutes = () => {
+    return (
+        <Route path='/geothermal'>
+            <Route path="dashboard" element={<GeothermalDashboard/>}/>
+            <Route path="wells">
+                <Route index element={<GeoThermalWellList/>}/>
+                {/*<Route path="create" element={<GeoThermalCreate/>}/>*/}
+                {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
+                <Route path="show/:id" element={<GeoThermalWellShow/>}/>
+            </Route>
+        </Route>
+    )
+}
 // ============= EOF =============================================
