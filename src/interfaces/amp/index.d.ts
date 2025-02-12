@@ -15,6 +15,23 @@
 // ===============================================================================
 import { Dayjs } from 'dayjs';
 
+export interface IWellInventoryForm {
+    pointid: string;
+    latitude: number;
+    longitude: number;
+    northing: number;
+    easting: number;
+    elevation: number;
+    elevation_units: string;
+    elevation_datum: string;
+    well_depth: number;
+    // PublicRelease: boolean;
+    // Location: ILocation;
+    // Well: IWell;
+    // Equipment: IEquipment[];
+    // ManualWaterLevels: IManualWaterLevel[];
+}
+
 
 export interface ILocation {
   PointID: string;
@@ -116,4 +133,5 @@ export interface IProject {
   Project: string
   PointIDPrefix: string
 }
+
 // ============= EOF =============================================
