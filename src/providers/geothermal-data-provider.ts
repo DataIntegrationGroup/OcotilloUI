@@ -17,17 +17,18 @@
 
 import type {DataProvider} from "@refinedev/core";
 import {getAccessToken} from "./fief-provider";
+import {settings} from "@/settings";
 
 // const API_URL = "http://10.3.1.211";
-const API_URL = "http://localhost:8008";
+// const API_URL = "http://localhost:8008";
 
 export const fetcher = async (url: string, options?: RequestInit) => {
 
     // const auth = sessionStorage.getItem("fief-authstate");
     // const token = auth ? JSON.parse(auth).tokenInfo.access_token : "";
     // const token = getAccessToken();
-    console.log('fetcher', `${API_URL}/${url}`);
-    return fetch(`${API_URL}/${url}`, {
+    console.log('fetcher', `${settings.geothermal_api_url}/${url}`);
+    return fetch(`${settings.geothermal_api_url}/${url}`, {
         ...options,
         headers: {
             ...options?.headers,
@@ -153,7 +154,7 @@ export const geothermalDataProvider: DataProvider = {
 
         return {data};
     },
-    getApiUrl: () => API_URL,
+    getApiUrl: () => settings.geothermal_api_url,
     deleteOne: () => {
         throw new Error("Not implemented");
     },
