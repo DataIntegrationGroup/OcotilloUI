@@ -10,10 +10,7 @@ import {
   TextField,
   Box,
   Grid,
-  Typography,
-  Divider,
-  useMediaQuery,
-  useTheme
+  Typography
 } from "@mui/material";
 import type { Dayjs } from "dayjs";
 
@@ -26,15 +23,12 @@ export const WellCreate: React.FC = () => {
 
   const [dateTime, setDateTime] = useState<Dayjs | null>(null);
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
   return (
     <Create saveButtonProps={saveButtonProps}>
       <Box component="form" autoComplete="off">
-        <Grid container spacing={2}>
-          <Grid container item spacing={2} xs={12} md={6} direction={isMobile ? "column" : "row"}>
-            <Grid item xs={12} sm={6}>
+        <Grid container spacing={2} direction={{ xs: "column", sm: "row" }}>
+          <Grid container item spacing={2} xs={12} md={6} direction={{ xs: "column", sm: "row" }}>
+            <Grid item xs={12} sm={6} md={12} lg={6}>
               <TextField
                 {...register("WellID", { required: "This field is required" })}
                 required
@@ -46,7 +40,7 @@ export const WellCreate: React.FC = () => {
                 autoFocus
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6} md={12} lg={6}>
               <TextField
                 {...register("SiteName")}
                 error={!!errors.SiteName}
@@ -57,8 +51,8 @@ export const WellCreate: React.FC = () => {
               />
             </Grid>
           </Grid>
-          <Grid container item spacing={2} xs={12} md={6} direction={isMobile ? "column" : "row"}>
-            <Grid item xs={12} sm={6}>
+          <Grid container item spacing={2} xs={12} md={6} direction={{ xs: "column", sm: "row" }}>
+            <Grid item xs={12} sm={6} md={12} lg={6}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateTimePicker
                   sx={{ width: '100%' }}
@@ -68,7 +62,7 @@ export const WellCreate: React.FC = () => {
                 />
               </LocalizationProvider>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6} md={12} lg={6}>
               <TextField
                 {...register("FieldStaff")}
                 error={!!errors.FieldStaff}
@@ -80,8 +74,7 @@ export const WellCreate: React.FC = () => {
             </Grid>
           </Grid>
           <Grid item xs={12}>
-            <Divider />
-            <Typography variant="h6">Owner Data</Typography>
+            <Typography variant="h3">Owner Data</Typography>
           </Grid>
           <Grid item xs={12}>
             <TextField
@@ -94,8 +87,7 @@ export const WellCreate: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12}>
-            <Divider />
-            <Typography variant="h6">Well Data</Typography>
+            <Typography variant="h3">Well Data</Typography>
           </Grid>
         </Grid>
       </Box>

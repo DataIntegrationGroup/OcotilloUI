@@ -14,335 +14,327 @@
 // limitations under the License.
 // ===============================================================================
 
-// import "./global.css"
-import {Authenticated, Refine} from "@refinedev/core";
-import {AuthPage, ErrorComponent, RefineSnackbarProvider, useNotificationProvider,} from "@refinedev/mui";
+import { Authenticated, Refine } from "@refinedev/core";
+import { AuthPage, ErrorComponent, RefineSnackbarProvider, useNotificationProvider, } from "@refinedev/mui";
 
 import routerProvider, {
-    CatchAllNavigate,
-    DocumentTitleHandler, NavigateToResource,
-    UnsavedChangesNotifier,
+  DocumentTitleHandler,
+  UnsavedChangesNotifier,
 } from "@refinedev/react-router-v6";
-import {BrowserRouter, Navigate, Outlet, Route, Routes,} from "react-router-dom";
+import { BrowserRouter, Navigate, Outlet, Route, Routes, } from "react-router-dom";
 
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
-import GitHubIcon from "@mui/icons-material/GitHub";
-import GoogleIcon from "@mui/icons-material/Google";
 
-import {FiefAuthProvider} from "@fief/fief/react";
+import { FiefAuthProvider } from "@fief/fief/react";
 
-import {ampDataProvider} from "@/providers/amp-data-provider";
-import {authProvider, fiefConstants} from "@/providers/fief-provider";
+import { ampDataProvider } from "@/providers/amp-data-provider";
+import { authProvider, fiefConstants } from "@/providers/fief-provider";
 
-import {ThemedLayoutV2} from "@/components/layout";
-import {ThemedHeaderV2} from "@/components/layout/header";
-import {ThemedSiderV2} from "@/components/layout/sider";
-import {ThemedTitleV2} from "@/components/layout/title";
+import { ThemedLayoutV2 } from "@/components/layout";
+import { ThemedHeaderV2 } from "@/components/layout/header";
+import { ThemedSiderV2 } from "@/components/layout/sider";
+import { ThemedTitleV2 } from "@/components/layout/title";
 
-import {resources} from "@/resources";
-import {ColorModeContextProvider} from "@/contexts";
-import {Home} from "@/pages/home";
+import { resources } from "@/resources";
+import { ColorModeContextProvider } from "@/contexts";
+import { Home } from "@/pages/home";
 
-import {ProjectCreate, ProjectList, ProjectShow} from "@/pages/geochronology/projects";
-import {geochronologyDataProvider} from "@/providers/geochronology-data-provider";
-import {SampleCreate, SampleList, SampleShow} from "@/pages/geochronology/samples";
-import {MaterialCreate, MaterialList, MaterialShow} from "@/pages/geochronology/materials";
+import { ProjectCreate, ProjectList, ProjectShow } from "@/pages/geochronology/projects";
+import { geochronologyDataProvider } from "@/providers/geochronology-data-provider";
+import { SampleCreate, SampleList, SampleShow } from "@/pages/geochronology/samples";
+import { MaterialCreate, MaterialList, MaterialShow } from "@/pages/geochronology/materials";
 
 import {
-    PrincipalInvestigatorCreate,
-    PrincipalInvestigatorList,
-    PrincipalInvestigatorShow
+  PrincipalInvestigatorCreate,
+  PrincipalInvestigatorList,
+  PrincipalInvestigatorShow
 } from "@/pages/geochronology/principal_investigators";
-import {GeochronologyDashboard} from "@/pages/geochronology/dashboard";
-import {GeothermalDashboard} from "@/pages/geothermal/dashboard";
-import {CriticalMineralsDashboard} from "@/pages/criticalminerals/dashboard";
-import {geothermalDataProvider} from "@/providers/geothermal-data-provider";
-import {GeoThermalWellList, GeoThermalWellShow} from "@/pages/geothermal/wells";
-import {settings} from "@/settings";
-import {Callback, RememberMe} from "@/components/Auth";
-import {makeAMPRoutes} from "@/routes/amp";
-import {st2DataProvider} from "@/providers/st2-data-provider";
-import {makeST2Routes} from "@/routes/st2";
-import {LocalizationProvider} from "@mui/x-date-pickers";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-
+import { GeochronologyDashboard } from "@/pages/geochronology/dashboard";
+import { GeothermalDashboard } from "@/pages/geothermal/dashboard";
+import { CriticalMineralsDashboard } from "@/pages/criticalminerals/dashboard";
+import { geothermalDataProvider } from "@/providers/geothermal-data-provider";
+import { GeoThermalWellList, GeoThermalWellShow } from "@/pages/geothermal/wells";
+import { settings } from "@/settings";
+import { Callback } from "@/components/Auth";
+import { makeAMPRoutes } from "@/routes/amp";
+import { st2DataProvider } from "@/providers/st2-data-provider";
+import { makeST2Routes } from "@/routes/st2";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { theme } from "./NM_WDI_theme";
+import { ThemeProvider } from "@mui/material";
 
 const App: React.FC = () => {
-    const customTitleHandler = ({
-                                    resource,
-                                    action,
-                                    params,
-                                    pathname,
-                                    autoGeneratedTitle,
-                                }) => {
-        let title = "NMBGMR Data Manager";
-        if (action === "list") {
-            title = `${resource.label} | ${title}`;
-        }
-        return title;
-    };
+  const customTitleHandler = ({
+    resource,
+    action,
+  }) => {
+    let title = "NMBGMR Data Manager";
+    if (action === "list") {
+      title = `${resource.label} | ${title}`;
+    }
+    return title;
+  };
 
-    return (
-        <BrowserRouter basename={settings.urlprefix}>
-            <ColorModeContextProvider>
-                <CssBaseline/>
-                <GlobalStyles styles={{html: {WebkitFontSmoothing: "auto"}}}/>
-                <RefineSnackbarProvider>
-                    <Refine
-                        // accessControlProvider={accessControlProvider}
-                        authProvider={authProvider}
-                        dataProvider={{
-                            default: ampDataProvider,
-                            amp: ampDataProvider,
-                            geochronology: geochronologyDataProvider,
-                            geothermal: geothermalDataProvider,
-                            st2: st2DataProvider,
-                        }}
-                        routerProvider={routerProvider}
-                        notificationProvider={useNotificationProvider}
-                        resources={resources}
-                        options={{
-                            disableTelemetry: true,
-                            syncWithLocation: true,
-                            warnWhenUnsavedChanges: true,
-                            projectId: "wCqQ1f-agx0FN-70pXIr",
-                        }}
+  return (
+    <BrowserRouter basename={settings.urlprefix}>
+      <ColorModeContextProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
+          <RefineSnackbarProvider>
+            <Refine
+              // accessControlProvider={accessControlProvider}
+              authProvider={authProvider}
+              dataProvider={{
+                default: ampDataProvider,
+                amp: ampDataProvider,
+                geochronology: geochronologyDataProvider,
+                geothermal: geothermalDataProvider,
+                st2: st2DataProvider,
+              }}
+              routerProvider={routerProvider}
+              notificationProvider={useNotificationProvider}
+              resources={resources}
+              options={{
+                disableTelemetry: true,
+                syncWithLocation: true,
+                warnWhenUnsavedChanges: true,
+                projectId: "wCqQ1f-agx0FN-70pXIr",
+              }}
+            >
+              <UnsavedChangesNotifier />
+              <DocumentTitleHandler handler={customTitleHandler} />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <FiefAuthProvider
+                  baseURL={fiefConstants.baseURL}
+                  clientId={fiefConstants.clientId}
+                >
+                  <Routes>
+                    <Route
+                      element={<Authenticated key={'auth-pages'} fallback={<Outlet />}
+                        v3LegacyAuthProviderCompatible={true}>
+                        <Navigate to="/home" />
+                      </Authenticated>
+                      }>
+                      <Route path="/callback" element={<Callback />} />
+                      <Route
+                        path="/login"
+                        element={
+                          <AuthPage
+                            title={<ThemedTitleV2
+                              collapsed={false}
+                              text="NMBGMR Data Manager" />}
+                            hideForm={true}
+                            type="login"
+                            registerLink={false}
+                            providers={[{
+                              name: "fief",
+                              label: "Sign in with Fief"
+                            },]}
+                          />
+                        }
+                      />
+                    </Route>
+                    <Route
+                      element={
+                        <Authenticated
+                          key="authenticated-routes"
+                          redirectOnFail={"/login"}
+                          v3LegacyAuthProviderCompatible={true}
+                        >
+                          <ThemedLayoutV2
+                            Header={() => <ThemedHeaderV2 sticky />}
+                            Sider={ThemedSiderV2}
+                            Title={({ collapsed }) => (
+                              <ThemedTitleV2
+                                // collapsed is a boolean value that indicates whether the <Sidebar> is collapsed or not
+                                collapsed={collapsed}
+                                text="NMBGMR Data Manager"
+                              />
+                            )}
+                          >
+                            <Outlet />
+                          </ThemedLayoutV2>
+                        </Authenticated>
+                      }
                     >
-                        <UnsavedChangesNotifier/>
-                        <DocumentTitleHandler handler={customTitleHandler}/>
-                        <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <FiefAuthProvider
-                                baseURL={fiefConstants.baseURL}
-                                clientId={fiefConstants.clientId}
-                            >
-                                <Routes>
-                                    <Route
-                                        element={<Authenticated key={'auth-pages'} fallback={<Outlet/>}
-                                                                v3LegacyAuthProviderCompatible={true}>
-                                            <Navigate to="/home"/>
-                                        </Authenticated>
-                                        }>
-                                        <Route path="/callback" element={<Callback/>}/>
-                                        <Route
-                                            path="/login"
-                                            element={
-                                                <AuthPage
-                                                    // title={''}
-                                                    title={<ThemedTitleV2
-                                                        collapsed={false}
-                                                        text="NMBGMR Data Manager"/>}
-                                                    hideForm={true}
-                                                    type="login"
-                                                    registerLink={false}
-                                                    // rememberMe={<RememberMe/>}
-                                                    providers={[{
-                                                        name: "fief",
-                                                        label: "Sign in with Fief"
-                                                    },]}
-                                                />
-                                            }
-                                        />
-                                    </Route>
-                                    <Route
-                                        element={
-                                            <Authenticated
-                                                key="authenticated-routes"
-                                                redirectOnFail={"/login"}
-                                                // fallback={<CatchAllNavigate to="/login"/>}
-                                                v3LegacyAuthProviderCompatible={true}
-                                            >
-                                                <ThemedLayoutV2
-                                                    Header={() => <ThemedHeaderV2 sticky/>}
-                                                    Sider={ThemedSiderV2}
-                                                    Title={({collapsed}) => (
-                                                        <ThemedTitleV2
-                                                            // collapsed is a boolean value that indicates whether the <Sidebar> is collapsed or not
-                                                            collapsed={collapsed}
-                                                            // icon={collapsed ? <MySmallIcon /> : <MyLargeIcon />}
-                                                            text="NMBGMR Data Manager"
-                                                        />
-                                                    )}
-                                                >
-                                                    <Outlet/>
-                                                </ThemedLayoutV2>
-                                            </Authenticated>
-                                        }
-                                    >
-                                        <Route index element={<Home/>}/>
-                                        <Route path={'/home'} element={<Home/>}/>
+                      <Route index element={<Home />} />
+                      <Route path={'/home'} element={<Home />} />
 
                                         // amp routes
-                                        {makeAMPRoutes()}
+                      {makeAMPRoutes()}
                                         // st2 routes
-                                        {makeST2Routes()}
+                      {makeST2Routes()}
 
                                         // geochronology routes
-                                        <Route path="/geochronology">
-                                            <Route path="dashboard" element={<GeochronologyDashboard/>}/>
-                                            <Route path="principal_investigators">
-                                                <Route index element={<PrincipalInvestigatorList/>}/>
-                                                <Route path="create" element={<PrincipalInvestigatorCreate/>}/>
-                                                {/*<Route path="edit/:id" element={<LocationEdit/>}/>*/}
-                                                <Route path="show/:id" element={<PrincipalInvestigatorShow/>}/>
-                                            </Route>
-                                            <Route path="projects">
-                                                <Route index element={<ProjectList/>}/>
-                                                <Route path="create" element={<ProjectCreate/>}/>
-                                                {/*<Route path="edit/:id" element={<ProjectEdit/>}/>*/}
-                                                <Route path="show/:id" element={<ProjectShow/>}/>
-                                            </Route>
-                                            <Route path="samples">
-                                                <Route index element={<SampleList/>}/>
-                                                <Route path="create" element={<SampleCreate/>}/>
-                                                {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
-                                                <Route path="show/:id" element={<SampleShow/>}/>
-                                            </Route>
-                                            <Route path='materials'>
-                                                <Route index element={<MaterialList/>}/>
-                                                <Route path="create" element={<MaterialCreate/>}/>
-                                                {/*<Route path="edit/:id" element={<MaterialEdit/>}/>*/}
-                                                <Route path="show/:id" element={<MaterialShow/>}/>
-                                            </Route>
-                                        </Route>
+                      <Route path="/geochronology">
+                        <Route path="dashboard" element={<GeochronologyDashboard />} />
+                        <Route path="principal_investigators">
+                          <Route index element={<PrincipalInvestigatorList />} />
+                          <Route path="create" element={<PrincipalInvestigatorCreate />} />
+                          {/*<Route path="edit/:id" element={<LocationEdit/>}/>*/}
+                          <Route path="show/:id" element={<PrincipalInvestigatorShow />} />
+                        </Route>
+                        <Route path="projects">
+                          <Route index element={<ProjectList />} />
+                          <Route path="create" element={<ProjectCreate />} />
+                          {/*<Route path="edit/:id" element={<ProjectEdit/>}/>*/}
+                          <Route path="show/:id" element={<ProjectShow />} />
+                        </Route>
+                        <Route path="samples">
+                          <Route index element={<SampleList />} />
+                          <Route path="create" element={<SampleCreate />} />
+                          {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
+                          <Route path="show/:id" element={<SampleShow />} />
+                        </Route>
+                        <Route path='materials'>
+                          <Route index element={<MaterialList />} />
+                          <Route path="create" element={<MaterialCreate />} />
+                          {/*<Route path="edit/:id" element={<MaterialEdit/>}/>*/}
+                          <Route path="show/:id" element={<MaterialShow />} />
+                        </Route>
+                      </Route>
 
                                         // criticalminerals routes
-                                        <Route path='/criticalminerals'>
-                                            <Route path="dashboard" element={<CriticalMineralsDashboard/>}/>
-                                        </Route>
+                      <Route path='/criticalminerals'>
+                        <Route path="dashboard" element={<CriticalMineralsDashboard />} />
+                      </Route>
 
                                         // geothermal routes
-                                        <Route path='/geothermal'>
-                                            <Route path="dashboard" element={<GeothermalDashboard/>}/>
-                                            <Route path="wells">
-                                                <Route index element={<GeoThermalWellList/>}/>
-                                                {/*<Route path="create" element={<GeoThermalCreate/>}/>*/}
-                                                {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
-                                                <Route path="show/:id" element={<GeoThermalWellShow/>}/>
-                                            </Route>
-                                        </Route>
-                                    </Route>
+                      <Route path='/geothermal'>
+                        <Route path="dashboard" element={<GeothermalDashboard />} />
+                        <Route path="wells">
+                          <Route index element={<GeoThermalWellList />} />
+                          {/*<Route path="create" element={<GeoThermalCreate/>}/>*/}
+                          {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
+                          <Route path="show/:id" element={<GeoThermalWellShow />} />
+                        </Route>
+                      </Route>
+                    </Route>
 
-                                    {/*<Route*/}
-                                    {/*    // element={*/}
-                                    {/*    //   <Authenticated key="auth-pages" fallback={<Outlet />}>*/}
-                                    {/*    //     <NavigateToResource resource="Water" />*/}
-                                    {/*    //   </Authenticated>*/}
-                                    {/*    // }*/}
-                                    {/*>*/}
-                                    {/*    <Route*/}
-                                    {/*        path="/login"*/}
-                                    {/*        element={*/}
-                                    {/*            <AuthPage*/}
-                                    {/*                type="login"*/}
-                                    {/*                rememberMe={<RememberMe/>}*/}
-                                    {/*                // formProps={{*/}
-                                    {/*                //   defaultValues: {*/}
-                                    {/*                //     ...authCredentials,*/}
-                                    {/*                //   },*/}
-                                    {/*                // }}*/}
-                                    {/*                providers={[*/}
-                                    {/*                    {*/}
-                                    {/*                        name: "fief",*/}
-                                    {/*                        label: "Sign in with Fief",*/}
-                                    {/*                        // icon: (*/}
-                                    {/*                        //     <GoogleIcon*/}
-                                    {/*                        //         style={{*/}
-                                    {/*                        //             fontSize: 24,*/}
-                                    {/*                        //         }}*/}
-                                    {/*                        //     />*/}
-                                    {/*                        // ),*/}
-                                    {/*                    },*/}
-                                    {/*                    // {*/}
-                                    {/*                    //   name: "google",*/}
-                                    {/*                    //   label: "Sign in with Google",*/}
-                                    {/*                    //   icon: (*/}
-                                    {/*                    //     <GoogleIcon*/}
-                                    {/*                    //       style={{*/}
-                                    {/*                    //         fontSize: 24,*/}
-                                    {/*                    //       }}*/}
-                                    {/*                    //     />*/}
-                                    {/*                    //   ),*/}
-                                    {/*                    // },*/}
-                                    {/*                    // {*/}
-                                    {/*                    //   name: "github",*/}
-                                    {/*                    //   label: "Sign in with GitHub",*/}
-                                    {/*                    //   icon: (*/}
-                                    {/*                    //     <GitHubIcon*/}
-                                    {/*                    //       style={{*/}
-                                    {/*                    //         fontSize: 24,*/}
-                                    {/*                    //       }}*/}
-                                    {/*                    //     />*/}
-                                    {/*                    //   ),*/}
-                                    {/*                    // },*/}
-                                    {/*                ]}*/}
-                                    {/*            />*/}
-                                    {/*        }*/}
-                                    {/*    />*/}
-                                    {/*    <Route*/}
-                                    {/*        path="/register"*/}
-                                    {/*        element={*/}
-                                    {/*            <AuthPage*/}
-                                    {/*                type="register"*/}
-                                    {/*                providers={[*/}
-                                    {/*                    {*/}
-                                    {/*                        name: "google",*/}
-                                    {/*                        label: "Sign in with Google",*/}
-                                    {/*                        icon: (*/}
-                                    {/*                            <GoogleIcon*/}
-                                    {/*                                style={{*/}
-                                    {/*                                    fontSize: 24,*/}
-                                    {/*                                }}*/}
-                                    {/*                            />*/}
-                                    {/*                        ),*/}
-                                    {/*                    },*/}
-                                    {/*                    {*/}
-                                    {/*                        name: "github",*/}
-                                    {/*                        label: "Sign in with GitHub",*/}
-                                    {/*                        icon: (*/}
-                                    {/*                            <GitHubIcon*/}
-                                    {/*                                style={{*/}
-                                    {/*                                    fontSize: 24,*/}
-                                    {/*                                }}*/}
-                                    {/*                            />*/}
-                                    {/*                        ),*/}
-                                    {/*                    },*/}
-                                    {/*                ]}*/}
-                                    {/*            />*/}
-                                    {/*        }*/}
-                                    {/*    />*/}
-                                    {/*    <Route*/}
-                                    {/*        path="/forgot-password"*/}
-                                    {/*        element={<AuthPage type="forgotPassword"/>}*/}
-                                    {/*    />*/}
-                                    {/*    <Route*/}
-                                    {/*        path="/update-password"*/}
-                                    {/*        element={<AuthPage type="updatePassword"/>}*/}
-                                    {/*    />*/}
-                                    {/*</Route>*/}
+                    {/*<Route*/}
+                    {/*    // element={*/}
+                    {/*    //   <Authenticated key="auth-pages" fallback={<Outlet />}>*/}
+                    {/*    //     <NavigateToResource resource="Water" />*/}
+                    {/*    //   </Authenticated>*/}
+                    {/*    // }*/}
+                    {/*>*/}
+                    {/*    <Route*/}
+                    {/*        path="/login"*/}
+                    {/*        element={*/}
+                    {/*            <AuthPage*/}
+                    {/*                type="login"*/}
+                    {/*                rememberMe={<RememberMe/>}*/}
+                    {/*                // formProps={{*/}
+                    {/*                //   defaultValues: {*/}
+                    {/*                //     ...authCredentials,*/}
+                    {/*                //   },*/}
+                    {/*                // }}*/}
+                    {/*                providers={[*/}
+                    {/*                    {*/}
+                    {/*                        name: "fief",*/}
+                    {/*                        label: "Sign in with Fief",*/}
+                    {/*                        // icon: (*/}
+                    {/*                        //     <GoogleIcon*/}
+                    {/*                        //         style={{*/}
+                    {/*                        //             fontSize: 24,*/}
+                    {/*                        //         }}*/}
+                    {/*                        //     />*/}
+                    {/*                        // ),*/}
+                    {/*                    },*/}
+                    {/*                    // {*/}
+                    {/*                    //   name: "google",*/}
+                    {/*                    //   label: "Sign in with Google",*/}
+                    {/*                    //   icon: (*/}
+                    {/*                    //     <GoogleIcon*/}
+                    {/*                    //       style={{*/}
+                    {/*                    //         fontSize: 24,*/}
+                    {/*                    //       }}*/}
+                    {/*                    //     />*/}
+                    {/*                    //   ),*/}
+                    {/*                    // },*/}
+                    {/*                    // {*/}
+                    {/*                    //   name: "github",*/}
+                    {/*                    //   label: "Sign in with GitHub",*/}
+                    {/*                    //   icon: (*/}
+                    {/*                    //     <GitHubIcon*/}
+                    {/*                    //       style={{*/}
+                    {/*                    //         fontSize: 24,*/}
+                    {/*                    //       }}*/}
+                    {/*                    //     />*/}
+                    {/*                    //   ),*/}
+                    {/*                    // },*/}
+                    {/*                ]}*/}
+                    {/*            />*/}
+                    {/*        }*/}
+                    {/*    />*/}
+                    {/*    <Route*/}
+                    {/*        path="/register"*/}
+                    {/*        element={*/}
+                    {/*            <AuthPage*/}
+                    {/*                type="register"*/}
+                    {/*                providers={[*/}
+                    {/*                    {*/}
+                    {/*                        name: "google",*/}
+                    {/*                        label: "Sign in with Google",*/}
+                    {/*                        icon: (*/}
+                    {/*                            <GoogleIcon*/}
+                    {/*                                style={{*/}
+                    {/*                                    fontSize: 24,*/}
+                    {/*                                }}*/}
+                    {/*                            />*/}
+                    {/*                        ),*/}
+                    {/*                    },*/}
+                    {/*                    {*/}
+                    {/*                        name: "github",*/}
+                    {/*                        label: "Sign in with GitHub",*/}
+                    {/*                        icon: (*/}
+                    {/*                            <GitHubIcon*/}
+                    {/*                                style={{*/}
+                    {/*                                    fontSize: 24,*/}
+                    {/*                                }}*/}
+                    {/*                            />*/}
+                    {/*                        ),*/}
+                    {/*                    },*/}
+                    {/*                ]}*/}
+                    {/*            />*/}
+                    {/*        }*/}
+                    {/*    />*/}
+                    {/*    <Route*/}
+                    {/*        path="/forgot-password"*/}
+                    {/*        element={<AuthPage type="forgotPassword"/>}*/}
+                    {/*    />*/}
+                    {/*    <Route*/}
+                    {/*        path="/update-password"*/}
+                    {/*        element={<AuthPage type="updatePassword"/>}*/}
+                    {/*    />*/}
+                    {/*</Route>*/}
 
-                                    <Route
-                                        element={
-                                            <Authenticated
-                                                v3LegacyAuthProviderCompatible={true}
-                                                key="catch-all">
-                                                <ThemedLayoutV2>
-                                                    <Outlet/>
-                                                </ThemedLayoutV2>
-                                            </Authenticated>
-                                        }
-                                    >
-                                        <Route path="*" element={<ErrorComponent/>}/>
-                                    </Route>
-                                </Routes>
-                            </FiefAuthProvider>
-                        </LocalizationProvider>
+                    <Route
+                      element={
+                        <Authenticated
+                          v3LegacyAuthProviderCompatible={true}
+                          key="catch-all">
+                          <ThemedLayoutV2>
+                            <Outlet />
+                          </ThemedLayoutV2>
+                        </Authenticated>
+                      }
+                    >
+                      <Route path="*" element={<ErrorComponent />} />
+                    </Route>
+                  </Routes>
+                </FiefAuthProvider>
+              </LocalizationProvider>
 
-                    </Refine>
-                </RefineSnackbarProvider>
-            </ColorModeContextProvider>
-        </BrowserRouter>
-    );
+            </Refine>
+          </RefineSnackbarProvider>
+        </ThemeProvider>
+      </ColorModeContextProvider>
+    </BrowserRouter>
+  );
 };
 
 export default App;
