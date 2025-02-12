@@ -14,36 +14,28 @@
 // limitations under the License.
 // ===============================================================================
 
-import {useForm} from "@refinedev/react-hook-form";
-import {IWellInventoryForm} from "@/interfaces/amp";
-import {Box, TextField} from "@mui/material";
-import Stack from "@mui/material/Stack";
-import {Controller} from "react-hook-form";
-
-import * as Yup from "yup";
-import {yupResolver} from "@hookform/resolvers/yup";
+import { useForm } from "@refinedev/react-hook-form";
+import { IWellInventoryForm } from "@/interfaces/amp";
+import { Box, TextField } from "@mui/material";
+import { Controller } from "react-hook-form";
 
 
-export const WellStep = ({control, formState, register}) => {
-
-    return (
-        <Box>
-
-
-            <Controller name={'well_depth'}
-                        control={control}
-                        render={({field}) => (
-                            <TextField {...field}
-                                       label={'Well Depth'}
-                                       error={!!formState.well_depth}
-                                       helperText={formState.well_depth && `${formState.well_depth.message}`}
-                                       type={'number'}
-                                       fullWidth
-                                       sx={{maxWidth: 600}}
-                                       margin={'dense'}/>
-                        )}/>
-
-        </Box>
-    )
+export const WellStep = ({ control, formState, register }) => {
+  return (
+    <Box>
+      <Controller name={'well_depth'}
+        control={control}
+        render={({ field }) => (
+          <TextField {...field}
+            label={'Well Depth'}
+            error={!!formState.well_depth}
+            helperText={formState.well_depth && `${formState.well_depth.message}`}
+            type={'number'}
+            fullWidth
+            sx={{ maxWidth: 600 }}
+            margin={'dense'} />
+        )} />
+    </Box>
+  )
 }
 // ============= EOF =============================================

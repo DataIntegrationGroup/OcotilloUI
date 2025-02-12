@@ -16,42 +16,13 @@
 import { Dayjs } from 'dayjs';
 
 export interface IWellInventoryForm {
-    pointid: string;
-    latitude: number;
-    longitude: number;
-    northing: number;
-    easting: number;
-    elevation: number;
-    elevation_units: string;
-    elevation_datum: string;
-    well_depth: number;
-    // PublicRelease: boolean;
-    // Location: ILocation;
-    // Well: IWell;
-    // Equipment: IEquipment[];
-    // ManualWaterLevels: IManualWaterLevel[];
-}
-
-
-export interface ILocation {
   PointID: string;
-  SiteID: string;
-  PublicRelease: boolean;
-  geometry: { coordinates: number[], type: string };
-  Easting: number;
-  Northing: number;
-  site_type: string;
-  // title: string;
-  // status: IStatus;
-  // category: ICategory;
-}
-
-export interface IWellForm {
-  WellID: string;
   SiteName: string;
   DateTime: Dayjs;
   FieldStaff: string;
+
   Owner: IWellOwner;
+
   Address: {
     Physical: string;
     Mailing?: string;
@@ -60,6 +31,65 @@ export interface IWellForm {
   Email: string;
   DirectionsToSite: string;
   LocationOfWell: string;
+
+  OwnerGivePermissionFor: IOwnerGivePermissionFor;
+  DoesOwnerAcknowledgesDataWillBePubliclyAvailable: boolean;
+
+  SpecialRequests: string[];
+
+  Latitude: number;
+  Longitude: number;
+  Northing: number;
+  Easting: number;
+  Elevation: number;
+  ElevationUnits: string;
+  ElevationDatum: string;
+  ElevationSource: string;
+
+  OSEWellRecord: string;
+  DateDrilled: Dayjs;
+  Source: string[];
+
+  WellTotalDepth: number;
+  WellTotalDepthUnits: string;
+
+  HistoricDepthOfWater: number;
+  HistoricDepthOfWaterUnits: string;
+
+  WellType: string;
+  isDataloggerPossible: boolean;
+
+  PumpDepth: number;
+  PumpDepthUnits: string;
+
+  OuterCasingDiameter: number;
+  OuterCasingDiameterUnits: string;
+
+  MPHeight: number;
+  MPHeightAboveOrBelowGround: boolean;
+  MPHeightUnits: string;
+
+  MPDescription: string;
+  WellUse: string;
+  Status: string;
+
+  PhotoOverviewFrameNum: string;
+  PhotoCloseupFrameNum: string;
+
+  SonicMeasurements: ISonicMeasurement[];
+  SteelTapes: ISteelTape[];
+  EProbes: IEProbe[];
+
+  SampleCollected: boolean;
+  IsPossibleToSampleWell: boolean;
+  SamplingScenario: string;
+  Comments: string;
+}
+
+export interface IOwnerGivePermissionFor {
+  RepeatMeasurements: boolean;
+  SamplingInTheFuture: boolean;
+  DataloggerInstallation: boolean;
 }
 
 export interface IWellOwner {
@@ -70,6 +100,36 @@ export interface IWellOwner {
     Work?: string;
     Other?: string;
   }
+}
+
+interface ISonicMeasurement {
+  Type: 'normal' | 'deep',
+  Measurement: number;
+  MeasurementUnits: string;
+  TemperatureSettings: string;
+}
+
+interface ISteelTapes {
+  Hold: number;
+  HoldUnits: string;
+  Cut: number;
+  CutUnits: string;
+  DTW: number;
+  DTWUnits: string;
+  Time: Dayjs;
+  Notes: string;
+}
+
+export interface ILocation {
+  PointID: string;
+  PublicRelease: boolean;
+  geometry: { coordinates: number[], type: string };
+  Easting: number;
+  Northing: number;
+  site_type: string;
+  // title: string;
+  // status: IStatus;
+  // category: ICategory;
 }
 
 export interface IWell {
