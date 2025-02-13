@@ -15,7 +15,6 @@
 // ===============================================================================
 
 
-
 export interface IWell {
     OBJECTID: integer;
     // SiteID: string;
@@ -26,6 +25,20 @@ export interface IWell {
     // title: string;
     // status: IStatus;
     // category: ICategory;
+}
+
+export interface IWellRecord {
+    API_suffix: string;
+    ActionDate: string;
+    Comments: string;
+    EnteredBy: string;
+    EntryDate: string;
+    OBJECTID: string;
+    RecrdSetID: string;
+    SourceID: string;
+    WellDataID: string;
+    WellName: string;
+    WellNumber: string;
 }
 
 // ============= EOF =============================================
