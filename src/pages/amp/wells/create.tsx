@@ -1,95 +1,134 @@
 import type { HttpError } from "@refinedev/core";
-import { Create } from "@refinedev/mui";
+import { Create, useAutocomplete } from "@refinedev/mui";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import Autocomplete from "@mui/material/Autocomplete";
 import { useForm } from "@refinedev/react-hook-form";
-import type { IWellForm } from "../../../interfaces/amp";
-import { Nullable } from "../../../interfaces";
-import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useState } from "react";
-import {
-  TextField,
-  Box,
-  Grid,
-  Typography
-} from "@mui/material";
-import type { Dayjs } from "dayjs";
+
+import { Controller } from "react-hook-form";
+
+import type { ILocation, } from "../../../interfaces/amp";
+import {Nullable} from "../../../interfaces";
 
 export const WellCreate: React.FC = () => {
   const {
     saveButtonProps,
     register,
+    control,
     formState: { errors },
-  } = useForm<IWellForm, HttpError, Nullable<IWellForm>>();
+  } = useForm<ILocation, HttpError, Nullable<ILocation>>();
 
-  const [dateTime, setDateTime] = useState<Dayjs | null>(null);
+  // const { autocompleteProps } = useAutocomplete<ICategory>({
+  //   resource: "categories",
+  // });
 
   return (
     <Create saveButtonProps={saveButtonProps}>
-      <Box component="form" autoComplete="off">
-        <Grid container spacing={2} direction={{ xs: "column", sm: "row" }}>
-          <Grid container item spacing={2} xs={12} md={6} direction={{ xs: "column", sm: "row" }}>
-            <Grid item xs={12} sm={6} md={12} lg={6}>
-              <TextField
-                {...register("WellID", { required: "This field is required" })}
-                required
-                error={!!errors.WellID}
-                helperText={errors.WellID?.message}
-                fullWidth
-                label="Well ID"
-                name="WellID"
-                autoFocus
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={12} lg={6}>
-              <TextField
-                {...register("SiteName")}
-                error={!!errors.SiteName}
-                helperText={errors.SiteName?.message}
-                fullWidth
-                label="Site Name"
-                name="SiteName"
-              />
-            </Grid>
-          </Grid>
-          <Grid container item spacing={2} xs={12} md={6} direction={{ xs: "column", sm: "row" }}>
-            <Grid item xs={12} sm={6} md={12} lg={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DateTimePicker
-                  sx={{ width: '100%' }}
-                  label="Date Time"
-                  value={dateTime}
-                  onChange={(newDateTime) => setDateTime(newDateTime)}
-                />
-              </LocalizationProvider>
-            </Grid>
-            <Grid item xs={12} sm={6} md={12} lg={6}>
-              <TextField
-                {...register("FieldStaff")}
-                error={!!errors.FieldStaff}
-                helperText={errors.FieldStaff?.message}
-                fullWidth
-                label="Field Staff"
-                name="FieldStaff"
-              />
-            </Grid>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="h3">Owner Data</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              {...register("Owner.Name")}
-              error={!!errors.Owner?.Name}
-              helperText={errors.Owner?.Name?.message}
+      <Box
+        component="form"
+        sx={{ display: "flex", flexDirection: "column" }}
+        autoComplete="off"
+      >
+        <TextField
+          {...register("PointID", {
+            required: "This field is required",
+          })}
+          error={!!errors.PointID}
+          helperText={errors.PointID?.message}
+          margin="normal"
+          fullWidth
+          label="PointID"
+          name="PointID"
+          autoFocus
+        />
+          <TextField
+              {...register("SiteID", {
+                  required: "This field is required",
+              })}
+              error={!!errors.SiteID}
+              helperText={errors.SiteID?.message}
+              margin="normal"
               fullWidth
-              label="Owner Name"
-              name="Owner Name"
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="h3">Well Data</Typography>
-          </Grid>
-        </Grid>
+              label="SiteID"
+              name="SiteID"
+              autoFocus
+          />
+        {/*<Controller*/}
+        {/*  control={control}*/}
+        {/*  name="status"*/}
+        {/*  rules={{ required: "This field is required" }}*/}
+        {/*  // eslint-disable-next-line*/}
+        {/*  defaultValue={null as any}*/}
+        {/*  render={({ field }) => (*/}
+        {/*    <Autocomplete<IStatus>*/}
+        {/*      options={["published", "draft", "rejected"]}*/}
+        {/*      {...field}*/}
+        {/*      onChange={(_, value) => {*/}
+        {/*        field.onChange(value);*/}
+        {/*      }}*/}
+        {/*      renderInput={(params) => (*/}
+        {/*        <TextField*/}
+        {/*          {...params}*/}
+        {/*          label="Status"*/}
+        {/*          margin="normal"*/}
+        {/*          variant="outlined"*/}
+        {/*          error={!!errors.status}*/}
+        {/*          helperText={errors.status?.message}*/}
+        {/*          required*/}
+        {/*        />*/}
+        {/*      )}*/}
+        {/*    />*/}
+        {/*  )}*/}
+        {/*/>*/}
+        {/*<Controller*/}
+        {/*  control={control}*/}
+        {/*  name="category"*/}
+        {/*  rules={{ required: "This field is required" }}*/}
+        {/*  // eslint-disable-next-line*/}
+        {/*  defaultValue={null as any}*/}
+        {/*  render={({ field }) => (*/}
+        {/*    <Autocomplete*/}
+        {/*      {...autocompleteProps}*/}
+        {/*      {...field}*/}
+        {/*      onChange={(_, value) => {*/}
+        {/*        field.onChange(value);*/}
+        {/*      }}*/}
+        {/*      getOptionLabel={(item) => {*/}
+        {/*        return (*/}
+        {/*          autocompleteProps?.options?.find(*/}
+        {/*            (p) => p?.id?.toString() === item?.id?.toString(),*/}
+        {/*          )?.title ?? ""*/}
+        {/*        );*/}
+        {/*      }}*/}
+        {/*      isOptionEqualToValue={(option, value) =>*/}
+        {/*        value === undefined ||*/}
+        {/*        option?.id?.toString() === (value?.id ?? value)?.toString()*/}
+        {/*      }*/}
+        {/*      renderInput={(params) => (*/}
+        {/*        <TextField*/}
+        {/*          {...params}*/}
+        {/*          label="Category"*/}
+        {/*          margin="normal"*/}
+        {/*          variant="outlined"*/}
+        {/*          error={!!errors.category}*/}
+        {/*          helperText={errors.category?.message}*/}
+        {/*          required*/}
+        {/*        />*/}
+        {/*      )}*/}
+        {/*    />*/}
+        {/*  )}*/}
+        {/*/>*/}
+        {/*<TextField*/}
+        {/*  {...register("content", {*/}
+        {/*    required: "This field is required",*/}
+        {/*  })}*/}
+        {/*  error={!!errors.content}*/}
+        {/*  helperText={errors.content?.message}*/}
+        {/*  margin="normal"*/}
+        {/*  label="Content"*/}
+        {/*  multiline*/}
+        {/*  rows={4}*/}
+        {/*/>*/}
       </Box>
     </Create>
   );

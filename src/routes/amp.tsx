@@ -19,7 +19,7 @@ import {WaterDashboard} from "@/pages/amp/dashboard";
 import {Querybuilder} from "@/pages/amp/querybuilder";
 import {ReportBuilder} from "@/pages/amp/reportbuilder";
 import {ChemUpload} from "@/pages/amp/chemupload";
-import {WellCreate, WellEdit, WellList, WellShow} from "@/pages/amp/wells";
+import {WellEdit, WellList, WellShow} from "@/pages/amp/wells";
 import {LocationCreate, LocationEdit, LocationList, LocationShow} from "@/pages/amp/locations";
 import {EquipmentList, EquipmentShow} from "@/pages/amp/equipment";
 import {
@@ -51,7 +51,7 @@ export const makeAMPRoutes = () => {
             <Route path="chemupload" element={<ChemUpload/>}/>
             <Route path="wells">
                 <Route index element={<WellList/>}/>
-                <Route path="create" element={<WellCreate />}/>
+                {/*<Route path="create" element={<PostCreate />} />*/}
                 <Route path="edit/:id" element={<WellEdit/>}/>
                 <Route path="show/:id" element={<WellShow/>}/>
             </Route>
