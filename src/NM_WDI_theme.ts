@@ -5,7 +5,7 @@ export const theme = createTheme({
     primary: {
       light: "#A6CCD6", // Soft Aqua
       main: "#006E7B", // Deep Cyan
-      dark: "#004153" // Deep Teal
+      dark: "#004153", // Deep Teal
     },
     secondary: {
       light: "#E1E4C6", // Beige Sand
@@ -27,13 +27,16 @@ export const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: ["Roboto Condensed", "Open Sans", "Arial", "sans-serif"].join(","),
+    fontFamily: ["Roboto Condensed", "Open Sans", "Arial", "sans-serif"].join(
+      ",",
+    ),
     h1: {
       fontFamily: "Roboto Condensed",
       fontWeight: 700,
       fontSize: "48px",
       lineHeight: 1.4,
-      "@media (max-width:600px)": {  // Mobile
+      "@media (max-width:600px)": {
+        // Mobile
         fontSize: "36px",
       },
     },
@@ -42,7 +45,8 @@ export const theme = createTheme({
       fontWeight: 600,
       fontSize: "36px",
       lineHeight: 1.5,
-      "@media (max-width:600px)": {  // Mobile
+      "@media (max-width:600px)": {
+        // Mobile
         fontSize: "28px",
       },
     },
@@ -51,7 +55,8 @@ export const theme = createTheme({
       fontWeight: 500,
       fontSize: "28px",
       lineHeight: 1.5,
-      "@media (max-width:600px)": {  // Mobile
+      "@media (max-width:600px)": {
+        // Mobile
         fontSize: "24px",
         lineHeight: 1.6,
       },
@@ -61,7 +66,8 @@ export const theme = createTheme({
       fontWeight: 500,
       fontSize: "22px",
       lineHeight: 1.6,
-      "@media (max-width:600px)": {  // Mobile
+      "@media (max-width:600px)": {
+        // Mobile
         fontSize: "20px",
       },
     },
@@ -70,7 +76,8 @@ export const theme = createTheme({
       fontWeight: 400,
       fontSize: "16px",
       lineHeight: 1.5,
-      "@media (max-width:600px)": {  // Mobile
+      "@media (max-width:600px)": {
+        // Mobile
         fontSize: "14px",
       },
     },
