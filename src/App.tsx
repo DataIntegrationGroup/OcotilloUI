@@ -1,4 +1,3 @@
-// import "./global.css"
 import { Authenticated, Refine } from "@refinedev/core";
 import {
   AuthPage,
@@ -19,8 +18,7 @@ import {
   Routes,
 } from "react-router-dom";
 
-import CssBaseline from "@mui/material/CssBaseline";
-import GlobalStyles from "@mui/material/GlobalStyles";
+import { CssBaseline, GlobalStyles } from "@mui/material";
 
 import { FiefAuthProvider } from "@fief/fief/react";
 
@@ -112,7 +110,6 @@ const App: React.FC = () => {
                         path="/login"
                         element={
                           <AuthPage
-                            // title={''}
                             title={
                               <ThemedTitleV2
                                 collapsed={false}
@@ -122,7 +119,6 @@ const App: React.FC = () => {
                             hideForm={true}
                             type="login"
                             registerLink={false}
-                            // rememberMe={<RememberMe/>}
                             providers={[
                               {
                                 name: "fief",
@@ -138,7 +134,6 @@ const App: React.FC = () => {
                         <Authenticated
                           key="authenticated-routes"
                           redirectOnFail={"/login"}
-                          // fallback={<CatchAllNavigate to="/login"/>}
                           v3LegacyAuthProviderCompatible={true}
                         >
                           <ThemedLayoutV2
@@ -148,7 +143,6 @@ const App: React.FC = () => {
                               <ThemedTitleV2
                                 // collapsed is a boolean value that indicates whether the <Sidebar> is collapsed or not
                                 collapsed={collapsed}
-                                // icon={collapsed ? <MySmallIcon /> : <MyLargeIcon />}
                                 text="NMBGMR Data Manager"
                               />
                             )}
