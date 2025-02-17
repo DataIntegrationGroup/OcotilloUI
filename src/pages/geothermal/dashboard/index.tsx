@@ -23,8 +23,6 @@ import MapComponent from "@/components/MapComponent";
 import {Layer, Source} from "react-map-gl";
 import React, {useState} from "react";
 import {GeothermalSetMapPopupContent} from "@/components/MapPopupComponent";
-import counties from "@/data/nmcounties.json";
-
 
 export const GeothermalDashboard = () => {
     // const {query} = useShow({
@@ -53,7 +51,6 @@ export const GeothermalDashboard = () => {
     });
     const {data, isLoading} = query
     const featureCollection = data?.data
-
     return (
         <Box>
             <Typography variant={'h3'}>Geothermal Dashboard</Typography>
@@ -92,63 +89,36 @@ export const GeothermalDashboard = () => {
                         type="circle"
                         paint={{
                             'circle-radius': 3,
-                            // 'circle-color': '#f8600d',
-                            'circle-color': [
-                                'match',
-                                ['get', 'county'],
-                                'Socorro', '#224bb4',
-                                'Bernalillo', '#daa210',
-                                'Chaves', '#b42722',
-                                'Catron', '#d5633a',
-                                'Cibola', '#517938',
-                                'Colfax', '#79878f',
-                                'Curry', '#64b976',
-                                'De Baca', '#987f7f',
-                                'Dona Ana', '#6b82d9',
-                                'Eddy', '#66838a',
-                                'Grant', '#d9b76b',
-                                'Guadalupe', '#d9b76b',
-                                'Harding', '#d9b76b',
-                                'Hidalgo', '#d9b76b',
-                                'Lea', '#d9b76b',
-                                'Lincoln', '#d9b76b',
-                                'Los Alamos', '#d96b91',
-                                'Luna', '#d9b76b',
-                                'McKinley', '#d9b76b',
-                                'Mora', '#7a1338',
-                                'Otero', '#d9b76b',
-                                'Quay', '#d9b76b',
-                                'Rio Arriba', '#9d7d32',
-                                'Roosevelt', '#d9b76b',
-                                'San Juan', '#4f5e98',
-                                'San Miguel', '#d9b76b',
-                                'Sandoval', '#d9b76b',
-                                'Santa Fe', '#d9b76b',
-                                'Sierra', '#d9b76b',
-                                'Taos', '#d9b76b',
-                                'rgba(255,255,255,0)'
-                            ],
-                            'circle-stroke-color': '#000000',
+                            'circle-color': '#f8600d',
+                            // [
+                            //     'match',
+                            //     ['get', 'site_type'],
+                            //     'Groundwater other than spring (well)', '#224bb4',
+                            //     'Spring', '#517938',
+                            //     'Ephemeral stream', '#b42722',
+                            //     'Perennial stream', '#d5633a',
+                            //     '#000000'
+                            // ],
+                            'circle-stroke-color': '#224bb4',
                             'circle-stroke-width': 1,
                         }}
                     />
                 </Source>
-
-                <Source
-                    key='county'
-                    id='countysource'
-                    type='geojson'
-                    data={counties}>
-                    <Layer
-                        id="county"
-                        type="fill"
-                        paint={{
-                            "fill-color": "#9ab7d5",
-                            "fill-outline-color": "#000000",
-                            "fill-opacity": 0.25,
-                        }}
-                    />
-                </Source>
+                {/*{countyFeature && <Source*/}
+                {/*    key='county'*/}
+                {/*    id='countysource'*/}
+                {/*    type='geojson'*/}
+                {/*    data={countyFeature}>*/}
+                {/*    <Layer*/}
+                {/*        id="county"*/}
+                {/*        type="fill"*/}
+                {/*        paint={{*/}
+                {/*            "fill-color": "#9ab7d5",*/}
+                {/*            "fill-outline-color": "#000000",*/}
+                {/*            "fill-opacity": 0.25,*/}
+                {/*        }}*/}
+                {/*    />*/}
+                {/*</Source>}*/}
             </MapComponent>
 
         </Box>
