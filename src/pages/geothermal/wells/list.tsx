@@ -56,6 +56,11 @@ export const GeoThermalWellList: React.FC = () => {
                 minWidth: 150,
             },
             {
+                field: "API",
+                headerName: "API",
+                type: "string",
+            },
+            {
                 field: 'County',
                 headerName: 'County',
                 type: 'string',
