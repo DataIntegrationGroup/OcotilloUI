@@ -15,21 +15,57 @@
 // ===============================================================================
 
 import {Table, TableContainer, TableHead, TableCell, TableRow, TableBody} from "@mui/material";
+import Paper from "@mui/material/Paper";
 
 export function mToFt(m) {
     return (m * 3.28084).toFixed(2);
 }
 
-export const SetMapPopupContent = ({features,
-                                   setPopupContent}) => {
+
+export const GeothermalSetMapPopupContent = ({features, setPopupContent}) => {
+    console.log(features);
+    setPopupContent({
+        coordinates: features[0].geometry.coordinates,
+        children: (
+            <TableContainer sx={{width: 300}} component={Paper}>
+                <Table size="small">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>OBJECTID</TableCell>
+                            <TableCell>County</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+
+                        {
+                            features.map((feature, index) => (
+                                <TableRow key={index}>
+                                    <TableCell align={'left'}>{feature.properties.objectid}</TableCell>
+                                    <TableCell>{feature.properties.county}</TableCell>
+                                </TableRow>
+                            ))
+                        }
+
+                    </TableBody>
+                </Table>
+            </TableContainer>
+
+        )
+    });
+}
+
+export const SetMapPopupContent = ({
+                                       features,
+                                       setPopupContent
+                                   }) => {
 
     const transposedData = [
-        { key: "Name", values: features.map(point => point.properties.PointID) },
+        {key: "Name", values: features.map(point => point.properties.PointID)},
         // { key: "Elevation (ft)", values: features.map(point => mToFt(point._geometry.coordinates[2])) },
         // { key: "Well Depth (ft)", values: features.map(point => point.properties.well_depth?.value) },
         // { key: "Hole Depth (ft)", values: features.map(point => point.properties.hole_depth?.value) },
         // { key: "OSE Well ID", values: features.map(point => point.properties.ose_well_id) },
-        { key: "Alternate Site ID", values: features.map(point => point.properties.AlternateSiteID) },
+        {key: "Alternate Site ID", values: features.map(point => point.properties.AlternateSiteID)},
         // { key: "Site No", values: features.map(point => point.properties.site_no) },
     ];
 
@@ -51,9 +87,9 @@ export const SetMapPopupContent = ({features,
     setPopupContent({
         coordinates: features[0].geometry.coordinates,
         children: (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <h3 style={{ color: "black"}}>Click for more details</h3>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                <h3 style={{color: "black"}}>Click for more details</h3>
+                <div style={{display: 'flex', gap: '1rem'}}>
                     {/*<div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>*/}
                     {/*    {transposedData.map((row, index) => (*/}
                     {/*        <div key={index} style={{ display: 'flex', gap: '1rem' }}>*/}
@@ -68,10 +104,10 @@ export const SetMapPopupContent = ({features,
                             <TableBody>
                                 {
                                     transposedData.map((row, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell>{row.key}</TableCell>
-                                        <TableCell>{row.values[0]}</TableCell>
-                                    </TableRow>
+                                        <TableRow key={index}>
+                                            <TableCell>{row.key}</TableCell>
+                                            <TableCell>{row.values[0]}</TableCell>
+                                        </TableRow>
                                     ))
                                 }
                             </TableBody>

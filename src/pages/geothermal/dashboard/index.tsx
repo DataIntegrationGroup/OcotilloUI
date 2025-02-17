@@ -19,6 +19,10 @@ import {Box} from "@mui/system";
 import {useShow} from "@refinedev/core";
 import {Card} from "@mui/material";
 import Stack from "@mui/material/Stack";
+import MapComponent from "@/components/MapComponent";
+import {Layer, Source} from "react-map-gl";
+import React, {useState} from "react";
+import {GeothermalSetMapPopupContent} from "@/components/MapPopupComponent";
 
 export const GeothermalDashboard = () => {
     // const {query} = useShow({
@@ -28,9 +32,28 @@ export const GeothermalDashboard = () => {
     // });
     // const stats = query.data?.data
     // console.log(query.data?.data)
+
+    const [popupContent, setPopupContent] = useState<any>(null);
+    const onMouseMove = (e: any, features: any[], mapRef: any) => {
+        features = features.filter((f) => f.layer.id === 'location')
+        if (features.length > 0) {
+            mapRef.current.getCanvas().style.cursor = 'pointer'
+            GeothermalSetMapPopupContent({features, setPopupContent})
+        } else {
+            mapRef.current.getCanvas().style.cursor = 'grab'
+            setPopupContent(null)
+        }
+    }
+    const {query} = useShow({
+        resource: 'wells',
+        id: 'locations',
+        dataProviderName: 'geothermal'
+    });
+    const {data, isLoading} = query
+    const featureCollection = data?.data
     return (
         <Box>
-                <Typography variant={'h3'}>Geothermal Dashboard</Typography>
+            <Typography variant={'h3'}>Geothermal Dashboard</Typography>
 
             {/*<Stack direction={'column'}*/}
             {/*         spacing={2}*/}
@@ -48,7 +71,55 @@ export const GeothermalDashboard = () => {
             {/*        <Typography variant={'body1'}>{stats?.materials}</Typography>*/}
             {/*    </Card>*/}
             {/*</Stack>*/}
-
+            <MapComponent
+                isLoading={isLoading}
+                showDrawControls={{show: true, position: 'top-right'}}
+                // setSelectionPolygons={setSelectionPolygons}
+                setPopupContent={setPopupContent}
+                popupContent={popupContent}
+                onMouseMoveCallback={onMouseMove}
+            >
+                <Source
+                    key='foo'
+                    id='foo'
+                    type='geojson'
+                    data={featureCollection}>
+                    <Layer
+                        id="location"
+                        type="circle"
+                        paint={{
+                            'circle-radius': 3,
+                            'circle-color': '#f8600d',
+                            // [
+                            //     'match',
+                            //     ['get', 'site_type'],
+                            //     'Groundwater other than spring (well)', '#224bb4',
+                            //     'Spring', '#517938',
+                            //     'Ephemeral stream', '#b42722',
+                            //     'Perennial stream', '#d5633a',
+                            //     '#000000'
+                            // ],
+                            'circle-stroke-color': '#224bb4',
+                            'circle-stroke-width': 1,
+                        }}
+                    />
+                </Source>
+                {/*{countyFeature && <Source*/}
+                {/*    key='county'*/}
+                {/*    id='countysource'*/}
+                {/*    type='geojson'*/}
+                {/*    data={countyFeature}>*/}
+                {/*    <Layer*/}
+                {/*        id="county"*/}
+                {/*        type="fill"*/}
+                {/*        paint={{*/}
+                {/*            "fill-color": "#9ab7d5",*/}
+                {/*            "fill-outline-color": "#000000",*/}
+                {/*            "fill-opacity": 0.25,*/}
+                {/*        }}*/}
+                {/*    />*/}
+                {/*</Source>}*/}
+            </MapComponent>
 
         </Box>
     )
