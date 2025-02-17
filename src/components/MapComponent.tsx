@@ -38,13 +38,14 @@ interface MapComponentProps {
     isLoading?: boolean;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({children,
+const MapComponent: React.FC<MapComponentProps> = ({
+                                                       children,
                                                        onClick,
                                                        popupContent,
                                                        setPopupContent,
                                                        onMouseMoveCallback,
                                                        setSelectionPolygons,
-                                                       isLoading=false,
+                                                       isLoading = false,
                                                        showDrawControls = {show: true, position: "top-right"},
                                                        showNavigation = {
                                                            show: true,
@@ -199,7 +200,7 @@ const MapComponent: React.FC<MapComponentProps> = ({children,
                     />
                 )}
 
-                {popupContent!==undefined && popupContent!==null && (
+                {popupContent !== undefined && popupContent !== null && (
                     <Popup
                         latitude={popupContent.coordinates[1]}
                         longitude={popupContent.coordinates[0]}

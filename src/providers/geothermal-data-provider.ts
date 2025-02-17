@@ -84,13 +84,13 @@ export const geothermalDataProvider: DataProvider = {
 
         let data;
         let total;
-        // if (['wells',].includes(resource)) {
-        //     data = resp.items;
-        //     total = resp.total;
-        // } else {
-        data = resp;
-        total = data.length;
-        // }
+        if (['wells',].includes(resource)) {
+            data = resp.items;
+            total = resp.total;
+        } else {
+            data = resp;
+            total = data.length;
+        }
 
         console.log('getList', resp, data, total);
         return {
