@@ -56,6 +56,9 @@ export const useDebounce = (callback, delay) => {
 };
 
 
+export const intFormatter = (param?: any) => {
+    return param != undefined ? param.toFixed(0) : "";
+}
 // export function makeExportHeader({loading, onClick}){
 //     return ({defaultButtons}) => {
 //         return (

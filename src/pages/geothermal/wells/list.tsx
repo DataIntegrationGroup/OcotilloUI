@@ -22,6 +22,7 @@ import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 
 import type {IWell} from "@/interfaces/geothermal";
 import {ListPage} from "@/components/ListPage";
+import {intFormatter} from "@/components/util";
 
 
 export const GeoThermalWellList: React.FC = () => {
@@ -46,8 +47,9 @@ export const GeoThermalWellList: React.FC = () => {
             {
                 field: "OBJECTID",
                 headerName: "ID",
-                type: "integer",
+                type: "number",
                 minWidth: 150,
+                valueFormatter: intFormatter
             },
             {
                 field: "WellDataID",
