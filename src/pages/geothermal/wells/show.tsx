@@ -26,16 +26,7 @@ import {
 import {settings} from "@/settings";
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 import React from "react";
-import type {
-    IBore,
-    ICasing,
-    IWell,
-    IWellRecord,
-    IProduction,
-    ILithStrat,
-    ILithLog,
-    ILogData, IHistory
-} from "@/interfaces/geothermal";
+import type {IBore, ICasing, IWell, IWellRecord, IProduction, ILithStrat} from "@/interfaces/geothermal";
 import {intFormatter} from "@/components/util";
 
 
@@ -296,83 +287,6 @@ export const GeoThermalWellShow = () => {
         ], []
     )
 
-    const {dataGridProps: dataGridPropsLithLog} = useDataGrid<ILithLog>(
-        {
-            dataProviderName: "geothermal",
-            resource: `wells/${id}/lithlog`,
-        }
-    );
-
-    const lithLogColumns = React.useMemo<GridColDef<ILithLog>[]>(
-        () => [
-            {
-                field: "FromDepth",
-                headerName: "From Depth",
-            },
-            {
-                field: "ToDepth",
-                headerName: "To Depth",
-            },
-
-        ], []
-    )
-
-    const {dataGridProps: dataGridPropsLogData} = useDataGrid<ILogData>(
-        {
-            dataProviderName: "geothermal",
-            resource: `wells/${id}/logdata`,
-        }
-    );
-
-    const logDataColumns = React.useMemo<GridColDef<ILogData>[]>(
-        () => [
-            {
-                field: "FromDepth",
-                headerName: "From Depth",
-            },
-            {
-                field: "ToDepth",
-                headerName: "To Depth",
-            },
-            {
-                field: "FileNo",
-                headerName: "File No",
-            },
-            {
-                field: "Int_Notes",
-                headerName: "Int Notes",
-            },
-            {
-                field: "RecrdsetID",
-                headerName: "RecrdsetID",
-            }
-
-        ], []
-    )
-
-    const {dataGridProps: dataGridPropsHistory} = useDataGrid<IHistory>(
-        {
-            dataProviderName: "geothermal",
-            resource: `wells/${id}/history`,
-        }
-    );
-
-    const historyColumns = React.useMemo<GridColDef<IHistory>[]>(
-        () => [
-            {field: "OBJECTID", headerName: "ID", type: "number", minWidth: 150, valueFormatter: intFormatter},
-            {field: "ActionDate", headerName: "ActionDate"},
-            {field: "SpudDate", headerName: "SpudDate"},
-            {field: "PlugBack", headerName: "PlugBack"},
-            {field: "Commodity", headerName: "Commodity"},
-            {field: "WorkType", headerName: "WorkType"},
-            {field: "ActionClss", headerName: "ActionClss"},
-            {field: "RecrdsetID", headerName: "RecrdsetID"},
-            {field: "Status", headerName: "Status"},
-            {field: "StatusDescription", headerName: "StatusDescription"},
-            {field: "Driller", headerName: "Driller"},
-
-        ], []
-    )
 
     // const { data: categoryData, isLoading: categoryIsLoading } = useOne({
     //   resource: "categories",
@@ -381,14 +295,7 @@ export const GeoThermalWellShow = () => {
     //     enabled: !!record,
     //   },
     // });
-    const isLoading = dataGridPropsProduction.loading ||
-        dataGridPropsCasing.loading ||
-        dataGridPropsBore.loading ||
-        dataGridProps.loading ||
-        dataGridPropsLithLog.loading ||
-        dataGridPropsLithStrat.loading ||
-        dataGridPropsLogData.loading
-
+    const isLoading = dataGridPropsProduction.loading || dataGridPropsCasing.loading || dataGridPropsBore.loading || dataGridProps.loading;
     return (
         <Show isLoading={isLoading}>
             {/*<Stack gap={1}>*/}
@@ -434,45 +341,6 @@ export const GeoThermalWellShow = () => {
                     rowHeight={settings.rowHeight}
                     getRowId={(row) => row.OBJECTID}
                     columns={columns}
-                    // onRowSelectionModelChange={handleSelectionChangeWrapper}
-                    // loading={isLoading}
-                />
-            </Stack>
-            <Stack gap={1}>
-                <h3>History</h3>
-                <DataGrid
-                    {...dataGridPropsHistory}
-                    disableRowSelectionOnClick={false}
-                    // rowHeight={settings.rowHeight}
-                    getRowId={(row) => row.OBJECTID}
-                    columns={historyColumns}
-                    // onRowSelectionModelChange={handleSelectionChangeWrapper}
-                    // loading={isLoading}
-                />
-            </Stack>
-
-            <Stack gap={1}>
-                <h3>LogData</h3>
-                <DataGrid
-                    {...dataGridPropsLogData}
-                    disableRowSelectionOnClick={false}
-                    // rowHeight={settings.rowHeight}
-                    getRowId={(row) => row.OBJECTID}
-                    columns={logDataColumns}
-
-                    // onRowSelectionModelChange={handleSelectionChangeWrapper}
-                    // loading={isLoading}
-                />
-            </Stack>
-            <Stack gap={1}>
-                <h3>LithLog</h3>
-                <DataGrid
-                    {...dataGridPropsLithLog}
-                    disableRowSelectionOnClick={false}
-                    // rowHeight={settings.rowHeight}
-                    getRowId={(row) => row.OBJECTID}
-                    columns={lithLogColumns}
-
                     // onRowSelectionModelChange={handleSelectionChangeWrapper}
                     // loading={isLoading}
                 />

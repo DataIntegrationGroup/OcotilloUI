@@ -92,7 +92,7 @@ export const geothermalDataProvider: DataProvider = {
             total = data.length;
         }
 
-        console.log('getList', resp, data, total);
+        console.log('getList', resource, total, resp, data,);
         return {
             data,
             total,
