@@ -23,7 +23,6 @@ export function mToFt(m) {
 
 
 export const GeothermalSetMapPopupContent = ({features, setPopupContent}) => {
-    console.log(features);
     setPopupContent({
         coordinates: features[0].geometry.coordinates,
         children: (
