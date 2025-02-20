@@ -15,6 +15,14 @@
 // ===============================================================================
 
 
+import {date} from "yup";
+
+export interface IWellHeader {
+    API: string;
+    TotalDepth: number;
+
+}
+
 export interface IWell {
     OBJECTID: integer;
     // SiteID: string;
@@ -25,7 +33,9 @@ export interface IWell {
     // title: string;
     // status: IStatus;
     // category: ICategory;
+    header: IWellHeader
 }
+
 
 export interface IWellRecord {
     API_suffix: string;
@@ -112,27 +122,99 @@ export interface IProduction {
 
 
 export interface ILithStrat {
-    LithClass: string //= Column(String(50))
-    UnitBasis: string //= Column(String(16))
-    UnitName: string //= Column(String(128))
-    GeoID: string //= Column(String(16))
-    WithinUnit: string //= Column(String(16))
-    Top_Qual: string //= Column(String(3))
-    Depth2Top: number //= Column(Float)
-    Top_TVD: number//= Column(Float)
-    Elev_Top: number //= Column(Float)
-    Botm_Qual: string //= Column(String(3))
-    Depth2Botm: number //= Column(Float)
-    Bottom_TVD: number //= Column(Float)
-    Elev_Bot: number  //= Column(Float)
-    DpthMethod: string //= Column(String(16))
-    PickConfid: string //= Column(String(16))
-    Absent: number//= Column(Integer)
-    Overturned: number //= Column(Integer)
-    Duplicated: number  //= Column(Integer)
-    Exclude: number //= Column(Integer)
-    CheckPick: number //= Column(Integer)
-    Int_Notes: string //= Column(String(255))
+    LithClass: string
+    UnitBasis: string
+    UnitName: string
+    GeoID: string
+    WithinUnit: string
+    Top_Qual: string
+    Depth2Top: number
+    Top_TVD: numbe
+    Elev_Top: number
+    Botm_Qual: string
+    Depth2Botm: number
+    Bottom_TVD: number
+    Elev_Bot: number
+    DpthMethod: string
+    PickConfid: string
+    Absent: number
+    Overturned: number
+    Duplicated: number
+    Exclude: number
+    CheckPick: number
+    Int_Notes: string
+}
+
+export interface ILithLog {
+    GeoID: string
+    FromDepth: number
+    Name: string
+    ToDepth: number
+    LithClass: string
+    LithType: string
+    IgneousCmp: string
+    MMfacies: string
+    Mineralogy: string
+    PrimLith: string
+    SecondLith: string
+    ShortDesc: string
+    UnitDesc: string
+    Texture: string
+    Color: string
+    GrainSize: string
+    Sorting: string
+    Cemntation: string
+    Induration: string
+    Bedding: string
+    BedThkness: number
+    ThickUnits: string
+    Protolith: string
+    Comments: string
+}
+
+export interface ILogData {
+    GeoID: string
+    FromDepth: float
+    Name: string
+    ToDepth: float
+    LithClass: string
+    LithType: string
+    IgneousCmp: string
+    MMfacies: string
+    Mineralogy: string
+    PrimLith: string
+    SecondLith: string
+    ShortDesc: string
+    UnitDesc: string
+    Texture: string
+    Color: string
+    GrainSize: string
+    Sorting: string
+    Cemntation: string
+    Induration: string
+    Bedding: string
+    BedThkness: float
+    ThickUnits: string
+    Protolith: string
+    Comments: string
+}
+
+export interface IHistory {
+    ActionClss: string // Column(String(16))
+    WorkType: string // Column(String(16))
+    ActionDate: date // Column(DateTime)
+    SpudDate: date // Column(DateTime)
+    Commodity: string // Column(String(16))
+    PlugBack: number // Column(Float)
+    BridgePlug: string // Column(String(50))
+    TotalDepth: number // Column(Float)
+    Results: string // Column(String(16))
+    LeaseID: string // Column(String(128))
+    Operator: string // Column(String(50))
+    Contractor: string // Column(String(50))
+    Driller: string // Column(String(50))
+    Status: string // Column(String(16))
+
 }
 
 // ============= EOF =============================================
