@@ -31,9 +31,10 @@ export const ProjectList: React.FC = () => {
 
     const columns = React.useMemo<GridColDef<IProject>[]>(
         () => [
-            {field: 'id',
+            {
+                field: 'id',
                 headerName: 'ID',
-                type: 'integer',
+                type: 'number',
                 minWidth: 50
             },
             {

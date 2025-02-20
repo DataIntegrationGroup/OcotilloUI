@@ -48,7 +48,7 @@ import {SetMapPopupContent} from "@/components/MapPopupComponent";
 import {CheckBox} from "@mui/icons-material";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
-import {DataGrid} from "@mui/x-data-grid";
+import {DataGrid, GridColDef} from "@mui/x-data-grid";
 import {ExportControl} from "@/pages/amp/querybuilder/ExportControl";
 import {ClearableSelect} from "@/components/ClearableSelect";
 import {ANALYTES} from "@/components/enums";
@@ -325,7 +325,7 @@ export const Querybuilder: React.FC = () => {
     //     return
     // }
 
-    const columns = [
+    const columns: GridColDef[] = [
         {
             field: 'PointID',
             headerName: 'PointID',
@@ -347,13 +347,13 @@ export const Querybuilder: React.FC = () => {
         {
             field: 'Easting',
             headerName: 'Easting',
-            type: 'integer',
+            type: 'number',
             minWidth: 80
         },
         {
             field: 'Northing',
             headerName: 'Northing',
-            type: 'integer',
+            type: 'number',
             minWidth: 80
         }
     ]

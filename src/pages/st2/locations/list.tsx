@@ -51,7 +51,7 @@ export const ST2LocationList: React.FC = () => {
             {
                 field: "agency",
                 headerName: "Agency",
-                valueGetter: params => params.row.properties?.agency,
+                valueGetter: (value, row) => row.properties?.agency,
                 minWidth: 150,
             },
             {

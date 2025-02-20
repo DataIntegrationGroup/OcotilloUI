@@ -119,22 +119,22 @@ export const ST2DatastreamList: React.FC = () => {
             {
                 field: "unitOfMeasurement",
                 headerName: "Unit",
-                valueGetter: params => params.row.unitOfMeasurement?.symbol,
+                valueGetter: (value, row) => row.unitOfMeasurement?.symbol,
                 minWidth: 25
             },
             {
                 field: "agency",
                 headerName: "Agency",
-                valueGetter: params => params.row.Thing?.properties?.agency,
+                valueGetter: (value, row) => row.Thing?.properties?.agency,
                 minWidth: 150
             },
             {
                 field: "Location",
                 headerName: "Location",
-                valueGetter: params => params.row.Thing?.Locations?.map((loc) => loc.name).join(', '),
+                valueGetter: (value, row) => row.Thing?.Locations?.map((loc) => loc.name).join(', '),
                 minWidth: 300
             },
-            {field: "sensor", headerName: "Sensor", valueGetter: params => params.row.Sensor?.name},
+            {field: "sensor", headerName: "Sensor", valueGetter: (value, row) => row.Sensor?.name},
             {
                 field: "locationID", headerName: "Location ID",
                 renderCell: function render({row}) {
@@ -299,8 +299,8 @@ export const ST2DatastreamList: React.FC = () => {
                                         headerName: 'Measurement Date Time',
                                         type: 'dateTime',
                                         width: 200,
-                                        valueGetter: (params) => {
-                                            return new Date(params.value)
+                                        valueGetter: (value) => {
+                                            return new Date(value)
                                         }
                                     },
                                     {

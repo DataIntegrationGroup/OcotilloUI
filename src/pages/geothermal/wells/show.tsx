@@ -60,7 +60,7 @@ export const GeoThermalWellShow = () => {
             {
                 field: "OBJECTID",
                 headerName: "ID",
-                type: "integer",
+                type: "number",
                 minWidth: 150,
             },
             {

@@ -46,7 +46,7 @@ export const GeoThermalWellList: React.FC = () => {
             {
                 field: "OBJECTID",
                 headerName: "ID",
-                type: "integer",
+                type: "number",
                 minWidth: 150,
             },
             {

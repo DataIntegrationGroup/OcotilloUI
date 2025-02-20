@@ -32,10 +32,11 @@ export const EquipmentList: React.FC = () => {
 
     const columns = React.useMemo<GridColDef<IEquipment>[]>(
         () => [
-            {field: 'ID',
+            {
+                field: 'ID',
                 headerName: 'ID',
-                type: 'integer',
-                minWidth: 50
+                type: 'number',
+                minWidth: 50,
             },
             {
                 field: "PointID",
@@ -56,12 +57,12 @@ export const EquipmentList: React.FC = () => {
                 minWidth: 150,
             },
             {
-              field: "SerialNo",
+                field: "SerialNo",
                 headerName: "SerialNumber",
                 type: "string",
             },
             {
-              field: 'DateInstalled',
+                field: 'DateInstalled',
                 headerName: 'DateInstalled',
                 type: 'string',
             },
@@ -90,11 +91,11 @@ export const EquipmentList: React.FC = () => {
         []
     );
 
-    return ( <ListPage columns={columns}
-                       exportProps={{pageSize: 50}} // something weird with the database/API pagination for Equipment.
-                                     // pageSize >50 results in the API missing some results which
-                                    // prevents the useExport hook from ever completing.
-                       getRowId={(row) => row.ID}
-                       dataGridProps={dataGridProps} />);
+    return (<ListPage columns={columns}
+                      exportProps={{pageSize: 50}} // something weird with the database/API pagination for Equipment.
+        // pageSize >50 results in the API missing some results which
+        // prevents the useExport hook from ever completing.
+                      getRowId={(row) => row.ID}
+                      dataGridProps={dataGridProps}/>);
 };
 // ============= EOF =============================================

@@ -31,9 +31,10 @@ export const MaterialList: React.FC = () => {
 
     const columns = React.useMemo<GridColDef<IMaterial>[]>(
         () => [
-            {field: 'id',
+            {
+                field: 'id',
                 headerName: 'ID',
-                type: 'integer',
+                type: 'number',
                 minWidth: 50
             },
             {
