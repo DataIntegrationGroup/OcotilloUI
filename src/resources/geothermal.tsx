@@ -15,6 +15,7 @@
 // ===============================================================================
 
 import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
+import {PlumbingTwoTone} from "@mui/icons-material";
 
 let geothermal = [
     {
@@ -29,7 +30,7 @@ let geothermal = [
         name: 'geothermal_wells',
         list: '/geothermal/wells',
         show: '/geothermal/wells/show/:id',
-        icon: <DashboardOutlined/>,
+        icon: <PlumbingTwoTone/>,
         meta: {
             label: "Wells",
         }

@@ -61,12 +61,25 @@ export const GeoThermalWellList: React.FC = () => {
                 field: "API",
                 headerName: "API",
                 type: "string",
+                minWidth: 150,
+                valueGetter: (value, row) => {
+                    return row.header.API
+                },
             },
             {
                 field: 'County',
                 headerName: 'County',
                 type: 'string',
                 minWidth: 150,
+            },
+            {
+                field: "TotalDepth",
+                headerName: "Total Depth",
+                type: "number",
+                valueGetter: (value, row) => {
+                    return row.header.TotalDepth
+                },
+                valueFormatter: intFormatter
             },
             // {
             //     field: "OSEWelltagID",
