@@ -58,7 +58,7 @@ export const ST2WellList: React.FC = () => {
             {
                 field: "agency",
                 headerName: "Agency",
-                valueGetter: params => params.row.properties?.agency,
+                valueGetter: (value, row) => row.properties?.agency,
                 minWidth: 150,
             },
             // {
@@ -137,8 +137,8 @@ export const ST2WellList: React.FC = () => {
         // [categoriesData, isLoading],
     );
 
-    return ( <ListPage
+    return (<ListPage
         getRowId={(row) => row["@iot.id"]}
-        columns={columns} dataGridProps={dataGridProps} />);
+        columns={columns} dataGridProps={dataGridProps}/>);
 };
 // ============= EOF =============================================

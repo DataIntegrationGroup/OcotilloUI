@@ -31,9 +31,10 @@ export const PrincipalInvestigatorList: React.FC = () => {
 
     const columns = React.useMemo<GridColDef<IPrincipalInvestigator>[]>(
         () => [
-            {field: 'id',
+            {
+                field: 'id',
                 headerName: 'ID',
-                type: 'integer',
+                type: 'number',
                 minWidth: 50
             },
             {

@@ -31,9 +31,10 @@ export const SampleList: React.FC = () => {
 
     const columns = React.useMemo<GridColDef<ISample>[]>(
         () => [
-            {field: 'id',
+            {
+                field: 'id',
                 headerName: 'ID',
-                type: 'integer',
+                type: 'number',
                 minWidth: 50
             },
             {
@@ -56,7 +57,7 @@ export const SampleList: React.FC = () => {
                 },
             },
             {
-              field: "project",
+                field: "project",
                 headerName: "Project",
                 type: "string",
                 minWidth: 200,
