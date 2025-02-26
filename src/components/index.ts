@@ -1,5 +1,7 @@
 export * from "./ControlledTextField";
 export * from "./ControlledDateTimePicker";
+export * from "./ControlledPhoneField";
+export * from "./ControlledEmailField";
 export * from "./Auth";
 export * from "./ClearableSelect";
 export * from "./ControlledTextField";

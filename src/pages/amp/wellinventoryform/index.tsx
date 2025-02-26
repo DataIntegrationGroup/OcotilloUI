@@ -11,8 +11,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { ControlledDateTimePicker, ControlledTextField } from "@/components";
+import {
+  ControlledDateTimePicker,
+  ControlledEmailField,
+  ControlledTextField,
+} from "@/components";
 import { useTheme, useMediaQuery } from "@mui/material";
+import { ControlledPhoneField } from "@/components/ControlledPhoneField";
 
 export const WellInventoryForm = () => {
   const theme = useTheme();
@@ -24,6 +29,7 @@ export const WellInventoryForm = () => {
     useForm<IWellInventoryForm>({
       defaultValues: SchemaDefaults,
       resolver: yupResolver(WellInventorySchema),
+      mode: "onTouched",
     });
 
   return (
@@ -177,12 +183,15 @@ export const WellInventoryForm = () => {
                 direction={{ xs: "column", sm: "row" }}
               >
                 <Grid item xs={12} sm={6} lg={3}>
-                  <ControlledTextField
+                  <ControlledPhoneField
                     label="Cell Phone"
                     fullWidth
                     control={control}
-                    type="text"
+                    type="tel"
                     name="owner.cell_phone"
+                    errorMessage={
+                      formState.errors.owner?.cell_phone?.message as string
+                    }
                   />
                 </Grid>{" "}
                 <Grid
@@ -192,12 +201,15 @@ export const WellInventoryForm = () => {
                   lg={3}
                   sx={{ paddingLeft: isSmBreakpoint ? "" : "1rem !important" }}
                 >
-                  <ControlledTextField
+                  <ControlledPhoneField
                     label="Home Phone"
                     fullWidth
                     control={control}
-                    type="text"
+                    type="tel"
                     name="owner.phone"
+                    errorMessage={
+                      formState.errors.owner?.phone?.message as string
+                    }
                   />
                 </Grid>{" "}
                 <Grid
@@ -206,12 +218,15 @@ export const WellInventoryForm = () => {
                   lg={6}
                   sx={{ paddingLeft: isLgBreakpoint ? "" : "1rem !important" }}
                 >
-                  <ControlledTextField
+                  <ControlledEmailField
                     label="Email"
                     fullWidth
                     control={control}
-                    type="text"
+                    type="email"
                     name="owner.email"
+                    errorMessage={
+                      formState.errors.owner?.email?.message as string
+                    }
                   />
                 </Grid>{" "}
               </Grid>{" "}
