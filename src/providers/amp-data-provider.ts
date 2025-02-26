@@ -20,7 +20,7 @@ import {getAccessToken} from "./fief-provider";
 import {settings} from "@/settings";
 
 // const API_URL = "https://waterdata.nmt.edu/authorized";
-const API_URL = `${settings.nmbgmr_api_url}/latest/authorized`;
+const API_URL = `${settings.nmbgmr_api_url}/latest`;
 
 import axios, {AxiosInstance, AxiosRequestConfig} from "axios";
 import createAuthRefreshInterceptor from 'axios-auth-refresh';
@@ -124,9 +124,11 @@ export const ampDataProvider: DataProvider = {
         if (['formations', 'level_status',
             'measurement_method', 'data_quality',
             'measuring_agency', 'data_source'].includes(resource)) {
-            url = `lookuptable/${resource}`;
+            url = `authorized/lookuptable/${resource}`;
+        } else if (['waterlevels/manual'].includes(resource)) {
+            url = `${resource}`;
         } else {
-            url = `tabular/${resource}`;
+            url = `authorized/tabular/${resource}`;
         }
 
         console.log('getlist', resource, url, params.toString());
@@ -136,14 +138,22 @@ export const ampDataProvider: DataProvider = {
 
         let data;
         let total;
-        if (['wells', 'locations', 'equipment',
-            'manual_waterlevels', 'projects'].includes(resource)) {
+        // if (['wells', 'locations', 'equipment',
+        //     'manual_waterlevels', 'projects'].includes(resource)) {
+        //     data = response.data.items;
+        //     total = response.data.total;
+        // } else {
+        //     data = response.data;
+        //     total = data.length;
+        // }
+        if ("items" in response.data) {
             data = response.data.items;
             total = response.data.total;
         } else {
             data = response.data;
-            total = data.length;
+            total = data.length
         }
+
         console.log('getList', resource, total, data);
 
         return {
@@ -174,9 +184,9 @@ export const ampDataProvider: DataProvider = {
 
         let url;
         if (resource == 'dashboard') {
-            url = `tabular/dashboard`;
+            url = `authorized/tabular/dashboard`;
         } else {
-            url = `tabular/${resource}/${id}`;
+            url = `authorized/tabular/${resource}/${id}`;
         }
 
         console.log('getOne', url, resource, id, meta);

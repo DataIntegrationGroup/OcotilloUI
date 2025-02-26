@@ -33,6 +33,7 @@ import {AMPProjectList} from "@/pages/amp/projects";
 import {ProjectShow} from "@/pages/geochronology/projects";
 import {LookupTableList, MeasuringAgencyList} from "@/components/lookuptable";
 import {WellInventoryForm} from "@/pages/amp/wellinventoryform";
+import {HydrographCorrector} from "@/pages/amp/hydrographcorrector";
 
 const lookupRoutes = [
     "measurement_method",
@@ -45,6 +46,7 @@ const lookupRoutes = [
 export const makeAMPRoutes = () => {
     return (
         <Route path="/amp">
+            <Route path={"hydrographcorrector"} element={<HydrographCorrector/>}/>
             <Route path="dashboard" element={<WaterDashboard/>}/>
             <Route path="querybuilder" element={<Querybuilder/>}/>
             <Route path='reportbuilder' element={<ReportBuilder/>}/>

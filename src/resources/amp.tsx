@@ -37,6 +37,14 @@ let amp = [
         },
     },
     {
+        name: 'hydrographcorrector',
+        list: '/amp/hydrographcorrector',
+        meta: {
+            label: <>Hydrograph Corrector <b>(Coming Soon)</b></>,
+            icon: <Construction/>,
+        },
+    },
+    {
         name: 'reportbuilder',
         list: '/amp/reportbuilder',
         meta: {
