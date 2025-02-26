@@ -32,7 +32,6 @@ export const ControlledDateTimePicker = <T,>({
               error: !!errorMessage,
               helperText: errorMessage || "",
               fullWidth: true,
-              sx: { maxWidth: 600 },
             },
           }}
         />

@@ -116,5 +116,12 @@ export const getTheme = (mode: PaletteMode) =>
           }),
         },
       },
+      MuiGrid: {
+        styleOverrides: {
+          root: {
+            paddingLeft: "0px !important",
+          },
+        },
+      },
     },
   });

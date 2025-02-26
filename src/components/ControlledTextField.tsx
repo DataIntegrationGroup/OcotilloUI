@@ -29,7 +29,6 @@ export const ControlledTextField = <T,>({
           helperText={errorMessage || ""}
           type={type}
           fullWidth
-          sx={{ maxWidth: 600 }}
         />
       )}
     />
