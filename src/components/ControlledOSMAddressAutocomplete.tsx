@@ -99,7 +99,8 @@ export const ControlledOSMAddressAutocomplete = <T,>({
             >
               <List>
                 {suggestions.map((suggestion, index) => {
-                  const address = `${suggestion.address?.house_number} ${suggestion.address?.road}`;
+                  const address =
+                    `${suggestion.address?.house_number || ""} ${suggestion.address?.road || ""}`.trim();
                   const city =
                     suggestion.address?.city ||
                     suggestion.address?.town ||
