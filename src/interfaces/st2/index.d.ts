@@ -41,7 +41,9 @@ export interface ILocation extends BaseSTEntity {
 export interface IThing extends BaseSTEntity {
     Locations?: ILocation[];
 }
-export interface IWell extends IThing {}
+
+export interface IWell extends IThing {
+}
 
 export interface ISensor extends BaseSTEntity {
     encodingType: string;
@@ -55,8 +57,9 @@ export interface IDatastream extends BaseSTEntity {
     Thing?: IThing;
     Sensor?: ISensor;
 }
+
 export interface IObservation {
-    "@iot.id": string;
+    // "@iot.id"?: string;
     phenomenonTime: string;
     result: number;
     Datastream?: IDatastream;
@@ -67,6 +70,7 @@ export interface IHydrographDatasource {
     id: number;
     data: IObservation[]
     name: string
+    style?: string
 }
 
 export interface IHydrographOptions {
@@ -80,6 +84,7 @@ export interface IObservedProperty extends BaseSTEntity {
     definition: string;
     name: string;
 }
+
 //
 // export interface ILookupTable {
 //     Code: string;
