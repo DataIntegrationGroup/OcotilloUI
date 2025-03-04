@@ -26,7 +26,7 @@ export const WellInventoryForm = () => {
 
   const [_, setAddress] = useState("");
   const [city, setCity] = useState("");
-  const [state, setState] = useState("");
+  const [state, setState] = useState("NM");
   const [zip, setZip] = useState("");
 
   const {
@@ -365,7 +365,7 @@ export const WellInventoryForm = () => {
                 errorMessage={errors.location?.site_name?.message}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: "grow" }}>
+            <Grid size={{ xs: 12, md: 4, lg: 5 }}>
               <ControlledTextField
                 required
                 label="Easting (NAD83)"
@@ -375,7 +375,7 @@ export const WellInventoryForm = () => {
                 errorMessage={errors.location?.coordinates?.x?.message}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: "grow" }}>
+            <Grid size={{ xs: 12, md: 4, lg: 5 }}>
               <ControlledTextField
                 required
                 label="Northing (NAD83)"
@@ -385,7 +385,7 @@ export const WellInventoryForm = () => {
                 errorMessage={errors.location?.coordinates?.y?.message}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3, lg: 2 }}>
+            <Grid size={{ xs: 12, md: 4, lg: 2 }}>
               <ControlledSelectField
                 required
                 label="Coordinate Type"
@@ -396,6 +396,71 @@ export const WellInventoryForm = () => {
                   { value: "utm", label: "UTM" },
                 ]}
                 errorMessage={errors.location?.coordinates?.type?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                required
+                label="Altitude"
+                control={control}
+                name="location.altitude"
+                errorMessage={errors.location?.altitude?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                required
+                label="UTM Datum"
+                control={control}
+                name="location.utm_datum"
+                errorMessage={errors.location?.utm_datum?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                required
+                label="ALT Datum"
+                control={control}
+                name="location.alt_datum"
+                errorMessage={errors.location?.alt_datum?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <ControlledSelectField
+                required
+                label="Altitude Method"
+                control={control}
+                name="location.altitude_method"
+                options={[
+                  { value: "gcs", label: "GCS" },
+                  { value: "survey", label: "Survey" },
+                  { value: "map", label: "Map" },
+                  { value: "altimeter", label: "Altimeter" },
+                  { value: "differential-gps", label: "Differential GPS" },
+                ]}
+                errorMessage={errors.location?.altitude_method?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <ControlledSelectField
+                required
+                label="Site Type"
+                control={control}
+                name="location.site_type"
+                options={[
+                  { value: "gcs", label: "GCS" },
+                  { value: "utm", label: "UTM" },
+                ]}
+                errorMessage={errors.location?.site_type?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ControlledTextField
+                multiline
+                label="Notes"
+                control={control}
+                name="location.location_notes"
+                errorMessage={errors.location?.location_notes?.message}
               />
             </Grid>
             <Grid size={12}>
