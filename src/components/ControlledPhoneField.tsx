@@ -22,7 +22,9 @@ export const ControlledPhoneField = <T,>({
         <InputMask
           mask="(999)-999-9999"
           value={field.value || ""}
-          onChange={field.onChange}
+          onChange={(event) =>
+            field.onChange(event.target.value.replace(/\D/g, ""))
+          }
         >
           {(inputProps) => (
             <TextField
