@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  TextField,
   Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
@@ -56,7 +55,7 @@ export const WellInventoryForm = () => {
             spacing={2}
             direction={{ xs: "column", sm: "row" }}
             sx={{
-              maxWidth: theme.breakpoints.values.xl,
+              maxWidth: theme.breakpoints.values.lg,
               marginLeft: "auto",
               marginRight: "auto",
             }}
@@ -68,9 +67,10 @@ export const WellInventoryForm = () => {
             >
               <Grid size={12}>
                 <Typography variant="h2">Project</Typography>
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                 <ControlledSelectField
+                  required
                   label="PointId Prefix"
                   control={control}
                   name="project.pointid_prefix"
@@ -81,9 +81,10 @@ export const WellInventoryForm = () => {
                   ]}
                   errorMessage={errors.project?.pointid_prefix?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                 <ControlledSelectField
+                  required
                   label="Project Name"
                   control={control}
                   name="project.project"
@@ -94,8 +95,8 @@ export const WellInventoryForm = () => {
                   ]}
                   errorMessage={errors.project?.project?.message}
                 />
-              </Grid>{" "}
-            </Grid>{" "}
+              </Grid>
+            </Grid>
             <Grid container spacing={2} direction={{ xs: "column", sm: "row" }}>
               <Grid size={12}>
                 <Typography variant="h2">Owner Data</Typography>
@@ -103,6 +104,7 @@ export const WellInventoryForm = () => {
               <Grid size={12}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
+                    required
                     label="Owner Key"
                     fullWidth
                     control={control}
@@ -110,10 +112,11 @@ export const WellInventoryForm = () => {
                     name="owner.owner_key"
                     errorMessage={errors.owner?.owner_key?.message}
                   />
-                </Grid>{" "}
-              </Grid>{" "}
+                </Grid>
+              </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                 <ControlledTextField
+                  required
                   label="First Name"
                   fullWidth
                   control={control}
@@ -121,9 +124,10 @@ export const WellInventoryForm = () => {
                   name="owner.first_name"
                   errorMessage={errors.owner?.first_name?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                 <ControlledTextField
+                  required
                   label="Last Name"
                   fullWidth
                   control={control}
@@ -131,7 +135,7 @@ export const WellInventoryForm = () => {
                   name="owner.last_name"
                   errorMessage={errors.owner?.last_name?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                 <ControlledTextField
                   label="First Name (Secondary)"
@@ -141,7 +145,7 @@ export const WellInventoryForm = () => {
                   name="owner.second_first_name"
                   errorMessage={errors.owner?.second_first_name?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                 <ControlledTextField
                   label="Last Name (Secondary)"
@@ -151,7 +155,7 @@ export const WellInventoryForm = () => {
                   name="owner.second_last_name"
                   errorMessage={errors.owner?.second_last_name?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid
                 container
                 spacing={2}
@@ -164,6 +168,7 @@ export const WellInventoryForm = () => {
               >
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                   <ControlledPhoneField
+                    required
                     label="Cell Phone"
                     fullWidth
                     control={control}
@@ -171,7 +176,7 @@ export const WellInventoryForm = () => {
                     name="owner.cell_phone"
                     errorMessage={errors.owner?.cell_phone?.message}
                   />
-                </Grid>{" "}
+                </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                   <ControlledPhoneField
                     label="Home Phone"
@@ -181,21 +186,39 @@ export const WellInventoryForm = () => {
                     name="owner.phone"
                     errorMessage={errors.owner?.phone?.message}
                   />
-                </Grid>{" "}
+                </Grid>
                 <Grid size={{ xs: 12, lg: 6 }}>
                   <ControlledEmailField
+                    required
                     label="Email"
                     control={control}
                     name="owner.email"
                     errorMessage={errors.owner?.email?.message}
                   />
-                </Grid>{" "}
-              </Grid>{" "}
+                </Grid>
+                <Grid size={{ xs: 12, lg: 6, xl: 3 }} offset={{ xl: 3 }}>
+                  <ControlledPhoneField
+                    label="Phone (Secondary)"
+                    control={control}
+                    name="owner.second_ctct_phone"
+                    errorMessage={errors.owner?.second_ctct_phone?.message}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, lg: 6 }}>
+                  <ControlledEmailField
+                    label="Email (Secondary)"
+                    control={control}
+                    name="owner.second_ctct_email"
+                    errorMessage={errors.owner?.second_ctct_email?.message}
+                  />
+                </Grid>
+              </Grid>
               <Grid size={12}>
                 <Typography variant="h4">Physical</Typography>
               </Grid>
               <Grid size={12}>
                 <ControlledOSMAddressAutocomplete
+                  required
                   label="Address"
                   fullWidth
                   control={control}
@@ -213,9 +236,10 @@ export const WellInventoryForm = () => {
                     setZip(selectedZip);
                   }}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, lg: 6 }}>
                 <ControlledTextField
+                  required
                   label="City"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
@@ -225,9 +249,10 @@ export const WellInventoryForm = () => {
                   name="owner.physical_city"
                   errorMessage={errors.owner?.physical_city?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
                 <ControlledTextField
+                  required
                   label="State"
                   value={state}
                   onChange={(e) => setState(e.target.value)}
@@ -237,9 +262,10 @@ export const WellInventoryForm = () => {
                   name="owner.physical_state"
                   errorMessage={errors.owner?.physical_state?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
                 <ControlledTextField
+                  required
                   label="Zip Code"
                   value={zip}
                   onChange={(e) => setZip(e.target.value)}
@@ -249,7 +275,7 @@ export const WellInventoryForm = () => {
                   name="owner.physical_zip_code"
                   errorMessage={errors.owner?.physical_zip_code?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid
                 container
                 size={12}
@@ -275,7 +301,7 @@ export const WellInventoryForm = () => {
                   name="owner.mailing_address"
                   errorMessage={errors.owner?.mailing_address?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, lg: 6 }}>
                 <ControlledTextField
                   label="City"
@@ -285,7 +311,7 @@ export const WellInventoryForm = () => {
                   name="owner.mail_city"
                   errorMessage={errors.owner?.mail_city?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
                 <ControlledTextField
                   label="State"
@@ -295,7 +321,7 @@ export const WellInventoryForm = () => {
                   name="owner.mail_state"
                   errorMessage={errors.owner?.mail_state?.message}
                 />
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
                 <ControlledTextField
                   label="Zip Code"
@@ -305,20 +331,73 @@ export const WellInventoryForm = () => {
                   name="owner.mail_zip_code"
                   errorMessage={errors.owner?.mail_zip_code?.message}
                 />
-              </Grid>{" "}
+              </Grid>
             </Grid>
             <Grid size={12}>
               <Typography variant="h2">Location</Typography>
-            </Grid>{" "}
-            <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                label="Site ID"
+                fullWidth
+                required
+                control={control}
+                name="location.site_id"
+                errorMessage={errors.location?.site_id?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                label="Site ID (Alternate)"
+                fullWidth
+                control={control}
+                name="location.alternate_site_id"
+                errorMessage={errors.location?.alternate_site_id?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ControlledTextField
                 label="Site Name"
                 fullWidth
+                required
                 control={control}
-                type="text"
                 name="location.site_name"
+                errorMessage={errors.location?.site_name?.message}
               />
-            </Grid>{" "}
+            </Grid>
+            <Grid size={{ xs: 12, sm: "grow" }}>
+              <ControlledTextField
+                required
+                label="Easting (NAD83)"
+                fullWidth
+                control={control}
+                name="location.coordinates.x"
+                errorMessage={errors.location?.coordinates?.x?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: "grow" }}>
+              <ControlledTextField
+                required
+                label="Northing (NAD83)"
+                fullWidth
+                control={control}
+                name="location.coordinates.y"
+                errorMessage={errors.location?.coordinates?.y?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3, lg: 2 }}>
+              <ControlledSelectField
+                required
+                label="Coordinate Type"
+                control={control}
+                name="location.coordinates.type"
+                options={[
+                  { value: "gcs", label: "GCS" },
+                  { value: "utm", label: "UTM" },
+                ]}
+                errorMessage={errors.location?.coordinates?.type?.message}
+              />
+            </Grid>
             <Grid size={12}>
               <Typography variant="h2">Well</Typography>
             </Grid>
