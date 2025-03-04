@@ -1,23 +1,14 @@
 import * as Yup from "yup";
-import dayjs, { Dayjs } from "dayjs";
 
 export const WellInventorySchema = Yup.object().shape({
   project: Yup.object({
     pointid_prefix: Yup.string().required("Point ID Prefix is required"),
     project: Yup.string().required("Project name is required"),
-    date_time: Yup.mixed()
-      .test(
-        "is-dayjs",
-        "Invalid date format",
-        (value?: string | number | Dayjs) => value && dayjs(value).isValid(),
-      )
-      .required("Date and Time are required"),
-    field_staff: Yup.string().required("Field staff is required"),
   }),
   location: Yup.object({
     site_id: Yup.string().required("Site ID is required"),
     alternate_site_id: Yup.string().nullable(),
-    site_names: Yup.string().required("Site Name is required"),
+    site_name: Yup.string().required("Site Name is required"),
     public_release: Yup.boolean().required("Public Release flag is required"),
     coordinates: Yup.object({
       type: Yup.mixed()
@@ -84,14 +75,13 @@ export const WellInventorySchema = Yup.object().shape({
     phone: Yup.string()
       .matches(/^[0-9]{10}$/, "Invalid Phone format")
       .nullable(),
-    mailing_address: Yup.string().required("Mailing Address is required"),
-    mail_city: Yup.string().required("Mail City is required"),
-    mail_state: Yup.string()
-      .length(2, "State must be 2 characters")
-      .required("Mail State is required"),
-    mail_zip_code: Yup.string()
-      .matches(/^[0-9]{5}(-[0-9]{4})?$/, "Invalid ZIP Code format")
-      .required("Mail ZIP Code is required"),
+    mailing_address: Yup.string(),
+    mail_city: Yup.string(),
+    mail_state: Yup.string().length(2, "State must be 2 characters"),
+    mail_zip_code: Yup.string().matches(
+      /^[0-9]{5}(-[0-9]{4})?$/,
+      "Invalid ZIP Code format",
+    ),
     physical_address: Yup.string().required("Physical Address is required"),
     physical_city: Yup.string().required("Physical City is required"),
     physical_state: Yup.string()
@@ -113,8 +103,6 @@ export const SchemaDefaults = {
   project: {
     pointid_prefix: "",
     project: "",
-    date_time: dayjs(),
-    field_staff: "",
   },
   location: {
     site_id: "",
