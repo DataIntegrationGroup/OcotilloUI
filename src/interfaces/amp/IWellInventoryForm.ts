@@ -1,16 +1,12 @@
-import { Dayjs } from "dayjs";
-
 export interface IWellInventoryForm {
   project: {
     pointid_prefix: string;
     project: string;
-    date_time: Dayjs;
-    field_staff: string;
   };
   location: {
     site_id: string;
     alternate_site_id: string | null;
-    site_names: string;
+    site_name: string;
     public_release: boolean;
     coordinates: {
       type: "utm" | "gcs";
