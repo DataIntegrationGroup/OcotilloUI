@@ -9,7 +9,9 @@ export const WellInventorySchema = Yup.object().shape({
     site_id: Yup.string().required("Site ID is required"),
     alternate_site_id: Yup.string().nullable(),
     site_name: Yup.string().required("Site Name is required"),
-    public_release: Yup.boolean().required("Public Release flag is required"),
+    public_release: Yup.boolean()
+      .oneOf([true], "Public Release must be accepted")
+      .required("Public Release answer is required"),
     coordinates: Yup.object({
       type: Yup.mixed()
         .oneOf(["utm", "gcs"])
@@ -139,9 +141,9 @@ export const SchemaDefaults = {
     water_notes: "",
     status_user_notes: "",
     notes: "",
-    monitor_ok: false,
-    sample_ok: false,
-    open_well_logger_ok: false,
+    monitor_ok: true,
+    sample_ok: true,
+    open_well_logger_ok: true,
   },
   owner: {
     owner_key: "",

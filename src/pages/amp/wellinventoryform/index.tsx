@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import {
+  ControlledDateTimePicker,
   ControlledEmailField,
   ControlledSelectField,
   ControlledTextField,
@@ -20,6 +21,7 @@ import {
 import { useTheme } from "@mui/material";
 import { ControlledPhoneField } from "@/components/ControlledPhoneField";
 import { ControlledOSMAddressAutocomplete } from "@/components/ControlledOSMAddressAutocomplete";
+import { ControlledCheckbox } from "@/components/ControlledCheckbox";
 
 export const WellInventoryForm = () => {
   const theme = useTheme();
@@ -464,22 +466,203 @@ export const WellInventoryForm = () => {
               />
             </Grid>
             <Grid size={12}>
+              <ControlledCheckbox
+                label="Owner acknowledges data will be publicly available?"
+                control={control}
+                name="location.public_release"
+                errorMessage={errors.location?.public_release?.message}
+              />
+            </Grid>
+            <Grid size={12}>
               <Typography variant="h2">Well</Typography>
             </Grid>
             <Grid container spacing={2} direction={{ xs: "column", sm: "row" }}>
+              <Grid size={12}>
+                <ControlledCheckbox
+                  label="Would owner give permission for repeat measurements?"
+                  control={control}
+                  name="location.monitor_ok"
+                  errorMessage={errors.location?.monitor_ok?.message}
+                />
+              </Grid>
+              <Grid size={12}>
+                <ControlledCheckbox
+                  label="Would owner give permission for sampling in the future?"
+                  control={control}
+                  name="location.sample_ok"
+                  errorMessage={errors.location?.sample_ok?.message}
+                />
+              </Grid>
+              <Grid size={12}>
+                <ControlledCheckbox
+                  label="Would owner give permission for datalogger installation?"
+                  control={control}
+                  name="location.open_well_logger_ok"
+                  errorMessage={errors.location?.open_well_logger_ok?.message}
+                />
+              </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                {/* All the statuses are from end point show user the meaning and send the backend the list of codes */}
-                {/* This should be a dropdown multi select */}
                 <ControlledTextField
+                  label="OSE Well Record"
+                  fullWidth
+                  control={control}
+                  name="well.ose_well_id"
+                  errorMessage={errors.well?.ose_well_id?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                {/* This is on the PDF with database table: WellDate and column: CompletionDate */}
+                <ControlledDateTimePicker
+                  label="Date Drilled"
+                  control={control}
+                  name="well.completion_date"
+                  errorMessage={errors.well?.completion_date?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Well Total Depth"
+                  fullWidth
+                  control={control}
+                  name="well.hole_depth"
+                  errorMessage={errors.well?.hole_depth?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Outer Casing Diameter"
+                  fullWidth
+                  control={control}
+                  name="well.casing_diameter"
+                  errorMessage={errors.well?.casing_diameter?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Casing Depth"
+                  fullWidth
+                  control={control}
+                  name="well.casing_depth"
+                  errorMessage={errors.well?.casing_depth?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Casing Description"
+                  fullWidth
+                  control={control}
+                  name="well.casing_description"
+                  errorMessage={errors.well?.casing_description?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="MP Height (+/-)"
+                  fullWidth
+                  control={control}
+                  name="well.mp_height"
+                  errorMessage={errors.well?.mp_height?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="MP Description"
+                  fullWidth
+                  control={control}
+                  name="well.measuring_point"
+                  errorMessage={errors.well?.measuring_point?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledSelectField
                   label="Monitoring status"
                   fullWidth
                   control={control}
-                  type="text"
                   name="well.monitoring_status"
+                  options={[
+                    { value: "gcs", label: "GCS" },
+                    { value: "utm", label: "UTM" },
+                  ]}
+                  errorMessage={errors.well?.monitoring_status?.message}
                 />
-              </Grid>{" "}
-              {/* altitude (let users enter in whatever units they want but always return the back in feet) */}
-            </Grid>{" "}
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Construction Notes"
+                  fullWidth
+                  control={control}
+                  name="well.construction_notes"
+                  errorMessage={errors.well?.construction_notes?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Formation"
+                  fullWidth
+                  control={control}
+                  name="well.formation"
+                  errorMessage={errors.well?.formation?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Static Water"
+                  fullWidth
+                  control={control}
+                  name="well.static_water"
+                  errorMessage={errors.well?.static_water?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Data Source"
+                  fullWidth
+                  control={control}
+                  name="well.data_source"
+                  errorMessage={errors.well?.data_source?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Water Notes"
+                  fullWidth
+                  control={control}
+                  name="well.water_notes"
+                  errorMessage={errors.well?.water_notes?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Status Notes"
+                  fullWidth
+                  control={control}
+                  name="well.status_user_notes"
+                  errorMessage={errors.well?.status_user_notes?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Notes"
+                  fullWidth
+                  control={control}
+                  name="well.notes"
+                  errorMessage={errors.well?.notes?.message}
+                />
+              </Grid>
+            </Grid>
             <Grid
               container
               size={12}
