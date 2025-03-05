@@ -1,205 +1,696 @@
-// ===============================================================================
-// Copyright 2024 Jake Ross
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-// ===============================================================================
-
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import {useShow} from "@refinedev/core";
-import Stepper from '@mui/material/Stepper';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
-import {useState, Fragment} from "react";
-import {useForm} from "@refinedev/react-hook-form";
-import {Button, Box, TextField} from "@mui/material";
-import {IWellInventoryForm} from "@/interfaces/amp";
-import {LocationStep} from "@/pages/amp/wellinventoryform/steps/location";
-import {WellStep} from "@/pages/amp/wellinventoryform/steps/well";
-
-import * as Yup from "yup";
-import {yupResolver} from "@hookform/resolvers/yup";
-
-
-const steps = ['Add Location', 'Add Well Details', 'Add Owner Info'];
-
-
-const OwnerStep = () => {
-    return (
-        <Box>
-            <Typography variant={'h3'}>Owner</Typography>
-        </Box>
-    )
-}
-
+import { useState } from "react";
+import { useForm } from "@refinedev/react-hook-form";
+import { IWellInventoryForm } from "@/interfaces/amp";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { WellInventorySchema, SchemaDefaults } from "./well_inventory.schema";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+} from "@mui/material";
+import Grid from "@mui/material/Grid2";
+import {
+  ControlledDateTimePicker,
+  ControlledEmailField,
+  ControlledSelectField,
+  ControlledTextField,
+} from "@/components";
+import { useTheme } from "@mui/material";
+import { ControlledPhoneField } from "@/components/ControlledPhoneField";
+import { ControlledOSMAddressAutocomplete } from "@/components/ControlledOSMAddressAutocomplete";
+import { ControlledCheckbox } from "@/components/ControlledCheckbox";
 
 export const WellInventoryForm = () => {
-    const [activeStep, setActiveStep] = useState(0);
-    const [skipped, setSkipped] = useState(new Set<number>());
-    const isStepSkipped = (step: number) => {
-        return skipped.has(step);
-    };
+  const theme = useTheme();
 
-    const schema = Yup.object().shape({
-        pointid: Yup.string().required('Point ID is required'),
-        latitude: Yup.number().required('Latitude is required').min(-90, 'Latitude must be between -90 and 90').max(90, 'Latitude must be between -90 and 90'),
-        longitude: Yup.number().required('Longitude is required').min(-180, 'Longitude must be between -180 and 180').max(180, 'Longitude must be between -180 and 180'),
-        northing: Yup.number().required('Northing is required'),
-        easting: Yup.number().required('Easting is required'),
-        elevation: Yup.number().required('Elevation is required'),
-        elevation_units: Yup.string().required('Elevation Units is required'),
-        elevation_datum: Yup.string().required('Elevation Datum is required'),
-        well_depth: Yup.number().required('Well Depth is required'),
+  const [_, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("NM");
+  const [zip, setZip] = useState("");
 
-        // site_type: Yup.string().required('Site Type is required'),
-    });
-    const defaultValues: IWellInventoryForm = {
-        pointid: '',
-        latitude: 0,
-        longitude: 0,
-        northing: 0,
-        easting: 0,
-        elevation: 0,
-        elevation_units: '',
-        elevation_datum: '',
-        well_depth: 0,
-    }
+  const {
+    refineCore: { onFinish },
+    formState: { errors },
+    control,
+    handleSubmit,
+    reset,
+  } = useForm<IWellInventoryForm>({
+    defaultValues: SchemaDefaults,
+    resolver: yupResolver(WellInventorySchema),
+    mode: "onTouched",
+  });
 
-
-    const {register, formState, control, handleSubmit} = useForm<IWellInventoryForm>({
-        defaultValues: defaultValues,
-        resolver: yupResolver(schema)
-    });
-    // const {query} = useShow({
-    //     resource: 'dashboard',
-    //     id: 'dashboard',
-    //     dataProviderName: 'amp'
-    // });
-    // const stats = query.data?.data
-    // console.log(query.data?.data)
-
-    const isStepOptional = (step: number) => {
-        return step === 1;
-    };
-
-    const handleNext = () => {
-        console.log('handle next')
-
-        let newSkipped = skipped;
-        if (isStepSkipped(activeStep)) {
-            newSkipped = new Set(newSkipped.values());
-            newSkipped.delete(activeStep);
-        }
-
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-        setSkipped(newSkipped);
-    };
-
-    const handleBack = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep - 1);
-    };
-
-    const handleSkip = () => {
-        if (!isStepOptional(activeStep)) {
-            // You probably want to guard against something like this,
-            // it should never occur unless someone's actively trying to break something.
-            throw new Error("You can't skip a step that isn't optional.");
-        }
-
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-        setSkipped((prevSkipped) => {
-            const newSkipped = new Set(prevSkipped.values());
-            newSkipped.add(activeStep);
-            return newSkipped;
-        });
-    };
-
-    const handleReset = () => {
-        setActiveStep(0);
-    };
-
-
-    const getStepContent = () => {
-        switch (activeStep) {
-            case 0:
-                return <LocationStep control={control} formState={formState} register={register}/>;
-            case 1:
-                return <WellStep control={control} formState={formState} register={register}/>;
-            case 2:
-                return <OwnerStep/>;
-            default:
-                return 'Unknown step';
-        }
-    }
-
-    return (
-        <Box>
-            <Typography variant={'h3'}>Well Inventory Form</Typography>
-
-            <Stepper activeStep={activeStep}>
-                {steps.map((label, index) => {
-                    const stepProps = {};
-                    const labelProps = {};
-                    return (
-                        <Step key={label} {...stepProps}>
-                            <StepLabel {...labelProps}>{label}</StepLabel>
-                        </Step>
-
-                    );
-                })}
-            </Stepper>
-
-            {activeStep === steps.length ? (
-                <Fragment>
-                    <Typography sx={{mt: 2, mb: 1}}>
-                        All steps completed - you&apos;re finished
-                    </Typography>
-                    <Box sx={{display: 'flex', flexDirection: 'row', pt: 2}}>
-                        <Box sx={{flex: '1 1 auto'}}/>
-                        <Button onClick={handleReset}>Reset</Button>
-                    </Box>
-                </Fragment>
-            ) : (
-                <Fragment>
-
-                    <Box sx={{backgroundColor: '#e6ecf2', margin: 2, borderRadius: 2, padding: 1}}>
-                        <form style={{display: "flex", flexDirection: "column"}}>
-                            {getStepContent()}
-                        </form>
-                    </Box>
-
-                    <Box sx={{display: 'flex', flexDirection: 'row', pt: 2}}>
-                        <Button
-                            color="inherit"
-                            disabled={activeStep === 0}
-                            onClick={handleBack}
-                            sx={{mr: 1}}
-                        >
-                            Back
-                        </Button>
-                        <Box sx={{flex: '1 1 auto'}}/>
-                        {isStepOptional(activeStep) && (
-                            <Button color="inherit" onClick={handleSkip} sx={{mr: 1}}>
-                                Skip
-                            </Button>
-                        )}
-                        <Button onClick={handleSubmit(handleNext)}>
-                            {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
-                        </Button>
-                    </Box>
-                </Fragment>
-            )}
+  return (
+    <Card>
+      <CardHeader title="Well Inventory Form" />
+      <CardContent sx={{ padding: "2.5rem" }}>
+        <Box
+          component="form"
+          autoComplete="off"
+          onSubmit={handleSubmit(onFinish)}
+        >
+          <Grid
+            container
+            spacing={2}
+            direction={{ xs: "column", sm: "row" }}
+            sx={{
+              maxWidth: theme.breakpoints.values.lg,
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}
+          >
+            <Grid
+              container
+              sx={{ width: "100%" }}
+              direction={{ xs: "column", sm: "row" }}
+            >
+              <Grid size={12}>
+                <Typography variant="h2">Project</Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
+                <ControlledSelectField
+                  required
+                  label="PointId Prefix"
+                  control={control}
+                  name="project.pointid_prefix"
+                  options={[
+                    { value: 1, label: "One" },
+                    { value: 2, label: "Two" },
+                    { value: 3, label: "Three" },
+                  ]}
+                  errorMessage={errors.project?.pointid_prefix?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
+                <ControlledSelectField
+                  required
+                  label="Project Name"
+                  control={control}
+                  name="project.project"
+                  options={[
+                    { value: 1, label: "One" },
+                    { value: 2, label: "Two" },
+                    { value: 3, label: "Three" },
+                  ]}
+                  errorMessage={errors.project?.project?.message}
+                />
+              </Grid>
+            </Grid>
+            <Grid container spacing={2} direction={{ xs: "column", sm: "row" }}>
+              <Grid size={12}>
+                <Typography variant="h2">Owner Data</Typography>
+              </Grid>
+              <Grid size={12}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ControlledTextField
+                    required
+                    label="Owner Key"
+                    fullWidth
+                    control={control}
+                    type="text"
+                    name="owner.owner_key"
+                    errorMessage={errors.owner?.owner_key?.message}
+                  />
+                </Grid>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
+                <ControlledTextField
+                  required
+                  label="First Name"
+                  fullWidth
+                  control={control}
+                  type="text"
+                  name="owner.first_name"
+                  errorMessage={errors.owner?.first_name?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Last Name"
+                  fullWidth
+                  control={control}
+                  type="text"
+                  name="owner.last_name"
+                  errorMessage={errors.owner?.last_name?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
+                <ControlledTextField
+                  label="First Name (Secondary)"
+                  fullWidth
+                  control={control}
+                  type="text"
+                  name="owner.second_first_name"
+                  errorMessage={errors.owner?.second_first_name?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
+                <ControlledTextField
+                  label="Last Name (Secondary)"
+                  fullWidth
+                  control={control}
+                  type="text"
+                  name="owner.second_last_name"
+                  errorMessage={errors.owner?.second_last_name?.message}
+                />
+              </Grid>
+              <Grid
+                container
+                spacing={2}
+                size={12}
+                sx={{
+                  marginLeft: "0rem !important",
+                  marginRight: "0rem !important",
+                }}
+                direction={{ xs: "column", sm: "row" }}
+              >
+                <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
+                  <ControlledPhoneField
+                    required
+                    label="Cell Phone"
+                    fullWidth
+                    control={control}
+                    type="tel"
+                    name="owner.cell_phone"
+                    errorMessage={errors.owner?.cell_phone?.message}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
+                  <ControlledPhoneField
+                    label="Home Phone"
+                    fullWidth
+                    control={control}
+                    type="tel"
+                    name="owner.phone"
+                    errorMessage={errors.owner?.phone?.message}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, lg: 6 }}>
+                  <ControlledEmailField
+                    required
+                    label="Email"
+                    control={control}
+                    name="owner.email"
+                    errorMessage={errors.owner?.email?.message}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, lg: 6, xl: 3 }} offset={{ xl: 3 }}>
+                  <ControlledPhoneField
+                    label="Phone (Secondary)"
+                    control={control}
+                    name="owner.second_ctct_phone"
+                    errorMessage={errors.owner?.second_ctct_phone?.message}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, lg: 6 }}>
+                  <ControlledEmailField
+                    label="Email (Secondary)"
+                    control={control}
+                    name="owner.second_ctct_email"
+                    errorMessage={errors.owner?.second_ctct_email?.message}
+                  />
+                </Grid>
+              </Grid>
+              <Grid size={12}>
+                <Typography variant="h4">Physical</Typography>
+              </Grid>
+              <Grid size={12}>
+                <ControlledOSMAddressAutocomplete
+                  required
+                  label="Address"
+                  fullWidth
+                  control={control}
+                  name="owner.physical_address"
+                  errorMessage={errors.owner?.physical_address?.message}
+                  onAddressSelect={(
+                    selectedAddress: string,
+                    selectedCity: string,
+                    selectedState: string,
+                    selectedZip: string,
+                  ) => {
+                    setAddress(selectedAddress);
+                    setCity(selectedCity);
+                    setState(selectedState);
+                    setZip(selectedZip);
+                  }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, lg: 6 }}>
+                <ControlledTextField
+                  required
+                  label="City"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  fullWidth
+                  type="text"
+                  control={control}
+                  name="owner.physical_city"
+                  errorMessage={errors.owner?.physical_city?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="State"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  fullWidth
+                  type="text"
+                  control={control}
+                  name="owner.physical_state"
+                  errorMessage={errors.owner?.physical_state?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Zip Code"
+                  value={zip}
+                  onChange={(e) => setZip(e.target.value)}
+                  fullWidth
+                  type="text"
+                  control={control}
+                  name="owner.physical_zip_code"
+                  errorMessage={errors.owner?.physical_zip_code?.message}
+                />
+              </Grid>
+              <Grid
+                container
+                size={12}
+                alignItems="center"
+                columnGap={1}
+                rowGap={0}
+              >
+                <Grid size={{ xs: 12, sm: "auto" }}>
+                  <Typography variant="h4">Mailing </Typography>
+                </Grid>
+                <Grid size={{ xs: 12, sm: "grow" }}>
+                  <Typography variant="body1">
+                    (if different from physical address)
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Grid size={12}>
+                <ControlledTextField
+                  label="Address"
+                  fullWidth
+                  type="text"
+                  control={control}
+                  name="owner.mailing_address"
+                  errorMessage={errors.owner?.mailing_address?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, lg: 6 }}>
+                <ControlledTextField
+                  label="City"
+                  fullWidth
+                  type="text"
+                  control={control}
+                  name="owner.mail_city"
+                  errorMessage={errors.owner?.mail_city?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, lg: 3 }}>
+                <ControlledTextField
+                  label="State"
+                  fullWidth
+                  type="text"
+                  control={control}
+                  name="owner.mail_state"
+                  errorMessage={errors.owner?.mail_state?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, lg: 3 }}>
+                <ControlledTextField
+                  label="Zip Code"
+                  fullWidth
+                  type="text"
+                  control={control}
+                  name="owner.mail_zip_code"
+                  errorMessage={errors.owner?.mail_zip_code?.message}
+                />
+              </Grid>
+            </Grid>
+            <Grid size={12}>
+              <Typography variant="h2">Location</Typography>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                label="Site ID"
+                fullWidth
+                required
+                control={control}
+                name="location.site_id"
+                errorMessage={errors.location?.site_id?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                label="Site ID (Alternate)"
+                fullWidth
+                control={control}
+                name="location.alternate_site_id"
+                errorMessage={errors.location?.alternate_site_id?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                label="Site Name"
+                fullWidth
+                required
+                control={control}
+                name="location.site_name"
+                errorMessage={errors.location?.site_name?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4, lg: 5 }}>
+              <ControlledTextField
+                required
+                label="Easting (NAD83)"
+                fullWidth
+                control={control}
+                name="location.coordinates.x"
+                errorMessage={errors.location?.coordinates?.x?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4, lg: 5 }}>
+              <ControlledTextField
+                required
+                label="Northing (NAD83)"
+                fullWidth
+                control={control}
+                name="location.coordinates.y"
+                errorMessage={errors.location?.coordinates?.y?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4, lg: 2 }}>
+              <ControlledSelectField
+                required
+                label="Coordinate Type"
+                control={control}
+                name="location.coordinates.type"
+                options={[
+                  { value: "gcs", label: "GCS" },
+                  { value: "utm", label: "UTM" },
+                ]}
+                errorMessage={errors.location?.coordinates?.type?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                required
+                label="Altitude"
+                control={control}
+                name="location.altitude"
+                errorMessage={errors.location?.altitude?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                required
+                label="UTM Datum"
+                control={control}
+                name="location.utm_datum"
+                errorMessage={errors.location?.utm_datum?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ControlledTextField
+                required
+                label="ALT Datum"
+                control={control}
+                name="location.alt_datum"
+                errorMessage={errors.location?.alt_datum?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <ControlledSelectField
+                required
+                label="Altitude Method"
+                control={control}
+                name="location.altitude_method"
+                options={[
+                  { value: "gcs", label: "GCS" },
+                  { value: "survey", label: "Survey" },
+                  { value: "map", label: "Map" },
+                  { value: "altimeter", label: "Altimeter" },
+                  { value: "differential-gps", label: "Differential GPS" },
+                ]}
+                errorMessage={errors.location?.altitude_method?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <ControlledSelectField
+                required
+                label="Site Type"
+                control={control}
+                name="location.site_type"
+                options={[
+                  { value: "gcs", label: "GCS" },
+                  { value: "utm", label: "UTM" },
+                ]}
+                errorMessage={errors.location?.site_type?.message}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ControlledTextField
+                multiline
+                label="Notes"
+                control={control}
+                name="location.location_notes"
+                errorMessage={errors.location?.location_notes?.message}
+              />
+            </Grid>
+            <Grid size={12}>
+              <ControlledCheckbox
+                label="Owner acknowledges data will be publicly available?"
+                control={control}
+                name="location.public_release"
+                errorMessage={errors.location?.public_release?.message}
+              />
+            </Grid>
+            <Grid size={12}>
+              <Typography variant="h2">Well</Typography>
+            </Grid>
+            <Grid container spacing={2} direction={{ xs: "column", sm: "row" }}>
+              <Grid size={12}>
+                <ControlledCheckbox
+                  label="Would owner give permission for repeat measurements?"
+                  control={control}
+                  name="location.monitor_ok"
+                  errorMessage={errors.location?.monitor_ok?.message}
+                />
+              </Grid>
+              <Grid size={12}>
+                <ControlledCheckbox
+                  label="Would owner give permission for sampling in the future?"
+                  control={control}
+                  name="location.sample_ok"
+                  errorMessage={errors.location?.sample_ok?.message}
+                />
+              </Grid>
+              <Grid size={12}>
+                <ControlledCheckbox
+                  label="Would owner give permission for datalogger installation?"
+                  control={control}
+                  name="location.open_well_logger_ok"
+                  errorMessage={errors.location?.open_well_logger_ok?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  label="OSE Well Record"
+                  fullWidth
+                  control={control}
+                  name="well.ose_well_id"
+                  errorMessage={errors.well?.ose_well_id?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                {/* This is on the PDF with database table: WellDate and column: CompletionDate */}
+                <ControlledDateTimePicker
+                  label="Date Drilled"
+                  control={control}
+                  name="well.completion_date"
+                  errorMessage={errors.well?.completion_date?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Well Total Depth"
+                  fullWidth
+                  control={control}
+                  name="well.hole_depth"
+                  errorMessage={errors.well?.hole_depth?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Outer Casing Diameter"
+                  fullWidth
+                  control={control}
+                  name="well.casing_diameter"
+                  errorMessage={errors.well?.casing_diameter?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Casing Depth"
+                  fullWidth
+                  control={control}
+                  name="well.casing_depth"
+                  errorMessage={errors.well?.casing_depth?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Casing Description"
+                  fullWidth
+                  control={control}
+                  name="well.casing_description"
+                  errorMessage={errors.well?.casing_description?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="MP Height (+/-)"
+                  fullWidth
+                  control={control}
+                  name="well.mp_height"
+                  errorMessage={errors.well?.mp_height?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="MP Description"
+                  fullWidth
+                  control={control}
+                  name="well.measuring_point"
+                  errorMessage={errors.well?.measuring_point?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledSelectField
+                  label="Monitoring status"
+                  fullWidth
+                  control={control}
+                  name="well.monitoring_status"
+                  options={[
+                    { value: "gcs", label: "GCS" },
+                    { value: "utm", label: "UTM" },
+                  ]}
+                  errorMessage={errors.well?.monitoring_status?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Construction Notes"
+                  fullWidth
+                  control={control}
+                  name="well.construction_notes"
+                  errorMessage={errors.well?.construction_notes?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Formation"
+                  fullWidth
+                  control={control}
+                  name="well.formation"
+                  errorMessage={errors.well?.formation?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Static Water"
+                  fullWidth
+                  control={control}
+                  name="well.static_water"
+                  errorMessage={errors.well?.static_water?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <ControlledTextField
+                  required
+                  label="Data Source"
+                  fullWidth
+                  control={control}
+                  name="well.data_source"
+                  errorMessage={errors.well?.data_source?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Water Notes"
+                  fullWidth
+                  control={control}
+                  name="well.water_notes"
+                  errorMessage={errors.well?.water_notes?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Status Notes"
+                  fullWidth
+                  control={control}
+                  name="well.status_user_notes"
+                  errorMessage={errors.well?.status_user_notes?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Notes"
+                  fullWidth
+                  control={control}
+                  name="well.notes"
+                  errorMessage={errors.well?.notes?.message}
+                />
+              </Grid>
+            </Grid>
+            <Grid
+              container
+              size={12}
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={2}
+              sx={{ paddingTop: "3rem", paddingBottom: "1rem" }}
+            >
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2 }}>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  color="secondary"
+                  fullWidth
+                  onClick={() => reset()}
+                >
+                  Reset
+                </Button>
+              </Grid>{" "}
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2 }}>
+                <Button type="submit" variant="contained" fullWidth>
+                  Submit
+                </Button>
+              </Grid>{" "}
+            </Grid>{" "}
+          </Grid>{" "}
         </Box>
-    )
-}
-// ============= EOF =============================================
+      </CardContent>
+    </Card>
+  );
+};
