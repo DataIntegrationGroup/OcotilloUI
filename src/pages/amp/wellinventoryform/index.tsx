@@ -17,11 +17,11 @@ import {
   ControlledEmailField,
   ControlledSelectField,
   ControlledTextField,
+  ControlledCheckbox,
+  ControlledOSMAddressAutocomplete,
+  ControlledPhoneField,
 } from "@/components";
 import { useTheme } from "@mui/material";
-import { ControlledPhoneField } from "@/components/ControlledPhoneField";
-import { ControlledOSMAddressAutocomplete } from "@/components/ControlledOSMAddressAutocomplete";
-import { ControlledCheckbox } from "@/components/ControlledCheckbox";
 
 export const WellInventoryForm = () => {
   const theme = useTheme();
