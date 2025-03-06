@@ -1,35 +1,95 @@
-// ===============================================================================
-// Copyright 2024 Jake Ross
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-// ===============================================================================
+import {
+  AutoAwesome,
+  ElectricBolt,
+  Plumbing,
+  StorageOutlined,
+} from "@mui/icons-material";
+import {
+  Avatar,
+  Card,
+  CardContent,
+  CardHeader,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemButton,
+  ListItemText,
+  ListSubheader,
+  Stack,
+  Typography,
+  useTheme,
+} from "@mui/material";
 
 export const Home = () => {
-    return (
-        <div>
-            <h1>Home</h1>
-            <p>
-                Welcome to the NMBGMR Data Management Portal. Use this tool to manage data from.
-            </p>
-            <ul>
-                <li>NM_Aquifer</li>
-                <li><a href={'https://github.com/NMGRL/pychron'}>Pychron</a></li>
-                <li>NM_Wells</li>
-                <li><a href={'https://st2.newmexicowaterdata.org/FROST-Server'}>ST2</a></li>
-            </ul>
+  const theme = useTheme();
 
-
-        </div>
-    )
-}
-// ============= EOF =============================================
+  return (
+    <Card>
+      <CardHeader title="Home" />
+      <CardContent>
+        <Stack spacing={2}>
+          <Typography variant="h1">
+            Welcome to the NMBGMR Data Management Portal.
+          </Typography>
+          <List
+            sx={{ width: "100%", maxWidth: 300 }}
+            subheader={
+              <ListSubheader component="span">
+                Use this tool to efficiently manage data from:
+              </ListSubheader>
+            }
+          >
+            <ListItem>
+              <ListItemAvatar>
+                <Avatar>
+                  <StorageOutlined />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText primary="NM_Aquifer" />
+            </ListItem>
+            <ListItemButton
+              component="a"
+              href="https://github.com/NMGRL/pychron"
+            >
+              <ListItemAvatar>
+                <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
+                  <AutoAwesome />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary="Pychron"
+                sx={{
+                  color: theme.palette.secondary.main,
+                }}
+              />
+            </ListItemButton>
+            <ListItem>
+              <ListItemAvatar>
+                <Avatar>
+                  <Plumbing />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText primary="NM_Wells" />
+            </ListItem>
+            <ListItemButton
+              component="a"
+              href="https://st2.newmexicowaterdata.org/FROST-Server"
+            >
+              <ListItemAvatar>
+                <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
+                  <ElectricBolt />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary="ST2"
+                sx={{
+                  color: theme.palette.secondary.main,
+                }}
+              />
+            </ListItemButton>
+          </List>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+};
