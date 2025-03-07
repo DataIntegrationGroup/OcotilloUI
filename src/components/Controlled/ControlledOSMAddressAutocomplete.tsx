@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import debounce from "lodash.debounce";
+import { STATE_ABBREVIATIONS } from "@/interfaces";
 
 export const ControlledOSMAddressAutocomplete = <T,>({
   control,
@@ -106,7 +107,10 @@ export const ControlledOSMAddressAutocomplete = <T,>({
                     suggestion.address?.town ||
                     suggestion.address?.village ||
                     "";
-                  const state = suggestion.address?.state || "";
+
+                  const stateFull = suggestion.address?.state || "";
+                  const stateAbbr = STATE_ABBREVIATIONS[stateFull] || stateFull; // Convert to abbreviation
+
                   const zip = suggestion.address?.postcode || "";
 
                   return (
@@ -117,7 +121,7 @@ export const ControlledOSMAddressAutocomplete = <T,>({
                           setSuggestions([]);
                           setIsFocused(false);
                           if (onAddressSelect) {
-                            onAddressSelect(address, city, state, zip);
+                            onAddressSelect(address, city, stateAbbr, zip);
                           }
                         }}
                       >
