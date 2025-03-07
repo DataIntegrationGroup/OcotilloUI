@@ -1,20 +1,32 @@
 import { useContext, useState } from "react";
-import { useGetIdentity, useActiveAuthProvider } from "@refinedev/core";
-import { HamburgerMenu } from "./hamburgerMenu";
-import AppBar from "@mui/material/AppBar";
-import Avatar from "@mui/material/Avatar";
-import Stack from "@mui/material/Stack";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import type { RefineThemedLayoutV2HeaderProps } from "@refinedev/mui";
-import { ColorModeContext } from "../../contexts";
+import {
+  useGetIdentity,
+  useActiveAuthProvider,
+  useIsExistAuthentication,
+  useLogout,
+  useWarnAboutChange,
+  useTranslate,
+} from "@refinedev/core";
+import {
+  AppBar,
+  Avatar,
+  Stack,
+  Toolbar,
+  IconButton,
+  ListItemIcon,
+  Menu,
+  MenuItem,
+  Skeleton,
+} from "@mui/material";
 import {
   DarkModeRounded,
   LightModeOutlined,
+  LogoutOutlined,
   PersonOutline,
 } from "@mui/icons-material";
-import IconButton from "@mui/material/IconButton";
-import { ListItemIcon, Menu, MenuItem } from "@mui/material";
+import type { RefineThemedLayoutV2HeaderProps } from "@refinedev/mui";
+import { HamburgerMenu } from "./hamburgerMenu";
+import { ColorModeContext } from "../../contexts";
 
 const stringAvatar = (name: string) => {
   // Reduce the string into a numerical hash value
@@ -44,10 +56,16 @@ const stringAvatar = (name: string) => {
 
 export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
   const authProvider = useActiveAuthProvider();
-  const { data: user } = useGetIdentity({
+  const isExistAuthentication = useIsExistAuthentication();
+  const { data: user, isLoading } = useGetIdentity({
+    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+  });
+  const { warnWhen, setWarnWhen } = useWarnAboutChange();
+  const { mutate: mutateLogout } = useLogout({
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
   });
 
+  const translate = useTranslate();
   const { mode, setMode } = useContext(ColorModeContext);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -69,6 +87,28 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
     handleMenuClose();
   };
 
+  const handleLogout = () => {
+    if (warnWhen) {
+      const confirm = window.confirm(
+        translate(
+          "warnWhenUnsavedChanges",
+          "Are you sure you want to leave? You have unsaved changes.",
+        ),
+      );
+
+      if (confirm) {
+        setWarnWhen(false);
+        mutateLogout();
+      }
+    } else {
+      mutateLogout();
+    }
+
+    handleMenuClose();
+  };
+
+  console.log({ user, isLoading });
+
   return (
     <AppBar position="sticky">
       <Toolbar>
@@ -85,32 +125,38 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
             alignItems="center"
             justifyContent="center"
           >
-            <IconButton
-              onClick={() => {
-                setMode();
-              }}
-            >
+            <IconButton onClick={() => setMode()}>
               {mode === "dark" ? (
                 <LightModeOutlined sx={{ color: "#FFD700" }} />
               ) : (
-                <DarkModeRounded sx={{ color: "#C0C0C0" }} />
+                <DarkModeRounded sx={{ color: "#F9F9F9" }} />
               )}
             </IconButton>
 
-            {user?.name && (
-              <Typography variant="subtitle2" data-testid="header-user-name">
-                {user?.name}
-              </Typography>
+            {isLoading ? (
+              <Skeleton
+                variant="circular"
+                animation="pulse"
+                sx={{ bgcolor: "rgba(255, 255, 255, 0.25)" }}
+              >
+                <Avatar />
+              </Skeleton>
+            ) : (
+              <>
+                {user?.avatar ? (
+                  <Avatar
+                    onClick={handleMenuOpen}
+                    src={user?.avatar}
+                    alt={user?.name}
+                  />
+                ) : (
+                  <Avatar
+                    onClick={handleMenuOpen}
+                    {...stringAvatar(user?.name)}
+                  />
+                )}
+              </>
             )}
-
-            <IconButton onClick={handleMenuOpen}>
-              {" "}
-              {user?.avatar ? (
-                <Avatar src={user?.avatar} alt={user?.name} />
-              ) : (
-                <Avatar {...stringAvatar(user?.name)} />
-              )}
-            </IconButton>
 
             <Menu
               anchorEl={anchorEl}
@@ -125,12 +171,21 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
                 horizontal: "right",
               }}
             >
+              {user?.name && <MenuItem disabled>{user?.name}</MenuItem>}
               <MenuItem onClick={handleProfile}>
                 <ListItemIcon>
-                  <PersonOutline fontSize="small" />
+                  <PersonOutline />
                 </ListItemIcon>
                 Profile
               </MenuItem>
+              {isExistAuthentication && (
+                <MenuItem onClick={handleLogout}>
+                  <ListItemIcon>
+                    <LogoutOutlined />
+                  </ListItemIcon>
+                  Logout
+                </MenuItem>
+              )}
             </Menu>
           </Stack>
         </Stack>

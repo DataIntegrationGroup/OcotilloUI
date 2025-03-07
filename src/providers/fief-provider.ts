@@ -1,213 +1,120 @@
-// ===============================================================================
-// Copyright 2024 Jake Ross
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-// ===============================================================================
-import {
-    type AuthProvider,
-} from "@refinedev/core";
-import {sha256} from "js-sha256";
+import { type AuthProvider } from "@refinedev/core";
+import { sha256 } from "js-sha256";
+import { Fief, browser } from "@fief/fief";
+import { jwtDecode } from "jwt-decode";
+import { settings } from "@/settings";
 
-import {Fief, browser} from '@fief/fief'
-import {jwtDecode} from "jwt-decode";
-import {settings} from "@/settings";
-
-/**
- *  mock auth credentials to simulate authentication
- */
-const authCredentials = {
-    email: "demo@refine.dev",
-    password: "demodemo",
+//TODO mv these to a .env file and provide an .env.example
+export const fiefConstants = {
+  baseURL: "https://fief.newmexicowaterdata.org",
+  clientId: "bJNVqsHEndupn6RpIE9rNHQNFtmaXnHBeYqNnXIwCM8",
 };
 
-export const fiefConstants = {
-    baseURL: 'https://fief.newmexicowaterdata.org',
-    clientId: 'bJNVqsHEndupn6RpIE9rNHQNFtmaXnHBeYqNnXIwCM8'
-}
+//TODO mv these to a .env file and provide an .env.example
+export const fiefURL = (path: string) => {
+  return `${window.location.protocol}//${window.location.host}${settings.urlprefix}/${path}`;
+};
 
 const fiefClient = new Fief(fiefConstants);
 
-
-
 export const getAuthState = () => {
-    const item = sessionStorage.getItem('fief-authstate')
-    // console.log('getAuthState', item, 'fief getAuthState', fiefAuth.getTokenInfo())
-    if (item) {
-        return JSON.parse(item)
-    }
-}
+  const authState = sessionStorage.getItem("fief-authstate");
+  if (authState) {
+    return JSON.parse(authState);
+  }
 
-export const getAccessToken = async (refresh: boolean=false) => {
-    const authstate = getAuthState()
-    if (refresh) {
-        console.debug('refreshing token')
-        const refresh_token = authstate?.tokenInfo.refresh_token
-        const [tokenInfo, userinfo] = await fiefClient.authRefreshToken(refresh_token)
-        sessionStorage.setItem('fief-authstate', JSON.stringify({tokenInfo, userinfo}))
-        return tokenInfo.access_token
-    }
-
-    return authstate?.tokenInfo.access_token
-}
-
-const gravatarUrl = (email) => {
-    let hash = email.trim().toLowerCase();
-    return `https://www.gravatar.com/avatar/${sha256(hash)}`;
+  return null;
 };
 
-export const fiefURL = (path: string) => {
-    return `${window.location.protocol}//${window.location.host}${settings.urlprefix}/${path}`
-}
+export const getAccessToken = async (refresh: boolean = false) => {
+  const authstate = getAuthState();
+
+  if (refresh) {
+    const refresh_token = authstate?.tokenInfo.refresh_token;
+    if (!refresh_token) return null;
+
+    const [tokenInfo, userinfo] =
+      await fiefClient.authRefreshToken(refresh_token);
+
+    sessionStorage.setItem(
+      "fief-authstate",
+      JSON.stringify({ tokenInfo, userinfo }),
+    );
+
+    return tokenInfo.access_token;
+  }
+
+  return authstate?.tokenInfo.access_token || null;
+};
+
+const gravatarUrl = (email: string) => {
+  let hash = email.trim().toLowerCase();
+  return `https://www.gravatar.com/avatar/${sha256(hash)}`;
+};
 
 export const authProvider: AuthProvider = {
-    login: async ({providerName, email}) => {
+  login: async ({ providerName }) => {
+    if (providerName === "fief") {
+      const authstate = getAuthState();
 
-        // if (providerName === "google") {
-        //     window.location.href = "https://accounts.google.com/o/oauth2/v2/auth";
-        //     return {
-        //         success: true,
-        //     };
-        // }
-        //
-        // if (providerName === "github") {
-        //     window.location.href = "https://github.com/login/oauth/authorize";
-        //     return {
-        //         success: true,
-        //     };
-        // }
+      if (authstate?.tokenInfo) {
+        return { success: true, redirectTo: "/" };
+      }
 
-        if (providerName === "fief") {
-            const authstate = getAuthState()
-            console.log('authstate', authstate)
-            if (Boolean(authstate?.tokenInfo)) {
-                return {
-                    success: true,
-                    redirectTo: "/",
-                }
-            }
-            const fiefAuth = new browser.FiefAuth(fiefClient);
+      const fiefAuth = new browser.FiefAuth(fiefClient);
+      await fiefAuth.redirectToLogin(fiefURL("callback"), {
+        scope: ["offline_access", "openid"],
+      });
 
-            // console.log('redirecting to login')
-            await fiefAuth.redirectToLogin(fiefURL('callback'),
-                                            {scope: ['offline_access', 'openid']});
-            // console.log('returned from redirect')
-            return {
-                success: true,
-            };
-        }
-
-        return {
-            success: false,
-            error: {
-                message: "Login failed",
-                name: "Invalid email or password",
-            },
-        };
-    },
-
-    // register: async (params) => {
-    //     if (params.email === authCredentials.email && params.password) {
-    //         localStorage.setItem("email", params.email);
-    //         return {
-    //             success: true,
-    //             redirectTo: "/",
-    //         };
-    //     }
-    //     return {
-    //         success: false,
-    //         error: {
-    //             message: "Register failed",
-    //             name: "Invalid email or password",
-    //         },
-    //     };
-    // },
-    // updatePassword: async (params) => {
-    //     if (params.password === authCredentials.password) {
-    //         //we can update password here
-    //         return {
-    //             success: true,
-    //         };
-    //     }
-    //     return {
-    //         success: false,
-    //         error: {
-    //             message: "Update password failed",
-    //             name: "Invalid password",
-    //         },
-    //     };
-    // },
-    // forgotPassword: async (params) => {
-    //     if (params.email === authCredentials.email) {
-    //         //we can send email with reset password link here
-    //         return {
-    //             success: true,
-    //         };
-    //     }
-    //     return {
-    //         success: false,
-    //         error: {
-    //             message: "Forgot password failed",
-    //             name: "Invalid email",
-    //         },
-    //     };
-    // },
-    logout: async () => {
-        const fiefAuth = new browser.FiefAuth(fiefClient);
-        sessionStorage.removeItem("fief-authstate");
-        await fiefAuth.logout(fiefURL('login'));
-        return {
-            success: true,
-        };
-    },
-    onError: async (error) => {
-        if (error.response?.status === 401) {
-            return {
-                logout: false,
-            };
-        }
-
-        return {error};
-    },
-    check: async () => {
-        const authState = getAuthState()
-        console.log('check', authState)
-        return {authenticated: Boolean(authState.userinfo)}
-
-    },
-        // localStorage.getItem("email")
-        //     ? {
-        //         authenticated: true,
-        //     }
-        //     : {
-        //         authenticated: false,
-        //         error: {
-        //             message: "Check failed",
-        //             name: "Not authenticated",
-        //         },
-        //         logout: true,
-        //         redirectTo: "/login",
-        //     },
-    getPermissions: async () => {
-        const access_token = await getAccessToken()
-        const token = jwtDecode(access_token);
-        return token['permissions'] || [];
-    },
-    getIdentity: async () => {
-        let authstate = getAuthState()
-        if (authstate) {
-            return {avatar: gravatarUrl(authstate.userinfo.email)}
-        }
+      return { success: true };
     }
-};
 
-// ============= EOF =============================================
+    return {
+      success: false,
+      error: {
+        message: "Login failed",
+        name: "Invalid email or password",
+      },
+    };
+  },
+
+  logout: async () => {
+    const fiefAuth = new browser.FiefAuth(fiefClient);
+    sessionStorage.removeItem("fief-authstate");
+    await fiefAuth.logout(fiefURL("login"));
+    return { success: true };
+  },
+
+  onError: async (error) => {
+    if (error.response?.status === 401) {
+      return { logout: false };
+    }
+
+    return { error };
+  },
+
+  check: async () => {
+    const authState = getAuthState();
+    return { authenticated: Boolean(authState.userinfo) };
+  },
+
+  getPermissions: async () => {
+    const access_token = await getAccessToken();
+    if (!access_token) return [];
+
+    const token = jwtDecode(access_token);
+    return token["permissions"] || [];
+  },
+
+  getIdentity: async () => {
+    let authstate = getAuthState();
+    if (!authstate?.userinfo) return null;
+
+    return {
+      id: authstate.userinfo.sub, // Unique user ID
+      name: authstate.userinfo.name || authstate.userinfo.email, // Use name if available, fallback to email
+      email: authstate.userinfo.email,
+      avatar: gravatarUrl(authstate.userinfo.email),
+    };
+  },
+};
