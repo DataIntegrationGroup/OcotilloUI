@@ -9,6 +9,8 @@ import {
   Card,
   CardContent,
   CardHeader,
+  IconButton,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
@@ -21,9 +23,13 @@ import {
   ControlledPhoneField,
 } from "@/components";
 import { useTheme } from "@mui/material";
+import { PersonSearch } from "@mui/icons-material";
+import { SearchOwnerDialog } from "./SearchOwnerDialog";
 
 export const WellInventoryForm = () => {
   const theme = useTheme();
+
+  const [openSearchOwnerDialog, setOpenSearchOwnerDialog] = useState(false);
 
   const [_, setAddress] = useState("");
   const [city, setCity] = useState("");
@@ -129,8 +135,23 @@ export const WellInventoryForm = () => {
               </Grid>
             </Grid>
             <Grid container spacing={2} direction={{ xs: "column", sm: "row" }}>
-              <Grid size={12}>
-                <Typography variant="h2">Owner</Typography>
+              <Grid container size={12} alignItems="center" direction="row">
+                <Typography variant="h2" sx={{ width: "fit-content" }}>
+                  Owner
+                </Typography>
+                <Tooltip title="Search for owner" placement="right">
+                  <IconButton
+                    onClick={() => setOpenSearchOwnerDialog(true)}
+                    color="primary"
+                    aria-label="Search for owner button"
+                  >
+                    <PersonSearch />
+                  </IconButton>
+                </Tooltip>
+                <SearchOwnerDialog
+                  open={openSearchOwnerDialog}
+                  setOpen={setOpenSearchOwnerDialog}
+                />
               </Grid>
               <Grid size={12}>
                 <Grid size={{ xs: 12, md: 6 }}>
@@ -537,7 +558,7 @@ export const WellInventoryForm = () => {
                   errorMessage={errors.location?.open_well_logger_ok?.message}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ControlledTextField
                   label="OSE Well Record"
                   fullWidth
@@ -571,16 +592,6 @@ export const WellInventoryForm = () => {
                   control={control}
                   name="well.casing_depth"
                   errorMessage={errors.well?.casing_depth?.message}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ControlledTextField
-                  multiline
-                  label="Casing Description"
-                  fullWidth
-                  control={control}
-                  name="well.casing_description"
-                  errorMessage={errors.well?.casing_description?.message}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -623,16 +634,6 @@ export const WellInventoryForm = () => {
                   errorMessage={errors.well?.formation?.message}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ControlledTextField
-                  multiline
-                  label="Construction Notes"
-                  fullWidth
-                  control={control}
-                  name="well.construction_notes"
-                  errorMessage={errors.well?.construction_notes?.message}
-                />
-              </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
                   label="Static Water"
@@ -642,13 +643,33 @@ export const WellInventoryForm = () => {
                   errorMessage={errors.well?.static_water?.message}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ControlledTextField
                   label="Data Source"
                   fullWidth
                   control={control}
                   name="well.data_source"
                   errorMessage={errors.well?.data_source?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Casing Description"
+                  fullWidth
+                  control={control}
+                  name="well.casing_description"
+                  errorMessage={errors.well?.casing_description?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Construction Notes"
+                  fullWidth
+                  control={control}
+                  name="well.construction_notes"
+                  errorMessage={errors.well?.construction_notes?.message}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
