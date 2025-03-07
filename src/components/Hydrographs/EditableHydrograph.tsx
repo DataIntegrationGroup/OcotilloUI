@@ -102,16 +102,16 @@ export const EditableHydrograph: React.FC<{
                 saveAsImage: {},
                 dataView: {show: true},
                 brush: {
-                    type: ['lineX', 'clear']
+                    type: ['lineX', 'polygon', 'clear']
                 }
             }
         },
-        // legend: {
-        //     orient: 'vertical',
-        //     left: '82%',
-        //     top: '20%',
-        //     data: chartData.seriesNames,
-        // },
+        legend: {
+            orient: 'vertical',
+            left: '82%',
+            top: '20%',
+            data: chartData.seriesNames,
+        },
         grid: {
             right: '20%' // Adjust the right property to create space for the legend
         },

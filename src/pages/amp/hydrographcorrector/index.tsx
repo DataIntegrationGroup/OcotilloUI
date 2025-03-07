@@ -13,33 +13,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ===============================================================================
-
 import Typography from "@mui/material/Typography";
-import {Card, TextField} from "@mui/material";
-import Stack from "@mui/material/Stack";
-import {useShow} from "@refinedev/core";
+import {Button, Card, CircularProgress, TextField} from "@mui/material";
 import Box from "@mui/material/Box";
-
 import {useAll} from "@/useAll";
 import {useEffect, useRef, useState} from "react";
-import type {IHydrographDatasource} from "@/interfaces/st2";
 import {EditableHydrograph} from "@/components/Hydrographs/EditableHydrograph";
 import {transform} from "@/components/Hydrographs/util";
-// import {DebouncedTextInput} from "@/components/DebouncedTextInput";
+import {ArrowDown, ArrowUp} from "react-flaticons";
+import * as d3 from "d3-polygon";
 
+const transformer = (v: number, ov: number, modifier: number) => {
+    return v + modifier;
+}
 
 export const HydrographCorrector = () => {
-
     const chartRef = useRef(null)
-    // const {query} = useShow({
-    //     resource: 'hydrograph_corrector',
-    //     id: 'hydrograph_corrector',
-    //     dataProviderName: 'amp'
-    // });
-    //
-    // const stats = query.data?.data
-    // console.log(query.data?.data)
-    // const [data, setData] = useState({id: 0, name: '', data: []})
 
     // hardcoded stuff. in future will be combination of user defined and retrieved data
     const activeDatastreamId = 26188
@@ -47,12 +36,28 @@ export const HydrographCorrector = () => {
 
     const [dtwOffset, setDTWOffset] = useState<number>(0)
     const [chartData, setChartData] = useState({series: [], dataset: [], seriesNames: []})
-    const [brushSelection, setBrushSelection] = useState<{ globalMin: number, globalMax: number } | null>(null);
-    const [refreshHydrograph, setRefreshHydrograph] = useState(0)
+    const [brushSelection, setBrushSelection] = useState<{
+        globalMin?: number,
+        globalMax?: number,
+        dataPoints?: []
+        range?: []
+    } | null>(null);
+
+    const [baseChartDatasource, setBaseChartDatasource] = useState({
+        continuous: [],
+        manual: [],
+    })
+    const [applyCorrection, setApplyCorrection] = useState(0)
+    const [bumpUp, setBumpUp] = useState(0)
+    const [bumpDown, setBumpDown] = useState(0)
+    const [bumpOffset, setBumpOffset] = useState<number>(1)
+    const [applyMatchToManual, setApplyMatchToManual] = useState(0)
+    const [clearCorrection, setClearCorrection] = useState(0)
 
     const {isLoading, triggerAll} = useAll({
         resource: `Datastreams(${activeDatastreamId})/Observations`,
-        maxItemCount: 1000,
+        maxItemCount: 100,
+        pageSize: 1000,
         meta: {
             // filter: getObservationFilter(),
             orderby: 'resultTime asc'
@@ -78,6 +83,10 @@ export const HydrographCorrector = () => {
     const make_series = (data: any,
                          xtag: string, ytag: string,
                          id: string, index: number = 0) => {
+        if (data.length === 0) {
+            return {id: id, source: []}
+        }
+
         let ref = data[0][ytag]
 
         let obj = {id: id}
@@ -99,17 +108,28 @@ export const HydrographCorrector = () => {
         if (brushSelection && chartRef.current) {
             const instance = chartRef.current.getEchartsInstance();
             console.log('Dispatching brush action:', brushSelection);
+            let brushType = 'lineX';
+            let range: number[]
+            if (brushSelection.dataPoints) {
+
+                brushType = 'polygon'
+                range = brushSelection.dataPoints
+
+            } else {
+                range = [brushSelection.globalMin, brushSelection.globalMax]
+            }
+
+            console.log('Dispatching brush action:', range);
             instance.dispatchAction({
                 type: 'brush',
                 areas: [{
-                    brushType: 'lineX',
-                    // coordRange: [brushSelection.minDataCoord, brushSelection.maxDataCoord],
-                    range: [brushSelection.globalMin, brushSelection.globalMax],
+                    brushType: brushType,
+                    range: brushSelection.range,
                     xAxisIndex: 0
                 }]
             });
         }
-    }, [chartData]);
+    }, [chartData, brushSelection]);
 
     useEffect(() => {
         triggerAll().then((data) => {
@@ -128,6 +148,11 @@ export const HydrographCorrector = () => {
                     }
                 })
 
+                setBaseChartDatasource({
+                    continuous: continuous_data,
+                    manual: manual_data,
+                })
+
                 const continuous_series = {
                     type: 'line',
                     symbol: 'circle',
@@ -143,64 +168,187 @@ export const HydrographCorrector = () => {
                     datasetId: 'manual',
                     clip: false
                 }
-                const series = [continuous_series, manual_series]
+                const continuous_modified_series = {
+                    type: 'line',
+                    symbol: 'circle',
+                    name: 'Continuous Modified',
+                    datasetId: 'continuous_modified',
+                    clip: false
+                }
+                const series = [continuous_series, continuous_modified_series, manual_series]
                 const dataset = [make_series(continuous_data, 'phenomenonTime', 'result', 'continuous'),
+                    make_series(continuous_data, 'phenomenonTime', 'result', 'continuous_modified_series'),
                     // make_series(manual_data, 'phenomenonTime', 'result', 'manual')
                 ]
-                const seriesNames = ['Continuous', 'Manual']
+                const seriesNames = ['Continuous', 'Continuous Modified', 'Manual']
                 setChartData({
                     series: series,
                     dataset: dataset,
                     seriesNames: seriesNames
                 })
-
-                // setRefreshHydrograph((prev) => prev + 1)
             })
         })
-
-
     }, [activeDatastreamId]);
+
+    const modifyData = (modifier: number, transformer?: any) => {
+        if (chartRef.current && brushSelection) {
+            let continuous_modified_source;
+            const instance = chartRef.current.getEchartsInstance();
+            if (brushSelection.dataPoints) {
+                continuous_modified_source = chartData.dataset[1].source.map((d, index) => {
+                    const tindex = d[0].getTime();
+                    const ov = baseChartDatasource['continuous'][index].result;
+                    if (brushSelection.dataPoints.find((dp: any) => dp[0].getTime() === tindex)) {
+                        if (transformer === undefined) {
+                            d[1] = ov + modifier;
+                        } else {
+                            d[1] = transformer(parseFloat(d[1]), ov, modifier);
+                        }
+                    }
+                    return d;
+                })
+            } else {
+                const minDataCoord = instance.convertFromPixel('grid', [brushSelection.globalMin, 0])[0];
+                const maxDataCoord = instance.convertFromPixel('grid', [brushSelection.globalMax, 0])[0];
+                // console.log('horizontal brush', minDataCoord, maxDataCoord);
+
+                continuous_modified_source = chartData.dataset[1].source.map((d, index) => {
+                    const tindex = d[0].getTime();
+                    if (tindex >= minDataCoord && tindex <= maxDataCoord) {
+                        const ov = baseChartDatasource['continuous'][index].result;
+                        if (transformer === undefined) {
+                            d[1] = ov + modifier;
+                        } else {
+                            d[1] = transformer(parseFloat(d[1]), ov, modifier);
+                        }
+                    }
+                    return d;
+                })
+            }
+
+            const dataset = chartData.dataset
+            dataset[1] = {id: 'continuous_modified', source: continuous_modified_source}
+            setChartData({...chartData, dataset: dataset});
+        }
+    }
+
+    const clearData = () => {
+    }
+
+    useEffect(() => {
+        clearData();
+    }, [clearCorrection]);
+
+    useEffect(() => {
+        modifyData(dtwOffset);
+    }, [applyCorrection]);
+
+    useEffect(() => {
+        console.log('useEffect for bumpUp fired')
+        modifyData(-bumpOffset, transformer)
+    }, [bumpUp]);
+
+    useEffect(() => {
+        console.log('useEffect for bumpDown fired')
+        modifyData(bumpOffset, transformer)
+    }, [bumpDown]);
 
     const onBrushEnd = (params: any) => {
         console.log('brush end', params);
-        console.log('dtwOffset', dtwOffset, typeof dtwOffset);
-        const area = params.areas[0];
-        const [mi, ma] = area.range;
+        if (params.areas.length === 0) {
+            setBrushSelection(null);
+        } else {
 
-        if (chartRef.current) {
-            const instance = chartRef.current.getEchartsInstance();
-            const minDataCoord = instance.convertFromPixel('grid', [mi, 0])[0];
-            const maxDataCoord = instance.convertFromPixel('grid', [ma, 0])[0];
+            const area = params.areas[0];
+            if (area.brushType === 'polygon') {
+                const polygon = area.range;
+                const instance = chartRef.current.getEchartsInstance();
+                const dataPoints = chartData.dataset[0].source.filter((point) => {
+                    const [x, y] = instance.convertToPixel('grid', point);
+                    return d3.polygonContains(polygon, [x, y]);
+                });
+                console.log('Data points in polygon:', dataPoints);
+                setBrushSelection({dataPoints: dataPoints, range: polygon});
+            } else {
+                const [mi, ma] = area.range;
+                setBrushSelection({globalMin: mi, globalMax: ma, range: area.range});
+            }
+        }
+    };
 
-            setChartData((prev) => {
-                const newDataset = [{
-                    'id': 'continuous',
-                    'source': prev.dataset[0].source.map((d) => {
-                        const tindex = d[0].getTime();
-                        if (tindex >= minDataCoord && tindex <= maxDataCoord) {
-                            d[1] = parseFloat(d[1]) + dtwOffset;
-                        }
-                        return d;
-                    })
-                }];
-                return {...prev, dataset: newDataset};
-            });
-
-            // Store the brush selection state
-            setBrushSelection({globalMin: mi, globalMax: ma});
+    const onBrushSelection = (params: any) => {
+        // console.log('brush selected', params);
+        if (params.batch[0].areas.length === 0) {
+            setBrushSelection(null)
         }
     };
 
     return (
         <Box>
             <Typography variant={'h3'}>Hydrograph Corrector</Typography>
-            {/*<DebouncedTextInput value={dtwOffset} setValue={setDTWOffset}/>*/}
-            <TextField value={dtwOffset}
-                       onChange={(e) => setDTWOffset(parseFloat(e.target.value))}/>
-            <EditableHydrograph
-                chartRef={chartRef}
-                onEvents={{brushEnd: onBrushEnd}}
-                chartData={chartData} refresh={refreshHydrograph}/>
+            <Box sx={{padding: 1}}>
+                <TextField
+
+                    label="DTW Offset"
+                    type="number"
+                    value={dtwOffset}
+                    onChange={(e) => setDTWOffset(parseFloat(e.target.value))}
+                />
+
+
+                <Button onClick={() => setApplyCorrection(applyCorrection + 1)}
+                        disabled={brushSelection === null}
+                        variant={'contained'}>Apply Correction</Button>
+                <Button onClick={() => {
+                    setApplyMatchToManual(applyMatchToManual + 1)
+                }}
+                        disabled={brushSelection === null}
+                        variant={'contained'}>Match To Manual</Button>
+
+
+            </Box>
+            <Box sx={{padding: 1}}>
+                <TextField
+                    label="bumpOffset"
+                    type="number"
+                    value={bumpOffset}
+                    onChange={(e) => setBumpOffset(parseFloat(e.target.value))}
+                />
+                <Button onClick={() => setBumpUp(bumpUp + 1)}
+                        disabled={brushSelection === null}
+                        variant={'contained'}
+                        startIcon={<ArrowUp/>}>Bump Up</Button>
+                <Button onClick={() => setBumpDown(bumpDown + 1)}
+                        disabled={brushSelection === null}
+                        variant={'contained'}
+                        startIcon={<ArrowDown/>}>Bump Down</Button>
+            </Box>
+            <Box>
+                <Button onClick={() => setClearCorrection(clearCorrection + 1)}
+                        disabled={brushSelection === null}
+                        variant={'contained'}>Clear Correction</Button>
+            </Box>
+            <Box position="relative">
+                <EditableHydrograph
+                    chartRef={chartRef}
+                    onEvents={{
+                        // brushselected: onBrushSelection,
+                        brushEnd: onBrushEnd,
+                    }}
+                    chartData={chartData}
+                />
+                {(isLoading || isLoadingAMP) && (
+                    <Box
+                        position="absolute"
+                        top="50%"
+                        left="50%"
+                        sx={{transform: 'translate(-50%, -50%)'}}
+                    >
+                        <CircularProgress/>
+                    </Box>
+                )}
+            </Box>
+
         </Box>
     )
 }

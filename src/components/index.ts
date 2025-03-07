@@ -3,7 +3,7 @@ export * from "./Controlled";
 export * from "./ClearableSelect";
 export * from "./DebouncedTextInput";
 export * from "./FilterComponent";
-export * from "./Hydrograph";
+export * from "./Hydrographs/EditableHydrograph";
 export * from "./LegendComponent";
 export * from "./ListPage";
 export * from "./MapComponent";
