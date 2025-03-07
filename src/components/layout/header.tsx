@@ -1,35 +1,116 @@
-import React, {useContext} from "react";
+import { useContext, useState } from "react";
 import {
   useGetIdentity,
   useActiveAuthProvider,
-  pickNotDeprecated,
+  useIsExistAuthentication,
+  useLogout,
+  useWarnAboutChange,
+  useTranslate,
 } from "@refinedev/core";
-import { HamburgerMenu } from "./hamburgerMenu";
-import AppBar from "@mui/material/AppBar";
-import Avatar from "@mui/material/Avatar";
-import Stack from "@mui/material/Stack";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
+import {
+  AppBar,
+  Avatar,
+  Stack,
+  Toolbar,
+  IconButton,
+  ListItemIcon,
+  Menu,
+  MenuItem,
+  Skeleton,
+} from "@mui/material";
+import {
+  DarkModeRounded,
+  LightModeOutlined,
+  LogoutOutlined,
+  PersonOutline,
+} from "@mui/icons-material";
 import type { RefineThemedLayoutV2HeaderProps } from "@refinedev/mui";
+import { HamburgerMenu } from "./hamburgerMenu";
 import { ColorModeContext } from "../../contexts";
-import { DarkModeOutlined, LightModeOutlined } from "@mui/icons-material";
-import IconButton from "@mui/material/IconButton";
 
+const stringAvatar = (name: string) => {
+  // Reduce the string into a numerical hash value
+  // Convert hash to a hexadecimal string
+  // Ensure at least 6 characters for valid hex color
+  const stringToColor = (name: string) =>
+    `#${[...name]
+      .reduce((hash, char) => char.charCodeAt(0) + ((hash << 5) - hash), 0)
+      .toString(16)
+      .padStart(6, "0")
+      .slice(-6)}`;
 
-export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = ({
-  isSticky,
-  sticky,
-}) => {
+  name = name?.trim() || "UU";
+  const nameParts = name?.trim().split(" "); // Split name into words
+  const initials =
+    nameParts.length > 1
+      ? `${nameParts[0][0]}${nameParts[1][0]}` // First letter of first two words
+      : `${nameParts[0][0]}${nameParts[0][1] || nameParts[0][0]}`; // Handle single-word names
+
+  return {
+    sx: {
+      bgcolor: stringToColor(name),
+    },
+    children: initials.toUpperCase(),
+  };
+};
+
+export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
   const authProvider = useActiveAuthProvider();
-  const { data: user } = useGetIdentity({
+  const isExistAuthentication = useIsExistAuthentication();
+  const { data: user, isLoading } = useGetIdentity({
+    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+  });
+  const { warnWhen, setWarnWhen } = useWarnAboutChange();
+  const { mutate: mutateLogout } = useLogout({
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
   });
 
-  const prefferedSticky = pickNotDeprecated(sticky, isSticky) ?? true;
+  const translate = useTranslate();
   const { mode, setMode } = useContext(ColorModeContext);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfile = () => {
+    window.open(
+      "https://fief.newmexicowaterdata.org/",
+      "_blank",
+      "noopener,noreferrer",
+    );
+    handleMenuClose();
+  };
+
+  const handleLogout = () => {
+    if (warnWhen) {
+      const confirm = window.confirm(
+        translate(
+          "warnWhenUnsavedChanges",
+          "Are you sure you want to leave? You have unsaved changes.",
+        ),
+      );
+
+      if (confirm) {
+        setWarnWhen(false);
+        mutateLogout();
+      }
+    } else {
+      mutateLogout();
+    }
+
+    handleMenuClose();
+  };
+
+  console.log({ user, isLoading });
 
   return (
-    <AppBar position={prefferedSticky ? "sticky" : "relative"}>
+    <AppBar position="sticky">
       <Toolbar>
         <HamburgerMenu />
         <Stack
@@ -44,21 +125,68 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = ({
             alignItems="center"
             justifyContent="center"
           >
-
-            <IconButton
-                onClick={() => {
-                  setMode();
-                }}
-            >
-              {mode === "dark" ? <LightModeOutlined /> : <DarkModeOutlined />}
+            <IconButton onClick={() => setMode()}>
+              {mode === "dark" ? (
+                <LightModeOutlined sx={{ color: "#FFD700" }} />
+              ) : (
+                <DarkModeRounded sx={{ color: "#F9F9F9" }} />
+              )}
             </IconButton>
 
-            {user?.name && (
-              <Typography variant="subtitle2" data-testid="header-user-name">
-                {user?.name}
-              </Typography>
+            {isLoading ? (
+              <Skeleton
+                variant="circular"
+                animation="pulse"
+                sx={{ bgcolor: "rgba(255, 255, 255, 0.25)" }}
+              >
+                <Avatar />
+              </Skeleton>
+            ) : (
+              <>
+                {user?.avatar ? (
+                  <Avatar
+                    onClick={handleMenuOpen}
+                    src={user?.avatar}
+                    alt={user?.name}
+                  />
+                ) : (
+                  <Avatar
+                    onClick={handleMenuOpen}
+                    {...stringAvatar(user?.name)}
+                  />
+                )}
+              </>
             )}
-            {user?.avatar && <Avatar src={user?.avatar} alt={user?.name} />}
+
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              {user?.name && <MenuItem disabled>{user?.name}</MenuItem>}
+              <MenuItem onClick={handleProfile}>
+                <ListItemIcon>
+                  <PersonOutline />
+                </ListItemIcon>
+                Profile
+              </MenuItem>
+              {isExistAuthentication && (
+                <MenuItem onClick={handleLogout}>
+                  <ListItemIcon>
+                    <LogoutOutlined />
+                  </ListItemIcon>
+                  Logout
+                </MenuItem>
+              )}
+            </Menu>
           </Stack>
         </Stack>
       </Toolbar>
