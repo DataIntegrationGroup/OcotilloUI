@@ -20,6 +20,7 @@ export const ControlledCheckbox = <T,>({
       control={control as unknown as Control<T>}
       render={({ field }) => (
         <FormControlLabel
+          labelPlacement="start"
           control={
             <Checkbox {...field} checked={field.value} {...checkboxProps} />
           }

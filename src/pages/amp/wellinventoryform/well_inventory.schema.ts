@@ -2,102 +2,110 @@ import * as Yup from "yup";
 
 export const WellInventorySchema = Yup.object().shape({
   project: Yup.object({
-    pointid_prefix: Yup.string().required("Point ID Prefix is required"),
-    project: Yup.string().required("Project name is required"),
+    pointid_prefix: Yup.string().nullable(),
+    project: Yup.string().nullable(),
   }),
   location: Yup.object({
-    site_id: Yup.string().required("Site ID is required"),
+    site_id: Yup.string(),
     alternate_site_id: Yup.string().nullable(),
-    site_name: Yup.string().required("Site Name is required"),
-    public_release: Yup.boolean()
-      .oneOf([true], "Public Release must be accepted")
-      .required("Public Release answer is required"),
+    site_name: Yup.string().nullable(),
+    public_release: Yup.boolean().oneOf(
+      [true],
+      "Public Release must be accepted",
+    ),
     coordinates: Yup.object({
-      type: Yup.mixed()
-        .oneOf(["utm", "gcs"])
-        .required("Coordinate type is required"),
-      x: Yup.number().required("X coordinate is required"),
-      y: Yup.number().required("Y coordinate is required"),
+      type: Yup.mixed().oneOf(["utm", "gcs"]),
+      x: Yup.number().nullable(),
+      y: Yup.number().nullable(),
     }),
-    altitude: Yup.number().required("Altitude is required"),
-    utm_datum: Yup.string().required("UTM Datum is required"),
-    alt_datum: Yup.string().required("Altitude Datum is required"),
+    altitude: Yup.number().nullable(),
+    utm_datum: Yup.string().nullable(),
+    alt_datum: Yup.string().nullable(),
     location_notes: Yup.string().nullable(),
-    altitude_method: Yup.string().required("Altitude Method is required"),
-    site_type: Yup.string().required("Site Type is required"),
+    altitude_method: Yup.string().nullable(),
+    site_type: Yup.string().nullable(),
   }),
   well: Yup.object({
-    hole_depth: Yup.number()
-      .min(0, "Hole depth must be positive")
-      .required("Hole depth is required"),
-    well_depth: Yup.number()
-      .min(0, "Well depth must be positive")
-      .required("Well depth is required"),
+    hole_depth: Yup.number().min(0, "Hole depth must be positive").nullable(),
+    well_depth: Yup.number().min(0, "Well depth must be positive").nullable(),
     ose_well_id: Yup.string().nullable(),
     ose_welltag_id: Yup.string().nullable(),
-    measuring_point: Yup.string().required("Measuring Point is required"),
+    measuring_point: Yup.string().nullable(),
     mp_height: Yup.number()
       .min(0, "Measuring Point Height must be positive")
-      .required("Measuring Point Height is required"),
+      .nullable(),
     casing_diameter: Yup.number()
       .min(0, "Casing Diameter must be positive")
-      .required("Casing Diameter is required"),
+      .nullable(),
     casing_depth: Yup.number()
       .min(0, "Casing Depth must be positive")
-      .required("Casing Depth is required"),
+      .nullable(),
     casing_description: Yup.string().nullable(),
     construction_notes: Yup.string().nullable(),
-    formation: Yup.string().required("Formation is required"),
+    formation: Yup.string().nullable(),
     static_water: Yup.number()
       .min(0, "Static Water Level must be positive")
-      .required("Static Water Level is required"),
-    data_source: Yup.number()
-      .min(0, "Data Source must be a valid number")
-      .required("Data Source is required"),
-    monitoring_status: Yup.string().required("Monitoring Status is required"),
+      .nullable(),
+    data_source: Yup.string().nullable(),
+    monitoring_status: Yup.string().nullable(),
     water_notes: Yup.string().nullable(),
     status_user_notes: Yup.string().nullable(),
     notes: Yup.string().nullable(),
-    monitor_ok: Yup.boolean().required("Monitor OK status is required"),
-    sample_ok: Yup.boolean().required("Sample OK status is required"),
-    open_well_logger_ok: Yup.boolean().required(
-      "Open Well Logger OK status is required",
-    ),
+    monitor_ok: Yup.boolean().nullable(),
+    sample_ok: Yup.boolean().nullable(),
+    open_well_logger_ok: Yup.boolean().nullable(),
   }),
   owner: Yup.object({
-    owner_key: Yup.string().required("Owner Key is required"),
-    first_name: Yup.string().required("First Name is required"),
-    last_name: Yup.string().required("Last Name is required"),
-    email: Yup.string()
-      .email("Invalid email format")
-      .required("Email is required"),
+    owner_key: Yup.string().nullable(),
+    first_name: Yup.string().nullable(),
+    last_name: Yup.string().nullable(),
+    email: Yup.string().email("Invalid email format").nullable(),
     cell_phone: Yup.string()
-      .matches(/^[0-9]{10}$/, "Invalid Cell Phone format")
-      .required("Cell Phone is required"),
+      .nullable()
+      .test(
+        "phone-format",
+        "Invalid Phone format",
+        (value) => !value || /^[0-9]{10}$/.test(value),
+      ),
     phone: Yup.string()
-      .matches(/^[0-9]{10}$/, "Invalid Phone format")
-      .nullable(),
-    mailing_address: Yup.string(),
-    mail_city: Yup.string(),
-    mail_state: Yup.string().length(2, "State must be 2 characters"),
-    mail_zip_code: Yup.string().matches(
-      /^[0-9]{5}(-[0-9]{4})?$/,
-      "Invalid ZIP Code format",
-    ),
-    physical_address: Yup.string().required("Physical Address is required"),
-    physical_city: Yup.string().required("Physical City is required"),
+      .nullable()
+      .test(
+        "phone-format",
+        "Invalid Phone format",
+        (value) => !value || /^[0-9]{10}$/.test(value),
+      ),
+    mailing_address: Yup.string().nullable(),
+    mail_city: Yup.string().nullable(),
+    mail_state: Yup.string().length(2, "State must be 2 characters").nullable(),
+    mail_zip_code: Yup.string()
+      .nullable()
+      .test(
+        "zip-code-format",
+        "Invalid ZIP Code format",
+        (value) => !value || /^[0-9]{5}(-[0-9]{4})?$/.test(value),
+      ),
+    physical_address: Yup.string().nullable(),
+    physical_city: Yup.string().nullable(),
     physical_state: Yup.string()
       .length(2, "State must be 2 characters")
-      .required("Physical State is required"),
+      .nullable(),
     physical_zip_code: Yup.string()
-      .matches(/^[0-9]{5}(-[0-9]{4})?$/, "Invalid ZIP Code format")
-      .required("Physical ZIP Code is required"),
+      .nullable()
+      .test(
+        "zip-code-format",
+        "Invalid ZIP Code format",
+        (value) => !value || /^[0-9]{5}(-[0-9]{4})?$/.test(value),
+      ),
     second_last_name: Yup.string().nullable(),
     second_first_name: Yup.string().nullable(),
     second_ctct_email: Yup.string().email("Invalid email format").nullable(),
     second_ctct_phone: Yup.string()
-      .matches(/^[0-9]{10}$/, "Invalid Phone format")
-      .nullable(),
+      .nullable()
+      .test(
+        "phone-format",
+        "Invalid Phone format",
+        (value) => !value || /^[0-9]{10}$/.test(value),
+      ),
   }),
 });
 
@@ -112,7 +120,7 @@ export const SchemaDefaults = {
     site_names: "",
     public_release: false,
     coordinates: {
-      type: "gcs",
+      type: "utm",
       x: 0,
       y: 0,
     },
@@ -136,7 +144,7 @@ export const SchemaDefaults = {
     construction_notes: "",
     formation: "",
     static_water: 0,
-    data_source: 0,
+    data_source: "",
     monitoring_status: "",
     water_notes: "",
     status_user_notes: "",

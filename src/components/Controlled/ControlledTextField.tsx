@@ -7,6 +7,8 @@ export const ControlledTextField = <T,>({
   name,
   label,
   errorMessage,
+  multiline,
+  minRows = 4, // Default minimum rows when multiline is true
   ...textFieldProps
 }: {
   control: Control<T>;
@@ -29,6 +31,8 @@ export const ControlledTextField = <T,>({
           helperText={errorMessage || ""}
           type={type}
           fullWidth
+          multiline={multiline}
+          minRows={multiline ? minRows : undefined}
         />
       )}
     />

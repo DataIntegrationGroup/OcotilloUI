@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { useForm } from "@refinedev/react-hook-form";
 import { IWellInventoryForm } from "@/interfaces/amp";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -9,27 +9,34 @@ import {
   Card,
   CardContent,
   CardHeader,
+  IconButton,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import {
-  ControlledDateTimePicker,
   ControlledEmailField,
   ControlledSelectField,
   ControlledTextField,
+  ControlledCheckbox,
+  ControlledOSMAddressAutocomplete,
+  ControlledPhoneField,
 } from "@/components";
 import { useTheme } from "@mui/material";
-import { ControlledPhoneField } from "@/components/ControlledPhoneField";
-import { ControlledOSMAddressAutocomplete } from "@/components/ControlledOSMAddressAutocomplete";
-import { ControlledCheckbox } from "@/components/ControlledCheckbox";
+import { PersonSearch } from "@mui/icons-material";
+import { SearchOwnerDialog } from "./SearchOwnerDialog";
 
 export const WellInventoryForm = () => {
   const theme = useTheme();
+
+  const [openSearchOwnerDialog, setOpenSearchOwnerDialog] = useState(false);
 
   const [_, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("NM");
   const [zip, setZip] = useState("");
+
+  const [coordinateType, setCoordinateType] = useState("utm");
 
   const {
     refineCore: { onFinish },
@@ -37,11 +44,41 @@ export const WellInventoryForm = () => {
     control,
     handleSubmit,
     reset,
+    setValue,
   } = useForm<IWellInventoryForm>({
     defaultValues: SchemaDefaults,
     resolver: yupResolver(WellInventorySchema),
     mode: "onTouched",
   });
+
+  const handleReset = () => {
+    // reset the useForm state
+    reset(SchemaDefaults);
+
+    // reset local useState state
+    setAddress(SchemaDefaults.owner.physical_address);
+    setCity(SchemaDefaults.owner.physical_city);
+    setState(SchemaDefaults.owner.physical_state);
+    setZip(SchemaDefaults.owner.physical_zip_code);
+    setCoordinateType(SchemaDefaults.location.coordinates.type);
+  };
+
+  const handleOnChange = <T,>(
+    newValue: T,
+    setState: Dispatch<SetStateAction<T>>,
+    formFieldName: string,
+  ) => {
+    setState(newValue);
+    setValue(formFieldName, newValue, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const locationLabels = {
+    utm: ["Easting (NAD83)", "Northing (NAD83)"],
+    gcs: ["Longitude", "Latitude"],
+  };
 
   return (
     <Card>
@@ -72,21 +109,6 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                 <ControlledSelectField
-                  required
-                  label="PointId Prefix"
-                  control={control}
-                  name="project.pointid_prefix"
-                  options={[
-                    { value: 1, label: "One" },
-                    { value: 2, label: "Two" },
-                    { value: 3, label: "Three" },
-                  ]}
-                  errorMessage={errors.project?.pointid_prefix?.message}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                <ControlledSelectField
-                  required
                   label="Project Name"
                   control={control}
                   name="project.project"
@@ -98,15 +120,42 @@ export const WellInventoryForm = () => {
                   errorMessage={errors.project?.project?.message}
                 />
               </Grid>
+              <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
+                <ControlledSelectField
+                  label="PointId Prefix"
+                  control={control}
+                  name="project.pointid_prefix"
+                  options={[
+                    { value: 1, label: "One" },
+                    { value: 2, label: "Two" },
+                    { value: 3, label: "Three" },
+                  ]}
+                  errorMessage={errors.project?.pointid_prefix?.message}
+                />
+              </Grid>
             </Grid>
             <Grid container spacing={2} direction={{ xs: "column", sm: "row" }}>
-              <Grid size={12}>
-                <Typography variant="h2">Owner Data</Typography>
+              <Grid container size={12} alignItems="center" direction="row">
+                <Typography variant="h2" sx={{ width: "fit-content" }}>
+                  Owner
+                </Typography>
+                <Tooltip title="Search for owner" placement="right">
+                  <IconButton
+                    onClick={() => setOpenSearchOwnerDialog(true)}
+                    color="primary"
+                    aria-label="Search for owner button"
+                  >
+                    <PersonSearch />
+                  </IconButton>
+                </Tooltip>
+                <SearchOwnerDialog
+                  open={openSearchOwnerDialog}
+                  setOpen={setOpenSearchOwnerDialog}
+                />
               </Grid>
               <Grid size={12}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
-                    required
                     label="Owner Key"
                     fullWidth
                     control={control}
@@ -118,7 +167,6 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                 <ControlledTextField
-                  required
                   label="First Name"
                   fullWidth
                   control={control}
@@ -129,7 +177,6 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                 <ControlledTextField
-                  required
                   label="Last Name"
                   fullWidth
                   control={control}
@@ -170,7 +217,6 @@ export const WellInventoryForm = () => {
               >
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                   <ControlledPhoneField
-                    required
                     label="Cell Phone"
                     fullWidth
                     control={control}
@@ -191,7 +237,6 @@ export const WellInventoryForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6 }}>
                   <ControlledEmailField
-                    required
                     label="Email"
                     control={control}
                     name="owner.email"
@@ -220,7 +265,6 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={12}>
                 <ControlledOSMAddressAutocomplete
-                  required
                   label="Address"
                   fullWidth
                   control={control}
@@ -241,10 +285,15 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, lg: 6 }}>
                 <ControlledTextField
-                  required
                   label="City"
                   value={city}
-                  onChange={(e) => setCity(e.target.value)}
+                  onChange={(e) =>
+                    handleOnChange(
+                      e.target.value,
+                      setCity,
+                      "owner.physical_city",
+                    )
+                  }
                   fullWidth
                   type="text"
                   control={control}
@@ -254,10 +303,15 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
                 <ControlledTextField
-                  required
                   label="State"
                   value={state}
-                  onChange={(e) => setState(e.target.value)}
+                  onChange={(e) =>
+                    handleOnChange(
+                      e.target.value.toLocaleUpperCase(),
+                      setState,
+                      "owner.physical_state",
+                    )
+                  }
                   fullWidth
                   type="text"
                   control={control}
@@ -267,10 +321,15 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
                 <ControlledTextField
-                  required
                   label="Zip Code"
                   value={zip}
-                  onChange={(e) => setZip(e.target.value)}
+                  onChange={(e) =>
+                    handleOnChange(
+                      e.target.value,
+                      setZip,
+                      "owner.physical_zip_code",
+                    )
+                  }
                   fullWidth
                   type="text"
                   control={control}
@@ -342,7 +401,6 @@ export const WellInventoryForm = () => {
               <ControlledTextField
                 label="Site ID"
                 fullWidth
-                required
                 control={control}
                 name="location.site_id"
                 errorMessage={errors.location?.site_id?.message}
@@ -361,7 +419,6 @@ export const WellInventoryForm = () => {
               <ControlledTextField
                 label="Site Name"
                 fullWidth
-                required
                 control={control}
                 name="location.site_name"
                 errorMessage={errors.location?.site_name?.message}
@@ -369,8 +426,7 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 4, lg: 5 }}>
               <ControlledTextField
-                required
-                label="Easting (NAD83)"
+                label={locationLabels[coordinateType][0]}
                 fullWidth
                 control={control}
                 name="location.coordinates.x"
@@ -379,8 +435,7 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 4, lg: 5 }}>
               <ControlledTextField
-                required
-                label="Northing (NAD83)"
+                label={locationLabels[coordinateType][1]}
                 fullWidth
                 control={control}
                 name="location.coordinates.y"
@@ -389,10 +444,17 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 4, lg: 2 }}>
               <ControlledSelectField
-                required
                 label="Coordinate Type"
                 control={control}
                 name="location.coordinates.type"
+                value={coordinateType}
+                onChange={(e) =>
+                  handleOnChange(
+                    e.target.value,
+                    setCoordinateType,
+                    "location.coordinates.type",
+                  )
+                }
                 options={[
                   { value: "gcs", label: "GCS" },
                   { value: "utm", label: "UTM" },
@@ -402,7 +464,6 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <ControlledTextField
-                required
                 label="Altitude"
                 control={control}
                 name="location.altitude"
@@ -411,7 +472,6 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <ControlledTextField
-                required
                 label="UTM Datum"
                 control={control}
                 name="location.utm_datum"
@@ -420,7 +480,6 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <ControlledTextField
-                required
                 label="ALT Datum"
                 control={control}
                 name="location.alt_datum"
@@ -429,7 +488,6 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
               <ControlledSelectField
-                required
                 label="Altitude Method"
                 control={control}
                 name="location.altitude_method"
@@ -445,7 +503,6 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
               <ControlledSelectField
-                required
                 label="Site Type"
                 control={control}
                 name="location.site_type"
@@ -501,7 +558,7 @@ export const WellInventoryForm = () => {
                   errorMessage={errors.location?.open_well_logger_ok?.message}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ControlledTextField
                   label="OSE Well Record"
                   fullWidth
@@ -511,17 +568,7 @@ export const WellInventoryForm = () => {
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                {/* This is on the PDF with database table: WellDate and column: CompletionDate */}
-                <ControlledDateTimePicker
-                  label="Date Drilled"
-                  control={control}
-                  name="well.completion_date"
-                  errorMessage={errors.well?.completion_date?.message}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
-                  required
                   label="Well Total Depth"
                   fullWidth
                   control={control}
@@ -531,7 +578,6 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
-                  required
                   label="Outer Casing Diameter"
                   fullWidth
                   control={control}
@@ -541,7 +587,6 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
-                  required
                   label="Casing Depth"
                   fullWidth
                   control={control}
@@ -549,19 +594,8 @@ export const WellInventoryForm = () => {
                   errorMessage={errors.well?.casing_depth?.message}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ControlledTextField
-                  multiline
-                  label="Casing Description"
-                  fullWidth
-                  control={control}
-                  name="well.casing_description"
-                  errorMessage={errors.well?.casing_description?.message}
-                />
-              </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
-                  required
                   label="MP Height (+/-)"
                   fullWidth
                   control={control}
@@ -571,7 +605,6 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
-                  required
                   label="MP Description"
                   fullWidth
                   control={control}
@@ -592,19 +625,8 @@ export const WellInventoryForm = () => {
                   errorMessage={errors.well?.monitoring_status?.message}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ControlledTextField
-                  multiline
-                  label="Construction Notes"
-                  fullWidth
-                  control={control}
-                  name="well.construction_notes"
-                  errorMessage={errors.well?.construction_notes?.message}
-                />
-              </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
-                  required
                   label="Formation"
                   fullWidth
                   control={control}
@@ -614,7 +636,6 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
-                  required
                   label="Static Water"
                   fullWidth
                   control={control}
@@ -622,14 +643,33 @@ export const WellInventoryForm = () => {
                   errorMessage={errors.well?.static_water?.message}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ControlledTextField
-                  required
                   label="Data Source"
                   fullWidth
                   control={control}
                   name="well.data_source"
                   errorMessage={errors.well?.data_source?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Casing Description"
+                  fullWidth
+                  control={control}
+                  name="well.casing_description"
+                  errorMessage={errors.well?.casing_description?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ControlledTextField
+                  multiline
+                  label="Construction Notes"
+                  fullWidth
+                  control={control}
+                  name="well.construction_notes"
+                  errorMessage={errors.well?.construction_notes?.message}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -677,7 +717,7 @@ export const WellInventoryForm = () => {
                   variant="outlined"
                   color="secondary"
                   fullWidth
-                  onClick={() => reset()}
+                  onClick={handleReset}
                 >
                   Reset
                 </Button>
@@ -686,9 +726,9 @@ export const WellInventoryForm = () => {
                 <Button type="submit" variant="contained" fullWidth>
                   Submit
                 </Button>
-              </Grid>{" "}
-            </Grid>{" "}
-          </Grid>{" "}
+              </Grid>
+            </Grid>
+          </Grid>
         </Box>
       </CardContent>
     </Card>
