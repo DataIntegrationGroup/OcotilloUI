@@ -22,8 +22,8 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import GeocoderControl from "./GeocoderControl.jsx";
 import {ControlPosition} from "react-map-gl";
 import {CircularProgress} from "@mui/material";
+import {settings} from "@/settings";
 
-const mapboxToken = "pk.eyJ1IjoiamFrZXJvc3N3ZGkiLCJhIjoiY2s3M3ZneGl4MGhkMDNrcjlocmNuNWg4bCJ9.4r1DRDQ_ja0fV2nnmlVT0A"
 
 interface MapComponentProps {
     children?: any;
@@ -38,13 +38,14 @@ interface MapComponentProps {
     isLoading?: boolean;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({children,
+const MapComponent: React.FC<MapComponentProps> = ({
+                                                       children,
                                                        onClick,
                                                        popupContent,
                                                        setPopupContent,
                                                        onMouseMoveCallback,
                                                        setSelectionPolygons,
-                                                       isLoading=false,
+                                                       isLoading = false,
                                                        showDrawControls = {show: true, position: "top-right"},
                                                        showNavigation = {
                                                            show: true,
@@ -147,7 +148,7 @@ const MapComponent: React.FC<MapComponentProps> = ({children,
         <div>
             <Map
                 ref={mapRef}
-                mapboxAccessToken={mapboxToken}
+                mapboxAccessToken={settings.mapboxToken}
                 initialViewState={initialViewState}
                 onClick={onClick}
                 // fog={{
@@ -173,7 +174,7 @@ const MapComponent: React.FC<MapComponentProps> = ({children,
                 {/*<ContextMenu model={mapContextMenu} ref={cmRef}/>*/}
                 {showGeocoder?.show && (
                     <GeocoderControl
-                        token={mapboxToken}
+                        token={settings.mapboxToken}
                         position={showGeocoder?.position}
                     />
                 )}
@@ -199,7 +200,7 @@ const MapComponent: React.FC<MapComponentProps> = ({children,
                     />
                 )}
 
-                {popupContent!==undefined && popupContent!==null && (
+                {popupContent !== undefined && popupContent !== null && (
                     <Popup
                         latitude={popupContent.coordinates[1]}
                         longitude={popupContent.coordinates[0]}
