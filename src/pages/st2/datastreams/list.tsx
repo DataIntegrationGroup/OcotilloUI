@@ -21,7 +21,7 @@ import {ListPage} from "@/components/ListPage";
 import {Accordion, AccordionDetails, AccordionSummary, Button, Card, InputLabel, TextField} from "@mui/material";
 import {useAll} from "@/useAll";
 import {settings} from "@/settings";
-import {ST2Hydrograph} from "@/components/Hydrograph";
+import {ST2Hydrograph} from "@/components/Hydrographs/Hydrograph";
 import {ClearableSelect} from "@/components/ClearableSelect";
 import Stack from "@mui/material/Stack";
 import {DebouncedTextInput} from "@/components/DebouncedTextInput";

@@ -24,28 +24,46 @@ import {criticalMineralResources} from '@/resources/criticalminerals'
 import {geothermalResources} from '@/resources/geothermal'
 import {st2Resources} from "@/resources/st2";
 import SensorsOutlinedIcon from "@mui/icons-material/SensorsOutlined";
+import {governorResources} from "@/resources/governor";
+import {AssuredWorkloadOutlined, GavelOutlined, OilBarrelOutlined} from "@mui/icons-material";
+import {subsurfaceResources} from "@/resources/subsurface";
 
 
-let base = [{name: 'Water',
-            icon: <WaterDropOutlined/>,
-            meta: {label: 'Water'}
-            },
-            {name: 'st2',
-                icon: <SensorsOutlinedIcon/>,
-                meta: {label: 'NMWDI SensorThings'}
-            },
-            {name: 'geochronology',
-            icon: <AccessTime/>,
-            meta: {label: 'Geochronology'},
-            },
-            {name: 'criticalminerals',
-            icon: <DiamondOutlined/>,
-            meta: {label: 'Critical Minerals'}
-            },
-            {name: 'geothermal',
-            icon: <HeatPumpOutlined/>,
-            meta: {label: 'Geothermal'}
-            },
+let base = [{
+    name: 'Water',
+    icon: <WaterDropOutlined/>,
+    meta: {label: 'Water'}
+},
+    {
+        name: 'st2',
+        icon: <SensorsOutlinedIcon/>,
+        meta: {label: 'NMWDI SensorThings'}
+    },
+    {
+        name: 'geochronology',
+        icon: <AccessTime/>,
+        meta: {label: 'Geochronology'},
+    },
+    {
+        name: 'criticalminerals',
+        icon: <DiamondOutlined/>,
+        meta: {label: 'Critical Minerals'}
+    },
+    {
+        name: 'geothermal',
+        icon: <HeatPumpOutlined/>,
+        meta: {label: 'Geothermal'}
+    },
+    {
+        name: 'subsurface',
+        icon: <OilBarrelOutlined/>,
+        meta: {label: 'Subsurface'}
+    },
+    {
+        name: 'governor',
+        icon: <AssuredWorkloadOutlined/>,
+        meta: {label: 'Govern'}
+    },
 
 ]
 
@@ -56,6 +74,8 @@ export const resources = [...base,
     ...geochronologyResources,
     ...criticalMineralResources,
     ...geothermalResources,
+    ...governorResources,
+    ...subsurfaceResources
 ]
 
 // ============= EOF =============================================
