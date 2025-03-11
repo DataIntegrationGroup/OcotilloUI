@@ -22,8 +22,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import GeocoderControl from "./GeocoderControl.jsx";
 import {ControlPosition} from "react-map-gl";
 import {CircularProgress} from "@mui/material";
-
-const mapboxToken = "pk.eyJ1IjoiamFrZXJvc3N3ZGkiLCJhIjoiY2s3M3ZneGl4MGhkMDNrcjlocmNuNWg4bCJ9.4r1DRDQ_ja0fV2nnmlVT0A"
+import {settings} from "@/settings";
 
 interface MapComponentProps {
     children?: any;
@@ -148,7 +147,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         <div>
             <Map
                 ref={mapRef}
-                mapboxAccessToken={mapboxToken}
+                mapboxAccessToken={settings.mapboxToken}
                 initialViewState={initialViewState}
                 onClick={onClick}
                 // fog={{
@@ -174,7 +173,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
                 {/*<ContextMenu model={mapContextMenu} ref={cmRef}/>*/}
                 {showGeocoder?.show && (
                     <GeocoderControl
-                        token={mapboxToken}
+                        token={settings.mapboxToken}
                         position={showGeocoder?.position}
                     />
                 )}
