@@ -25,7 +25,8 @@ import {geothermalResources} from '@/resources/geothermal'
 import {st2Resources} from "@/resources/st2";
 import SensorsOutlinedIcon from "@mui/icons-material/SensorsOutlined";
 import {governorResources} from "@/resources/governor";
-import {AssuredWorkloadOutlined, GavelOutlined} from "@mui/icons-material";
+import {AssuredWorkloadOutlined, GavelOutlined, OilBarrelOutlined} from "@mui/icons-material";
+import {subsurfaceResources} from "@/resources/subsurface";
 
 
 let base = [{
@@ -54,6 +55,11 @@ let base = [{
         meta: {label: 'Geothermal'}
     },
     {
+        name: 'subsurface',
+        icon: <OilBarrelOutlined/>,
+        meta: {label: 'Subsurface'}
+    },
+    {
         name: 'governor',
         icon: <AssuredWorkloadOutlined/>,
         meta: {label: 'Govern'}
@@ -69,6 +75,7 @@ export const resources = [...base,
     ...criticalMineralResources,
     ...geothermalResources,
     ...governorResources,
+    ...subsurfaceResources
 ]
 
 // ============= EOF =============================================

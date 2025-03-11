@@ -8,10 +8,10 @@
 
 import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
 
-let governor = [
+let subsurface = [
     {
         name: 'dashboard', icon: <DashboardOutlined/>,
-        list: "/governor/dashboard",
+        list: "/subsurface/dashboard",
         meta: {
             label: "Dashboard",
             icon: <DashboardOutlined/>,
@@ -20,13 +20,13 @@ let governor = [
 
 ]
 
-export const governorResources = governor.map((r) => {
+export const subsurfaceResources = subsurface.map((r) => {
     let meta = r.meta || {}
     if (!meta['parent']) {
-        meta['parent'] = 'governor'
+        meta['parent'] = 'subsurface'
     }
 
-    meta['dataProviderName'] = 'governor'
+    meta['dataProviderName'] = 'subsurface'
     return {
         ...r,
         meta
