@@ -15,37 +15,19 @@
 // ===============================================================================
 import MapComponent from '../../../components/MapComponent';
 // import TextField from "@mui/material/TextField";
-import Select, {SelectChangeEvent} from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
 
 import React, {useEffect, useState} from "react";
 import {fetcher} from "../../../providers/amp-data-provider";
-import {Layer, Map, NavigationControl, Popup, Source} from "react-map-gl";
-import {ExportButton, useAutocomplete, useDataGrid} from "@refinedev/mui";
-import LoadingButton from "@mui/lab/LoadingButton";
-import {
-    Alert,
-    Autocomplete,
-    Card,
-    CircularProgress,
-    Dialog,
-    FormControl,
-    InputAdornment,
-    InputLabel,
-    TextField
-} from "@mui/material";
-import Grid from "@mui/material/Grid";
-import {HttpError, useExport, useList, useMany} from "@refinedev/core";
-import {stringify, parse} from "wkt";
-import {ILocation} from "@/interfaces/amp";
+import {Layer, Source} from "react-map-gl";
+import {useDataGrid} from "@refinedev/mui";
+import {Alert, Card, Dialog} from "@mui/material";
+import Grid2 from "@mui/material/Grid2";
+import {HttpError, useList} from "@refinedev/core";
+import {parse, stringify} from "wkt";
 import {useAll} from "@/useAll";
-import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
-import ClearIcon from "@mui/icons-material/Clear";
 import {Box} from "@mui/system";
-import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import {SetMapPopupContent} from "@/components/MapPopupComponent";
-import {CheckBox} from "@mui/icons-material";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
@@ -394,7 +376,7 @@ export const Querybuilder: React.FC = () => {
                 <Alert severity="error">Please select a County or a Project Region or draw a polygon on the map</Alert>
             </Dialog>
 
-            <Grid container spacing={2} p={3}>
+            <Grid2 container spacing={2} p={3}>
                 <Stack direction={'row'} sx={{width: 1}}>
                     <ClearableSelect label={'Location Type'}
                                      value={locationType} setValue={setLocationType} values={LocationTypes}/>
@@ -426,7 +408,7 @@ export const Querybuilder: React.FC = () => {
                 </Stack>
 
                 {/*well check boxes*/}
-                <Grid xs={12} p={1}>
+                <Grid2>
                     <FormControlLabel
                         control={<Checkbox
                             checked={includeLegacyUSGS}
@@ -465,20 +447,20 @@ export const Querybuilder: React.FC = () => {
                         />}
                         label="Continuous Acoustic Locations"
                     />
-                </Grid>
+                </Grid2>
 
-                <Grid xs={12}>
+                <Grid2>
                     <Box border={1} p={2}>
                         <ExportControl
                             disabled={!spatialFilterEnabled}
                             params={params}/>
                     </Box>
-                </Grid>
+                </Grid2>
 
-            </Grid>
+            </Grid2>
 
-            <Grid container>
-                <Grid xs={6}>
+            <Grid2 container>
+                <Grid2 columns={6}>
                     <Card sx={{p: 1}}>
                         <DataGrid
                             {...dataGridProps}
@@ -487,8 +469,8 @@ export const Querybuilder: React.FC = () => {
                             columns={columns}
                         />
                     </Card>
-                </Grid>
-                <Grid xs={6} p={1}>
+                </Grid2>
+                <Grid2 columns={6} p={1}>
                     <Card sx={{p: 1}}>
                         <LegendComponent items={legendOptions}/>
                         <MapComponent
@@ -541,8 +523,8 @@ export const Querybuilder: React.FC = () => {
                             </Source>}
                         </MapComponent>
                     </Card>
-                </Grid>
-            </Grid>
+                </Grid2>
+            </Grid2>
 
 
         </Card>

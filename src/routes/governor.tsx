@@ -17,16 +17,17 @@
 import {Route, Routes} from "react-router-dom";
 import {GeothermalDashboard} from "@/pages/geothermal/dashboard";
 import {GeoThermalWellList, GeoThermalWellShow} from "@/pages/geothermal/wells";
+import AMPLSLint from "@/pages/governor/amplslint/amplslint";
 
-export const GeothermalRoutes = () => {
+export const GovernorRoutes = () => {
     return (
         <Routes>
-            <Route path="dashboard" element={<GeothermalDashboard/>}/>
-            <Route path="wells">
-                <Route index element={<GeoThermalWellList/>}/>
+            {/*<Route path="dashboard" element={<GovernorDashboard/>}/>*/}
+            <Route path="amp_network_share">
+                <Route index element={<AMPLSLint/>}/>
                 {/*<Route path="create" element={<GeoThermalCreate/>}/>*/}
                 {/*    <Route path="edit/:id" element={<SampleEdit/>}/>*/}
-                <Route path="show/:id" element={<GeoThermalWellShow/>}/>
+                {/*<Route path="show/:id" element={<GeoThermalWellShow/>}/>*/}
             </Route>
         </Routes>
     )

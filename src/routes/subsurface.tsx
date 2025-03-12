@@ -14,14 +14,14 @@
 // limitations under the License.
 // ===============================================================================
 
-import {Route} from "react-router-dom";
+import {Route, Routes} from "react-router-dom";
 import {GeothermalDashboard} from "@/pages/geothermal/dashboard";
 import {GeoThermalWellList, GeoThermalWellShow} from "@/pages/geothermal/wells";
 import {SubsurfaceDashboard} from "@/pages/subsurface/dashboard";
 
-export const makeSubsurfaceRoutes = () => {
+export const SubsurfaceRoutes = () => {
     return (
-        <Route path='/subsurface'>
+        <Routes>
             <Route path="dashboard" element={<SubsurfaceDashboard/>}/>
             {/*<Route path="wells">*/}
             {/*    <Route index element={<GeoThermalWellList/>}/>*/}
@@ -29,7 +29,9 @@ export const makeSubsurfaceRoutes = () => {
             {/*    /!*    <Route path="edit/:id" element={<SampleEdit/>}/>*!/*/}
             {/*    <Route path="show/:id" element={<GeoThermalWellShow/>}/>*/}
             {/*</Route>*/}
-        </Route>
+
+        </Routes>
+
     )
 }
 // ============= EOF =============================================

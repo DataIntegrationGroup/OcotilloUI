@@ -17,6 +17,14 @@ let governor = [
             icon: <DashboardOutlined/>,
         },
     },
+    {
+        name: 'AMP Network Share',
+        list: "/governor/amp_network_share",
+        meta: {
+            label: "AMP Network Share",
+            icon: <DashboardOutlined/>,
+        },
+    }
 
 ]
 
