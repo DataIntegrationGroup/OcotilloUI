@@ -10,6 +10,8 @@ import {
   CardContent,
   CardHeader,
   IconButton,
+  Select,
+  Skeleton,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -23,6 +25,7 @@ import {
   ControlledPhoneField,
 } from "@/components";
 import { useTheme } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { PersonSearch } from "@mui/icons-material";
 import { SearchOwnerDialog } from "./SearchOwnerDialog";
 
@@ -61,6 +64,7 @@ export const WellInventoryForm = () => {
     setState(SchemaDefaults.owner.physical_state);
     setZip(SchemaDefaults.owner.physical_zip_code);
     setCoordinateType(SchemaDefaults.location.coordinates.type);
+    setSelectedProject(SchemaDefaults.project.project);
   };
 
   const handleOnChange = <T,>(
@@ -79,6 +83,52 @@ export const WellInventoryForm = () => {
     utm: ["Easting (NAD83)", "Northing (NAD83)"],
     gcs: ["Longitude", "Latitude"],
   };
+
+  const fetchProjectOptions = async (): Promise<
+    {
+      Project: string;
+      PointIDPrefix: string[];
+    }[]
+  > => {
+    const authState = sessionStorage.getItem("fief-authstate");
+    const parsedAuthState = JSON.parse(authState);
+    const accessToken = parsedAuthState?.tokenInfo?.access_token || null;
+
+    const response = await fetch(
+      "https://ampapidev-dot-waterdatainitiative-271000.appspot.com/v0/authorized/lookuptable/project",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch project options");
+    }
+
+    return response.json();
+  };
+
+  const {
+    data: projectOptions,
+    isFetching: isProjectOptionsFetching,
+    isError: isProjectOptionsError,
+  } = useQuery({
+    queryKey: ["ProjectNames"],
+    queryFn: fetchProjectOptions,
+    staleTime: 300000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  const [selectedProject, setSelectedProject] = useState(null);
+  const selectedProjectData = projectOptions?.find(
+    (proj) => proj.Project === selectedProject,
+  );
+
+  console.log({ projectOptions });
 
   return (
     <Card>
@@ -108,30 +158,54 @@ export const WellInventoryForm = () => {
                 <Typography variant="h2">Project</Typography>
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                <ControlledSelectField
-                  label="Project Name"
-                  control={control}
-                  name="project.project"
-                  options={[
-                    { value: 1, label: "One" },
-                    { value: 2, label: "Two" },
-                    { value: 3, label: "Three" },
-                  ]}
-                  errorMessage={errors.project?.project?.message}
-                />
+                {isProjectOptionsError ? "failed to load" : null}
+                {isProjectOptionsFetching ? (
+                  <Skeleton variant="rectangular" width="100%" height={55}>
+                    <Select fullWidth />
+                  </Skeleton>
+                ) : (
+                  <ControlledSelectField
+                    label="Project Name"
+                    control={control}
+                    name="project.project"
+                    value={selectedProject}
+                    onChange={(e) => {
+                      handleOnChange(
+                        e.target.value,
+                        setSelectedProject,
+                        "project.project",
+                      );
+                      reset({ "project.pointid_prefix": "" });
+                    }}
+                    options={projectOptions.map((option) => {
+                      return { value: option.Project, label: option.Project };
+                    })}
+                    errorMessage={errors.project?.project?.message}
+                  />
+                )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                <ControlledSelectField
-                  label="PointId Prefix"
-                  control={control}
-                  name="project.pointid_prefix"
-                  options={[
-                    { value: 1, label: "One" },
-                    { value: 2, label: "Two" },
-                    { value: 3, label: "Three" },
-                  ]}
-                  errorMessage={errors.project?.pointid_prefix?.message}
-                />
+                {isProjectOptionsFetching ? (
+                  <Skeleton variant="rectangular" width="100%" height={55}>
+                    <Select fullWidth />
+                  </Skeleton>
+                ) : (
+                  <ControlledSelectField
+                    label="PointId Prefix"
+                    control={control}
+                    disabled={!selectedProjectData}
+                    name="project.pointid_prefix"
+                    options={
+                      selectedProjectData
+                        ? selectedProjectData.PointIDPrefix.map((prefix) => ({
+                            value: prefix,
+                            label: prefix,
+                          }))
+                        : []
+                    }
+                    errorMessage={errors.project?.pointid_prefix?.message}
+                  />
+                )}
               </Grid>
             </Grid>
             <Grid container spacing={2} direction={{ xs: "column", sm: "row" }}>
