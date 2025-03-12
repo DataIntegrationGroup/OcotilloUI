@@ -34,6 +34,7 @@ import {
   getFormations,
   getMonitoringStatuses,
   getProjects,
+  getSiteTypes,
 } from "./well_inventory.service";
 
 export const WellInventoryForm = () => {
@@ -116,16 +117,22 @@ export const WellInventoryForm = () => {
   } = getFormations();
 
   const {
+    data: monitoryingStatuses,
+    isFetching: isMonitoryingStatusFetching,
+    isError: isMonitoryingStatusError,
+  } = getMonitoringStatuses();
+
+  const {
     data: projects,
     isFetching: isProjectFetching,
     isError: isProjectError,
   } = getProjects();
 
   const {
-    data: monitoryingStatuses,
-    isFetching: isMonitoryingStatusFetching,
-    isError: isMonitoryingStatusError,
-  } = getMonitoringStatuses();
+    data: siteTypes,
+    isFetching: isSiteTypeFetching,
+    isError: isSiteTypeError,
+  } = getSiteTypes();
 
   const [selectedProject, setSelectedProject] = useState(null);
   const selectedProjectData = projects?.find(
@@ -170,6 +177,7 @@ export const WellInventoryForm = () => {
                     control={control}
                     name="project.project"
                     value={selectedProject}
+                    disabled={isProjectError}
                     onChange={(e) => {
                       handleOnChange(
                         e.target.value,
@@ -194,7 +202,7 @@ export const WellInventoryForm = () => {
                   <ControlledSelectField
                     label="PointId Prefix"
                     control={control}
-                    disabled={!selectedProjectData}
+                    disabled={!selectedProjectData || isProjectError}
                     name="project.pointid_prefix"
                     options={
                       selectedProjectData
@@ -555,6 +563,7 @@ export const WellInventoryForm = () => {
                   label="UTM Datum"
                   control={control}
                   name="location.utm_datum"
+                  disabled={isCoordinateDatumError}
                   options={coordinateDatums.map((option) => {
                     return { value: option.DATUMCODE, label: option.DATUMCODE };
                   })}
@@ -572,6 +581,7 @@ export const WellInventoryForm = () => {
                   label="ALT Datum"
                   control={control}
                   name="location.alt_datum"
+                  disabled={isAltitudeDatumError}
                   options={altitudeDatums.map((option) => {
                     return { value: option.Code, label: option.Code };
                   })}
@@ -580,7 +590,7 @@ export const WellInventoryForm = () => {
               )}
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              {isAltitudeDatumFetching ? (
+              {isAltitudeMethodFetching ? (
                 <Skeleton variant="rectangular" width="100%" height={55}>
                   <Select fullWidth />
                 </Skeleton>
@@ -589,6 +599,7 @@ export const WellInventoryForm = () => {
                   label="Altitude Method"
                   control={control}
                   name="location.altitude_method"
+                  disabled={isAltitudeMethodError}
                   options={altitudeMethods.map((option) => {
                     return { value: option.Code, label: option.Meaning };
                   })}
@@ -597,16 +608,22 @@ export const WellInventoryForm = () => {
               )}
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              <ControlledSelectField
-                label="Site Type"
-                control={control}
-                name="location.site_type"
-                options={[
-                  { value: "gcs", label: "GCS" },
-                  { value: "utm", label: "UTM" },
-                ]}
-                errorMessage={errors.location?.site_type?.message}
-              />
+              {isSiteTypeFetching ? (
+                <Skeleton variant="rectangular" width="100%" height={55}>
+                  <Select fullWidth />
+                </Skeleton>
+              ) : (
+                <ControlledSelectField
+                  label="Site Type"
+                  control={control}
+                  name="location.site_type"
+                  disabled={isSiteTypeError}
+                  options={siteTypes.map((option) => {
+                    return { value: option.Code, label: option.Meaning };
+                  })}
+                  errorMessage={errors.location?.site_type?.message}
+                />
+              )}
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <ControlledTextField
@@ -718,6 +735,7 @@ export const WellInventoryForm = () => {
                     fullWidth
                     control={control}
                     name="well.monitoring_status"
+                    disabled={isMonitoryingStatusError}
                     options={monitoryingStatuses.map((option) => {
                       return {
                         label: option.Meaning,
@@ -729,7 +747,7 @@ export const WellInventoryForm = () => {
                 )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                {isAltitudeDatumFetching ? (
+                {isFormationFetching ? (
                   <Skeleton variant="rectangular" width="100%" height={55}>
                     <Select fullWidth />
                   </Skeleton>
@@ -738,6 +756,7 @@ export const WellInventoryForm = () => {
                     label="Formation"
                     control={control}
                     name="well.formation"
+                    disabled={isFormationError}
                     options={formations.map((option) => {
                       return { value: option.Code, label: option.Meaning };
                     })}

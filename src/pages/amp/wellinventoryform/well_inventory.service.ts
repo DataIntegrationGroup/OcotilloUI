@@ -147,3 +147,27 @@ export const getFormations = () => {
     ...lookupTableQueryConfig,
   });
 };
+
+const fetchSiteTypes = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  const accessToken = await getAccessToken();
+  const response = await fetch(
+    "/api/v0/authorized/lookuptable/site_type",
+    lookupTableFetchConfig(accessToken),
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch site type options");
+  }
+
+  return response.json();
+};
+
+export const getSiteTypes = () => {
+  return useQuery({
+    queryKey: ["SiteTypes"],
+    queryFn: fetchSiteTypes,
+    ...lookupTableQueryConfig,
+  });
+};
