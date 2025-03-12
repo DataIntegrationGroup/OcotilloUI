@@ -1,5 +1,5 @@
 import { TextField, TextFieldProps } from "@mui/material";
-import { Controller, Control, FormState, Path } from "react-hook-form";
+import { Controller, Control, Path } from "react-hook-form";
 
 export const ControlledTextField = <T,>({
   control,
@@ -12,16 +12,15 @@ export const ControlledTextField = <T,>({
   ...textFieldProps
 }: {
   control: Control<T>;
-  formState: FormState<T>;
   type: string;
-  name: Path<T>;
+  name: string;
   label: string;
   errorMessage: string;
 } & TextFieldProps) => {
   return (
     <Controller
-      name={name}
-      control={control as unknown as Control<T>}
+      name={name as Path<T>}
+      control={control}
       render={({ field }) => (
         <TextField
           {...field}

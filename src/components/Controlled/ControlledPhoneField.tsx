@@ -10,25 +10,24 @@ export const ControlledPhoneField = <T,>({
   ...textFieldProps
 }: {
   control: Control<T>;
-  name: Path<T>;
+  name: string;
   label: string;
   errorMessage?: string;
 } & TextFieldProps) => {
   return (
     <Controller
-      name={name}
+      name={name as Path<T>}
       control={control}
       render={({ field }) => (
         <InputMask
           mask="(999)-999-9999"
           value={field.value || ""}
-          onChange={(event) =>
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
             field.onChange(event.target.value.replace(/\D/g, ""))
           }
         >
-          {(inputProps) => (
+          {(textFieldProps) => (
             <TextField
-              {...inputProps}
               {...textFieldProps}
               label={label}
               error={!!errorMessage}

@@ -6,7 +6,7 @@ import {
   FormHelperText,
   SelectProps,
 } from "@mui/material";
-import { Controller, Control, FormState, Path } from "react-hook-form";
+import { Controller, Control, Path } from "react-hook-form";
 
 export const ControlledSelectField = <T,>({
   control,
@@ -17,8 +17,7 @@ export const ControlledSelectField = <T,>({
   ...selectProps
 }: {
   control: Control<T>;
-  formState: FormState<T>;
-  name: Path<T>;
+  name: string;
   label: string;
   errorMessage: string;
   options: { value: string | number; label: string }[];
@@ -27,7 +26,7 @@ export const ControlledSelectField = <T,>({
     <FormControl fullWidth error={!!errorMessage}>
       <InputLabel>{label}</InputLabel>
       <Controller
-        name={name}
+        name={name as Path<T>}
         control={control as unknown as Control<T>}
         render={({ field }) => (
           <Select label={label} {...field} {...selectProps}>

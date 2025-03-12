@@ -1,5 +1,5 @@
 import { FormControlLabel, Checkbox } from "@mui/material";
-import { Controller, Control, FormState, Path } from "react-hook-form";
+import { Controller, Control, Path } from "react-hook-form";
 
 export const ControlledCheckbox = <T,>({
   control,
@@ -9,14 +9,13 @@ export const ControlledCheckbox = <T,>({
   ...checkboxProps
 }: {
   control: Control<T>;
-  formState: FormState<T>;
-  name: Path<T>;
+  name: string;
   label: string;
   errorMessage: string;
 } & React.ComponentProps<typeof Checkbox>) => {
   return (
     <Controller
-      name={name}
+      name={name as Path<T>}
       control={control as unknown as Control<T>}
       render={({ field }) => (
         <FormControlLabel
