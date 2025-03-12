@@ -1,4 +1,4 @@
-export const lookupTableFetchConfig = (accessToken: string) => {
+export const fetchConfig = (accessToken: string) => {
   return {
     method: "GET",
     headers: {

@@ -1,8 +1,5 @@
 import { getAccessToken } from "@/providers/fief-provider";
-import {
-  lookupTableFetchConfig,
-  lookupTableQueryConfig,
-} from "./well_inventory.configs";
+import { fetchConfig, lookupTableQueryConfig } from "./well_inventory.configs";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchProjects = async (): Promise<
@@ -14,7 +11,7 @@ const fetchProjects = async (): Promise<
   const accessToken = await getAccessToken();
   const response = await fetch(
     "/api/v0/authorized/lookuptable/project",
-    lookupTableFetchConfig(accessToken),
+    fetchConfig(accessToken),
   );
 
   if (!response.ok) {
@@ -38,7 +35,7 @@ const fetchMonitoringStatuses = async (): Promise<
   const accessToken = await getAccessToken();
   const response = await fetch(
     "/api/v0/authorized/lookuptable/monitoring_status",
-    lookupTableFetchConfig(accessToken),
+    fetchConfig(accessToken),
   );
 
   if (!response.ok) {
@@ -60,7 +57,7 @@ const fetchCoordinateDatums = async (): Promise<{ DATUMCODE: string }[]> => {
   const accessToken = await getAccessToken();
   const response = await fetch(
     "/api/v0/authorized/lookuptable/coordinate_datum",
-    lookupTableFetchConfig(accessToken),
+    fetchConfig(accessToken),
   );
 
   if (!response.ok) {
@@ -82,7 +79,7 @@ const fetchAltitudeDatums = async (): Promise<{ Code: string }[]> => {
   const accessToken = await getAccessToken();
   const response = await fetch(
     "/api/v0/authorized/lookuptable/altitude_datum",
-    lookupTableFetchConfig(accessToken),
+    fetchConfig(accessToken),
   );
 
   if (!response.ok) {
@@ -106,7 +103,7 @@ const fetchAltitudeMethods = async (): Promise<
   const accessToken = await getAccessToken();
   const response = await fetch(
     "/api/v0/authorized/lookuptable/altitude_method",
-    lookupTableFetchConfig(accessToken),
+    fetchConfig(accessToken),
   );
 
   if (!response.ok) {
@@ -130,7 +127,7 @@ const fetchFormations = async (): Promise<
   const accessToken = await getAccessToken();
   const response = await fetch(
     "/api/v0/authorized/lookuptable/formation",
-    lookupTableFetchConfig(accessToken),
+    fetchConfig(accessToken),
   );
 
   if (!response.ok) {
@@ -154,7 +151,7 @@ const fetchSiteTypes = async (): Promise<
   const accessToken = await getAccessToken();
   const response = await fetch(
     "/api/v0/authorized/lookuptable/site_type",
-    lookupTableFetchConfig(accessToken),
+    fetchConfig(accessToken),
   );
 
   if (!response.ok) {
@@ -169,5 +166,27 @@ export const getSiteTypes = () => {
     queryKey: ["SiteTypes"],
     queryFn: fetchSiteTypes,
     ...lookupTableQueryConfig,
+  });
+};
+
+const fetchNewPointIDPreview = async (prefix: string) => {
+  const accessToken = await getAccessToken();
+  const response = await fetch(
+    `api/latest/authorized/well_inventory/newly_generated_endpoint?pointid_prefix=${prefix}`,
+    fetchConfig(accessToken),
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch new Point ID preview");
+  }
+
+  return response.json();
+};
+
+export const getNewPointIDPreview = (prefix: string) => {
+  return useQuery({
+    queryKey: ["PointIDPreview", prefix],
+    queryFn: () => fetchNewPointIDPreview(prefix),
+    enabled: !!prefix,
   });
 };

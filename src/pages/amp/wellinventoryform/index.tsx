@@ -1,16 +1,17 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { useForm } from "@refinedev/react-hook-form";
 import { IWellInventoryForm } from "@/interfaces/amp";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { WellInventorySchema, SchemaDefaults } from "./well_inventory.schema";
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
   CardHeader,
   IconButton,
-  Select,
+  Paper,
   Skeleton,
   Tooltip,
   Typography,
@@ -33,6 +34,7 @@ import {
   getCoordinateDatums,
   getFormations,
   getMonitoringStatuses,
+  getNewPointIDPreview,
   getProjects,
   getSiteTypes,
 } from "./well_inventory.service";
@@ -48,6 +50,9 @@ export const WellInventoryForm = () => {
   const [zip, setZip] = useState("");
 
   const [coordinateType, setCoordinateType] = useState("utm");
+
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedPointIDPrefix, setSelectedPointIDPrefix] = useState(null);
 
   const {
     refineCore: { onFinish },
@@ -128,16 +133,29 @@ export const WellInventoryForm = () => {
     isError: isProjectError,
   } = getProjects();
 
+  const selectedProjectData = useMemo(
+    () => projects?.find((proj) => proj.Project === selectedProject),
+    [projects, selectedProject],
+  );
+
   const {
     data: siteTypes,
     isFetching: isSiteTypeFetching,
     isError: isSiteTypeError,
   } = getSiteTypes();
 
-  const [selectedProject, setSelectedProject] = useState(null);
-  const selectedProjectData = projects?.find(
-    (proj) => proj.Project === selectedProject,
-  );
+  const {
+    data: newPointIdPreview,
+    isFetching: isNewPointIdPreviewFetching,
+    isError: isNewPointIdPreviewError,
+    refetch: refetchNewPointIdPreview,
+  } = getNewPointIDPreview(selectedPointIDPrefix);
+
+  useEffect(() => {
+    if (selectedPointIDPrefix) {
+      refetchNewPointIdPreview();
+    }
+  }, [selectedPointIDPrefix, refetchNewPointIdPreview]);
 
   return (
     <Card>
@@ -167,53 +185,81 @@ export const WellInventoryForm = () => {
                 <Typography variant="h2">Project</Typography>
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                {isProjectFetching ? (
-                  <Skeleton variant="rectangular" width="100%" height={55}>
-                    <Select fullWidth />
-                  </Skeleton>
-                ) : (
-                  <ControlledSelectField
-                    label="Project Name"
-                    control={control}
-                    name="project.project"
-                    value={selectedProject}
-                    disabled={isProjectError}
-                    onChange={(e) => {
-                      handleOnChange(
-                        e.target.value,
-                        setSelectedProject,
-                        "project.project",
-                      );
-                      reset({ "project.pointid_prefix": "" });
-                    }}
-                    options={projects.map((option) => {
-                      return { value: option.Project, label: option.Project };
-                    })}
-                    errorMessage={errors.project?.project?.message}
-                  />
-                )}
+                <LoadingControlledSelectField
+                  isLoading={isProjectFetching}
+                  label="Project Name"
+                  control={control}
+                  name="project.project"
+                  value={selectedProject}
+                  disabled={isProjectError}
+                  onChange={(e) => {
+                    handleOnChange(
+                      e.target.value,
+                      setSelectedProject,
+                      "project.project",
+                    );
+                    reset({ "project.pointid_prefix": "" });
+                  }}
+                  options={projects?.map((option) => {
+                    return { value: option.Project, label: option.Project };
+                  })}
+                  errorMessage={errors.project?.project?.message}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                {isProjectFetching ? (
-                  <Skeleton variant="rectangular" width="100%" height={55}>
-                    <Select fullWidth />
-                  </Skeleton>
-                ) : (
-                  <ControlledSelectField
-                    label="PointId Prefix"
-                    control={control}
-                    disabled={!selectedProjectData || isProjectError}
-                    name="project.pointid_prefix"
-                    options={
-                      selectedProjectData
-                        ? selectedProjectData.PointIDPrefix.map((prefix) => ({
-                            value: prefix,
-                            label: prefix,
-                          }))
-                        : []
-                    }
-                    errorMessage={errors.project?.pointid_prefix?.message}
+                <LoadingControlledSelectField
+                  isLoading={isProjectFetching}
+                  label="PointId Prefix"
+                  control={control}
+                  disabled={!selectedProjectData || isProjectError}
+                  name="project.pointid_prefix"
+                  value={selectedPointIDPrefix}
+                  onChange={(e) => {
+                    handleOnChange(
+                      e.target.value,
+                      setSelectedPointIDPrefix,
+                      "project.pointid_prefix",
+                    );
+                  }}
+                  options={
+                    selectedProjectData
+                      ? selectedProjectData.PointIDPrefix.map((prefix) => ({
+                          value: prefix,
+                          label: prefix,
+                        }))
+                      : []
+                  }
+                  errorMessage={errors.project?.pointid_prefix?.message}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 3 }}>
+                {isNewPointIdPreviewFetching ? (
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={55}
+                    sx={{ borderRadius: "4px" }}
                   />
+                ) : isNewPointIdPreviewError ? (
+                  <Alert severity="error" sx={{ height: 55 }}>
+                    Failed to load Point ID Preview
+                  </Alert>
+                ) : (
+                  <Paper
+                    elevation={2}
+                    sx={{
+                      padding: 1,
+                      textAlign: "center",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    <Typography variant="subtitle1" color="primary">
+                      New Point ID:
+                    </Typography>
+                    <Typography variant="h6" fontWeight="bold">
+                      {newPointIdPreview || "N/A"}
+                    </Typography>
+                  </Paper>
                 )}
               </Grid>
             </Grid>
@@ -554,76 +600,56 @@ export const WellInventoryForm = () => {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              {isCoordinateDatumFetching ? (
-                <Skeleton variant="rectangular" width="100%" height={55}>
-                  <Select fullWidth />
-                </Skeleton>
-              ) : (
-                <ControlledSelectField
-                  label="UTM Datum"
-                  control={control}
-                  name="location.utm_datum"
-                  disabled={isCoordinateDatumError}
-                  options={coordinateDatums.map((option) => {
-                    return { value: option.DATUMCODE, label: option.DATUMCODE };
-                  })}
-                  errorMessage={errors.location?.utm_datum?.message}
-                />
-              )}
+              <LoadingControlledSelectField
+                isLoading={isCoordinateDatumFetching}
+                label="UTM Datum"
+                control={control}
+                name="location.utm_datum"
+                disabled={isCoordinateDatumError}
+                options={coordinateDatums?.map((option) => {
+                  return { value: option.DATUMCODE, label: option.DATUMCODE };
+                })}
+                errorMessage={errors.location?.utm_datum?.message}
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              {isAltitudeDatumFetching ? (
-                <Skeleton variant="rectangular" width="100%" height={55}>
-                  <Select fullWidth />
-                </Skeleton>
-              ) : (
-                <ControlledSelectField
-                  label="ALT Datum"
-                  control={control}
-                  name="location.alt_datum"
-                  disabled={isAltitudeDatumError}
-                  options={altitudeDatums.map((option) => {
-                    return { value: option.Code, label: option.Code };
-                  })}
-                  errorMessage={errors.location?.alt_datum?.message}
-                />
-              )}
+              <LoadingControlledSelectField
+                isLoading={isAltitudeDatumFetching}
+                label="ALT Datum"
+                control={control}
+                name="location.alt_datum"
+                disabled={isAltitudeDatumError}
+                options={altitudeDatums?.map((option) => {
+                  return { value: option.Code, label: option.Code };
+                })}
+                errorMessage={errors.location?.alt_datum?.message}
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              {isAltitudeMethodFetching ? (
-                <Skeleton variant="rectangular" width="100%" height={55}>
-                  <Select fullWidth />
-                </Skeleton>
-              ) : (
-                <ControlledSelectField
-                  label="Altitude Method"
-                  control={control}
-                  name="location.altitude_method"
-                  disabled={isAltitudeMethodError}
-                  options={altitudeMethods.map((option) => {
-                    return { value: option.Code, label: option.Meaning };
-                  })}
-                  errorMessage={errors.location?.altitude_method?.message}
-                />
-              )}
+              <LoadingControlledSelectField
+                isLoading={isAltitudeMethodFetching}
+                label="Altitude Method"
+                control={control}
+                name="location.altitude_method"
+                disabled={isAltitudeMethodError}
+                options={altitudeMethods?.map((option) => {
+                  return { value: option.Code, label: option.Meaning };
+                })}
+                errorMessage={errors.location?.altitude_method?.message}
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              {isSiteTypeFetching ? (
-                <Skeleton variant="rectangular" width="100%" height={55}>
-                  <Select fullWidth />
-                </Skeleton>
-              ) : (
-                <ControlledSelectField
-                  label="Site Type"
-                  control={control}
-                  name="location.site_type"
-                  disabled={isSiteTypeError}
-                  options={siteTypes.map((option) => {
-                    return { value: option.Code, label: option.Meaning };
-                  })}
-                  errorMessage={errors.location?.site_type?.message}
-                />
-              )}
+              <LoadingControlledSelectField
+                isLoading={isSiteTypeFetching}
+                label="Site Type"
+                control={control}
+                name="location.site_type"
+                disabled={isSiteTypeError}
+                options={siteTypes?.map((option) => {
+                  return { value: option.Code, label: option.Meaning };
+                })}
+                errorMessage={errors.location?.site_type?.message}
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <ControlledTextField
@@ -725,44 +751,34 @@ export const WellInventoryForm = () => {
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                {isMonitoryingStatusFetching ? (
-                  <Skeleton variant="rectangular" width="100%" height={55}>
-                    <Select fullWidth />
-                  </Skeleton>
-                ) : (
-                  <ControlledSelectField
-                    label="Monitoring status"
-                    fullWidth
-                    control={control}
-                    name="well.monitoring_status"
-                    disabled={isMonitoryingStatusError}
-                    options={monitoryingStatuses.map((option) => {
-                      return {
-                        label: option.Meaning,
-                        value: option.Code,
-                      };
-                    })}
-                    errorMessage={errors.well?.monitoring_status?.message}
-                  />
-                )}
+                <LoadingControlledSelectField
+                  isLoading={isMonitoryingStatusFetching}
+                  label="Monitoring status"
+                  fullWidth
+                  control={control}
+                  name="well.monitoring_status"
+                  disabled={isMonitoryingStatusError}
+                  options={monitoryingStatuses?.map((option) => {
+                    return {
+                      label: option.Meaning,
+                      value: option.Code,
+                    };
+                  })}
+                  errorMessage={errors.well?.monitoring_status?.message}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                {isFormationFetching ? (
-                  <Skeleton variant="rectangular" width="100%" height={55}>
-                    <Select fullWidth />
-                  </Skeleton>
-                ) : (
-                  <ControlledSelectField
-                    label="Formation"
-                    control={control}
-                    name="well.formation"
-                    disabled={isFormationError}
-                    options={formations.map((option) => {
-                      return { value: option.Code, label: option.Meaning };
-                    })}
-                    errorMessage={errors.well?.formation?.message}
-                  />
-                )}
+                <LoadingControlledSelectField
+                  isLoading={isFormationFetching}
+                  label="Formation"
+                  control={control}
+                  name="well.formation"
+                  disabled={isFormationError}
+                  options={formations?.map((option) => {
+                    return { value: option.Code, label: option.Meaning };
+                  })}
+                  errorMessage={errors.well?.formation?.message}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
@@ -864,3 +880,28 @@ export const WellInventoryForm = () => {
     </Card>
   );
 };
+
+const LoadingControlledSelectField = ({
+  isLoading,
+  options,
+  control,
+  label,
+  name,
+  ...props
+}) =>
+  isLoading ? (
+    <Skeleton
+      variant="rectangular"
+      width="100%"
+      height={55}
+      sx={{ borderRadius: "4px" }}
+    />
+  ) : (
+    <ControlledSelectField
+      options={options}
+      control={control}
+      label={label}
+      name={name}
+      {...props}
+    />
+  );
