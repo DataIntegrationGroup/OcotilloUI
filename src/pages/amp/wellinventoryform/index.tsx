@@ -28,8 +28,12 @@ import { useTheme } from "@mui/material";
 import { PersonSearch } from "@mui/icons-material";
 import { SearchOwnerDialog } from "./SearchOwnerDialog";
 import {
-  getMonitoringStatusOptions,
-  getProjectOptions,
+  getAltitudeDatums,
+  getAltitudeMethods,
+  getCoordinateDatums,
+  getFormations,
+  getMonitoringStatuses,
+  getProjects,
 } from "./well_inventory.service";
 
 export const WellInventoryForm = () => {
@@ -83,26 +87,48 @@ export const WellInventoryForm = () => {
   };
 
   const locationLabels = {
-    utm: ["Easting (NAD83)", "Northing (NAD83)"],
+    utm: ["Easting", "Northing"],
     gcs: ["Longitude", "Latitude"],
   };
 
   const {
-    data: projectOptions,
-    isFetching: isProjectOptionsFetching,
-    isError: isProjectOptionsError,
-  } = getProjectOptions();
+    data: coordinateDatums,
+    isFetching: isCoordinateDatumFetching,
+    isError: isCoordinateDatumError,
+  } = getCoordinateDatums();
 
   const {
-    data: monitoryingStatusOptions,
-    isFetching: isMonitoryingStatusOptionsFetching,
-    isError: isMonitoryingStatusOptionsError,
-  } = getMonitoringStatusOptions();
+    data: altitudeDatums,
+    isFetching: isAltitudeDatumFetching,
+    isError: isAltitudeDatumError,
+  } = getAltitudeDatums();
 
-  console.log({ monitoryingStatusOptions });
+  const {
+    data: altitudeMethods,
+    isFetching: isAltitudeMethodFetching,
+    isError: isAltitudeMethodError,
+  } = getAltitudeMethods();
+
+  const {
+    data: formations,
+    isFetching: isFormationFetching,
+    isError: isFormationError,
+  } = getFormations();
+
+  const {
+    data: projects,
+    isFetching: isProjectFetching,
+    isError: isProjectError,
+  } = getProjects();
+
+  const {
+    data: monitoryingStatuses,
+    isFetching: isMonitoryingStatusFetching,
+    isError: isMonitoryingStatusError,
+  } = getMonitoringStatuses();
 
   const [selectedProject, setSelectedProject] = useState(null);
-  const selectedProjectData = projectOptions?.find(
+  const selectedProjectData = projects?.find(
     (proj) => proj.Project === selectedProject,
   );
 
@@ -134,8 +160,7 @@ export const WellInventoryForm = () => {
                 <Typography variant="h2">Project</Typography>
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                {isProjectOptionsError ? "failed to load" : null}
-                {isProjectOptionsFetching ? (
+                {isProjectFetching ? (
                   <Skeleton variant="rectangular" width="100%" height={55}>
                     <Select fullWidth />
                   </Skeleton>
@@ -153,7 +178,7 @@ export const WellInventoryForm = () => {
                       );
                       reset({ "project.pointid_prefix": "" });
                     }}
-                    options={projectOptions.map((option) => {
+                    options={projects.map((option) => {
                       return { value: option.Project, label: option.Project };
                     })}
                     errorMessage={errors.project?.project?.message}
@@ -161,7 +186,7 @@ export const WellInventoryForm = () => {
                 )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                {isProjectOptionsFetching ? (
+                {isProjectFetching ? (
                   <Skeleton variant="rectangular" width="100%" height={55}>
                     <Select fullWidth />
                   </Skeleton>
@@ -521,35 +546,55 @@ export const WellInventoryForm = () => {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <ControlledTextField
-                label="UTM Datum"
-                control={control}
-                name="location.utm_datum"
-                errorMessage={errors.location?.utm_datum?.message}
-              />
+              {isCoordinateDatumFetching ? (
+                <Skeleton variant="rectangular" width="100%" height={55}>
+                  <Select fullWidth />
+                </Skeleton>
+              ) : (
+                <ControlledSelectField
+                  label="UTM Datum"
+                  control={control}
+                  name="location.utm_datum"
+                  options={coordinateDatums.map((option) => {
+                    return { value: option.DATUMCODE, label: option.DATUMCODE };
+                  })}
+                  errorMessage={errors.location?.utm_datum?.message}
+                />
+              )}
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <ControlledTextField
-                label="ALT Datum"
-                control={control}
-                name="location.alt_datum"
-                errorMessage={errors.location?.alt_datum?.message}
-              />
+              {isAltitudeDatumFetching ? (
+                <Skeleton variant="rectangular" width="100%" height={55}>
+                  <Select fullWidth />
+                </Skeleton>
+              ) : (
+                <ControlledSelectField
+                  label="ALT Datum"
+                  control={control}
+                  name="location.alt_datum"
+                  options={altitudeDatums.map((option) => {
+                    return { value: option.Code, label: option.Code };
+                  })}
+                  errorMessage={errors.location?.alt_datum?.message}
+                />
+              )}
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              <ControlledSelectField
-                label="Altitude Method"
-                control={control}
-                name="location.altitude_method"
-                options={[
-                  { value: "gcs", label: "GCS" },
-                  { value: "survey", label: "Survey" },
-                  { value: "map", label: "Map" },
-                  { value: "altimeter", label: "Altimeter" },
-                  { value: "differential-gps", label: "Differential GPS" },
-                ]}
-                errorMessage={errors.location?.altitude_method?.message}
-              />
+              {isAltitudeDatumFetching ? (
+                <Skeleton variant="rectangular" width="100%" height={55}>
+                  <Select fullWidth />
+                </Skeleton>
+              ) : (
+                <ControlledSelectField
+                  label="Altitude Method"
+                  control={control}
+                  name="location.altitude_method"
+                  options={altitudeMethods.map((option) => {
+                    return { value: option.Code, label: option.Meaning };
+                  })}
+                  errorMessage={errors.location?.altitude_method?.message}
+                />
+              )}
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
               <ControlledSelectField
@@ -663,7 +708,7 @@ export const WellInventoryForm = () => {
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                {isMonitoryingStatusOptionsFetching ? (
+                {isMonitoryingStatusFetching ? (
                   <Skeleton variant="rectangular" width="100%" height={55}>
                     <Select fullWidth />
                   </Skeleton>
@@ -673,7 +718,7 @@ export const WellInventoryForm = () => {
                     fullWidth
                     control={control}
                     name="well.monitoring_status"
-                    options={monitoryingStatusOptions.map((option) => {
+                    options={monitoryingStatuses.map((option) => {
                       return {
                         label: option.Meaning,
                         value: option.Code,
@@ -684,13 +729,21 @@ export const WellInventoryForm = () => {
                 )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                <ControlledTextField
-                  label="Formation"
-                  fullWidth
-                  control={control}
-                  name="well.formation"
-                  errorMessage={errors.well?.formation?.message}
-                />
+                {isAltitudeDatumFetching ? (
+                  <Skeleton variant="rectangular" width="100%" height={55}>
+                    <Select fullWidth />
+                  </Skeleton>
+                ) : (
+                  <ControlledSelectField
+                    label="Formation"
+                    control={control}
+                    name="well.formation"
+                    options={formations.map((option) => {
+                      return { value: option.Code, label: option.Meaning };
+                    })}
+                    errorMessage={errors.well?.formation?.message}
+                  />
+                )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
