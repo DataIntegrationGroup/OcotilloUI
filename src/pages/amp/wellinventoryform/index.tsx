@@ -25,9 +25,12 @@ import {
   ControlledPhoneField,
 } from "@/components";
 import { useTheme } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { PersonSearch } from "@mui/icons-material";
 import { SearchOwnerDialog } from "./SearchOwnerDialog";
+import {
+  getMonitoringStatusOptions,
+  getProjectOptions,
+} from "./well_inventory.service";
 
 export const WellInventoryForm = () => {
   const theme = useTheme();
@@ -84,51 +87,24 @@ export const WellInventoryForm = () => {
     gcs: ["Longitude", "Latitude"],
   };
 
-  const fetchProjectOptions = async (): Promise<
-    {
-      Project: string;
-      PointIDPrefix: string[];
-    }[]
-  > => {
-    const authState = sessionStorage.getItem("fief-authstate");
-    const parsedAuthState = JSON.parse(authState);
-    const accessToken = parsedAuthState?.tokenInfo?.access_token || null;
-
-    const response = await fetch(
-      "https://ampapidev-dot-waterdatainitiative-271000.appspot.com/v0/authorized/lookuptable/project",
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch project options");
-    }
-
-    return response.json();
-  };
-
   const {
     data: projectOptions,
     isFetching: isProjectOptionsFetching,
     isError: isProjectOptionsError,
-  } = useQuery({
-    queryKey: ["ProjectNames"],
-    queryFn: fetchProjectOptions,
-    staleTime: 300000, // Cache for 5 minutes
-    refetchOnWindowFocus: false,
-  });
+  } = getProjectOptions();
+
+  const {
+    data: monitoryingStatusOptions,
+    isFetching: isMonitoryingStatusOptionsFetching,
+    isError: isMonitoryingStatusOptionsError,
+  } = getMonitoringStatusOptions();
+
+  console.log({ monitoryingStatusOptions });
 
   const [selectedProject, setSelectedProject] = useState(null);
   const selectedProjectData = projectOptions?.find(
     (proj) => proj.Project === selectedProject,
   );
-
-  console.log({ projectOptions });
 
   return (
     <Card>
@@ -687,17 +663,25 @@ export const WellInventoryForm = () => {
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                <ControlledSelectField
-                  label="Monitoring status"
-                  fullWidth
-                  control={control}
-                  name="well.monitoring_status"
-                  options={[
-                    { value: "gcs", label: "GCS" },
-                    { value: "utm", label: "UTM" },
-                  ]}
-                  errorMessage={errors.well?.monitoring_status?.message}
-                />
+                {isMonitoryingStatusOptionsFetching ? (
+                  <Skeleton variant="rectangular" width="100%" height={55}>
+                    <Select fullWidth />
+                  </Skeleton>
+                ) : (
+                  <ControlledSelectField
+                    label="Monitoring status"
+                    fullWidth
+                    control={control}
+                    name="well.monitoring_status"
+                    options={monitoryingStatusOptions.map((option) => {
+                      return {
+                        label: option.Meaning,
+                        value: option.Code,
+                      };
+                    })}
+                    errorMessage={errors.well?.monitoring_status?.message}
+                  />
+                )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
