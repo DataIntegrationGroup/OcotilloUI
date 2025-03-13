@@ -14,13 +14,11 @@ export const ControlledEmailField = <T,>({
   control,
   name,
   label,
-  errorMessage,
   ...textFieldProps
 }: {
   control: Control<T>;
   name: Path<T>;
   label: string;
-  errorMessage?: string;
 }) => {
   const [_, setInputValue] = useState("");
 
@@ -35,7 +33,7 @@ export const ControlledEmailField = <T,>({
     <Controller
       name={name}
       control={control}
-      render={({ field }) => (
+      render={({ field, fieldState }) => (
         <Autocomplete
           freeSolo
           disableClearable
@@ -49,8 +47,8 @@ export const ControlledEmailField = <T,>({
               {...params}
               {...textFieldProps}
               label={label}
-              error={!!errorMessage}
-              helperText={errorMessage || ""}
+              error={!!fieldState?.error}
+              helperText={fieldState?.error?.message || ""}
               fullWidth
             />
           )}
