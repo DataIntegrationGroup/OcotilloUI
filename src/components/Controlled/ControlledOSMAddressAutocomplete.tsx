@@ -16,14 +16,12 @@ export const ControlledOSMAddressAutocomplete = <T,>({
   control,
   name,
   label,
-  errorMessage,
   onAddressSelect,
   ...textFieldProps
 }: {
   control: Control<T>;
   name: string;
   label: string;
-  errorMessage?: string;
   onAddressSelect?: (
     address: string,
     city: string,
@@ -69,14 +67,14 @@ export const ControlledOSMAddressAutocomplete = <T,>({
     <Controller
       name={name as Path<T>}
       control={control}
-      render={({ field }) => (
+      render={({ field, fieldState }) => (
         <div style={{ position: "relative" }}>
           <TextField
             {...field}
             {...textFieldProps}
             label={label}
-            error={!!errorMessage}
-            helperText={errorMessage || ""}
+            error={!!fieldState?.error}
+            helperText={fieldState?.error?.message || ""}
             fullWidth
             autoComplete="off"
             onFocus={() => setIsFocused(true)}

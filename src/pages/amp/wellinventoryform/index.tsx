@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { useForm } from "@refinedev/react-hook-form";
-import { Control, FieldError, FieldErrors } from "react-hook-form";
+import { Control } from "react-hook-form";
 import { IWellInventoryForm } from "@/interfaces/amp";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { WellInventorySchema, SchemaDefaults } from "./well_inventory.schema";
@@ -18,6 +18,7 @@ import {
   CardHeader,
   IconButton,
   Paper,
+  SelectChangeEvent,
   SelectProps,
   Stack,
   Tooltip,
@@ -36,6 +37,7 @@ import { useTheme } from "@mui/material";
 import { PersonSearch } from "@mui/icons-material";
 import { SearchOwnerDialog } from "./SearchOwnerDialog";
 import {
+  createWellInventoryForm,
   getAltitudeDatums,
   getAltitudeMethods,
   getCoordinateDatums,
@@ -45,8 +47,11 @@ import {
   getProjects,
   getSiteTypes,
 } from "./well_inventory.service";
+import { locationLabels } from "./well_inventory.configs";
 import { SkeletonFormField } from "@/components/SkeletonFormField";
 import { ErrorAlertFormField } from "@/components/ErrorAlertFormField";
+import { useMutation } from "@tanstack/react-query";
+import { useNotification } from "@refinedev/core";
 
 export const WellInventoryForm = () => {
   const theme = useTheme();
@@ -60,21 +65,14 @@ export const WellInventoryForm = () => {
 
   const [coordinateType, setCoordinateType] = useState("utm");
 
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [selectedPointIDPrefix, setSelectedPointIDPrefix] = useState(null);
+  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedPointIDPrefix, setSelectedPointIDPrefix] = useState("");
 
-  const {
-    refineCore: { onFinish },
-    formState: { errors },
-    control,
-    handleSubmit,
-    reset,
-    setValue,
-  } = useForm<IWellInventoryForm>({
-    defaultValues: SchemaDefaults,
-    resolver: yupResolver(WellInventorySchema),
-    mode: "onTouched",
-  });
+  const { control, handleSubmit, reset, setValue } =
+    useForm<IWellInventoryForm>({
+      defaultValues: SchemaDefaults,
+      resolver: yupResolver(WellInventorySchema),
+    });
 
   const handleReset = () => {
     // reset the useForm state
@@ -87,6 +85,7 @@ export const WellInventoryForm = () => {
     setZip(SchemaDefaults.owner.physical_zip_code);
     setCoordinateType(SchemaDefaults.location.coordinates.type);
     setSelectedProject(SchemaDefaults.project.project);
+    setSelectedPointIDPrefix(SchemaDefaults.project.pointid_prefix);
   };
 
   const handleOnChange = <T,>(
@@ -99,11 +98,6 @@ export const WellInventoryForm = () => {
       shouldValidate: true,
       shouldDirty: true,
     });
-  };
-
-  const locationLabels = {
-    utm: ["Easting", "Northing"],
-    gcs: ["Longitude", "Latitude"],
   };
 
   const {
@@ -166,6 +160,44 @@ export const WellInventoryForm = () => {
     }
   }, [selectedPointIDPrefix, refetchNewPointIdPreview]);
 
+  const { open, close } = useNotification();
+
+  const { mutateAsync, isPending: isFormSubmissionPending } = useMutation({
+    mutationFn: createWellInventoryForm,
+    onMutate: () => {
+      open?.({
+        key: "well-inventory-submission",
+        type: "progress",
+        message: "Submitting Well Inventory Form...",
+      });
+    },
+    onSuccess: () => {
+      close?.("well-inventory-submission");
+      open?.({
+        type: "success",
+        message: "Form Submitted Successfully!",
+        description: "Your well inventory form has been submitted.",
+      });
+    },
+    onError: () => {
+      close?.("well-inventory-submission");
+      open?.({
+        type: "error",
+        message: "Failed to Submit Form",
+        description: "Please check your input and try again later.",
+      });
+    },
+  });
+
+  const handleFormSubmit = async (data: Partial<IWellInventoryForm>) => {
+    try {
+      await mutateAsync(data);
+      reset();
+    } catch (err) {
+      console.error("Form submission error:", err);
+    }
+  };
+
   return (
     <Card>
       <CardHeader title="Well Inventory Form" />
@@ -173,7 +205,7 @@ export const WellInventoryForm = () => {
         <Box
           component="form"
           autoComplete="off"
-          onSubmit={handleSubmit(onFinish)}
+          onSubmit={handleSubmit(handleFormSubmit)}
         >
           <Grid
             container
@@ -197,61 +229,69 @@ export const WellInventoryForm = () => {
                 <LoadingControlledSelectField
                   isLoading={isProjectFetching}
                   isError={isProjectError}
-                  isErrorMessage="Failed to load Projects"
+                  errorMessage="Failed to load Projects"
                   label="Project Name"
                   control={control}
                   name="project.project"
                   value={selectedProject}
                   disabled={isProjectError}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  onChange={(
+                    e: SelectChangeEvent<HTMLSelectElement>,
+                    _: React.ReactNode,
+                  ) => {
                     handleOnChange(
                       e.target.value,
                       setSelectedProject,
                       "project.project",
                     );
                     reset({ "project.pointid_prefix": "" });
+                    setSelectedPointIDPrefix("");
                   }}
                   options={projects?.map((option) => {
                     return { value: option.Project, label: option.Project };
                   })}
-                  errorMessage={
-                    (
-                      errors.project as FieldErrors<IWellInventoryForm>["project"]
-                    )?.project?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                <LoadingControlledSelectField
-                  isLoading={isProjectFetching}
-                  label="PointId Prefix"
-                  control={control}
-                  disabled={!selectedProjectData || isProjectError}
-                  name="project.pointid_prefix"
-                  value={selectedPointIDPrefix}
-                  isError={isProjectError}
-                  isErrorMessage="Failed to load pointId prefixes"
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                    handleOnChange(
-                      e.target.value,
-                      setSelectedPointIDPrefix,
-                      "project.pointid_prefix",
-                    );
-                  }}
-                  options={
-                    selectedProjectData
-                      ? selectedProjectData.PointIDPrefix.map((prefix) => ({
-                          value: prefix,
-                          label: prefix,
-                        }))
-                      : []
+                <Tooltip
+                  placement="top"
+                  title={
+                    !selectedProject
+                      ? "Must select a Project before selecting a PointId Prefix"
+                      : null
                   }
-                  errorMessage={
-                    (
-                      errors.project as FieldErrors<IWellInventoryForm>["project"]
-                    )?.pointid_prefix?.message
-                  }
-                />
+                >
+                  <div>
+                    <LoadingControlledSelectField
+                      isLoading={isProjectFetching}
+                      label="PointId Prefix"
+                      control={control}
+                      disabled={!selectedProjectData || isProjectError}
+                      name="project.pointid_prefix"
+                      value={selectedPointIDPrefix}
+                      isError={isProjectError}
+                      errorMessage="Failed to load pointId prefixes"
+                      onChange={(
+                        e: SelectChangeEvent<HTMLSelectElement>,
+                        _: React.ReactNode,
+                      ) => {
+                        handleOnChange(
+                          e.target.value,
+                          setSelectedPointIDPrefix,
+                          "project.pointid_prefix",
+                        );
+                      }}
+                      options={
+                        selectedProjectData
+                          ? selectedProjectData.PointIDPrefix.map((prefix) => ({
+                              value: prefix,
+                              label: prefix,
+                            }))
+                          : []
+                      }
+                    />
+                  </div>
+                </Tooltip>
               </Grid>
               <Grid size={{ xs: 12, lg: 6, xl: 3 }}>
                 {isNewPointIdPreviewFetching ? (
@@ -290,11 +330,6 @@ export const WellInventoryForm = () => {
                     control={control}
                     type="text"
                     name="owner.owner_key"
-                    errorMessage={
-                      (
-                        errors.project as FieldErrors<IWellInventoryForm>["owner"]
-                      )?.owner_key?.message
-                    }
                   />
                 </Grid>
               </Grid>
@@ -305,10 +340,6 @@ export const WellInventoryForm = () => {
                   control={control}
                   type="text"
                   name="owner.first_name"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.first_name?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
@@ -318,10 +349,6 @@ export const WellInventoryForm = () => {
                   control={control}
                   type="text"
                   name="owner.last_name"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.last_name?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
@@ -331,10 +358,6 @@ export const WellInventoryForm = () => {
                   control={control}
                   type="text"
                   name="owner.second_first_name"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.second_first_name?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
@@ -344,10 +367,6 @@ export const WellInventoryForm = () => {
                   control={control}
                   type="text"
                   name="owner.second_last_name"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.second_last_name?.message
-                  }
                 />
               </Grid>
               <Grid
@@ -367,11 +386,6 @@ export const WellInventoryForm = () => {
                     control={control}
                     type="tel"
                     name="owner.cell_phone"
-                    errorMessage={
-                      (
-                        errors.project as FieldErrors<IWellInventoryForm>["owner"]
-                      )?.cell_phone?.message
-                    }
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
@@ -381,11 +395,6 @@ export const WellInventoryForm = () => {
                     control={control}
                     type="tel"
                     name="owner.phone"
-                    errorMessage={
-                      (
-                        errors.project as FieldErrors<IWellInventoryForm>["owner"]
-                      )?.phone?.message
-                    }
                   />
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6 }}>
@@ -393,11 +402,6 @@ export const WellInventoryForm = () => {
                     label="Email"
                     control={control}
                     name="owner.email"
-                    errorMessage={
-                      (
-                        errors.project as FieldErrors<IWellInventoryForm>["owner"]
-                      )?.email?.message
-                    }
                   />
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6, xl: 3 }} offset={{ xl: 3 }}>
@@ -405,11 +409,6 @@ export const WellInventoryForm = () => {
                     label="Phone (Secondary)"
                     control={control}
                     name="owner.second_ctct_phone"
-                    errorMessage={
-                      (
-                        errors.project as FieldErrors<IWellInventoryForm>["owner"]
-                      )?.second_ctct_phone?.message
-                    }
                   />
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6 }}>
@@ -417,11 +416,6 @@ export const WellInventoryForm = () => {
                     label="Email (Secondary)"
                     control={control}
                     name="owner.second_ctct_email"
-                    errorMessage={
-                      (
-                        errors.project as FieldErrors<IWellInventoryForm>["owner"]
-                      )?.second_ctct_email?.message
-                    }
                   />
                 </Grid>
               </Grid>
@@ -434,10 +428,6 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="owner.physical_address"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.physical_address?.message
-                  }
                   onAddressSelect={(
                     selectedAddress: string,
                     selectedCity: string,
@@ -466,10 +456,6 @@ export const WellInventoryForm = () => {
                   type="text"
                   control={control}
                   name="owner.physical_city"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.physical_city?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
@@ -487,10 +473,6 @@ export const WellInventoryForm = () => {
                   type="text"
                   control={control}
                   name="owner.physical_state"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.physical_state?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
@@ -508,10 +490,6 @@ export const WellInventoryForm = () => {
                   type="text"
                   control={control}
                   name="owner.physical_zip_code"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.physical_zip_code?.message
-                  }
                 />
               </Grid>
               <Grid
@@ -537,10 +515,6 @@ export const WellInventoryForm = () => {
                   type="text"
                   control={control}
                   name="owner.mailing_address"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.mailing_address?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, lg: 6 }}>
@@ -550,10 +524,6 @@ export const WellInventoryForm = () => {
                   type="text"
                   control={control}
                   name="owner.mail_city"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.mail_city?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
@@ -563,10 +533,6 @@ export const WellInventoryForm = () => {
                   type="text"
                   control={control}
                   name="owner.mail_state"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.mail_state?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
@@ -576,10 +542,6 @@ export const WellInventoryForm = () => {
                   type="text"
                   control={control}
                   name="owner.mail_zip_code"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["owner"])
-                      ?.mail_zip_code?.message
-                  }
                 />
               </Grid>
             </Grid>
@@ -592,11 +554,6 @@ export const WellInventoryForm = () => {
                 fullWidth
                 control={control}
                 name="location.site_id"
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.site_id?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
@@ -605,11 +562,6 @@ export const WellInventoryForm = () => {
                 fullWidth
                 control={control}
                 name="location.alternate_site_id"
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.alternate_site_id?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
@@ -618,37 +570,24 @@ export const WellInventoryForm = () => {
                 fullWidth
                 control={control}
                 name="location.site_name"
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.site_name?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4, lg: 5 }}>
               <ControlledTextField
+                type="number"
                 label={locationLabels[coordinateType][0]}
                 fullWidth
                 control={control}
                 name="location.coordinates.x"
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.coordinates?.x?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4, lg: 5 }}>
               <ControlledTextField
+                type="number"
                 label={locationLabels[coordinateType][1]}
                 fullWidth
                 control={control}
                 name="location.coordinates.y"
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.coordinates?.y?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4, lg: 2 }}>
@@ -668,25 +607,14 @@ export const WellInventoryForm = () => {
                   { value: "gcs", label: "GCS" },
                   { value: "utm", label: "UTM" },
                 ]}
-                errorMessage={
-                  (
-                    (
-                      errors.project as FieldErrors<IWellInventoryForm>["location"]
-                    )?.coordinates?.type as FieldError
-                  )?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <ControlledTextField
+                type="number"
                 label="Altitude"
                 control={control}
                 name="location.altitude"
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.altitude?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
@@ -697,15 +625,10 @@ export const WellInventoryForm = () => {
                 name="location.utm_datum"
                 disabled={isCoordinateDatumError}
                 isError={isCoordinateDatumError}
-                isErrorMessage="Failed to load UTM datums"
+                errorMessage="Failed to load UTM datums"
                 options={coordinateDatums?.map((option) => {
                   return { value: option.DATUMCODE, label: option.DATUMCODE };
                 })}
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.utm_datum?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
@@ -716,15 +639,10 @@ export const WellInventoryForm = () => {
                 name="location.alt_datum"
                 disabled={isAltitudeDatumError}
                 isError={isAltitudeDatumError}
-                isErrorMessage="Failed to load ALT datums"
+                errorMessage="Failed to load ALT datums"
                 options={altitudeDatums?.map((option) => {
                   return { value: option.Code, label: option.Code };
                 })}
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.alt_datum?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
@@ -735,15 +653,10 @@ export const WellInventoryForm = () => {
                 name="location.altitude_method"
                 disabled={isAltitudeMethodError}
                 isError={isAltitudeMethodError}
-                isErrorMessage="Failed to load altitude methods"
+                errorMessage="Failed to load altitude methods"
                 options={altitudeMethods?.map((option) => {
                   return { value: option.Code, label: option.Meaning };
                 })}
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.altitude_method?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
@@ -754,15 +667,10 @@ export const WellInventoryForm = () => {
                 name="location.site_type"
                 disabled={isSiteTypeError}
                 isError={isSiteTypeError}
-                isErrorMessage="Failed to load site types"
+                errorMessage="Failed to load site types"
                 options={siteTypes?.map((option) => {
                   return { value: option.Code, label: option.Meaning };
                 })}
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.site_type?.message
-                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -771,11 +679,6 @@ export const WellInventoryForm = () => {
                 label="Notes"
                 control={control}
                 name="location.location_notes"
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.location_notes?.message
-                }
               />
             </Grid>
             <Grid size={12}>
@@ -783,11 +686,6 @@ export const WellInventoryForm = () => {
                 label="Owner acknowledges data will be publicly available?"
                 control={control}
                 name="location.public_release"
-                errorMessage={
-                  (
-                    errors.project as FieldErrors<IWellInventoryForm>["location"]
-                  )?.public_release?.message
-                }
               />
             </Grid>
             <Grid size={12}>
@@ -799,12 +697,6 @@ export const WellInventoryForm = () => {
                   label="Would owner give permission for repeat measurements?"
                   control={control}
                   name="location.monitor_ok"
-                  errorMessage={errors.location?.monitor_ok?.message}
-                  errorMessage={
-                    (
-                      errors.project as FieldErrors<IWellInventoryForm>["location"]
-                    )?.monitor_ok?.message
-                  }
                 />
               </Grid>
               <Grid size={12}>
@@ -812,11 +704,6 @@ export const WellInventoryForm = () => {
                   label="Would owner give permission for sampling in the future?"
                   control={control}
                   name="location.sample_ok"
-                  errorMessage={
-                    (
-                      errors.project as FieldErrors<IWellInventoryForm>["location"]
-                    )?.sample_ok?.message
-                  }
                 />
               </Grid>
               <Grid size={12}>
@@ -824,11 +711,6 @@ export const WellInventoryForm = () => {
                   label="Would owner give permission for datalogger installation?"
                   control={control}
                   name="location.open_well_logger_ok"
-                  errorMessage={
-                    (
-                      errors.project as FieldErrors<IWellInventoryForm>["location"]
-                    )?.open_well_logger_ok?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -837,58 +719,42 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="well.ose_well_id"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.ose_well_id?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
+                  type="number"
                   label="Well Total Depth"
                   fullWidth
                   control={control}
                   name="well.hole_depth"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.hole_depth?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
+                  type="number"
                   label="Outer Casing Diameter"
                   fullWidth
                   control={control}
                   name="well.casing_diameter"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.casing_diameter?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
+                  type="number"
                   label="Casing Depth"
                   fullWidth
                   control={control}
                   name="well.casing_depth"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.casing_depth?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
+                  type="number"
                   label="MP Height (+/-)"
                   fullWidth
                   control={control}
                   name="well.mp_height"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.mp_height?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -897,10 +763,6 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="well.measuring_point"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.measuring_point?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -912,49 +774,36 @@ export const WellInventoryForm = () => {
                   name="well.monitoring_status"
                   disabled={isMonitoryingStatusError}
                   isError={isMonitoryingStatusError}
-                  isErrorMessage="Failed to load monitoring statuses"
+                  errorMessage="Failed to load monitoring statuses"
                   options={monitoryingStatuses?.map((option) => {
                     return {
                       label: option.Meaning,
                       value: option.Code,
                     };
                   })}
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.monitoring_status?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <LoadingControlledSelectField
                   isLoading={isFormationFetching}
-                  isError={isFormationError}
-                  isErrorMessage=""
                   label="Formation"
                   control={control}
                   name="well.formation"
                   disabled={isFormationError}
                   isError={isFormationError}
-                  isErrorMessage="Failed to load formations"
+                  errorMessage="Failed to load formations"
                   options={formations?.map((option) => {
                     return { value: option.Code, label: option.Meaning };
                   })}
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.formation?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                 <ControlledTextField
+                  type="number"
                   label="Static Water"
                   fullWidth
                   control={control}
                   name="well.static_water"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.static_water?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -963,10 +812,6 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="well.data_source"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.data_source?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -976,10 +821,6 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="well.casing_description"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.casing_description?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -989,10 +830,6 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="well.construction_notes"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.construction_notes?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -1002,10 +839,6 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="well.water_notes"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.water_notes?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -1015,10 +848,6 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="well.status_user_notes"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.status_user_notes?.message
-                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -1028,10 +857,6 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="well.notes"
-                  errorMessage={
-                    (errors.project as FieldErrors<IWellInventoryForm>["well"])
-                      ?.notes?.message
-                  }
                 />
               </Grid>
             </Grid>
@@ -1055,8 +880,13 @@ export const WellInventoryForm = () => {
                 </Button>
               </Grid>{" "}
               <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2 }}>
-                <Button type="submit" variant="contained" fullWidth>
-                  Submit
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  disabled={isFormSubmissionPending}
+                >
+                  {isFormSubmissionPending ? "Submitting..." : "Submit"}
                 </Button>
               </Grid>
             </Grid>
@@ -1070,7 +900,7 @@ export const WellInventoryForm = () => {
 export const LoadingControlledSelectField = <T,>({
   isLoading,
   isError,
-  isErrorMessage,
+  errorMessage,
   options,
   control,
   label,
@@ -1079,7 +909,7 @@ export const LoadingControlledSelectField = <T,>({
 }: {
   isLoading: boolean;
   isError?: boolean;
-  isErrorMessage?: string;
+  errorMessage?: string;
   options: { value: string; label: string }[];
   control: Control<T>;
   name: string;
@@ -1087,7 +917,7 @@ export const LoadingControlledSelectField = <T,>({
 } & SelectProps) => {
   if (isLoading) return <SkeletonFormField />;
 
-  if (isError) return <ErrorAlertFormField message={isErrorMessage} />;
+  if (isError) return <ErrorAlertFormField message={errorMessage} />;
 
   return (
     <ControlledSelectField

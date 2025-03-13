@@ -15,10 +15,16 @@ export const WellInventorySchema = Yup.object().shape({
     ),
     coordinates: Yup.object({
       type: Yup.mixed().oneOf(["utm", "gcs"]),
-      x: Yup.number().nullable(),
-      y: Yup.number().nullable(),
+      x: Yup.number()
+        .nullable()
+        .typeError("X coordinate must be a valid number."),
+      y: Yup.number()
+        .nullable()
+        .typeError("Y coordinate must be a valid number."),
     }),
-    altitude: Yup.number().nullable(),
+    altitude: Yup.number()
+      .nullable()
+      .typeError("Altitude must be a valid number."),
     utm_datum: Yup.string().nullable(),
     alt_datum: Yup.string().nullable(),
     location_notes: Yup.string().nullable(),
@@ -26,26 +32,35 @@ export const WellInventorySchema = Yup.object().shape({
     site_type: Yup.string().nullable(),
   }),
   well: Yup.object({
-    hole_depth: Yup.number().min(0, "Hole depth must be positive").nullable(),
-    well_depth: Yup.number().min(0, "Well depth must be positive").nullable(),
+    hole_depth: Yup.number()
+      .nullable()
+      .typeError("Hole depth must be a valid number.")
+      .min(0, "Hole depth must be positive"),
+    well_depth: Yup.number()
+      .nullable()
+      .typeError("Well depth must be a valid number.")
+      .min(0, "Well depth must be positive"),
     ose_well_id: Yup.string().nullable(),
     ose_welltag_id: Yup.string().nullable(),
     measuring_point: Yup.string().nullable(),
     mp_height: Yup.number()
-      .min(0, "Measuring Point Height must be positive")
-      .nullable(),
+      .nullable()
+      .typeError("Measuring Point Height must be a valid number."),
     casing_diameter: Yup.number()
-      .min(0, "Casing Diameter must be positive")
-      .nullable(),
+      .nullable()
+      .typeError("Casing Diameter must be a valid number.")
+      .min(0, "Casing Diameter must be positive"),
     casing_depth: Yup.number()
-      .min(0, "Casing Depth must be positive")
-      .nullable(),
+      .nullable()
+      .typeError("Casing Depth must be a valid number.")
+      .min(0, "Casing Depth must be positive"),
     casing_description: Yup.string().nullable(),
     construction_notes: Yup.string().nullable(),
     formation: Yup.string().nullable(),
     static_water: Yup.number()
-      .min(0, "Static Water Level must be positive")
-      .nullable(),
+      .nullable()
+      .typeError("Static Water Level must be a valid number.")
+      .min(0, "Static Water Level must be positive"),
     data_source: Yup.string().nullable(),
     monitoring_status: Yup.string().nullable(),
     water_notes: Yup.string().nullable(),

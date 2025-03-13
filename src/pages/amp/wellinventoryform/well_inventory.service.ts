@@ -1,6 +1,7 @@
 import { getAccessToken } from "@/providers/fief-provider";
 import { fetchConfig, lookupTableQueryConfig } from "./well_inventory.configs";
 import { useQuery } from "@tanstack/react-query";
+import { IWellInventoryForm } from "@/interfaces";
 
 const fetchProjects = async (): Promise<
   {
@@ -189,4 +190,20 @@ export const getNewPointIDPreview = (prefix: string) => {
     queryFn: () => fetchNewPointIDPreview(prefix),
     enabled: !!prefix,
   });
+};
+
+export const createWellInventoryForm = async (
+  body: Partial<IWellInventoryForm>,
+) => {
+  const accessToken = await getAccessToken();
+  const response = await fetch("/api/authorized/well_inventory", {
+    ...fetchConfig(accessToken, "POST"),
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create new well inventory entry");
+  }
+
+  return response.json();
 };

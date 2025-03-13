@@ -6,19 +6,17 @@ export const ControlledPhoneField = <T,>({
   control,
   name,
   label,
-  errorMessage,
   ...textFieldProps
 }: {
   control: Control<T>;
   name: string;
   label: string;
-  errorMessage?: string;
 } & TextFieldProps) => {
   return (
     <Controller
       name={name as Path<T>}
       control={control}
-      render={({ field }) => (
+      render={({ field, fieldState }) => (
         <InputMask
           mask="(999)-999-9999"
           value={field.value || ""}
@@ -30,8 +28,8 @@ export const ControlledPhoneField = <T,>({
             <TextField
               {...textFieldProps}
               label={label}
-              error={!!errorMessage}
-              helperText={errorMessage || ""}
+              error={!!fieldState?.error}
+              helperText={fieldState?.error?.message || ""}
               fullWidth
             />
           )}
