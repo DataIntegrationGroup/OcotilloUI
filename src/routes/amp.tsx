@@ -23,6 +23,7 @@ import { ProjectShow } from "@/pages/geochronology/projects";
 import { LookupTableList, MeasuringAgencyList } from "@/components/lookuptable";
 import { WellInventoryForm } from "@/pages/amp/wellinventoryform";
 import { HydrographCorrector } from "@/pages/amp/hydrographcorrector";
+import { ErrorComponent } from "@refinedev/mui";
 
 const lookupRoutes = [
   "measurement_method",
@@ -74,6 +75,7 @@ export const AMPRoutes = () => {
       <Route path="lu_measuring_agency">
         <Route index element={<MeasuringAgencyList />} />
       </Route>
+      <Route path="*" element={<ErrorComponent />} />
     </Routes>
   );
 };

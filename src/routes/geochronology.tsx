@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import { ErrorComponent } from "@refinedev/mui";
 import { GeochronologyDashboard } from "@/pages/geochronology/dashboard";
 import {
   PrincipalInvestigatorCreate,
@@ -45,6 +46,7 @@ export const GeochronologyRoutes = () => {
         <Route path="create" element={<MaterialCreate />} />
         <Route path="show/:id" element={<MaterialShow />} />
       </Route>
+      <Route path="*" element={<ErrorComponent />} />
     </Routes>
   );
 };

@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { GeothermalDashboard } from "@/pages/geothermal/dashboard";
+import { ErrorComponent } from "@refinedev/mui";
 import {
   GeoThermalWellList,
   GeoThermalWellShow,
@@ -13,6 +14,7 @@ export const GeothermalRoutes = () => {
         <Route index element={<GeoThermalWellList />} />
         <Route path="show/:id" element={<GeoThermalWellShow />} />
       </Route>
+      <Route path="*" element={<ErrorComponent />} />
     </Routes>
   );
 };
