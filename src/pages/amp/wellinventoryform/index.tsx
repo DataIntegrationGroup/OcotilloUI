@@ -6,7 +6,6 @@ import React, {
   useState,
 } from "react";
 import { useForm } from "@refinedev/react-hook-form";
-import { Control } from "react-hook-form";
 import { IWellInventoryForm } from "@/interfaces/amp";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { WellInventorySchema, SchemaDefaults } from "./well_inventory.schema";
@@ -17,10 +16,7 @@ import {
   CardContent,
   CardHeader,
   IconButton,
-  Paper,
   SelectChangeEvent,
-  SelectProps,
-  Stack,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -35,7 +31,11 @@ import {
 } from "@/components";
 import { useTheme } from "@mui/material";
 import { PersonSearch } from "@mui/icons-material";
-import { SearchOwnerDialog } from "./SearchOwnerDialog";
+import {
+  LoadingControlledSelectField,
+  SearchOwnerDialog,
+  NewPointIdPreview,
+} from "@/components/amp/wellinventoryform";
 import {
   createWellInventoryForm,
   getAltitudeDatums,
@@ -896,60 +896,3 @@ export const WellInventoryForm = () => {
     </Card>
   );
 };
-
-export const LoadingControlledSelectField = <T,>({
-  isLoading,
-  isError,
-  errorMessage,
-  options,
-  control,
-  label,
-  name,
-  ...props
-}: {
-  isLoading: boolean;
-  isError?: boolean;
-  errorMessage?: string;
-  options: { value: string; label: string }[];
-  control: Control<T>;
-  name: string;
-  label: string;
-} & SelectProps) => {
-  if (isLoading) return <SkeletonFormField />;
-
-  if (isError) return <ErrorAlertFormField message={errorMessage} />;
-
-  return (
-    <ControlledSelectField
-      options={options}
-      control={control}
-      label={label}
-      name={name}
-      {...props}
-    />
-  );
-};
-
-const NewPointIdPreview = ({ id }: { id: string }) => (
-  <Paper
-    elevation={2}
-    sx={{
-      padding: 1,
-      textAlign: "center",
-      borderRadius: "4px",
-      height: 55,
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-    }}
-  >
-    <Stack direction="row" gap={2} justifyContent="center" alignItems="center">
-      <Typography variant="subtitle1" color="primary">
-        New Point ID:
-      </Typography>
-      <Typography variant="h6" fontWeight="bold">
-        {id || "N/A"}
-      </Typography>
-    </Stack>
-  </Paper>
-);
