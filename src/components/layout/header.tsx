@@ -107,8 +107,6 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
     handleMenuClose();
   };
 
-  console.log({ user, isLoading });
-
   return (
     <AppBar position="sticky">
       <Toolbar>

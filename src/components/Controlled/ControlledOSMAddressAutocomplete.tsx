@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Controller, Control, FormState, Path } from "react-hook-form";
+import { Controller, Control, Path } from "react-hook-form";
 import {
   TextField,
   TextFieldProps,
@@ -16,15 +16,12 @@ export const ControlledOSMAddressAutocomplete = <T,>({
   control,
   name,
   label,
-  errorMessage,
   onAddressSelect,
   ...textFieldProps
 }: {
   control: Control<T>;
-  formState: FormState<T>;
-  name: Path<T>;
+  name: string;
   label: string;
-  errorMessage?: string;
   onAddressSelect?: (
     address: string,
     city: string,
@@ -68,16 +65,16 @@ export const ControlledOSMAddressAutocomplete = <T,>({
 
   return (
     <Controller
-      name={name}
+      name={name as Path<T>}
       control={control}
-      render={({ field }) => (
+      render={({ field, fieldState }) => (
         <div style={{ position: "relative" }}>
           <TextField
             {...field}
             {...textFieldProps}
             label={label}
-            error={!!errorMessage}
-            helperText={errorMessage || ""}
+            error={!!fieldState?.error}
+            helperText={fieldState?.error?.message || ""}
             fullWidth
             autoComplete="off"
             onFocus={() => setIsFocused(true)}
