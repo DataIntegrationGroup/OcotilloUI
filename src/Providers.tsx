@@ -58,7 +58,7 @@ export const Providers = ({ children }: { children: ReactNode }) => (
             disableTelemetry: true,
             syncWithLocation: true,
             warnWhenUnsavedChanges: true,
-            projectId: process.env.REFINE_PROJECT_ID,
+            projectId: import.meta.env.VITE_REFINE_PROJECT_ID,
           }}
         >
           <UnsavedChangesNotifier />
