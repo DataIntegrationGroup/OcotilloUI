@@ -17,7 +17,7 @@ export const ControlledEmailField = <T,>({
   ...textFieldProps
 }: {
   control: Control<T>;
-  name: Path<T>;
+  name: string;
   label: string;
 }) => {
   const [_, setInputValue] = useState("");
@@ -31,13 +31,13 @@ export const ControlledEmailField = <T,>({
 
   return (
     <Controller
-      name={name}
+      name={name as Path<T>}
       control={control}
       render={({ field, fieldState }) => (
         <Autocomplete
           freeSolo
           disableClearable
-          options={getSuggestions(field.value || "")}
+          options={getSuggestions((field.value as string) || "")}
           onInputChange={(_, newValue) => {
             setInputValue(newValue);
             field.onChange(newValue);
