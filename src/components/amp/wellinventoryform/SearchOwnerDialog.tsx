@@ -57,6 +57,11 @@ export const SearchOwnerDialog = ({
     setOwners(results);
   };
 
+  const handleOwnerSelect = (owner: Owner) => {
+    // Simulate selecting an owner
+    console.debug({ owner });
+  };
+
   const { control, handleSubmit, reset } = useForm<{ search: string }>();
 
   return (
@@ -81,8 +86,6 @@ export const SearchOwnerDialog = ({
             Search
           </Button>
         </form>
-
-        {/* Search Results Table */}
         {owners.length > 0 && (
           <TableContainer component={Paper} sx={{ mt: 2 }}>
             <Table>
@@ -114,8 +117,10 @@ export const SearchOwnerDialog = ({
           </TableContainer>
         )}
       </DialogContent>
-
       <DialogActions>
+        <Button onClick={() => reset()} color="secondary">
+          Reset
+        </Button>
         <Button onClick={() => setOpen(false)} color="secondary">
           Close
         </Button>
