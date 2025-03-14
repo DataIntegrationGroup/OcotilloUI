@@ -7,14 +7,12 @@
 // ===============================================================================
 
 import {Route, Routes} from "react-router-dom";
-import {GeothermalDashboard} from "@/pages/geothermal/dashboard";
-import {GeoThermalWellList, GeoThermalWellShow} from "@/pages/geothermal/wells";
-import {SubsurfaceDashboard} from "@/pages/subsurface/dashboard";
+import {MapsDashboard} from "@/pages/maps/dashboard";
 
-export const SubsurfaceRoutes = () => {
+export const MapsRoutes = () => {
     return (
         <Routes>
-            <Route path="dashboard" element={<SubsurfaceDashboard/>}/>
+            <Route path="dashboard" element={<MapsDashboard/>}/>
             {/*<Route path="wells">*/}
             {/*    <Route index element={<GeoThermalWellList/>}/>*/}
             {/*    /!*<Route path="create" element={<GeoThermalCreate/>}/>*!/*/}

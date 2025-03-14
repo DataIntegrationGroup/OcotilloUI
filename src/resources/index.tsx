@@ -18,15 +18,18 @@ import WaterDropOutlined from '@mui/icons-material/WaterDropOutlined';
 import AccessTime from '@mui/icons-material/AccessTime';
 import HeatPumpOutlined from '@mui/icons-material/HeatPumpOutlined';
 import DiamondOutlined from '@mui/icons-material/DiamondOutlined';
+import MapOutlined from "@mui/icons-material/MapOutlined";
+import SensorsOutlinedIcon from "@mui/icons-material/SensorsOutlined";
+import {AssuredWorkloadOutlined, OilBarrelOutlined} from "@mui/icons-material";
+
 import {ampResources, lookup} from '@/resources/amp'
 import {geochronologyResources} from '@/resources/geochronology'
 import {criticalMineralResources} from '@/resources/criticalminerals'
 import {geothermalResources} from '@/resources/geothermal'
 import {st2Resources} from "@/resources/st2";
-import SensorsOutlinedIcon from "@mui/icons-material/SensorsOutlined";
 import {governorResources} from "@/resources/governor";
-import {AssuredWorkloadOutlined, GavelOutlined, OilBarrelOutlined} from "@mui/icons-material";
 import {subsurfaceResources} from "@/resources/subsurface";
+import {mapsResources} from "@/resources/maps";
 
 
 let base = [{
@@ -64,6 +67,11 @@ let base = [{
         icon: <AssuredWorkloadOutlined/>,
         meta: {label: 'Govern'}
     },
+    {
+        name: 'maps',
+        icon: <MapOutlined/>,
+        meta: {label: 'Maps'}
+    }
 
 ]
 
@@ -75,7 +83,8 @@ export const resources = [...base,
     ...criticalMineralResources,
     ...geothermalResources,
     ...governorResources,
-    ...subsurfaceResources
+    ...subsurfaceResources,
+    ...mapsResources
 ]
 
 // ============= EOF =============================================
