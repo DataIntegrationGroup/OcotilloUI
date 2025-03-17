@@ -1,6 +1,7 @@
 import React, {
   Dispatch,
   SetStateAction,
+  useContext,
   useEffect,
   useMemo,
   useState,
@@ -17,6 +18,7 @@ import {
   CardContent,
   CardHeader,
   IconButton,
+  Paper,
   SelectChangeEvent,
   Tooltip,
   Typography,
@@ -54,22 +56,23 @@ import { ErrorAlertFormField } from "@/components/ErrorAlertFormField";
 import { useMutation } from "@tanstack/react-query";
 import { useNotification } from "@refinedev/core";
 import { settings } from "@/settings";
-
-const initialViewState = {
-  longitude: -106.4,
-  latitude: 34.5,
-  zoom: 6,
-};
-
-const mapStyle = "mapbox://styles/mapbox/light-v10";
-const style = { width: "100%", height: "650px" };
+import { ColorModeContext } from "@/contexts";
 
 export const WellInventoryForm = () => {
-  const [viewState, setViewState] = useState({
-    longitude: -100,
-    latitude: 40,
-    zoom: 3.5,
-  });
+  const initialViewState = {
+    longitude: -106.4,
+    latitude: 34.5,
+    zoom: 6,
+  };
+
+  const [viewState, setViewState] = useState(initialViewState);
+
+  const style = { width: "100%", height: "650px" };
+  const { mode } = useContext(ColorModeContext);
+  const mapStyle =
+    mode === "dark"
+      ? "mapbox://styles/mapbox/dark-v10"
+      : "mapbox://styles/mapbox/light-v10";
 
   const theme = useTheme();
 
@@ -566,15 +569,17 @@ export const WellInventoryForm = () => {
               <Typography variant="h2">Location</Typography>
             </Grid>
             <Grid size={12}>
-              <Map
-                {...viewState}
-                onMove={(evt) => setViewState(evt.viewState)}
-                mapboxAccessToken={settings.mapboxToken}
-                initialViewState={initialViewState}
-                mapStyle="mapbox://styles/mapbox/satellite-v9"
-                terrain={{ source: "mapbox-dem", exaggeration: 3 }}
-                style={style}
-              />
+              <Paper elevation={2}>
+                <Map
+                  {...viewState}
+                  onMove={(evt) => setViewState(evt.viewState)}
+                  mapboxAccessToken={settings.mapboxToken}
+                  initialViewState={initialViewState}
+                  terrain={{ source: "mapbox-dem", exaggeration: 3 }}
+                  style={style}
+                  mapStyle={mapStyle}
+                />
+              </Paper>
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <ControlledTextField
