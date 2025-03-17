@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { Map } from "react-map-gl";
 import { useForm } from "@refinedev/react-hook-form";
 import { IWellInventoryForm } from "@/interfaces/amp";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -52,8 +53,24 @@ import { SkeletonFormField } from "@/components/SkeletonFormField";
 import { ErrorAlertFormField } from "@/components/ErrorAlertFormField";
 import { useMutation } from "@tanstack/react-query";
 import { useNotification } from "@refinedev/core";
+import { settings } from "@/settings";
+
+const initialViewState = {
+  longitude: -106.4,
+  latitude: 34.5,
+  zoom: 6,
+};
+
+const mapStyle = "mapbox://styles/mapbox/light-v10";
+const style = { width: "100%", height: "650px" };
 
 export const WellInventoryForm = () => {
+  const [viewState, setViewState] = useState({
+    longitude: -100,
+    latitude: 40,
+    zoom: 3.5,
+  });
+
   const theme = useTheme();
 
   const [openSearchOwnerDialog, setOpenSearchOwnerDialog] = useState(false);
@@ -547,6 +564,17 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={12}>
               <Typography variant="h2">Location</Typography>
+            </Grid>
+            <Grid size={12}>
+              <Map
+                {...viewState}
+                onMove={(evt) => setViewState(evt.viewState)}
+                mapboxAccessToken={settings.mapboxToken}
+                initialViewState={initialViewState}
+                mapStyle="mapbox://styles/mapbox/satellite-v9"
+                terrain={{ source: "mapbox-dem", exaggeration: 3 }}
+                style={style}
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <ControlledTextField
