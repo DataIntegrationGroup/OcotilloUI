@@ -17,11 +17,14 @@ import {
   Skeleton,
   Typography,
   TablePagination,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import { useNotification } from "@refinedev/core";
 import { useMutation } from "@tanstack/react-query";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, Fragment, SetStateAction, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 
 interface IOwnerSearchForm {
@@ -44,6 +47,14 @@ export const SearchOwnerDialog = ({
     useNotification();
   const { control, handleSubmit, reset } = useForm<IOwnerSearchForm>();
 
+  const [searchParams, setSearchParams] = useState<{
+    owner_key_like: string;
+    first_name_like: string;
+    last_name_like: string;
+    email_like: string;
+    phone_like: string;
+    cell_phone_like: string;
+  } | null>(null);
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -58,6 +69,10 @@ export const SearchOwnerDialog = ({
   const { mutate, isPending } = useMutation({
     mutationFn: fetchOwnerSearch,
     onMutate: () => {
+      setPagination({ total: 0, page: 1, size: 10, pages: 1 });
+      setOwners(null);
+      setLocations(new Map());
+
       openNotification?.({
         key: "owner-search",
         type: "progress",
@@ -88,6 +103,10 @@ export const SearchOwnerDialog = ({
       setLocations(locationMap);
     },
     onError: () => {
+      setPagination({ total: 0, page: 1, size: 10, pages: 1 });
+      setOwners(null);
+      setLocations(new Map());
+
       closeNotification?.("owner-search");
       openNotification?.({
         key: "owner-search-error",
@@ -99,6 +118,15 @@ export const SearchOwnerDialog = ({
   });
 
   const handleSearch = (data: IOwnerSearchForm) => {
+    setSearchParams({
+      owner_key_like: data.owner_key || "",
+      first_name_like: data.first_name.toLocaleLowerCase() || "",
+      last_name_like: data.last_name.toLocaleLowerCase() || "",
+      email_like: data.email || "",
+      phone_like: data.phone || "",
+      cell_phone_like: data.cell_phone || "",
+    });
+
     mutate({
       owner_key_like: data.owner_key || "",
       first_name_like: data.first_name.toLocaleLowerCase() || "",
@@ -112,8 +140,11 @@ export const SearchOwnerDialog = ({
   };
 
   const handlePageChange = (_: unknown, newPage: number) => {
+    if (!searchParams) return;
+
     setPagination((prev) => ({ ...prev, page: newPage + 1 }));
     mutate({
+      ...searchParams,
       page: newPage + 1,
       size: pagination.size,
     });
@@ -122,12 +153,15 @@ export const SearchOwnerDialog = ({
   const handleRowsPerPageChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
+    if (!searchParams) return;
+
     setPagination({
       ...pagination,
       size: parseInt(event.target.value, 10),
       page: 1,
     });
     mutate({
+      ...searchParams,
       page: 1,
       size: parseInt(event.target.value, 10),
     });
@@ -225,6 +259,7 @@ export const SearchOwnerDialog = ({
                 fullWidth
                 onClick={() => {
                   setOwners(null);
+                  setSearchParams(null);
                   reset();
                 }}
                 color="secondary"
@@ -265,25 +300,42 @@ export const SearchOwnerDialog = ({
                 <TableBody>
                   {isPending ? <SkeletonTableRow /> : null}
                   {owners?.map((owner) => (
-                    <TableRow key={owner.OwnerKey}>
-                      <TableCell>{owner.OwnerKey}</TableCell>
-                      <TableCell>{owner.FirstName}</TableCell>
-                      <TableCell>{owner.LastName}</TableCell>
-                      <TableCell>{owner.Email}</TableCell>
-                      <TableCell>
-                        {owner.Phone}
-                        {owner?.CellPhone ? `/ ${owner?.CellPhone}` : null}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => handleOwnerSelect(owner)}
-                        >
-                          Select
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                    <Fragment key={owner.OwnerKey}>
+                      <TableRow
+                        sx={{
+                          borderBottom: "none",
+                          borderTop: "1px solid rgba(224, 224, 224, 1)",
+                        }}
+                      >
+                        <TableCell>{owner.OwnerKey}</TableCell>
+                        <TableCell>{owner.FirstName}</TableCell>
+                        <TableCell>{owner.LastName}</TableCell>
+                        <TableCell>{owner.Email}</TableCell>
+                        <TableCell>
+                          {owner.Phone}
+                          {owner?.CellPhone ? `/ ${owner?.CellPhone}` : null}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => handleOwnerSelect(owner)}
+                          >
+                            Select
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                      <List dense>
+                        {locations.get(owner.OwnerKey)?.map((location) => (
+                          <ListItem key={location.PointID}>
+                            <ListItemText
+                              primary={`${location.SiteNames} (${location.PointID})`}
+                              secondary={`State: ${location.State}, County: ${location.County}`}
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Fragment>
                   ))}
                 </TableBody>
               </Table>
