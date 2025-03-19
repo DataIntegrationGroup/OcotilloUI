@@ -208,7 +208,7 @@ export const createWellInventoryForm = async (
   return response.json();
 };
 
-const fetchOwnerSearch = async ({
+export const fetchOwnerSearch = async ({
   owner_key_like = "",
   first_name_like = "",
   last_name_like = "",
@@ -261,25 +261,4 @@ const fetchOwnerSearch = async ({
   }
 
   return response.json();
-};
-
-export const searchOwners = (params: {
-  owner_key_like?: string;
-  first_name_like?: string;
-  last_name_like?: string;
-  email_like?: string;
-  phone_like?: string;
-  cell_phone_like?: string;
-  limit?: number;
-  expand?: boolean;
-  page?: number;
-  size?: number;
-}) => {
-  return useQuery({
-    queryKey: ["OwnersSearch", params],
-    queryFn: () => fetchOwnerSearch(params),
-    enabled: Object.values(params).some(
-      (value) => value !== undefined && value !== "",
-    ),
-  });
 };

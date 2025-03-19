@@ -1,5 +1,5 @@
-import { IOwner } from "@/interfaces";
-import { searchOwners } from "@/pages/amp/wellinventoryform/well_inventory.service";
+import { ILocation, IOwner } from "@/interfaces";
+import { fetchOwnerSearch } from "@/pages/amp/wellinventoryform/well_inventory.service";
 import {
   Dialog,
   DialogTitle,
@@ -14,8 +14,11 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  Skeleton,
 } from "@mui/material";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useNotification } from "@refinedev/core";
+import { useMutation } from "@tanstack/react-query";
+import { Dispatch, SetStateAction, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 
 export const SearchOwnerDialog = ({
@@ -25,42 +28,82 @@ export const SearchOwnerDialog = ({
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const { control, handleSubmit, reset } = useForm<{ search: string }>();
-  const [searchTerm, setSearchTerm] = useState<string | null>(null);
+  const { open: openNotification, close: closeNotification } =
+    useNotification();
+  const { control, handleSubmit, reset } = useForm<{
+    first_name: string;
+    last_name: string;
+  }>();
   const [owners, setOwners] = useState<IOwner[]>([]);
+  const [locations, setLocations] = useState<Map<IOwner, ILocation[]>>(null);
 
-  const { data, isLoading, error } = searchOwners({
-    first_name_like: searchTerm || "",
+  const { mutate, isPending } = useMutation({
+    mutationFn: fetchOwnerSearch,
+    onMutate: () => {
+      openNotification?.({
+        key: "well-inventory-submission",
+        type: "progress",
+        message: "Submitting Well Inventory Form...",
+      });
+    },
+    onSuccess: (data) => {
+      closeNotification?.("well-inventory-submission");
+      openNotification?.({
+        type: "success",
+        message: "Form Submitted Successfully!",
+        description: "Your well inventory form has been submitted.",
+      });
+
+      setOwners(data.items.map((item) => item.owner));
+    },
+    onError: () => {
+      closeNotification?.("well-inventory-submission");
+      openNotification?.({
+        type: "error",
+        message: "Failed to Submit Form",
+        description: "Please check your input and try again later.",
+      });
+    },
   });
 
-  const handleSearch = (data: { search: string }) => {
+  const handleSearch = (data: { first_name: string; last_name: string }) => {
     console.log({ data });
-    setSearchTerm(data.search.toLocaleLowerCase()); // Triggers query re-fetch
+    mutate({
+      first_name_like: data.first_name.toLocaleLowerCase(),
+      last_name_like: data.last_name.toLocaleLowerCase(),
+    });
   };
-
-  useEffect(() => {
-    if (data) {
-      setOwners(data.items.map((item) => item.owner));
-    }
-  }, [data]);
 
   const handleOwnerSelect = (owner: IOwner) => {
     console.log({ owner });
   };
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xl">
       <DialogTitle>Search Owner</DialogTitle>
       <DialogContent>
         <form onSubmit={handleSubmit(handleSearch)}>
           <Controller
-            name="search"
+            name="first_name"
             control={control}
             defaultValue=""
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Search by Name"
+                label="Search by First Name"
+                fullWidth
+                margin="normal"
+              />
+            )}
+          />
+          <Controller
+            name="last_name"
+            control={control}
+            defaultValue=""
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Search by Last Name"
                 fullWidth
                 margin="normal"
               />
@@ -70,38 +113,37 @@ export const SearchOwnerDialog = ({
             Search
           </Button>
         </form>
-        {owners?.length > 0 && (
-          <TableContainer component={Paper} sx={{ mt: 2 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Frist Name</TableCell>
-                  <TableCell>Last Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Action</TableCell>
+        <TableContainer component={Paper} sx={{ mt: 2 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Frist Name</TableCell>
+                <TableCell>Last Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {isPending ? <Skeleton></Skeleton> : null}
+              {owners?.map((owner) => (
+                <TableRow key={owner.OwnerKey}>
+                  <TableCell>{owner.FirstName}</TableCell>
+                  <TableCell>{owner.LastName}</TableCell>
+                  <TableCell>{owner.Email}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => handleOwnerSelect(owner)}
+                    >
+                      Select
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {owners.map((owner) => (
-                  <TableRow key={owner.OwnerKey}>
-                    <TableCell>{owner.FirstName}</TableCell>
-                    <TableCell>{owner.LastName}</TableCell>
-                    <TableCell>{owner.Email}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => handleOwnerSelect(owner)}
-                      >
-                        Select
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </DialogContent>
       <DialogActions>
         <Button
