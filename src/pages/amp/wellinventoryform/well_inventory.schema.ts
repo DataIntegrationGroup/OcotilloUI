@@ -2,44 +2,67 @@ import * as Yup from "yup";
 
 export const WellInventorySchema = Yup.object().shape({
   project: Yup.object({
-    pointid_prefix: Yup.string().nullable(),
-    project: Yup.string().nullable(),
+    pointid_prefix: Yup.string().required("PointId Prefix is required."),
+    project: Yup.string().required("Project Name is required."),
   }),
   location: Yup.object({
-    site_id: Yup.string(),
+    site_id: Yup.string().nullable(),
     alternate_site_id: Yup.string().nullable(),
     site_name: Yup.string().nullable(),
     public_release: Yup.boolean().oneOf(
       [true],
-      "Public Release must be accepted",
+      "Public Release must be accepted.",
     ),
     coordinates: Yup.object({
       type: Yup.mixed().oneOf(["utm", "gcs"]),
       x: Yup.number()
-        .nullable()
+        .required("X coordinate is required.")
         .typeError("X coordinate must be a valid number."),
       y: Yup.number()
-        .nullable()
+        .required("Y coordinate is required.")
         .typeError("Y coordinate must be a valid number."),
     }),
     altitude: Yup.number()
       .nullable()
+      // .transform((value, originalValue) =>
+      //   originalValue === "" || originalValue === 0 ? null : value,
+      // )
       .typeError("Altitude must be a valid number."),
-    utm_datum: Yup.string().nullable(),
+    utm_datum: Yup.string().required("UTM Datum is required."),
     alt_datum: Yup.string().nullable(),
+    // .transform((value, originalValue) =>
+    //   originalValue === "" ? null : value,
+    // )
+    // .when("altitude", (altitude, schema) =>
+    //   altitude !== null && altitude !== undefined
+    //     ? schema.required(
+    //         "Altitude Datum is required when altitude is provided.",
+    //       )
+    //     : schema,
+    // ),
     location_notes: Yup.string().nullable(),
     altitude_method: Yup.string().nullable(),
-    site_type: Yup.string().nullable(),
+    // .transform((value, originalValue) =>
+    //   originalValue === "" ? null : value,
+    // )
+    // .when("altitude", (altitude, schema) =>
+    //   altitude !== null && altitude !== undefined
+    //     ? schema.required(
+    //         "Altitude Datum is required when altitude is provided.",
+    //       )
+    //     : schema,
+    // ),
+    site_type: Yup.string().required("Site Type is required."),
   }),
   well: Yup.object({
     hole_depth: Yup.number()
       .nullable()
       .typeError("Hole depth must be a valid number.")
-      .min(0, "Hole depth must be positive"),
+      .min(0, "Hole depth must be positive."),
     well_depth: Yup.number()
       .nullable()
       .typeError("Well depth must be a valid number.")
-      .min(0, "Well depth must be positive"),
+      .min(0, "Well depth must be positive."),
     ose_well_id: Yup.string().nullable(),
     ose_welltag_id: Yup.string().nullable(),
     measuring_point: Yup.string().nullable(),
@@ -49,18 +72,18 @@ export const WellInventorySchema = Yup.object().shape({
     casing_diameter: Yup.number()
       .nullable()
       .typeError("Casing Diameter must be a valid number.")
-      .min(0, "Casing Diameter must be positive"),
+      .min(0, "Casing Diameter must be positive."),
     casing_depth: Yup.number()
       .nullable()
       .typeError("Casing Depth must be a valid number.")
-      .min(0, "Casing Depth must be positive"),
+      .min(0, "Casing Depth must be positive."),
     casing_description: Yup.string().nullable(),
     construction_notes: Yup.string().nullable(),
     formation: Yup.string().nullable(),
     static_water: Yup.number()
       .nullable()
       .typeError("Static Water Level must be a valid number.")
-      .min(0, "Static Water Level must be positive"),
+      .min(0, "Static Water Level must be positive."),
     data_source: Yup.string().nullable(),
     monitoring_status: Yup.string().nullable(),
     water_notes: Yup.string().nullable(),
@@ -71,10 +94,10 @@ export const WellInventorySchema = Yup.object().shape({
     open_well_logger_ok: Yup.boolean().nullable(),
   }),
   owner: Yup.object({
-    owner_key: Yup.string().nullable(),
+    owner_key: Yup.string().required("Owner Key is required."),
     first_name: Yup.string().nullable(),
     last_name: Yup.string().nullable(),
-    email: Yup.string().email("Invalid email format").nullable(),
+    email: Yup.string().email("Invalid email format.").nullable(),
     cell_phone: Yup.string()
       .nullable()
       .test(
@@ -91,12 +114,14 @@ export const WellInventorySchema = Yup.object().shape({
       ),
     mailing_address: Yup.string().nullable(),
     mail_city: Yup.string().nullable(),
-    mail_state: Yup.string().length(2, "State must be 2 characters").nullable(),
+    mail_state: Yup.string()
+      .length(2, "State must be 2 characters.")
+      .nullable(),
     mail_zip_code: Yup.string()
       .nullable()
       .test(
         "zip-code-format",
-        "Invalid ZIP Code format",
+        "Invalid ZIP Code format.",
         (value) => !value || /^[0-9]{5}(-[0-9]{4})?$/.test(value),
       ),
     physical_address: Yup.string().nullable(),
@@ -108,17 +133,17 @@ export const WellInventorySchema = Yup.object().shape({
       .nullable()
       .test(
         "zip-code-format",
-        "Invalid ZIP Code format",
+        "Invalid ZIP Code format.",
         (value) => !value || /^[0-9]{5}(-[0-9]{4})?$/.test(value),
       ),
     second_last_name: Yup.string().nullable(),
     second_first_name: Yup.string().nullable(),
-    second_ctct_email: Yup.string().email("Invalid email format").nullable(),
+    second_ctct_email: Yup.string().email("Invalid email format.").nullable(),
     second_ctct_phone: Yup.string()
       .nullable()
       .test(
         "phone-format",
-        "Invalid Phone format",
+        "Invalid Phone format.",
         (value) => !value || /^[0-9]{10}$/.test(value),
       ),
   }),
@@ -133,18 +158,18 @@ export const SchemaDefaults = {
     site_id: "",
     alternate_site_id: "",
     site_names: "",
-    public_release: false,
+    public_release: true,
     coordinates: {
       type: "utm",
       x: 0,
       y: 0,
     },
     altitude: 0,
-    utm_datum: "",
+    utm_datum: "NAD83",
     alt_datum: "",
     location_notes: "",
     altitude_method: "",
-    site_type: "",
+    site_type: "GW",
   },
   well: {
     hole_depth: 0,
