@@ -247,6 +247,7 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                 <LoadingControlledSelectField
+                  required
                   isLoading={isProjectFetching}
                   isError={isProjectError}
                   errorMessage="Failed to load Projects"
@@ -283,6 +284,7 @@ export const WellInventoryForm = () => {
                 >
                   <div>
                     <LoadingControlledSelectField
+                      required
                       isLoading={isProjectFetching}
                       label="PointId Prefix"
                       control={control}
@@ -345,6 +347,7 @@ export const WellInventoryForm = () => {
               <Grid size={12}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
+                    required
                     label="Owner Key"
                     fullWidth
                     control={control}
@@ -607,6 +610,7 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 4, lg: 5 }}>
               <ControlledTextField
+                required
                 type="number"
                 label={locationLabels[coordinateType][0]}
                 fullWidth
@@ -616,6 +620,7 @@ export const WellInventoryForm = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 4, lg: 5 }}>
               <ControlledTextField
+                required
                 type="number"
                 label={locationLabels[coordinateType][1]}
                 fullWidth
@@ -698,7 +703,7 @@ export const WellInventoryForm = () => {
                 label="Site Type"
                 control={control}
                 name="location.site_type"
-                disabled={isSiteTypeError}
+                disabled={true}
                 isError={isSiteTypeError}
                 errorMessage="Failed to load site types"
                 options={siteTypes?.map((option) => {
@@ -911,7 +916,7 @@ export const WellInventoryForm = () => {
                 >
                   Reset
                 </Button>
-              </Grid>{" "}
+              </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2 }}>
                 <Button
                   type="submit"
