@@ -195,10 +195,17 @@ export const getNewPointIDPreview = (prefix: string) => {
 export const createWellInventoryForm = async (
   body: Partial<IWellInventoryForm>,
 ) => {
+  const formData = new FormData();
+  const sanitizedBody = removeEmptyFields(body);
+  formData.append("data", JSON.stringify(sanitizedBody));
+
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/authorized/well_inventory", {
-    ...fetchConfig(accessToken, "POST"),
-    body: JSON.stringify(body),
+  const response = await fetch("/api/v0/authorized/well_inventory", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
   });
 
   if (!response.ok) {
@@ -261,4 +268,17 @@ export const fetchOwnerSearch = async ({
   }
 
   return response.json();
+};
+
+const removeEmptyFields = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map(removeEmptyFields);
+  } else if (typeof obj === "object" && obj !== null) {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([, value]) => value !== "")
+        .map(([key, value]) => [key, removeEmptyFields(value)]),
+    );
+  }
+  return obj;
 };
