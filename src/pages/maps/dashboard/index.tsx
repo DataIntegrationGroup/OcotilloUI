@@ -20,13 +20,13 @@ import counties from "@/data/nmcounties.json";
 
 
 export const MapsDashboard = () => {
-    const {query} = useShow({
-        resource: 'maps',
-        id: 'dashboard',
-        dataProviderName: 'maps'
-    });
+    // const {query} = useShow({
+    //     resource: 'maps',
+    //     id: 'dashboard',
+    //     dataProviderName: 'maps'
+    // });
 
-    const {data, isLoading} = query
+    // const {data, isLoading} = query
     // const featureCollection = data?.data
 
     return (
