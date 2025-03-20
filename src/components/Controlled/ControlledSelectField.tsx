@@ -13,19 +13,21 @@ export const ControlledSelectField = <T,>({
   name,
   label,
   options,
+  required,
   ...selectProps
 }: {
   control: Control<T>;
   name: string;
   label: string;
   options: { value: string | number; label: string }[];
+  required?: boolean;
 } & SelectProps) => {
   return (
     <Controller
       name={name as Path<T>}
       control={control as unknown as Control<T>}
       render={({ field, fieldState }) => (
-        <FormControl fullWidth error={!!fieldState.error}>
+        <FormControl fullWidth error={!!fieldState.error} required={required}>
           <InputLabel>{label}</InputLabel>
           <Select label={label} {...field} {...selectProps}>
             {options.map((option) => (
