@@ -1,3 +1,4 @@
+import { ControlledEmailField } from "@/components/Controlled";
 import { ILocation, IOwner } from "@/interfaces";
 import { fetchOwnerSearch } from "@/pages/amp/wellinventoryform/well_inventory.service";
 import {
@@ -39,9 +40,11 @@ interface IOwnerSearchForm {
 export const SearchOwnerDialog = ({
   open,
   setOpen,
+  onOwnerSelect,
 }: {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
+  onOwnerSelect: (owner: IOwner) => void;
 }) => {
   const { open: openNotification, close: closeNotification } =
     useNotification();
@@ -168,11 +171,19 @@ export const SearchOwnerDialog = ({
   };
 
   const handleOwnerSelect = (owner: IOwner) => {
-    console.log({ owner });
+    onOwnerSelect(owner);
+    onClose();
+  };
+
+  const onClose = () => {
+    reset();
+    setOwners(null);
+    setSearchParams(null);
+    setOpen(false);
   };
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xl">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl">
       <DialogTitle>Search Owner</DialogTitle>
       <DialogContent>
         <form onSubmit={handleSubmit(handleSearch)}>
@@ -353,11 +364,7 @@ export const SearchOwnerDialog = ({
         )}
       </DialogContent>
       <DialogActions style={{ padding: "20px 24px" }}>
-        <Button
-          variant="outlined"
-          onClick={() => setOpen(false)}
-          color="secondary"
-        >
+        <Button variant="outlined" onClick={onClose} color="secondary">
           Close
         </Button>
       </DialogActions>

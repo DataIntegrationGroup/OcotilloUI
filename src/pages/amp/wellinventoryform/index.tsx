@@ -950,6 +950,14 @@ export const WellInventoryForm = () => {
       <SearchOwnerDialog
         open={openSearchOwnerDialog}
         setOpen={setOpenSearchOwnerDialog}
+        onOwnerSelect={(owner) => {
+          setValue("owner.owner_key", owner.OwnerKey);
+          setValue("owner.first_name", owner.FirstName);
+          setValue("owner.last_name", owner.LastName);
+          setValue("owner.email", owner.Email);
+          setValue("owner.phone", owner.Phone);
+          setValue("owner.cell_phone", owner.CellPhone);
+        }}
       />
     </>
   );
