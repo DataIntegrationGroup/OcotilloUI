@@ -1,4 +1,7 @@
-import { ControlledEmailField } from "@/components/Controlled";
+import {
+  ControlledEmailField,
+  ControlledPhoneField,
+} from "@/components/Controlled";
 import { ILocation, IOwner } from "@/interfaces";
 import { fetchOwnerSearch } from "@/pages/amp/wellinventoryform/well_inventory.service";
 import {
@@ -176,10 +179,15 @@ export const SearchOwnerDialog = ({
   };
 
   const onClose = () => {
+    handleCompleteReset();
+    setOpen(false);
+  };
+
+  const handleCompleteReset = () => {
     reset();
     setOwners(null);
     setSearchParams(null);
-    setOpen(false);
+    setPagination({ total: 0, page: 1, size: 10, pages: 1 });
   };
 
   return (
@@ -226,33 +234,24 @@ export const SearchOwnerDialog = ({
               />
             </Grid>
             <Grid size={{ xs: 12, lg: 6 }}>
-              <Controller
+              <ControlledEmailField
+                label="Email"
+                control={control}
                 name="email"
-                control={control}
-                defaultValue=""
-                render={({ field }) => (
-                  <TextField {...field} label="Email" fullWidth />
-                )}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-              <Controller
+              <ControlledPhoneField
+                label="Phone"
+                control={control}
                 name="phone"
-                control={control}
-                defaultValue=""
-                render={({ field }) => (
-                  <TextField {...field} label="Phone" fullWidth />
-                )}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-              <Controller
-                name="cell_phone"
+              <ControlledPhoneField
+                label="Cell Phone"
                 control={control}
-                defaultValue=""
-                render={({ field }) => (
-                  <TextField {...field} label="Cell Phone" fullWidth />
-                )}
+                name="cell_phone"
               />
             </Grid>
           </Grid>
@@ -268,11 +267,7 @@ export const SearchOwnerDialog = ({
               <Button
                 variant="outlined"
                 fullWidth
-                onClick={() => {
-                  setOwners(null);
-                  setSearchParams(null);
-                  reset();
-                }}
+                onClick={handleCompleteReset}
                 color="secondary"
               >
                 Reset
