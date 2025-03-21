@@ -6,7 +6,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { Map } from "react-map-gl";
+import { Map, Marker } from "react-map-gl";
 import { useForm } from "@refinedev/react-hook-form";
 import { IWellInventoryForm } from "@/interfaces/amp";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -57,6 +57,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useNotification } from "@refinedev/core";
 import { settings } from "@/settings";
 import { ColorModeContext } from "@/contexts";
+import { convertLonLatToUTM, convertUTMToLonLat } from "@/utils/UtmToLonLat";
 
 export const WellInventoryForm = () => {
   const initialViewState = {
@@ -88,11 +89,15 @@ export const WellInventoryForm = () => {
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedPointIDPrefix, setSelectedPointIDPrefix] = useState("");
 
-  const { control, handleSubmit, reset, setValue } =
+  const { control, handleSubmit, reset, setValue, watch } =
     useForm<IWellInventoryForm>({
       defaultValues: SchemaDefaults,
       resolver: yupResolver(WellInventorySchema),
     });
+
+  const x = watch("location.coordinates.x");
+  const y = watch("location.coordinates.y");
+  const utmZone = watch("location.utm_zone");
 
   const handleReset = () => {
     // reset the useForm state
@@ -118,6 +123,89 @@ export const WellInventoryForm = () => {
       shouldValidate: true,
       shouldDirty: true,
     });
+  };
+
+  const handleCoordinateTypeChange = (newType: "utm" | "gcs") => {
+    const currentX = watch("location.coordinates.x");
+    const currentY = watch("location.coordinates.y");
+
+    if (
+      typeof currentX === "number" &&
+      typeof currentY === "number" &&
+      !isNaN(currentX) &&
+      !isNaN(currentY)
+    ) {
+      let newX = currentX;
+      let newY = currentY;
+
+      if (coordinateType === "utm" && newType === "gcs") {
+        // Convert UTM → GCS
+        [newX, newY] = convertUTMToLonLat(currentX, currentY, utmZone);
+      } else if (coordinateType === "gcs" && newType === "utm") {
+        // Convert GCS → UTM
+        [newX, newY] = convertLonLatToUTM(currentX, currentY, utmZone);
+      }
+
+      // Set new values in the form
+      setValue("location.coordinates.x", newX, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+
+      setValue("location.coordinates.y", newY, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+
+    setCoordinateType(newType);
+    setValue("location.coordinates.type", newType, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const handleCoordinateChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    formFieldName: "location.coordinates.x" | "location.coordinates.y",
+  ) => {
+    const newValue = parseFloat(e.target.value);
+
+    setValue(formFieldName, newValue, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+
+    const currentX =
+      formFieldName === "location.coordinates.x"
+        ? newValue
+        : watch("location.coordinates.x");
+    const currentY =
+      formFieldName === "location.coordinates.y"
+        ? newValue
+        : watch("location.coordinates.y");
+
+    if (
+      typeof currentX === "number" &&
+      typeof currentY === "number" &&
+      !isNaN(currentX) &&
+      !isNaN(currentY)
+    ) {
+      let longitude = currentX;
+      let latitude = currentY;
+
+      if (coordinateType === "utm" && utmZone) {
+        [longitude, latitude] = convertUTMToLonLat(currentX, currentY, utmZone);
+      }
+
+      setViewState((prev) => ({
+        ...prev,
+        longitude,
+        latitude,
+        zoom: 8,
+        transitionDuration: 1000,
+      }));
+    }
   };
 
   const {
@@ -583,7 +671,37 @@ export const WellInventoryForm = () => {
                     terrain={{ source: "mapbox-dem", exaggeration: 3 }}
                     style={style}
                     mapStyle={mapStyle}
-                  />
+                  >
+                    {typeof x === "number" &&
+                      typeof y === "number" &&
+                      !isNaN(x) &&
+                      !isNaN(y) && (
+                        <Marker
+                          {...(() => {
+                            if (coordinateType === "utm" && utmZone) {
+                              const [lon, lat] = convertUTMToLonLat(
+                                x,
+                                y,
+                                utmZone,
+                              );
+                              return { longitude: lon, latitude: lat };
+                            }
+                            return { longitude: x, latitude: y };
+                          })()}
+                          anchor="bottom"
+                        >
+                          <div
+                            style={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: "50%",
+                              backgroundColor: "red",
+                              border: "2px solid white",
+                            }}
+                          />
+                        </Marker>
+                      )}
+                  </Map>
                 </Paper>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
@@ -618,6 +736,9 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="location.coordinates.x"
+                  onChange={(e) =>
+                    handleCoordinateChange(e, "location.coordinates.x")
+                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4, lg: 5 }}>
@@ -628,6 +749,9 @@ export const WellInventoryForm = () => {
                   fullWidth
                   control={control}
                   name="location.coordinates.y"
+                  onChange={(e) =>
+                    handleCoordinateChange(e, "location.coordinates.y")
+                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4, lg: 2 }}>
@@ -637,11 +761,7 @@ export const WellInventoryForm = () => {
                   name="location.coordinates.type"
                   value={coordinateType}
                   onChange={(e) =>
-                    handleOnChange(
-                      e.target.value,
-                      setCoordinateType,
-                      "location.coordinates.type",
-                    )
+                    handleCoordinateTypeChange(e.target.value as "utm" | "gcs")
                   }
                   options={[
                     { value: "gcs", label: "GCS" },

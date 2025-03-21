@@ -28,7 +28,11 @@ export const WellInventorySchema = Yup.object().shape({
       //   originalValue === "" || originalValue === 0 ? null : value,
       // )
       .typeError("Altitude must be a valid number."),
-    utm_zone: Yup.number().required("UTM Zone is required."),
+    utm_zone: Yup.number()
+      .typeError("UTM Zone must be a valid number.")
+      .required("UTM Zone is required.")
+      .min(1, "UTM Zone must be at least 1.")
+      .max(60, "UTM Zone must be at most 60."),
     utm_datum: Yup.string().required("UTM Datum is required."),
     alt_datum: Yup.string().nullable(),
     // .transform((value, originalValue) =>
