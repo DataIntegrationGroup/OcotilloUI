@@ -14,6 +14,7 @@ export const LoadingControlledSelectField = <T,>({
   control,
   label,
   name,
+  required,
   ...props
 }: {
   isLoading: boolean;
@@ -23,6 +24,7 @@ export const LoadingControlledSelectField = <T,>({
   control: Control<T>;
   name: string;
   label: string;
+  required?: boolean;
 } & SelectProps) => {
   if (isLoading) return <SkeletonFormField />;
 
@@ -34,6 +36,7 @@ export const LoadingControlledSelectField = <T,>({
       control={control}
       label={label}
       name={name}
+      required={required}
       {...props}
     />
   );
