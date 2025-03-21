@@ -28,6 +28,7 @@ export const WellInventorySchema = Yup.object().shape({
       //   originalValue === "" || originalValue === 0 ? null : value,
       // )
       .typeError("Altitude must be a valid number."),
+    utm_zone: Yup.number().required("UTM Zone is required."),
     utm_datum: Yup.string().required("UTM Datum is required."),
     alt_datum: Yup.string().nullable(),
     // .transform((value, originalValue) =>
@@ -164,7 +165,8 @@ export const SchemaDefaults = {
       x: 0,
       y: 0,
     },
-    altitude: 0,
+    altitude: 2842,
+    utm_zone: 13,
     utm_datum: "NAD83",
     alt_datum: "",
     location_notes: "",

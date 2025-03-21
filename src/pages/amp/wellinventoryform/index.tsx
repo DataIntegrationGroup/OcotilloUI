@@ -122,37 +122,37 @@ export const WellInventoryForm = () => {
 
   const {
     data: coordinateDatums,
-    isFetching: isCoordinateDatumFetching,
+    isPending: isCoordinateDatumFetching,
     isError: isCoordinateDatumError,
   } = getCoordinateDatums();
 
   const {
     data: altitudeDatums,
-    isFetching: isAltitudeDatumFetching,
+    isPending: isAltitudeDatumFetching,
     isError: isAltitudeDatumError,
   } = getAltitudeDatums();
 
   const {
     data: altitudeMethods,
-    isFetching: isAltitudeMethodFetching,
+    isPending: isAltitudeMethodFetching,
     isError: isAltitudeMethodError,
   } = getAltitudeMethods();
 
   const {
     data: formations,
-    isFetching: isFormationFetching,
+    isPending: isFormationFetching,
     isError: isFormationError,
   } = getFormations();
 
   const {
     data: monitoryingStatuses,
-    isFetching: isMonitoryingStatusFetching,
+    isPending: isMonitoryingStatusFetching,
     isError: isMonitoryingStatusError,
   } = getMonitoringStatuses();
 
   const {
     data: projects,
-    isFetching: isProjectFetching,
+    isPending: isProjectFetching,
     isError: isProjectError,
   } = getProjects();
 
@@ -163,7 +163,7 @@ export const WellInventoryForm = () => {
 
   const {
     data: siteTypes,
-    isFetching: isSiteTypeFetching,
+    isPending: isSiteTypeFetching,
     isError: isSiteTypeError,
   } = getSiteTypes();
 
@@ -265,7 +265,6 @@ export const WellInventoryForm = () => {
                       setSelectedProject,
                       "project.project",
                     );
-                    reset({ "project.pointid_prefix": "" });
                     setSelectedPointIDPrefix("");
                   }}
                   options={projects?.map((option) => {
@@ -647,7 +646,7 @@ export const WellInventoryForm = () => {
                 ]}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <ControlledTextField
                 type="number"
                 label="Altitude"
@@ -655,8 +654,17 @@ export const WellInventoryForm = () => {
                 name="location.altitude"
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <ControlledTextField
+                type="number"
+                label="UTM zone"
+                control={control}
+                name="location.utm_zone"
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
               <LoadingControlledSelectField
+                required
                 isLoading={isCoordinateDatumFetching}
                 label="UTM Datum"
                 control={control}
@@ -669,7 +677,7 @@ export const WellInventoryForm = () => {
                 })}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <LoadingControlledSelectField
                 isLoading={isAltitudeDatumFetching}
                 label="ALT Datum"
@@ -734,21 +742,21 @@ export const WellInventoryForm = () => {
                 <ControlledCheckbox
                   label="Would owner give permission for repeat measurements?"
                   control={control}
-                  name="location.monitor_ok"
+                  name="well.monitor_ok"
                 />
               </Grid>
               <Grid size={12}>
                 <ControlledCheckbox
                   label="Would owner give permission for sampling in the future?"
                   control={control}
-                  name="location.sample_ok"
+                  name="well.sample_ok"
                 />
               </Grid>
               <Grid size={12}>
                 <ControlledCheckbox
                   label="Would owner give permission for datalogger installation?"
                   control={control}
-                  name="location.open_well_logger_ok"
+                  name="well.open_well_logger_ok"
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
