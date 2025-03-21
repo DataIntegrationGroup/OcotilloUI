@@ -1,7 +1,7 @@
 import { getAccessToken } from "@/providers/fief-provider";
 import { fetchConfig, lookupTableQueryConfig } from "./well_inventory.configs";
 import { useQuery } from "@tanstack/react-query";
-import { IWellInventoryForm } from "@/interfaces";
+import { ILocation, IOwner, IWellInventoryForm, Page } from "@/interfaces";
 
 const fetchProjects = async (): Promise<
   {
@@ -173,7 +173,7 @@ export const getSiteTypes = () => {
 const fetchNewPointIDPreview = async (prefix: string) => {
   const accessToken = await getAccessToken();
   const response = await fetch(
-    `api/latest/authorized/well_inventory/newly_generated_endpoint?pointid_prefix=${prefix}`,
+    `/api/v0/authorized/well_inventory/newly_generated_pointid?pointid_prefix=${encodeURIComponent(prefix)}`,
     fetchConfig(accessToken),
   );
 
@@ -195,10 +195,17 @@ export const getNewPointIDPreview = (prefix: string) => {
 export const createWellInventoryForm = async (
   body: Partial<IWellInventoryForm>,
 ) => {
+  const formData = new FormData();
+  const sanitizedBody = removeEmptyFields(body);
+  formData.append("data", JSON.stringify(sanitizedBody));
+
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/authorized/well_inventory", {
-    ...fetchConfig(accessToken, "POST"),
-    body: JSON.stringify(body),
+  const response = await fetch("/api/v0/authorized/well_inventory", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
   });
 
   if (!response.ok) {
@@ -206,4 +213,72 @@ export const createWellInventoryForm = async (
   }
 
   return response.json();
+};
+
+export const fetchOwnerSearch = async ({
+  owner_key_like = "",
+  first_name_like = "",
+  last_name_like = "",
+  email_like = "",
+  phone_like = "",
+  cell_phone_like = "",
+  limit = 10,
+  expand = false,
+  page = 1,
+  size = 10,
+}: {
+  owner_key_like?: string;
+  first_name_like?: string;
+  last_name_like?: string;
+  email_like?: string;
+  phone_like?: string;
+  cell_phone_like?: string;
+  limit?: number;
+  expand?: boolean;
+  page?: number;
+  size?: number;
+}): Promise<
+  Page<{
+    locations: ILocation[];
+    owner: IOwner;
+  }>
+> => {
+  const accessToken = await getAccessToken();
+
+  const queryParams = new URLSearchParams({
+    owner_key_like,
+    first_name_like,
+    last_name_like,
+    email_like,
+    phone_like,
+    cell_phone_like,
+    limit: limit.toString(),
+    expand: expand.toString(),
+    page: page.toString(),
+    size: size.toString(),
+  });
+
+  const response = await fetch(
+    `/api/v0/authorized/locations/owners-search?${queryParams.toString()}`,
+    fetchConfig(accessToken),
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch owners: ${response.statusText}`);
+  }
+
+  return response.json();
+};
+
+const removeEmptyFields = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map(removeEmptyFields);
+  } else if (typeof obj === "object" && obj !== null) {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([, value]) => value !== "")
+        .map(([key, value]) => [key, removeEmptyFields(value)]),
+    );
+  }
+  return obj;
 };
