@@ -1,284 +1,218 @@
-import { getAccessToken } from "@/providers/fief-provider";
-import { fetchConfig, lookupTableQueryConfig } from "./well_inventory.configs";
-import { useQuery } from "@tanstack/react-query";
-import { ILocation, IOwner, IWellInventoryForm, Page } from "@/interfaces";
+import {getAccessToken} from "@/providers/fief-provider";
+import {fetchConfig, lookupTableQueryConfig} from "./well_inventory.configs";
+import {useQuery} from "@tanstack/react-query";
+import {ILocation, IOwner, IWellInventoryForm, Page} from "@/interfaces";
+import {settings} from "@/settings";
+
+const ampApiFetch = async (endpoint: string,
+                           failure_message: string,
+                           version: string = 'v0'): Promise<any> => {
+    const accessToken = await getAccessToken();
+    const response = await fetch(
+        `${settings.nmbgmr_api_url}/${version}/${endpoint}`,
+        fetchConfig(accessToken),
+    );
+    if (!response.ok) {
+        throw new Error(`${failure_message}: ${response.statusText}`);
+    }
+
+    return response.json();
+}
+
+const fetchLookupTable = async (table: string): Promise<any> => {
+    return await ampApiFetch(`authorized/lookuptable/${table}`,
+        `Failed to fetch ${table} options`);
+}
 
 const fetchProjects = async (): Promise<
-  {
-    Project: string;
-    PointIDPrefix: string[];
-  }[]
+    {
+        Project: string;
+        PointIDPrefix: string[];
+    }[]
 > => {
-  const accessToken = await getAccessToken();
-  const response = await fetch(
-    "/api/v0/authorized/lookuptable/project",
-    fetchConfig(accessToken),
-  );
+    return await fetchLookupTable('project');
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch project options");
-  }
-
-  return response.json();
 };
 
 export const getProjects = () => {
-  return useQuery({
-    queryKey: ["ProjectNames"],
-    queryFn: fetchProjects,
-    ...lookupTableQueryConfig,
-  });
+    return useQuery({
+        queryKey: ["ProjectNames"],
+        queryFn: fetchProjects,
+        ...lookupTableQueryConfig,
+    });
 };
 
 const fetchMonitoringStatuses = async (): Promise<
-  { Code: string; Meaning: string }[]
+    { Code: string; Meaning: string }[]
 > => {
-  const accessToken = await getAccessToken();
-  const response = await fetch(
-    "/api/v0/authorized/lookuptable/monitoring_status",
-    fetchConfig(accessToken),
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch monitoring status options");
-  }
-
-  return response.json();
+    return await fetchLookupTable('monitoring_status');
 };
 
 export const getMonitoringStatuses = () => {
-  return useQuery({
-    queryKey: ["MonitoringStatuses"],
-    queryFn: fetchMonitoringStatuses,
-    ...lookupTableQueryConfig,
-  });
+    return useQuery({
+        queryKey: ["MonitoringStatuses"],
+        queryFn: fetchMonitoringStatuses,
+        ...lookupTableQueryConfig,
+    });
 };
 
 const fetchCoordinateDatums = async (): Promise<{ DATUMCODE: string }[]> => {
-  const accessToken = await getAccessToken();
-  const response = await fetch(
-    "/api/v0/authorized/lookuptable/coordinate_datum",
-    fetchConfig(accessToken),
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch coordinate datum options");
-  }
-
-  return response.json();
+    return await fetchLookupTable('coordinate_datum');
 };
 
 export const getCoordinateDatums = () => {
-  return useQuery({
-    queryKey: ["CoordinateDatums"],
-    queryFn: fetchCoordinateDatums,
-    ...lookupTableQueryConfig,
-  });
+    return useQuery({
+        queryKey: ["CoordinateDatums"],
+        queryFn: fetchCoordinateDatums,
+        ...lookupTableQueryConfig,
+    });
 };
 
 const fetchAltitudeDatums = async (): Promise<{ Code: string }[]> => {
-  const accessToken = await getAccessToken();
-  const response = await fetch(
-    "/api/v0/authorized/lookuptable/altitude_datum",
-    fetchConfig(accessToken),
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch altitude datum options");
-  }
-
-  return response.json();
+    return await fetchLookupTable('altitude_datum');
 };
 
 export const getAltitudeDatums = () => {
-  return useQuery({
-    queryKey: ["AltitudeDatums"],
-    queryFn: fetchAltitudeDatums,
-    ...lookupTableQueryConfig,
-  });
+    return useQuery({
+        queryKey: ["AltitudeDatums"],
+        queryFn: fetchAltitudeDatums,
+        ...lookupTableQueryConfig,
+    });
 };
 
 const fetchAltitudeMethods = async (): Promise<
-  { Code: string; Meaning: string }[]
+    { Code: string; Meaning: string }[]
 > => {
-  const accessToken = await getAccessToken();
-  const response = await fetch(
-    "/api/v0/authorized/lookuptable/altitude_method",
-    fetchConfig(accessToken),
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch altitude method options");
-  }
-
-  return response.json();
+    return await fetchLookupTable('altitude_method');
 };
 
 export const getAltitudeMethods = () => {
-  return useQuery({
-    queryKey: ["AltitudeMethods"],
-    queryFn: fetchAltitudeMethods,
-    ...lookupTableQueryConfig,
-  });
+    return useQuery({
+        queryKey: ["AltitudeMethods"],
+        queryFn: fetchAltitudeMethods,
+        ...lookupTableQueryConfig,
+    });
 };
 
 const fetchFormations = async (): Promise<
-  { Code: string; Meaning: string }[]
+    { Code: string; Meaning: string }[]
 > => {
-  const accessToken = await getAccessToken();
-  const response = await fetch(
-    "/api/v0/authorized/lookuptable/formation",
-    fetchConfig(accessToken),
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch formation options");
-  }
-
-  return response.json();
+    return await fetchLookupTable('formation');
 };
 
 export const getFormations = () => {
-  return useQuery({
-    queryKey: ["Formations"],
-    queryFn: fetchFormations,
-    ...lookupTableQueryConfig,
-  });
+    return useQuery({
+        queryKey: ["Formations"],
+        queryFn: fetchFormations,
+        ...lookupTableQueryConfig,
+    });
 };
 
 const fetchSiteTypes = async (): Promise<
-  { Code: string; Meaning: string }[]
+    { Code: string; Meaning: string }[]
 > => {
-  const accessToken = await getAccessToken();
-  const response = await fetch(
-    "/api/v0/authorized/lookuptable/site_type",
-    fetchConfig(accessToken),
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch site type options");
-  }
-
-  return response.json();
+    return await fetchLookupTable('site_type');
 };
 
 export const getSiteTypes = () => {
-  return useQuery({
-    queryKey: ["SiteTypes"],
-    queryFn: fetchSiteTypes,
-    ...lookupTableQueryConfig,
-  });
+    return useQuery({
+        queryKey: ["SiteTypes"],
+        queryFn: fetchSiteTypes,
+        ...lookupTableQueryConfig,
+    });
 };
 
 const fetchNewPointIDPreview = async (prefix: string) => {
-  const accessToken = await getAccessToken();
-  const response = await fetch(
-    `/api/v0/authorized/well_inventory/newly_generated_pointid?pointid_prefix=${encodeURIComponent(prefix)}`,
-    fetchConfig(accessToken),
-  );
+    return await ampApiFetch(`authorized/well_inventory/newly_generated_pointid?pointid_prefix=${encodeURIComponent(prefix)}`,
+        'Failed to fetch new Point ID preview');
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch new Point ID preview");
-  }
-
-  return response.json();
 };
 
 export const getNewPointIDPreview = (prefix: string) => {
-  return useQuery({
-    queryKey: ["PointIDPreview", prefix],
-    queryFn: () => fetchNewPointIDPreview(prefix),
-    enabled: !!prefix,
-  });
+    return useQuery({
+        queryKey: ["PointIDPreview", prefix],
+        queryFn: () => fetchNewPointIDPreview(prefix),
+        enabled: !!prefix,
+    });
 };
 
 export const createWellInventoryForm = async (
-  body: Partial<IWellInventoryForm>,
+    body: Partial<IWellInventoryForm>,
 ) => {
-  const formData = new FormData();
-  const sanitizedBody = removeEmptyFields(body);
-  formData.append("data", JSON.stringify(sanitizedBody));
+    const formData = new FormData();
+    const sanitizedBody = removeEmptyFields(body);
+    formData.append("data", JSON.stringify(sanitizedBody));
 
-  const accessToken = await getAccessToken();
-  const response = await fetch("/api/v0/authorized/well_inventory", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: formData,
-  });
+    const accessToken = await getAccessToken();
+    const response = await fetch("/api/v0/authorized/well_inventory", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+    });
 
-  if (!response.ok) {
-    throw new Error("Failed to create new well inventory entry");
-  }
+    if (!response.ok) {
+        throw new Error("Failed to create new well inventory entry");
+    }
 
-  return response.json();
+    return response.json();
 };
 
 export const fetchOwnerSearch = async ({
-  owner_key_like = "",
-  first_name_like = "",
-  last_name_like = "",
-  email_like = "",
-  phone_like = "",
-  cell_phone_like = "",
-  limit = 10,
-  expand = false,
-  page = 1,
-  size = 10,
-}: {
-  owner_key_like?: string;
-  first_name_like?: string;
-  last_name_like?: string;
-  email_like?: string;
-  phone_like?: string;
-  cell_phone_like?: string;
-  limit?: number;
-  expand?: boolean;
-  page?: number;
-  size?: number;
+                                           owner_key_like = "",
+                                           first_name_like = "",
+                                           last_name_like = "",
+                                           email_like = "",
+                                           phone_like = "",
+                                           cell_phone_like = "",
+                                           limit = 10,
+                                           expand = false,
+                                           page = 1,
+                                           size = 10,
+                                       }: {
+    owner_key_like?: string;
+    first_name_like?: string;
+    last_name_like?: string;
+    email_like?: string;
+    phone_like?: string;
+    cell_phone_like?: string;
+    limit?: number;
+    expand?: boolean;
+    page?: number;
+    size?: number;
 }): Promise<
-  Page<{
-    locations: ILocation[];
-    owner: IOwner;
-  }>
+    Page<{
+        locations: ILocation[];
+        owner: IOwner;
+    }>
 > => {
-  const accessToken = await getAccessToken();
+    const queryParams = new URLSearchParams({
+        owner_key_like,
+        first_name_like,
+        last_name_like,
+        email_like,
+        phone_like,
+        cell_phone_like,
+        limit: limit.toString(),
+        expand: expand.toString(),
+        page: page.toString(),
+        size: size.toString(),
+    });
 
-  const queryParams = new URLSearchParams({
-    owner_key_like,
-    first_name_like,
-    last_name_like,
-    email_like,
-    phone_like,
-    cell_phone_like,
-    limit: limit.toString(),
-    expand: expand.toString(),
-    page: page.toString(),
-    size: size.toString(),
-  });
-
-  const response = await fetch(
-    `/api/v0/authorized/locations/owners-search?${queryParams.toString()}`,
-    fetchConfig(accessToken),
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch owners: ${response.statusText}`);
-  }
-
-  return response.json();
+    return await ampApiFetch(`authorized/locations/owners-search?${queryParams.toString()}`,
+        'Failed to fetch owners');
 };
 
 const removeEmptyFields = (obj: any): any => {
-  if (Array.isArray(obj)) {
-    return obj.map(removeEmptyFields);
-  } else if (typeof obj === "object" && obj !== null) {
-    return Object.fromEntries(
-      Object.entries(obj)
-        .filter(([, value]) => value !== "")
-        .map(([key, value]) => [key, removeEmptyFields(value)]),
-    );
-  }
-  return obj;
+    if (Array.isArray(obj)) {
+        return obj.map(removeEmptyFields);
+    } else if (typeof obj === "object" && obj !== null) {
+        return Object.fromEntries(
+            Object.entries(obj)
+                .filter(([, value]) => value !== "")
+                .map(([key, value]) => [key, removeEmptyFields(value)]),
+        );
+    }
+    return obj;
 };
