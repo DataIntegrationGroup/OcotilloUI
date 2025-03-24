@@ -6,11 +6,15 @@ import {settings} from "@/settings";
 
 const ampApiFetch = async (endpoint: string,
                            failure_message: string,
-                           version: string = 'v0'): Promise<any> => {
+                           method: string = 'GET',
+                           formData?: FormData,
+                           version: string = 'v0',
+): Promise<any> => {
+
     const accessToken = await getAccessToken();
     const response = await fetch(
         `${settings.nmbgmr_api_url}/${version}/${endpoint}`,
-        fetchConfig(accessToken),
+        fetchConfig(accessToken, method, formData),
     );
     if (!response.ok) {
         throw new Error(`${failure_message}: ${response.statusText}`);
@@ -143,20 +147,11 @@ export const createWellInventoryForm = async (
     const sanitizedBody = removeEmptyFields(body);
     formData.append("data", JSON.stringify(sanitizedBody));
 
-    const accessToken = await getAccessToken();
-    const response = await fetch("/api/v0/authorized/well_inventory", {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-        body: formData,
-    });
+    return await ampApiFetch('authorized/well_inventory',
+        'Failed to create new well inventory entry',
+        'POST',
+        formData);
 
-    if (!response.ok) {
-        throw new Error("Failed to create new well inventory entry");
-    }
-
-    return response.json();
 };
 
 export const fetchOwnerSearch = async ({
