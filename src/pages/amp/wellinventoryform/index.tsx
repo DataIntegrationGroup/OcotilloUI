@@ -29,7 +29,7 @@ import {
   ControlledSelectField,
   ControlledTextField,
   ControlledCheckbox,
-  ControlledOSMAddressAutocomplete,
+  ControlledMapboxAddressAutocomplete,
   ControlledPhoneField,
 } from "@/components";
 import { useTheme } from "@mui/material";
@@ -536,7 +536,7 @@ export const WellInventoryForm = () => {
                   <Typography variant="h4">Physical</Typography>
                 </Grid>
                 <Grid size={12}>
-                  <ControlledOSMAddressAutocomplete
+                  <ControlledMapboxAddressAutocomplete
                     label="Address"
                     fullWidth
                     control={control}
