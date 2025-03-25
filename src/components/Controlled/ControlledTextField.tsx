@@ -6,14 +6,16 @@ export const ControlledTextField = <T,>({
   type = "text",
   name,
   label,
-  multiline,
-  minRows = 4, // Default minimum rows when multiline is true
+  multiline = false,
+  minRows = 4,
   ...textFieldProps
 }: {
   control: Control<T>;
-  type?: React.InputHTMLAttributes<unknown>["type"];
+  type?: React.HTMLInputTypeAttribute;
   name: string;
   label: string;
+  multiline?: boolean;
+  minRows?: number;
 } & TextFieldProps) => {
   return (
     <Controller

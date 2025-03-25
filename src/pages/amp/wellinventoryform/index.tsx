@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Map, Marker } from "react-map-gl";
@@ -60,6 +61,7 @@ import { ColorModeContext } from "@/contexts";
 import { convertLonLatToUTM, convertUTMToLonLat } from "@/utils/UtmToLonLat";
 
 export const WellInventoryForm = () => {
+  const mapRef = useRef(null);
   const initialViewState = {
     longitude: -106.4,
     latitude: 34.5,
@@ -89,7 +91,7 @@ export const WellInventoryForm = () => {
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedPointIDPrefix, setSelectedPointIDPrefix] = useState("");
 
-  const { control, handleSubmit, reset, setValue, watch } =
+  const { control, handleSubmit, reset, setValue, watch, setError } =
     useForm<IWellInventoryForm>({
       defaultValues: SchemaDefaults,
       resolver: yupResolver(WellInventorySchema),
@@ -165,25 +167,86 @@ export const WellInventoryForm = () => {
     });
   };
 
-  const handleCoordinateChange = (
+  const updateMapView = (longitude: number, latitude: number) => {
+    if (mapRef.current) {
+      mapRef.current.easeTo({
+        center: [longitude, latitude],
+        zoom: viewState.zoom,
+        duration: 1500,
+        easing: (t: number) => t * (2 - t), // Smooth easing function
+      });
+    }
+  };
+
+  const handleCoordinateValidation = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     formFieldName: "location.coordinates.x" | "location.coordinates.y",
   ) => {
-    const newValue = parseFloat(e.target.value);
+    const inputValue = e.target.value.trim();
+    let newValue = parseFloat(inputValue);
+
+    if (isNaN(newValue) || inputValue === "") {
+      setError(formFieldName, {
+        type: "manual",
+        message: `${
+          coordinateType === "gcs"
+            ? formFieldName === "location.coordinates.x"
+              ? "Longitude"
+              : "Latitude"
+            : formFieldName === "location.coordinates.x"
+              ? "UTM X"
+              : "UTM Y"
+        } must be a valid number.`,
+      });
+
+      setValue(formFieldName, inputValue, {
+        shouldValidate: false,
+        shouldDirty: true,
+      });
+      return;
+    }
+
+    if (coordinateType === "gcs") {
+      if (
+        formFieldName === "location.coordinates.x" &&
+        (newValue < -180 || newValue > 180)
+      ) {
+        setError(formFieldName, {
+          type: "manual",
+          message: "Longitude must be between -180 and 180.",
+        });
+        setValue(formFieldName, inputValue, {
+          shouldValidate: false,
+          shouldDirty: true,
+        });
+        return;
+      }
+
+      if (
+        formFieldName === "location.coordinates.y" &&
+        (newValue < -90 || newValue > 90)
+      ) {
+        setError(formFieldName, {
+          type: "manual",
+          message: "Latitude must be between -90 and 90.",
+        });
+        setValue(formFieldName, inputValue, {
+          shouldValidate: false,
+          shouldDirty: true,
+        });
+        return;
+      }
+    }
 
     setValue(formFieldName, newValue, {
       shouldValidate: true,
       shouldDirty: true,
     });
+  };
 
-    const currentX =
-      formFieldName === "location.coordinates.x"
-        ? newValue
-        : watch("location.coordinates.x");
-    const currentY =
-      formFieldName === "location.coordinates.y"
-        ? newValue
-        : watch("location.coordinates.y");
+  const handleCoordinateUpdate = () => {
+    const currentX = parseFloat(watch("location.coordinates.x"));
+    const currentY = parseFloat(watch("location.coordinates.y"));
 
     if (
       typeof currentX === "number" &&
@@ -198,13 +261,15 @@ export const WellInventoryForm = () => {
         [longitude, latitude] = convertUTMToLonLat(currentX, currentY, utmZone);
       }
 
-      setViewState((prev) => ({
-        ...prev,
-        longitude,
-        latitude,
-        zoom: 8,
-        transitionDuration: 1000,
-      }));
+      if (
+        longitude < -180 ||
+        longitude > 180 ||
+        latitude < -90 ||
+        latitude > 90
+      )
+        return;
+
+      updateMapView(longitude, latitude);
     }
   };
 
@@ -665,6 +730,7 @@ export const WellInventoryForm = () => {
                 <Paper elevation={2}>
                   <Map
                     {...viewState}
+                    ref={mapRef}
                     onMove={(evt) => setViewState(evt.viewState)}
                     mapboxAccessToken={settings.mapboxToken}
                     initialViewState={initialViewState}
@@ -685,6 +751,23 @@ export const WellInventoryForm = () => {
                                 utmZone,
                               );
                               return { longitude: lon, latitude: lat };
+                            } else if (coordinateType === "gcs") {
+                              const [longitude, latitude] = [x, y];
+                              if (
+                                longitude < -180 ||
+                                longitude > 180 ||
+                                latitude < -90 ||
+                                latitude > 90
+                              ) {
+                                console.error("Invalid GCS coordinates:", {
+                                  longitude,
+                                  latitude,
+                                });
+                                return {
+                                  longitude: undefined,
+                                  latitude: undefined,
+                                };
+                              }
                             }
                             return { longitude: x, latitude: y };
                           })()}
@@ -692,8 +775,8 @@ export const WellInventoryForm = () => {
                         >
                           <div
                             style={{
-                              width: 12,
-                              height: 12,
+                              width: 15,
+                              height: 15,
                               borderRadius: "50%",
                               backgroundColor: "red",
                               border: "2px solid white",
@@ -737,8 +820,9 @@ export const WellInventoryForm = () => {
                   control={control}
                   name="location.coordinates.x"
                   onChange={(e) =>
-                    handleCoordinateChange(e, "location.coordinates.x")
+                    handleCoordinateValidation(e, "location.coordinates.x")
                   }
+                  onBlur={handleCoordinateUpdate}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4, lg: 5 }}>
@@ -750,8 +834,9 @@ export const WellInventoryForm = () => {
                   control={control}
                   name="location.coordinates.y"
                   onChange={(e) =>
-                    handleCoordinateChange(e, "location.coordinates.y")
+                    handleCoordinateValidation(e, "location.coordinates.y")
                   }
+                  onBlur={handleCoordinateUpdate}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4, lg: 2 }}>
@@ -897,7 +982,16 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
-                    label="Well Total Depth"
+                    label="Well Depth"
+                    fullWidth
+                    control={control}
+                    name="well.well_depth"
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                  <ControlledTextField
+                    type="number"
+                    label="Hole Depth"
                     fullWidth
                     control={control}
                     name="well.hole_depth"
@@ -919,23 +1013,6 @@ export const WellInventoryForm = () => {
                     fullWidth
                     control={control}
                     name="well.casing_depth"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    type="number"
-                    label="MP Height (+/-)"
-                    fullWidth
-                    control={control}
-                    name="well.mp_height"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    label="MP Description"
-                    fullWidth
-                    control={control}
-                    name="well.measuring_point"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -968,6 +1045,23 @@ export const WellInventoryForm = () => {
                     options={formations?.map((option) => {
                       return { value: option.Code, label: option.Meaning };
                     })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                  <ControlledTextField
+                    type="number"
+                    label="MP Height (+/-)"
+                    fullWidth
+                    control={control}
+                    name="well.mp_height"
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ControlledTextField
+                    label="MP Description"
+                    fullWidth
+                    control={control}
+                    name="well.measuring_point"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
