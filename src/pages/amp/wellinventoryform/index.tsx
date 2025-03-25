@@ -185,9 +185,6 @@ export const WellInventoryForm = () => {
     const inputValue = e.target.value.trim();
     let newValue = parseFloat(inputValue);
 
-    console.log("inputValue:", inputValue);
-    console.log("formFieldName:", formFieldName);
-
     if (isNaN(newValue) || inputValue === "") {
       setError(formFieldName, {
         type: "manual",
@@ -202,7 +199,6 @@ export const WellInventoryForm = () => {
         } must be a valid number.`,
       });
 
-      console.log("empty or Nan:", inputValue);
       setValue(formFieldName, inputValue, {
         shouldValidate: false,
         shouldDirty: true,
@@ -215,7 +211,6 @@ export const WellInventoryForm = () => {
         formFieldName === "location.coordinates.x" &&
         (newValue < -180 || newValue > 180)
       ) {
-        console.log("long too long:", inputValue);
         setError(formFieldName, {
           type: "manual",
           message: "Longitude must be between -180 and 180.",
@@ -231,7 +226,6 @@ export const WellInventoryForm = () => {
         formFieldName === "location.coordinates.y" &&
         (newValue < -90 || newValue > 90)
       ) {
-        console.log("lat too lat:", inputValue);
         setError(formFieldName, {
           type: "manual",
           message: "Latitude must be between -90 and 90.",
