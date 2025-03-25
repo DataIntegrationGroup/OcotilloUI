@@ -982,7 +982,16 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
-                    label="Well Total Depth"
+                    label="Well Depth"
+                    fullWidth
+                    control={control}
+                    name="well.well_depth"
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                  <ControlledTextField
+                    type="number"
+                    label="Hole Depth"
                     fullWidth
                     control={control}
                     name="well.hole_depth"
@@ -1004,23 +1013,6 @@ export const WellInventoryForm = () => {
                     fullWidth
                     control={control}
                     name="well.casing_depth"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    type="number"
-                    label="MP Height (+/-)"
-                    fullWidth
-                    control={control}
-                    name="well.mp_height"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    label="MP Description"
-                    fullWidth
-                    control={control}
-                    name="well.measuring_point"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -1053,6 +1045,23 @@ export const WellInventoryForm = () => {
                     options={formations?.map((option) => {
                       return { value: option.Code, label: option.Meaning };
                     })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                  <ControlledTextField
+                    type="number"
+                    label="MP Height (+/-)"
+                    fullWidth
+                    control={control}
+                    name="well.mp_height"
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ControlledTextField
+                    label="MP Description"
+                    fullWidth
+                    control={control}
+                    name="well.measuring_point"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
