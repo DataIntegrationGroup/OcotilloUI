@@ -69,6 +69,14 @@ let amp = [
         },
     },
     {
+        name: 'waterlevelform',
+        list: '/amp/waterlevelform',
+        meta: {
+            label: <>Water Level Form <b>(Beta)</b></>,
+            icon: <Water/>,
+        }
+    },
+    {
         name: 'projects',
         list: '/amp/projects',
         icon: <CategoryOutlined/>,

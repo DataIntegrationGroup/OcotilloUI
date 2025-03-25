@@ -8,3 +8,4 @@ export * from "./IOwner";
 export * from "./IProject";
 export * from "./IWell";
 export * from "./IWellInventoryForm";
+export * from "./IWaterLevelForm";
