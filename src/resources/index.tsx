@@ -26,29 +26,42 @@ import {st2Resources} from "@/resources/st2";
 import SensorsOutlinedIcon from "@mui/icons-material/SensorsOutlined";
 
 
-let base = [{name: 'Water',
-            icon: <WaterDropOutlined/>,
-            meta: {label: 'Water'}
-            },
-            {name: 'st2',
-                icon: <SensorsOutlinedIcon/>,
-                meta: {label: 'NMWDI SensorThings'}
-            },
-            {name: 'geochronology',
-            icon: <AccessTime/>,
-            meta: {label: 'Geochronology'},
-            },
-            {name: 'criticalminerals',
-            icon: <DiamondOutlined/>,
-            meta: {label: 'Critical Minerals'}
-            },
-            {name: 'geothermal',
-            icon: <HeatPumpOutlined/>,
-            meta: {label: 'Geothermal'}
-            },
+const base = [{
+    name: 'Water',
+    icon: <WaterDropOutlined/>,
+    meta: {label: 'Water'}
+},
+    {
+        name: 'st2',
+        icon: <SensorsOutlinedIcon/>,
+        meta: {label: 'NMWDI SensorThings'}
+    },
+    {
+        name: 'geochronology',
+        icon: <AccessTime/>,
+        meta: {label: 'Geochronology'},
+    },
+    {
+        name: 'criticalminerals',
+        icon: <DiamondOutlined/>,
+        meta: {label: 'Critical Minerals'}
+    },
+    {
+        name: 'geothermal',
+        icon: <HeatPumpOutlined/>,
+        meta: {label: 'Geothermal'}
+    },
 
 ]
 
+const mapstudioResources = [
+    {
+        name: 'mapstudio',
+        icon: <WaterDropOutlined/>,
+        meta: {label: 'MapStudio'},
+        list: "/mapstudio/viewer",
+    }
+]
 
 export const resources = [...base,
     ...ampResources, ...lookup,
@@ -56,6 +69,7 @@ export const resources = [...base,
     ...geochronologyResources,
     ...criticalMineralResources,
     ...geothermalResources,
+    ...mapstudioResources,
 ]
 
 // ============= EOF =============================================
