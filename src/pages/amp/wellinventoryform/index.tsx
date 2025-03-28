@@ -365,7 +365,7 @@ export const WellInventoryForm = () => {
   const handleFormSubmit = async (data: Partial<IWellInventoryForm>) => {
     try {
       await mutateAsync(data);
-      reset();
+      handleReset();
     } catch (err) {
       console.error("Form submission error:", err);
     }
