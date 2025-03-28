@@ -3,7 +3,8 @@ import {
   SkeletonFormField,
   ErrorAlertFormField,
 } from "@/components";
-import { SelectProps } from "@mui/material";
+import { Clear } from "@mui/icons-material";
+import { Box, Button, SelectProps, Tooltip } from "@mui/material";
 import { Control } from "react-hook-form";
 
 export const LoadingControlledSelectField = <T,>({
@@ -15,6 +16,7 @@ export const LoadingControlledSelectField = <T,>({
   label,
   name,
   required,
+  resetFn,
   ...props
 }: {
   isLoading: boolean;
@@ -25,19 +27,48 @@ export const LoadingControlledSelectField = <T,>({
   name: string;
   label: string;
   required?: boolean;
+  resetFn: () => void;
 } & SelectProps) => {
+  const { disabled } = props;
+
   if (isLoading) return <SkeletonFormField />;
 
   if (isError) return <ErrorAlertFormField message={errorMessage} />;
 
   return (
-    <ControlledSelectField
-      options={options}
-      control={control}
-      label={label}
-      name={name}
-      required={required}
-      {...props}
-    />
+    <Box alignItems="center" sx={{ display: "flex" }}>
+      <Tooltip title="Clear selection">
+        <Button
+          variant="outlined"
+          disabled={disabled}
+          onClick={resetFn}
+          sx={{
+            borderBottomRightRadius: 0,
+            borderTopRightRadius: 0,
+            height: 55,
+            width: 30,
+            minWidth: "auto",
+            paddingLeft: 2.5,
+            paddingRight: 2.5,
+          }}
+        >
+          <Clear />
+        </Button>
+      </Tooltip>
+      <ControlledSelectField
+        sx={{
+          borderBottomLeftRadius: 0,
+          borderTopLeftRadius: 0,
+          height: 55,
+          flexGrow: 1,
+        }}
+        options={options}
+        control={control}
+        label={label}
+        name={name}
+        required={required}
+        {...props}
+      />
+    </Box>
   );
 };

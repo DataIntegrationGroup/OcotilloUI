@@ -401,6 +401,14 @@ export const WellInventoryForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                   <LoadingControlledSelectField
+                    resetFn={() => {
+                      setValue(
+                        "project.project",
+                        SchemaDefaults.project.project,
+                      );
+                      setSelectedProject("");
+                      setSelectedPointIDPrefix("");
+                    }}
                     required
                     isLoading={isProjectFetching}
                     isError={isProjectError}
@@ -437,6 +445,13 @@ export const WellInventoryForm = () => {
                   >
                     <div>
                       <LoadingControlledSelectField
+                        resetFn={() => {
+                          setValue(
+                            "project.pointid_prefix",
+                            SchemaDefaults.project.pointid_prefix,
+                          );
+                          setSelectedPointIDPrefix("");
+                        }}
                         required
                         isLoading={isProjectFetching}
                         label="PointId Prefix"
@@ -872,6 +887,12 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
                 <LoadingControlledSelectField
+                  resetFn={() => {
+                    setValue(
+                      "location.utm_datum",
+                      SchemaDefaults.location.utm_datum,
+                    );
+                  }}
                   required
                   isLoading={isCoordinateDatumFetching}
                   label="UTM Datum"
@@ -887,6 +908,12 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
                 <LoadingControlledSelectField
+                  resetFn={() => {
+                    setValue(
+                      "location.alt_datum",
+                      SchemaDefaults.location.alt_datum,
+                    );
+                  }}
                   isLoading={isAltitudeDatumFetching}
                   label="ALT Datum"
                   control={control}
@@ -901,6 +928,12 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
                 <LoadingControlledSelectField
+                  resetFn={() => {
+                    setValue(
+                      "location.altitude_method",
+                      SchemaDefaults.location.altitude_method,
+                    );
+                  }}
                   isLoading={isAltitudeMethodFetching}
                   label="Altitude Method"
                   control={control}
@@ -915,6 +948,12 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
                 <LoadingControlledSelectField
+                  resetFn={() => {
+                    setValue(
+                      "location.site_type",
+                      SchemaDefaults.location.site_type,
+                    );
+                  }}
                   isLoading={isSiteTypeFetching}
                   label="Site Type"
                   control={control}
@@ -1017,6 +1056,12 @@ export const WellInventoryForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <LoadingControlledSelectField
+                    resetFn={() =>
+                      setValue(
+                        "well.monitoring_status",
+                        SchemaDefaults.well.monitoring_status,
+                      )
+                    }
                     isLoading={isMonitoryingStatusFetching}
                     label="Monitoring status"
                     fullWidth
@@ -1035,6 +1080,9 @@ export const WellInventoryForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <LoadingControlledSelectField
+                    resetFn={() =>
+                      setValue("well.formation", SchemaDefaults.well.formation)
+                    }
                     isLoading={isFormationFetching}
                     label="Formation"
                     control={control}
