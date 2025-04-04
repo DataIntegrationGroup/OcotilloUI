@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 import { ThemedLayoutV2 } from "@/components/layout";
 import { ThemedHeaderV2 } from "@/components/layout/header";
-import { ThemedSiderV2 } from "@/components/layout/sider";
+import { CustomThemedSider } from "@/components/layout/sidebar";
 import { ThemedTitleV2 } from "@/components/layout/title";
 import { Home } from "@/pages/home";
 import { CriticalMineralsDashboard } from "@/pages/criticalminerals/dashboard";
@@ -66,7 +66,7 @@ const App: React.FC = () => (
             >
               <ThemedLayoutV2
                 Header={() => <ThemedHeaderV2 sticky />}
-                Sider={ThemedSiderV2}
+                Sider={CustomThemedSider}
                 Title={({ collapsed }) => (
                   <ThemedTitleV2
                     collapsed={collapsed}
