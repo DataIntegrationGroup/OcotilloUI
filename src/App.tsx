@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 import { ThemedLayoutV2 } from "@/components/layout";
 import { ThemedHeaderV2 } from "@/components/layout/header";
-import { CustomThemedSider } from "@/components/layout/sidebar";
+import { CustomThemedSider } from "@/components/layout/sider";
 import { ThemedTitleV2 } from "@/components/layout/title";
 import { Home } from "@/pages/home";
 import { CriticalMineralsDashboard } from "@/pages/criticalminerals/dashboard";
