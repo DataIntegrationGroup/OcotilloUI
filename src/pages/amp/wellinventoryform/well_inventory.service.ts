@@ -129,18 +129,18 @@ export const getSiteTypes = () => {
   });
 };
 
-const fetchNewPointIDPreview = async (prefix: string) => {
+const fetchNewPointIDPreview = async (prefix: string, siteType: string) => {
   return await ampApiFetch(
-    `authorized/well_inventory/newly_generated_pointid?pointid_prefix=${encodeURIComponent(prefix)}`,
+    `authorized/well_inventory/newly-generated-pointid?pointid_prefix=${encodeURIComponent(prefix)}&site_type=${encodeURIComponent(siteType)}`,
     "Failed to fetch new Point ID preview",
   );
 };
 
-export const getNewPointIDPreview = (prefix: string) => {
+export const getNewPointIDPreview = (prefix: string, siteType: string) => {
   return useQuery({
-    queryKey: ["PointIDPreview", prefix],
-    queryFn: () => fetchNewPointIDPreview(prefix),
-    enabled: !!prefix,
+    queryKey: ["PointIDPreview", prefix, siteType],
+    queryFn: () => fetchNewPointIDPreview(prefix, siteType),
+    enabled: !!(prefix && siteType),
   });
 };
 

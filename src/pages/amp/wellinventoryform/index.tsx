@@ -325,7 +325,7 @@ export const WellInventoryForm = () => {
     isFetching: isNewPointIdPreviewFetching,
     isError: isNewPointIdPreviewError,
     refetch: refetchNewPointIdPreview,
-  } = getNewPointIDPreview(selectedPointIDPrefix);
+  } = getNewPointIDPreview(selectedPointIDPrefix, watch("location.site_type"));
 
   useEffect(() => {
     if (selectedPointIDPrefix) {
@@ -484,6 +484,26 @@ export const WellInventoryForm = () => {
                       />
                     </div>
                   </Tooltip>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
+                  <LoadingControlledSelectField
+                    resetFn={() => {
+                      setValue(
+                        "location.site_type",
+                        SchemaDefaults.location.site_type,
+                      );
+                    }}
+                    isLoading={isSiteTypeFetching}
+                    label="Site Type"
+                    control={control}
+                    name="location.site_type"
+                    disabled={true}
+                    isError={isSiteTypeError}
+                    errorMessage="Failed to load site types"
+                    options={siteTypes?.map((option) => {
+                      return { value: option.Code, label: option.Meaning };
+                    })}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6, xl: 3 }}>
                   {isNewPointIdPreviewFetching ? (
@@ -946,26 +966,7 @@ export const WellInventoryForm = () => {
                   })}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <LoadingControlledSelectField
-                  resetFn={() => {
-                    setValue(
-                      "location.site_type",
-                      SchemaDefaults.location.site_type,
-                    );
-                  }}
-                  isLoading={isSiteTypeFetching}
-                  label="Site Type"
-                  control={control}
-                  name="location.site_type"
-                  disabled={true}
-                  isError={isSiteTypeError}
-                  errorMessage="Failed to load site types"
-                  options={siteTypes?.map((option) => {
-                    return { value: option.Code, label: option.Meaning };
-                  })}
-                />
-              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}></Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <ControlledTextField
                   multiline
