@@ -123,7 +123,7 @@ let amp = [
         list: "/amp/chemupload",
         icon: <ScienceOutlined/>,
         meta: {
-            parent: "batchupload",
+            parent: "water.batchupload",
             nestedLevel: 2,
             label: "Chemistry Upload (Beta)",
         },
@@ -134,7 +134,7 @@ let amp = [
         icon: <Water/>,
         meta: {
             label: "Manual Water Levels (Beta)",
-            parent: "batchupload",
+            parent: "water.batchupload",
             nestedLevel: 2,
         },
     },
@@ -180,7 +180,7 @@ export const lookup = lookupKeys.map((l) => {
         name: l.key,
         list: `/amp/lu_${l.key}`,
         meta: {
-            parent: "LookupTables",
+            parent: "water.LookupTables",
             nestedLevel: 2,
             label: l.label,
         },
