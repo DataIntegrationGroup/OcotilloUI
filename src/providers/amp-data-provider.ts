@@ -20,7 +20,7 @@ import {getAccessToken} from "./fief-provider";
 import {settings} from "@/settings";
 
 // const API_URL = "https://waterdata.nmt.edu/authorized";
-const API_URL = `${settings.nmbgmr_api_url}/latest`;
+const API_URL = `${settings.nmbgmr_amp_api_url}/latest`;
 
 import axios, {AxiosInstance, AxiosRequestConfig} from "axios";
 import createAuthRefreshInterceptor from 'axios-auth-refresh';

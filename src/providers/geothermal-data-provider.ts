@@ -27,8 +27,8 @@ export const fetcher = async (url: string, options?: RequestInit) => {
     // const auth = sessionStorage.getItem("fief-authstate");
     // const token = auth ? JSON.parse(auth).tokenInfo.access_token : "";
     // const token = getAccessToken();
-    console.log('fetcher', `${settings.geothermal_api_url}/${url}`);
-    return fetch(`${settings.geothermal_api_url}/${url}`, {
+    console.log('fetcher', `${settings.nmbgmr_geothermal_api_url}/${url}`);
+    return fetch(`${settings.nmbgmr_geothermal_api_url}/${url}`, {
         ...options,
         headers: {
             ...options?.headers,
@@ -154,7 +154,7 @@ export const geothermalDataProvider: DataProvider = {
 
         return {data};
     },
-    getApiUrl: () => settings.geothermal_api_url,
+    getApiUrl: () => settings.nmbgmr_geothermal_api_url,
     deleteOne: () => {
         throw new Error("Not implemented");
     },
