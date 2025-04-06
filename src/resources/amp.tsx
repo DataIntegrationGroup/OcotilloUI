@@ -157,7 +157,7 @@ let amp = [
 export const ampResources = amp.map((b) => {
     let meta = b.meta || {};
     if (!meta["parent"]) {
-        meta["parent"] = "Water";
+        meta["parent"] = "water";
     }
     meta["dataProviderName"] = "amp";
     return {
@@ -167,6 +167,7 @@ export const ampResources = amp.map((b) => {
     };
 });
 
+console.log("ampResources", ampResources);
 const lookupKeys = [
     {key: "level_status", label: "Level Status"},
     {key: "measurement_method", label: "Measurement Method"},
