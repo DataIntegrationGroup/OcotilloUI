@@ -8,168 +8,182 @@ import TableViewIcon from "@mui/icons-material/TableView";
 import ScienceOutlined from "@mui/icons-material/ScienceOutlined";
 import FileUploadOutlined from "@mui/icons-material/FileUploadOutlined";
 import CategoryOutlined from "@mui/icons-material/CategoryOutlined";
-import { DynamicFormTwoTone } from "@mui/icons-material";
+import {DynamicFormTwoTone} from "@mui/icons-material";
 
 let amp = [
-  {
-    name: "dashboard",
-    list: "/amp/dashboard",
-    meta: {
-      label: "Dashboard",
-      icon: <DashboardOutlined />,
+    {
+        name: "dashboard",
+        list: "/amp/dashboard",
+        meta: {
+            label: "Dashboard",
+            icon: <DashboardOutlined/>,
+        },
     },
-  },
-  {
-    name: "hydrographcorrector",
-    list: "/amp/hydrographcorrector",
-    meta: {
-      label: "Hydrograph Corrector (Coming Soon)",
-      icon: <Construction />,
+    {
+        name: "hydrographcorrector",
+        list: "/amp/hydrographcorrector",
+        meta: {
+            label: "Hydrograph Corrector (Coming Soon)",
+            icon: <Construction/>,
+        },
     },
-  },
-  {
-    name: "reportbuilder",
-    list: "/amp/reportbuilder",
-    meta: {
-      label: "Report Builder (Coming Soon)",
-      icon: <Construction />,
+    {
+        name: "reportbuilder",
+        list: "/amp/reportbuilder",
+        meta: {
+            label: "Report Builder (Coming Soon)",
+            icon: <Construction/>,
+        },
     },
-  },
-  {
-    name: "querybuilder",
-    list: "/amp/querybuilder",
-    meta: {
-      label: "Query Builder (Beta)",
-      icon: <Construction />,
+    {
+        name: "querybuilder",
+        list: "/amp/querybuilder",
+        meta: {
+            label: "Query Builder (Beta)",
+            icon: <Construction/>,
+        },
     },
-  },
-  {
-    name: "wellinventoryform",
-    list: "/amp/wellinventoryform",
-    meta: {
-      label: "Well Inventory Form (Beta)",
-      icon: <DynamicFormTwoTone />,
+    {
+        name: "wellinventoryform",
+        list: "/amp/wellinventoryform",
+        meta: {
+            label: "Well Inventory Form (Beta)",
+            icon: <DynamicFormTwoTone/>,
+        },
     },
-  },
-  {
-    name: "waterlevelform",
-    list: "/amp/waterlevelform",
-    meta: {
-      label: "Water Level Form (Beta)",
-      icon: <Water />,
+    {
+        name: "waterlevelform",
+        list: "/amp/waterlevelform",
+        meta: {
+            label: "Water Level Form (Beta)",
+            icon: <Water/>,
+        },
     },
-  },
-  {
-    name: "projects",
-    list: "/amp/projects",
-    icon: <CategoryOutlined />,
-  },
+    {
+        name: "projects",
+        list: "/amp/projects",
+        icon: <CategoryOutlined/>,
+        meta: {
+            label: "Projects",
+        },
+    },
 
-  {
-    name: "locations",
-    icon: <Place />,
-    list: "/amp/locations",
-    edit: "/amp/locations/edit/:id",
-    show: "/amp/locations/show/:id",
-    create: "/amp/locations/create",
-  },
-  {
-    name: "wells",
-    icon: <Plumbing />,
-    list: "/amp/wells",
-    edit: "/amp/wells/edit/:id",
-    show: "/amp/wells/show/:id",
-    create: "/amp/wells/create",
-  },
-  {
-    name: "equipment",
-    icon: <Cable />,
-    list: "/amp/equipment",
-    edit: "/amp/equipment/edit/:id",
-    create: "/amp/equipment/create",
-    show: "/amp/equipment/show/:id",
-  },
-  {
-    name: "manual_waterlevels",
-    list: "/amp/manualwaterlevels",
-    edit: "/amp/manualwaterlevels/edit/:id",
-    create: "/amp/manualwaterlevels/create",
-    show: "/amp/manualwaterlevels/show/:id",
-    meta: {
-      label: "Manual Water Levels",
+    {
+        name: "locations",
+        icon: <Place/>,
+        list: "/amp/locations",
+        edit: "/amp/locations/edit/:id",
+        show: "/amp/locations/show/:id",
+        create: "/amp/locations/create",
+        meta: {
+            label: "Locations",
+        },
     },
-  },
-  {
-    name: "batchupload",
-    icon: <FileUploadOutlined />,
-    meta: {
-      label: "Batch Upload",
+    {
+        name: "wells",
+        icon: <Plumbing/>,
+        list: "/amp/wells",
+        edit: "/amp/wells/edit/:id",
+        show: "/amp/wells/show/:id",
+        create: "/amp/wells/create",
+        meta: {
+            label: "Wells",
+        },
     },
-  },
-  {
-    name: "chemupload",
-    list: "/amp/chemupload",
-    icon: <ScienceOutlined />,
-    meta: {
-      parent: "batchupload",
-      nestedLevel: 2,
-      label: "Chemistry Upload (Beta)",
+    {
+        name: "equipment",
+        icon: <Cable/>,
+        list: "/amp/equipment",
+        edit: "/amp/equipment/edit/:id",
+        create: "/amp/equipment/create",
+        show: "/amp/equipment/show/:id",
+        meta: {
+            label: "Equipment",
+        },
     },
-  },
-  {
-    name: "manualwaterlevels_batchupload",
-    list: "/amp/manualwaterlevels/batchupload",
-    icon: <Water />,
-    meta: {
-      label: "Manual Water Levels (Beta)",
-      parent: "batchupload",
-      nestedLevel: 2,
+    {
+        name: "manual_waterlevels",
+        list: "/amp/manualwaterlevels",
+        edit: "/amp/manualwaterlevels/edit/:id",
+        create: "/amp/manualwaterlevels/create",
+        show: "/amp/manualwaterlevels/show/:id",
+        meta: {
+            label: "Manual Water Levels",
+        },
     },
-  },
-  {
-    name: "Chemistry",
-    icon: <ScienceOutlined />,
-    meta: {
-      label: "Chemistry",
+    {
+        name: "batchupload",
+        icon: <FileUploadOutlined/>,
+        meta: {
+            label: "Batch Upload",
+        },
     },
-  },
-  {
-    name: "LookupTables",
-    icon: <TableViewIcon />,
-    meta: {
-      label: "Lookup Tables",
+    {
+        name: "chemupload",
+        list: "/amp/chemupload",
+        icon: <ScienceOutlined/>,
+        meta: {
+            parent: "water.batchupload",
+            nestedLevel: 2,
+            label: "Chemistry Upload (Beta)",
+        },
     },
-  },
+    {
+        name: "manualwaterlevels_batchupload",
+        list: "/amp/manualwaterlevels/batchupload",
+        icon: <Water/>,
+        meta: {
+            label: "Manual Water Levels (Beta)",
+            parent: "water.batchupload",
+            nestedLevel: 2,
+        },
+    },
+    {
+        name: "Chemistry",
+        icon: <ScienceOutlined/>,
+        meta: {
+            label: "Chemistry",
+        },
+    },
+    {
+        name: "LookupTables",
+        icon: <TableViewIcon/>,
+        meta: {
+            label: "Lookup Tables",
+        },
+    },
 ];
 
 export const ampResources = amp.map((b) => {
-  let meta = b.meta || {};
-  if (!meta["parent"]) {
-    meta["parent"] = "Water";
-  }
-  meta["dataProviderName"] = "amp";
-  return {
-    ...b,
-    meta: meta,
-  };
+    let meta = b.meta || {};
+    if (!meta["parent"]) {
+        meta["parent"] = "water";
+    }
+    meta["dataProviderName"] = "amp";
+    return {
+        ...b,
+        name: `water.${b.name}`,
+        meta: meta,
+    };
 });
 
+console.log("ampResources", ampResources);
 const lookupKeys = [
-  { key: "level_status", label: "Level Status" },
-  { key: "measurement_method", label: "Measurement Method" },
-  { key: "data_quality", label: "Data Quality" },
-  { key: "measuring_agency", label: "Measuring Agency" },
-  { key: "data_source", label: "Data Source" },
+    {key: "level_status", label: "Level Status"},
+    {key: "measurement_method", label: "Measurement Method"},
+    {key: "data_quality", label: "Data Quality"},
+    {key: "measuring_agency", label: "Measuring Agency"},
+    {key: "data_source", label: "Data Source"},
 ];
 
 export const lookup = lookupKeys.map((l) => {
-  return {
-    name: l.key,
-    list: `/amp/lu_${l.key}`,
-    meta: {
-      parent: "LookupTables",
-      nestedLevel: 2,
-      label: l.label,
-    },
-  };
+    return {
+        name: l.key,
+        list: `/amp/lu_${l.key}`,
+        meta: {
+            parent: "water.LookupTables",
+            nestedLevel: 2,
+            label: l.label,
+        },
+    };
 });

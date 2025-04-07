@@ -13,36 +13,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ===============================================================================
-// export default accessControlProvider: ;
 
 import {getAccessToken} from "./fief-provider";
 import {jwtDecode} from "jwt-decode";
 
 export const accessControlProvider = {
-    can: async ({resource, action}) => {
-        // const token = jwtDecode(getAccessToken());
-        // const permissions = token['permissions'] ?? [];
-        // console.log('can permissions', permissions)
-
-        //access control disabled for now.
-        // need to defined permissions in fief
-        return {can: true};
-
-        // if (permissions.includes(`${resource}:${action}`)) {
-        //     return {can: true}
-        // } else {
-        //     return {
-        //         can: false,
-        //         reason: "You do not have the necessary permissions to perform this action."
-        //     }
-        // }
+    can: async ({resource, action, params}) => {
+        const token = jwtDecode(await getAccessToken());
+        const permissions = token['permissions'] ?? [];
+        console.log('can', {resource, action, params, permissions})
+        if (resource === "water.wellinventoryform") {
+            if (permissions.includes("datamanager:wellinventory:write")) {
+                return {can: true}
+            } else {
+                return {
+                    can: false,
+                    reason: "You do not have permission to edit this resource. Please contact your administrator."
+                }
+            }
+        }
+        return {can: true}
     }
 }
-//
-// export default function getCan({resource, action}) {
-//     const token = getToken();
-//     return {can: true};
-// }
-
 
 // ============= EOF =============================================
