@@ -1,496 +1,376 @@
-import React, {type CSSProperties, useState} from "react";
+import React, { type CSSProperties, useEffect, useState } from "react";
 import {
-    CanAccess,
-    type ITreeMenu,
-    useIsExistAuthentication,
-    useLogout,
-    useTitle,
-    useTranslate,
-    useRouterContext,
-    useRouterType,
-    useLink,
-    useMenu,
-    useRefineContext,
-    useActiveAuthProvider,
-    pickNotDeprecated,
-    useWarnAboutChange,
+  CanAccess,
+  type ITreeMenu,
+  useTitle,
+  useRouterContext,
+  useRouterType,
+  useLink,
+  useMenu,
 } from "@refinedev/core";
-import {
-    ThemedTitleV2 as DefaultTitle,
-    useThemedLayoutContext,
-} from "@refinedev/mui";
+import { ThemedTitleV2, useThemedLayoutContext } from "@refinedev/mui";
 import ChevronLeft from "@mui/icons-material/ChevronLeft";
-import Dashboard from "@mui/icons-material/Dashboard";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import ListOutlined from "@mui/icons-material/ListOutlined";
-import Logout from "@mui/icons-material/Logout";
-import Box from "@mui/material/Box";
-import Collapse from "@mui/material/Collapse";
-import Drawer from "@mui/material/Drawer";
-import IconButton from "@mui/material/IconButton";
-import List from "@mui/material/List";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import Paper from "@mui/material/Paper";
-import Tooltip from "@mui/material/Tooltip";
-import type {RefineThemedLayoutV2SiderProps} from "@refinedev/mui";
-
+import {
+  Box,
+  Collapse,
+  ListItemText,
+  ListItemIcon,
+  ListItemButton,
+  List,
+  IconButton,
+  Drawer,
+  Tooltip,
+  Paper,
+} from "@mui/material";
+import type { RefineThemedLayoutV2SiderProps } from "@refinedev/mui";
+import { Dashboard } from "./dashboard";
+import { Logout } from "./logout";
 
 export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
-                                                                            Title: TitleFromProps,
-                                                                            render,
-                                                                            meta,
-                                                                            activeItemDisabled = false,
-                                                                        }) => {
-    const {
-        siderCollapsed,
-        setSiderCollapsed,
-        mobileSiderOpen,
-        setMobileSiderOpen,
-    } = useThemedLayoutContext();
+  Title: TitleFromProps,
+  render,
+  meta,
+  activeItemDisabled = false,
+}) => {
+  const {
+    siderCollapsed,
+    setSiderCollapsed,
+    mobileSiderOpen,
+    setMobileSiderOpen,
+  } = useThemedLayoutContext();
 
-    const drawerWidth = () => {
-        if (siderCollapsed) return 56;
-        return 350;
-    };
+  const { menuItems, selectedKey, defaultOpenKeys } = useMenu({ meta });
+  const TitleFromContext = useTitle();
 
-    const t = useTranslate();
-    const routerType = useRouterType();
-    const Link = useLink();
-    const {Link: LegacyLink} = useRouterContext();
-    const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
-    const {hasDashboard} = useRefineContext();
-    const translate = useTranslate();
+  const { Link: LegacyLink } = useRouterContext();
+  const routerType = useRouterType();
 
-    const {menuItems, selectedKey, defaultOpenKeys} = useMenu({meta});
-    const isExistAuthentication = useIsExistAuthentication();
-    const TitleFromContext = useTitle();
-    const authProvider = useActiveAuthProvider();
-    const {warnWhen, setWarnWhen} = useWarnAboutChange();
-    const {mutate: mutateLogout} = useLogout({
-        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+  const NewLink = useLink();
+  const Link = routerType === "legacy" ? LegacyLink : NewLink;
+
+  const getDrawerWidth = (isSiderCollapsed: boolean): number =>
+    isSiderCollapsed ? 56 : 350;
+
+  const [open, setOpen] = useState<{ [key: string]: boolean }>({});
+
+  useEffect(() => {
+    setOpen((previous) => {
+      const previousKeys: string[] = Object.keys(previous);
+      const previousOpenKeys = previousKeys.filter((key) => previous[key]);
+
+      const uniqueKeys = new Set([...previousOpenKeys, ...defaultOpenKeys]);
+      const uniqueKeysRecord = Object.fromEntries(
+        Array.from(uniqueKeys.values()).map((key) => [key, true]),
+      );
+      return uniqueKeysRecord;
     });
+  }, [defaultOpenKeys]);
 
-    const [open, setOpen] = useState<{ [k: string]: any }>({});
+  const Title = TitleFromProps ?? TitleFromContext ?? ThemedTitleV2;
 
-    React.useEffect(() => {
-        setOpen((previous) => {
-            const previousKeys: string[] = Object.keys(previous);
-            const previousOpenKeys = previousKeys.filter((key) => previous[key]);
+  const handleClick = (key: string) => {
+    setOpen({ ...open, [key]: !open[key] });
+  };
 
-            const uniqueKeys = new Set([...previousOpenKeys, ...defaultOpenKeys]);
-            const uniqueKeysRecord = Object.fromEntries(
-                Array.from(uniqueKeys.values()).map((key) => [key, true])
-            );
-            return uniqueKeysRecord;
-        });
-    }, [defaultOpenKeys]);
+  const renderTreeView = (tree: ITreeMenu[], selectedKey?: string) => {
+    return tree.map((item: ITreeMenu) => {
+      const {
+        icon: deprecatedIcon,
+        label: deprecatedLabel,
+        meta,
+        key,
+        children,
+        name,
+        route,
+      } = item;
+      const isOpen = open[key] || false;
 
-    const RenderToTitle = TitleFromProps ?? TitleFromContext ?? DefaultTitle;
+      const icon = deprecatedIcon ?? meta.icon;
+      const label = meta?.label || deprecatedLabel || name;
+      const isSelected = key === selectedKey;
+      const isNested = !(meta.parent === undefined);
+      const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0;
 
-    const handleClick = (key: string) => {
-        setOpen({...open, [key]: !open[key]});
-    };
-
-    const renderTreeView = (tree: ITreeMenu[], selectedKey?: string) => {
-        return tree.map((item: ITreeMenu) => {
-            const {icon, label, route, name, children, parentName, meta, options} =
-                item;
-            const isOpen = open[item.key || ""] || false;
-
-            let mlabel = label;
-            if (meta?.label) {
-                mlabel = meta.label
-            }
-            const isSelected = item.key === selectedKey;
-            const isNested = !(
-                pickNotDeprecated(meta?.parent, options?.parent, parentName) ===
-                undefined
-            );
-
-            const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0;
-
-            if (children.length > 0) {
-                return (
-                    <CanAccess
-                        key={item.key}
-                        resource={name}
-                        action="list"
-                        params={{
-                            resource: item,
-                        }}
-                    >
-                        <div key={item.key}
-                        >
-                            <Tooltip
-                                title={mlabel ?? name}
-                                placement="right"
-                                disableHoverListener={!siderCollapsed}
-                                arrow
-                            >
-                                <ListItemButton
-                                    onClick={() => {
-                                        if (siderCollapsed) {
-                                            setSiderCollapsed(false);
-                                            if (!isOpen) {
-                                                handleClick(item.key || "");
-                                            }
-                                        } else {
-                                            handleClick(item.key || "");
-                                        }
-                                    }}
-                                    sx={{
-                                        pl: isNested ? nestedLevel * 4 : 2,
-                                        justifyContent: "center",
-                                        borderRadius: isNested ? "0px" : '10px',
-                                        border: isNested ? 0 : 1,
-                                        // p: 0.25,
-                                        m: 0.5,
-                                        backgroundColor: !isNested ? 'rgba(48,114,122,0.5)' : 'rgba(48,114,122,0.25)',
-                                    }}
-                                >
-                                    <ListItemIcon
-                                        sx={{
-                                            justifyContent: "center",
-                                            minWidth: "24px",
-                                            transition: "margin-right 0.3s",
-                                            marginRight: siderCollapsed ? "0px" : "12px",
-                                            color: "currentColor",
-                                        }}
-                                    >
-                                        {icon ?? <ListOutlined/>}
-                                    </ListItemIcon>
-                                    <ListItemText
-                                        primary={mlabel}
-                                        primaryTypographyProps={{
-                                            noWrap: true,
-                                            fontSize: "14px",
-                                        }}
-                                    />
-                                    {isOpen ? (
-                                        <ExpandLess
-                                            sx={{
-                                                color: "text.icon",
-                                            }}
-                                        />
-                                    ) : (
-                                        <ExpandMore
-                                            sx={{
-                                                color: "text.icon",
-                                            }}
-                                        />
-                                    )}
-                                </ListItemButton>
-                            </Tooltip>
-                            {!siderCollapsed && (
-                                <Collapse
-                                    in={open[item.key || ""]}
-                                    timeout="auto"
-                                    unmountOnExit
-                                >
-                                    <List component="div" disablePadding>
-                                        {renderTreeView(children, selectedKey)}
-                                    </List>
-                                </Collapse>
-                            )}
-                        </div>
-                    </CanAccess>
-                );
-            }
-
-            const linkStyle: CSSProperties =
-                activeItemDisabled && isSelected ? {pointerEvents: "none"} : {};
-
-            return (
-                <CanAccess
-                    key={item.key}
-                    resource={name}
-                    action="list"
-                    params={{resource: item}}
-                >
-                    <Tooltip
-                        title={mlabel ?? name}
-                        placement="right"
-                        disableHoverListener={!siderCollapsed}
-                        arrow
-                    >
-                        <ListItemButton
-                            component={ActiveLink}
-                            to={route}
-                            selected={isSelected}
-                            style={linkStyle}
-                            onClick={() => {
-                                setMobileSiderOpen(false);
-                            }}
-                            sx={{
-                                pl: isNested ? nestedLevel * 4 : 2,
-                                py: isNested ? 1.25 : 1,
-                                justifyContent: "center",
-                                color: isSelected ? "primary.main" : "text.primary",
-                            }}
-                        >
-                            <ListItemIcon
-                                sx={{
-                                    justifyContent: "center",
-                                    transition: "margin-right 0.3s",
-                                    marginRight: siderCollapsed ? "0px" : "12px",
-                                    minWidth: "24px",
-                                    color: "currentColor",
-                                }}
-                            >
-                                {icon ?? <ListOutlined/>}
-                            </ListItemIcon>
-                            <ListItemText
-                                primary={mlabel}
-                                primaryTypographyProps={{
-                                    noWrap: true,
-                                    fontSize: "14px",
-                                }}
-                            />
-                        </ListItemButton>
-                    </Tooltip>
-                </CanAccess>
-            );
-        });
-    };
-
-    const dashboard = hasDashboard ? (
-        <CanAccess resource="dashboard" action="list">
-            <Tooltip
-                title={translate("dashboard.title", "Dashboard")}
+      if (children.length > 0) {
+        return (
+          <CanAccess
+            key={item.key}
+            resource={name}
+            action="list"
+            params={{
+              resource: item,
+            }}
+          >
+            <div key={key}>
+              <Tooltip
+                title={label ?? name}
                 placement="right"
                 disableHoverListener={!siderCollapsed}
                 arrow
-            >
+              >
                 <ListItemButton
-                    component={ActiveLink}
-                    to="/"
-                    selected={selectedKey === "/"}
-                    onClick={() => {
-                        setMobileSiderOpen(false);
-                    }}
-                    sx={{
-                        pl: 2,
-                        py: 1,
-                        justifyContent: "center",
-                        color: selectedKey === "/" ? "primary.main" : "text.primary",
-                    }}
+                  onClick={() => {
+                    if (siderCollapsed) {
+                      setSiderCollapsed(false);
+                      if (!isOpen) {
+                        handleClick(key || "");
+                      }
+                    } else {
+                      handleClick(key || "");
+                    }
+                  }}
+                  sx={{
+                    pl: isNested ? nestedLevel * 4 : 2,
+                    justifyContent: "center",
+                    borderRadius: isNested ? "0px" : "10px",
+                    border: isNested ? 0 : 1,
+                    m: 0.5,
+                    backgroundColor: !isNested
+                      ? "rgba(48,114,122,0.5)"
+                      : "rgba(48,114,122,0.25)",
+                  }}
                 >
-                    <ListItemIcon
-                        sx={{
-                            justifyContent: "center",
-                            minWidth: "24px",
-                            transition: "margin-right 0.3s",
-                            marginRight: siderCollapsed ? "0px" : "12px",
-                            color: "currentColor",
-                            fontSize: "14px",
-                        }}
-                    >
-                        <Dashboard/>
-                    </ListItemIcon>
-                    <ListItemText
-                        primary={translate("dashboard.title", "Dashboard")}
-                        primaryTypographyProps={{
-                            noWrap: true,
-                            fontSize: "14px",
-                        }}
+                  <ListItemIcon
+                    sx={{
+                      justifyContent: "center",
+                      minWidth: "24px",
+                      transition: "margin-right 0.3s",
+                      marginRight: siderCollapsed ? "0px" : "12px",
+                      color: "currentColor",
+                    }}
+                  >
+                    {icon ?? <ListOutlined />}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={label}
+                    slotProps={{
+                      primary: {
+                        noWrap: true,
+                        fontSize: "14px",
+                      },
+                    }}
+                  />
+                  {isOpen ? (
+                    <ExpandLess
+                      sx={{
+                        color: "text.icon",
+                      }}
                     />
+                  ) : (
+                    <ExpandMore
+                      sx={{
+                        color: "text.icon",
+                      }}
+                    />
+                  )}
                 </ListItemButton>
-            </Tooltip>
-        </CanAccess>
-    ) : null;
+              </Tooltip>
+              {!siderCollapsed && (
+                <Collapse
+                  in={open[item.key || ""]}
+                  timeout="auto"
+                  unmountOnExit
+                >
+                  <List component="div" disablePadding>
+                    {renderTreeView(children, selectedKey)}
+                  </List>
+                </Collapse>
+              )}
+            </div>
+          </CanAccess>
+        );
+      }
 
-    const handleLogout = () => {
-        if (warnWhen) {
-            const confirm = window.confirm(
-                t(
-                    "warnWhenUnsavedChanges",
-                    "Are you sure you want to leave? You have unsaved changes."
-                )
-            );
+      const linkStyle: CSSProperties =
+        activeItemDisabled && isSelected ? { pointerEvents: "none" } : {};
 
-            if (confirm) {
-                setWarnWhen(false);
-                mutateLogout();
-            }
-        } else {
-            mutateLogout();
-        }
-    };
-
-    const logout = isExistAuthentication && (
-        <Tooltip
-            title={t("buttons.logout", "Logout")}
+      return (
+        <CanAccess
+          key={item.key}
+          resource={name}
+          action="list"
+          params={{ resource: item }}
+        >
+          <Tooltip
+            title={label ?? name}
             placement="right"
             disableHoverListener={!siderCollapsed}
             arrow
-        >
+          >
             <ListItemButton
-                key="logout"
-                onClick={() => handleLogout()}
-                sx={{
-                    justifyContent: "center",
-                }}
+              component={Link}
+              to={route}
+              selected={isSelected}
+              style={linkStyle}
+              onClick={() => {
+                setMobileSiderOpen(false);
+              }}
+              sx={{
+                pl: isNested ? nestedLevel * 4 : 2,
+                py: isNested ? 1.25 : 1,
+                justifyContent: "center",
+                color: isSelected ? "primary.main" : "text.primary",
+              }}
             >
-                <ListItemIcon
-                    sx={{
-                        justifyContent: "center",
-                        minWidth: "24px",
-                        transition: "margin-right 0.3s",
-                        marginRight: siderCollapsed ? "0px" : "12px",
-                        color: "currentColor",
-                    }}
-                >
-                    <Logout/>
-                </ListItemIcon>
-                <ListItemText
-                    primary={t("buttons.logout", "Logout")}
-                    primaryTypographyProps={{
-                        noWrap: true,
-                        fontSize: "14px",
-                    }}
-                />
+              <ListItemIcon
+                sx={{
+                  justifyContent: "center",
+                  transition: "margin-right 0.3s",
+                  marginRight: siderCollapsed ? "0px" : "12px",
+                  minWidth: "24px",
+                  color: "currentColor",
+                }}
+              >
+                {icon ?? <ListOutlined />}
+              </ListItemIcon>
+              <ListItemText
+                primary={label}
+                slotProps={{
+                  primary: {
+                    noWrap: true,
+                    fontSize: "14px",
+                  },
+                }}
+              />
             </ListItemButton>
-        </Tooltip>
-    );
+          </Tooltip>
+        </CanAccess>
+      );
+    });
+  };
 
-    const items = renderTreeView(menuItems, selectedKey);
-
-    const renderSider = () => {
-        if (render) {
-            return render({
-                dashboard,
-                logout,
-                items,
-                collapsed: siderCollapsed,
-            });
-        }
-        return (
-            <>
-                {dashboard}
-                {items}
-                {logout}
-            </>
-        );
-    };
-
-    const drawer = (
-        <List
-            disablePadding
-            sx={{
-                flexGrow: 1,
-                paddingTop: "16px",
-            }}
-        >
-            {renderSider()}
-        </List>
-    );
-
+  const Sider = () => {
+    if (render) {
+      return render({
+        dashboard: (
+          <Dashboard collapsed={siderCollapsed} selectedKey={selectedKey} />
+        ),
+        logout: <Logout collapsed={siderCollapsed} />,
+        items: renderTreeView(menuItems, selectedKey),
+        collapsed: siderCollapsed,
+      });
+    }
     return (
-        <>
-            <Box
-                sx={{
-                    width: {xs: drawerWidth()},
-                    display: {
-                        xs: "none",
-                        md: "block",
-                    },
-                    transition: "width 0.3s ease",
-                }}
-            />
-            <Box
-                component="nav"
-                sx={{
-                    position: "fixed",
-                    zIndex: 1101,
-                    width: {sm: drawerWidth()},
-                    display: "flex",
-                }}
-            >
-                <Drawer
-                    variant="temporary"
-                    elevation={2}
-                    open={mobileSiderOpen}
-                    onClose={() => setMobileSiderOpen(false)}
-                    ModalProps={{
-                        keepMounted: true, // Better open performance on mobile.
-                    }}
-                    sx={{
-                        display: {
-                            sm: "block",
-                            md: "none",
-                        },
-                    }}
-                >
-                    <Box
-                        sx={{
-                            width: drawerWidth(),
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                height: 64,
-                                display: "flex",
-                                alignItems: "center",
-                                paddingLeft: "16px",
-                                fontSize: "14px",
-                            }}
-                        >
-                            <RenderToTitle collapsed={false}/>
-                        </Box>
-                        {drawer}
-                    </Box>
-                </Drawer>
-                <Drawer
-                    variant="permanent"
-                    sx={{
-                        display: {xs: "none", md: "block"},
-                        "& .MuiDrawer-paper": {
-                            width: drawerWidth(),
-                            overflow: "hidden",
-                            transition: "width 200ms cubic-bezier(0.4, 0, 0.6, 1) 0ms",
-                        },
-                    }}
-                    open
-                >
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            fontSize: "14px",
-                            width: "100%",
-                            height: 64,
-                            display: "flex",
-                            flexShrink: 0,
-                            alignItems: "center",
-                            justifyContent: siderCollapsed ? "center" : "space-between",
-                            paddingLeft: siderCollapsed ? 0 : "16px",
-                            paddingRight: siderCollapsed ? 0 : "8px",
-                            variant: "outlined",
-                            borderRadius: 0,
-                            borderBottom: (theme) =>
-                                `1px solid ${theme.palette.action.focus}`,
-                        }}
-                    >
-                        <RenderToTitle collapsed={siderCollapsed}/>
-                        {!siderCollapsed && (
-                            <IconButton size="small" onClick={() => setSiderCollapsed(true)}>
-                                {<ChevronLeft/>}
-                            </IconButton>
-                        )}
-                    </Paper>
-                    <Box
-                        sx={{
-                            flexGrow: 1,
-                            overflowX: "hidden",
-                            overflowY: "auto",
-                        }}
-                    >
-                        {drawer}
-                    </Box>
-                </Drawer>
-            </Box>
-        </>
+      <List
+        disablePadding
+        sx={{
+          flexGrow: 1,
+          paddingTop: "16px",
+        }}
+      >
+        <Dashboard collapsed={siderCollapsed} selectedKey={selectedKey} />
+        {renderTreeView(menuItems, selectedKey)}
+        <Logout collapsed={siderCollapsed} />
+      </List>
     );
+  };
+
+  return (
+    <>
+      <Box
+        sx={{
+          width: { xs: getDrawerWidth(siderCollapsed) },
+          display: {
+            xs: "none",
+            md: "block",
+          },
+          transition: "width 0.3s ease",
+        }}
+      />
+      <Box
+        component="nav"
+        sx={{
+          position: "fixed",
+          zIndex: 1101,
+          width: { sm: getDrawerWidth(siderCollapsed) },
+          display: "flex",
+        }}
+      >
+        <Drawer
+          variant="temporary"
+          elevation={2}
+          open={mobileSiderOpen}
+          onClose={() => setMobileSiderOpen(false)}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+          }}
+          sx={{
+            display: {
+              sm: "block",
+              md: "none",
+            },
+          }}
+        >
+          <Box
+            sx={{
+              width: getDrawerWidth(siderCollapsed),
+            }}
+          >
+            <Box
+              sx={{
+                height: 64,
+                display: "flex",
+                alignItems: "center",
+                paddingLeft: "16px",
+                fontSize: "14px",
+              }}
+            >
+              <Title collapsed={false} />
+            </Box>
+            <Sider />
+          </Box>
+        </Drawer>
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: "none", md: "block" },
+            "& .MuiDrawer-paper": {
+              width: getDrawerWidth(siderCollapsed),
+              overflow: "hidden",
+              transition: "width 200ms cubic-bezier(0.4, 0, 0.6, 1) 0ms",
+            },
+          }}
+          open
+        >
+          <Paper
+            elevation={0}
+            sx={{
+              fontSize: "14px",
+              width: "100%",
+              height: 64,
+              display: "flex",
+              flexShrink: 0,
+              alignItems: "center",
+              justifyContent: siderCollapsed ? "center" : "space-between",
+              paddingLeft: siderCollapsed ? 0 : "16px",
+              paddingRight: siderCollapsed ? 0 : "8px",
+              variant: "outlined",
+              borderRadius: 0,
+              borderBottom: (theme) =>
+                `1px solid ${theme.palette.action.focus}`,
+            }}
+          >
+            <Title collapsed={siderCollapsed} />
+            {!siderCollapsed && (
+              <IconButton size="small" onClick={() => setSiderCollapsed(true)}>
+                {<ChevronLeft />}
+              </IconButton>
+            )}
+          </Paper>
+          <Box
+            sx={{
+              flexGrow: 1,
+              overflowX: "hidden",
+              overflowY: "auto",
+            }}
+          >
+            <Sider />
+          </Box>
+        </Drawer>
+      </Box>
+    </>
+  );
 };
