@@ -77,13 +77,21 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
 
   const renderTreeView = (tree: ITreeMenu[], selectedKey?: string) => {
     return tree.map((item: ITreeMenu) => {
-      const { icon: deprecatedIcon, meta, key, children, name, route } = item;
+      const {
+        icon: deprecatedIcon,
+        label: deprecatedLabel,
+        meta,
+        key,
+        children,
+        name,
+        route,
+      } = item;
       const isOpen = open[key] || false;
 
       const icon = deprecatedIcon ?? meta.icon;
-      const label = meta?.label || name;
+      const label = meta?.label || deprecatedLabel || name;
       const isSelected = key === selectedKey;
-      const isNested = !meta.parent === undefined;
+      const isNested = !(meta.parent === undefined);
       const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0;
 
       if (children.length > 0) {
