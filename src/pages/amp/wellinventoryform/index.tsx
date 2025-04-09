@@ -935,11 +935,12 @@ export const WellInventoryForm = () => {
                   name="location.location_notes"
                 />
               </Grid>
-              <Grid size={12} sx={{ px: 2 }}>
+              <Grid size={12} sx={{ px: 4 }}>
                 <Paper elevation={2}>
                   <Map
                     {...viewState}
                     ref={mapRef}
+                    scrollZoom={false}
                     onMove={(evt) => setViewState(evt.viewState)}
                     mapboxAccessToken={settings.mapboxToken}
                     initialViewState={initialViewState}
