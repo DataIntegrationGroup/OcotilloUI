@@ -4,6 +4,7 @@ export const WellInventorySchema = Yup.object().shape({
   project: Yup.object({
     pointid_prefix: Yup.string().required("PointId Prefix is required."),
     project: Yup.string().required("Project Name is required."),
+    pointid: Yup.string().nonNullable(),
   }),
   location: Yup.object({
     site_id: Yup.string().nullable(),
@@ -158,6 +159,7 @@ export const SchemaDefaults = {
   project: {
     pointid_prefix: "",
     project: "",
+    pointid: "",
   },
   location: {
     site_id: "",

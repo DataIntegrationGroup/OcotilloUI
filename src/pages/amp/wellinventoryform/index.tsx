@@ -38,7 +38,6 @@ import { PersonSearch } from "@mui/icons-material";
 import {
   LoadingControlledSelectField,
   SearchOwnerDialog,
-  NewPointIdPreview,
 } from "@/components/amp/wellinventoryform";
 import {
   createWellInventoryForm,
@@ -53,7 +52,6 @@ import {
 } from "./well_inventory.service";
 import { locationLabels } from "./well_inventory.configs";
 import { SkeletonFormField } from "@/components/SkeletonFormField";
-import { ErrorAlertFormField } from "@/components/ErrorAlertFormField";
 import { useMutation } from "@tanstack/react-query";
 import { useNotification } from "@refinedev/core";
 import { settings } from "@/settings";
@@ -333,6 +331,15 @@ export const WellInventoryForm = () => {
     }
   }, [selectedPointIDPrefix, refetchNewPointIdPreview]);
 
+  useEffect(() => {
+    if (newPointIdPreview && !isNewPointIdPreviewError) {
+      setValue("project.pointid", newPointIdPreview, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }, [newPointIdPreview, isNewPointIdPreviewError, setValue]);
+
   const { open, close } = useNotification();
 
   const { mutateAsync, isPending: isFormSubmissionPending } = useMutation({
@@ -524,10 +531,21 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, lg: 6, xl: 3 }}>
                   {isNewPointIdPreviewFetching ? (
                     <SkeletonFormField />
-                  ) : isNewPointIdPreviewError ? (
-                    <ErrorAlertFormField message="Failed to load Point ID Preview" />
                   ) : (
-                    <NewPointIdPreview id={newPointIdPreview} />
+                    <ControlledTextField
+                      required
+                      label="Point ID"
+                      fullWidth
+                      control={control}
+                      type="text"
+                      name="project.pointid"
+                      error={isNewPointIdPreviewError}
+                      helperText={
+                        isNewPointIdPreviewError
+                          ? "Failed to load Point ID Preview"
+                          : undefined
+                      }
+                    />
                   )}
                 </Grid>
               </Grid>
