@@ -429,9 +429,16 @@ export const WellInventoryForm = () => {
                       );
                       setSelectedPointIDPrefix("");
                     }}
-                    options={projects?.map((option) => {
-                      return { value: option.Project, label: option.Project };
-                    })}
+                    options={projects
+                      ?.sort((a, b) =>
+                        a.Project.toLocaleLowerCase().localeCompare(
+                          b.Project.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => ({
+                        value: option.Project,
+                        label: option.Project,
+                      }))}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
@@ -473,12 +480,15 @@ export const WellInventoryForm = () => {
                         }}
                         options={
                           selectedProjectData
-                            ? selectedProjectData.PointIDPrefix.map(
-                                (prefix) => ({
-                                  value: prefix,
-                                  label: prefix,
-                                }),
-                              )
+                            ? // Case-insensitive sort for consistent UX
+                              selectedProjectData.PointIDPrefix?.sort((a, b) =>
+                                a
+                                  .toLocaleLowerCase()
+                                  .localeCompare(b.toLocaleLowerCase()),
+                              )?.map((prefix) => ({
+                                value: prefix,
+                                label: prefix,
+                              }))
                             : []
                         }
                       />
