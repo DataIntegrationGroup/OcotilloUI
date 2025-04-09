@@ -510,9 +510,15 @@ export const WellInventoryForm = () => {
                     disabled={true}
                     isError={isSiteTypeError}
                     errorMessage="Failed to load site types"
-                    options={siteTypes?.map((option) => {
-                      return { value: option.Code, label: option.Meaning };
-                    })}
+                    options={siteTypes
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return { value: option.Code, label: option.Meaning };
+                      })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6, xl: 3 }}>
@@ -971,13 +977,18 @@ export const WellInventoryForm = () => {
                   disabled={isAltitudeMethodError}
                   isError={isAltitudeMethodError}
                   errorMessage="Failed to load altitude methods"
-                  options={altitudeMethods?.map((option) => {
-                    return { value: option.Code, label: option.Meaning };
-                  })}
+                  options={altitudeMethods
+                    ?.sort((a, b) =>
+                      a.Meaning.toLocaleLowerCase().localeCompare(
+                        b.Meaning.toLocaleLowerCase(),
+                      ),
+                    )
+                    ?.map((option) => {
+                      return { value: option.Code, label: option.Meaning };
+                    })}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 3 }}></Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, md: 6 }} offset={{ md: 3 }}>
                 <ControlledTextField
                   multiline
                   label="Notes"
@@ -1081,12 +1092,18 @@ export const WellInventoryForm = () => {
                     disabled={isMonitoryingStatusError}
                     isError={isMonitoryingStatusError}
                     errorMessage="Failed to load monitoring statuses"
-                    options={monitoryingStatuses?.map((option) => {
-                      return {
-                        label: option.Meaning,
-                        value: option.Code,
-                      };
-                    })}
+                    options={monitoryingStatuses
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return {
+                          label: option.Meaning,
+                          value: option.Code,
+                        };
+                      })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -1101,9 +1118,15 @@ export const WellInventoryForm = () => {
                     disabled={isFormationError}
                     isError={isFormationError}
                     errorMessage="Failed to load formations"
-                    options={formations?.map((option) => {
-                      return { value: option.Code, label: option.Meaning };
-                    })}
+                    options={formations
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return { value: option.Code, label: option.Meaning };
+                      })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
