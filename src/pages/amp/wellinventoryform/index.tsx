@@ -777,67 +777,6 @@ export const WellInventoryForm = () => {
               <Grid size={12}>
                 <Typography variant="h2">Location</Typography>
               </Grid>
-              <Grid size={12}>
-                <Paper elevation={2}>
-                  <Map
-                    {...viewState}
-                    ref={mapRef}
-                    onMove={(evt) => setViewState(evt.viewState)}
-                    mapboxAccessToken={settings.mapboxToken}
-                    initialViewState={initialViewState}
-                    terrain={{ source: "mapbox-dem", exaggeration: 3 }}
-                    style={style}
-                    mapStyle={mapStyle}
-                  >
-                    {typeof x === "number" &&
-                      typeof y === "number" &&
-                      !isNaN(x) &&
-                      !isNaN(y) && (
-                        <Marker
-                          {...(() => {
-                            if (coordinateType === "utm" && utmZone) {
-                              const [lon, lat] = convertUTMToLonLat(
-                                x,
-                                y,
-                                utmZone,
-                              );
-                              return { longitude: lon, latitude: lat };
-                            } else if (coordinateType === "gcs") {
-                              const [longitude, latitude] = [x, y];
-                              if (
-                                longitude < -180 ||
-                                longitude > 180 ||
-                                latitude < -90 ||
-                                latitude > 90
-                              ) {
-                                console.error("Invalid GCS coordinates:", {
-                                  longitude,
-                                  latitude,
-                                });
-                                return {
-                                  longitude: undefined,
-                                  latitude: undefined,
-                                };
-                              }
-                            }
-                            return { longitude: x, latitude: y };
-                          })()}
-                          anchor="bottom"
-                        >
-                          <div
-                            style={{
-                              width: 15,
-                              height: 15,
-                              borderRadius: "50%",
-                              backgroundColor: "red",
-                              border: "2px solid white",
-                            }}
-                          />
-                        </Marker>
-                      )}
-                  </Map>
-                </Paper>
-              </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <ControlledTextField
                   label="Site ID"
@@ -995,6 +934,67 @@ export const WellInventoryForm = () => {
                   control={control}
                   name="location.location_notes"
                 />
+              </Grid>
+              <Grid size={12} sx={{ px: 2 }}>
+                <Paper elevation={2}>
+                  <Map
+                    {...viewState}
+                    ref={mapRef}
+                    onMove={(evt) => setViewState(evt.viewState)}
+                    mapboxAccessToken={settings.mapboxToken}
+                    initialViewState={initialViewState}
+                    terrain={{ source: "mapbox-dem", exaggeration: 3 }}
+                    style={style}
+                    mapStyle={mapStyle}
+                  >
+                    {typeof x === "number" &&
+                      typeof y === "number" &&
+                      !isNaN(x) &&
+                      !isNaN(y) && (
+                        <Marker
+                          {...(() => {
+                            if (coordinateType === "utm" && utmZone) {
+                              const [lon, lat] = convertUTMToLonLat(
+                                x,
+                                y,
+                                utmZone,
+                              );
+                              return { longitude: lon, latitude: lat };
+                            } else if (coordinateType === "gcs") {
+                              const [longitude, latitude] = [x, y];
+                              if (
+                                longitude < -180 ||
+                                longitude > 180 ||
+                                latitude < -90 ||
+                                latitude > 90
+                              ) {
+                                console.error("Invalid GCS coordinates:", {
+                                  longitude,
+                                  latitude,
+                                });
+                                return {
+                                  longitude: undefined,
+                                  latitude: undefined,
+                                };
+                              }
+                            }
+                            return { longitude: x, latitude: y };
+                          })()}
+                          anchor="bottom"
+                        >
+                          <div
+                            style={{
+                              width: 15,
+                              height: 15,
+                              borderRadius: "50%",
+                              backgroundColor: "red",
+                              border: "2px solid white",
+                            }}
+                          />
+                        </Marker>
+                      )}
+                  </Map>
+                </Paper>
               </Grid>
               <Grid size={12}>
                 <ControlledCheckbox
