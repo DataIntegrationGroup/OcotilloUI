@@ -41,8 +41,8 @@ import {
 } from "@/components/amp/wellinventoryform";
 import {
   createWellInventoryForm,
-  getAltitudeDatums,
-  getAltitudeMethods,
+  getElevationDatums,
+  getElevationMethods,
   getCoordinateDatums,
   getFormations,
   getMonitoringStatuses,
@@ -278,16 +278,16 @@ export const WellInventoryForm = () => {
   } = getCoordinateDatums();
 
   const {
-    data: altitudeDatums,
-    isPending: isAltitudeDatumFetching,
-    isError: isAltitudeDatumError,
-  } = getAltitudeDatums();
+    data: elevationDatums,
+    isPending: iselevationDatumFetching,
+    isError: iselevationDatumError,
+  } = getElevationDatums();
 
   const {
-    data: altitudeMethods,
-    isPending: isAltitudeMethodFetching,
-    isError: isAltitudeMethodError,
-  } = getAltitudeMethods();
+    data: elevationMethods,
+    isPending: iselevationMethodFetching,
+    isError: iselevationMethodError,
+  } = getElevationMethods();
 
   const {
     data: formations,
@@ -865,9 +865,9 @@ export const WellInventoryForm = () => {
               <Grid size={{ xs: 12, md: 3 }}>
                 <ControlledTextField
                   type="number"
-                  label="Altitude"
+                  label="Elevation"
                   control={control}
-                  name="location.altitude"
+                  name="location.elevation"
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
@@ -903,18 +903,18 @@ export const WellInventoryForm = () => {
                 <LoadingControlledSelectField
                   resetFn={() => {
                     setValue(
-                      "location.alt_datum",
-                      SchemaDefaults.location.alt_datum,
+                      "location.elevation_datum",
+                      SchemaDefaults.location.elevation_datum,
                     );
                   }}
-                  isLoading={isAltitudeDatumFetching}
-                  label="ALT Datum"
+                  isLoading={iselevationDatumFetching}
+                  label="Elevation Datum"
                   control={control}
-                  name="location.alt_datum"
-                  disabled={isAltitudeDatumError}
-                  isError={isAltitudeDatumError}
+                  name="location.elevation_datum"
+                  disabled={iselevationDatumError}
+                  isError={iselevationDatumError}
                   errorMessage="Failed to load ALT datums"
-                  options={altitudeDatums?.map((option) => {
+                  options={elevationDatums?.map((option) => {
                     return { value: option.Code, label: option.Code };
                   })}
                 />
@@ -923,18 +923,18 @@ export const WellInventoryForm = () => {
                 <LoadingControlledSelectField
                   resetFn={() => {
                     setValue(
-                      "location.altitude_method",
-                      SchemaDefaults.location.altitude_method,
+                      "location.elevation_method",
+                      SchemaDefaults.location.elevation_method,
                     );
                   }}
-                  isLoading={isAltitudeMethodFetching}
-                  label="Altitude Method"
+                  isLoading={iselevationMethodFetching}
+                  label="elevation Method"
                   control={control}
-                  name="location.altitude_method"
-                  disabled={isAltitudeMethodError}
-                  isError={isAltitudeMethodError}
-                  errorMessage="Failed to load altitude methods"
-                  options={altitudeMethods
+                  name="location.elevation_method"
+                  disabled={iselevationMethodError}
+                  isError={iselevationMethodError}
+                  errorMessage="Failed to load elevation methods"
+                  options={elevationMethods
                     ?.sort((a, b) =>
                       a.Meaning.toLocaleLowerCase().localeCompare(
                         b.Meaning.toLocaleLowerCase(),
