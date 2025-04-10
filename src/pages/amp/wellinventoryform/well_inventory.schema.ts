@@ -91,7 +91,7 @@ export const WellInventorySchema = Yup.object().shape({
       .typeError("Static Water Level must be a valid number.")
       .min(0, "Static Water Level must be positive."),
     data_source: Yup.string().nullable(),
-    monitoring_status: Yup.string().nullable(),
+    monitoring_status: Yup.array().of(Yup.string()).nullable(),
     water_notes: Yup.string().nullable(),
     status_user_notes: Yup.string().nullable(),
     notes: Yup.string().nullable(),
@@ -193,7 +193,7 @@ export const SchemaDefaults = {
     formation: "",
     static_water: 0,
     data_source: "",
-    monitoring_status: "",
+    monitoring_status: [],
     water_notes: "",
     status_user_notes: "",
     notes: "",

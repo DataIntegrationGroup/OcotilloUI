@@ -296,9 +296,9 @@ export const WellInventoryForm = () => {
   } = getFormations();
 
   const {
-    data: monitoryingStatuses,
-    isPending: isMonitoryingStatusFetching,
-    isError: isMonitoryingStatusError,
+    data: monitoringStatuses,
+    isPending: isMonitoringStatusFetching,
+    isError: isMonitoringStatusError,
   } = getMonitoringStatuses();
 
   const {
@@ -1104,15 +1104,16 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.monitoring_status,
                       )
                     }
-                    isLoading={isMonitoryingStatusFetching}
+                    isLoading={isMonitoringStatusFetching}
                     label="Monitoring status"
                     fullWidth
                     control={control}
                     name="well.monitoring_status"
-                    disabled={isMonitoryingStatusError}
-                    isError={isMonitoryingStatusError}
+                    disabled={isMonitoringStatusError}
+                    isError={isMonitoringStatusError}
                     errorMessage="Failed to load monitoring statuses"
-                    options={monitoryingStatuses
+                    multiple={true}
+                    options={monitoringStatuses
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase(),
