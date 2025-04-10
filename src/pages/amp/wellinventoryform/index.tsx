@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Map, Marker } from "react-map-gl";
+import { Map, Marker, NavigationControl } from "react-map-gl";
 import { useForm } from "@refinedev/react-hook-form";
 import { IWellInventoryForm } from "@/interfaces/amp";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -966,6 +966,7 @@ export const WellInventoryForm = () => {
                     style={style}
                     mapStyle={mapStyle}
                   >
+                    <NavigationControl position="top-right" />
                     {typeof x === "number" &&
                       typeof y === "number" &&
                       !isNaN(x) &&
