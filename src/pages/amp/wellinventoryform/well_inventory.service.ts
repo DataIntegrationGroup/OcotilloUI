@@ -9,7 +9,7 @@ const ampApiFetch = async (
   endpoint: string,
   failure_message: string,
   method: string = "GET",
-  version: string = "v0"
+  version: string = "v0",
 ): Promise<any> => {
   const accessToken = await getAccessToken();
   const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
@@ -28,7 +28,7 @@ const ampApiFetch = async (
 const fetchLookupTable = async (table: string): Promise<any> => {
   return await ampApiFetch(
     `authorized/lookuptable/${table}`,
-    `Failed to fetch ${table} options`
+    `Failed to fetch ${table} options`,
   );
 };
 
@@ -132,9 +132,9 @@ export const getSiteTypes = () => {
 const fetchNewPointIDPreview = async (prefix: string, siteType: string) => {
   return await ampApiFetch(
     `authorized/well_inventory/newly-generated-pointid?pointid_prefix=${encodeURIComponent(
-      prefix
+      prefix,
     )}&site_type=${encodeURIComponent(siteType)}`,
-    "Failed to fetch new Point ID preview"
+    "Failed to fetch new Point ID preview",
   );
 };
 
@@ -147,7 +147,7 @@ export const getNewPointIDPreview = (prefix: string, siteType: string) => {
 };
 
 export const createWellInventoryForm = async (
-  body: Partial<IWellInventoryForm>
+  body: Partial<IWellInventoryForm>,
 ) => {
   const formData = new FormData();
   const sanitizedBody = removeEmptyFields(body);
@@ -168,7 +168,7 @@ export const createWellInventoryForm = async (
 
   if (!response.ok) {
     throw new Error(
-      `Failed to create new well inventory entry: ${response.statusText}`
+      `Failed to create new well inventory entry: ${response.statusText}`,
     );
   }
 
@@ -218,7 +218,7 @@ export const fetchOwnerSearch = async ({
 
   return await ampApiFetch(
     `authorized/locations/owners-search?${queryParams.toString()}`,
-    "Failed to fetch owners"
+    "Failed to fetch owners",
   );
 };
 
@@ -228,8 +228,8 @@ const removeEmptyFields = (obj: any): any => {
   } else if (typeof obj === "object" && obj !== null) {
     return Object.fromEntries(
       Object.entries(obj)
-        .filter(([, value]) => value !== "")
-        .map(([key, value]) => [key, removeEmptyFields(value)])
+        .filter(([, value]) => value !== "" && value !== null)
+        .map(([key, value]) => [key, removeEmptyFields(value)]),
     );
   }
   return obj;
