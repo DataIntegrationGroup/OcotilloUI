@@ -17,6 +17,7 @@ export const LoadingControlledSelectField = <T,>({
   name,
   required,
   resetFn,
+  multiple = false,
   ...props
 }: {
   isLoading: boolean;
@@ -28,6 +29,7 @@ export const LoadingControlledSelectField = <T,>({
   label: string;
   required?: boolean;
   resetFn: () => void;
+  multiple?: boolean;
 } & SelectProps) => {
   const { disabled } = props;
 
@@ -67,6 +69,7 @@ export const LoadingControlledSelectField = <T,>({
         label={label}
         name={name}
         required={required}
+        multiple={multiple}
         {...props}
       />
     </Box>

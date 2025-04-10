@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Map, Marker } from "react-map-gl";
+import { Map, Marker, NavigationControl } from "react-map-gl";
 import { useForm } from "@refinedev/react-hook-form";
 import { IWellInventoryForm } from "@/interfaces/amp";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -38,7 +38,6 @@ import { PersonSearch } from "@mui/icons-material";
 import {
   LoadingControlledSelectField,
   SearchOwnerDialog,
-  NewPointIdPreview,
 } from "@/components/amp/wellinventoryform";
 import {
   createWellInventoryForm,
@@ -53,7 +52,6 @@ import {
 } from "./well_inventory.service";
 import { locationLabels } from "./well_inventory.configs";
 import { SkeletonFormField } from "@/components/SkeletonFormField";
-import { ErrorAlertFormField } from "@/components/ErrorAlertFormField";
 import { useMutation } from "@tanstack/react-query";
 import { useNotification } from "@refinedev/core";
 import { settings } from "@/settings";
@@ -298,9 +296,9 @@ export const WellInventoryForm = () => {
   } = getFormations();
 
   const {
-    data: monitoryingStatuses,
-    isPending: isMonitoryingStatusFetching,
-    isError: isMonitoryingStatusError,
+    data: monitoringStatuses,
+    isPending: isMonitoringStatusFetching,
+    isError: isMonitoringStatusError,
   } = getMonitoringStatuses();
 
   const {
@@ -332,6 +330,15 @@ export const WellInventoryForm = () => {
       refetchNewPointIdPreview();
     }
   }, [selectedPointIDPrefix, refetchNewPointIdPreview]);
+
+  useEffect(() => {
+    if (newPointIdPreview && !isNewPointIdPreviewError) {
+      setValue("project.pointid", newPointIdPreview, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }, [newPointIdPreview, isNewPointIdPreviewError, setValue]);
 
   const { open, close } = useNotification();
 
@@ -429,9 +436,16 @@ export const WellInventoryForm = () => {
                       );
                       setSelectedPointIDPrefix("");
                     }}
-                    options={projects?.map((option) => {
-                      return { value: option.Project, label: option.Project };
-                    })}
+                    options={projects
+                      ?.sort((a, b) =>
+                        a.Project.toLocaleLowerCase().localeCompare(
+                          b.Project.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => ({
+                        value: option.Project,
+                        label: option.Project,
+                      }))}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
@@ -473,12 +487,15 @@ export const WellInventoryForm = () => {
                         }}
                         options={
                           selectedProjectData
-                            ? selectedProjectData.PointIDPrefix.map(
-                                (prefix) => ({
-                                  value: prefix,
-                                  label: prefix,
-                                }),
-                              )
+                            ? // Case-insensitive sort for consistent UX
+                              selectedProjectData.PointIDPrefix?.sort((a, b) =>
+                                a
+                                  .toLocaleLowerCase()
+                                  .localeCompare(b.toLocaleLowerCase()),
+                              )?.map((prefix) => ({
+                                value: prefix,
+                                label: prefix,
+                              }))
                             : []
                         }
                       />
@@ -500,18 +517,35 @@ export const WellInventoryForm = () => {
                     disabled={true}
                     isError={isSiteTypeError}
                     errorMessage="Failed to load site types"
-                    options={siteTypes?.map((option) => {
-                      return { value: option.Code, label: option.Meaning };
-                    })}
+                    options={siteTypes
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return { value: option.Code, label: option.Meaning };
+                      })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6, xl: 3 }}>
                   {isNewPointIdPreviewFetching ? (
                     <SkeletonFormField />
-                  ) : isNewPointIdPreviewError ? (
-                    <ErrorAlertFormField message="Failed to load Point ID Preview" />
                   ) : (
-                    <NewPointIdPreview id={newPointIdPreview} />
+                    <ControlledTextField
+                      required
+                      label="Point ID"
+                      fullWidth
+                      control={control}
+                      type="text"
+                      name="project.pointid"
+                      error={isNewPointIdPreviewError}
+                      helperText={
+                        isNewPointIdPreviewError
+                          ? "Failed to load Point ID Preview"
+                          : undefined
+                      }
+                    />
                   )}
                 </Grid>
               </Grid>
@@ -761,67 +795,6 @@ export const WellInventoryForm = () => {
               <Grid size={12}>
                 <Typography variant="h2">Location</Typography>
               </Grid>
-              <Grid size={12}>
-                <Paper elevation={2}>
-                  <Map
-                    {...viewState}
-                    ref={mapRef}
-                    onMove={(evt) => setViewState(evt.viewState)}
-                    mapboxAccessToken={settings.mapboxToken}
-                    initialViewState={initialViewState}
-                    terrain={{ source: "mapbox-dem", exaggeration: 3 }}
-                    style={style}
-                    mapStyle={mapStyle}
-                  >
-                    {typeof x === "number" &&
-                      typeof y === "number" &&
-                      !isNaN(x) &&
-                      !isNaN(y) && (
-                        <Marker
-                          {...(() => {
-                            if (coordinateType === "utm" && utmZone) {
-                              const [lon, lat] = convertUTMToLonLat(
-                                x,
-                                y,
-                                utmZone,
-                              );
-                              return { longitude: lon, latitude: lat };
-                            } else if (coordinateType === "gcs") {
-                              const [longitude, latitude] = [x, y];
-                              if (
-                                longitude < -180 ||
-                                longitude > 180 ||
-                                latitude < -90 ||
-                                latitude > 90
-                              ) {
-                                console.error("Invalid GCS coordinates:", {
-                                  longitude,
-                                  latitude,
-                                });
-                                return {
-                                  longitude: undefined,
-                                  latitude: undefined,
-                                };
-                              }
-                            }
-                            return { longitude: x, latitude: y };
-                          })()}
-                          anchor="bottom"
-                        >
-                          <div
-                            style={{
-                              width: 15,
-                              height: 15,
-                              borderRadius: "50%",
-                              backgroundColor: "red",
-                              border: "2px solid white",
-                            }}
-                          />
-                        </Marker>
-                      )}
-                  </Map>
-                </Paper>
-              </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <ControlledTextField
                   label="Site ID"
@@ -961,19 +934,87 @@ export const WellInventoryForm = () => {
                   disabled={isAltitudeMethodError}
                   isError={isAltitudeMethodError}
                   errorMessage="Failed to load altitude methods"
-                  options={altitudeMethods?.map((option) => {
-                    return { value: option.Code, label: option.Meaning };
-                  })}
+                  options={altitudeMethods
+                    ?.sort((a, b) =>
+                      a.Meaning.toLocaleLowerCase().localeCompare(
+                        b.Meaning.toLocaleLowerCase(),
+                      ),
+                    )
+                    ?.map((option) => {
+                      return { value: option.Code, label: option.Meaning };
+                    })}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 3 }}></Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, md: 6 }} offset={{ md: 3 }}>
                 <ControlledTextField
                   multiline
                   label="Notes"
                   control={control}
                   name="location.location_notes"
                 />
+              </Grid>
+              <Grid size={12} sx={{ px: 4 }}>
+                <Paper elevation={2}>
+                  <Map
+                    {...viewState}
+                    ref={mapRef}
+                    scrollZoom={false}
+                    onMove={(evt) => setViewState(evt.viewState)}
+                    mapboxAccessToken={settings.mapboxToken}
+                    initialViewState={initialViewState}
+                    terrain={{ source: "mapbox-dem", exaggeration: 3 }}
+                    style={style}
+                    mapStyle={mapStyle}
+                  >
+                    <NavigationControl position="top-right" />
+                    {typeof x === "number" &&
+                      typeof y === "number" &&
+                      !isNaN(x) &&
+                      !isNaN(y) && (
+                        <Marker
+                          {...(() => {
+                            if (coordinateType === "utm" && utmZone) {
+                              const [lon, lat] = convertUTMToLonLat(
+                                x,
+                                y,
+                                utmZone,
+                              );
+                              return { longitude: lon, latitude: lat };
+                            } else if (coordinateType === "gcs") {
+                              const [longitude, latitude] = [x, y];
+                              if (
+                                longitude < -180 ||
+                                longitude > 180 ||
+                                latitude < -90 ||
+                                latitude > 90
+                              ) {
+                                console.error("Invalid GCS coordinates:", {
+                                  longitude,
+                                  latitude,
+                                });
+                                return {
+                                  longitude: undefined,
+                                  latitude: undefined,
+                                };
+                              }
+                            }
+                            return { longitude: x, latitude: y };
+                          })()}
+                          anchor="bottom"
+                        >
+                          <div
+                            style={{
+                              width: 15,
+                              height: 15,
+                              borderRadius: "50%",
+                              backgroundColor: "red",
+                              border: "2px solid white",
+                            }}
+                          />
+                        </Marker>
+                      )}
+                  </Map>
+                </Paper>
               </Grid>
               <Grid size={12}>
                 <ControlledCheckbox
@@ -1063,20 +1104,27 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.monitoring_status,
                       )
                     }
-                    isLoading={isMonitoryingStatusFetching}
+                    isLoading={isMonitoringStatusFetching}
                     label="Monitoring status"
                     fullWidth
                     control={control}
                     name="well.monitoring_status"
-                    disabled={isMonitoryingStatusError}
-                    isError={isMonitoryingStatusError}
+                    disabled={isMonitoringStatusError}
+                    isError={isMonitoringStatusError}
                     errorMessage="Failed to load monitoring statuses"
-                    options={monitoryingStatuses?.map((option) => {
-                      return {
-                        label: option.Meaning,
-                        value: option.Code,
-                      };
-                    })}
+                    multiple={true}
+                    options={monitoringStatuses
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return {
+                          label: option.Meaning,
+                          value: option.Code,
+                        };
+                      })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -1091,9 +1139,15 @@ export const WellInventoryForm = () => {
                     disabled={isFormationError}
                     isError={isFormationError}
                     errorMessage="Failed to load formations"
-                    options={formations?.map((option) => {
-                      return { value: option.Code, label: option.Meaning };
-                    })}
+                    options={formations
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return { value: option.Code, label: option.Meaning };
+                      })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>

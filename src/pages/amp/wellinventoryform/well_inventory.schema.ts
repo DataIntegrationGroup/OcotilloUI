@@ -4,6 +4,7 @@ export const WellInventorySchema = Yup.object().shape({
   project: Yup.object({
     pointid_prefix: Yup.string().required("PointId Prefix is required."),
     project: Yup.string().required("Project Name is required."),
+    pointid: Yup.string().nonNullable(),
   }),
   location: Yup.object({
     site_id: Yup.string().nullable(),
@@ -90,7 +91,7 @@ export const WellInventorySchema = Yup.object().shape({
       .typeError("Static Water Level must be a valid number.")
       .min(0, "Static Water Level must be positive."),
     data_source: Yup.string().nullable(),
-    monitoring_status: Yup.string().nullable(),
+    monitoring_status: Yup.array().of(Yup.string()).nullable(),
     water_notes: Yup.string().nullable(),
     status_user_notes: Yup.string().nullable(),
     notes: Yup.string().nullable(),
@@ -158,6 +159,7 @@ export const SchemaDefaults = {
   project: {
     pointid_prefix: "",
     project: "",
+    pointid: "",
   },
   location: {
     site_id: "",
@@ -191,7 +193,7 @@ export const SchemaDefaults = {
     formation: "",
     static_water: 0,
     data_source: "",
-    monitoring_status: "",
+    monitoring_status: [],
     water_notes: "",
     status_user_notes: "",
     notes: "",
