@@ -1134,7 +1134,82 @@ export const WellInventoryForm = () => {
                     name="well.casing_depth"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <LoadingControlledSelectField
+                    resetFn={() =>
+                      setValue(
+                        "well.depth_source",
+                        SchemaDefaults.well.depth_source,
+                      )
+                    }
+                    isLoading={isFormationFetching}
+                    label="Depth Source"
+                    control={control}
+                    name="well.depth_source"
+                    disabled={isFormationError}
+                    isError={isFormationError}
+                    errorMessage="Failed to load depth sources"
+                    options={formations
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return { value: option.Code, label: option.Meaning };
+                      })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <LoadingControlledSelectField
+                    resetFn={() =>
+                      setValue(
+                        "well.completion_source",
+                        SchemaDefaults.well.completion_source,
+                      )
+                    }
+                    isLoading={isFormationFetching}
+                    label="Completion Source"
+                    control={control}
+                    name="well.completion_source"
+                    disabled={isFormationError}
+                    isError={isFormationError}
+                    errorMessage="Failed to load completion sources"
+                    options={formations
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return { value: option.Code, label: option.Meaning };
+                      })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <LoadingControlledSelectField
+                    resetFn={() =>
+                      setValue("well.status", SchemaDefaults.well.status)
+                    }
+                    isLoading={isFormationFetching}
+                    label="Status"
+                    control={control}
+                    name="well.status"
+                    disabled={isFormationError}
+                    isError={isFormationError}
+                    errorMessage="Failed to load statuses"
+                    options={formations
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return { value: option.Code, label: option.Meaning };
+                      })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 9 }}>
                   <LoadingControlledSelectField
                     resetFn={() =>
                       setValue(
@@ -1189,12 +1264,63 @@ export const WellInventoryForm = () => {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                  <LoadingControlledSelectField
+                    resetFn={() =>
+                      setValue(
+                        "well.construction_method",
+                        SchemaDefaults.well.construction_method,
+                      )
+                    }
+                    isLoading={isFormationFetching}
+                    label="Construction Method"
+                    control={control}
+                    name="well.construction_method"
+                    disabled={isFormationError}
+                    isError={isFormationError}
+                    errorMessage="Failed to load construction methods"
+                    options={formations
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return { value: option.Code, label: option.Meaning };
+                      })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                  <LoadingControlledSelectField
+                    resetFn={() =>
+                      setValue(
+                        "well.current_use",
+                        SchemaDefaults.well.current_use,
+                      )
+                    }
+                    isLoading={isFormationFetching}
+                    label="Current Use"
+                    control={control}
+                    name="well.current_use"
+                    disabled={isFormationError}
+                    isError={isFormationError}
+                    errorMessage="Failed to load current uses"
+                    options={formations
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase(),
+                        ),
+                      )
+                      ?.map((option) => {
+                        return { value: option.Code, label: option.Meaning };
+                      })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
-                    type="number"
-                    label="MP Height (+/-)"
+                    label="Driller Name"
                     fullWidth
                     control={control}
-                    name="well.mp_height"
+                    name="well.driller_name"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -1205,6 +1331,23 @@ export const WellInventoryForm = () => {
                     name="well.measuring_point"
                   />
                 </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ControlledTextField
+                    label="Data Source"
+                    fullWidth
+                    control={control}
+                    name="well.data_source"
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                  <ControlledTextField
+                    type="number"
+                    label="MP Height (+/-)"
+                    fullWidth
+                    control={control}
+                    name="well.mp_height"
+                  />
+                </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
@@ -1212,14 +1355,6 @@ export const WellInventoryForm = () => {
                     fullWidth
                     control={control}
                     name="well.static_water"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ControlledTextField
-                    label="Data Source"
-                    fullWidth
-                    control={control}
-                    name="well.data_source"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
