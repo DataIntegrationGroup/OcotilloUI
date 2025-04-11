@@ -23,41 +23,18 @@ export const WellInventorySchema = Yup.object().shape({
         .required("Y coordinate is required.")
         .typeError("Y coordinate must be a valid number."),
     }),
-    altitude: Yup.number()
+    elevation: Yup.number()
       .nullable()
-      // .transform((value, originalValue) =>
-      //   originalValue === "" || originalValue === 0 ? null : value,
-      // )
-      .typeError("Altitude must be a valid number."),
+      .typeError("Elevation must be a valid number."),
     utm_zone: Yup.number()
       .typeError("UTM Zone must be a valid number.")
       .required("UTM Zone is required.")
       .min(1, "UTM Zone must be at least 1.")
       .max(60, "UTM Zone must be at most 60."),
     utm_datum: Yup.string().required("UTM Datum is required."),
-    alt_datum: Yup.string().nullable(),
-    // .transform((value, originalValue) =>
-    //   originalValue === "" ? null : value,
-    // )
-    // .when("altitude", (altitude, schema) =>
-    //   altitude !== null && altitude !== undefined
-    //     ? schema.required(
-    //         "Altitude Datum is required when altitude is provided.",
-    //       )
-    //     : schema,
-    // ),
+    elevation_datum: Yup.string().nullable(),
     location_notes: Yup.string().nullable(),
-    altitude_method: Yup.string().nullable(),
-    // .transform((value, originalValue) =>
-    //   originalValue === "" ? null : value,
-    // )
-    // .when("altitude", (altitude, schema) =>
-    //   altitude !== null && altitude !== undefined
-    //     ? schema.required(
-    //         "Altitude Datum is required when altitude is provided.",
-    //       )
-    //     : schema,
-    // ),
+    elevation_method: Yup.string().nullable(),
     site_type: Yup.string().required("Site Type is required."),
   }),
   well: Yup.object({
@@ -171,12 +148,12 @@ export const SchemaDefaults = {
       x: 0,
       y: 0,
     },
-    altitude: 2842,
+    elevation: null,
     utm_zone: 13,
     utm_datum: "NAD83",
-    alt_datum: "",
+    elevation_datum: "",
     location_notes: "",
-    altitude_method: "",
+    elevation_method: "",
     site_type: "GW",
   },
   well: {
