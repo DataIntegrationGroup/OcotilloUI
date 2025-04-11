@@ -10,6 +10,7 @@ export const WellInventorySchema = Yup.object().shape({
     site_id: Yup.string().nullable(),
     alternate_site_id: Yup.string().nullable(),
     site_name: Yup.string().nullable(),
+    site_date: Yup.string().nullable(),
     public_release: Yup.boolean().oneOf(
       [true],
       "Public Release must be accepted.",
@@ -35,6 +36,19 @@ export const WellInventorySchema = Yup.object().shape({
     elevation_datum: Yup.string().nullable(),
     location_notes: Yup.string().nullable(),
     elevation_method: Yup.string().nullable(),
+    // .transform((value, originalValue) =>
+    //   originalValue === "" ? null : value,
+    // )
+    // .when("altitude", (altitude, schema) =>
+    //   altitude !== null && altitude !== undefined
+    //     ? schema.required(
+    //         "Altitude Datum is required when altitude is provided.",
+    //       )
+    //     : schema,
+    // ),
+    elevation_accuracy: Yup.number()
+      .nullable()
+      .min(0, "Elevation Accuracy must be greater than 0."),
     site_type: Yup.string().required("Site Type is required."),
   }),
   well: Yup.object({
@@ -140,6 +154,7 @@ export const SchemaDefaults = {
   },
   location: {
     site_id: "",
+    site_date: null,
     alternate_site_id: "",
     site_names: "",
     public_release: true,
@@ -154,6 +169,7 @@ export const SchemaDefaults = {
     elevation_datum: "",
     location_notes: "",
     elevation_method: "",
+    elevation_accuracy: 0,
     site_type: "GW",
   },
   well: {

@@ -58,6 +58,7 @@ import { useNotification } from "@refinedev/core";
 import { settings } from "@/settings";
 import { ColorModeContext } from "@/contexts";
 import { convertLonLatToUTM, convertUTMToLonLat } from "@/utils/UtmToLonLat";
+import { ControlledDateField } from "@/components/Controlled/ControlledDateField";
 
 export const WellInventoryForm = () => {
   const mapRef = useRef(null);
@@ -817,7 +818,7 @@ export const WellInventoryForm = () => {
               <Grid size={12}>
                 <Typography variant="h2">Location</Typography>
               </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <ControlledTextField
                   label="Site ID"
                   fullWidth
@@ -825,7 +826,7 @@ export const WellInventoryForm = () => {
                   name="location.site_id"
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <ControlledTextField
                   label="Site ID (Alternate)"
                   fullWidth
@@ -833,12 +834,19 @@ export const WellInventoryForm = () => {
                   name="location.alternate_site_id"
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <ControlledTextField
                   label="Site Name"
                   fullWidth
                   control={control}
                   name="location.site_name"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <ControlledDateField
+                  label="Site Date"
+                  control={control}
+                  name="location.site_date"
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4, lg: 5 }}>
@@ -887,14 +895,6 @@ export const WellInventoryForm = () => {
               <Grid size={{ xs: 12, md: 3 }}>
                 <ControlledTextField
                   type="number"
-                  label="Elevation"
-                  control={control}
-                  name="location.elevation"
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <ControlledTextField
-                  type="number"
                   label="UTM zone"
                   control={control}
                   name="location.utm_zone"
@@ -919,6 +919,22 @@ export const WellInventoryForm = () => {
                   options={coordinateDatums?.map((option) => {
                     return { value: option.DATUMCODE, label: option.DATUMCODE };
                   })}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <ControlledTextField
+                  type="number"
+                  label="Elevation"
+                  control={control}
+                  name="location.elevation"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <ControlledTextField
+                  type="number"
+                  label="Elevation Accuracy"
+                  control={control}
+                  name="location.elevation_accuracy"
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
@@ -967,7 +983,7 @@ export const WellInventoryForm = () => {
                     })}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }} offset={{ md: 3 }}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ControlledTextField
                   multiline
                   label="Notes"
