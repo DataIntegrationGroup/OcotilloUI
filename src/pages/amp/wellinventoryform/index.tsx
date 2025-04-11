@@ -19,6 +19,7 @@ import {
   CardContent,
   CardHeader,
   IconButton,
+  InputAdornment,
   Paper,
   SelectChangeEvent,
   Tooltip,
@@ -329,11 +330,12 @@ export const WellInventoryForm = () => {
     if (selectedPointIDPrefix) {
       refetchNewPointIdPreview();
     }
-  }, [selectedPointIDPrefix, refetchNewPointIdPreview]);
+  }, [selectedPointIDPrefix, refetchNewPointIdPreview, setValue]);
 
   useEffect(() => {
     if (newPointIdPreview && !isNewPointIdPreviewError) {
-      setValue("project.pointid", newPointIdPreview, {
+      const newPointIdPreviewSuffix = newPointIdPreview.split("-")[1];
+      setValue("project.pointid_suffix", newPointIdPreviewSuffix, {
         shouldValidate: true,
         shouldDirty: true,
       });
@@ -415,6 +417,10 @@ export const WellInventoryForm = () => {
                       );
                       setSelectedProject("");
                       setSelectedPointIDPrefix("");
+                      setValue(
+                        "project.pointid_suffix",
+                        SchemaDefaults.project.pointid_suffix,
+                      );
                     }}
                     required
                     isLoading={isProjectFetching}
@@ -465,6 +471,10 @@ export const WellInventoryForm = () => {
                             SchemaDefaults.project.pointid_prefix,
                           );
                           setSelectedPointIDPrefix("");
+                          setValue(
+                            "project.pointid_suffix",
+                            SchemaDefaults.project.pointid_suffix,
+                          );
                         }}
                         required
                         isLoading={isProjectFetching}
@@ -538,13 +548,25 @@ export const WellInventoryForm = () => {
                       fullWidth
                       control={control}
                       type="text"
-                      name="project.pointid"
+                      name="project.pointid_suffix"
+                      disabled={!selectedPointIDPrefix}
                       error={isNewPointIdPreviewError}
                       helperText={
                         isNewPointIdPreviewError
                           ? "Failed to load Point ID Preview"
                           : undefined
                       }
+                      slotProps={{
+                        input: {
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              {selectedPointIDPrefix
+                                ? `${selectedPointIDPrefix}-`
+                                : null}
+                            </InputAdornment>
+                          ),
+                        },
+                      }}
                     />
                   )}
                 </Grid>
