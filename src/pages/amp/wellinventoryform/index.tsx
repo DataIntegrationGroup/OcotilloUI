@@ -44,12 +44,17 @@ import {
   createWellInventoryForm,
   getElevationDatums,
   getElevationMethods,
+  getCompletionSources,
+  getConstructionMethods,
   getCoordinateDatums,
+  getCurrentUses,
+  getDepthSources,
   getFormations,
   getMonitoringStatuses,
   getNewPointIDPreview,
   getProjects,
   getSiteTypes,
+  getStatus,
 } from "./well_inventory.service";
 import { locationLabels } from "./well_inventory.configs";
 import { SkeletonFormField } from "@/components/SkeletonFormField";
@@ -292,16 +297,46 @@ export const WellInventoryForm = () => {
   } = getElevationMethods();
 
   const {
-    data: formations,
-    isPending: isFormationFetching,
-    isError: isFormationError,
-  } = getFormations();
+    data: depthSources,
+    isPending: isDepthSourcesFetching,
+    isError: isDepthSourcesError,
+  } = getDepthSources();
+
+  const {
+    data: completionSources,
+    isPending: isCompletionSourcesFetching,
+    isError: isCompletionSourcesError,
+  } = getCompletionSources();
+
+  const {
+    data: statuses,
+    isPending: isStatusesFetching,
+    isError: isStatusesError,
+  } = getStatus();
 
   const {
     data: monitoringStatuses,
     isPending: isMonitoringStatusFetching,
     isError: isMonitoringStatusError,
   } = getMonitoringStatuses();
+
+  const {
+    data: formations,
+    isPending: isFormationFetching,
+    isError: isFormationError,
+  } = getFormations();
+
+  const {
+    data: constructionMethods,
+    isPending: isConstructionMethodsFetching,
+    isError: isConstructionMethodsError,
+  } = getConstructionMethods();
+
+  const {
+    data: currentUses,
+    isPending: isCurrentUsesFetching,
+    isError: isCurrentUsesError,
+  } = getCurrentUses();
 
   const {
     data: projects,
@@ -1142,14 +1177,14 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.depth_source,
                       )
                     }
-                    isLoading={isFormationFetching}
+                    isLoading={isDepthSourcesFetching}
                     label="Depth Source"
                     control={control}
                     name="well.depth_source"
-                    disabled={isFormationError}
-                    isError={isFormationError}
+                    disabled={isDepthSourcesError}
+                    isError={isDepthSourcesError}
                     errorMessage="Failed to load depth sources"
-                    options={formations
+                    options={depthSources
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase(),
@@ -1168,14 +1203,14 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.completion_source,
                       )
                     }
-                    isLoading={isFormationFetching}
+                    isLoading={isCompletionSourcesFetching}
                     label="Completion Source"
                     control={control}
                     name="well.completion_source"
-                    disabled={isFormationError}
-                    isError={isFormationError}
+                    disabled={isCompletionSourcesError}
+                    isError={isCompletionSourcesError}
                     errorMessage="Failed to load completion sources"
-                    options={formations
+                    options={completionSources
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase(),
@@ -1191,14 +1226,14 @@ export const WellInventoryForm = () => {
                     resetFn={() =>
                       setValue("well.status", SchemaDefaults.well.status)
                     }
-                    isLoading={isFormationFetching}
+                    isLoading={isStatusesFetching}
                     label="Status"
                     control={control}
                     name="well.status"
-                    disabled={isFormationError}
-                    isError={isFormationError}
+                    disabled={isStatusesError}
+                    isError={isStatusesError}
                     errorMessage="Failed to load statuses"
-                    options={formations
+                    options={statuses
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase(),
@@ -1271,14 +1306,14 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.construction_method,
                       )
                     }
-                    isLoading={isFormationFetching}
+                    isLoading={isConstructionMethodsFetching}
                     label="Construction Method"
                     control={control}
                     name="well.construction_method"
-                    disabled={isFormationError}
-                    isError={isFormationError}
+                    disabled={isConstructionMethodsError}
+                    isError={isConstructionMethodsError}
                     errorMessage="Failed to load construction methods"
-                    options={formations
+                    options={constructionMethods
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase(),
@@ -1297,14 +1332,14 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.current_use,
                       )
                     }
-                    isLoading={isFormationFetching}
+                    isLoading={isCurrentUsesFetching}
                     label="Current Use"
                     control={control}
                     name="well.current_use"
-                    disabled={isFormationError}
-                    isError={isFormationError}
+                    disabled={isCurrentUsesError}
+                    isError={isCurrentUsesError}
                     errorMessage="Failed to load current uses"
-                    options={formations
+                    options={currentUses
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase(),

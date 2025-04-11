@@ -129,6 +129,76 @@ export const getSiteTypes = () => {
   });
 };
 
+const fetchStatuses = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable("status");
+};
+
+export const getStatus = () => {
+  return useQuery({
+    queryKey: ["Statuses"],
+    queryFn: fetchStatuses,
+    ...lookupTableQueryConfig,
+  });
+};
+
+const fetchDepthSources = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable("depth-completion-source");
+};
+
+export const getDepthSources = () => {
+  return useQuery({
+    queryKey: ["DepthSources"],
+    queryFn: fetchDepthSources,
+    ...lookupTableQueryConfig,
+  });
+};
+
+const fetchCompletionSources = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable("depth-completion-source");
+};
+
+export const getCompletionSources = () => {
+  return useQuery({
+    queryKey: ["CompletionSources"],
+    queryFn: fetchCompletionSources,
+    ...lookupTableQueryConfig,
+  });
+};
+
+const fetchConstructionMethods = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable("construction-method");
+};
+
+export const getConstructionMethods = () => {
+  return useQuery({
+    queryKey: ["ConstructionMethods"],
+    queryFn: fetchConstructionMethods,
+    ...lookupTableQueryConfig,
+  });
+};
+
+const fetchCurrentUses = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable("current-use");
+};
+
+export const getCurrentUses = () => {
+  return useQuery({
+    queryKey: ["CurrentUses"],
+    queryFn: fetchCurrentUses,
+    ...lookupTableQueryConfig,
+  });
+};
+
 const fetchNewPointIDPreview = async (prefix: string, siteType: string) => {
   return await ampApiFetch(
     `authorized/well_inventory/newly-generated-pointid?pointid_prefix=${encodeURIComponent(
