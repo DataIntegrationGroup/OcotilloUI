@@ -76,7 +76,7 @@ export const getCoordinateDatums = () => {
 };
 
 const fetchElevationDatums = async (): Promise<{ Code: string }[]> => {
-  return await fetchLookupTable("elevation_datum");
+  return await fetchLookupTable("altitude_datum");
 };
 
 export const getElevationDatums = () => {
@@ -90,7 +90,7 @@ export const getElevationDatums = () => {
 const fetchElevationMethods = async (): Promise<
   { Code: string; Meaning: string }[]
 > => {
-  return await fetchLookupTable("elevation_method");
+  return await fetchLookupTable("altitude_method");
 };
 
 export const getElevationMethods = () => {

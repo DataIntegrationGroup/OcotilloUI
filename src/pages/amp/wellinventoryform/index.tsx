@@ -1001,7 +1001,7 @@ export const WellInventoryForm = () => {
                     );
                   }}
                   isLoading={iselevationMethodFetching}
-                  label="elevation Method"
+                  label="Elevation Method"
                   control={control}
                   name="location.elevation_method"
                   disabled={iselevationMethodError}
