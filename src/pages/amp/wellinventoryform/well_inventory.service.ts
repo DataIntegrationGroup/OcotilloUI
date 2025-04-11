@@ -76,7 +76,7 @@ export const getCoordinateDatums = () => {
 };
 
 const fetchElevationDatums = async (): Promise<{ Code: string }[]> => {
-  return await fetchLookupTable("elevation_datum");
+  return await fetchLookupTable("altitude_datum");
 };
 
 export const getElevationDatums = () => {
@@ -90,7 +90,7 @@ export const getElevationDatums = () => {
 const fetchElevationMethods = async (): Promise<
   { Code: string; Meaning: string }[]
 > => {
-  return await fetchLookupTable("elevation_method");
+  return await fetchLookupTable("altitude_method");
 };
 
 export const getElevationMethods = () => {
@@ -125,6 +125,76 @@ export const getSiteTypes = () => {
   return useQuery({
     queryKey: ["SiteTypes"],
     queryFn: fetchSiteTypes,
+    ...lookupTableQueryConfig,
+  });
+};
+
+const fetchStatuses = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable("status");
+};
+
+export const getStatus = () => {
+  return useQuery({
+    queryKey: ["Statuses"],
+    queryFn: fetchStatuses,
+    ...lookupTableQueryConfig,
+  });
+};
+
+const fetchDepthSources = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable("depth-completion-source");
+};
+
+export const getDepthSources = () => {
+  return useQuery({
+    queryKey: ["DepthSources"],
+    queryFn: fetchDepthSources,
+    ...lookupTableQueryConfig,
+  });
+};
+
+const fetchCompletionSources = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable("depth-completion-source");
+};
+
+export const getCompletionSources = () => {
+  return useQuery({
+    queryKey: ["CompletionSources"],
+    queryFn: fetchCompletionSources,
+    ...lookupTableQueryConfig,
+  });
+};
+
+const fetchConstructionMethods = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable("construction-method");
+};
+
+export const getConstructionMethods = () => {
+  return useQuery({
+    queryKey: ["ConstructionMethods"],
+    queryFn: fetchConstructionMethods,
+    ...lookupTableQueryConfig,
+  });
+};
+
+const fetchCurrentUses = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable("current-use");
+};
+
+export const getCurrentUses = () => {
+  return useQuery({
+    queryKey: ["CurrentUses"],
+    queryFn: fetchCurrentUses,
     ...lookupTableQueryConfig,
   });
 };
