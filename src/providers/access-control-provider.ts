@@ -2,7 +2,7 @@ import { getAccessToken } from "./fief-provider";
 import { jwtDecode } from "jwt-decode";
 
 export const accessControlProvider = {
-  can: async ({ resource }) => {
+  can: async ({ resource, action: _action, params: _params }) => {
     const token = jwtDecode(await getAccessToken());
     const permissions = token["permissions"] ?? [];
 
