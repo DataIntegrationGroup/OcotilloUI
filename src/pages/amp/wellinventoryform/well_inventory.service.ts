@@ -236,13 +236,20 @@ export const createWellInventoryForm = async (
     body: formData,
   });
 
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const data = isJson ? await response.json() : null;
+
   if (!response.ok) {
-    throw new Error(
-      `Failed to create new well inventory entry: ${response.statusText}`,
-    );
+    const error = new Error(
+      `Failed to create new well inventory entry: ${response.status}`,
+    ) as Error & { status?: number; data?: any };
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
 
-  return response.json();
+  return data;
 };
 
 export const fetchOwnerSearch = async ({
