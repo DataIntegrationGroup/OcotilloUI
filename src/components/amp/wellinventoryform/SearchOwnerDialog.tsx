@@ -2,7 +2,7 @@ import {
   ControlledEmailField,
   ControlledPhoneField,
 } from "@/components/Controlled";
-import { ILocation, IOwner } from "@/interfaces";
+import { ILocation, IOwner } from "@/interfaces/amp";
 import { fetchOwnerSearch } from "@/pages/amp/wellinventoryform/well_inventory.service";
 import {
   Dialog,

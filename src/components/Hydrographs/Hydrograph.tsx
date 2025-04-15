@@ -57,7 +57,7 @@ export const Hydrograph: React.FC<{
 
         obj["source"] = s.data.map((obs) => [
           new Date(obs[xtag]),
-          transform(obs[ytag], ref, index, offset, options).toFixed(2),
+          transform(obs[ytag], ref, offset, options).toFixed(2),
         ]);
         return obj;
       });
