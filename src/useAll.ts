@@ -4,13 +4,9 @@ import {
   useDataProvider,
   useMeta,
   useResource,
-} from "@refinedev/core";
-
-// @ts-ignore,
-import type {
   BaseRecord,
   MetaQuery,
-} from "@refinedev/core/src/contexts/data/types";
+} from "@refinedev/core";
 
 type UseAllOptionsType<
   TData extends BaseRecord = BaseRecord,
