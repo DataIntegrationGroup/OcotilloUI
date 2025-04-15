@@ -1,7 +1,8 @@
 import { getAccessToken } from "@/providers/fief-provider";
 import { fetchConfig, lookupTableQueryConfig } from "./well_inventory.configs";
 import { useQuery } from "@tanstack/react-query";
-import { ILocation, IOwner, IWellInventoryForm, Page } from "@/interfaces";
+import { ILocation, IOwner, IWellInventoryForm } from "@/interfaces/amp";
+import { Page } from "@/interfaces";
 import { settings } from "@/settings";
 import { AmpApiUriBuilder } from "@/utils/AmpApiUriBuilder";
 

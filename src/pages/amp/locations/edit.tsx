@@ -6,7 +6,8 @@ import { useForm } from "@refinedev/react-hook-form";
 import { Controller } from "react-hook-form";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import { Switch } from "@mui/material";
-import { Nullable, ILocation } from "@/interfaces";
+import { Nullable } from "@/interfaces";
+import { ILocation } from "@/interfaces/amp";
 
 export const LocationEdit: React.FC = () => {
   const {
