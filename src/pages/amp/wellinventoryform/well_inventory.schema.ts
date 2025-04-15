@@ -169,7 +169,7 @@ export const SchemaDefaults = {
       x: 0,
       y: 0,
     },
-    elevation: null,
+    elevation: undefined,
     utm_zone: 13,
     utm_datum: "NAD83",
     elevation_datum: "",

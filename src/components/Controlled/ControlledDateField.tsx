@@ -1,13 +1,14 @@
 import { Controller, Control, Path } from "react-hook-form";
-import { FormControl, FormHelperText, TextField } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { FormControl } from "@mui/material";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import dayjs from "dayjs";
 
 export const ControlledDateField = <T,>({
   control,
   name,
   label,
   required,
-  ...dateProps
+  ...pickerProps
 }: {
   control: Control<T>;
   name: string;
@@ -17,20 +18,24 @@ export const ControlledDateField = <T,>({
   return (
     <Controller
       name={name as Path<T>}
-      control={control as unknown as Control<T>}
+      control={control as Control<T>}
       render={({ field, fieldState }) => (
         <FormControl fullWidth error={!!fieldState.error} required={required}>
-          <DatePicker
+          <DateTimePicker
             label={label}
-            {...field}
-            {...dateProps}
-            disableFuture
-            inputFormat="yyyy-MM-dd"
-            renderInput={(params: any) => <TextField {...params} />}
+            value={field.value ? dayjs(field.value as string) : null}
+            onChange={(date) => {
+              field.onChange(date ? date.toISOString() : null);
+            }}
+            slotProps={{
+              textField: {
+                required,
+                error: !!fieldState.error,
+                helperText: fieldState?.error?.message,
+              },
+            }}
+            {...pickerProps}
           />
-          {fieldState?.error && (
-            <FormHelperText>{fieldState?.error?.message}</FormHelperText>
-          )}
         </FormControl>
       )}
     />

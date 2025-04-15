@@ -64,6 +64,12 @@ import { settings } from "@/settings";
 import { ColorModeContext } from "@/contexts";
 import { convertLonLatToUTM, convertUTMToLonLat } from "@/utils/UtmToLonLat";
 import { ControlledDateField } from "@/components/Controlled/ControlledDateField";
+import { PydanticValidationError } from "@/interfaces";
+
+type FetchValidationError = Error & {
+  status?: number;
+  data?: PydanticValidationError;
+};
 
 export const WellInventoryForm = () => {
   const mapRef = useRef(null);
@@ -410,10 +416,75 @@ export const WellInventoryForm = () => {
   const handleFormSubmit = async (data: Partial<IWellInventoryForm>) => {
     try {
       await mutateAsync(data);
-      handleReset();
     } catch (err) {
-      console.error("Form submission error:", err);
+      const errorWithStatus = err as FetchValidationError;
+
+      if (
+        errorWithStatus.status === 422 &&
+        Array.isArray(errorWithStatus.data?.detail)
+      ) {
+        const details = errorWithStatus.data.detail;
+
+        details.forEach((issue) => {
+          const fieldPaths = getFieldPathsFromLoc(issue.loc);
+
+          console.log({ fieldPaths });
+
+          if (fieldPaths.length > 0) {
+            fieldPaths.forEach((path) => {
+              setError(path as any, {
+                type: "server",
+                message: issue.msg,
+              });
+            });
+          } else {
+            console.warn("Invalid error location received:", issue.loc);
+          }
+        });
+      } else {
+        console.error("Unexpected form error:", err);
+      }
     }
+  };
+
+  const schemaDesc = WellInventorySchema.describe();
+
+  const getFieldPathsFromLoc = (loc: (string | number)[]): string[] => {
+    const pathSegments =
+      loc[0] === "body" ? loc.slice(1).map(String) : loc.map(String);
+
+    // Recursively resolve field paths based on Yup schema.
+    const resolved = resolvePathInSchema(schemaDesc, pathSegments);
+
+    return resolved.map((segments) => segments.join("."));
+  };
+
+  // Recursively walk a schema to validate and expand fields
+  const resolvePathInSchema = (
+    schemaNode: any,
+    remainingPath: string[],
+  ): string[][] => {
+    if (!schemaNode || !schemaNode.fields) return [];
+
+    const [current, ...rest] = remainingPath;
+
+    const currentField = schemaNode.fields[current];
+
+    if (!currentField) return [];
+
+    // If this is the last path segment
+    if (rest.length === 0) {
+      if (currentField.type === "object" && currentField.fields) {
+        // Expand to its child fields
+        return Object.keys(currentField.fields).map((key) => [current, key]);
+      } else {
+        return [[current]];
+      }
+    }
+
+    // Continue recursing down the path
+    const subResults = resolvePathInSchema(currentField, rest);
+    return subResults.map((subPath) => [current, ...subPath]);
   };
 
   return (
