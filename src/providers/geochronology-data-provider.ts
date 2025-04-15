@@ -70,7 +70,6 @@ export const geochronologyDataProvider: DataProvider = {
       total = data.length;
     }
 
-    console.log("getList", resp);
     return {
       data,
       total,
@@ -97,7 +96,6 @@ export const geochronologyDataProvider: DataProvider = {
     if (response.status < 200 || response.status > 299) throw response;
 
     const data = await response.json();
-    console.log("getOne", data);
     return { data };
   },
   create: async ({ resource, variables }) => {

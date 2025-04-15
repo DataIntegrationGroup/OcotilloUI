@@ -117,7 +117,6 @@ export const ampDataProvider: DataProvider = {
       url = `authorized/tabular/${resource}`;
     }
 
-    console.log("getlist", resource, url, params.toString());
     const response = await fetcher(`${url}?${params.toString()}`);
 
     if (response.status < 200 || response.status > 299) throw response;
@@ -131,8 +130,6 @@ export const ampDataProvider: DataProvider = {
       data = response.data;
       total = data.length;
     }
-
-    console.log("getList", resource, total, data);
 
     return {
       data,

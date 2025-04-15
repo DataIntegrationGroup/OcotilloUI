@@ -2,7 +2,6 @@ import type { DataProvider } from "@refinedev/core";
 import { settings } from "@/settings";
 
 export const fetcher = async (url: string, options?: RequestInit) => {
-  console.log("fetcher", `${settings.nmbgmr_geothermal_api_url}/${url}`);
   return fetch(`${settings.nmbgmr_geothermal_api_url}/${url}`, {
     ...options,
     headers: {
@@ -70,7 +69,6 @@ export const geothermalDataProvider: DataProvider = {
     if (response.status < 200 || response.status > 299) throw response;
 
     const data = await response.json();
-    console.log("getOne", data);
     return { data };
   },
   create: async ({ resource, variables }) => {
