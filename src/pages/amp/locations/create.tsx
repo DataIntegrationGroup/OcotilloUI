@@ -3,7 +3,8 @@ import { Create } from "@refinedev/mui";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { useForm } from "@refinedev/react-hook-form";
-import { Nullable, ILocation } from "@/interfaces";
+import { Nullable } from "@/interfaces";
+import { ILocation } from "@/interfaces/amp";
 
 export const LocationCreate: React.FC = () => {
   const {

@@ -3,7 +3,3 @@ export type PydanticErrorDetail = {
   msg: string;
   type: string;
 };
-
-export type PydanticValidationError = {
-  detail: PydanticErrorDetail[];
-};

@@ -4,18 +4,11 @@ import { Fief, browser } from "@fief/fief";
 import { jwtDecode } from "jwt-decode";
 import { settings } from "@/settings";
 
-//TODO mv these to a .env file and provide an .env.example
-export const fiefConstants = {
-  baseURL: "https://fief.newmexicowaterdata.org",
-  clientId: "bJNVqsHEndupn6RpIE9rNHQNFtmaXnHBeYqNnXIwCM8",
-};
-
-//TODO mv these to a .env file and provide an .env.example
 export const fiefURL = (path: string) => {
   return `${window.location.protocol}//${window.location.host}${settings.urlprefix}/${path}`;
 };
 
-const fiefClient = new Fief(fiefConstants);
+const fiefClient = new Fief(settings.fief);
 
 export const getAuthState = () => {
   const authState = sessionStorage.getItem("fief-authstate");
