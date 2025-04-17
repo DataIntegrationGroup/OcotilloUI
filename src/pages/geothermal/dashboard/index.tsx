@@ -14,43 +14,43 @@
 // limitations under the License.
 // ===============================================================================
 
-import Typography from "@mui/material/Typography";
-import {Box} from "@mui/system";
-import {useShow} from "@refinedev/core";
-import {Card} from "@mui/material";
-import Stack from "@mui/material/Stack";
+import Typography from '@mui/material/Typography'
+import { Box } from '@mui/system'
+import { useShow } from '@refinedev/core'
+import { Card } from '@mui/material'
+import Stack from '@mui/material/Stack'
 
 export const GeothermalDashboard = () => {
-    // const {query} = useShow({
-    //     resource: 'geothermal',
-    //     id: 'dashboard',
-    //     dataProviderName: 'geothermal'
-    // });
-    // const stats = query.data?.data
-    // console.log(query.data?.data)
-    return (
-        <Box>
-                <Typography variant={'h3'}>Geothermal Dashboard</Typography>
+  // const {query} = useShow({
+  //     resource: 'geothermal',
+  //     id: 'dashboard',
+  //     dataProviderName: 'geothermal'
+  // });
+  // const stats = query.data?.data
+  // console.log(query.data?.data)
+  return (
+    <Box>
+      <Typography variant={'h3'}>Geothermal Dashboard</Typography>
 
-            {/*<Stack direction={'column'}*/}
-            {/*         spacing={2}*/}
-            {/*    sx={{justifyContent: 'space-between'}}>*/}
-            {/*    <Card sx={{'p': 3}}>*/}
-            {/*        <Typography variant={'h5'}>Projects</Typography>*/}
-            {/*        <Typography variant={'body1'}>{stats?.projects}</Typography>*/}
-            {/*    </Card>*/}
-            {/*    <Card sx={{'p': 3}}>*/}
-            {/*        <Typography variant={'h5'}>Samples</Typography>*/}
-            {/*        <Typography variant={'body1'}>{stats?.samples}</Typography>*/}
-            {/*    </Card>*/}
-            {/*    <Card sx={{'p': 3}}>*/}
-            {/*        <Typography variant={'h5'}>Materials</Typography>*/}
-            {/*        <Typography variant={'body1'}>{stats?.materials}</Typography>*/}
-            {/*    </Card>*/}
-            {/*</Stack>*/}
+      {/*<Stack direction={'column'}*/}
+      {/*         spacing={2}*/}
+      {/*    sx={{justifyContent: 'space-between'}}>*/}
+      {/*    <Card sx={{'p': 3}}>*/}
+      {/*        <Typography variant={'h5'}>Projects</Typography>*/}
+      {/*        <Typography variant={'body1'}>{stats?.projects}</Typography>*/}
+      {/*    </Card>*/}
+      {/*    <Card sx={{'p': 3}}>*/}
+      {/*        <Typography variant={'h5'}>Samples</Typography>*/}
+      {/*        <Typography variant={'body1'}>{stats?.samples}</Typography>*/}
+      {/*    </Card>*/}
+      {/*    <Card sx={{'p': 3}}>*/}
+      {/*        <Typography variant={'h5'}>Materials</Typography>*/}
+      {/*        <Typography variant={'body1'}>{stats?.materials}</Typography>*/}
+      {/*    </Card>*/}
+      {/*</Stack>*/}
 
 
-        </Box>
-    )
+    </Box>
+  )
 }
 // ============= EOF =============================================
