@@ -1,10 +1,10 @@
-import type { DataProvider } from "@refinedev/core";
-import { getAccessToken } from "./fief-provider";
-import { settings } from "@/settings";
+import type {DataProvider} from "@refinedev/core";
+import {getAccessToken} from "./fief-provider";
+import {settings} from "@/settings";
 
 const API_URL = `${settings.nmbgmr_amp_api_url}/latest`;
 
-import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import axios, {AxiosInstance, AxiosRequestConfig} from "axios";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
 
 export const axiosInstance: AxiosInstance = axios.create();
@@ -35,7 +35,7 @@ export const fetcher = async (url: string, config?: AxiosRequestConfig) => {
 };
 
 export const axiosCall = async (url: string, options: AxiosRequestConfig) => {
-  const config = { url: `${API_URL}/${url}`, ...options };
+  const config = {url: `${API_URL}/${url}`, ...options};
   return axiosInstance(config);
 };
 
@@ -69,12 +69,15 @@ const getPhotos = async (id) => {
     }),
   );
 
-  return { data: photos };
+  return {data: photos};
 };
 
 export const ampDataProvider: DataProvider = {
-  getList: async ({ resource, pagination, filters, sorters, meta }) => {
+  getList: async ({resource, pagination, filters, sorters, meta}) => {
     const params = new URLSearchParams();
+
+    // strip off water. from resource name
+    resource = resource.replace(/^water\./, "");
 
     if (meta?.params !== undefined) {
       Object.entries(meta["params"]).forEach(([key, value]) => {
@@ -136,7 +139,7 @@ export const ampDataProvider: DataProvider = {
       total,
     };
   },
-  getMany: async ({ resource, ids, meta }) => {
+  getMany: async ({resource, ids, meta}) => {
     const params = new URLSearchParams();
 
     if (ids) {
@@ -149,7 +152,7 @@ export const ampDataProvider: DataProvider = {
 
     return await response.data;
   },
-  getOne: async ({ resource, id, meta }) => {
+  getOne: async ({resource, id, meta}) => {
     if (resource == "photos") {
       console.log("asdfasdffgetasdfsdf", id);
       return await getPhotos(id);
@@ -169,9 +172,9 @@ export const ampDataProvider: DataProvider = {
 
     const data = await response.data;
     console.log("getOne data", data);
-    return { data };
+    return {data};
   },
-  create: async ({ resource, variables }) => {
+  create: async ({resource, variables}) => {
     const response = await axiosCall(`${resource}`, {
       method: "POST",
       data: JSON.stringify(variables),
@@ -184,9 +187,9 @@ export const ampDataProvider: DataProvider = {
 
     const data = await response.data;
 
-    return { data };
+    return {data};
   },
-  update: async ({ resource, id, variables }) => {
+  update: async ({resource, id, variables}) => {
     const response = await axiosCall(`${resource}/${id}`, {
       method: "PATCH",
       data: JSON.stringify(variables),
@@ -199,7 +202,7 @@ export const ampDataProvider: DataProvider = {
 
     const data = await response.data;
 
-    return { data };
+    return {data};
   },
   getApiUrl: () => API_URL,
   deleteOne: () => {
