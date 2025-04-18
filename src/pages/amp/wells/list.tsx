@@ -91,4 +91,3 @@ export const WellList: React.FC = () => {
 
     return ( <ListPage columns={columns} dataGridProps={dataGridProps} />);
 };
-// ============= EOF =============================================

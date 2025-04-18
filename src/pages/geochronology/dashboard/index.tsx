@@ -37,4 +37,3 @@ export const GeochronologyDashboard = () => {
         </Box>
     )
 }
-// ============= EOF =============================================

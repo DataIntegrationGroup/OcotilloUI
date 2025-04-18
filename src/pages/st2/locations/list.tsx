@@ -64,4 +64,3 @@ export const ST2LocationList: React.FC = () => {
             columns={columns} dataGridProps={dataGridProps}/>
     </Stack>);
 };
-// ============= EOF =============================================

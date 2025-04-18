@@ -70,4 +70,3 @@ export const PrincipalInvestigatorList: React.FC = () => {
         </List>
     );
 };
-// ============= EOF =============================================

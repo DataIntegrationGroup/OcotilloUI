@@ -126,4 +126,3 @@ export const LocationList: React.FC = () => {
         <ListPage columns={columns} dataGridProps={dataGridProps} />
     </Stack>);
 };
-// ============= EOF =============================================

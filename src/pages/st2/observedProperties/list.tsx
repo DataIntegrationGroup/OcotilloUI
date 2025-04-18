@@ -73,4 +73,3 @@ export const ST2ObservedPropertiesList: React.FC = () => {
         getRowId={(row) => row["@iot.id"]}
         columns={columns} dataGridProps={{...dataGridProps, getRowHeight}} />);
 };
-// ============= EOF =============================================

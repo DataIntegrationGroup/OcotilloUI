@@ -72,4 +72,3 @@ export const ST2SensorList: React.FC = () => {
         getRowId={(row) => row["@iot.id"]}
         columns={columns} dataGridProps={{...dataGridProps, getRowHeight}} />);
 };
-// ============= EOF =============================================

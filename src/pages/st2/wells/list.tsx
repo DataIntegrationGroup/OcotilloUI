@@ -124,4 +124,3 @@ export const ST2WellList: React.FC = () => {
         getRowId={(row) => row["@iot.id"]}
         columns={columns} dataGridProps={dataGridProps}/>);
 };
-// ============= EOF =============================================
