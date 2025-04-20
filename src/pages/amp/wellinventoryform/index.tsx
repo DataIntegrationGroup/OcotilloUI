@@ -1,13 +1,13 @@
 import React, {
   Dispatch,
   SetStateAction,
-  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
+  lazy,
+  Suspense,
 } from 'react'
-import { Map, Marker, NavigationControl } from 'react-map-gl'
 import { useForm } from '@refinedev/react-hook-form'
 import { IWellInventoryForm } from '@/interfaces/amp'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -60,8 +60,6 @@ import { locationLabels } from './well_inventory.configs'
 import { SkeletonFormField } from '@/components/SkeletonFormField'
 import { useMutation } from '@tanstack/react-query'
 import { useNotification } from '@refinedev/core'
-import { settings } from '@/settings'
-import { ColorModeContext } from '@/contexts'
 import { convertLonLatToUTM, convertUTMToLonLat } from '@/utils/UtmToLonLat'
 import { ControlledDateField } from '@/components/Controlled/ControlledDateField'
 import { PydanticValidationError } from '@/interfaces'
@@ -72,22 +70,8 @@ type FetchValidationError = Error & {
 }
 
 export const WellInventoryForm = () => {
+  const LazyMap = lazy(() => import('@/components/amp/wellinventoryform/Map'))
   const mapRef = useRef(null)
-  const initialViewState = {
-    longitude: -106.4,
-    latitude: 34.5,
-    zoom: 6,
-  }
-
-  const [viewState, setViewState] = useState(initialViewState)
-
-  const style = { width: '100%', height: '650px' }
-  const { mode } = useContext(ColorModeContext)
-  const mapStyle =
-    mode === 'dark'
-      ? 'mapbox://styles/mapbox/dark-v10'
-      : 'mapbox://styles/mapbox/light-v10'
-
   const theme = useTheme()
 
   const [openSearchOwnerDialog, setOpenSearchOwnerDialog] = useState(false)
@@ -180,9 +164,11 @@ export const WellInventoryForm = () => {
 
   const updateMapView = (longitude: number, latitude: number) => {
     if (mapRef.current) {
+      const currentZoom = mapRef.current.getZoom()
+
       mapRef.current.easeTo({
         center: [longitude, latitude],
-        zoom: viewState.zoom,
+        zoom: currentZoom,
         duration: 1500,
         easing: (t: number) => t * (2 - t), // Smooth easing function
       })
@@ -1139,65 +1125,16 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={12} sx={{ px: 4 }}>
                 <Paper elevation={2}>
-                  <Map
-                    {...viewState}
-                    ref={mapRef}
-                    scrollZoom={false}
-                    onMove={(evt) => setViewState(evt.viewState)}
-                    mapboxAccessToken={settings.mapboxToken}
-                    initialViewState={initialViewState}
-                    terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
-                    style={style}
-                    mapStyle={mapStyle}
-                  >
-                    <NavigationControl position="top-right" />
-                    {typeof x === 'number' &&
-                      typeof y === 'number' &&
-                      !isNaN(x) &&
-                      !isNaN(y) && (
-                        <Marker
-                          {...(() => {
-                            if (coordinateType === 'utm' && utmZone) {
-                              const [lon, lat] = convertUTMToLonLat(
-                                x,
-                                y,
-                                utmZone
-                              )
-                              return { longitude: lon, latitude: lat }
-                            } else if (coordinateType === 'gcs') {
-                              const [longitude, latitude] = [x, y]
-                              if (
-                                longitude < -180 ||
-                                longitude > 180 ||
-                                latitude < -90 ||
-                                latitude > 90
-                              ) {
-                                console.error('Invalid GCS coordinates:', {
-                                  longitude,
-                                  latitude,
-                                })
-                                return {
-                                  longitude: undefined,
-                                  latitude: undefined,
-                                }
-                              }
-                            }
-                            return { longitude: x, latitude: y }
-                          })()}
-                          anchor="bottom"
-                        >
-                          <div
-                            style={{
-                              width: 15,
-                              height: 15,
-                              borderRadius: '50%',
-                              backgroundColor: 'red',
-                              border: '2px solid white',
-                            }}
-                          />
-                        </Marker>
-                      )}
-                  </Map>
+                  <Suspense fallback={<SkeletonFormField height={'650px'} />}>
+                    <LazyMap
+                      ref={mapRef}
+                      x={x}
+                      y={y}
+                      coordinateType={coordinateType as 'utm' | 'gcs'}
+                      utmZone={utmZone}
+                      updateMapView={updateMapView}
+                    />
+                  </Suspense>
                 </Paper>
               </Grid>
               <Grid size={12}>
