@@ -67,6 +67,7 @@ import { convertLonLatToUTM, convertUTMToLonLat } from '@/utils/UtmToLonLat'
 import { ControlledDateField } from '@/components/Controlled/ControlledDateField'
 import { PydanticValidationError } from '@/interfaces'
 import { VisuallyHiddenTextField } from '@/components/VisuallyHiddenTextField'
+import LoadingControlledSelectWithChips from '@/components/amp/wellinventoryform/LoadingControlledSelectWithChips'
 
 type FetchValidationError = Error & {
   status?: number
@@ -1375,7 +1376,7 @@ export const WellInventoryForm = () => {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 9 }}>
-                  <LoadingControlledSelectField
+                  <LoadingControlledSelectWithChips
                     resetFn={() =>
                       setValue(
                         'well.monitoring_status',
