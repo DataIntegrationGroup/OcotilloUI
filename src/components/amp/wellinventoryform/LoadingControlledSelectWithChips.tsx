@@ -4,9 +4,7 @@ import {
   Button,
   Chip,
   FormControl,
-  InputLabel,
   MenuItem,
-  Select,
   SelectProps,
   Tooltip,
 } from '@mui/material'
@@ -65,13 +63,12 @@ export const LoadingControlledSelectWithChips = <T,>({
   if (isError) return <ErrorAlertFormField message={errorMessage} />
 
   return (
-    <Box alignItems="center" sx={{ display: 'flex', flexDirection: 'column' }}>
+    <Box alignItems="center" sx={{ display: 'flex' }}>
       <Tooltip title="Clear selection">
         <Button
           variant="outlined"
           onClick={resetFn}
           sx={{
-            marginBottom: 1,
             borderBottomRightRadius: 0,
             borderTopRightRadius: 0,
             height: 55,
@@ -84,11 +81,19 @@ export const LoadingControlledSelectWithChips = <T,>({
           <Clear />
         </Button>
       </Tooltip>
-
       <FormControl fullWidth required={required}>
-        <InputLabel>{label}</InputLabel>
-        <Select
+        <ControlledSelectField
+          sx={{
+            borderBottomLeftRadius: 0,
+            borderTopLeftRadius: 0,
+            height: 55,
+            flexGrow: 1,
+          }}
+          options={options}
+          control={control}
           label={label}
+          name={name}
+          required={required}
           multiple={multiple}
           value={selectedChips}
           onChange={handleSelectChange}
@@ -117,10 +122,8 @@ export const LoadingControlledSelectWithChips = <T,>({
               {option.label}
             </MenuItem>
           ))}
-        </Select>
+        </ControlledSelectField>
       </FormControl>
-
-      {isError && <div>{errorMessage}</div>}
     </Box>
   )
 }
