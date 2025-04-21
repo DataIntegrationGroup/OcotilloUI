@@ -18,6 +18,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Chip,
   IconButton,
   InputAdornment,
   Paper,
@@ -35,7 +36,7 @@ import {
   ControlledPhoneField,
 } from '@/components'
 import { useTheme } from '@mui/material'
-import { PersonSearch, Refresh } from '@mui/icons-material'
+import { CloudUpload, PersonSearch, Refresh } from '@mui/icons-material'
 import {
   LoadingControlledSelectField,
   SearchOwnerDialog,
@@ -65,6 +66,7 @@ import { ColorModeContext } from '@/contexts'
 import { convertLonLatToUTM, convertUTMToLonLat } from '@/utils/UtmToLonLat'
 import { ControlledDateField } from '@/components/Controlled/ControlledDateField'
 import { PydanticValidationError } from '@/interfaces'
+import { VisuallyHiddenTextField } from '@/components/VisuallyHiddenTextField'
 
 type FetchValidationError = Error & {
   status?: number
@@ -80,6 +82,7 @@ export const WellInventoryForm = () => {
   }
 
   const [viewState, setViewState] = useState(initialViewState)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
   const style = { width: '100%', height: '650px' }
   const { mode } = useContext(ColorModeContext)
@@ -126,6 +129,12 @@ export const WellInventoryForm = () => {
     setSelectedPointIDPrefix(SchemaDefaults.project.pointid_prefix)
   }
 
+  const handleDeleteFile = (fileToDelete: File) => {
+    setSelectedFiles((prevFiles) =>
+      prevFiles.filter((file) => file !== fileToDelete)
+    )
+  }
+
   const handleOnChange = <T,>(
     newValue: T,
     setState: Dispatch<SetStateAction<T>>,
@@ -136,6 +145,18 @@ export const WellInventoryForm = () => {
       shouldValidate: true,
       shouldDirty: true,
     })
+  }
+
+  const handlePhotoFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = event.target.files
+
+    console.log({ files })
+
+    if (files) {
+      setSelectedFiles((prevFiles) => [...prevFiles, ...Array.from(files)])
+    }
   }
 
   const handleCoordinateTypeChange = (newType: 'utm' | 'gcs') => {
@@ -415,7 +436,7 @@ export const WellInventoryForm = () => {
 
   const handleFormSubmit = async (data: Partial<IWellInventoryForm>) => {
     try {
-      await mutateAsync(data)
+      await mutateAsync({ body: data, photos: selectedFiles })
     } catch (err) {
       const errorWithStatus = err as FetchValidationError
 
@@ -427,8 +448,6 @@ export const WellInventoryForm = () => {
 
         details.forEach((issue) => {
           const fieldPaths = getFieldPathsFromLoc(issue.loc)
-
-          console.log({ fieldPaths })
 
           if (fieldPaths.length > 0) {
             fieldPaths.forEach((path) => {
@@ -1547,6 +1566,48 @@ export const WellInventoryForm = () => {
                     control={control}
                     name="well.notes"
                   />
+                </Grid>
+              </Grid>
+              <Grid
+                container
+                size={12}
+                direction="column"
+                justifyContent="center"
+                alignItems="center"
+                spacing={2}
+                sx={{ paddingTop: '3rem', paddingBottom: '1rem' }}
+              >
+                <Grid
+                  container
+                  spacing={1}
+                  justifyContent="center"
+                  sx={{ marginBottom: '1rem' }}
+                >
+                  {selectedFiles?.map((file, index) => (
+                    <Chip
+                      key={index}
+                      label={`${file.name} (${(file.size / 1024).toFixed(2)} KB)`}
+                      onDelete={() => handleDeleteFile(file)}
+                      color="secondary"
+                    />
+                  ))}
+                </Grid>
+                <Grid container spacing={1} size={12} justifyContent="center">
+                  <Button
+                    component="label"
+                    role={undefined}
+                    variant="contained"
+                    tabIndex={-1}
+                    startIcon={<CloudUpload />}
+                  >
+                    Upload Well Photos
+                    <VisuallyHiddenTextField
+                      type="file"
+                      onChange={handlePhotoFileChange}
+                      multiple
+                      accept="image/jpeg, image/png, image/heic"
+                    />
+                  </Button>
                 </Grid>
               </Grid>
               <Grid
