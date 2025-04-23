@@ -161,6 +161,8 @@ export const SchemaDefaults = {
       x: 0,
       y: 0,
     },
+    coordinate_accuracy: '',
+    coordinate_method: '',
     elevation: undefined,
     utm_zone: 13,
     utm_datum: 'NAD83',

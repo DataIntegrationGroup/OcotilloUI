@@ -200,6 +200,34 @@ export const getCurrentUses = () => {
   })
 }
 
+const fetchCoordinateAccuracies = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable('coordinate-accuracy')
+}
+
+export const getCoordinateAccuracies = () => {
+  return useQuery({
+    queryKey: ['CoordinateAccuracies'],
+    queryFn: fetchCoordinateAccuracies,
+    ...lookupTableQueryConfig,
+  })
+}
+
+const fetchCoordinateMethods = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable('coordinate-method')
+}
+
+export const getCoordinateMethods = () => {
+  return useQuery({
+    queryKey: ['CoordinateMethods'],
+    queryFn: fetchCoordinateMethods,
+    ...lookupTableQueryConfig,
+  })
+}
+
 const fetchNewPointIDPreview = async (prefix: string, siteType: string) => {
   return await ampApiFetch(
     `authorized/well_inventory/newly-generated-pointid?pointid_prefix=${encodeURIComponent(

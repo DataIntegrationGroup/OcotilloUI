@@ -49,6 +49,8 @@ import {
   getCompletionSources,
   getConstructionMethods,
   getCoordinateDatums,
+  getCoordinateAccuracies,
+  getCoordinateMethods,
   getCurrentUses,
   getDepthSources,
   getFormations,
@@ -306,6 +308,18 @@ export const WellInventoryForm = () => {
       updateMapView(longitude, latitude)
     }
   }
+
+  const {
+    data: coordinateAccuracies,
+    isPending: isCoordinateAccuraciesFetching,
+    isError: isCoordinateAccuraciesError,
+  } = getCoordinateAccuracies()
+
+  const {
+    data: coordinateMethods,
+    isPending: isCoordinateMethodsFetching,
+    isError: isCoordinateMethodsError,
+  } = getCoordinateMethods()
 
   const {
     data: coordinateDatums,
@@ -1050,6 +1064,60 @@ export const WellInventoryForm = () => {
                     { value: 'gcs', label: 'GCS' },
                     { value: 'utm', label: 'UTM' },
                   ]}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <LoadingControlledSelectField
+                  resetFn={() => {
+                    setValue(
+                      'location.coordinate_accuracy',
+                      SchemaDefaults.location.coordinate_accuracy
+                    )
+                  }}
+                  required
+                  isLoading={isCoordinateAccuraciesFetching}
+                  label="Coordinate Accuracy"
+                  control={control}
+                  name="location.coordinate_accuracy"
+                  disabled={isCoordinateAccuraciesError}
+                  isError={isCoordinateAccuraciesError}
+                  errorMessage="Failed to load Coordinate Accuracies"
+                  options={coordinateAccuracies
+                    ?.sort((a, b) =>
+                      a.Meaning.toLocaleLowerCase().localeCompare(
+                        b.Meaning.toLocaleLowerCase()
+                      )
+                    )
+                    ?.map((option) => {
+                      return { value: option.Code, label: option.Meaning }
+                    })}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <LoadingControlledSelectField
+                  resetFn={() => {
+                    setValue(
+                      'location.coordinate_method',
+                      SchemaDefaults.location.coordinate_method
+                    )
+                  }}
+                  required
+                  isLoading={isCoordinateMethodsFetching}
+                  label="Coordinate Method"
+                  control={control}
+                  name="location.coordinate_method"
+                  disabled={isCoordinateMethodsError}
+                  isError={isCoordinateMethodsError}
+                  errorMessage="Failed to load Coordinate Methods"
+                  options={coordinateMethods
+                    ?.sort((a, b) =>
+                      a.Meaning.toLocaleLowerCase().localeCompare(
+                        b.Meaning.toLocaleLowerCase()
+                      )
+                    )
+                    ?.map((option) => {
+                      return { value: option.Code, label: option.Meaning }
+                    })}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
