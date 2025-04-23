@@ -6,6 +6,23 @@ export const WellInventorySchema = Yup.object().shape({
     project: Yup.string().required('Project Name is required.'),
     pointid_suffix: Yup.string().nonNullable(),
   }),
+  well_screens: Yup.array().of(
+    Yup.object({
+      wdbid: Yup.number()
+        .nullable()
+        .typeError("wdbid must be a valid number."),
+      counter: Yup.number()
+        .nullable()
+        .typeError("Counter must be a valid number."),
+      screen_top: Yup.number()
+        .nullable()
+        .typeError("Screen Top must be a valid number."),
+     screen_bottom: Yup.number()
+        .nullable()
+        .typeError("Screen Bottom must be a valid number."),
+     screen_description: Yup.string().nullable(),
+    })
+  ).nullable(),
   location: Yup.object({
     site_id: Yup.string().nullable(),
     alternate_site_id: Yup.string().nullable(),
