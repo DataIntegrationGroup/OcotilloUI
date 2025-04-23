@@ -128,6 +128,7 @@ export const WellInventoryForm = () => {
     setCoordinateType(SchemaDefaults.location.coordinates.type)
     setSelectedProject(SchemaDefaults.project.project)
     setSelectedPointIDPrefix(SchemaDefaults.project.pointid_prefix)
+    setSelectedFiles([])
   }
 
   const handleDeleteFile = (fileToDelete: File) => {
