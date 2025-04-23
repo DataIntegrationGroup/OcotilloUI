@@ -167,6 +167,15 @@ export const SchemaDefaults = {
     project: '',
     pointid_suffix: '',
   },
+  well_screens: [
+    {
+      wdbid: undefined,
+      counter: undefined,
+      screen_top: undefined,
+      screen_bottom: undefined,
+      screen_description: '',
+    }  
+  ],
   location: {
     site_id: '',
     site_date: null,
