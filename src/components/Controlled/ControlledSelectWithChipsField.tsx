@@ -51,9 +51,7 @@ export const ControlledSelectWithChipsField = <T,>({
     } else {
       // Enforce chip limit by replacing the oldest chip with the new selection
       const updatedChips = [...selectedValues]
-      while (updatedChips.length > chipLimit) {
-        updatedChips.shift() // Remove the oldest chip
-      }
+      updatedChips.shift() // Remove the oldest chip
       setSelectedChips(updatedChips)
     }
   }
@@ -72,8 +70,12 @@ export const ControlledSelectWithChipsField = <T,>({
             {...selectProps}
             value={selectedChips}
             onChange={(event: SelectChangeEvent<string[]>) => {
-              const { value } = event.target
-              field.onChange(value)
+              const { value: selectedValues } = event.target
+              if (selectedValues.length <= chipLimit) {
+                field.onChange(selectedValues)
+              } else {
+                field.onChange(selectedValues.slice(-chipLimit))
+              }
               handleSelectChange(event)
             }}
             renderValue={(selected: string[]) => (

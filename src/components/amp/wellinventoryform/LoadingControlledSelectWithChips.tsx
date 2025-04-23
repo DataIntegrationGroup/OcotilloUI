@@ -68,26 +68,24 @@ export const LoadingControlledSelectWithChips = <T,>({
           <Clear />
         </Button>
       </Tooltip>
-      <FormControl fullWidth required={required}>
-        <ControlledSelectWithChipsField
-          sx={{
-            borderBottomLeftRadius: 0,
-            borderTopLeftRadius: 0,
-            height: 55,
-            flexGrow: 1,
-          }}
-          options={options}
-          control={control}
-          clearChipsSignal={clearChipsSignal}
-          resetClearChipsSignal={resetClearChipsSignal}
-          label={label}
-          name={name}
-          required={required}
-          multiple={multiple}
-          chipLimit={chipLimit}
-          {...props}
-        />
-      </FormControl>
+      <ControlledSelectWithChipsField
+        sx={{
+          borderBottomLeftRadius: 0,
+          borderTopLeftRadius: 0,
+          height: 55,
+          flexGrow: 1,
+        }}
+        options={options}
+        control={control}
+        clearChipsSignal={clearChipsSignal}
+        resetClearChipsSignal={resetClearChipsSignal}
+        label={label}
+        name={name}
+        required={required}
+        multiple={multiple}
+        chipLimit={chipLimit}
+        {...props}
+      />
     </Box>
   )
 }
