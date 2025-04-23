@@ -39,6 +39,7 @@ import { useTheme } from '@mui/material'
 import { CloudUpload, PersonSearch, Refresh } from '@mui/icons-material'
 import {
   LoadingControlledSelectField,
+  LoadingControlledSelectWithChips,
   SearchOwnerDialog,
 } from '@/components/amp/wellinventoryform'
 import {
@@ -67,7 +68,6 @@ import { convertLonLatToUTM, convertUTMToLonLat } from '@/utils/UtmToLonLat'
 import { ControlledDateField } from '@/components/Controlled/ControlledDateField'
 import { PydanticValidationError } from '@/interfaces'
 import { VisuallyHiddenTextField } from '@/components/VisuallyHiddenTextField'
-import LoadingControlledSelectWithChips from '@/components/amp/wellinventoryform/LoadingControlledSelectWithChips'
 
 type FetchValidationError = Error & {
   status?: number
