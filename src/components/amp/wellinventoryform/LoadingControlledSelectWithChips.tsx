@@ -1,20 +1,12 @@
-import React, { useState } from 'react'
-import {
-  Box,
-  Button,
-  Chip,
-  FormControl,
-  MenuItem,
-  SelectProps,
-  Tooltip,
-} from '@mui/material'
+import { Box, Button, FormControl, SelectProps, Tooltip } from '@mui/material'
 import { Clear } from '@mui/icons-material'
 import { Control } from 'react-hook-form'
 import {
-  ControlledSelectField,
+  ControlledSelectWithChipsField,
   SkeletonFormField,
   ErrorAlertFormField,
 } from '@/components'
+import { useState } from 'react'
 
 export const LoadingControlledSelectWithChips = <T,>({
   isLoading,
@@ -42,20 +34,15 @@ export const LoadingControlledSelectWithChips = <T,>({
   multiple?: boolean
   chipLimit?: number
 } & SelectProps) => {
-  const [selectedChips, setSelectedChips] = useState<string[]>([])
+  const [clearChipsSignal, setClearChipsSignal] = useState<boolean>(false)
 
-  const handleSelectChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const selectedValues = event.target.value as string[]
-
-    if (selectedValues.length <= chipLimit) {
-      setSelectedChips(selectedValues)
-    }
+  const handleReset = () => {
+    setClearChipsSignal(true)
+    resetFn()
   }
 
-  const handleDeleteChip = (chipToDelete: string) => {
-    setSelectedChips((prevChips) =>
-      prevChips.filter((chip) => chip !== chipToDelete)
-    )
+  const resetClearChipsSignal = () => {
+    setClearChipsSignal(false)
   }
 
   if (isLoading) return <SkeletonFormField />
@@ -67,7 +54,7 @@ export const LoadingControlledSelectWithChips = <T,>({
       <Tooltip title="Clear selection">
         <Button
           variant="outlined"
-          onClick={resetFn}
+          onClick={handleReset}
           sx={{
             borderBottomRightRadius: 0,
             borderTopRightRadius: 0,
@@ -82,7 +69,7 @@ export const LoadingControlledSelectWithChips = <T,>({
         </Button>
       </Tooltip>
       <FormControl fullWidth required={required}>
-        <ControlledSelectField
+        <ControlledSelectWithChipsField
           sx={{
             borderBottomLeftRadius: 0,
             borderTopLeftRadius: 0,
@@ -91,38 +78,15 @@ export const LoadingControlledSelectWithChips = <T,>({
           }}
           options={options}
           control={control}
+          clearChipsSignal={clearChipsSignal}
+          resetClearChipsSignal={resetClearChipsSignal}
           label={label}
           name={name}
           required={required}
           multiple={multiple}
-          value={selectedChips}
-          onChange={handleSelectChange}
-          renderValue={(selected) => (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {selected?.map((value) => (
-                <Chip
-                  key={value}
-                  label={
-                    options.find((option) => option.value === value)?.label
-                  }
-                  onDelete={() => handleDeleteChip(value)}
-                  color="primary"
-                />
-              ))}
-            </Box>
-          )}
+          chipLimit={chipLimit}
           {...props}
-        >
-          {options.map((option) => (
-            <MenuItem
-              key={option.value}
-              value={option.value}
-              disabled={selectedChips.includes(option.value)}
-            >
-              {option.label}
-            </MenuItem>
-          ))}
-        </ControlledSelectField>
+        />
       </FormControl>
     </Box>
   )
