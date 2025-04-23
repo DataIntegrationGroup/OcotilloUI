@@ -24,6 +24,8 @@ export const WellInventorySchema = Yup.object().shape({
         .required('Y coordinate is required.')
         .typeError('Y coordinate must be a valid number.'),
     }),
+    coordinate_accuracy: Yup.string().nullable(),
+    coordinate_method: Yup.string().nullable(),
     elevation: Yup.number()
       .nullable()
       .typeError('Elevation must be a valid number.'),
@@ -36,16 +38,6 @@ export const WellInventorySchema = Yup.object().shape({
     elevation_datum: Yup.string().nullable(),
     location_notes: Yup.string().nullable(),
     elevation_method: Yup.string().nullable(),
-    // .transform((value, originalValue) =>
-    //   originalValue === "" ? null : value,
-    // )
-    // .when("altitude", (altitude, schema) =>
-    //   altitude !== null && altitude !== undefined
-    //     ? schema.required(
-    //         "Altitude Datum is required when altitude is provided.",
-    //       )
-    //     : schema,
-    // ),
     elevation_accuracy: Yup.number()
       .nullable()
       .min(0, 'Elevation Accuracy must be greater than 0.'),
@@ -175,22 +167,22 @@ export const SchemaDefaults = {
     elevation_datum: '',
     location_notes: '',
     elevation_method: '',
-    elevation_accuracy: 0,
+    elevation_accuracy: undefined,
     site_type: 'GW',
   },
   well: {
-    hole_depth: 0,
-    well_depth: 0,
+    hole_depth: undefined,
+    well_depth: undefined,
     ose_well_id: '',
     ose_welltag_id: '',
     measuring_point: '',
-    mp_height: 0,
-    casing_diameter: 0,
-    casing_depth: 0,
+    mp_height: undefined,
+    casing_diameter: undefined,
+    casing_depth: undefined,
     casing_description: '',
     construction_notes: '',
     formation: '',
-    static_water: 0,
+    static_water: undefined,
     data_source: '',
     monitoring_status: [],
     status: '',
