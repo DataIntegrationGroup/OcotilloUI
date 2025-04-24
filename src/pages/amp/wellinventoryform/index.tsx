@@ -9,6 +9,7 @@ import React, {
 } from 'react'
 import { Map, Marker, NavigationControl } from 'react-map-gl'
 import { useForm } from '@refinedev/react-hook-form'
+import { useFieldArray } from 'react-hook-form'
 import { IWellInventoryForm } from '@/interfaces/amp'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { WellInventorySchema, SchemaDefaults } from './well_inventory.schema'
@@ -36,7 +37,13 @@ import {
   ControlledPhoneField,
 } from '@/components'
 import { useTheme } from '@mui/material'
-import { CloudUpload, PersonSearch, Refresh } from '@mui/icons-material'
+import {
+  Add,
+  CloudUpload,
+  Delete,
+  PersonSearch,
+  Refresh,
+} from '@mui/icons-material'
 import {
   LoadingControlledSelectField,
   LoadingControlledSelectWithChips,
@@ -113,6 +120,11 @@ export const WellInventoryForm = () => {
       defaultValues: SchemaDefaults,
       resolver: yupResolver(WellInventorySchema),
     })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'well_screens',
+  })
 
   const x = watch('location.coordinates.x')
   const y = watch('location.coordinates.y')
@@ -1074,7 +1086,6 @@ export const WellInventoryForm = () => {
                       SchemaDefaults.location.coordinate_accuracy
                     )
                   }}
-                  required
                   isLoading={isCoordinateAccuraciesFetching}
                   label="Coordinate Accuracy"
                   control={control}
@@ -1101,7 +1112,6 @@ export const WellInventoryForm = () => {
                       SchemaDefaults.location.coordinate_method
                     )
                   }}
-                  required
                   isLoading={isCoordinateMethodsFetching}
                   label="Coordinate Method"
                   control={control}
@@ -1636,6 +1646,100 @@ export const WellInventoryForm = () => {
                     control={control}
                     name="well.notes"
                   />
+                </Grid>
+              </Grid>
+              <Grid size={12}>
+                <Typography variant="h2">Well Screens</Typography>
+              </Grid>
+              <Grid
+                sx={{ width: '100%' }}
+                container
+                spacing={2}
+                direction="column"
+              >
+                {fields.map((item, index) => (
+                  <Grid container key={item.id} mb={2}>
+                    <Grid size={12}>
+                      <Typography variant="h6">
+                        Well Screen {index + 1}
+                      </Typography>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                      <ControlledTextField
+                        type="number"
+                        label="Wdbid"
+                        fullWidth
+                        control={control}
+                        name={`well_screens[${index}].wdbid`}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                      <ControlledTextField
+                        type="number"
+                        label="Counter"
+                        fullWidth
+                        name={`well_screens[${index}].counter`}
+                        control={control}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                      <ControlledTextField
+                        type="number"
+                        label="Screen Top"
+                        name={`well_screens[${index}].screen_top`}
+                        control={control}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                      <ControlledTextField
+                        type="number"
+                        label="Screen Bottom"
+                        name={`well_screens[${index}].screen_bottom`}
+                        control={control}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <ControlledTextField
+                        label="Screen Description"
+                        name={`well_screens[${index}].screen_description`}
+                        multiline
+                        control={control}
+                      />
+                    </Grid>
+                    <Grid
+                      offset={{ xs: 0, sm: 3 }}
+                      size={{ xs: 12, sm: 3 }}
+                      alignContent="center"
+                    >
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="warning"
+                        onClick={() => remove(index)}
+                        startIcon={<Delete />}
+                      >
+                        Remove
+                      </Button>
+                    </Grid>
+                  </Grid>
+                ))}
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() =>
+                      append({
+                        wdbid: '',
+                        counter: '',
+                        screen_top: '',
+                        screen_bottom: '',
+                        screen_description: '',
+                      })
+                    }
+                    startIcon={<Add />}
+                  >
+                    Add Well Screen
+                  </Button>
                 </Grid>
               </Grid>
               <Grid
