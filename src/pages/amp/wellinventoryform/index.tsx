@@ -497,8 +497,7 @@ export const WellInventoryForm = () => {
   const schemaDesc = WellInventorySchema.describe()
 
   const getFieldPathsFromLoc = (loc: (string | number)[]): string[] => {
-    const pathSegments =
-      loc[0] === 'body' ? loc.slice(1).map(String) : loc.map(String)
+    const pathSegments = loc.map(String)
 
     // Recursively resolve field paths based on Yup schema.
     const resolved = resolvePathInSchema(schemaDesc, pathSegments)
@@ -511,13 +510,23 @@ export const WellInventoryForm = () => {
     schemaNode: any,
     remainingPath: string[]
   ): string[][] => {
-    if (!schemaNode || !schemaNode.fields) return []
+    if (!schemaNode) return []
 
     const [current, ...rest] = remainingPath
 
-    const currentField = schemaNode.fields[current]
+    // Handle array indices
+    if (!isNaN(Number(current))) {
+      const arrayItemSchema = schemaNode.innerType
 
-    if (!currentField) return []
+      if (arrayItemSchema.type === 'object' && arrayItemSchema.fields) {
+        const subResults = resolvePathInSchema(arrayItemSchema, rest)
+        return subResults.map((subPath) => [`${current}`, ...subPath])
+      } else {
+        return [[`${current}`]]
+      }
+    }
+
+    const currentField = schemaNode.fields ? schemaNode.fields[current] : null
 
     // If this is the last path segment
     if (rest.length === 0) {
@@ -1667,24 +1676,6 @@ export const WellInventoryForm = () => {
                     <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                       <ControlledTextField
                         type="number"
-                        label="Wdbid"
-                        fullWidth
-                        control={control}
-                        name={`well_screens[${index}].wdbid`}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                      <ControlledTextField
-                        type="number"
-                        label="Counter"
-                        fullWidth
-                        name={`well_screens[${index}].counter`}
-                        control={control}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                      <ControlledTextField
-                        type="number"
                         label="Screen Top"
                         name={`well_screens[${index}].screen_top`}
                         control={control}
@@ -1706,11 +1697,7 @@ export const WellInventoryForm = () => {
                         control={control}
                       />
                     </Grid>
-                    <Grid
-                      offset={{ xs: 0, sm: 3 }}
-                      size={{ xs: 12, sm: 3 }}
-                      alignContent="center"
-                    >
+                    <Grid size={{ xs: 12, sm: 3 }}>
                       <Button
                         fullWidth
                         variant="outlined"

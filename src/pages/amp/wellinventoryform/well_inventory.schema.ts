@@ -9,24 +9,12 @@ export const WellInventorySchema = Yup.object().shape({
   well_screens: Yup.array()
     .of(
       Yup.object({
-        wdbid: Yup.number()
-          .nullable()
-          .typeError('wdbid must be a valid number.'),
-        counter: Yup.number()
-          .nullable()
-          .typeError('Counter must be a valid number.'),
         screen_top: Yup.number()
           .nullable()
           .typeError('Screen Top must be a valid number.'),
         screen_bottom: Yup.number()
           .nullable()
-          .typeError('Screen Bottom must be a valid number.')
-          .when('screen_top', (screen_top, schema) => {
-            return schema.min(
-              screen_top as unknown as number,
-              'Screen Bottom must be greater or equal to Screen Top'
-            )
-          }),
+          .typeError('Screen Bottom must be a valid number.'),
         screen_description: Yup.string().nullable(),
       })
     )
