@@ -6,23 +6,31 @@ export const WellInventorySchema = Yup.object().shape({
     project: Yup.string().required('Project Name is required.'),
     pointid_suffix: Yup.string().nonNullable(),
   }),
-  well_screens: Yup.array().of(
-    Yup.object({
-      wdbid: Yup.number()
-        .nullable()
-        .typeError("wdbid must be a valid number."),
-      counter: Yup.number()
-        .nullable()
-        .typeError("Counter must be a valid number."),
-      screen_top: Yup.number()
-        .nullable()
-        .typeError("Screen Top must be a valid number."),
-     screen_bottom: Yup.number()
-        .nullable()
-        .typeError("Screen Bottom must be a valid number."),
-     screen_description: Yup.string().nullable(),
-    })
-  ).nullable(),
+  well_screens: Yup.array()
+    .of(
+      Yup.object({
+        wdbid: Yup.number()
+          .nullable()
+          .typeError('wdbid must be a valid number.'),
+        counter: Yup.number()
+          .nullable()
+          .typeError('Counter must be a valid number.'),
+        screen_top: Yup.number()
+          .nullable()
+          .typeError('Screen Top must be a valid number.'),
+        screen_bottom: Yup.number()
+          .nullable()
+          .typeError('Screen Bottom must be a valid number.')
+          .when('screen_top', (screen_top, schema) => {
+            return schema.min(
+              screen_top as unknown as number,
+              'Screen Bottom must be greater or equal to Screen Top'
+            )
+          }),
+        screen_description: Yup.string().nullable(),
+      })
+    )
+    .nullable(),
   location: Yup.object({
     site_id: Yup.string().nullable(),
     alternate_site_id: Yup.string().nullable(),
@@ -64,11 +72,11 @@ export const WellInventorySchema = Yup.object().shape({
     hole_depth: Yup.number()
       .nullable()
       .typeError('Hole depth must be a valid number.')
-      .min(0, 'Hole depth must be positive.'),
+      .positive('Hole depth must be positive.'),
     well_depth: Yup.number()
       .nullable()
       .typeError('Well depth must be a valid number.')
-      .min(0, 'Well depth must be positive.'),
+      .positive('Well depth must be positive.'),
     ose_well_id: Yup.string().nullable(),
     ose_welltag_id: Yup.string().nullable(),
     measuring_point: Yup.string().nullable(),
@@ -78,18 +86,18 @@ export const WellInventorySchema = Yup.object().shape({
     casing_diameter: Yup.number()
       .nullable()
       .typeError('Casing Diameter must be a valid number.')
-      .min(0, 'Casing Diameter must be positive.'),
+      .positive('Casing Diameter must be positive.'),
     casing_depth: Yup.number()
       .nullable()
       .typeError('Casing Depth must be a valid number.')
-      .min(0, 'Casing Depth must be positive.'),
+      .positive('Casing Depth must be positive.'),
     casing_description: Yup.string().nullable(),
     construction_notes: Yup.string().nullable(),
     formation: Yup.string().nullable(),
     static_water: Yup.number()
       .nullable()
       .typeError('Static Water Level must be a valid number.')
-      .min(0, 'Static Water Level must be positive.'),
+      .positive('Static Water Level must be positive.'),
     data_source: Yup.string().nullable(),
     monitoring_status: Yup.array().of(Yup.string()).nullable(),
     status: Yup.string().nullable(),
@@ -174,7 +182,7 @@ export const SchemaDefaults = {
       screen_top: undefined,
       screen_bottom: undefined,
       screen_description: '',
-    }  
+    },
   ],
   location: {
     site_id: '',
