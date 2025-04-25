@@ -73,7 +73,12 @@ import { useMutation } from '@tanstack/react-query'
 import { useNotification } from '@refinedev/core'
 import { settings } from '@/settings'
 import { ColorModeContext } from '@/contexts'
-import { convertLonLatToUTM, convertUTMToLonLat } from '@/utils/UtmToLonLat'
+import {
+  convertLonLatToUTM,
+  convertUTMToLonLat,
+  getFieldPathsFromLoc,
+  updateMapView,
+} from '@/utils'
 import { ControlledDateField } from '@/components/Controlled/ControlledDateField'
 import { PydanticValidationError } from '@/interfaces'
 import { VisuallyHiddenTextField } from '@/components/VisuallyHiddenTextField'
@@ -215,17 +220,6 @@ export const WellInventoryForm = () => {
     })
   }
 
-  const updateMapView = (longitude: number, latitude: number) => {
-    if (mapRef.current) {
-      mapRef.current.easeTo({
-        center: [longitude, latitude],
-        zoom: viewState.zoom,
-        duration: 1500,
-        easing: (t: number) => t * (2 - t), // Smooth easing function
-      })
-    }
-  }
-
   const handleCoordinateValidation = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     formFieldName: 'location.coordinates.x' | 'location.coordinates.y'
@@ -317,7 +311,7 @@ export const WellInventoryForm = () => {
       )
         return
 
-      updateMapView(longitude, latitude)
+      updateMapView(mapRef.current, longitude, latitude)
     }
   }
 
@@ -475,7 +469,10 @@ export const WellInventoryForm = () => {
         const details = errorWithStatus.data.detail
 
         details.forEach((issue) => {
-          const fieldPaths = getFieldPathsFromLoc(issue.loc)
+          const fieldPaths = getFieldPathsFromLoc(
+            WellInventorySchema.describe(),
+            issue.loc
+          )
 
           if (fieldPaths.length > 0) {
             fieldPaths.forEach((path) => {
@@ -492,55 +489,6 @@ export const WellInventoryForm = () => {
         console.error('Unexpected form error:', err)
       }
     }
-  }
-
-  const schemaDesc = WellInventorySchema.describe()
-
-  const getFieldPathsFromLoc = (loc: (string | number)[]): string[] => {
-    const pathSegments = loc.map(String)
-
-    // Recursively resolve field paths based on Yup schema.
-    const resolved = resolvePathInSchema(schemaDesc, pathSegments)
-
-    return resolved.map((segments) => segments.join('.'))
-  }
-
-  // Recursively walk a schema to validate and expand fields
-  const resolvePathInSchema = (
-    schemaNode: any,
-    remainingPath: string[]
-  ): string[][] => {
-    if (!schemaNode) return []
-
-    const [current, ...rest] = remainingPath
-
-    // Handle array indices
-    if (!isNaN(Number(current))) {
-      const arrayItemSchema = schemaNode.innerType
-
-      if (arrayItemSchema.type === 'object' && arrayItemSchema.fields) {
-        const subResults = resolvePathInSchema(arrayItemSchema, rest)
-        return subResults.map((subPath) => [`${current}`, ...subPath])
-      } else {
-        return [[`${current}`]]
-      }
-    }
-
-    const currentField = schemaNode.fields ? schemaNode.fields[current] : null
-
-    // If this is the last path segment
-    if (rest.length === 0) {
-      if (currentField.type === 'object' && currentField.fields) {
-        // Expand to its child fields
-        return Object.keys(currentField.fields).map((key) => [current, key])
-      } else {
-        return [[current]]
-      }
-    }
-
-    // Continue recursing down the path
-    const subResults = resolvePathInSchema(currentField, rest)
-    return subResults.map((subPath) => [current, ...subPath])
   }
 
   return (
@@ -1171,7 +1119,7 @@ export const WellInventoryForm = () => {
               <Grid size={{ xs: 12, md: 3 }}>
                 <ControlledTextField
                   type="number"
-                  label="Elevation"
+                  label="Elevation (ft)"
                   control={control}
                   name="location.elevation"
                 />
@@ -1355,7 +1303,7 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
-                    label="Well Depth"
+                    label="Well Depth (ft)"
                     fullWidth
                     control={control}
                     name="well.well_depth"
@@ -1364,7 +1312,7 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
-                    label="Hole Depth"
+                    label="Hole Depth (ft)"
                     fullWidth
                     control={control}
                     name="well.hole_depth"
@@ -1373,7 +1321,7 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
-                    label="Outer Casing Diameter"
+                    label="Outer Casing Diameter (in)"
                     fullWidth
                     control={control}
                     name="well.casing_diameter"
@@ -1382,7 +1330,7 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
-                    label="Casing Depth"
+                    label="Casing Depth (ft)"
                     fullWidth
                     control={control}
                     name="well.casing_depth"
@@ -1594,13 +1542,18 @@ export const WellInventoryForm = () => {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    type="number"
-                    label="MP Height (+/-)"
-                    fullWidth
-                    control={control}
-                    name="well.mp_height"
-                  />
+                  <Tooltip
+                    placement="top"
+                    title="Enter the MP Height in feet. This value can be positive or negative, indicating the height above or below a reference point."
+                  >
+                    <ControlledTextField
+                      type="number"
+                      label="MP Height (ft)"
+                      fullWidth
+                      control={control}
+                      name="well.mp_height"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
