@@ -66,6 +66,7 @@ import {
   getProjects,
   getSiteTypes,
   getStatus,
+  getElevationByDEM,
 } from './well_inventory.service'
 import { locationLabels } from './well_inventory.configs'
 import { SkeletonFormField } from '@/components/SkeletonFormField'
@@ -120,7 +121,7 @@ export const WellInventoryForm = () => {
   const [selectedProject, setSelectedProject] = useState('')
   const [selectedPointIDPrefix, setSelectedPointIDPrefix] = useState('')
 
-  const { control, handleSubmit, reset, setValue, watch, setError } =
+  const { control, handleSubmit, reset, setValue, getValues, watch, setError } =
     useForm<IWellInventoryForm>({
       defaultValues: SchemaDefaults,
       resolver: yupResolver(WellInventorySchema),
@@ -131,9 +132,70 @@ export const WellInventoryForm = () => {
     name: 'well_screens',
   })
 
-  const x = watch('location.coordinates.x')
-  const y = watch('location.coordinates.y')
-  const utmZone = watch('location.utm_zone')
+  const {
+    coordinates: { x, y },
+    utm_zone: utmZone,
+    elevation_method: elevationMethod,
+    location_notes: existingNotes = '',
+  } = watch('location')
+
+  const demCodes = new Set(['I', 'N'])
+  const noteToAdd = 'Elevation was pulled from the USGS dataset'
+
+  const [longitude, latitude] = useMemo(() => {
+    if (coordinateType === 'utm') {
+      return convertUTMToLonLat(x, y, utmZone)
+    }
+    return [x, y]
+  }, [x, y, utmZone, coordinateType])
+
+  const elevationQuery = getElevationByDEM(
+    longitude,
+    latitude,
+    demCodes.has(elevationMethod) && longitude != null && latitude != null
+  )
+
+  useEffect(() => {
+    if (
+      demCodes.has(elevationMethod) &&
+      elevationQuery.isSuccess &&
+      elevationQuery.data
+    ) {
+      const elevationInFeet = elevationQuery.data.value
+
+      setValue('location.elevation', elevationInFeet, {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+
+      setValue('location.elevation_accuracy', 1.74, {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+
+      setValue('location.elevation_datum', 'NAVD88', {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+
+      // Append the note if not already there
+      const prevNotes = getValues('location.location_notes') || ''
+      if (!prevNotes.includes(noteToAdd)) {
+        const newNotes = prevNotes ? `${prevNotes}\n${noteToAdd}` : noteToAdd
+        setValue('location.location_notes', newNotes, {
+          shouldValidate: true,
+          shouldDirty: true,
+        })
+      }
+    }
+  }, [
+    elevationMethod,
+    elevationQuery.isSuccess,
+    elevationQuery.data,
+    existingNotes,
+    setValue,
+    getValues,
+  ])
 
   const handleReset = () => {
     // reset the useForm state

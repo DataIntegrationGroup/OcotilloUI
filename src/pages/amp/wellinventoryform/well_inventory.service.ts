@@ -344,6 +344,45 @@ export const fetchOwnerSearch = async ({
   )
 }
 
+export interface ElevationResponse {
+  location: {
+    x: number
+    y: number
+    spatialReference: {
+      wkid: number
+      latestWkid: number
+    }
+  }
+  locationId: number
+  value: number // elevation in feet
+  rasterId: number
+  resolution: number
+}
+
+export const fetchElevation = async (
+  x: number,
+  y: number
+): Promise<ElevationResponse> => {
+  const url = `https://epqs.nationalmap.gov/v1/json?x=${x}&y=${y}&units=Feet&wkid=4326&includeDate=False`
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch elevation: ${res.status} ${res.statusText}`
+    )
+  }
+  const data = (await res.json()) as ElevationResponse
+  return data
+}
+
+export const getElevationByDEM = (x: number, y: number, enabled: boolean) => {
+  return useQuery({
+    queryKey: ['ElevationByDEM', x, y],
+    queryFn: () => fetchElevation(x, y),
+    enabled: enabled,
+    staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
+  })
+}
+
 const removeEmptyFields = (obj: any): any => {
   if (Array.isArray(obj)) {
     return obj.map(removeEmptyFields)
