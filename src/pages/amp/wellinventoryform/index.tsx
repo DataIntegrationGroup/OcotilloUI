@@ -24,6 +24,7 @@ import {
   InputAdornment,
   Paper,
   SelectChangeEvent,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material'
@@ -51,22 +52,10 @@ import {
 } from '@/components/amp/wellinventoryform'
 import {
   createWellInventoryForm,
-  getElevationDatums,
-  getElevationMethods,
-  getCompletionSources,
-  getConstructionMethods,
-  getCoordinateDatums,
-  getCoordinateAccuracies,
-  getCoordinateMethods,
-  getCurrentUses,
-  getDepthSources,
-  getFormations,
-  getMonitoringStatuses,
   getNewPointIDPreview,
-  getProjects,
-  getSiteTypes,
-  getStatus,
+  getElevationByDEM,
 } from './well_inventory.service'
+import { useGetWellInventoryLookupTablesData } from './well_inventory.hooks'
 import { locationLabels } from './well_inventory.configs'
 import { SkeletonFormField } from '@/components/SkeletonFormField'
 import { useMutation } from '@tanstack/react-query'
@@ -98,6 +87,7 @@ export const WellInventoryForm = () => {
 
   const [viewState, setViewState] = useState(initialViewState)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [noteAppended, setNoteAppended] = useState(false)
 
   const style = { width: '100%', height: '650px' }
   const { mode } = useContext(ColorModeContext)
@@ -131,9 +121,67 @@ export const WellInventoryForm = () => {
     name: 'well_screens',
   })
 
-  const x = watch('location.coordinates.x')
-  const y = watch('location.coordinates.y')
-  const utmZone = watch('location.utm_zone')
+  const {
+    coordinates: { x, y },
+    utm_zone: utmZone,
+    elevation_method: elevationMethod,
+    location_notes: existingNotes = '',
+  } = watch('location')
+
+  const USGS_NATIONAL_ELEVATION_DATASET = 'E'
+  const noteToAdd =
+    'Elevation data was obtained from the National Elevation Dataset (NED) provided by the U.S. Geological Survey (USGS). You can access more information and the data via the official site: https://epqs.nationalmap.gov.'
+
+  const [longitude, latitude] = useMemo(() => {
+    if (coordinateType === 'utm') {
+      return convertUTMToLonLat(x, y, utmZone)
+    }
+    return [x, y]
+  }, [x, y, utmZone, coordinateType])
+
+  const elevationQuery = getElevationByDEM(
+    longitude,
+    latitude,
+    elevationMethod === USGS_NATIONAL_ELEVATION_DATASET &&
+      longitude != null &&
+      latitude != null
+  )
+
+  useEffect(() => {
+    if (
+      elevationMethod === USGS_NATIONAL_ELEVATION_DATASET &&
+      elevationQuery.isSuccess &&
+      elevationQuery.data
+    ) {
+      const elevationInFeet = Math.round(elevationQuery.data.value)
+
+      setValue('location.elevation', elevationInFeet, {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+
+      setValue('location.elevation_accuracy', 1.74, {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+
+      setValue('location.elevation_datum', 'NAVD88', {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+
+      setNoteAppended(true)
+    } else if (elevationMethod !== USGS_NATIONAL_ELEVATION_DATASET) {
+      setNoteAppended(false)
+    }
+  }, [
+    elevationMethod,
+    elevationQuery.isSuccess,
+    elevationQuery.data,
+    existingNotes,
+    setValue,
+    noteAppended,
+  ])
 
   const handleReset = () => {
     // reset the useForm state
@@ -172,8 +220,6 @@ export const WellInventoryForm = () => {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const files = event.target.files
-
-    console.log({ files })
 
     if (files) {
       setSelectedFiles((prevFiles) => [...prevFiles, ...Array.from(files)])
@@ -316,93 +362,26 @@ export const WellInventoryForm = () => {
   }
 
   const {
-    data: coordinateAccuracies,
-    isPending: isCoordinateAccuraciesFetching,
-    isError: isCoordinateAccuraciesError,
-  } = getCoordinateAccuracies()
-
-  const {
-    data: coordinateMethods,
-    isPending: isCoordinateMethodsFetching,
-    isError: isCoordinateMethodsError,
-  } = getCoordinateMethods()
-
-  const {
-    data: coordinateDatums,
-    isPending: isCoordinateDatumFetching,
-    isError: isCoordinateDatumError,
-  } = getCoordinateDatums()
-
-  const {
-    data: elevationDatums,
-    isPending: iselevationDatumFetching,
-    isError: iselevationDatumError,
-  } = getElevationDatums()
-
-  const {
-    data: elevationMethods,
-    isPending: iselevationMethodFetching,
-    isError: iselevationMethodError,
-  } = getElevationMethods()
-
-  const {
-    data: depthSources,
-    isPending: isDepthSourcesFetching,
-    isError: isDepthSourcesError,
-  } = getDepthSources()
-
-  const {
-    data: completionSources,
-    isPending: isCompletionSourcesFetching,
-    isError: isCompletionSourcesError,
-  } = getCompletionSources()
-
-  const {
-    data: statuses,
-    isPending: isStatusesFetching,
-    isError: isStatusesError,
-  } = getStatus()
-
-  const {
-    data: monitoringStatuses,
-    isPending: isMonitoringStatusFetching,
-    isError: isMonitoringStatusError,
-  } = getMonitoringStatuses()
-
-  const {
-    data: formations,
-    isPending: isFormationFetching,
-    isError: isFormationError,
-  } = getFormations()
-
-  const {
-    data: constructionMethods,
-    isPending: isConstructionMethodsFetching,
-    isError: isConstructionMethodsError,
-  } = getConstructionMethods()
-
-  const {
-    data: currentUses,
-    isPending: isCurrentUsesFetching,
-    isError: isCurrentUsesError,
-  } = getCurrentUses()
-
-  const {
-    data: projects,
-    isPending: isProjectFetching,
-    isError: isProjectError,
-  } = getProjects()
+    CoordinateAccuraciesQuery,
+    CoordinateMethodsQuery,
+    CoordinateDatumsQuery,
+    ElevationDatumsQuery,
+    ElevationMethodsQuery,
+    DepthSourcesQuery,
+    CompletionSourcesQuery,
+    StatusQuery,
+    MonitoringStatusesQuery,
+    FormationsQuery,
+    ConstructionMethodsQuery,
+    CurrentUsesQuery,
+    ProjectsQuery,
+    SiteTypesQuery,
+  } = useGetWellInventoryLookupTablesData()
 
   const selectedProjectData = useMemo(
-    () => projects?.find((proj) => proj.Project === selectedProject),
-    [projects, selectedProject]
+    () => ProjectsQuery.data?.find((proj) => proj.Project === selectedProject),
+    [ProjectsQuery.data, selectedProject]
   )
-
-  const {
-    data: siteTypes,
-    isPending: isSiteTypeFetching,
-    isError: isSiteTypeError,
-  } = getSiteTypes()
 
   const {
     data: newPointIdPreview,
@@ -458,6 +437,14 @@ export const WellInventoryForm = () => {
 
   const handleFormSubmit = async (data: Partial<IWellInventoryForm>) => {
     try {
+      if (noteAppended) {
+        // Ensure location_notes ends with a newline character
+        if (!data.location.location_notes.endsWith('\n')) {
+          data.location.location_notes += '\n'
+        } // Append noteToAdd on a new line
+        data.location.location_notes += `${noteToAdd}\n`
+      }
+
       await mutateAsync({ body: data, photos: selectedFiles })
     } catch (err) {
       const errorWithStatus = err as FetchValidationError
@@ -534,14 +521,14 @@ export const WellInventoryForm = () => {
                       )
                     }}
                     required
-                    isLoading={isProjectFetching}
-                    isError={isProjectError}
+                    isLoading={ProjectsQuery.isFetching}
+                    isError={ProjectsQuery.isError}
                     errorMessage="Failed to load Projects"
                     label="Project Name"
                     control={control}
                     name="project.project"
                     value={selectedProject}
-                    disabled={isProjectError}
+                    disabled={ProjectsQuery.isError}
                     onChange={(
                       e: SelectChangeEvent<HTMLSelectElement>,
                       _: React.ReactNode
@@ -557,7 +544,7 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.project.pointid_suffix
                       )
                     }}
-                    options={projects
+                    options={ProjectsQuery?.data
                       ?.sort((a, b) =>
                         a.Project.toLocaleLowerCase().localeCompare(
                           b.Project.toLocaleLowerCase()
@@ -592,13 +579,13 @@ export const WellInventoryForm = () => {
                           )
                         }}
                         required
-                        isLoading={isProjectFetching}
+                        isLoading={ProjectsQuery.isFetching}
                         label="PointId Prefix"
                         control={control}
-                        disabled={!selectedProjectData || isProjectError}
+                        disabled={!selectedProjectData || ProjectsQuery.isError}
                         name="project.pointid_prefix"
                         value={selectedPointIDPrefix}
-                        isError={isProjectError}
+                        isError={ProjectsQuery.isError}
                         errorMessage="Failed to load pointId prefixes"
                         onChange={(
                           e: SelectChangeEvent<HTMLSelectElement>,
@@ -635,14 +622,14 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.location.site_type
                       )
                     }}
-                    isLoading={isSiteTypeFetching}
+                    isLoading={SiteTypesQuery.isFetching}
                     label="Site Type"
                     control={control}
                     name="location.site_type"
                     disabled={true}
-                    isError={isSiteTypeError}
+                    isError={SiteTypesQuery.isError}
                     errorMessage="Failed to load site types"
-                    options={siteTypes
+                    options={SiteTypesQuery?.data
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase()
@@ -1043,14 +1030,14 @@ export const WellInventoryForm = () => {
                       SchemaDefaults.location.coordinate_accuracy
                     )
                   }}
-                  isLoading={isCoordinateAccuraciesFetching}
+                  isLoading={CoordinateAccuraciesQuery.isFetching}
                   label="Coordinate Accuracy"
                   control={control}
                   name="location.coordinate_accuracy"
-                  disabled={isCoordinateAccuraciesError}
-                  isError={isCoordinateAccuraciesError}
+                  disabled={CoordinateAccuraciesQuery.isError}
+                  isError={CoordinateAccuraciesQuery.isError}
                   errorMessage="Failed to load Coordinate Accuracies"
-                  options={coordinateAccuracies
+                  options={CoordinateAccuraciesQuery?.data
                     ?.sort((a, b) =>
                       a.Meaning.toLocaleLowerCase().localeCompare(
                         b.Meaning.toLocaleLowerCase()
@@ -1069,14 +1056,14 @@ export const WellInventoryForm = () => {
                       SchemaDefaults.location.coordinate_method
                     )
                   }}
-                  isLoading={isCoordinateMethodsFetching}
+                  isLoading={CoordinateMethodsQuery.isFetching}
                   label="Coordinate Method"
                   control={control}
                   name="location.coordinate_method"
-                  disabled={isCoordinateMethodsError}
-                  isError={isCoordinateMethodsError}
+                  disabled={CoordinateMethodsQuery.isError}
+                  isError={CoordinateMethodsQuery.isError}
                   errorMessage="Failed to load Coordinate Methods"
-                  options={coordinateMethods
+                  options={CoordinateMethodsQuery?.data
                     ?.sort((a, b) =>
                       a.Meaning.toLocaleLowerCase().localeCompare(
                         b.Meaning.toLocaleLowerCase()
@@ -1104,40 +1091,48 @@ export const WellInventoryForm = () => {
                     )
                   }}
                   required
-                  isLoading={isCoordinateDatumFetching}
+                  isLoading={CoordinateDatumsQuery.isFetching}
                   label="UTM Datum"
                   control={control}
                   name="location.utm_datum"
-                  disabled={isCoordinateDatumError}
-                  isError={isCoordinateDatumError}
+                  disabled={CoordinateDatumsQuery.isError}
+                  isError={CoordinateDatumsQuery.isError}
                   errorMessage="Failed to load UTM datums"
-                  options={coordinateDatums?.map((option) => {
+                  options={CoordinateDatumsQuery?.data?.map((option) => {
                     return { value: option.DATUMCODE, label: option.DATUMCODE }
                   })}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <ControlledTextField
-                  type="number"
-                  label="Elevation (ft)"
-                  control={control}
-                  name="location.elevation"
-                />
+                {elevationQuery.isFetching ? (
+                  <SkeletonFormField />
+                ) : (
+                  <ControlledTextField
+                    type="number"
+                    label="Elevation (ft)"
+                    control={control}
+                    name="location.elevation"
+                  />
+                )}
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <ControlledTextField
-                  type="number"
-                  label="Elevation Accuracy"
-                  control={control}
-                  name="location.elevation_accuracy"
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">±</InputAdornment>
-                      ),
-                    },
-                  }}
-                />
+                {elevationQuery.isFetching ? (
+                  <SkeletonFormField />
+                ) : (
+                  <ControlledTextField
+                    type="number"
+                    label="Elevation Accuracy"
+                    control={control}
+                    name="location.elevation_accuracy"
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">±</InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                )}
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
                 <LoadingControlledSelectField
@@ -1147,14 +1142,16 @@ export const WellInventoryForm = () => {
                       SchemaDefaults.location.elevation_datum
                     )
                   }}
-                  isLoading={iselevationDatumFetching}
+                  isLoading={
+                    ElevationDatumsQuery.isFetching || elevationQuery.isFetching
+                  }
                   label="Elevation Datum"
                   control={control}
                   name="location.elevation_datum"
-                  disabled={iselevationDatumError}
-                  isError={iselevationDatumError}
+                  disabled={ElevationDatumsQuery.isError}
+                  isError={ElevationDatumsQuery.isError}
                   errorMessage="Failed to load ALT datums"
-                  options={elevationDatums?.map((option) => {
+                  options={ElevationDatumsQuery?.data?.map((option) => {
                     return { value: option.Code, label: option.Code }
                   })}
                 />
@@ -1166,15 +1163,16 @@ export const WellInventoryForm = () => {
                       'location.elevation_method',
                       SchemaDefaults.location.elevation_method
                     )
+                    setNoteAppended(false)
                   }}
-                  isLoading={iselevationMethodFetching}
+                  isLoading={ElevationMethodsQuery.isFetching}
                   label="Elevation Method"
                   control={control}
                   name="location.elevation_method"
-                  disabled={iselevationMethodError}
-                  isError={iselevationMethodError}
+                  disabled={ElevationMethodsQuery.isError}
+                  isError={ElevationMethodsQuery.isError}
                   errorMessage="Failed to load elevation methods"
-                  options={elevationMethods
+                  options={ElevationMethodsQuery?.data
                     ?.sort((a, b) =>
                       a.Meaning.toLocaleLowerCase().localeCompare(
                         b.Meaning.toLocaleLowerCase()
@@ -1193,6 +1191,18 @@ export const WellInventoryForm = () => {
                   name="location.location_notes"
                 />
               </Grid>
+              {noteAppended ? (
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    disabled
+                    multiline
+                    minRows={4}
+                    fullWidth
+                    label="Message appended to Notes"
+                    value={noteToAdd}
+                  />
+                </Grid>
+              ) : null}
               <Grid size={12} sx={{ px: 4 }}>
                 <Paper elevation={2}>
                   <Map
@@ -1344,14 +1354,14 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.depth_source
                       )
                     }
-                    isLoading={isDepthSourcesFetching}
+                    isLoading={DepthSourcesQuery.isFetching}
                     label="Depth Source"
                     control={control}
                     name="well.depth_source"
-                    disabled={isDepthSourcesError}
-                    isError={isDepthSourcesError}
+                    disabled={DepthSourcesQuery.isError}
+                    isError={DepthSourcesQuery.isError}
                     errorMessage="Failed to load depth sources"
-                    options={depthSources
+                    options={DepthSourcesQuery?.data
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase()
@@ -1370,14 +1380,14 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.completion_source
                       )
                     }
-                    isLoading={isCompletionSourcesFetching}
+                    isLoading={CompletionSourcesQuery.isFetching}
                     label="Completion Source"
                     control={control}
                     name="well.completion_source"
-                    disabled={isCompletionSourcesError}
-                    isError={isCompletionSourcesError}
+                    disabled={CompletionSourcesQuery.isError}
+                    isError={CompletionSourcesQuery.isError}
                     errorMessage="Failed to load completion sources"
-                    options={completionSources
+                    options={CompletionSourcesQuery?.data
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase()
@@ -1393,14 +1403,14 @@ export const WellInventoryForm = () => {
                     resetFn={() =>
                       setValue('well.status', SchemaDefaults.well.status)
                     }
-                    isLoading={isStatusesFetching}
+                    isLoading={StatusQuery.isFetching}
                     label="Status"
                     control={control}
                     name="well.status"
-                    disabled={isStatusesError}
-                    isError={isStatusesError}
+                    disabled={StatusQuery.isError}
+                    isError={StatusQuery.isError}
                     errorMessage="Failed to load statuses"
-                    options={statuses
+                    options={StatusQuery?.data
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase()
@@ -1419,16 +1429,16 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.monitoring_status
                       )
                     }
-                    isLoading={isMonitoringStatusFetching}
+                    isLoading={MonitoringStatusesQuery.isFetching}
                     label="Monitoring status"
                     fullWidth
                     control={control}
                     name="well.monitoring_status"
-                    disabled={isMonitoringStatusError}
-                    isError={isMonitoringStatusError}
+                    disabled={MonitoringStatusesQuery.isError}
+                    isError={MonitoringStatusesQuery.isError}
                     errorMessage="Failed to load monitoring statuses"
                     multiple={true}
-                    options={monitoringStatuses
+                    options={MonitoringStatusesQuery?.data
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase()
@@ -1447,14 +1457,14 @@ export const WellInventoryForm = () => {
                     resetFn={() =>
                       setValue('well.formation', SchemaDefaults.well.formation)
                     }
-                    isLoading={isFormationFetching}
+                    isLoading={FormationsQuery.isFetching}
                     label="Formation"
                     control={control}
                     name="well.formation"
-                    disabled={isFormationError}
-                    isError={isFormationError}
+                    disabled={FormationsQuery.isError}
+                    isError={FormationsQuery.isError}
                     errorMessage="Failed to load formations"
-                    options={formations
+                    options={FormationsQuery?.data
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase()
@@ -1473,14 +1483,14 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.construction_method
                       )
                     }
-                    isLoading={isConstructionMethodsFetching}
+                    isLoading={ConstructionMethodsQuery.isFetching}
                     label="Construction Method"
                     control={control}
                     name="well.construction_method"
-                    disabled={isConstructionMethodsError}
-                    isError={isConstructionMethodsError}
+                    disabled={ConstructionMethodsQuery.isError}
+                    isError={ConstructionMethodsQuery.isError}
                     errorMessage="Failed to load construction methods"
-                    options={constructionMethods
+                    options={ConstructionMethodsQuery?.data
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase()
@@ -1499,14 +1509,14 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.well.current_use
                       )
                     }
-                    isLoading={isCurrentUsesFetching}
+                    isLoading={CurrentUsesQuery.isFetching}
                     label="Current Use"
                     control={control}
                     name="well.current_use"
-                    disabled={isCurrentUsesError}
-                    isError={isCurrentUsesError}
+                    disabled={CurrentUsesQuery.isError}
+                    isError={CurrentUsesQuery.isError}
                     errorMessage="Failed to load current uses"
-                    options={currentUses
+                    options={CurrentUsesQuery?.data
                       ?.sort((a, b) =>
                         a.Meaning.toLocaleLowerCase().localeCompare(
                           b.Meaning.toLocaleLowerCase()

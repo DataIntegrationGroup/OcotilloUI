@@ -165,8 +165,6 @@ export const SchemaDefaults = {
   },
   well_screens: [
     {
-      wdbid: undefined,
-      counter: undefined,
       screen_top: undefined,
       screen_bottom: undefined,
       screen_description: '',
