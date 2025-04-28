@@ -24,6 +24,7 @@ import {
   InputAdornment,
   Paper,
   SelectChangeEvent,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material'
@@ -86,6 +87,7 @@ export const WellInventoryForm = () => {
 
   const [viewState, setViewState] = useState(initialViewState)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [noteAppended, setNoteAppended] = useState(false)
 
   const style = { width: '100%', height: '650px' }
   const { mode } = useContext(ColorModeContext)
@@ -108,7 +110,7 @@ export const WellInventoryForm = () => {
   const [selectedProject, setSelectedProject] = useState('')
   const [selectedPointIDPrefix, setSelectedPointIDPrefix] = useState('')
 
-  const { control, handleSubmit, reset, setValue, getValues, watch, setError } =
+  const { control, handleSubmit, reset, setValue, watch, setError } =
     useForm<IWellInventoryForm>({
       defaultValues: SchemaDefaults,
       resolver: yupResolver(WellInventorySchema),
@@ -126,8 +128,9 @@ export const WellInventoryForm = () => {
     location_notes: existingNotes = '',
   } = watch('location')
 
-  const demCodes = new Set(['I', 'N'])
-  const noteToAdd = 'Elevation was pulled from the USGS dataset'
+  const USGS_NATIONAL_ELEVATION_DATASET = 'E'
+  const noteToAdd =
+    'Elevation data was obtained from the National Elevation Dataset (NED) provided by the U.S. Geological Survey (USGS). You can access more information and the data via the official site: https://epqs.nationalmap.gov.'
 
   const [longitude, latitude] = useMemo(() => {
     if (coordinateType === 'utm') {
@@ -139,12 +142,14 @@ export const WellInventoryForm = () => {
   const elevationQuery = getElevationByDEM(
     longitude,
     latitude,
-    demCodes.has(elevationMethod) && longitude != null && latitude != null
+    elevationMethod === USGS_NATIONAL_ELEVATION_DATASET &&
+      longitude != null &&
+      latitude != null
   )
 
   useEffect(() => {
     if (
-      demCodes.has(elevationMethod) &&
+      elevationMethod === USGS_NATIONAL_ELEVATION_DATASET &&
       elevationQuery.isSuccess &&
       elevationQuery.data
     ) {
@@ -166,14 +171,9 @@ export const WellInventoryForm = () => {
       })
 
       // Append the note if not already there
-      const prevNotes = getValues('location.location_notes') || ''
-      if (!prevNotes.includes(noteToAdd)) {
-        const newNotes = prevNotes ? `${prevNotes}\n${noteToAdd}` : noteToAdd
-        setValue('location.location_notes', newNotes, {
-          shouldValidate: true,
-          shouldDirty: true,
-        })
-      }
+      setNoteAppended(true)
+    } else if (elevationMethod !== USGS_NATIONAL_ELEVATION_DATASET) {
+      setNoteAppended(false)
     }
   }, [
     elevationMethod,
@@ -181,7 +181,7 @@ export const WellInventoryForm = () => {
     elevationQuery.data,
     existingNotes,
     setValue,
-    getValues,
+    noteAppended,
   ])
 
   const handleReset = () => {
@@ -438,6 +438,14 @@ export const WellInventoryForm = () => {
 
   const handleFormSubmit = async (data: Partial<IWellInventoryForm>) => {
     try {
+      if (noteAppended) {
+        // Ensure location_notes ends with a newline character
+        if (!data.location.location_notes.endsWith('\n')) {
+          data.location.location_notes += '\n'
+        } // Append noteToAdd on a new line
+        data.location.location_notes += `${noteToAdd}\n`
+      }
+
       await mutateAsync({ body: data, photos: selectedFiles })
     } catch (err) {
       const errorWithStatus = err as FetchValidationError
@@ -1156,6 +1164,7 @@ export const WellInventoryForm = () => {
                       'location.elevation_method',
                       SchemaDefaults.location.elevation_method
                     )
+                    setNoteAppended(false)
                   }}
                   isLoading={ElevationMethodsQuery.isFetching}
                   label="Elevation Method"
@@ -1183,6 +1192,18 @@ export const WellInventoryForm = () => {
                   name="location.location_notes"
                 />
               </Grid>
+              {noteAppended ? (
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    disabled
+                    multiline
+                    minRows={4}
+                    fullWidth
+                    label="Message appended to Notes"
+                    value={noteToAdd}
+                  />
+                </Grid>
+              ) : null}
               <Grid size={12} sx={{ px: 4 }}>
                 <Paper elevation={2}>
                   <Map
