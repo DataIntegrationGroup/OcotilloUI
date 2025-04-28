@@ -170,7 +170,6 @@ export const WellInventoryForm = () => {
         shouldDirty: true,
       })
 
-      // Append the note if not already there
       setNoteAppended(true)
     } else if (elevationMethod !== USGS_NATIONAL_ELEVATION_DATASET) {
       setNoteAppended(false)
