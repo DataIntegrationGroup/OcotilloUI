@@ -9,6 +9,7 @@ import React, {
 } from 'react'
 import { Map, Marker, NavigationControl } from 'react-map-gl'
 import { useForm } from '@refinedev/react-hook-form'
+import { useFieldArray } from 'react-hook-form'
 import { IWellInventoryForm } from '@/interfaces/amp'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { WellInventorySchema, SchemaDefaults } from './well_inventory.schema'
@@ -36,7 +37,13 @@ import {
   ControlledPhoneField,
 } from '@/components'
 import { useTheme } from '@mui/material'
-import { CloudUpload, PersonSearch, Refresh } from '@mui/icons-material'
+import {
+  Add,
+  CloudUpload,
+  Delete,
+  PersonSearch,
+  Refresh,
+} from '@mui/icons-material'
 import {
   LoadingControlledSelectField,
   LoadingControlledSelectWithChips,
@@ -66,7 +73,12 @@ import { useMutation } from '@tanstack/react-query'
 import { useNotification } from '@refinedev/core'
 import { settings } from '@/settings'
 import { ColorModeContext } from '@/contexts'
-import { convertLonLatToUTM, convertUTMToLonLat } from '@/utils/UtmToLonLat'
+import {
+  convertLonLatToUTM,
+  convertUTMToLonLat,
+  getFieldPathsFromLoc,
+  updateMapView,
+} from '@/utils'
 import { ControlledDateField } from '@/components/Controlled/ControlledDateField'
 import { PydanticValidationError } from '@/interfaces'
 import { VisuallyHiddenTextField } from '@/components/VisuallyHiddenTextField'
@@ -113,6 +125,11 @@ export const WellInventoryForm = () => {
       defaultValues: SchemaDefaults,
       resolver: yupResolver(WellInventorySchema),
     })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'well_screens',
+  })
 
   const x = watch('location.coordinates.x')
   const y = watch('location.coordinates.y')
@@ -201,17 +218,6 @@ export const WellInventoryForm = () => {
       shouldValidate: true,
       shouldDirty: true,
     })
-  }
-
-  const updateMapView = (longitude: number, latitude: number) => {
-    if (mapRef.current) {
-      mapRef.current.easeTo({
-        center: [longitude, latitude],
-        zoom: viewState.zoom,
-        duration: 1500,
-        easing: (t: number) => t * (2 - t), // Smooth easing function
-      })
-    }
   }
 
   const handleCoordinateValidation = (
@@ -305,7 +311,7 @@ export const WellInventoryForm = () => {
       )
         return
 
-      updateMapView(longitude, latitude)
+      updateMapView(mapRef.current, longitude, latitude)
     }
   }
 
@@ -463,7 +469,10 @@ export const WellInventoryForm = () => {
         const details = errorWithStatus.data.detail
 
         details.forEach((issue) => {
-          const fieldPaths = getFieldPathsFromLoc(issue.loc)
+          const fieldPaths = getFieldPathsFromLoc(
+            WellInventorySchema.describe(),
+            issue.loc
+          )
 
           if (fieldPaths.length > 0) {
             fieldPaths.forEach((path) => {
@@ -480,46 +489,6 @@ export const WellInventoryForm = () => {
         console.error('Unexpected form error:', err)
       }
     }
-  }
-
-  const schemaDesc = WellInventorySchema.describe()
-
-  const getFieldPathsFromLoc = (loc: (string | number)[]): string[] => {
-    const pathSegments =
-      loc[0] === 'body' ? loc.slice(1).map(String) : loc.map(String)
-
-    // Recursively resolve field paths based on Yup schema.
-    const resolved = resolvePathInSchema(schemaDesc, pathSegments)
-
-    return resolved.map((segments) => segments.join('.'))
-  }
-
-  // Recursively walk a schema to validate and expand fields
-  const resolvePathInSchema = (
-    schemaNode: any,
-    remainingPath: string[]
-  ): string[][] => {
-    if (!schemaNode || !schemaNode.fields) return []
-
-    const [current, ...rest] = remainingPath
-
-    const currentField = schemaNode.fields[current]
-
-    if (!currentField) return []
-
-    // If this is the last path segment
-    if (rest.length === 0) {
-      if (currentField.type === 'object' && currentField.fields) {
-        // Expand to its child fields
-        return Object.keys(currentField.fields).map((key) => [current, key])
-      } else {
-        return [[current]]
-      }
-    }
-
-    // Continue recursing down the path
-    const subResults = resolvePathInSchema(currentField, rest)
-    return subResults.map((subPath) => [current, ...subPath])
   }
 
   return (
@@ -1074,7 +1043,6 @@ export const WellInventoryForm = () => {
                       SchemaDefaults.location.coordinate_accuracy
                     )
                   }}
-                  required
                   isLoading={isCoordinateAccuraciesFetching}
                   label="Coordinate Accuracy"
                   control={control}
@@ -1101,7 +1069,6 @@ export const WellInventoryForm = () => {
                       SchemaDefaults.location.coordinate_method
                     )
                   }}
-                  required
                   isLoading={isCoordinateMethodsFetching}
                   label="Coordinate Method"
                   control={control}
@@ -1152,7 +1119,7 @@ export const WellInventoryForm = () => {
               <Grid size={{ xs: 12, md: 3 }}>
                 <ControlledTextField
                   type="number"
-                  label="Elevation"
+                  label="Elevation (ft)"
                   control={control}
                   name="location.elevation"
                 />
@@ -1336,7 +1303,7 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
-                    label="Well Depth"
+                    label="Well Depth (ft)"
                     fullWidth
                     control={control}
                     name="well.well_depth"
@@ -1345,7 +1312,7 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
-                    label="Hole Depth"
+                    label="Hole Depth (ft)"
                     fullWidth
                     control={control}
                     name="well.hole_depth"
@@ -1354,7 +1321,7 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
-                    label="Outer Casing Diameter"
+                    label="Outer Casing Diameter (in)"
                     fullWidth
                     control={control}
                     name="well.casing_diameter"
@@ -1363,7 +1330,7 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
                     type="number"
-                    label="Casing Depth"
+                    label="Casing Depth (ft)"
                     fullWidth
                     control={control}
                     name="well.casing_depth"
@@ -1575,13 +1542,18 @@ export const WellInventoryForm = () => {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    type="number"
-                    label="MP Height (+/-)"
-                    fullWidth
-                    control={control}
-                    name="well.mp_height"
-                  />
+                  <Tooltip
+                    placement="top"
+                    title="Enter the MP Height in feet. This value can be positive or negative, indicating the height above or below a reference point."
+                  >
+                    <ControlledTextField
+                      type="number"
+                      label="MP Height (ft)"
+                      fullWidth
+                      control={control}
+                      name="well.mp_height"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <ControlledTextField
@@ -1636,6 +1608,78 @@ export const WellInventoryForm = () => {
                     control={control}
                     name="well.notes"
                   />
+                </Grid>
+              </Grid>
+              <Grid size={12}>
+                <Typography variant="h2">Well Screens</Typography>
+              </Grid>
+              <Grid
+                sx={{ width: '100%' }}
+                container
+                spacing={2}
+                direction="column"
+              >
+                {fields.map((item, index) => (
+                  <Grid container key={item.id} mb={2}>
+                    <Grid size={12}>
+                      <Typography variant="h6">
+                        Well Screen {index + 1}
+                      </Typography>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                      <ControlledTextField
+                        type="number"
+                        label="Screen Top"
+                        name={`well_screens[${index}].screen_top`}
+                        control={control}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                      <ControlledTextField
+                        type="number"
+                        label="Screen Bottom"
+                        name={`well_screens[${index}].screen_bottom`}
+                        control={control}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <ControlledTextField
+                        label="Screen Description"
+                        name={`well_screens[${index}].screen_description`}
+                        multiline
+                        control={control}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="warning"
+                        onClick={() => remove(index)}
+                        startIcon={<Delete />}
+                      >
+                        Remove
+                      </Button>
+                    </Grid>
+                  </Grid>
+                ))}
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() =>
+                      append({
+                        wdbid: '',
+                        counter: '',
+                        screen_top: '',
+                        screen_bottom: '',
+                        screen_description: '',
+                      })
+                    }
+                    startIcon={<Add />}
+                  >
+                    Add Well Screen
+                  </Button>
                 </Grid>
               </Grid>
               <Grid
