@@ -139,7 +139,7 @@ export const WellInventoryForm = () => {
       elevationQuery.isSuccess &&
       elevationQuery.data
     ) {
-      const elevationInFeet = Math.round(elevationQuery.data.value)
+      const elevationInFeet = Math.round(elevationQuery.data.value * 100) / 100
 
       handleSetValue('location.elevation', elevationInFeet)
       handleSetValue('location.elevation_accuracy', 1.74)
@@ -441,58 +441,55 @@ export const WellInventoryForm = () => {
                   <Typography variant="h2">Project</Typography>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                  <Tooltip placement="top" title="Name of Project">
-                    <div>
-                      <LoadingControlledSelectField
-                        resetFn={() => {
-                          setValue(
-                            'project.project',
-                            SchemaDefaults.project.project
-                          )
-                          setValue(
-                            'project.pointid_prefix',
-                            SchemaDefaults.project.pointid_prefix
-                          )
-                          setValue(
-                            'project.pointid_suffix',
-                            SchemaDefaults.project.pointid_suffix
-                          )
-                        }}
-                        required
-                        isLoading={ProjectsQuery.isFetching}
-                        isError={ProjectsQuery.isError}
-                        errorMessage="Failed to load Projects"
-                        label="Project Name"
-                        control={control}
-                        name="project.project"
-                        disabled={ProjectsQuery.isError}
-                        onChange={(
-                          e: SelectChangeEvent<HTMLSelectElement>,
-                          _: React.ReactNode
-                        ) => {
-                          handleSetValue('project.project', e.target.value)
-                          setValue(
-                            'project.pointid_prefix',
-                            SchemaDefaults.project.pointid_prefix
-                          )
-                          setValue(
-                            'project.pointid_suffix',
-                            SchemaDefaults.project.pointid_suffix
-                          )
-                        }}
-                        options={ProjectsQuery?.data
-                          ?.sort((a, b) =>
-                            a.Project.toLocaleLowerCase().localeCompare(
-                              b.Project.toLocaleLowerCase()
-                            )
-                          )
-                          ?.map((option) => ({
-                            value: option.Project,
-                            label: option.Project,
-                          }))}
-                      />
-                    </div>
-                  </Tooltip>
+                  <LoadingControlledSelectField
+                    resetFn={() => {
+                      setValue(
+                        'project.project',
+                        SchemaDefaults.project.project
+                      )
+                      setValue(
+                        'project.pointid_prefix',
+                        SchemaDefaults.project.pointid_prefix
+                      )
+                      setValue(
+                        'project.pointid_suffix',
+                        SchemaDefaults.project.pointid_suffix
+                      )
+                    }}
+                    required
+                    isLoading={ProjectsQuery.isFetching}
+                    isError={ProjectsQuery.isError}
+                    errorMessage="Failed to load Projects"
+                    label="Project Name"
+                    title="Name of project"
+                    control={control}
+                    name="project.project"
+                    disabled={ProjectsQuery.isError}
+                    onChange={(
+                      e: SelectChangeEvent<HTMLSelectElement>,
+                      _: React.ReactNode
+                    ) => {
+                      handleSetValue('project.project', e.target.value)
+                      setValue(
+                        'project.pointid_prefix',
+                        SchemaDefaults.project.pointid_prefix
+                      )
+                      setValue(
+                        'project.pointid_suffix',
+                        SchemaDefaults.project.pointid_suffix
+                      )
+                    }}
+                    options={ProjectsQuery?.data
+                      ?.sort((a, b) =>
+                        a.Project.toLocaleLowerCase().localeCompare(
+                          b.Project.toLocaleLowerCase()
+                        )
+                      )
+                      ?.map((option) => ({
+                        value: option.Project,
+                        label: option.Project,
+                      }))}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                   <Tooltip
@@ -550,37 +547,31 @@ export const WellInventoryForm = () => {
                   </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                  <Tooltip
-                    placement="top"
+                  <LoadingControlledSelectField
+                    resetFn={() => {
+                      setValue(
+                        'location.site_type',
+                        SchemaDefaults.location.site_type
+                      )
+                    }}
+                    isLoading={SiteTypesQuery.isFetching}
+                    label="Site Type"
                     title="Type of site/monitoring location"
-                  >
-                    <div>
-                      <LoadingControlledSelectField
-                        resetFn={() => {
-                          setValue(
-                            'location.site_type',
-                            SchemaDefaults.location.site_type
-                          )
-                        }}
-                        isLoading={SiteTypesQuery.isFetching}
-                        label="Site Type"
-                        control={control}
-                        name="location.site_type"
-                        disabled={true}
-                        isError={SiteTypesQuery.isError}
-                        errorMessage="Failed to load site types"
-                        options={SiteTypesQuery?.data
-                          ?.sort((a, b) =>
-                            a.Meaning.toLocaleLowerCase().localeCompare(
-                              b.Meaning.toLocaleLowerCase()
-                            )
-                          )
-                          ?.map((option) => {
-                            return { value: option.Code, label: option.Meaning }
-                          })}
-                      />
-                    </div>
-                  </Tooltip>
+                    control={control}
+                    name="location.site_type"
+                    disabled={true}
+                    isError={SiteTypesQuery.isError}
+                    errorMessage="Failed to load site types"
+                    options={SiteTypesQuery?.data
+                      ?.sort((a, b) =>
+                        a.Meaning.toLocaleLowerCase().localeCompare(
+                          b.Meaning.toLocaleLowerCase()
+                        )
+                      )
+                      ?.map((option) => {
+                        return { value: option.Code, label: option.Meaning }
+                      })}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6, xl: 3 }}>
                   {isNewPointIdPreviewFetching ? (
