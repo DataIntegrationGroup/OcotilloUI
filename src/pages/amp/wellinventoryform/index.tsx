@@ -70,6 +70,7 @@ type FetchValidationError = Error & {
 }
 
 export const WellInventoryForm = () => {
+  const theme = useTheme()
   const mapRef = useRef(null)
   const initialViewState = {
     longitude: -106.4,
@@ -80,6 +81,7 @@ export const WellInventoryForm = () => {
   const [viewState, setViewState] = useState(initialViewState)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [noteAppended, setNoteAppended] = useState(false)
+  const [openSearchOwnerDialog, setOpenSearchOwnerDialog] = useState(false)
 
   const style = { width: '100%', height: '650px' }
   const { mode } = useContext(ColorModeContext)
@@ -89,11 +91,6 @@ export const WellInventoryForm = () => {
       : mode === 'dark'
         ? 'mapbox://styles/mapbox/dark-v10'
         : 'mapbox://styles/mapbox/light-v10'
-
-  const theme = useTheme()
-
-  const [openSearchOwnerDialog, setOpenSearchOwnerDialog] = useState(false)
-  const [selectedPointIDPrefix, setSelectedPointIDPrefix] = useState('')
 
   const { control, handleSubmit, reset, setValue, watch, setError } =
     useForm<IWellInventoryForm>({
@@ -107,11 +104,12 @@ export const WellInventoryForm = () => {
   })
 
   const {
-    project: { project: selectedProject },
+    project: { project: selectedProject, pointid_prefix: pointIdPrefix },
   } = watch('project')
 
   const {
     coordinates: { x, y, type: coordinateType },
+    site_type: siteType,
     utm_zone: utmZone,
     elevation_method: elevationMethod,
     location_notes: existingNotes = '',
@@ -162,11 +160,7 @@ export const WellInventoryForm = () => {
   ])
 
   const handleReset = () => {
-    // reset the useForm state
     reset(SchemaDefaults)
-
-    // reset local useState state
-    setSelectedPointIDPrefix(SchemaDefaults.project.pointid_prefix)
     setSelectedFiles([])
   }
 
@@ -277,8 +271,8 @@ export const WellInventoryForm = () => {
   }
 
   const handleCoordinateUpdate = () => {
-    const currentX = parseFloat(watch('location.coordinates.x'))
-    const currentY = parseFloat(watch('location.coordinates.y'))
+    const currentX = parseFloat(x)
+    const currentY = parseFloat(y)
 
     if (
       typeof currentX === 'number' &&
@@ -332,13 +326,13 @@ export const WellInventoryForm = () => {
     isFetching: isNewPointIdPreviewFetching,
     isError: isNewPointIdPreviewError,
     refetch: refetchNewPointIdPreview,
-  } = getNewPointIDPreview(selectedPointIDPrefix, watch('location.site_type'))
+  } = getNewPointIDPreview(pointIdPrefix, siteType)
 
   useEffect(() => {
-    if (selectedPointIDPrefix) {
+    if (pointIdPrefix) {
       refetchNewPointIdPreview()
     }
-  }, [selectedPointIDPrefix, refetchNewPointIdPreview, setValue])
+  }, [pointIdPrefix, refetchNewPointIdPreview, setValue])
 
   useEffect(() => {
     if (newPointIdPreview && !isNewPointIdPreviewError) {
@@ -449,49 +443,56 @@ export const WellInventoryForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                   <Tooltip placement="top" title="Name of Project">
-                    <LoadingControlledSelectField
-                      resetFn={() => {
-                        setValue(
-                          'project.project',
-                          SchemaDefaults.project.project
-                        )
-                        setSelectedPointIDPrefix('')
-                        setValue(
-                          'project.pointid_suffix',
-                          SchemaDefaults.project.pointid_suffix
-                        )
-                      }}
-                      required
-                      isLoading={ProjectsQuery.isFetching}
-                      isError={ProjectsQuery.isError}
-                      errorMessage="Failed to load Projects"
-                      label="Project Name"
-                      control={control}
-                      name="project.project"
-                      value={selectedProject}
-                      disabled={ProjectsQuery.isError}
-                      onChange={(
-                        e: SelectChangeEvent<HTMLSelectElement>,
-                        _: React.ReactNode
-                      ) => {
-                        handleSetValue('project.project', e.target.value)
-                        setSelectedPointIDPrefix('')
-                        setValue(
-                          'project.pointid_suffix',
-                          SchemaDefaults.project.pointid_suffix
-                        )
-                      }}
-                      options={ProjectsQuery?.data
-                        ?.sort((a, b) =>
-                          a.Project.toLocaleLowerCase().localeCompare(
-                            b.Project.toLocaleLowerCase()
+                    <div>
+                      <LoadingControlledSelectField
+                        resetFn={() => {
+                          setValue(
+                            'project.project',
+                            SchemaDefaults.project.project
                           )
-                        )
-                        ?.map((option) => ({
-                          value: option.Project,
-                          label: option.Project,
-                        }))}
-                    />
+                          setValue(
+                            'project.pointid_prefix',
+                            SchemaDefaults.project.pointid_prefix
+                          )
+                          setValue(
+                            'project.pointid_suffix',
+                            SchemaDefaults.project.pointid_suffix
+                          )
+                        }}
+                        required
+                        isLoading={ProjectsQuery.isFetching}
+                        isError={ProjectsQuery.isError}
+                        errorMessage="Failed to load Projects"
+                        label="Project Name"
+                        control={control}
+                        name="project.project"
+                        disabled={ProjectsQuery.isError}
+                        onChange={(
+                          e: SelectChangeEvent<HTMLSelectElement>,
+                          _: React.ReactNode
+                        ) => {
+                          handleSetValue('project.project', e.target.value)
+                          setValue(
+                            'project.pointid_prefix',
+                            SchemaDefaults.project.pointid_prefix
+                          )
+                          setValue(
+                            'project.pointid_suffix',
+                            SchemaDefaults.project.pointid_suffix
+                          )
+                        }}
+                        options={ProjectsQuery?.data
+                          ?.sort((a, b) =>
+                            a.Project.toLocaleLowerCase().localeCompare(
+                              b.Project.toLocaleLowerCase()
+                            )
+                          )
+                          ?.map((option) => ({
+                            value: option.Project,
+                            label: option.Project,
+                          }))}
+                      />
+                    </div>
                   </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
@@ -510,7 +511,6 @@ export const WellInventoryForm = () => {
                             'project.pointid_prefix',
                             SchemaDefaults.project.pointid_prefix
                           )
-                          setSelectedPointIDPrefix('')
                           setValue(
                             'project.pointid_suffix',
                             SchemaDefaults.project.pointid_suffix
@@ -522,7 +522,6 @@ export const WellInventoryForm = () => {
                         control={control}
                         disabled={!selectedProjectData || ProjectsQuery.isError}
                         name="project.pointid_prefix"
-                        value={selectedPointIDPrefix}
                         isError={ProjectsQuery.isError}
                         errorMessage="Failed to load pointId prefixes"
                         onChange={(
@@ -556,30 +555,32 @@ export const WellInventoryForm = () => {
                     placement="top"
                     title="Type of site/monitoring location"
                   >
-                    <LoadingControlledSelectField
-                      resetFn={() => {
-                        setValue(
-                          'location.site_type',
-                          SchemaDefaults.location.site_type
-                        )
-                      }}
-                      isLoading={SiteTypesQuery.isFetching}
-                      label="Site Type"
-                      control={control}
-                      name="location.site_type"
-                      disabled={true}
-                      isError={SiteTypesQuery.isError}
-                      errorMessage="Failed to load site types"
-                      options={SiteTypesQuery?.data
-                        ?.sort((a, b) =>
-                          a.Meaning.toLocaleLowerCase().localeCompare(
-                            b.Meaning.toLocaleLowerCase()
+                    <div>
+                      <LoadingControlledSelectField
+                        resetFn={() => {
+                          setValue(
+                            'location.site_type',
+                            SchemaDefaults.location.site_type
                           )
-                        )
-                        ?.map((option) => {
-                          return { value: option.Code, label: option.Meaning }
-                        })}
-                    />
+                        }}
+                        isLoading={SiteTypesQuery.isFetching}
+                        label="Site Type"
+                        control={control}
+                        name="location.site_type"
+                        disabled={true}
+                        isError={SiteTypesQuery.isError}
+                        errorMessage="Failed to load site types"
+                        options={SiteTypesQuery?.data
+                          ?.sort((a, b) =>
+                            a.Meaning.toLocaleLowerCase().localeCompare(
+                              b.Meaning.toLocaleLowerCase()
+                            )
+                          )
+                          ?.map((option) => {
+                            return { value: option.Code, label: option.Meaning }
+                          })}
+                      />
+                    </div>
                   </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6, xl: 3 }}>
@@ -587,61 +588,57 @@ export const WellInventoryForm = () => {
                     <SkeletonFormField />
                   ) : (
                     <Tooltip placement="top" title="Point identifier or name">
-                      <ControlledTextField
-                        required
-                        label="Point ID"
-                        fullWidth
-                        control={control}
-                        type="text"
-                        name="project.pointid_suffix"
-                        disabled={!selectedPointIDPrefix}
-                        error={isNewPointIdPreviewError}
-                        helperText={
-                          isNewPointIdPreviewError
-                            ? 'Failed to load Point ID Preview'
-                            : undefined
-                        }
-                        slotProps={{
-                          input: {
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                {selectedPointIDPrefix
-                                  ? `${selectedPointIDPrefix}-`
-                                  : null}
-                              </InputAdornment>
-                            ),
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <IconButton
-                                  disabled={!selectedPointIDPrefix}
-                                  aria-label="Re-fetch next Point ID"
-                                  onClick={async () => {
-                                    await refetchNewPointIdPreview()
-                                    if (
-                                      newPointIdPreview &&
-                                      !isNewPointIdPreviewError
-                                    ) {
-                                      const newPointIdPreviewSuffix =
-                                        newPointIdPreview.split('-')[1]
-                                      setValue(
-                                        'project.pointid_suffix',
-                                        newPointIdPreviewSuffix,
-                                        {
-                                          shouldValidate: true,
-                                          shouldDirty: true,
-                                        }
-                                      )
-                                    }
-                                  }}
-                                  edge="end"
-                                >
-                                  <Refresh />
-                                </IconButton>
-                              </InputAdornment>
-                            ),
-                          },
-                        }}
-                      />
+                      <div>
+                        <ControlledTextField
+                          required
+                          label="Point ID"
+                          fullWidth
+                          control={control}
+                          type="text"
+                          name="project.pointid_suffix"
+                          disabled={!pointIdPrefix}
+                          error={isNewPointIdPreviewError}
+                          helperText={
+                            isNewPointIdPreviewError
+                              ? 'Failed to load Point ID Preview'
+                              : undefined
+                          }
+                          slotProps={{
+                            input: {
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  {pointIdPrefix ? `${pointIdPrefix}-` : null}
+                                </InputAdornment>
+                              ),
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    disabled={!pointIdPrefix}
+                                    aria-label="Re-fetch next Point ID"
+                                    onClick={async () => {
+                                      await refetchNewPointIdPreview()
+                                      if (
+                                        newPointIdPreview &&
+                                        !isNewPointIdPreviewError
+                                      ) {
+                                        const newPointIdPreviewSuffix =
+                                          newPointIdPreview.split('-')[1]
+                                        handleSetValue(
+                                          'project.pointid_suffix',
+                                          newPointIdPreviewSuffix
+                                        )
+                                      }
+                                    }}
+                                    edge="end"
+                                  >
+                                    <Refresh />
+                                  </IconButton>
+                                </InputAdornment>
+                              ),
+                            },
+                          }}
+                        />
+                      </div>
                     </Tooltip>
                   )}
                 </Grid>
@@ -963,7 +960,6 @@ export const WellInventoryForm = () => {
                   label="Coordinate Type"
                   control={control}
                   name="location.coordinates.type"
-                  value={coordinateType}
                   onChange={(e) =>
                     handleCoordinateTypeChange(e.target.value as 'utm' | 'gcs')
                   }
@@ -1031,6 +1027,7 @@ export const WellInventoryForm = () => {
                     type="number"
                     label="UTM zone"
                     control={control}
+                    disabled={coordinateType === 'gcs'}
                     name="location.utm_zone"
                   />
                 </Tooltip>
@@ -1049,7 +1046,9 @@ export const WellInventoryForm = () => {
                     label="UTM Datum"
                     control={control}
                     name="location.utm_datum"
-                    disabled={CoordinateDatumsQuery.isError}
+                    disabled={
+                      CoordinateDatumsQuery.isError || coordinateType === 'gcs'
+                    }
                     isError={CoordinateDatumsQuery.isError}
                     errorMessage="Failed to load UTM datums"
                     options={CoordinateDatumsQuery?.data?.map((option) => {
