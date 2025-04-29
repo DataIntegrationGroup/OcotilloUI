@@ -103,9 +103,8 @@ export const WellInventoryForm = () => {
     name: 'well_screens',
   })
 
-  const {
-    project: { project: selectedProject, pointid_prefix: pointIdPrefix },
-  } = watch('project')
+  const { project: selectedProject, pointid_prefix: pointIdPrefix } =
+    watch('project')
 
   const {
     coordinates: { x, y, type: coordinateType },
