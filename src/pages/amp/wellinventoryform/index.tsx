@@ -1253,48 +1253,64 @@ export const WellInventoryForm = () => {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <ControlledTextField
-                    label="OSE Well Record"
-                    fullWidth
-                    control={control}
-                    name="well.ose_well_id"
-                  />
+                  <Tooltip
+                    placement="top"
+                    title="Well identifier issued by the OSE"
+                  >
+                    <ControlledTextField
+                      label="OSE Well Record"
+                      fullWidth
+                      control={control}
+                      name="well.ose_well_id"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    type="number"
-                    label="Well Depth (ft)"
-                    fullWidth
-                    control={control}
-                    name="well.well_depth"
-                  />
+                  <Tooltip placement="top" title="Total depth of well (ft)">
+                    <ControlledTextField
+                      type="number"
+                      label="Well Depth (ft)"
+                      fullWidth
+                      control={control}
+                      name="well.well_depth"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    type="number"
-                    label="Hole Depth (ft)"
-                    fullWidth
-                    control={control}
-                    name="well.hole_depth"
-                  />
+                  <Tooltip
+                    placement="top"
+                    title="Total depth of hole drilled (ft)"
+                  >
+                    <ControlledTextField
+                      type="number"
+                      label="Hole Depth (ft)"
+                      fullWidth
+                      control={control}
+                      name="well.hole_depth"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    type="number"
-                    label="Outer Casing Diameter (in)"
-                    fullWidth
-                    control={control}
-                    name="well.casing_diameter"
-                  />
+                  <Tooltip placement="top" title="Diameter of the well casing">
+                    <ControlledTextField
+                      type="number"
+                      label="Outer Casing Diameter (in)"
+                      fullWidth
+                      control={control}
+                      name="well.casing_diameter"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    type="number"
-                    label="Casing Depth (ft)"
-                    fullWidth
-                    control={control}
-                    name="well.casing_depth"
-                  />
+                  <Tooltip placement="top" title="Depth of the well casing">
+                    <ControlledTextField
+                      type="number"
+                      label="Casing Depth (ft)"
+                      fullWidth
+                      control={control}
+                      name="well.casing_depth"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
                   <LoadingControlledSelectField
@@ -1306,6 +1322,7 @@ export const WellInventoryForm = () => {
                     }
                     isLoading={DepthSourcesQuery.isFetching}
                     label="Depth Source"
+                    title="Reference to person, agency, or document reporting hole/well depth information."
                     control={control}
                     name="well.depth_source"
                     disabled={DepthSourcesQuery.isError}
@@ -1332,6 +1349,7 @@ export const WellInventoryForm = () => {
                     }
                     isLoading={CompletionSourcesQuery.isFetching}
                     label="Completion Source"
+                    title="Reference to person, agency, or document reporting hole/well completion information (same as Depth Source)"
                     control={control}
                     name="well.completion_source"
                     disabled={CompletionSourcesQuery.isError}
@@ -1409,6 +1427,7 @@ export const WellInventoryForm = () => {
                     }
                     isLoading={FormationsQuery.isFetching}
                     label="Formation"
+                    title="Formation(s) or zone(s) the well was completed in"
                     control={control}
                     name="well.formation"
                     disabled={FormationsQuery.isError}
@@ -1435,6 +1454,7 @@ export const WellInventoryForm = () => {
                     }
                     isLoading={ConstructionMethodsQuery.isFetching}
                     label="Construction Method"
+                    title="Method used to drill/construct the well"
                     control={control}
                     name="well.construction_method"
                     disabled={ConstructionMethodsQuery.isError}
@@ -1461,6 +1481,7 @@ export const WellInventoryForm = () => {
                     }
                     isLoading={CurrentUsesQuery.isFetching}
                     label="Current Use"
+                    title="How is the well currently used?"
                     control={control}
                     name="well.current_use"
                     disabled={CurrentUsesQuery.isError}
@@ -1478,12 +1499,17 @@ export const WellInventoryForm = () => {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    label="Driller Name"
-                    fullWidth
-                    control={control}
-                    name="well.driller_name"
-                  />
+                  <Tooltip
+                    placement="top"
+                    title="Name of the drilling contractor who constructed the well"
+                  >
+                    <ControlledTextField
+                      label="Driller Name"
+                      fullWidth
+                      control={control}
+                      name="well.driller_name"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ControlledTextField
@@ -1494,12 +1520,17 @@ export const WellInventoryForm = () => {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <ControlledTextField
-                    label="Data Source"
-                    fullWidth
-                    control={control}
-                    name="well.data_source"
-                  />
+                  <Tooltip
+                    placement="top"
+                    title="Reference to person, agency, or document reporting hole/well construction information"
+                  >
+                    <ControlledTextField
+                      label="Data Source"
+                      fullWidth
+                      control={control}
+                      name="well.data_source"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <Tooltip
@@ -1516,22 +1547,32 @@ export const WellInventoryForm = () => {
                   </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                  <ControlledTextField
-                    type="number"
-                    label="Static Water"
-                    fullWidth
-                    control={control}
-                    name="well.static_water"
-                  />
+                  <Tooltip
+                    placement="top"
+                    title="Depth to water (ft bgs) at time of well completion"
+                  >
+                    <ControlledTextField
+                      type="number"
+                      label="Static Water"
+                      fullWidth
+                      control={control}
+                      name="well.static_water"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <ControlledTextField
-                    multiline
-                    label="Casing Description"
-                    fullWidth
-                    control={control}
-                    name="well.casing_description"
-                  />
+                  <Tooltip
+                    placement="top"
+                    title="Additional notes regarding the casing (material, thickness, etc.)"
+                  >
+                    <ControlledTextField
+                      multiline
+                      label="Casing Description"
+                      fullWidth
+                      control={control}
+                      name="well.casing_description"
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ControlledTextField
@@ -1587,20 +1628,30 @@ export const WellInventoryForm = () => {
                       </Typography>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                      <ControlledTextField
-                        type="number"
-                        label="Screen Top"
-                        name={`well_screens[${index}].screen_top`}
-                        control={control}
-                      />
+                      <Tooltip
+                        placement="top"
+                        title="Top of screen (bgs) if present"
+                      >
+                        <ControlledTextField
+                          type="number"
+                          label="Screen Top"
+                          name={`well_screens[${index}].screen_top`}
+                          control={control}
+                        />
+                      </Tooltip>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                      <ControlledTextField
-                        type="number"
-                        label="Screen Bottom"
-                        name={`well_screens[${index}].screen_bottom`}
-                        control={control}
-                      />
+                      <Tooltip
+                        placement="top"
+                        title="Bottom/base of screen (bgs) if present"
+                      >
+                        <ControlledTextField
+                          type="number"
+                          label="Screen Bottom"
+                          name={`well_screens[${index}].screen_bottom`}
+                          control={control}
+                        />
+                      </Tooltip>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <ControlledTextField
