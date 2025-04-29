@@ -2,10 +2,11 @@ import {
   ControlledSelectField,
   SkeletonFormField,
   ErrorAlertFormField,
-} from "@/components";
-import { Clear } from "@mui/icons-material";
-import { Box, Button, SelectProps, Tooltip } from "@mui/material";
-import { Control } from "react-hook-form";
+} from '@/components'
+import { Clear } from '@mui/icons-material'
+import { Box, Button, SelectProps, Tooltip } from '@mui/material'
+import { useState } from 'react'
+import { Control } from 'react-hook-form'
 
 export const LoadingControlledSelectField = <T,>({
   isLoading,
@@ -14,31 +15,39 @@ export const LoadingControlledSelectField = <T,>({
   options,
   control,
   label,
+  title,
   name,
   required,
   resetFn,
   multiple = false,
   ...props
 }: {
-  isLoading: boolean;
-  isError?: boolean;
-  errorMessage?: string;
-  options: { value: string; label: string }[];
-  control: Control<T>;
-  name: string;
-  label: string;
-  required?: boolean;
-  resetFn: () => void;
-  multiple?: boolean;
+  isLoading?: boolean
+  isError?: boolean
+  errorMessage?: string
+  options: { value: string; label: string }[]
+  control: Control<T>
+  name: string
+  label: string
+  title?: string
+  required?: boolean
+  resetFn: () => void
+  multiple?: boolean
 } & SelectProps) => {
-  const { disabled } = props;
+  const { disabled } = props
 
-  if (isLoading) return <SkeletonFormField />;
+  if (isLoading) return <SkeletonFormField />
 
-  if (isError) return <ErrorAlertFormField message={errorMessage} />;
+  if (isError) return <ErrorAlertFormField message={errorMessage} />
+
+  const [tooltipOpen, setTooltipOpen] = useState(false)
+
+  const handleMouseEnter = () => setTooltipOpen(true)
+  const handleMouseLeave = () => setTooltipOpen(false)
+  const handleSelectOpen = () => setTooltipOpen(false)
 
   return (
-    <Box alignItems="center" sx={{ display: "flex" }}>
+    <Box alignItems="center" sx={{ display: 'flex' }}>
       <Tooltip title="Clear selection">
         <Button
           variant="outlined"
@@ -49,7 +58,7 @@ export const LoadingControlledSelectField = <T,>({
             borderTopRightRadius: 0,
             height: 55,
             width: 30,
-            minWidth: "auto",
+            minWidth: 'auto',
             paddingLeft: 2.5,
             paddingRight: 2.5,
           }}
@@ -57,21 +66,39 @@ export const LoadingControlledSelectField = <T,>({
           <Clear />
         </Button>
       </Tooltip>
-      <ControlledSelectField
-        sx={{
-          borderBottomLeftRadius: 0,
-          borderTopLeftRadius: 0,
-          height: 55,
-          flexGrow: 1,
-        }}
-        options={options}
-        control={control}
-        label={label}
-        name={name}
-        required={required}
-        multiple={multiple}
-        {...props}
-      />
+      <Tooltip
+        placement="top"
+        title={!disabled ? title : null}
+        open={tooltipOpen}
+        disableFocusListener
+        disableTouchListener
+      >
+        <div
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          style={{
+            flexGrow: 1,
+            maxWidth: 'calc(100% - 42.5px)',
+          }}
+        >
+          <ControlledSelectField
+            sx={{
+              borderBottomLeftRadius: 0,
+              borderTopLeftRadius: 0,
+              height: 55,
+              flexShrink: 0,
+            }}
+            options={options}
+            control={control}
+            label={label}
+            name={name}
+            required={required}
+            multiple={multiple}
+            onOpen={handleSelectOpen}
+            {...props}
+          />
+        </div>
+      </Tooltip>
     </Box>
-  );
-};
+  )
+}
