@@ -1,12 +1,4 @@
-import React, {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Map, Marker, NavigationControl } from 'react-map-gl'
 import { useForm } from '@refinedev/react-hook-form'
 import { useFieldArray } from 'react-hook-form'
@@ -91,23 +83,16 @@ export const WellInventoryForm = () => {
 
   const style = { width: '100%', height: '650px' }
   const { mode } = useContext(ColorModeContext)
-  const mapStyle =
-    mode === 'dark'
-      ? 'mapbox://styles/mapbox/dark-v10'
-      : 'mapbox://styles/mapbox/light-v10'
+  const mapStyle = (zoom: number) =>
+    zoom > 10
+      ? 'mapbox://styles/mapbox/satellite-streets-v11'
+      : mode === 'dark'
+        ? 'mapbox://styles/mapbox/dark-v10'
+        : 'mapbox://styles/mapbox/light-v10'
 
   const theme = useTheme()
 
   const [openSearchOwnerDialog, setOpenSearchOwnerDialog] = useState(false)
-
-  const [_, setAddress] = useState('')
-  const [city, setCity] = useState('')
-  const [state, setState] = useState('NM')
-  const [zip, setZip] = useState('')
-
-  const [coordinateType, setCoordinateType] = useState('utm')
-
-  const [selectedProject, setSelectedProject] = useState('')
   const [selectedPointIDPrefix, setSelectedPointIDPrefix] = useState('')
 
   const { control, handleSubmit, reset, setValue, watch, setError } =
@@ -122,7 +107,11 @@ export const WellInventoryForm = () => {
   })
 
   const {
-    coordinates: { x, y },
+    project: { project: selectedProject },
+  } = watch('project')
+
+  const {
+    coordinates: { x, y, type: coordinateType },
     utm_zone: utmZone,
     elevation_method: elevationMethod,
     location_notes: existingNotes = '',
@@ -155,20 +144,9 @@ export const WellInventoryForm = () => {
     ) {
       const elevationInFeet = Math.round(elevationQuery.data.value)
 
-      setValue('location.elevation', elevationInFeet, {
-        shouldValidate: true,
-        shouldDirty: true,
-      })
-
-      setValue('location.elevation_accuracy', 1.74, {
-        shouldValidate: true,
-        shouldDirty: true,
-      })
-
-      setValue('location.elevation_datum', 'NAVD88', {
-        shouldValidate: true,
-        shouldDirty: true,
-      })
+      handleSetValue('location.elevation', elevationInFeet)
+      handleSetValue('location.elevation_accuracy', 1.74)
+      handleSetValue('location.elevation_datum', 'NAVD88')
 
       setNoteAppended(true)
     } else if (elevationMethod !== USGS_NATIONAL_ELEVATION_DATASET) {
@@ -188,12 +166,6 @@ export const WellInventoryForm = () => {
     reset(SchemaDefaults)
 
     // reset local useState state
-    setAddress(SchemaDefaults.owner.physical_address)
-    setCity(SchemaDefaults.owner.physical_city)
-    setState(SchemaDefaults.owner.physical_state)
-    setZip(SchemaDefaults.owner.physical_zip_code)
-    setCoordinateType(SchemaDefaults.location.coordinates.type)
-    setSelectedProject(SchemaDefaults.project.project)
     setSelectedPointIDPrefix(SchemaDefaults.project.pointid_prefix)
     setSelectedFiles([])
   }
@@ -204,12 +176,7 @@ export const WellInventoryForm = () => {
     )
   }
 
-  const handleOnChange = <T,>(
-    newValue: T,
-    setState: Dispatch<SetStateAction<T>>,
-    formFieldName: string
-  ) => {
-    setState(newValue)
+  const handleSetValue = <T,>(formFieldName: string, newValue: T) => {
     setValue(formFieldName, newValue, {
       shouldValidate: true,
       shouldDirty: true,
@@ -248,22 +215,11 @@ export const WellInventoryForm = () => {
       }
 
       // Set new values in the form
-      setValue('location.coordinates.x', newX, {
-        shouldValidate: true,
-        shouldDirty: true,
-      })
-
-      setValue('location.coordinates.y', newY, {
-        shouldValidate: true,
-        shouldDirty: true,
-      })
+      handleSetValue('location.coordinates.x', newX)
+      handleSetValue('location.coordinates.y', newY)
     }
 
-    setCoordinateType(newType)
-    setValue('location.coordinates.type', newType, {
-      shouldValidate: true,
-      shouldDirty: true,
-    })
+    handleSetValue('location.coordinates.type', newType)
   }
 
   const handleCoordinateValidation = (
@@ -287,10 +243,7 @@ export const WellInventoryForm = () => {
         } must be a valid number.`,
       })
 
-      setValue(formFieldName, inputValue, {
-        shouldValidate: false,
-        shouldDirty: true,
-      })
+      handleSetValue(formFieldName, inputValue)
       return
     }
 
@@ -303,10 +256,7 @@ export const WellInventoryForm = () => {
           type: 'manual',
           message: 'Longitude must be between -180 and 180.',
         })
-        setValue(formFieldName, inputValue, {
-          shouldValidate: false,
-          shouldDirty: true,
-        })
+        handleSetValue(formFieldName, inputValue)
         return
       }
 
@@ -318,18 +268,12 @@ export const WellInventoryForm = () => {
           type: 'manual',
           message: 'Latitude must be between -90 and 90.',
         })
-        setValue(formFieldName, inputValue, {
-          shouldValidate: false,
-          shouldDirty: true,
-        })
+        handleSetValue(formFieldName, inputValue)
         return
       }
     }
 
-    setValue(formFieldName, newValue, {
-      shouldValidate: true,
-      shouldDirty: true,
-    })
+    handleSetValue(formFieldName, newValue)
   }
 
   const handleCoordinateUpdate = () => {
@@ -399,10 +343,7 @@ export const WellInventoryForm = () => {
   useEffect(() => {
     if (newPointIdPreview && !isNewPointIdPreviewError) {
       const newPointIdPreviewSuffix = newPointIdPreview.split('-')[1]
-      setValue('project.pointid_suffix', newPointIdPreviewSuffix, {
-        shouldValidate: true,
-        shouldDirty: true,
-      })
+      handleSetValue('project.pointid_suffix', newPointIdPreviewSuffix)
     }
   }, [newPointIdPreview, isNewPointIdPreviewError, setValue])
 
@@ -507,54 +448,51 @@ export const WellInventoryForm = () => {
                   <Typography variant="h2">Project</Typography>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                  <LoadingControlledSelectField
-                    resetFn={() => {
-                      setValue(
-                        'project.project',
-                        SchemaDefaults.project.project
-                      )
-                      setSelectedProject('')
-                      setSelectedPointIDPrefix('')
-                      setValue(
-                        'project.pointid_suffix',
-                        SchemaDefaults.project.pointid_suffix
-                      )
-                    }}
-                    required
-                    isLoading={ProjectsQuery.isFetching}
-                    isError={ProjectsQuery.isError}
-                    errorMessage="Failed to load Projects"
-                    label="Project Name"
-                    control={control}
-                    name="project.project"
-                    value={selectedProject}
-                    disabled={ProjectsQuery.isError}
-                    onChange={(
-                      e: SelectChangeEvent<HTMLSelectElement>,
-                      _: React.ReactNode
-                    ) => {
-                      handleOnChange(
-                        e.target.value,
-                        setSelectedProject,
-                        'project.project'
-                      )
-                      setSelectedPointIDPrefix('')
-                      setValue(
-                        'project.pointid_suffix',
-                        SchemaDefaults.project.pointid_suffix
-                      )
-                    }}
-                    options={ProjectsQuery?.data
-                      ?.sort((a, b) =>
-                        a.Project.toLocaleLowerCase().localeCompare(
-                          b.Project.toLocaleLowerCase()
+                  <Tooltip placement="top" title="Name of Project">
+                    <LoadingControlledSelectField
+                      resetFn={() => {
+                        setValue(
+                          'project.project',
+                          SchemaDefaults.project.project
                         )
-                      )
-                      ?.map((option) => ({
-                        value: option.Project,
-                        label: option.Project,
-                      }))}
-                  />
+                        setSelectedPointIDPrefix('')
+                        setValue(
+                          'project.pointid_suffix',
+                          SchemaDefaults.project.pointid_suffix
+                        )
+                      }}
+                      required
+                      isLoading={ProjectsQuery.isFetching}
+                      isError={ProjectsQuery.isError}
+                      errorMessage="Failed to load Projects"
+                      label="Project Name"
+                      control={control}
+                      name="project.project"
+                      value={selectedProject}
+                      disabled={ProjectsQuery.isError}
+                      onChange={(
+                        e: SelectChangeEvent<HTMLSelectElement>,
+                        _: React.ReactNode
+                      ) => {
+                        handleSetValue('project.project', e.target.value)
+                        setSelectedPointIDPrefix('')
+                        setValue(
+                          'project.pointid_suffix',
+                          SchemaDefaults.project.pointid_suffix
+                        )
+                      }}
+                      options={ProjectsQuery?.data
+                        ?.sort((a, b) =>
+                          a.Project.toLocaleLowerCase().localeCompare(
+                            b.Project.toLocaleLowerCase()
+                          )
+                        )
+                        ?.map((option) => ({
+                          value: option.Project,
+                          label: option.Project,
+                        }))}
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
                   <Tooltip
@@ -591,10 +529,9 @@ export const WellInventoryForm = () => {
                           e: SelectChangeEvent<HTMLSelectElement>,
                           _: React.ReactNode
                         ) => {
-                          handleOnChange(
-                            e.target.value,
-                            setSelectedPointIDPrefix,
-                            'project.pointid_prefix'
+                          handleSetValue(
+                            'project.pointid_prefix',
+                            e.target.value
                           )
                         }}
                         options={
@@ -615,90 +552,97 @@ export const WellInventoryForm = () => {
                   </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-                  <LoadingControlledSelectField
-                    resetFn={() => {
-                      setValue(
-                        'location.site_type',
-                        SchemaDefaults.location.site_type
-                      )
-                    }}
-                    isLoading={SiteTypesQuery.isFetching}
-                    label="Site Type"
-                    control={control}
-                    name="location.site_type"
-                    disabled={true}
-                    isError={SiteTypesQuery.isError}
-                    errorMessage="Failed to load site types"
-                    options={SiteTypesQuery?.data
-                      ?.sort((a, b) =>
-                        a.Meaning.toLocaleLowerCase().localeCompare(
-                          b.Meaning.toLocaleLowerCase()
+                  <Tooltip
+                    placement="top"
+                    title="Type of site/monitoring location"
+                  >
+                    <LoadingControlledSelectField
+                      resetFn={() => {
+                        setValue(
+                          'location.site_type',
+                          SchemaDefaults.location.site_type
                         )
-                      )
-                      ?.map((option) => {
-                        return { value: option.Code, label: option.Meaning }
-                      })}
-                  />
+                      }}
+                      isLoading={SiteTypesQuery.isFetching}
+                      label="Site Type"
+                      control={control}
+                      name="location.site_type"
+                      disabled={true}
+                      isError={SiteTypesQuery.isError}
+                      errorMessage="Failed to load site types"
+                      options={SiteTypesQuery?.data
+                        ?.sort((a, b) =>
+                          a.Meaning.toLocaleLowerCase().localeCompare(
+                            b.Meaning.toLocaleLowerCase()
+                          )
+                        )
+                        ?.map((option) => {
+                          return { value: option.Code, label: option.Meaning }
+                        })}
+                    />
+                  </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6, xl: 3 }}>
                   {isNewPointIdPreviewFetching ? (
                     <SkeletonFormField />
                   ) : (
-                    <ControlledTextField
-                      required
-                      label="Point ID"
-                      fullWidth
-                      control={control}
-                      type="text"
-                      name="project.pointid_suffix"
-                      disabled={!selectedPointIDPrefix}
-                      error={isNewPointIdPreviewError}
-                      helperText={
-                        isNewPointIdPreviewError
-                          ? 'Failed to load Point ID Preview'
-                          : undefined
-                      }
-                      slotProps={{
-                        input: {
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              {selectedPointIDPrefix
-                                ? `${selectedPointIDPrefix}-`
-                                : null}
-                            </InputAdornment>
-                          ),
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                disabled={!selectedPointIDPrefix}
-                                aria-label="Re-fetch next Point ID"
-                                onClick={async () => {
-                                  await refetchNewPointIdPreview()
-                                  if (
-                                    newPointIdPreview &&
-                                    !isNewPointIdPreviewError
-                                  ) {
-                                    const newPointIdPreviewSuffix =
-                                      newPointIdPreview.split('-')[1]
-                                    setValue(
-                                      'project.pointid_suffix',
-                                      newPointIdPreviewSuffix,
-                                      {
-                                        shouldValidate: true,
-                                        shouldDirty: true,
-                                      }
-                                    )
-                                  }
-                                }}
-                                edge="end"
-                              >
-                                <Refresh />
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        },
-                      }}
-                    />
+                    <Tooltip placement="top" title="Point identifier or name">
+                      <ControlledTextField
+                        required
+                        label="Point ID"
+                        fullWidth
+                        control={control}
+                        type="text"
+                        name="project.pointid_suffix"
+                        disabled={!selectedPointIDPrefix}
+                        error={isNewPointIdPreviewError}
+                        helperText={
+                          isNewPointIdPreviewError
+                            ? 'Failed to load Point ID Preview'
+                            : undefined
+                        }
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                {selectedPointIDPrefix
+                                  ? `${selectedPointIDPrefix}-`
+                                  : null}
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  disabled={!selectedPointIDPrefix}
+                                  aria-label="Re-fetch next Point ID"
+                                  onClick={async () => {
+                                    await refetchNewPointIdPreview()
+                                    if (
+                                      newPointIdPreview &&
+                                      !isNewPointIdPreviewError
+                                    ) {
+                                      const newPointIdPreviewSuffix =
+                                        newPointIdPreview.split('-')[1]
+                                      setValue(
+                                        'project.pointid_suffix',
+                                        newPointIdPreviewSuffix,
+                                        {
+                                          shouldValidate: true,
+                                          shouldDirty: true,
+                                        }
+                                      )
+                                    }
+                                  }}
+                                  edge="end"
+                                >
+                                  <Refresh />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          },
+                        }}
+                      />
+                    </Tooltip>
                   )}
                 </Grid>
               </Grid>
@@ -723,14 +667,19 @@ export const WellInventoryForm = () => {
                 </Grid>
                 <Grid size={12}>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <ControlledTextField
-                      required
-                      label="Owner Key"
-                      fullWidth
-                      control={control}
-                      type="text"
-                      name="owner.owner_key"
-                    />
+                    <Tooltip
+                      placement="top"
+                      title="ID assigned to each owner record, usually owner’s last name, first name"
+                    >
+                      <ControlledTextField
+                        required
+                        label="Owner Key"
+                        fullWidth
+                        control={control}
+                        type="text"
+                        name="owner.owner_key"
+                      />
+                    </Tooltip>
                   </Grid>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
@@ -834,23 +783,18 @@ export const WellInventoryForm = () => {
                       selectedState: string,
                       selectedZip: string
                     ) => {
-                      setAddress(selectedAddress)
-                      setCity(selectedCity)
-                      setState(selectedState)
-                      setZip(selectedZip)
+                      handleSetValue('owner.physical_address', selectedAddress)
+                      handleSetValue('owner.physical_city', selectedCity)
+                      handleSetValue('owner.physical_state', selectedState)
+                      handleSetValue('owner.physical_zip_code', selectedZip)
                     }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, lg: 6 }}>
                   <ControlledTextField
                     label="City"
-                    value={city}
                     onChange={(e) =>
-                      handleOnChange(
-                        e.target.value,
-                        setCity,
-                        'owner.physical_city'
-                      )
+                      handleSetValue('owner.physical_city', e.target.value)
                     }
                     fullWidth
                     type="text"
@@ -861,12 +805,10 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, lg: 3 }}>
                   <ControlledTextField
                     label="State"
-                    value={state}
                     onChange={(e) =>
-                      handleOnChange(
-                        e.target.value.toLocaleUpperCase(),
-                        setState,
-                        'owner.physical_state'
+                      handleSetValue(
+                        'owner.physical_state',
+                        e.target.value.toLocaleUpperCase()
                       )
                     }
                     fullWidth
@@ -878,13 +820,8 @@ export const WellInventoryForm = () => {
                 <Grid size={{ xs: 12, lg: 3 }}>
                   <ControlledTextField
                     label="Zip Code"
-                    value={zip}
                     onChange={(e) =>
-                      handleOnChange(
-                        e.target.value,
-                        setZip,
-                        'owner.physical_zip_code'
-                      )
+                      handleSetValue('owner.physical_zip_code', e.target.value)
                     }
                     fullWidth
                     type="text"
@@ -949,35 +886,49 @@ export const WellInventoryForm = () => {
                 <Typography variant="h2">Location</Typography>
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <ControlledTextField
-                  label="Site ID"
-                  fullWidth
-                  control={control}
-                  name="location.site_id"
-                />
+                <Tooltip placement="top" title="USGS well ID">
+                  <ControlledTextField
+                    label="Site ID"
+                    fullWidth
+                    control={control}
+                    name="location.site_id"
+                  />
+                </Tooltip>
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <ControlledTextField
-                  label="Site ID (Alternate)"
-                  fullWidth
-                  control={control}
-                  name="location.alternate_site_id"
-                />
+                <Tooltip
+                  placement="top"
+                  title="Alternate site or property name"
+                >
+                  <ControlledTextField
+                    label="Site ID (Alternate)"
+                    fullWidth
+                    control={control}
+                    name="location.alternate_site_id"
+                  />
+                </Tooltip>
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <ControlledTextField
-                  label="Site Name"
-                  fullWidth
-                  control={control}
-                  name="location.site_name"
-                />
+                <Tooltip
+                  placement="top"
+                  title="Descriptive name for well, provided by user or owner. Usually owner last name + well use."
+                >
+                  <ControlledTextField
+                    label="Site Name"
+                    fullWidth
+                    control={control}
+                    name="location.site_name"
+                  />
+                </Tooltip>
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <ControlledDateField
-                  label="Site Date"
-                  control={control}
-                  name="location.site_date"
-                />
+                <Tooltip placement="top" title="Date site/location was visited">
+                  <ControlledDateField
+                    label="Site Date"
+                    control={control}
+                    name="location.site_date"
+                  />
+                </Tooltip>
               </Grid>
               <Grid size={{ xs: 12, md: 4, lg: 5 }}>
                 <ControlledTextField
@@ -1075,33 +1026,40 @@ export const WellInventoryForm = () => {
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <ControlledTextField
-                  type="number"
-                  label="UTM zone"
-                  control={control}
-                  name="location.utm_zone"
-                />
+                <Tooltip placement="top" title="UTM Zone (12 or 13)">
+                  <ControlledTextField
+                    type="number"
+                    label="UTM zone"
+                    control={control}
+                    name="location.utm_zone"
+                  />
+                </Tooltip>
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <LoadingControlledSelectField
-                  resetFn={() => {
-                    setValue(
-                      'location.utm_datum',
-                      SchemaDefaults.location.utm_datum
-                    )
-                  }}
-                  required
-                  isLoading={CoordinateDatumsQuery.isFetching}
-                  label="UTM Datum"
-                  control={control}
-                  name="location.utm_datum"
-                  disabled={CoordinateDatumsQuery.isError}
-                  isError={CoordinateDatumsQuery.isError}
-                  errorMessage="Failed to load UTM datums"
-                  options={CoordinateDatumsQuery?.data?.map((option) => {
-                    return { value: option.DATUMCODE, label: option.DATUMCODE }
-                  })}
-                />
+                <Tooltip placement="top" title="Horizontal datum">
+                  <LoadingControlledSelectField
+                    resetFn={() => {
+                      setValue(
+                        'location.utm_datum',
+                        SchemaDefaults.location.utm_datum
+                      )
+                    }}
+                    required
+                    isLoading={CoordinateDatumsQuery.isFetching}
+                    label="UTM Datum"
+                    control={control}
+                    name="location.utm_datum"
+                    disabled={CoordinateDatumsQuery.isError}
+                    isError={CoordinateDatumsQuery.isError}
+                    errorMessage="Failed to load UTM datums"
+                    options={CoordinateDatumsQuery?.data?.map((option) => {
+                      return {
+                        value: option.DATUMCODE,
+                        label: option.DATUMCODE,
+                      }
+                    })}
+                  />
+                </Tooltip>
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
                 {elevationQuery.isFetching ? (
@@ -1135,26 +1093,29 @@ export const WellInventoryForm = () => {
                 )}
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <LoadingControlledSelectField
-                  resetFn={() => {
-                    setValue(
-                      'location.elevation_datum',
-                      SchemaDefaults.location.elevation_datum
-                    )
-                  }}
-                  isLoading={
-                    ElevationDatumsQuery.isFetching || elevationQuery.isFetching
-                  }
-                  label="Elevation Datum"
-                  control={control}
-                  name="location.elevation_datum"
-                  disabled={ElevationDatumsQuery.isError}
-                  isError={ElevationDatumsQuery.isError}
-                  errorMessage="Failed to load ALT datums"
-                  options={ElevationDatumsQuery?.data?.map((option) => {
-                    return { value: option.Code, label: option.Code }
-                  })}
-                />
+                <Tooltip placement="top" title="Vertical datum">
+                  <LoadingControlledSelectField
+                    resetFn={() => {
+                      setValue(
+                        'location.elevation_datum',
+                        SchemaDefaults.location.elevation_datum
+                      )
+                    }}
+                    isLoading={
+                      ElevationDatumsQuery.isFetching ||
+                      elevationQuery.isFetching
+                    }
+                    label="Elevation Datum"
+                    control={control}
+                    name="location.elevation_datum"
+                    disabled={ElevationDatumsQuery.isError}
+                    isError={ElevationDatumsQuery.isError}
+                    errorMessage="Failed to load ALT datums"
+                    options={ElevationDatumsQuery?.data?.map((option) => {
+                      return { value: option.Code, label: option.Code }
+                    })}
+                  />
+                </Tooltip>
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
                 <LoadingControlledSelectField
@@ -1214,7 +1175,7 @@ export const WellInventoryForm = () => {
                     initialViewState={initialViewState}
                     terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
                     style={style}
-                    mapStyle={mapStyle}
+                    mapStyle={mapStyle(viewState.zoom)}
                   >
                     <NavigationControl position="top-right" />
                     {typeof x === 'number' &&
