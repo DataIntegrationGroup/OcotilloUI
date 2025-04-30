@@ -1,4 +1,12 @@
-import { Button, Card, CardContent, CardHeader, useTheme } from '@mui/material'
+import { useEffect, useState } from 'react'
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Chip,
+  useTheme,
+} from '@mui/material'
 import { useForm } from '@refinedev/react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { IWaterLevelForm } from '@/interfaces/amp'
@@ -10,18 +18,23 @@ import { Box } from '@mui/system'
 import { useMutation } from '@tanstack/react-query'
 import { useNotification } from '@refinedev/core'
 import Grid from '@mui/material/Grid2'
-import { ControlledCheckbox, ControlledTextField } from '@/components'
+import {
+  ControlledCheckbox,
+  ControlledTextField,
+  VisuallyHiddenTextField,
+  ControlledDateField,
+} from '@/components'
 import {
   createWaterLevelForm,
   getEquipmentTypes,
   getMeasuringAgencies,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
-import { ControlledDateField } from '@/components/Controlled/ControlledDateField'
-import { useEffect } from 'react'
+import { CloudUpload } from '@mui/icons-material'
 
 export const WaterLevelForm = () => {
   const theme = useTheme()
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
   const { control, handleSubmit, reset, setValue, watch } =
     useForm<IWaterLevelForm>({
@@ -73,11 +86,27 @@ export const WaterLevelForm = () => {
 
   const handleFormSubmit = async (data: IWaterLevelForm) => {
     try {
-      await mutateAsync({ body: data, photos: [] })
+      await mutateAsync({ body: data, photos: selectedFiles })
       reset()
     } catch (err) {
       console.error('Form submission error:', err)
     }
+  }
+
+  const handlePhotoFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = event.target.files
+
+    if (files) {
+      setSelectedFiles((prevFiles) => [...prevFiles, ...Array.from(files)])
+    }
+  }
+
+  const handleDeleteFile = (fileToDelete: File) => {
+    setSelectedFiles((prevFiles) =>
+      prevFiles.filter((file) => file !== fileToDelete)
+    )
   }
 
   const EquipmentTypeQuery = getEquipmentTypes()
@@ -282,6 +311,49 @@ export const WaterLevelForm = () => {
                     name="final_value"
                   />
                 </Grid>
+
+                <Grid
+                  container
+                  size={12}
+                  direction="column"
+                  justifyContent="center"
+                  alignItems="center"
+                  spacing={2}
+                  sx={{ paddingTop: '3rem', paddingBottom: '1rem' }}
+                >
+                  <Grid
+                    container
+                    spacing={1}
+                    justifyContent="center"
+                    sx={{ marginBottom: '1rem' }}
+                  >
+                    {selectedFiles?.map((file, index) => (
+                      <Chip
+                        key={index}
+                        label={`${file.name} (${(file.size / 1024).toFixed(2)} KB)`}
+                        onDelete={() => handleDeleteFile(file)}
+                        color="secondary"
+                      />
+                    ))}
+                  </Grid>
+                  <Grid container spacing={1} size={12} justifyContent="center">
+                    <Button
+                      component="label"
+                      role={undefined}
+                      variant="contained"
+                      tabIndex={-1}
+                      startIcon={<CloudUpload />}
+                    >
+                      Upload Well Photos
+                      <VisuallyHiddenTextField
+                        type="file"
+                        onChange={handlePhotoFileChange}
+                        multiple
+                        accept="image/jpeg, image/png, image/heic"
+                      />
+                    </Button>
+                  </Grid>
+                </Grid>
                 <Grid
                   container
                   size={12}
@@ -296,7 +368,10 @@ export const WaterLevelForm = () => {
                       variant="outlined"
                       color="secondary"
                       fullWidth
-                      onClick={() => reset(SchemaDefaults)}
+                      onClick={() => {
+                        reset(SchemaDefaults)
+                        setSelectedFiles([])
+                      }}
                     >
                       Reset
                     </Button>
