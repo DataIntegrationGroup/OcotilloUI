@@ -1,5 +1,5 @@
 import { getAccessToken } from '@/providers/fief-provider'
-import { fetchConfig, lookupTableQueryConfig } from './water_level.configs'
+import { fetchConfig, lookupTableQueryConfig } from '@/pages/pages.config'
 import { useQuery } from '@tanstack/react-query'
 import { IWaterLevelForm } from '@/interfaces/amp'
 import { settings } from '@/settings'

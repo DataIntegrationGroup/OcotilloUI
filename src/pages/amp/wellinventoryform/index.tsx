@@ -181,9 +181,10 @@ export const WellInventoryForm = () => {
   ) => {
     const files = event.target.files
 
-    if (files) {
-      setSelectedFiles((prevFiles) => [...prevFiles, ...Array.from(files)])
-    }
+    if (!files) return
+
+    setSelectedFiles((prevFiles) => [...prevFiles, ...Array.from(files)])
+    event.target.value = ''
   }
 
   const handleCoordinateTypeChange = (newType: 'utm' | 'gcs') => {
