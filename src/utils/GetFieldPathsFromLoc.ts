@@ -26,6 +26,14 @@ const resolvePathInSchema = (
     const arrayItemSchema = schemaNode.innerType
 
     if (arrayItemSchema.type === 'object' && arrayItemSchema.fields) {
+      // If this is the last segment, expand all child fields
+      if (rest.length === 0) {
+        return Object.keys(arrayItemSchema.fields).map((key) => [
+          `${current}`,
+          key,
+        ])
+      }
+
       const subResults = resolvePathInSchema(arrayItemSchema, rest)
       return subResults.map((subPath) => [`${current}`, ...subPath])
     } else {
