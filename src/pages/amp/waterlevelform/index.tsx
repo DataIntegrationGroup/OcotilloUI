@@ -133,38 +133,40 @@ export const WaterLevelForm = () => {
                 sx={{ width: '100%' }}
                 direction={{ xs: 'column', sm: 'row' }}
               >
-                <Grid size={{ xs: 12 }}>
-                  <ControlledTextField
-                    label="Point ID"
-                    control={control}
-                    name="pointid"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <LoadingControlledSelectField
-                    resetFn={() => {
-                      setValue('type', SchemaDefaults.type)
-                    }}
-                    isLoading={EquipmentTypeQuery.isFetching}
-                    label="Type"
-                    title=""
-                    control={control}
-                    name="type"
-                    disabled={true}
-                    isError={EquipmentTypeQuery.isError}
-                    errorMessage="Failed to load equipment types"
-                    options={EquipmentTypeQuery?.data
-                      ?.sort((a, b) =>
-                        a.Meaning.toLocaleLowerCase().localeCompare(
-                          b.Meaning.toLocaleLowerCase()
+                <Grid container size={12}>
+                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                    <ControlledTextField
+                      label="Point ID"
+                      control={control}
+                      name="pointid"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                    <LoadingControlledSelectField
+                      resetFn={() => {
+                        setValue('type', SchemaDefaults.type)
+                      }}
+                      isLoading={EquipmentTypeQuery.isFetching}
+                      label="Type"
+                      title=""
+                      control={control}
+                      name="type"
+                      disabled={true}
+                      isError={EquipmentTypeQuery.isError}
+                      errorMessage="Failed to load equipment types"
+                      options={EquipmentTypeQuery?.data
+                        ?.sort((a, b) =>
+                          a.Meaning.toLocaleLowerCase().localeCompare(
+                            b.Meaning.toLocaleLowerCase()
+                          )
                         )
-                      )
-                      ?.map((option) => {
-                        return { value: option.Code, label: option.Meaning }
-                      })}
-                  />
+                        ?.map((option) => {
+                          return { value: option.Code, label: option.Meaning }
+                        })}
+                    />
+                  </Grid>
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 4, lg: 3 }}>
                   <ControlledTextField
                     type="number"
                     label="Hold (ft)"
@@ -172,7 +174,7 @@ export const WaterLevelForm = () => {
                     name="hold"
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 4, lg: 3 }}>
                   <ControlledTextField
                     type="number"
                     label="Cut (ft)"
@@ -180,7 +182,7 @@ export const WaterLevelForm = () => {
                     name="cut"
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 4, lg: 3 }}>
                   <ControlledTextField
                     value={watch('depth_of_water')}
                     type="number"
@@ -189,7 +191,7 @@ export const WaterLevelForm = () => {
                     name="depth_of_water"
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledDateField
                     label="Measurement Date"
                     control={control}
@@ -197,28 +199,28 @@ export const WaterLevelForm = () => {
                   />
                 </Grid>
 
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledTextField
                     label="Level Status"
                     control={control}
                     name="level_status"
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledTextField
                     label="Data Quality"
                     control={control}
                     name="data_quality"
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledTextField
                     label="Data Sources"
                     control={control}
                     name="data_sources"
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledTextField
                     type="number"
                     label="MP Height"
@@ -226,21 +228,21 @@ export const WaterLevelForm = () => {
                     name="mp_height"
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledTextField
                     label="Measurement Method"
                     control={control}
                     name="measurement_method"
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
                     label="Measured By"
                     control={control}
                     name="measured_by"
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <LoadingControlledSelectField
                     resetFn={() => {
                       setValue(
@@ -266,15 +268,7 @@ export const WaterLevelForm = () => {
                       })}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <ControlledTextField
-                    type="text"
-                    label="Data Sources"
-                    control={control}
-                    name="data_sources"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
                     multiline
                     label="Notes"
@@ -282,7 +276,7 @@ export const WaterLevelForm = () => {
                     control={control}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
                     multiline
                     label="Describe Sampling Scenario"
@@ -311,7 +305,6 @@ export const WaterLevelForm = () => {
                     name="final_value"
                   />
                 </Grid>
-
                 <Grid
                   container
                   size={12}
