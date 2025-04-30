@@ -67,14 +67,24 @@ export const getEquipmentTypes = () => {
   })
 }
 
-const fetchCoordinateDatums = async (): Promise<{ DATUMCODE: string }[]> => {
-  return await fetchLookupTable('coordinate_datum')
+const fetchMeasuringAgencies = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return [
+    { Code: 'O', Meaning: 'Office of the State Engineer' },
+    { Code: 'P', Meaning: 'Pecos Valley Artesian Conservancy District' },
+    { Code: 'U', Meaning: 'U.S. Geological Survey' },
+    {
+      Code: 'G',
+      Meaning: 'New Mexico Bureau of Geology and Mineral Resources',
+    },
+  ]
 }
 
-export const getCoordinateDatums = () => {
+export const getMeasuringAgencies = () => {
   return useQuery({
-    queryKey: ['CoordinateDatums'],
-    queryFn: fetchCoordinateDatums,
+    queryKey: ['MeasuringAgencies'],
+    queryFn: fetchMeasuringAgencies,
     ...lookupTableQueryConfig,
   })
 }
