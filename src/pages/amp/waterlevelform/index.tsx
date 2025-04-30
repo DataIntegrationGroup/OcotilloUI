@@ -26,7 +26,11 @@ import {
 } from '@/components'
 import {
   createWaterLevelForm,
+  getDataQualities,
+  getDataSources,
   getEquipmentTypes,
+  getLevelStatuses,
+  getMeasurementMethods,
   getMeasuringAgencies,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
@@ -110,6 +114,10 @@ export const WaterLevelForm = () => {
   }
 
   const EquipmentTypeQuery = getEquipmentTypes()
+  const LevelStatusesQuery = getLevelStatuses()
+  const DataSourcesQuery = getDataSources()
+  const DataQualitiesQuery = getDataQualities()
+  const MeasurementMethodsQuery = getMeasurementMethods()
   const MeasuringAgencyQuery = getMeasuringAgencies()
 
   return (
@@ -156,8 +164,8 @@ export const WaterLevelForm = () => {
                       errorMessage="Failed to load equipment types"
                       options={EquipmentTypeQuery?.data
                         ?.sort((a, b) =>
-                          a.Meaning.toLocaleLowerCase().localeCompare(
-                            b.Meaning.toLocaleLowerCase()
+                          a.Meaning?.toLocaleLowerCase().localeCompare(
+                            b.Meaning?.toLocaleLowerCase()
                           )
                         )
                         ?.map((option) => {
@@ -198,26 +206,82 @@ export const WaterLevelForm = () => {
                     name="measurement_date"
                   />
                 </Grid>
-
                 <Grid size={{ xs: 12, md: 3 }}>
-                  <ControlledTextField
+                  <LoadingControlledSelectField
+                    resetFn={() => {
+                      setValue('level_status', SchemaDefaults.level_status)
+                    }}
+                    isLoading={LevelStatusesQuery.isFetching}
                     label="Level Status"
+                    title=""
                     control={control}
                     name="level_status"
+                    isError={LevelStatusesQuery.isError}
+                    errorMessage="Failed to load level statuses"
+                    options={LevelStatusesQuery?.data
+                      ?.sort((a, b) =>
+                        a.Meaning?.toLocaleLowerCase().localeCompare(
+                          b.Meaning?.toLocaleLowerCase()
+                        )
+                      )
+                      ?.map((option) => {
+                        return {
+                          value: option.Code,
+                          label: option.Meaning,
+                        }
+                      })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
-                  <ControlledTextField
+                  <LoadingControlledSelectField
+                    resetFn={() => {
+                      setValue('data_quality', SchemaDefaults.data_quality)
+                    }}
+                    isLoading={DataQualitiesQuery.isFetching}
                     label="Data Quality"
+                    title=""
                     control={control}
                     name="data_quality"
+                    isError={DataQualitiesQuery.isError}
+                    errorMessage="Failed to load data qualities"
+                    options={DataQualitiesQuery?.data
+                      ?.sort((a, b) =>
+                        a.Meaning?.toLocaleLowerCase().localeCompare(
+                          b.Meaning?.toLocaleLowerCase()
+                        )
+                      )
+                      ?.map((option) => {
+                        return {
+                          value: option.Code,
+                          label: option.Meaning,
+                        }
+                      })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
-                  <ControlledTextField
-                    label="Data Sources"
+                  <LoadingControlledSelectField
+                    resetFn={() => {
+                      setValue('data_source', SchemaDefaults.data_source)
+                    }}
+                    isLoading={DataSourcesQuery.isFetching}
+                    label="Data Source"
+                    title=""
                     control={control}
-                    name="data_sources"
+                    name="data_source"
+                    isError={DataSourcesQuery.isError}
+                    errorMessage="Failed to load data sources"
+                    options={DataSourcesQuery?.data
+                      ?.sort((a, b) =>
+                        a.Meaning?.toLocaleLowerCase().localeCompare(
+                          b.Meaning?.toLocaleLowerCase()
+                        )
+                      )
+                      ?.map((option) => {
+                        return {
+                          value: option.Code,
+                          label: option.Meaning,
+                        }
+                      })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
@@ -229,10 +293,32 @@ export const WaterLevelForm = () => {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
-                  <ControlledTextField
+                  <LoadingControlledSelectField
+                    resetFn={() => {
+                      setValue(
+                        'measurement_method',
+                        SchemaDefaults.measurement_method
+                      )
+                    }}
+                    isLoading={MeasurementMethodsQuery.isFetching}
                     label="Measurement Method"
+                    title=""
                     control={control}
                     name="measurement_method"
+                    isError={MeasurementMethodsQuery.isError}
+                    errorMessage="Failed to load measurement methods"
+                    options={MeasurementMethodsQuery?.data
+                      ?.sort((a, b) =>
+                        a.Meaning?.toLocaleLowerCase().localeCompare(
+                          b.Meaning?.toLocaleLowerCase()
+                        )
+                      )
+                      ?.map((option) => {
+                        return {
+                          value: option.Code,
+                          label: option.Meaning,
+                        }
+                      })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
@@ -259,12 +345,15 @@ export const WaterLevelForm = () => {
                     errorMessage="Failed to load measuring agencies"
                     options={MeasuringAgencyQuery?.data
                       ?.sort((a, b) =>
-                        a.Meaning.toLocaleLowerCase().localeCompare(
-                          b.Meaning.toLocaleLowerCase()
+                        a.Description.toLocaleLowerCase().localeCompare(
+                          b.Description.toLocaleLowerCase()
                         )
                       )
                       ?.map((option) => {
-                        return { value: option.Code, label: option.Meaning }
+                        return {
+                          value: option.Agency,
+                          label: option.Description,
+                        }
                       })}
                   />
                 </Grid>

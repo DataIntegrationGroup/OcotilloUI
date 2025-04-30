@@ -32,23 +32,6 @@ const fetchLookupTable = async (table: string): Promise<any> => {
   )
 }
 
-const fetchProjects = async (): Promise<
-  {
-    Project: string
-    PointIDPrefix: string[]
-  }[]
-> => {
-  return await fetchLookupTable('project')
-}
-
-export const getProjects = () => {
-  return useQuery({
-    queryKey: ['ProjectNames'],
-    queryFn: fetchProjects,
-    ...lookupTableQueryConfig,
-  })
-}
-
 const fetchEquipmentTypes = async (): Promise<
   { Code: string; Meaning: string }[]
 > => {
@@ -67,18 +50,66 @@ export const getEquipmentTypes = () => {
   })
 }
 
-const fetchMeasuringAgencies = async (): Promise<
+const fetchLevelStatuses = async (): Promise<
   { Code: string; Meaning: string }[]
 > => {
-  return [
-    { Code: 'O', Meaning: 'Office of the State Engineer' },
-    { Code: 'P', Meaning: 'Pecos Valley Artesian Conservancy District' },
-    { Code: 'U', Meaning: 'U.S. Geological Survey' },
-    {
-      Code: 'G',
-      Meaning: 'New Mexico Bureau of Geology and Mineral Resources',
-    },
-  ]
+  return await fetchLookupTable('level_status')
+}
+
+export const getLevelStatuses = () => {
+  return useQuery({
+    queryKey: ['LevelStatuses'],
+    queryFn: fetchLevelStatuses,
+    ...lookupTableQueryConfig,
+  })
+}
+
+const fetchDataSources = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable('data_source')
+}
+
+export const getDataSources = () => {
+  return useQuery({
+    queryKey: ['DataSources'],
+    queryFn: fetchDataSources,
+    ...lookupTableQueryConfig,
+  })
+}
+
+const fetchDataQualities = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable('data_quality')
+}
+
+export const getDataQualities = () => {
+  return useQuery({
+    queryKey: ['DataQualities'],
+    queryFn: fetchDataQualities,
+    ...lookupTableQueryConfig,
+  })
+}
+
+const fetchMeasurementMethods = async (): Promise<
+  { Code: string; Meaning: string }[]
+> => {
+  return await fetchLookupTable('measurement_method')
+}
+
+export const getMeasurementMethods = () => {
+  return useQuery({
+    queryKey: ['MeasurementMethods'],
+    queryFn: fetchMeasurementMethods,
+    ...lookupTableQueryConfig,
+  })
+}
+
+const fetchMeasuringAgencies = async (): Promise<
+  { Agency: string; Description: string }[]
+> => {
+  return await fetchLookupTable('measuring_agency')
 }
 
 export const getMeasuringAgencies = () => {
@@ -86,175 +117,6 @@ export const getMeasuringAgencies = () => {
     queryKey: ['MeasuringAgencies'],
     queryFn: fetchMeasuringAgencies,
     ...lookupTableQueryConfig,
-  })
-}
-
-const fetchElevationDatums = async (): Promise<{ Code: string }[]> => {
-  return await fetchLookupTable('altitude_datum')
-}
-
-export const getElevationDatums = () => {
-  return useQuery({
-    queryKey: ['elevationDatums'],
-    queryFn: fetchElevationDatums,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchElevationMethods = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return await fetchLookupTable('altitude_method')
-}
-
-export const getElevationMethods = () => {
-  return useQuery({
-    queryKey: ['elevationMethods'],
-    queryFn: fetchElevationMethods,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchFormations = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return await fetchLookupTable('formation')
-}
-
-export const getFormations = () => {
-  return useQuery({
-    queryKey: ['Formations'],
-    queryFn: fetchFormations,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchSiteTypes = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return await fetchLookupTable('site_type')
-}
-
-export const getSiteTypes = () => {
-  return useQuery({
-    queryKey: ['SiteTypes'],
-    queryFn: fetchSiteTypes,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchStatuses = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return await fetchLookupTable('status')
-}
-
-export const getStatus = () => {
-  return useQuery({
-    queryKey: ['Statuses'],
-    queryFn: fetchStatuses,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchDepthSources = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return await fetchLookupTable('depth-completion-source')
-}
-
-export const getDepthSources = () => {
-  return useQuery({
-    queryKey: ['DepthSources'],
-    queryFn: fetchDepthSources,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchCompletionSources = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return await fetchLookupTable('depth-completion-source')
-}
-
-export const getCompletionSources = () => {
-  return useQuery({
-    queryKey: ['CompletionSources'],
-    queryFn: fetchCompletionSources,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchConstructionMethods = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return await fetchLookupTable('construction-method')
-}
-
-export const getConstructionMethods = () => {
-  return useQuery({
-    queryKey: ['ConstructionMethods'],
-    queryFn: fetchConstructionMethods,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchCurrentUses = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return await fetchLookupTable('current-use')
-}
-
-export const getCurrentUses = () => {
-  return useQuery({
-    queryKey: ['CurrentUses'],
-    queryFn: fetchCurrentUses,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchCoordinateAccuracies = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return await fetchLookupTable('coordinate-accuracy')
-}
-
-export const getCoordinateAccuracies = () => {
-  return useQuery({
-    queryKey: ['CoordinateAccuracies'],
-    queryFn: fetchCoordinateAccuracies,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchCoordinateMethods = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return await fetchLookupTable('coordinate-method')
-}
-
-export const getCoordinateMethods = () => {
-  return useQuery({
-    queryKey: ['CoordinateMethods'],
-    queryFn: fetchCoordinateMethods,
-    ...lookupTableQueryConfig,
-  })
-}
-
-const fetchNewPointIDPreview = async (prefix: string, siteType: string) => {
-  return await ampApiFetch(
-    `authorized/well_inventory/newly-generated-pointid?pointid_prefix=${encodeURIComponent(
-      prefix
-    )}&site_type=${encodeURIComponent(siteType)}`,
-    'Failed to fetch new Point ID preview'
-  )
-}
-
-export const getNewPointIDPreview = (prefix: string, siteType: string) => {
-  return useQuery({
-    queryKey: ['PointIDPreview', prefix, siteType],
-    queryFn: () => fetchNewPointIDPreview(prefix, siteType),
-    enabled: !!(prefix && siteType),
   })
 }
 

@@ -1294,7 +1294,7 @@ export const WellInventoryForm = () => {
                   <Tooltip placement="top" title="Diameter of the well casing">
                     <ControlledTextField
                       type="number"
-                      label="Outer Casing Diameter (in)"
+                      label="Outer Casing Diameter (ft)"
                       fullWidth
                       control={control}
                       name="well.casing_diameter"

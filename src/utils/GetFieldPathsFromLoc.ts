@@ -37,7 +37,7 @@ const resolvePathInSchema = (
 
   // If this is the last path segment
   if (rest.length === 0) {
-    if (currentField.type === 'object' && currentField.fields) {
+    if (currentField?.type === 'object' && currentField?.fields) {
       // Expand to its child fields
       return Object.keys(currentField.fields).map((key) => [current, key])
     } else {
