@@ -1,3 +1,4 @@
+export * from './AddPhotosSection'
 export * from './Auth'
 export * from './ClearableSelect'
 export * from './Controlled'
