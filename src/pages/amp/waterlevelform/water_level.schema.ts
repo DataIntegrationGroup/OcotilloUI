@@ -1,26 +1,43 @@
-import * as Yup from "yup";
-
-export const SchemaDefaults = {
-    PointID: "",
-    DepthToWaterBGS: 0,
-    MeasurementDate: "",
-    LevelStatus: "",
-    DataQuality: "",
-    MeasuredBy: "",
-    Notes: "",
-    MPHeight: 0,
-    MeasurementMethod: "",
-}
+import * as Yup from 'yup'
 
 export const WaterLevelSchema = Yup.object().shape({
-    PointID: Yup.string().required("Point ID is required"),
-    DepthToWaterBGS: Yup.number().required("Depth to Water BGS is required"),
-    MeasurementDate: Yup.string().required("Measurement Date is required"),
-    LevelStatus: Yup.string().required("Level Status is required"),
-    DataQuality: Yup.string().required("Data Quality is required"),
-    MeasuredBy: Yup.string().required("Measured By is required"),
-    Notes: Yup.string().required("Site Notes is required"),
-    MPHeight: Yup.number().optional(),
-    MeasurementMethod: Yup.date().required("Measurement Method is required"),
-
+  pointid: Yup.string().required('Point ID is required'),
+  type: Yup.string().required('Type is required'),
+  hold: Yup.number().nullable(),
+  cut: Yup.number().nullable(),
+  depth_of_water: Yup.number().required('Depth to Water (DTW) is required'),
+  measurement_date: Yup.string().required('Measurement Date is required'),
+  level_status: Yup.string().nullable(),
+  data_source: Yup.string().nullable(),
+  data_quality: Yup.string().nullable(),
+  mp_height: Yup.number().nullable(),
+  measurement_method: Yup.string().required('Measurement Method is required'),
+  measured_by: Yup.string().required('Measured By is required'),
+  measuring_agency: Yup.string().nullable(),
+  notes: Yup.string().nullable(),
+  sampling_scenario: Yup.string().nullable(),
+  sample_collected: Yup.boolean().nullable(),
+  possibe_to_sample: Yup.boolean().nullable(),
+  final_value: Yup.boolean().nullable(),
 })
+
+export const SchemaDefaults = {
+  pointid: '',
+  type: 'T',
+  hold: null,
+  cut: null,
+  depth_of_water: null,
+  measurement_date: '',
+  level_status: '',
+  data_quality: '',
+  data_source: '',
+  mp_height: null,
+  measurement_method: '',
+  measured_by: '',
+  measuring_agency: '',
+  notes: '',
+  sampling_scenario: '',
+  sample_collected: true,
+  possibe_to_sample: true,
+  final_value: true,
+}

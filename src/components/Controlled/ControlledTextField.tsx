@@ -1,21 +1,21 @@
-import { TextField, TextFieldProps } from "@mui/material";
-import { Controller, Control, Path } from "react-hook-form";
+import { TextField, TextFieldProps } from '@mui/material'
+import { Controller, Control, Path } from 'react-hook-form'
 
 export const ControlledTextField = <T,>({
   control,
-  type = "text",
+  type = 'text',
   name,
   label,
   multiline = false,
   minRows = 4,
   ...textFieldProps
 }: {
-  control: Control<T>;
-  type?: React.HTMLInputTypeAttribute;
-  name: string;
-  label: string;
-  multiline?: boolean;
-  minRows?: number;
+  control: Control<T>
+  type?: React.HTMLInputTypeAttribute
+  name: string
+  label: string
+  multiline?: boolean
+  minRows?: number
 } & TextFieldProps) => {
   return (
     <Controller
@@ -25,9 +25,10 @@ export const ControlledTextField = <T,>({
         <TextField
           {...field}
           {...textFieldProps}
+          value={field.value ?? ''}
           label={label}
           error={!!fieldState?.error}
-          helperText={fieldState?.error?.message || ""}
+          helperText={fieldState?.error?.message || ''}
           type={type}
           fullWidth
           multiline={multiline}
@@ -35,5 +36,5 @@ export const ControlledTextField = <T,>({
         />
       )}
     />
-  );
-};
+  )
+}

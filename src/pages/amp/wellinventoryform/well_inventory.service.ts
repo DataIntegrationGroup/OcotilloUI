@@ -1,5 +1,5 @@
 import { getAccessToken } from '@/providers/fief-provider'
-import { fetchConfig, lookupTableQueryConfig } from './well_inventory.configs'
+import { fetchConfig, lookupTableQueryConfig } from '@/pages/pages.config'
 import { useQuery } from '@tanstack/react-query'
 import { ILocation, IOwner, IWellInventoryForm } from '@/interfaces/amp'
 import { Page } from '@/interfaces'
