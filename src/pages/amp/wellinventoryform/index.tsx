@@ -112,7 +112,13 @@ export const WellInventoryForm = () => {
     'Elevation data was obtained from the National Elevation Dataset (NED) provided by the U.S. Geological Survey (USGS). You can access more information and the data via the official site: https://epqs.nationalmap.gov.'
 
   const [longitude, latitude] = useMemo(() => {
-    if (coordinateType === 'utm') {
+    if (
+      coordinateType === 'utm' &&
+      !isNaN(x) &&
+      !isNaN(y) &&
+      typeof x === 'number' &&
+      typeof y === 'number'
+    ) {
       return convertUTMToLonLat(x, y, utmZone)
     }
     return [x, y]
