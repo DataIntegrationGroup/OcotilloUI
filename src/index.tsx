@@ -7,7 +7,7 @@ import * as Sentry from '@sentry/react'
 
 let dsn = import.meta.env.VITE_SENTRY_DSN
 
-if (dsn) {
+if (dsn !== undefined && dsn !== '' && dsn !== null) {
   Sentry.init({
     dsn: dsn,
     // Setting this option to true will send default PII data to Sentry.
