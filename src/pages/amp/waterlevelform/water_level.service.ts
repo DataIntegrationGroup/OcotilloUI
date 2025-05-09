@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { IWaterLevelForm } from '@/interfaces/amp'
 import { settings } from '@/settings'
 import { AmpApiUriBuilder, removeEmptyFields, fetchLookupTable } from '@/utils'
+import { Page } from '@/interfaces'
 
 const fetchLevelStatuses = async (): Promise<
   { Code: string; Meaning: string }[]
@@ -210,62 +211,46 @@ export const getCoordinatesFromPointId = (
 
 export interface WaterLevel {
   PointID: string
-  DepthFromLandSurfaceData: number
-  WaterLevelUnits: string
-  MeasuringMethod: string
-  MeasurementMonth: number
-  MeasurementDay: number
-  MeasurementYear: number
-  MeasurementTime: string
-  MeasurementTimezone: string
-  WaterLevelAccuracy: string
+  DepthToWaterBGS: number
+  DepthToWaterBGSUnits: string
+  DateMeasured: string
+  TimeMeasured: string
+  LevelStatus: string
+  DataQuality: string
+  MeasuringAgency: string
+  DataSource: string
+  MeasurementMethod: string
+  MeasuredBy: string
+  SiteNotes: false
+  PublicRelease: boolean
 }
 
 export const fetchWaterLevels = async (
   pointid: string
-): Promise<WaterLevel[]> => {
+): Promise<Page<WaterLevel>> => {
+  const accessToken = await getAccessToken()
   const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
-    .setEndpoint(`ngwmn/waterlevels/${pointid}`)
+    .setEndpoint('waterlevels')
+    .addParam('pointid', pointid)
+    .addParam('omit_null_measurements', 'true')
+    .addParam('sort_datetime', 'desc')
+    .addParam('size', '1000')
     .build()
 
-  const response = await fetch(url)
-  const text = await response.text()
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
 
-  const parser = new DOMParser()
-  const xmlDoc = parser.parseFromString(text, 'application/xml')
-  const waterLevelElements = Array.from(
-    xmlDoc.getElementsByTagName('WaterLevel')
-  )
+  const data = await response.json()
 
-  if (waterLevelElements.length === 0) {
-    throw new Error(`No water level data found for PointID: ${pointid}`)
+  if (!data.items || data.items.length === 0) {
+    throw new Error(`No site data found for PointID: ${pointid}`)
   }
 
-  return waterLevelElements.map((el) => ({
-    PointID: el.getElementsByTagName('PointID')[0]?.textContent || '',
-    DepthFromLandSurfaceData: parseFloat(
-      el.getElementsByTagName('DepthFromLandSurfaceData')[0]?.textContent || '0'
-    ),
-    WaterLevelUnits:
-      el.getElementsByTagName('WaterLevelUnits')[0]?.textContent || '',
-    MeasuringMethod:
-      el.getElementsByTagName('MeasuringMethod')[0]?.textContent || '',
-    MeasurementMonth: parseInt(
-      el.getElementsByTagName('MeasurementMonth')[0]?.textContent || '0'
-    ),
-    MeasurementDay: parseInt(
-      el.getElementsByTagName('MeasurementDay')[0]?.textContent || '0'
-    ),
-    MeasurementYear: parseInt(
-      el.getElementsByTagName('MeasurementYear')[0]?.textContent || '0'
-    ),
-    MeasurementTime:
-      el.getElementsByTagName('MeasurementTime')[0]?.textContent || '',
-    MeasurementTimezone:
-      el.getElementsByTagName('MeasurementTimezone')[0]?.textContent || '',
-    WaterLevelAccuracy:
-      el.getElementsByTagName('WaterLevelAccuracy')[0]?.textContent || '',
-  }))
+  return data
 }
 
 export const getWaterLevelsFromPointId = (

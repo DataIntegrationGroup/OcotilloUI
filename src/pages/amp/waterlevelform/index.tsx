@@ -37,6 +37,7 @@ import {
   getMeasurementMethods,
   getMeasuringAgencies,
   getWaterLevelsFromPointId,
+  WaterLevel,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
 import { ColorModeContext } from '@/contexts'
@@ -167,7 +168,7 @@ export const WaterLevelForm = () => {
       return
     }
 
-    if (waterSuccess && waterLevels?.length) {
+    if (waterSuccess && waterLevels?.items?.length) {
       clearErrors('pointid')
 
       const series = [
@@ -183,12 +184,16 @@ export const WaterLevelForm = () => {
 
       const dataset = [
         {
-          source: waterLevels.map((wl) => ({
-            date: `${wl.MeasurementYear}-${wl.MeasurementMonth.toString().padStart(2, '0')}-${wl.MeasurementDay.toString().padStart(2, '0')}`,
-            depth: wl.DepthFromLandSurfaceData,
+          source: waterLevels?.items?.map((wl) => ({
+            date: wl.TimeMeasured?.trim()
+              ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
+              : wl.DateMeasured,
+            depth: wl.DepthToWaterBGS,
           })),
         },
       ]
+
+      console.log({ waterLevels, dataset })
 
       setOption({
         ...baseOption,

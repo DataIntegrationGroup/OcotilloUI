@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc && refine build",
-    "build:ci": "SENTRY_TELEMETRY_DISABLED=true NODE_OPTIONS='--max-old-space-size=4096' tsc && refine build",
+    "build:ci": "VITE_DISABLE_SOURCEMAP=true VITE_SENTRY_TELEMETRY_DISABLED=true NODE_OPTIONS='--max-old-space-size=4096' tsc && refine build",
     "dev": "refine dev",
     "refine": "refine",
     "start": "refine start"
