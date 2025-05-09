@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useId, useRef, useState } from 'react'
 import {
   Button,
   Card,
@@ -7,6 +7,7 @@ import {
   Paper,
   useTheme,
 } from '@mui/material'
+import ReactECharts from 'echarts-for-react'
 import { Map, Marker, NavigationControl } from 'react-map-gl'
 import { useForm } from '@refinedev/react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -33,6 +34,7 @@ import {
   getLevelStatuses,
   getMeasurementMethods,
   getMeasuringAgencies,
+  getWaterLevelsFromPointId,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
 import { ColorModeContext } from '@/contexts'
@@ -41,6 +43,7 @@ import { updateMapView } from '@/utils'
 export const WaterLevelForm = () => {
   const theme = useTheme()
   const mapRef = useRef(null)
+  const chartRef = useRef(null)
   const initialViewState = {
     longitude: -106.4,
     latitude: 34.5,
@@ -98,13 +101,20 @@ export const WaterLevelForm = () => {
 
   const {
     data: coords,
-    isSuccess,
-    isError,
-    refetch,
+    isSuccess: coordsSuccess,
+    isError: coordsError,
+    refetch: refetchCoords,
   } = getCoordinatesFromPointId(pointId, false)
 
+  const {
+    data: waterLevels,
+    isSuccess: waterSuccess,
+    isError: waterError,
+    refetch: refetchWater,
+  } = getWaterLevelsFromPointId(pointId, false)
+
   useEffect(() => {
-    if (isError) {
+    if (coordsError) {
       setError('pointid', {
         type: 'manual',
         message: 'Invalid Point ID or coordinates not found',
@@ -112,7 +122,7 @@ export const WaterLevelForm = () => {
       return
     }
 
-    if (isSuccess && coords) {
+    if (coordsSuccess && coords) {
       clearErrors('pointid')
       setLongitude(coords.x)
       setLatitude(coords.y)
@@ -121,7 +131,132 @@ export const WaterLevelForm = () => {
         updateMapView(mapRef.current, coords.x, coords.y)
       }
     }
-  }, [isSuccess, isError, setError, coords])
+  }, [coordsSuccess, coordsError, coords])
+
+  useEffect(() => {
+    if (waterError) {
+      setError('pointid', {
+        type: 'manual',
+        message: 'No water level data found for this Point ID',
+      })
+      return
+    }
+
+    if (waterSuccess && waterLevels?.length) {
+      clearErrors('pointid')
+
+      const series = [
+        {
+          type: 'line',
+          showSymbol: true,
+          symbolSize: 6,
+          name: 'Depth to Water',
+          encode: { x: 'date', y: 'depth' },
+          emphasis: { focus: 'series' },
+        },
+      ]
+
+      const dataset = [
+        {
+          source: waterLevels.map((wl) => ({
+            date: `${wl.MeasurementYear}-${wl.MeasurementMonth.toString().padStart(2, '0')}-${wl.MeasurementDay.toString().padStart(2, '0')}`,
+            depth: wl.DepthFromLandSurfaceData,
+          })),
+        },
+      ]
+
+      const updatedOption = {
+        ...baseoption,
+        dataset,
+        series,
+        yAxis: {
+          ...baseoption.yAxis,
+          name: 'Depth to Water (ft bgs)', // ft below ground surface
+        },
+        title: {
+          text: `Water Levels for ${pointId}`,
+          left: 'center',
+        },
+      }
+
+      setOption(updatedOption)
+    }
+  }, [waterSuccess, waterError, waterLevels])
+
+  let yaxisTitle = 'Depth To Water Below Ground Surface (ft)'
+  let dataZoomStart = -1
+  let dataZoomEnd = 100
+  let series = []
+  let dataset = []
+  let seriesNames = []
+  const [chartData] = useState({ series, dataset, seriesNames })
+
+  const baseoption = {
+    animation: false,
+    dataset: chartData.dataset,
+    series: chartData.series,
+    toolbox: {
+      feature: {
+        dataZoom: [
+          { show: true, title: { zoom: 'Zoom In', back: 'Zoom Out' } },
+          { type: 'inside', title: { zoom: 'Zoom In', back: 'Zoom Out' } },
+        ],
+        restore: {},
+        saveAsImage: {},
+        dataView: { show: true },
+        brush: {
+          type: ['lineX', 'clear'],
+        },
+      },
+    },
+    grid: {
+      right: '20%', // Adjust the right property to create space for the legend
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross',
+        animation: false,
+        label: {
+          backgroundColor: '#505765',
+        },
+      },
+    },
+    dataZoom: [
+      {
+        show: true,
+        realtime: true,
+        start: dataZoomStart,
+        end: dataZoomEnd,
+      },
+      {
+        type: 'inside',
+        realtime: true,
+        start: dataZoomStart,
+        end: dataZoomEnd,
+      },
+    ],
+    xAxis: {
+      type: 'time',
+      splitLine: {
+        show: true, // This will display vertical grid lines
+      },
+    },
+    yAxis: {
+      inverse: true,
+      name: yaxisTitle,
+      nameLocation: 'center',
+      nameGap: 75,
+      scale: true,
+    },
+    brush: {
+      outOfBrush: {
+        colorAlpha: 0.25,
+      },
+    },
+  }
+
+  const [option, setOption] = useState(baseoption)
 
   const { open, close } = useNotification()
 
@@ -229,15 +364,27 @@ export const WaterLevelForm = () => {
                     </Map>
                   </Paper>
                 </Grid>
+                <Grid size={{ xs: 12, md: 6 }} sx={{ px: 4 }}>
+                  <Paper elevation={2}>
+                    <ReactECharts
+                      chartRef={chartRef}
+                      key={useId()}
+                      option={option}
+                      style={style}
+                      onEvents={(record: Record<string, Function>) => {}}
+                    />
+                  </Paper>
+                </Grid>
                 <Grid container size={12}>
                   <Grid size={{ xs: 12, md: 6, lg: 3 }}>
                     <ControlledTextField
                       label="Point ID"
                       control={control}
                       name="pointid"
-                      onBlur={(e) => {
-                        if (e.target.value?.trim()) {
-                          refetch()
+                      onBlur={async (e) => {
+                        const value = e.target.value?.trim()
+                        if (value) {
+                          await Promise.all([refetchCoords(), refetchWater()])
                         }
                       }}
                       onFocus={() => clearErrors('pointid')}

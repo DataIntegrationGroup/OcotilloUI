@@ -207,3 +207,75 @@ export const getCoordinatesFromPointId = (
     staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
   })
 }
+
+export interface WaterLevel {
+  PointID: string
+  DepthFromLandSurfaceData: number
+  WaterLevelUnits: string
+  MeasuringMethod: string
+  MeasurementMonth: number
+  MeasurementDay: number
+  MeasurementYear: number
+  MeasurementTime: string
+  MeasurementTimezone: string
+  WaterLevelAccuracy: string
+}
+
+export const fetchWaterLevels = async (
+  pointid: string
+): Promise<WaterLevel[]> => {
+  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+    .setEndpoint(`ngwmn/waterlevels/${pointid}`)
+    .build()
+
+  const response = await fetch(url)
+  const text = await response.text()
+
+  const parser = new DOMParser()
+  const xmlDoc = parser.parseFromString(text, 'application/xml')
+  const waterLevelElements = Array.from(
+    xmlDoc.getElementsByTagName('WaterLevel')
+  )
+
+  if (waterLevelElements.length === 0) {
+    throw new Error(`No water level data found for PointID: ${pointid}`)
+  }
+
+  return waterLevelElements.map((el) => ({
+    PointID: el.getElementsByTagName('PointID')[0]?.textContent || '',
+    DepthFromLandSurfaceData: parseFloat(
+      el.getElementsByTagName('DepthFromLandSurfaceData')[0]?.textContent || '0'
+    ),
+    WaterLevelUnits:
+      el.getElementsByTagName('WaterLevelUnits')[0]?.textContent || '',
+    MeasuringMethod:
+      el.getElementsByTagName('MeasuringMethod')[0]?.textContent || '',
+    MeasurementMonth: parseInt(
+      el.getElementsByTagName('MeasurementMonth')[0]?.textContent || '0'
+    ),
+    MeasurementDay: parseInt(
+      el.getElementsByTagName('MeasurementDay')[0]?.textContent || '0'
+    ),
+    MeasurementYear: parseInt(
+      el.getElementsByTagName('MeasurementYear')[0]?.textContent || '0'
+    ),
+    MeasurementTime:
+      el.getElementsByTagName('MeasurementTime')[0]?.textContent || '',
+    MeasurementTimezone:
+      el.getElementsByTagName('MeasurementTimezone')[0]?.textContent || '',
+    WaterLevelAccuracy:
+      el.getElementsByTagName('WaterLevelAccuracy')[0]?.textContent || '',
+  }))
+}
+
+export const getWaterLevelsFromPointId = (
+  pointid: string,
+  enabled: boolean
+) => {
+  return useQuery({
+    queryKey: ['WaterLevelsFromPointId', pointid],
+    queryFn: () => fetchWaterLevels(pointid),
+    enabled: enabled,
+    staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
+  })
+}
