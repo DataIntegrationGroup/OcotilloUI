@@ -15,7 +15,7 @@ import {
   ControlledCheckbox,
   ControlledTextField,
   ControlledDateField,
-  AddPhotosSection,
+  FileSelectionSection,
 } from '@/components'
 import {
   createWaterLevelForm,
@@ -386,7 +386,7 @@ export const WaterLevelForm = () => {
                     name="final_value"
                   />
                 </Grid>
-                <AddPhotosSection
+                <FileSelectionSection
                   selectedFiles={selectedFiles}
                   setSelectedFiles={setSelectedFiles}
                 />

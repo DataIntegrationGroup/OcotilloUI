@@ -4,12 +4,16 @@ import { Button, Chip } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { VisuallyHiddenTextField } from './VisuallyHiddenTextField'
 
-export const AddPhotosSection = ({
+export const FileSelectionSection = ({
   selectedFiles,
   setSelectedFiles,
+  supportedFileTypes = ['image/jpeg', 'image/png', 'image/heic'],
+  title = 'Upload Field Notes',
 }: {
   selectedFiles: File[]
   setSelectedFiles: Dispatch<SetStateAction<File[]>>
+  supportedFileTypes?: string[]
+  title?: string
 }) => {
   const handleDeleteFile = (fileToDelete: File) => {
     setSelectedFiles((prevFiles) =>
@@ -61,12 +65,12 @@ export const AddPhotosSection = ({
           tabIndex={-1}
           startIcon={<CloudUpload />}
         >
-          Upload Well Photos
+          {title}
           <VisuallyHiddenTextField
             type="file"
             onChange={handlePhotoFileChange}
             multiple
-            accept="image/jpeg, image/png, image/heic"
+            accept={supportedFileTypes.join(', ')}
           />
         </Button>
       </Grid>

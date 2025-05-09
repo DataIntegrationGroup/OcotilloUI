@@ -247,21 +247,25 @@ export const getNewPointIDPreview = (prefix: string, siteType: string) => {
 
 export const createWellInventoryForm = async ({
   body,
-  photos,
+  files,
+  supportedFileTypes,
 }: {
   body: Partial<IWellInventoryForm>
-  photos: File[]
+  files: File[]
+  supportedFileTypes: string[]
 }) => {
   const formData = new FormData()
   const sanitizedBody = removeEmptyFields(body)
   formData.append('data', JSON.stringify(sanitizedBody))
 
-  if (photos) {
-    Array.from(photos).forEach((file) => {
+  if (files?.length) {
+    Array.from(files).forEach((file) => {
+      const fileType = file.type
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+
       if (
-        file.type === 'image/jpeg' ||
-        file.type === 'image/png' ||
-        file.type === 'image/heic'
+        supportedFileTypes.includes(fileType) ||
+        supportedFileTypes.includes(fileExtension)
       ) {
         formData.append('files', file)
       }

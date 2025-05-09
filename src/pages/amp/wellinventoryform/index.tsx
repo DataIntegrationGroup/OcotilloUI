@@ -27,7 +27,7 @@ import {
   ControlledCheckbox,
   ControlledMapboxAddressAutocomplete,
   ControlledPhoneField,
-  AddPhotosSection,
+  FileSelectionSection,
 } from '@/components'
 import { useTheme } from '@mui/material'
 import { Add, Delete, PersonSearch, Refresh } from '@mui/icons-material'
@@ -51,6 +51,7 @@ import { ColorModeContext } from '@/contexts'
 import {
   convertLonLatToUTM,
   convertUTMToLonLat,
+  fallbackWithDefault,
   getFieldPathsFromLoc,
   updateMapView,
 } from '@/utils'
@@ -70,6 +71,14 @@ export const WellInventoryForm = () => {
     latitude: 34.5,
     zoom: 6,
   }
+
+  const supportedFileTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/heic',
+    'application/pdf',
+    '.gpx',
+  ]
 
   const [viewState, setViewState] = useState(initialViewState)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -362,7 +371,11 @@ export const WellInventoryForm = () => {
         data.location.location_notes += `${noteToAdd}\n`
       }
 
-      await mutateAsync({ body: data, photos: selectedFiles })
+      await mutateAsync({
+        body: data,
+        files: selectedFiles,
+        supportedFileTypes,
+      })
     } catch (err) {
       const errorWithStatus = err as FetchValidationError
 
@@ -1675,9 +1688,10 @@ export const WellInventoryForm = () => {
                     Add Well Screen
                   </Button>
                 </Grid>
-                <AddPhotosSection
+                <FileSelectionSection
                   selectedFiles={selectedFiles}
                   setSelectedFiles={setSelectedFiles}
+                  supportedFileTypes={supportedFileTypes}
                 />
               </Grid>
               <Grid
@@ -1718,27 +1732,117 @@ export const WellInventoryForm = () => {
         open={openSearchOwnerDialog}
         setOpen={setOpenSearchOwnerDialog}
         onOwnerSelect={(owner) => {
-          handleSetValue('owner.owner_key', owner.OwnerKey ?? '')
-          handleSetValue('owner.first_name', owner.FirstName ?? '')
-          handleSetValue('owner.last_name', owner.LastName ?? '')
-          handleSetValue('owner.email', owner.Email ?? '')
-          handleSetValue('owner.phone', owner.Phone ?? '')
-          handleSetValue('owner.cell_phone', owner.CellPhone ?? '')
-
-          handleSetValue('owner.second_first_name', owner.SecondFirstName ?? '')
-          handleSetValue('owner.second_last_name', owner.SecondLastName ?? '')
-          handleSetValue('owner.second_ctct_email', owner.SecondCtctEmail ?? '')
-          handleSetValue('owner.second_ctct_phone', owner.SecondCtctPhone ?? '')
-
-          handleSetValue('owner.physical_address', owner.PhysicalAddress ?? '')
-          handleSetValue('owner.physical_city', owner.PhysicalCity ?? '')
-          handleSetValue('owner.physical_state', owner.PhysicalState ?? '')
-          handleSetValue('owner.physical_zip_code', owner.PhysicalZipCode ?? '')
-
-          handleSetValue('owner.mailing_address', owner.MailingAddress ?? '')
-          handleSetValue('owner.mail_city', owner.MailCity ?? '')
-          handleSetValue('owner.mail_state', owner.MailState ?? '')
-          handleSetValue('owner.mail_zip_code', owner.MailZipCode ?? '')
+          handleSetValue(
+            'owner.owner_key',
+            fallbackWithDefault(owner.OwnerKey, SchemaDefaults.owner.owner_key)
+          )
+          handleSetValue(
+            'owner.first_name',
+            fallbackWithDefault(
+              owner.FirstName,
+              SchemaDefaults.owner.first_name
+            )
+          )
+          handleSetValue(
+            'owner.last_name',
+            fallbackWithDefault(owner.LastName, SchemaDefaults.owner.last_name)
+          )
+          handleSetValue(
+            'owner.email',
+            fallbackWithDefault(owner.Email, SchemaDefaults.owner.email)
+          )
+          handleSetValue(
+            'owner.phone',
+            fallbackWithDefault(owner.Phone, SchemaDefaults.owner.phone)
+          )
+          handleSetValue(
+            'owner.cell_phone',
+            fallbackWithDefault(
+              owner.CellPhone,
+              SchemaDefaults.owner.cell_phone
+            )
+          )
+          handleSetValue(
+            'owner.second_first_name',
+            fallbackWithDefault(
+              owner.SecondFirstName,
+              SchemaDefaults.owner.second_first_name
+            )
+          )
+          handleSetValue(
+            'owner.second_last_name',
+            fallbackWithDefault(
+              owner.SecondLastName,
+              SchemaDefaults.owner.second_last_name
+            )
+          )
+          handleSetValue(
+            'owner.second_ctct_email',
+            fallbackWithDefault(
+              owner.SecondCtctEmail,
+              SchemaDefaults.owner.second_ctct_email
+            )
+          )
+          handleSetValue(
+            'owner.second_ctct_phone',
+            fallbackWithDefault(
+              owner.SecondCtctPhone,
+              SchemaDefaults.owner.second_ctct_phone
+            )
+          )
+          handleSetValue(
+            'owner.physical_address',
+            fallbackWithDefault(
+              owner.PhysicalAddress,
+              SchemaDefaults.owner.physical_address
+            )
+          )
+          handleSetValue(
+            'owner.physical_city',
+            fallbackWithDefault(
+              owner.PhysicalCity,
+              SchemaDefaults.owner.physical_city
+            )
+          )
+          handleSetValue(
+            'owner.physical_state',
+            fallbackWithDefault(
+              owner.PhysicalState,
+              SchemaDefaults.owner.physical_state
+            )
+          )
+          handleSetValue(
+            'owner.physical_zip_code',
+            fallbackWithDefault(
+              owner.PhysicalZipCode,
+              SchemaDefaults.owner.physical_zip_code
+            )
+          )
+          handleSetValue(
+            'owner.mailing_address',
+            fallbackWithDefault(
+              owner.MailingAddress,
+              SchemaDefaults.owner.mailing_address
+            )
+          )
+          handleSetValue(
+            'owner.mail_city',
+            fallbackWithDefault(owner.MailCity, SchemaDefaults.owner.mail_city)
+          )
+          handleSetValue(
+            'owner.mail_state',
+            fallbackWithDefault(
+              owner.MailState,
+              SchemaDefaults.owner.mail_state
+            )
+          )
+          handleSetValue(
+            'owner.mail_zip_code',
+            fallbackWithDefault(
+              owner.MailZipCode,
+              SchemaDefaults.owner.mail_zip_code
+            )
+          )
         }}
       />
     </>

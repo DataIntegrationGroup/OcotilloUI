@@ -1,4 +1,5 @@
 export * from './AmpApiUriBuilder'
+export * from './FallbackWithDefault'
 export * from './GetFieldPathsFromLoc'
 export * from './UpdateMapView'
 export * from './UtmToLonLat'
