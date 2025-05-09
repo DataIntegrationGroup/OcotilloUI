@@ -1718,12 +1718,27 @@ export const WellInventoryForm = () => {
         open={openSearchOwnerDialog}
         setOpen={setOpenSearchOwnerDialog}
         onOwnerSelect={(owner) => {
-          setValue('owner.owner_key', owner.OwnerKey)
-          setValue('owner.first_name', owner.FirstName)
-          setValue('owner.last_name', owner.LastName)
-          setValue('owner.email', owner.Email)
-          setValue('owner.phone', owner.Phone)
-          setValue('owner.cell_phone', owner.CellPhone)
+          handleSetValue('owner.owner_key', owner.OwnerKey ?? '')
+          handleSetValue('owner.first_name', owner.FirstName ?? '')
+          handleSetValue('owner.last_name', owner.LastName ?? '')
+          handleSetValue('owner.email', owner.Email ?? '')
+          handleSetValue('owner.phone', owner.Phone ?? '')
+          handleSetValue('owner.cell_phone', owner.CellPhone ?? '')
+
+          handleSetValue('owner.second_first_name', owner.SecondFirstName ?? '')
+          handleSetValue('owner.second_last_name', owner.SecondLastName ?? '')
+          handleSetValue('owner.second_ctct_email', owner.SecondCtctEmail ?? '')
+          handleSetValue('owner.second_ctct_phone', owner.SecondCtctPhone ?? '')
+
+          handleSetValue('owner.physical_address', owner.PhysicalAddress ?? '')
+          handleSetValue('owner.physical_city', owner.PhysicalCity ?? '')
+          handleSetValue('owner.physical_state', owner.PhysicalState ?? '')
+          handleSetValue('owner.physical_zip_code', owner.PhysicalZipCode ?? '')
+
+          handleSetValue('owner.mailing_address', owner.MailingAddress ?? '')
+          handleSetValue('owner.mail_city', owner.MailCity ?? '')
+          handleSetValue('owner.mail_state', owner.MailState ?? '')
+          handleSetValue('owner.mail_zip_code', owner.MailZipCode ?? '')
         }}
       />
     </>
