@@ -18,6 +18,11 @@ export default defineConfig(({ mode }) => {
         authToken: env.VITE_SENTRY_AUTH_TOKEN,
         org: env.VITE_SENTRY_ORG,
         project: env.VITE_SENTRY_PROJECT,
+        telemetry:
+          process.env.CI === 'true' ||
+          process.env.SENTRY_TELEMETRY_DISABLED === 'true'
+            ? false
+            : true,
       }),
     ],
     optimizeDeps: {
