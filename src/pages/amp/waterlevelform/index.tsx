@@ -4,6 +4,8 @@ import {
   Card,
   CardContent,
   CardHeader,
+  InputAdornment,
+  keyframes,
   Paper,
   useTheme,
 } from '@mui/material'
@@ -39,11 +41,12 @@ import {
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
 import { ColorModeContext } from '@/contexts'
 import { updateMapView } from '@/utils'
+import { baseOption } from './water_level.base_options'
+import { CloudDownload } from '@mui/icons-material'
 
 export const WaterLevelForm = () => {
   const theme = useTheme()
   const mapRef = useRef(null)
-  const chartRef = useRef(null)
   const initialViewState = {
     longitude: -106.4,
     latitude: 34.5,
@@ -62,8 +65,14 @@ export const WaterLevelForm = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [longitude, setLongitude] = useState<number | null>(null)
   const [latitude, setLatitude] = useState<number | null>(null)
+  const [option, setOption] = useState(baseOption)
 
   const style = { width: '100%', height: '500px' }
+  const pulse = keyframes`
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+`
   const { mode } = useContext(ColorModeContext)
   const mapStyle = (zoom: number) =>
     zoom > 10
@@ -103,6 +112,7 @@ export const WaterLevelForm = () => {
     data: coords,
     isSuccess: coordsSuccess,
     isError: coordsError,
+    isFetching: isFetchingCoords,
     refetch: refetchCoords,
   } = getCoordinatesFromPointId(pointId, false)
 
@@ -110,6 +120,7 @@ export const WaterLevelForm = () => {
     data: waterLevels,
     isSuccess: waterSuccess,
     isError: waterError,
+    isFetching: isFetchingWater,
     refetch: refetchWater,
   } = getWaterLevelsFromPointId(pointId, false)
 
@@ -119,6 +130,8 @@ export const WaterLevelForm = () => {
         type: 'manual',
         message: 'Invalid Point ID or coordinates not found',
       })
+      setLatitude(null)
+      setLongitude(null)
       return
     }
 
@@ -139,6 +152,18 @@ export const WaterLevelForm = () => {
         type: 'manual',
         message: 'No water level data found for this Point ID',
       })
+
+      // Reset the chart
+      setOption({
+        ...baseOption,
+        title: {
+          text: 'No Data',
+          left: 'center',
+        },
+        series: [],
+        dataset: [],
+      })
+
       return
     }
 
@@ -165,98 +190,21 @@ export const WaterLevelForm = () => {
         },
       ]
 
-      const updatedOption = {
-        ...baseoption,
-        dataset,
+      setOption({
+        ...baseOption,
         series,
+        dataset,
         yAxis: {
-          ...baseoption.yAxis,
-          name: 'Depth to Water (ft bgs)', // ft below ground surface
+          ...baseOption.yAxis,
+          name: 'Depth to Water (ft bgs)',
         },
         title: {
           text: `Water Levels for ${pointId}`,
           left: 'center',
         },
-      }
-
-      setOption(updatedOption)
+      })
     }
   }, [waterSuccess, waterError, waterLevels])
-
-  let yaxisTitle = 'Depth To Water Below Ground Surface (ft)'
-  let dataZoomStart = -1
-  let dataZoomEnd = 100
-  let series = []
-  let dataset = []
-  let seriesNames = []
-  const [chartData] = useState({ series, dataset, seriesNames })
-
-  const baseoption = {
-    animation: false,
-    dataset: chartData.dataset,
-    series: chartData.series,
-    toolbox: {
-      feature: {
-        dataZoom: [
-          { show: true, title: { zoom: 'Zoom In', back: 'Zoom Out' } },
-          { type: 'inside', title: { zoom: 'Zoom In', back: 'Zoom Out' } },
-        ],
-        restore: {},
-        saveAsImage: {},
-        dataView: { show: true },
-        brush: {
-          type: ['lineX', 'clear'],
-        },
-      },
-    },
-    grid: {
-      right: '20%', // Adjust the right property to create space for the legend
-    },
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'cross',
-        animation: false,
-        label: {
-          backgroundColor: '#505765',
-        },
-      },
-    },
-    dataZoom: [
-      {
-        show: true,
-        realtime: true,
-        start: dataZoomStart,
-        end: dataZoomEnd,
-      },
-      {
-        type: 'inside',
-        realtime: true,
-        start: dataZoomStart,
-        end: dataZoomEnd,
-      },
-    ],
-    xAxis: {
-      type: 'time',
-      splitLine: {
-        show: true, // This will display vertical grid lines
-      },
-    },
-    yAxis: {
-      inverse: true,
-      name: yaxisTitle,
-      nameLocation: 'center',
-      nameGap: 75,
-      scale: true,
-    },
-    brush: {
-      outOfBrush: {
-        colorAlpha: 0.25,
-      },
-    },
-  }
-
-  const [option, setOption] = useState(baseoption)
 
   const { open, close } = useNotification()
 
@@ -367,11 +315,14 @@ export const WaterLevelForm = () => {
                 <Grid size={{ xs: 12, md: 6 }} sx={{ px: 4 }}>
                   <Paper elevation={2}>
                     <ReactECharts
-                      chartRef={chartRef}
                       key={useId()}
                       option={option}
                       style={style}
-                      onEvents={(record: Record<string, Function>) => {}}
+                      onEvents={{
+                        click: (params: any) => {
+                          console.debug('Data point clicked:', params)
+                        },
+                      }}
                     />
                   </Paper>
                 </Grid>
@@ -388,6 +339,21 @@ export const WaterLevelForm = () => {
                         }
                       }}
                       onFocus={() => clearErrors('pointid')}
+                      slotProps={{
+                        input: {
+                          endAdornment:
+                            isFetchingCoords || isFetchingWater ? (
+                              <InputAdornment position="end">
+                                <CloudDownload
+                                  color="secondary"
+                                  sx={{
+                                    animation: `${pulse} 1.5s ease-in-out infinite`,
+                                  }}
+                                />
+                              </InputAdornment>
+                            ) : null,
+                        },
+                      }}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 6, lg: 3 }}>
