@@ -4,7 +4,12 @@ import { useQuery } from '@tanstack/react-query'
 import { ILocation, IOwner, IWellInventoryForm } from '@/interfaces/amp'
 import { Page } from '@/interfaces'
 import { settings } from '@/settings'
-import { AmpApiUriBuilder, removeEmptyFields, fetchLookupTable } from '@/utils'
+import {
+  AmpApiUriBuilder,
+  removeEmptyFields,
+  fetchLookupTable,
+  ampApiFetch,
+} from '@/utils'
 
 const fetchProjects = async (): Promise<
   {

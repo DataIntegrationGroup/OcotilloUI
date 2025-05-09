@@ -1,5 +1,13 @@
-import { useEffect, useState } from 'react'
-import { Button, Card, CardContent, CardHeader, useTheme } from '@mui/material'
+import { useContext, useEffect, useRef, useState } from 'react'
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Paper,
+  useTheme,
+} from '@mui/material'
+import { Map, Marker, NavigationControl } from 'react-map-gl'
 import { useForm } from '@refinedev/react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { IWaterLevelForm } from '@/interfaces/amp'
@@ -8,17 +16,18 @@ import {
   SchemaDefaults,
 } from '@/pages/amp/waterlevelform/water_level.schema'
 import { Box } from '@mui/system'
+import { settings } from '@/settings'
 import { useMutation } from '@tanstack/react-query'
 import { useNotification } from '@refinedev/core'
 import Grid from '@mui/material/Grid2'
 import {
-  ControlledCheckbox,
   ControlledTextField,
   ControlledDateField,
   FileSelectionSection,
 } from '@/components'
 import {
   createWaterLevelForm,
+  getCoordinatesFromPointId,
   getDataQualities,
   getDataSources,
   getLevelStatuses,
@@ -26,10 +35,18 @@ import {
   getMeasuringAgencies,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
+import { ColorModeContext } from '@/contexts'
+import { updateMapView } from '@/utils'
 
 export const WaterLevelForm = () => {
   const theme = useTheme()
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const mapRef = useRef(null)
+  const initialViewState = {
+    longitude: -106.4,
+    latitude: 34.5,
+    zoom: 10.5,
+  }
+
   const supportedFileTypes = [
     'image/jpeg',
     'image/png',
@@ -38,12 +55,34 @@ export const WaterLevelForm = () => {
     '.gpx',
   ]
 
-  const { control, handleSubmit, reset, setValue, watch } =
-    useForm<IWaterLevelForm>({
-      defaultValues: SchemaDefaults,
-      resolver: yupResolver(WaterLevelSchema),
-    })
+  const [viewState, setViewState] = useState(initialViewState)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [longitude, setLongitude] = useState<number | null>(null)
+  const [latitude, setLatitude] = useState<number | null>(null)
 
+  const style = { width: '100%', height: '500px' }
+  const { mode } = useContext(ColorModeContext)
+  const mapStyle = (zoom: number) =>
+    zoom > 10
+      ? 'mapbox://styles/mapbox/satellite-streets-v11'
+      : mode === 'dark'
+        ? 'mapbox://styles/mapbox/dark-v10'
+        : 'mapbox://styles/mapbox/light-v10'
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    setError,
+    clearErrors,
+    watch,
+  } = useForm<IWaterLevelForm>({
+    defaultValues: SchemaDefaults,
+    resolver: yupResolver(WaterLevelSchema),
+  })
+
+  const pointId = watch('pointid')
   const hold = watch('hold')
   const cut = watch('cut')
 
@@ -56,6 +95,33 @@ export const WaterLevelForm = () => {
       })
     }
   }, [hold, cut, setValue])
+
+  const {
+    data: coords,
+    isSuccess,
+    isError,
+    refetch,
+  } = getCoordinatesFromPointId(pointId, false)
+
+  useEffect(() => {
+    if (isError) {
+      setError('pointid', {
+        type: 'manual',
+        message: 'Invalid Point ID or coordinates not found',
+      })
+      return
+    }
+
+    if (isSuccess && coords) {
+      clearErrors('pointid')
+      setLongitude(coords.x)
+      setLatitude(coords.y)
+
+      if (!isNaN(coords.x) && !isNaN(coords.y)) {
+        updateMapView(mapRef.current, coords.x, coords.y)
+      }
+    }
+  }, [isSuccess, isError, setError, coords])
 
   const { open, close } = useNotification()
 
@@ -126,12 +192,55 @@ export const WaterLevelForm = () => {
                 sx={{ width: '100%' }}
                 direction={{ xs: 'column', sm: 'row' }}
               >
+                <Grid size={{ xs: 12, md: 6 }} sx={{ px: 4 }}>
+                  <Paper elevation={2}>
+                    <Map
+                      {...viewState}
+                      ref={mapRef}
+                      scrollZoom={false}
+                      onMove={(evt) => setViewState(evt.viewState)}
+                      mapboxAccessToken={settings.mapboxToken}
+                      initialViewState={initialViewState}
+                      terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
+                      style={style}
+                      mapStyle={mapStyle(viewState.zoom)}
+                    >
+                      <NavigationControl position="top-right" />
+                      {typeof longitude === 'number' &&
+                        typeof latitude === 'number' &&
+                        !isNaN(longitude) &&
+                        !isNaN(latitude) && (
+                          <Marker
+                            longitude={longitude}
+                            latitude={latitude}
+                            anchor="bottom"
+                          >
+                            <div
+                              style={{
+                                width: 15,
+                                height: 15,
+                                borderRadius: '50%',
+                                backgroundColor: 'red',
+                                border: '2px solid white',
+                              }}
+                            />
+                          </Marker>
+                        )}
+                    </Map>
+                  </Paper>
+                </Grid>
                 <Grid container size={12}>
                   <Grid size={{ xs: 12, md: 6, lg: 3 }}>
                     <ControlledTextField
                       label="Point ID"
                       control={control}
                       name="pointid"
+                      onBlur={(e) => {
+                        if (e.target.value?.trim()) {
+                          refetch()
+                        }
+                      }}
+                      onFocus={() => clearErrors('pointid')}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 6, lg: 3 }}>
