@@ -21,7 +21,6 @@ import {
   createWaterLevelForm,
   getDataQualities,
   getDataSources,
-  getEquipmentTypes,
   getLevelStatuses,
   getMeasurementMethods,
   getMeasuringAgencies,
@@ -31,6 +30,13 @@ import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform
 export const WaterLevelForm = () => {
   const theme = useTheme()
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const supportedFileTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/heic',
+    'application/pdf',
+    '.gpx',
+  ]
 
   const { control, handleSubmit, reset, setValue, watch } =
     useForm<IWaterLevelForm>({
@@ -82,30 +88,17 @@ export const WaterLevelForm = () => {
 
   const handleFormSubmit = async (data: IWaterLevelForm) => {
     try {
-      await mutateAsync({ body: data, photos: selectedFiles })
+      await mutateAsync({
+        body: data,
+        files: selectedFiles,
+        supportedFileTypes,
+      })
       reset()
     } catch (err) {
       console.error('Form submission error:', err)
     }
   }
 
-  const handlePhotoFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = event.target.files
-
-    if (files) {
-      setSelectedFiles((prevFiles) => [...prevFiles, ...Array.from(files)])
-    }
-  }
-
-  const handleDeleteFile = (fileToDelete: File) => {
-    setSelectedFiles((prevFiles) =>
-      prevFiles.filter((file) => file !== fileToDelete)
-    )
-  }
-
-  const EquipmentTypeQuery = getEquipmentTypes()
   const LevelStatusesQuery = getLevelStatuses()
   const DataSourcesQuery = getDataSources()
   const DataQualitiesQuery = getDataQualities()
@@ -144,24 +137,29 @@ export const WaterLevelForm = () => {
                   <Grid size={{ xs: 12, md: 6, lg: 3 }}>
                     <LoadingControlledSelectField
                       resetFn={() => {
-                        setValue('type', SchemaDefaults.type)
+                        setValue(
+                          'measurement_method',
+                          SchemaDefaults.measurement_method
+                        )
                       }}
-                      isLoading={EquipmentTypeQuery.isFetching}
-                      label="Type"
+                      isLoading={MeasurementMethodsQuery.isFetching}
+                      label="Measurement Method"
                       title=""
                       control={control}
-                      name="type"
-                      disabled={true}
-                      isError={EquipmentTypeQuery.isError}
-                      errorMessage="Failed to load equipment types"
-                      options={EquipmentTypeQuery?.data
+                      name="measurement_method"
+                      isError={MeasurementMethodsQuery.isError}
+                      errorMessage="Failed to load measurement methods"
+                      options={MeasurementMethodsQuery?.data
                         ?.sort((a, b) =>
                           a.Meaning?.toLocaleLowerCase().localeCompare(
                             b.Meaning?.toLocaleLowerCase()
                           )
                         )
                         ?.map((option) => {
-                          return { value: option.Code, label: option.Meaning }
+                          return {
+                            value: option.Code,
+                            label: option.Meaning,
+                          }
                         })}
                     />
                   </Grid>
@@ -284,35 +282,6 @@ export const WaterLevelForm = () => {
                     name="mp_height"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
-                  <LoadingControlledSelectField
-                    resetFn={() => {
-                      setValue(
-                        'measurement_method',
-                        SchemaDefaults.measurement_method
-                      )
-                    }}
-                    isLoading={MeasurementMethodsQuery.isFetching}
-                    label="Measurement Method"
-                    title=""
-                    control={control}
-                    name="measurement_method"
-                    isError={MeasurementMethodsQuery.isError}
-                    errorMessage="Failed to load measurement methods"
-                    options={MeasurementMethodsQuery?.data
-                      ?.sort((a, b) =>
-                        a.Meaning?.toLocaleLowerCase().localeCompare(
-                          b.Meaning?.toLocaleLowerCase()
-                        )
-                      )
-                      ?.map((option) => {
-                        return {
-                          value: option.Code,
-                          label: option.Meaning,
-                        }
-                      })}
-                  />
-                </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
                     label="Measured By"
@@ -320,7 +289,7 @@ export const WaterLevelForm = () => {
                     name="measured_by"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <LoadingControlledSelectField
                     resetFn={() => {
                       setValue(
@@ -365,30 +334,10 @@ export const WaterLevelForm = () => {
                     control={control}
                   />
                 </Grid>
-                <Grid size={12}>
-                  <ControlledCheckbox
-                    label="Sample Collected? (If yes, use sample collection form)"
-                    control={control}
-                    name="sample_collected"
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <ControlledCheckbox
-                    label="Is it possible to sample this well?"
-                    control={control}
-                    name="possibe_to_sample"
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <ControlledCheckbox
-                    label="Is this your preferred final value?"
-                    control={control}
-                    name="final_value"
-                  />
-                </Grid>
                 <FileSelectionSection
                   selectedFiles={selectedFiles}
                   setSelectedFiles={setSelectedFiles}
+                  supportedFileTypes={supportedFileTypes}
                 />
                 <Grid
                   container
