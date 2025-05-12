@@ -7,6 +7,7 @@ import {
   InputAdornment,
   keyframes,
   Paper,
+  Typography,
   useTheme,
 } from '@mui/material'
 import ReactECharts from 'echarts-for-react'
@@ -67,7 +68,11 @@ export const WaterLevelForm = () => {
   const [latitude, setLatitude] = useState<number | null>(null)
   const [option, setOption] = useState(baseOption)
 
-  const style = { width: '100%', height: '500px' }
+  const style = (isError: boolean) => ({
+    width: '100%',
+    height: isError ? '414px' : '450px',
+  })
+
   const pulse = keyframes`
   0% { opacity: 0.4; }
   50% { opacity: 1; }
@@ -125,10 +130,20 @@ export const WaterLevelForm = () => {
   } = getWaterLevelsFromPointId(pointId, false)
 
   useEffect(() => {
+    if (coordsError && waterError) {
+      setError('pointid', {
+        type: 'manual',
+        message: 'Invalid Point ID — no coordinate or water level data found.',
+      })
+      setLatitude(null)
+      setLongitude(null)
+      return
+    }
+
     if (coordsError) {
       setError('pointid', {
         type: 'manual',
-        message: 'Invalid Point ID or coordinates not found',
+        message: 'No coordinate data found — check if the Point ID is valid.',
       })
       setLatitude(null)
       setLongitude(null)
@@ -147,10 +162,31 @@ export const WaterLevelForm = () => {
   }, [coordsSuccess, coordsError, coords])
 
   useEffect(() => {
+    if (coordsError && waterError) {
+      setError('pointid', {
+        type: 'manual',
+        message: 'Invalid Point ID — no coordinate or water level data found.',
+      })
+
+      // Reset the chart
+      setOption({
+        ...baseOption,
+        title: {
+          text: 'No Data',
+          left: 'center',
+          top: 35,
+        },
+        series: [],
+        dataset: [],
+      })
+      return
+    }
+
     if (waterError) {
       setError('pointid', {
         type: 'manual',
-        message: 'No water level data found for this Point ID',
+        message:
+          'No water level data found — site may be valid but unmonitored.',
       })
 
       // Reset the chart
@@ -300,8 +336,19 @@ export const WaterLevelForm = () => {
                 sx={{ width: '100%' }}
                 direction={{ xs: 'column', sm: 'row' }}
               >
-                <Grid size={{ xs: 12, md: 6 }} sx={{ px: 4 }}>
-                  <Paper elevation={2}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Paper
+                    sx={{
+                      border: '1px solid',
+                      borderColor: coordsError ? 'error.main' : 'divider',
+                      backgroundColor: coordsError
+                        ? 'rgba(255, 0, 0, 0.05)'
+                        : 'background.paper',
+                      transition: 'border-color 0.3s, background-color 0.3s',
+                      p: 1,
+                    }}
+                    elevation={2}
+                  >
                     <Map
                       {...viewState}
                       ref={mapRef}
@@ -310,7 +357,7 @@ export const WaterLevelForm = () => {
                       mapboxAccessToken={settings.mapboxToken}
                       initialViewState={initialViewState}
                       terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
-                      style={style}
+                      style={style(coordsError)}
                       mapStyle={mapStyle(viewState.zoom)}
                     >
                       <NavigationControl position="top-right" />
@@ -335,24 +382,55 @@ export const WaterLevelForm = () => {
                           </Marker>
                         )}
                     </Map>
+                    {coordsError ? (
+                      <Typography
+                        variant="body2"
+                        color="error"
+                        align="center"
+                        padding={1}
+                      >
+                        Coordinates not found for point ID: {pointId}
+                      </Typography>
+                    ) : null}
                   </Paper>
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }} sx={{ px: 4 }}>
-                  <Paper elevation={2}>
+                <Grid size={{ xs: 12, md: 8 }}>
+                  <Paper
+                    sx={{
+                      border: '1px solid',
+                      borderColor: waterError ? 'error.main' : 'divider',
+                      backgroundColor: waterError
+                        ? 'rgba(255, 0, 0, 0.05)'
+                        : 'background.paper',
+                      transition: 'border-color 0.3s, background-color 0.3s',
+                      p: 1,
+                    }}
+                    elevation={2}
+                  >
                     <ReactECharts
                       key={useId()}
                       option={option}
-                      style={style}
+                      style={style(waterError)}
                       onEvents={{
                         click: (params: any) => {
                           console.debug('Data point clicked:', params)
                         },
                       }}
                     />
+                    {waterError ? (
+                      <Typography
+                        variant="body2"
+                        color="error"
+                        align="center"
+                        padding={1}
+                      >
+                        No data found for point ID: {pointId}
+                      </Typography>
+                    ) : null}
                   </Paper>
                 </Grid>
                 <Grid container size={12}>
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                  <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                     <ControlledTextField
                       label="Point ID"
                       control={control}
@@ -385,7 +463,7 @@ export const WaterLevelForm = () => {
                       }}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                  <Grid size={{ xs: 12, md: 6, lg: 5 }}>
                     <LoadingControlledSelectField
                       resetFn={() => {
                         setValue(
