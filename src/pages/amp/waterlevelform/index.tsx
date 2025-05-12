@@ -38,12 +38,25 @@ import {
   getMeasurementMethods,
   getMeasuringAgencies,
   getWaterLevelsFromPointId,
+  WaterLevel,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
 import { ColorModeContext } from '@/contexts'
 import { updateMapView } from '@/utils'
 import { baseOption } from './water_level.base_options'
 import { CloudDownload } from '@mui/icons-material'
+
+const getFormattedDate = (inputDate?: string | Date | null) => {
+  const date = inputDate ? new Date(inputDate) : new Date()
+
+  if (isNaN(date.getTime())) return null // guard against invalid dates
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0') // months are 0-based
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
 
 export const WaterLevelForm = () => {
   const theme = useTheme()
@@ -169,16 +182,7 @@ export const WaterLevelForm = () => {
       })
 
       // Reset the chart
-      setOption({
-        ...baseOption,
-        title: {
-          text: 'No Data',
-          left: 'center',
-          top: 35,
-        },
-        series: [],
-        dataset: [],
-      })
+      clearChartOption('No Data')
       return
     }
 
@@ -190,61 +194,21 @@ export const WaterLevelForm = () => {
       })
 
       // Reset the chart
-      setOption({
-        ...baseOption,
-        title: {
-          text: 'No Data',
-          left: 'center',
-          top: 35,
-        },
-        series: [],
-        dataset: [],
-      })
-
+      clearChartOption('No Data')
       return
     }
 
     if (waterSuccess && waterLevels?.items?.length) {
       clearErrors('pointid')
-
-      const series = [
-        {
-          type: 'line',
-          showSymbol: true,
-          symbolSize: 6,
-          name: 'Depth to Water',
-          encode: { x: 'date', y: 'depth' },
-          emphasis: { focus: 'series' },
-        },
-      ]
-
-      const dataset = [
-        {
-          source: waterLevels?.items?.map((wl) => ({
-            date: wl.TimeMeasured?.trim()
-              ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
-              : wl.DateMeasured,
-            depth: wl.DepthToWaterBGS,
-          })),
-        },
-      ]
-
-      setOption({
-        ...baseOption,
-        series,
-        dataset,
-        yAxis: {
-          ...baseOption.yAxis,
-          name: 'Depth to Water (ft bgs)',
-        },
-        title: {
-          text: `Water Levels for ${pointId}`,
-          left: 'center',
-          top: 35,
-        },
-      })
+      updateHydrograph(waterLevels, watch('depth_of_water'), pointId)
     }
-  }, [waterSuccess, waterError, waterLevels])
+  }, [
+    waterSuccess,
+    waterError,
+    waterLevels,
+    watch('depth_of_water'),
+    watch('measurement_date'),
+  ])
 
   const { open, close } = useNotification()
 
@@ -297,15 +261,95 @@ export const WaterLevelForm = () => {
     setLongitude(null)
 
     // Clear chart
+    clearChartOption('Water Level Data')
+  }
+
+  const clearChartOption = (text: string) => {
     setOption({
       ...baseOption,
       title: {
-        text: 'Water Level Data',
+        text,
         left: 'center',
         top: 35,
       },
       series: [],
       dataset: [],
+    })
+  }
+
+  const updateHydrograph = (
+    waterLevels: { items: WaterLevel[] },
+    userDepth: number | null,
+    pointId: string
+  ) => {
+    const manualWaterLevelData = waterLevels.items
+      .map((wl) => ({
+        date: wl.TimeMeasured?.trim()
+          ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
+          : wl.DateMeasured,
+        depth: wl.DepthToWaterBGS,
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+    const userPoint =
+      userDepth !== undefined && userDepth !== null && !isNaN(userDepth)
+        ? [
+            {
+              date: getFormattedDate(watch('measurement_date') || new Date()),
+              depth: Number(userDepth),
+            },
+          ]
+        : []
+
+    const datasets = [
+      {
+        id: 'manualWaterLevelData',
+        source: manualWaterLevelData,
+      },
+      {
+        id: 'userPoint',
+        source: userPoint,
+      },
+    ]
+
+    console.log(getFormattedDate(watch('measurement_date') || new Date()))
+    setOption({
+      ...baseOption,
+      series: [
+        {
+          datasetId: 'manualWaterLevelData',
+          type: 'scatter',
+          name: 'Depth to Water',
+          encode: { x: 'date', y: 'depth' },
+          itemStyle: { color: '#1976d2' }, // blue
+          showSymbol: true,
+          symbolSize: 6,
+        },
+        {
+          datasetId: 'userPoint',
+          type: 'scatter',
+          name: 'Your Entry',
+          encode: { x: 'date', y: 'depth' },
+          itemStyle: { color: '#fbc02d' }, // yellow
+          symbolSize: 10,
+          showSymbol: true,
+        },
+      ],
+      dataset: datasets,
+      yAxis: {
+        ...baseOption.yAxis,
+        name: 'Depth to Water (ft bgs)',
+        type: 'value',
+      },
+      xAxis: {
+        ...baseOption.xAxis,
+        name: 'Date',
+      },
+      title: {
+        text: `Water Levels for ${pointId}`,
+        left: 'center',
+        top: 35,
+      },
     })
   }
 
@@ -411,6 +455,8 @@ export const WaterLevelForm = () => {
                       key={useId()}
                       option={option}
                       style={style(waterError)}
+                      notMerge={true}
+                      lazyUpdate={false}
                       onEvents={{
                         click: (params: any) => {
                           console.debug('Data point clicked:', params)

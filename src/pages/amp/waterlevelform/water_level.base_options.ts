@@ -4,7 +4,14 @@ export const baseOption: any = {
     feature: {
       dataZoom: [
         { show: true, title: { zoom: 'Zoom In', back: 'Zoom Out' } },
-        { type: 'inside', title: { zoom: 'Zoom In', back: 'Zoom Out' } },
+        {
+          type: 'inside',
+          title: { zoom: 'Zoom In', back: 'Zoom Out' },
+          zoomLock: true,
+          moveOnMouseWheel: false,
+          moveOnMouseMove: false,
+          preventDefaultMouseMove: true,
+        },
       ],
       restore: {},
       saveAsImage: {},
