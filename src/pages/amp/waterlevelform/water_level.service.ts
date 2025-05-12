@@ -139,36 +139,12 @@ export interface Geometry {
   coordinates: Coordinates3D
 }
 
-export interface Site {
-  PointID: string
-  PublicRelease: boolean
-  Confidential: boolean
-  AlternateSiteID: string
-  elevation_method: string
-  Elevation: number
-  SiteNames: string
-  SiteID: string
-  Easting: number
-  Northing: number
-  State: string
-  County: string
-  geometry: Geometry
-  utm_datum: string
-  utm_zone: number
-  altitude_datum: string
-  lonlat_datum: string
-  site_type: string
-  LocationNotes: string | null
-  AltitudeAccuracy: number
-  SiteDate: string | null
-}
-
 export const fetchCoordinates = async (
   pointid: string
 ): Promise<{ x: number; y: number }> => {
   const accessToken = await getAccessToken()
   const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
-    .setEndpoint('authorized/tabular/locations')
+    .setEndpoint('locations')
     .addParam('pointid', pointid)
     .build()
 
@@ -179,21 +155,20 @@ export const fetchCoordinates = async (
     },
   })
 
-  const data: { items: Site[] } = await response.json()
+  const data: { features: any[] } = await response.json()
 
-  if (!data.items || data.items.length === 0) {
+  if (!data.features || data.features.length === 0) {
     throw new Error(`No site data found for PointID: ${pointid}`)
   }
 
-  const matchingSite = data.items.find((site) => site.PointID === pointid)
-
-  if (!matchingSite.geometry?.coordinates) {
+  const coordinates = data.features?.at(0).geometry?.coordinates
+  if (!coordinates) {
     throw new Error(`Coordinates not found for PointID: ${pointid}`)
   }
 
   return {
-    x: matchingSite.geometry.coordinates[0],
-    y: matchingSite.geometry.coordinates[1],
+    x: coordinates[0],
+    y: coordinates[1],
   }
 }
 

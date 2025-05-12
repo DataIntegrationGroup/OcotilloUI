@@ -15,7 +15,7 @@ export const baseOption: any = {
     },
   },
   grid: {
-    right: '20%',
+    right: '5%',
   },
   tooltip: {
     trigger: 'axis',
@@ -44,6 +44,9 @@ export const baseOption: any = {
   xAxis: {
     type: 'time',
     splitLine: { show: true },
+    axisLine: { show: false },
+    min: 'dataMin',
+    max: 'dataMax',
   },
   yAxis: {
     inverse: true,

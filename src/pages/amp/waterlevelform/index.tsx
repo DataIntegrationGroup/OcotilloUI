@@ -159,6 +159,7 @@ export const WaterLevelForm = () => {
         title: {
           text: 'No Data',
           left: 'center',
+          top: 35,
         },
         series: [],
         dataset: [],
@@ -203,6 +204,7 @@ export const WaterLevelForm = () => {
         title: {
           text: `Water Levels for ${pointId}`,
           left: 'center',
+          top: 35,
         },
       })
     }
@@ -264,6 +266,7 @@ export const WaterLevelForm = () => {
       title: {
         text: 'Water Level Data',
         left: 'center',
+        top: 35,
       },
       series: [],
       dataset: [],
