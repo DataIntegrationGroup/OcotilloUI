@@ -37,7 +37,6 @@ import {
   getMeasurementMethods,
   getMeasuringAgencies,
   getWaterLevelsFromPointId,
-  WaterLevel,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
 import { ColorModeContext } from '@/contexts'
@@ -193,8 +192,6 @@ export const WaterLevelForm = () => {
         },
       ]
 
-      console.log({ waterLevels, dataset })
-
       setOption({
         ...baseOption,
         series,
@@ -251,6 +248,26 @@ export const WaterLevelForm = () => {
     } catch (err) {
       console.error('Form submission error:', err)
     }
+  }
+
+  const handleReset = () => {
+    reset(SchemaDefaults)
+    setSelectedFiles([])
+
+    // Clear map view
+    setLatitude(null)
+    setLongitude(null)
+
+    // Clear chart
+    setOption({
+      ...baseOption,
+      title: {
+        text: 'Water Level Data',
+        left: 'center',
+      },
+      series: [],
+      dataset: [],
+    })
   }
 
   const LevelStatusesQuery = getLevelStatuses()
@@ -342,6 +359,10 @@ export const WaterLevelForm = () => {
                         if (value) {
                           await Promise.all([refetchCoords(), refetchWater()])
                         }
+                      }}
+                      onChange={(e) => {
+                        const uppercaseValue = e.target.value.toUpperCase()
+                        setValue('pointid', uppercaseValue)
                       }}
                       onFocus={() => clearErrors('pointid')}
                       slotProps={{
@@ -580,10 +601,7 @@ export const WaterLevelForm = () => {
                       variant="outlined"
                       color="secondary"
                       fullWidth
-                      onClick={() => {
-                        reset(SchemaDefaults)
-                        setSelectedFiles([])
-                      }}
+                      onClick={handleReset}
                     >
                       Reset
                     </Button>
