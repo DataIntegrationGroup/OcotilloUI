@@ -37,26 +37,20 @@ import {
   getLevelStatuses,
   getMeasurementMethods,
   getMeasuringAgencies,
-  getWaterLevelsFromPointId,
+  getManualWaterLevelsFromPointId,
+  getContinuousWaterLevelsFromPointId,
   WaterLevel,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
 import { ColorModeContext } from '@/contexts'
-import { updateMapView } from '@/utils'
-import { baseOption } from './water_level.base_options'
+import { updateMapView, getFormattedDate } from '@/utils'
+import {
+  chartOptions as baseOptions,
+  getContinuousWaterLevelSeries,
+  getManualWaterLevelSeries,
+  getUserPointSeries,
+} from './water_level.chart_options'
 import { CloudDownload } from '@mui/icons-material'
-
-const getFormattedDate = (inputDate?: string | Date | null) => {
-  const date = inputDate ? new Date(inputDate) : new Date()
-
-  if (isNaN(date.getTime())) return null // guard against invalid dates
-
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0') // months are 0-based
-  const day = String(date.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
 
 export const WaterLevelForm = () => {
   const theme = useTheme()
@@ -79,7 +73,7 @@ export const WaterLevelForm = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [longitude, setLongitude] = useState<number | null>(null)
   const [latitude, setLatitude] = useState<number | null>(null)
-  const [option, setOption] = useState(baseOption)
+  const [chartOptions, setChartOptions] = useState(baseOptions)
 
   const style = (isError: boolean) => ({
     width: '100%',
@@ -135,15 +129,23 @@ export const WaterLevelForm = () => {
   } = getCoordinatesFromPointId(pointId, false)
 
   const {
-    data: waterLevels,
-    isSuccess: waterSuccess,
-    isError: waterError,
-    isFetching: isFetchingWater,
-    refetch: refetchWater,
-  } = getWaterLevelsFromPointId(pointId, false)
+    data: manualWaterLevels,
+    isSuccess: manualWaterSuccess,
+    isError: manualWaterError,
+    isFetching: isFetchingManualWater,
+    refetch: refetchManualWater,
+  } = getManualWaterLevelsFromPointId(pointId, false)
+
+  const {
+    data: continuousWaterLevels,
+    isSuccess: continuousWaterSuccess,
+    isError: continuousWaterError,
+    isFetching: isFetchingContinuousWater,
+    refetch: refetchContinuousWater,
+  } = getContinuousWaterLevelsFromPointId(pointId, false)
 
   useEffect(() => {
-    if (coordsError && waterError) {
+    if (coordsError && continuousWaterError && manualWaterError) {
       setError('pointid', {
         type: 'manual',
         message: 'Invalid Point ID — no coordinate or water level data found.',
@@ -175,7 +177,7 @@ export const WaterLevelForm = () => {
   }, [coordsSuccess, coordsError, coords])
 
   useEffect(() => {
-    if (coordsError && waterError) {
+    if (coordsError && continuousWaterError && manualWaterError) {
       setError('pointid', {
         type: 'manual',
         message: 'Invalid Point ID — no coordinate or water level data found.',
@@ -186,7 +188,7 @@ export const WaterLevelForm = () => {
       return
     }
 
-    if (waterError) {
+    if (continuousWaterError && manualWaterError) {
       setError('pointid', {
         type: 'manual',
         message:
@@ -198,14 +200,24 @@ export const WaterLevelForm = () => {
       return
     }
 
-    if (waterSuccess && waterLevels?.items?.length) {
+    if (
+      (manualWaterSuccess && manualWaterLevels?.items?.length) ||
+      (continuousWaterSuccess && continuousWaterLevels?.items?.length)
+    ) {
       clearErrors('pointid')
-      updateHydrograph(waterLevels, watch('depth_of_water'), pointId)
+      updateHydrograph(
+        manualWaterLevels,
+        continuousWaterLevels,
+        watch('depth_of_water'),
+        pointId
+      )
     }
   }, [
-    waterSuccess,
-    waterError,
-    waterLevels,
+    manualWaterSuccess,
+    manualWaterError,
+    manualWaterLevels,
+    continuousWaterSuccess,
+    continuousWaterLevels,
     watch('depth_of_water'),
     watch('measurement_date'),
   ])
@@ -265,8 +277,8 @@ export const WaterLevelForm = () => {
   }
 
   const clearChartOption = (text: string) => {
-    setOption({
-      ...baseOption,
+    setChartOptions({
+      ...baseOptions,
       title: {
         text,
         left: 'center',
@@ -278,18 +290,36 @@ export const WaterLevelForm = () => {
   }
 
   const updateHydrograph = (
-    waterLevels: { items: WaterLevel[] },
+    manualWaterLevels: { items: WaterLevel[] },
+    continousWaterLevels: { items: WaterLevel[] },
     userDepth: number | null,
     pointId: string
   ) => {
-    const manualWaterLevelData = waterLevels.items
-      .map((wl) => ({
-        date: wl.TimeMeasured?.trim()
-          ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
-          : wl.DateMeasured,
-        depth: wl.DepthToWaterBGS,
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    const manualWaterLevelData = manualWaterLevels
+      ? manualWaterLevels.items
+          .map((wl) => ({
+            date: wl.TimeMeasured?.trim()
+              ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
+              : wl.DateMeasured,
+            depth: wl.DepthToWaterBGS,
+          }))
+          .sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          )
+      : []
+
+    const continuousWaterLevelData = continousWaterLevels
+      ? continousWaterLevels.items
+          .map((wl) => ({
+            date: wl.TimeMeasured?.trim()
+              ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
+              : wl.DateMeasured,
+            depth: wl.DepthToWaterBGS,
+          }))
+          .sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          )
+      : []
 
     const userPoint =
       userDepth !== undefined && userDepth !== null && !isNaN(userDepth)
@@ -307,42 +337,30 @@ export const WaterLevelForm = () => {
         source: manualWaterLevelData,
       },
       {
+        id: 'continuousWaterLevelData',
+        source: continuousWaterLevelData,
+      },
+      {
         id: 'userPoint',
         source: userPoint,
       },
     ]
 
-    console.log(getFormattedDate(watch('measurement_date') || new Date()))
-    setOption({
-      ...baseOption,
+    setChartOptions({
+      ...baseOptions,
       series: [
-        {
-          datasetId: 'manualWaterLevelData',
-          type: 'scatter',
-          name: 'Depth to Water',
-          encode: { x: 'date', y: 'depth' },
-          itemStyle: { color: '#1976d2' }, // blue
-          showSymbol: true,
-          symbolSize: 6,
-        },
-        {
-          datasetId: 'userPoint',
-          type: 'scatter',
-          name: 'Your Entry',
-          encode: { x: 'date', y: 'depth' },
-          itemStyle: { color: '#fbc02d' }, // yellow
-          symbolSize: 10,
-          showSymbol: true,
-        },
+        getContinuousWaterLevelSeries('continuousWaterLevelData'),
+        getManualWaterLevelSeries('manualWaterLevelData'),
+        getUserPointSeries('userPoint'),
       ],
       dataset: datasets,
       yAxis: {
-        ...baseOption.yAxis,
+        ...baseOptions.yAxis,
         name: 'Depth to Water (ft bgs)',
         type: 'value',
       },
       xAxis: {
-        ...baseOption.xAxis,
+        ...baseOptions.xAxis,
         name: 'Date',
       },
       title: {
@@ -442,8 +460,8 @@ export const WaterLevelForm = () => {
                   <Paper
                     sx={{
                       border: '1px solid',
-                      borderColor: waterError ? 'error.main' : 'divider',
-                      backgroundColor: waterError
+                      borderColor: manualWaterError ? 'error.main' : 'divider',
+                      backgroundColor: manualWaterError
                         ? 'rgba(255, 0, 0, 0.05)'
                         : 'background.paper',
                       transition: 'border-color 0.3s, background-color 0.3s',
@@ -453,8 +471,11 @@ export const WaterLevelForm = () => {
                   >
                     <ReactECharts
                       key={useId()}
-                      option={option}
-                      style={style(waterError)}
+                      option={chartOptions}
+                      style={style(
+                        manualWaterError ||
+                          (manualWaterError && continuousWaterError)
+                      )}
                       notMerge={true}
                       lazyUpdate={false}
                       onEvents={{
@@ -463,7 +484,7 @@ export const WaterLevelForm = () => {
                         },
                       }}
                     />
-                    {waterError ? (
+                    {manualWaterError ? (
                       <Typography
                         variant="body2"
                         color="error"
@@ -484,7 +505,11 @@ export const WaterLevelForm = () => {
                       onBlur={async (e) => {
                         const value = e.target.value?.trim()
                         if (value) {
-                          await Promise.all([refetchCoords(), refetchWater()])
+                          await Promise.all([
+                            refetchCoords(),
+                            refetchManualWater(),
+                            refetchContinuousWater(),
+                          ])
                         }
                       }}
                       onChange={(e) => {
@@ -495,7 +520,9 @@ export const WaterLevelForm = () => {
                       slotProps={{
                         input: {
                           endAdornment:
-                            isFetchingCoords || isFetchingWater ? (
+                            isFetchingCoords ||
+                            isFetchingManualWater ||
+                            isFetchingContinuousWater ? (
                               <InputAdornment position="end">
                                 <CloudDownload
                                   color="secondary"

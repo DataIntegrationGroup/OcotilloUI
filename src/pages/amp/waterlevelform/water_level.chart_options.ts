@@ -1,4 +1,4 @@
-export const baseOption: any = {
+export const chartOptions: any = {
   animation: false,
   toolbox: {
     feature: {
@@ -67,3 +67,33 @@ export const baseOption: any = {
     },
   },
 }
+
+export const getContinuousWaterLevelSeries = (id: string) => ({
+  datasetId: id,
+  type: 'line',
+  name: 'Depth to Water (ST2)',
+  encode: { x: 'date', y: 'depth' },
+  itemStyle: { color: '#d32f2f' }, // red
+  showSymbol: true,
+  symbolSize: 6,
+})
+
+export const getManualWaterLevelSeries = (id: string) => ({
+  datasetId: id,
+  type: 'scatter',
+  name: 'Depth to Water (Manual)',
+  encode: { x: 'date', y: 'depth' },
+  itemStyle: { color: '#1976d2' }, // blue
+  showSymbol: true,
+  symbolSize: 6,
+})
+
+export const getUserPointSeries = (id: string) => ({
+  datasetId: id,
+  type: 'scatter',
+  name: 'Your Entry',
+  encode: { x: 'date', y: 'depth' },
+  itemStyle: { color: '#fbc02d' }, // yellow
+  symbolSize: 10,
+  showSymbol: true,
+})

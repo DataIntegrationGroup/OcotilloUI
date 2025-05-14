@@ -200,12 +200,12 @@ export interface WaterLevel {
   PublicRelease: boolean
 }
 
-export const fetchWaterLevels = async (
+export const fetchManualWaterLevels = async (
   pointid: string
 ): Promise<Page<WaterLevel>> => {
   const accessToken = await getAccessToken()
   const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
-    .setEndpoint('waterlevels')
+    .setEndpoint('waterlevels/manual')
     .addParam('pointid', pointid)
     .addParam('omit_null_measurements', 'true')
     .addParam('sort_datetime', 'desc')
@@ -228,13 +228,53 @@ export const fetchWaterLevels = async (
   return data
 }
 
-export const getWaterLevelsFromPointId = (
+export const getManualWaterLevelsFromPointId = (
   pointid: string,
   enabled: boolean
 ) => {
   return useQuery({
-    queryKey: ['WaterLevelsFromPointId', pointid],
-    queryFn: () => fetchWaterLevels(pointid),
+    queryKey: ['ManualWaterLevelsFromPointId', pointid],
+    queryFn: () => fetchManualWaterLevels(pointid),
+    enabled: enabled,
+    staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
+  })
+}
+
+export const fetchContinuousWaterLevels = async (
+  pointid: string
+): Promise<Page<WaterLevel>> => {
+  const accessToken = await getAccessToken()
+  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+    .setEndpoint('waterlevels/continuous')
+    .addParam('pointid', pointid)
+    .addParam('omit_null_measurements', 'true')
+    .addParam('sort_datetime', 'desc')
+    .addParam('size', '1000')
+    .build()
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!data.items || data.items.length === 0) {
+    throw new Error(`No site data found for PointID: ${pointid}`)
+  }
+
+  return data
+}
+
+export const getContinuousWaterLevelsFromPointId = (
+  pointid: string,
+  enabled: boolean
+) => {
+  return useQuery({
+    queryKey: ['ContinuousWaterLevelsFromPointId', pointid],
+    queryFn: () => fetchContinuousWaterLevels(pointid),
     enabled: enabled,
     staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
   })
