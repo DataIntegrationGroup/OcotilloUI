@@ -596,6 +596,7 @@ export const WaterLevelForm = () => {
                     label="Measurement Date"
                     control={control}
                     name="measurement_date"
+                    openTo="year"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
