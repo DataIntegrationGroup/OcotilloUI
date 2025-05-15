@@ -23,7 +23,6 @@ export const WaterLevelSchema = Yup.object().shape({
 
 export const SchemaDefaults = {
   pointid: '',
-  type: 'T',
   hold: null,
   cut: null,
   depth_of_water: null,
@@ -32,12 +31,9 @@ export const SchemaDefaults = {
   data_quality: '',
   data_source: '',
   mp_height: null,
-  measurement_method: '',
+  measurement_method: 'S',
   measured_by: '',
-  measuring_agency: '',
+  measuring_agency: 'NMBGMR',
   notes: '',
   sampling_scenario: '',
-  sample_collected: true,
-  possibe_to_sample: true,
-  final_value: true,
 }

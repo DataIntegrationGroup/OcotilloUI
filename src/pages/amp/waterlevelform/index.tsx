@@ -1,5 +1,17 @@
-import { useEffect, useState } from 'react'
-import { Button, Card, CardContent, CardHeader, useTheme } from '@mui/material'
+import { useContext, useEffect, useId, useRef, useState } from 'react'
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  InputAdornment,
+  keyframes,
+  Paper,
+  Typography,
+  useTheme,
+} from '@mui/material'
+import ReactECharts from 'echarts-for-react'
+import { Map, Marker, NavigationControl } from 'react-map-gl'
 import { useForm } from '@refinedev/react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { IWaterLevelForm } from '@/interfaces/amp'
@@ -8,36 +20,93 @@ import {
   SchemaDefaults,
 } from '@/pages/amp/waterlevelform/water_level.schema'
 import { Box } from '@mui/system'
+import { settings } from '@/settings'
 import { useMutation } from '@tanstack/react-query'
 import { useNotification } from '@refinedev/core'
 import Grid from '@mui/material/Grid2'
 import {
-  ControlledCheckbox,
   ControlledTextField,
   ControlledDateField,
-  AddPhotosSection,
+  FileSelectionSection,
 } from '@/components'
 import {
   createWaterLevelForm,
+  getCoordinatesFromPointId,
   getDataQualities,
   getDataSources,
-  getEquipmentTypes,
   getLevelStatuses,
   getMeasurementMethods,
   getMeasuringAgencies,
+  getManualWaterLevelsFromPointId,
+  getContinuousWaterLevelsFromPointId,
+  WaterLevel,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
+import { ColorModeContext } from '@/contexts'
+import { updateMapView, getFormattedDate } from '@/utils'
+import {
+  chartOptions as baseOptions,
+  getContinuousWaterLevelSeries,
+  getManualWaterLevelSeries,
+  getUserPointSeries,
+} from './water_level.chart_options'
+import { CloudDownload } from '@mui/icons-material'
 
 export const WaterLevelForm = () => {
   const theme = useTheme()
+  const mapRef = useRef(null)
+  const initialViewState = {
+    longitude: -106.4,
+    latitude: 34.5,
+    zoom: 10.5,
+  }
+
+  const supportedFileTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/heic',
+    'application/pdf',
+    '.gpx',
+  ]
+
+  const [viewState, setViewState] = useState(initialViewState)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [longitude, setLongitude] = useState<number | null>(null)
+  const [latitude, setLatitude] = useState<number | null>(null)
+  const [chartOptions, setChartOptions] = useState(baseOptions)
 
-  const { control, handleSubmit, reset, setValue, watch } =
-    useForm<IWaterLevelForm>({
-      defaultValues: SchemaDefaults,
-      resolver: yupResolver(WaterLevelSchema),
-    })
+  const style = (isError: boolean) => ({
+    width: '100%',
+    height: isError ? '414px' : '450px',
+  })
 
+  const pulse = keyframes`
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+`
+  const { mode } = useContext(ColorModeContext)
+  const mapStyle = (zoom: number) =>
+    zoom > 10
+      ? 'mapbox://styles/mapbox/satellite-streets-v11'
+      : mode === 'dark'
+        ? 'mapbox://styles/mapbox/dark-v10'
+        : 'mapbox://styles/mapbox/light-v10'
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    setError,
+    clearErrors,
+    watch,
+  } = useForm<IWaterLevelForm>({
+    defaultValues: SchemaDefaults,
+    resolver: yupResolver(WaterLevelSchema),
+  })
+
+  const pointId = watch('pointid')
   const hold = watch('hold')
   const cut = watch('cut')
 
@@ -50,6 +119,108 @@ export const WaterLevelForm = () => {
       })
     }
   }, [hold, cut, setValue])
+
+  const {
+    data: coords,
+    isSuccess: coordsSuccess,
+    isError: coordsError,
+    isFetching: isFetchingCoords,
+    refetch: refetchCoords,
+  } = getCoordinatesFromPointId(pointId, false)
+
+  const {
+    data: manualWaterLevels,
+    isSuccess: manualWaterSuccess,
+    isError: manualWaterError,
+    isFetching: isFetchingManualWater,
+    refetch: refetchManualWater,
+  } = getManualWaterLevelsFromPointId(pointId, false)
+
+  const {
+    data: continuousWaterLevels,
+    isSuccess: continuousWaterSuccess,
+    isError: continuousWaterError,
+    isFetching: isFetchingContinuousWater,
+    refetch: refetchContinuousWater,
+  } = getContinuousWaterLevelsFromPointId(pointId, false)
+
+  useEffect(() => {
+    if (coordsError && continuousWaterError && manualWaterError) {
+      setError('pointid', {
+        type: 'manual',
+        message: 'Invalid Point ID — no coordinate or water level data found.',
+      })
+      setLatitude(null)
+      setLongitude(null)
+      return
+    }
+
+    if (coordsError) {
+      setError('pointid', {
+        type: 'manual',
+        message: 'No coordinate data found — check if the Point ID is valid.',
+      })
+      setLatitude(null)
+      setLongitude(null)
+      return
+    }
+
+    if (coordsSuccess && coords) {
+      clearErrors('pointid')
+      setLongitude(coords.x)
+      setLatitude(coords.y)
+
+      if (!isNaN(coords.x) && !isNaN(coords.y)) {
+        updateMapView(mapRef.current, coords.x, coords.y)
+      }
+    }
+  }, [coordsSuccess, coordsError, coords])
+
+  useEffect(() => {
+    if (coordsError && continuousWaterError && manualWaterError) {
+      setError('pointid', {
+        type: 'manual',
+        message: 'Invalid Point ID — no coordinate or water level data found.',
+      })
+
+      // Reset the chart
+      clearChartOption('No Data')
+      return
+    }
+
+    if (continuousWaterError && manualWaterError) {
+      setError('pointid', {
+        type: 'manual',
+        message:
+          'No water level data found — site may be valid but unmonitored.',
+      })
+
+      // Reset the chart
+      clearChartOption('No Data')
+      return
+    }
+
+    if (
+      (manualWaterSuccess && manualWaterLevels?.items?.length) ||
+      (continuousWaterSuccess && continuousWaterLevels?.items?.length)
+    ) {
+      clearErrors('pointid')
+      updateHydrograph(
+        manualWaterLevels,
+        continuousWaterLevels,
+        watch('depth_of_water'),
+        pointId
+      )
+    }
+  }, [
+    manualWaterSuccess,
+    manualWaterError,
+    manualWaterLevels,
+    continuousWaterSuccess,
+    continuousWaterLevels,
+    watch('depth_of_water'),
+    watch('measurement_date'),
+  ])
 
   const { open, close } = useNotification()
 
@@ -82,30 +253,124 @@ export const WaterLevelForm = () => {
 
   const handleFormSubmit = async (data: IWaterLevelForm) => {
     try {
-      await mutateAsync({ body: data, photos: selectedFiles })
+      await mutateAsync({
+        body: data,
+        files: selectedFiles,
+        supportedFileTypes,
+      })
       reset()
     } catch (err) {
       console.error('Form submission error:', err)
     }
   }
 
-  const handlePhotoFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+  const handleReset = () => {
+    reset(SchemaDefaults)
+    setSelectedFiles([])
+
+    // Clear map view
+    setLatitude(null)
+    setLongitude(null)
+
+    // Clear chart
+    clearChartOption('Water Level Data')
+  }
+
+  const clearChartOption = (text: string) => {
+    setChartOptions({
+      ...baseOptions,
+      title: {
+        text,
+        left: 'center',
+        top: 35,
+      },
+      series: [],
+      dataset: [],
+    })
+  }
+
+  const updateHydrograph = (
+    manualWaterLevels: { items: WaterLevel[] },
+    continousWaterLevels: { items: WaterLevel[] },
+    userDepth: number | null,
+    pointId: string
   ) => {
-    const files = event.target.files
+    const manualWaterLevelData = manualWaterLevels
+      ? manualWaterLevels.items
+          .map((wl) => ({
+            date: wl.TimeMeasured?.trim()
+              ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
+              : wl.DateMeasured,
+            depth: wl.DepthToWaterBGS,
+          }))
+          .sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          )
+      : []
 
-    if (files) {
-      setSelectedFiles((prevFiles) => [...prevFiles, ...Array.from(files)])
-    }
+    const continuousWaterLevelData = continousWaterLevels
+      ? continousWaterLevels.items
+          .map((wl) => ({
+            date: wl.TimeMeasured?.trim()
+              ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
+              : wl.DateMeasured,
+            depth: wl.DepthToWaterBGS,
+          }))
+          .sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          )
+      : []
+
+    const userPoint =
+      userDepth !== undefined && userDepth !== null && !isNaN(userDepth)
+        ? [
+            {
+              date: getFormattedDate(watch('measurement_date') || new Date()),
+              depth: Number(userDepth),
+            },
+          ]
+        : []
+
+    const datasets = [
+      {
+        id: 'manualWaterLevelData',
+        source: manualWaterLevelData,
+      },
+      {
+        id: 'continuousWaterLevelData',
+        source: continuousWaterLevelData,
+      },
+      {
+        id: 'userPoint',
+        source: userPoint,
+      },
+    ]
+
+    setChartOptions({
+      ...baseOptions,
+      series: [
+        getContinuousWaterLevelSeries('continuousWaterLevelData'),
+        getManualWaterLevelSeries('manualWaterLevelData'),
+        getUserPointSeries('userPoint'),
+      ],
+      dataset: datasets,
+      yAxis: {
+        ...baseOptions.yAxis,
+        name: 'Depth to Water (ft bgs)',
+        type: 'value',
+      },
+      xAxis: {
+        ...baseOptions.xAxis,
+        name: 'Date',
+      },
+      title: {
+        text: `Water Levels for ${pointId}`,
+        left: 'center',
+        top: 35,
+      },
+    })
   }
 
-  const handleDeleteFile = (fileToDelete: File) => {
-    setSelectedFiles((prevFiles) =>
-      prevFiles.filter((file) => file !== fileToDelete)
-    )
-  }
-
-  const EquipmentTypeQuery = getEquipmentTypes()
   const LevelStatusesQuery = getLevelStatuses()
   const DataSourcesQuery = getDataSources()
   const DataQualitiesQuery = getDataQualities()
@@ -133,35 +398,170 @@ export const WaterLevelForm = () => {
                 sx={{ width: '100%' }}
                 direction={{ xs: 'column', sm: 'row' }}
               >
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Paper
+                    sx={{
+                      border: '1px solid',
+                      borderColor: coordsError ? 'error.main' : 'divider',
+                      backgroundColor: coordsError
+                        ? 'rgba(255, 0, 0, 0.05)'
+                        : 'background.paper',
+                      transition: 'border-color 0.3s, background-color 0.3s',
+                      p: 1,
+                    }}
+                    elevation={2}
+                  >
+                    <Map
+                      {...viewState}
+                      ref={mapRef}
+                      scrollZoom={false}
+                      onMove={(evt) => setViewState(evt.viewState)}
+                      mapboxAccessToken={settings.mapboxToken}
+                      initialViewState={initialViewState}
+                      terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
+                      style={style(coordsError)}
+                      mapStyle={mapStyle(viewState.zoom)}
+                    >
+                      <NavigationControl position="top-right" />
+                      {typeof longitude === 'number' &&
+                        typeof latitude === 'number' &&
+                        !isNaN(longitude) &&
+                        !isNaN(latitude) && (
+                          <Marker
+                            longitude={longitude}
+                            latitude={latitude}
+                            anchor="bottom"
+                          >
+                            <div
+                              style={{
+                                width: 15,
+                                height: 15,
+                                borderRadius: '50%',
+                                backgroundColor: 'red',
+                                border: '2px solid white',
+                              }}
+                            />
+                          </Marker>
+                        )}
+                    </Map>
+                    {coordsError ? (
+                      <Typography
+                        variant="body2"
+                        color="error"
+                        align="center"
+                        padding={1}
+                      >
+                        Coordinates not found for point ID: {pointId}
+                      </Typography>
+                    ) : null}
+                  </Paper>
+                </Grid>
+                <Grid size={{ xs: 12, md: 8 }}>
+                  <Paper
+                    sx={{
+                      border: '1px solid',
+                      borderColor: manualWaterError ? 'error.main' : 'divider',
+                      backgroundColor: manualWaterError
+                        ? 'rgba(255, 0, 0, 0.05)'
+                        : 'background.paper',
+                      transition: 'border-color 0.3s, background-color 0.3s',
+                      p: 1,
+                    }}
+                    elevation={2}
+                  >
+                    <ReactECharts
+                      key={useId()}
+                      option={chartOptions}
+                      style={style(
+                        manualWaterError ||
+                          (manualWaterError && continuousWaterError)
+                      )}
+                      notMerge={true}
+                      lazyUpdate={false}
+                      onEvents={{
+                        click: (params: any) => {
+                          console.debug('Data point clicked:', params)
+                        },
+                      }}
+                    />
+                    {manualWaterError ? (
+                      <Typography
+                        variant="body2"
+                        color="error"
+                        align="center"
+                        padding={1}
+                      >
+                        No data found for point ID: {pointId}
+                      </Typography>
+                    ) : null}
+                  </Paper>
+                </Grid>
                 <Grid container size={12}>
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                  <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                     <ControlledTextField
                       label="Point ID"
                       control={control}
                       name="pointid"
+                      onBlur={async (e) => {
+                        const value = e.target.value?.trim()
+                        if (value) {
+                          await Promise.all([
+                            refetchCoords(),
+                            refetchManualWater(),
+                            refetchContinuousWater(),
+                          ])
+                        }
+                      }}
+                      onChange={(e) => {
+                        const uppercaseValue = e.target.value.toUpperCase()
+                        setValue('pointid', uppercaseValue)
+                      }}
+                      onFocus={() => clearErrors('pointid')}
+                      slotProps={{
+                        input: {
+                          endAdornment:
+                            isFetchingCoords ||
+                            isFetchingManualWater ||
+                            isFetchingContinuousWater ? (
+                              <InputAdornment position="end">
+                                <CloudDownload
+                                  color="secondary"
+                                  sx={{
+                                    animation: `${pulse} 1.5s ease-in-out infinite`,
+                                  }}
+                                />
+                              </InputAdornment>
+                            ) : null,
+                        },
+                      }}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                  <Grid size={{ xs: 12, md: 6, lg: 5 }}>
                     <LoadingControlledSelectField
                       resetFn={() => {
-                        setValue('type', SchemaDefaults.type)
+                        setValue(
+                          'measurement_method',
+                          SchemaDefaults.measurement_method
+                        )
                       }}
-                      isLoading={EquipmentTypeQuery.isFetching}
-                      label="Type"
+                      isLoading={MeasurementMethodsQuery.isFetching}
+                      label="Measurement Method"
                       title=""
                       control={control}
-                      name="type"
-                      disabled={true}
-                      isError={EquipmentTypeQuery.isError}
-                      errorMessage="Failed to load equipment types"
-                      options={EquipmentTypeQuery?.data
+                      name="measurement_method"
+                      isError={MeasurementMethodsQuery.isError}
+                      errorMessage="Failed to load measurement methods"
+                      options={MeasurementMethodsQuery?.data
                         ?.sort((a, b) =>
                           a.Meaning?.toLocaleLowerCase().localeCompare(
                             b.Meaning?.toLocaleLowerCase()
                           )
                         )
                         ?.map((option) => {
-                          return { value: option.Code, label: option.Meaning }
+                          return {
+                            value: option.Code,
+                            label: option.Meaning,
+                          }
                         })}
                     />
                   </Grid>
@@ -196,6 +596,7 @@ export const WaterLevelForm = () => {
                     label="Measurement Date"
                     control={control}
                     name="measurement_date"
+                    openTo="year"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
@@ -284,35 +685,6 @@ export const WaterLevelForm = () => {
                     name="mp_height"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
-                  <LoadingControlledSelectField
-                    resetFn={() => {
-                      setValue(
-                        'measurement_method',
-                        SchemaDefaults.measurement_method
-                      )
-                    }}
-                    isLoading={MeasurementMethodsQuery.isFetching}
-                    label="Measurement Method"
-                    title=""
-                    control={control}
-                    name="measurement_method"
-                    isError={MeasurementMethodsQuery.isError}
-                    errorMessage="Failed to load measurement methods"
-                    options={MeasurementMethodsQuery?.data
-                      ?.sort((a, b) =>
-                        a.Meaning?.toLocaleLowerCase().localeCompare(
-                          b.Meaning?.toLocaleLowerCase()
-                        )
-                      )
-                      ?.map((option) => {
-                        return {
-                          value: option.Code,
-                          label: option.Meaning,
-                        }
-                      })}
-                  />
-                </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
                     label="Measured By"
@@ -320,7 +692,7 @@ export const WaterLevelForm = () => {
                     name="measured_by"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <LoadingControlledSelectField
                     resetFn={() => {
                       setValue(
@@ -365,30 +737,10 @@ export const WaterLevelForm = () => {
                     control={control}
                   />
                 </Grid>
-                <Grid size={12}>
-                  <ControlledCheckbox
-                    label="Sample Collected? (If yes, use sample collection form)"
-                    control={control}
-                    name="sample_collected"
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <ControlledCheckbox
-                    label="Is it possible to sample this well?"
-                    control={control}
-                    name="possibe_to_sample"
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <ControlledCheckbox
-                    label="Is this your preferred final value?"
-                    control={control}
-                    name="final_value"
-                  />
-                </Grid>
-                <AddPhotosSection
+                <FileSelectionSection
                   selectedFiles={selectedFiles}
                   setSelectedFiles={setSelectedFiles}
+                  supportedFileTypes={supportedFileTypes}
                 />
                 <Grid
                   container
@@ -404,10 +756,7 @@ export const WaterLevelForm = () => {
                       variant="outlined"
                       color="secondary"
                       fullWidth
-                      onClick={() => {
-                        reset(SchemaDefaults)
-                        setSelectedFiles([])
-                      }}
+                      onClick={handleReset}
                     >
                       Reset
                     </Button>

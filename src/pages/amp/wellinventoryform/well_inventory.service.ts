@@ -1,37 +1,15 @@
 import { getAccessToken } from '@/providers/fief-provider'
-import { fetchConfig, lookupTableQueryConfig } from '@/pages/pages.config'
+import { lookupTableQueryConfig } from '@/pages/pages.config'
 import { useQuery } from '@tanstack/react-query'
 import { ILocation, IOwner, IWellInventoryForm } from '@/interfaces/amp'
 import { Page } from '@/interfaces'
 import { settings } from '@/settings'
-import { AmpApiUriBuilder } from '@/utils/AmpApiUriBuilder'
-
-const ampApiFetch = async (
-  endpoint: string,
-  failure_message: string,
-  method: string = 'GET',
-  version: string = 'v0'
-): Promise<any> => {
-  const accessToken = await getAccessToken()
-  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
-    .setVersion(version)
-    .setEndpoint(endpoint)
-    .build()
-
-  const response = await fetch(url, fetchConfig(accessToken, method))
-  if (!response.ok) {
-    throw new Error(`${failure_message}: ${response.statusText}`)
-  }
-
-  return response.json()
-}
-
-const fetchLookupTable = async (table: string): Promise<any> => {
-  return await ampApiFetch(
-    `authorized/lookuptable/${table}`,
-    `Failed to fetch ${table} options`
-  )
-}
+import {
+  AmpApiUriBuilder,
+  removeEmptyFields,
+  fetchLookupTable,
+  ampApiFetch,
+} from '@/utils'
 
 const fetchProjects = async (): Promise<
   {
@@ -247,21 +225,25 @@ export const getNewPointIDPreview = (prefix: string, siteType: string) => {
 
 export const createWellInventoryForm = async ({
   body,
-  photos,
+  files,
+  supportedFileTypes,
 }: {
   body: Partial<IWellInventoryForm>
-  photos: File[]
+  files: File[]
+  supportedFileTypes: string[]
 }) => {
   const formData = new FormData()
   const sanitizedBody = removeEmptyFields(body)
   formData.append('data', JSON.stringify(sanitizedBody))
 
-  if (photos) {
-    Array.from(photos).forEach((file) => {
+  if (files?.length) {
+    Array.from(files).forEach((file) => {
+      const fileType = file.type
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+
       if (
-        file.type === 'image/jpeg' ||
-        file.type === 'image/png' ||
-        file.type === 'image/heic'
+        supportedFileTypes.includes(fileType) ||
+        supportedFileTypes.includes(fileExtension)
       ) {
         formData.append('files', file)
       }
@@ -381,17 +363,4 @@ export const getElevationByDEM = (x: number, y: number, enabled: boolean) => {
     enabled: enabled,
     staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
   })
-}
-
-const removeEmptyFields = (obj: any): any => {
-  if (Array.isArray(obj)) {
-    return obj.map(removeEmptyFields)
-  } else if (typeof obj === 'object' && obj !== null) {
-    return Object.fromEntries(
-      Object.entries(obj)
-        .filter(([, value]) => value !== '' && value !== null)
-        .map(([key, value]) => [key, removeEmptyFields(value)])
-    )
-  }
-  return obj
 }

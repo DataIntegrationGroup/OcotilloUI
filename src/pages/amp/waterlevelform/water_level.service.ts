@@ -1,54 +1,10 @@
 import { getAccessToken } from '@/providers/fief-provider'
-import { fetchConfig, lookupTableQueryConfig } from '@/pages/pages.config'
+import { lookupTableQueryConfig } from '@/pages/pages.config'
 import { useQuery } from '@tanstack/react-query'
 import { IWaterLevelForm } from '@/interfaces/amp'
 import { settings } from '@/settings'
-import { AmpApiUriBuilder } from '@/utils/AmpApiUriBuilder'
-
-const ampApiFetch = async (
-  endpoint: string,
-  failure_message: string,
-  method: string = 'GET',
-  version: string = 'v0'
-): Promise<any> => {
-  const accessToken = await getAccessToken()
-  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
-    .setVersion(version)
-    .setEndpoint(endpoint)
-    .build()
-
-  const response = await fetch(url, fetchConfig(accessToken, method))
-  if (!response.ok) {
-    throw new Error(`${failure_message}: ${response.statusText}`)
-  }
-
-  return response.json()
-}
-
-const fetchLookupTable = async (table: string): Promise<any> => {
-  return await ampApiFetch(
-    `authorized/lookuptable/${table}`,
-    `Failed to fetch ${table} options`
-  )
-}
-
-const fetchEquipmentTypes = async (): Promise<
-  { Code: string; Meaning: string }[]
-> => {
-  return [
-    { Code: 'S', Meaning: 'SONIC' },
-    { Code: 'T', Meaning: 'STEEL TAPE' },
-    { Code: 'E', Meaning: 'E-Probe' },
-  ]
-}
-
-export const getEquipmentTypes = () => {
-  return useQuery({
-    queryKey: ['EquipmentTypes'],
-    queryFn: fetchEquipmentTypes,
-    ...lookupTableQueryConfig,
-  })
-}
+import { AmpApiUriBuilder, removeEmptyFields, fetchLookupTable } from '@/utils'
+import { Page } from '@/interfaces'
 
 const fetchLevelStatuses = async (): Promise<
   { Code: string; Meaning: string }[]
@@ -122,21 +78,25 @@ export const getMeasuringAgencies = () => {
 
 export const createWaterLevelForm = async ({
   body,
-  photos,
+  files,
+  supportedFileTypes,
 }: {
   body: Partial<IWaterLevelForm>
-  photos: File[]
+  files: File[]
+  supportedFileTypes: string[]
 }) => {
   const formData = new FormData()
   const sanitizedBody = removeEmptyFields(body)
   formData.append('data', JSON.stringify(sanitizedBody))
 
-  if (photos) {
-    Array.from(photos).forEach((file) => {
+  if (files?.length) {
+    files.forEach((file) => {
+      const fileType = file.type
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+
       if (
-        file.type === 'image/jpeg' ||
-        file.type === 'image/png' ||
-        file.type === 'image/heic'
+        supportedFileTypes.includes(fileType) ||
+        supportedFileTypes.includes(fileExtension)
       ) {
         formData.append('files', file)
       }
@@ -172,15 +132,150 @@ export const createWaterLevelForm = async ({
   return data
 }
 
-const removeEmptyFields = (obj: any): any => {
-  if (Array.isArray(obj)) {
-    return obj.map(removeEmptyFields)
-  } else if (typeof obj === 'object' && obj !== null) {
-    return Object.fromEntries(
-      Object.entries(obj)
-        .filter(([, value]) => value !== '' && value !== null)
-        .map(([key, value]) => [key, removeEmptyFields(value)])
-    )
+export type Coordinates3D = [number, number, number]
+
+export interface Geometry {
+  type: 'Point'
+  coordinates: Coordinates3D
+}
+
+export const fetchCoordinates = async (
+  pointid: string
+): Promise<{ x: number; y: number }> => {
+  const accessToken = await getAccessToken()
+  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+    .setEndpoint('locations')
+    .addParam('pointid', pointid)
+    .build()
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  const data: { features: any[] } = await response.json()
+
+  if (!data.features || data.features.length === 0) {
+    throw new Error(`No site data found for PointID: ${pointid}`)
   }
-  return obj
+
+  const coordinates = data.features?.at(0).geometry?.coordinates
+  if (!coordinates) {
+    throw new Error(`Coordinates not found for PointID: ${pointid}`)
+  }
+
+  return {
+    x: coordinates[0],
+    y: coordinates[1],
+  }
+}
+
+export const getCoordinatesFromPointId = (
+  pointid: string,
+  enabled: boolean
+) => {
+  return useQuery({
+    queryKey: ['CoordinatesFromPointId', pointid],
+    queryFn: () => fetchCoordinates(pointid),
+    enabled: enabled,
+    staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
+  })
+}
+
+export interface WaterLevel {
+  PointID: string
+  DepthToWaterBGS: number
+  DepthToWaterBGSUnits: string
+  DateMeasured: string
+  TimeMeasured: string
+  LevelStatus: string
+  DataQuality: string
+  MeasuringAgency: string
+  DataSource: string
+  MeasurementMethod: string
+  MeasuredBy: string
+  SiteNotes: false
+  PublicRelease: boolean
+}
+
+export const fetchManualWaterLevels = async (
+  pointid: string
+): Promise<Page<WaterLevel>> => {
+  const accessToken = await getAccessToken()
+  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+    .setEndpoint('waterlevels/manual')
+    .addParam('pointid', pointid)
+    .addParam('omit_null_measurements', 'true')
+    .addParam('sort_datetime', 'desc')
+    .addParam('size', '1000')
+    .build()
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!data.items || data.items.length === 0) {
+    throw new Error(`No site data found for PointID: ${pointid}`)
+  }
+
+  return data
+}
+
+export const getManualWaterLevelsFromPointId = (
+  pointid: string,
+  enabled: boolean
+) => {
+  return useQuery({
+    queryKey: ['ManualWaterLevelsFromPointId', pointid],
+    queryFn: () => fetchManualWaterLevels(pointid),
+    enabled: enabled,
+    staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
+  })
+}
+
+export const fetchContinuousWaterLevels = async (
+  pointid: string
+): Promise<Page<WaterLevel>> => {
+  const accessToken = await getAccessToken()
+  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+    .setEndpoint('waterlevels/continuous')
+    .addParam('pointid', pointid)
+    .addParam('omit_null_measurements', 'true')
+    .addParam('sort_datetime', 'desc')
+    .addParam('size', '1000')
+    .build()
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!data.items || data.items.length === 0) {
+    throw new Error(`No site data found for PointID: ${pointid}`)
+  }
+
+  return data
+}
+
+export const getContinuousWaterLevelsFromPointId = (
+  pointid: string,
+  enabled: boolean
+) => {
+  return useQuery({
+    queryKey: ['ContinuousWaterLevelsFromPointId', pointid],
+    queryFn: () => fetchContinuousWaterLevels(pointid),
+    enabled: enabled,
+    staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
+  })
 }

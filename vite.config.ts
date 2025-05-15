@@ -5,20 +5,29 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
+  const enableSourceMap =
+    mode !== 'production' && env.VITE_DISABLE_SOURCEMAP !== 'true'
+  const enableSentry =
+    mode !== 'production' && env.VITE_SENTRY_TELEMETRY_DISABLED !== 'true'
 
   return {
     build: {
-      sourcemap: true,
+      sourcemap: enableSourceMap,
     },
     base: env.VITE_BASE_URL,
     plugins: [
       react(),
       tsconfigPaths(),
-      sentryVitePlugin({
-        authToken: env.VITE_SENTRY_AUTH_TOKEN,
-        org: env.VITE_SENTRY_ORG,
-        project: env.VITE_SENTRY_PROJECT,
-      }),
+      ...(enableSentry
+        ? [
+            sentryVitePlugin({
+              authToken: env.VITE_SENTRY_AUTH_TOKEN,
+              org: env.VITE_SENTRY_ORG,
+              project: env.VITE_SENTRY_PROJECT,
+              telemetry: false,
+            }),
+          ]
+        : []),
     ],
     optimizeDeps: {
       include: ['@emotion/react', '@emotion/styled', '@mui/material/Tooltip'],
