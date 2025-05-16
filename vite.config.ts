@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     build: {
+      outDir: 'build',
       sourcemap: enableSourceMap,
     },
     base: env.VITE_BASE_URL,
