@@ -2,7 +2,6 @@ import * as Yup from 'yup'
 
 export const WaterLevelSchema = Yup.object().shape({
   pointid: Yup.string().required('Point ID is required'),
-  type: Yup.string().required('Type is required'),
   hold: Yup.number().nullable(),
   cut: Yup.number().nullable(),
   depth_of_water: Yup.number().required('Depth to Water (DTW) is required'),
@@ -16,9 +15,6 @@ export const WaterLevelSchema = Yup.object().shape({
   measuring_agency: Yup.string().nullable(),
   notes: Yup.string().nullable(),
   sampling_scenario: Yup.string().nullable(),
-  sample_collected: Yup.boolean().nullable(),
-  possibe_to_sample: Yup.boolean().nullable(),
-  final_value: Yup.boolean().nullable(),
 })
 
 export const SchemaDefaults = {

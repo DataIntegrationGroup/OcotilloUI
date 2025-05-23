@@ -321,6 +321,8 @@ export const WaterLevelForm = () => {
           )
       : []
 
+    console.log({ continuousWaterLevelData })
+
     const userPoint =
       userDepth !== undefined && userDepth !== null && !isNaN(userDepth)
         ? [
