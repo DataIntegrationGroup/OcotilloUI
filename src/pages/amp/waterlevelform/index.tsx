@@ -114,7 +114,7 @@ export const WaterLevelForm = () => {
 
   useEffect(() => {
     if (hold && cut) {
-      setValue('depth_of_water', hold - cut, {
+      setValue('depth_to_water', hold - cut, {
         shouldTouch: true,
         shouldDirty: true,
         shouldValidate: true,
@@ -179,38 +179,42 @@ export const WaterLevelForm = () => {
   }, [coordsSuccess, coordsError, coords])
 
   useEffect(() => {
-    if (coordsError && continuousWaterError && manualWaterError) {
-      setError('pointid', {
-        type: 'manual',
-        message: 'Invalid Point ID — no coordinate or water level data found.',
-      })
+    const manualReady = manualWaterSuccess || manualWaterError
+    const continuousReady = continuousWaterSuccess || continuousWaterError
 
-      // Reset the chart
-      clearChartOption('No Data')
-      return
-    }
+    const manualHasData =
+      manualWaterSuccess && manualWaterLevels?.items?.length > 0
 
-    if (continuousWaterError && manualWaterError) {
+    const continuousHasData =
+      continuousWaterSuccess && continuousWaterLevels?.items?.length > 0
+
+    // Case: both finished and no data
+    if (
+      manualReady &&
+      continuousReady &&
+      !manualHasData &&
+      !continuousHasData
+    ) {
       setError('pointid', {
         type: 'manual',
         message:
           'No water level data found — site may be valid but unmonitored.',
       })
-
-      // Reset the chart
       clearChartOption('No Data')
       return
     }
 
+    // Case: both finished and at least one has data
     if (
-      (manualWaterSuccess && manualWaterLevels?.items?.length) ||
-      (continuousWaterSuccess && continuousWaterLevels?.items?.length)
+      manualReady &&
+      continuousReady &&
+      (manualHasData || continuousHasData)
     ) {
       clearErrors('pointid')
       updateHydrograph(
         manualWaterLevels,
         continuousWaterLevels,
-        watch('depth_of_water'),
+        watch('depth_to_water'),
         pointId
       )
     }
@@ -219,8 +223,9 @@ export const WaterLevelForm = () => {
     manualWaterError,
     manualWaterLevels,
     continuousWaterSuccess,
+    continuousWaterError,
     continuousWaterLevels,
-    watch('depth_of_water'),
+    watch('depth_to_water'),
     watch('measurement_date'),
   ])
 
@@ -328,7 +333,7 @@ export const WaterLevelForm = () => {
       ? manualWaterLevels.items
           .map((wl) => ({
             date: wl.TimeMeasured?.trim()
-              ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
+              ? `${wl.DateMeasured}T${wl.TimeMeasured.trim()}`
               : wl.DateMeasured,
             depth: wl.DepthToWaterBGS,
           }))
@@ -341,7 +346,7 @@ export const WaterLevelForm = () => {
       ? continousWaterLevels.items
           .map((wl) => ({
             date: wl.TimeMeasured?.trim()
-              ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
+              ? `${wl.DateMeasured}T${wl.TimeMeasured.trim()}`
               : wl.DateMeasured,
             depth: wl.DepthToWaterBGS,
           }))
@@ -349,8 +354,6 @@ export const WaterLevelForm = () => {
             (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
           )
       : []
-
-    console.log({ continuousWaterLevelData })
 
     const userPoint =
       userDepth !== undefined && userDepth !== null && !isNaN(userDepth)
@@ -393,6 +396,7 @@ export const WaterLevelForm = () => {
       xAxis: {
         ...baseOptions.xAxis,
         name: 'Date',
+        type: 'time',
       },
       title: {
         text: `Water Levels for ${pointId}`,
