@@ -105,7 +105,7 @@ export const createWaterLevelForm = async ({
 
   const accessToken = await getAccessToken()
   const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
-    .setEndpoint('authorized/well_inventory')
+    .setEndpoint('processes/water-level-form/execute')
     .build()
 
   const response = await fetch(url, {

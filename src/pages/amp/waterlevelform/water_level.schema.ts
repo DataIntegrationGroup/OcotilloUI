@@ -2,38 +2,40 @@ import * as Yup from 'yup'
 
 export const WaterLevelSchema = Yup.object().shape({
   pointid: Yup.string().required('Point ID is required'),
-  type: Yup.string().required('Type is required'),
-  hold: Yup.number().nullable(),
-  cut: Yup.number().nullable(),
-  depth_of_water: Yup.number().required('Depth to Water (DTW) is required'),
+  hold: Yup.number()
+    .nullable()
+    .typeError('Hold measurement must be a valid number.'),
+  cut: Yup.number()
+    .nullable()
+    .typeError('Cut measurement must be a valid number.'),
+  depth_to_water: Yup.number()
+    .nullable()
+    .typeError('Depth to water must be a valid number.'),
   measurement_date: Yup.string().required('Measurement Date is required'),
   level_status: Yup.string().nullable(),
   data_source: Yup.string().nullable(),
   data_quality: Yup.string().nullable(),
-  mp_height: Yup.number().nullable(),
+  mp_height: Yup.number()
+    .nullable()
+    .typeError('MP Height must be a valid number.'),
   measurement_method: Yup.string().required('Measurement Method is required'),
   measured_by: Yup.string().required('Measured By is required'),
   measuring_agency: Yup.string().nullable(),
   notes: Yup.string().nullable(),
-  sampling_scenario: Yup.string().nullable(),
-  sample_collected: Yup.boolean().nullable(),
-  possibe_to_sample: Yup.boolean().nullable(),
-  final_value: Yup.boolean().nullable(),
 })
 
 export const SchemaDefaults = {
   pointid: '',
-  hold: null,
-  cut: null,
-  depth_of_water: null,
+  hold: undefined,
+  cut: undefined,
+  depth_to_water: undefined,
   measurement_date: '',
   level_status: '',
   data_quality: '',
   data_source: '',
-  mp_height: null,
+  mp_height: undefined,
   measurement_method: 'S',
   measured_by: '',
   measuring_agency: 'NMBGMR',
   notes: '',
-  sampling_scenario: '',
 }

@@ -56,12 +56,7 @@ import {
   updateMapView,
 } from '@/utils'
 import { ControlledDateField } from '@/components/Controlled/ControlledDateField'
-import { PydanticValidationError } from '@/interfaces'
-
-type FetchValidationError = Error & {
-  status?: number
-  data?: PydanticValidationError
-}
+import { FetchValidationError } from '@/interfaces'
 
 export const WellInventoryForm = () => {
   const theme = useTheme()

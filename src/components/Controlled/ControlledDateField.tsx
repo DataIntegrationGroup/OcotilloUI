@@ -1,7 +1,7 @@
-import { Controller, Control, Path } from "react-hook-form";
-import { FormControl } from "@mui/material";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import dayjs from "dayjs";
+import { Controller, Control, Path } from 'react-hook-form'
+import { FormControl } from '@mui/material'
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
+import dayjs from 'dayjs'
 
 export const ControlledDateField = <T,>({
   control,
@@ -10,10 +10,10 @@ export const ControlledDateField = <T,>({
   required,
   ...pickerProps
 }: {
-  control: Control<T>;
-  name: string;
-  label: string;
-  required?: boolean;
+  control: Control<T>
+  name: string
+  label: string
+  required?: boolean
 } & any) => {
   return (
     <Controller
@@ -25,7 +25,7 @@ export const ControlledDateField = <T,>({
             label={label}
             value={field.value ? dayjs(field.value as string) : null}
             onChange={(date) => {
-              field.onChange(date ? date.toISOString() : null);
+              field.onChange(date ? date.toISOString() : null)
             }}
             slotProps={{
               textField: {
@@ -39,5 +39,5 @@ export const ControlledDateField = <T,>({
         </FormControl>
       )}
     />
-  );
-};
+  )
+}
