@@ -43,7 +43,7 @@ import {
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
 import { ColorModeContext } from '@/contexts'
-import { updateMapView, getFormattedDate } from '@/utils'
+import { updateMapView, getFormattedDate, getFieldPathsFromLoc } from '@/utils'
 import {
   chartOptions as baseOptions,
   getContinuousWaterLevelSeries,
@@ -51,6 +51,8 @@ import {
   getUserPointSeries,
 } from './water_level.chart_options'
 import { CloudDownload } from '@mui/icons-material'
+import { Fetcher } from 'react-router-dom'
+import { FetchValidationError } from '@/interfaces'
 
 export const WaterLevelForm = () => {
   const theme = useTheme()
@@ -260,7 +262,34 @@ export const WaterLevelForm = () => {
       })
       reset()
     } catch (err) {
-      console.error('Form submission error:', err)
+      const errorWithStatus = err as FetchValidationError
+
+      if (
+        errorWithStatus.status === 422 &&
+        Array.isArray(errorWithStatus.data?.detail)
+      ) {
+        const details = errorWithStatus.data.detail
+
+        details.forEach((issue) => {
+          const fieldPaths = getFieldPathsFromLoc(
+            WaterLevelSchema.describe(),
+            issue.loc
+          )
+
+          if (fieldPaths.length > 0) {
+            fieldPaths.forEach((path) => {
+              setError(path as any, {
+                type: 'server',
+                message: issue.msg,
+              })
+            })
+          } else {
+            console.warn('Invalid error location received:', issue.loc)
+          }
+        })
+      } else {
+        console.error('Unexpected form error:', err)
+      }
     }
   }
 
@@ -586,11 +615,11 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 4, lg: 3 }}>
                   <ControlledTextField
-                    value={watch('depth_of_water')}
+                    value={watch('depth_to_water')}
                     type="number"
                     label="Depth to Water (ft)"
                     control={control}
-                    name="depth_of_water"
+                    name="depth_to_water"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
@@ -728,14 +757,6 @@ export const WaterLevelForm = () => {
                     multiline
                     label="Notes"
                     name="notes"
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <ControlledTextField
-                    multiline
-                    label="Describe Sampling Scenario"
-                    name="sampling_scenario"
                     control={control}
                   />
                 </Grid>
