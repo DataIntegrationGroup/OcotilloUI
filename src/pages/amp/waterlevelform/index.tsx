@@ -766,7 +766,7 @@ export const WaterLevelForm = () => {
                       type="submit"
                       variant="contained"
                       fullWidth
-                      disabled={isFormSubmissionPending}
+                      disabled={isFormSubmissionPending || true}
                     >
                       {isFormSubmissionPending ? 'Submitting...' : 'Submit'}
                     </Button>
