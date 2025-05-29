@@ -15,7 +15,37 @@ export const chartOptions: any = {
       ],
       restore: {},
       saveAsImage: {},
-      dataView: { show: true },
+      dataView: {
+        show: true,
+        readOnly: true,
+        optionToContent: (opt: any) => {
+          const datasetIds = [
+            { id: 'continuousWaterLevelDataView', label: 'Continuous (ST2)' },
+            { id: 'manualWaterLevelDataView', label: 'Manual' },
+            { id: 'userPointDataView', label: 'Your Entry' },
+          ]
+
+          let html = '<div style="padding:10px;">'
+
+          datasetIds.forEach(({ id, label }) => {
+            const dataset = opt.dataset.find((ds: any) => ds.id === id)
+            if (dataset && dataset.source.length > 0) {
+              html += `<h4>${label}</h4>`
+              html +=
+                '<table style="width:100%;text-align:left;margin-bottom:10px;"><thead><tr><th>Date</th><th>Depth (ft)</th></tr></thead><tbody>'
+              dataset.source.forEach((row: any) => {
+                html += `<tr><td>${row.date}</td><td>${Number(
+                  row.depth
+                ).toFixed(2)}</td></tr>`
+              })
+              html += '</tbody></table>'
+            }
+          })
+
+          html += '</div>'
+          return html
+        },
+      },
       brush: {
         type: ['lineX', 'clear'],
       },
@@ -71,7 +101,7 @@ export const chartOptions: any = {
 export const getContinuousWaterLevelSeries = (id: string) => ({
   datasetId: id,
   type: 'line',
-  name: 'Depth to Water (ST2)',
+  name: 'Continuous (ST2) Depth to Water BGS (ft)',
   encode: { x: 'date', y: 'depth' },
   itemStyle: { color: '#d32f2f' }, // red
   showSymbol: true,
@@ -81,7 +111,7 @@ export const getContinuousWaterLevelSeries = (id: string) => ({
 export const getManualWaterLevelSeries = (id: string) => ({
   datasetId: id,
   type: 'scatter',
-  name: 'Depth to Water (Manual)',
+  name: 'Manual Depth to Water BGS (ft)',
   encode: { x: 'date', y: 'depth' },
   itemStyle: { color: '#1976d2' }, // blue
   showSymbol: true,
@@ -91,7 +121,7 @@ export const getManualWaterLevelSeries = (id: string) => ({
 export const getUserPointSeries = (id: string) => ({
   datasetId: id,
   type: 'scatter',
-  name: 'Your Entry',
+  name: 'Your Entry BGS (ft)',
   encode: { x: 'date', y: 'depth' },
   itemStyle: { color: '#fbc02d' }, // yellow
   symbolSize: 10,

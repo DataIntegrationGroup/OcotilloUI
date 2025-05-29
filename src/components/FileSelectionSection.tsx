@@ -5,11 +5,13 @@ import Grid from '@mui/material/Grid2'
 import { VisuallyHiddenTextField } from './VisuallyHiddenTextField'
 
 export const FileSelectionSection = ({
+  disabled = false,
   selectedFiles,
   setSelectedFiles,
   supportedFileTypes = ['image/jpeg', 'image/png', 'image/heic'],
   title = 'Upload Field Notes',
 }: {
+  disabled?: boolean
   selectedFiles: File[]
   setSelectedFiles: Dispatch<SetStateAction<File[]>>
   supportedFileTypes?: string[]
@@ -59,6 +61,7 @@ export const FileSelectionSection = ({
       </Grid>
       <Grid container spacing={1} size={12} justifyContent="center">
         <Button
+          disabled={disabled}
           component="label"
           role={undefined}
           variant="contained"

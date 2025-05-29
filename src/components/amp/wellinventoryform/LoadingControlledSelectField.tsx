@@ -20,6 +20,7 @@ export const LoadingControlledSelectField = <T,>({
   required,
   resetFn,
   multiple = false,
+  showAsterisk = false,
   ...props
 }: {
   isLoading?: boolean
@@ -33,6 +34,7 @@ export const LoadingControlledSelectField = <T,>({
   required?: boolean
   resetFn: () => void
   multiple?: boolean
+  showAsterisk?: boolean
 } & SelectProps) => {
   const { disabled } = props
 
@@ -47,7 +49,9 @@ export const LoadingControlledSelectField = <T,>({
   const handleSelectOpen = () => setTooltipOpen(false)
 
   return (
-    <Box alignItems="center" sx={{ display: 'flex' }}>
+    <Box
+      sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}
+    >
       <Tooltip title="Clear selection">
         <Button
           variant="outlined"
@@ -95,6 +99,7 @@ export const LoadingControlledSelectField = <T,>({
             required={required}
             multiple={multiple}
             onOpen={handleSelectOpen}
+            showAsterisk={showAsterisk}
             {...props}
           />
         </div>
