@@ -22,6 +22,7 @@ export const WaterLevelSchema = Yup.object().shape({
   measured_by: Yup.string().required('Measured By is required'),
   measuring_agency: Yup.string().nullable(),
   notes: Yup.string().nullable(),
+  public_release: Yup.boolean().nullable(),
 })
 
 export const SchemaDefaults = {
@@ -38,4 +39,5 @@ export const SchemaDefaults = {
   measured_by: '',
   measuring_agency: 'NMBGMR',
   notes: '',
+  public_release: false,
 }

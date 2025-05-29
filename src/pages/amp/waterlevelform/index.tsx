@@ -28,6 +28,7 @@ import {
   ControlledTextField,
   ControlledDateField,
   FileSelectionSection,
+  ControlledCheckbox,
 } from '@/components'
 import {
   createWaterLevelForm,
@@ -803,6 +804,13 @@ export const WaterLevelForm = () => {
                     label="Notes"
                     name="notes"
                     control={control}
+                  />
+                </Grid>
+                <Grid size={12}>
+                  <ControlledCheckbox
+                    label="Owner acknowledges data will be publicly available?"
+                    control={control}
+                    name="public_release"
                   />
                 </Grid>
                 <FileSelectionSection
