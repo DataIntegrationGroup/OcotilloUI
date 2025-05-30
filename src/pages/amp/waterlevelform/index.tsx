@@ -28,6 +28,7 @@ import {
   ControlledTextField,
   ControlledDateField,
   FileSelectionSection,
+  ControlledCheckbox,
 } from '@/components'
 import {
   createWaterLevelForm,
@@ -51,7 +52,6 @@ import {
   getUserPointSeries,
 } from './water_level.chart_options'
 import { CloudDownload } from '@mui/icons-material'
-import { Fetcher } from 'react-router-dom'
 import { FetchValidationError } from '@/interfaces'
 
 export const WaterLevelForm = () => {
@@ -227,6 +227,7 @@ export const WaterLevelForm = () => {
     continuousWaterLevels,
     watch('depth_to_water'),
     watch('measurement_date'),
+    watch('mp_height'),
   ])
 
   const { open, close } = useNotification()
@@ -360,10 +361,27 @@ export const WaterLevelForm = () => {
         ? [
             {
               date: getFormattedDate(watch('measurement_date') || new Date()),
-              depth: Number(userDepth),
+              depth: Number(userDepth) - Number(watch('mp_height') ?? 0),
             },
           ]
         : []
+
+    const manualWaterLevelDataView = manualWaterLevelData.map((point) => ({
+      date: new Date(point.date).toLocaleDateString(),
+      depth: point.depth,
+    }))
+
+    const continuousWaterLevelDataView = continuousWaterLevelData.map(
+      (point) => ({
+        date: new Date(point.date).toLocaleDateString(),
+        depth: point.depth,
+      })
+    )
+
+    const userPointDataView = userPoint.map((point) => ({
+      date: new Date(point.date).toLocaleDateString(),
+      depth: point.depth,
+    }))
 
     const datasets = [
       {
@@ -377,6 +395,18 @@ export const WaterLevelForm = () => {
       {
         id: 'userPoint',
         source: userPoint,
+      },
+      {
+        id: 'manualWaterLevelDataView',
+        source: manualWaterLevelDataView,
+      },
+      {
+        id: 'continuousWaterLevelDataView',
+        source: continuousWaterLevelDataView,
+      },
+      {
+        id: 'userPointDataView',
+        source: userPointDataView,
       },
     ]
 
@@ -417,7 +447,15 @@ export const WaterLevelForm = () => {
       <Card>
         <CardHeader title="Water Level Form" />
         <CardContent>
-          <Box component="form" onSubmit={handleSubmit(handleFormSubmit)}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit(handleFormSubmit)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+              }
+            }}
+          >
             <Grid
               container
               spacing={2}
@@ -534,6 +572,7 @@ export const WaterLevelForm = () => {
                 <Grid container size={12}>
                   <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                     <ControlledTextField
+                      showAsterisk={true}
                       label="Point ID"
                       control={control}
                       name="pointid"
@@ -573,6 +612,7 @@ export const WaterLevelForm = () => {
                   </Grid>
                   <Grid size={{ xs: 12, md: 6, lg: 5 }}>
                     <LoadingControlledSelectField
+                      showAsterisk={true}
                       resetFn={() => {
                         setValue(
                           'measurement_method',
@@ -628,6 +668,7 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledDateField
+                    showAsterisk={true}
                     label="Measurement Date"
                     control={control}
                     name="measurement_date"
@@ -722,6 +763,7 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
+                    showAsterisk={true}
                     label="Measured By"
                     control={control}
                     name="measured_by"
@@ -764,7 +806,15 @@ export const WaterLevelForm = () => {
                     control={control}
                   />
                 </Grid>
+                <Grid size={12}>
+                  <ControlledCheckbox
+                    label="Owner acknowledges data will be publicly available?"
+                    control={control}
+                    name="public_release"
+                  />
+                </Grid>
                 <FileSelectionSection
+                  disabled
                   selectedFiles={selectedFiles}
                   setSelectedFiles={setSelectedFiles}
                   supportedFileTypes={supportedFileTypes}

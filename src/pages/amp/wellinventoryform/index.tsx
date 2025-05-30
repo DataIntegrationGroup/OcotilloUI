@@ -412,6 +412,11 @@ export const WellInventoryForm = () => {
             component="form"
             autoComplete="off"
             onSubmit={handleSubmit(handleFormSubmit)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+              }
+            }}
           >
             <Grid
               container
@@ -447,10 +452,10 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.project.pointid_suffix
                       )
                     }}
-                    required
                     isLoading={ProjectsQuery.isFetching}
                     isError={ProjectsQuery.isError}
                     errorMessage="Failed to load Projects"
+                    showAsterisk={true}
                     label="Project Name"
                     title="Name of project"
                     control={control}
@@ -503,7 +508,7 @@ export const WellInventoryForm = () => {
                             SchemaDefaults.project.pointid_suffix
                           )
                         }}
-                        required
+                        showAsterisk={true}
                         isLoading={ProjectsQuery.isFetching}
                         label="PointId Prefix"
                         control={control}
@@ -571,7 +576,7 @@ export const WellInventoryForm = () => {
                     <Tooltip placement="top" title="Point identifier or name">
                       <div>
                         <ControlledTextField
-                          required
+                          showAsterisk={true}
                           label="Point ID"
                           fullWidth
                           control={control}
@@ -650,7 +655,7 @@ export const WellInventoryForm = () => {
                       title="ID assigned to each owner record, usually owner’s last name, first name"
                     >
                       <ControlledTextField
-                        required
+                        showAsterisk={true}
                         label="Owner Key"
                         fullWidth
                         control={control}
@@ -910,7 +915,7 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, md: 4, lg: 5 }}>
                 <ControlledTextField
-                  required
+                  showAsterisk={true}
                   type="number"
                   label={locationLabels[coordinateType][0]}
                   fullWidth
@@ -924,7 +929,7 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, md: 4, lg: 5 }}>
                 <ControlledTextField
-                  required
+                  showAsterisk={true}
                   type="number"
                   label={locationLabels[coordinateType][1]}
                   fullWidth
@@ -1022,7 +1027,6 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.location.utm_datum
                       )
                     }}
-                    required
                     isLoading={CoordinateDatumsQuery.isFetching}
                     label="UTM Datum"
                     control={control}
