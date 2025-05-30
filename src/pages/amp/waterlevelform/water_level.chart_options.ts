@@ -20,7 +20,7 @@ export const chartOptions: any = {
         readOnly: true,
         optionToContent: (opt: any) => {
           const datasetIds = [
-            { id: 'continuousWaterLevelDataView', label: 'Continuous (ST2)' },
+            { id: 'continuousWaterLevelDataView', label: 'Continuous' },
             { id: 'manualWaterLevelDataView', label: 'Manual' },
             { id: 'userPointDataView', label: 'Your Entry' },
           ]
@@ -101,7 +101,7 @@ export const chartOptions: any = {
 export const getContinuousWaterLevelSeries = (id: string) => ({
   datasetId: id,
   type: 'line',
-  name: 'Continuous (ST2) Depth to Water BGS (ft)',
+  name: 'Continuous Depth to Water BGS (ft)',
   encode: { x: 'date', y: 'depth' },
   itemStyle: { color: '#d32f2f' }, // red
   showSymbol: true,
