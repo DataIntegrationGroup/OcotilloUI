@@ -5,6 +5,7 @@ import {
   FormLabel,
   Radio,
   RadioGroup,
+  useTheme,
 } from '@mui/material'
 import { Controller, Control, Path } from 'react-hook-form'
 import { CheckCircle, HighlightOff } from '@mui/icons-material'
@@ -19,6 +20,8 @@ export const ControlledRadio = <T,>({
   name: Path<T>
   label: string
 } & Omit<React.ComponentProps<typeof Radio>, 'name'>) => {
+  const theme = useTheme()
+
   return (
     <Controller
       name={name}
@@ -33,48 +36,38 @@ export const ControlledRadio = <T,>({
               value={selectedValue}
               onChange={(e) => field.onChange(e.target.value === 'true')}
             >
-              <FormControlLabel
-                value="false"
-                control={
-                  <Radio
-                    {...radioProps}
-                    icon={<HighlightOff />}
-                    checkedIcon={<HighlightOff />}
+              {[
+                { value: 'false', label: 'No', icon: <HighlightOff /> },
+                { value: 'true', label: 'Yes', icon: <CheckCircle /> },
+              ].map(({ value, label, icon }) => {
+                const isSelected = selectedValue === value
+                return (
+                  <FormControlLabel
+                    key={value}
+                    value={value}
+                    control={
+                      <Radio
+                        {...radioProps}
+                        icon={icon}
+                        checkedIcon={icon}
+                        sx={{ padding: '0px 8px 0px 0px' }}
+                      />
+                    }
+                    label={label}
+                    sx={{
+                      border: '2px solid',
+                      borderColor: isSelected ? 'primary.main' : 'transparent',
+                      borderRadius: theme.shape.borderRadius,
+                      padding: '4px 8px',
+                      marginRight: 2,
+                      '& .MuiFormControlLabel-label': {
+                        color: isSelected ? 'primary.main' : 'inherit',
+                        fontWeight: isSelected ? 'bold' : 'normal',
+                      },
+                    }}
                   />
-                }
-                label="No"
-                sx={{
-                  color:
-                    selectedValue === 'false' ? 'primary.main' : 'text.primary',
-                  '& .MuiFormControlLabel-label': {
-                    color:
-                      selectedValue === 'false' ? 'primary.main' : 'inherit',
-                    fontWeight: selectedValue === 'false' ? 700 : 400,
-                  },
-                  fontWeight: selectedValue === 'false' ? 700 : 400,
-                }}
-              />
-              <FormControlLabel
-                value="true"
-                control={
-                  <Radio
-                    {...radioProps}
-                    icon={<CheckCircle />}
-                    checkedIcon={<CheckCircle />}
-                  />
-                }
-                label="Yes"
-                sx={{
-                  color:
-                    selectedValue === 'true' ? 'primary.main' : 'text.primary',
-                  '& .MuiFormControlLabel-label': {
-                    color:
-                      selectedValue === 'true' ? 'primary.main' : 'inherit',
-                    fontWeight: selectedValue === 'true' ? 700 : 400,
-                  },
-                  fontWeight: selectedValue === 'true' ? 700 : 400,
-                }}
-              />
+                )
+              })}
             </RadioGroup>
             {fieldState.error && (
               <FormHelperText>{fieldState.error.message}</FormHelperText>
