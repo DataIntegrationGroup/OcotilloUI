@@ -1,9 +1,10 @@
 import {
+  FormControl,
   FormControlLabel,
   FormHelperText,
-  FormControl,
-  RadioGroup,
+  FormLabel,
   Radio,
+  RadioGroup,
 } from '@mui/material'
 import { Controller, Control, Path } from 'react-hook-form'
 
@@ -14,21 +15,30 @@ export const ControlledRadio = <T,>({
   ...radioProps
 }: {
   control: Control<T>
-  name: string
+  name: Path<T>
   label: string
-} & React.ComponentProps<typeof Radio>) => {
+} & Omit<React.ComponentProps<typeof Radio>, 'name'>) => {
   return (
     <Controller
-      name={name as Path<T>}
-      control={control as unknown as Control<T>}
+      name={name}
+      control={control}
       render={({ field, fieldState }) => (
         <FormControl error={!!fieldState?.error}>
-          <RadioGroup>
-            <FormControlLabel value="false" control={<Radio />} label="no" />
-            <FormControlLabel value="true" control={<Radio />} label="yes" />
+          <FormLabel>{label}</FormLabel>
+          <RadioGroup {...field}>
+            <FormControlLabel
+              value="false"
+              control={<Radio {...radioProps} />}
+              label="No"
+            />
+            <FormControlLabel
+              value="true"
+              control={<Radio {...radioProps} />}
+              label="Yes"
+            />
           </RadioGroup>
           {fieldState.error && (
-            <FormHelperText>{fieldState?.error?.message}</FormHelperText>
+            <FormHelperText>{fieldState.error.message}</FormHelperText>
           )}
         </FormControl>
       )}
