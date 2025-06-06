@@ -60,6 +60,7 @@ export const ControlledRadio = <T,>({
                       borderRadius: theme.shape.borderRadius,
                       padding: '4px 8px',
                       marginRight: 2,
+                      marginTop: 1,
                       '& .MuiFormControlLabel-label': {
                         color: isSelected ? 'primary.main' : 'inherit',
                         fontWeight: isSelected ? 'bold' : 'normal',

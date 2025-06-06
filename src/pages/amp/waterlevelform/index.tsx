@@ -29,6 +29,7 @@ import {
   ControlledDateField,
   ControlledRadio,
   FileSelectionSection,
+  ConfirmDialog,
 } from '@/components'
 import {
   createWaterLevelForm,
@@ -77,6 +78,10 @@ export const WaterLevelForm = () => {
   const [latitude, setLatitude] = useState<number | null>(null)
   const [chartOptions, setChartOptions] = useState(baseOptions)
 
+  const [showDialog, setShowDialog] = useState(false)
+  const [pendingFormData, setPendingFormData] =
+    useState<IWaterLevelForm | null>(null)
+
   const style = (isError: boolean) => ({
     width: '100%',
     height: isError ? '414px' : '450px',
@@ -111,6 +116,8 @@ export const WaterLevelForm = () => {
   const pointId = watch('pointid')
   const hold = watch('hold')
   const cut = watch('cut')
+
+  const isPublicRelease = watch('public_release')
 
   useEffect(() => {
     if (hold && cut) {
@@ -259,7 +266,25 @@ export const WaterLevelForm = () => {
     },
   })
 
+  const handleConfirmDialog = () => {
+    if (pendingFormData) {
+      completeSubmission(pendingFormData)
+    }
+    setShowDialog(false)
+    setPendingFormData(null)
+  }
+
   const handleFormSubmit = async (data: IWaterLevelForm) => {
+    if (!isPublicRelease) {
+      setPendingFormData(data)
+      setShowDialog(true)
+      return
+    }
+
+    completeSubmission(data)
+  }
+
+  const completeSubmission = async (data: IWaterLevelForm) => {
     try {
       await mutateAsync({
         body: data,
@@ -808,7 +833,7 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={12}>
                   <ControlledRadio
-                    label="Owner acknowledges data will be publicly available?"
+                    label="Data has been reviewed and is ready to publish"
                     control={control}
                     name="public_release"
                   />
@@ -854,6 +879,13 @@ export const WaterLevelForm = () => {
           </Box>
         </CardContent>
       </Card>
+      <ConfirmDialog
+        title="Data Not Reviewed"
+        text="You have not selected that the data have been reviewed. This data is not cleared for publication."
+        open={showDialog}
+        onClose={() => setShowDialog(false)}
+        onConfirm={handleConfirmDialog}
+      />
     </>
   )
 }
