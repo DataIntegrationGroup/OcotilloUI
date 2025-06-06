@@ -27,8 +27,8 @@ import Grid from '@mui/material/Grid2'
 import {
   ControlledTextField,
   ControlledDateField,
+  ControlledRadio,
   FileSelectionSection,
-  ControlledCheckbox,
 } from '@/components'
 import {
   createWaterLevelForm,
@@ -53,7 +53,6 @@ import {
 } from './water_level.chart_options'
 import { CloudDownload } from '@mui/icons-material'
 import { FetchValidationError } from '@/interfaces'
-import { ControlledRadio } from '@/components/Controlled/ControlledRadio'
 
 export const WaterLevelForm = () => {
   const theme = useTheme()
