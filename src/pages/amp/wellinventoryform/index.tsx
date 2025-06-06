@@ -11,6 +11,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  FormHelperText,
   IconButton,
   InputAdornment,
   Paper,
@@ -80,6 +81,8 @@ export const WellInventoryForm = () => {
   const [noteAppended, setNoteAppended] = useState(false)
   const [openSearchOwnerDialog, setOpenSearchOwnerDialog] = useState(false)
 
+  const [casingWarning, setCasingWarning] = useState<string | null>(null)
+
   const style = { width: '100%', height: '650px' }
   const { mode } = useContext(ColorModeContext)
   const mapStyle = (zoom: number) =>
@@ -110,6 +113,16 @@ export const WellInventoryForm = () => {
     elevation_method: elevationMethod,
     location_notes: existingNotes = '',
   } = watch('location')
+
+  const { casing_diameter } = watch('well')
+
+  useEffect(() => {
+    if (casing_diameter > 3) {
+      setCasingWarning('Warning: Casing diameter is greater than 3 feet.')
+    } else {
+      setCasingWarning(null)
+    }
+  }, [casing_diameter])
 
   const USGS_NATIONAL_ELEVATION_DATASET = 'E'
   const noteToAdd =
@@ -1287,13 +1300,21 @@ export const WellInventoryForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <Tooltip placement="top" title="Diameter of the well casing">
-                    <ControlledTextField
-                      type="number"
-                      label="Outer Casing Diameter (ft)"
-                      fullWidth
-                      control={control}
-                      name="well.casing_diameter"
-                    />
+                    <>
+                      <ControlledTextField
+                        type="number"
+                        label="Outer Casing Diameter (ft)"
+                        fullWidth
+                        control={control}
+                        name="well.casing_diameter"
+                        warning={!!casingWarning}
+                      />
+                      {casingWarning && (
+                        <FormHelperText sx={{ color: 'warning.main' }}>
+                          {casingWarning}
+                        </FormHelperText>
+                      )}
+                    </>
                   </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
