@@ -53,6 +53,7 @@ import {
 } from './water_level.chart_options'
 import { CloudDownload } from '@mui/icons-material'
 import { FetchValidationError } from '@/interfaces'
+import { ControlledRadio } from '@/components/Controlled/ControlledRadio'
 
 export const WaterLevelForm = () => {
   const theme = useTheme()
@@ -807,7 +808,7 @@ export const WaterLevelForm = () => {
                   />
                 </Grid>
                 <Grid size={12}>
-                  <ControlledCheckbox
+                  <ControlledRadio
                     label="Owner acknowledges data will be publicly available?"
                     control={control}
                     name="public_release"

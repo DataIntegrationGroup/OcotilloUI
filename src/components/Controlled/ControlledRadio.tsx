@@ -7,6 +7,7 @@ import {
   RadioGroup,
 } from '@mui/material'
 import { Controller, Control, Path } from 'react-hook-form'
+import { CheckCircle, HighlightOff } from '@mui/icons-material'
 
 export const ControlledRadio = <T,>({
   control,
@@ -25,15 +26,22 @@ export const ControlledRadio = <T,>({
       render={({ field, fieldState }) => (
         <FormControl error={!!fieldState?.error}>
           <FormLabel>{label}</FormLabel>
-          <RadioGroup {...field}>
+          <RadioGroup
+            row
+            name="position"
+            defaultValue="top"
+            value={String(field.value)}
+            onChange={(e) => field.onChange(e.target.value === 'true')}
+            {...field}
+          >
             <FormControlLabel
               value="false"
-              control={<Radio {...radioProps} />}
+              control={<Radio {...radioProps} icon={<HighlightOff />} />}
               label="No"
             />
             <FormControlLabel
               value="true"
-              control={<Radio {...radioProps} />}
+              control={<Radio {...radioProps} icon={<CheckCircle />} />}
               label="Yes"
             />
           </RadioGroup>
