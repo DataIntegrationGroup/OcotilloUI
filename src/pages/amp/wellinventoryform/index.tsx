@@ -920,7 +920,7 @@ export const WellInventoryForm = () => {
               <Grid size={{ xs: 12, md: 3 }}>
                 <Tooltip placement="top" title="Date site/location was visited">
                   <ControlledDateField
-                    label="Site Date"
+                    label="Site Date & Time (MT)"
                     control={control}
                     name="location.site_date"
                   />

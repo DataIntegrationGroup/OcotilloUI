@@ -245,7 +245,7 @@ export const WaterLevelForm = () => {
       open?.({
         key: 'water-level-submission',
         type: 'progress',
-        message: 'Submitting Well Inventory Form...',
+        message: 'Submitting water level form...',
       })
     },
     onSuccess: () => {
@@ -253,7 +253,7 @@ export const WaterLevelForm = () => {
       open?.({
         type: 'success',
         message: 'Form Submitted Successfully!',
-        description: 'Your well inventory form has been submitted.',
+        description: 'Your water level form has been submitted.',
       })
     },
     onError: () => {
@@ -694,7 +694,7 @@ export const WaterLevelForm = () => {
                 <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledDateField
                     showAsterisk={true}
-                    label="Measurement Date"
+                    label="Measurement Date & Time (MT)"
                     control={control}
                     name="measurement_date"
                     openTo="year"
@@ -833,7 +833,7 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={12}>
                   <ControlledRadio
-                    label="Data has been reviewed and is ready to publish"
+                    label="Data has been reviewed and is ready for public release"
                     control={control}
                     name="public_release"
                   />
@@ -880,8 +880,8 @@ export const WaterLevelForm = () => {
         </CardContent>
       </Card>
       <ConfirmDialog
-        title="Data Not Reviewed"
-        text="You have not selected that the data have been reviewed. This data is not cleared for publication."
+        title="Data Not Reviewed for Public Release"
+        text="You have selected that the data is NOT cleared for public release. Continue with submission?"
         open={showDialog}
         onClose={() => setShowDialog(false)}
         onConfirm={handleConfirmDialog}

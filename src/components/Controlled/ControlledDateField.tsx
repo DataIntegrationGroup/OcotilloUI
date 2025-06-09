@@ -3,6 +3,8 @@ import { Box, FormControl } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import dayjs from 'dayjs'
 
+const MOUNTAIN_TZ = 'America/Denver'
+
 export const ControlledDateField = <T,>({
   control,
   name,
@@ -37,6 +39,7 @@ export const ControlledDateField = <T,>({
                 ) : null}
               </>
             }
+            timezone={MOUNTAIN_TZ}
             value={field.value ? dayjs(field.value as string) : null}
             onChange={(date) => {
               field.onChange(date ? date.toISOString() : null)
