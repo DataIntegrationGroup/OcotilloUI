@@ -666,7 +666,7 @@ export const WaterLevelForm = () => {
                     />
                   </Grid>
                 </Grid>
-                <Grid size={{ xs: 12, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                   <ControlledTextField
                     type="number"
                     label="Hold (ft)"
@@ -674,7 +674,7 @@ export const WaterLevelForm = () => {
                     name="hold"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                   <ControlledTextField
                     type="number"
                     label="Cut (ft)"
@@ -691,7 +691,7 @@ export const WaterLevelForm = () => {
                     name="depth_to_water"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
+                <Grid size={{ xs: 12, md: 5 }}>
                   <ControlledDateField
                     showAsterisk={true}
                     label="Measurement Date & Time (MT)"

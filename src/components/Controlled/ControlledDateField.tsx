@@ -2,7 +2,11 @@ import { Controller, Control, Path } from 'react-hook-form'
 import { Box, FormControl } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import dayjs from 'dayjs'
+import timezone from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
 
+dayjs.extend(utc)
+dayjs.extend(timezone)
 const MOUNTAIN_TZ = 'America/Denver'
 
 export const ControlledDateField = <T,>({
