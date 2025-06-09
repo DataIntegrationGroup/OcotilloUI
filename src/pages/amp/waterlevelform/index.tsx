@@ -27,8 +27,9 @@ import Grid from '@mui/material/Grid2'
 import {
   ControlledTextField,
   ControlledDateField,
+  ControlledRadio,
   FileSelectionSection,
-  ControlledCheckbox,
+  ConfirmDialog,
 } from '@/components'
 import {
   createWaterLevelForm,
@@ -77,6 +78,10 @@ export const WaterLevelForm = () => {
   const [latitude, setLatitude] = useState<number | null>(null)
   const [chartOptions, setChartOptions] = useState(baseOptions)
 
+  const [showDialog, setShowDialog] = useState(false)
+  const [pendingFormData, setPendingFormData] =
+    useState<IWaterLevelForm | null>(null)
+
   const style = (isError: boolean) => ({
     width: '100%',
     height: isError ? '414px' : '450px',
@@ -111,6 +116,8 @@ export const WaterLevelForm = () => {
   const pointId = watch('pointid')
   const hold = watch('hold')
   const cut = watch('cut')
+
+  const isPublicRelease = watch('public_release')
 
   useEffect(() => {
     if (hold && cut) {
@@ -238,7 +245,7 @@ export const WaterLevelForm = () => {
       open?.({
         key: 'water-level-submission',
         type: 'progress',
-        message: 'Submitting Well Inventory Form...',
+        message: 'Submitting water level form...',
       })
     },
     onSuccess: () => {
@@ -246,7 +253,7 @@ export const WaterLevelForm = () => {
       open?.({
         type: 'success',
         message: 'Form Submitted Successfully!',
-        description: 'Your well inventory form has been submitted.',
+        description: 'Your water level form has been submitted.',
       })
     },
     onError: () => {
@@ -259,7 +266,25 @@ export const WaterLevelForm = () => {
     },
   })
 
+  const handleConfirmDialog = () => {
+    if (pendingFormData) {
+      completeSubmission(pendingFormData)
+    }
+    setShowDialog(false)
+    setPendingFormData(null)
+  }
+
   const handleFormSubmit = async (data: IWaterLevelForm) => {
+    if (!isPublicRelease) {
+      setPendingFormData(data)
+      setShowDialog(true)
+      return
+    }
+
+    completeSubmission(data)
+  }
+
+  const completeSubmission = async (data: IWaterLevelForm) => {
     try {
       await mutateAsync({
         body: data,
@@ -641,7 +666,7 @@ export const WaterLevelForm = () => {
                     />
                   </Grid>
                 </Grid>
-                <Grid size={{ xs: 12, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                   <ControlledTextField
                     type="number"
                     label="Hold (ft)"
@@ -649,7 +674,7 @@ export const WaterLevelForm = () => {
                     name="hold"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                   <ControlledTextField
                     type="number"
                     label="Cut (ft)"
@@ -666,10 +691,10 @@ export const WaterLevelForm = () => {
                     name="depth_to_water"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
+                <Grid size={{ xs: 12, md: 5 }}>
                   <ControlledDateField
                     showAsterisk={true}
-                    label="Measurement Date"
+                    label="Measurement Date & Time (MT)"
                     control={control}
                     name="measurement_date"
                     openTo="year"
@@ -807,8 +832,8 @@ export const WaterLevelForm = () => {
                   />
                 </Grid>
                 <Grid size={12}>
-                  <ControlledCheckbox
-                    label="Owner acknowledges data will be publicly available?"
+                  <ControlledRadio
+                    label="Data has been reviewed and is ready for public release"
                     control={control}
                     name="public_release"
                   />
@@ -854,6 +879,13 @@ export const WaterLevelForm = () => {
           </Box>
         </CardContent>
       </Card>
+      <ConfirmDialog
+        title="Data Not Reviewed for Public Release"
+        text="You have selected that the data is NOT cleared for public release. Continue with submission?"
+        open={showDialog}
+        onClose={() => setShowDialog(false)}
+        onConfirm={handleConfirmDialog}
+      />
     </>
   )
 }

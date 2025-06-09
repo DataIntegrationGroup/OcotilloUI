@@ -9,6 +9,7 @@ export const ControlledTextField = <T,>({
   multiline = false,
   minRows = 4,
   showAsterisk = false,
+  warning = false,
   ...textFieldProps
 }: {
   control: Control<T>
@@ -18,6 +19,7 @@ export const ControlledTextField = <T,>({
   multiline?: boolean
   minRows?: number
   showAsterisk?: boolean
+  warning?: boolean
 } & TextFieldProps) => {
   return (
     <Controller
@@ -47,6 +49,28 @@ export const ControlledTextField = <T,>({
           fullWidth
           multiline={multiline}
           minRows={multiline ? minRows : undefined}
+          sx={{
+            ...(textFieldProps.sx || {}),
+            '& .MuiInputLabel-root': {
+              color: warning ? 'warning.main' : undefined,
+            },
+            '& .MuiInputLabel-root.Mui-focused': {
+              color: warning ? 'warning.dark' : undefined,
+            },
+            '& .MuiOutlinedInput-root': {
+              ...(warning && {
+                '& fieldset': {
+                  borderColor: 'warning.main',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'warning.dark',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'warning.main',
+                },
+              }),
+            },
+          }}
         />
       )}
     />
