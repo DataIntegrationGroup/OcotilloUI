@@ -46,6 +46,7 @@ export const ControlledDateField = <T,>({
             timezone={MOUNTAIN_TZ}
             value={field.value ? dayjs(field.value as string) : null}
             onChange={(date) => {
+              //will send date in UTC format
               field.onChange(date ? date.toISOString() : null)
             }}
             slotProps={{
