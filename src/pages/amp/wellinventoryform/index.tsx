@@ -11,6 +11,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  FormHelperText,
   IconButton,
   InputAdornment,
   Paper,
@@ -56,12 +57,7 @@ import {
   updateMapView,
 } from '@/utils'
 import { ControlledDateField } from '@/components/Controlled/ControlledDateField'
-import { PydanticValidationError } from '@/interfaces'
-
-type FetchValidationError = Error & {
-  status?: number
-  data?: PydanticValidationError
-}
+import { FetchValidationError } from '@/interfaces'
 
 export const WellInventoryForm = () => {
   const theme = useTheme()
@@ -84,6 +80,8 @@ export const WellInventoryForm = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [noteAppended, setNoteAppended] = useState(false)
   const [openSearchOwnerDialog, setOpenSearchOwnerDialog] = useState(false)
+
+  const [casingWarning, setCasingWarning] = useState<string | null>(null)
 
   const style = { width: '100%', height: '650px' }
   const { mode } = useContext(ColorModeContext)
@@ -115,6 +113,16 @@ export const WellInventoryForm = () => {
     elevation_method: elevationMethod,
     location_notes: existingNotes = '',
   } = watch('location')
+
+  const { casing_diameter } = watch('well')
+
+  useEffect(() => {
+    if (casing_diameter > 3) {
+      setCasingWarning('Warning: Casing diameter is greater than 3 feet.')
+    } else {
+      setCasingWarning(null)
+    }
+  }, [casing_diameter])
 
   const USGS_NATIONAL_ELEVATION_DATASET = 'E'
   const noteToAdd =
@@ -417,6 +425,11 @@ export const WellInventoryForm = () => {
             component="form"
             autoComplete="off"
             onSubmit={handleSubmit(handleFormSubmit)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+              }
+            }}
           >
             <Grid
               container
@@ -452,10 +465,10 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.project.pointid_suffix
                       )
                     }}
-                    required
                     isLoading={ProjectsQuery.isFetching}
                     isError={ProjectsQuery.isError}
                     errorMessage="Failed to load Projects"
+                    showAsterisk={true}
                     label="Project Name"
                     title="Name of project"
                     control={control}
@@ -508,7 +521,7 @@ export const WellInventoryForm = () => {
                             SchemaDefaults.project.pointid_suffix
                           )
                         }}
-                        required
+                        showAsterisk={true}
                         isLoading={ProjectsQuery.isFetching}
                         label="PointId Prefix"
                         control={control}
@@ -576,7 +589,7 @@ export const WellInventoryForm = () => {
                     <Tooltip placement="top" title="Point identifier or name">
                       <div>
                         <ControlledTextField
-                          required
+                          showAsterisk={true}
                           label="Point ID"
                           fullWidth
                           control={control}
@@ -655,7 +668,7 @@ export const WellInventoryForm = () => {
                       title="ID assigned to each owner record, usually owner’s last name, first name"
                     >
                       <ControlledTextField
-                        required
+                        showAsterisk={true}
                         label="Owner Key"
                         fullWidth
                         control={control}
@@ -907,7 +920,7 @@ export const WellInventoryForm = () => {
               <Grid size={{ xs: 12, md: 3 }}>
                 <Tooltip placement="top" title="Date site/location was visited">
                   <ControlledDateField
-                    label="Site Date"
+                    label="Site Date & Time (MT)"
                     control={control}
                     name="location.site_date"
                   />
@@ -915,7 +928,7 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, md: 4, lg: 5 }}>
                 <ControlledTextField
-                  required
+                  showAsterisk={true}
                   type="number"
                   label={locationLabels[coordinateType][0]}
                   fullWidth
@@ -929,7 +942,7 @@ export const WellInventoryForm = () => {
               </Grid>
               <Grid size={{ xs: 12, md: 4, lg: 5 }}>
                 <ControlledTextField
-                  required
+                  showAsterisk={true}
                   type="number"
                   label={locationLabels[coordinateType][1]}
                   fullWidth
@@ -1027,7 +1040,6 @@ export const WellInventoryForm = () => {
                         SchemaDefaults.location.utm_datum
                       )
                     }}
-                    required
                     isLoading={CoordinateDatumsQuery.isFetching}
                     label="UTM Datum"
                     control={control}
@@ -1288,13 +1300,21 @@ export const WellInventoryForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                   <Tooltip placement="top" title="Diameter of the well casing">
-                    <ControlledTextField
-                      type="number"
-                      label="Outer Casing Diameter (ft)"
-                      fullWidth
-                      control={control}
-                      name="well.casing_diameter"
-                    />
+                    <>
+                      <ControlledTextField
+                        type="number"
+                        label="Outer Casing Diameter (ft)"
+                        fullWidth
+                        control={control}
+                        name="well.casing_diameter"
+                        warning={!!casingWarning}
+                      />
+                      {casingWarning && (
+                        <FormHelperText sx={{ color: 'warning.main' }}>
+                          {casingWarning}
+                        </FormHelperText>
+                      )}
+                    </>
                   </Tooltip>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>

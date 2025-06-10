@@ -1,5 +1,6 @@
 export * from './Auth'
 export * from './ClearableSelect'
+export * from './ConfirmDialog'
 export * from './Controlled'
 export * from './DebouncedTextInput'
 export * from './enums'

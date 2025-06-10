@@ -27,7 +27,9 @@ import Grid from '@mui/material/Grid2'
 import {
   ControlledTextField,
   ControlledDateField,
+  ControlledRadio,
   FileSelectionSection,
+  ConfirmDialog,
 } from '@/components'
 import {
   createWaterLevelForm,
@@ -43,7 +45,7 @@ import {
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
 import { ColorModeContext } from '@/contexts'
-import { updateMapView, getFormattedDate } from '@/utils'
+import { updateMapView, getFormattedDate, getFieldPathsFromLoc } from '@/utils'
 import {
   chartOptions as baseOptions,
   getContinuousWaterLevelSeries,
@@ -51,6 +53,7 @@ import {
   getUserPointSeries,
 } from './water_level.chart_options'
 import { CloudDownload } from '@mui/icons-material'
+import { FetchValidationError } from '@/interfaces'
 
 export const WaterLevelForm = () => {
   const theme = useTheme()
@@ -74,6 +77,10 @@ export const WaterLevelForm = () => {
   const [longitude, setLongitude] = useState<number | null>(null)
   const [latitude, setLatitude] = useState<number | null>(null)
   const [chartOptions, setChartOptions] = useState(baseOptions)
+
+  const [showDialog, setShowDialog] = useState(false)
+  const [pendingFormData, setPendingFormData] =
+    useState<IWaterLevelForm | null>(null)
 
   const style = (isError: boolean) => ({
     width: '100%',
@@ -110,9 +117,11 @@ export const WaterLevelForm = () => {
   const hold = watch('hold')
   const cut = watch('cut')
 
+  const isPublicRelease = watch('public_release')
+
   useEffect(() => {
     if (hold && cut) {
-      setValue('depth_of_water', hold - cut, {
+      setValue('depth_to_water', hold - cut, {
         shouldTouch: true,
         shouldDirty: true,
         shouldValidate: true,
@@ -177,38 +186,42 @@ export const WaterLevelForm = () => {
   }, [coordsSuccess, coordsError, coords])
 
   useEffect(() => {
-    if (coordsError && continuousWaterError && manualWaterError) {
-      setError('pointid', {
-        type: 'manual',
-        message: 'Invalid Point ID — no coordinate or water level data found.',
-      })
+    const manualReady = manualWaterSuccess || manualWaterError
+    const continuousReady = continuousWaterSuccess || continuousWaterError
 
-      // Reset the chart
-      clearChartOption('No Data')
-      return
-    }
+    const manualHasData =
+      manualWaterSuccess && manualWaterLevels?.items?.length > 0
 
-    if (continuousWaterError && manualWaterError) {
+    const continuousHasData =
+      continuousWaterSuccess && continuousWaterLevels?.items?.length > 0
+
+    // Case: both finished and no data
+    if (
+      manualReady &&
+      continuousReady &&
+      !manualHasData &&
+      !continuousHasData
+    ) {
       setError('pointid', {
         type: 'manual',
         message:
           'No water level data found — site may be valid but unmonitored.',
       })
-
-      // Reset the chart
       clearChartOption('No Data')
       return
     }
 
+    // Case: both finished and at least one has data
     if (
-      (manualWaterSuccess && manualWaterLevels?.items?.length) ||
-      (continuousWaterSuccess && continuousWaterLevels?.items?.length)
+      manualReady &&
+      continuousReady &&
+      (manualHasData || continuousHasData)
     ) {
       clearErrors('pointid')
       updateHydrograph(
         manualWaterLevels,
         continuousWaterLevels,
-        watch('depth_of_water'),
+        watch('depth_to_water'),
         pointId
       )
     }
@@ -217,9 +230,11 @@ export const WaterLevelForm = () => {
     manualWaterError,
     manualWaterLevels,
     continuousWaterSuccess,
+    continuousWaterError,
     continuousWaterLevels,
-    watch('depth_of_water'),
+    watch('depth_to_water'),
     watch('measurement_date'),
+    watch('mp_height'),
   ])
 
   const { open, close } = useNotification()
@@ -230,7 +245,7 @@ export const WaterLevelForm = () => {
       open?.({
         key: 'water-level-submission',
         type: 'progress',
-        message: 'Submitting Well Inventory Form...',
+        message: 'Submitting water level form...',
       })
     },
     onSuccess: () => {
@@ -238,7 +253,7 @@ export const WaterLevelForm = () => {
       open?.({
         type: 'success',
         message: 'Form Submitted Successfully!',
-        description: 'Your well inventory form has been submitted.',
+        description: 'Your water level form has been submitted.',
       })
     },
     onError: () => {
@@ -251,7 +266,25 @@ export const WaterLevelForm = () => {
     },
   })
 
+  const handleConfirmDialog = () => {
+    if (pendingFormData) {
+      completeSubmission(pendingFormData)
+    }
+    setShowDialog(false)
+    setPendingFormData(null)
+  }
+
   const handleFormSubmit = async (data: IWaterLevelForm) => {
+    if (!isPublicRelease) {
+      setPendingFormData(data)
+      setShowDialog(true)
+      return
+    }
+
+    completeSubmission(data)
+  }
+
+  const completeSubmission = async (data: IWaterLevelForm) => {
     try {
       await mutateAsync({
         body: data,
@@ -260,7 +293,34 @@ export const WaterLevelForm = () => {
       })
       reset()
     } catch (err) {
-      console.error('Form submission error:', err)
+      const errorWithStatus = err as FetchValidationError
+
+      if (
+        errorWithStatus.status === 422 &&
+        Array.isArray(errorWithStatus.data?.detail)
+      ) {
+        const details = errorWithStatus.data.detail
+
+        details.forEach((issue) => {
+          const fieldPaths = getFieldPathsFromLoc(
+            WaterLevelSchema.describe(),
+            issue.loc
+          )
+
+          if (fieldPaths.length > 0) {
+            fieldPaths.forEach((path) => {
+              setError(path as any, {
+                type: 'server',
+                message: issue.msg,
+              })
+            })
+          } else {
+            console.warn('Invalid error location received:', issue.loc)
+          }
+        })
+      } else {
+        console.error('Unexpected form error:', err)
+      }
     }
   }
 
@@ -299,7 +359,7 @@ export const WaterLevelForm = () => {
       ? manualWaterLevels.items
           .map((wl) => ({
             date: wl.TimeMeasured?.trim()
-              ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
+              ? `${wl.DateMeasured}T${wl.TimeMeasured.trim()}`
               : wl.DateMeasured,
             depth: wl.DepthToWaterBGS,
           }))
@@ -312,7 +372,7 @@ export const WaterLevelForm = () => {
       ? continousWaterLevels.items
           .map((wl) => ({
             date: wl.TimeMeasured?.trim()
-              ? `${wl.DateMeasured}-${wl.TimeMeasured.trim()}`
+              ? `${wl.DateMeasured}T${wl.TimeMeasured.trim()}`
               : wl.DateMeasured,
             depth: wl.DepthToWaterBGS,
           }))
@@ -326,10 +386,27 @@ export const WaterLevelForm = () => {
         ? [
             {
               date: getFormattedDate(watch('measurement_date') || new Date()),
-              depth: Number(userDepth),
+              depth: Number(userDepth) - Number(watch('mp_height') ?? 0),
             },
           ]
         : []
+
+    const manualWaterLevelDataView = manualWaterLevelData.map((point) => ({
+      date: new Date(point.date).toLocaleDateString(),
+      depth: point.depth,
+    }))
+
+    const continuousWaterLevelDataView = continuousWaterLevelData.map(
+      (point) => ({
+        date: new Date(point.date).toLocaleDateString(),
+        depth: point.depth,
+      })
+    )
+
+    const userPointDataView = userPoint.map((point) => ({
+      date: new Date(point.date).toLocaleDateString(),
+      depth: point.depth,
+    }))
 
     const datasets = [
       {
@@ -343,6 +420,18 @@ export const WaterLevelForm = () => {
       {
         id: 'userPoint',
         source: userPoint,
+      },
+      {
+        id: 'manualWaterLevelDataView',
+        source: manualWaterLevelDataView,
+      },
+      {
+        id: 'continuousWaterLevelDataView',
+        source: continuousWaterLevelDataView,
+      },
+      {
+        id: 'userPointDataView',
+        source: userPointDataView,
       },
     ]
 
@@ -362,6 +451,7 @@ export const WaterLevelForm = () => {
       xAxis: {
         ...baseOptions.xAxis,
         name: 'Date',
+        type: 'time',
       },
       title: {
         text: `Water Levels for ${pointId}`,
@@ -382,7 +472,15 @@ export const WaterLevelForm = () => {
       <Card>
         <CardHeader title="Water Level Form" />
         <CardContent>
-          <Box component="form" onSubmit={handleSubmit(handleFormSubmit)}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit(handleFormSubmit)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+              }
+            }}
+          >
             <Grid
               container
               spacing={2}
@@ -499,6 +597,7 @@ export const WaterLevelForm = () => {
                 <Grid container size={12}>
                   <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                     <ControlledTextField
+                      showAsterisk={true}
                       label="Point ID"
                       control={control}
                       name="pointid"
@@ -538,6 +637,7 @@ export const WaterLevelForm = () => {
                   </Grid>
                   <Grid size={{ xs: 12, md: 6, lg: 5 }}>
                     <LoadingControlledSelectField
+                      showAsterisk={true}
                       resetFn={() => {
                         setValue(
                           'measurement_method',
@@ -566,7 +666,7 @@ export const WaterLevelForm = () => {
                     />
                   </Grid>
                 </Grid>
-                <Grid size={{ xs: 12, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                   <ControlledTextField
                     type="number"
                     label="Hold (ft)"
@@ -574,7 +674,7 @@ export const WaterLevelForm = () => {
                     name="hold"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                   <ControlledTextField
                     type="number"
                     label="Cut (ft)"
@@ -584,16 +684,17 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 4, lg: 3 }}>
                   <ControlledTextField
-                    value={watch('depth_of_water')}
+                    value={watch('depth_to_water')}
                     type="number"
                     label="Depth to Water (ft)"
                     control={control}
-                    name="depth_of_water"
+                    name="depth_to_water"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
+                <Grid size={{ xs: 12, md: 5 }}>
                   <ControlledDateField
-                    label="Measurement Date"
+                    showAsterisk={true}
+                    label="Measurement Date & Time (MT)"
                     control={control}
                     name="measurement_date"
                     openTo="year"
@@ -687,6 +788,7 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
+                    showAsterisk={true}
                     label="Measured By"
                     control={control}
                     name="measured_by"
@@ -729,15 +831,15 @@ export const WaterLevelForm = () => {
                     control={control}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <ControlledTextField
-                    multiline
-                    label="Describe Sampling Scenario"
-                    name="sampling_scenario"
+                <Grid size={12}>
+                  <ControlledRadio
+                    label="Data has been reviewed and is ready for public release"
                     control={control}
+                    name="public_release"
                   />
                 </Grid>
                 <FileSelectionSection
+                  disabled
                   selectedFiles={selectedFiles}
                   setSelectedFiles={setSelectedFiles}
                   supportedFileTypes={supportedFileTypes}
@@ -777,6 +879,13 @@ export const WaterLevelForm = () => {
           </Box>
         </CardContent>
       </Card>
+      <ConfirmDialog
+        title="Data Not Reviewed for Public Release"
+        text="You have selected that the data is NOT cleared for public release. Continue with submission?"
+        open={showDialog}
+        onClose={() => setShowDialog(false)}
+        onConfirm={handleConfirmDialog}
+      />
     </>
   )
 }
