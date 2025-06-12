@@ -22,7 +22,6 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install deps & build
-        working-directory: frontend
         env:
             VITE_APP_TITLE: "NMBGMR Data Manager"
             VITE_NMBGMR_AMP_API_URL: ${{ secrets.VITE_NMBGMR_AMP_API_URL_DEV }}
