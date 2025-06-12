@@ -2,8 +2,7 @@ name: CD deploy pre-production to GAE
 
 on:
   push:
-    branches: [pre-production]     
-  workflow_dispatch:
+    branches: [pre-production]
 
 jobs:
   deploy-dev:
