@@ -47,3 +47,14 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID_DEV }}
           deliverables: app.yaml
           promote: false
+
+    # Use PR author's username as git user name
+      - name: Set up git user
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: Tag commit
+        run: |
+          git tag -a "datamanagerdev-deploy-$(date -u +%Y-%m-%d)T$(date -u +%H-%M-%S%z)" -m "datamanagerdev deployment: $(date -u +%Y-%m-%d)T$(date -u +%H:%M:%S%z)"
+          git push origin --tags
