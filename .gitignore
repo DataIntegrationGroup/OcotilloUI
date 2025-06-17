@@ -3,8 +3,6 @@
 .idea
 .env
 
-app.yaml
-
 # dependencies
 /node_modules
 /.pnp

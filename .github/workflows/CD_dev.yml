@@ -1,0 +1,60 @@
+name: CD deploy pre-production to GAE
+
+on:
+  push:
+    branches: [pre-production]
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    environment: pre-production
+
+    steps:
+      # checkout the repo
+      - uses: actions/checkout@v4
+
+      #build data manager
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install deps & build
+        env:
+            VITE_APP_TITLE: "NMBGMR Data Manager"
+            VITE_NMBGMR_AMP_API_URL: ${{ secrets.VITE_NMBGMR_AMP_API_URL_DEV }}
+            VITE_NMBGMR_GEOTHERMAL_API_URL: ${{ secrets.VITE_NMBGMR_GEOTHERMAL_API_URL_DEV }}
+            VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN_DEV }}
+            VITE_FIEF_BASE_URL: ${{ secrets.VITE_FIEF_BASE_URL_DEV }}
+            VITE_FIEF_CLIENT_ID: ${{ secrets.VITE_FIEF_CLIENT_ID_DEV }}
+            VITE_BASE_URL: ${{ secrets.VITE_BASE_URL_DEV }}
+
+        run: |
+          npm ci
+          npm audit fix
+          npm run build
+
+      # authenticate to Google Cloud
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_DEV }}
+
+      # deploy to App Engine
+      - id: deploy
+        uses: google-github-actions/deploy-appengine@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID_DEV }}
+          deliverables: app.yaml
+          promote: false
+
+    # Use PR author's username as git user name
+      - name: Set up git user
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: Tag commit
+        run: |
+          git tag -a "datamanagerdev-deploy-$(date -u +%Y-%m-%d)T$(date -u +%H-%M-%S%z)" -m "datamanagerdev deployment: $(date -u +%Y-%m-%d)T$(date -u +%H:%M:%S%z)"
+          git push origin --tags
