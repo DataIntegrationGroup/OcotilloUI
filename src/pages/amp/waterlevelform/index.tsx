@@ -117,6 +117,9 @@ export const WaterLevelForm = () => {
   const hold = watch('hold')
   const cut = watch('cut')
 
+  const STEEL_TAPE_MEASURING_METHOD_CODE = 'S'
+  const measurementMethod = watch('measurement_method')
+
   const isPublicRelease = watch('public_release')
 
   useEffect(() => {
@@ -668,6 +671,9 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                   <ControlledTextField
+                    disabled={
+                      measurementMethod !== STEEL_TAPE_MEASURING_METHOD_CODE
+                    }
                     type="number"
                     label="Hold (ft)"
                     control={control}
@@ -676,6 +682,9 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                   <ControlledTextField
+                    disabled={
+                      measurementMethod !== STEEL_TAPE_MEASURING_METHOD_CODE
+                    }
                     type="number"
                     label="Cut (ft)"
                     control={control}
@@ -780,6 +789,7 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledTextField
+                    showAsterisk={true}
                     type="number"
                     label="MP Height"
                     control={control}
