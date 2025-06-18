@@ -157,17 +157,23 @@ export const WaterLevelForm = () => {
     refetch: refetchContinuousWater,
   } = getContinuousWaterLevelsFromPointId(pointId, false)
 
+  // Track the original MP Height without causing rerenders
+  const originalMPHeightRef = useRef<number | undefined>()
+
   const {
     data: mpHeight,
     isSuccess: mpHeightSuccess,
-    isError: mpHeightError,
     isFetching: isFetchingMPHeight,
     refetch: refetchMPHeight,
   } = getMPHeightFromPointId(pointId, false)
 
+  const [showMPHeightChangeDialog, setShowMPHeightChangeDialog] =
+    useState(false)
+
   useEffect(() => {
     if (mpHeightSuccess && mpHeight !== undefined) {
       setValue('mp_height', mpHeight)
+      originalMPHeightRef.current = mpHeight
     }
   }, [mpHeightSuccess, mpHeight, setValue])
 
@@ -805,11 +811,23 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledTextField
+                    disabled={isFetchingMPHeight}
                     showAsterisk={true}
                     type="number"
                     label="MP Height"
                     control={control}
                     name="mp_height"
+                    onBlur={(e) => {
+                      const current = parseFloat(e.target.value)
+                      const original = originalMPHeightRef.current
+                      if (
+                        !isNaN(current) &&
+                        original !== undefined &&
+                        current !== original
+                      ) {
+                        setShowMPHeightChangeDialog(true)
+                      }
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
@@ -910,7 +928,21 @@ export const WaterLevelForm = () => {
         text="You have selected that the data is NOT cleared for public release. Continue with submission?"
         open={showDialog}
         onClose={() => setShowDialog(false)}
-        onConfirm={handleConfirmDialog}
+        onPrimaryAction={handleConfirmDialog}
+      />
+      <ConfirmDialog
+        title="MP Height Changed"
+        text={`You have modified the MP Height from it's original well value of ${originalMPHeightRef.current} feet. Continue with the form?`}
+        open={showMPHeightChangeDialog}
+        onClose={() => setShowMPHeightChangeDialog(false)}
+        SecondaryActionBtnMsg="Reset to Original"
+        onSecondaryAction={() => {
+          if (originalMPHeightRef.current !== undefined) {
+            setValue('mp_height', originalMPHeightRef.current)
+          }
+          setShowMPHeightChangeDialog(false)
+        }}
+        onPrimaryAction={() => setShowMPHeightChangeDialog(false)}
       />
     </>
   )
