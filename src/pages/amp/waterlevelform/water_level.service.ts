@@ -279,3 +279,29 @@ export const getContinuousWaterLevelsFromPointId = (
     staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
   })
 }
+
+export const getMPHeightFromPointId = (pointid: string, enabled: boolean) => {
+  return useQuery({
+    queryKey: ['MPHeightFromPointId', pointid],
+    queryFn: async () => {
+      const accessToken = await getAccessToken()
+      const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+        .setEndpoint('wells')
+        .addParam('pointid', pointid)
+        .build()
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+
+      const data = await response.json()
+
+      return data?.measuring_point_height_ft ?? null
+    },
+    enabled: enabled,
+    staleTime: 5 * 60 * 1000, // keep results fresh for 5 minutes
+  })
+}

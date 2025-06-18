@@ -41,6 +41,7 @@ import {
   getMeasuringAgencies,
   getManualWaterLevelsFromPointId,
   getContinuousWaterLevelsFromPointId,
+  getMPHeightFromPointId,
   WaterLevel,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
@@ -155,6 +156,20 @@ export const WaterLevelForm = () => {
     isFetching: isFetchingContinuousWater,
     refetch: refetchContinuousWater,
   } = getContinuousWaterLevelsFromPointId(pointId, false)
+
+  const {
+    data: mpHeight,
+    isSuccess: mpHeightSuccess,
+    isError: mpHeightError,
+    isFetching: isFetchingMPHeight,
+    refetch: refetchMPHeight,
+  } = getMPHeightFromPointId(pointId, false)
+
+  useEffect(() => {
+    if (mpHeightSuccess && mpHeight !== undefined) {
+      setValue('mp_height', mpHeight)
+    }
+  }, [mpHeightSuccess, mpHeight, setValue])
 
   useEffect(() => {
     if (coordsError && continuousWaterError && manualWaterError) {
@@ -611,6 +626,7 @@ export const WaterLevelForm = () => {
                             refetchCoords(),
                             refetchManualWater(),
                             refetchContinuousWater(),
+                            refetchMPHeight(),
                           ])
                         }
                       }}
