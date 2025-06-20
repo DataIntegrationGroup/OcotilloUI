@@ -828,6 +828,20 @@ export const WaterLevelForm = () => {
                         setShowMPHeightChangeDialog(true)
                       }
                     }}
+                    slotProps={{
+                      input: {
+                        endAdornment: isFetchingMPHeight ? (
+                          <InputAdornment position="end">
+                            <CloudDownload
+                              color="secondary"
+                              sx={{
+                                animation: `${pulse} 1.5s ease-in-out infinite`,
+                              }}
+                            />
+                          </InputAdornment>
+                        ) : null,
+                      },
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
@@ -932,7 +946,7 @@ export const WaterLevelForm = () => {
       />
       <ConfirmDialog
         title="MP Height Changed"
-        text={`You have modified the MP Height from it's original well value of ${originalMPHeightRef.current} feet. Continue with the form?`}
+        text={`You have modified the MP Height from it's original well value of ${originalMPHeightRef.current} feet. Continue with the modified value of ${watch('mp_height')}?`}
         open={showMPHeightChangeDialog}
         onClose={() => setShowMPHeightChangeDialog(false)}
         SecondaryActionBtnMsg="Reset to Original"
