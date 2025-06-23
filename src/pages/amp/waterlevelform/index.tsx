@@ -41,6 +41,7 @@ import {
   getMeasuringAgencies,
   getManualWaterLevelsFromPointId,
   getContinuousWaterLevelsFromPointId,
+  getMPHeightFromPointId,
   WaterLevel,
 } from './water_level.service'
 import { LoadingControlledSelectField } from '@/components/amp/wellinventoryform'
@@ -117,6 +118,9 @@ export const WaterLevelForm = () => {
   const hold = watch('hold')
   const cut = watch('cut')
 
+  const STEEL_TAPE_MEASURING_METHOD_CODE = 'S'
+  const measurementMethod = watch('measurement_method')
+
   const isPublicRelease = watch('public_release')
 
   useEffect(() => {
@@ -152,6 +156,26 @@ export const WaterLevelForm = () => {
     isFetching: isFetchingContinuousWater,
     refetch: refetchContinuousWater,
   } = getContinuousWaterLevelsFromPointId(pointId, false)
+
+  // Track the original MP Height without causing rerenders
+  const originalMPHeightRef = useRef<number | undefined>()
+
+  const {
+    data: mpHeight,
+    isSuccess: mpHeightSuccess,
+    isFetching: isFetchingMPHeight,
+    refetch: refetchMPHeight,
+  } = getMPHeightFromPointId(pointId, false)
+
+  const [showMPHeightChangeDialog, setShowMPHeightChangeDialog] =
+    useState(false)
+
+  useEffect(() => {
+    if (mpHeightSuccess && mpHeight !== undefined) {
+      setValue('mp_height', mpHeight)
+      originalMPHeightRef.current = mpHeight
+    }
+  }, [mpHeightSuccess, mpHeight, setValue])
 
   useEffect(() => {
     if (coordsError && continuousWaterError && manualWaterError) {
@@ -608,6 +632,7 @@ export const WaterLevelForm = () => {
                             refetchCoords(),
                             refetchManualWater(),
                             refetchContinuousWater(),
+                            refetchMPHeight(),
                           ])
                         }
                       }}
@@ -668,6 +693,9 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                   <ControlledTextField
+                    disabled={
+                      measurementMethod !== STEEL_TAPE_MEASURING_METHOD_CODE
+                    }
                     type="number"
                     label="Hold (ft)"
                     control={control}
@@ -676,6 +704,9 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                   <ControlledTextField
+                    disabled={
+                      measurementMethod !== STEEL_TAPE_MEASURING_METHOD_CODE
+                    }
                     type="number"
                     label="Cut (ft)"
                     control={control}
@@ -780,10 +811,37 @@ export const WaterLevelForm = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
                   <ControlledTextField
+                    disabled={isFetchingMPHeight}
+                    showAsterisk={true}
                     type="number"
                     label="MP Height"
                     control={control}
                     name="mp_height"
+                    onBlur={(e) => {
+                      const current = parseFloat(e.target.value)
+                      const original = originalMPHeightRef.current
+                      if (
+                        !isNaN(current) &&
+                        original !== undefined &&
+                        current !== original
+                      ) {
+                        setShowMPHeightChangeDialog(true)
+                      }
+                    }}
+                    slotProps={{
+                      input: {
+                        endAdornment: isFetchingMPHeight ? (
+                          <InputAdornment position="end">
+                            <CloudDownload
+                              color="secondary"
+                              sx={{
+                                animation: `${pulse} 1.5s ease-in-out infinite`,
+                              }}
+                            />
+                          </InputAdornment>
+                        ) : null,
+                      },
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
@@ -884,7 +942,21 @@ export const WaterLevelForm = () => {
         text="You have selected that the data is NOT cleared for public release. Continue with submission?"
         open={showDialog}
         onClose={() => setShowDialog(false)}
-        onConfirm={handleConfirmDialog}
+        onPrimaryAction={handleConfirmDialog}
+      />
+      <ConfirmDialog
+        title="MP Height Changed"
+        text={`You have modified the MP Height from it's original well value of ${originalMPHeightRef.current} feet. Continue with the modified value of ${watch('mp_height')}?`}
+        open={showMPHeightChangeDialog}
+        onClose={() => setShowMPHeightChangeDialog(false)}
+        SecondaryActionBtnMsg="Reset to Original"
+        onSecondaryAction={() => {
+          if (originalMPHeightRef.current !== undefined) {
+            setValue('mp_height', originalMPHeightRef.current)
+          }
+          setShowMPHeightChangeDialog(false)
+        }}
+        onPrimaryAction={() => setShowMPHeightChangeDialog(false)}
       />
     </>
   )

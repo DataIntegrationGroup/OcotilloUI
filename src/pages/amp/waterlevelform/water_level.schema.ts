@@ -16,7 +16,7 @@ export const WaterLevelSchema = Yup.object().shape({
   data_source: Yup.string().nullable(),
   data_quality: Yup.string().nullable(),
   mp_height: Yup.number()
-    .nullable()
+    .required('MP Height is required')
     .typeError('MP Height must be a valid number.'),
   measurement_method: Yup.string().required('Measurement Method is required'),
   measured_by: Yup.string().required('Measured By is required'),

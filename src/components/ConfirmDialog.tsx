@@ -10,13 +10,19 @@ import {
 export interface ConfirmDialogProps {
   open: boolean
   onClose: () => void
-  onConfirm: () => void
+  SecondaryActionBtnMsg?: string
+  onSecondaryAction?: () => void
+  PrimaryActionBtnMsg?: string
+  onPrimaryAction?: () => void
 }
 
 export const ConfirmDialog = ({
   open,
   onClose,
-  onConfirm,
+  SecondaryActionBtnMsg = 'Cancel',
+  onSecondaryAction = onClose,
+  PrimaryActionBtnMsg = 'Continue',
+  onPrimaryAction,
   title = '',
   text = '',
 }: { title: string; text: string } & ConfirmDialogProps) => {
@@ -26,10 +32,18 @@ export const ConfirmDialog = ({
       <DialogContent>
         <DialogContentText>{text}</DialogContentText>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={onConfirm} variant="contained" color="primary">
-          Continue
+      <DialogActions
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: '20px 24px',
+        }}
+      >
+        <Button onClick={onSecondaryAction} variant="outlined">
+          {SecondaryActionBtnMsg}
+        </Button>
+        <Button onClick={onPrimaryAction} variant="contained" color="primary">
+          {PrimaryActionBtnMsg}
         </Button>
       </DialogActions>
     </Dialog>
