@@ -1,9 +1,23 @@
 import { Box } from '@mui/system'
-import { Autocomplete, Collapse, TextField, Card, Chip, InputAdornment, Typography } from '@mui/material'
-import { Search } from '@mui/icons-material'
+import {
+  Autocomplete,
+  Collapse,
+  Divider,
+  InputAdornment,
+  TextField,
+  Typography,
+} from '@mui/material'
+import { Search } from 'react-flaticons'
 import Stack from '@mui/material/Stack'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import {
+  AddressCard,
+  EmailCard,
+  PhoneCard,
+  SpringCard,
+  WellCard,
+} from '@/components/SearchResultCard'
 
 const results = [
   {
@@ -12,6 +26,10 @@ const results = [
     properties: {
       well_type: 'Production',
       county: 'Rio Arriba',
+      series: {
+        observed_property: 'groundwater level',
+        sensor: 'manual',
+      },
     },
     group: 'Wells',
   },
@@ -21,6 +39,10 @@ const results = [
     properties: {
       well_type: 'Observation',
       county: 'Santa Fe',
+      series: {
+        observed_property: 'groundwater level',
+        sensor: 'continuous',
+      },
     },
     group: 'Wells',
   },
@@ -30,6 +52,10 @@ const results = [
     properties: {
       well_type: 'Irrigation',
       county: 'Bernalillo',
+      series: {
+        observed_property: 'groundwater level',
+        sensor: 'manual',
+      },
     },
     group: 'Wells',
   },
@@ -69,82 +95,33 @@ const results = [
           state: 'IL',
           zip_code: '62701',
           type: 'Primary',
+          id: '1',
         },
       ],
-      phone: [{ phone_number: '555-1234', type: 'Primary' }],
-      email: [{ email: 'foo@bar.com', type: 'Primary' }],
+      phone: [{ phone_number: '555-1234', type: 'Primary', id: '1' }],
+      email: [{ email: 'foo@bar.com', type: 'Primary', id: '1' }],
     },
     group: 'Contacts',
   },
 ]
 
-type Address = {
-  address_line_1: string;
-  address_line_2: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  type: string;
-};
-type Phone = { phone_number: string; type: string };
-type Email = { email: string; type: string };
-
-type ContactProp =
-  | (Address & { category: 'address' })
-  | (Phone & { category: 'phone' })
-  | (Email & { category: 'email' });
-
-function flattenContactProps(props: {
-  address?: Address[];
-  phone?: Phone[];
-  email?: Email[];
-}): ContactProp[] {
-  return [
-    ...(props.address ?? []).map((a) => ({ ...a, category: 'address' as const })),
-    ...(props.phone ?? []).map((p) => ({ ...p, category: 'phone' as const })),
-    ...(props.email ?? []).map((e) => ({ ...e, category: 'email' as const })),
-  ];
-}
-
 export const searchService = async (query: string) => {
-  if (!query) return [];
+  if (!query) return []
 
   return results.filter((option) =>
     option.label.toLowerCase().includes(query.toLowerCase())
-  );
+  )
 }
 
-const SearchResultCard = ({ property }: { property: ContactProp }) => {
-  return (
-    <Card sx={{ p: 1, m: 1 }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Chip size="small" label={property.type} />
-        {property.category === 'address' && (
-          <Typography variant="body2">
-            {property.address_line_1}, {property.address_line_2}, {property.city},{' '}
-            {property.state} {property.zip_code}
-          </Typography>
-        )}
-        {property.category === 'phone' && (
-          <Typography variant="body2">{property.phone_number}</Typography>
-        )}
-        {property.category === 'email' && (
-          <Typography variant="body2">{property.email}</Typography>
-        )}
-      </Stack>
-    </Card>
-  );
-};
-
 export const SearchBar = () => {
-  const [searchInput, setSearchInput] = useState('');
-  const [selectedValue, setSelectedValue] = useState(null);
+  const [searchInput, setSearchInput] = useState('')
+  const [selectedValue, setSelectedValue] = useState(null)
 
   const searchQuery = useQuery({
     queryKey: ['search', searchInput],
     queryFn: () => searchService(searchInput),
     enabled: !!searchInput,
-  });
+  })
 
   return (
     <Box
@@ -153,7 +130,7 @@ export const SearchBar = () => {
         flexGrow: 1,
         borderRadius: '5px',
         margin: '10px',
-        height: '40px',   // enforce height to match nav bar
+        height: '40px', // enforce height to match nav bar
         display: 'flex',
         alignItems: 'center',
       }}
@@ -176,36 +153,52 @@ export const SearchBar = () => {
             outline: 'none',
           },
         }}
+        slotProps={{
+          paper: {
+            sx: {
+              maxHeight: 600, // Optional: set max height
+            },
+          },
+          listbox: {
+            sx: {
+              maxHeight: 600, // Optional: set max height
+              overflowY: 'auto', // Enable scrolling if content exceeds max height
+            },
+          },
+        }}
         options={searchQuery?.data ?? results}
-        getOptionLabel={(option) =>
-          typeof option === 'string'
-            ? option               // user‑typed string
-            : option.label ?? ''   // your object’s label
+        getOptionLabel={
+          (option) =>
+            typeof option === 'string'
+              ? option // user‑typed string
+              : (option.label ?? '') // your object’s label
         }
-        isOptionEqualToValue={(option, value) =>
-          typeof value === 'string'
-            ? option.label === value              // matching a freeSolo string
-            : option.label === (value as any).label // matching an object
+        isOptionEqualToValue={
+          (option, value) =>
+            typeof value === 'string'
+              ? option.label === value // matching a freeSolo string
+              : option.label === (value as any).label // matching an object
         }
-
         // control the text field
         inputValue={searchInput}
         onInputChange={(_, newInput) => {
-          setSearchInput(newInput);
+          setSearchInput(newInput)
         }}
-
         // control the selected value
         value={selectedValue}
         onChange={(_, newValue) => {
-          setSelectedValue(newValue);
+          setSelectedValue(newValue)
         }}
-
         openOnFocus
         disableClearable
         freeSolo
         groupBy={(option) => option?.group}
         renderGroup={(params) => (
-          <Collapse in={Boolean(params.children)} timeout="auto">
+          <Collapse
+            key={params.group}
+            in={Boolean(params.children)}
+            timeout="auto"
+          >
             <Stack
               sx={{
                 padding: '10px',
@@ -217,71 +210,84 @@ export const SearchBar = () => {
                 margin: '10px',
               }}
             >
-              <div
-                style={{
-                  fontWeight: 'bold',
-                  color: '#066b78',
-                  marginBottom: '5px',
-                }}
-              >
-                {params.group}
-              </div>
+              <Typography variant={'h3'}>{params.group}</Typography>
+              <Divider sx={{ marginBottom: '5px' }} />
               {params.children}
             </Stack>
           </Collapse>
         )}
-        renderOption={(props, option) => {
-          // for non-Contacts just render the label + chips
-          if (option.group !== 'Contacts') {
-            return (
-              <li {...props} key={option.label} style={{ padding: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <Typography sx={{ display: 'block' }} variant='subtitle1' component="div">{option.label}</Typography>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    mt: 0.5,
-                    width: '100%'
-                  }}
+        renderOption={(props, option) => (
+          <li
+            {...props}
+            style={{ padding: '10px' }}
+            key={option.label + option.group}
+          >
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <div>
+                <Typography
+                  sx={{ display: 'block' }}
+                  variant="subtitle1"
+                  component="div"
                 >
-                  <Typography variant='body1'>{option.description}</Typography>
-                  {option.properties.well_type && (
-                    <Chip size="small" label={option.properties.well_type} sx={{ ml: 1 }} />
-                  )}
-                  {option.properties.county && (
-                    <Chip size="small" label={option.properties.county} sx={{ ml: 1 }} />
-                  )}
-                </Box>
-              </li>
-            );
-          }
-
-          // for Contacts, flatten & render one card per sub-property
-          const contactProps = flattenContactProps(option.properties);
-
-          return (
-            <li {...props} key={option.label} style={{ width: '100%' }}>
-              <Typography variant="subtitle2">{option.label}</Typography>
-              {contactProps.map((prop, i) => (
-                <SearchResultCard key={`${option.label}-${prop.category}-${i}`} property={prop} />
-              ))}
-            </li>
-          );
-        }}
-        renderInput={params => <TextField {...params}
-          placeholder="Search"
-          InputProps={{
-            ...params.InputProps,
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search color="primary" />
-              </InputAdornment>
-            ),
-          }}
-        />}
+                  {option.label}
+                </Typography>
+                <Typography variant={'body1'}>{option.description}</Typography>
+                // Well result
+                {option.group === 'Wells' && (
+                  <div style={{ color: '#666' }}>
+                    <WellCard option={option} />
+                  </div>
+                )}
+                // Spring result
+                {option.group === 'Springs' && (
+                  <div style={{ color: '#666' }}>
+                    <SpringCard option={option} />
+                  </div>
+                )}
+                // Contact result
+                {option.group === 'Contacts' && (
+                  <div style={{ color: '#666' }}>
+                    {option.properties.address.map((address) => (
+                      <AddressCard
+                        key={'address' + address.id}
+                        option={address}
+                      />
+                    ))}
+                    {option.properties.phone.map((phone) => (
+                      <PhoneCard key={'phone' + phone.id} option={phone} />
+                    ))}
+                    {option.properties.email.map((email) => (
+                      <EmailCard key={'email' + email.id} option={email} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Stack>
+          </li>
+        )}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            sx={{
+              borderRadius: '10px',
+              margin: '10px',
+            }}
+            label="Search"
+            slotProps={{
+              input: {
+                ...params.InputProps,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search color="primary" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+        )}
       />
-    </Box >
+    </Box>
   )
 }
 
-export default SearchBar;
+export default SearchBar
