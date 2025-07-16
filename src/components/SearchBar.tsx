@@ -232,19 +232,19 @@ export const SearchBar = () => {
                   {option.label}
                 </Typography>
                 <Typography variant={'body1'}>{option.description}</Typography>
-                // Well result
+                {/*Well result*/}
                 {option.group === 'Wells' && (
                   <div style={{ color: '#666' }}>
                     <WellCard option={option} />
                   </div>
                 )}
-                // Spring result
+                {/*Spring result*/}
                 {option.group === 'Springs' && (
                   <div style={{ color: '#666' }}>
                     <SpringCard option={option} />
                   </div>
                 )}
-                // Contact result
+                {/*Contact result*/}
                 {option.group === 'Contacts' && (
                   <div style={{ color: '#666' }}>
                     {option.properties.address.map((address) => (
