@@ -1,5 +1,5 @@
 import { Box } from '@mui/system'
-import { Autocomplete, Collapse, TextField, Card, Chip } from '@mui/material'
+import { Autocomplete, Collapse, TextField, Card, Chip, InputAdornment } from '@mui/material'
 import { Search } from 'react-flaticons'
 import Stack from '@mui/material/Stack'
 import { useState } from 'react'
@@ -93,8 +93,6 @@ function PhoneCard({ option }) {
       <Chip color="default" label={option.type} />
       {option.phone_number}
     </Card>
-    // <div style={{ color: '#666' }}>
-    // </div>
   )
 }
 
@@ -108,7 +106,6 @@ function EmailCard({ option }) {
 }
 
 export default function SearchBar() {
-  // const [options, setOptions] = useState(results.map((option) => option.title))
   const [options, setOptions] = useState(results)
   const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value
@@ -138,8 +135,8 @@ export default function SearchBar() {
         freeSolo
         disableClearable
         options={options}
-        onChange={(event, value) => {
-          console.log('Selected value:', value)
+        onChange={(_event, value) => {
+          console.debug('Selected value:', value)
         }}
         groupBy={(option) => option.group}
         slotProps={{
@@ -151,11 +148,9 @@ export default function SearchBar() {
           listbox: {
             sx: {
               maxHeight: 600, // Optional: set max height
-              // overflowY: 'auto', // Enable scrolling if content exceeds max height
             },
           },
         }}
-        // getOptionLabel={(option) => option.label}
         renderGroup={(params) => (
           <Collapse in={Boolean(params.children)} timeout="auto">
             <Stack
@@ -222,17 +217,17 @@ export default function SearchBar() {
           <TextField
             {...params}
             sx={{
-              // background: '#fff',
-              borderRadius: '10px',
-              margin: '10px',
-              // padding: '10px',
+              margin: 0,
+              padding: 0,
             }}
             onChange={handleInput}
-            label="Search"
+            label=""
+            placeholder='Search'
             slotProps={{
               input: {
                 ...params.InputProps,
                 type: 'search',
+                startAdornment: <InputAdornment position='start'><Search /></InputAdornment>
               },
             }}
           />
