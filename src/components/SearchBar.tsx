@@ -1,6 +1,6 @@
 import { Box } from '@mui/system'
 import { Autocomplete, Collapse, TextField, Card, Chip, InputAdornment } from '@mui/material'
-import { Search } from 'react-flaticons'
+import { Search } from '@mui/icons-material'
 import Stack from '@mui/material/Stack'
 import { useState } from 'react'
 
@@ -105,13 +105,12 @@ function EmailCard({ option }) {
   )
 }
 
-export default function SearchBar() {
+export const SearchBar = () => {
   const [options, setOptions] = useState(results)
   const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value
     if (!inputValue) {
-      // If input is empty, reset options to initial results
-      setOptions([])
+      setOptions(results)
       return
     }
     // Simulate fetching options based on input
@@ -124,33 +123,30 @@ export default function SearchBar() {
   return (
     <Box
       sx={{
-        background: '#fff',
+        backgroundColor: 'background.paper',
         flexGrow: 1,
         borderRadius: '5px',
-        paddingRight: '20px',
         margin: '10px',
+        height: '40px',   // enforce height to match nav bar
+        display: 'flex',
+        alignItems: 'center',
       }}
     >
       <Autocomplete
-        freeSolo
+        sx={{
+          width: '100%',
+          '& .MuiInputBase-root': {
+            height: '40px',
+          },
+        }}
+        disablePortal
         disableClearable
+        freeSolo
         options={options}
         onChange={(_event, value) => {
           console.debug('Selected value:', value)
         }}
         groupBy={(option) => option.group}
-        slotProps={{
-          paper: {
-            sx: {
-              maxHeight: 600, // Optional: set max height
-            },
-          },
-          listbox: {
-            sx: {
-              maxHeight: 600, // Optional: set max height
-            },
-          },
-        }}
         renderGroup={(params) => (
           <Collapse in={Boolean(params.children)} timeout="auto">
             <Stack
@@ -216,19 +212,27 @@ export default function SearchBar() {
         renderInput={(params) => (
           <TextField
             {...params}
+            size="small"
+            margin="none"
             sx={{
-              margin: 0,
-              padding: 0,
+              m: 0,
+              p: 0,
+              '& .MuiInputBase-root': {
+                height: '40px',
+              },
             }}
             onChange={handleInput}
-            label=""
-            placeholder='Search'
+            placeholder="Search"
             slotProps={{
+              ...params.InputProps,
               input: {
-                ...params.InputProps,
                 type: 'search',
-                startAdornment: <InputAdornment position='start'><Search /></InputAdornment>
-              },
+                startAdornment: (
+                  <InputAdornment position="start" sx={{ color: 'text.primary' }}>
+                    <Search color='primary' />
+                  </InputAdornment>
+                ),
+              }
             }}
           />
         )}
@@ -236,3 +240,5 @@ export default function SearchBar() {
     </Box>
   )
 }
+
+export default SearchBar;
