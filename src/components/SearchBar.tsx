@@ -1,8 +1,9 @@
 import { Box } from '@mui/system'
-import { Autocomplete, Collapse, TextField, Card, Chip, InputAdornment } from '@mui/material'
+import { Autocomplete, Collapse, TextField, Card, Chip, InputAdornment, Popper } from '@mui/material'
 import { Search } from '@mui/icons-material'
 import Stack from '@mui/material/Stack'
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 const results = [
   {
@@ -77,6 +78,14 @@ const results = [
   },
 ]
 
+export const searchService = async (query: string) => {
+  if (!query) return [];
+
+  return results.filter((option) =>
+    option.label.toLowerCase().includes(query.toLowerCase())
+  );
+}
+
 function AddressCard({ option }) {
   return (
     <Card sx={{ padding: '5px', margin: '5px' }}>
@@ -106,19 +115,14 @@ function EmailCard({ option }) {
 }
 
 export const SearchBar = () => {
-  const [options, setOptions] = useState(results)
-  const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = event.target.value
-    if (!inputValue) {
-      setOptions(results)
-      return
-    }
-    // Simulate fetching options based on input
-    const fetchedOptions = results.filter((option) =>
-      option['label'].toLowerCase().includes(inputValue.toLowerCase())
-    )
-    setOptions(fetchedOptions)
-  }
+  const [searchInput, setSearchInput] = useState('');
+  const [selectedValue, setSelectedValue] = useState(null);
+
+  const searchQuery = useQuery({
+    queryKey: ['search', searchInput],
+    queryFn: () => searchService(searchInput),
+    enabled: !!searchInput,
+  });
 
   return (
     <Box
@@ -138,15 +142,23 @@ export const SearchBar = () => {
           '& .MuiInputBase-root': {
             height: '40px',
           },
+          zIndex: 1500, // Ensure it's higher than surrounding components
+          '& .MuiAutocomplete-popper': {
+            zIndex: 1500,
+          },
         }}
-        disablePortal
+        disablePortal={false}
         disableClearable
         freeSolo
-        options={options}
-        onChange={(_event, value) => {
-          console.debug('Selected value:', value)
-        }}
-        groupBy={(option) => option.group}
+        options={searchQuery?.data ?? []}
+        onChange={(_event, newValue) => setSelectedValue(newValue)}
+        value={selectedValue}
+        onInputChange={(_event, newInput) => setSearchInput(newInput)}
+        inputValue={searchInput}
+        isOptionEqualToValue={(option, value) => option.label === value?.label}
+        clearOnBlur={false}
+        groupBy={(option) => option?.group}
+        getOptionLabel={(option) => option.label}
         renderGroup={(params) => (
           <Collapse in={Boolean(params.children)} timeout="auto">
             <Stack
@@ -171,43 +183,46 @@ export const SearchBar = () => {
           </Collapse>
         )}
         renderOption={(props, option) => (
-          <li {...props} style={{ padding: '10px' }}>
-            <Stack direction="row" alignItems="center" spacing={2}>
-              <div>
-                <strong>{option.label}</strong>
-                <div style={{ color: '#666' }}>{option.description}</div>
-                {option.group === 'Wells' && (
-                  <div style={{ color: '#666' }}>
-                    {
-                      <Chip
-                        color={'primary'}
-                        label={option.properties.well_type}
-                      />
-                    }
-                    {
-                      <Chip
-                        color={'secondary'}
-                        label={option.properties.county}
-                      />
-                    }
-                  </div>
-                )}
-                {option.group === 'Contacts' && (
-                  <div style={{ color: '#666' }}>
-                    {option.properties.address.map((address) => (
-                      <AddressCard option={address} />
-                    ))}
-                    {option.properties.phone.map((phone) => (
-                      <PhoneCard option={phone} />
-                    ))}
-                    {option.properties.email.map((email) => (
-                      <EmailCard option={email} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </Stack>
+          <li {...props} key={option.label}>
+            {option.label}
           </li>
+          // <li {...props} style={{ padding: '10px' }}>
+          //   <Stack direction="row" alignItems="center" spacing={2}>
+          //     <div>
+          //       <strong>{option.label}</strong>
+          //       <div style={{ color: '#666' }}>{option.description}</div>
+          //       {option.group === 'Wells' && (
+          //         <div style={{ color: '#666' }}>
+          //           {
+          //             <Chip
+          //               color={'primary'}
+          //               label={option.properties.well_type}
+          //             />
+          //           }
+          //           {
+          //             <Chip
+          //               color={'secondary'}
+          //               label={option.properties.county}
+          //             />
+          //           }
+          //         </div>
+          //       )}
+          //       {option.group === 'Contacts' && (
+          //         <div style={{ color: '#666' }}>
+          //           {option.properties.address.map((address) => (
+          //             <AddressCard option={address} />
+          //           ))}
+          //           {option.properties.phone.map((phone) => (
+          //             <PhoneCard option={phone} />
+          //           ))}
+          //           {option.properties.email.map((email) => (
+          //             <EmailCard option={email} />
+          //           ))}
+          //         </div>
+          //       )}
+          //     </div>
+          //   </Stack>
+          // </li>
         )}
         renderInput={(params) => (
           <TextField
@@ -221,7 +236,6 @@ export const SearchBar = () => {
                 height: '40px',
               },
             }}
-            onChange={handleInput}
             placeholder="Search"
             slotProps={{
               ...params.InputProps,
