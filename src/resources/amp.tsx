@@ -15,7 +15,7 @@ let amp = [
     name: "dashboard",
     list: "/amp/dashboard",
     meta: {
-      label: "Dashboard",
+      label: "Dashboard (Coming Soon)",
       icon: <DashboardOutlined />,
     },
   },
@@ -31,7 +31,7 @@ let amp = [
     name: "reportbuilder",
     list: "/amp/reportbuilder",
     meta: {
-      label: "Report Builder (Coming Soon)",
+      label: "Report Builder (Not Available)",
       icon: <Construction />,
     },
   },
@@ -39,7 +39,7 @@ let amp = [
     name: "querybuilder",
     list: "/amp/querybuilder",
     meta: {
-      label: "Query Builder (Beta)",
+      label: "Query Builder (Coming Soon)",
       icon: <Construction />,
     },
   },
@@ -62,9 +62,9 @@ let amp = [
   {
     name: "projects",
     list: "/amp/projects",
-    icon: <CategoryOutlined />,
     meta: {
-      label: "Projects",
+      label: "Projects (Coming Soon)",
+      icon: <CategoryOutlined />,
     },
   },
 
@@ -76,7 +76,7 @@ let amp = [
     show: "/amp/locations/show/:id",
     create: "/amp/locations/create",
     meta: {
-      label: "Locations",
+      label: "Locations (Coming Soon)",
     },
   },
   {
@@ -87,7 +87,7 @@ let amp = [
     show: "/amp/wells/show/:id",
     create: "/amp/wells/create",
     meta: {
-      label: "Wells",
+      label: "Wells (Coming Soon)",
     },
   },
   {
@@ -98,7 +98,7 @@ let amp = [
     create: "/amp/equipment/create",
     show: "/amp/equipment/show/:id",
     meta: {
-      label: "Equipment",
+      label: "Equipment (Coming Soon)",
     },
   },
   {
@@ -108,7 +108,7 @@ let amp = [
     create: "/amp/manualwaterlevels/create",
     show: "/amp/manualwaterlevels/show/:id",
     meta: {
-      label: "Manual Water Levels",
+      label: "Manual Water Levels (Coming Soon)",
     },
   },
   {
