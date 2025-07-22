@@ -1,25 +1,26 @@
-import { Authenticated } from "@refinedev/core";
-import { AuthPage, ErrorComponent } from "@refinedev/mui";
+import { Authenticated } from '@refinedev/core'
+import { AuthPage, ErrorComponent } from '@refinedev/mui'
 import {
   BrowserRouter,
   Navigate,
   Outlet,
   Route,
   Routes,
-} from "react-router-dom";
-import { ThemedLayoutV2 } from "@/components/layout";
-import { ThemedHeaderV2 } from "@/components/layout/header";
-import { ThemedSiderV2 } from "@/components/layout/sider";
-import { ThemedTitleV2 } from "@/components/layout/title";
-import { Home } from "@/pages/home";
-import { CriticalMineralsDashboard } from "@/pages/criticalminerals/dashboard";
-import { Callback } from "@/components/Auth";
-import { AMPRoutes } from "@/routes/amp";
-import { ST2Routes } from "@/routes/st2";
-import { GeothermalRoutes } from "@/routes/geothermal";
-import { GeochronologyRoutes } from "@/routes/geochronology";
-import { settings } from "@/settings";
-import { Providers } from "./Providers";
+} from 'react-router-dom'
+import { ThemedLayoutV2 } from '@/components/layout'
+import { ThemedHeaderV2 } from '@/components/layout/header'
+import { ThemedSiderV2 } from '@/components/layout/sider'
+import { ThemedTitleV2 } from '@/components/layout/title'
+import { Home } from '@/pages/home'
+import { CriticalMineralsDashboard } from '@/pages/criticalminerals/dashboard'
+import { Callback } from '@/components/Auth'
+import { AMPRoutes } from '@/routes/amp'
+import { ST2Routes } from '@/routes/st2'
+import { GeothermalRoutes } from '@/routes/geothermal'
+import { GeochronologyRoutes } from '@/routes/geochronology'
+import { settings } from '@/settings'
+import { Providers } from './Providers'
+import { DataforgeRoutes } from '@/routes/dataforge'
 
 const App: React.FC = () => (
   <BrowserRouter basename={settings.urlprefix}>
@@ -28,7 +29,7 @@ const App: React.FC = () => (
         <Route
           element={
             <Authenticated
-              key={"auth-pages"}
+              key={'auth-pages'}
               fallback={<Outlet />}
               v3LegacyAuthProviderCompatible={true}
             >
@@ -49,8 +50,8 @@ const App: React.FC = () => (
                 registerLink={false}
                 providers={[
                   {
-                    name: "fief",
-                    label: "Sign in with Fief",
+                    name: 'fief',
+                    label: 'Sign in with Fief',
                   },
                 ]}
               />
@@ -81,6 +82,7 @@ const App: React.FC = () => (
         >
           <Route index element={<Home />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/dataforge/*" element={<DataforgeRoutes />} />
           <Route path="/amp/*" element={<AMPRoutes />} />
           <Route path="/st2/*" element={<ST2Routes />} />
           <Route path="/geochronology/*" element={<GeochronologyRoutes />} />
@@ -106,6 +108,6 @@ const App: React.FC = () => (
       </Routes>
     </Providers>
   </BrowserRouter>
-);
+)
 
-export default App;
+export default App
