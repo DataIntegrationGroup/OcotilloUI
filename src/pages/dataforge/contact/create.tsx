@@ -10,6 +10,8 @@ import { Controller } from 'react-hook-form'
 import type { ILocation } from '../../../interfaces/amp'
 import { Nullable } from '../../../interfaces'
 import { IContact } from '@/interfaces/dataforge/IContact'
+import { IThing } from '@/interfaces/dataforge/IThing'
+import { useState } from 'react'
 
 export const ContactCreate: React.FC = () => {
   const {
@@ -19,9 +21,12 @@ export const ContactCreate: React.FC = () => {
     formState: { errors },
   } = useForm<IContact, HttpError, Nullable<IContact>>()
 
-  // const { autocompleteProps } = useAutocomplete<ICategory>({
-  //   resource: "categories",
-  // });
+  const [thingValue, setThingValue] = useState<IThing | null>(null)
+  const [role, setRole] = useState<string | null>(null)
+  const { autocompleteProps } = useAutocomplete<IThing>({
+    resource: 'thing',
+    dataProviderName: 'dataforge',
+  })
 
   return (
     <Create saveButtonProps={saveButtonProps}>
@@ -42,31 +47,71 @@ export const ContactCreate: React.FC = () => {
           name="name"
           autoFocus
         />
-        <TextField
-          {...register('role', {
-            required: 'This field is required',
-          })}
-          error={!!errors.role}
-          helperText={errors.role?.message}
-          margin="normal"
-          fullWidth
-          label="Role"
+
+        <Controller
           name="role"
-          autoFocus
+          control={control}
+          rules={{ required: 'This field is required' }}
+          render={({ field }) => (
+            <Autocomplete
+              //todo: get roles from API
+              options={['Owner', 'Manager', 'Operator']}
+              value={role}
+              onChange={(_, newValue) => {
+                setRole(newValue)
+                field.onChange(newValue)
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Role"
+                  margin="normal"
+                  error={!!errors.role}
+                  helperText={errors.role?.message}
+                />
+              )}
+            />
+          )}
         />
-        <TextField
-          {...register('thing_id', {
-            required: 'This field is required',
-          })}
-          error={!!errors.thing_id}
-          helperText={errors.thing_id?.message}
-          margin="normal"
-          fullWidth
-          label="Thing ID"
+        <Controller
           name="thing_id"
-          autoFocus
-          defaultValue={3}
+          control={control}
+          rules={{ required: 'This field is required' }}
+          render={({ field }) => (
+            <Autocomplete
+              {...autocompleteProps}
+              value={thingValue}
+              onChange={(_, newValue) => {
+                setThingValue(newValue)
+                field.onChange(newValue?.id || null)
+              }}
+              getOptionKey={(option) => option.id}
+              getOptionLabel={(option) => option.name || ''}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Location"
+                  margin="normal"
+                  error={!!errors.thing_id}
+                  helperText={errors.thing_id?.message}
+                />
+              )}
+            />
+          )}
         />
+        {/*<TextField*/}
+        {/*  {...register('thing_id', {*/}
+        {/*    required: 'This field is required',*/}
+        {/*  })}*/}
+        {/*  error={!!errors.thing_id}*/}
+        {/*  helperText={errors.thing_id?.message}*/}
+        {/*  margin="normal"*/}
+        {/*  fullWidth*/}
+        {/*  label="Thing ID"*/}
+        {/*  name="thing_id"*/}
+        {/*  autoFocus*/}
+        {/*  defaultValue={3}*/}
+        {/*/>*/}
       </Box>
     </Create>
   )
