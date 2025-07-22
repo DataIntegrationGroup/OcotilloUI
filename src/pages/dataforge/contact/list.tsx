@@ -26,6 +26,22 @@ export const ContactList: React.FC = () => {
         minWidth: 100,
       },
       {
+        field: 'things',
+        headerName: 'Things',
+        type: 'number',
+        minWidth: 150,
+        valueGetter: (value, row) =>
+          row.things.map((thing) => thing.name).join('; '),
+      },
+      {
+        field: 'thing_ids',
+        headerName: 'Thing IDs',
+        type: 'number',
+        minWidth: 150,
+        valueGetter: (value, row) =>
+          row.things.map((thing) => thing.id).join('; '),
+      },
+      {
         field: 'name',
         headerName: 'Name',
         type: 'string',

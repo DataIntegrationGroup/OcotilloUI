@@ -1,4 +1,7 @@
+import { IThing } from '@/interfaces/dataforge/IThing'
+
 export interface IContact {
+  things: [IThing]
   id: number
   name: string
   role: string
