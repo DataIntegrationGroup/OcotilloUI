@@ -7,7 +7,6 @@ import { useForm } from '@refinedev/react-hook-form'
 
 import { Controller } from 'react-hook-form'
 
-import type { ILocation } from '../../../interfaces/amp'
 import { Nullable } from '../../../interfaces'
 import { IContact } from '@/interfaces/dataforge/IContact'
 import { IThing } from '@/interfaces/dataforge/IThing'
@@ -99,19 +98,6 @@ export const ContactCreate: React.FC = () => {
             />
           )}
         />
-        {/*<TextField*/}
-        {/*  {...register('thing_id', {*/}
-        {/*    required: 'This field is required',*/}
-        {/*  })}*/}
-        {/*  error={!!errors.thing_id}*/}
-        {/*  helperText={errors.thing_id?.message}*/}
-        {/*  margin="normal"*/}
-        {/*  fullWidth*/}
-        {/*  label="Thing ID"*/}
-        {/*  name="thing_id"*/}
-        {/*  autoFocus*/}
-        {/*  defaultValue={3}*/}
-        {/*/>*/}
       </Box>
     </Create>
   )
