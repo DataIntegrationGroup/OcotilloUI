@@ -86,12 +86,11 @@ export const ContactList: React.FC = () => {
     []
   )
 
-  const { dataGridProps: phoneDataGridProps, loading: phoneLoading } =
-    useDataGrid<IEmail>({
-      dataProviderName: 'dataforge',
-      resource: `contact/${selectedContactId}/phone`,
-      meta: { enabled: !!selectedContactId },
-    })
+  const { dataGridProps: phoneDataGridProps } = useDataGrid<IEmail>({
+    dataProviderName: 'dataforge',
+    resource: `contact/${selectedContactId}/phone`,
+    meta: { enabled: !!selectedContactId },
+  })
 
   const phoneColumns = useMemo<GridColDef<IPhone>[]>(
     () => [
@@ -117,12 +116,11 @@ export const ContactList: React.FC = () => {
     []
   )
 
-  const { dataGridProps: addressDataGridProps, loading: addressIsLoading } =
-    useDataGrid<IAddress>({
-      dataProviderName: 'dataforge',
-      resource: `contact/${selectedContactId}/address`,
-      meta: { enabled: !!selectedContactId },
-    })
+  const { dataGridProps: addressDataGridProps } = useDataGrid<IAddress>({
+    dataProviderName: 'dataforge',
+    resource: `contact/${selectedContactId}/address`,
+    meta: { enabled: !!selectedContactId },
+  })
 
   const addressColumns = useMemo<GridColDef<IAddress>[]>(
     () => [
@@ -181,35 +179,20 @@ export const ContactList: React.FC = () => {
           onRowClick={(params) => {
             setSelectedContactId(params.row.id)
           }}
-          // getRowId={(row) => row.id}
         />
         {selectedContactId && (
           <>
             <Card sx={{ marginTop: 2 }}>
               <CardHeader title={'Email'} />
-              <DataGrid
-                {...emailDataGridProps}
-                // loading={emailIsLoading}
-                columns={emailColumns}
-                // getRowId={(row) => row.id}
-              />
+              <DataGrid {...emailDataGridProps} columns={emailColumns} />
             </Card>
             <Card sx={{ marginTop: 2 }}>
               <CardHeader title={'Phone'} />
-              <DataGrid
-                {...phoneDataGridProps}
-                loading={phoneLoading}
-                columns={phoneColumns}
-                // getRowId={(row) => row.id}
-              />
+              <DataGrid {...phoneDataGridProps} columns={phoneColumns} />
             </Card>
             <Card sx={{ marginTop: 2 }}>
               <CardHeader title={'Address'} />
-              <DataGrid
-                {...addressDataGridProps}
-                loading={addressIsLoading}
-                columns={addressColumns}
-              />
+              <DataGrid {...addressDataGridProps} columns={addressColumns} />
             </Card>
           </>
         )}
