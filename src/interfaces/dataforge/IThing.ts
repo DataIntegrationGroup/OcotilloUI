@@ -6,7 +6,10 @@ export interface IThing {
 
 export interface IWellThing {
   id: number
+  thing: IThing
   well_depth: number
   hole_depth: number
   created_at: string
+  thing_id: number
+  well_type: string
 }

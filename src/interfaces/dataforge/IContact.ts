@@ -3,6 +3,7 @@ export interface IContact {
   name: string
   role: string
   thing_id: number
+  created_at: string
 }
 
 export interface IEmail {

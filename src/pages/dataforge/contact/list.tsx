@@ -38,6 +38,13 @@ export const ContactList: React.FC = () => {
         minWidth: 150,
       },
       {
+        field: 'created_at',
+        headerName: 'Created At',
+        type: 'dateTime',
+        minWidth: 180,
+        valueGetter: (params) => new Date(params),
+      },
+      {
         field: 'actions',
         headerName: 'Actions',
         renderCell: function render({ row }) {
