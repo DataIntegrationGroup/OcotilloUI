@@ -22,6 +22,17 @@ let dataforge = [
       label: 'Contacts',
     },
   },
+  {
+    name: 'wellthing',
+    list: '/dataforge/wellthing',
+    edit: '/dataforge/wellthing/edit/:id',
+    show: '/dataforge/wellthing/show/:id',
+    create: '/dataforge/wellthing/create',
+    meta: {
+      label: 'Well Things',
+      icon: <Construction />,
+    },
+  },
 ]
 
 export const dataforgeResources = dataforge.map((b) => {

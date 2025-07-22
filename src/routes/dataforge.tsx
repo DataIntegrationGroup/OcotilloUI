@@ -12,6 +12,12 @@ import {
   ContactShow,
 } from '@/pages/dataforge/contact'
 import { ContactCreate } from '@/pages/dataforge/contact/create'
+import { WellThingCreate } from '@/pages/dataforge/thing/create'
+import {
+  WellThingEdit,
+  WellThingList,
+  WellThingShow,
+} from '@/pages/dataforge/thing'
 
 export const DataforgeRoutes = () => {
   return (
@@ -22,6 +28,12 @@ export const DataforgeRoutes = () => {
         <Route path={'show/:id'} element={<ContactShow />} />
         <Route path={'edit/:id'} element={<ContactEdit />} />
         <Route path={'create'} element={<ContactCreate />} />
+      </Route>
+      <Route path="wellthing">
+        <Route index element={<WellThingList />} />
+        <Route path={'show/:id'} element={<WellThingShow />} />
+        <Route path={'edit/:id'} element={<WellThingEdit />} />
+        <Route path={'create'} element={<WellThingCreate />} />
       </Route>
 
       <Route path="*" element={<ErrorComponent />} />

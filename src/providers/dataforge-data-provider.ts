@@ -39,10 +39,17 @@ export const axiosCall = async (url: string, options: AxiosRequestConfig) => {
   return axiosInstance(config)
 }
 
+const cleanResourceName = (resource: string) => {
+  resource = resource.replace(/^dataforge\./, '')
+  if (resource === 'wellthing') {
+    resource = 'thing/well'
+  }
+  return resource
+}
 export const dataForgeDataProvider: DataProvider = {
   getList: async ({ resource, pagination, filters, sorters, meta }) => {
     const params = new URLSearchParams()
-    resource = resource.replace(/^dataforge\./, '')
+    resource = cleanResourceName(resource)
 
     if (meta?.params !== undefined) {
       Object.entries(meta['params']).forEach(([key, value]) => {
@@ -94,7 +101,7 @@ export const dataForgeDataProvider: DataProvider = {
     return await response.data
   },
   getOne: async ({ resource, id, meta }) => {
-    resource = resource.replace(/^dataforge\./, '')
+    resource = cleanResourceName(resource)
 
     let url: string = `${resource}/${id}`
     const response = await fetcher(url)
@@ -105,7 +112,7 @@ export const dataForgeDataProvider: DataProvider = {
     return { data }
   },
   create: async ({ resource, variables }) => {
-    resource = resource.replace(/^dataforge\./, '')
+    resource = cleanResourceName(resource)
     const response = await axiosCall(`${resource}`, {
       method: 'POST',
       data: JSON.stringify(variables),
@@ -121,8 +128,7 @@ export const dataForgeDataProvider: DataProvider = {
     return { data }
   },
   update: async ({ resource, id, variables }) => {
-    resource = resource.replace(/^dataforge\./, '')
-
+    resource = cleanResourceName(resource)
     const response = await axiosCall(`${resource}/${id}`, {
       method: 'PATCH',
       data: JSON.stringify(variables),
