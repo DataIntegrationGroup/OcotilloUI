@@ -21,7 +21,7 @@ interface MapComponentProps {
   isLoading?: boolean;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({
+export const MapComponent: React.FC<MapComponentProps> = ({
   children,
   onClick,
   popupContent,
