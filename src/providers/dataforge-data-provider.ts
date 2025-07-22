@@ -51,6 +51,13 @@ export const dataForgeDataProvider: DataProvider = {
     const params = new URLSearchParams()
     resource = cleanResourceName(resource)
 
+    if (meta?.enabled === false) {
+      return {
+        data: [],
+        total: 0,
+      }
+    }
+
     if (meta?.params !== undefined) {
       Object.entries(meta['params']).forEach(([key, value]) => {
         if (value === null || value === undefined) return
