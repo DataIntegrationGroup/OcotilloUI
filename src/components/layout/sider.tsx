@@ -94,6 +94,8 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
       const isNested = !(meta.parent === undefined);
       const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0;
 
+      const allowedCategories = new Set(['Water', 'Batch Upload', 'Lookup Tables'])
+
       if (children.length > 0) {
         return (
           <CanAccess
@@ -112,6 +114,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
                 arrow
               >
                 <ListItemButton
+                  disabled={!allowedCategories.has(label)}
                   onClick={() => {
                     if (siderCollapsed) {
                       setSiderCollapsed(false);
