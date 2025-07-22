@@ -13,11 +13,17 @@ export const ContactList: React.FC = () => {
         field: 'id',
         headerName: 'ID',
         type: 'number',
-        minWidth: 200,
+        minWidth: 100,
       },
       {
         field: 'name',
         headerName: 'Name',
+        type: 'string',
+        minWidth: 150,
+      },
+      {
+        field: 'role',
+        headerName: 'Role',
         type: 'string',
         minWidth: 150,
       },

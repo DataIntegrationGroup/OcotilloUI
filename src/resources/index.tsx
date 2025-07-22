@@ -37,7 +37,7 @@ let base = [
   {
     name: 'dataforge',
     icon: <FactoryOutlined />,
-    meta: { label: 'DataForge' },
+    meta: { label: 'DataForge: Coming Soon' },
   },
 ]
 
