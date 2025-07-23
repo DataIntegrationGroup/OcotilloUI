@@ -18,6 +18,7 @@ import {
   WellThingList,
   WellThingShow,
 } from '@/pages/dataforge/thing'
+import { MapView } from '@/pages/dataforge/map'
 
 export const DataforgeRoutes = () => {
   return (
@@ -35,7 +36,7 @@ export const DataforgeRoutes = () => {
         <Route path={'edit/:id'} element={<WellThingEdit />} />
         <Route path={'create'} element={<WellThingCreate />} />
       </Route>
-
+      <Route path="map" element={<MapView />} />
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
   )

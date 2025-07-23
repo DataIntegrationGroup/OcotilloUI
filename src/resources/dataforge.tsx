@@ -33,6 +33,14 @@ let dataforge = [
       icon: <Construction />,
     },
   },
+  {
+    name: 'map',
+    list: '/dataforge/map',
+    meta: {
+      label: 'Map',
+      icon: <DashboardOutlined />,
+    },
+  },
 ]
 
 export const dataforgeResources = dataforge.map((b) => {
