@@ -34,6 +34,14 @@ let dataforge = [
     },
   },
   {
+    name: 'location',
+    list: '/dataforge/location',
+    meta: {
+      label: 'Locations',
+      icon: <Place />,
+    },
+  },
+  {
     name: 'map',
     list: '/dataforge/map',
     meta: {
