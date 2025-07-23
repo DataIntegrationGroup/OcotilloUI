@@ -1,17 +1,22 @@
 export const settings = {
   rowHeight: 27,
   filterDebounceMs: 1000,
-  urlprefix: import.meta.env.VITE_URLPREFIX || "",
+  urlprefix: import.meta.env.VITE_URLPREFIX || '',
+
   nmbgmr_amp_api_url:
-    import.meta.env.VITE_NMBGMR_AMP_API_URL || "http://localhost:8009",
-  st2_url: "https://st2.newmexicowaterdata.org/FROST-Server/v1.1",
+    import.meta.env.VITE_NMBGMR_AMP_API_URL || 'http://localhost:8009',
+
+  dataforge_api_url:
+    import.meta.env.VITE_DATAFORGE_API_URL || 'http://localhost:8000',
+
+  st2_url: 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
   nmbgmr_geothermal_api_url:
-    import.meta.env.VITE_NMBGMR_GEOTHERMAL_API_URL || "http://localhost:8008",
-  mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN || "",
+    import.meta.env.VITE_NMBGMR_GEOTHERMAL_API_URL || 'http://localhost:8008',
+  mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN || '',
   fief: {
     baseURL:
       import.meta.env.VITE_FIEF_BASE_URL ||
-      "https://fief.newmexicowaterdata.org",
+      'https://fief.newmexicowaterdata.org',
     clientId: import.meta.env.VITE_FIEF_CLIENT_ID,
   },
-};
+}
