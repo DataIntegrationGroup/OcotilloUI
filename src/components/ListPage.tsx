@@ -5,6 +5,7 @@ import React from "react";
 import { useExport } from "@refinedev/core";
 
 type ListPageProps = {
+  title?: string | null;
   columns: any;
   dataGridProps: any;
   exportProps?: any;
@@ -15,6 +16,7 @@ type ListPageProps = {
 };
 
 export const ListPage: React.FC<ListPageProps> = ({
+  title,
   columns,
   dataGridProps,
   getRowId,
@@ -48,20 +50,18 @@ export const ListPage: React.FC<ListPageProps> = ({
   };
 
   return (
-    <>
-      <List headerButtons={headerButtons}>
-        {children}
-        <DataGrid
-          {...dataGridProps}
-          disableRowSelectionOnClick={false}
-          rowHeight={settings.rowHeight}
-          getRowId={getRowId ? getRowId : (row) => row.PointID}
-          columns={columns}
-          autoHeight
-          onRowSelectionModelChange={handleSelectionChangeWrapper}
-          loading={isLoading}
-        />
-      </List>
-    </>
+    <List headerButtons={headerButtons} title={title}>
+      {children}
+      <DataGrid
+        {...dataGridProps}
+        disableRowSelectionOnClick={false}
+        rowHeight={settings.rowHeight}
+        getRowId={getRowId ? getRowId : (row) => row.PointID}
+        columns={columns}
+        autoHeight
+        onRowSelectionModelChange={handleSelectionChangeWrapper}
+        loading={isLoading}
+      />
+    </List>
   );
 };

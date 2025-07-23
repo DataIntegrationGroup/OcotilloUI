@@ -2,7 +2,7 @@ import { MenuItem, Select, FormControl, InputLabel, Box } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
 import { DebouncedTextInput } from "@/components/DebouncedTextInput";
 
-const FilterComponent = ({
+export const FilterComponent = ({
   field,
   setField,
   operator,

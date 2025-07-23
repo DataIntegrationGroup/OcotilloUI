@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { ShowButton, EditButton, useDataGrid } from "@refinedev/mui";
 import { GridColDef } from "@mui/x-data-grid";
 import { IEquipment } from "@/interfaces/amp";
-import { ListPage } from "@/components/ListPage";
+import { WIPAlert, ListPage } from "@/components";
+import { Box } from "@mui/material";
 
 export const EquipmentList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IEquipment>();
@@ -69,13 +70,15 @@ export const EquipmentList: React.FC = () => {
   );
 
   return (
-    <ListPage
-      columns={columns}
-      exportProps={{ pageSize: 50 }} // something weird with the database/API pagination for Equipment.
-      // pageSize >50 results in the API missing some results which
-      // prevents the useExport hook from ever completing.
-      getRowId={(row) => row.ID}
-      dataGridProps={dataGridProps}
-    />
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <WIPAlert />
+      <ListPage
+        title="Equipment"
+        columns={columns}
+        exportProps={{ pageSize: 50 }} // something weird with the database/API pagination for Equipment.
+        getRowId={(row) => row.ID}
+        dataGridProps={dataGridProps}
+      />
+    </Box>
   );
 };

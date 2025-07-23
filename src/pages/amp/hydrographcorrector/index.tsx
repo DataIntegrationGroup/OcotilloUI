@@ -1,16 +1,12 @@
-import Typography from "@mui/material/Typography";
-import { Button, CircularProgress, TextField } from "@mui/material";
-import Box from "@mui/material/Box";
+import { Button, CircularProgress, TextField, Box, Typography, Card, CardContent, CardHeader } from "@mui/material";
 import { useAll } from "@/useAll";
 import { useEffect, useRef, useState } from "react";
-import { EditableHydrograph } from "@/components/Hydrographs/EditableHydrograph";
 import { transform } from "@/components/Hydrographs/util";
 import { ArrowDown, ArrowUp } from "react-flaticons";
+import { WIPAlert, EditableHydrograph } from "@/components";
 import * as d3 from "d3-polygon";
 
-const transformer = (v: number, ov: number, modifier: number) => {
-  return v + modifier;
-};
+const transformer = (v: number, _ov: number, modifier: number) => v + modifier;
 
 export const HydrographCorrector = () => {
   const chartRef = useRef(null);
@@ -48,7 +44,6 @@ export const HydrographCorrector = () => {
     maxItemCount: 100,
     pageSize: 1000,
     meta: {
-      // filter: getObservationFilter(),
       orderby: "resultTime asc",
     },
     dataProviderName: "st2",
@@ -56,11 +51,6 @@ export const HydrographCorrector = () => {
 
   const { isLoading: isLoadingAMP, triggerAll: triggerAMP } = useAll({
     resource: `waterlevels/manual`,
-
-    // meta: {
-    //     // filter: getObservationFilter(),
-    //     orderby: 'resultTime asc'
-    // },
     meta: {
       params: {
         pointid: pointid,
@@ -74,7 +64,7 @@ export const HydrographCorrector = () => {
     xtag: string,
     ytag: string,
     id: string,
-    index: number = 0,
+    _index: number = 0,
   ) => {
     if (data.length === 0) {
       return { id: id, source: [] };
@@ -85,7 +75,7 @@ export const HydrographCorrector = () => {
     let obj = { id: id };
     let offset = 0;
 
-    obj["source"] = data.map((obs) => [
+    obj["source"] = data.map((obs: any) => [
       new Date(obs[xtag]),
       transform(obs[ytag], ref, offset, undefined).toFixed(2),
     ]);
@@ -181,7 +171,6 @@ export const HydrographCorrector = () => {
             "result",
             "continuous_modified_series",
           ),
-          // make_series(manual_data, 'phenomenonTime', 'result', 'manual')
         ];
         const seriesNames = ["Continuous", "Continuous Modified", "Manual"];
         setChartData({
@@ -195,11 +184,11 @@ export const HydrographCorrector = () => {
 
   const modifyData = (modifier: number, transformer?: any) => {
     if (chartRef.current && brushSelection) {
-      let continuous_modified_source;
+      let continuous_modified_source: any;
       const instance = chartRef.current.getEchartsInstance();
       if (brushSelection.dataPoints) {
         continuous_modified_source = chartData.dataset[1].source.map(
-          (d, index) => {
+          (d: any, index: number) => {
             const tindex = d[0].getTime();
             const ov = baseChartDatasource["continuous"][index].result;
             if (
@@ -225,10 +214,9 @@ export const HydrographCorrector = () => {
           brushSelection.globalMax,
           0,
         ])[0];
-        // console.log('horizontal brush', minDataCoord, maxDataCoord);
 
         continuous_modified_source = chartData.dataset[1].source.map(
-          (d, index) => {
+          (d: any, index: number) => {
             const tindex = d[0].getTime();
             if (tindex >= minDataCoord && tindex <= maxDataCoord) {
               const ov = baseChartDatasource["continuous"][index].result;
@@ -252,7 +240,7 @@ export const HydrographCorrector = () => {
     }
   };
 
-  const clearData = () => {};
+  const clearData = () => { };
 
   useEffect(() => {
     clearData();
@@ -273,7 +261,6 @@ export const HydrographCorrector = () => {
   }, [bumpDown]);
 
   const onBrushEnd = (params: any) => {
-    console.log("brush end", params);
     if (params.areas.length === 0) {
       setBrushSelection(null);
     } else {
@@ -281,11 +268,10 @@ export const HydrographCorrector = () => {
       if (area.brushType === "polygon") {
         const polygon = area.range;
         const instance = chartRef.current.getEchartsInstance();
-        const dataPoints = chartData.dataset[0].source.filter((point) => {
+        const dataPoints = chartData.dataset[0].source.filter((point: any) => {
           const [x, y] = instance.convertToPixel("grid", point);
           return d3.polygonContains(polygon, [x, y]);
         });
-        console.log("Data points in polygon:", dataPoints);
         setBrushSelection({ dataPoints: dataPoints, range: polygon });
       } else {
         const [mi, ma] = area.range;
@@ -294,93 +280,91 @@ export const HydrographCorrector = () => {
     }
   };
 
-  const onBrushSelection = (params: any) => {
-    // console.log('brush selected', params);
-    if (params.batch[0].areas.length === 0) {
-      setBrushSelection(null);
-    }
-  };
-
   return (
-    <Box>
-      <Typography variant={"h3"}>Hydrograph Corrector</Typography>
-      <Box sx={{ padding: 1 }}>
-        <TextField
-          label="DTW Offset"
-          type="number"
-          value={dtwOffset}
-          onChange={(e) => setDTWOffset(parseFloat(e.target.value))}
-        />
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <WIPAlert />
+      <Card>
+        <CardHeader title="Hydrograph Corrector" />
+        <CardContent>
+          <Box sx={{ padding: 1 }}>
+            <TextField
+              label="DTW Offset"
+              type="number"
+              value={dtwOffset}
+              onChange={(e) => setDTWOffset(parseFloat(e.target.value))}
+            />
 
-        <Button
-          onClick={() => setApplyCorrection(applyCorrection + 1)}
-          disabled={brushSelection === null}
-          variant={"contained"}
-        >
-          Apply Correction
-        </Button>
-        <Button
-          onClick={() => {
-            setApplyMatchToManual(applyMatchToManual + 1);
-          }}
-          disabled={brushSelection === null}
-          variant={"contained"}
-        >
-          Match To Manual
-        </Button>
-      </Box>
-      <Box sx={{ padding: 1 }}>
-        <TextField
-          label="bumpOffset"
-          type="number"
-          value={bumpOffset}
-          onChange={(e) => setBumpOffset(parseFloat(e.target.value))}
-        />
-        <Button
-          onClick={() => setBumpUp(bumpUp + 1)}
-          disabled={brushSelection === null}
-          variant={"contained"}
-          startIcon={<ArrowUp />}
-        >
-          Bump Up
-        </Button>
-        <Button
-          onClick={() => setBumpDown(bumpDown + 1)}
-          disabled={brushSelection === null}
-          variant={"contained"}
-          startIcon={<ArrowDown />}
-        >
-          Bump Down
-        </Button>
-      </Box>
-      <Box>
-        <Button
-          onClick={() => setClearCorrection(clearCorrection + 1)}
-          disabled={brushSelection === null}
-          variant={"contained"}
-        >
-          Clear Correction
-        </Button>
-      </Box>
-      <Box position="relative">
-        <EditableHydrograph
-          chartRef={chartRef}
-          onEvents={{
-            brushEnd: onBrushEnd,
-          }}
-          chartData={chartData}
-        />
-        {(isLoading || isLoadingAMP) && (
-          <Box
-            position="absolute"
-            top="50%"
-            left="50%"
-            sx={{ transform: "translate(-50%, -50%)" }}
-          >
-            <CircularProgress />
+            <Button
+              onClick={() => setApplyCorrection(applyCorrection + 1)}
+              disabled={brushSelection === null}
+              variant={"contained"}
+            >
+              Apply Correction
+            </Button>
+            <Button
+              onClick={() => {
+                setApplyMatchToManual(applyMatchToManual + 1);
+              }}
+              disabled={brushSelection === null}
+              variant={"contained"}
+            >
+              Match To Manual
+            </Button>
           </Box>
-        )}
-      </Box>
+          <Box sx={{ padding: 1 }}>
+            <TextField
+              label="bumpOffset"
+              type="number"
+              value={bumpOffset}
+              onChange={(e) => setBumpOffset(parseFloat(e.target.value))}
+            />
+            <Button
+              onClick={() => setBumpUp(bumpUp + 1)}
+              disabled={brushSelection === null}
+              variant={"contained"}
+              startIcon={<ArrowUp />}
+            >
+              Bump Up
+            </Button>
+            <Button
+              onClick={() => setBumpDown(bumpDown + 1)}
+              disabled={brushSelection === null}
+              variant={"contained"}
+              startIcon={<ArrowDown />}
+            >
+              Bump Down
+            </Button>
+          </Box>
+          <Box>
+            <Button
+              onClick={() => setClearCorrection(clearCorrection + 1)}
+              disabled={brushSelection === null}
+              variant={"contained"}
+            >
+              Clear Correction
+            </Button>
+          </Box>
+          <Box position="relative">
+            <EditableHydrograph
+              chartRef={chartRef}
+              onEvents={{
+                brushEnd: onBrushEnd,
+              }}
+              chartData={chartData}
+            />
+            {(isLoading || isLoadingAMP) && (
+              <Box
+                position="absolute"
+                top="50%"
+                left="50%"
+                sx={{ transform: "translate(-50%, -50%)" }}
+              >
+                <CircularProgress />
+              </Box>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
     </Box>
   );
 };

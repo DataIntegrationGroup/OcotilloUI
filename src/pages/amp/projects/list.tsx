@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { ShowButton, EditButton, useDataGrid } from "@refinedev/mui";
 import { GridColDef } from "@mui/x-data-grid";
-import { IProject, IWell } from "@/interfaces/amp";
-import { ListPage } from "@/components/ListPage";
+import { IProject } from "@/interfaces/amp";
+import { Box } from "@mui/material";
+import { ListPage, WIPAlert } from "@/components";
 
 export const AMPProjectList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IProject>();
@@ -42,10 +43,14 @@ export const AMPProjectList: React.FC = () => {
   );
 
   return (
-    <ListPage
-      columns={columns}
-      dataGridProps={dataGridProps}
-      getRowId={(row) => row.Project}
-    />
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <WIPAlert />
+      <ListPage
+        title="Projects"
+        columns={columns}
+        dataGridProps={dataGridProps}
+        getRowId={(row) => row.Project}
+      />
+    </Box>
   );
 };
