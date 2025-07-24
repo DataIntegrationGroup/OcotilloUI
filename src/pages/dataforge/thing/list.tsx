@@ -2,12 +2,21 @@ import { useMemo } from 'react'
 import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
-import { IWellThing } from '@/interfaces/dataforge/IThing'
+import { IWell } from '@/interfaces/dataforge/IThing'
 
-export const WellThingList: React.FC = () => {
-  const { dataGridProps } = useDataGrid<IWellThing>()
+export const WellList: React.FC = () => {
+  const { dataGridProps } = useDataGrid<IWell>({
+    resource: 'thing',
+    dataProviderName: 'dataforge',
+    meta: {
+      params: {
+        // thing_type: 'water well',
+        thing_type: ['water well', 'geothermal well'],
+      },
+    },
+  })
 
-  const columns = useMemo<GridColDef<IWellThing>[]>(
+  const columns = useMemo<GridColDef<IWell>[]>(
     () => [
       {
         field: 'id',
@@ -16,22 +25,10 @@ export const WellThingList: React.FC = () => {
         minWidth: 100,
       },
       {
-        field: 'thing',
-        headerName: 'Thing',
-        type: 'number',
+        field: 'thing_type',
+        headerName: 'Thing Type',
+        type: 'string',
         minWidth: 150,
-        valueGetter: (value, row) => {
-          return row.thing ? row.thing.name : ''
-        },
-      },
-      {
-        field: 'thing_id',
-        headerName: 'Thing ID',
-        type: 'number',
-        minWidth: 150,
-        valueGetter: (value, row) => {
-          return row.thing ? row.thing.id : ''
-        },
       },
       {
         field: 'well_type',

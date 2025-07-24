@@ -5,16 +5,16 @@ import TextField from '@mui/material/TextField'
 import { useForm } from '@refinedev/react-hook-form'
 
 import type { Nullable } from '@/interfaces'
-import { IWellThing } from '@/interfaces/dataforge/IThing'
+import { IWell } from '@/interfaces/dataforge/IThing'
 
-export const WellThingEdit: React.FC = () => {
+export const WellEdit: React.FC = () => {
   const {
     saveButtonProps,
     refineCore: { query: queryResult },
     register,
     control,
     formState: { errors },
-  } = useForm<IWellThing, HttpError, Nullable<IWellThing>>()
+  } = useForm<IWell, HttpError, Nullable<IWell>>()
 
   // const { autocompleteProps } = useAutocomplete<ICategory>({
   //   resource: "categories",
