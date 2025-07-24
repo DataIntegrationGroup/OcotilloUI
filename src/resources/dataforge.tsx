@@ -23,13 +23,24 @@ let dataforge = [
     },
   },
   {
-    name: 'well',
+    name: 'thing/well',
     list: '/dataforge/well',
     edit: '/dataforge/well/edit/:id',
     show: '/dataforge/well/show/:id',
     create: '/dataforge/well/create',
     meta: {
       label: 'Wells',
+      icon: <Construction />,
+    },
+  },
+  {
+    name: 'thing/spring',
+    list: '/dataforge/spring',
+    edit: '/dataforge/spring/edit/:id',
+    show: '/dataforge/spring/show/:id',
+    create: '/dataforge/spring/create',
+    meta: {
+      label: 'Springs',
       icon: <Construction />,
     },
   },

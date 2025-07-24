@@ -5,7 +5,7 @@ import { ST2DatastreamList } from '@/pages/st2/datastreams'
 import { ST2SensorList } from '@/pages/st2/sensors'
 import { ST2ObservedPropertiesList } from '@/pages/st2/observedProperties'
 import { ST2Dashboard } from '@/pages/st2/dashboard'
-import { ErrorComponent } from '@refinedev/mui'
+import { Create, ErrorComponent } from '@refinedev/mui'
 import {
   ContactEdit,
   ContactList,
@@ -13,7 +13,13 @@ import {
 } from '@/pages/dataforge/contact'
 import { ContactCreate } from '@/pages/dataforge/contact/create'
 import { WellCreate } from '@/pages/dataforge/thing/create'
-import { WellEdit, WellList, WellShow } from '@/pages/dataforge/thing'
+import {
+  SpringList,
+  SpringCreate,
+  WellEdit,
+  WellList,
+  WellShow,
+} from '@/pages/dataforge/thing'
 import { MapView } from '@/pages/dataforge/map'
 import {
   LocationList,
@@ -37,6 +43,12 @@ export const DataforgeRoutes = () => {
         <Route path={'show/:id'} element={<WellShow />} />
         <Route path={'edit/:id'} element={<WellEdit />} />
         <Route path={'create'} element={<WellCreate />} />
+      </Route>
+      <Route path="spring">
+        <Route index element={<SpringList />} />
+        {/*<Route path={'show/:id'} element={<WellShow />} />*/}
+        {/*<Route path={'edit/:id'} element={<WellEdit />} />*/}
+        <Route path={'create'} element={<SpringCreate />} />
       </Route>
       <Route path="map" element={<MapView />} />
       <Route path="location">
