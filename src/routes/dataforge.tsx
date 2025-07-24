@@ -23,6 +23,7 @@ import {
   LocationList,
   LocationCreate,
   LocationEdit,
+  LocationShow,
 } from '@/pages/dataforge/location'
 
 export const DataforgeRoutes = () => {
@@ -46,6 +47,7 @@ export const DataforgeRoutes = () => {
         <Route index element={<LocationList />} />
         <Route path={'create'} element={<LocationCreate />} />
         <Route path={'edit/:id'} element={<LocationEdit />} />
+        <Route path={'show/:id'} element={<LocationShow />} />
       </Route>
       <Route path="*" element={<ErrorComponent />} />
     </Routes>

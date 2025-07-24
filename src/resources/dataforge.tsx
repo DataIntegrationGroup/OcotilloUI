@@ -38,6 +38,7 @@ let dataforge = [
     list: '/dataforge/location',
     create: '/dataforge/location/create',
     edit: '/dataforge/location/edit/:id',
+    show: '/dataforge/location/show/:id',
     meta: {
       label: 'Locations',
       icon: <Place />,
