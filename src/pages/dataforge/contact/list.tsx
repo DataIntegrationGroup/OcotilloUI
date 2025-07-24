@@ -15,14 +15,15 @@ export const ContactList: React.FC = () => {
     null
   )
 
-  const { dataGridProps } = useDataGrid<IContact>({
-    resource: 'contact',
-    dataProviderName: 'dataforge',
-    queryOptions: {
-      cacheTime: 60000, // Cache for 1 minute
-      staleTime: 30000, // Consider data fresh for 30 seconds
-    },
-  })
+  const { dataGridProps } = useDataGrid<IContact>()
+  //   {
+  //   resource: 'contact',
+  //   dataProviderName: 'dataforge',
+  //   queryOptions: {
+  //     cacheTime: 60000, // Cache for 1 minute
+  //     staleTime: 30000, // Consider data fresh for 30 seconds
+  //   },
+  // }
 
   const columns = useMemo<GridColDef<IContact>[]>(
     () => [
@@ -205,9 +206,12 @@ export const ContactList: React.FC = () => {
       <List>
         <DataGrid
           {...dataGridProps}
+          disableRowSelectionOnClick={false}
           columns={columns}
-          onRowClick={(params) => {
-            setSelectedContactId(params.row.id)
+          onRowSelectionModelChange={(params) => {
+            setSelectedContactId(
+              params.length > 0 ? (params[0] as number) : null
+            )
           }}
         />
         {selectedContactId && (
