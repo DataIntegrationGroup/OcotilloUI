@@ -56,6 +56,17 @@ let dataforge = [
     },
   },
   {
+    name: 'sensor',
+    list: '/dataforge/sensor',
+    create: '/dataforge/sensor/create',
+    edit: '/dataforge/sensor/edit/:id',
+    show: '/dataforge/sensor/show/:id',
+    meta: {
+      label: 'Sensors',
+      icon: <ScienceOutlined />,
+    },
+  },
+  {
     name: 'map',
     list: '/dataforge/map',
     meta: {
