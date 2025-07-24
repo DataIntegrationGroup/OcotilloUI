@@ -12,12 +12,8 @@ import {
   ContactShow,
 } from '@/pages/dataforge/contact'
 import { ContactCreate } from '@/pages/dataforge/contact/create'
-import { WellThingCreate } from '@/pages/dataforge/thing/create'
-import {
-  WellThingEdit,
-  WellThingList,
-  WellThingShow,
-} from '@/pages/dataforge/thing'
+import { WellCreate } from '@/pages/dataforge/thing/create'
+import { WellEdit, WellList, WellShow } from '@/pages/dataforge/thing'
 import { MapView } from '@/pages/dataforge/map'
 import {
   LocationList,
@@ -36,11 +32,11 @@ export const DataforgeRoutes = () => {
         <Route path={'edit/:id'} element={<ContactEdit />} />
         <Route path={'create'} element={<ContactCreate />} />
       </Route>
-      <Route path="wellthing">
-        <Route index element={<WellThingList />} />
-        <Route path={'show/:id'} element={<WellThingShow />} />
-        <Route path={'edit/:id'} element={<WellThingEdit />} />
-        <Route path={'create'} element={<WellThingCreate />} />
+      <Route path="well">
+        <Route index element={<WellList />} />
+        <Route path={'show/:id'} element={<WellShow />} />
+        <Route path={'edit/:id'} element={<WellEdit />} />
+        <Route path={'create'} element={<WellCreate />} />
       </Route>
       <Route path="map" element={<MapView />} />
       <Route path="location">

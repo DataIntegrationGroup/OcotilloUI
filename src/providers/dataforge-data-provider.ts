@@ -41,9 +41,9 @@ export const axiosCall = async (url: string, options: AxiosRequestConfig) => {
 
 const cleanResourceName = (resource: string) => {
   resource = resource.replace(/^dataforge\./, '')
-  if (resource === 'wellthing') {
-    resource = 'thing/well'
-  }
+  // if (resource === 'wellthing') {
+  //   resource = 'thing/well'
+  // }
   return resource
 }
 export const dataForgeDataProvider: DataProvider = {
@@ -61,6 +61,15 @@ export const dataForgeDataProvider: DataProvider = {
     if (meta?.params !== undefined) {
       Object.entries(meta['params']).forEach(([key, value]) => {
         if (value === null || value === undefined) return
+        if (typeof value === 'object') {
+          if (Array.isArray(value)) {
+            value.forEach((v) => params.append(key, String(v)))
+          } else {
+            params.append(key, JSON.stringify(value))
+          }
+          return
+        }
+
         params.append(key, String(value))
       })
     }
@@ -83,8 +92,13 @@ export const dataForgeDataProvider: DataProvider = {
 
     let url: string = resource
 
-    const response = await fetcher(`${url}?${params.toString()}`)
-
+    // const response = await fetcher(`${url}?${params.toString()}`)
+    const response = await axiosCall(url, {
+      params: params,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
     if (response.status < 200 || response.status > 299) throw response
 
     let data = await response.data
@@ -110,8 +124,9 @@ export const dataForgeDataProvider: DataProvider = {
   getOne: async ({ resource, id, meta }) => {
     resource = cleanResourceName(resource)
 
+    console.log(`Fetching one ${resource} with id ${id}`)
     let url: string = `${resource}/${id}`
-    const response = await fetcher(url)
+    const response = await fetcher(url, meta.requestConfig)
 
     if (response.status < 200 || response.status > 299) throw response
 

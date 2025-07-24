@@ -2,7 +2,7 @@ import { Stack, Typography } from '@mui/material'
 import { useShow } from '@refinedev/core'
 import { Show, TextFieldComponent as TextField } from '@refinedev/mui'
 
-export const WellThingShow = () => {
+export const WellShow = () => {
   // const isLoading = false
   const { queryResult } = useShow({})
 
