@@ -1,7 +1,8 @@
 export interface ILocation {
-  id: number;
-  notes?: string | null;
-  point: string;
-  release_status: string;
-  created_at: string;
+  id: number
+  name: string | null
+  notes: string | null
+  point: string
+  release_status: string
+  created_at: string
 }

@@ -7,7 +7,7 @@ export const MapView: React.FC = () => {
   const { data, isLoading } = useOne({
     dataProviderName: 'dataforge',
     resource: 'geospatial',
-    id: 'feature-collection',
+    id: '',
     queryOptions: {
       cacheTime: 60000, // Cache for 1 minute
       staleTime: 30000, // Consider data fresh for 30 seconds
@@ -16,6 +16,7 @@ export const MapView: React.FC = () => {
       requestConfig: {
         params: {
           type: 'water well',
+          format: 'geojson',
         },
       },
     },

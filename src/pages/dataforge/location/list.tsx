@@ -23,6 +23,14 @@ export const LocationList: React.FC = () => {
         minWidth: 100,
       },
       {
+        field: 'name',
+        headerName: 'Name',
+        type: 'string',
+        minWidth: 100,
+        maxWidth: 150,
+        flex: 1,
+      },
+      {
         field: 'notes',
         headerName: 'Notes',
         type: 'string',
