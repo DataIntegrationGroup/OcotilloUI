@@ -20,6 +20,7 @@ import {
 } from '@/pages/dataforge/thing'
 import { MapView } from '@/pages/dataforge/map'
 import { LocationList } from '@/pages/dataforge/location'
+import { LocationCreate } from '@/pages/dataforge/location/create'
 
 export const DataforgeRoutes = () => {
   return (
@@ -40,6 +41,7 @@ export const DataforgeRoutes = () => {
       <Route path="map" element={<MapView />} />
       <Route path="location">
         <Route index element={<LocationList />} />
+        <Route path={'create'} element={<LocationCreate />} />
       </Route>
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
