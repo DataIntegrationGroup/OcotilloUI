@@ -33,6 +33,9 @@ import {
   SensorEdit,
   SensorShow,
 } from '@/pages/dataforge/sensor'
+import {
+  SampleList,
+} from '@/pages/dataforge/sample'
 
 export const DataforgeRoutes = () => {
   return (
@@ -68,6 +71,9 @@ export const DataforgeRoutes = () => {
         <Route path={'create'} element={<SensorCreate />} />
         <Route path={'edit/:id'} element={<SensorEdit />} />
         <Route path={'show/:id'} element={<SensorShow />} />
+      </Route>
+      <Route path="sample">
+        <Route index element={<SampleList />} />
       </Route>
       <Route path="*" element={<ErrorComponent />} />
     </Routes>

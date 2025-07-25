@@ -8,7 +8,7 @@ import TableViewIcon from '@mui/icons-material/TableView'
 import ScienceOutlined from '@mui/icons-material/ScienceOutlined'
 import FileUploadOutlined from '@mui/icons-material/FileUploadOutlined'
 import CategoryOutlined from '@mui/icons-material/CategoryOutlined'
-import { DynamicFormTwoTone, PersonOutlined, SettingsInputAntenna } from '@mui/icons-material'
+import { PersonOutlined, SettingsInputAntenna } from '@mui/icons-material'
 
 let dataforge = [
   {
@@ -64,6 +64,14 @@ let dataforge = [
     meta: {
       label: 'Sensors',
       icon: <SettingsInputAntenna/>,
+    },
+  },
+  {
+    name: 'sample',
+    list: '/dataforge/sample',
+    meta: {
+      label: 'Samples',
+      icon: <ScienceOutlined />,
     },
   },
   {
