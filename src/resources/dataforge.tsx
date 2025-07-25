@@ -69,6 +69,7 @@ let dataforge = [
   {
     name: 'sample',
     list: '/dataforge/sample',
+    show: '/dataforge/sample/show/:id',
     meta: {
       label: 'Samples',
       icon: <ScienceOutlined />,

@@ -35,6 +35,7 @@ import {
 } from '@/pages/dataforge/sensor'
 import {
   SampleList,
+  SampleShow,
 } from '@/pages/dataforge/sample'
 
 export const DataforgeRoutes = () => {
@@ -74,6 +75,7 @@ export const DataforgeRoutes = () => {
       </Route>
       <Route path="sample">
         <Route index element={<SampleList />} />
+        <Route path={'show/:id'} element={<SampleShow />} />
       </Route>
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
