@@ -63,7 +63,7 @@ let dataforge = [
       label: 'Wells',
       parent: 'dataforge.thing',
       nestedLevel: 2,
-      icon: <Construction />,
+      // icon: <Construction />,
     },
   },
   {
@@ -76,7 +76,7 @@ let dataforge = [
       label: 'Springs',
       parent: 'dataforge.thing',
       nestedLevel: 2,
-      icon: <Construction />,
+      // icon: <Construction />,
     },
   },
   {
