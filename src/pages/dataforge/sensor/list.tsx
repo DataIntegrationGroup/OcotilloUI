@@ -23,6 +23,22 @@ export const SensorList: React.FC = () => {
         minWidth: 100,
       },
       {
+        field: 'actions',
+        headerName: 'Actions',
+        renderCell: function render({ row }) {
+          return (
+            <div style={{ display: 'flex'}}>
+              <EditButton size="small" hideText recordItemId={row.id} />
+              <ShowButton size="small" hideText recordItemId={row.id} />
+            </div>
+          )
+        },
+        align: 'left',
+        headerAlign: 'center',
+        minWidth: 210,
+        flex: 0.3,
+      },
+      {
         field: 'name',
         headerName: 'Name',
         type: 'string',
@@ -71,22 +87,6 @@ export const SensorList: React.FC = () => {
         type: 'string',
         minWidth: 150,
         flex: 2,
-      },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <>
-              <EditButton hideText recordItemId={row.id} />
-              <ShowButton hideText recordItemId={row.id} />
-            </>
-          )
-        },
-        align: 'center',
-        headerAlign: 'center',
-        minWidth: 80,
-        flex: 0.3,
       },
     ],
     []
