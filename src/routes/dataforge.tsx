@@ -37,6 +37,7 @@ import {
   SampleList,
   SampleShow,
   SampleEdit,
+  SampleCreate,
 } from '@/pages/dataforge/sample'
 
 export const DataforgeRoutes = () => {
@@ -78,6 +79,7 @@ export const DataforgeRoutes = () => {
         <Route index element={<SampleList />} />
         <Route path={'show/:id'} element={<SampleShow />} />
         <Route path={'edit/:id'} element={<SampleEdit />} />
+        <Route path={'create'} element={<SampleCreate />} />
       </Route>
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
