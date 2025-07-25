@@ -1,15 +1,8 @@
-import DashboardOutlined from '@mui/icons-material/DashboardOutlined'
-import Construction from '@mui/icons-material/Construction'
-import Place from '@mui/icons-material/Place'
-import Plumbing from '@mui/icons-material/Plumbing'
-import Cable from '@mui/icons-material/Cable'
-import Water from '@mui/icons-material/Water'
-import TableViewIcon from '@mui/icons-material/TableView'
-import ScienceOutlined from '@mui/icons-material/ScienceOutlined'
-import FileUploadOutlined from '@mui/icons-material/FileUploadOutlined'
-import CategoryOutlined from '@mui/icons-material/CategoryOutlined'
 import {
-  DynamicFormTwoTone,
+  CategoryOutlined,
+  Place,
+  Construction,
+  DashboardOutlined,
   PersonOutlined,
   ScaleOutlined,
   WidgetsOutlined,
@@ -47,6 +40,17 @@ let dataforge = [
     },
   },
   {
+    name: 'group',
+    list: '/dataforge/group',
+    edit: '/dataforge/group/edit/:id',
+    show: '/dataforge/group/show/:id',
+    create: '/dataforge/group/create',
+    meta: {
+      label: 'Groups',
+      icon: <CategoryOutlined />,
+    },
+  },
+  {
     name: 'thing',
     icon: <WidgetsOutlined />,
     meta: {
@@ -63,7 +67,7 @@ let dataforge = [
       label: 'Wells',
       parent: 'dataforge.thing',
       nestedLevel: 2,
-      // icon: <Construction />,
+      icon: <Construction />,
     },
   },
   {
@@ -76,7 +80,7 @@ let dataforge = [
       label: 'Springs',
       parent: 'dataforge.thing',
       nestedLevel: 2,
-      // icon: <Construction />,
+      icon: <Construction />,
     },
   },
   {
