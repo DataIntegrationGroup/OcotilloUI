@@ -22,17 +22,17 @@ let base = [
   {
     name: 'geochronology',
     icon: <AccessTime />,
-    meta: { label: 'Geochronology' },
+    meta: { label: 'Geochronology', disabled: true },
   },
   {
     name: 'criticalminerals',
     icon: <DiamondOutlined />,
-    meta: { label: 'Critical Minerals' },
+    meta: { label: 'Critical Minerals', disabled: true },
   },
   {
     name: 'geothermal',
     icon: <HeatPumpOutlined />,
-    meta: { label: 'Geothermal' },
+    meta: { label: 'Geothermal', disabled: true },
   },
   {
     name: 'dataforge',

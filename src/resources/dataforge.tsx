@@ -8,7 +8,13 @@ import TableViewIcon from '@mui/icons-material/TableView'
 import ScienceOutlined from '@mui/icons-material/ScienceOutlined'
 import FileUploadOutlined from '@mui/icons-material/FileUploadOutlined'
 import CategoryOutlined from '@mui/icons-material/CategoryOutlined'
-import { DynamicFormTwoTone, PersonOutlined, SettingsInputAntenna } from '@mui/icons-material'
+import {
+  DynamicFormTwoTone,
+  PersonOutlined,
+  SettingsInputAntenna,
+  ScaleOutlined,
+  WidgetsOutlined,
+} from '@mui/icons-material'
 
 let dataforge = [
   {
@@ -20,28 +26,6 @@ let dataforge = [
     icon: <PersonOutlined />,
     meta: {
       label: 'Contacts',
-    },
-  },
-  {
-    name: 'thing/well',
-    list: '/dataforge/well',
-    edit: '/dataforge/well/edit/:id',
-    show: '/dataforge/well/show/:id',
-    create: '/dataforge/well/create',
-    meta: {
-      label: 'Wells',
-      icon: <Construction />,
-    },
-  },
-  {
-    name: 'thing/spring',
-    list: '/dataforge/spring',
-    edit: '/dataforge/spring/edit/:id',
-    show: '/dataforge/spring/show/:id',
-    create: '/dataforge/spring/create',
-    meta: {
-      label: 'Springs',
-      icon: <Construction />,
     },
   },
   {
@@ -72,6 +56,58 @@ let dataforge = [
     meta: {
       label: 'Map',
       icon: <DashboardOutlined />,
+    },
+  },
+  {
+    name: 'thing',
+    icon: <WidgetsOutlined />,
+    meta: {
+      label: 'Things',
+    },
+  },
+  {
+    name: 'thing/well',
+    list: '/dataforge/well',
+    edit: '/dataforge/well/edit/:id',
+    show: '/dataforge/well/show/:id',
+    create: '/dataforge/well/create',
+    meta: {
+      label: 'Wells',
+      parent: 'dataforge.thing',
+      nestedLevel: 2,
+      // icon: <Construction />,
+    },
+  },
+  {
+    name: 'thing/spring',
+    list: '/dataforge/spring',
+    edit: '/dataforge/spring/edit/:id',
+    show: '/dataforge/spring/show/:id',
+    create: '/dataforge/spring/create',
+    meta: {
+      label: 'Springs',
+      parent: 'dataforge.thing',
+      nestedLevel: 2,
+      // icon: <Construction />,
+    },
+  },
+  {
+    name: 'observation',
+    icon: <ScaleOutlined />,
+    meta: {
+      label: 'Observations',
+    },
+  },
+  {
+    name: 'groundwater-level-observation',
+    list: '/dataforge/groundwater-level-observation',
+    create: '/dataforge/groundwater-level-observation/create',
+    // edit: '/dataforge/observation/edit/:id',
+    // show: '/dataforge/observation/show/:id',
+    meta: {
+      parent: 'dataforge.observation',
+      nestedLevel: 2,
+      label: 'Groundwater Levels',
     },
   },
 ]
