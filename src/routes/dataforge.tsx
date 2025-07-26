@@ -28,6 +28,12 @@ import {
   LocationShow,
 } from '@/pages/dataforge/location'
 import {
+  SensorList,
+  SensorCreate,
+  SensorEdit,
+  SensorShow,
+} from '@/pages/dataforge/sensor'
+import {
   GroundwaterLevelObservationCreate,
   GroundwaterLevelObservationList,
 } from '@/pages/dataforge/observation'
@@ -60,6 +66,12 @@ export const DataforgeRoutes = () => {
         <Route path={'create'} element={<LocationCreate />} />
         <Route path={'edit/:id'} element={<LocationEdit />} />
         <Route path={'show/:id'} element={<LocationShow />} />
+      </Route>
+      <Route path="sensor">
+        <Route index element={<SensorList />} />
+        <Route path={'create'} element={<SensorCreate />} />
+        <Route path={'edit/:id'} element={<SensorEdit />} />
+        <Route path={'show/:id'} element={<SensorShow />} />
       </Route>
       <Route path="groundwater-level-observation">
         <Route index element={<GroundwaterLevelObservationList />} />

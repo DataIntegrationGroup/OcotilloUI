@@ -11,6 +11,7 @@ import CategoryOutlined from '@mui/icons-material/CategoryOutlined'
 import {
   DynamicFormTwoTone,
   PersonOutlined,
+  SettingsInputAntenna,
   ScaleOutlined,
   WidgetsOutlined,
 } from '@mui/icons-material'
@@ -36,6 +37,17 @@ let dataforge = [
     meta: {
       label: 'Locations',
       icon: <Place />,
+    },
+  },
+  {
+    name: 'sensor',
+    list: '/dataforge/sensor',
+    create: '/dataforge/sensor/create',
+    edit: '/dataforge/sensor/edit/:id',
+    show: '/dataforge/sensor/show/:id',
+    meta: {
+      label: 'Sensors',
+      icon: <SettingsInputAntenna/>,
     },
   },
   {
