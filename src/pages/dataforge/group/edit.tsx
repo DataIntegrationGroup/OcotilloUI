@@ -1,26 +1,20 @@
 import type { HttpError } from '@refinedev/core'
-import { Edit, useAutocomplete } from '@refinedev/mui'
+import { Edit } from '@refinedev/mui'
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
-import Autocomplete from '@mui/material/Autocomplete'
 import { useForm } from '@refinedev/react-hook-form'
 
-import { Controller } from 'react-hook-form'
-
 import type { Nullable } from '@/interfaces'
-import type { IWell } from '@/interfaces/amp'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import { Switch } from '@mui/material'
-import { IContact } from '@/interfaces/dataforge/IContact'
+import { IGroup } from '@/interfaces/dataforge/IGroup'
 
-export const ContactEdit: React.FC = () => {
+export const GroupEdit: React.FC = () => {
   const {
     saveButtonProps,
     refineCore: { query: queryResult },
     register,
     control,
     formState: { errors },
-  } = useForm<IContact, HttpError, Nullable<IContact>>()
+  } = useForm<IGroup, HttpError, Nullable<IGroup>>()
 
   // const { autocompleteProps } = useAutocomplete<ICategory>({
   //   resource: "categories",
@@ -46,7 +40,7 @@ export const ContactEdit: React.FC = () => {
           label="Name"
           name="name"
           autoFocus
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ inputLabel: { shrink: true } }}
         />
       </Box>
     </Edit>

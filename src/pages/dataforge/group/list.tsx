@@ -7,15 +7,18 @@ import { Card, CardHeader } from '@mui/material'
 import { ListPage } from '@/components/ListPage'
 
 export const GroupList: React.FC = () => {
-  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
-
   const { dataGridProps } = useDataGrid<IGroup>({
     resource: 'group',
     dataProviderName: 'dataforge',
-    queryOptions: {
-      cacheTime: 60000, // Cache for 1 minute
-      staleTime: 30000, // Consider data fresh for 30 seconds
-    },
+
+    // it would be great to use staleTime and cacheTime here, but it seems
+    // that when staleTime is set, the data is not refetched when the component is remounted
+    // after editing a record.
+    
+    // queryOptions: {
+    //   cacheTime: 60000, // Cache for 1 minute
+    // staleTime: 30000, // Consider data fresh for 30 seconds
+    // },
   })
 
   const columns = useMemo<GridColDef<IGroup>[]>(

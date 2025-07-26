@@ -8,10 +8,6 @@ export const LocationList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ILocation>({
     resource: 'location',
     dataProviderName: 'dataforge',
-    queryOptions: {
-      cacheTime: 60000, // Cache for 1 minute
-      staleTime: 30000, // Consider data fresh for 30 seconds
-    },
   })
 
   const columns = useMemo<GridColDef<ILocation>[]>(

@@ -23,19 +23,7 @@ export const GroundwaterLevelObservationList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IGroundwaterLevelObservation>({
     resource: 'observation/groundwater-level',
     dataProviderName: 'dataforge',
-    queryOptions: {
-      cacheTime: 60000, // Cache for 1 minute
-      staleTime: 30000, // Consider data fresh for 30 seconds
-    },
   })
-  //   {
-  //   resource: 'contact',
-  //   dataProviderName: 'dataforge',
-  //   queryOptions: {
-  //     cacheTime: 60000, // Cache for 1 minute
-  //     staleTime: 30000, // Consider data fresh for 30 seconds
-  //   },
-  // }
 
   const columns = useMemo<GridColDef<IGroundwaterLevelObservation>[]>(
     () => [

@@ -31,7 +31,7 @@ import {
   GroundwaterLevelObservationCreate,
   GroundwaterLevelObservationList,
 } from '@/pages/dataforge/observation'
-import { GroupCreate, GroupList } from '@/pages/dataforge/group'
+import { GroupCreate, GroupEdit, GroupList } from '@/pages/dataforge/group'
 
 export const DataforgeRoutes = () => {
   return (
@@ -74,7 +74,7 @@ export const DataforgeRoutes = () => {
       <Route path="group">
         <Route index element={<GroupList />} />
         <Route path={'create'} element={<GroupCreate />} />
-        {/*<Route path={'edit/:id'} element={<GroupEdit />} />*/}
+        <Route path={'edit/:id'} element={<GroupEdit />} />
         {/*<Route path={'show/:id'} element={<GroupShow />} />*/}
       </Route>
 
