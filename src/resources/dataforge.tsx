@@ -3,10 +3,13 @@ import {
   Place,
   Construction,
   DashboardOutlined,
-  PersonOutlined,
   SettingsInputAntenna,
   ScaleOutlined,
   WidgetsOutlined,
+  Contacts,
+  Apps,
+  DynamicFormOutlined,
+  Map,
 } from '@mui/icons-material'
 
 let dataforge = [
@@ -16,7 +19,7 @@ let dataforge = [
     edit: '/dataforge/contact/edit/:id',
     show: '/dataforge/contact/show/:id',
     create: '/dataforge/contact/create',
-    icon: <PersonOutlined />,
+    icon: <Contacts />,
     meta: {
       label: 'Contacts',
     },
@@ -40,7 +43,7 @@ let dataforge = [
     show: '/dataforge/sensor/show/:id',
     meta: {
       label: 'Sensors',
-      icon: <SettingsInputAntenna/>,
+      icon: <SettingsInputAntenna />,
     },
   },
   {
@@ -48,7 +51,7 @@ let dataforge = [
     list: '/dataforge/map',
     meta: {
       label: 'Map',
-      icon: <DashboardOutlined />,
+      icon: <Map />,
     },
   },
   {
@@ -114,6 +117,66 @@ let dataforge = [
       label: 'Groundwater Levels',
     },
   },
+  {
+    name: 'apps',
+    icon: <Apps />,
+    meta: {
+      label: 'Apps',
+    },
+  },
+  {
+    name: 'HygrographCorrector',
+    list: '/dataforge/hydrograph-corrector',
+    meta: {
+      disabled: true,
+      label: 'Hydrograph Corrector (Coming Soon)',
+      parent: 'dataforge.apps',
+      nestedLevel: 2,
+      icon: <Construction />,
+    },
+  },
+  {
+    name: 'forms',
+    icon: <DynamicFormOutlined />,
+    meta: {
+      label: 'Forms',
+    },
+  },
+  {
+    name: 'well-inventory-form',
+    list: '/dataforge/well-inventory-form',
+    create: '/dataforge/well-inventory-form/create',
+    edit: '/dataforge/well-inventory-form/edit/:id',
+    show: '/dataforge/well-inventory-form/show/:id',
+    meta: {
+      disabled: true,
+      label: 'Well Inventory Form (Beta)',
+      parent: 'dataforge.forms',
+      nestedLevel: 2,
+      icon: <Construction />,
+    },
+  },
+  {
+    name: 'water-level-form',
+    list: '/dataforge/water-level-form',
+    create: '/dataforge/water-level-form/create',
+    edit: '/dataforge/water-level-form/edit/:id',
+    show: '/dataforge/water-level-form/show/:id',
+    meta: {
+      disabled: true,
+      label: 'Water Level Form (Coming Soon)',
+      parent: 'dataforge.forms',
+      nestedLevel: 2,
+      icon: <Construction />,
+    },
+  },
+  // {
+  //   name: 'Apps',
+  //   icon: <WidgetsOutlined />,
+  //   meta: {
+  //     label: 'Things',
+  //   },
+  // },
 ]
 
 export const dataforgeResources = dataforge.map((b) => {

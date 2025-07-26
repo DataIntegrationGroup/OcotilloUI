@@ -9,6 +9,22 @@ import {
 } from '@/interfaces/dataforge/IContact'
 import { List } from '@refinedev/mui'
 import { Card, CardHeader } from '@mui/material'
+import EmailIcon from '@mui/icons-material/Email'
+import HomeIcon from '@mui/icons-material/Home'
+import { Phone } from '@mui/icons-material'
+
+const IconCardHeader = ({ text, icon }) => {
+  return (
+    <CardHeader
+      title={
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          {icon}
+          {text}
+        </span>
+      }
+    />
+  )
+}
 
 export const ContactList: React.FC = () => {
   const [selectedContactId, setSelectedContactId] = useState<number | null>(
@@ -217,15 +233,25 @@ export const ContactList: React.FC = () => {
         {selectedContactId && (
           <>
             <Card sx={{ marginTop: 2 }}>
-              <CardHeader title={'Email'} />
+              <IconCardHeader
+                text={'Email'}
+                icon={<EmailIcon style={{ marginRight: 8 }} />}
+              />
               <DataGrid {...emailDataGridProps} columns={emailColumns} />
             </Card>
             <Card sx={{ marginTop: 2 }}>
-              <CardHeader title={'Phone'} />
+              <IconCardHeader
+                text={'Phone'}
+                icon={<Phone style={{ marginRight: 8 }} />}
+              />
               <DataGrid {...phoneDataGridProps} columns={phoneColumns} />
             </Card>
             <Card sx={{ marginTop: 2 }}>
-              <CardHeader title={'Address'} />
+              {/*<CardHeader title={'Address'} />*/}
+              <IconCardHeader
+                text={'Address'}
+                icon={<HomeIcon style={{ marginRight: 8 }} />}
+              />
               <DataGrid {...addressDataGridProps} columns={addressColumns} />
             </Card>
           </>
