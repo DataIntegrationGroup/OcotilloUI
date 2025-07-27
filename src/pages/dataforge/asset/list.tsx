@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react'
 import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { IGroup } from '@/interfaces/dataforge/IGroup'
+import { IAsset } from '@/interfaces/dataforge/IAsset'
 import { List } from '@refinedev/mui'
 import { Card, CardHeader } from '@mui/material'
 import { ListPage } from '@/components/ListPage'
 
-export const GroupList: React.FC = () => {
-  const { dataGridProps } = useDataGrid<IGroup>({
-    resource: 'group',
+export const AssetList: React.FC = () => {
+  const { dataGridProps } = useDataGrid<IAsset>({
+    resource: 'asset',
     dataProviderName: 'dataforge',
 
     // it would be great to use staleTime and cacheTime here, but it seems
@@ -21,7 +21,7 @@ export const GroupList: React.FC = () => {
     // },
   })
 
-  const columns = useMemo<GridColDef<IGroup>[]>(
+  const columns = useMemo<GridColDef<IAsset>[]>(
     () => [
       {
         field: 'id',
@@ -30,10 +30,21 @@ export const GroupList: React.FC = () => {
         minWidth: 100,
       },
       {
+        field: 'label',
+        headerName: 'Label',
+        type: 'string',
+        minWidth: 150,
+      },
+      {
         field: 'name',
         headerName: 'Name',
         type: 'string',
         minWidth: 150,
+      },
+      {
+        field: 'storage_path',
+        headerName: 'Storage Path',
+        type: 'string',
       },
       {
         field: 'created_at',

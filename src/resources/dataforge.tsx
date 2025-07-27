@@ -10,9 +10,21 @@ import {
   Apps,
   DynamicFormOutlined,
   Map,
+  Image,
 } from '@mui/icons-material'
 
 let dataforge = [
+  {
+    name: 'asset',
+    list: '/dataforge/asset',
+    create: '/dataforge/asset/create',
+    edit: '/dataforge/asset/edit/:id',
+    show: '/dataforge/asset/show/:id',
+    meta: {
+      label: 'Assets',
+      icon: <Image />,
+    },
+  },
   {
     name: 'contact',
     list: '/dataforge/contact',
@@ -170,6 +182,7 @@ let dataforge = [
       icon: <Construction />,
     },
   },
+
   // {
   //   name: 'Apps',
   //   icon: <WidgetsOutlined />,
