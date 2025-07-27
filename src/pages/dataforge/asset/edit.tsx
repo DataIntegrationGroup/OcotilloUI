@@ -1,4 +1,4 @@
-import type { HttpError } from '@refinedev/core'
+import { HttpError, useOne } from '@refinedev/core'
 import { Edit } from '@refinedev/mui'
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
@@ -20,6 +20,13 @@ export const AssetEdit: React.FC = () => {
   //   resource: "categories",
   //   defaultValue: queryResult?.data?.data.category.id,
   // });
+  const { data, isLoading, isError } = useOne({
+    resource: 'asset',
+    id: queryResult?.data?.data.id,
+    dataProviderName: 'dataforge',
+  })
+
+  const image = data?.data
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
@@ -29,7 +36,7 @@ export const AssetEdit: React.FC = () => {
         autoComplete="off"
       >
         <TextField
-          {...register('name', {
+          {...register('label', {
             required: 'This field is required',
           })}
           // disabled
@@ -37,12 +44,21 @@ export const AssetEdit: React.FC = () => {
           helperText={errors.name?.message}
           margin="normal"
           fullWidth
-          label="Name"
-          name="name"
+          label="Label"
+          name="label"
           autoFocus
           slotProps={{ inputLabel: { shrink: true } }}
         />
       </Box>
+      <Box
+        component="img"
+        sx={{
+          maxWidth: '100%',
+          maxHeight: '100%',
+        }}
+        src={image?.url}
+        alt="Post image"
+      />
     </Edit>
   )
 }

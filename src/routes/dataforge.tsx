@@ -32,7 +32,7 @@ import {
   GroundwaterLevelObservationList,
 } from '@/pages/dataforge/observation'
 import { GroupCreate, GroupEdit, GroupList } from '@/pages/dataforge/group'
-import { AssetList, AssetCreate } from '@/pages/dataforge/asset'
+import { AssetList, AssetCreate, AssetEdit } from '@/pages/dataforge/asset'
 
 export const DataforgeRoutes = () => {
   return (
@@ -87,7 +87,7 @@ export const DataforgeRoutes = () => {
       <Route path="asset">
         <Route index element={<AssetList />} />
         <Route path={'create'} element={<AssetCreate />} />
-        {/*<Route path={'edit/:id'} element={<AssetEdit />} />*/}
+        <Route path={'edit/:id'} element={<AssetEdit />} />
       </Route>
 
       <Route path="*" element={<ErrorComponent />} />

@@ -47,16 +47,15 @@ export const AssetCreate: React.FC = () => {
 
       formData.append('file', file)
 
-      const res = await axios.post<{ url: string }>(
-        `${apiUrl}/asset/upload`,
-        formData,
-        {
-          withCredentials: false,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      )
+      const res = await axios.post<{
+        storage_path: string
+        url: string
+      }>(`${apiUrl}/asset/upload`, formData, {
+        withCredentials: false,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
+      })
 
       const { name, size, type, lastModified } = file
 
@@ -77,10 +76,10 @@ export const AssetCreate: React.FC = () => {
       ]
       setValue('file', imagePayload, { shouldValidate: true })
       setValue('name', name, { shouldValidate: true })
-      setValue('storage_path', res.data.url, { shouldValidate: true })
+      setValue('storage_path', res.data.storage_path, { shouldValidate: true })
       setValue('mime_type', type, { shouldValidate: true })
       setValue('size', size, { shouldValidate: true })
-
+      setValue('url', res.data.url, { shouldValidate: true })
       setIsUploadLoading(false)
     } catch (error) {
       setError('file', { message: 'Upload failed. Please try again.' })

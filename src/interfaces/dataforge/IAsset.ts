@@ -9,4 +9,5 @@ export interface IAsset {
   size: number
   file: any
   thing_id: number | null
+  url: string
 }
