@@ -93,13 +93,15 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
       const isSelected = key === selectedKey
       const isNested = !(meta.parent === undefined)
       const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0
+      const disabled = meta?.disabled || false
 
-      const allowedCategories = new Set([
-        'Water',
-        'Batch Upload',
-        'Lookup Tables',
-        'DataForge: Coming Soon',
-      ])
+      // const allowedCategories = new Set([
+      //   'Water',
+      //   'Batch Upload',
+      //   'Lookup Tables',
+      //   'DataForge: Coming Soon',
+      //   'Observations',
+      // ])
 
       if (children.length > 0) {
         return (
@@ -119,7 +121,8 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
                 arrow
               >
                 <ListItemButton
-                  disabled={!allowedCategories.has(label)}
+                  disabled={disabled}
+                  // disabled={!allowedCategories.has(label)}
                   onClick={() => {
                     if (siderCollapsed) {
                       setSiderCollapsed(false)
