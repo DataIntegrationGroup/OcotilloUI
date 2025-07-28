@@ -3,6 +3,7 @@ import {
   Place,
   Construction,
   DashboardOutlined,
+  ScienceOutlined,
   SettingsInputAntenna,
   ScaleOutlined,
   WidgetsOutlined,
