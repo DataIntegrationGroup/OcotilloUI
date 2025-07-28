@@ -1,29 +1,37 @@
-import DashboardOutlined from '@mui/icons-material/DashboardOutlined'
-import Construction from '@mui/icons-material/Construction'
-import Place from '@mui/icons-material/Place'
-import Plumbing from '@mui/icons-material/Plumbing'
-import Cable from '@mui/icons-material/Cable'
-import Water from '@mui/icons-material/Water'
-import TableViewIcon from '@mui/icons-material/TableView'
-import ScienceOutlined from '@mui/icons-material/ScienceOutlined'
-import FileUploadOutlined from '@mui/icons-material/FileUploadOutlined'
-import CategoryOutlined from '@mui/icons-material/CategoryOutlined'
 import {
- 
-  PersonOutlined,
+  CategoryOutlined,
+  Place,
+  Construction,
+  DashboardOutlined,
   SettingsInputAntenna,
   ScaleOutlined,
   WidgetsOutlined,
+  Contacts,
+  Apps,
+  DynamicFormOutlined,
+  Map,
+  Image,
 } from '@mui/icons-material'
 
 let dataforge = [
+  {
+    name: 'asset',
+    list: '/dataforge/asset',
+    create: '/dataforge/asset/create',
+    edit: '/dataforge/asset/edit/:id',
+    show: '/dataforge/asset/show/:id',
+    meta: {
+      label: 'Assets',
+      icon: <Image />,
+    },
+  },
   {
     name: 'contact',
     list: '/dataforge/contact',
     edit: '/dataforge/contact/edit/:id',
     show: '/dataforge/contact/show/:id',
     create: '/dataforge/contact/create',
-    icon: <PersonOutlined />,
+    icon: <Contacts />,
     meta: {
       label: 'Contacts',
     },
@@ -66,7 +74,18 @@ let dataforge = [
     list: '/dataforge/map',
     meta: {
       label: 'Map',
-      icon: <DashboardOutlined />,
+      icon: <Map />,
+    },
+  },
+  {
+    name: 'group',
+    list: '/dataforge/group',
+    edit: '/dataforge/group/edit/:id',
+    show: '/dataforge/group/show/:id',
+    create: '/dataforge/group/create',
+    meta: {
+      label: 'Groups',
+      icon: <CategoryOutlined />,
     },
   },
   {
@@ -86,7 +105,7 @@ let dataforge = [
       label: 'Wells',
       parent: 'dataforge.thing',
       nestedLevel: 2,
-      // icon: <Construction />,
+      icon: <Construction />,
     },
   },
   {
@@ -99,7 +118,7 @@ let dataforge = [
       label: 'Springs',
       parent: 'dataforge.thing',
       nestedLevel: 2,
-      // icon: <Construction />,
+      icon: <Construction />,
     },
   },
   {
@@ -121,6 +140,67 @@ let dataforge = [
       label: 'Groundwater Levels',
     },
   },
+  {
+    name: 'apps',
+    icon: <Apps />,
+    meta: {
+      label: 'Apps',
+    },
+  },
+  {
+    name: 'HygrographCorrector',
+    list: '/dataforge/hydrograph-corrector',
+    meta: {
+      disabled: true,
+      label: 'Hydrograph Corrector (Coming Soon)',
+      parent: 'dataforge.apps',
+      nestedLevel: 2,
+      icon: <Construction />,
+    },
+  },
+  {
+    name: 'forms',
+    icon: <DynamicFormOutlined />,
+    meta: {
+      label: 'Forms',
+    },
+  },
+  {
+    name: 'well-inventory-form',
+    list: '/dataforge/well-inventory-form',
+    create: '/dataforge/well-inventory-form/create',
+    edit: '/dataforge/well-inventory-form/edit/:id',
+    show: '/dataforge/well-inventory-form/show/:id',
+    meta: {
+      disabled: true,
+      label: 'Well Inventory Form (Beta)',
+      parent: 'dataforge.forms',
+      nestedLevel: 2,
+      icon: <Construction />,
+    },
+  },
+  {
+    name: 'water-level-form',
+    list: '/dataforge/water-level-form',
+    create: '/dataforge/water-level-form/create',
+    edit: '/dataforge/water-level-form/edit/:id',
+    show: '/dataforge/water-level-form/show/:id',
+    meta: {
+      disabled: true,
+      label: 'Water Level Form (Coming Soon)',
+      parent: 'dataforge.forms',
+      nestedLevel: 2,
+      icon: <Construction />,
+    },
+  },
+
+  // {
+  //   name: 'Apps',
+  //   icon: <WidgetsOutlined />,
+  //   meta: {
+  //     label: 'Things',
+  //   },
+  // },
 ]
 
 export const dataforgeResources = dataforge.map((b) => {

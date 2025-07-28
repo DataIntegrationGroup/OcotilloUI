@@ -212,6 +212,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
             arrow
           >
             <ListItemButton
+              disabled={disabled}
               component={Link}
               to={route}
               selected={isSelected}

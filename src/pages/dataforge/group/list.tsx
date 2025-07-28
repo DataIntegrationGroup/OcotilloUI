@@ -1,31 +1,27 @@
 import { useMemo, useState } from 'react'
 import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import {
-  IContact,
-  IEmail,
-  IPhone,
-  IAddress,
-} from '@/interfaces/dataforge/IContact'
+import { IGroup } from '@/interfaces/dataforge/IGroup'
 import { List } from '@refinedev/mui'
 import { Card, CardHeader } from '@mui/material'
-import { ListPage } from '@/components'
-import {
-  IGroundwaterLevelObservation,
-  IObservation,
-} from '@/interfaces/dataforge/IObservation'
+import { ListPage } from '@/components/ListPage'
 
-export const GroundwaterLevelObservationList: React.FC = () => {
-  const [selectedContactId, setSelectedContactId] = useState<number | null>(
-    null
-  )
-
-  const { dataGridProps } = useDataGrid<IGroundwaterLevelObservation>({
-    resource: 'observation/groundwater-level',
+export const GroupList: React.FC = () => {
+  const { dataGridProps } = useDataGrid<IGroup>({
+    resource: 'group',
     dataProviderName: 'dataforge',
+
+    // it would be great to use staleTime and cacheTime here, but it seems
+    // that when staleTime is set, the data is not refetched when the component is remounted
+    // after editing a record.
+
+    // queryOptions: {
+    //   cacheTime: 60000, // Cache for 1 minute
+    // staleTime: 30000, // Consider data fresh for 30 seconds
+    // },
   })
 
-  const columns = useMemo<GridColDef<IGroundwaterLevelObservation>[]>(
+  const columns = useMemo<GridColDef<IGroup>[]>(
     () => [
       {
         field: 'id',
@@ -34,24 +30,15 @@ export const GroundwaterLevelObservationList: React.FC = () => {
         minWidth: 100,
       },
       {
-        field: 'observation_type',
-        headerName: 'Observation Type',
+        field: 'name',
+        headerName: 'Name',
         type: 'string',
         minWidth: 150,
-        flex: 1,
       },
       {
-        field: 'observation_timestamp',
-        headerName: 'Observation Timestamp',
-        type: 'dateTime',
-        minWidth: 180,
-        valueGetter: (params) => new Date(params),
-      },
-      {
-        field: 'depth_to_water',
-        headerName: 'Depth to Water (m)',
-        type: 'number',
-        minWidth: 150,
+        field: 'parent_group_id',
+        headerName: 'Parent Group ID',
+        type: 'string',
       },
       {
         field: 'created_at',

@@ -8,10 +8,7 @@ export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
     resource: 'thing',
     dataProviderName: 'dataforge',
-    queryOptions: {
-      cacheTime: 60000, // Cache for 1 minute
-      staleTime: 30000, // Consider data fresh for 30 seconds
-    },
+
     meta: {
       params: {
         thing_type: ['spring'],
@@ -79,10 +76,6 @@ export const WellList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IWell>({
     resource: 'thing',
     dataProviderName: 'dataforge',
-    queryOptions: {
-      cacheTime: 60000, // Cache for 1 minute
-      staleTime: 30000, // Consider data fresh for 30 seconds
-    },
     meta: {
       params: {
         thing_type: ['water well', 'geothermal well'],
