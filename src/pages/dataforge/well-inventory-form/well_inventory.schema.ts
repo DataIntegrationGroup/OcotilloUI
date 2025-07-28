@@ -22,10 +22,10 @@ export const WellInventorySchema = Yup.object().shape({
     well_type: Yup.string().required('Well type is required'),
     notes: Yup.string().nullable(),
   }),
-  contacts: Yup.object({
-    primary: Yup.object({
-      name: Yup.string().required('Primary contact name is required'),
-      role: Yup.string().required('Primary contact role is required'),
+  contacts: Yup.array().of(
+    Yup.object({
+      name: Yup.string().required('Contact name is required'),
+      role: Yup.string().required('Contact role is required'),
       emails: Yup.array().of(
         Yup.object({
           email: Yup.string().email('Invalid email format'),
@@ -48,34 +48,8 @@ export const WellInventorySchema = Yup.object().shape({
           address_type: Yup.string().required('Address type is required'),
         })
       ),
-    }),
-    secondary: Yup.object({
-      name: Yup.string().nullable(),
-      role: Yup.string().nullable(),
-      emails: Yup.array().of(
-        Yup.object({
-          email: Yup.string().email('Invalid email format'),
-          email_type: Yup.string().required('Email type is required'),
-        })
-      ),
-      phones: Yup.array().of(
-        Yup.object({
-          phone_number: Yup.string().required('Phone number is required'),
-          phone_type: Yup.string().required('Phone type is required'),
-        })
-      ),
-      addresses: Yup.array().of(
-        Yup.object({
-          address_line_1: Yup.string().required('Address line 1 is required'),
-          address_line_2: Yup.string().nullable(),
-          city: Yup.string().required('City is required'),
-          state: Yup.string().required('State is required'),
-          postal_code: Yup.string().required('Postal code is required'),
-          address_type: Yup.string().required('Address type is required'),
-        })
-      ),
-    }),
-  }),
+    })
+  ).min(1, 'At least one contact is required'),
   assets: Yup.array().of(
     Yup.object({
       label: Yup.string().required('Asset label is required'),
@@ -99,21 +73,14 @@ export const SchemaDefaults: Partial<IWellInventoryForm> = {
     well_type: '',
     notes: '',
   },
-  contacts: {
-    primary: {
+  contacts: [
+    {
       name: '',
       role: 'owner',
       emails: [],
       phones: [],
       addresses: [],
     },
-    secondary: {
-      name: '',
-      role: 'secondary',
-      emails: [],
-      phones: [],
-      addresses: [],
-    },
-  },
+  ],
   assets: [],
 } 
