@@ -36,6 +36,11 @@ export const GroupList: React.FC = () => {
         minWidth: 150,
       },
       {
+        field: 'parent_group_id',
+        headerName: 'Parent Group ID',
+        type: 'string',
+      },
+      {
         field: 'created_at',
         headerName: 'Created At',
         type: 'dateTime',

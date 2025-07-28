@@ -10,6 +10,7 @@ import { Controller } from 'react-hook-form'
 import { Nullable } from '../../../interfaces'
 import { IGroup } from '@/interfaces/dataforge/IGroup'
 import { useState } from 'react'
+import { IThing } from '@/interfaces/dataforge/IThing'
 
 export const GroupCreate: React.FC = () => {
   const {
@@ -18,6 +19,18 @@ export const GroupCreate: React.FC = () => {
     control,
     formState: { errors },
   } = useForm<IGroup, HttpError, Nullable<IGroup>>()
+
+  const { autocompleteProps } = useAutocomplete<IGroup>({
+    resource: 'group',
+    dataProviderName: 'dataforge',
+    onSearch: (value) => [
+      {
+        field: 'name',
+        operator: 'contains',
+        value,
+      },
+    ],
+  })
 
   return (
     <Create saveButtonProps={saveButtonProps}>
@@ -39,6 +52,30 @@ export const GroupCreate: React.FC = () => {
           autoFocus
         />
       </Box>
+      <Controller
+        name="parent_group_id"
+        control={control}
+        // rules={{ required: 'This field is required' }}
+        render={({ field }) => (
+          <Autocomplete
+            {...autocompleteProps}
+            onChange={(_, newValue) => {
+              field.onChange(newValue?.id || null)
+            }}
+            getOptionKey={(option) => option.id}
+            getOptionLabel={(option) => option.name || ''}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Parent Group"
+                margin="normal"
+                error={!!errors.parent_group_id}
+                helperText={errors.parent_group_id?.message}
+              />
+            )}
+          />
+        )}
+      />
     </Create>
   )
 }
