@@ -3,6 +3,7 @@ import {
   Place,
   Construction,
   DashboardOutlined,
+  ScienceOutlined,
   SettingsInputAntenna,
   ScaleOutlined,
   WidgetsOutlined,
@@ -55,7 +56,18 @@ let dataforge = [
     show: '/dataforge/sensor/show/:id',
     meta: {
       label: 'Sensors',
-      icon: <SettingsInputAntenna />,
+      icon: <SettingsInputAntenna/>,
+    },
+  },
+  {
+    name: 'sample',
+    list: '/dataforge/sample',
+    show: '/dataforge/sample/show/:id',
+    edit: '/dataforge/sample/edit/:id',
+    create: '/dataforge/sample/create',
+    meta: {
+      label: 'Samples',
+      icon: <ScienceOutlined />,
     },
   },
   {
