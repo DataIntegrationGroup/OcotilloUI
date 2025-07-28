@@ -135,16 +135,14 @@ export const WellInventoryForm: React.FC = () => {
                 control={control}
                 name="location.release_status"
                 options={[
-                  { value: 'public', label: 'Public' },
-                  { value: 'private', label: 'Private' },
-                  { value: 'restricted', label: 'Restricted' },
+                  { value: 'draft', label: 'Draft' }
                 ]}
                 required
               />
             </Grid>
             
             <Grid size={12}>
-              <ControlledMapboxAddressAutocomplete
+              <ControlledTextField
                 label="Location Coordinates"
                 control={control}
                 name="location.point"
@@ -191,10 +189,7 @@ export const WellInventoryForm: React.FC = () => {
                 control={control}
                 name="well.well_type"
                 options={[
-                  { value: 'monitoring', label: 'Monitoring' },
-                  { value: 'production', label: 'Production' },
-                  { value: 'injection', label: 'Injection' },
-                  { value: 'exploration', label: 'Exploration' },
+                  { value: 'draft', label: 'Draft' }
                 ]}
                 required
               />
@@ -217,17 +212,6 @@ export const WellInventoryForm: React.FC = () => {
                 type="number"
                 control={control}
                 name="well.hole_depth"
-              />
-            </Grid>
-            
-            <Grid size={12}>
-              <ControlledTextField
-                label="Well Notes"
-                fullWidth
-                multiline
-                rows={3}
-                control={control}
-                name="well.notes"
               />
             </Grid>
 
@@ -267,11 +251,7 @@ export const WellInventoryForm: React.FC = () => {
                     control={control}
                     name={`contacts.${contactIndex}.role`}
                     options={[
-                      { value: 'owner', label: 'Owner' },
-                      { value: 'operator', label: 'Operator' },
-                      { value: 'contractor', label: 'Contractor' },
-                      { value: 'contact', label: 'Contact' },
-                      { value: 'emergency', label: 'Emergency Contact' },
+                      { value: 'owner', label: 'Owner' }
                     ]}
                     required
                   />
@@ -298,9 +278,7 @@ export const WellInventoryForm: React.FC = () => {
                           control={control}
                           name={`contacts.${contactIndex}.emails.${emailIndex}.email_type`}
                           options={[
-                            { value: 'personal', label: 'Personal' },
-                            { value: 'work', label: 'Work' },
-                            { value: 'other', label: 'Other' },
+                            { value: 'Primary', label: 'Primary' }
                           ]}
                         />
                       </Grid>
@@ -357,10 +335,7 @@ export const WellInventoryForm: React.FC = () => {
                           control={control}
                           name={`contacts.${contactIndex}.phones.${phoneIndex}.phone_type`}
                           options={[
-                            { value: 'mobile', label: 'Mobile' },
-                            { value: 'home', label: 'Home' },
-                            { value: 'work', label: 'Work' },
-                            { value: 'other', label: 'Other' },
+                            { value: 'Primary', label: 'Primary' },
                           ]}
                         />
                       </Grid>
@@ -450,9 +425,7 @@ export const WellInventoryForm: React.FC = () => {
                           control={control}
                           name={`contacts.${contactIndex}.addresses.${addressIndex}.address_type`}
                           options={[
-                            { value: 'mailing', label: 'Mailing' },
-                            { value: 'physical', label: 'Physical' },
-                            { value: 'billing', label: 'Billing' },
+                            { value: 'Primary', label: 'Primary' }
                           ]}
                         />
                       </Grid>

@@ -71,7 +71,6 @@ export const SchemaDefaults: Partial<IWellInventoryForm> = {
     well_depth: undefined,
     hole_depth: undefined,
     well_type: '',
-    notes: '',
   },
   contacts: [
     {

@@ -25,7 +25,6 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
       well_depth: data.well.well_depth,
       hole_depth: data.well.hole_depth,
       well_type: data.well.well_type,
-      notes: data.well.notes,
     },
   })
 
