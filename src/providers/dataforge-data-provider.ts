@@ -135,6 +135,7 @@ export const dataForgeDataProvider: DataProvider = {
   },
   create: async ({ resource, variables }) => {
     resource = cleanResourceName(resource)
+
     const response = await axiosCall(`${resource}`, {
       method: 'POST',
       data: JSON.stringify(variables),
@@ -148,6 +149,26 @@ export const dataForgeDataProvider: DataProvider = {
     const data = await response.data
 
     return { data }
+  },
+  custom: async ({ url, method, payload, headers }) => {
+    const config: AxiosRequestConfig = {
+      url: `${API_URL}/${url}`,
+      method: method || 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+    }
+
+    if (payload) {
+      config.data = payload
+    }
+
+    const response = await axiosInstance(config)
+
+    if (response.status < 200 || response.status > 299) throw response
+
+    return { data: response.data }
   },
   update: async ({ resource, id, variables }) => {
     resource = cleanResourceName(resource)

@@ -1,11 +1,5 @@
 import { Route, Routes } from 'react-router-dom'
-import { ST2LocationList } from '@/pages/st2/locations'
-import { ST2WellList } from '@/pages/st2/wells'
-import { ST2DatastreamList } from '@/pages/st2/datastreams'
-import { ST2SensorList } from '@/pages/st2/sensors'
-import { ST2ObservedPropertiesList } from '@/pages/st2/observedProperties'
-import { ST2Dashboard } from '@/pages/st2/dashboard'
-import { Create, ErrorComponent } from '@refinedev/mui'
+import { ErrorComponent } from '@refinedev/mui'
 import {
   ContactEdit,
   ContactList,
@@ -38,6 +32,12 @@ import {
   GroundwaterLevelObservationList,
 } from '@/pages/dataforge/observation'
 import { GroupCreate, GroupEdit, GroupList } from '@/pages/dataforge/group'
+import {
+  AssetList,
+  AssetCreate,
+  AssetEdit,
+  AssetShow,
+} from '@/pages/dataforge/asset'
 
 export const DataforgeRoutes = () => {
   return (
@@ -88,6 +88,12 @@ export const DataforgeRoutes = () => {
         <Route path={'create'} element={<GroupCreate />} />
         <Route path={'edit/:id'} element={<GroupEdit />} />
         {/*<Route path={'show/:id'} element={<GroupShow />} />*/}
+      </Route>
+      <Route path="asset">
+        <Route index element={<AssetList />} />
+        <Route path={'create'} element={<AssetCreate />} />
+        <Route path={'edit/:id'} element={<AssetEdit />} />
+        <Route path={'show/:id'} element={<AssetShow />} />
       </Route>
 
       <Route path="*" element={<ErrorComponent />} />

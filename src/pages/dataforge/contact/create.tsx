@@ -89,7 +89,7 @@ export const ContactCreate: React.FC = () => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Location"
+                  label="Thing"
                   margin="normal"
                   error={!!errors.thing_id}
                   helperText={errors.thing_id?.message}
