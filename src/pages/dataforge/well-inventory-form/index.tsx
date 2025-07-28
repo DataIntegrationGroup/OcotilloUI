@@ -216,6 +216,17 @@ export const WellInventoryForm: React.FC = () => {
             </Grid>
 
             <Grid size={12}>
+              <ControlledTextField
+                label="Well Notes"
+                fullWidth
+                multiline
+                rows={3}
+                control={control}
+                name="well.notes"
+              />
+            </Grid>
+
+            <Grid size={12}>
               <Divider sx={{ my: 2 }} />
             </Grid>
 
@@ -251,7 +262,7 @@ export const WellInventoryForm: React.FC = () => {
                     control={control}
                     name={`contacts.${contactIndex}.role`}
                     options={[
-                      { value: 'owner', label: 'Owner' }
+                      { value: 'Owner', label: 'Owner' }
                     ]}
                     required
                   />

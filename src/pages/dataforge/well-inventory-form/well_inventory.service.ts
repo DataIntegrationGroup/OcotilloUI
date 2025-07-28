@@ -17,14 +17,14 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
 
   // Create well (thing)
   const wellResponse = await dataForgeDataProvider.create({
-    resource: 'dataforge.thing',
+    resource: 'dataforge.thing/well',
     variables: {
       name: data.well.name,
-      thing_type: 'well',
       location_id: locationId,
       well_depth: data.well.well_depth,
       hole_depth: data.well.hole_depth,
       well_type: data.well.well_type,
+      well_construction_notes: data.well.notes,
     },
   })
 

@@ -12,6 +12,7 @@ export interface IWellInventoryForm {
     well_depth?: number
     hole_depth?: number
     well_type: string
+    notes?: string
   }
   contacts: Array<{
     name: string
