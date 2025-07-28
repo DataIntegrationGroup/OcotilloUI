@@ -44,6 +44,7 @@ import {
   AssetEdit,
   AssetShow,
 } from '@/pages/dataforge/asset'
+import { WellInventoryForm } from '@/pages/dataforge/well-inventory-form'
 
 export const DataforgeRoutes = () => {
   return (
@@ -107,6 +108,7 @@ export const DataforgeRoutes = () => {
         <Route path={'edit/:id'} element={<AssetEdit />} />
         <Route path={'show/:id'} element={<AssetShow />} />
       </Route>
+      <Route path="well-inventory-form" element={<WellInventoryForm />} />
 
       <Route path="*" element={<ErrorComponent />} />
     </Routes>

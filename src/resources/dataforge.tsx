@@ -173,8 +173,8 @@ let dataforge = [
     edit: '/dataforge/well-inventory-form/edit/:id',
     show: '/dataforge/well-inventory-form/show/:id',
     meta: {
-      disabled: true,
-      label: 'Well Inventory Form (Beta)',
+      disabled: false,
+      label: 'Well Inventory Form',
       parent: 'dataforge.forms',
       nestedLevel: 2,
       icon: <Construction />,
