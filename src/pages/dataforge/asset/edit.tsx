@@ -66,7 +66,7 @@ export const AssetEdit: React.FC = () => {
           maxHeight: '100%',
         }}
         src={image?.url}
-        alt="Asset"
+        alt={image?.name}
       />
     </Edit>
   )

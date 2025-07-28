@@ -36,6 +36,13 @@ export const AssetCreate: React.FC = () => {
   const { autocompleteProps } = useAutocomplete<IThing>({
     resource: 'thing',
     dataProviderName: 'dataforge',
+    onSearch: (value) => [
+      {
+        field: 'name',
+        operator: 'contains',
+        value,
+      },
+    ],
   })
 
   const dataProvider = useDataProvider()
@@ -202,7 +209,7 @@ export const AssetCreate: React.FC = () => {
               maxHeight: '100%',
             }}
             src={imageInput[0].url}
-            alt="Post image"
+            alt={imageInput[0].name}
           />
         )}
       </Stack>

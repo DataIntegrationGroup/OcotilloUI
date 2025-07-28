@@ -6,22 +6,21 @@ import {
   Show,
   TextFieldComponent as TextField,
 } from '@refinedev/mui'
+import Box from '@mui/material/Box'
 
-export const ContactShow = () => {
+export const AssetShow = () => {
   // const isLoading = false
-  const { queryResult } = useShow({})
+  const { queryResult } = useShow({
+    // resource: 'asset',
+    // dataProviderName: 'dataforge',
+    queryOptions: {
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  })
 
   const { data, isLoading } = queryResult
-
   const record = data?.data
-
-  // const { data: categoryData, isLoading: categoryIsLoading } = useOne({
-  //   resource: "categories",
-  //   id: record?.category?.id || "",
-  //   queryOptions: {
-  //     enabled: !!record,
-  //   },
-  // });
 
   return (
     <Show isLoading={isLoading}>
@@ -36,24 +35,15 @@ export const ContactShow = () => {
           {'Name'}
         </Typography>
         <TextField value={record?.name} />
-
-        {/*<Typography variant="body1" fontWeight="bold">*/}
-        {/*  {"Content"}*/}
-        {/*</Typography>*/}
-        {/*<MarkdownField value={record?.content} />*/}
-
-        {/*<Typography variant="body1" fontWeight="bold">*/}
-        {/*  {"Category"}*/}
-        {/*</Typography>*/}
-        {/*{categoryIsLoading ? <>Loading...</> : <>{categoryData?.data?.title}</>}*/}
-        {/*<Typography variant="body1" fontWeight="bold">*/}
-        {/*  {"Status"}*/}
-        {/*</Typography>*/}
-        {/*<TextField value={record?.status} />*/}
-        {/*<Typography variant="body1" fontWeight="bold">*/}
-        {/*  {"CreatedAt"}*/}
-        {/*</Typography>*/}
-        {/*<DateField value={record?.createdAt} />*/}
+        <Box
+          component="img"
+          sx={{
+            maxWidth: '100%',
+            maxHeight: '100%',
+          }}
+          src={record?.url}
+          alt={record?.name}
+        />
       </Stack>
     </Show>
   )
