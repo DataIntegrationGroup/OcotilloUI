@@ -20,7 +20,6 @@ import {
   ControlledSelectField,
   ControlledCheckbox,
   ControlledEmailField,
-  ControlledPhoneField,
   ControlledMapboxAddressAutocomplete,
 } from '@/components'
 import { IWellInventoryForm } from '@/interfaces/dataforge/IWellInventoryForm'
@@ -316,7 +315,7 @@ export const WellInventoryForm: React.FC = () => {
                       const currentEmails = watch(`contacts.${contactIndex}.emails`) || []
                       setValue(`contacts.${contactIndex}.emails`, [
                         ...currentEmails,
-                        { email: '', email_type: 'personal' }
+                        { email: '', email_type: 'Primary' }
                       ])
                     }}
                     startIcon={<Add />}
@@ -332,11 +331,26 @@ export const WellInventoryForm: React.FC = () => {
                   </Typography>
                   {(watch(`contacts.${contactIndex}.phones`) || []).map((phoneField, phoneIndex) => (
                     <Grid container key={phoneIndex} spacing={2} sx={{ mb: 2 }}>
-                      <Grid size={{ xs: 12, md: 5 }}>
-                        <ControlledPhoneField
+                      <Grid size={{ xs: 12, md: 2 }}>
+                        <ControlledSelectField
+                          label="Country"
+                          fullWidth
+                          control={control}
+                          name={`contacts.${contactIndex}.phones.${phoneIndex}.country_code`}
+                          options={[
+                            { value: '+1', label: 'US (+1)' },
+                          ]}
+                          defaultValue="+1"
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <ControlledTextField
                           label="Phone Number"
+                          fullWidth
                           control={control}
                           name={`contacts.${contactIndex}.phones.${phoneIndex}.phone_number`}
+                          placeholder="555-123-4567"
+                          helperText="Enter area code and number (e.g., 555-123-4567)"
                         />
                       </Grid>
                       <Grid size={{ xs: 12, md: 5 }}>
@@ -346,7 +360,7 @@ export const WellInventoryForm: React.FC = () => {
                           control={control}
                           name={`contacts.${contactIndex}.phones.${phoneIndex}.phone_type`}
                           options={[
-                            { value: 'Primary', label: 'Primary' },
+                            { value: 'Primary', label: 'Primary' }
                           ]}
                         />
                       </Grid>
@@ -373,7 +387,7 @@ export const WellInventoryForm: React.FC = () => {
                       const currentPhones = watch(`contacts.${contactIndex}.phones`) || []
                       setValue(`contacts.${contactIndex}.phones`, [
                         ...currentPhones,
-                        { phone_number: '', phone_type: 'mobile' }
+                        { phone_number: '', phone_type: 'Primary', country_code: '+1' }
                       ])
                     }}
                     startIcon={<Add />}
@@ -469,7 +483,7 @@ export const WellInventoryForm: React.FC = () => {
                           city: '',
                           state: '',
                           postal_code: '',
-                          address_type: 'physical',
+                          address_type: 'Primary',
                         }
                       ])
                     }}

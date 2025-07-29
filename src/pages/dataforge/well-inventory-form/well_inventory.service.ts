@@ -39,54 +39,17 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
         name: contact.name,
         role: contact.role,
         thing_id: wellId,
+        emails: contact.emails || [],
+        phones: contact.phones?.map(phone => ({
+          phone_number: phone.country_code ? `${phone.country_code}${phone.phone_number}` : phone.phone_number,
+          phone_type: phone.phone_type
+        })) || [],
+        addresses: contact.addresses?.map(address => ({
+          ...address,
+          country: 'United States' 
+        })) || [],
       },
     })
-
-    const contactId = contactResponse.data.id
-
-    // Create contact details (emails, phones, addresses)
-    if (contact.emails?.length) {
-      for (const email of contact.emails) {
-        await dataForgeDataProvider.create({
-          resource: 'dataforge.contact/email',
-          variables: {
-            email: email.email,
-            email_type: email.email_type,
-            contact_id: contactId,
-          },
-        })
-      }
-    }
-
-    if (contact.phones?.length) {
-      for (const phone of contact.phones) {
-        await dataForgeDataProvider.create({
-          resource: 'dataforge.contact/phone',
-          variables: {
-            phone_number: phone.phone_number,
-            phone_type: phone.phone_type,
-            contact_id: contactId,
-          },
-        })
-      }
-    }
-
-    if (contact.addresses?.length) {
-      for (const address of contact.addresses) {
-        await dataForgeDataProvider.create({
-          resource: 'dataforge.contact/address',
-          variables: {
-            address_line_1: address.address_line_1,
-            address_line_2: address.address_line_2,
-            city: address.city,
-            state: address.state,
-            postal_code: address.postal_code,
-            address_type: address.address_type,
-            contact_id: contactId,
-          },
-        })
-      }
-    }
 
     contactResponses.push(contactResponse.data)
   }

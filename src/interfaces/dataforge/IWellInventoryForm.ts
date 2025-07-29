@@ -24,6 +24,7 @@ export interface IWellInventoryForm {
     phones?: Array<{
       phone_number: string
       phone_type: string
+      country_code?: string
     }>
     addresses?: Array<{
       address_line_1: string
