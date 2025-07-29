@@ -13,7 +13,16 @@ import TableViewIcon from '@mui/icons-material/TableView'
 import { FactoryOutlined } from '@mui/icons-material'
 
 let base = [
-  { name: 'water', icon: <WaterDropOutlined />, meta: { label: 'Water' } },
+  {
+    name: 'dataforge',
+    icon: <FactoryOutlined />,
+    meta: { label: 'DataForge (Coming Soon)' },
+  },
+  {
+    name: 'water',
+    icon: <WaterDropOutlined />,
+    meta: { label: 'Water (Deprecated)' },
+  },
   {
     name: 'st2',
     icon: <SensorsOutlinedIcon />,
@@ -33,11 +42,6 @@ let base = [
     name: 'geothermal',
     icon: <HeatPumpOutlined />,
     meta: { label: 'Geothermal', disabled: true },
-  },
-  {
-    name: 'dataforge',
-    icon: <FactoryOutlined />,
-    meta: { label: 'DataForge: Coming Soon' },
   },
 ]
 
