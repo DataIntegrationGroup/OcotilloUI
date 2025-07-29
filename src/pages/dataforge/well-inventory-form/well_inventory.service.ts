@@ -2,18 +2,28 @@ import { dataForgeDataProvider } from '@/providers/dataforge-data-provider'
 import { IWellInventoryForm } from '@/interfaces/dataforge/IWellInventoryForm'
 
 export const createWellInventoryForm = async (data: IWellInventoryForm) => {
-  // Create location
-  const locationResponse = await dataForgeDataProvider.create({
-    resource: 'dataforge.location',
-    variables: {
-      name: data.location.name,
-      notes: data.location.notes,
-      point: data.location.point,
-      release_status: data.location.release_status,
-    },
-  })
-
-  const locationId = locationResponse.data.id
+  // Handle location (create new or use existing)
+  let locationId: number
+  let locationData: any
+  
+  if (data.locationMode === 'new') {
+    // Create new location
+    const locationResponse = await dataForgeDataProvider.create({
+      resource: 'dataforge.location',
+      variables: {
+        name: data.location.name,
+        notes: data.location.notes,
+        point: data.location.point,
+        release_status: data.location.release_status,
+      },
+    })
+    locationId = Number(locationResponse.data.id)
+    locationData = locationResponse.data
+  } else {
+    // Use existing location
+    locationId = Number(data.selectedLocationId!)
+    locationData = { id: locationId }
+  }
 
   // Create well (thing)
   const wellResponse = await dataForgeDataProvider.create({
@@ -71,7 +81,7 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
   }
 
   return {
-    location: locationResponse.data,
+    location: locationData,
     well: wellResponse.data,
     contacts: contactResponses,
     assets: assetResponses,

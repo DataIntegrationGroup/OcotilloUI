@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useForm } from '@refinedev/react-hook-form'
-import { useFieldArray } from 'react-hook-form'
+import { useAutocomplete } from '@refinedev/mui'
+import { useFieldArray, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useNotification } from '@refinedev/core'
 import { useMutation } from '@tanstack/react-query'
@@ -12,6 +13,13 @@ import {
   CardHeader,
   Typography,
   Divider,
+  Switch,
+  FormControlLabel,
+  Paper,
+  Radio,
+  RadioGroup,
+  Autocomplete,
+  TextField,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { Add, Delete } from '@mui/icons-material'
@@ -23,12 +31,25 @@ import {
   ControlledMapboxAddressAutocomplete,
 } from '@/components'
 import { IWellInventoryForm } from '@/interfaces/dataforge/IWellInventoryForm'
+import { ILocation } from '@/interfaces/dataforge/ILocation'
 import { WellInventorySchema, SchemaDefaults } from './well_inventory.schema'
 import { createWellInventoryForm } from './well_inventory.service'
 
 export const WellInventoryForm: React.FC = () => {
   const { open, close } = useNotification()
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+
+  const { autocompleteProps: locationAutocompleteProps } = useAutocomplete<ILocation>({
+    resource: 'dataforge.location',
+    dataProviderName: 'dataforge',
+    onSearch: (value) => [
+      {
+        field: 'name',
+        operator: 'contains',
+        value,
+      },
+    ],
+  })
 
   const {
     control,
@@ -116,49 +137,140 @@ export const WellInventoryForm: React.FC = () => {
                 Location Information
               </Typography>
             </Grid>
-            
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ControlledTextField
-                label="Location Name"
-                fullWidth
-                control={control}
-                name="location.name"
-                required
-              />
-            </Grid>
-            
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ControlledSelectField
-                label="Release Status"
-                fullWidth
-                control={control}
-                name="location.release_status"
-                options={[
-                  { value: 'draft', label: 'Draft' }
-                ]}
-                required
-              />
-            </Grid>
-            
+
+            {/* Location Mode Selection */}
             <Grid size={12}>
-              <ControlledTextField
-                label="Location Coordinates"
-                control={control}
-                name="location.point"
-                required
-              />
+              <Card elevation={1} sx={{ p: 2 }}>
+                <RadioGroup
+                  value={watch('locationMode')}
+                  onChange={(e) => {
+                    setValue('locationMode', e.target.value as 'new' | 'existing')
+                    // Clear the other field when switching modes
+                    if (e.target.value === 'existing') {
+                      setValue('location.name', '')
+                      setValue('location.notes', '')
+                      setValue('location.point', '')
+                      setValue('location.release_status', 'public')
+                    } else {
+                      setValue('selectedLocationId', undefined)
+                    }
+                  }}
+                >
+                  <FormControlLabel
+                    value="new"
+                    control={<Radio />}
+                    label={
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight="medium">
+                          Create a new location
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Add location details for this well
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                  <FormControlLabel
+                    value="existing"
+                    control={<Radio />}
+                    label={
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight="medium">
+                          Use existing location
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Select from database
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </RadioGroup>
+              </Card>
             </Grid>
-            
-            <Grid size={12}>
-              <ControlledTextField
-                label="Location Notes"
-                fullWidth
-                multiline
-                rows={3}
-                control={control}
-                name="location.notes"
-              />
-            </Grid>
+
+            {/* Existing Location Selector */}
+            {watch('locationMode') === 'existing' && (
+              <>
+                <Grid size={12}>
+                  <Controller
+                    name="selectedLocationId"
+                    control={control}
+                    rules={{ required: 'Please select a location' }}
+                    render={({ field, fieldState }) => (
+                      <Autocomplete
+                        {...locationAutocompleteProps}
+                        value={locationAutocompleteProps.options.find(option => option.id === field.value) || null}
+                        onChange={(_, newValue) => {
+                          field.onChange(newValue?.id || null)
+                        }}
+                        getOptionKey={(option) => option.id}
+                        getOptionLabel={(option) => option.name || ''}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Select Existing Location"
+                            margin="normal"
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message}
+                            required
+                          />
+                        )}
+                      />
+                    )}
+                  />
+                </Grid>
+              </>
+            )}
+
+            {/* New Location Form */}
+            {watch('locationMode') === 'new' && (
+              <>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ControlledTextField
+                    label="Location Name"
+                    fullWidth
+                    control={control}
+                    name="location.name"
+                    required
+                  />
+                </Grid>
+                
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ControlledSelectField
+                    label="Release Status"
+                    fullWidth
+                    control={control}
+                    name="location.release_status"
+                    options={[
+                      { value: 'draft', label: 'Draft' }
+                    ]}
+                    required
+                  />
+                </Grid>
+                
+                <Grid size={12}>
+                  <ControlledTextField
+                    label="Location Coordinates POINT (X Y)"
+                    control={control}
+                    name="location.point"
+                    placeholder='POINT (-106.5 35.1)'
+                    helperText="Enter coordinates in POINT (X Y) format"
+                    required
+                  />
+                </Grid>
+                
+                <Grid size={12}>
+                  <ControlledTextField
+                    label="Location Notes"
+                    fullWidth
+                    multiline
+                    rows={3}
+                    control={control}
+                    name="location.notes"
+                  />
+                </Grid>
+              </>
+            )}
 
             <Grid size={12}>
               <Divider sx={{ my: 2 }} />

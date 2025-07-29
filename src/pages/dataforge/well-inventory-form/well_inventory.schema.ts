@@ -2,11 +2,19 @@ import * as Yup from 'yup'
 import { IWellInventoryForm } from '@/interfaces/dataforge/IWellInventoryForm'
 
 export const WellInventorySchema = Yup.object().shape({
-  location: Yup.object({
-    name: Yup.string().required('Location name is required'),
-    notes: Yup.string().nullable(),
-    point: Yup.string().required('Location coordinates are required'),
-    release_status: Yup.string().required('Release status is required'),
+  locationMode: Yup.string().oneOf(['existing', 'new']).required('Location mode is required'),
+  selectedLocationId: Yup.number().when('locationMode', {
+    is: 'existing',
+    then: (schema) => schema.required('Please select a location'),
+  }),
+  location: Yup.object().when('locationMode', {
+    is: 'new',
+    then: (schema) => schema.shape({
+      name: Yup.string().required('Location name is required'),
+      notes: Yup.string().nullable(),
+      point: Yup.string().required('Location coordinates are required'),
+      release_status: Yup.string().required('Release status is required'),
+    }),
   }),
   well: Yup.object({
     name: Yup.string().required('Well name is required'),
@@ -59,6 +67,8 @@ export const WellInventorySchema = Yup.object().shape({
 })
 
 export const SchemaDefaults: Partial<IWellInventoryForm> = {
+  locationMode: 'new',
+  selectedLocationId: undefined,
   location: {
     name: '',
     notes: '',

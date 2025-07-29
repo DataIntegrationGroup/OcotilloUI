@@ -6,6 +6,8 @@ export interface IWellInventoryForm {
     point: string 
     release_status: string
   }
+  locationMode: 'existing' | 'new'
+  selectedLocationId?: number
   well: {
     name: string
     thing_type: 'well'
