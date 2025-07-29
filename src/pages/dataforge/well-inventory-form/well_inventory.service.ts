@@ -82,7 +82,7 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
 
   return {
     location: locationData,
-    well: wellResponse.data,
+    well: wellResponse,
     contacts: contactResponses,
     assets: assetResponses,
   }
