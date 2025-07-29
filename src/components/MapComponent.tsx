@@ -19,7 +19,7 @@ interface MapComponentProps {
   showNavigation?: { show: boolean; position: ControlPosition }
   showGeocoder?: { show: boolean; position: ControlPosition }
   isLoading?: boolean
-  mapRef: any
+  mapRef?: any
 }
 
 export const MapComponent: React.FC<MapComponentProps> = ({
@@ -44,7 +44,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       ? 'mapbox://styles/mapbox/dark-v10'
       : 'mapbox://styles/mapbox/light-v10'
   const style = { width: '100%', height: '650px' }
-  
+
   if (mapRef === undefined) {
     mapRef = useRef<MapRef>(null)
   }
