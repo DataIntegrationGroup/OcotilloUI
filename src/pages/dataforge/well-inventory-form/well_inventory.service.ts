@@ -58,22 +58,14 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
   const assetResponses = []
   if (data.assets?.length) {
     for (const asset of data.assets) {
-      const formData = new FormData()
-      formData.append('label', asset.label)
-      formData.append('name', asset.name)
-      if (asset.file) {
-        formData.append('file', asset.file)
-      }
-
-      const assetResponse = await dataForgeDataProvider.custom({
-        url: 'asset',
-        method: 'post',
-        payload: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      const assetResponse = await dataForgeDataProvider.create({
+        resource: 'dataforge.asset',
+        variables: {
+          name: asset.name,
+          label: asset.label,
         },
       })
-      
+
       assetResponses.push(assetResponse.data)
     }
   }
