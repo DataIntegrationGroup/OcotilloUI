@@ -18,7 +18,6 @@ export const WellInventorySchema = Yup.object().shape({
   }),
   well: Yup.object({
     name: Yup.string().required('Well name is required'),
-    thing_type: Yup.string().oneOf(['well']).required(),
     well_depth: Yup.number()
       .nullable()
       .positive('Well depth must be positive')
