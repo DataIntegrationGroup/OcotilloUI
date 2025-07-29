@@ -11,6 +11,7 @@ import Autocomplete from '@mui/material/Autocomplete'
 import { IThing } from '@/interfaces/dataforge/IThing'
 import { ISeries } from '@/interfaces/dataforge/ISeries'
 import { ILexicon } from '@/interfaces/dataforge/ILexicon'
+import { ISensor } from '@/interfaces/dataforge/ISensor'
 import dayjs from 'dayjs'
 
 import { MapComponent } from '@/components'
@@ -22,9 +23,9 @@ import { MapOutlined } from '@mui/icons-material'
 export const GroundwaterLevelForm: React.FC = () => {
   const {
     control,
-    refineCore: { onFinish, formLoading, query },
+    // refineCore: { onFinish, formLoading, query },
     register,
-    handleSubmit,
+    // handleSubmit,
     formState: { errors },
     saveButtonProps,
   } = useForm<IGroundwaterLevelForm, HttpError, IGroundwaterLevelForm>({
@@ -75,7 +76,19 @@ export const GroundwaterLevelForm: React.FC = () => {
       resource: 'series',
       dataProviderName: 'dataforge',
       meta: {
-        params: { thing_id: selectedThingID },
+        params: {
+          thing_id: selectedThingID,
+          observed_property: 'groundwater level',
+        },
+      },
+    })
+
+  const { autocompleteProps: autocompletePropsLevelStatus } =
+    useAutocomplete<ILexicon>({
+      resource: 'lexicon',
+      dataProviderName: 'dataforge',
+      meta: {
+        params: { category: 'level_status' },
       },
     })
 
@@ -96,7 +109,27 @@ export const GroundwaterLevelForm: React.FC = () => {
         })
       }
     }
-  }, [selectedThingFeatureCollection])
+  }, [selectedThingFeatureCollection, displayMap])
+
+  const coords =
+    selectedThingFeatureCollection?.features[0]?.geometry.coordinates
+  const initialViewState = {
+    longitude: coords ? coords[0] : -106.4,
+    latitude: coords ? coords[1] : 34.5,
+    zoom: 10,
+  }
+
+  const { autocompleteProps: autocompletePropsSensor } =
+    useAutocomplete<ISensor>({
+      resource: 'sensor',
+      dataProviderName: 'dataforge',
+      meta: {
+        params: {
+          thing_id: selectedThingID,
+          observed_property: 'groundwater level',
+        },
+      },
+    })
 
   return (
     <Create goBack={<></>} saveButtonProps={saveButtonProps}>
@@ -109,11 +142,10 @@ export const GroundwaterLevelForm: React.FC = () => {
             <Controller
               name="thing_id"
               control={control}
-              // rules={{ required: 'This field is required' }}
+              rules={{ required: 'This field is required' }}
               render={({ field }) => (
                 <Autocomplete
                   {...autocompletePropsThing}
-                  // value={thingValue}
                   onChange={(_, newValue) => {
                     if (newValue === null) {
                       setSelectedThingFeatureCollection({
@@ -140,7 +172,6 @@ export const GroundwaterLevelForm: React.FC = () => {
                     setSelectedThingID(newValue?.id || null)
                     field.onChange(newValue?.id || null)
                   }}
-                  // options={['Draft', 'Public', 'Private']}
                   getOptionKey={(option) => option.id}
                   getOptionLabel={(option) =>
                     `${option.name}: (${option.id})` || ''
@@ -163,7 +194,6 @@ export const GroundwaterLevelForm: React.FC = () => {
               sx={{ height: '48px' }}
               variant="outlined"
               startIcon={<MapOutlined />}
-              // variant="contained"
               onClick={() => {
                 setDisplayMap((prev) => !prev)
               }}
@@ -173,7 +203,7 @@ export const GroundwaterLevelForm: React.FC = () => {
 
         <Box sx={{ paddingLeft: '50px', paddingRight: '50px' }}>
           {displayMap && (
-            <MapComponent mapRef={mapRef}>
+            <MapComponent mapRef={mapRef} initialViewState={initialViewState}>
               <Source
                 key="selectedThing"
                 id="selectedThing"
@@ -194,21 +224,41 @@ export const GroundwaterLevelForm: React.FC = () => {
             </MapComponent>
           )}
         </Box>
-
+        <Controller
+          name="sensor_id"
+          control={control}
+          render={({ field }) => (
+            <Autocomplete
+              {...autocompletePropsSensor}
+              disabled={selectedThingID === null}
+              onChange={(_, newValue) => {
+                field.onChange(newValue?.id || null)
+              }}
+              getOptionKey={(option) => option.id}
+              getOptionLabel={(option) => option.name || ''}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Sensor"
+                  margin="normal"
+                  error={!!errors.sensor_id}
+                  helperText={errors.sensor_id?.message}
+                />
+              )}
+            />
+          )}
+        />
         <Controller
           name="series_id"
           control={control}
-          // rules={{ required: 'This field is required' }}
+          rules={{ required: 'This field is required' }}
           render={({ field }) => (
             <Autocomplete
               {...autocompletePropsSeries}
-              // value={thingValue}
               disabled={selectedThingID === null}
               onChange={(_, newValue) => {
-                // setThingValue(newValue)
                 field.onChange(newValue?.id || null)
               }}
-              // options={['Draft', 'Public', 'Private']}
               getOptionKey={(option) => option.id}
               getOptionLabel={(option) => option.name || ''}
               renderInput={(params) => (
@@ -273,13 +323,9 @@ export const GroundwaterLevelForm: React.FC = () => {
           render={({ field }) => (
             <Autocomplete
               {...autocompletePropsReleaseStatus}
-              // value={thingValue}
               onChange={(_, newValue) => {
-                // setThingValue(newValue)
                 field.onChange(newValue?.term || null)
               }}
-              // options={['Draft', 'Public', 'Private']}
-              // getValue={(option) => option.term}
               getOptionKey={(option) => option.term}
               getOptionLabel={(option) => option.term || ''}
               renderInput={(params) => (
@@ -294,18 +340,31 @@ export const GroundwaterLevelForm: React.FC = () => {
             />
           )}
         />
+        <Controller
+          name="level_status"
+          control={control}
+          rules={{ required: 'This field is required' }}
+          render={({ field }) => (
+            <Autocomplete
+              {...autocompletePropsLevelStatus}
+              onChange={(_, newValue) => {
+                field.onChange(newValue?.term || null)
+              }}
+              getOptionKey={(option) => option.term}
+              getOptionLabel={(option) => option.term || ''}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Level Status"
+                  margin="normal"
+                  error={!!errors.level_status}
+                  helperText={errors.level_status?.message}
+                />
+              )}
+            />
+          )}
+        />
       </Box>
     </Create>
   )
-  // <form onSubmit={handleSubmit(onFinish)}>
-  //   <label>
-  //     Name:
-  //     <input {...register('name')} />
-  //   </label>
-  //   <label>
-  //     Material:
-  //     <input {...register('material')} />
-  //   </label>
-  //   <button type="submit">Submit</button>
-  // </form>
 }

@@ -20,6 +20,8 @@ interface MapComponentProps {
   showGeocoder?: { show: boolean; position: ControlPosition }
   isLoading?: boolean
   mapRef?: any
+  // zoomToPoint?: object
+  initialViewState?: object
 }
 
 export const MapComponent: React.FC<MapComponentProps> = ({
@@ -30,6 +32,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   onMouseMoveCallback,
   setSelectionPolygons,
   isLoading = false,
+  initialViewState,
   showDrawControls = { show: true, position: 'top-right' },
   showNavigation = {
     show: true,
@@ -48,12 +51,19 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   if (mapRef === undefined) {
     mapRef = useRef<MapRef>(null)
   }
-  // console.log(mapRef, ref)
-  const initialViewState = {
-    longitude: -106.4,
-    latitude: 34.5,
-    zoom: 6,
+  if (!initialViewState) {
+    initialViewState = {
+      longitude: -106.4,
+      latitude: 34.5,
+      zoom: 6,
+    }
   }
+  // console.log(mapRef, ref)
+  // const initialViewState = {
+  //   longitude: -106.4,
+  //   latitude: 34.5,
+  //   zoom: 6,
+  // }
 
   const getCurrentPoints = (e) => {
     if (!mapRef || !mapRef.current) {
