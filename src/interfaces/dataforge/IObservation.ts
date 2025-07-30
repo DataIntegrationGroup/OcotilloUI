@@ -6,7 +6,7 @@ export interface IObservationAttributes {
   id: number
   observation_type: string
   observation_timestamp: string
-  created_at: string
+  created_at: Date
 }
 
 export interface IObservation
