@@ -119,38 +119,6 @@ export const GroundwaterLevelForm: React.FC = () => {
     }
   }, [selectedThingFeatureCollection, displayMap])
 
-  const makeDummyData = (nr) => {
-    const now = new Date()
-    return [
-      {
-        phenomenonTime: new Date(
-          now.getTime() - 4 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        result: 2.1,
-      },
-      {
-        phenomenonTime: new Date(
-          now.getTime() - 3 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        result: 2.3,
-      },
-      {
-        phenomenonTime: new Date(
-          now.getTime() - 2 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        result: 2.2,
-      },
-      {
-        phenomenonTime: new Date(
-          now.getTime() - 1 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        result: 2.4,
-      },
-      { phenomenonTime: now.toISOString(), result: 2.5 },
-      nr,
-    ]
-  }
-
   const dataProvider = useDataProvider()
   const dataForgeDataProvider = dataProvider('dataforge')
 
@@ -160,7 +128,7 @@ export const GroundwaterLevelForm: React.FC = () => {
       result: Number(depthToWater),
     }
     if (!thingID || !sensorID) {
-      console.warn('Thing ID or Sensor ID is not set, skipping data fetch.')
+      console.log('Thing ID or Sensor ID is not set, skipping data fetch.')
       return
     }
 
@@ -174,9 +142,6 @@ export const GroundwaterLevelForm: React.FC = () => {
       meta: { params },
     })
     values.then((response) => {
-      console.log(response)
-      console.log(response.data)
-
       const obs = response.data.map((item) => ({
         phenomenonTime: item.observation_timestamp,
         result: Number(item.depth_to_water),
@@ -343,7 +308,7 @@ export const GroundwaterLevelForm: React.FC = () => {
         <Controller
           name="observation_timestamp"
           control={control}
-          render={({ field, fieldState }) => (
+          render={({ field }) => (
             <DateTimePicker
               {...field}
               value={field.value ? dayjs(field.value) : null}
