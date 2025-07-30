@@ -19,21 +19,32 @@ import { Layer, Source } from 'react-map-gl'
 import { MapRef } from 'react-map-gl'
 import { Button, Stack } from '@mui/material'
 import { MapOutlined } from '@mui/icons-material'
+import { Hydrograph } from '@/components/Hydrographs/Hydrograph'
+import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
 
 export const GroundwaterLevelForm: React.FC = () => {
+  const [selectedThingID, setSelectedThingID] = useState<number | null>(null)
+  const [selectedSensorID, setSelectedSensorID] = useState<number | null>(null)
+  const [selectedSeries, setSelectedSeries] = useState<any | null>(null)
+  const [selectedThingFeatureCollection, setSelectedThingFeatureCollection] =
+    useState(null)
+  const [displayMap, setDisplayMap] = useState(false)
+  const mapRef = useRef<MapRef>(null)
+  const [hydrographDatasource, setHydrographDatasource] = useState<
+    IHydrographDatasource[]
+  >([])
+  const [refreshHydrograph, setRefreshHydrograph] = useState(0)
+
   const {
     control,
-    // refineCore: { onFinish, formLoading, query },
     register,
-    // handleSubmit,
     formState: { errors },
     saveButtonProps,
+    setValue,
   } = useForm<IGroundwaterLevelForm, HttpError, IGroundwaterLevelForm>({
     refineCoreProps: {
       resource: 'observation/groundwater-level',
       dataProviderName: 'dataforge',
-      // action: 'edit',
-      // id: 123,
     },
     defaultValues: {
       measuring_point_height: 1,
@@ -66,11 +77,6 @@ export const GroundwaterLevelForm: React.FC = () => {
     }
   )
 
-  const [selectedThingID, setSelectedThingID] = useState<number | null>(null)
-  const [selectedThingFeatureCollection, setSelectedThingFeatureCollection] =
-    useState(null)
-  const [displayMap, setDisplayMap] = useState(false)
-
   const { autocompleteProps: autocompletePropsSeries } =
     useAutocomplete<ISeries>({
       resource: 'series',
@@ -79,6 +85,7 @@ export const GroundwaterLevelForm: React.FC = () => {
         params: {
           thing_id: selectedThingID,
           observed_property: 'groundwater level',
+          sensor_id: selectedSensorID,
         },
       },
     })
@@ -92,7 +99,18 @@ export const GroundwaterLevelForm: React.FC = () => {
       },
     })
 
-  const mapRef = useRef<MapRef>(null)
+  const { autocompleteProps: autocompletePropsSensor } =
+    useAutocomplete<ISensor>({
+      resource: 'sensor',
+      dataProviderName: 'dataforge',
+      meta: {
+        params: {
+          thing_id: selectedThingID,
+          observed_property: 'groundwater level',
+        },
+      },
+    })
+
   useEffect(() => {
     if (
       selectedThingFeatureCollection &&
@@ -111,6 +129,56 @@ export const GroundwaterLevelForm: React.FC = () => {
     }
   }, [selectedThingFeatureCollection, displayMap])
 
+  useEffect(() => {
+    const options = autocompletePropsSeries.options
+    if (options && options.length === 1) {
+      // Set the value in the form to the single option's id
+      setSelectedSeries(options[0])
+      setValue('series_id', options[0].id)
+    }
+  }, [autocompletePropsSeries.options])
+
+  const makeDummyData = () => {
+    const now = new Date()
+    return [
+      {
+        phenomenonTime: new Date(
+          now.getTime() - 4 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        result: 2.1,
+      },
+      {
+        phenomenonTime: new Date(
+          now.getTime() - 3 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        result: 2.3,
+      },
+      {
+        phenomenonTime: new Date(
+          now.getTime() - 2 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        result: 2.2,
+      },
+      {
+        phenomenonTime: new Date(
+          now.getTime() - 1 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        result: 2.4,
+      },
+      { phenomenonTime: now.toISOString(), result: 2.5 },
+    ]
+  }
+
+  useEffect(() => {
+    const source = {
+      data: makeDummyData(),
+      id: 1,
+      name: 'Groundwater Level',
+      style: 'scatter',
+    }
+    setHydrographDatasource([source])
+    setRefreshHydrograph((prev) => !prev)
+  }, [selectedSeries])
   const coords =
     selectedThingFeatureCollection?.features[0]?.geometry.coordinates
   const initialViewState = {
@@ -119,17 +187,13 @@ export const GroundwaterLevelForm: React.FC = () => {
     zoom: 10,
   }
 
-  const { autocompleteProps: autocompletePropsSensor } =
-    useAutocomplete<ISensor>({
-      resource: 'sensor',
-      dataProviderName: 'dataforge',
-      meta: {
-        params: {
-          thing_id: selectedThingID,
-          observed_property: 'groundwater level',
-        },
-      },
-    })
+  const getOptionLabel = (option: any) => {
+    return `${option.name}: (${option.id})`
+  }
+
+  const getLexiconLabel = (option: ILexicon) => {
+    return option.term
+  }
 
   return (
     <Create goBack={<></>} saveButtonProps={saveButtonProps}>
@@ -173,9 +237,7 @@ export const GroundwaterLevelForm: React.FC = () => {
                     field.onChange(newValue?.id || null)
                   }}
                   getOptionKey={(option) => option.id}
-                  getOptionLabel={(option) =>
-                    `${option.name}: (${option.id})` || ''
-                  }
+                  getOptionLabel={getOptionLabel}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -232,10 +294,11 @@ export const GroundwaterLevelForm: React.FC = () => {
               {...autocompletePropsSensor}
               disabled={selectedThingID === null}
               onChange={(_, newValue) => {
+                setSelectedSensorID(newValue?.id || null)
                 field.onChange(newValue?.id || null)
               }}
               getOptionKey={(option) => option.id}
-              getOptionLabel={(option) => option.name || ''}
+              getOptionLabel={getOptionLabel}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -258,9 +321,11 @@ export const GroundwaterLevelForm: React.FC = () => {
               disabled={selectedThingID === null}
               onChange={(_, newValue) => {
                 field.onChange(newValue?.id || null)
+                setSelectedSeries(newValue || null)
               }}
+              value={selectedSeries}
               getOptionKey={(option) => option.id}
-              getOptionLabel={(option) => option.name || ''}
+              getOptionLabel={getOptionLabel}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -273,7 +338,12 @@ export const GroundwaterLevelForm: React.FC = () => {
             />
           )}
         />
-
+        {selectedSeries && (
+          <Hydrograph
+            datasource={hydrographDatasource}
+            refresh={refreshHydrograph}
+          />
+        )}
         <TextField
           {...register('depth_to_water')}
           error={!!errors.depth_to_water}
@@ -327,7 +397,7 @@ export const GroundwaterLevelForm: React.FC = () => {
                 field.onChange(newValue?.term || null)
               }}
               getOptionKey={(option) => option.term}
-              getOptionLabel={(option) => option.term || ''}
+              getOptionLabel={getLexiconLabel}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -351,7 +421,7 @@ export const GroundwaterLevelForm: React.FC = () => {
                 field.onChange(newValue?.term || null)
               }}
               getOptionKey={(option) => option.term}
-              getOptionLabel={(option) => option.term || ''}
+              getOptionLabel={getLexiconLabel}
               renderInput={(params) => (
                 <TextField
                   {...params}
