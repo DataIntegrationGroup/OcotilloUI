@@ -48,6 +48,7 @@ export const ControlledSelectField = <T,>({
           label={label}
           {...omit(field, ['required'])}
           {...omit(selectProps, ['required'])}
+          value={field.value ?? ''}
           onOpen={onOpen}
         >
           {options.map((option) => (
