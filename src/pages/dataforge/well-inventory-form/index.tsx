@@ -30,9 +30,9 @@ import { Add, Delete, NavigateNext, NavigateBefore, Check } from '@mui/icons-mat
 import {
   ControlledTextField,
   ControlledSelectField,
-  ControlledCheckbox,
   ControlledEmailField,
   ControlledMapboxAddressAutocomplete,
+  ControlledRadioFormSelection,
 } from '@/components'
 import { IWellInventoryForm } from '@/interfaces/dataforge/IWellInventoryForm'
 import { ILocation } from '@/interfaces/dataforge/ILocation'
@@ -288,14 +288,24 @@ const LocationStep: React.FC<{
     {/* Location Mode Selection */}
     <Grid size={12}>
       <Card sx={{ p: 2 }}>
-        <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-          Location Selection
-        </Typography>
-        <RadioGroup
-          value={watch('locationMode')}
-          onChange={(e) => {
-            setValue('locationMode', e.target.value as 'new' | 'existing')
-            if (e.target.value === 'existing') {
+        <ControlledRadioFormSelection
+          control={control}
+          name="locationMode"
+          label="Location Selection"
+          options={[
+            {
+              value: 'new',
+              label: 'Create a new location',
+              description: 'Add location details for this well'
+            },
+            {
+              value: 'existing',
+              label: 'Use existing location',
+              description: 'Select from database'
+            }
+          ]}
+          onValueChange={(value) => {
+            if (value === 'existing') {
               setValue('location.name', '')
               setValue('location.notes', '')
               setValue('location.point', '')
@@ -304,36 +314,7 @@ const LocationStep: React.FC<{
               setValue('selectedLocationId', undefined)
             }
           }}
-        >
-          <FormControlLabel
-            value="new"
-            control={<Radio />}
-            label={
-              <Box>
-                <Typography variant="subtitle1" fontWeight="medium">
-                  Create a new location
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Add location details for this well
-                </Typography>
-              </Box>
-            }
-          />
-          <FormControlLabel
-            value="existing"
-            control={<Radio />}
-            label={
-              <Box>
-                <Typography variant="subtitle1" fontWeight="medium">
-                  Use existing location
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Select from database
-                </Typography>
-              </Box>
-            }
-          />
-        </RadioGroup>
+        />
       </Card>
     </Grid>
 
