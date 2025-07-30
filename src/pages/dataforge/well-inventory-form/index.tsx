@@ -38,6 +38,7 @@ import { IWellInventoryForm } from '@/interfaces/dataforge/IWellInventoryForm'
 import { ILocation } from '@/interfaces/dataforge/ILocation'
 import { WellInventorySchema, SchemaDefaults } from './well_inventory.schema'
 import { createWellInventoryForm } from './well_inventory.service'
+import { LocationForm } from '../location/forms'
 
 const steps = [
   'Location Information',
@@ -350,55 +351,16 @@ const LocationStep: React.FC<{
       </Grid>
     )}
 
-    {/* New Location Form */}
+    {/* New Location Form - REUSED COMPONENT */}
     {watch('locationMode') === 'new' && (
-      <>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ControlledTextField
-            label="Location Name"
-            fullWidth
-            control={control}
-            name="location.name"
-            required
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ControlledSelectField
-            label="Release Status"
-            fullWidth
-            control={control}
-            name="location.release_status"
-            options={[
-              { value: 'draft', label: 'Draft' }
-            ]}
-            required
-          />
-        </Grid>
-
-        <Grid size={12}>
-          <ControlledTextField
-            label="Location Coordinates POINT (X Y)"
-            control={control}
-            name="location.point"
-            placeholder='POINT(-106.5 35.1)'
-            helperText="Enter coordinates in POINT (X Y) format"
-            required
-          />
-        </Grid>
-
-        <Grid size={12}>
-          <ControlledTextField
-            label="Location Notes"
-            fullWidth
-            multiline
-            minRows={3}
-            maxRows={6}
-            control={control}
-            name="location.notes"
-          />
-        </Grid>
-      </>
+      <LocationForm
+        control={control}
+        watch={watch}
+        setValue={setValue}
+        errors={errors}
+        mode="step"
+        fieldPrefix="location."
+      />
     )}
   </Grid>
 )
