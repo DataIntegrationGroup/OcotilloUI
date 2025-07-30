@@ -37,8 +37,9 @@ import {
 import { IWellInventoryForm } from '@/interfaces/dataforge/IWellInventoryForm'
 import { ILocation } from '@/interfaces/dataforge/ILocation'
 import { WellInventorySchema, SchemaDefaults } from './well_inventory.schema'
-import { createWellInventoryForm } from './well_inventory.service'
-import { LocationForm } from '../location/forms'
+import { createWellInventoryForm } from '@/pages/dataforge/well-inventory-form/well_inventory.service'
+import { LocationForm } from '@/pages/dataforge/location/forms'
+import { WellForm } from '@/pages/dataforge/thing/forms'
 
 const steps = [
   'Location Information',
@@ -377,60 +378,12 @@ const WellStep: React.FC<{
       </Typography>
     </Grid>
 
-    <Grid size={{ xs: 12, md: 6 }}>
-      <ControlledTextField
-        label="Well Name"
-        fullWidth
-        control={control}
-        name="well.name"
-        required
-      />
-    </Grid>
-
-    <Grid size={{ xs: 12, md: 6 }}>
-      <ControlledSelectField
-        label="Well Type"
-        fullWidth
-        control={control}
-        name="well.well_type"
-        options={[
-          { value: 'draft', label: 'Draft' },
-        ]}
-        required
-      />
-    </Grid>
-
-    <Grid size={{ xs: 12, md: 6 }}>
-      <ControlledTextField
-        label="Well Depth (ft)"
-        fullWidth
-        type="number"
-        control={control}
-        name="well.well_depth"
-      />
-    </Grid>
-
-    <Grid size={{ xs: 12, md: 6 }}>
-      <ControlledTextField
-        label="Hole Depth (ft)"
-        fullWidth
-        type="number"
-        control={control}
-        name="well.hole_depth"
-      />
-    </Grid>
-
-    <Grid size={12}>
-      <ControlledTextField
-        label="Well Notes"
-        fullWidth
-        multiline
-        minRows={3}
-        maxRows={6}
-        control={control}
-        name="well.notes"
-      />
-    </Grid>
+    <WellForm
+      control={control}
+      errors={errors}
+      mode="step"
+      fieldPrefix="well."
+    />
   </Grid>
 )
 
