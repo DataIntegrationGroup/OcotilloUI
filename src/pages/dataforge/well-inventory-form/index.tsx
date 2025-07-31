@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useStepsForm } from '@refinedev/react-hook-form'
 import { useAutocomplete } from '@refinedev/mui'
 import { useFieldArray, Controller } from 'react-hook-form'
@@ -40,6 +40,9 @@ import { WellInventorySchema, SchemaDefaults } from './well_inventory.schema'
 import { createWellInventoryForm } from '@/pages/dataforge/well-inventory-form/well_inventory.service'
 import { LocationForm } from '@/pages/dataforge/location/forms'
 import { WellForm } from '@/pages/dataforge/thing/forms'
+import { ContactForm } from '@/pages/dataforge/contact/forms'
+
+import { stepSchemas } from './well_inventory.schema'
 
 const steps = [
   'Location Information',
@@ -52,7 +55,6 @@ const steps = [
 export const WellInventoryForm: React.FC = () => {
   const { open, close } = useNotification()
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [currentStepState, setCurrentStepState] = useState(0)
 
   const { autocompleteProps: locationAutocompleteProps } = useAutocomplete<ILocation>({
     resource: 'dataforge.location',
@@ -78,7 +80,8 @@ export const WellInventoryForm: React.FC = () => {
     refineCore: { onFinish },
   } = useStepsForm<IWellInventoryForm>({
     defaultValues: SchemaDefaults,
-    resolver: yupResolver(WellInventorySchema),
+    resolver: (data, ctx, opts) =>
+      yupResolver(stepSchemas[currentStep])(data, ctx, opts),
     stepsProps: {
       isBackValidate: false,
     },
@@ -112,7 +115,7 @@ export const WellInventoryForm: React.FC = () => {
       })
       reset(SchemaDefaults)
       setSelectedFiles([])
-      setCurrentStepState(0) // Reset to first step
+      gotoStep(0) // Reset to first step
     },
     onError: (error) => {
       close?.('well-inventory-submission')
@@ -136,46 +139,16 @@ export const WellInventoryForm: React.FC = () => {
   const handleReset = () => {
     reset(SchemaDefaults)
     setSelectedFiles([])
-    setCurrentStepState(0)
+    gotoStep(0)
   }
 
   const handleNext = async () => {
-    console.log('Current step:', currentStep)
-    console.log('Current form values:', watch())
-    
-    // Validate only the current step
-    let isValid = false
-    
-    switch (currentStepState) {
-      case 0: // Location step
-        const locationMode = watch('locationMode')
-        if (locationMode === 'existing') {
-          isValid = await trigger(['locationMode', 'selectedLocationId'])
-        } else {
-          isValid = await trigger(['locationMode', 'location.name', 'location.point', 'location.release_status'])
-        }
-        break
-      case 1: // Well step
-        isValid = await trigger(['well.name', 'well.well_type'])
-        break
-      case 2: // Contacts step
-        isValid = await trigger(['contacts'])
-        break
-      case 3: // Assets step
-        isValid = await trigger(['assets'])
-        break
-      default:
-        isValid = true
-    }
-    if (isValid) {
-      setCurrentStepState(currentStepState + 1)
-    } else {
-      console.error('Validation failed, staying on current step')
-    }
-  }
+    const isValid = await trigger();
+    if (isValid) gotoStep(currentStep + 1);
+  };
 
   const handleBack = () => {
-    setCurrentStepState(currentStepState - 1)
+    gotoStep(currentStep - 1)
   }
 
   const renderStepContent = (step: number) => {
@@ -209,14 +182,14 @@ export const WellInventoryForm: React.FC = () => {
             }
           }}
         >
-          <Stepper activeStep={currentStepState} orientation="vertical" sx={{ mb: 4 }}>
+          <Stepper activeStep={currentStep} orientation="vertical" sx={{ mb: 4 }}>
             {steps.map((label, index) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
                                 <StepContent>
                   <Box sx={{ mb: 2 }}>
-                    {renderStepContent(currentStepState)}
-                    {index === currentStepState && (
+                    {renderStepContent(currentStep)}
+                    {index === currentStep && (
                       <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
                         {index > 0 && (
                           <Button
@@ -227,7 +200,7 @@ export const WellInventoryForm: React.FC = () => {
                             Back
                           </Button>
                         )}
-                        {currentStepState < steps.length - 1 ? (
+                        {currentStep < steps.length - 1 ? (
                           <Button
                             type="button"
                             onClick={handleNext}
@@ -328,7 +301,7 @@ const LocationStep: React.FC<{
           control={control}
           rules={{ required: 'Please select a location' }}
           render={({ field, fieldState }) => (
-                         <Autocomplete
+              <Autocomplete
                {...locationAutocompleteProps}
                value={locationAutocompleteProps.options.find((option: any) => option.id === field.value) || null}
                onChange={(_, newValue) => {
@@ -352,7 +325,7 @@ const LocationStep: React.FC<{
       </Grid>
     )}
 
-    {/* New Location Form - REUSED COMPONENT */}
+    {/*  Location Form */}
     {watch('locationMode') === 'new' && (
       <LocationForm
         control={control}
@@ -411,254 +384,17 @@ const ContactsStep: React.FC<{
           </Typography>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ControlledTextField
-            label="Contact Name"
-            fullWidth
-            control={control}
-            name={`contacts.${contactIndex}.name`}
-            required
-          />
-        </Grid>
+        <ContactForm
+          control={control}
+          watch={watch}
+          setValue={setValue}
+          errors={errors}
+          mode="step"
+          fieldPrefix={`contacts.${contactIndex}.`}
+          showDynamicArrays={true}
+        />
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ControlledSelectField
-            label="Contact Role"
-            fullWidth
-            control={control}
-            name={`contacts.${contactIndex}.role`}
-            options={[
-              { value: 'Owner', label: 'Owner' },
-            ]}
-            required
-          />
-        </Grid>
 
-        {/* Contact Emails */}
-        <Grid size={12}>
-          <Typography variant="subtitle1" gutterBottom>
-            Email Addresses
-          </Typography>
-          {(watch(`contacts.${contactIndex}.emails`) || []).map((emailField, emailIndex) => (
-            <Grid container key={emailIndex} spacing={2} sx={{ mb: 2 }}>
-              <Grid size={{ xs: 12, md: 5 }}>
-                <ControlledEmailField
-                  label="Email"
-                  control={control}
-                  name={`contacts.${contactIndex}.emails.${emailIndex}.email`}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 5 }}>
-                <ControlledSelectField
-                  label="Email Type"
-                  fullWidth
-                  control={control}
-                  name={`contacts.${contactIndex}.emails.${emailIndex}.email_type`}
-                  options={[
-                    { value: 'Primary', label: 'Primary' },
-                  ]}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 2 }}>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => {
-                    const currentEmails = watch(`contacts.${contactIndex}.emails`) || []
-                    const newEmails = currentEmails.filter((_, i) => i !== emailIndex)
-                    setValue(`contacts.${contactIndex}.emails`, newEmails)
-                  }}
-                  startIcon={<Delete />}
-                  fullWidth
-                >
-                  Remove
-                </Button>
-              </Grid>
-            </Grid>
-          ))}
-          <Button
-            variant="outlined"
-            onClick={() => {
-              const currentEmails = watch(`contacts.${contactIndex}.emails`) || []
-              setValue(`contacts.${contactIndex}.emails`, [
-                ...currentEmails,
-                { email: '', email_type: 'Primary' }
-              ])
-            }}
-            startIcon={<Add />}
-          >
-            Add Email
-          </Button>
-        </Grid>
-
-        {/* Contact Phones */}
-        <Grid size={12}>
-          <Typography variant="subtitle1" gutterBottom>
-            Phone Numbers
-          </Typography>
-          {(watch(`contacts.${contactIndex}.phones`) || []).map((phoneField, phoneIndex) => (
-            <Grid container key={phoneIndex} spacing={2} sx={{ mb: 2 }}>
-              <Grid size={{ xs: 12, md: 2 }}>
-                <ControlledSelectField
-                  label="Country"
-                  fullWidth
-                  control={control}
-                  name={`contacts.${contactIndex}.phones.${phoneIndex}.country_code`}
-                  options={[
-                    { value: '+1', label: 'US (+1)' },
-                  ]}
-                  defaultValue="+1"
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <ControlledTextField
-                  label="Phone Number"
-                  fullWidth
-                  control={control}
-                  name={`contacts.${contactIndex}.phones.${phoneIndex}.phone_number`}
-                  placeholder="555-123-4567"
-                  helperText="Enter area code and number (e.g., 555-123-4567)"
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 5 }}>
-                <ControlledSelectField
-                  label="Phone Type"
-                  fullWidth
-                  control={control}
-                  name={`contacts.${contactIndex}.phones.${phoneIndex}.phone_type`}
-                  options={[
-                    { value: 'Primary', label: 'Primary' },
-                  ]}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 2 }}>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => {
-                    const currentPhones = watch(`contacts.${contactIndex}.phones`) || []
-                    const newPhones = currentPhones.filter((_, i) => i !== phoneIndex)
-                    setValue(`contacts.${contactIndex}.phones`, newPhones)
-                  }}
-                  startIcon={<Delete />}
-                  fullWidth
-                >
-                  Remove
-                </Button>
-              </Grid>
-            </Grid>
-          ))}
-          <Button
-            variant="outlined"
-            onClick={() => {
-              const currentPhones = watch(`contacts.${contactIndex}.phones`) || []
-              setValue(`contacts.${contactIndex}.phones`, [
-                ...currentPhones,
-                { phone_number: '', phone_type: 'Primary', country_code: '+1' }
-              ])
-            }}
-            startIcon={<Add />}
-          >
-            Add Phone
-          </Button>
-        </Grid>
-
-        {/* Contact Addresses */}
-        <Grid size={12}>
-          <Typography variant="subtitle1" gutterBottom>
-            Addresses
-          </Typography>
-          {(watch(`contacts.${contactIndex}.addresses`) || []).map((addressField, addressIndex) => (
-            <Grid container key={addressIndex} spacing={2} sx={{ mb: 2 }}>
-              <Grid size={12}>
-                <ControlledTextField
-                  label="Address Line 1"
-                  fullWidth
-                  control={control}
-                  name={`contacts.${contactIndex}.addresses.${addressIndex}.address_line_1`}
-                />
-              </Grid>
-              <Grid size={12}>
-                <ControlledTextField
-                  label="Address Line 2"
-                  fullWidth
-                  control={control}
-                  name={`contacts.${contactIndex}.addresses.${addressIndex}.address_line_2`}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <ControlledTextField
-                  label="City"
-                  fullWidth
-                  control={control}
-                  name={`contacts.${contactIndex}.addresses.${addressIndex}.city`}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <ControlledTextField
-                  label="State"
-                  fullWidth
-                  control={control}
-                  name={`contacts.${contactIndex}.addresses.${addressIndex}.state`}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <ControlledTextField
-                  label="Postal Code"
-                  fullWidth
-                  control={control}
-                  name={`contacts.${contactIndex}.addresses.${addressIndex}.postal_code`}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 10 }}>
-                <ControlledSelectField
-                  label="Address Type"
-                  fullWidth
-                  control={control}
-                  name={`contacts.${contactIndex}.addresses.${addressIndex}.address_type`}
-                  options={[
-                    { value: 'Primary', label: 'Primary' },
-                  ]}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 2 }}>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => {
-                    const currentAddresses = watch(`contacts.${contactIndex}.addresses`) || []
-                    const newAddresses = currentAddresses.filter((_, i) => i !== addressIndex)
-                    setValue(`contacts.${contactIndex}.addresses`, newAddresses)
-                  }}
-                  startIcon={<Delete />}
-                  fullWidth
-                >
-                  Remove
-                </Button>
-              </Grid>
-            </Grid>
-          ))}
-          <Button
-            variant="outlined"
-            onClick={() => {
-              const currentAddresses = watch(`contacts.${contactIndex}.addresses`) || []
-              setValue(`contacts.${contactIndex}.addresses`, [
-                ...currentAddresses,
-                {
-                  address_line_1: '',
-                  address_line_2: '',
-                  city: '',
-                  state: '',
-                  postal_code: '',
-                  address_type: 'Primary',
-                }
-              ])
-            }}
-            startIcon={<Add />}
-          >
-            Add Address
-          </Button>
-        </Grid>
 
         <Grid size={12}>
           <Button
