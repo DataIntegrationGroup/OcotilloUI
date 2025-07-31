@@ -45,6 +45,7 @@ import {
   AssetShow,
 } from '@/pages/dataforge/asset'
 import { GroundwaterLevelForm } from '@/pages/dataforge/groundwaterlevelform'
+import { CreateAMPFieldReport } from '@/pages/dataforge/fieldreport/AMPFieldReport'
 
 export const DataforgeRoutes = () => {
   return (
@@ -112,6 +113,10 @@ export const DataforgeRoutes = () => {
         <Route index element={<GroundwaterLevelForm />} />
       </Route>
       <Route path="*" element={<ErrorComponent />} />
+      // apps
+      <Route path="amp-field-report">
+        <Route index element={<CreateAMPFieldReport />} />
+      </Route>
     </Routes>
   )
 }

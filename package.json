@@ -35,6 +35,7 @@
     "@mui/material": "^6.4.6",
     "@mui/x-data-grid": "^7.27.0",
     "@mui/x-date-pickers": "^7.22.3",
+    "@react-pdf/renderer": "^4.3.0",
     "@refinedev/cli": "^2.16.46",
     "@refinedev/core": "^4.57.10",
     "@refinedev/devtools": "^1.2.16",

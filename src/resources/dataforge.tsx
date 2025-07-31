@@ -149,6 +149,17 @@ let dataforge = [
     },
   },
   {
+    name: 'AMPFieldReport',
+    list: '/dataforge/amp-field-report',
+    meta: {
+      disabled: false,
+      label: 'AMP Field (Coming Soon)',
+      parent: 'dataforge.apps',
+      nestedLevel: 2,
+      icon: <Construction />,
+    },
+  },
+  {
     name: 'HygrographCorrector',
     list: '/dataforge/hydrograph-corrector',
     meta: {
