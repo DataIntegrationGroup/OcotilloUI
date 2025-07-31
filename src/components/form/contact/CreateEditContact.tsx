@@ -17,7 +17,7 @@ import {
   ControlledSelectField,
 } from '@/components'
 
-interface ContactFormProps {
+interface CreateEditContactProps {
   control: Control<any>
   watch?: UseFormWatch<any>
   setValue?: UseFormSetValue<any>
@@ -27,7 +27,7 @@ interface ContactFormProps {
   showDynamicArrays?: boolean
 }
 
-export const ContactForm: React.FC<ContactFormProps> = ({
+export const CreateEditContact: React.FC<CreateEditContactProps> = ({
   control,
   watch,
   setValue,

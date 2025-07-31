@@ -5,14 +5,14 @@ import {
   ControlledSelectField,
 } from '@/components'
 
-interface WellFormProps {
+interface CreateEditWellProps {
   control: Control<any>
   errors?: FieldErrors<any>
   mode?: 'standalone' | 'step'
   fieldPrefix?: string
 }
 
-export const WellForm: React.FC<WellFormProps> = ({
+export const CreateEditWell: React.FC<CreateEditWellProps> = ({
   control,
   errors,
   mode = 'standalone',

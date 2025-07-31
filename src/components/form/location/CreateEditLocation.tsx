@@ -10,7 +10,7 @@ import {
   ControlledSelectField,
 } from '@/components'
 
-interface LocationFormProps {
+interface CreateEditLocationProps {
   control: Control<any>
   watch?: UseFormWatch<any>
   setValue?: UseFormSetValue<any>
@@ -19,7 +19,7 @@ interface LocationFormProps {
   fieldPrefix?: string
 }
 
-export const LocationForm: React.FC<LocationFormProps> = ({
+export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   control,
   watch,
   setValue,

@@ -3,7 +3,7 @@ import { Create } from '@refinedev/mui'
 import { useForm } from '@refinedev/react-hook-form'
 import { Nullable } from '../../../interfaces'
 import { ILocation } from '@/interfaces/dataforge/ILocation'
-import { LocationForm } from './forms'
+import { CreateEditLocation } from '@/components/form/location/CreateEditLocation'
 
 export const LocationCreate: React.FC = () => {
   const {
@@ -14,7 +14,7 @@ export const LocationCreate: React.FC = () => {
 
   return (
     <Create saveButtonProps={saveButtonProps}>
-      <LocationForm
+      <CreateEditLocation
         control={control}
         errors={errors}
         mode="standalone"

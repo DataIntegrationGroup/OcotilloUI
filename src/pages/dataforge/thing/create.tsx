@@ -8,7 +8,7 @@ import { ISpring, IWell } from '@/interfaces/dataforge/IThing'
 import Autocomplete from '@mui/material/Autocomplete'
 import { Controller } from 'react-hook-form'
 import { useState } from 'react'
-import { WellForm } from '@/pages/dataforge/thing/forms'
+import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 
 export const SpringCreate: React.FC = () => {
   const {
@@ -97,7 +97,7 @@ export const WellCreate: React.FC = () => {
 
   return (
     <Create saveButtonProps={saveButtonProps}>
-      <WellForm
+      <CreateEditWell
         control={control}
         errors={errors}
         mode="standalone"

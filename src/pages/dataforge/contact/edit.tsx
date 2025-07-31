@@ -4,7 +4,7 @@ import { useForm } from '@refinedev/react-hook-form'
 
 import type { Nullable } from '@/interfaces'
 import { IContact } from '@/interfaces/dataforge/IContact'
-import { ContactForm } from './forms'
+import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
 
 export const ContactEdit: React.FC = () => {
   const {
@@ -16,7 +16,7 @@ export const ContactEdit: React.FC = () => {
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <ContactForm
+      <CreateEditContact
         control={control}
         errors={errors}
         mode="standalone"

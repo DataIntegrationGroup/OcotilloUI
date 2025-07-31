@@ -38,9 +38,9 @@ import { IWellInventoryForm } from '@/interfaces/dataforge/IWellInventoryForm'
 import { ILocation } from '@/interfaces/dataforge/ILocation'
 import { WellInventorySchema, SchemaDefaults } from './well_inventory.schema'
 import { createWellInventoryForm } from '@/pages/dataforge/well-inventory-form/well_inventory.service'
-import { LocationForm } from '@/pages/dataforge/location/forms'
-import { WellForm } from '@/pages/dataforge/thing/forms'
-import { ContactForm } from '@/pages/dataforge/contact/forms'
+import { CreateEditLocation } from '@/components/form/location/CreateEditLocation'
+import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
+import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
 
 import { stepSchemas } from './well_inventory.schema'
 
@@ -115,7 +115,7 @@ export const WellInventoryForm: React.FC = () => {
       })
       reset(SchemaDefaults)
       setSelectedFiles([])
-      gotoStep(0) // Reset to first step
+      gotoStep(0) 
     },
     onError: (error) => {
       close?.('well-inventory-submission')
@@ -271,7 +271,7 @@ const LocationStep: React.FC<{
             {
               value: 'new',
               label: 'Create a new location',
-              description: 'Add location details for this well'
+              description: 'Add new location details for this well'
             },
             {
               value: 'existing',
@@ -327,7 +327,7 @@ const LocationStep: React.FC<{
 
     {/*  Location Form */}
     {watch('locationMode') === 'new' && (
-      <LocationForm
+      <CreateEditLocation
         control={control}
         watch={watch}
         setValue={setValue}
@@ -351,7 +351,7 @@ const WellStep: React.FC<{
       </Typography>
     </Grid>
 
-    <WellForm
+    <CreateEditWell
       control={control}
       errors={errors}
       mode="step"
@@ -384,7 +384,7 @@ const ContactsStep: React.FC<{
           </Typography>
         </Grid>
 
-        <ContactForm
+        <CreateEditContact
           control={control}
           watch={watch}
           setValue={setValue}

@@ -4,7 +4,7 @@ import { useForm } from '@refinedev/react-hook-form'
 
 import type { Nullable } from '@/interfaces'
 import { IWell } from '@/interfaces/dataforge/IThing'
-import { WellForm } from '@/pages/dataforge/thing/forms'
+import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 
 export const WellEdit: React.FC = () => {
   const {
@@ -16,7 +16,7 @@ export const WellEdit: React.FC = () => {
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <WellForm
+      <CreateEditWell
         control={control}
         errors={errors}
         mode="standalone"
