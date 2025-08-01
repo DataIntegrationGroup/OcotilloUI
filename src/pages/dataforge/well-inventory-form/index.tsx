@@ -383,12 +383,6 @@ const ContactsStep: React.FC<{
 
     {contactFields.map((field, contactIndex) => (
       <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
-        <Grid size={12}>
-          <Typography variant="h6" gutterBottom>
-            Contact {contactIndex + 1}
-          </Typography>
-        </Grid>
-
         {/*  Contact Form ----------------------------------------*/}
         {/*  /components/form/contact/CreateEditContact.tsx */}
         <CreateEditContact
@@ -399,37 +393,20 @@ const ContactsStep: React.FC<{
           mode="step"
           fieldPrefix={`contacts.${contactIndex}.`}
           showDynamicArrays={true}
+          contactIndex={contactIndex}
+          onRemoveContact={removeContact}
+          onAddContact={contactIndex === contactFields.length - 1 ? () => appendContact({
+            name: '',
+            role: 'contact',
+            emails: [],
+            phones: [],
+            addresses: []
+          }) : undefined}
+          canRemoveContact={contactFields.length > 1}
+          totalContacts={contactFields.length}
         />
-
-        <Grid size={12}>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => removeContact(contactIndex)}
-            startIcon={<Delete />}
-            disabled={contactFields.length === 1}
-          >
-            Remove Contact
-          </Button>
-        </Grid>
       </Grid>
     ))}
-
-    <Grid size={12}>
-      <Button
-        variant="outlined"
-        onClick={() => appendContact({
-          name: '',
-          role: 'contact',
-          emails: [],
-          phones: [],
-          addresses: []
-        })}
-        startIcon={<Add />}
-      >
-        Add Contact
-      </Button>
-    </Grid>
   </Grid>
 )
 

@@ -9,7 +9,8 @@ import Grid from '@mui/material/Grid2'
 import { 
     Button, 
     Typography, 
-    Box 
+    Box,
+    Divider
 } from '@mui/material'
 import { Add, Delete } from '@mui/icons-material'
 import {
@@ -25,6 +26,12 @@ interface CreateEditContactProps {
   mode?: 'standalone' | 'step'
   fieldPrefix?: string
   showDynamicArrays?: boolean
+  // Contact-level array management
+  contactIndex?: number
+  onRemoveContact?: (index: number) => void
+  onAddContact?: () => void
+  canRemoveContact?: boolean
+  totalContacts?: number
 }
 
 export const CreateEditContact: React.FC<CreateEditContactProps> = ({
@@ -34,7 +41,12 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
   errors,
   mode = 'standalone',
   fieldPrefix = '',
-  showDynamicArrays = false
+  showDynamicArrays = false,
+  contactIndex,
+  onRemoveContact,
+  onAddContact,
+  canRemoveContact = true,
+  totalContacts = 1
 }) => {
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
@@ -57,6 +69,25 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
 
   return (
     <Grid container spacing={3}>
+      {/* Contact Header with canRemoveContact button */}
+      {contactIndex !== undefined && (
+        <Grid size={12}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 2, gap: 2 }}>
+            <Typography variant="h6">Contact {contactIndex + 1}</Typography>
+            {onRemoveContact && canRemoveContact && (
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={() => onRemoveContact(contactIndex)}
+                startIcon={<Delete />}
+              >
+                Remove Contact
+              </Button>
+            )}
+          </Box>
+        </Grid>
+      )}
+
       {/* Basic Contact Information */}
       <Grid size={{ xs: 12, md: 6 }}>
         <ControlledTextField
@@ -86,7 +117,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
         <>
           {/* Emails Section */}
           <Grid size={12}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 2, gap: 2 }}>
               <Typography variant="h6">Emails</Typography>
               <Button
                 startIcon={<Add />}
@@ -136,7 +167,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
 
           {/* Phones Section */}
           <Grid size={12}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 2, gap: 2 }}>
               <Typography variant="h6">Phone Numbers</Typography>
               <Button
                 startIcon={<Add />}
@@ -202,7 +233,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
 
           {/* Addresses Section */}
           <Grid size={12}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 2, gap: 2 }}>
               <Typography variant="h6">Addresses</Typography>
               <Button
                 startIcon={<Add />}
@@ -290,8 +321,23 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                 </Grid>
               </Grid>
             ))}
+            <Divider sx={{ my: 2 }} />
           </Grid>
         </>
+      )}
+      
+
+      {/* Add Contact Button */}
+      {onAddContact && (
+        <Grid size={12}>
+          <Button
+            variant="outlined"
+            onClick={onAddContact}
+            startIcon={<Add />}
+          >
+            Add Contact
+          </Button>
+        </Grid>
       )}
     </Grid>
   )
