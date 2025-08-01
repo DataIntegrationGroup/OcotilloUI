@@ -25,7 +25,7 @@ import { createWellInventoryForm } from '@/pages/dataforge/well-inventory-form/w
 import { CreateEditLocation } from '@/components/form/location/CreateEditLocation'
 import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
-import { FormReview } from '@/components/form/general/FormReview'
+import { FormReview } from '@/components/form/stepper/FormReview'
 import { FormStepper } from '@/components/form/stepper/FormStepper'
 
 import { wellInventoryStepSchemas, SchemaDefaults } from './well_inventory.schema'
