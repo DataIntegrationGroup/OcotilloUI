@@ -5,6 +5,16 @@ import {
   ControlledSelectField,
 } from '@/components'
 
+/**
+ * CreateEditWell Component
+ * A reusable form component for creating and editing well information.
+ * 
+ * @param control - The control object from useForm
+ * @param errors - The errors object from useForm
+ * @param mode - The mode of the component ('standalone' or 'step')
+ * @param fieldPrefix - The prefix for the field names
+ */
+
 interface CreateEditWellProps {
   control: Control<any>
   errors?: FieldErrors<any>

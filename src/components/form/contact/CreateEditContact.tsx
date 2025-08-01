@@ -18,6 +18,24 @@ import {
   ControlledSelectField,
 } from '@/components'
 
+/**
+ * CreateEditContact Component
+ * A reusable form component for creating and editing contact information.
+ * 
+ * @param control - The control object from useForm
+ * @param watch - The watch object from useForm
+ * @param setValue - The setValue function from useForm
+ * @param errors - The errors object from useForm
+ * @param mode - The mode of the component ('standalone' or 'step')
+ * @param fieldPrefix - The prefix for the field names
+ * @param showDynamicArrays - Whether to show dynamic arrays
+ * @param contactIndex - The index of the contact
+ * @param onRemoveContact - The function to remove a contact
+ * @param onAddContact - The function to add a contact
+ * @param canRemoveContact - Whether to show the remove contact button
+ * @param totalContacts - The total number of contacts
+ */
+
 interface CreateEditContactProps {
   control: Control<any>
   watch?: UseFormWatch<any>

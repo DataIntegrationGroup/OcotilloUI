@@ -10,6 +10,18 @@ import {
   ControlledSelectField,
 } from '@/components'
 
+/**
+ * CreateEditLocation Component
+ * A reusable form component for creating and editing location information.
+ * 
+ * @param control - The control object from useForm
+ * @param watch - The watch object from useForm
+ * @param setValue - The setValue function from useForm
+ * @param errors - The errors object from useForm
+ * @param mode - The mode of the component ('standalone' or 'step')
+ * @param fieldPrefix - The prefix for the field names
+ */
+
 interface CreateEditLocationProps {
   control: Control<any>
   watch?: UseFormWatch<any>

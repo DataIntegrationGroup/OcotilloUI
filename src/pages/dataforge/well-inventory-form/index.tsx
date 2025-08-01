@@ -411,6 +411,10 @@ const ContactsStep: React.FC<{
 )
 
 //Assets Step #4 -----------------------------------------------
+/**
+ * @TODO this step a placeholder right now
+ * @refactor
+*/
 const AssetsStep: React.FC<{
   control: any
   watch: any
