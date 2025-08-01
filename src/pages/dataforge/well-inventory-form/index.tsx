@@ -41,6 +41,7 @@ import { createWellInventoryForm } from '@/pages/dataforge/well-inventory-form/w
 import { CreateEditLocation } from '@/components/form/location/CreateEditLocation'
 import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
+import { FormReview } from '@/components/form/general/FormReview'
 
 import { stepSchemas } from './well_inventory.schema'
 
@@ -394,8 +395,6 @@ const ContactsStep: React.FC<{
           showDynamicArrays={true}
         />
 
-
-
         <Grid size={12}>
           <Button
             variant="outlined"
@@ -492,99 +491,55 @@ const ReviewStep: React.FC<{
 }> = ({ watch }) => {
   const formData = watch()
 
-  const ReviewSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <Grid size={12}>
-      <Paper elevation={1} sx={{ p: 2 }}>
-        <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-          {title}
-        </Typography>
-        {children}
-      </Paper>
-    </Grid>
-  )
-
-  const ReviewItem = ({ label, value }: { label: string; value: string | number }) => (
-    <Box sx={{ display: 'flex', justifyContent: 'left', py: 0.5, gap: 1 }}>
-      <Typography variant="body2" color="text.secondary">
-        {label}:
-      </Typography>
-      <Typography variant="body2" fontWeight="medium">
-        {value || 'Not specified'}
-      </Typography>
-    </Box>
-  )
+  const sections = [
+    {
+      title: "Location Information",
+      items: formData.locationMode === 'new' ? [
+        { label: "Mode", value: "Create New Location" },
+        { label: "Name", value: formData.location?.name },
+        { label: "Release Status", value: formData.location?.release_status },
+        { label: "Coordinates", value: formData.location?.point },
+        { label: "Notes", value: formData.location?.notes || 'None' }
+      ] : [
+        { label: "Mode", value: "Use Existing Location" },
+        { label: "Location ID", value: formData.selectedLocationId }
+      ]
+    },
+    {
+      title: "Well Information",
+      items: [
+        { label: "Name", value: formData.well?.name },
+        { label: "Type", value: formData.well?.well_type },
+        { label: "Well Depth", value: formData.well?.well_depth ? `${formData.well.well_depth} ft` : '' },
+        { label: "Hole Depth", value: formData.well?.hole_depth ? `${formData.well.hole_depth} ft` : '' },
+        { label: "Notes", value: formData.well?.notes || 'None' }
+      ]
+    },
+    {
+      title: `Contacts (${formData.contacts?.length || 0})`,
+      items: [],
+      groupedItems: formData.contacts?.map((contact, index) => [
+        { label: `Contact ${index + 1} - Name`, value: contact.name },
+        { label: `Contact ${index + 1} - Role`, value: contact.role },
+        { label: `Emails`, value: `${contact.emails?.length || 0} email(s)` },
+        { label: `Phones`, value: `${contact.phones?.length || 0} phone(s)` },
+        { label: `Addresses`, value: `${contact.addresses?.length || 0} address(es)` }
+      ]) || []
+    },
+    {
+      title: `Assets (${formData.assets?.length || 0})`,
+      items: formData.assets?.map((asset) => ({
+        label: `Asset`,
+        value: `${asset.label || 'Not specified'} - ${asset.name || 'Not specified'}`
+      })) || []
+    }
+  ]
 
   return (
-    <Grid container spacing={3}>
-      <Grid size={12}>
-        <Typography variant="h6" gutterBottom>
-          Review Your Information
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Please review all the information below before submitting. You can go back to any step to make changes.
-        </Typography>
-      </Grid>
-
-      {/* Location Review */}
-      <ReviewSection title="Location Information">
-        {formData.locationMode === 'new' ? (
-          <Box>
-            <ReviewItem label="Mode" value="Create New Location" />
-            <ReviewItem label="Name" value={formData.location?.name} />
-            <ReviewItem label="Release Status" value={formData.location?.release_status} />
-            <ReviewItem label="Coordinates" value={formData.location?.point} />
-            <ReviewItem label="Notes" value={formData.location?.notes || 'None'} />
-          </Box>
-        ) : (
-          <Box>
-            <ReviewItem label="Mode" value="Use Existing Location" />
-            <ReviewItem label="Location ID" value={formData.selectedLocationId} />
-          </Box>
-        )}
-      </ReviewSection>
-
-      {/* Well Review */}
-      <ReviewSection title="Well Information">
-        <ReviewItem label="Name" value={formData.well?.name} />
-        <ReviewItem label="Type" value={formData.well?.well_type} />
-        <ReviewItem 
-          label="Well Depth" 
-          value={formData.well?.well_depth ? `${formData.well.well_depth} ft` : ''} 
-        />
-        <ReviewItem 
-          label="Hole Depth" 
-          value={formData.well?.hole_depth ? `${formData.well.hole_depth} ft` : ''} 
-        />
-        <ReviewItem label="Notes" value={formData.well?.notes || 'None'} />
-      </ReviewSection>
-
-      {/* Contacts Review */}
-      <ReviewSection title={`Contacts (${formData.contacts?.length || 0})`}>
-        {formData.contacts?.map((contact, index) => (
-          <Box key={index} sx={{ mb: 2, pl: 2, borderLeft: '2px solid #e0e0e0' }}>
-            <Typography variant="body2" fontWeight="medium" gutterBottom>
-              Contact {index + 1}
-            </Typography>
-            <ReviewItem label="Name" value={contact.name} />
-            <ReviewItem label="Role" value={contact.role} />
-            <ReviewItem label="Emails" value={`${contact.emails?.length || 0} email(s)`} />
-            <ReviewItem label="Phones" value={`${contact.phones?.length || 0} phone(s)`} />
-            <ReviewItem label="Addresses" value={`${contact.addresses?.length || 0} address(es)`} />
-          </Box>
-        ))}
-      </ReviewSection>
-
-      {/* Assets Review */}
-      <ReviewSection title={`Assets (${formData.assets?.length || 0})`}>
-        {formData.assets?.map((asset, index) => (
-          <Box key={index} sx={{ mb: 1 }}>
-            <ReviewItem 
-              label={`Asset ${index + 1}`} 
-              value={`${asset.label || 'Not specified'} - ${asset.name || 'Not specified'}`} 
-            />
-          </Box>
-        ))}
-      </ReviewSection>
-    </Grid>
+    <FormReview
+      title="Review Your Information"
+      description="Please review all the information below before submitting. You can go back to any step to make changes."
+      sections={sections}
+    />
   )
 } 
