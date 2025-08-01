@@ -13,11 +13,6 @@ import {
   CardHeader,
   Typography,
   Divider,
-  Switch,
-  FormControlLabel,
-  Paper,
-  Radio,
-  RadioGroup,
   Autocomplete,
   TextField,
   Stepper,
@@ -29,21 +24,17 @@ import Grid from '@mui/material/Grid2'
 import { Add, Delete, NavigateNext, NavigateBefore, Check } from '@mui/icons-material'
 import {
   ControlledTextField,
-  ControlledSelectField,
-  ControlledEmailField,
-  ControlledMapboxAddressAutocomplete,
   ControlledRadioFormSelection,
 } from '@/components'
 import { IWellInventoryForm } from '@/interfaces/dataforge/IWellInventoryForm'
 import { ILocation } from '@/interfaces/dataforge/ILocation'
-import { WellInventorySchema, SchemaDefaults } from './well_inventory.schema'
 import { createWellInventoryForm } from '@/pages/dataforge/well-inventory-form/well_inventory.service'
 import { CreateEditLocation } from '@/components/form/location/CreateEditLocation'
 import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
 import { FormReview } from '@/components/form/general/FormReview'
 
-import { stepSchemas } from './well_inventory.schema'
+import { stepSchemas, SchemaDefaults } from './well_inventory.schema'
 
 const steps = [
   'Location Information',
