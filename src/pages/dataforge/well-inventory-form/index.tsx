@@ -25,6 +25,7 @@ import { createWellInventoryForm } from '@/pages/dataforge/well-inventory-form/w
 import { CreateEditLocation } from '@/components/form/location/CreateEditLocation'
 import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
+import { CreateEditAsset } from '@/components/form/asset/CreateEditAsset'
 import { FormReview } from '@/components/form/stepper/FormReview'
 import { FormStepper } from '@/components/form/stepper/FormStepper'
 
@@ -51,6 +52,8 @@ export const WellInventoryForm: React.FC = () => {
     handleSubmit,
     reset,
     setValue,
+    setError,
+    register,
     watch,
     trigger,
     formState: { errors },
@@ -165,8 +168,8 @@ export const WellInventoryForm: React.FC = () => {
         return <WellStep control={control} watch={watch} errors={errors} />
       case 2:
         return <ContactsStep control={control} watch={watch} setValue={setValue} errors={errors} contactFields={contactFields} appendContact={appendContact} removeContact={removeContact} />
-      case 3:
-        return <AssetsStep control={control} watch={watch} errors={errors} assetFields={assetFields} appendAsset={appendAsset} removeAsset={removeAsset} />
+              case 3:
+          return <AssetsStep control={control} watch={watch} setValue={setValue} setError={setError} register={register} errors={errors} assetFields={assetFields} appendAsset={appendAsset} removeAsset={removeAsset} />
       case 4:
         return <ReviewStep watch={watch} />
       default:
@@ -371,11 +374,14 @@ const ContactsStep: React.FC<{
 const AssetsStep: React.FC<{
   control: any
   watch: any
+  setValue: any
+  setError: any
+  register: any
   errors: any
   assetFields: any
   appendAsset: any
   removeAsset: any
-}> = ({ control, watch, errors, assetFields, appendAsset, removeAsset }) => (
+}> = ({ control, watch, setValue, setError, register, errors, assetFields, appendAsset, removeAsset }) => (
   <Grid container spacing={3}>
     <Grid size={12}>
       <Typography variant="h6" gutterBottom>
@@ -384,46 +390,52 @@ const AssetsStep: React.FC<{
     </Grid>
 
     {assetFields.map((field, index) => (
-      <Grid container key={field.id} spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 12, md: 5 }}>
-          <ControlledTextField
-            label="Asset Label"
-            fullWidth
-            control={control}
-            name={`assets.${index}.label`}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 5 }}>
-          <ControlledTextField
-            label="Asset Name"
-            fullWidth
-            control={control}
-            name={`assets.${index}.name`}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 2 }}>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => removeAsset(index)}
-            startIcon={<Delete />}
-            fullWidth
-          >
-            Remove
-          </Button>
-        </Grid>
+      <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
+        <CreateEditAsset
+          control={control}
+          watch={watch}
+          setValue={setValue}
+          setError={setError}
+          register={register}
+          errors={errors}
+          mode="step"
+          fieldPrefix={`assets.${index}.`}
+          assetIndex={index}
+          onRemoveAsset={removeAsset}
+          onAddAsset={(asset) => {
+            // Set the thing_id to the well that will be created
+            appendAsset({
+              ...asset,
+              thing_id: null // This will be set after well creation in the service
+            })
+          }}
+          canRemoveAsset={assetFields.length > 1}
+          totalAssets={assetFields.length}
+        />
       </Grid>
     ))}
 
-    <Grid size={12}>
-      <Button
-        variant="outlined"
-        onClick={() => appendAsset({ label: '', name: '' })}
-        startIcon={<Add />}
-      >
-        Add Asset
-      </Button>
-    </Grid>
+    {/* Show Add Asset button when no assets exist */}
+    {assetFields.length === 0 && (
+      <Grid size={12}>
+        <Button
+          variant="outlined"
+          onClick={() => appendAsset({
+            label: '',
+            name: '',
+            thing_id: null, // This will be set after well creation in the service
+            file: null,
+            storage_path: '',
+            mime_type: '',
+            size: 0,
+            url: ''
+          })}
+          startIcon={<Add />}
+        >
+          Add Asset
+        </Button>
+      </Grid>
+    )}
   </Grid>
 )
 
@@ -472,9 +484,9 @@ const ReviewStep: React.FC<{
     },
     {
       title: `Assets (${formData.assets?.length || 0})`,
-      items: formData.assets?.map((asset) => ({
-        label: `Asset`,
-        value: `${asset.label || 'Not specified'} - ${asset.name || 'Not specified'}`
+      items: formData.assets?.map((asset, index) => ({
+        label: `Asset ${index + 1}`,
+        value: `${asset.label || 'Not specified'} - ${asset.name || 'Not specified'} - ${asset.thing_id ? 'Thing Selected' : 'No Thing'}`
       })) || []
     }
   ]

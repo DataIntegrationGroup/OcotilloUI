@@ -73,6 +73,7 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
         variables: {
           name: asset.name,
           label: asset.label,
+          thing_id: wellId,
         },
       })
 
