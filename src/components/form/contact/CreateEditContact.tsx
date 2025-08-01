@@ -17,6 +17,7 @@ import {
   ControlledTextField,
   ControlledSelectField,
 } from '@/components'
+import { useLexicon } from '@/hooks'
 
 /**
  * CreateEditContact Component
@@ -85,6 +86,26 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
     name: getFieldName('addresses'),
   })
 
+  //get contact role options
+  const { options: contactRoleOptions, isLoading: contactRoleLoading } = useLexicon({ 
+    category: 'role' 
+  })
+
+  //get email type options
+  const { options: emailTypeOptions, isLoading: emailTypeLoading } = useLexicon({ 
+    category: 'email_type' 
+  })
+
+  //get phone type options
+  const { options: phoneTypeOptions, isLoading: phoneTypeLoading } = useLexicon({ 
+    category: 'phone_type' 
+  })
+
+  //get address type options
+  const { options: addressTypeOptions, isLoading: addressTypeLoading } = useLexicon({ 
+    category: 'address_type' 
+  })
+
   return (
     <Grid container spacing={3}>
       {/* Contact Header with canRemoveContact button */}
@@ -123,9 +144,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
           fullWidth
           control={control}
           name={getFieldName('role')}
-          options={[
-            { value: 'Owner', label: 'Owner' },
-          ]}
+          options={contactRoleOptions}
           required
         />
       </Grid>
@@ -163,9 +182,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                     fullWidth
                     control={control}
                     name={`${getFieldName('emails')}.${emailIndex}.email_type`}
-                    options={[
-                      { value: 'Primary', label: 'Primary' },
-                    ]}
+                    options={emailTypeOptions}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 2 }}>
@@ -229,9 +246,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                     fullWidth
                     control={control}
                     name={`${getFieldName('phones')}.${phoneIndex}.phone_type`}
-                    options={[
-                      { value: 'Primary', label: 'Primary' },
-                    ]}
+                    options={phoneTypeOptions}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 2 }}>

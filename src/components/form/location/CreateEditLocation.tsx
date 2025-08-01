@@ -9,6 +9,7 @@ import {
   ControlledTextField,
   ControlledSelectField,
 } from '@/components'
+import { useLexicon } from '@/hooks'
 
 /**
  * CreateEditLocation Component
@@ -43,6 +44,11 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
 
+  //get release status options
+  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
+    category: 'release_status' 
+  })
+
   return (
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, md: 6 }}>
@@ -61,9 +67,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           fullWidth
           control={control}
           name={getFieldName('release_status')}
-          options={[
-            { value: 'draft', label: 'Draft' }
-          ]}
+          options={releaseStatusOptions}
           required
         />
       </Grid>
