@@ -301,9 +301,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                     fullWidth
                     control={control}
                     name={`${getFieldName('addresses')}.${addressIndex}.address_type`}
-                    options={[
-                      { value: 'Primary', label: 'Primary' },
-                    ]}
+                    options={addressTypeOptions}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 2 }}>
