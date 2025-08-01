@@ -1,105 +1,121 @@
-import React, { useCallback, useContext, useRef, useState } from "react";
-import { Map, NavigationControl, Popup } from "react-map-gl";
-import { ColorModeContext } from "@/contexts";
-import DrawControl from "./DrawControl";
-import "mapbox-gl/dist/mapbox-gl.css";
-import GeocoderControl from "./GeocoderControl";
-import { ControlPosition } from "react-map-gl";
-import { CircularProgress } from "@mui/material";
-import { settings } from "@/settings";
+import React, { useCallback, useContext, useRef, useState } from 'react'
+import { Map, MapRef, NavigationControl, Popup } from 'react-map-gl'
+import { ColorModeContext } from '@/contexts'
+import DrawControl from './DrawControl'
+import 'mapbox-gl/dist/mapbox-gl.css'
+import GeocoderControl from './GeocoderControl'
+import { ControlPosition } from 'react-map-gl'
+import { CircularProgress } from '@mui/material'
+import { settings } from '@/settings'
 
 interface MapComponentProps {
-  children?: any;
-  onClick?: any;
-  setSelectionPolygons?: any;
-  popupContent?: any;
-  setPopupContent?: any;
-  onMouseMoveCallback?: any;
-  showDrawControls?: { show: boolean; position: ControlPosition };
-  showNavigation?: { show: boolean; position: ControlPosition };
-  showGeocoder?: { show: boolean; position: ControlPosition };
-  isLoading?: boolean;
+  children?: any
+  onClick?: any
+  setSelectionPolygons?: any
+  popupContent?: any
+  setPopupContent?: any
+  onMouseMoveCallback?: any
+  showDrawControls?: { show: boolean; position: ControlPosition }
+  showNavigation?: { show: boolean; position: ControlPosition }
+  showGeocoder?: { show: boolean; position: ControlPosition }
+  isLoading?: boolean
+  mapRef?: any
+  // zoomToPoint?: object
+  initialViewState?: object
 }
 
 export const MapComponent: React.FC<MapComponentProps> = ({
+  mapRef,
   children,
   onClick,
   popupContent,
   onMouseMoveCallback,
   setSelectionPolygons,
   isLoading = false,
-  showDrawControls = { show: true, position: "top-right" },
+  initialViewState,
+  showDrawControls = { show: true, position: 'top-right' },
   showNavigation = {
     show: true,
-    position: "top-right" as ControlPosition,
+    position: 'top-right' as ControlPosition,
   },
-  showGeocoder = { show: true, position: "top-left" },
+  showGeocoder = { show: true, position: 'top-left' },
 }) => {
-  const { mode } = useContext(ColorModeContext);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const { mode } = useContext(ColorModeContext)
+  const [isDrawing, setIsDrawing] = useState(false)
   const mapStyle =
-    mode === "dark"
-      ? "mapbox://styles/mapbox/dark-v10"
-      : "mapbox://styles/mapbox/light-v10";
-  const style = { width: "100%", height: "650px" };
-  const mapRef = useRef(null);
-  const initialViewState = {
-    longitude: -106.4,
-    latitude: 34.5,
-    zoom: 6,
-  };
+    mode === 'dark'
+      ? 'mapbox://styles/mapbox/dark-v10'
+      : 'mapbox://styles/mapbox/light-v10'
+  const style = { width: '100%', height: '650px' }
+
+  if (mapRef === undefined) {
+    mapRef = useRef<MapRef>(null)
+  }
+  if (!initialViewState) {
+    initialViewState = {
+      longitude: -106.4,
+      latitude: 34.5,
+      zoom: 6,
+    }
+  }
+  // console.log(mapRef, ref)
+  // const initialViewState = {
+  //   longitude: -106.4,
+  //   latitude: 34.5,
+  //   zoom: 6,
+  // }
 
   const getCurrentPoints = (e) => {
     if (!mapRef || !mapRef.current) {
-      return [[]];
+      return [[]]
     }
 
-    let features = mapRef.current.queryRenderedFeatures(e.point);
-    return features.filter((f) => f.type === "Feature");
-  };
+    let features = mapRef.current.queryRenderedFeatures(e.point)
+    return features.filter((f) => f.type === 'Feature')
+  }
 
   const onUpdate = useCallback((e) => {
     setSelectionPolygons((currFeatures) => {
-      const newFeatures = { ...currFeatures };
+      const newFeatures = { ...currFeatures }
       for (const f of e.features) {
-        newFeatures[f.id] = f;
+        newFeatures[f.id] = f
       }
-      return newFeatures;
-    });
-  }, []);
+      return newFeatures
+    })
+  }, [])
 
   const onDelete = useCallback((e) => {
     setSelectionPolygons((currFeatures) => {
-      const newFeatures = { ...currFeatures };
+      const newFeatures = { ...currFeatures }
       for (const f of e.features) {
-        delete newFeatures[f.id];
+        delete newFeatures[f.id]
       }
-      return newFeatures;
-    });
-  }, []);
+      return newFeatures
+    })
+  }, [])
 
   const onMouseMove = (e) => {
     if (mapRef === undefined) {
-      return;
+      return
     }
 
     if (isDrawing === true) {
-      return;
+      return
     }
 
-    const features = getCurrentPoints(e);
+    const features = getCurrentPoints(e)
     if (onMouseMoveCallback !== undefined) {
-      onMouseMoveCallback(e, features, mapRef);
+      onMouseMoveCallback(e, features, mapRef)
     }
-  };
+  }
 
   const onModeChange = useCallback((e) => {
-    setIsDrawing(e.mode === "draw_polygon");
-  }, []);
+    setIsDrawing(e.mode === 'draw_polygon')
+  }, [])
 
   const onSelectionChange = useCallback((e) => {
-    setIsDrawing(e.features.length > 0);
-  }, []);
+    setIsDrawing(e.features.length > 0)
+  }, [])
 
   return (
     <div>
@@ -108,7 +124,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
         mapboxAccessToken={settings.mapboxToken}
         initialViewState={initialViewState}
         onClick={onClick}
-        terrain={{ source: "mapbox-dem", exaggeration: 3 }}
+        terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
         style={style}
         mapStyle={mapStyle}
         onMouseMove={onMouseMove}
@@ -154,7 +170,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
         {children}
       </Map>
     </div>
-  );
-};
+  )
+}
 
-export default MapComponent;
+export default MapComponent

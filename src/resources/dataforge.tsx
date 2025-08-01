@@ -56,7 +56,7 @@ let dataforge = [
     show: '/dataforge/sensor/show/:id',
     meta: {
       label: 'Sensors',
-      icon: <SettingsInputAntenna/>,
+      icon: <SettingsInputAntenna />,
     },
   },
   {
@@ -181,14 +181,14 @@ let dataforge = [
     },
   },
   {
-    name: 'water-level-form',
-    list: '/dataforge/water-level-form',
-    create: '/dataforge/water-level-form/create',
-    edit: '/dataforge/water-level-form/edit/:id',
-    show: '/dataforge/water-level-form/show/:id',
+    name: 'groundwater-level-form',
+    list: '/dataforge/groundwater-level-form',
+    create: '/dataforge/groundwater-level-form/create',
+    edit: '/dataforge/groundwater-level-form/edit/:id',
+    show: '/dataforge/groundwater-level-form/show/:id',
     meta: {
-      disabled: true,
-      label: 'Water Level Form (Coming Soon)',
+      // disabled: true,
+      label: 'Groundwater Level Form (Beta)',
       parent: 'dataforge.forms',
       nestedLevel: 2,
       icon: <Construction />,

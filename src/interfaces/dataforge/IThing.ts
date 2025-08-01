@@ -4,6 +4,11 @@ export interface IThing {
   created_at: string
   thing_type: string
   location_id: number
+  location?: object
+  geometry?: {
+    type: string
+    coordinates: number[][]
+  }
 }
 
 export interface IWell extends IThing {
