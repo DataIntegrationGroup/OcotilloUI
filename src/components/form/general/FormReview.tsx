@@ -1,5 +1,49 @@
 import { Box, Typography, Paper, Divider } from '@mui/material'
 import Grid from '@mui/material/Grid2'
+/**
+ * FormReview Component
+ * 
+ * A reusable component for displaying form data in a review step before submission.
+ * 
+ * @param title - (defaults to "Review Your Information")
+ * @param description - (defaults to "Please review all the information below before submitting.")
+ * @param sections - Array of section objects
+ *   - title: The section header
+ *   - items: ReviewItemProps[] - Array of simple key-value pairs to display
+ *   - groupedItems?: ReviewItemProps[][] - Optional array of item groups (for nested data like multiple contacts)
+ * 
+ * @example - use watch() and formData to create the sections array
+ * const ReviewStep = ({ watch }) => {
+ *   const formData = watch()
+ *   
+ *   const sections = [
+ *     {
+ *       title: "Location Information",
+ *       items: [
+ *         { label: "Name", value: formData.location?.name },
+ *         { label: "Status", value: formData.location?.release_status }
+ *       ]
+ *     },
+ *     {
+ *       title: `Contacts (${formData.contacts?.length || 0})`,
+ *       items: [],
+ *       groupedItems: formData.contacts?.map((contact, index) => [
+ *         { label: `Contact ${index + 1} - Name`, value: contact.name },
+ *         { label: `Contact ${index + 1} - Role`, value: contact.role },
+ *         { label: "Emails", value: `${contact.emails?.length || 0} email(s)` }
+ *       ]) || []
+ *     }
+ *   ]
+ *   
+ *   return (
+ *     <FormReview
+ *       title="Review Your Information"
+ *       description="Please review before submitting."
+ *       sections={sections}
+ *     />
+ *   )
+ * }
+ */
 
 interface ReviewItemProps {
   label: string

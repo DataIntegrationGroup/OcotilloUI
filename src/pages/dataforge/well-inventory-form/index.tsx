@@ -169,6 +169,10 @@ export const WellInventoryForm: React.FC = () => {
     }
   }
 
+  // ------------------------------------------------------------
+  // MAIN STEPPER COMPONENT
+  // ------------------------------------------------------------
+
   return (
     <Card>
       <CardHeader title="Well Inventory Form" />
@@ -246,7 +250,11 @@ export const WellInventoryForm: React.FC = () => {
   )
 }
 
-// Step Components
+// ------------------------------------------------------------
+//BEGIN STEP COMPONENTS
+// ------------------------------------------------------------
+
+//Location Step #1 --------------------------------------------
 const LocationStep: React.FC<{
   control: any
   watch: any
@@ -326,7 +334,8 @@ const LocationStep: React.FC<{
       </Grid>
     )}
 
-    {/*  Location Form */}
+    {/*  Location Form --------------------------------------*/}
+    {/*  /components/form/location/CreateEditLocation.tsx */}
     {watch('locationMode') === 'new' && (
       <CreateEditLocation
         control={control}
@@ -340,6 +349,7 @@ const LocationStep: React.FC<{
   </Grid>
 )
 
+//Well Step #2 -----------------------------------------------
 const WellStep: React.FC<{
   control: any
   watch: any
@@ -352,6 +362,8 @@ const WellStep: React.FC<{
       </Typography>
     </Grid>
 
+    {/*  Well Form ----------------------------------------*/}
+    {/*  /components/form/thing/CreateEditWell.tsx */}
     <CreateEditWell
       control={control}
       errors={errors}
@@ -361,6 +373,7 @@ const WellStep: React.FC<{
   </Grid>
 )
 
+//Contacts Step #3 -----------------------------------------------
 const ContactsStep: React.FC<{
   control: any
   watch: any
@@ -385,6 +398,8 @@ const ContactsStep: React.FC<{
           </Typography>
         </Grid>
 
+        {/*  Contact Form ----------------------------------------*/}
+        {/*  /components/form/contact/CreateEditContact.tsx */}
         <CreateEditContact
           control={control}
           watch={watch}
@@ -427,6 +442,7 @@ const ContactsStep: React.FC<{
   </Grid>
 )
 
+//Assets Step #4 -----------------------------------------------
 const AssetsStep: React.FC<{
   control: any
   watch: any
@@ -486,11 +502,14 @@ const AssetsStep: React.FC<{
   </Grid>
 )
 
+//Review Step #5 -----------------------------------------------
+//explicit return due to processing the sections data in the component
 const ReviewStep: React.FC<{
   watch: any
 }> = ({ watch }) => {
   const formData = watch()
 
+  // Review Sections - to send to review component for rendering
   const sections = [
     {
       title: "Location Information",
