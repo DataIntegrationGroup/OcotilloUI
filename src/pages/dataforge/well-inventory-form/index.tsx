@@ -34,7 +34,7 @@ import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
 import { FormReview } from '@/components/form/general/FormReview'
 
-import { stepSchemas, SchemaDefaults } from './well_inventory.schema'
+import { wellInventoryStepSchemas, SchemaDefaults } from './well_inventory.schema'
 
 const steps = [
   'Location Information',
@@ -73,7 +73,7 @@ export const WellInventoryForm: React.FC = () => {
   } = useStepsForm<IWellInventoryForm>({
     defaultValues: SchemaDefaults,
     resolver: (data, ctx, opts) =>
-      yupResolver(stepSchemas[currentStep])(data, ctx, opts),
+      yupResolver(wellInventoryStepSchemas[currentStep])(data, ctx, opts),
     stepsProps: {
       isBackValidate: false,
     },
