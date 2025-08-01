@@ -67,6 +67,28 @@ export const wellInventoryStepSchemas: Yup.ObjectSchema<any>[] = [
       Yup.object({
         label: Yup.string().required('Asset label is required'),
         name: Yup.string().required('Asset name is required'),
+        storage_path: Yup.string().when('file', {
+          is: (file: any) => file !== null && file !== undefined,
+          then: (schema) => schema.required('Storage path is required'),
+          otherwise: (schema) => schema.nullable(),
+        }),
+        mime_type: Yup.string().when('file', {
+          is: (file: any) => file !== null && file !== undefined,
+          then: (schema) => schema.required('MIME type is required'),
+          otherwise: (schema) => schema.nullable(),
+        }),
+        size: Yup.number().when('file', {
+          is: (file: any) => file !== null && file !== undefined,
+          then: (schema) => schema.required('File size is required').min(0, 'File size must be non-negative'),
+          otherwise: (schema) => schema.nullable(),
+        }),
+        url: Yup.string().when('file', {
+          is: (file: any) => file !== null && file !== undefined,
+          then: (schema) => schema.required('File URL is required'),
+          otherwise: (schema) => schema.nullable(),
+        }),
+        file: Yup.mixed().nullable(),
+        thing_id: Yup.number().nullable(),
       })
     ),
   }),

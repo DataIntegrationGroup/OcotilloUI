@@ -406,7 +406,11 @@ const AssetsStep: React.FC<{
             // Set the thing_id to the well that will be created
             appendAsset({
               ...asset,
-              thing_id: null // This will be set after well creation in the service
+              thing_id: null, // This will be set after well creation in the service
+              storage_path: '',
+              mime_type: '',
+              size: 0,
+              url: ''
             })
           }}
           canRemoveAsset={assetFields.length > 1}

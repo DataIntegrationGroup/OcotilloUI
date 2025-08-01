@@ -3,7 +3,7 @@ import {
   useDataProvider,
 } from '@refinedev/core'
 import { useForm } from '@refinedev/react-hook-form'
-import { Controller as RHController } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
 import {
   Box,
   TextField,
@@ -146,7 +146,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
 
       {/* Asset Label */}
       <Grid size={12}>
-        <RHController
+        <Controller
           name={getFieldName('label')}
           control={control}
           rules={{ required: 'This field is required' }}
