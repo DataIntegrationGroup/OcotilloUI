@@ -48,6 +48,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
   const [selectedThingFeatureCollection, setSelectedThingFeatureCollection] =
     useState(null)
 
+  console.log(selectedThingFeatureCollection)
   const coords =
     selectedThingFeatureCollection?.features[0]?.geometry.coordinates
   const initialViewState = {
@@ -87,6 +88,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
   }, [selectedThingFeatureCollection])
 
   const updateMap = (newValue: IThing) => {
+    console.log('update map', newValue)
     if (!newValue) {
       setSelectedThingFeatureCollection({
         type: 'FeatureCollection',

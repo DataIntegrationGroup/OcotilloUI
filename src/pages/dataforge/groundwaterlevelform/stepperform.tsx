@@ -1,7 +1,8 @@
 import { useStepsForm } from '@refinedev/react-hook-form'
 import { IGroundwaterLevelForm } from '@/interfaces/dataforge/IGroundwaterLevel'
-import { Box, Button, Step, StepButton, Stepper } from '@mui/material'
+import { Box, Step, StepButton, Stepper } from '@mui/material'
 import { Create, SaveButton } from '@refinedev/mui'
+import Button from '@mui/material/Button'
 import { SelectThingComponent } from '@/components/SelectThingComponent'
 import { GroundwaterLevelEntryComponent } from '@/components/GroundwaterLevelEntryComponent'
 import { HttpError } from '@refinedev/core'
@@ -10,7 +11,7 @@ import { useTheme } from '@mui/material/styles'
 import { useMediaQuery } from '@mui/material'
 
 export const GroundwaterLevelForm: React.FC = () => {
-  const stepTitles = ['Location', 'Sample', 'Sensor', 'Observation']
+  const stepTitles = ['Well', 'Sample', 'Sensor', 'Observation']
   const {
     saveButtonProps,
     refineCore: { formLoading, onFinish },
@@ -25,8 +26,15 @@ export const GroundwaterLevelForm: React.FC = () => {
     HttpError,
     Nullable<IGroundwaterLevelForm>
   >({
+    refineCoreProps: {
+      resource: 'observation/groundwater-level',
+      dataProviderName: 'dataforge',
+    },
     defaultValues: {
       measuring_point_height: 1,
+      sensor_id: 1,
+      thing_id: 4,
+      sample_id: 1,
       depth_to_water: 123,
       observation_timestamp: new Date(),
       observed_property: 'groundwater level',
@@ -41,6 +49,8 @@ export const GroundwaterLevelForm: React.FC = () => {
       case 0:
         return (
           <SelectThingComponent
+            label="Select Water Well"
+            thing_type={'water well'}
             control={control}
             errors={errors}
             watch={watch}

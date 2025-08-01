@@ -5,6 +5,7 @@ export interface IGroundwaterLevel {
 export interface IGroundwaterLevelForm {
   thing_id: number
   sensor_id: number
+  sample_id: number
   observed_property: string
 
   observation_timestamp: Date
