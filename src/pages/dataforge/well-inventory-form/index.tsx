@@ -8,20 +8,13 @@ import { useMutation } from '@tanstack/react-query'
 import {
   Box,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
   Typography,
-  Divider,
   Autocomplete,
   TextField,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
+  Card,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { Add, Delete, NavigateNext, NavigateBefore, Check } from '@mui/icons-material'
+import { Add, Delete } from '@mui/icons-material'
 import {
   ControlledTextField,
   ControlledRadioFormSelection,
@@ -33,16 +26,9 @@ import { CreateEditLocation } from '@/components/form/location/CreateEditLocatio
 import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
 import { FormReview } from '@/components/form/general/FormReview'
+import { FormStepper } from '@/components/form/stepper/FormStepper'
 
 import { wellInventoryStepSchemas, SchemaDefaults } from './well_inventory.schema'
-
-const steps = [
-  'Location Information',
-  'Well Information', 
-  'Contacts',
-  'Assets',
-  'Review & Submit'
-]
 
 export const WellInventoryForm: React.FC = () => {
   const { open, close } = useNotification()
@@ -79,6 +65,22 @@ export const WellInventoryForm: React.FC = () => {
     },
   })
 
+  // ------------------------------------------------------------
+  // Step Labels
+  // ------------------------------------------------------------
+
+  const steps = [
+    'Location Information',
+    'Well Information', 
+    'Contacts',
+    'Assets',
+    'Review & Submit'
+  ]
+
+  // ------------------------------------------------------------
+  // Field Arrays
+  // ------------------------------------------------------------
+
   const { fields: contactFields, append: appendContact, remove: removeContact } = useFieldArray({
     control,
     name: 'contacts',
@@ -88,6 +90,10 @@ export const WellInventoryForm: React.FC = () => {
     control,
     name: 'assets',
   })
+
+  // ------------------------------------------------------------
+  // Form Submission Mutation
+  // ------------------------------------------------------------
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: createWellInventoryForm,
@@ -120,6 +126,10 @@ export const WellInventoryForm: React.FC = () => {
     },
   })
 
+  // ------------------------------------------------------------
+  // Form Handlers
+  // ------------------------------------------------------------
+
   const handleFormSubmit = async (data: IWellInventoryForm) => {
     try {
       await mutateAsync(data)
@@ -143,7 +153,11 @@ export const WellInventoryForm: React.FC = () => {
     gotoStep(currentStep - 1)
   }
 
-  const renderStepContent = (step: number) => {
+  // ------------------------------------------------------------
+  // Render Step Content
+  // ------------------------------------------------------------
+
+  const renderFormByStep = (step: number) => {
     switch (step) {
       case 0:
         return <LocationStep control={control} watch={watch} setValue={setValue} errors={errors} locationAutocompleteProps={locationAutocompleteProps} />
@@ -161,88 +175,27 @@ export const WellInventoryForm: React.FC = () => {
   }
 
   // ------------------------------------------------------------
-  // MAIN STEPPER COMPONENT
+  // MAIN STEPPER COMPONENT RETURN
   // ------------------------------------------------------------
 
   return (
-    <Card>
-      <CardHeader title="Well Inventory Form" />
-      <CardContent sx={{ padding: '2rem' }}>
-        <Box
-          component="form"
-          autoComplete="off"
-          onSubmit={handleSubmit(handleFormSubmit)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-            }
-          }}
-        >
-          <Stepper activeStep={currentStep} orientation="vertical" sx={{ mb: 4 }}>
-            {steps.map((label, index) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-                                <StepContent>
-                  <Box sx={{ mb: 2 }}>
-                    {renderStepContent(currentStep)}
-                    {index === currentStep && (
-                      <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                        {index > 0 && (
-                          <Button
-                            onClick={handleBack}
-                            startIcon={<NavigateBefore />}
-                            variant="outlined"
-                          >
-                            Back
-                          </Button>
-                        )}
-                        {currentStep < steps.length - 1 ? (
-                          <Button
-                            type="button"
-                            onClick={handleNext}
-                            endIcon={<NavigateNext />}
-                            variant="contained"
-                          >
-                            Next
-                          </Button>
-                        ) : (
-                          <Button
-                            type="submit"
-                            variant="contained"
-                            disabled={isPending}
-                            startIcon={<Check />}
-                          >
-                            {isPending ? 'Submitting...' : 'Submit Form'}
-                          </Button>
-                        )}
-                      </Box>
-                    )}
-                  </Box>
-                </StepContent>
-              </Step>
-            ))}
-          </Stepper>
-
-          {/* Form Actions */}
-          <Divider sx={{ my: 2 }} />
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-            <Button
-              type="button"
-              variant="outlined"
-              onClick={handleReset}
-              disabled={isPending}
-            >
-              Reset Form
-            </Button>
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
+    <FormStepper
+      title="Well Inventory Form"
+      steps={steps}
+      currentStep={currentStep}
+      onNext={handleNext}
+      onBack={handleBack}
+      onSubmit={handleSubmit(handleFormSubmit)}
+      onReset={handleReset}
+      isSubmitting={isPending}
+    >
+      {renderFormByStep(currentStep)}
+    </FormStepper>
   )
 }
 
 // ------------------------------------------------------------
-//BEGIN STEP COMPONENTS
+//Define Step Components:
 // ------------------------------------------------------------
 
 //Location Step #1 --------------------------------------------
