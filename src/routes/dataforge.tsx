@@ -46,6 +46,7 @@ import {
 } from '@/pages/dataforge/asset'
 // import { GroundwaterLevelForm } from '@/pages/dataforge/groundwaterlevelform'
 import { GroundwaterLevelForm } from '@/pages/dataforge/groundwaterlevelform/stepperform'
+import { WellInventoryForm } from '@/pages/dataforge/well-inventory-form'
 
 export const DataforgeRoutes = () => {
   return (
@@ -112,6 +113,8 @@ export const DataforgeRoutes = () => {
       <Route path="groundwater-level-form">
         <Route index element={<GroundwaterLevelForm />} />
       </Route>
+      <Route path="well-inventory-form" element={<WellInventoryForm />} />
+
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
   )

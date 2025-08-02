@@ -8,6 +8,7 @@ import { ISpring, IWell } from '@/interfaces/dataforge/IThing'
 import Autocomplete from '@mui/material/Autocomplete'
 import { Controller } from 'react-hook-form'
 import { useState } from 'react'
+import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 
 export const SpringCreate: React.FC = () => {
   const {
@@ -90,65 +91,17 @@ export const SpringCreate: React.FC = () => {
 export const WellCreate: React.FC = () => {
   const {
     saveButtonProps,
-    register,
     control,
     formState: { errors },
   } = useForm<IWell, HttpError, Nullable<IWell>>()
 
-  // const { autocompleteProps } = useAutocomplete<ICategory>({
-  //   resource: "categories",
-  // });
-
   return (
     <Create saveButtonProps={saveButtonProps}>
-      <Box
-        component="form"
-        sx={{ display: 'flex', flexDirection: 'column' }}
-        autoComplete="off"
-      >
-        <TextField
-          {...register('name', {
-            required: 'This field is required',
-          })}
-          error={!!errors.name}
-          helperText={errors.name?.message}
-          margin="normal"
-          fullWidth
-          label="Name"
-          name="name"
-          autoFocus
-        />
-        <TextField
-          {...register('location_id')}
-          error={!!errors.location_id}
-          helperText={errors.location_id?.message}
-          margin="normal"
-          fullWidth
-          label="Location ID"
-          name="location_id"
-          autoFocus
-        />
-        <TextField
-          {...register('well_depth')}
-          error={!!errors.well_depth}
-          helperText={errors.well_depth?.message}
-          margin="normal"
-          fullWidth
-          label="Well Depth (ft)"
-          name="well_depth"
-          autoFocus
-        />
-        <TextField
-          {...register('hole_depth')}
-          error={!!errors.hole_depth}
-          helperText={errors.hole_depth?.message}
-          margin="normal"
-          fullWidth
-          label="Hole Depth (ft)"
-          name="hole_depth"
-          autoFocus
-        />
-      </Box>
+      <CreateEditWell
+        control={control}
+        errors={errors}
+        mode="standalone"
+      />
     </Create>
   )
 }

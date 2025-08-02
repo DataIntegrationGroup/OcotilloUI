@@ -1,54 +1,91 @@
 import type { HttpError } from '@refinedev/core'
 import { Edit, useAutocomplete } from '@refinedev/mui'
-import Box from '@mui/material/Box'
-import TextField from '@mui/material/TextField'
-import Autocomplete from '@mui/material/Autocomplete'
 import { useForm } from '@refinedev/react-hook-form'
-
 import { Controller } from 'react-hook-form'
+import { Autocomplete, TextField } from '@mui/material'
+import Grid from '@mui/material/Grid2'
+import { useState, useEffect } from 'react'
 
 import type { Nullable } from '@/interfaces'
-import type { IWell } from '@/interfaces/amp'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import { Switch } from '@mui/material'
 import { IContact } from '@/interfaces/dataforge/IContact'
+import { IThing } from '@/interfaces/dataforge/IThing'
+import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
 
 export const ContactEdit: React.FC = () => {
   const {
     saveButtonProps,
     refineCore: { query: queryResult },
-    register,
     control,
     formState: { errors },
+    watch,
   } = useForm<IContact, HttpError, Nullable<IContact>>()
 
-  // const { autocompleteProps } = useAutocomplete<ICategory>({
-  //   resource: "categories",
-  //   defaultValue: queryResult?.data?.data.category.id,
-  // });
+  const [thingValue, setThingValue] = useState<IThing | null>(null)
+
+  const { autocompleteProps } = useAutocomplete<IThing>({
+    resource: 'thing',
+    dataProviderName: 'dataforge',
+    onSearch: (value) => [
+      {
+        field: 'name',
+        operator: 'contains',
+        value,
+      },
+    ],
+  })
+/**
+ * @TODO this doesn't seems like the best method to get the thing id into the autocomplete
+ * @refactor
+ */
+  useEffect(() => {
+    if (queryResult?.data?.data?.things && queryResult.data.data.things.length > 0) {
+      const thing = queryResult.data.data.things[0]
+      setThingValue(thing)
+    }
+  }, [queryResult?.data?.data?.things])
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <Box
-        component="form"
-        sx={{ display: 'flex', flexDirection: 'column' }}
-        autoComplete="off"
-      >
-        <TextField
-          {...register('name', {
-            required: 'This field is required',
-          })}
-          // disabled
-          error={!!errors.name}
-          helperText={errors.name?.message}
-          margin="normal"
-          fullWidth
-          label="Name"
-          name="name"
-          autoFocus
-          InputLabelProps={{ shrink: true }}
-        />
-      </Box>
+      <Grid container spacing={3}>
+        <Grid size={12}>
+          <Controller
+            name="thing_id"
+            control={control}
+            rules={{ required: 'This field is required' }}
+            render={({ field }) => (
+              <Autocomplete
+                {...autocompleteProps}
+                value={thingValue}
+                onChange={(_, newValue) => {
+                  setThingValue(newValue)
+                  field.onChange(newValue?.id || null)
+                }}
+                getOptionKey={(option) => option.id}
+                getOptionLabel={(option) => option.name || ''}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Thing"
+                    margin="normal"
+                    error={!!errors.thing_id}
+                    helperText={errors.thing_id?.message}
+                    required
+                  />
+                )}
+              />
+            )}
+          />
+        </Grid>
+        
+        <Grid size={12}>
+          <CreateEditContact
+            control={control}
+            errors={errors}
+            mode="standalone"
+            showDynamicArrays={true}
+          />
+        </Grid>
+      </Grid>
     </Edit>
   )
 }

@@ -1,0 +1,24 @@
+import { useList } from '@refinedev/core'
+import { ILexicon } from '@/interfaces/dataforge/ILexicon'
+
+export const useLexicon = ({ category }) => {
+  const data = useList<ILexicon>({
+    resource: 'lexicon',
+    dataProviderName: 'dataforge',
+    queryOptions: {
+      cacheTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 2, // 2 minutes
+    },
+    meta: {
+      params: { category: category },
+    },
+  })
+  return {
+    ...data,
+    options:
+      data.data?.data?.map((item) => ({
+        value: item.term,
+        label: item.term,
+      })) || [],
+  }
+}
