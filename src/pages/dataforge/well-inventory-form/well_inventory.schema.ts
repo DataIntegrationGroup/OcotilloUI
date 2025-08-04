@@ -102,7 +102,7 @@ export const SchemaDefaults: Partial<IWellInventoryForm> = {
     name: '',
     notes: '',
     point: '',
-    release_status: 'public',
+    release_status: '',
   },
   well: {
     name: '',
@@ -115,7 +115,7 @@ export const SchemaDefaults: Partial<IWellInventoryForm> = {
   contacts: [
     {
       name: '',
-      role: 'owner',
+      role: '',
       emails: [],
       phones: [],
       addresses: [],
