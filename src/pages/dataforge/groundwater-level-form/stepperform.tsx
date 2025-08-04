@@ -1,10 +1,7 @@
 import { useStepsForm } from '@refinedev/react-hook-form'
 import { IGroundwaterLevelForm } from '@/interfaces/dataforge/IGroundwaterLevel'
-import { GroundwaterLevelEntryComponent } from '@/components/GroundwaterLevelEntryComponent'
 import { HttpError, useNotification } from '@refinedev/core'
 import { Nullable } from '@/interfaces'
-import { useTheme } from '@mui/material/styles'
-import { useMediaQuery } from '@mui/material'
 import { useMutation } from '@tanstack/react-query'
 import {
   groundwaterLevelStepSchemas,
@@ -20,7 +17,6 @@ import {
 } from '@/pages/dataforge/groundwater-level-form/step-components'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { createGroundwaterLevelForm } from '@/pages/dataforge/groundwater-level-form/groundwater-level-form.service'
-import { SelectThingComponent } from '@/components/form/thing/SelectThingComponent'
 
 export const GroundwaterLevelForm: React.FC = () => {
   // ---------------------------------------------------------------------------
