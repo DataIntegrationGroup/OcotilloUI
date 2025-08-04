@@ -497,7 +497,7 @@ const ReviewStep: React.FC<{
       title: `Assets (${formData.assets?.length || 0})`,
       items: formData.assets?.map((asset, index) => ({
         label: `Asset ${index + 1}`,
-        value: `${asset.label || 'Not specified'} - ${asset.name || 'Not specified'} - ${asset.thing_id ? 'Thing Selected' : 'No Thing'}`
+        value: `${asset.label || 'Not specified'} - ${asset.name || 'Not specified'}`
       })) || []
     }
   ]
