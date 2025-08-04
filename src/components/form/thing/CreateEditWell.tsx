@@ -4,6 +4,7 @@ import {
   ControlledTextField,
   ControlledSelectField,
 } from '@/components'
+import { useLexicon } from '@/hooks'
 
 /**
  * CreateEditWell Component
@@ -32,6 +33,11 @@ export const CreateEditWell: React.FC<CreateEditWellProps> = ({
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
 
+  //get well type options
+  const { options: wellTypeOptions, isLoading: wellTypeLoading } = useLexicon({ 
+    category: 'well_type' 
+  })
+
   return (
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, md: 6 }}>
@@ -50,9 +56,7 @@ export const CreateEditWell: React.FC<CreateEditWellProps> = ({
           fullWidth
           control={control}
           name={getFieldName('well_type')}
-          options={[
-            { value: 'draft', label: 'Draft' }
-          ]}
+          options={wellTypeOptions}
           required
         />
       </Grid>
