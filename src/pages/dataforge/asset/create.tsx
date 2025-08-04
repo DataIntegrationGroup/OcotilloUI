@@ -15,8 +15,8 @@ import { Nullable } from '../../../interfaces'
 import { IAsset } from '@/interfaces/dataforge/IAsset'
 import { useCallback, useState } from 'react'
 import axios from 'axios'
-import { Input, Stack, Typography } from '@mui/material'
-import { LoadingButton } from '@mui/lab'
+import { Input, Stack, Typography, Button } from '@mui/material'
+// import { LoadingButton } from '@mui/lab'
 import FileUploadIcon from '@mui/icons-material/FileUpload'
 import { IThing } from '@/interfaces/dataforge/IThing'
 
@@ -185,7 +185,7 @@ export const AssetCreate: React.FC = () => {
             })}
             type="hidden"
           />
-          <LoadingButton
+          <Button
             loading={isUploadLoading}
             loadingPosition="end"
             endIcon={<FileUploadIcon />}
@@ -193,7 +193,7 @@ export const AssetCreate: React.FC = () => {
             component="span"
           >
             Upload
-          </LoadingButton>
+          </Button>
           <br />
           {errors.file && (
             <Typography variant="caption" color="#fa541c">

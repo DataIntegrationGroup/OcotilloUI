@@ -6,7 +6,7 @@ export interface IContact {
   name: string
   role: string
   thing_id: number
-  created_at: string
+  created_at: Date
 }
 
 export interface IEmail {

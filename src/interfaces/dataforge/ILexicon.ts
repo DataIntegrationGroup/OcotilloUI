@@ -3,5 +3,5 @@ export interface ILexicon {
   term: string
   definition: string
   category: string
-  created_at: string
+  created_at: Date
 }

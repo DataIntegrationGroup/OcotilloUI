@@ -9,8 +9,8 @@ export const SampleList: React.FC = () => {
     resource: 'sample',
     dataProviderName: 'dataforge',
     queryOptions: {
-      cacheTime: 60000, 
-      staleTime: 30000, 
+      cacheTime: 60000,
+      staleTime: 30000,
     },
   })
 
@@ -23,11 +23,18 @@ export const SampleList: React.FC = () => {
         minWidth: 100,
       },
       {
+        field: 'release_status',
+        headerName: 'Release Status',
+        type: 'string',
+        minWidth: 120,
+        flex: 1,
+      },
+      {
         field: 'actions',
         headerName: 'Actions',
         renderCell: function render({ row }) {
           return (
-            <div style={{ display: 'flex'}}>
+            <div style={{ display: 'flex' }}>
               <EditButton size="small" hideText recordItemId={row.id} />
               <ShowButton size="small" hideText recordItemId={row.id} />
             </div>
@@ -39,17 +46,38 @@ export const SampleList: React.FC = () => {
         flex: 0.3,
       },
       {
-        field: 'collection_timestamp',
-        headerName: 'Collection Timestamp',
+        field: 'sample_date',
+        headerName: 'Sample Date',
         type: 'string',
         minWidth: 100,
         flex: 1,
       },
       {
-        field: 'collection_method',
-        headerName: 'Collection Method',
+        field: 'sample_type',
+        headerName: 'Sample Type',
         type: 'string',
         minWidth: 100,
+        flex: 1,
+      },
+      {
+        field: 'field_sample_id',
+        headerName: 'Field Sample ID',
+        type: 'string',
+        minWidth: 150,
+        flex: 1,
+      },
+      {
+        field: 'qc_sample',
+        headerName: 'QC Sample',
+        type: 'string',
+        minWidth: 100,
+        flex: 1,
+      },
+      {
+        field: 'sensor_id',
+        headerName: 'Sensor ID',
+        type: 'number',
+        minWidth: 120,
         flex: 1,
       },
       {
@@ -58,6 +86,14 @@ export const SampleList: React.FC = () => {
         type: 'number',
         minWidth: 120,
         flex: 1,
+      },
+      {
+        field: 'created_at',
+        headerName: 'Created At',
+        type: 'dateTime',
+        minWidth: 150,
+        flex: 1,
+        valueGetter: (params) => new Date(params),
       },
     ],
     []
@@ -70,4 +106,4 @@ export const SampleList: React.FC = () => {
       getRowId={(row) => row.id}
     />
   )
-}   
+}

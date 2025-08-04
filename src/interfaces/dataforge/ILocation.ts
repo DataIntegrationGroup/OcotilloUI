@@ -4,5 +4,5 @@ export interface ILocation {
   notes: string | null
   point: string
   release_status: string
-  created_at: string
+  created_at: Date
 }
