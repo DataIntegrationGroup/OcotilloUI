@@ -368,8 +368,7 @@ const ContactsStep: React.FC<{
 
 //Assets Step #4 -----------------------------------------------
 /**
- * @TODO this step a placeholder right now
- * @refactor
+ * @TODO Link asset to a well via thing_id in future API changes
 */
 const AssetsStep: React.FC<{
   control: any
@@ -403,17 +402,19 @@ const AssetsStep: React.FC<{
           assetIndex={index}
           onRemoveAsset={removeAsset}
           onAddAsset={(asset) => {
-            // Set the thing_id to the well that will be created
             appendAsset({
               ...asset,
-              thing_id: null, // This will be set after well creation in the service
+              thing_id: null, 
+              /**
+              * @TODO Link asset to a well via thing_id in future API changes
+              */
               storage_path: '',
               mime_type: '',
               size: 0,
               url: ''
             })
           }}
-          canRemoveAsset={assetFields.length > 1}
+          canRemoveAsset={assetFields.length >= 1}
           totalAssets={assetFields.length}
         />
       </Grid>
@@ -427,7 +428,10 @@ const AssetsStep: React.FC<{
           onClick={() => appendAsset({
             label: '',
             name: '',
-            thing_id: null, // This will be set after well creation in the service
+            thing_id: null,
+            /**
+            * @TODO Link asset to a well via thing_id in future API changes
+            */
             file: null,
             storage_path: '',
             mime_type: '',
