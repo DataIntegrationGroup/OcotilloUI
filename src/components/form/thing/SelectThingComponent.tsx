@@ -148,7 +148,11 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
         />
       </Box>
       <Box sx={{ paddingLeft: '50px', paddingRight: '50px' }}>
-        <MapComponent mapRef={mapRef} initialViewState={initialViewState}>
+        <MapComponent
+          style={{ height: '300px', width: '100%' }}
+          mapRef={mapRef}
+          initialViewState={initialViewState}
+        >
           <Source
             key="selectedThing"
             id="selectedThing"

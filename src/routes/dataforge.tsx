@@ -45,7 +45,7 @@ import {
   AssetShow,
 } from '@/pages/dataforge/asset'
 // import { GroundwaterLevelForm } from '@/pages/dataforge/groundwaterlevelform'
-import { GroundwaterLevelForm } from '@/pages/dataforge/groundwaterlevelform/stepperform'
+import { GroundwaterLevelForm } from '@/pages/dataforge/groundwater-level-form/stepperform'
 import { WellInventoryForm } from '@/pages/dataforge/well-inventory-form'
 
 export const DataforgeRoutes = () => {

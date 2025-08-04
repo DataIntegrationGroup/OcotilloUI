@@ -22,6 +22,7 @@ interface MapComponentProps {
   mapRef?: any
   // zoomToPoint?: object
   initialViewState?: object
+  style?: React.CSSProperties
 }
 
 export const MapComponent: React.FC<MapComponentProps> = ({
@@ -39,6 +40,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     position: 'top-right' as ControlPosition,
   },
   showGeocoder = { show: true, position: 'top-left' },
+  style = { width: '100%', height: '650px' },
 }) => {
   const { mode } = useContext(ColorModeContext)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -46,7 +48,6 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     mode === 'dark'
       ? 'mapbox://styles/mapbox/dark-v10'
       : 'mapbox://styles/mapbox/light-v10'
-  const style = { width: '100%', height: '650px' }
 
   if (mapRef === undefined) {
     mapRef = useRef<MapRef>(null)

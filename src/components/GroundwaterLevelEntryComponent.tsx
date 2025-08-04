@@ -16,6 +16,8 @@ interface EntryProps {
   errors: any
   register: any
   watch: any
+  mode?: 'step' | 'standalone' // 'step' or 'standalone'
+  fieldPrefix?: string
 }
 
 export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
@@ -23,6 +25,8 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
   errors,
   register,
   watch,
+  mode = 'standalone', // 'step' or 'standalone'
+  fieldPrefix = 'observation.',
 }) => {
   const { autocompleteProps: autocompletePropsReleaseStatus } =
     useAutocomplete<ILexicon>({
@@ -51,14 +55,20 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
   const dataProvider = useDataProvider()
   const dataForgeDataProvider = dataProvider('dataforge')
 
-  const depthToWater = watch('depth_to_water')
-  const observationTimestamp = watch('observation_timestamp')
-  const sensorID = watch('sensor_id')
+  const getFieldName = (fieldName: string) => {
+    return `${fieldPrefix}${fieldName}`
+  }
+
+  const depthToWater = watch(getFieldName('depth_to_water'))
+  const observationTimestamp = watch(getFieldName('observation_timestamp'))
+  const sensorID = watch(getFieldName('sensor_id'))
   const thingID = watch('thing_id')
 
+  // console.log('errors', errors)
+  // console.log('level_statis', errors[getFieldName('level_status')])
   useEffect(() => {
     const newResult = {
-      phenomenonTime: observationTimestamp.toISOString(),
+      phenomenonTime: observationTimestamp?.toISOString(),
       result: Number(depthToWater),
     }
     if (!thingID || !sensorID) {
@@ -92,6 +102,22 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
     })
   }, [depthToWater, observationTimestamp, sensorID, thingID])
 
+  const getError = (fieldName: string) => {
+    // const error = errors
+    let error = errors
+    if (mode === 'step') {
+      error = errors.observation
+    }
+    let field_error = null
+    if (!!error) {
+      field_error = error[fieldName]
+    }
+    return {
+      error: !!field_error,
+      helperText: field_error?.message,
+    }
+  }
+
   return (
     <Box>
       <Hydrograph
@@ -99,18 +125,17 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
         refresh={refreshHydrograph}
       />
       <TextField
-        {...register('depth_to_water')}
-        error={!!errors.depth_to_water}
-        helperText={errors.depth_to_water?.message}
+        {...register(getFieldName('depth_to_water'))}
+        {...getError('depth_to_water')}
         margin="normal"
         fullWidth
         label="Depth to Water (ft)"
-        name="depth_to_water"
+        name={getFieldName('depth_to_water')}
         type="number"
         autoFocus
       />
       <Controller
-        name="observation_timestamp"
+        name={getFieldName('observation_timestamp')}
         control={control}
         render={({ field }) => (
           <DateTimePicker
@@ -120,19 +145,17 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
             label="Observation Timestamp"
             slotProps={{
               textField: {
+                ...getError('observation_timestamp'),
                 margin: 'normal',
                 fullWidth: true,
-                error: !!errors.observation_timestamp,
-                helperText: errors.observation_timestamp?.message,
               },
             }}
           />
         )}
       />
       <TextField
-        {...register('measuring_point_height')}
-        error={!!errors.measuring_point_height}
-        helperText={errors.measuring_point_height?.message}
+        {...register(getFieldName('measuring_point_height'))}
+        {...getError('measuring_point_height')}
         margin="normal"
         fullWidth
         label="Measuring Point Height (inches)"
@@ -140,9 +163,8 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
         type="number"
       />
       <Controller
-        name="release_status"
+        name={getFieldName('release_status')}
         control={control}
-        rules={{ required: 'This field is required' }}
         render={({ field }) => (
           <Autocomplete
             {...autocompletePropsReleaseStatus}
@@ -161,17 +183,15 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
                 {...params}
                 label="Release Status"
                 margin="normal"
-                error={!!errors.release_status}
-                helperText={errors.release_status?.message}
+                {...getError('release_status')}
               />
             )}
           />
         )}
       />
       <Controller
-        name="level_status"
+        name={getFieldName('level_status')}
         control={control}
-        rules={{ required: 'This field is required' }}
         render={({ field }) => (
           <Autocomplete
             {...autocompletePropsLevelStatus}
@@ -190,8 +210,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
                 {...params}
                 label="Level Status"
                 margin="normal"
-                error={!!errors.level_status}
-                helperText={errors.level_status?.message}
+                {...getError('level_status')}
               />
             )}
           />
