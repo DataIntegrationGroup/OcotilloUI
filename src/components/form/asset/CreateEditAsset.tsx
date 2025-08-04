@@ -36,6 +36,7 @@ interface CreateEditAssetProps {
   onAddAsset?: (asset: any) => void
   canRemoveAsset?: boolean
   totalAssets?: number
+  existingAsset?: any
 }
 
 export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
@@ -51,7 +52,8 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
   onRemoveAsset,
   onAddAsset,
   canRemoveAsset = true,
-  totalAssets = 1
+  totalAssets = 1,
+  existingAsset
 }) => {
   const [isUploadLoading, setIsUploadLoading] = useState(false)
 
@@ -120,7 +122,18 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
     }
   }
 
+  //handle create image input
   const imageInput = watch ? watch(getFieldName('file')) : null
+
+  //handle creating preview for existing asset
+  const existingAssetPreview = existingAsset ? {
+    name: existingAsset.name,
+    url: existingAsset.url,
+    mime_type: existingAsset.mime_type,
+    size: existingAsset.size
+  } : null
+
+  const previewAsset = imageInput || (existingAssetPreview ? [existingAssetPreview] : null)
 
   return (
     <Grid container spacing={3}>
@@ -204,7 +217,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
               </Typography>
             )}
           </label>
-          {imageInput && (
+          {previewAsset && (
             <Box
               component="img"
               sx={{
@@ -212,8 +225,8 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
                 maxHeight: '200px',
                 objectFit: 'contain',
               }}
-              src={imageInput[0].url}
-              alt={imageInput[0].name}
+              src={previewAsset[0].url}
+              alt={previewAsset[0].name}
             />
           )}
         </Stack>

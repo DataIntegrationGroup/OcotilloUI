@@ -7,20 +7,20 @@ import CircularProgress from '@mui/material/CircularProgress'
 import type { Nullable } from '@/interfaces'
 import { IAsset } from '@/interfaces/dataforge/IAsset'
 import { useState } from 'react'
+import { CreateEditAsset } from '@/components/form/asset/CreateEditAsset'
 
 export const AssetEdit: React.FC = () => {
   const {
     saveButtonProps,
     refineCore: { query: queryResult },
-    register,
     control,
+    watch,
+    setValue,
+    setError,
+    register,
     formState: { errors },
   } = useForm<IAsset, HttpError, Nullable<IAsset>>()
 
-  // const { autocompleteProps } = useAutocomplete<ICategory>({
-  //   resource: "categories",
-  //   defaultValue: queryResult?.data?.data.category.id,
-  // });
   const { data, isLoading, isError } = useOne({
     resource: 'asset',
     id: queryResult?.data?.data.id,
@@ -32,41 +32,18 @@ export const AssetEdit: React.FC = () => {
   })
 
   const image = data?.data
-  // const [imgLoading, setImgLoading] = useState(true)
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <Box
-        component="form"
-        sx={{ display: 'flex', flexDirection: 'column' }}
-        autoComplete="off"
-      >
-        <TextField
-          {...register('label', {
-            required: 'This field is required',
-          })}
-          // disabled
-          error={!!errors.name}
-          helperText={errors.name?.message}
-          margin="normal"
-          fullWidth
-          label="Label"
-          name="label"
-          autoFocus
-          slotProps={{ inputLabel: { shrink: true } }}
-        />
-      </Box>
-      {isLoading && (
-        <CircularProgress size={48} sx={{ position: 'absolute', zIndex: 1 }} />
-      )}
-      <Box
-        component="img"
-        sx={{
-          maxWidth: '100%',
-          maxHeight: '100%',
-        }}
-        src={image?.url}
-        alt={image?.name}
+      <CreateEditAsset
+        control={control}
+        watch={watch}
+        setValue={setValue}
+        setError={setError}
+        register={register}
+        errors={errors}
+        mode="standalone"
+        existingAsset={image}
       />
     </Edit>
   )
