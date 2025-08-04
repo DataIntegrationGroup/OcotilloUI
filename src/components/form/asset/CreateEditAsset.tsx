@@ -1,8 +1,6 @@
 import {
-  HttpError,
   useDataProvider,
 } from '@refinedev/core'
-import { useForm } from '@refinedev/react-hook-form'
 import { Controller } from 'react-hook-form'
 import {
   Box,
@@ -17,9 +15,6 @@ import FileUploadIcon from '@mui/icons-material/FileUpload'
 import { Add, Delete } from '@mui/icons-material'
 import Grid from '@mui/material/Grid2'
 import { useState } from 'react'
-
-import { Nullable } from '@/interfaces'
-import { IAsset } from '@/interfaces/dataforge/IAsset'
 
 interface CreateEditAssetProps {
   control: any
@@ -132,7 +127,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
     mime_type: existingAsset.mime_type,
     size: existingAsset.size
   } : null
-
+  //determine which preview to use, upload or existing asset
   const previewAsset = imageInput || (existingAssetPreview ? [existingAssetPreview] : null)
 
   return (
@@ -163,6 +158,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
           name={getFieldName('label')}
           control={control}
           rules={{ required: 'This field is required' }}
+          defaultValue={existingAsset?.label || ''}
           render={({ field, fieldState }) => (
             <TextField
               {...field}

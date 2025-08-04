@@ -369,6 +369,9 @@ const ContactsStep: React.FC<{
 //Assets Step #4 -----------------------------------------------
 /**
  * @TODO Link asset to a well via thing_id in future API changes
+ * @TODO Create a new component that allows for multi-file selection without immediate upload, and 
+ * change the asset step to use this new component
+ * @TODO change the well inventory form to only upload new asset on form submit, not on file selection
 */
 const AssetsStep: React.FC<{
   control: any
