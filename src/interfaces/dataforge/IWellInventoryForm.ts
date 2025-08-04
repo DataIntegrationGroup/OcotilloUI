@@ -40,7 +40,11 @@ export interface IWellInventoryForm {
   assets?: Array<{
     label: string
     name: string
+    storage_path: string
+    mime_type: string
+    size: number
+    url: string
     file?: File
-    mime_type?: string
+    thing_id?: number | null
   }>
 } 
