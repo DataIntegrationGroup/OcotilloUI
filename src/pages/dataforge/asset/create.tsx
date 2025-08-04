@@ -10,6 +10,7 @@ export const AssetCreate: React.FC = () => {
   const {
     saveButtonProps,
     control,
+    watch,
     setValue,
     setError,
     register,
@@ -20,6 +21,7 @@ export const AssetCreate: React.FC = () => {
     <Create saveButtonProps={saveButtonProps}>
       <CreateEditAsset
         control={control}
+        watch={watch}
         setValue={setValue}
         setError={setError}
         register={register}
