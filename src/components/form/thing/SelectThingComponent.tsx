@@ -4,13 +4,15 @@ import { IThing } from '@/interfaces/dataforge/IThing'
 import { Controller } from 'react-hook-form'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
-import { Layer, MapRef, Source } from 'react-map-gl'
+import { Layer, LngLatBoundsLike, MapRef, Source } from 'react-map-gl'
 import MapComponent from '@/components/MapComponent'
 import { useEffect, useRef, useState } from 'react'
-import { Button, Modal } from '@mui/material'
+import { Button, Modal, useTheme } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { Place } from '@mui/icons-material'
 import wellknown from 'wellknown'
+import bbox from '@turf/bbox'
+import { SpatialSearchComponent } from '@/components/SpatialSearchComponent'
 
 interface EntryProps {
   control: any
@@ -30,9 +32,10 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
   const getOptionLabel = (option: any) => {
     return `${option.name}: (${option.id})`
   }
-  const [spatialSearchOpen, setSpatialSearchOpen] = useState(false)
-  const [selectionPolygons, setSelectionPolygons] = useState({})
+  // const [spatialSearchOpen, setSpatialSearchOpen] = useState(false)
+  // const [selectionPolygons, setSelectionPolygons] = useState({})
   const [spatialSearchWKT, setSpatialSearchWKT] = useState(null)
+  const theme = useTheme()
 
   const { autocompleteProps: autocompletePropsThing } = useAutocomplete<IThing>(
     {
@@ -86,6 +89,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
     updateMap(selectedThing)
   }, [thing_id])
 
+  // Update the map view when the selected feature collection changes
   useEffect(() => {
     if (
       selectedThingFeatureCollection &&
@@ -103,7 +107,22 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
         })
       }
     }
-  }, [selectedThingFeatureCollection])
+
+    if (spatialSearchWKT) {
+      const polygon = wellknown.parse(spatialSearchWKT)
+      if (polygon && mapRef.current) {
+        // Create a bounding box from the polygon
+        const bounds = bbox(polygon)
+        console.log('bounds', bounds)
+        mapRef.current.fitBounds(bounds as LngLatBoundsLike, {
+          padding: 20,
+          maxZoom: 10,
+          animate: false,
+          essential: true,
+        })
+      }
+    }
+  }, [selectedThingFeatureCollection, spatialSearchWKT])
 
   const updateMap = (newValue: IThing[] | undefined) => {
     console.log('update map', newValue)
@@ -130,77 +149,15 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
             thing_type: item.thing_type,
           },
         })),
-        // features: [
-        //   {
-        //     type: 'Feature',
-        //     id: newValue?.id || null,
-        //     geometry: newValue?.geometry,
-        //   },
-        // ],
       })
     }
-  }
-
-  const handleSpatialSearch = () => {
-    if (Object.keys(selectionPolygons).length === 0) {
-      console.warn('No selection polygons to process')
-      return
-    }
-
-    const polygon = Object.values(selectionPolygons)[0]
-    const wktString = wellknown.stringify(polygon)
-    setSpatialSearchWKT(wktString)
-    setSelectionPolygons({})
-  }
-  const modalStyle = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '50%',
-    backgroundColor: 'background.paper',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
   }
 
   return (
     <Box>
       <Grid container spacing={2} alignItems="center">
         <Grid size={3}>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => setSpatialSearchOpen(true)}
-          >
-            <Place />
-            Spatial Search
-          </Button>
-          <Modal open={spatialSearchOpen}>
-            <Box sx={modalStyle}>
-              <MapComponent
-                style={{ height: '300px', width: '100%' }}
-                mapRef={mapRef}
-                initialViewState={initialViewState}
-                setSelectionPolygons={setSelectionPolygons}
-              ></MapComponent>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  handleSpatialSearch()
-                  setSpatialSearchOpen(false)
-                }}
-              >
-                Search
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => setSpatialSearchOpen(false)}
-              >
-                Close
-              </Button>
-            </Box>
-          </Modal>
+          <SpatialSearchComponent setSpatialSearchWKT={setSpatialSearchWKT} />
         </Grid>
         <Grid size={9}>
           <Controller
@@ -243,6 +200,33 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
           initialViewState={initialViewState}
           showDrawControls={{ show: false }}
         >
+          <Source
+            key="spatialSearchPolygon"
+            id="spatialSearchPolygon"
+            type="geojson"
+            data={
+              spatialSearchWKT
+                ? {
+                    type: 'FeatureCollection',
+                    features: [
+                      {
+                        type: 'Feature',
+                        geometry: wellknown.parse(spatialSearchWKT),
+                      },
+                    ],
+                  }
+                : { type: 'FeatureCollection', features: [] }
+            }
+          >
+            <Layer
+              type={'fill'}
+              id={'spatialSearchPolygon'}
+              paint={{
+                'fill-color': theme.palette.primary.main,
+                'fill-opacity': 0.2,
+              }}
+            />
+          </Source>
           <Source
             key="selectedThing"
             id="selectedThing"
