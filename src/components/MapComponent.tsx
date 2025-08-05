@@ -15,9 +15,9 @@ interface MapComponentProps {
   popupContent?: any
   setPopupContent?: any
   onMouseMoveCallback?: any
-  showDrawControls?: { show: boolean; position: ControlPosition }
-  showNavigation?: { show: boolean; position: ControlPosition }
-  showGeocoder?: { show: boolean; position: ControlPosition }
+  showDrawControls?: { show: boolean; position?: ControlPosition }
+  showNavigation?: { show: boolean; position?: ControlPosition }
+  showGeocoder?: { show: boolean; position?: ControlPosition }
   isLoading?: boolean
   mapRef?: any
   // zoomToPoint?: object
@@ -34,12 +34,18 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   setSelectionPolygons,
   isLoading = false,
   initialViewState,
-  showDrawControls = { show: true, position: 'top-right' },
+  showDrawControls = {
+    show: true,
+    position: 'top-right' as ControlPosition,
+  },
   showNavigation = {
     show: true,
     position: 'top-right' as ControlPosition,
   },
-  showGeocoder = { show: true, position: 'top-left' },
+  showGeocoder = {
+    show: true,
+    position: 'top-left' as ControlPosition,
+  },
   style = { width: '100%', height: '650px' },
 }) => {
   const { mode } = useContext(ColorModeContext)
@@ -76,6 +82,10 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   }
 
   const onUpdate = useCallback((e) => {
+    if (!setSelectionPolygons) {
+      return
+    }
+
     setSelectionPolygons((currFeatures) => {
       const newFeatures = { ...currFeatures }
       for (const f of e.features) {
@@ -86,6 +96,9 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   }, [])
 
   const onDelete = useCallback((e) => {
+    if (!setSelectionPolygons) {
+      return
+    }
     setSelectionPolygons((currFeatures) => {
       const newFeatures = { ...currFeatures }
       for (const f of e.features) {

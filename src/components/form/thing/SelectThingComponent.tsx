@@ -7,6 +7,10 @@ import TextField from '@mui/material/TextField'
 import { Layer, MapRef, Source } from 'react-map-gl'
 import MapComponent from '@/components/MapComponent'
 import { useEffect, useRef, useState } from 'react'
+import { Button, Modal } from '@mui/material'
+import Grid from '@mui/material/Grid2'
+import { Place } from '@mui/icons-material'
+import wellknown from 'wellknown'
 
 interface EntryProps {
   control: any
@@ -26,13 +30,19 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
   const getOptionLabel = (option: any) => {
     return `${option.name}: (${option.id})`
   }
+  const [spatialSearchOpen, setSpatialSearchOpen] = useState(false)
+  const [selectionPolygons, setSelectionPolygons] = useState({})
+  const [spatialSearchWKT, setSpatialSearchWKT] = useState(null)
 
   const { autocompleteProps: autocompletePropsThing } = useAutocomplete<IThing>(
     {
       resource: 'thing',
       dataProviderName: 'dataforge',
       meta: {
-        params: { thing_type: thing_type },
+        params: {
+          thing_type: thing_type,
+          within: spatialSearchWKT,
+        },
       },
       onSearch: (value) => [
         {
@@ -41,6 +51,13 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
           value,
         },
       ],
+      queryOptions: {
+        onSuccess: (data) => {
+          console.log('Autocomplete options fetched:', data)
+
+          updateMap(data?.data)
+        },
+      },
     }
   )
 
@@ -48,7 +65,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
   const [selectedThingFeatureCollection, setSelectedThingFeatureCollection] =
     useState(null)
 
-  console.log(selectedThingFeatureCollection)
+  // console.log(selectedThingFeatureCollection)
   const coords =
     selectedThingFeatureCollection?.features[0]?.geometry.coordinates
   const initialViewState = {
@@ -64,6 +81,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
       selectedThing = autocompletePropsThing.options.find(
         (option: any) => option.id === thing_id
       )
+      selectedThing = selectedThing ? [selectedThing] : undefined
     }
     updateMap(selectedThing)
   }, [thing_id])
@@ -87,14 +105,14 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
     }
   }, [selectedThingFeatureCollection])
 
-  const updateMap = (newValue: IThing) => {
+  const updateMap = (newValue: IThing[] | undefined) => {
     console.log('update map', newValue)
     if (!newValue) {
       setSelectedThingFeatureCollection({
         type: 'FeatureCollection',
         features: [],
       })
-    } else if (newValue?.geometry === null) {
+    } else if (newValue[0]?.geometry === null) {
       setSelectedThingFeatureCollection({
         type: 'FeatureCollection',
         features: [],
@@ -102,56 +120,128 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
     } else {
       setSelectedThingFeatureCollection({
         type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            id: newValue?.id || null,
-            geometry: newValue?.geometry,
+        features: newValue.map((item) => ({
+          type: 'Feature',
+          id: item.id,
+          geometry: item.geometry,
+          properties: {
+            name: item.name,
+            id: item.id,
+            thing_type: item.thing_type,
           },
-        ],
+        })),
+        // features: [
+        //   {
+        //     type: 'Feature',
+        //     id: newValue?.id || null,
+        //     geometry: newValue?.geometry,
+        //   },
+        // ],
       })
     }
   }
 
+  const handleSpatialSearch = () => {
+    if (Object.keys(selectionPolygons).length === 0) {
+      console.warn('No selection polygons to process')
+      return
+    }
+
+    const polygon = Object.values(selectionPolygons)[0]
+    const wktString = wellknown.stringify(polygon)
+    setSpatialSearchWKT(wktString)
+    setSelectionPolygons({})
+  }
+  const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '50%',
+    backgroundColor: 'background.paper',
+    border: '2px solid #000',
+    boxShadow: 24,
+    p: 4,
+  }
+
   return (
     <Box>
-      <Box sx={{ flexGrow: 1 }}>
-        <Controller
-          name="thing_id"
-          control={control}
-          rules={{ required: 'This field is required' }}
-          render={({ field }) => (
-            <Autocomplete
-              {...autocompletePropsThing}
-              value={
-                autocompletePropsThing.options.find(
-                  (option: any) => option.id === field.value
-                ) || null
-              }
-              onChange={(_, newValue) => {
-                updateMap(newValue)
-                field.onChange(newValue?.id || null)
-              }}
-              getOptionKey={(option) => option.id}
-              getOptionLabel={getOptionLabel}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={label}
-                  margin="normal"
-                  error={!!errors.thing_id}
-                  helperText={errors.thing_id?.message}
-                />
-              )}
-            />
-          )}
-        />
-      </Box>
+      <Grid container spacing={2} alignItems="center">
+        <Grid size={3}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setSpatialSearchOpen(true)}
+          >
+            <Place />
+            Spatial Search
+          </Button>
+          <Modal open={spatialSearchOpen}>
+            <Box sx={modalStyle}>
+              <MapComponent
+                style={{ height: '300px', width: '100%' }}
+                mapRef={mapRef}
+                initialViewState={initialViewState}
+                setSelectionPolygons={setSelectionPolygons}
+              ></MapComponent>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  handleSpatialSearch()
+                  setSpatialSearchOpen(false)
+                }}
+              >
+                Search
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setSpatialSearchOpen(false)}
+              >
+                Close
+              </Button>
+            </Box>
+          </Modal>
+        </Grid>
+        <Grid size={9}>
+          <Controller
+            name="thing_id"
+            control={control}
+            rules={{ required: 'This field is required' }}
+            render={({ field }) => (
+              <Autocomplete
+                {...autocompletePropsThing}
+                value={
+                  autocompletePropsThing.options.find(
+                    (option: any) => option.id === field.value
+                  ) || null
+                }
+                onChange={(_, newValue) => {
+                  updateMap([newValue])
+                  field.onChange(newValue?.id || null)
+                }}
+                getOptionKey={(option) => option.id}
+                getOptionLabel={getOptionLabel}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={label}
+                    margin="normal"
+                    error={!!errors.thing_id}
+                    helperText={errors.thing_id?.message}
+                  />
+                )}
+              />
+            )}
+          />
+        </Grid>
+      </Grid>
+
       <Box sx={{ paddingLeft: '50px', paddingRight: '50px' }}>
         <MapComponent
           style={{ height: '300px', width: '100%' }}
           mapRef={mapRef}
           initialViewState={initialViewState}
+          showDrawControls={{ show: false }}
         >
           <Source
             key="selectedThing"
