@@ -5,9 +5,9 @@ import {
   ControlledSelectField,
   ControlledDateField,
 } from '@/components'
+
+import { useSensor } from '@/hooks/useSensor'
 import { useLexicon } from '@/hooks'
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
-import { useList } from '@refinedev/core'
 
 /**
  * CreateEditSample Component
@@ -36,25 +36,11 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
 
-  // const { options: qc_options, isLoading: qcLoading } = useLexicon({
-  //   category: 'qc_sample',
-  // })
-  const qc_options = [
-    { label: 'original', value: 'original' },
-    { label: 'duplicate', value: 'duplicate' },
-  ]
-
-  const { data } = useList({
-    resource: 'sensor',
-    dataProviderName: 'dataforge',
+  const { options: qc_options } = useLexicon({
+    category: 'qc_sample',
   })
 
-  //todo: probably need to make this an autocomplete field?
-  const sensor_options =
-    data?.data.map((sensor: any) => ({
-      label: sensor.name,
-      value: sensor.id,
-    })) || []
+  const { options: sensorOptions } = useSensor()
 
   return (
     <Grid container spacing={3} size={12}>
@@ -96,8 +82,8 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
         <ControlledSelectField
           control={control}
           name={getFieldName('sensor_id')}
-          label={'Sensor'}
-          options={sensor_options}
+          label={'Sampling Instrumentation'}
+          options={sensorOptions}
         />
       </Grid>
       <Grid size={12}>

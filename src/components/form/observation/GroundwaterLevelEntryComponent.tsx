@@ -10,6 +10,8 @@ import { ILexicon } from '@/interfaces/dataforge/ILexicon'
 import { Hydrograph } from '@/components/Hydrographs/Hydrograph'
 import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
 import { useDataProvider } from '@refinedev/core'
+import { ControlledSelectField } from '@/components'
+import { useSensor } from '@/hooks/useSensor'
 
 interface EntryProps {
   control: any
@@ -64,8 +66,8 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
   const sensorID = watch(getFieldName('sensor_id'))
   const thingID = watch('thing_id')
 
-  // console.log('errors', errors)
-  // console.log('level_statis', errors[getFieldName('level_status')])
+  const { options: sensorOptions } = useSensor()
+
   useEffect(() => {
     const newResult = {
       phenomenonTime: observationTimestamp?.toISOString(),
@@ -123,6 +125,14 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
       <Hydrograph
         datasource={hydrographDatasource}
         refresh={refreshHydrograph}
+      />
+      {/*todo: probably need to make this an autocomplete field?*/}
+      <ControlledSelectField
+        {...getError('sensor_id')}
+        control={control}
+        name={getFieldName('sensor_id')}
+        label={'Measurement Instrumentation'}
+        options={sensorOptions}
       />
       <TextField
         {...register(getFieldName('depth_to_water'))}
