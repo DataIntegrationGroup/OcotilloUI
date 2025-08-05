@@ -4,6 +4,7 @@ import {
   ControlledTextField,
   ControlledSelectField,
   ControlledDateField,
+  ControlledNumberField,
 } from '@/components'
 
 import { useSensor } from '@/hooks/useSensor'
@@ -36,14 +37,57 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
 
+  //lexicon options
+  //qc sample
   const { options: qc_options } = useLexicon({
     category: 'qc_sample',
   })
+  /**
+   * @TODO add sample_type options
+   */
+  //sample_type
+  const { options: sampleTypeOptions } = useLexicon({
+    category: 'sample_type',
+  })
 
+  /**
+   * @TODO add sample_matrix options
+   */
+  //sample_matrix
+  const { options: sampleMatrixOptions } = useLexicon({
+    category: 'sample_matrix',
+  })
+
+  /**
+   * @TODO add sample_method options
+   */
+  //sample_method
+  const { options: sampleMethodOptions } = useLexicon({
+    category: 'sample_method',
+  })
+
+  /**
+   * @TODO add release_status options
+   */
+  //release_status
+  const { options: releaseStatusOptions } = useLexicon({
+    category: 'release_status',
+  })
+
+  //sensor options
   const { options: sensorOptions } = useSensor()
+
 
   return (
     <Grid container spacing={3} size={12}>
+      <Grid size={12}>
+        <ControlledSelectField
+          control={control}
+          name={getFieldName('sample_type')}
+          label={'Sample Type'}
+          options={sampleTypeOptions}
+        />
+      </Grid>
       <Grid size={12}>
         <ControlledTextField
           label="Field Sample ID"
@@ -54,10 +98,9 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
         />
       </Grid>
       <Grid size={12}>
-        <ControlledTextField
+        <ControlledNumberField
           label="Duplicate Sample Number"
           fullWidth
-          type="number"
           control={control}
           name={getFieldName('duplicate_sample_number')}
         />
@@ -68,6 +111,14 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
           label="Sample Date"
           name={getFieldName('sample_date')}
           control={control}
+        />
+      </Grid>
+      <Grid size={12}>
+        <ControlledTextField
+          label="Sampler Name"
+          fullWidth
+          control={control}
+          name={getFieldName('sampler_name')}
         />
       </Grid>
       <Grid size={12}>
@@ -87,12 +138,41 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
         />
       </Grid>
       <Grid size={12}>
-        <ControlledTextField
-          label="Notes"
+        <ControlledSelectField
+          label="Sample Matrix"
           control={control}
-          name={getFieldName('notes')}
-          multiline
-          minRows={3}
+          name={getFieldName('sample_matrix')}
+          options={sampleMatrixOptions}
+        />
+      </Grid>
+      <Grid size={12}>
+        <ControlledSelectField
+          label="Sample Method"
+          control={control}
+          name={getFieldName('sample_method')}
+          options={sampleMethodOptions}
+        />
+      </Grid>
+      <Grid size={12}>
+        <ControlledNumberField
+          label="Sample Top"
+          control={control}
+          name={getFieldName('sample_top')}
+        />
+      </Grid>
+      <Grid size={12}>
+        <ControlledNumberField
+          label="Sample Bottom"
+          control={control}
+          name={getFieldName('sample_bottom')}
+        />
+      </Grid>
+      <Grid size={12}>
+        <ControlledSelectField
+          label="Release Status"
+          control={control}
+          name={getFieldName('release_status')}
+          options={releaseStatusOptions}
         />
       </Grid>
     </Grid>
