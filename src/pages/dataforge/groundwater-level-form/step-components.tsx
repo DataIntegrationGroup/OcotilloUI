@@ -2,7 +2,7 @@ import { FormReview } from '@/components/form/stepper/FormReview'
 import Grid from '@mui/material/Grid2'
 import { Typography } from '@mui/material'
 import { CreateEditSample } from '@/components/form/sample/CreateEditSample'
-import { GroundwaterLevelEntryComponent } from '@/components/GroundwaterLevelEntryComponent'
+import { GroundwaterLevelEntryComponent } from '@/components/form/observation/GroundwaterLevelEntryComponent'
 import { SelectThingComponent } from '@/components/form/thing/SelectThingComponent'
 
 export const WellStep: React.FC<{
