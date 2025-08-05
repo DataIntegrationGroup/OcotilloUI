@@ -156,10 +156,10 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
   return (
     <Box>
       <Grid container spacing={2} alignItems="center">
-        <Grid size={3}>
+        <Grid size={4}>
           <SpatialSearchComponent setSpatialSearchWKT={setSpatialSearchWKT} />
         </Grid>
-        <Grid size={9}>
+        <Grid size={8}>
           <Controller
             name="thing_id"
             control={control}

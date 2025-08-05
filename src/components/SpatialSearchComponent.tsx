@@ -48,6 +48,10 @@ export const SpatialSearchComponent: React.FC<SpatialSearchComponentProps> = ({
       setSpatialSearchWKT(wktString)
     }
   }
+  const handleClear = () => {
+    setSelectionPolygons({})
+    setSpatialSearchWKT(null)
+  }
 
   const modalStyle = {
     position: 'absolute',
@@ -69,14 +73,19 @@ export const SpatialSearchComponent: React.FC<SpatialSearchComponentProps> = ({
 
   return (
     <>
-      <Button
-        variant="outlined"
-        size="small"
-        onClick={() => setSpatialSearchOpen(true)}
-      >
-        <Place />
-        Spatial Search
-      </Button>
+      <Grid spacing={2} container>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => setSpatialSearchOpen(true)}
+        >
+          <Place />
+          Spatial Search
+        </Button>
+        <Button variant="contained" size="small" onClick={handleClear}>
+          Clear
+        </Button>
+      </Grid>
       <Modal open={spatialSearchOpen}>
         <Box sx={modalStyle}>
           <MapComponent
