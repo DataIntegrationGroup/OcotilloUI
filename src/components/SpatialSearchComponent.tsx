@@ -90,7 +90,7 @@ export const SpatialSearchComponent: React.FC<SpatialSearchComponentProps> = ({
         <Box sx={modalStyle}>
           <MapComponent
             mapRef={mapRef}
-            style={{ height: '300px', width: '100%' }}
+            style={{ height: '700px', width: '100%' }}
             initialViewState={initialViewState}
             setSelectionPolygons={setSelectionPolygons}
           ></MapComponent>

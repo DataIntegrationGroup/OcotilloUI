@@ -8,6 +8,14 @@ import { ControlPosition } from 'react-map-gl'
 import { CircularProgress } from '@mui/material'
 import { settings } from '@/settings'
 
+export const getMapStyle = (mode: string, zoom: number) => {
+  return zoom > 10
+    ? 'mapbox://styles/mapbox/satellite-streets-v12'
+    : mode === 'dark'
+      ? 'mapbox://styles/mapbox/dark-v11'
+      : 'mapbox://styles/mapbox/light-v11'
+}
+
 interface MapComponentProps {
   children?: any
   onClick?: any
@@ -20,8 +28,14 @@ interface MapComponentProps {
   showGeocoder?: { show: boolean; position?: ControlPosition }
   isLoading?: boolean
   mapRef?: any
-  // zoomToPoint?: object
-  initialViewState?: object
+
+  initialViewState?: {
+    longitude: number
+    latitude: number
+    zoom: number
+    bearing?: number
+    pitch?: number
+  }
   style?: React.CSSProperties
 }
 
@@ -50,10 +64,6 @@ export const MapComponent: React.FC<MapComponentProps> = ({
 }) => {
   const { mode } = useContext(ColorModeContext)
   const [isDrawing, setIsDrawing] = useState(false)
-  const mapStyle =
-    mode === 'dark'
-      ? 'mapbox://styles/mapbox/dark-v10'
-      : 'mapbox://styles/mapbox/light-v10'
 
   if (mapRef === undefined) {
     mapRef = useRef<MapRef>(null)
@@ -65,12 +75,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       zoom: 6,
     }
   }
-  // console.log(mapRef, ref)
-  // const initialViewState = {
-  //   longitude: -106.4,
-  //   latitude: 34.5,
-  //   zoom: 6,
-  // }
+  const [viewState, setViewState] = useState(initialViewState)
 
   const getCurrentPoints = (e) => {
     if (!mapRef || !mapRef.current) {
@@ -138,9 +143,10 @@ export const MapComponent: React.FC<MapComponentProps> = ({
         mapboxAccessToken={settings.mapboxToken}
         initialViewState={initialViewState}
         onClick={onClick}
+        onMove={(evt) => setViewState(evt.viewState)}
         terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
         style={style}
-        mapStyle={mapStyle}
+        mapStyle={getMapStyle(mode, viewState.zoom)}
         onMouseMove={onMouseMove}
       >
         {showGeocoder?.show && (
