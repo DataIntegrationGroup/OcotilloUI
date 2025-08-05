@@ -1,7 +1,7 @@
 export interface IThing {
   id: number
   name: string
-  created_at: Date
+  created_at: string
   thing_type: string
   location_id: number
   location?: object

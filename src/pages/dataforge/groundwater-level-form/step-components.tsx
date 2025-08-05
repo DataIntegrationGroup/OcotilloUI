@@ -3,7 +3,7 @@ import Grid from '@mui/material/Grid2'
 import { Typography } from '@mui/material'
 import { CreateEditSample } from '@/components/form/sample/CreateEditSample'
 import { GroundwaterLevelEntryComponent } from '@/components/form/observation/GroundwaterLevelEntryComponent'
-import { SelectThingComponent } from '@/components/form/thing/SelectThingComponent'
+import { SelectWellComponent } from '@/components/form/thing/SelectWellComponent'
 
 export const WellStep: React.FC<{
   control: any
@@ -18,7 +18,7 @@ export const WellStep: React.FC<{
     </Grid>
 
     <Grid size={12}>
-      <SelectThingComponent
+      <SelectWellComponent
         label="Select Water Well"
         thing_type={'water well'}
         control={control}

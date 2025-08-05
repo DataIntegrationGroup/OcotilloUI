@@ -1,13 +1,13 @@
 import { Box } from '@mui/system'
 import { useAutocomplete } from '@refinedev/mui'
-import { IThing } from '@/interfaces/dataforge/IThing'
+import { IThing, IWell } from '@/interfaces/dataforge/IThing'
 import { Controller } from 'react-hook-form'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
 import { Layer, LngLatBoundsLike, MapRef, Source } from 'react-map-gl'
 import MapComponent from '@/components/MapComponent'
 import { useEffect, useRef, useState } from 'react'
-import { Button, Modal, useTheme } from '@mui/material'
+import { Button, Card, Modal, Typography, useTheme } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { Place } from '@mui/icons-material'
 import wellknown from 'wellknown'
@@ -22,12 +22,12 @@ interface EntryProps {
   label?: string
 }
 
-export const SelectThingComponent: React.FC<EntryProps> = ({
+export const SelectWellComponent: React.FC<EntryProps> = ({
   control,
   errors,
   watch,
   thing_type,
-  label = 'Select Thing',
+  label = 'Select Well',
 }) => {
   const getOptionLabel = (option: any) => {
     return `${option.name}: (${option.id})`
@@ -37,36 +37,35 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
   const [spatialSearchWKT, setSpatialSearchWKT] = useState(null)
   const theme = useTheme()
 
-  const { autocompleteProps: autocompletePropsThing } = useAutocomplete<IThing>(
-    {
-      resource: 'thing',
-      dataProviderName: 'dataforge',
-      meta: {
-        params: {
-          thing_type: thing_type,
-          within: spatialSearchWKT,
-        },
+  const { autocompleteProps: autocompletePropsThing } = useAutocomplete<IWell>({
+    resource: 'thing',
+    dataProviderName: 'dataforge',
+    meta: {
+      params: {
+        thing_type: thing_type,
+        within: spatialSearchWKT,
       },
-      onSearch: (value) => [
-        {
-          field: 'name',
-          operator: 'contains',
-          value,
-        },
-      ],
-      queryOptions: {
-        onSuccess: (data) => {
-          console.log('Autocomplete options fetched:', data)
+    },
+    onSearch: (value) => [
+      {
+        field: 'name',
+        operator: 'contains',
+        value,
+      },
+    ],
+    queryOptions: {
+      onSuccess: (data) => {
+        console.log('Autocomplete options fetched:', data)
 
-          updateMap(data?.data)
-        },
+        updateMap(data?.data)
       },
-    }
-  )
+    },
+  })
 
   const mapRef = useRef<MapRef>(null)
   const [selectedThingFeatureCollection, setSelectedThingFeatureCollection] =
     useState(null)
+  const [selectedThing, setSelectedThing] = useState<IWell | null>(null)
 
   // console.log(selectedThingFeatureCollection)
   const coords =
@@ -79,14 +78,14 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
 
   const thing_id = watch('thing_id')
   useEffect(() => {
-    let selectedThing = null
+    let thing = null
     if (thing_id) {
-      selectedThing = autocompletePropsThing.options.find(
+      thing = autocompletePropsThing.options.find(
         (option: any) => option.id === thing_id
       )
-      selectedThing = selectedThing ? [selectedThing] : undefined
     }
-    updateMap(selectedThing)
+    setSelectedThing(thing)
+    updateMap(thing ? [thing] : undefined)
   }, [thing_id])
 
   // Update the map view when the selected feature collection changes
@@ -124,8 +123,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
     }
   }, [selectedThingFeatureCollection, spatialSearchWKT])
 
-  const updateMap = (newValue: IThing[] | undefined) => {
-    console.log('update map', newValue)
+  const updateMap = (newValue: IWell[] | undefined) => {
     if (!newValue) {
       setSelectedThingFeatureCollection({
         type: 'FeatureCollection',
@@ -173,7 +171,6 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
                   ) || null
                 }
                 onChange={(_, newValue) => {
-                  updateMap([newValue])
                   field.onChange(newValue?.id || null)
                 }}
                 getOptionKey={(option) => option.id}
@@ -192,60 +189,96 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
           />
         </Grid>
       </Grid>
+      <Grid container spacing={2} sx={{ paddingTop: '10px' }}>
+        <Grid size={9}>
+          <Box sx={{ paddingLeft: '50px', paddingRight: '5px' }}>
+            <MapComponent
+              style={{ height: '450px', width: '100%' }}
+              mapRef={mapRef}
+              initialViewState={initialViewState}
+              showDrawControls={{ show: false }}
+            >
+              <Source
+                key="spatialSearchPolygon"
+                id="spatialSearchPolygon"
+                type="geojson"
+                data={
+                  spatialSearchWKT
+                    ? {
+                        type: 'FeatureCollection',
+                        features: [
+                          {
+                            type: 'Feature',
+                            geometry: wellknown.parse(spatialSearchWKT),
+                          },
+                        ],
+                      }
+                    : { type: 'FeatureCollection', features: [] }
+                }
+              >
+                <Layer
+                  type={'fill'}
+                  id={'spatialSearchPolygon'}
+                  paint={{
+                    'fill-color': theme.palette.primary.main,
+                    'fill-opacity': 0.2,
+                  }}
+                />
+              </Source>
+              <Source
+                key="selectedThing"
+                id="selectedThing"
+                type="geojson"
+                data={selectedThingFeatureCollection}
+              >
+                <Layer
+                  id="location"
+                  type="circle"
+                  paint={{
+                    'circle-radius': 6,
+                    'circle-color': '#B42222',
+                    'circle-stroke-color': '#ffffff',
+                    'circle-stroke-width': 1,
+                  }}
+                />
+              </Source>
+            </MapComponent>
+          </Box>
+        </Grid>
+        <Grid size={3}>
+          <Card sx={{ height: '100%', padding: 2 }}>
+            <Typography variant="h6">Well Details</Typography>
 
-      <Box sx={{ paddingLeft: '50px', paddingRight: '50px' }}>
-        <MapComponent
-          style={{ height: '300px', width: '100%' }}
-          mapRef={mapRef}
-          initialViewState={initialViewState}
-          showDrawControls={{ show: false }}
-        >
-          <Source
-            key="spatialSearchPolygon"
-            id="spatialSearchPolygon"
-            type="geojson"
-            data={
-              spatialSearchWKT
-                ? {
-                    type: 'FeatureCollection',
-                    features: [
-                      {
-                        type: 'Feature',
-                        geometry: wellknown.parse(spatialSearchWKT),
-                      },
-                    ],
-                  }
-                : { type: 'FeatureCollection', features: [] }
-            }
-          >
-            <Layer
-              type={'fill'}
-              id={'spatialSearchPolygon'}
-              paint={{
-                'fill-color': theme.palette.primary.main,
-                'fill-opacity': 0.2,
-              }}
-            />
-          </Source>
-          <Source
-            key="selectedThing"
-            id="selectedThing"
-            type="geojson"
-            data={selectedThingFeatureCollection}
-          >
-            <Layer
-              id="location"
-              type="circle"
-              paint={{
-                'circle-radius': 6,
-                'circle-color': '#B42222',
-                'circle-stroke-color': '#ffffff',
-                'circle-stroke-width': 1,
-              }}
-            />
-          </Source>
-        </MapComponent>
-      </Box>
+            {selectedThing && (
+              <Box sx={{ marginTop: 2 }}>
+                <Typography variant="body1">
+                  Name: {selectedThing.name}
+                </Typography>
+                <Typography variant="body1">ID: {selectedThing.id}</Typography>
+                <Typography variant="body1">
+                  Type: {selectedThing.thing_type}
+                </Typography>
+                <Typography variant="body1">
+                  Created At: {selectedThing.created_at}
+                </Typography>
+                <Typography variant="body1">
+                  Well Depth: {selectedThing.well_depth}
+                </Typography>
+              </Box>
+            )}
+          </Card>
+          {/*<Box*/}
+          {/*  sx={{*/}
+          {/*    backgroundColor: theme.palette.background.main,*/}
+          {/*    padding: 2,*/}
+          {/*    height: '100%',*/}
+          {/*    border: '1px solid #000',*/}
+          {/*  }}*/}
+          {/*>*/}
+          {/*  <Typography variant="h6">Well Details</Typography>*/}
+          {/*</Box>*/}
+        </Grid>
+      </Grid>
     </Box>
   )
 }
