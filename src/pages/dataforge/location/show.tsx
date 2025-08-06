@@ -1,42 +1,27 @@
-import { Stack, Typography } from '@mui/material'
 import { useShow } from '@refinedev/core'
-import { Show, TextFieldComponent as TextField } from '@refinedev/mui'
+import { Show } from '@refinedev/mui'
+import { ILocation } from '@/interfaces/dataforge/ILocation'
+import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 
 export const LocationShow = () => {
   const { queryResult } = useShow({})
-
   const { data, isLoading } = queryResult
+  const record = data?.data as ILocation
 
-  const record = data?.data
+  //custom configs for location
+  const fieldConfigs = {
+    created_at: {
+      label: 'Created At',
+      formatter: (value: string) => value ? new Date(value).toLocaleString() : ''
+    }
+  }
 
   return (
     <Show isLoading={isLoading}>
-      <Stack gap={1}>
-        <Typography variant="body1" fontWeight="bold">
-          {'ID'}
-        </Typography>
-        <TextField value={record?.id} />
-
-        <Typography variant="body1" fontWeight="bold">
-          {'Point'}
-        </Typography>
-        <TextField value={record?.point} />
-
-        <Typography variant="body1" fontWeight="bold">
-          {'Release Status'}
-        </Typography>
-        <TextField value={record?.release_status} />
-
-        <Typography variant="body1" fontWeight="bold">
-          {'Notes'}
-        </Typography>
-        <TextField value={record?.notes} />
-
-        <Typography variant="body1" fontWeight="bold">
-          {'Created At'}
-        </Typography>
-        <TextField value={record?.created_at} />
-      </Stack>
+      <DynamicShowDisplay<ILocation> 
+        record={record} 
+        fieldConfigs={fieldConfigs}
+      />
     </Show>
   )
 }
