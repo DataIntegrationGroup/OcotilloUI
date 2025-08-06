@@ -42,16 +42,14 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
   const { options: qc_options } = useLexicon({
     category: 'qc_sample',
   })
-  /**
-   * @TODO add sample_type options
-   */
+
   //sample_type
   const { options: sampleTypeOptions } = useLexicon({
     category: 'sample_type',
   })
 
   /**
-   * @TODO add sample_matrix options
+   * @TODO add sample_matrix options to lexicon
    */
   //sample_matrix
   const { options: sampleMatrixOptions } = useLexicon({
@@ -59,16 +57,13 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
   })
 
   /**
-   * @TODO add sample_method options
+   * @TODO add sample_method options to lexicon
    */
   //sample_method
   const { options: sampleMethodOptions } = useLexicon({
     category: 'sample_method',
   })
 
-  /**
-   * @TODO add release_status options
-   */
   //release_status
   const { options: releaseStatusOptions } = useLexicon({
     category: 'release_status',
