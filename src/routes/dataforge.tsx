@@ -47,6 +47,7 @@ import {
 // import { GroundwaterLevelForm } from '@/pages/dataforge/groundwaterlevelform'
 import { GroundwaterLevelForm } from '@/pages/dataforge/groundwater-level-form/stepperform'
 import { WellInventoryForm } from '@/pages/dataforge/well-inventory-form'
+import { WaterChemistryApp } from '@/pages/dataforge/water-chemistry-app'
 
 export const DataforgeRoutes = () => {
   return (
@@ -110,11 +111,15 @@ export const DataforgeRoutes = () => {
         <Route path={'edit/:id'} element={<AssetEdit />} />
         <Route path={'show/:id'} element={<AssetShow />} />
       </Route>
+      // Apps
+      <Route path={'water-chemistry-import'}>
+        <Route index element={<WaterChemistryApp />} />
+      </Route>
+      // Forms
       <Route path="groundwater-level-form">
         <Route index element={<GroundwaterLevelForm />} />
       </Route>
       <Route path="well-inventory-form" element={<WellInventoryForm />} />
-
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
   )
