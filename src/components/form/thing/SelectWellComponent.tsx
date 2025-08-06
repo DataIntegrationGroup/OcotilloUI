@@ -1,13 +1,13 @@
 import { Box } from '@mui/system'
 import { useAutocomplete } from '@refinedev/mui'
-import { IThing, IWell } from '@/interfaces/dataforge/IThing'
+import { IWell } from '@/interfaces/dataforge/IThing'
 import { Controller } from 'react-hook-form'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
 import { Layer, LngLatBoundsLike, MapRef, Source } from 'react-map-gl'
 import MapComponent from '@/components/MapComponent'
 import { useEffect, useRef, useState } from 'react'
-import { Button, Card, Modal, Typography, useTheme } from '@mui/material'
+import { Card, Typography, useTheme } from '@mui/material'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -15,7 +15,6 @@ import TableContainer from '@mui/material/TableContainer'
 import TableRow from '@mui/material/TableRow'
 
 import Grid from '@mui/material/Grid2'
-import { Place } from '@mui/icons-material'
 import wellknown from 'wellknown'
 import bbox from '@turf/bbox'
 import { SpatialSearchComponent } from '@/components/SpatialSearchComponent'
@@ -38,8 +37,7 @@ export const SelectWellComponent: React.FC<EntryProps> = ({
   const getOptionLabel = (option: any) => {
     return `${option.name}: (${option.id})`
   }
-  // const [spatialSearchOpen, setSpatialSearchOpen] = useState(false)
-  // const [selectionPolygons, setSelectionPolygons] = useState({})
+
   const [spatialSearchWKT, setSpatialSearchWKT] = useState(null)
   const theme = useTheme()
 
@@ -90,32 +88,28 @@ export const SelectWellComponent: React.FC<EntryProps> = ({
         (option: any) => option.id === thing_id
       )
     }
-    // setSelectedThing(thing)
-    console.log('thing', thing)
-    let rows
-    if (thing) {
-      // setSelectedThing(thing)
-      rows = [
-        { name: 'Name', value: thing.name },
-        { name: 'ID', value: thing.id },
-        { name: 'Release Status', value: thing.release_status },
-        { name: 'Thing Type', value: thing.thing_type },
-        { name: 'Well Type', value: thing.well_type || 'N/A' },
-        { name: 'Well Depth (ft)', value: thing.well_depth || 'N/A' },
-        { name: 'Hole Depth (ft)', value: thing.hole_depth || 'N/A' },
-        { name: 'Location Name', value: thing.location.name || 'N/A' },
-        {
-          name: 'Location Release Status',
-          value: thing.location.release_status,
-        },
-        { name: 'Created At', value: thing.created_at },
-        { name: 'Geometry Type', value: thing.geometry?.type || 'N/A' },
-        {
-          name: 'Coordinates',
-          value: JSON.stringify(thing.geometry?.coordinates) || 'N/A',
-        },
-      ]
-    }
+
+    let rows = [
+      { name: 'Name', value: thing?.name || '' },
+      { name: 'ID', value: thing?.id || '' },
+      { name: 'Release Status', value: thing?.release_status || '' },
+      { name: 'Thing Type', value: thing?.thing_type || '' },
+      { name: 'Well Type', value: thing?.well_type || '' },
+      { name: 'Well Depth (ft)', value: thing?.well_depth || '' },
+      { name: 'Hole Depth (ft)', value: thing?.hole_depth || '' },
+      { name: 'Location Name', value: thing?.location.name || '' },
+      {
+        name: 'Location Release Status',
+        value: thing?.location.release_status || '',
+      },
+      { name: 'Created At', value: thing?.created_at },
+      { name: 'Geometry Type', value: thing?.geometry?.type || '' },
+      {
+        name: 'Coordinates',
+        value: JSON.stringify(thing?.geometry?.coordinates) || '',
+      },
+    ]
+
     setTableRows(rows)
     updateMap(thing ? [thing] : undefined)
   }, [thing_id])
