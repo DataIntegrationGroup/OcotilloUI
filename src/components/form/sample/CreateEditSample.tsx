@@ -4,7 +4,6 @@ import {
   ControlledTextField,
   ControlledSelectField,
   ControlledDateField,
-  ControlledNumberField,
 } from '@/components'
 
 import { useSensor } from '@/hooks/useSensor'
@@ -94,11 +93,12 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
         />
       </Grid>
       <Grid size={12}>
-        <ControlledNumberField
+        <ControlledTextField
           label="Duplicate Sample Number"
           fullWidth
           control={control}
           name={getFieldName('duplicate_sample_number')}
+          type="number"
         />
       </Grid>
       <Grid size={12}>
@@ -152,17 +152,19 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
         />
       </Grid>
       <Grid size={12}>
-        <ControlledNumberField
+        <ControlledTextField
           label="Sample Top"
           control={control}
           name={getFieldName('sample_top')}
+          type="number"
         />
       </Grid>
       <Grid size={12}>
-        <ControlledNumberField
+        <ControlledTextField
           label="Sample Bottom"
           control={control}
           name={getFieldName('sample_bottom')}
+          type="number"
         />
       </Grid>
       <Grid size={12}>
