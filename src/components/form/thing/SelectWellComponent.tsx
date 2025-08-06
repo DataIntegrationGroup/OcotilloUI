@@ -8,6 +8,12 @@ import { Layer, LngLatBoundsLike, MapRef, Source } from 'react-map-gl'
 import MapComponent from '@/components/MapComponent'
 import { useEffect, useRef, useState } from 'react'
 import { Button, Card, Modal, Typography, useTheme } from '@mui/material'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableRow from '@mui/material/TableRow'
+
 import Grid from '@mui/material/Grid2'
 import { Place } from '@mui/icons-material'
 import wellknown from 'wellknown'
@@ -65,8 +71,8 @@ export const SelectWellComponent: React.FC<EntryProps> = ({
   const mapRef = useRef<MapRef>(null)
   const [selectedThingFeatureCollection, setSelectedThingFeatureCollection] =
     useState(null)
-  const [selectedThing, setSelectedThing] = useState<IWell | null>(null)
-
+  // const [selectedThing, setSelectedThing] = useState<IWell | null>(null)
+  const [tableRows, setTableRows] = useState([])
   // console.log(selectedThingFeatureCollection)
   const coords =
     selectedThingFeatureCollection?.features[0]?.geometry.coordinates
@@ -84,7 +90,33 @@ export const SelectWellComponent: React.FC<EntryProps> = ({
         (option: any) => option.id === thing_id
       )
     }
-    setSelectedThing(thing)
+    // setSelectedThing(thing)
+    console.log('thing', thing)
+    let rows
+    if (thing) {
+      // setSelectedThing(thing)
+      rows = [
+        { name: 'Name', value: thing.name },
+        { name: 'ID', value: thing.id },
+        { name: 'Release Status', value: thing.release_status },
+        { name: 'Thing Type', value: thing.thing_type },
+        { name: 'Well Type', value: thing.well_type || 'N/A' },
+        { name: 'Well Depth (ft)', value: thing.well_depth || 'N/A' },
+        { name: 'Hole Depth (ft)', value: thing.hole_depth || 'N/A' },
+        { name: 'Location Name', value: thing.location.name || 'N/A' },
+        {
+          name: 'Location Release Status',
+          value: thing.location.release_status,
+        },
+        { name: 'Created At', value: thing.created_at },
+        { name: 'Geometry Type', value: thing.geometry?.type || 'N/A' },
+        {
+          name: 'Coordinates',
+          value: JSON.stringify(thing.geometry?.coordinates) || 'N/A',
+        },
+      ]
+    }
+    setTableRows(rows)
     updateMap(thing ? [thing] : undefined)
   }, [thing_id])
 
@@ -189,11 +221,11 @@ export const SelectWellComponent: React.FC<EntryProps> = ({
           />
         </Grid>
       </Grid>
-      <Grid container spacing={2} sx={{ paddingTop: '10px' }}>
-        <Grid size={9}>
-          <Box sx={{ paddingLeft: '50px', paddingRight: '5px' }}>
+      <Grid container spacing={1} sx={{ paddingTop: '10px' }}>
+        <Grid size={8}>
+          <Box sx={{ paddingLeft: '5px', paddingRight: '5px' }}>
             <MapComponent
-              style={{ height: '450px', width: '100%' }}
+              style={{ height: '500px', width: '100%' }}
               mapRef={mapRef}
               initialViewState={initialViewState}
               showDrawControls={{ show: false }}
@@ -245,27 +277,29 @@ export const SelectWellComponent: React.FC<EntryProps> = ({
             </MapComponent>
           </Box>
         </Grid>
-        <Grid size={3}>
+        <Grid size={4}>
           <Card sx={{ height: '100%', padding: 2 }}>
             <Typography variant="h6">Well Details</Typography>
 
-            {selectedThing && (
-              <Box sx={{ marginTop: 2 }}>
-                <Typography variant="body1">
-                  Name: {selectedThing.name}
-                </Typography>
-                <Typography variant="body1">ID: {selectedThing.id}</Typography>
-                <Typography variant="body1">
-                  Type: {selectedThing.thing_type}
-                </Typography>
-                <Typography variant="body1">
-                  Created At: {selectedThing.created_at}
-                </Typography>
-                <Typography variant="body1">
-                  Well Depth: {selectedThing.well_depth}
-                </Typography>
-              </Box>
-            )}
+            <TableContainer>
+              <Table size={'small'}>
+                <TableBody>
+                  {tableRows?.map((row) => (
+                    <TableRow key={row.name}>
+                      <TableCell component="th" scope="row">
+                        <strong>{row.name}</strong>
+                      </TableCell>
+                      <TableCell align="right">{row.value}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {/*{selectedThing && <Box sx={{ marginTop: 2 }}>*/}
+            {/*  */}
+            {/*  */}
+            {/*  */}
+            {/*</Box>}*/}
           </Card>
           {/*<Box*/}
           {/*  sx={{*/}
