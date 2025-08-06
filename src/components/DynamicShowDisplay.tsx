@@ -1,4 +1,4 @@
-import { Stack, Typography } from '@mui/material'
+import { Stack, Typography, Box } from '@mui/material'
 import { TextFieldComponent as TextField } from '@refinedev/mui'
 
 /**
@@ -18,7 +18,7 @@ import { TextFieldComponent as TextField } from '@refinedev/mui'
 //field config interface
 interface FieldConfig {
   label: string
-  formatter?: (value: any) => string
+  formatter?: (value: any) => string | React.ReactNode
   hidden?: boolean
 }
 
@@ -45,23 +45,43 @@ export const DynamicShowDisplay = <T extends Record<string, any>>({
       .replace(/_/g, ' ')
   }
 
+  //handle value for rendering arrays nad objects from json response
+  const renderValue = (value: any): React.ReactNode => {
+    if (value === null || value === undefined) {
+      return <Typography variant="body2" color="text.secondary">-</Typography>
+    }
+    //handle arrays and objects!!
+    if (Array.isArray(value) || typeof value === 'object') {
+      return (
+        <Typography variant="body2" sx={{whiteSpace: 'pre-wrap' }}>
+          {JSON.stringify(value, null, 2)}
+        </Typography>
+      )
+    }
+    return <Typography variant="body2">{String(value)}</Typography>
+  }
+
   const renderField = (key: string) => {
     if (excludeFields.includes(key as keyof T)) return null
-    
+    //get the config for the field if present
     const config = fieldConfigs[key as keyof T]
     if (config?.hidden) return null
-    
+    //value of field
     const value = record?.[key]
+    //label for the field
     const label = config?.label || formatLabel(key)
-    const formattedValue = config?.formatter ? config.formatter(value) : value
-    
+    //render the field
     return (
-      <div key={key}>
-        <Typography variant="body1" fontWeight="bold">
+      <Box key={key} sx={{ mb: 2 }}>
+        <Typography variant="body1" fontWeight="bold" sx={{ mb: 1 }}>
           {label}
         </Typography>
-        <TextField value={formattedValue || ''} />
-      </div>
+        {config?.formatter ? (
+          <TextField value={config.formatter(value) as string} />
+        ) : (
+          renderValue(value)
+        )}
+      </Box>
     )
   }
 
