@@ -81,6 +81,7 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
           name={getFieldName('sample_type')}
           label={'Sample Type'}
           options={sampleTypeOptions}
+          required
         />
       </Grid>
       <Grid size={12}>
@@ -106,6 +107,7 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
           label="Sample Date"
           name={getFieldName('sample_date')}
           control={control}
+          required
         />
       </Grid>
       <Grid size={12}>
@@ -114,6 +116,7 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
           fullWidth
           control={control}
           name={getFieldName('sampler_name')}
+          required
         />
       </Grid>
       <Grid size={12}>
@@ -168,6 +171,7 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
           control={control}
           name={getFieldName('release_status')}
           options={releaseStatusOptions}
+          required
         />
       </Grid>
     </Grid>
