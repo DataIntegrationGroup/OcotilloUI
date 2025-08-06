@@ -4,6 +4,8 @@ import { TextFieldComponent as TextField } from '@refinedev/mui'
 /**
  * DynamicShowDisplay Component
  * A component to use on the show.tsx pages to dynamically display the fields of a record.
+ * This component is to be used as a default on show.tsx pages. It processes the json response from the api and displays the fields
+ * in a basic way. More avanced shows should be created on a per entity basis.
  * 
  * @param record - The record to display
  * @param fieldConfigs - The field configurations for custom field display, field config interface:
