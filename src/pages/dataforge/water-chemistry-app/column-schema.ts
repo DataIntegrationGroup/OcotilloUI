@@ -3,6 +3,7 @@ export const SAMPLE_DATE_COL = 20
 export const PARAMETER_COL = 3
 export const RESULT_UNITS_COL = 4
 export const RESULT_COL = 16
+export const SAMPLE_ID_COL = 8
 
 // 0: "CustomerName"
 // 1: "CustomerContact"
@@ -25,11 +26,17 @@ export const RESULT_COL = 16
 // 18: "LowerLimit"
 // 19: "LowerXdilution"
 // 20: "SampleDate"
-
-export interface IUploadSchema {
-  id: number
-  sampleDate: string
-  parameter: string
+export interface IObservationUploadSchema {
+  idx: number
+  sampleId: string
+  observedProperty: string
   resultUnits: string
   result: string
+  sampleDate: string
+}
+
+export interface ISampleUploadSchema {
+  idx: number
+  sampleId: string
+  sampleDate: string
 }
