@@ -13,6 +13,7 @@ import {
   WellEdit,
   WellList,
   WellShow,
+  SpringShow,
 } from '@/pages/dataforge/thing'
 import { MapView } from '@/pages/dataforge/map'
 import {
@@ -66,8 +67,8 @@ export const DataforgeRoutes = () => {
       </Route>
       <Route path="spring">
         <Route index element={<SpringList />} />
-        {/*<Route path={'show/:id'} element={<WellShow />} />*/}
-        {/*<Route path={'edit/:id'} element={<WellEdit />} />*/}
+        <Route path={'show/:id'} element={<SpringShow />} />
+        {/* <Route path={'edit/:id'} element={<ThingEdit />} /> */}
         <Route path={'create'} element={<SpringCreate />} />
       </Route>
       <Route path="map" element={<MapView />} />
