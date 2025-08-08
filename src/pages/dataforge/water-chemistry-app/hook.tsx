@@ -149,14 +149,13 @@ export const useImportWaterChemistrySamples = <
       const observationFns = observations.map(
         (observation: IObservationUploadSchema) => {
           const vs = {
-            // field_sample_id: sampleId,
-            sample_id: 1, // hardcoded for now
+            field_sample_id: observation.sampleId,
             sensor_id: 1, // hardcoded for now
             release_status: 'draft',
             observed_property: observation.observedProperty,
             units: observation.resultUnits,
             value: observation.result,
-            obserfation_datetime: new Date(
+            observation_datetime: new Date(
               observation.sampleDate.trim()
             ).toISOString(),
           }

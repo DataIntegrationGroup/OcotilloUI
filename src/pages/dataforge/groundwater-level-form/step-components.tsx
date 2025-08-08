@@ -81,7 +81,7 @@ export const ReviewStep = ({ watch }: any) => {
         },
         {
           label: 'Observation Timestamp',
-          value: formData.observation.obserfation_datetime.toISOString(),
+          value: formData.observation.observation_datetime.toISOString(),
         },
         { label: 'Depth to Water', value: formData.observation.depth_to_water },
         {

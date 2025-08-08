@@ -20,7 +20,7 @@ const sampleStepSchema = {
 
 const observationStepSchema = {
   observed_property: Yup.string().required('Observed property is required'),
-  obserfation_datetime: Yup.date()
+  observation_datetime: Yup.date()
     .required('Observation timestamp is required')
     .typeError('Observation timestamp must be a valid date'),
   depth_to_water: Yup.number()
@@ -60,7 +60,7 @@ export const SchemaDefaults: Partial<IGroundwaterLevelForm> = {
     sensor_id: 1,
     measuring_point_height: 1,
     depth_to_water: 123,
-    obserfation_datetime: new Date(),
+    observation_datetime: new Date(),
     observed_property: 'groundwater level',
     release_status: 'draft',
     level_status: 'normal',
