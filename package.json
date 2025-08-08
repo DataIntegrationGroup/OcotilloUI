@@ -48,6 +48,7 @@
     "@tiptap/pm": "^2.9.1",
     "@tiptap/react": "^2.9.1",
     "@tiptap/starter-kit": "^2.9.1",
+    "@turf/turf": "^7.2.0",
     "axios-auth-refresh": "^3.3.6",
     "d3-polygon": "^3.0.1",
     "echarts": "^5.6.0",
@@ -63,6 +64,7 @@
     "react-input-mask": "^2.0.4",
     "react-map-gl": "^7.1.7",
     "react-router-dom": "^6.8.1",
+    "wellknown": "^0.5.0",
     "wkt": "^0.1.1",
     "yup": "^1.6.1"
   },

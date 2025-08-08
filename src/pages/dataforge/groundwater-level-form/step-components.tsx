@@ -1,32 +1,20 @@
 import { FormReview } from '@/components/form/stepper/FormReview'
-import Grid from '@mui/material/Grid2'
-import { Typography } from '@mui/material'
 import { CreateEditSample } from '@/components/form/sample/CreateEditSample'
 import { GroundwaterLevelEntryComponent } from '@/components/form/observation/GroundwaterLevelEntryComponent'
-import { SelectThingComponent } from '@/components/form/thing/SelectThingComponent'
+import { SelectWellComponent } from '@/components/form/thing/SelectWellComponent'
 
 export const WellStep: React.FC<{
   control: any
   errors: any
   watch: any
 }> = ({ control, errors, watch }) => (
-  <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Well Information
-      </Typography>
-    </Grid>
-
-    <Grid size={12}>
-      <SelectThingComponent
-        label="Select Water Well"
-        thing_type={'water well'}
-        control={control}
-        errors={errors}
-        watch={watch}
-      />
-    </Grid>
-  </Grid>
+  <SelectWellComponent
+    label="Select Water Well"
+    thing_type={'water well'}
+    control={control}
+    errors={errors}
+    watch={watch}
+  />
 )
 
 export const ObservationStep: React.FC<{
@@ -35,20 +23,13 @@ export const ObservationStep: React.FC<{
   watch: any
   errors: any
 }> = ({ register, control, watch, errors }) => (
-  <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Observation Information
-      </Typography>
-    </Grid>
-    <GroundwaterLevelEntryComponent
-      register={register}
-      control={control}
-      errors={errors}
-      watch={watch}
-      mode="step"
-    />
-  </Grid>
+  <GroundwaterLevelEntryComponent
+    register={register}
+    control={control}
+    errors={errors}
+    watch={watch}
+    mode="step"
+  />
 )
 
 export const SampleStep: React.FC<{
@@ -56,21 +37,12 @@ export const SampleStep: React.FC<{
   watch: any
   errors: any
 }> = ({ control, watch, errors }) => (
-  <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Sample Information
-      </Typography>
-    </Grid>
-
-    {/*  /components/form/sample/CreateEditSample.tsx */}
-    <CreateEditSample
-      control={control}
-      errors={errors}
-      mode="step"
-      fieldPrefix="sample."
-    />
-  </Grid>
+  <CreateEditSample
+    control={control}
+    errors={errors}
+    mode="step"
+    fieldPrefix="sample."
+  />
 )
 
 export const ReviewStep = ({ watch }: any) => {
