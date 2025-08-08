@@ -87,14 +87,6 @@ export const SampleList: React.FC = () => {
         minWidth: 120,
         flex: 1,
       },
-      {
-        field: 'created_at',
-        headerName: 'Created At',
-        type: 'dateTime',
-        minWidth: 150,
-        flex: 1,
-        valueGetter: (params) => new Date(params),
-      },
     ],
     []
   )
