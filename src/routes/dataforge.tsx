@@ -13,6 +13,7 @@ import {
   WellEdit,
   WellList,
   WellShow,
+  SpringShow,
 } from '@/pages/dataforge/thing'
 import { MapView } from '@/pages/dataforge/map'
 import {
@@ -37,7 +38,7 @@ import {
   GroundwaterLevelObservationCreate,
   GroundwaterLevelObservationList,
 } from '@/pages/dataforge/observation'
-import { GroupCreate, GroupEdit, GroupList } from '@/pages/dataforge/group'
+import { GroupCreate, GroupEdit, GroupList, GroupShow } from '@/pages/dataforge/group'
 import {
   AssetList,
   AssetCreate,
@@ -66,8 +67,8 @@ export const DataforgeRoutes = () => {
       </Route>
       <Route path="spring">
         <Route index element={<SpringList />} />
-        {/*<Route path={'show/:id'} element={<WellShow />} />*/}
-        {/*<Route path={'edit/:id'} element={<WellEdit />} />*/}
+        <Route path={'show/:id'} element={<SpringShow />} />
+        {/* <Route path={'edit/:id'} element={<ThingEdit />} /> */}
         <Route path={'create'} element={<SpringCreate />} />
       </Route>
       <Route path="map" element={<MapView />} />
@@ -102,7 +103,7 @@ export const DataforgeRoutes = () => {
         <Route index element={<GroupList />} />
         <Route path={'create'} element={<GroupCreate />} />
         <Route path={'edit/:id'} element={<GroupEdit />} />
-        {/*<Route path={'show/:id'} element={<GroupShow />} />*/}
+        <Route path={'show/:id'} element={<GroupShow />} />
       </Route>
       <Route path="asset">
         <Route index element={<AssetList />} />
