@@ -25,8 +25,14 @@ export const SpringList: React.FC = () => {
         minWidth: 100,
       },
       {
-        field: 'thing_type',
-        headerName: 'Thing Type',
+        field: 'name',
+        headerName: 'Name',
+        type: 'string',
+        minWidth: 150,
+      },
+      {
+        field: 'release_status',
+        headerName: 'Release Status',
         type: 'string',
         minWidth: 150,
       },
@@ -92,8 +98,14 @@ export const WellList: React.FC = () => {
         minWidth: 100,
       },
       {
-        field: 'thing_type',
-        headerName: 'Thing Type',
+        field: 'name',
+        headerName: 'Name',
+        type: 'string',
+        minWidth: 150,
+      },
+      {
+        field: 'release_status',
+        headerName: 'Release Status',
         type: 'string',
         minWidth: 150,
       },
