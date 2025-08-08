@@ -1,0 +1,8 @@
+CustomerName,CustomerContact,PhoneNumber,Param,Results_Units,Dilution,AnalysisTime,SampleNumber,CustomerSampleNumber,SamplePointID,OrderID,ProjectID,Matrix,Method,Test,UpperLimit,ReportedND,ReceiveDate,LowerLimit,LowerXdilution,SampleDate
+New Mexico Institute of Mining and Technology,Laila Sturgis,\N,Alkalinity as CaCO3,mg/L,1,44363,210605-01,DE-0001A,DE-0001A,210605,Delaware Basin,Water,EPA 310.1,Alkalinity,,218,44361.49935347222,5,,6/9/2021 
+New Mexico Institute of Mining and Technology,Laila Sturgis,\N,Alkalinity as CaCO3,mg/L,1,44363,210605-02,DE-0002A,DE-0002A,210605,Delaware Basin,Water,EPA 310.1,Alkalinity,,249,44361.49935347222,5,,6/9/2021 
+New Mexico Institute of Mining and Technology,Laila Sturgis,\N,Alkalinity as CaCO3,mg/L,1,44363,210605-03,DE-0003A,DE-0003A,210605,Delaware Basin,Water,EPA 310.1,Alkalinity,,239,44361.49935347222,5,,6/9/2021 
+New Mexico Institute of Mining and Technology,Laila Sturgis,\N,Alkalinity as CaCO3,mg/L,1,44368,210605-04,DE-0006A,DE-0006A,210605,Delaware Basin,Water,EPA 310.1,Alkalinity,,153,44361.49935347222,5,,6/10/2021 
+New Mexico Institute of Mining and Technology,Laila Sturgis,\N,Alkalinity as CaCO3,mg/L,1,44368,210605-05,DE-0016A,DE-0016A,210605,Delaware Basin,Water,EPA 310.1,Alkalinity,,200,44361.49935347222,5,,6/8/2021 
+New Mexico Institute of Mining and Technology,Laila Sturgis,\N,Alkalinity as CaCO3,mg/L,1,44368,210605-06,DE-0019A,DE-0019A,210605,Delaware Basin,Water,EPA 310.1,Alkalinity,,141,44361.49935347222,5,,6/8/2021 
+New Mexico Institute of Mining and Technology,Laila Sturgis,\N,Alkalinity as CaCO3,mg/L,1,44368,210605-07,DE-0023A,DE-0023A,210605,Delaware Basin,Water,EPA 310.1,Alkalinity,,217,44361.49935347222,5,,6/10/2021

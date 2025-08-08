@@ -47,13 +47,13 @@
 //     defaultValues: {
 //       measuring_point_height: 1,
 //       depth_to_water: 123,
-//       observation_timestamp: new Date(),
+//       observation_datetime: new Date(),
 //       observed_property: 'groundwater level',
 //     },
 //   })
 //
 //   const depthToWater = watch('depth_to_water')
-//   const observationTimestamp = watch('observation_timestamp')
+//   const observationTimestamp = watch('observation_datetime')
 //   const sensorID = watch('sensor_id')
 //   const thingID = watch('thing_id')
 //
@@ -143,7 +143,7 @@
 //     })
 //     values.then((response) => {
 //       const obs = response.data.map((item) => ({
-//         phenomenonTime: item.observation_timestamp,
+//         phenomenonTime: item.observation_datetime,
 //         result: Number(item.depth_to_water),
 //       }))
 //
@@ -306,7 +306,7 @@
 //           autoFocus
 //         />
 //         <Controller
-//           name="observation_timestamp"
+//           name="observation_datetime"
 //           control={control}
 //           render={({ field }) => (
 //             <DateTimePicker
@@ -318,8 +318,8 @@
 //                 textField: {
 //                   margin: 'normal',
 //                   fullWidth: true,
-//                   error: !!errors.observation_timestamp,
-//                   helperText: errors.observation_timestamp?.message,
+//                   error: !!errors.observation_datetime,
+//                   helperText: errors.observation_datetime?.message,
 //                 },
 //               }}
 //             />

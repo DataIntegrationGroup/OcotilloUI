@@ -122,8 +122,7 @@ export const dataForgeDataProvider: DataProvider = {
     return await response.data
   },
   getOne: async ({ resource, id, meta }) => {
-    resource = cleanResourceName(resource)
-    
+    resource = cleanResourceName(resource)    
     /**
      * for 'things' use a query parameter structure ?thing_id=123
      * same for well things, spring things, etc.
@@ -146,7 +145,10 @@ export const dataForgeDataProvider: DataProvider = {
     /**
      * for other resources, use path parameter structure /location/123
      */
-    let url: string = `${resource}/${id}`
+
+    let url =
+      id === undefined || id === null ? `${resource}` : `${resource}/${id}`
+
     const response = await fetcher(url, meta.requestConfig)
 
     if (response.status < 200 || response.status > 299) throw response

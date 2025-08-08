@@ -5,7 +5,7 @@ export interface IGroundwaterLevelObservationAttributes {
 export interface IObservationAttributes {
   id: number
   observation_type: string
-  observation_timestamp: string
+  observation_datetime: string
   created_at: Date
 }
 

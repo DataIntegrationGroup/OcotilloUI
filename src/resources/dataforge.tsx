@@ -141,6 +141,8 @@ let dataforge = [
       label: 'Groundwater Levels',
     },
   },
+
+  // Apps
   {
     name: 'apps',
     icon: <Apps />,
@@ -159,6 +161,18 @@ let dataforge = [
       icon: <Construction />,
     },
   },
+  {
+    name: 'Water Chemistry Import',
+    list: '/dataforge/water-chemistry-import',
+    meta: {
+      label: 'Water Chemistry Import (Coming Soon)',
+      parent: 'dataforge.apps',
+      nestedLevel: 2,
+      icon: <ScienceOutlined />,
+    },
+  },
+
+  // Forms
   {
     name: 'forms',
     icon: <DynamicFormOutlined />,
