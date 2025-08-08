@@ -123,9 +123,10 @@ export const dataForgeDataProvider: DataProvider = {
   },
   getOne: async ({ resource, id, meta }) => {
     resource = cleanResourceName(resource)
+    let url =
+      id === undefined || id === null ? `${resource}` : `${resource}/${id}`
 
     console.log(`Fetching one ${resource} with id ${id}`)
-    let url: string = `${resource}/${id}`
     const response = await fetcher(url, meta.requestConfig)
 
     if (response.status < 200 || response.status > 299) throw response

@@ -7,7 +7,7 @@ export const MapView: React.FC = () => {
   const { data, isLoading } = useOne({
     dataProviderName: 'dataforge',
     resource: 'geospatial',
-    id: '',
+    id: null,
     queryOptions: {
       cacheTime: 60000, // Cache for 1 minute
       staleTime: 30000, // Consider data fresh for 30 seconds
