@@ -62,7 +62,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
   }
 
   const depthToWater = watch(getFieldName('depth_to_water'))
-  const observationTimestamp = watch(getFieldName('observation_timestamp'))
+  const observationTimestamp = watch(getFieldName('obserfation_datetime'))
   const sensorID = watch(getFieldName('sensor_id'))
   const thingID = watch('thing_id')
 
@@ -89,7 +89,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
     })
     values.then((response) => {
       const obs = response.data.map((item) => ({
-        phenomenonTime: item.observation_timestamp,
+        phenomenonTime: item.obserfation_datetime,
         result: Number(item.depth_to_water),
       }))
 
@@ -145,7 +145,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
         autoFocus
       />
       <Controller
-        name={getFieldName('observation_timestamp')}
+        name={getFieldName('obserfation_datetime')}
         control={control}
         render={({ field }) => (
           <DateTimePicker
@@ -155,7 +155,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
             label="Observation Timestamp"
             slotProps={{
               textField: {
-                ...getError('observation_timestamp'),
+                ...getError('obserfation_datetime'),
                 margin: 'normal',
                 fullWidth: true,
               },

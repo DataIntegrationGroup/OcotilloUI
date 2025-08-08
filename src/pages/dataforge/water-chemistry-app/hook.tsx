@@ -156,7 +156,7 @@ export const useImportWaterChemistrySamples = <
             observed_property: observation.observedProperty,
             units: observation.resultUnits,
             value: observation.result,
-            observation_timestamp: new Date(
+            obserfation_datetime: new Date(
               observation.sampleDate.trim()
             ).toISOString(),
           }

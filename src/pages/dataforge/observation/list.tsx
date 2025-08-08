@@ -41,7 +41,7 @@ export const GroundwaterLevelObservationList: React.FC = () => {
         flex: 1,
       },
       {
-        field: 'observation_timestamp',
+        field: 'obserfation_datetime',
         headerName: 'Observation Timestamp',
         type: 'dateTime',
         minWidth: 180,
