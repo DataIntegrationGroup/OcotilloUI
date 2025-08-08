@@ -48,7 +48,7 @@ export const LexiconList: React.FC = () => {
     resource: 'lexicon',
     dataProviderName: 'dataforge',
     queryOptions: {
-      cacheTime: 10 * 60 * 1000, // Cache for 10 minute
+      cacheTime: 10 * 60 * 1000, // Cache for 10 minutes
       staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     },
     // onRowSelectionModelChange: handleSelectionChangeWrapper,
@@ -61,6 +61,8 @@ export const LexiconList: React.FC = () => {
       valueGetter: (params) => {
         return params.map((c) => c.category.name).join(', ')
       },
+      sortable: false,
+      filterable: false,
     },
     { field: 'term', headerName: 'Term', width: 150 },
     { field: 'definition', headerName: 'Definition', width: 300 },
@@ -72,10 +74,10 @@ export const LexiconList: React.FC = () => {
   const { dataGridProps: categoryDataGridProps } = useDataGrid({
     resource: 'lexicon/category',
     dataProviderName: 'dataforge',
-    // queryOptions: {
-    //   cacheTime: 60000, // Cache for 1 minute
-    //   staleTime: 30000, // Consider data fresh for 30 seconds
-    // },
+    queryOptions: {
+      cacheTime: 10 * 60 * 1000, // Cache for 10 minutes
+      staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    },
     // onRowSelectionModelChange: handleSelectionChangeWrapper,
   })
   const categoryColumns = [
