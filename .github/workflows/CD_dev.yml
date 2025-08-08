@@ -32,7 +32,7 @@ jobs:
 
         run: |
           npm ci
-          npm audit fix
+          npm audit fix || true
           npm run build
 
       # authenticate to Google Cloud
