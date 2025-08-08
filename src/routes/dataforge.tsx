@@ -47,6 +47,7 @@ import {
 // import { GroundwaterLevelForm } from '@/pages/dataforge/groundwaterlevelform'
 import { GroundwaterLevelForm } from '@/pages/dataforge/groundwater-level-form/stepperform'
 import { WellInventoryForm } from '@/pages/dataforge/well-inventory-form'
+import { LexiconList } from '@/pages/dataforge/lexicon'
 
 export const DataforgeRoutes = () => {
   return (
@@ -109,6 +110,10 @@ export const DataforgeRoutes = () => {
         <Route path={'create'} element={<AssetCreate />} />
         <Route path={'edit/:id'} element={<AssetEdit />} />
         <Route path={'show/:id'} element={<AssetShow />} />
+      </Route>
+      <Route path="lexicon">
+        <Route index element={<LexiconList />} />
+        {/* Add your lexicon list content here */}
       </Route>
       <Route path="groundwater-level-form">
         <Route index element={<GroundwaterLevelForm />} />

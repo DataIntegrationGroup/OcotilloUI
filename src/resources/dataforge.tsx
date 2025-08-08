@@ -90,6 +90,17 @@ let dataforge = [
     },
   },
   {
+    name: 'lexicon',
+    list: '/dataforge/lexicon',
+    edit: '/dataforge/lexicon/edit/:id',
+    show: '/dataforge/lexicon/show/:id',
+    create: '/dataforge/lexicon/create',
+    meta: {
+      label: 'Lexicon',
+      icon: <CategoryOutlined />,
+    },
+  },
+  {
     name: 'thing',
     icon: <WidgetsOutlined />,
     meta: {
