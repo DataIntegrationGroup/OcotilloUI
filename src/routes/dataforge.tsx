@@ -13,6 +13,7 @@ import {
   WellEdit,
   WellList,
   WellShow,
+  SpringShow,
 } from '@/pages/dataforge/thing'
 import { MapView } from '@/pages/dataforge/map'
 import {
@@ -37,7 +38,7 @@ import {
   GroundwaterLevelObservationCreate,
   GroundwaterLevelObservationList,
 } from '@/pages/dataforge/observation'
-import { GroupCreate, GroupEdit, GroupList } from '@/pages/dataforge/group'
+import { GroupCreate, GroupEdit, GroupList, GroupShow } from '@/pages/dataforge/group'
 import {
   AssetList,
   AssetCreate,
@@ -48,6 +49,8 @@ import {
 import { GroundwaterLevelForm } from '@/pages/dataforge/groundwater-level-form/stepperform'
 import { WellInventoryForm } from '@/pages/dataforge/well-inventory-form'
 import { LexiconList } from '@/pages/dataforge/lexicon'
+import { WaterChemistryApp } from '@/pages/dataforge/water-chemistry-app'
+
 
 export const DataforgeRoutes = () => {
   return (
@@ -67,8 +70,8 @@ export const DataforgeRoutes = () => {
       </Route>
       <Route path="spring">
         <Route index element={<SpringList />} />
-        {/*<Route path={'show/:id'} element={<WellShow />} />*/}
-        {/*<Route path={'edit/:id'} element={<WellEdit />} />*/}
+        <Route path={'show/:id'} element={<SpringShow />} />
+        {/* <Route path={'edit/:id'} element={<ThingEdit />} /> */}
         <Route path={'create'} element={<SpringCreate />} />
       </Route>
       <Route path="map" element={<MapView />} />
@@ -103,7 +106,7 @@ export const DataforgeRoutes = () => {
         <Route index element={<GroupList />} />
         <Route path={'create'} element={<GroupCreate />} />
         <Route path={'edit/:id'} element={<GroupEdit />} />
-        {/*<Route path={'show/:id'} element={<GroupShow />} />*/}
+        <Route path={'show/:id'} element={<GroupShow />} />
       </Route>
       <Route path="asset">
         <Route index element={<AssetList />} />
@@ -111,15 +114,22 @@ export const DataforgeRoutes = () => {
         <Route path={'edit/:id'} element={<AssetEdit />} />
         <Route path={'show/:id'} element={<AssetShow />} />
       </Route>
+
       <Route path="lexicon">
         <Route index element={<LexiconList />} />
         {/* Add your lexicon list content here */}
       </Route>
+
+      // Apps
+      <Route path={'water-chemistry-import'}>
+        <Route index element={<WaterChemistryApp />} />
+      </Route>
+      
+      // Forms
       <Route path="groundwater-level-form">
         <Route index element={<GroundwaterLevelForm />} />
       </Route>
       <Route path="well-inventory-form" element={<WellInventoryForm />} />
-
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
   )

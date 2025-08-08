@@ -122,10 +122,33 @@ export const dataForgeDataProvider: DataProvider = {
     return await response.data
   },
   getOne: async ({ resource, id, meta }) => {
-    resource = cleanResourceName(resource)
+    resource = cleanResourceName(resource)    
+    /**
+     * for 'things' use a query parameter structure ?thing_id=123
+     * same for well things, spring things, etc.
+     */
+    if (resource === 'thing' || resource === 'thing/well' || resource === 'thing/spring') {
+      const params = new URLSearchParams()
+      params.append('thing_id', id.toString())
+      let url: string = `thing?${params.toString()}`
+      const response = await fetcher(url, meta.requestConfig)
 
-    console.log(`Fetching one ${resource} with id ${id}`)
-    let url: string = `${resource}/${id}`
+      if (response.status < 200 || response.status > 299) throw response
+
+      const responseData = await response.data
+      
+      // Handle the response structure with items array for things
+      const record = responseData?.items?.[0] || responseData
+      return { data: record }
+    }
+    
+    /**
+     * for other resources, use path parameter structure /location/123
+     */
+
+    let url =
+      id === undefined || id === null ? `${resource}` : `${resource}/${id}`
+
     const response = await fetcher(url, meta.requestConfig)
 
     if (response.status < 200 || response.status > 299) throw response
@@ -172,6 +195,30 @@ export const dataForgeDataProvider: DataProvider = {
   },
   update: async ({ resource, id, variables }) => {
     resource = cleanResourceName(resource)
+    
+    /**
+     * for 'things' use path parameter structure for PATCH /thing/123
+     * same for well things, spring things, etc.
+     */
+    if (resource === 'thing' || resource === 'thing/well' || resource === 'thing/spring') {
+      const response = await axiosCall(`thing/${id}`, {
+        method: 'PATCH',
+        data: JSON.stringify(variables),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.status < 200 || response.status > 299) throw response
+
+      const data = await response.data
+
+      return { data }
+    }
+    
+    /**
+     * for other resources, use path parameter structure PATCH /location/123
+     */
     const response = await axiosCall(`${resource}/${id}`, {
       method: 'PATCH',
       data: JSON.stringify(variables),

@@ -1,14 +1,14 @@
 import { useShow } from '@refinedev/core'
 import { Show } from '@refinedev/mui'
-import { ILocation } from '@/interfaces/dataforge/ILocation'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
+import { ISpring } from '@/interfaces/dataforge/IThing'
 
-export const LocationShow = () => {
+export const SpringShow = () => {
   const { queryResult } = useShow({})
   const { data, isLoading } = queryResult
-  const record = data?.data as ILocation
+  const record = data?.data as ISpring
 
-  //custom configs for location
+  // Custom configs for springs
   const fieldConfigs = {
     created_at: {
       label: 'Created At',
@@ -18,10 +18,10 @@ export const LocationShow = () => {
 
   return (
     <Show isLoading={isLoading}>
-      <DynamicShowDisplay<ILocation> 
+      <DynamicShowDisplay<ISpring> 
         record={record} 
         fieldConfigs={fieldConfigs}
       />
     </Show>
   )
-}
+} 
