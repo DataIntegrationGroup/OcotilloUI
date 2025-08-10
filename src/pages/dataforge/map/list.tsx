@@ -28,7 +28,7 @@ const useLayer = (thing_type: string, label: string, color: string) => {
     sourceProps: { type: 'geojson', data: data?.data },
     layerProps: {
       label: label,
-      type: 'circle',
+      type: 'circle' as const,
       paint: {
         'circle-radius': 3,
         'circle-color': color,
@@ -70,10 +70,7 @@ export const MapView: React.FC = () => {
               {Object.entries(defaultLayers).map((layer) => {
                 const [key, layerDef] = layer
                 const { layerProps, isLoading } = layerDef
-                const color =
-                  layerProps.type === 'fill'
-                    ? layerProps.paint['fill-color']
-                    : layerProps.paint['circle-color']
+                const color = layerProps.paint['circle-color']
 
                 return (
                   <Grid container>
@@ -108,7 +105,6 @@ export const MapView: React.FC = () => {
         </Grid>
         <Grid size={9}>
           <MapComponent
-            // isLoading={wellIsLoading || springIsLoading}
             showDrawControls={{ show: true, position: 'top-right' }}
             // setSelectionPolygons={setSelectionPolygons}
             // setPopupContent={setPopupContent}
