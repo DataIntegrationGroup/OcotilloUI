@@ -99,9 +99,7 @@ export const MapView: React.FC = () => {
                         }}
                       />
                     </Grid>
-                    <Grid size={12}>
-                      {isLoading && <LinearProgress size={16} />}
-                    </Grid>
+                    <Grid size={12}>{isLoading && <LinearProgress />}</Grid>
                   </Grid>
                 )
               })}
