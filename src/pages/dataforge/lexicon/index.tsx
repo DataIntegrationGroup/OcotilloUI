@@ -44,12 +44,26 @@ export const LexiconList: React.FC = () => {
       </>
     )
   }
+  const [selectedCategory, setSelectedCategory] = React.useState(null)
+  const handleCategoryRowClick = (params) => {
+    // Handle the row click event for categories
+    setSelectedCategory(params.row)
+  }
+
   const { dataGridProps: termDataGridProps } = useDataGrid({
     resource: 'lexicon',
     dataProviderName: 'dataforge',
-    queryOptions: {
-      cacheTime: 10 * 60 * 1000, // Cache for 10 minutes
-      staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    meta: {
+      params: {
+        category: selectedCategory ? selectedCategory.name : undefined,
+      },
+    },
+    // queryOptions: {
+    //   cacheTime: 10 * 60 * 1000, // Cache for 10 minutes
+    //   staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    // },
+    pagination: {
+      pageSize: 25,
     },
     // onRowSelectionModelChange: handleSelectionChangeWrapper,
   })
@@ -74,10 +88,11 @@ export const LexiconList: React.FC = () => {
   const { dataGridProps: categoryDataGridProps } = useDataGrid({
     resource: 'lexicon/category',
     dataProviderName: 'dataforge',
-    queryOptions: {
-      cacheTime: 10 * 60 * 1000, // Cache for 10 minutes
-      staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    },
+    // queryOptions: {
+    //   cacheTime: 10 * 60 * 1000, // Cache for 10 minutes
+    //   staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    // },
+    pagination: { pageSize: 10 },
     // onRowSelectionModelChange: handleSelectionChangeWrapper,
   })
   const categoryColumns = [
@@ -90,23 +105,24 @@ export const LexiconList: React.FC = () => {
     <>
       <List headerButtons={headerButtons} title={'Lexicon'}>
         <Card>
+          <Typography variant={'h3'}>Categories</Typography>
+          <DataGrid
+            {...categoryDataGridProps}
+            rowHeight={settings.rowHeight}
+            columns={categoryColumns}
+            onRowClick={(params) => setSelectedCategory(params.row)}
+          />
+        </Card>
+        <Card>
           <Typography variant={'h3'}>Terms</Typography>
           <DataGrid
             {...termDataGridProps}
             disableRowSelectionOnClick={false}
             rowHeight={settings.rowHeight}
             columns={termColumns}
-            autoHeight
+
             // onRowSelectionModelChange={handleSelectionChangeWrapper}
             // loading={isLoading}
-          />
-        </Card>
-        <Card>
-          <Typography variant={'h3'}>Categories</Typography>
-          <DataGrid
-            {...categoryDataGridProps}
-            rowHeight={settings.rowHeight}
-            columns={categoryColumns}
           />
         </Card>
       </List>

@@ -302,10 +302,10 @@ export const WaterChemistryApp: React.FC<EntryProps> = () => {
       </Card>
       <Card sx={{ p: 2, m: 2 }}>
         <DataGrid
-          initialState={{
-            pagination: { paginationModel: { pageSize: 10 } },
-          }}
-          pageSizeOptions={[10]}
+          // initialState={{
+          //   pagination: { paginationModel: { pageSize: 10 } },
+          // }}
+          // pageSizeOptions={[10]}
           getRowId={(row) => row.idx}
           rows={inputSamples}
           columns={sampleColumns}
@@ -314,10 +314,10 @@ export const WaterChemistryApp: React.FC<EntryProps> = () => {
       </Card>
       <Card sx={{ p: 2, m: 2 }}>
         <DataGrid
-          initialState={{
-            pagination: { paginationModel: { pageSize: 10 } },
-          }}
-          pageSizeOptions={[10]}
+          // initialState={{
+          //   pagination: { paginationModel: { pageSize: 10 } },
+          // }}
+          // pageSizeOptions={[10]}
           getRowId={(row) => row.idx}
           rows={inputObservation}
           columns={observationColumns}
