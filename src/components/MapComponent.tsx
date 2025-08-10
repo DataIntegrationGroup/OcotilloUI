@@ -182,6 +182,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
             longitude={popupContent.coordinates[0]}
             closeButton={false}
             closeOnClick
+            maxWidth={popupContent.maxWidth}
           >
             {popupContent.children}
           </Popup>
