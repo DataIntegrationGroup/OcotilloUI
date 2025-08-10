@@ -2,8 +2,10 @@ import React from 'react'
 import { Layer, Source } from 'react-map-gl'
 import MapComponent from '@/components/MapComponent'
 import { useDataProvider, useList, useOne } from '@refinedev/core'
+import { Box, Card, CircularProgress, LinearProgress } from '@mui/material'
+import Grid from '@mui/material/Grid2'
 
-export const MapView: React.FC = () => {
+const useLayer = (thing_type: string, label: string, color: string) => {
   const { data, isLoading } = useOne({
     dataProviderName: 'dataforge',
     resource: 'geospatial',
@@ -15,39 +17,118 @@ export const MapView: React.FC = () => {
     meta: {
       requestConfig: {
         params: {
-          type: 'water well',
+          thing_type: thing_type,
           format: 'geojson',
         },
       },
     },
   })
 
+  return {
+    sourceProps: { type: 'geojson', data: data?.data },
+    layerProps: {
+      label: label,
+      type: 'circle',
+      paint: {
+        'circle-radius': 3,
+        'circle-color': color,
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-width': 1,
+      },
+    },
+    isLoading: isLoading,
+  }
+}
+
+export const MapView: React.FC = () => {
+  const defaultLayers = {
+    'water-wells': useLayer('water well', 'Water Wells', '#9cd0ab'),
+    springs: useLayer('spring', 'Springs', '#f0c0a0'),
+  }
+  const [visibleLayers, setVisibleLayers] = React.useState<string[]>(
+    Object.keys(defaultLayers)
+  )
+
+  const onLayerChangeWrapper = (layerKey: string) => {
+    const fn = () => {
+      setVisibleLayers((prev) =>
+        prev.includes(layerKey)
+          ? prev.filter((layer) => layer !== layerKey)
+          : [...prev, layerKey]
+      )
+    }
+    return fn
+  }
+
   return (
-    <MapComponent
-      isLoading={isLoading}
-      showDrawControls={{ show: true, position: 'top-right' }}
-      // setSelectionPolygons={setSelectionPolygons}
-      // setPopupContent={setPopupContent}
-      // popupContent={popupContent}
-      // onMouseMoveCallback={onMouseMove}
-    >
-      <Source
-        key="foo"
-        id="foo"
-        type="geojson"
-        data={data?.data || { type: 'FeatureCollection', features: [] }}
-      >
-        <Layer
-          id="location"
-          type="circle"
-          paint={{
-            'circle-radius': 6,
-            'circle-color': '#B42222',
-            'circle-stroke-color': '#ffffff',
-            'circle-stroke-width': 1,
-          }}
-        />
-      </Source>
-    </MapComponent>
+    <Box>
+      <Grid container spacing={3}>
+        <Grid size={3}>
+          <Card>
+            <Box sx={{ padding: 2 }}>
+              <h2>Layers</h2>
+              {Object.entries(defaultLayers).map((layer) => {
+                const [key, layerDef] = layer
+                const { layerProps, isLoading } = layerDef
+                const color =
+                  layerProps.type === 'fill'
+                    ? layerProps.paint['fill-color']
+                    : layerProps.paint['circle-color']
+
+                return (
+                  <Grid container>
+                    <Grid size={10}>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={visibleLayers.includes(key)}
+                          onChange={onLayerChangeWrapper(key)}
+                        />
+                        {layerProps.label}
+                      </label>
+                    </Grid>
+                    <Grid size={2}>
+                      <Box
+                        sx={{
+                          width: 16,
+                          height: 16,
+                          display: 'inline-block',
+                          backgroundColor: color,
+                          borderRadius: '4px',
+                          marginRight: 1,
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={12}>
+                      {isLoading && <LinearProgress size={16} />}
+                    </Grid>
+                  </Grid>
+                )
+              })}
+            </Box>
+          </Card>
+        </Grid>
+        <Grid size={9}>
+          <MapComponent
+            // isLoading={wellIsLoading || springIsLoading}
+            showDrawControls={{ show: true, position: 'top-right' }}
+            // setSelectionPolygons={setSelectionPolygons}
+            // setPopupContent={setPopupContent}
+            // popupContent={popupContent}
+            // onMouseMoveCallback={onMouseMove}
+          >
+            {Object.entries(defaultLayers).map(([key, layerDef]) => {
+              if (!visibleLayers.includes(key)) return null
+              const { sourceProps, layerProps } = layerDef
+              return (
+                <Source id={key} key={key} {...sourceProps}>
+                  <Layer key={key} {...layerProps} />
+                </Source>
+              )
+            })}
+          </MapComponent>
+        </Grid>
+      </Grid>
+    </Box>
   )
 }
