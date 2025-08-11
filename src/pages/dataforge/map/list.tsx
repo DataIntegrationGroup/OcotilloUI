@@ -1,7 +1,14 @@
 import React, { useState } from 'react'
 import { Layer, Source } from 'react-map-gl'
 import MapComponent from '@/components/MapComponent'
-import { useDataProvider, useList, useOne } from '@refinedev/core'
+import {
+  useDataProvider,
+  useList,
+  useOne,
+  useGo,
+  useGetToPath,
+  useResource,
+} from '@refinedev/core'
 import {
   Box,
   Card,
@@ -73,7 +80,27 @@ export const MapView: React.FC = () => {
     return fn
   }
 
-  const onMouseMove = (_e: any, features: any[], mapRef: any) => {
+  const go = useGo()
+  const show = (resource: string, id: string) => {
+    go({
+      to: {
+        resource: resource,
+        action: 'show',
+        id: id,
+      },
+    })
+  }
+
+  const onMapPointClick = (e: any, points: any[]) => {
+    const selectedPoint = points[0]
+    // console.log('selectedPoint', selectedPoint.properties)
+    if (selectedPoint.properties.thing_type === 'water well') {
+      show('dataforge.thing-well', selectedPoint.properties.id)
+    } else if (selectedPoint.properties.thing_type === 'spring') {
+      show('dataforge.thing-spring', selectedPoint.properties.id)
+    }
+  }
+  const onMapMouseMove = (_e: any, features: any[], mapRef: any) => {
     features = features.filter((f) => f.layer.id.startsWith('location-'))
     if (features.length > 0) {
       mapRef.current.getCanvas().style.cursor = 'pointer'
@@ -139,7 +166,7 @@ export const MapView: React.FC = () => {
                 const color = layerProps.paint['circle-color']
 
                 return (
-                  <Grid container>
+                  <Grid container key={key}>
                     <Grid size={10}>
                       <label>
                         <input
@@ -175,14 +202,19 @@ export const MapView: React.FC = () => {
             // setSelectionPolygons={setSelectionPolygons}
             setPopupContent={setPopupContent}
             popupContent={popupContent}
-            onMouseMoveCallback={onMouseMove}
+            onPointClick={onMapPointClick}
+            onMouseMoveCallback={onMapMouseMove}
           >
             {Object.entries(defaultLayers).map(([key, layerDef]) => {
               if (!visibleLayers.includes(key)) return null
               const { sourceProps, layerProps } = layerDef
               return (
                 <Source id={key} key={key} {...sourceProps}>
-                  <Layer id={`location-${key}`} key={key} {...layerProps} />
+                  <Layer
+                    id={`location-${key}`}
+                    key={`layer-${key}`}
+                    {...layerProps}
+                  />
                 </Source>
               )
             })}
