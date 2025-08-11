@@ -19,14 +19,14 @@ let base = [
     meta: { label: 'DataForge (Coming Soon)' },
   },
   {
-    name: 'water',
-    icon: <WaterDropOutlined />,
-    meta: { label: 'Water (Deprecated)' },
-  },
-  {
     name: 'st2',
     icon: <SensorsOutlinedIcon />,
     meta: { label: 'NMWDI SensorThings' },
+  },
+  {
+    name: 'water',
+    icon: <WaterDropOutlined />,
+    meta: { label: 'Water (Deprecated)', disabled: true },
   },
   {
     name: 'geochronology',
