@@ -19,6 +19,7 @@ export const getMapStyle = (mode: string, zoom: number) => {
 interface MapComponentProps {
   children?: any
   onClick?: any
+  onPointClick?: (e: any, features: any[]) => void
   setSelectionPolygons?: any
   popupContent?: any
   setPopupContent?: any
@@ -43,6 +44,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   mapRef,
   children,
   onClick,
+  onPointClick,
   popupContent,
   onMouseMoveCallback,
   setSelectionPolygons,
@@ -136,13 +138,31 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     setIsDrawing(e.features.length > 0)
   }, [])
 
+  const handleMouseClick = useCallback(
+    (e) => {
+      if (onPointClick) {
+        // Get the current points under the mouse click
+        const currentPoints = getCurrentPoints(e)
+        // Call the onPointClick callback with the event and current points
+        if (currentPoints.length > 0) {
+          onPointClick(e, currentPoints)
+        }
+      }
+
+      if (onClick) {
+        onClick(e)
+      }
+    },
+    [onClick]
+  )
+
   return (
     <div>
       <Map
         ref={mapRef}
         mapboxAccessToken={settings.mapboxToken}
         initialViewState={initialViewState}
-        onClick={onClick}
+        onClick={handleMouseClick}
         onMove={(evt) => setViewState(evt.viewState)}
         terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
         style={style}
@@ -182,6 +202,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
             longitude={popupContent.coordinates[0]}
             closeButton={false}
             closeOnClick
+            maxWidth={popupContent.maxWidth}
           >
             {popupContent.children}
           </Popup>

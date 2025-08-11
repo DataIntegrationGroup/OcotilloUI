@@ -108,7 +108,7 @@ let dataforge = [
     },
   },
   {
-    name: 'thing/well',
+    name: 'thing-well',
     list: '/dataforge/well',
     edit: '/dataforge/well/edit/:id',
     show: '/dataforge/well/show/:id',
@@ -121,7 +121,7 @@ let dataforge = [
     },
   },
   {
-    name: 'thing/spring',
+    name: 'thing-spring',
     list: '/dataforge/spring',
     edit: '/dataforge/spring/edit/:id',
     show: '/dataforge/spring/show/:id',
