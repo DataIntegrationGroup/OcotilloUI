@@ -3,8 +3,9 @@ import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { IAsset } from '@/interfaces/dataforge/IAsset'
 import { List } from '@refinedev/mui'
-import { Card, CardHeader } from '@mui/material'
+import { Card, CardHeader, Typography } from '@mui/material'
 import { ListPage } from '@/components/ListPage'
+import { Box } from '@mui/system'
 
 export const AssetList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IAsset>({
@@ -78,6 +79,14 @@ export const AssetList: React.FC = () => {
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}
+      children={
+        <Card sx={{ margin: 1, padding: 1 }}>
+          <Typography>
+            Assets are digital files (.e.g PDFs and images) that are associated
+            with "Things".
+          </Typography>
+        </Card>
+      }
     />
   )
 }
