@@ -3,41 +3,22 @@ import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
 import { ISensor } from '@/interfaces/dataforge/ISensor'
+import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 
 export const SensorList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISensor>({
     resource: 'sensor',
     dataProviderName: 'dataforge',
     queryOptions: {
-      cacheTime: 60000, 
-      staleTime: 30000, 
+      cacheTime: 60000,
+      staleTime: 30000,
     },
   })
 
   const columns = useMemo<GridColDef<ISensor>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <div style={{ display: 'flex'}}>
-              <EditButton size="small" hideText recordItemId={row.id} />
-              <ShowButton size="small" hideText recordItemId={row.id} />
-            </div>
-          )
-        },
-        align: 'left',
-        headerAlign: 'center',
-        minWidth: 210,
-        flex: 0.3,
-      },
+      idColumnDef(),
+      actionColumnDef(),
       {
         field: 'name',
         headerName: 'Name',
@@ -99,4 +80,4 @@ export const SensorList: React.FC = () => {
       getRowId={(row) => row.id}
     />
   )
-}   
+}

@@ -3,6 +3,7 @@ import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
 import { IWell, ISpring } from '@/interfaces/dataforge/IThing'
+import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
@@ -18,12 +19,7 @@ export const SpringList: React.FC = () => {
 
   const columns = useMemo<GridColDef<ISpring>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
+      idColumnDef(),
       {
         field: 'name',
         headerName: 'Name',
@@ -49,22 +45,7 @@ export const SpringList: React.FC = () => {
         minWidth: 180,
         valueGetter: (params) => new Date(params),
       },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <>
-              <EditButton hideText recordItemId={row.id} />
-              <ShowButton hideText recordItemId={row.id} />
-            </>
-          )
-        },
-        align: 'center',
-        headerAlign: 'center',
-        minWidth: 80,
-        flex: 0.3,
-      },
+      actionColumnDef(),
     ],
     []
   )
@@ -74,6 +55,9 @@ export const SpringList: React.FC = () => {
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}
+      description={
+        'Springs are natural water sources that flow from the ground. They can be used for various purposes, including water supply and ecological studies.'
+      }
     />
   )
 }
@@ -91,12 +75,7 @@ export const WellList: React.FC = () => {
 
   const columns = useMemo<GridColDef<IWell>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
+      idColumnDef(),
       {
         field: 'name',
         headerName: 'Name',
@@ -133,28 +112,19 @@ export const WellList: React.FC = () => {
         minWidth: 180,
         valueGetter: (params) => new Date(params),
       },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <>
-              <EditButton hideText recordItemId={row.id} />
-              <ShowButton hideText recordItemId={row.id} />
-            </>
-          )
-        },
-        align: 'center',
-        headerAlign: 'center',
-        minWidth: 80,
-        flex: 0.3,
-      },
+      actionColumnDef(),
     ],
     []
   )
 
   return (
     <ListPage
+      title="Wells"
+      description={
+        'A water well is a man-made structure created to access groundwater from underground aquifers. Wells are' +
+        ' commonly used for drinking water, irrigation, and industrial purposes, and can vary in depth and' +
+        ' construction depending on the local geology and intended use.'
+      }
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}

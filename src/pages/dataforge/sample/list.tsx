@@ -3,6 +3,7 @@ import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
 import { ISample } from '@/interfaces/dataforge/ISample'
+import { idColumnDef, actionColumnDef } from '@/components/CommonColumnDefs'
 
 export const SampleList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISample>({
@@ -16,12 +17,7 @@ export const SampleList: React.FC = () => {
 
   const columns = useMemo<GridColDef<ISample>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
+      idColumnDef(),
       {
         field: 'release_status',
         headerName: 'Release Status',
@@ -29,22 +25,7 @@ export const SampleList: React.FC = () => {
         minWidth: 120,
         flex: 1,
       },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <div style={{ display: 'flex' }}>
-              <EditButton size="small" hideText recordItemId={row.id} />
-              <ShowButton size="small" hideText recordItemId={row.id} />
-            </div>
-          )
-        },
-        align: 'left',
-        headerAlign: 'center',
-        minWidth: 210,
-        flex: 0.3,
-      },
+      actionColumnDef(),
       {
         field: 'sample_date',
         headerName: 'Sample Date',
@@ -96,6 +77,9 @@ export const SampleList: React.FC = () => {
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}
+      description={
+        'Samples are used to represent the data collected from a sensor.'
+      }
     />
   )
 }
