@@ -1,0 +1,125 @@
+import { AuthActionResponse, AuthProvider } from '@refinedev/core'
+import { generateCodeChallenge, generateCodeVerifier } from '@/providers/pcke'
+import { sha256 } from 'js-sha256'
+import { jwtDecode } from 'jwt-decode'
+
+const AUTHENTIK_URL =
+  import.meta.env.VITE_AUTHENTIK_URL || 'http://localhost:8000/'
+const CLIENT_ID = import.meta.env.VITE_AUTHENTIK_CLIENT_ID || 'authentik'
+const REDIRECT_URI =
+  import.meta.env.VITE_AUTHENTIK_REDIRECT_URI ||
+  'http://localhost:3000/callback'
+
+const gravatarUrl = (email: string) => {
+  let hash = email.trim().toLowerCase()
+  return `https://www.gravatar.com/avatar/${sha256(hash)}`
+}
+
+export const getAccessControlGroups = (): string[] => {
+  const id_token = localStorage.getItem('id_token')
+
+  if (!id_token) return null
+  const token = jwtDecode(id_token)
+
+  return token['groups'] || []
+}
+
+export const authentikAuthProvider: AuthProvider = {
+  login: async (params) => {
+    // const { status } = handleLogin(email, password)
+    console.log('ff', params)
+    const codeVerifier = generateCodeVerifier()
+    const codeChallenge = await generateCodeChallenge(codeVerifier)
+
+    localStorage.setItem('pkce_code_verifier', codeVerifier)
+
+    const RESPONSE_TYPE = 'code'
+    const SCOPE = 'openid profile email offline_access permissions'
+
+    const authUrl = new URL(`${AUTHENTIK_URL}authorize/`)
+    authUrl.searchParams.set('client_id', CLIENT_ID)
+    authUrl.searchParams.set('redirect_uri', REDIRECT_URI)
+    authUrl.searchParams.set('response_type', RESPONSE_TYPE)
+    authUrl.searchParams.set('scope', SCOPE)
+    authUrl.searchParams.set('code_challenge', codeChallenge)
+    authUrl.searchParams.set('code_challenge_method', 'S256')
+
+    window.location.href = authUrl.toString()
+    // fetch(authUrl.toString())
+    //   .then((resp) => resp.json())
+    //   .then((data) => console.log(data))
+
+    return { success: true }
+    // return { success: true, redirectTo: authUrl.toString() }
+    // const status = 200
+    // if (status === 200) {
+    //   return { success: true, redirectTo: authUrl.toString() }
+    // } else {
+    //   return {
+    //     success: false,
+    //     error: { name: 'Login Error', message: 'Invalid credentials' },
+    //   }
+    // }
+  },
+
+  // Called when user logs out
+  logout: async () => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('id_token')
+    localStorage.removeItem('pkce_code_verifier')
+    window.location.href = `${AUTHENTIK_URL}end-session?post_logout_redirect_uri=${encodeURIComponent(
+      window.location.origin
+    )}`
+    return { success: true }
+  },
+
+  // Called on page load / route change
+  check: async () => {
+    const token = localStorage.getItem('access_token')
+    return token
+      ? { authenticated: true }
+      : { authenticated: false, redirectTo: '/login' }
+  },
+
+  // Returns the current user's profile
+  getIdentity: async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return null
+
+    const res = await fetch(`${AUTHENTIK_URL}userinfo/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) return null
+
+    const profile = await res.json()
+    console.log('profile', profile)
+    return {
+      id: profile.sub,
+      fullName: profile.name || profile.preferred_username,
+      avatar: gravatarUrl(profile.email),
+      email: profile.email,
+    }
+  },
+
+  // Called to check permissions (optional)
+  getPermissions: async () => {
+    const id_token = localStorage.getItem('id_token')
+    // console.log('token', id_token)
+    if (!id_token) return null
+    const token = jwtDecode(id_token)
+    // console.log('tokenf', token)
+    // const payload = JSON.parse(atob(token.split('.')[1]))
+    // console.log('payload', payload)
+    // return payload.roles || []
+    return token['groups'] || []
+  },
+
+  // check: async (params) => ({}) as CheckResponse,
+  // logout: async (params) => ({}) as AuthActionResponse,
+  onError: async (params) => ({}) as AuthActionResponse,
+  register: async (params) => ({}) as AuthActionResponse,
+  forgotPassword: async (params) => ({}) as AuthActionResponse,
+  updatePassword: async (params) => ({}) as AuthActionResponse,
+  // getPermissions: async (params) => ({}) as string[],
+  // getIdentity: async (params) => ({}) as any,
+}

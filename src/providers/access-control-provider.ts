@@ -1,22 +1,25 @@
-import { getAccessToken } from "./fief-provider";
-import { jwtDecode } from "jwt-decode";
+import { getAccessControlGroups } from '@/providers/authentik-provider'
 
 export const accessControlProvider = {
-  can: async ({ resource, action: _action, params: _params }) => {
-    const token = jwtDecode(await getAccessToken());
-    const permissions = token["permissions"] ?? [];
-
-    if (resource === "water.wellinventoryform") {
-      if (permissions.includes("datamanager:wellinventory:write")) {
-        return { can: true };
-      } else {
-        return {
-          can: false,
-          reason:
-            "You do not have permission to edit this resource. Please contact your administrator.",
-        };
+  can: async ({ resource, action, params }) => {
+    const groups = getAccessControlGroups()
+    console.log(resource, action, groups)
+    let can = true
+    if (resource.startsWith('dataforge.')) {
+      if (resource === 'dataforge.well-inventory-form') {
+        can = groups.includes('LocationEditor')
+      } else if (resource === 'dataforge.groundwater-level-form') {
+        can = groups.includes('LocationEditor')
+      } else if (resource === 'dataforge.location') {
+        can = groups.includes('LocationViewer')
+        if (action === 'create') {
+          can = groups.includes('LocationEditor')
+        } else if (action === 'edit') {
+          can = groups.includes('LocationEditor')
+        }
       }
     }
-    return { can: true };
+
+    return { can }
   },
-};
+}

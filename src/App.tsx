@@ -50,8 +50,8 @@ const App: React.FC = () => (
                 registerLink={false}
                 providers={[
                   {
-                    name: 'fief',
-                    label: 'Sign in with Fief',
+                    name: 'authentik',
+                    label: 'Sign in with Authentik',
                   },
                 ]}
               />

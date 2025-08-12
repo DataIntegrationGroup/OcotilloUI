@@ -14,6 +14,7 @@ import {
   IGroundwaterLevelObservation,
   IObservation,
 } from '@/interfaces/dataforge/IObservation'
+import { CanAccess } from '@refinedev/core'
 
 export const GroundwaterLevelObservationList: React.FC = () => {
   const [selectedContactId, setSelectedContactId] = useState<number | null>(
@@ -81,10 +82,12 @@ export const GroundwaterLevelObservationList: React.FC = () => {
   )
 
   return (
-    <ListPage
-      columns={columns}
-      dataGridProps={dataGridProps}
-      getRowId={(row) => row.id}
-    />
+    <CanAccess>
+      <ListPage
+        columns={columns}
+        dataGridProps={dataGridProps}
+        getRowId={(row) => row.id}
+      />
+    </CanAccess>
   )
 }

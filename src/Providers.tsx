@@ -8,7 +8,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import CssBaseline from '@mui/material/CssBaseline'
 import GlobalStyles from '@mui/material/GlobalStyles'
 import { FiefAuthProvider } from '@fief/fief/react'
-import { authProvider } from '@/providers/fief-provider'
+// import { authProvider } from '@/providers/fief-provider'
 import { Action, IResourceItem, Refine } from '@refinedev/core'
 import { ampDataProvider } from './providers/amp-data-provider'
 import { geochronologyDataProvider } from './providers/geochronology-data-provider'
@@ -22,6 +22,7 @@ import routerProvider, {
 import { accessControlProvider } from '@/providers/access-control-provider'
 import { settings } from './settings'
 import { dataForgeDataProvider } from '@/providers/dataforge-data-provider'
+import { authentikAuthProvider } from '@/providers/authentik-provider'
 
 const queryClient = new QueryClient()
 
@@ -43,7 +44,7 @@ export const Providers = ({ children }: { children: ReactNode }) => (
     <RefineSnackbarProvider>
       <DevtoolsProvider>
         <Refine
-          authProvider={authProvider}
+          authProvider={authentikAuthProvider}
           dataProvider={{
             default: ampDataProvider,
             amp: ampDataProvider,
@@ -67,12 +68,12 @@ export const Providers = ({ children }: { children: ReactNode }) => (
           <DocumentTitleHandler handler={customTitleHandler} />
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <QueryClientProvider client={queryClient}>
-              <FiefAuthProvider
-                baseURL={settings.fief.baseURL}
-                clientId={settings.fief.clientId}
-              >
-                {children}
-              </FiefAuthProvider>
+              {/*<FiefAuthProvider*/}
+              {/*  baseURL={settings.fief.baseURL}*/}
+              {/*  clientId={settings.fief.clientId}*/}
+              {/*>*/}
+              {children}
+              {/*</FiefAuthProvider>*/}
             </QueryClientProvider>
           </LocalizationProvider>
         </Refine>

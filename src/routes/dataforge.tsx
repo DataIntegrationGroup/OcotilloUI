@@ -38,7 +38,12 @@ import {
   GroundwaterLevelObservationCreate,
   GroundwaterLevelObservationList,
 } from '@/pages/dataforge/observation'
-import { GroupCreate, GroupEdit, GroupList, GroupShow } from '@/pages/dataforge/group'
+import {
+  GroupCreate,
+  GroupEdit,
+  GroupList,
+  GroupShow,
+} from '@/pages/dataforge/group'
 import {
   AssetList,
   AssetCreate,
@@ -50,7 +55,7 @@ import { GroundwaterLevelForm } from '@/pages/dataforge/groundwater-level-form/s
 import { WellInventoryForm } from '@/pages/dataforge/well-inventory-form'
 import { LexiconList } from '@/pages/dataforge/lexicon'
 import { WaterChemistryApp } from '@/pages/dataforge/water-chemistry-app'
-
+import { CanAccess } from '@refinedev/core'
 
 export const DataforgeRoutes = () => {
   return (
@@ -114,17 +119,14 @@ export const DataforgeRoutes = () => {
         <Route path={'edit/:id'} element={<AssetEdit />} />
         <Route path={'show/:id'} element={<AssetShow />} />
       </Route>
-
       <Route path="lexicon">
         <Route index element={<LexiconList />} />
         {/* Add your lexicon list content here */}
       </Route>
-
       // Apps
       <Route path={'water-chemistry-import'}>
         <Route index element={<WaterChemistryApp />} />
       </Route>
-      
       // Forms
       <Route path="groundwater-level-form">
         <Route index element={<GroundwaterLevelForm />} />
