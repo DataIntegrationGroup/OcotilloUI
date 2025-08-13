@@ -20,7 +20,7 @@ import { GeothermalRoutes } from '@/routes/geothermal'
 import { GeochronologyRoutes } from '@/routes/geochronology'
 import { settings } from '@/settings'
 import { Providers } from './Providers'
-import { DataforgeRoutes } from '@/routes/dataforge'
+import { OcotilloRoutes } from '@/routes/ocotillo'
 
 const App: React.FC = () => (
   <BrowserRouter basename={settings.urlprefix}>
@@ -43,7 +43,7 @@ const App: React.FC = () => (
             element={
               <AuthPage
                 title={
-                  <ThemedTitleV2 collapsed={false} text="NMBGMR Data Manager" />
+                  <ThemedTitleV2 collapsed={false} text="NMBGMR Ocotillo" />
                 }
                 hideForm={true}
                 type="login"
@@ -69,10 +69,7 @@ const App: React.FC = () => (
                 Header={() => <ThemedHeaderV2 sticky />}
                 Sider={ThemedSiderV2}
                 Title={({ collapsed }) => (
-                  <ThemedTitleV2
-                    collapsed={collapsed}
-                    text="NMBGMR Data Manager"
-                  />
+                  <ThemedTitleV2 collapsed={collapsed} text="NMBGMR Ocotillo" />
                 )}
               >
                 <Outlet />
@@ -82,14 +79,8 @@ const App: React.FC = () => (
         >
           <Route index element={<Home />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/dataforge/*" element={<DataforgeRoutes />} />
-          <Route path="/amp/*" element={<AMPRoutes />} />
+          <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
           <Route path="/st2/*" element={<ST2Routes />} />
-          <Route path="/geochronology/*" element={<GeochronologyRoutes />} />
-          <Route path="/criticalminerals">
-            <Route path="dashboard" element={<CriticalMineralsDashboard />} />
-          </Route>
-          <Route path="/geothermal/*" element={<GeothermalRoutes />} />
         </Route>
         <Route
           element={
