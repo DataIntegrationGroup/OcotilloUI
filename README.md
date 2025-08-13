@@ -1,8 +1,10 @@
-# NMBGMR Data Manager
+# NMBGMR Ocotillo
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE) [![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](#)
 
-Admin dashboard application for managing and visualizing data for the New Mexico Bureau of Geology & Mineral Resources (NMBGMR). Built with React, TypeScript, and Refine.dev, it provides an intuitive interface to interact with various NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
+Admin dashboard application for managing and visualizing data for the New Mexico Bureau of Geology & Mineral Resources (
+NMBGMR). Built with React, TypeScript, and Refine.dev, it provides an intuitive interface to interact with various
+NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 
 ## Table of Contents
 
@@ -67,10 +69,11 @@ Admin dashboard application for managing and visualizing data for the New Mexico
 
 ## Configuration
 
-This application uses Vite environment variables. The following variables are required in `.env.development` and `.env.devserver`:
+This application uses Vite environment variables. The following variables are required in `.env.development` and
+`.env.devserver`:
 
 ```bash
-VITE_APP_TITLE="NMBGMR Data Manager"
+VITE_APP_TITLE="NMBGMR Ocotillo"
 VITE_NMBGMR_AMP_API_URL="https://your-amp-api-url"
 VITE_NMBGMR_GEOTHERMAL_API_URL="https://your-geothermal-api-url"
 VITE_REFINE_PROJECT_ID="your-refine-project-id"
@@ -83,7 +86,7 @@ In `.env.production`, you can set:
 
 ```bash
 VITE_API_URL="https://your-production-api-url"
-VITE_APP_TITLE="NMBGMR Data Manager"
+VITE_APP_TITLE="NMBGMR Ocotillo"
 ```
 
 ## Available Scripts
@@ -102,7 +105,8 @@ npm run start
 
 ## Deployment
 
-Deploy the contents of the `dist/` folder to any static hosting provider (e.g., Netlify, Vercel, AWS S3, GitHub Pages, GCP). Ensure environment variables are configured on the hosting platform.
+Deploy the contents of the `dist/` folder to any static hosting provider (e.g., Netlify, Vercel, AWS S3, GitHub Pages,
+GCP). Ensure environment variables are configured on the hosting platform.
 
 ## License
 

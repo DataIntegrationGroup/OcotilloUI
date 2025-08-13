@@ -1,10 +1,10 @@
 import { useList } from '@refinedev/core'
-import { ISensor } from '@/interfaces/dataforge/ISensor'
+import { ISensor } from '@/interfaces/ocotillo/ISensor'
 
 export const useSensor = () => {
   const { data } = useList<ISensor>({
     resource: 'sensor',
-    dataProviderName: 'dataforge',
+    dataProviderName: 'ocotillo',
   })
 
   const sensor_options =

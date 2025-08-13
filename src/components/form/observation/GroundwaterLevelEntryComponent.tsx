@@ -6,7 +6,7 @@ import Autocomplete from '@mui/material/Autocomplete'
 import React, { useEffect, useState } from 'react'
 import { Box } from '@mui/material'
 import { useAutocomplete } from '@refinedev/mui'
-import { ILexicon } from '@/interfaces/dataforge/ILexicon'
+import { ILexicon } from '@/interfaces/ocotillo/ILexicon'
 import { Hydrograph } from '@/components/Hydrographs/Hydrograph'
 import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
 import { useDataProvider } from '@refinedev/core'
@@ -33,7 +33,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
   const { autocompleteProps: autocompletePropsReleaseStatus } =
     useAutocomplete<ILexicon>({
       resource: 'lexicon',
-      dataProviderName: 'dataforge',
+      dataProviderName: 'ocotillo',
       meta: {
         params: { category: 'release_status' },
       },
@@ -41,7 +41,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
   const { autocompleteProps: autocompletePropsLevelStatus } =
     useAutocomplete<ILexicon>({
       resource: 'lexicon',
-      dataProviderName: 'dataforge',
+      dataProviderName: 'ocotillo',
       meta: {
         params: { category: 'level_status' },
       },
@@ -55,7 +55,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
   const [refreshHydrograph, setRefreshHydrograph] = useState<number>(0)
 
   const dataProvider = useDataProvider()
-  const dataForgeDataProvider = dataProvider('dataforge')
+  const ocotilloDataProvider = dataProvider('ocotillo')
 
   const getFieldName = (fieldName: string) => {
     return `${fieldPrefix}${fieldName}`
@@ -83,7 +83,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
       sensor_id: sensorID,
       observed_property: 'groundwater level',
     }
-    const values = dataForgeDataProvider.getList({
+    const values = ocotilloDataProvider.getList({
       resource: 'observation/groundwater-level',
       meta: { params },
     })
