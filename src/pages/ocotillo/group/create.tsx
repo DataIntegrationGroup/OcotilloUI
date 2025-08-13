@@ -11,6 +11,7 @@ import { Nullable } from '../../../interfaces'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { useState } from 'react'
 import { IThing } from '@/interfaces/ocotillo/IThing'
+import { CreateEditGroup } from '@/components/form/group/CreateEditGroup'
 
 export const GroupCreate: React.FC = () => {
   const {
@@ -34,47 +35,11 @@ export const GroupCreate: React.FC = () => {
 
   return (
     <Create saveButtonProps={saveButtonProps}>
-      <Box
-        component="form"
-        sx={{ display: 'flex', flexDirection: 'column' }}
-        autoComplete="off"
-      >
-        <TextField
-          {...register('name', {
-            required: 'This field is required',
-          })}
-          error={!!errors.name}
-          helperText={errors.name?.message}
-          margin="normal"
-          fullWidth
-          label="Name"
-          name="name"
-          autoFocus
-        />
-      </Box>
-      <Controller
-        name="parent_group_id"
+      <CreateEditGroup
+        errors={errors}
         control={control}
-        // rules={{ required: 'This field is required' }}
-        render={({ field }) => (
-          <Autocomplete
-            {...autocompleteProps}
-            onChange={(_, newValue) => {
-              field.onChange(newValue?.id || null)
-            }}
-            getOptionKey={(option) => option.id}
-            getOptionLabel={(option) => option.name || ''}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Parent Group"
-                margin="normal"
-                error={!!errors.parent_group_id}
-                helperText={errors.parent_group_id?.message}
-              />
-            )}
-          />
-        )}
+        register={register}
+        mode={'standalone'}
       />
     </Create>
   )

@@ -104,6 +104,12 @@ export const LexiconList: React.FC = () => {
   return (
     <>
       <List headerButtons={headerButtons} title={'Lexicon'}>
+        <Card sx={{ marginTop: 1, marginBottom: 1, padding: 1 }}>
+          <Typography variant="body1">
+            {'The Lexicon (aka Glossary) stores all the terms and definitions used in' +
+              ' the data sytem'}
+          </Typography>
+        </Card>
         <Card>
           <Typography variant={'h3'}>Categories</Typography>
           <DataGrid

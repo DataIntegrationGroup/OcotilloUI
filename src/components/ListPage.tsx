@@ -2,11 +2,13 @@ import { ExportButton, List } from '@refinedev/mui'
 import { DataGrid } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import React from 'react'
-import { useExport, usePermissions } from '@refinedev/core'
+import { useExport } from '@refinedev/core'
+import { Card, Typography } from '@mui/material'
 import { CanAccess } from '@refinedev/core'
 
 type ListPageProps = {
   title?: string | null
+  description?: string | null
   columns: any
   dataGridProps: any
   exportProps?: any
@@ -18,6 +20,7 @@ type ListPageProps = {
 
 export const ListPage: React.FC<ListPageProps> = ({
   title,
+  description,
   columns,
   dataGridProps,
   getRowId,
@@ -52,6 +55,12 @@ export const ListPage: React.FC<ListPageProps> = ({
 
   return (
     <List headerButtons={headerButtons} title={title}>
+      {description && (
+        <Card sx={{ marginTop: 1, marginBottom: 1, padding: 1 }}>
+          <Typography variant="body1">{description}</Typography>
+        </Card>
+      )}
+
       {children}
       <DataGrid
         {...dataGridProps}

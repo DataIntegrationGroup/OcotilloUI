@@ -12,6 +12,7 @@ import { Card, CardHeader } from '@mui/material'
 import EmailIcon from '@mui/icons-material/Email'
 import HomeIcon from '@mui/icons-material/Home'
 import { Phone } from '@mui/icons-material'
+import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 
 const IconCardHeader = ({ text, icon }) => {
   return (
@@ -43,12 +44,7 @@ export const ContactList: React.FC = () => {
 
   const columns = useMemo<GridColDef<IContact>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
+      idColumnDef(),
       {
         field: 'things',
         headerName: 'Things',
@@ -84,22 +80,7 @@ export const ContactList: React.FC = () => {
         minWidth: 180,
         valueGetter: (params) => new Date(params),
       },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <>
-              <EditButton hideText recordItemId={row.id} />
-              <ShowButton hideText recordItemId={row.id} />
-            </>
-          )
-        },
-        align: 'center',
-        headerAlign: 'center',
-        minWidth: 80,
-        flex: 0.3,
-      },
+      actionColumnDef(),
     ],
     []
   )
@@ -111,12 +92,7 @@ export const ContactList: React.FC = () => {
 
   const emailColumns = useMemo<GridColDef<IEmail>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
+      idColumnDef(),
       {
         field: 'email_type',
         headerName: 'Type',
@@ -141,12 +117,7 @@ export const ContactList: React.FC = () => {
 
   const phoneColumns = useMemo<GridColDef<IPhone>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
+      idColumnDef(),
       {
         field: 'phone_type',
         headerName: 'Type',
@@ -171,12 +142,7 @@ export const ContactList: React.FC = () => {
 
   const addressColumns = useMemo<GridColDef<IAddress>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
+      idColumnDef(),
       {
         field: 'address_type',
         headerName: 'Type',

@@ -14,13 +14,10 @@ import {
   IGroundwaterLevelObservation,
   IObservation,
 } from '@/interfaces/ocotillo/IObservation'
+import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { CanAccess } from '@refinedev/core'
 
 export const GroundwaterLevelObservationList: React.FC = () => {
-  const [selectedContactId, setSelectedContactId] = useState<number | null>(
-    null
-  )
-
   const { dataGridProps } = useDataGrid<IGroundwaterLevelObservation>({
     resource: 'observation/groundwater-level',
     dataProviderName: 'ocotillo',
@@ -28,19 +25,7 @@ export const GroundwaterLevelObservationList: React.FC = () => {
 
   const columns = useMemo<GridColDef<IGroundwaterLevelObservation>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
-      // {
-      //   field: 'observation_type',
-      //   headerName: 'Observation Type',
-      //   type: 'string',
-      //   minWidth: 150,
-      //   flex: 1,
-      // },
+      idColumnDef(),
       {
         field: 'observation_datetime',
         headerName: 'Observation Date/Time',
@@ -61,22 +46,7 @@ export const GroundwaterLevelObservationList: React.FC = () => {
         minWidth: 180,
         valueGetter: (params) => new Date(params),
       },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <>
-              <EditButton hideText recordItemId={row.id} />
-              <ShowButton hideText recordItemId={row.id} />
-            </>
-          )
-        },
-        align: 'center',
-        headerAlign: 'center',
-        minWidth: 80,
-        flex: 0.3,
-      },
+      actionColumnDef(),
     ],
     []
   )

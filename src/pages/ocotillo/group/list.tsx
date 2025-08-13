@@ -5,6 +5,7 @@ import { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { List } from '@refinedev/mui'
 import { Card, CardHeader } from '@mui/material'
 import { ListPage } from '@/components/ListPage'
+import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 
 export const GroupList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IGroup>({
@@ -23,12 +24,7 @@ export const GroupList: React.FC = () => {
 
   const columns = useMemo<GridColDef<IGroup>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
+      idColumnDef(),
       {
         field: 'name',
         headerName: 'Name',
@@ -47,22 +43,7 @@ export const GroupList: React.FC = () => {
         minWidth: 180,
         valueGetter: (params) => new Date(params),
       },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <>
-              <EditButton hideText recordItemId={row.id} />
-              <ShowButton hideText recordItemId={row.id} />
-            </>
-          )
-        },
-        align: 'center',
-        headerAlign: 'center',
-        minWidth: 80,
-        flex: 0.3,
-      },
+      actionColumnDef(),
     ],
     []
   )
@@ -72,6 +53,11 @@ export const GroupList: React.FC = () => {
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}
+      description={
+        'Groups are used to organize things and other groups. For example,\n' +
+        '            you can create a group called "Collaborative Network" and add all\n' +
+        '            the wells in the network to that group.'
+      }
     />
   )
 }

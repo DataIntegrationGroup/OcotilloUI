@@ -21,18 +21,18 @@ const editor = (can: any, cannot, resource: string) => {
 const defineUserAbility = (groups: string[]) => {
   return defineAbility((can, cannot) => {
     const resources = [
-      'dataforge.sensor',
-      'dataforge.lexicon',
-      'dataforge.group',
-      'dataforge.location',
-      'dataforge.sample',
-      'dataforge.asset',
-      'dataforge.contact',
+      'ocotillo.sensor',
+      'ocotillo.lexicon',
+      'ocotillo.group',
+      'ocotillo.location',
+      'ocotillo.sample',
+      'ocotillo.asset',
+      'ocotillo.contact',
     ]
     if (groups.includes('Viewer')) {
-      can('list', 'dataforge')
-      can('list', 'dataforge.thing')
-      can('list', 'dataforge.map')
+      can('list', 'ocotillo')
+      can('list', 'ocotillo.thing')
+      can('list', 'ocotillo.map')
 
       resources.forEach((resource) => {
         viewer(can, cannot, resource)
@@ -45,19 +45,19 @@ const defineUserAbility = (groups: string[]) => {
     }
 
     if (groups.includes('AMPViewer')) {
-      viewer(can, cannot, 'dataforge.observation')
-      viewer(can, cannot, 'dataforge.thing-well')
-      viewer(can, cannot, 'dataforge.thing-spring')
-      viewer(can, cannot, 'dataforge.groundwater-level-observation')
+      viewer(can, cannot, 'ocotillo.observation')
+      viewer(can, cannot, 'ocotillo.thing-well')
+      viewer(can, cannot, 'ocotillo.thing-spring')
+      viewer(can, cannot, 'ocotillo.groundwater-level-observation')
     }
     if (groups.includes('AMPEditor')) {
-      can('list', 'dataforge.forms')
-      can('list', 'dataforge.well-inventory-form')
-      can('list', 'dataforge.groundwater-level-form')
+      can('list', 'ocotillo.forms')
+      can('list', 'ocotillo.well-inventory-form')
+      can('list', 'ocotillo.groundwater-level-form')
 
-      can('list', 'dataforge.apps')
-      can('list', 'dataforge.water-chemistry-import')
-      can('list', 'dataforge.hydrograph-corrector')
+      can('list', 'ocotillo.apps')
+      can('list', 'ocotillo.water-chemistry-import')
+      can('list', 'ocotillo.hydrograph-corrector')
     }
 
     if (groups.includes('Admin')) {

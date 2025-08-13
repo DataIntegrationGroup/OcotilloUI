@@ -13,6 +13,7 @@ import {
   SAMPLE_ID_COL,
 } from '@/pages/ocotillo/water-chemistry-app/column-schema'
 import { useImportWaterChemistrySamples } from '@/pages/ocotillo/water-chemistry-app/hook'
+import { idColumnDef } from '@/components/CommonColumnDefs'
 
 interface EntryProps {}
 
@@ -190,12 +191,7 @@ export const WaterChemistryApp: React.FC<EntryProps> = () => {
     },
   ]
   const sampleColumns: GridColDef[] = [
-    {
-      field: 'id',
-      headerName: 'ID',
-      width: 90,
-      type: 'string',
-    },
+    idColumnDef(),
     {
       field: 'sampleId',
       headerName: 'Sample ID',

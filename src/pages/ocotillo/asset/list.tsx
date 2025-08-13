@@ -3,8 +3,10 @@ import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { IAsset } from '@/interfaces/ocotillo/IAsset'
 import { List } from '@refinedev/mui'
-import { Card, CardHeader } from '@mui/material'
+import { Card, CardHeader, Typography } from '@mui/material'
 import { ListPage } from '@/components/ListPage'
+import { Box } from '@mui/system'
+import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 
 export const AssetList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IAsset>({
@@ -23,12 +25,7 @@ export const AssetList: React.FC = () => {
 
   const columns = useMemo<GridColDef<IAsset>[]>(
     () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 100,
-      },
+      idColumnDef(),
       {
         field: 'label',
         headerName: 'Label',
@@ -53,22 +50,7 @@ export const AssetList: React.FC = () => {
         minWidth: 180,
         valueGetter: (params) => new Date(params),
       },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <>
-              <EditButton hideText recordItemId={row.id} />
-              <ShowButton hideText recordItemId={row.id} />
-            </>
-          )
-        },
-        align: 'center',
-        headerAlign: 'center',
-        minWidth: 80,
-        flex: 0.3,
-      },
+      actionColumnDef(),
     ],
     []
   )
@@ -78,6 +60,14 @@ export const AssetList: React.FC = () => {
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}
+      children={
+        <Card sx={{ margin: 1, padding: 1 }}>
+          <Typography>
+            Assets are digital files (.e.g PDFs and images) that are associated
+            with "Things".
+          </Typography>
+        </Card>
+      }
     />
   )
 }
