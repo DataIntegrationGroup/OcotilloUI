@@ -1,14 +1,14 @@
 import { useAutocomplete } from '@refinedev/mui'
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
-import { IGroup } from '@/interfaces/dataforge/IGroup'
+import { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { Controller } from 'react-hook-form'
 import { Autocomplete } from '@mui/material'
 
 export const CreateEditGroup = ({ control, register, errors, mode }) => {
   const { autocompleteProps } = useAutocomplete<IGroup>({
     resource: 'group',
-    dataProviderName: 'dataforge',
+    dataProviderName: 'ocotillo',
     onSearch: (value) => [
       {
         field: 'name',
