@@ -15,6 +15,7 @@ import {
   IObservation,
 } from '@/interfaces/ocotillo/IObservation'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
+import { CanAccess } from '@refinedev/core'
 
 export const GroundwaterLevelObservationList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IGroundwaterLevelObservation>({
@@ -51,10 +52,12 @@ export const GroundwaterLevelObservationList: React.FC = () => {
   )
 
   return (
-    <ListPage
-      columns={columns}
-      dataGridProps={dataGridProps}
-      getRowId={(row) => row.id}
-    />
+    <CanAccess>
+      <ListPage
+        columns={columns}
+        dataGridProps={dataGridProps}
+        getRowId={(row) => row.id}
+      />
+    </CanAccess>
   )
 }

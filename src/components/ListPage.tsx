@@ -4,6 +4,7 @@ import { settings } from '@/settings'
 import React from 'react'
 import { useExport } from '@refinedev/core'
 import { Card, Typography } from '@mui/material'
+import { CanAccess } from '@refinedev/core'
 
 type ListPageProps = {
   title?: string | null
@@ -42,7 +43,7 @@ export const ListPage: React.FC<ListPageProps> = ({
   const headerButtons = ({ defaultButtons }) => {
     return (
       <>
-        {defaultButtons}
+        <CanAccess>{defaultButtons}</CanAccess>
         <ExportButton
           variant={'contained'}
           loading={exportIsLoading}
