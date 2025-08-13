@@ -51,6 +51,7 @@ import { GroundwaterLevelForm } from '@/pages/ocotillo/groundwater-level-form/st
 import { WellInventoryForm } from '@/pages/ocotillo/well-inventory-form'
 import { LexiconList } from '@/pages/ocotillo/lexicon'
 import { WaterChemistryApp } from '@/pages/ocotillo/water-chemistry-app'
+import { CanAccess } from '@refinedev/core'
 
 export const OcotilloRoutes = () => {
   return (

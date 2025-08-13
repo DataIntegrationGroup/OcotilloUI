@@ -16,6 +16,14 @@ import {
 
 let ocotillo = [
   {
+    name: 'map',
+    list: '/ocotillo/map',
+    meta: {
+      label: 'Map',
+      icon: <Map />,
+    },
+  },
+  {
     name: 'asset',
     list: '/ocotillo/asset',
     create: '/ocotillo/asset/create',
@@ -68,14 +76,6 @@ let ocotillo = [
     meta: {
       label: 'Samples',
       icon: <ScienceOutlined />,
-    },
-  },
-  {
-    name: 'map',
-    list: '/ocotillo/map',
-    meta: {
-      label: 'Map',
-      icon: <Map />,
     },
   },
   {
@@ -162,7 +162,7 @@ let ocotillo = [
     },
   },
   {
-    name: 'HygrographCorrector',
+    name: 'hydrograph-corrector',
     list: '/ocotillo/hydrograph-corrector',
     meta: {
       disabled: true,
@@ -173,7 +173,7 @@ let ocotillo = [
     },
   },
   {
-    name: 'Water Chemistry Import',
+    name: 'water-chemistry-import',
     list: '/ocotillo/water-chemistry-import',
     meta: {
       label: 'Water Chemistry Import (Coming Soon)',

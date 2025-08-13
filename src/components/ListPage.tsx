@@ -1,19 +1,20 @@
-import { ExportButton, List } from "@refinedev/mui";
-import { DataGrid } from "@mui/x-data-grid";
-import { settings } from "@/settings";
-import React from "react";
-import { useExport } from "@refinedev/core";
+import { ExportButton, List } from '@refinedev/mui'
+import { DataGrid } from '@mui/x-data-grid'
+import { settings } from '@/settings'
+import React from 'react'
+import { useExport, usePermissions } from '@refinedev/core'
+import { CanAccess } from '@refinedev/core'
 
 type ListPageProps = {
-  title?: string | null;
-  columns: any;
-  dataGridProps: any;
-  exportProps?: any;
-  children?: any;
-  onSelectionChange?: (selectionModel: any) => void;
-  getRowId?: (row: any) => number;
-  isLoading?: any;
-};
+  title?: string | null
+  columns: any
+  dataGridProps: any
+  exportProps?: any
+  children?: any
+  onSelectionChange?: (selectionModel: any) => void
+  getRowId?: (row: any) => number
+  isLoading?: any
+}
 
 export const ListPage: React.FC<ListPageProps> = ({
   title,
@@ -26,28 +27,28 @@ export const ListPage: React.FC<ListPageProps> = ({
   isLoading,
 }) => {
   if (!exportProps) {
-    exportProps = { pageSize: 1000 };
+    exportProps = { pageSize: 1000 }
   }
 
   const handleSelectionChangeWrapper = (selectionModel) => {
     if (onSelectionChange) {
-      onSelectionChange(selectionModel);
+      onSelectionChange(selectionModel)
     }
-  };
+  }
 
-  const { triggerExport, isLoading: exportIsLoading } = useExport(exportProps);
+  const { triggerExport, isLoading: exportIsLoading } = useExport(exportProps)
   const headerButtons = ({ defaultButtons }) => {
     return (
       <>
-        {defaultButtons}
+        <CanAccess>{defaultButtons}</CanAccess>
         <ExportButton
-          variant={"contained"}
+          variant={'contained'}
           loading={exportIsLoading}
           onClick={triggerExport}
         />
       </>
-    );
-  };
+    )
+  }
 
   return (
     <List headerButtons={headerButtons} title={title}>
@@ -63,5 +64,5 @@ export const ListPage: React.FC<ListPageProps> = ({
         loading={isLoading}
       />
     </List>
-  );
-};
+  )
+}
