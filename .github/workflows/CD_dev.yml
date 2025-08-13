@@ -2,7 +2,7 @@ name: CD deploy pre-production to GAE
 
 on:
   push:
-    branches: [pre-production]
+    branches: [ pre-production ]
 
 jobs:
   deploy-dev:
@@ -22,13 +22,13 @@ jobs:
 
       - name: Install deps & build
         env:
-            VITE_APP_TITLE: "NMBGMR Data Manager"
-            VITE_NMBGMR_AMP_API_URL: ${{ secrets.VITE_NMBGMR_AMP_API_URL_DEV }}
-            VITE_NMBGMR_GEOTHERMAL_API_URL: ${{ secrets.VITE_NMBGMR_GEOTHERMAL_API_URL_DEV }}
-            VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN_DEV }}
-            VITE_FIEF_BASE_URL: ${{ secrets.VITE_FIEF_BASE_URL_DEV }}
-            VITE_FIEF_CLIENT_ID: ${{ secrets.VITE_FIEF_CLIENT_ID_DEV }}
-            VITE_BASE_URL: ${{ secrets.VITE_BASE_URL_DEV }}
+          VITE_APP_TITLE: "NMBGMR Ocotillo"
+          VITE_NMBGMR_AMP_API_URL: ${{ secrets.VITE_NMBGMR_AMP_API_URL_DEV }}
+          VITE_NMBGMR_GEOTHERMAL_API_URL: ${{ secrets.VITE_NMBGMR_GEOTHERMAL_API_URL_DEV }}
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN_DEV }}
+          VITE_FIEF_BASE_URL: ${{ secrets.VITE_FIEF_BASE_URL_DEV }}
+          VITE_FIEF_CLIENT_ID: ${{ secrets.VITE_FIEF_CLIENT_ID_DEV }}
+          VITE_BASE_URL: ${{ secrets.VITE_BASE_URL_DEV }}
 
         run: |
           npm ci
@@ -60,7 +60,7 @@ jobs:
               echo "No versions to delete"
             fi
 
-    # Use PR author's username as git user name
+      # Use PR author's username as git user name
       - name: Set up git user
         run: |
           git config --global user.name "${{ github.actor }}"

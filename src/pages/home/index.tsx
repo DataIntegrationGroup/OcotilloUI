@@ -3,7 +3,7 @@ import {
   ElectricBolt,
   Plumbing,
   StorageOutlined,
-} from "@mui/icons-material";
+} from '@mui/icons-material'
 import {
   Avatar,
   Card,
@@ -18,21 +18,20 @@ import {
   Stack,
   Typography,
   useTheme,
-} from "@mui/material";
+} from '@mui/material'
 
 export const Home = () => {
-  const theme = useTheme();
+  const theme = useTheme()
 
   return (
     <Card>
       <CardHeader title="Home" />
       <CardContent>
         <Stack spacing={2}>
-          <Typography variant="h1">
-            Welcome to the NMBGMR Data Management Portal.
-          </Typography>
+          <Typography variant="h1">Welcome to Ocotillo.</Typography>
+          <Typography variant="h2">NMBGMR's Data Management Portal</Typography>
           <List
-            sx={{ width: "100%", maxWidth: 300 }}
+            sx={{ width: '100%', maxWidth: 300 }}
             subheader={
               <ListSubheader component="span">
                 Use this tool to efficiently manage data from:
@@ -91,5 +90,5 @@ export const Home = () => {
         </Stack>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
