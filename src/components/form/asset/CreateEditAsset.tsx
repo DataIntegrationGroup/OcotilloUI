@@ -1,15 +1,6 @@
-import {
-  useDataProvider,
-} from '@refinedev/core'
+import { useDataProvider } from '@refinedev/core'
 import { Controller } from 'react-hook-form'
-import {
-  Box,
-  TextField,
-  Stack,
-  Typography,
-  Input,
-  Button,
-} from '@mui/material'
+import { Box, TextField, Stack, Typography, Input, Button } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
 import FileUploadIcon from '@mui/icons-material/FileUpload'
 import { Add, Delete } from '@mui/icons-material'
@@ -48,7 +39,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
   onAddAsset,
   canRemoveAsset = true,
   totalAssets = 1,
-  existingAsset
+  existingAsset,
 }) => {
   const [isUploadLoading, setIsUploadLoading] = useState(false)
 
@@ -57,7 +48,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
   }
 
   const dataProvider = useDataProvider()
-  const provider = dataProvider('dataforge')
+  const provider = dataProvider('ocotillo')
 
   const onChangeHandler = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -105,14 +96,18 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
       ]
       setValue(getFieldName('file'), imagePayload, { shouldValidate: true })
       setValue(getFieldName('name'), name, { shouldValidate: true })
-      setValue(getFieldName('storage_path'), asset.storage_path, { shouldValidate: true })
+      setValue(getFieldName('storage_path'), asset.storage_path, {
+        shouldValidate: true,
+      })
       setValue(getFieldName('mime_type'), type, { shouldValidate: true })
       setValue(getFieldName('size'), size, { shouldValidate: true })
       setValue(getFieldName('url'), asset.url, { shouldValidate: true })
       setIsUploadLoading(false)
     } catch (error) {
       console.log(error)
-      setError(getFieldName('file'), { message: 'Upload failed. Please try again.' })
+      setError(getFieldName('file'), {
+        message: 'Upload failed. Please try again.',
+      })
       setIsUploadLoading(false)
     }
   }
@@ -121,21 +116,31 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
   const imageInput = watch ? watch(getFieldName('file')) : null
 
   //handle creating preview for existing asset
-  const existingAssetPreview = existingAsset ? {
-    name: existingAsset.name,
-    url: existingAsset.url,
-    mime_type: existingAsset.mime_type,
-    size: existingAsset.size
-  } : null
+  const existingAssetPreview = existingAsset
+    ? {
+        name: existingAsset.name,
+        url: existingAsset.url,
+        mime_type: existingAsset.mime_type,
+        size: existingAsset.size,
+      }
+    : null
   //determine which preview to use, upload or existing asset
-  const previewAsset = imageInput || (existingAssetPreview ? [existingAssetPreview] : null)
+  const previewAsset =
+    imageInput || (existingAssetPreview ? [existingAssetPreview] : null)
 
   return (
     <Grid container spacing={3}>
       {/* Asset Header with Remove Button */}
       {assetIndex !== undefined && (
         <Grid size={12}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2,
+            }}
+          >
             <Typography variant="h6">Asset {assetIndex + 1}</Typography>
             {onRemoveAsset && (
               <Button
@@ -173,8 +178,6 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
         />
       </Grid>
 
-
-
       {/* File Upload Section */}
       <Grid size={12}>
         <Stack
@@ -192,9 +195,11 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
             />
             <input
               id={getFieldName('file')}
-              {...(register ? register(getFieldName('file'), {
-                required: 'This field is required',
-              }) : {})}
+              {...(register
+                ? register(getFieldName('file'), {
+                    required: 'This field is required',
+                  })
+                : {})}
               type="hidden"
             />
             <LoadingButton
@@ -233,16 +238,18 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
         <Grid size={12}>
           <Button
             variant="outlined"
-            onClick={() => onAddAsset({
-              label: '',
-              name: '',
-              thing_id: null,
-              file: null,
-              storage_path: '',
-              mime_type: '',
-              size: 0,
-              url: ''
-            })}
+            onClick={() =>
+              onAddAsset({
+                label: '',
+                name: '',
+                thing_id: null,
+                file: null,
+                storage_path: '',
+                mime_type: '',
+                size: 0,
+                url: '',
+              })
+            }
             startIcon={<Add />}
           >
             Add Asset
@@ -251,4 +258,4 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
       )}
     </Grid>
   )
-} 
+}

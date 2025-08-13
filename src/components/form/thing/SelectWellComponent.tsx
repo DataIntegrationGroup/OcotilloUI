@@ -1,6 +1,6 @@
 import { Box } from '@mui/system'
 import { useAutocomplete } from '@refinedev/mui'
-import { IWell } from '@/interfaces/dataforge/IThing'
+import { IWell } from '@/interfaces/ocotillo/IThing'
 import { Controller } from 'react-hook-form'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
@@ -43,7 +43,7 @@ export const SelectWellComponent: React.FC<EntryProps> = ({
 
   const { autocompleteProps: autocompletePropsThing } = useAutocomplete<IWell>({
     resource: 'thing',
-    dataProviderName: 'dataforge',
+    dataProviderName: 'ocotillo',
     meta: {
       params: {
         thing_type: thing_type,

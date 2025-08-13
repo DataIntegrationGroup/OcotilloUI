@@ -1,10 +1,10 @@
 import { useList } from '@refinedev/core'
-import { ILexicon } from '@/interfaces/dataforge/ILexicon'
+import { ILexicon } from '@/interfaces/ocotillo/ILexicon'
 
 export const useLexicon = ({ category }) => {
   const data = useList<ILexicon>({
     resource: 'lexicon',
-    dataProviderName: 'dataforge',
+    dataProviderName: 'ocotillo',
     queryOptions: {
       cacheTime: 1000 * 60 * 5, // 5 minutes
       staleTime: 1000 * 60 * 2, // 2 minutes
