@@ -16,6 +16,9 @@ const gravatarUrl = (email: string) => {
 }
 
 export const getAccessControlGroups = (): string[] => {
+  if (!import.meta.env.PROD && !import.meta.env.VITE_TEST_AUTH) {
+    return ['Admin']
+  }
   const id_token = localStorage.getItem('id_token')
 
   if (!id_token) return null
@@ -27,7 +30,14 @@ export const getAccessControlGroups = (): string[] => {
 export const authentikAuthProvider: AuthProvider = {
   login: async (params) => {
     // const { status } = handleLogin(email, password)
-    console.log('ff', params)
+    const mode = import.meta.env.MODE
+    console.log('mode', mode)
+    if (!import.meta.env.PROD && !import.meta.env.VITE_TEST_AUTH) {
+      localStorage.setItem('access_token', 'fake_token')
+      localStorage.setItem('id_token', 'fake_token')
+      return { success: true }
+    }
+
     const codeVerifier = generateCodeVerifier()
     const codeChallenge = await generateCodeChallenge(codeVerifier)
 
@@ -44,22 +54,9 @@ export const authentikAuthProvider: AuthProvider = {
     authUrl.searchParams.set('code_challenge', codeChallenge)
     authUrl.searchParams.set('code_challenge_method', 'S256')
 
-    window.location.href = authUrl.toString()
-    // fetch(authUrl.toString())
-    //   .then((resp) => resp.json())
-    //   .then((data) => console.log(data))
+    window.location.assign(authUrl.toString())
 
     return { success: true }
-    // return { success: true, redirectTo: authUrl.toString() }
-    // const status = 200
-    // if (status === 200) {
-    //   return { success: true, redirectTo: authUrl.toString() }
-    // } else {
-    //   return {
-    //     success: false,
-    //     error: { name: 'Login Error', message: 'Invalid credentials' },
-    //   }
-    // }
   },
 
   // Called when user logs out
@@ -104,22 +101,13 @@ export const authentikAuthProvider: AuthProvider = {
   // Called to check permissions (optional)
   getPermissions: async () => {
     const id_token = localStorage.getItem('id_token')
-    // console.log('token', id_token)
     if (!id_token) return null
     const token = jwtDecode(id_token)
-    // console.log('tokenf', token)
-    // const payload = JSON.parse(atob(token.split('.')[1]))
-    // console.log('payload', payload)
-    // return payload.roles || []
     return token['groups'] || []
   },
 
-  // check: async (params) => ({}) as CheckResponse,
-  // logout: async (params) => ({}) as AuthActionResponse,
   onError: async (params) => ({}) as AuthActionResponse,
   register: async (params) => ({}) as AuthActionResponse,
   forgotPassword: async (params) => ({}) as AuthActionResponse,
   updatePassword: async (params) => ({}) as AuthActionResponse,
-  // getPermissions: async (params) => ({}) as string[],
-  // getIdentity: async (params) => ({}) as any,
 }

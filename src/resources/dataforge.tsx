@@ -16,6 +16,14 @@ import {
 
 let dataforge = [
   {
+    name: 'map',
+    list: '/dataforge/map',
+    meta: {
+      label: 'Map',
+      icon: <Map />,
+    },
+  },
+  {
     name: 'asset',
     list: '/dataforge/asset',
     create: '/dataforge/asset/create',
@@ -68,14 +76,6 @@ let dataforge = [
     meta: {
       label: 'Samples',
       icon: <ScienceOutlined />,
-    },
-  },
-  {
-    name: 'map',
-    list: '/dataforge/map',
-    meta: {
-      label: 'Map',
-      icon: <Map />,
     },
   },
   {
@@ -162,7 +162,7 @@ let dataforge = [
     },
   },
   {
-    name: 'HygrographCorrector',
+    name: 'hydrograph-corrector',
     list: '/dataforge/hydrograph-corrector',
     meta: {
       disabled: true,
@@ -173,7 +173,7 @@ let dataforge = [
     },
   },
   {
-    name: 'Water Chemistry Import',
+    name: 'water-chemistry-import',
     list: '/dataforge/water-chemistry-import',
     meta: {
       label: 'Water Chemistry Import (Coming Soon)',

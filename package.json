@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-alpha.6",
+    "@casl/ability": "^6.7.3",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@fief/fief": "^0.15.0-beta.2",
