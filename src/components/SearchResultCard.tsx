@@ -34,40 +34,36 @@ export function EmailCard({ option }) {
 export function WellCard({ option }) {
   return (
     <Card sx={{ padding: '5px', margin: '5px', width: '800px' }}>
-      <Grid2 container spacing={2}>
-        <Grid2 size={6}>
-          <Box>
-            <Chip
-              size="small"
-              color="default"
-              label={option.properties.well_type}
-            />
-            <Chip
-              size="small"
-              color="default"
-              label={option.properties.county}
-            />
-          </Box>
-        </Grid2>
-        <Grid2 size={6} justifyContent={''}>
-          <Box>
-            <Chip
-              size="small"
-              color="default"
-              label={option.properties.series.observed_property}
-            />
-            <Chip
-              size="small"
-              color={
-                option.properties.series.sensor === 'manual'
-                  ? 'primary'
-                  : 'secondary'
-              }
-              label={option.properties.series.sensor}
-            />
-          </Box>
-        </Grid2>
-      </Grid2>
+      {/*<Grid2 container spacing={2}>*/}
+      {/*  <Grid2 size={6}>*/}
+      <Box>
+        <Chip
+          size="small"
+          color="default"
+          label={option.properties.well_type}
+        />
+        {/*<Chip size="small" color="default" label={option.properties.county} />*/}
+      </Box>
+      {/*</Grid2>*/}
+      {/*  <Grid2 size={6} justifyContent={''}>*/}
+      {/*    <Box>*/}
+      {/*      <Chip*/}
+      {/*        size="small"*/}
+      {/*        color="default"*/}
+      {/*        label={option.properties.series.observed_property}*/}
+      {/*      />*/}
+      {/*      <Chip*/}
+      {/*        size="small"*/}
+      {/*        color={*/}
+      {/*          option.properties.series.sensor === 'manual'*/}
+      {/*            ? 'primary'*/}
+      {/*            : 'secondary'*/}
+      {/*        }*/}
+      {/*        label={option.properties.series.sensor}*/}
+      {/*      />*/}
+      {/*    </Box>*/}
+      {/*  </Grid2>*/}
+      {/*</Grid2>*/}
     </Card>
   )
 }

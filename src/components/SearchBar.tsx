@@ -9,7 +9,7 @@ import {
 } from '@mui/material'
 import { Search } from 'react-flaticons'
 import Stack from '@mui/material/Stack'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   AddressCard,
@@ -18,6 +18,7 @@ import {
   SpringCard,
   WellCard,
 } from '@/components/SearchResultCard'
+import { useDataProvider, useList, useGo } from '@refinedev/core'
 
 const results = [
   {
@@ -117,11 +118,38 @@ export const SearchBar = () => {
   const [searchInput, setSearchInput] = useState('')
   const [selectedValue, setSelectedValue] = useState(null)
 
-  const searchQuery = useQuery({
-    queryKey: ['search', searchInput],
-    queryFn: () => searchService(searchInput),
-    enabled: !!searchInput,
+  const { data: searchResultData } = useList({
+    resource: 'search',
+    dataProviderName: 'ocotillo',
+    queryOptions: {
+      enabled: !!searchInput,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
+    meta: {
+      params: { q: searchInput },
+    },
   })
+  const go = useGo()
+  useEffect(() => {
+    if (!selectedValue) return
+
+    if (selectedValue.group == 'Wells') {
+      const thing_type = selectedValue?.properties?.thing_type
+      let thing_url
+      if (thing_type === 'water well') {
+        thing_url = 'well'
+      } else {
+        thing_url = 'spring'
+      }
+
+      go({
+        to: `ocotillo/${thing_url}/show/` + selectedValue?.properties.id,
+      })
+    }
+  }, [selectedValue])
+
+  const searchResults = searchResultData?.data ?? []
 
   return (
     <Box
@@ -166,7 +194,7 @@ export const SearchBar = () => {
             },
           },
         }}
-        options={searchQuery?.data ?? results}
+        options={searchResults}
         getOptionLabel={
           (option) =>
             typeof option === 'string'
