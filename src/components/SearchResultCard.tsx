@@ -42,7 +42,16 @@ export function WellCard({ option }) {
           color="default"
           label={option.properties.well_type}
         />
-        {/*<Chip size="small" color="default" label={option.properties.county} />*/}
+        <Chip
+          size="small"
+          color="default"
+          label={`Hole Depth (ft): ${option.properties.hole_depth || ''}`}
+        />
+        <Chip
+          size="small"
+          color="default"
+          label={`Well Depth (ft): ${option.properties.well_depth || ''}`}
+        />
       </Box>
       {/*</Grid2>*/}
       {/*  <Grid2 size={6} justifyContent={''}>*/}

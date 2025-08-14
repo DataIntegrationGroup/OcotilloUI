@@ -1,7 +1,25 @@
-import { useShow } from '@refinedev/core'
-import { Show } from '@refinedev/mui'
+import { useList, useResourceParams, useShow } from '@refinedev/core'
+import { Show, useDataGrid } from '@refinedev/mui'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 import { IWell } from '@/interfaces/ocotillo/IThing'
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Card,
+  CardHeader,
+  CircularProgress,
+  Typography,
+} from '@mui/material'
+import { Hydrograph } from '@/components/Hydrographs/Hydrograph'
+import { useEffect, useMemo, useState } from 'react'
+import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
+import { Box } from '@mui/system'
+import Grid from '@mui/material/Grid2'
+import { DataGrid, GridColDef } from '@mui/x-data-grid'
+import { IObservation } from '@/interfaces/ocotillo/IObservation'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import { settings } from '@/settings'
 
 export const WellShow = () => {
   const { queryResult } = useShow({})
@@ -17,9 +35,180 @@ export const WellShow = () => {
     },
   }
 
+  const [hydrographDatasource, setHydrographDatasource] = useState<
+    IHydrographDatasource[]
+  >([])
+  const [refreshHydrograph, setRefreshHydrograph] = useState<number>(0)
+
+  const { id } = useResourceParams()
+
+  const { dataGridProps: observationDataGridProps } = useDataGrid({
+    resource: 'observation/groundwater-level',
+    dataProviderName: 'ocotillo',
+    pagination: {
+      pageSize: 10,
+    },
+    meta: {
+      params: {
+        thing_id: id,
+      },
+    },
+  })
+  const { rows: observations, loading: observationsIsloading } =
+    observationDataGridProps
+
+  useEffect(() => {
+    if (!observations || observations.length === 0) return
+
+    const source: IHydrographDatasource[] = [
+      {
+        id: 1,
+        name: 'Groundwater Level',
+        style: 'scatter',
+        data:
+          observations.map((obs) => ({
+            phenomenonTime: new Date(obs.observation_datetime),
+            result: Number(obs.depth_to_water),
+          })) || [],
+      },
+    ]
+    setHydrographDatasource(source)
+  }, [observations])
+
+  const observationColumns: GridColDef<IObservation>[] = useMemo(() => {
+    return [
+      {
+        field: 'observation_datetime',
+        headerName: 'Date/Time',
+        valueGetter: (params) => new Date(params),
+        type: 'dateTime',
+        minWidth: 180,
+      },
+      {
+        field: 'depth_to_water',
+        headerName: 'Depth To Water (ft)',
+        type: 'number',
+        minWidth: 150,
+      },
+      { field: 'release_status', headerName: 'Release Status', minWidth: 150 },
+      { field: 'level_status', headerName: 'Level Status', minWidth: 150 },
+    ]
+  }, [])
+
+  const { dataGridProps: wellScreenDataGridProps } = useDataGrid({
+    resource: 'thing/well-screen',
+    dataProviderName: 'ocotillo',
+    pagination: {
+      pageSize: 10,
+    },
+    meta: {
+      params: {
+        thing_id: id,
+      },
+    },
+  })
+
+  const wellScreenColumns: GridColDef[] = useMemo(() => {
+    return [
+      { field: 'screen_type', headerName: 'Screen Type', minWidth: 150 },
+      {
+        field: 'screen_depth_top',
+        headerName: 'Screen Top Depth (ft)',
+        type: 'number',
+        minWidth: 150,
+      },
+      {
+        field: 'screen_depth_bottom',
+        headerName: 'Screen Bottom Depth (ft)',
+        type: 'number',
+        minWidth: 200,
+      },
+    ]
+  }, [])
+
   return (
-    <Show isLoading={isLoading}>
-      <DynamicShowDisplay<IWell> record={record} fieldConfigs={fieldConfigs} />
+    <Show isLoading={isLoading || observationsIsloading}>
+      <Grid container spacing={2}>
+        <Grid size={12}>
+          <Card>
+            <CardHeader title={`Well: ${record?.name || 'Loading...'}`} />
+            <Box padding={2}>
+              <Typography variant="body1">
+                Release Status: {record?.release_status || ''}
+              </Typography>
+              <Typography variant="body1">
+                Well Type: {record?.well_type || ''}
+              </Typography>
+              <Typography variant="body1">
+                Hole Depth (ft): {record?.hole_depth || ''}
+              </Typography>
+              <Typography variant="body1">
+                Well Depth (ft): {record?.well_depth || ''}
+              </Typography>
+            </Box>
+          </Card>
+        </Grid>
+        <Grid size={6}>
+          <Card>
+            <CardHeader title="Hydrograph" />
+            <Box position={'relative'}>
+              {observationsIsloading && (
+                <Box
+                  position="absolute"
+                  top="50%"
+                  left="50%"
+                  sx={{ transform: 'translate(-50%, -50%)' }}
+                >
+                  <CircularProgress />
+                </Box>
+              )}
+              <Hydrograph
+                datasource={hydrographDatasource}
+                refresh={refreshHydrograph}
+              />
+            </Box>
+          </Card>
+        </Grid>
+        <Grid size={6}>
+          <Card>
+            <DataGrid
+              rowHeight={settings.rowHeight}
+              {...observationDataGridProps}
+              columns={observationColumns}
+            />
+          </Card>
+        </Grid>
+        <Grid size={12}>
+          <Card>
+            <CardHeader title="Well Screens" />
+            <Box padding={2}>
+              <DataGrid
+                {...wellScreenDataGridProps}
+                columns={wellScreenColumns}
+              />
+            </Box>
+          </Card>
+        </Grid>
+        <Grid size={12}>
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel2-content"
+              id="panel2-header"
+            >
+              <Typography>Details</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Card>
+                <DynamicShowDisplay<IWell>
+                  record={record}
+                  fieldConfigs={fieldConfigs}
+                />
+              </Card>
+            </AccordionDetails>
+          </Accordion>
+        </Grid>
+      </Grid>
     </Show>
   )
 }
