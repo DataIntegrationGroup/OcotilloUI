@@ -9,6 +9,8 @@ import {
   Card,
   CardHeader,
   CircularProgress,
+  ImageList,
+  ImageListItem,
   Typography,
 } from '@mui/material'
 import { Hydrograph } from '@/components/Hydrographs/Hydrograph'
@@ -39,15 +41,28 @@ export const WellShow = () => {
     IHydrographDatasource[]
   >([])
   const [refreshHydrograph, setRefreshHydrograph] = useState<number>(0)
-
+  const [assets, setAssets] = useState([])
   const { id } = useResourceParams()
 
+  const { data: assetsData } = useList({
+    resource: 'asset',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: id,
+      },
+    },
+  })
+
+  useEffect(() => {
+    if (!assetsData || !assetsData.data || assetsData.total === 0) return
+    setAssets(assetsData.data)
+  }, [assetsData])
+
+  console.log('assets', assets)
   const { dataGridProps: observationDataGridProps } = useDataGrid({
     resource: 'observation/groundwater-level',
     dataProviderName: 'ocotillo',
-    pagination: {
-      pageSize: 10,
-    },
     meta: {
       params: {
         thing_id: id,
@@ -98,9 +113,6 @@ export const WellShow = () => {
   const { dataGridProps: wellScreenDataGridProps } = useDataGrid({
     resource: 'thing/well-screen',
     dataProviderName: 'ocotillo',
-    pagination: {
-      pageSize: 10,
-    },
     meta: {
       params: {
         thing_id: id,
@@ -175,6 +187,9 @@ export const WellShow = () => {
               rowHeight={settings.rowHeight}
               {...observationDataGridProps}
               columns={observationColumns}
+              pagination
+              pageSizeOptions={[5, 10, 25]}
+              paginationModel={{ pageSize: 10, page: 0 }}
             />
           </Card>
         </Grid>
@@ -188,6 +203,50 @@ export const WellShow = () => {
               />
             </Box>
           </Card>
+        </Grid>
+        <Grid size={12}>
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel2-content"
+              id="panel2-header"
+            >
+              <Typography>Attachments</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              {(!assets || assets.length === 0) && (
+                <Typography variant="body2" color="textSecondary">
+                  No attachments available.
+                </Typography>
+              )}
+              {assets && assets.length > 0 && (
+                <ImageList
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    overflowX: 'auto',
+                  }}
+                  cols={3}
+                >
+                  {(assets ?? []).map(
+                    (img: { url: string; name?: string }, idx: number) => (
+                      <ImageListItem key={idx} sx={{ minWidth: 200 }}>
+                        <img
+                          src={img.url}
+                          alt={img.name || `Attachment ${idx + 1}`}
+                          style={{
+                            width: '100%',
+                            height: 'auto',
+                            borderRadius: 8,
+                          }}
+                        />
+                      </ImageListItem>
+                    )
+                  )}
+                </ImageList>
+              )}
+            </AccordionDetails>
+          </Accordion>
         </Grid>
         <Grid size={12}>
           <Accordion>
