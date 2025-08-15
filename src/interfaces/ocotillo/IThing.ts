@@ -1,8 +1,10 @@
+import { number, object } from 'yup'
+
 export interface IThing {
   id: number
   name: string
   created_at: string
-  release_state: string
+  release_status: string
   thing_type: string
   location_id: number
   location?: object
@@ -20,4 +22,12 @@ export interface IWell extends IThing {
 
 export interface ISpring extends IThing {
   spring_type?: string
+}
+
+export interface IThingIdLink {
+  thing_id: number
+  thing: IThing
+  relation: string
+  alternate_id: string
+  alternate_organization: string
 }

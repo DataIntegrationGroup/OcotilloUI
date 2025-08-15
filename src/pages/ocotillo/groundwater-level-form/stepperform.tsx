@@ -17,7 +17,7 @@ import {
 } from '@/pages/ocotillo/groundwater-level-form/step-components'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { createGroundwaterLevelForm } from '@/pages/ocotillo/groundwater-level-form/groundwater-level-form.service'
-import { SelectWellComponent } from '@/components/form/thing/SelectWellComponent'
+import { SelectThingComponent } from '@/components/form/thing/SelectThingComponent'
 
 export const GroundwaterLevelForm: React.FC = () => {
   // ---------------------------------------------------------------------------

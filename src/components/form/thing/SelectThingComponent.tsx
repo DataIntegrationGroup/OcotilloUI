@@ -1,6 +1,6 @@
 import { Box } from '@mui/system'
 import { useAutocomplete } from '@refinedev/mui'
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import { IWell, IThing } from '@/interfaces/ocotillo/IThing'
 import { Controller } from 'react-hook-form'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
@@ -27,7 +27,7 @@ interface EntryProps {
   label?: string
 }
 
-export const SelectWellComponent: React.FC<EntryProps> = ({
+export const SelectThingComponent: React.FC<EntryProps> = ({
   control,
   errors,
   watch,
@@ -41,30 +41,32 @@ export const SelectWellComponent: React.FC<EntryProps> = ({
   const [spatialSearchWKT, setSpatialSearchWKT] = useState(null)
   const theme = useTheme()
 
-  const { autocompleteProps: autocompletePropsThing } = useAutocomplete<IWell>({
-    resource: 'thing',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_type: thing_type,
-        within: spatialSearchWKT,
+  const { autocompleteProps: autocompletePropsThing } = useAutocomplete<IThing>(
+    {
+      resource: 'thing',
+      dataProviderName: 'ocotillo',
+      meta: {
+        params: {
+          thing_type: thing_type,
+          within: spatialSearchWKT,
+        },
       },
-    },
-    onSearch: (value) => [
-      {
-        field: 'name',
-        operator: 'contains',
-        value,
-      },
-    ],
-    queryOptions: {
-      onSuccess: (data) => {
-        console.log('Autocomplete options fetched:', data)
+      onSearch: (value) => [
+        {
+          field: 'name',
+          operator: 'contains',
+          value,
+        },
+      ],
+      queryOptions: {
+        onSuccess: (data) => {
+          console.log('Autocomplete options fetched:', data)
 
-        updateMap(data?.data)
+          updateMap(data?.data)
+        },
       },
-    },
-  })
+    }
+  )
 
   const mapRef = useRef<MapRef>(null)
   const [selectedThingFeatureCollection, setSelectedThingFeatureCollection] =
@@ -149,7 +151,7 @@ export const SelectWellComponent: React.FC<EntryProps> = ({
     }
   }, [selectedThingFeatureCollection, spatialSearchWKT])
 
-  const updateMap = (newValue: IWell[] | undefined) => {
+  const updateMap = (newValue: IThing[] | undefined) => {
     if (!newValue) {
       setSelectedThingFeatureCollection({
         type: 'FeatureCollection',

@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState } from 'react'
 import {
   useGetIdentity,
   useActiveAuthProvider,
@@ -6,7 +6,7 @@ import {
   useLogout,
   useWarnAboutChange,
   useTranslate,
-} from "@refinedev/core";
+} from '@refinedev/core'
 import {
   AppBar,
   Avatar,
@@ -17,16 +17,17 @@ import {
   Menu,
   MenuItem,
   Skeleton,
-} from "@mui/material";
+} from '@mui/material'
 import {
   DarkModeRounded,
   LightModeOutlined,
   LogoutOutlined,
   PersonOutline,
-} from "@mui/icons-material";
-import type { RefineThemedLayoutV2HeaderProps } from "@refinedev/mui";
-import { HamburgerMenu } from "./hamburgerMenu";
-import { ColorModeContext } from "../../contexts";
+} from '@mui/icons-material'
+import type { RefineThemedLayoutV2HeaderProps } from '@refinedev/mui'
+import { HamburgerMenu } from './hamburgerMenu'
+import { ColorModeContext } from '../../contexts'
+import SearchBar from '@/components/SearchBar'
 
 const stringAvatar = (name: string) => {
   // Reduce the string into a numerical hash value
@@ -36,76 +37,76 @@ const stringAvatar = (name: string) => {
     `#${[...name]
       .reduce((hash, char) => char.charCodeAt(0) + ((hash << 5) - hash), 0)
       .toString(16)
-      .padStart(6, "0")
-      .slice(-6)}`;
+      .padStart(6, '0')
+      .slice(-6)}`
 
-  name = name?.trim() || "UU";
-  const nameParts = name?.trim().split(" "); // Split name into words
+  name = name?.trim() || 'UU'
+  const nameParts = name?.trim().split(' ') // Split name into words
   const initials =
     nameParts.length > 1
       ? `${nameParts[0][0]}${nameParts[1][0]}` // First letter of first two words
-      : `${nameParts[0][0]}${nameParts[0][1] || nameParts[0][0]}`; // Handle single-word names
+      : `${nameParts[0][0]}${nameParts[0][1] || nameParts[0][0]}` // Handle single-word names
 
   return {
     sx: {
       bgcolor: stringToColor(name),
     },
     children: initials.toUpperCase(),
-  };
-};
+  }
+}
 
 export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
-  const authProvider = useActiveAuthProvider();
-  const isExistAuthentication = useIsExistAuthentication();
+  const authProvider = useActiveAuthProvider()
+  const isExistAuthentication = useIsExistAuthentication()
   const { data: user, isLoading } = useGetIdentity({
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
-  });
-  const { warnWhen, setWarnWhen } = useWarnAboutChange();
+  })
+  const { warnWhen, setWarnWhen } = useWarnAboutChange()
   const { mutate: mutateLogout } = useLogout({
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
-  });
+  })
 
-  const translate = useTranslate();
-  const { mode, setMode } = useContext(ColorModeContext);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  const translate = useTranslate()
+  const { mode, setMode } = useContext(ColorModeContext)
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const open = Boolean(anchorEl)
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+    setAnchorEl(event.currentTarget)
+  }
 
   const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
+    setAnchorEl(null)
+  }
 
   const handleProfile = () => {
     window.open(
-      "https://fief.newmexicowaterdata.org/",
-      "_blank",
-      "noopener,noreferrer",
-    );
-    handleMenuClose();
-  };
+      'https://fief.newmexicowaterdata.org/',
+      '_blank',
+      'noopener,noreferrer'
+    )
+    handleMenuClose()
+  }
 
   const handleLogout = () => {
     if (warnWhen) {
       const confirm = window.confirm(
         translate(
-          "warnWhenUnsavedChanges",
-          "Are you sure you want to leave? You have unsaved changes.",
-        ),
-      );
+          'warnWhenUnsavedChanges',
+          'Are you sure you want to leave? You have unsaved changes.'
+        )
+      )
 
       if (confirm) {
-        setWarnWhen(false);
-        mutateLogout();
+        setWarnWhen(false)
+        mutateLogout()
       }
     } else {
-      mutateLogout();
+      mutateLogout()
     }
 
-    handleMenuClose();
-  };
+    handleMenuClose()
+  }
 
   return (
     <AppBar position="sticky">
@@ -117,6 +118,8 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
           justifyContent="flex-end"
           alignItems="center"
         >
+          <SearchBar />
+
           <Stack
             direction="row"
             gap="16px"
@@ -124,10 +127,10 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
             justifyContent="center"
           >
             <IconButton onClick={() => setMode()}>
-              {mode === "dark" ? (
-                <LightModeOutlined sx={{ color: "#FFD700" }} />
+              {mode === 'dark' ? (
+                <LightModeOutlined sx={{ color: '#FFD700' }} />
               ) : (
-                <DarkModeRounded sx={{ color: "#F9F9F9" }} />
+                <DarkModeRounded sx={{ color: '#F9F9F9' }} />
               )}
             </IconButton>
 
@@ -135,7 +138,7 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
               <Skeleton
                 variant="circular"
                 animation="pulse"
-                sx={{ bgcolor: "rgba(255, 255, 255, 0.25)" }}
+                sx={{ bgcolor: 'rgba(255, 255, 255, 0.25)' }}
               >
                 <Avatar />
               </Skeleton>
@@ -161,12 +164,12 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
               open={open}
               onClose={handleMenuClose}
               anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "right",
+                vertical: 'bottom',
+                horizontal: 'right',
               }}
               transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
+                vertical: 'top',
+                horizontal: 'right',
               }}
             >
               {user?.name && <MenuItem disabled>{user?.name}</MenuItem>}
@@ -189,5 +192,5 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
         </Stack>
       </Toolbar>
     </AppBar>
-  );
-};
+  )
+}

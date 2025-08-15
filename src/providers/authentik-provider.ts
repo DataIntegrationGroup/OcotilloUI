@@ -15,6 +15,27 @@ const gravatarUrl = (email: string) => {
   return `https://www.gravatar.com/avatar/${sha256(hash)}`
 }
 
+export const getAccessToken = async (refresh?: boolean) => {
+  if (refresh) {
+    const refresh_token = localStorage.getItem('refresh_token')
+    const url = new URL(`${AUTHENTIK_URL}/token/`)
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refresh_token,
+        client_id: CLIENT_ID,
+      }),
+    })
+    const data = await response.json()
+    localStorage.setItem('access_token', data.access_token)
+    localStorage.setItem('id_token', data.id_token)
+    localStorage.setItem('refresh_token', data.refresh_token)
+  }
+  return localStorage.getItem('access_token')
+}
+
 export const getAccessControlGroups = (): string[] => {
   if (!import.meta.env.PROD && !import.meta.env.VITE_TEST_AUTH) {
     return ['Admin']
@@ -31,7 +52,6 @@ export const authentikAuthProvider: AuthProvider = {
   login: async (params) => {
     // const { status } = handleLogin(email, password)
     const mode = import.meta.env.MODE
-    console.log('mode', mode)
     if (!import.meta.env.PROD && !import.meta.env.VITE_TEST_AUTH) {
       localStorage.setItem('access_token', 'fake_token')
       localStorage.setItem('id_token', 'fake_token')
@@ -46,7 +66,7 @@ export const authentikAuthProvider: AuthProvider = {
     const RESPONSE_TYPE = 'code'
     const SCOPE = 'openid profile email offline_access permissions'
 
-    const authUrl = new URL(`${AUTHENTIK_URL}authorize/`)
+    const authUrl = new URL(`${AUTHENTIK_URL}/authorize/`)
     authUrl.searchParams.set('client_id', CLIENT_ID)
     authUrl.searchParams.set('redirect_uri', REDIRECT_URI)
     authUrl.searchParams.set('response_type', RESPONSE_TYPE)
@@ -63,6 +83,7 @@ export const authentikAuthProvider: AuthProvider = {
   logout: async () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('id_token')
+    localStorage.removeItem('refresh_token')
     localStorage.removeItem('pkce_code_verifier')
     window.location.href = `${AUTHENTIK_URL}end-session?post_logout_redirect_uri=${encodeURIComponent(
       window.location.origin
@@ -83,13 +104,12 @@ export const authentikAuthProvider: AuthProvider = {
     const token = localStorage.getItem('access_token')
     if (!token) return null
 
-    const res = await fetch(`${AUTHENTIK_URL}userinfo/`, {
+    const res = await fetch(`${AUTHENTIK_URL}/userinfo/`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) return null
 
     const profile = await res.json()
-    console.log('profile', profile)
     return {
       id: profile.sub,
       fullName: profile.name || profile.preferred_username,

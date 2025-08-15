@@ -1,17 +1,17 @@
 import type { DataProvider } from '@refinedev/core'
-import { getAccessToken } from './fief-provider'
 import { settings } from '@/settings'
 
 const API_URL = `${settings.ocotillo_api_url}`
 
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import createAuthRefreshInterceptor from 'axios-auth-refresh'
-
+import { getAccessToken } from '@/providers/authentik-provider'
 export const axiosInstance: AxiosInstance = axios.create()
 
 axiosInstance.interceptors.request.use(
   async (config) => {
     const token = await getAccessToken()
+
     config.headers.Authorization = `Bearer ${token}`
     return config
   },
