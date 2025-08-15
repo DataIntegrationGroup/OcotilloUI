@@ -9,8 +9,7 @@ import {
 } from '@mui/material'
 import { Search } from 'react-flaticons'
 import Stack from '@mui/material/Stack'
-import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useCallback, useEffect, useState } from 'react'
 import {
   AddressCard,
   EmailCard,
@@ -18,116 +17,36 @@ import {
   SpringCard,
   WellCard,
 } from '@/components/SearchResultCard'
-import { useDataProvider, useList, useGo } from '@refinedev/core'
-
-const results = [
-  {
-    label: 'John Well',
-    description: 'Description for option 1',
-    properties: {
-      well_type: 'Production',
-      county: 'Rio Arriba',
-      series: {
-        observed_property: 'groundwater level',
-        sensor: 'manual',
-      },
-    },
-    group: 'Wells',
-  },
-  {
-    label: "Doe's well",
-    description: 'Description for option 2',
-    properties: {
-      well_type: 'Observation',
-      county: 'Santa Fe',
-      series: {
-        observed_property: 'groundwater level',
-        sensor: 'continuous',
-      },
-    },
-    group: 'Wells',
-  },
-  {
-    label: 'NM-0912',
-    description: 'Description for option 3',
-    properties: {
-      well_type: 'Irrigation',
-      county: 'Bernalillo',
-      series: {
-        observed_property: 'groundwater level',
-        sensor: 'manual',
-      },
-    },
-    group: 'Wells',
-  },
-  {
-    label: 'NM-0912spring',
-    description: 'Description for option 1',
-    properties: {
-      county: 'Taos',
-    },
-    group: 'Springs',
-  },
-  {
-    label: 'NM-0912a',
-    description: 'Description for option 1',
-    properties: {
-      county: 'San Miguel',
-    },
-    group: 'Springs',
-  },
-  {
-    label: "Doe's spring",
-    description: 'Description for option 2',
-    properties: {
-      county: 'Los Alamos',
-    },
-    group: 'Springs',
-  },
-  {
-    label: 'John Doe',
-    description: 'Description for option 1',
-    properties: {
-      address: [
-        {
-          address_line_1: '123 Main St',
-          address_line_2: 'Apt 4B',
-          city: 'Springfield',
-          state: 'IL',
-          zip_code: '62701',
-          type: 'Primary',
-          id: '1',
-        },
-      ],
-      phone: [{ phone_number: '555-1234', type: 'Primary', id: '1' }],
-      email: [{ email: 'foo@bar.com', type: 'Primary', id: '1' }],
-    },
-    group: 'Contacts',
-  },
-]
-
-export const searchService = async (query: string) => {
-  if (!query) return []
-
-  return results.filter((option) =>
-    option.label.toLowerCase().includes(query.toLowerCase())
-  )
-}
+import { useList, useGo } from '@refinedev/core'
+import { debounce } from 'lodash'
 
 export const SearchBar = () => {
   const [searchInput, setSearchInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [selectedValue, setSelectedValue] = useState(null)
+
+  const debouncedSetSearchQuery = useCallback(
+    debounce((value) => {
+      setSearchQuery(value)
+    }, 250),
+    [setSearchQuery]
+  )
+
+  const handleSearch = (value: string) => {
+    setSearchInput(value)
+    debouncedSetSearchQuery(value) // Use the debounced function to set the search query
+  }
 
   const { data: searchResultData } = useList({
     resource: 'search',
     dataProviderName: 'ocotillo',
     queryOptions: {
-      enabled: !!searchInput,
+      enabled: !!searchQuery,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
     meta: {
-      params: { q: searchInput },
+      params: { q: searchQuery },
     },
   })
   const go = useGo()
@@ -210,7 +129,9 @@ export const SearchBar = () => {
         // control the text field
         inputValue={searchInput}
         onInputChange={(_, newInput) => {
-          setSearchInput(newInput)
+          // setSearchInput(newInput)
+          console.log('input changed')
+          handleSearch(newInput)
         }}
         // control the selected value
         value={selectedValue}

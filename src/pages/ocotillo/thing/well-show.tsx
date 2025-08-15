@@ -59,7 +59,6 @@ export const WellShow = () => {
     setAssets(assetsData.data)
   }, [assetsData])
 
-  console.log('assets', assets)
   const { dataGridProps: observationDataGridProps } = useDataGrid({
     resource: 'observation/groundwater-level',
     dataProviderName: 'ocotillo',
