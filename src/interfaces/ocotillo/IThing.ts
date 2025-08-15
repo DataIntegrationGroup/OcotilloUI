@@ -1,3 +1,5 @@
+import { number, object } from 'yup'
+
 export interface IThing {
   id: number
   name: string
@@ -20,4 +22,12 @@ export interface IWell extends IThing {
 
 export interface ISpring extends IThing {
   spring_type?: string
+}
+
+export interface IThingIdLink {
+  thing_id: number
+  thing: IThing
+  relation: string
+  alternate_id: string
+  alternate_organization: string
 }

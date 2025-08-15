@@ -1,14 +1,14 @@
 import { FormReview } from '@/components/form/stepper/FormReview'
 import { CreateEditSample } from '@/components/form/sample/CreateEditSample'
 import { GroundwaterLevelEntryComponent } from '@/components/form/observation/GroundwaterLevelEntryComponent'
-import { SelectWellComponent } from '@/components/form/thing/SelectWellComponent'
+import { SelectThingComponent } from '@/components/form/thing/SelectThingComponent'
 
 export const WellStep: React.FC<{
   control: any
   errors: any
   watch: any
 }> = ({ control, errors, watch }) => (
-  <SelectWellComponent
+  <SelectThingComponent
     label="Select Water Well"
     thing_type={'water well'}
     control={control}

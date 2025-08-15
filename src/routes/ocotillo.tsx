@@ -52,6 +52,10 @@ import { WellInventoryForm } from '@/pages/ocotillo/well-inventory-form'
 import { LexiconList } from '@/pages/ocotillo/lexicon'
 import { WaterChemistryApp } from '@/pages/ocotillo/water-chemistry-app'
 import { CanAccess } from '@refinedev/core'
+import { ThingIdLinkList } from '@/pages/ocotillo/thing_id_link/list'
+import { ThingIdLinkShow } from '@/pages/ocotillo/thing_id_link/show'
+import { ThingIdLinkCreate } from '@/pages/ocotillo/thing_id_link/create'
+import { ThingIdLinkEdit } from '@/pages/ocotillo/thing_id_link/edit'
 
 export const OcotilloRoutes = () => {
   return (
@@ -74,6 +78,12 @@ export const OcotilloRoutes = () => {
         <Route path={'show/:id'} element={<SpringShow />} />
         {/* <Route path={'edit/:id'} element={<ThingEdit />} /> */}
         <Route path={'create'} element={<SpringCreate />} />
+      </Route>
+      <Route path={'thing-id-link'}>
+        <Route index element={<ThingIdLinkList />} />
+        <Route path={'create'} element={<ThingIdLinkCreate />} />
+        <Route path={'edit/:id'} element={<ThingIdLinkEdit />} />
+        <Route path={'show/:id'} element={<ThingIdLinkShow />} />
       </Route>
       <Route path="map" element={<MapView />} />
       <Route path="location">

@@ -12,6 +12,9 @@ import {
   DynamicFormOutlined,
   Map,
   Image,
+  Link,
+  Spa,
+  Workspaces,
 } from '@mui/icons-material'
 
 let ocotillo = [
@@ -86,7 +89,7 @@ let ocotillo = [
     create: '/ocotillo/group/create',
     meta: {
       label: 'Groups',
-      icon: <CategoryOutlined />,
+      icon: <Workspaces />,
     },
   },
   {
@@ -130,7 +133,20 @@ let ocotillo = [
       label: 'Springs',
       parent: 'ocotillo.thing',
       nestedLevel: 2,
-      icon: <Construction />,
+      icon: <Spa />,
+    },
+  },
+  {
+    name: 'thing-id-link',
+    list: '/ocotillo/thing-id-link',
+    edit: '/ocotillo/thing-id-link/edit/:id',
+    show: '/ocotillo/thing-id-link/show/:id',
+    create: '/ocotillo/thing-id-link/create',
+    meta: {
+      label: 'ID links',
+      parent: 'ocotillo.thing',
+      nestedLevel: 2,
+      icon: <Link />,
     },
   },
   {
