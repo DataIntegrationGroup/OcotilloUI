@@ -9,15 +9,26 @@ export const idColumnDef = () => {
   }
 }
 
-export const actionColumnDef = () => {
+export const actionColumnDef = ({ resource } = {}) => {
+  console.log('ascasd', resource)
   return {
     field: 'actions',
     headerName: 'Actions',
     renderCell: function render({ row }) {
       return (
         <div style={{ display: 'flex' }}>
-          <EditButton size="small" hideText recordItemId={row.id} />
-          <ShowButton size="small" hideText recordItemId={row.id} />
+          <EditButton
+            resource={resource}
+            size="small"
+            hideText
+            recordItemId={row.id}
+          />
+          <ShowButton
+            resource={resource}
+            size="small"
+            hideText
+            recordItemId={row.id}
+          />
         </div>
       )
     },

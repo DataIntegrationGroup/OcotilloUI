@@ -1,11 +1,15 @@
 import { Route, Routes } from 'react-router-dom'
 import { ErrorComponent } from '@refinedev/mui'
-import { ContactEdit, ContactList, ContactShow } from '@/pages/ocotillo/contact'
-import { ContactCreate } from '@/pages/ocotillo/contact/create'
-import { WellCreate } from '@/pages/ocotillo/thing/create'
+import {
+  ContactEdit,
+  ContactList,
+  ContactShow,
+  ContactCreate,
+} from '@/pages/ocotillo/contact'
 import {
   SpringList,
   SpringCreate,
+  WellCreate,
   WellEdit,
   WellList,
   WellShow,
@@ -46,16 +50,24 @@ import {
   AssetEdit,
   AssetShow,
 } from '@/pages/ocotillo/asset'
-// import { GroundwaterLevelForm } from '@/pages/dataforge/groundwaterlevelform'
+import {
+  ThingIdLinkList,
+  ThingIdLinkCreate,
+  ThingIdLinkEdit,
+  ThingIdLinkShow,
+} from '@/pages/ocotillo/thing_id_link'
+
+import {
+  TermCreate,
+  TermEdit,
+  CategoryCreate,
+  CategoryEdit,
+} from '@/pages/ocotillo/lexicon'
+
 import { GroundwaterLevelForm } from '@/pages/ocotillo/groundwater-level-form/stepperform'
 import { WellInventoryForm } from '@/pages/ocotillo/well-inventory-form'
 import { LexiconList } from '@/pages/ocotillo/lexicon'
 import { WaterChemistryApp } from '@/pages/ocotillo/water-chemistry-app'
-import { CanAccess } from '@refinedev/core'
-import { ThingIdLinkList } from '@/pages/ocotillo/thing_id_link/list'
-import { ThingIdLinkShow } from '@/pages/ocotillo/thing_id_link/show'
-import { ThingIdLinkCreate } from '@/pages/ocotillo/thing_id_link/create'
-import { ThingIdLinkEdit } from '@/pages/ocotillo/thing_id_link/edit'
 
 export const OcotilloRoutes = () => {
   return (
@@ -127,7 +139,10 @@ export const OcotilloRoutes = () => {
       </Route>
       <Route path="lexicon">
         <Route index element={<LexiconList />} />
-        {/* Add your lexicon list content here */}
+        <Route path={'term/create'} element={<TermCreate />} />
+        <Route path={'term/edit/:id'} element={<TermEdit />} />
+        <Route path={'category/create'} element={<CategoryCreate />} />
+        <Route path={'category/edit/:id'} element={<CategoryEdit />} />
       </Route>
       // Apps
       <Route path={'water-chemistry-import'}>

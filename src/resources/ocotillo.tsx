@@ -93,13 +93,23 @@ let ocotillo = [
     },
   },
   {
-    name: 'lexicon',
+    name: 'lexicon/term',
     list: '/ocotillo/lexicon',
-    edit: '/ocotillo/lexicon/edit/:id',
-    show: '/ocotillo/lexicon/show/:id',
-    create: '/ocotillo/lexicon/create',
+    edit: '/ocotillo/lexicon/term/edit/:id',
+    show: '/ocotillo/lexicon/term/show/:id',
+    create: '/ocotillo/lexicon/term/create',
     meta: {
       label: 'Lexicon',
+      icon: <CategoryOutlined />,
+    },
+  },
+  {
+    name: 'lexicon/category',
+    edit: '/ocotillo/lexicon/category/edit/:id',
+    show: '/ocotillo/lexicon/category/show/:id',
+    create: '/ocotillo/lexicon/category/create',
+    meta: {
+      label: 'Category',
       icon: <CategoryOutlined />,
     },
   },
