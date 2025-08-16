@@ -63,7 +63,23 @@ export const MapView: React.FC = () => {
   const defaultLayers = {
     'water-wells': useLayer('water well', 'Water Wells', '#9cd0ab'),
     springs: useLayer('spring', 'Springs', '#f0c0a0'),
+    'ephemeral-streams': useLayer(
+      'ephemeral stream',
+      'Ephemeral Streams',
+      '#f5df73'
+    ),
+    'perennial-streams': useLayer(
+      'perennial stream',
+      'Perennial Streams',
+      '#da55c4'
+    ),
+    'meteorological-stations': useLayer(
+      'meteorological station',
+      'Meteorological Stations',
+      '#2b7dc0'
+    ),
   }
+
   const [visibleLayers, setVisibleLayers] = React.useState<string[]>(
     Object.keys(defaultLayers)
   )
