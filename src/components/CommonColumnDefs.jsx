@@ -10,7 +10,6 @@ export const idColumnDef = () => {
 }
 
 export const actionColumnDef = ({ resource } = {}) => {
-  console.log('ascasd', resource)
   return {
     field: 'actions',
     headerName: 'Actions',

@@ -15,6 +15,8 @@ import {
   Link,
   Spa,
   Workspaces,
+  MoreVertOutlined,
+  LibraryBooksOutlined,
 } from '@mui/icons-material'
 
 let ocotillo = [
@@ -100,7 +102,7 @@ let ocotillo = [
     create: '/ocotillo/lexicon/term/create',
     meta: {
       label: 'Lexicon',
-      icon: <CategoryOutlined />,
+      icon: <LibraryBooksOutlined />,
     },
   },
   {
@@ -110,7 +112,7 @@ let ocotillo = [
     create: '/ocotillo/lexicon/category/create',
     meta: {
       label: 'Category',
-      icon: <CategoryOutlined />,
+      icon: <LibraryBooksOutlined />,
     },
   },
   {
@@ -157,6 +159,19 @@ let ocotillo = [
       parent: 'ocotillo.thing',
       nestedLevel: 2,
       icon: <Link />,
+    },
+  },
+  {
+    name: 'thing/well-screen',
+    list: '/ocotillo/well-screen',
+    edit: '/ocotillo/well-screen/edit/:id',
+    show: '/ocotillo/well-screen/show/:id',
+    create: '/ocotillo/well-screen/create',
+    meta: {
+      label: 'Well Screens',
+      parent: 'ocotillo.thing',
+      nestedLevel: 2,
+      icon: <MoreVertOutlined />,
     },
   },
   {

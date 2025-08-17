@@ -68,6 +68,12 @@ import { GroundwaterLevelForm } from '@/pages/ocotillo/groundwater-level-form/st
 import { WellInventoryForm } from '@/pages/ocotillo/well-inventory-form'
 import { LexiconList } from '@/pages/ocotillo/lexicon'
 import { WaterChemistryApp } from '@/pages/ocotillo/water-chemistry-app'
+import {
+  WellScreenCreate,
+  WellScreenEdit,
+  WellScreenList,
+  WellScreenShow,
+} from '@/pages/ocotillo/well-screen'
 
 export const OcotilloRoutes = () => {
   return (
@@ -96,6 +102,12 @@ export const OcotilloRoutes = () => {
         <Route path={'create'} element={<ThingIdLinkCreate />} />
         <Route path={'edit/:id'} element={<ThingIdLinkEdit />} />
         <Route path={'show/:id'} element={<ThingIdLinkShow />} />
+      </Route>
+      <Route path={'well-screen'}>
+        <Route index element={<WellScreenList />} />
+        <Route path={'create'} element={<WellScreenCreate />} />
+        <Route path={'edit/:id'} element={<WellScreenEdit />} />
+        <Route path={'show/:id'} element={<WellScreenShow />} />
       </Route>
       <Route path="map" element={<MapView />} />
       <Route path="location">
