@@ -5,6 +5,8 @@ import { IWellScreen } from '@/interfaces/ocotillo/IWellScreen'
 
 import { ListPage } from '@/components/ListPage'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
+import { useLink } from '@refinedev/core'
+import { linkColumn } from '@/utils/link'
 
 export const WellScreenList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IWellScreen>({
@@ -20,10 +22,20 @@ export const WellScreenList: React.FC = () => {
     // staleTime: 30000, // Consider data fresh for 30 seconds
     // },
   })
+  const Link = useLink()
 
   const columns = useMemo<GridColDef<IWellScreen>[]>(
     () => [
       idColumnDef(),
+      linkColumn(
+        {
+          field: 'thing_id',
+          headerName: 'Well ID',
+          type: 'string',
+          minWidth: 150,
+        },
+        Link
+      ),
       {
         field: 'screen_type',
         headerName: 'Type',
