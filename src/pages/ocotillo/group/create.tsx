@@ -18,6 +18,7 @@ export const GroupCreate: React.FC = () => {
     saveButtonProps,
     register,
     control,
+    setValue,
     formState: { errors },
   } = useForm<IGroup, HttpError, Nullable<IGroup>>()
 
@@ -39,6 +40,7 @@ export const GroupCreate: React.FC = () => {
         errors={errors}
         control={control}
         register={register}
+        setValue={setValue}
         mode={'standalone'}
       />
     </Create>

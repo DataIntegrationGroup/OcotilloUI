@@ -10,7 +10,13 @@ import { MapPolygonComponent } from '@/components/MapPolygonComponent'
 import Grid from '@mui/material/Grid2'
 import wellknown from 'wellknown'
 
-export const CreateEditGroup = ({ control, register, errors, mode }) => {
+export const CreateEditGroup = ({
+  control,
+  register,
+  errors,
+  setValue,
+  mode,
+}) => {
   const { autocompleteProps } = useAutocomplete<IGroup>({
     resource: 'group',
     dataProviderName: 'ocotillo',
@@ -24,7 +30,6 @@ export const CreateEditGroup = ({ control, register, errors, mode }) => {
   })
 
   const [polygon, setPolygon] = useState(null)
-  const [projectAreaWKT, setProjectAreaWKT] = useState('')
   const mapRef = useRef(null)
 
   useEffect(() => {
@@ -36,7 +41,7 @@ export const CreateEditGroup = ({ control, register, errors, mode }) => {
     const p = polygon[keys[0]]
     // convert the geojson polygon to WKT
     const wkt = wellknown.stringify(p.geometry)
-    setProjectAreaWKT(wkt)
+    setValue('project_area', wkt)
   }, [polygon])
 
   const handleMapExtentSearch = () => {
@@ -55,7 +60,7 @@ export const CreateEditGroup = ({ control, register, errors, mode }) => {
           ],
         ],
       })
-      setProjectAreaWKT(wktString)
+      setValue('project_area', wktString)
     }
   }
 
@@ -108,7 +113,13 @@ export const CreateEditGroup = ({ control, register, errors, mode }) => {
         </Button>
       </Grid>
       <Grid size={12}>
-        <TextField fullWidth value={projectAreaWKT} />
+        <TextField
+          {...register('project_area')}
+          fullWidth
+          error={!!errors.project_area}
+          helperText={errors.project_area?.message}
+          name="project_area"
+        />
       </Grid>
       <Grid size={12}>
         <MapPolygonComponent

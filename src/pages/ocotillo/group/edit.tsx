@@ -12,6 +12,7 @@ export const GroupEdit: React.FC = () => {
     refineCore: { query: queryResult },
     register,
     control,
+    setValue,
     formState: { errors },
   } = useForm<IGroup, HttpError, Nullable<IGroup>>()
 
@@ -21,6 +22,7 @@ export const GroupEdit: React.FC = () => {
         register={register}
         control={control}
         errors={errors}
+        setValue={setValue}
         mode="standalone"
       />
     </Edit>
