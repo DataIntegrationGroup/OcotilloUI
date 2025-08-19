@@ -4,7 +4,7 @@ import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
 import { ISample } from '@/interfaces/ocotillo/ISample'
 import { idColumnDef, actionColumnDef } from '@/components/CommonColumnDefs'
-import { linkColumn } from '@/utils/link'
+import { extractThingTypeResource, linkColumn } from '@/utils/link'
 import { useLink } from '@refinedev/core'
 
 export const SampleList: React.FC = () => {
@@ -16,17 +16,7 @@ export const SampleList: React.FC = () => {
       staleTime: 30000,
     },
   })
-  const extractResource = (params: any) => {
-    const thingType = params.row.thing.thing_type
-    switch (thingType) {
-      case 'water well':
-        return 'ocotillo.thing-well'
-      case 'spring':
-        return 'ocotillo.thing-spring'
-      default:
-        return 'ocotillo.thing-well'
-    }
-  }
+
   const columns = useMemo<GridColDef<ISample>[]>(
     () => [
       idColumnDef(),
@@ -76,13 +66,16 @@ export const SampleList: React.FC = () => {
 
       // TODO: this is an issue because thing_id may not link to a Well. It may link to some other type of thing,
       //  e.g. a Spring.
-      linkColumn(extractResource, {
-        field: 'thing_id',
-        headerName: 'Thing ID',
-        type: 'number',
-        minWidth: 120,
-        flex: 1,
-      }),
+      linkColumn(
+        extractThingTypeResource((params) => params.row.thing.thing_type),
+        {
+          field: 'thing_id',
+          headerName: 'Thing ID',
+          type: 'number',
+          minWidth: 120,
+          flex: 1,
+        }
+      ),
     ],
     []
   )

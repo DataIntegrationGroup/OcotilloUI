@@ -4,6 +4,7 @@ import { GridColDef } from '@mui/x-data-grid'
 import { useMemo } from 'react'
 import { IThingIdLink } from '@/interfaces/ocotillo/IThing'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
+import { extractThingTypeResource, linkColumn } from '@/utils/link'
 
 export const ThingIdLinkList = () => {
   const { dataGridProps } = useDataGrid({
@@ -14,12 +15,15 @@ export const ThingIdLinkList = () => {
   const columns = useMemo<GridColDef<IThingIdLink>[]>(
     () => [
       idColumnDef(),
-      {
-        field: 'thing_id',
-        headerName: 'Thing ID',
-        type: 'string',
-        minWidth: 150,
-      },
+      linkColumn(
+        extractThingTypeResource((params) => params.row.thing.thing_type),
+        {
+          field: 'thing_id',
+          headerName: 'Thing ID',
+          type: 'string',
+          minWidth: 150,
+        }
+      ),
       {
         field: 'thing',
         headerName: 'Thing Name',
@@ -27,6 +31,15 @@ export const ThingIdLinkList = () => {
         minWidth: 150,
         valueGetter: (value, row) => {
           return row.thing.name
+        },
+      },
+      {
+        field: 'thing_type',
+        headerName: 'Thing Type',
+        type: 'string',
+        minWidth: 150,
+        valueGetter: (value, row) => {
+          return row.thing.thing_type
         },
       },
       {
@@ -38,6 +51,12 @@ export const ThingIdLinkList = () => {
       {
         field: 'alternate_id',
         headerName: 'Alternate ID',
+        type: 'string',
+        minWidth: 150,
+      },
+      {
+        field: 'alternate_organization',
+        headerName: 'Alternate Organization',
         type: 'string',
         minWidth: 150,
       },
