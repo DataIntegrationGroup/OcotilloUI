@@ -154,7 +154,6 @@ export const WellShow = () => {
       { field: 'url', headerName: 'URL', flex: 1 },
     ]
   }, [])
-  console.log('asdfa', assets)
 
   return (
     <Show isLoading={isLoading || observationsIsloading}>

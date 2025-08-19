@@ -1,11 +1,11 @@
 import { string } from 'yup'
+import { useLink } from '@refinedev/core'
 
-export const linkColumn = (resource, options, Link) => {
+export const linkColumn = (resource, options) => {
+  const Link = useLink()
   return {
     ...options,
     renderCell: (params) => {
-      console.log(params)
-
       if (typeof resource !== 'string') {
         resource = resource(params)
       }

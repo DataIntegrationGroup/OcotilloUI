@@ -16,7 +16,6 @@ export const SampleList: React.FC = () => {
       staleTime: 30000,
     },
   })
-  const Link = useLink()
   const extractResource = (params: any) => {
     const thingType = params.row.thing.thing_type
     switch (thingType) {
@@ -77,17 +76,13 @@ export const SampleList: React.FC = () => {
 
       // TODO: this is an issue because thing_id may not link to a Well. It may link to some other type of thing,
       //  e.g. a Spring.
-      linkColumn(
-        extractResource,
-        {
-          field: 'thing_id',
-          headerName: 'Thing ID',
-          type: 'number',
-          minWidth: 120,
-          flex: 1,
-        },
-        Link
-      ),
+      linkColumn(extractResource, {
+        field: 'thing_id',
+        headerName: 'Thing ID',
+        type: 'number',
+        minWidth: 120,
+        flex: 1,
+      }),
     ],
     []
   )

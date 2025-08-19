@@ -22,21 +22,16 @@ export const WellScreenList: React.FC = () => {
     // staleTime: 30000, // Consider data fresh for 30 seconds
     // },
   })
-  const Link = useLink()
 
   const columns = useMemo<GridColDef<IWellScreen>[]>(
     () => [
       idColumnDef(),
-      linkColumn(
-        'ocotillo.thing-well',
-        {
-          field: 'thing_id',
-          headerName: 'Well ID',
-          type: 'string',
-          minWidth: 150,
-        },
-        Link
-      ),
+      linkColumn('ocotillo.thing-well', {
+        field: 'thing_id',
+        headerName: 'Well ID',
+        type: 'string',
+        minWidth: 150,
+      }),
       {
         field: 'screen_type',
         headerName: 'Type',

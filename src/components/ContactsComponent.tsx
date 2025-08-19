@@ -5,20 +5,14 @@ import { linkColumn } from '@/utils/link'
 import { useLink } from '@refinedev/core'
 
 export const ContactsComponent = ({ contacts }) => {
-  console.log(contacts)
-  const link = useLink()
   const columns: GridColDef[] = useMemo(() => {
     return [
-      linkColumn(
-        'ocotillo.contact',
-        {
-          field: 'id',
-          headerName: 'ID',
-          type: 'string',
-          width: 100,
-        },
-        link
-      ),
+      linkColumn('ocotillo.contact', {
+        field: 'id',
+        headerName: 'ID',
+        type: 'string',
+        width: 100,
+      }),
       {
         field: 'name',
         headerName: 'Name',
