@@ -1,4 +1,4 @@
-export const linkColumn = (options, Link) => {
+export const linkColumn = (resource, options, Link) => {
   return {
     ...options,
     renderCell: (params) => {
@@ -6,7 +6,7 @@ export const linkColumn = (options, Link) => {
         <Link
           go={{
             to: {
-              resource: 'ocotillo.thing-well',
+              resource: resource,
               action: 'show',
               id: params.value,
             },

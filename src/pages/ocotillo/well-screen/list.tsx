@@ -28,6 +28,7 @@ export const WellScreenList: React.FC = () => {
     () => [
       idColumnDef(),
       linkColumn(
+        'ocotillo.thing-well',
         {
           field: 'thing_id',
           headerName: 'Well ID',
