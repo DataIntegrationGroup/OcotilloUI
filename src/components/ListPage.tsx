@@ -3,7 +3,7 @@ import { DataGrid } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import React from 'react'
 import { useExport } from '@refinedev/core'
-import { Card, Typography } from '@mui/material'
+import { Card, Typography, useTheme } from '@mui/material'
 import { CanAccess } from '@refinedev/core'
 
 type ListPageProps = {
@@ -56,7 +56,15 @@ export const ListPage: React.FC<ListPageProps> = ({
   return (
     <List headerButtons={headerButtons} title={title}>
       {description && (
-        <Card sx={{ marginTop: 1, marginBottom: 1, padding: 1 }}>
+        <Card
+          className={'description'}
+          variant="outlined"
+          sx={{
+            marginTop: 1,
+            marginBottom: 1,
+            padding: 1,
+          }}
+        >
           <Typography variant="body1">{description}</Typography>
         </Card>
       )}
@@ -68,7 +76,6 @@ export const ListPage: React.FC<ListPageProps> = ({
         rowHeight={settings.rowHeight}
         getRowId={getRowId ? getRowId : (row) => row.PointID}
         columns={columns}
-        autoHeight
         onRowSelectionModelChange={handleSelectionChangeWrapper}
         loading={isLoading}
       />

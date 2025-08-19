@@ -75,6 +75,7 @@ export const SensorList: React.FC = () => {
 
   return (
     <ListPage
+      description={'Sensors are used to collect data from things.'}
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}
