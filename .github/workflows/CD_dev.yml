@@ -32,7 +32,7 @@ jobs:
           VITE_AUTHENTIK_CLIENT_ID: ${{ secrets.VITE_AUTHENTIK_CLIENT_ID }}
           VITE_AUTHENTIK_URL: ${{ secrets.VITE_AUTHENTIK_URL }}
           VITE_AUTHENTIK_REDIRECT_URI: ${{ secrets.VITE_AUTHENTIK_REDIRECT_URI }}
-
+          VITE_OCOTILLO_API_URL: ${{ secrets.VITE_OCOTILLO_API_URL }}
 
         run: |
           npm ci
