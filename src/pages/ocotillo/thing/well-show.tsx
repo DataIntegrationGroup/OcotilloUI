@@ -264,7 +264,7 @@ export const WellShow = () => {
                       (img: { url: string; name?: string }, idx: number) => (
                         <ImageListItem key={idx} sx={{ minWidth: 200 }}>
                           <img
-                            src={img.url}
+                            src={img.uri}
                             alt={img.name || `Attachment ${idx + 1}`}
                             style={{
                               width: '100%',

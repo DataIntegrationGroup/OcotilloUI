@@ -91,7 +91,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
           size,
           type,
           lastModified,
-          url: asset.url,
+          uri: asset.uri,
         },
       ]
       setValue(getFieldName('file'), imagePayload, { shouldValidate: true })
@@ -101,7 +101,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
       })
       setValue(getFieldName('mime_type'), type, { shouldValidate: true })
       setValue(getFieldName('size'), size, { shouldValidate: true })
-      setValue(getFieldName('url'), asset.url, { shouldValidate: true })
+      setValue(getFieldName('uri'), asset.uri, { shouldValidate: true })
       setIsUploadLoading(false)
     } catch (error) {
       console.log(error)
@@ -119,7 +119,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
   const existingAssetPreview = existingAsset
     ? {
         name: existingAsset.name,
-        url: existingAsset.url,
+        uri: existingAsset.uri,
         mime_type: existingAsset.mime_type,
         size: existingAsset.size,
       }
@@ -226,7 +226,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
                 maxHeight: '200px',
                 objectFit: 'contain',
               }}
-              src={previewAsset[0].url}
+              src={previewAsset[0].uri}
               alt={previewAsset[0].name}
             />
           )}

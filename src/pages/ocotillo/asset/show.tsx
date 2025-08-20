@@ -41,7 +41,7 @@ export const AssetShow = () => {
             maxWidth: '100%',
             maxHeight: '100%',
           }}
-          src={record?.url}
+          src={record?.uri}
           alt={record?.name}
         />
       </Stack>
