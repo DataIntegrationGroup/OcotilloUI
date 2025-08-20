@@ -1,9 +1,13 @@
 import { useMemo, useState } from 'react'
 import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
+import {
+  DataGrid,
+  GridCheckIcon,
+  GridCheckCircleIcon,
+  GridColDef,
+} from '@mui/x-data-grid'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
-import { List } from '@refinedev/mui'
-import { Card, CardHeader } from '@mui/material'
+
 import { ListPage } from '@/components/ListPage'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 
@@ -35,6 +39,20 @@ export const GroupList: React.FC = () => {
         field: 'parent_group_id',
         headerName: 'Parent Group ID',
         type: 'string',
+      },
+      {
+        field: 'project_area',
+        headerName: 'Project Area',
+        type: 'string',
+        minWidth: 150,
+        renderCell: (params) => {
+          return params.value ? (
+            <GridCheckCircleIcon color="primary" />
+          ) : (
+            // <Chip label="Yes" color="primary" size="small" />
+            <></>
+          )
+        },
       },
       {
         field: 'created_at',

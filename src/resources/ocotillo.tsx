@@ -15,6 +15,8 @@ import {
   Link,
   Spa,
   Workspaces,
+  MoreVertOutlined,
+  LibraryBooksOutlined,
 } from '@mui/icons-material'
 
 let ocotillo = [
@@ -93,14 +95,24 @@ let ocotillo = [
     },
   },
   {
-    name: 'lexicon',
+    name: 'lexicon/term',
     list: '/ocotillo/lexicon',
-    edit: '/ocotillo/lexicon/edit/:id',
-    show: '/ocotillo/lexicon/show/:id',
-    create: '/ocotillo/lexicon/create',
+    edit: '/ocotillo/lexicon/term/edit/:id',
+    show: '/ocotillo/lexicon/term/show/:id',
+    create: '/ocotillo/lexicon/term/create',
     meta: {
       label: 'Lexicon',
-      icon: <CategoryOutlined />,
+      icon: <LibraryBooksOutlined />,
+    },
+  },
+  {
+    name: 'lexicon/category',
+    edit: '/ocotillo/lexicon/category/edit/:id',
+    show: '/ocotillo/lexicon/category/show/:id',
+    create: '/ocotillo/lexicon/category/create',
+    meta: {
+      label: 'Category',
+      icon: <LibraryBooksOutlined />,
     },
   },
   {
@@ -147,6 +159,19 @@ let ocotillo = [
       parent: 'ocotillo.thing',
       nestedLevel: 2,
       icon: <Link />,
+    },
+  },
+  {
+    name: 'thing/well-screen',
+    list: '/ocotillo/well-screen',
+    edit: '/ocotillo/well-screen/edit/:id',
+    show: '/ocotillo/well-screen/show/:id',
+    create: '/ocotillo/well-screen/create',
+    meta: {
+      label: 'Well Screens',
+      parent: 'ocotillo.thing',
+      nestedLevel: 2,
+      icon: <MoreVertOutlined />,
     },
   },
   {

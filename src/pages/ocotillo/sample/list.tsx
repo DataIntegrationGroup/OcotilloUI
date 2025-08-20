@@ -4,6 +4,8 @@ import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
 import { ISample } from '@/interfaces/ocotillo/ISample'
 import { idColumnDef, actionColumnDef } from '@/components/CommonColumnDefs'
+import { extractThingTypeResource, linkColumn } from '@/utils/link'
+import { useLink } from '@refinedev/core'
 
 export const SampleList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISample>({
@@ -61,13 +63,19 @@ export const SampleList: React.FC = () => {
         minWidth: 120,
         flex: 1,
       },
-      {
-        field: 'thing_id',
-        headerName: 'Thing ID',
-        type: 'number',
-        minWidth: 120,
-        flex: 1,
-      },
+
+      // TODO: this is an issue because thing_id may not link to a Well. It may link to some other type of thing,
+      //  e.g. a Spring.
+      linkColumn(
+        extractThingTypeResource((params) => params.row.thing.thing_type),
+        {
+          field: 'thing_id',
+          headerName: 'Thing ID',
+          type: 'number',
+          minWidth: 120,
+          flex: 1,
+        }
+      ),
     ],
     []
   )

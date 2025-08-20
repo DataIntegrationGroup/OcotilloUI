@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
@@ -8,7 +8,7 @@ import {
   IAddress,
 } from '@/interfaces/ocotillo/IContact'
 import { List } from '@refinedev/mui'
-import { Card, CardHeader } from '@mui/material'
+import { Card, CardHeader, Typography } from '@mui/material'
 import EmailIcon from '@mui/icons-material/Email'
 import HomeIcon from '@mui/icons-material/Home'
 import { Phone } from '@mui/icons-material'
@@ -183,9 +183,22 @@ export const ContactList: React.FC = () => {
     []
   )
 
+  const description = 'Contacts are used to represent people or organizations.'
   return (
     <>
       <List>
+        <Card
+          className={'description'}
+          variant="outlined"
+          sx={{
+            marginTop: 1,
+            marginBottom: 1,
+            padding: 1,
+          }}
+        >
+          <Typography variant="body1">{description}</Typography>
+        </Card>
+
         <DataGrid
           {...dataGridProps}
           disableRowSelectionOnClick={false}

@@ -1,8 +1,8 @@
 import { useList } from '@refinedev/core'
-import { ILexicon } from '@/interfaces/ocotillo/ILexicon'
+import { ITerm } from '@/interfaces/ocotillo/ILexicon'
 
 export const useLexicon = ({ category }) => {
-  const data = useList<ILexicon>({
+  const data = useList<ITerm>({
     resource: 'lexicon',
     dataProviderName: 'ocotillo',
     queryOptions: {

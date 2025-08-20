@@ -54,6 +54,7 @@ export const GroundwaterLevelObservationList: React.FC = () => {
   return (
     <CanAccess>
       <ListPage
+        description={'Groundwater Level Observations'}
         columns={columns}
         dataGridProps={dataGridProps}
         getRowId={(row) => row.id}

@@ -46,7 +46,7 @@ export const Providers = ({ children }: { children: ReactNode }) => (
         <Refine
           authProvider={authentikAuthProvider}
           dataProvider={{
-            default: ampDataProvider,
+            default: ocotilloDataProvider,
             amp: ampDataProvider,
             geochronology: geochronologyDataProvider,
             geothermal: geothermalDataProvider,

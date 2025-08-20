@@ -6,7 +6,7 @@ import Autocomplete from '@mui/material/Autocomplete'
 import React, { useEffect, useState } from 'react'
 import { Box } from '@mui/material'
 import { useAutocomplete } from '@refinedev/mui'
-import { ILexicon } from '@/interfaces/ocotillo/ILexicon'
+import { ITerm } from '@/interfaces/ocotillo/ILexicon'
 import { Hydrograph } from '@/components/Hydrographs/Hydrograph'
 import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
 import { useDataProvider } from '@refinedev/core'
@@ -31,7 +31,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
   fieldPrefix = 'observation.',
 }) => {
   const { autocompleteProps: autocompletePropsReleaseStatus } =
-    useAutocomplete<ILexicon>({
+    useAutocomplete<ITerm>({
       resource: 'lexicon',
       dataProviderName: 'ocotillo',
       meta: {
@@ -39,14 +39,14 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
       },
     })
   const { autocompleteProps: autocompletePropsLevelStatus } =
-    useAutocomplete<ILexicon>({
+    useAutocomplete<ITerm>({
       resource: 'lexicon',
       dataProviderName: 'ocotillo',
       meta: {
         params: { category: 'level_status' },
       },
     })
-  const getLexiconLabel = (option: ILexicon) => {
+  const getLexiconLabel = (option: ITerm) => {
     return option.term
   }
   const [hydrographDatasource, setHydrographDatasource] = useState<

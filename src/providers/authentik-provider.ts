@@ -1,7 +1,7 @@
 import { AuthActionResponse, AuthProvider } from '@refinedev/core'
 import { generateCodeChallenge, generateCodeVerifier } from '@/providers/pcke'
 import { sha256 } from 'js-sha256'
-import { jwtDecode } from 'jwt-decode'
+import { jwtDecode, JwtPayload } from 'jwt-decode'
 
 const AUTHENTIK_URL =
   import.meta.env.VITE_AUTHENTIK_URL || 'http://localhost:8000/'
@@ -13,6 +13,10 @@ const REDIRECT_URI =
 const gravatarUrl = (email: string) => {
   let hash = email.trim().toLowerCase()
   return `https://www.gravatar.com/avatar/${sha256(hash)}`
+}
+
+interface AuthentikJwtPayload extends JwtPayload {
+  email: string
 }
 
 export const getAccessToken = async (refresh?: boolean) => {
@@ -101,18 +105,12 @@ export const authentikAuthProvider: AuthProvider = {
 
   // Returns the current user's profile
   getIdentity: async () => {
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('id_token')
     if (!token) return null
 
-    const res = await fetch(`${AUTHENTIK_URL}/userinfo/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    if (!res.ok) return null
-
-    const profile = await res.json()
+    const profile = jwtDecode<AuthentikJwtPayload>(token)
     return {
       id: profile.sub,
-      fullName: profile.name || profile.preferred_username,
       avatar: gravatarUrl(profile.email),
       email: profile.email,
     }

@@ -22,6 +22,7 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { IObservation } from '@/interfaces/ocotillo/IObservation'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { settings } from '@/settings'
+import { ContactsComponent } from '@/components/ContactsComponent'
 
 export const WellShow = () => {
   const { queryResult } = useShow({})
@@ -119,6 +120,16 @@ export const WellShow = () => {
     },
   })
 
+  const { data: contacts } = useList({
+    resource: 'contact',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: id,
+      },
+    },
+  })
+
   const wellScreenColumns: GridColDef[] = useMemo(() => {
     return [
       { field: 'screen_type', headerName: 'Screen Type', minWidth: 150 },
@@ -134,6 +145,13 @@ export const WellShow = () => {
         type: 'number',
         minWidth: 200,
       },
+    ]
+  }, [])
+
+  const assetColumns: GridColDef[] = useMemo(() => {
+    return [
+      { field: 'name', headerName: 'Name', minWidth: 150 },
+      { field: 'url', headerName: 'URL', flex: 1 },
     ]
   }, [])
 
@@ -204,6 +222,19 @@ export const WellShow = () => {
           </Card>
         </Grid>
         <Grid size={12}>
+          <Accordion expanded>
+            <AccordionSummary>
+              <Typography>
+                <b>Contacts</b>
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              {contacts && <ContactsComponent contacts={contacts.data} />}
+            </AccordionDetails>
+          </Accordion>
+        </Grid>
+
+        <Grid size={12}>
           <Accordion>
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
@@ -219,30 +250,33 @@ export const WellShow = () => {
                 </Typography>
               )}
               {assets && assets.length > 0 && (
-                <ImageList
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    overflowX: 'auto',
-                  }}
-                  cols={3}
-                >
-                  {(assets ?? []).map(
-                    (img: { url: string; name?: string }, idx: number) => (
-                      <ImageListItem key={idx} sx={{ minWidth: 200 }}>
-                        <img
-                          src={img.url}
-                          alt={img.name || `Attachment ${idx + 1}`}
-                          style={{
-                            width: '100%',
-                            height: 'auto',
-                            borderRadius: 8,
-                          }}
-                        />
-                      </ImageListItem>
-                    )
-                  )}
-                </ImageList>
+                <Box>
+                  <DataGrid columns={assetColumns} rows={assets} />
+                  <ImageList
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      overflowX: 'auto',
+                    }}
+                    cols={3}
+                  >
+                    {(assets ?? []).map(
+                      (img: { url: string; name?: string }, idx: number) => (
+                        <ImageListItem key={idx} sx={{ minWidth: 200 }}>
+                          <img
+                            src={img.url}
+                            alt={img.name || `Attachment ${idx + 1}`}
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: 8,
+                            }}
+                          />
+                        </ImageListItem>
+                      )
+                    )}
+                  </ImageList>
+                </Box>
               )}
             </AccordionDetails>
           </Accordion>

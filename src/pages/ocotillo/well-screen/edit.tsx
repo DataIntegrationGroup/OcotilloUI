@@ -1,12 +1,13 @@
+
 import type { HttpError } from '@refinedev/core'
 import { Edit } from '@refinedev/mui'
 
 import { useForm } from '@refinedev/react-hook-form'
-import { CreateEditGroup } from '@/components/form/group/CreateEditGroup'
+import { CreateEditWellScreen } from '@/components/form/thing/CreateEditWellScreen'
 import type { Nullable } from '@/interfaces'
-import { IGroup } from '@/interfaces/ocotillo/IGroup'
+import { IWellScreen } from '@/interfaces/ocotillo/IWellScreen'
 
-export const GroupEdit: React.FC = () => {
+export const WellScreenEdit: React.FC = () => {
   const {
     saveButtonProps,
     refineCore: { query: queryResult },
@@ -14,11 +15,11 @@ export const GroupEdit: React.FC = () => {
     control,
     setValue,
     formState: { errors },
-  } = useForm<IGroup, HttpError, Nullable<IGroup>>()
+  } = useForm<IWellScreen, HttpError, Nullable<IWellScreen>>()
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <CreateEditGroup
+      <CreateEditWellScreen
         register={register}
         control={control}
         errors={errors}
@@ -28,3 +29,4 @@ export const GroupEdit: React.FC = () => {
     </Edit>
   )
 }
+
