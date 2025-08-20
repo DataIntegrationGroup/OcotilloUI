@@ -226,7 +226,7 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
                 maxHeight: '200px',
                 objectFit: 'contain',
               }}
-              src={previewAsset[0].uri}
+              src={previewAsset[0].signed_url}
               alt={previewAsset[0].name}
             />
           )}

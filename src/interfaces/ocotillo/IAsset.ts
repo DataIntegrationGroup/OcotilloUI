@@ -10,4 +10,5 @@ export interface IAsset {
   file: any
   thing_id: number | null
   uri: string
+  signed_url: string
 }
