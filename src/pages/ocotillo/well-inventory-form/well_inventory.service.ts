@@ -73,7 +73,7 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
   if (data.assets?.length) {
     for (const asset of data.assets) {
       // Only create assets that have been properly uploaded
-      if (asset.storage_path && asset.mime_type && asset.size && asset.url) {
+      if (asset.storage_path && asset.mime_type && asset.size && asset.uri) {
         const assetResponse = await ocotilloDataProvider.create({
           resource: 'ocotillo.asset',
           variables: {
@@ -82,7 +82,7 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
             storage_path: asset.storage_path,
             mime_type: asset.mime_type,
             size: asset.size,
-            url: asset.url,
+            uri: asset.uri,
             thing_id: wellId,
           },
         })

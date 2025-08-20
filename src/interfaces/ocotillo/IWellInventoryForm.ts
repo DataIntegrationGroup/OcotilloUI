@@ -3,7 +3,7 @@ export interface IWellInventoryForm {
   location: {
     name: string
     notes?: string
-    point: string 
+    point: string
     release_status: string
   }
   locationMode: 'existing' | 'new'
@@ -43,8 +43,8 @@ export interface IWellInventoryForm {
     storage_path: string
     mime_type: string
     size: number
-    url: string
+    uri: string
     file?: File
     thing_id?: number | null
   }>
-} 
+}

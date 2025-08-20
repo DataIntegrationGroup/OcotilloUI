@@ -261,10 +261,13 @@ export const WellShow = () => {
                     cols={3}
                   >
                     {(assets ?? []).map(
-                      (img: { url: string; name?: string }, idx: number) => (
+                      (
+                        img: { signed_url: string; name?: string },
+                        idx: number
+                      ) => (
                         <ImageListItem key={idx} sx={{ minWidth: 200 }}>
                           <img
-                            src={img.url}
+                            src={img.signed_url}
                             alt={img.name || `Attachment ${idx + 1}`}
                             style={{
                               width: '100%',
