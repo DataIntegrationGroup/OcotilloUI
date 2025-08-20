@@ -55,12 +55,10 @@ jobs:
       # Clean up old versions - delete only the oldest version, one created and one destroyed
       - name: Clean up oldest version
         run: |
-          OLDEST_VERSION=$(gcloud app versions list --service=ocotillo --project=${{ secrets.GCP_PROJECT_ID_DEV }} 
-          --format="value(id)" --sort-by="version.createTime" | head -n 1)
+          OLDEST_VERSION=$(gcloud app versions list --service=ocotillo --project=${{ secrets.GCP_PROJECT_ID_DEV }} --format="value(id)" --sort-by="version.createTime" | head -n 1)
           if [ ! -z "$OLDEST_VERSION" ]; then
             echo "Deleting oldest version: $OLDEST_VERSION"
-            gcloud app versions delete $OLDEST_VERSION --service=ocotillo --project=${{ secrets.GCP_PROJECT_ID_DEV }} 
-          --quiet
+            gcloud app versions delete $OLDEST_VERSION --service=ocotillo --project=${{ secrets.GCP_PROJECT_ID_DEV }} --quiet
               echo "Deleted oldest version: $OLDEST_VERSION"
             else
               echo "No versions to delete"
