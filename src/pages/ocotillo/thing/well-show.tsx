@@ -142,6 +142,10 @@ export const WellShow = () => {
         thing_id: id,
       },
     },
+    queryOptions: {
+      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
+    },
   })
   const { rows: observations, loading: observationsIsloading } =
     observationDataGridProps
@@ -295,9 +299,12 @@ export const WellShow = () => {
               rowHeight={settings.rowHeight}
               {...observationDataGridProps}
               columns={observationColumns}
-              // pagination
-              // pageSizeOptions={[5, 10, 25]}
-              // paginationModel={{ pageSize: 10, page: 0 }}
+              initialState={{
+                pagination: {
+                  pageSizeOptions: false,
+                  paginationModel: { pageSize: 10, page: 0 },
+                },
+              }}
             />
           </Card>
         </Grid>
@@ -316,6 +323,12 @@ export const WellShow = () => {
               <DataGrid
                 {...wellScreenDataGridProps}
                 columns={wellScreenColumns}
+                initialState={{
+                  pagination: {
+                    pageSizeOptions: false,
+                    paginationModel: { pageSize: 10, page: 0 },
+                  },
+                }}
               />
             </Box>
           </Card>
@@ -350,7 +363,16 @@ export const WellShow = () => {
               )}
               {assets && assets.length > 0 && (
                 <Box>
-                  <DataGrid columns={assetColumns} rows={assets} />
+                  <DataGrid
+                    columns={assetColumns}
+                    rows={assets}
+                    initialState={{
+                      pagination: {
+                        pageSizeOptions: false,
+                        paginationModel: { pageSize: 10, page: 0 },
+                      },
+                    }}
+                  />
                   <ImageList
                     sx={{
                       display: 'flex',
