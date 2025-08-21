@@ -54,31 +54,33 @@ export const ListPage: React.FC<ListPageProps> = ({
   }
 
   return (
-    <List headerButtons={headerButtons} title={title}>
-      {description && (
-        <Card
-          className={'description'}
-          variant="outlined"
-          sx={{
-            marginTop: 1,
-            marginBottom: 1,
-            padding: 1,
-          }}
-        >
-          <Typography variant="body1">{description}</Typography>
-        </Card>
-      )}
+    <CanAccess>
+      <List headerButtons={headerButtons} title={title}>
+        {description && (
+          <Card
+            className={'description'}
+            variant="outlined"
+            sx={{
+              marginTop: 1,
+              marginBottom: 1,
+              padding: 1,
+            }}
+          >
+            <Typography variant="body1">{description}</Typography>
+          </Card>
+        )}
 
-      {children}
-      <DataGrid
-        {...dataGridProps}
-        disableRowSelectionOnClick={false}
-        rowHeight={settings.rowHeight}
-        getRowId={getRowId ? getRowId : (row) => row.PointID}
-        columns={columns}
-        onRowSelectionModelChange={handleSelectionChangeWrapper}
-        loading={isLoading}
-      />
-    </List>
+        {children}
+        <DataGrid
+          {...dataGridProps}
+          disableRowSelectionOnClick={false}
+          rowHeight={settings.rowHeight}
+          getRowId={getRowId ? getRowId : (row) => row.PointID}
+          columns={columns}
+          onRowSelectionModelChange={handleSelectionChangeWrapper}
+          loading={isLoading}
+        />
+      </List>
+    </CanAccess>
   )
 }

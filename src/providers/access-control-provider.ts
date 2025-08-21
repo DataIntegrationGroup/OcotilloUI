@@ -31,7 +31,6 @@ const defineUserAbility = (groups: string[]) => {
     ]
     if (groups.includes('Viewer')) {
       can('list', 'ocotillo')
-      can('list', 'ocotillo.thing')
       can('list', 'ocotillo.map')
 
       resources.forEach((resource) => {
@@ -50,7 +49,11 @@ const defineUserAbility = (groups: string[]) => {
       viewer(can, cannot, 'ocotillo.thing-spring')
       viewer(can, cannot, 'ocotillo.groundwater-level-observation')
     }
+
     if (groups.includes('AMPEditor')) {
+      can('list', 'ocotillo.tables')
+      can('list', 'ocotillo.thing')
+
       can('list', 'ocotillo.forms')
       can('list', 'ocotillo.well-inventory-form')
       can('list', 'ocotillo.groundwater-level-form')
@@ -60,7 +63,7 @@ const defineUserAbility = (groups: string[]) => {
       can('list', 'ocotillo.hydrograph-corrector')
     }
 
-    if (groups.includes('Admin')) {
+    if (groups.includes('Adminf')) {
       can('manage', 'all')
     }
   })

@@ -19,15 +19,14 @@ import {
   LibraryBooksOutlined,
 } from '@mui/icons-material'
 
-let ocotillo = [
-  {
-    name: 'map',
-    list: '/ocotillo/map',
-    meta: {
-      label: 'Map',
-      icon: <Map />,
-    },
-  },
+let tables: {
+  name: string
+  edit?: string
+  show?: string
+  create?: string
+  list?: string
+  meta: { label?: string; icon?: JSX.Element }
+}[] = [
   {
     name: 'asset',
     list: '/ocotillo/asset',
@@ -45,8 +44,8 @@ let ocotillo = [
     edit: '/ocotillo/contact/edit/:id',
     show: '/ocotillo/contact/show/:id',
     create: '/ocotillo/contact/create',
-    icon: <Contacts />,
     meta: {
+      icon: <Contacts />,
       label: 'Contacts',
     },
   },
@@ -115,13 +114,74 @@ let ocotillo = [
       icon: <LibraryBooksOutlined />,
     },
   },
+]
+
+tables = tables.map((b) => {
+  let meta = b.meta || {}
+  if (!meta['parent']) {
+    meta['parent'] = 'ocotillo.tables'
+  }
+  meta['nestedLevel'] = 2
+  return {
+    ...b,
+    meta: meta,
+  }
+})
+
+let forms: {
+  name: string
+  edit?: string
+  show?: string
+  create?: string
+  list: string
+  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
+}[] = [
   {
-    name: 'thing',
-    icon: <WidgetsOutlined />,
+    name: 'well-inventory-form',
+    list: '/ocotillo/well-inventory-form',
+    create: '/ocotillo/well-inventory-form/create',
+    edit: '/ocotillo/well-inventory-form/edit/:id',
+    show: '/ocotillo/well-inventory-form/show/:id',
     meta: {
-      label: 'Things',
+      disabled: false,
+      label: 'Well Inventory Form',
+      icon: <Construction />,
     },
   },
+  {
+    name: 'groundwater-level-form',
+    list: '/ocotillo/groundwater-level-form',
+    create: '/ocotillo/groundwater-level-form/create',
+    edit: '/ocotillo/groundwater-level-form/edit/:id',
+    show: '/ocotillo/groundwater-level-form/show/:id',
+    meta: {
+      // disabled: true,
+      label: 'Groundwater Level Form (Beta)',
+      icon: <Construction />,
+    },
+  },
+]
+
+forms = forms.map((b) => {
+  let meta = b.meta || {}
+  if (!meta['parent']) {
+    meta['parent'] = 'ocotillo.forms'
+  }
+  meta['nestedLevel'] = 2
+  return {
+    ...b,
+    meta: meta,
+  }
+})
+
+let things: {
+  name: string
+  edit?: string
+  show?: string
+  create?: string
+  list: string
+  meta: { label?: string; icon?: JSX.Element }
+}[] = [
   {
     name: 'thing-well',
     list: '/ocotillo/well',
@@ -130,8 +190,6 @@ let ocotillo = [
     create: '/ocotillo/well/create',
     meta: {
       label: 'Wells',
-      parent: 'ocotillo.thing',
-      nestedLevel: 2,
       icon: <Construction />,
     },
   },
@@ -143,8 +201,6 @@ let ocotillo = [
     create: '/ocotillo/spring/create',
     meta: {
       label: 'Springs',
-      parent: 'ocotillo.thing',
-      nestedLevel: 2,
       icon: <Spa />,
     },
   },
@@ -156,8 +212,6 @@ let ocotillo = [
     create: '/ocotillo/thing-id-link/create',
     meta: {
       label: 'ID links',
-      parent: 'ocotillo.thing',
-      nestedLevel: 2,
       icon: <Link />,
     },
   },
@@ -169,18 +223,33 @@ let ocotillo = [
     create: '/ocotillo/well-screen/create',
     meta: {
       label: 'Well Screens',
-      parent: 'ocotillo.thing',
-      nestedLevel: 2,
       icon: <MoreVertOutlined />,
     },
   },
-  {
-    name: 'observation',
-    icon: <ScaleOutlined />,
-    meta: {
-      label: 'Observations',
-    },
-  },
+]
+
+things = things.map((b) => {
+  let meta = b.meta || {}
+  if (!meta['parent']) {
+    meta['parent'] = 'ocotillo.thing'
+  }
+  meta['nestedLevel'] = 3
+  return {
+    ...b,
+    meta: meta,
+  }
+})
+
+console.log(things)
+
+let observations: {
+  name: string
+  edit?: string
+  show?: string
+  create?: string
+  list: string
+  meta: { label?: string; icon?: JSX.Element }
+}[] = [
   {
     name: 'groundwater-level-observation',
     list: '/ocotillo/groundwater-level-observation',
@@ -188,12 +257,64 @@ let ocotillo = [
     // edit: '/ocotillo/observation/edit/:id',
     // show: '/ocotillo/observation/show/:id',
     meta: {
-      parent: 'ocotillo.observation',
-      nestedLevel: 2,
       label: 'Groundwater Levels',
+      icon: <Construction />,
+    },
+  },
+]
+
+observations = observations.map((b) => {
+  let meta = b.meta || {}
+  if (!meta['parent']) {
+    meta['parent'] = 'ocotillo.observation'
+  }
+  meta['nestedLevel'] = 3
+  return {
+    ...b,
+    meta: meta,
+  }
+})
+
+let ocotillo = [
+  {
+    name: 'map',
+    list: '/ocotillo/map',
+    meta: {
+      label: 'Map',
+      icon: <Map />,
     },
   },
 
+  // tables
+  {
+    name: 'tables',
+    icon: <WidgetsOutlined />,
+    meta: {
+      label: 'Tables',
+    },
+  },
+  ...tables,
+
+  {
+    name: 'thing',
+    icon: <WidgetsOutlined />,
+    meta: {
+      parent: 'ocotillo.tables',
+      nestedLevel: 2,
+      label: 'Things',
+    },
+  },
+  ...things,
+  {
+    name: 'observation',
+    icon: <ScaleOutlined />,
+    meta: {
+      parent: 'ocotillo.tables',
+      nestedLevel: 2,
+      label: 'Observations',
+    },
+  },
+  ...observations,
   // Apps
   {
     name: 'apps',
@@ -232,34 +353,7 @@ let ocotillo = [
       label: 'Forms',
     },
   },
-  {
-    name: 'well-inventory-form',
-    list: '/ocotillo/well-inventory-form',
-    create: '/ocotillo/well-inventory-form/create',
-    edit: '/ocotillo/well-inventory-form/edit/:id',
-    show: '/ocotillo/well-inventory-form/show/:id',
-    meta: {
-      disabled: false,
-      label: 'Well Inventory Form',
-      parent: 'ocotillo.forms',
-      nestedLevel: 2,
-      icon: <Construction />,
-    },
-  },
-  {
-    name: 'groundwater-level-form',
-    list: '/ocotillo/groundwater-level-form',
-    create: '/ocotillo/groundwater-level-form/create',
-    edit: '/ocotillo/groundwater-level-form/edit/:id',
-    show: '/ocotillo/groundwater-level-form/show/:id',
-    meta: {
-      // disabled: true,
-      label: 'Groundwater Level Form (Beta)',
-      parent: 'ocotillo.forms',
-      nestedLevel: 2,
-      icon: <Construction />,
-    },
-  },
+  ...forms,
 
   // {
   //   name: 'Apps',
@@ -282,6 +376,8 @@ export const ocotilloResources = ocotillo.map((b) => {
     meta: meta,
   }
 })
+
+console.log(ocotilloResources)
 //
 // let amp = [
 //   {
