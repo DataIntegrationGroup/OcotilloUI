@@ -63,7 +63,7 @@ const defineUserAbility = (groups: string[]) => {
       can('list', 'ocotillo.hydrograph-corrector')
     }
 
-    if (groups.includes('Adminf')) {
+    if (groups.includes('Admin')) {
       can('manage', 'all')
     }
   })
