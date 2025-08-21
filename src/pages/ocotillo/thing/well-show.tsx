@@ -20,9 +20,11 @@ import { Box } from '@mui/system'
 import Grid from '@mui/material/Grid2'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { IObservation } from '@/interfaces/ocotillo/IObservation'
+import { ISensor } from '@/interfaces/ocotillo/ISensor'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { settings } from '@/settings'
 import { ContactsComponent } from '@/components/ContactsComponent'
+import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 
 export const WellShow = () => {
   const { queryResult } = useShow({})
@@ -151,8 +153,22 @@ export const WellShow = () => {
   const assetColumns: GridColDef[] = useMemo(() => {
     return [
       { field: 'name', headerName: 'Name', minWidth: 150 },
-      { field: 'url', headerName: 'URL', flex: 1 },
+      { field: 'uri', headerName: 'URL', flex: 1 },
     ]
+  }, [])
+
+  const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
+    resource: 'sensor',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: id,
+      },
+    },
+  })
+
+  const sensorColumns: GridColDef<ISensor>[] = useMemo(() => {
+    return [...sensorDefaultColumns]
   }, [])
 
   return (
@@ -208,6 +224,14 @@ export const WellShow = () => {
               pageSizeOptions={[5, 10, 25]}
               paginationModel={{ pageSize: 10, page: 0 }}
             />
+          </Card>
+        </Grid>
+        <Grid size={12}>
+          <Card>
+            <CardHeader title="Equipment" />
+            <Box padding={2}>
+              <DataGrid {...sensorDataGridProps} columns={sensorColumns} />
+            </Box>
           </Card>
         </Grid>
         <Grid size={12}>

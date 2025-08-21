@@ -5,6 +5,59 @@ import { ListPage } from '@/components/ListPage'
 import { ISensor } from '@/interfaces/ocotillo/ISensor'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 
+export const sensorDefaultColumns: GridColDef<ISensor>[] = [
+  {
+    field: 'name',
+    headerName: 'Name',
+    type: 'string',
+    minWidth: 100,
+    maxWidth: 150,
+    flex: 1,
+  },
+  {
+    field: 'model',
+    headerName: 'Model',
+    type: 'string',
+    minWidth: 100,
+    flex: 1,
+  },
+  {
+    field: 'serial_no',
+    headerName: 'Serial No',
+    type: 'string',
+    minWidth: 100,
+    flex: 1,
+  },
+  {
+    field: 'date_installed',
+    headerName: 'Date Installed',
+    type: 'string',
+    minWidth: 120,
+    flex: 1,
+  },
+  {
+    field: 'date_removed',
+    headerName: 'Date Removed',
+    type: 'string',
+    minWidth: 120,
+    flex: 1,
+  },
+  {
+    field: 'recording_interval',
+    headerName: 'Recording Interval',
+    type: 'number',
+    minWidth: 100,
+    flex: 1,
+  },
+  {
+    field: 'notes',
+    headerName: 'Notes',
+    type: 'string',
+    minWidth: 150,
+    flex: 2,
+  },
+]
+
 export const SensorList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISensor>({
     resource: 'sensor',
@@ -16,60 +69,7 @@ export const SensorList: React.FC = () => {
   })
 
   const columns = useMemo<GridColDef<ISensor>[]>(
-    () => [
-      idColumnDef(),
-      actionColumnDef(),
-      {
-        field: 'name',
-        headerName: 'Name',
-        type: 'string',
-        minWidth: 100,
-        maxWidth: 150,
-        flex: 1,
-      },
-      {
-        field: 'model',
-        headerName: 'Model',
-        type: 'string',
-        minWidth: 100,
-        flex: 1,
-      },
-      {
-        field: 'serial_no',
-        headerName: 'Serial No',
-        type: 'string',
-        minWidth: 100,
-        flex: 1,
-      },
-      {
-        field: 'date_installed',
-        headerName: 'Date Installed',
-        type: 'string',
-        minWidth: 120,
-        flex: 1,
-      },
-      {
-        field: 'date_removed',
-        headerName: 'Date Removed',
-        type: 'string',
-        minWidth: 120,
-        flex: 1,
-      },
-      {
-        field: 'recording_interval',
-        headerName: 'Recording Interval',
-        type: 'number',
-        minWidth: 100,
-        flex: 1,
-      },
-      {
-        field: 'notes',
-        headerName: 'Notes',
-        type: 'string',
-        minWidth: 150,
-        flex: 2,
-      },
-    ],
+    () => [idColumnDef(), actionColumnDef(), ...sensorDefaultColumns],
     []
   )
 
