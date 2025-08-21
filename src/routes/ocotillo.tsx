@@ -78,7 +78,6 @@ import {
 export const OcotilloRoutes = () => {
   return (
     <Routes>
-      {/*<Route path="dashboard" element={<ST2Dashboard />} />*/}
       <Route path="contact">
         <Route index element={<ContactList />} />
         <Route path={'show/:id'} element={<ContactShow />} />

@@ -11,11 +11,6 @@ let base = [
     meta: { label: 'NMBGMR (Coming Soon)' },
   },
   {
-    name: 'water',
-    icon: <WaterDropOutlined />,
-    meta: { label: 'Water (Deprecated)' },
-  },
-  {
     name: 'st2',
     icon: <SensorsOutlinedIcon />,
     meta: { label: 'NMWDI SensorThings' },
