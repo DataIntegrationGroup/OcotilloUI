@@ -26,6 +26,78 @@ import { settings } from '@/settings'
 import { ContactsComponent } from '@/components/ContactsComponent'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 
+function indexOfMax(arr) {
+  if (arr.length === 0) {
+    return -1
+  }
+
+  let max = arr[0]
+  let maxIndex = 0
+
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > max) {
+      maxIndex = i
+      max = arr[i]
+    }
+  }
+
+  return maxIndex
+}
+function indexOfMin(arr) {
+  if (arr.length === 0) {
+    return -1
+  }
+
+  let min = arr[0]
+  let minIndex = 0
+
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] < min) {
+      minIndex = i
+      min = arr[i]
+    }
+  }
+
+  return minIndex
+}
+
+const WaterlevelStats = ({
+  observations,
+}: {
+  observations: readonly IObservation[]
+}) => {
+  const [maxDepth, setMaxDepth] = useState(0)
+  const [minDepth, setMinDepth] = useState(0)
+  const [maxDepthDatetime, setMaxDepthDatetime] = useState<string>('')
+  const [minDepthDatetime, setMinDepthDatetime] = useState<string>('')
+
+  useEffect(() => {
+    if (observations.length === 0) return
+    const depths = observations.map((obs) => Number(obs.depth_to_water))
+
+    setMaxDepth(Math.max(...depths))
+    setMaxDepthDatetime(observations[indexOfMax(depths)].observation_datetime)
+    setMinDepthDatetime(observations[indexOfMin(depths)].observation_datetime)
+    setMinDepth(Math.min(...depths))
+  }, [observations])
+
+  return (
+    <Card>
+      <CardHeader title="Water Level Stats" />
+      <Box padding={2}>
+        <Typography variant="body1">
+          Max Depth: {maxDepth.toFixed(2)} ft --
+          {new Date(maxDepthDatetime).toLocaleString()}
+        </Typography>
+        <Typography variant="body1">
+          Min Depth: {minDepth.toFixed(2)} ft --
+          {new Date(minDepthDatetime).toLocaleString()}
+        </Typography>
+      </Box>
+    </Card>
+  )
+}
+
 export const WellShow = () => {
   const { queryResult } = useShow({})
   const { data, isLoading } = queryResult
@@ -174,7 +246,7 @@ export const WellShow = () => {
   return (
     <Show isLoading={isLoading || observationsIsloading}>
       <Grid container spacing={2}>
-        <Grid size={12}>
+        <Grid size={6}>
           <Card>
             <CardHeader title={`Well: ${record?.name || 'Loading...'}`} />
             <Box padding={2}>
@@ -192,6 +264,9 @@ export const WellShow = () => {
               </Typography>
             </Box>
           </Card>
+        </Grid>
+        <Grid size={6}>
+          <WaterlevelStats observations={observations} />
         </Grid>
         <Grid size={6}>
           <Card>
@@ -220,9 +295,9 @@ export const WellShow = () => {
               rowHeight={settings.rowHeight}
               {...observationDataGridProps}
               columns={observationColumns}
-              pagination
-              pageSizeOptions={[5, 10, 25]}
-              paginationModel={{ pageSize: 10, page: 0 }}
+              // pagination
+              // pageSizeOptions={[5, 10, 25]}
+              // paginationModel={{ pageSize: 10, page: 0 }}
             />
           </Card>
         </Grid>
