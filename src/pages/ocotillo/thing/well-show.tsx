@@ -299,9 +299,9 @@ export const WellShow = () => {
               rowHeight={settings.rowHeight}
               {...observationDataGridProps}
               columns={observationColumns}
+              pageSizeOptions={[]}
               initialState={{
                 pagination: {
-                  pageSizeOptions: false,
                   paginationModel: { pageSize: 10, page: 0 },
                 },
               }}
@@ -323,9 +323,9 @@ export const WellShow = () => {
               <DataGrid
                 {...wellScreenDataGridProps}
                 columns={wellScreenColumns}
+                pageSizeOptions={[]}
                 initialState={{
                   pagination: {
-                    pageSizeOptions: false,
                     paginationModel: { pageSize: 10, page: 0 },
                   },
                 }}
@@ -366,9 +366,9 @@ export const WellShow = () => {
                   <DataGrid
                     columns={assetColumns}
                     rows={assets}
+                    pageSizeOptions={[]}
                     initialState={{
                       pagination: {
-                        pageSizeOptions: false,
                         paginationModel: { pageSize: 10, page: 0 },
                       },
                     }}
