@@ -83,7 +83,7 @@ export const ContactsComponent = ({ contacts }) => {
         getRowId={(row) => row.id}
         columns={columns}
         rows={contacts}
-        pageSizeOptions={[]}
+        pageSizeOptions={[10]}
         initialState={{
           pagination: {
             paginationModel: { pageSize: 10, page: 0 },

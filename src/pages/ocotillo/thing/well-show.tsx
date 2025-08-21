@@ -150,6 +150,7 @@ export const WellShow = () => {
   const { rows: observations, loading: observationsIsloading } =
     observationDataGridProps
 
+  // console.log('props', observationDataGridProps)
   useEffect(() => {
     if (!observations || observations.length === 0) return
 
@@ -296,10 +297,12 @@ export const WellShow = () => {
         <Grid size={6}>
           <Card>
             <DataGrid
+              rows={observations}
+              loading={observationsIsloading}
+              getRowId={(row) => row.id}
               rowHeight={settings.rowHeight}
-              {...observationDataGridProps}
               columns={observationColumns}
-              pageSizeOptions={[]}
+              pageSizeOptions={[10]}
               initialState={{
                 pagination: {
                   paginationModel: { pageSize: 10, page: 0 },
@@ -312,7 +315,16 @@ export const WellShow = () => {
           <Card>
             <CardHeader title="Equipment" />
             <Box padding={2}>
-              <DataGrid {...sensorDataGridProps} columns={sensorColumns} />
+              <DataGrid
+                rows={sensorDataGridProps.rows}
+                columns={sensorColumns}
+                pageSizeOptions={[10]}
+                initialState={{
+                  pagination: {
+                    paginationModel: { pageSize: 10, page: 0 },
+                  },
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -321,9 +333,9 @@ export const WellShow = () => {
             <CardHeader title="Well Screens" />
             <Box padding={2}>
               <DataGrid
-                {...wellScreenDataGridProps}
+                rows={wellScreenDataGridProps.rows}
                 columns={wellScreenColumns}
-                pageSizeOptions={[]}
+                pageSizeOptions={[10]}
                 initialState={{
                   pagination: {
                     paginationModel: { pageSize: 10, page: 0 },
@@ -366,12 +378,18 @@ export const WellShow = () => {
                   <DataGrid
                     columns={assetColumns}
                     rows={assets}
-                    pageSizeOptions={[]}
+                    pageSizeOptions={[10]}
                     initialState={{
                       pagination: {
                         paginationModel: { pageSize: 10, page: 0 },
                       },
                     }}
+                    // pageSizeOptions={[]}
+                    // initialState={{
+                    //   pagination: {
+                    //     paginationModel: { pageSize: 10, page: 0 },
+                    //   },
+                    // }}
                   />
                   <ImageList
                     sx={{
