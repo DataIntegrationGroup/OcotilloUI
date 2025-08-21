@@ -6,6 +6,7 @@ import {
   useLogout,
   useWarnAboutChange,
   useTranslate,
+  useResourceParams,
 } from '@refinedev/core'
 import {
   AppBar,
@@ -17,9 +18,12 @@ import {
   Menu,
   MenuItem,
   Skeleton,
+  Button,
+  Drawer,
 } from '@mui/material'
 import {
   DarkModeRounded,
+  HelpSharp,
   LightModeOutlined,
   LogoutOutlined,
   PersonOutline,
@@ -28,6 +32,7 @@ import type { RefineThemedLayoutV2HeaderProps } from '@refinedev/mui'
 import { HamburgerMenu } from './hamburgerMenu'
 import { ColorModeContext } from '../../contexts'
 import SearchBar from '@/components/SearchBar'
+import { useHelp } from '@/hooks/useHelp'
 
 const stringAvatar = (name: string) => {
   // Reduce the string into a numerical hash value
@@ -66,6 +71,8 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
   })
 
+  const { helpDrawer, helpButton } = useHelp()
+
   const translate = useTranslate()
   const { mode, setMode } = useContext(ColorModeContext)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -81,7 +88,7 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
 
   const handleProfile = () => {
     window.open(
-      'https://fief.newmexicowaterdata.org/',
+      'https://authentik.newmexicowaterdata.org/',
       '_blank',
       'noopener,noreferrer'
     )
@@ -110,6 +117,8 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
 
   return (
     <AppBar position="sticky">
+      {helpDrawer}
+
       <Toolbar>
         <HamburgerMenu />
         <Stack
@@ -126,6 +135,8 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
             alignItems="center"
             justifyContent="center"
           >
+            {helpButton}
+
             <IconButton onClick={() => setMode()}>
               {mode === 'dark' ? (
                 <LightModeOutlined sx={{ color: '#FFD700' }} />
