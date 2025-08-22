@@ -6,6 +6,8 @@ import { useStepsForm } from '@refinedev/react-hook-form'
 import { useMediaQuery, useTheme } from '@mui/material'
 import { Button } from '@mui/material'
 import { SaveButton } from '@refinedev/mui'
+import { useOne, useList } from '@refinedev/core'
+import { IAsset } from '@/interfaces/ocotillo/IAsset'
 
 import TextField from '@mui/material/TextField'
 import {
@@ -15,14 +17,25 @@ import {
   Document,
   StyleSheet,
   PDFViewer,
+  Image,
 } from '@react-pdf/renderer'
+import { SelectThingComponent } from '@/components/form/thing/SelectThingComponent'
+import { IThing, IWell } from '@/interfaces/ocotillo/IThing'
 
 // Create styles
 const styles = StyleSheet.create({
   page: {
-    flexDirection: 'row',
     backgroundColor: '#E4E4E4',
+    paddingTop: 35,
+    paddingBottom: 65,
+    paddingHorizontal: 35,
   },
+  text: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 5,
+  },
+  image: {},
   section: {
     margin: 10,
     padding: 10,
@@ -32,18 +45,65 @@ const styles = StyleSheet.create({
 
 // Create Document Component
 
-const AMPFieldReport = () => {
+const AMPFieldReport = ({ thing_id }) => {
+  const theme = useTheme()
+  const isSmallOrLess = useMediaQuery(theme.breakpoints.down('sm'))
+
+  const { data } = useOne<IWell>({
+    resource: 'ocotillo.thing-well',
+    id: thing_id,
+    queryOptions: {
+      enabled: !!thing_id,
+    },
+  })
+
+  const { data: assets } = useList<IAsset>({
+    resource: 'ocotillo.asset',
+    meta: {
+      params: {
+        thing_id: thing_id,
+      },
+    },
+    queryOptions: {
+      enabled: !!thing_id,
+    },
+  })
+  console.log(assets)
+
   return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.section}>
-          <Text>Section #1</Text>
-        </View>
-        <View style={styles.section}>
-          <Text>Section #2</Text>
-        </View>
-      </Page>
-    </Document>
+    <PDFViewer
+      showToolbar={false}
+      width={'100%'}
+      height={isSmallOrLess ? '400px' : '600px'}
+    >
+      <Document>
+        <Page size="A4" style={styles.page}>
+          <Text style={styles.text}>PointID: {data?.data.name}</Text>
+          <Text style={styles.text}>Well Type: {data?.data.well_type}</Text>
+          <Text style={styles.text}>
+            Well Depth (ft): {data?.data.well_depth || '---'}
+          </Text>
+          <Text style={styles.text}>
+            Hole Depth (ft): {data?.data.hole_depth || '---'}
+          </Text>
+          <Text style={styles.text}>
+            Last Water Level Measurement: {'not yet implemented'}
+          </Text>
+          <Image
+            style={styles.image}
+            src={{
+              uri: assets?.data[0]?.signed_url,
+            }}
+          />
+          {/*<View style={styles.section}>*/}
+          {/*  <Text>Section #1</Text>*/}
+          {/*</View>*/}
+          {/*<View style={styles.section}>*/}
+          {/*  <Text>Section #2</Text>*/}
+          {/*</View>*/}
+        </Page>
+      </Document>
+    </PDFViewer>
   )
 }
 export const CreateAMPFieldReport: React.FC = () => {
@@ -53,6 +113,7 @@ export const CreateAMPFieldReport: React.FC = () => {
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors },
     steps: { currentStep, gotoStep },
   } = useStepsForm()
@@ -60,25 +121,25 @@ export const CreateAMPFieldReport: React.FC = () => {
   const theme = useTheme()
   const isSmallOrLess = useMediaQuery(theme.breakpoints.down('sm'))
 
+  const selectedThing = watch('thing_id')
+
   const stepTitles = ['Location', 'Output']
   const renderFormByStep = (step: number) => {
     switch (step) {
       case 0:
         return (
-          <Box>
-            <TextField {...register('thing_id')} fullWidth />
-          </Box>
+          <SelectThingComponent
+            control={control}
+            errors={errors}
+            watch={watch}
+            thing_type={'water well'}
+          />
         )
       case 1:
         return (
           <Box>
-            <PDFViewer
-              showToolbar={false}
-              width={'100%'}
-              height={isSmallOrLess ? '400px' : '600px'}
-            >
-              <AMPFieldReport />
-            </PDFViewer>
+            <AMPFieldReport thing_id={selectedThing} />
+            {/*</PDFViewer>*/}
           </Box>
         )
       default:

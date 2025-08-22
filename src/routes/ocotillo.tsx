@@ -74,7 +74,7 @@ import {
   WellScreenList,
   WellScreenShow,
 } from '@/pages/ocotillo/well-screen'
-import { CreateAMPFieldReport } from '@/pages/dataforge/fieldreport/AMPFieldReport'
+import { CreateAMPFieldReport } from '@/pages/ocotillo/fieldreport/AMPFieldReport'
 
 export const OcotilloRoutes = () => {
   return (
