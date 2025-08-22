@@ -89,9 +89,7 @@ export const authentikAuthProvider: AuthProvider = {
     localStorage.removeItem('id_token')
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('pkce_code_verifier')
-    window.location.href = `${AUTHENTIK_URL}end-session?post_logout_redirect_uri=${encodeURIComponent(
-      window.location.origin
-    )}`
+
     return { success: true }
   },
 
