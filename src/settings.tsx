@@ -6,8 +6,8 @@ export const settings = {
   nmbgmr_amp_api_url:
     import.meta.env.VITE_NMBGMR_AMP_API_URL || 'http://localhost:8009',
 
-  dataforge_api_url:
-    import.meta.env.VITE_DATAFORGE_API_URL || 'http://localhost:8000',
+  ocotillo_api_url:
+    import.meta.env.VITE_OCOTILLO_API_URL || 'http://localhost:8000',
 
   st2_url: 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
   nmbgmr_geothermal_api_url:
