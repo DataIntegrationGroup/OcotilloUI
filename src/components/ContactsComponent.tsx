@@ -7,12 +7,12 @@ import { useLink } from '@refinedev/core'
 export const ContactsComponent = ({ contacts }) => {
   const columns: GridColDef[] = useMemo(() => {
     return [
-      linkColumn('ocotillo.contact', {
-        field: 'id',
-        headerName: 'ID',
-        type: 'string',
-        width: 100,
-      }),
+      // linkColumn('ocotillo.contact', {
+      //   field: 'id',
+      //   headerName: 'ID',
+      //   type: 'string',
+      //   width: 100,
+      // }),
       {
         field: 'name',
         headerName: 'Name',

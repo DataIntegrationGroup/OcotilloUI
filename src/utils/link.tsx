@@ -1,5 +1,6 @@
 import { string } from 'yup'
 import { useLink } from '@refinedev/core'
+import { render } from 'react-dom'
 
 // export const extractThingTypeResource = (getThingType) => {
 //   return () => {
@@ -27,7 +28,7 @@ export const extractThingTypeResource = (getThingType) => {
   }
 }
 
-export const linkColumn = (resource, options) => {
+export const linkColumn = (resource, options, renderLabel?) => {
   const Link = useLink()
   return {
     ...options,
@@ -46,7 +47,7 @@ export const linkColumn = (resource, options) => {
             },
           }}
         >
-          {params.value}
+          {renderLabel ? renderLabel(params) : params.value}
         </Link>
       )
     },

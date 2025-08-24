@@ -74,6 +74,9 @@ export const SampleList: React.FC = () => {
           type: 'number',
           minWidth: 120,
           flex: 1,
+        },
+        (params) => {
+          return params.row.thing.name
         }
       ),
     ],

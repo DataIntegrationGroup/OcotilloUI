@@ -26,12 +26,18 @@ export const WellScreenList: React.FC = () => {
   const columns = useMemo<GridColDef<IWellScreen>[]>(
     () => [
       idColumnDef(),
-      linkColumn('ocotillo.thing-well', {
-        field: 'thing_id',
-        headerName: 'Well ID',
-        type: 'string',
-        minWidth: 150,
-      }),
+      linkColumn(
+        'ocotillo.thing-well',
+        {
+          field: 'thing_id',
+          headerName: 'Well',
+          type: 'string',
+          minWidth: 150,
+        },
+        (params) => {
+          return params.row.thing.name
+        }
+      ),
       {
         field: 'screen_type',
         headerName: 'Type',

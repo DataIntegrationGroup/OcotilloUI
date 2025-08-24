@@ -19,9 +19,12 @@ export const ThingIdLinkList = () => {
         extractThingTypeResource((params) => params.row.thing.thing_type),
         {
           field: 'thing_id',
-          headerName: 'Thing ID',
+          headerName: 'Thing',
           type: 'string',
           minWidth: 150,
+        },
+        (params) => {
+          return params.row.thing.name
         }
       ),
       {
