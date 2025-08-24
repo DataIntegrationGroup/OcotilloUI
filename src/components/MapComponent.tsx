@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useRef, useState } from 'react'
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { Map, MapRef, NavigationControl, Popup } from 'react-map-gl'
 import { ColorModeContext } from '@/contexts'
 import DrawControl from './DrawControl'
@@ -7,14 +13,15 @@ import GeocoderControl from './GeocoderControl'
 import { ControlPosition } from 'react-map-gl'
 import { CircularProgress } from '@mui/material'
 import { settings } from '@/settings'
+import { BaseMapSelect } from '@/components/BaseMapSelect'
 
-export const getMapStyle = (mode: string, zoom: number) => {
-  return zoom > 10
-    ? 'mapbox://styles/mapbox/satellite-streets-v12'
-    : mode === 'dark'
-      ? 'mapbox://styles/mapbox/dark-v11'
-      : 'mapbox://styles/mapbox/light-v11'
-}
+// export const getMapStyle = (mode: string, zoom: number) => {
+//   return zoom > 10
+//     ? 'mapbox://styles/mapbox/satellite-streets-v12'
+//     : mode === 'dark'
+//       ? 'mapbox://styles/mapbox/dark-v11'
+//       : 'mapbox://styles/mapbox/light-v11'
+// }
 
 interface MapComponentProps {
   children?: any
@@ -66,6 +73,19 @@ export const MapComponent: React.FC<MapComponentProps> = ({
 }) => {
   const { mode } = useContext(ColorModeContext)
   const [isDrawing, setIsDrawing] = useState(false)
+
+  const [baseMap, setBaseMap] = useState('dark-v11')
+  const [mapStyle, setMapStyle] = useState(
+    mode === 'dark'
+      ? 'mapbox://styles/mapbox/dark-v11'
+      : 'mapbox://styles/mapbox/light-v11'
+  )
+
+  useEffect(() => {
+    if (!mapRef.current) return
+    console.log('setting map style', baseMap)
+    setMapStyle('mapbox://styles/mapbox/' + baseMap)
+  }, [baseMap])
 
   if (mapRef === undefined) {
     mapRef = useRef<MapRef>(null)
@@ -158,6 +178,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
 
   return (
     <div>
+      <BaseMapSelect baseMap={baseMap} setBaseMap={setBaseMap} />
       <Map
         ref={mapRef}
         mapboxAccessToken={settings.mapboxToken}
@@ -166,7 +187,8 @@ export const MapComponent: React.FC<MapComponentProps> = ({
         onMove={(evt) => setViewState(evt.viewState)}
         terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
         style={style}
-        mapStyle={getMapStyle(mode, viewState.zoom)}
+        mapStyle={mapStyle}
+        // mapStyle={getMapStyle(mode, viewState.zoom)}
         onMouseMove={onMouseMove}
       >
         {showGeocoder?.show && (

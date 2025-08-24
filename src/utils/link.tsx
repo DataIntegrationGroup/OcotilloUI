@@ -1,20 +1,7 @@
 import { string } from 'yup'
 import { useLink } from '@refinedev/core'
-import { render } from 'react-dom'
 
-// export const extractThingTypeResource = (getThingType) => {
-//   return () => {
-//     switch (getThingType()) {
-//       case 'water well':
-//         return 'ocotillo.thing-well'
-//       case 'spring':
-//         return 'ocotillo.thing-spring'
-//       default:
-//         return 'ocotillo.thing-well'
-//     }
-//   }
-// }
-export const extractThingTypeResource = (getThingType) => {
+export const extractThingTypeResource = (getThingType: Function) => {
   return (params) => {
     const thingType = getThingType(params)
     switch (thingType) {
@@ -28,20 +15,21 @@ export const extractThingTypeResource = (getThingType) => {
   }
 }
 
-export const linkColumn = (resource, options, renderLabel?) => {
+export const linkColumn = (
+  resource: string | Function,
+  options: object,
+  renderLabel?: Function
+) => {
   const Link = useLink()
   return {
     ...options,
     renderCell: (params) => {
-      if (typeof resource !== 'string') {
-        resource = resource(params)
-      }
-
       return (
         <Link
           go={{
             to: {
-              resource: resource,
+              resource:
+                typeof resource === 'string' ? resource : resource(params),
               action: 'show',
               id: params.value,
             },

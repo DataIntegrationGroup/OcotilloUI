@@ -70,7 +70,7 @@ export const SampleList: React.FC = () => {
         extractThingTypeResource((params) => params.row.thing.thing_type),
         {
           field: 'thing_id',
-          headerName: 'Thing ID',
+          headerName: 'Thing',
           type: 'number',
           minWidth: 120,
           flex: 1,

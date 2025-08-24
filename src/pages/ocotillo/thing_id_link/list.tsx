@@ -28,15 +28,6 @@ export const ThingIdLinkList = () => {
         }
       ),
       {
-        field: 'thing',
-        headerName: 'Thing Name',
-        type: 'string',
-        minWidth: 150,
-        valueGetter: (value, row) => {
-          return row.thing.name
-        },
-      },
-      {
         field: 'thing_type',
         headerName: 'Thing Type',
         type: 'string',
