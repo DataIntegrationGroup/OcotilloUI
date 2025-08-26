@@ -8,9 +8,12 @@ import Grid from '@mui/material/Grid2'
 import {
   ControlledTextField,
   ControlledSelectField,
+  MapComponent,
 } from '@/components'
 import { useLexicon } from '@/hooks'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { MapRef, ViewState, Source, Layer } from 'react-map-gl'
+import { Typography } from '@mui/material'
 
 /**
  * CreateEditLocation Component
@@ -44,6 +47,15 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
+  const mapRef = useRef<MapRef>(null)
+  const [viewState, setViewState] = useState<ViewState>({
+    latitude: 34.068279,
+    longitude: -106.904192,
+    zoom: 5,
+    bearing: 0,
+    pitch: 0,
+    padding: { top: 0, left: 0, right: 0, bottom: 0 },
+  })
 
   //get release status options
   const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
@@ -61,6 +73,36 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       }
     }
   }, [setValue, fieldPrefix, watch(getFieldName('latitude')), watch(getFieldName('longitude'))])
+
+  //update map when lat or long chnages
+  useEffect(() => {
+    if (watch) {
+      const lat = watch(getFieldName('latitude'))
+      const lng = watch(getFieldName('longitude'))
+      
+      if (lat && lng && !isNaN(Number(lat)) && !isNaN(Number(lng))) {
+        setViewState(prev => ({
+          ...prev,
+          longitude: Number(lng),
+          latitude: Number(lat)
+        }))
+        if (mapRef.current) {
+          mapRef.current.flyTo({
+            center: [Number(lng), Number(lat)]
+          })
+        }
+      }
+    }
+  }, [fieldPrefix, watch(getFieldName('latitude')), watch(getFieldName('longitude'))])
+
+  //handle map click to set lat and long
+  const handleMapClick = (e: any) => {
+    if (setValue) {
+      const { lng, lat } = e.lngLat
+      setValue(getFieldName('longitude'), lng.toFixed(6))
+      setValue(getFieldName('latitude'), lat.toFixed(6))
+    }
+  }
 
   return (
     <Grid container spacing={3}>
@@ -105,6 +147,54 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           placeholder="-106.904192"
           required
         />
+      </Grid>
+
+      <Grid size={{ xs: 12}}>
+        <Typography variant="body1" sx={{ paddingBottom: '10px' }}>
+          Click on the map to set a location, or enter latitude and longitude above.
+        </Typography>
+      <MapComponent
+            mapRef={mapRef}
+            initialViewState={viewState}
+            style={{ height: '350px', width: '100%' }}
+            showDrawControls={{ show: false }}
+            onClick={handleMapClick}
+          >
+            {watch && watch(getFieldName('latitude')) && watch(getFieldName('longitude')) && (
+              <Source
+                key="locationMarker"
+                id="locationMarker"
+                type="geojson"
+                data={{
+                  type: 'FeatureCollection',
+                  features: [
+                    {
+                      type: 'Feature',
+                      geometry: {
+                        type: 'Point',
+                        coordinates: [
+                          Number(watch(getFieldName('longitude'))),
+                          Number(watch(getFieldName('latitude')))
+                        ]
+                      },
+                      properties: {}
+                    }
+                  ]
+                }}
+              >
+                <Layer
+                  id="locationMarker"
+                  type="circle"
+                  paint={{
+                    'circle-radius': 6,
+                    'circle-color': '#B42222',
+                    'circle-stroke-color': '#ffffff',
+                    'circle-stroke-width': 1,
+                  }}
+                />
+              </Source>
+            )}
+          </MapComponent>
       </Grid>
 
       <Grid size={12}>
