@@ -10,6 +10,7 @@ import {
   ControlledSelectField,
 } from '@/components'
 import { useLexicon } from '@/hooks'
+import { useEffect } from 'react'
 
 /**
  * CreateEditLocation Component
@@ -49,6 +50,18 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
     category: 'release_status' 
   })
 
+  //auto-generate WKT point from latitude and longitude
+  useEffect(() => {
+    if (setValue && watch) {
+      const lat = watch(getFieldName('latitude'))
+      const lng = watch(getFieldName('longitude'))
+      
+      if (lat && lng) {
+        setValue(getFieldName('point'), `POINT(${lng} ${lat})`)
+      }
+    }
+  }, [setValue, fieldPrefix, watch(getFieldName('latitude')), watch(getFieldName('longitude'))])
+
   return (
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, md: 6 }}>
@@ -72,14 +85,35 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
         />
       </Grid>
 
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Latitude"
+          control={control}
+          name={getFieldName('latitude')}
+          type="number"
+          placeholder="34.068279"
+          required
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Longitude"
+          control={control}
+          name={getFieldName('longitude')}
+          type="number"
+          placeholder="-106.904192"
+          required
+        />
+      </Grid>
+
       <Grid size={12}>
         <ControlledTextField
-          label="Location Coordinates POINT (X Y)"
+          label="WKT Point (Auto-generated)"
           control={control}
           name={getFieldName('point')}
-          placeholder='POINT(-106.5 35.1)'
-          helperText="Enter coordinates in POINT (X Y) format"
-          required
+          disabled
+          value={watch ? `POINT(${watch(getFieldName('longitude')) || 0} ${watch(getFieldName('latitude')) || 0})` : ''}
         />
       </Grid>
 
