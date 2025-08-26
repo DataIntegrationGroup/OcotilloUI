@@ -113,7 +113,6 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           control={control}
           name={getFieldName('point')}
           disabled
-          value={watch ? `POINT(${watch(getFieldName('longitude')) || 0} ${watch(getFieldName('latitude')) || 0})` : ''}
         />
       </Grid>
 
