@@ -95,16 +95,19 @@ export const Home = () => {
             <Box
               sx={{
                 backgroundImage: `url(${ocotilloImage})`,
+                transform: `scaleX(-1)`,
                 backgroundRepeat: 'no-repeat',
                 backgroundSize: 'cover',
                 height: '500px',
                 padding: 2,
               }}
             >
-              <Typography variant="h1">Welcome to Ocotillo.</Typography>
-              <Typography variant="h2">
-                NMBGMR's Data Management Portal
-              </Typography>
+              <Box sx={{ transform: `scaleX(-1)` }}>
+                <Typography variant="h1">Welcome to Ocotillo.</Typography>
+                <Typography variant="h2">
+                  NMBGMR's Data Management Portal
+                </Typography>
+              </Box>
             </Box>
             <List
               sx={{ width: '100%', maxWidth: 300 }}
