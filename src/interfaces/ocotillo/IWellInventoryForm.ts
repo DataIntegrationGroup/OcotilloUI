@@ -16,6 +16,11 @@ export interface IWellInventoryForm {
     well_type: string
     notes?: string
   }
+  wellScreens: Array<{
+    screen_depth_top?: number
+    screen_depth_bottom?: number
+    screen_description?: string
+  }>
   contacts: Array<{
     name: string
     role: string

@@ -40,6 +40,24 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
 
   const wellId = wellResponse.data.id
 
+   // Create well screens
+   if (data.wellScreens && data.wellScreens.length > 0) {
+    for (const screen of data.wellScreens) {
+      if (screen.screen_depth_top || screen.screen_depth_bottom || screen.screen_description) {
+        await ocotilloDataProvider.create({
+          resource: 'ocotillo.thing/well-screen',
+          variables: {
+            thing_id: wellId,
+            screen_depth_bottom: screen.screen_depth_bottom || null,
+            screen_depth_top: screen.screen_depth_top || null,
+            screen_type: 'PVC', // default value
+            screen_description: screen.screen_description || '',
+          },
+        })
+      }
+    }
+  }
+
   // Create all contacts
   const contactResponses = []
   for (const contact of data.contacts) {
