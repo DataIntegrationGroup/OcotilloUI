@@ -14,6 +14,7 @@ import { useLexicon } from '@/hooks'
 import { useEffect, useRef, useState } from 'react'
 import { MapRef, ViewState, Source, Layer } from 'react-map-gl'
 import { Typography } from '@mui/material'
+import wellknown from 'wellknown'
 
 /**
  * CreateEditLocation Component
@@ -73,6 +74,27 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       }
     }
   }, [setValue, fieldPrefix, watch(getFieldName('latitude')), watch(getFieldName('longitude'))])
+
+  //get lat long from WKT point when edit location is loaded
+  useEffect(() => {
+    if (watch && setValue) {
+      const point = watch(getFieldName('point'))
+      
+      if (point) {
+        try {
+          const geometry = wellknown.parse(point)
+          if (geometry.type === 'Point' && geometry.coordinates) {
+            const [lng, lat] = geometry.coordinates
+            setValue(getFieldName('longitude'), lng)
+            setValue(getFieldName('latitude'), lat)
+            setViewState(prev => ({ ...prev, longitude: lng, latitude: lat }))
+          }
+        } catch (e) {
+          console.error('Error parsing WKT point:', e)
+        }
+      }
+    }
+  }, [watch, setValue, fieldPrefix, watch(getFieldName('point'))])
 
   //update map when lat or long chnages
   useEffect(() => {
