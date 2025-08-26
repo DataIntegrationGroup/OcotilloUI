@@ -30,6 +30,7 @@ import {
   wellInventoryStepSchemas,
   SchemaDefaults,
 } from './well_inventory.schema'
+import { CreateEditWellScreen } from '@/components/form/thing/CreateEditWellScreen'
 
 export const WellInventoryForm: React.FC = () => {
   const { open, close } = useNotification()
@@ -76,6 +77,7 @@ export const WellInventoryForm: React.FC = () => {
   const steps = [
     'Location Information',
     'Well Information',
+    'Well Screens',
     'Contacts',
     'Assets',
     'Review & Submit',
@@ -101,6 +103,15 @@ export const WellInventoryForm: React.FC = () => {
   } = useFieldArray({
     control,
     name: 'assets',
+  })
+
+  const {
+    fields: wellScreenFields,
+    append: appendWellScreen,
+    remove: removeWellScreen,
+  } = useFieldArray({
+    control,
+    name: 'wellScreens',
   })
 
   // ------------------------------------------------------------
@@ -185,6 +196,18 @@ export const WellInventoryForm: React.FC = () => {
         return <WellStep control={control} watch={watch} errors={errors} />
       case 2:
         return (
+          <WellScreensStep
+            control={control}
+            watch={watch}
+            setValue={setValue}
+            errors={errors}
+            wellScreenFields={wellScreenFields}
+            appendWellScreen={appendWellScreen}
+            removeWellScreen={removeWellScreen}
+          />
+        )
+      case 3:
+        return (
           <ContactsStep
             control={control}
             watch={watch}
@@ -195,7 +218,7 @@ export const WellInventoryForm: React.FC = () => {
             removeContact={removeContact}
           />
         )
-      case 3:
+      case 4:
         return (
           <AssetsStep
             control={control}
@@ -209,7 +232,7 @@ export const WellInventoryForm: React.FC = () => {
             removeAsset={removeAsset}
           />
         )
-      case 4:
+      case 5:
         return <ReviewStep watch={watch} />
       default:
         return null
@@ -360,6 +383,78 @@ const WellStep: React.FC<{
       mode="step"
       fieldPrefix="well."
     />
+  </Grid>
+)
+
+const WellScreensStep: React.FC<{
+  control: any
+  watch: any
+  setValue: any
+  errors: any
+  wellScreenFields: any
+  appendWellScreen: any
+  removeWellScreen: any
+}> = ({
+  control,
+  watch,
+  setValue,
+  errors,
+  wellScreenFields,
+  appendWellScreen,
+  removeWellScreen,
+}) => (
+  <Grid container spacing={3}>
+    <Grid size={12}>
+      <Typography variant="h6" gutterBottom>
+        Well Screens
+      </Typography>
+    </Grid>
+
+    {wellScreenFields.map((field, screenIndex) => (
+      <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
+        <CreateEditWellScreen
+          control={control}
+          watch={watch}
+          setValue={setValue}
+          errors={errors}
+          mode="step"
+          fieldPrefix={`wellScreens.${screenIndex}.`}
+          screenIndex={screenIndex}
+          onRemoveScreen={removeWellScreen}
+          onAddScreen={
+            screenIndex === wellScreenFields.length - 1
+              ? () =>
+                  appendWellScreen({
+                    screen_depth_top: null,
+                    screen_depth_bottom: null,
+                    screen_description: '',
+                  })
+              : undefined
+          }
+          canRemoveScreen={wellScreenFields.length > 1}
+          totalScreens={wellScreenFields.length}
+        />
+      </Grid>
+    ))}
+
+    {/* Show Add Screen button when no screens exist */}
+    {wellScreenFields.length === 0 && (
+      <Grid size={12}>
+        <Button
+          variant="outlined"
+          onClick={() =>
+            appendWellScreen({
+              screen_depth_top: null,
+              screen_depth_bottom: null,
+              screen_description: '',
+            })
+          }
+          startIcon={<Add />}
+        >
+          Add Well Screen
+        </Button>
+      </Grid>
+    )}
   </Grid>
 )
 
@@ -565,6 +660,14 @@ const ReviewStep: React.FC<{
         },
         { label: 'Notes', value: formData.well?.notes || 'None' },
       ],
+    },
+    {
+      title: `Well Screens (${formData.wellScreens?.length || 0})`,
+      items:
+        formData.wellScreens?.map((screen, index) => ({
+          label: `Screen ${index + 1}`,
+          value: `Top: ${screen.screen_depth_top || 'N/A'} ft, Bottom: ${screen.screen_depth_bottom || 'N/A'} ft, Description: ${screen.screen_description || 'None'}`,
+        })) || [],
     },
     {
       title: `Contacts (${formData.contacts?.length || 0})`,

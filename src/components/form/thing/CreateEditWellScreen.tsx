@@ -1,45 +1,105 @@
-import TextField from '@mui/material/TextField'
+import { Control, FieldErrors } from 'react-hook-form'
 import Grid from '@mui/material/Grid2'
+import { ControlledTextField } from '@/components'
+import { Button, Typography } from '@mui/material'
+import { Add, Delete } from '@mui/icons-material'
 
-export const CreateEditWellScreen = ({
+interface CreateEditWellScreenProps {
+  control: Control<any>
+  watch?: any
+  setValue?: any
+  errors?: FieldErrors<any>
+  mode?: 'standalone' | 'step'
+  fieldPrefix?: string
+  screenIndex?: number
+  onRemoveScreen?: (index: number) => void
+  onAddScreen?: () => void
+  canRemoveScreen?: boolean
+  totalScreens?: number
+}
+
+export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
   control,
-  register,
-  errors,
+  watch,
   setValue,
-  mode,
+  errors,
+  mode = 'standalone',
+  fieldPrefix = '',
+  screenIndex,
+  onRemoveScreen,
+  onAddScreen,
+  canRemoveScreen = true,
+  totalScreens = 1,
 }) => {
+  const getFieldName = (fieldName: string) => {
+    return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
+  }
+
   return (
     <Grid container spacing={2} alignItems="center">
       <Grid size={12}>
-        <TextField
-          {...register('screen_depth_bottom')}
-          error={!!errors.screen_depth_bottom}
-          helperText={errors.screen_depth_bottom?.message}
-          margin="normal"
+        <Typography variant="subtitle1" gutterBottom>
+          Screen {screenIndex !== undefined ? screenIndex + 1 : ''}
+        </Typography>
+      </Grid>
+      
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Screen Depth Top (ft)"
+          control={control}
+          name={getFieldName('screen_depth_top')}
+          type="number"
           fullWidth
-          label="Screen Depth Bottom"
         />
       </Grid>
+      
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Screen Depth Bottom (ft)"
+          control={control}
+          name={getFieldName('screen_depth_bottom')}
+          type="number"
+          fullWidth
+        />
+      </Grid>
+      
       <Grid size={12}>
-        <TextField
-          {...register('screen_depth_top')}
-          error={!!errors.screen_depth_top}
-          helperText={errors.screen_depth_top?.message}
-          margin="normal"
+        <ControlledTextField
+          label="Screen Description"
+          control={control}
+          name={getFieldName('screen_description')}
+          multiline
+          minRows={2}
           fullWidth
-          label="Screen Depth top"
         />
       </Grid>
-      <Grid size={12}>
-        <TextField
-          {...register('screen_description')}
-          error={!!errors.screen_description}
-          helperText={errors.screen_description?.message}
-          margin="normal"
-          fullWidth
-          label="Description"
-        />
-      </Grid>
+
+      {/* Add/Remove buttons for step mode */}
+      {mode === 'step' && (
+        <Grid size={12} sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+          {onAddScreen && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={onAddScreen}
+              startIcon={<Add />}
+            >
+              Add Another Screen
+            </Button>
+          )}
+          {canRemoveScreen && onRemoveScreen && screenIndex !== undefined && (
+            <Button
+              variant="outlined"
+              color="error"
+              size="small"
+              onClick={() => onRemoveScreen(screenIndex)}
+              startIcon={<Delete />}
+            >
+              Remove Screen
+            </Button>
+          )}
+        </Grid>
+      )}
     </Grid>
   )
 }
