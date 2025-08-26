@@ -151,7 +151,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
 
       <Grid size={{ xs: 12, md: 6 }}>
         <ControlledTextField
-          label="Latitude"
+          label="Latitude (decimal degrees)"
           control={control}
           name={getFieldName('latitude')}
           type="number"
@@ -162,7 +162,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
 
       <Grid size={{ xs: 12, md: 6 }}>
         <ControlledTextField
-          label="Longitude"
+          label="Longitude (decimal degrees)"
           control={control}
           name={getFieldName('longitude')}
           type="number"
