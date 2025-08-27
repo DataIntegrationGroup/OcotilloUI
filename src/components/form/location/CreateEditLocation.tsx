@@ -14,9 +14,10 @@ import {
 import { useLexicon } from '@/hooks'
 import { useEffect, useRef, useState } from 'react'
 import { MapRef, ViewState, Source, Layer } from 'react-map-gl'
-import { Typography, FormControlLabel, Switch, Box } from '@mui/material'
+import { Typography, FormControlLabel, Switch, Box, InputAdornment, IconButton, Tooltip } from '@mui/material'
 import wellknown from 'wellknown'
 import { convertUTMToLonLat, convertLonLatToUTM } from '@/utils/UtmToLonLat'
+import { useElevation } from '@/hooks/useElevation'
 
 /**
  * CreateEditLocation Component
@@ -52,6 +53,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   }
   
   const [useUTM, setUseUTM] = useState(false)
+  const [autoGenerateElevation, setAutoGenerateElevation] = useState(true)
   const mapRef = useRef<MapRef>(null)
   const [viewState, setViewState] = useState<ViewState>({
     latitude: 34.068279,
@@ -75,13 +77,8 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   const northing = useWatch({ control, name: getFieldName('northing') })
   const utmZone = useWatch({ control, name: getFieldName('utm_zone') })
   const utmDatum = useWatch({ control, name: getFieldName('utm_datum') })
+  const elevation = useWatch({ control, name: getFieldName('elevation') })
 
-  //auto-generate WKT point from latitude and longitude
-  useEffect(() => {
-    if (setValue && latitude && longitude) {
-      setValue(getFieldName('point'), `POINT(${longitude} ${latitude})`)
-    }
-  }, [setValue, latitude, longitude])
 
   //get lat long from WKT point when edit location is loaded
   useEffect(() => {
@@ -164,10 +161,45 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
     }
   }, [setValue, utmZone, utmDatum])
 
-  // Handle coordinate system toggle
+  // handle coordinate system toggle
   const handleCoordinateSystemToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUseUTM(event.target.checked)
   }
+
+  // use elevation hook to fetch form USGS DEM
+  const elevationQuery = useElevation(longitude, latitude, autoGenerateElevation)
+
+  // Set form values when elevation data is fetched
+  useEffect(() => {
+    if (autoGenerateElevation && elevationQuery.isSuccess && elevationQuery.data) {
+      const elevationInFeet = elevationQuery.data.value.toFixed(2)
+      
+      if (setValue) {
+        setValue(getFieldName('elevation'), elevationInFeet)
+        setValue(getFieldName('elevation_accuracy'), 1.74)
+        setValue(getFieldName('elevation_datum'), 'NAVD88')
+        setValue(getFieldName('elevation_method'), 'USGS DEM')
+      }
+    }
+  }, [autoGenerateElevation, elevationQuery.isSuccess, elevationQuery.data, setValue])
+
+  // clear elevation fields when turning off auto-generation
+  const handleElevationToggle = (checked: boolean) => {
+    setAutoGenerateElevation(checked)
+    if (!checked && setValue) {
+      setValue(getFieldName('elevation'), undefined)
+      setValue(getFieldName('elevation_accuracy'), undefined)
+      setValue(getFieldName('elevation_datum'), '')
+      setValue(getFieldName('elevation_method'), '')
+    }
+  }
+
+  //auto-generate WKT point from latitude and longitude and elevation
+  useEffect(() => {
+    if (setValue && latitude && longitude && elevation) {
+      setValue(getFieldName('point'), `POINT(${longitude} ${latitude} ${elevation})`)
+    }
+  }, [setValue, latitude, longitude, elevation])
 
   return (
     <Grid container spacing={3}>
@@ -333,11 +365,57 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       </Grid>
 
       <Grid size={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={autoGenerateElevation}
+              onChange={(e) => handleElevationToggle(e.target.checked)}
+            />
+          }
+          label="Auto-generate elevation from USGS DEM"
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <ControlledTextField
-          label="WKT Point (Auto-generated)"
+          label="Elevation (ft)"
           control={control}
-          name={getFieldName('point')}
-          disabled
+          name={getFieldName('elevation')}
+          type="number"
+          placeholder="5000"
+          disabled={autoGenerateElevation}
+          required={!autoGenerateElevation}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Elevation Accuracy (ft)"
+          control={control}
+          name={getFieldName('elevation_accuracy')}
+          type="number"
+          placeholder="1.74"
+          disabled={autoGenerateElevation}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Elevation Datum"
+          control={control}
+          name={getFieldName('elevation_datum')}
+          placeholder="NAVD88"
+          disabled={autoGenerateElevation}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Elevation Method"
+          control={control}
+          name={getFieldName('elevation_method')}
+          placeholder="USGS DEM"
+          disabled={autoGenerateElevation}
         />
       </Grid>
 
@@ -350,6 +428,16 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           minRows={3}
         />
       </Grid>
+
+      <Grid size={12}>
+        <ControlledTextField
+          label="WKT Point (Auto-generated)"
+          control={control}
+          name={getFieldName('point')}
+          disabled
+        />
+      </Grid>
+
     </Grid>
   )
 } 
