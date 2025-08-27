@@ -11,7 +11,6 @@ export const WellScreenEdit: React.FC = () => {
   const {
     saveButtonProps,
     refineCore: { query: queryResult },
-    register,
     control,
     setValue,
     formState: { errors },
@@ -20,7 +19,6 @@ export const WellScreenEdit: React.FC = () => {
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <CreateEditWellScreen
-        register={register}
         control={control}
         errors={errors}
         setValue={setValue}
