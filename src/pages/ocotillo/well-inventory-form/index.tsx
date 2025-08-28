@@ -118,6 +118,9 @@ export const WellInventoryForm: React.FC = () => {
   // Form Submission Mutation
   // ------------------------------------------------------------
 
+  // state for form submission for after submit page display
+  const [submissionResult, setSubmissionResult] = useState<'success' | 'error' | null>(null)
+
   const { mutateAsync, isPending } = useMutation({
     mutationFn: createWellInventoryForm,
     onMutate: () => {
@@ -134,9 +137,7 @@ export const WellInventoryForm: React.FC = () => {
         message: 'Form Submitted Successfully!',
         description: 'Your well inventory form has been submitted.',
       })
-      reset(SchemaDefaults)
-      setSelectedFiles([])
-      gotoStep(0)
+      setSubmissionResult('success')
     },
     onError: (error) => {
       close?.('well-inventory-submission')
@@ -145,6 +146,7 @@ export const WellInventoryForm: React.FC = () => {
         message: 'Failed to Submit Form',
         description: 'Please check your input and try again later.',
       })
+      setSubmissionResult('error')
       console.error('Form submission error:', error)
     },
   })
@@ -176,8 +178,16 @@ export const WellInventoryForm: React.FC = () => {
     gotoStep(currentStep - 1)
   }
 
+  //step click navigation
   const handleStepClick = (stepIndex: number) => {
     gotoStep(stepIndex)
+  }
+
+  //handler for going back to beginning of form after successful submission
+  const handleCreateAnother = () => {
+    setSubmissionResult(null)
+    reset(SchemaDefaults)
+    gotoStep(0)
   }
 
   // ------------------------------------------------------------
@@ -248,19 +258,75 @@ export const WellInventoryForm: React.FC = () => {
   // ------------------------------------------------------------
 
   return (
-    <FormStepper
-      title="Well Inventory Form"
-      steps={steps}
-      currentStep={currentStep}
-      onNext={handleNext}
-      onBack={handleBack}
-      onSubmit={handleSubmit(handleFormSubmit)}
-      onReset={handleReset}
-      isSubmitting={isPending}
-      onStepClick={handleStepClick}
-    >
-      {renderFormByStep(currentStep)}
-    </FormStepper>
+    <>
+    {submissionResult ? (
+      // Show result page when there's a submission result
+      <Card sx={{ p: 4, textAlign: 'center' }}>
+          {submissionResult === 'success' ? (
+            <>
+              <Typography variant="h4" color="success.main" gutterBottom>
+                Well Created Successfully!
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 3 }}>
+                Your well has been submitted and saved.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                <Button
+                  variant="contained"
+                  onClick={handleCreateAnother}
+                  startIcon={<Add />}
+                >
+                  Create Another Well
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => window.location.href = 'well?pageSize=25&current=1'}
+                >
+                  View All Wells
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <>
+              <Typography variant="h4" color="error.main" gutterBottom>
+                Something Went Wrong
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 3 }}>
+                There was an error submitting your form. Please try again.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                <Button
+                  variant="contained"
+                  onClick={() => setSubmissionResult(null)}
+                >
+                  Try Again
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => window.location.href = '/ocotillo/well?pageSize=25&current=1'}
+                >
+                  Go Back to Wells
+                </Button>
+              </Box>
+            </>
+          )}
+        </Card>
+    ) : (
+      <FormStepper
+        title="Well Inventory Form"
+        steps={steps}
+        currentStep={currentStep}
+        onNext={handleNext}
+        onBack={handleBack}
+        onSubmit={handleSubmit(handleFormSubmit)}
+        onReset={handleReset}
+        isSubmitting={isPending}
+        onStepClick={handleStepClick}
+      >
+        {renderFormByStep(currentStep)}
+      </FormStepper>
+    )}
+  </>
   )
 }
 
