@@ -176,6 +176,10 @@ export const WellInventoryForm: React.FC = () => {
     gotoStep(currentStep - 1)
   }
 
+  const handleStepClick = (stepIndex: number) => {
+    gotoStep(stepIndex)
+  }
+
   // ------------------------------------------------------------
   // Render Step Content
   // ------------------------------------------------------------
@@ -253,6 +257,7 @@ export const WellInventoryForm: React.FC = () => {
       onSubmit={handleSubmit(handleFormSubmit)}
       onReset={handleReset}
       isSubmitting={isPending}
+      onStepClick={handleStepClick}
     >
       {renderFormByStep(currentStep)}
     </FormStepper>
@@ -697,7 +702,7 @@ const ReviewStep: React.FC<{
   return (
     <FormReview
       title="Review Your Information"
-      description="Please review all the information below before submitting. You can go back to any step to make changes."
+      description="Please review all the information below before submitting. You can go back to any step to make changes by clicking on the step label."
       sections={sections}
     />
   )

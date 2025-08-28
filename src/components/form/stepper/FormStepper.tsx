@@ -8,6 +8,7 @@ import {
   Stepper,
   Step,
   StepLabel,
+  StepButton,
   StepContent,
   Divider,
 } from '@mui/material'
@@ -24,6 +25,7 @@ interface FormStepperProps {
   isSubmitting?: boolean
   children: React.ReactNode
   showResetButton?: boolean
+  onStepClick?: (step: number) => void
 }
 
 /**
@@ -39,6 +41,7 @@ interface FormStepperProps {
  * @param isSubmitting - loading state for submit button
  * @param children - step content to render
  * @param showResetButton - whether to show reset button (default: true)
+ * @param onStepClick - function to handle step click (optional)
  *
  *  Example:
  * <FormStepper
@@ -49,6 +52,7 @@ interface FormStepperProps {
  *   onBack={handleBack}
  *   onSubmit={handleSubmit}
  *   isSubmitting={isPending}
+ *   onStepClick={handleStepClick}
  * >
  *   {renderFormByStep(currentStep)}
  * </FormStepper>
@@ -73,7 +77,8 @@ export const FormStepper: React.FC<FormStepperProps> = ({
   onReset,
   isSubmitting = false,
   children,
-  showResetButton = true
+  showResetButton = true,
+  onStepClick
 }) => {
   return (
     <Card>
@@ -95,7 +100,11 @@ export const FormStepper: React.FC<FormStepperProps> = ({
           <Stepper activeStep={currentStep} orientation="vertical" sx={{ mb: 4 }}>
             {steps.map((label, index) => (
               <Step key={label}>
-                <StepLabel>{label}</StepLabel>
+                <StepButton 
+                  onClick={() => onStepClick?.(index)}
+                >
+                  <StepLabel>{label}</StepLabel>
+                </StepButton>
                 <StepContent>
                   <Box sx={{ mb: 2 }}>
                     {index === currentStep && children}
