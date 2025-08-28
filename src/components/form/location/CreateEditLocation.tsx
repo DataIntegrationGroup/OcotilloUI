@@ -195,9 +195,10 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   }
 
   //auto-generate WKT point from latitude and longitude and elevation
+  //TODO: add back elevation when availabe via API
   useEffect(() => {
     if (setValue && latitude && longitude && elevation) {
-      setValue(getFieldName('point'), `POINT(${longitude} ${latitude} ${elevation})`)
+      setValue(getFieldName('point'), `POINT(${longitude} ${latitude})`) 
     }
   }, [setValue, latitude, longitude, elevation])
 
