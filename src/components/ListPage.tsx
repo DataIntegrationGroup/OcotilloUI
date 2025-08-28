@@ -16,6 +16,7 @@ type ListPageProps = {
   onSelectionChange?: (selectionModel: any) => void
   getRowId?: (row: any) => number
   isLoading?: any
+  headerButtons?: any
 }
 
 export const ListPage: React.FC<ListPageProps> = ({
@@ -28,6 +29,7 @@ export const ListPage: React.FC<ListPageProps> = ({
   children,
   onSelectionChange,
   isLoading,
+  headerButtons,
 }) => {
   if (!exportProps) {
     exportProps = { pageSize: 1000 }
@@ -40,7 +42,7 @@ export const ListPage: React.FC<ListPageProps> = ({
   }
 
   const { triggerExport, isLoading: exportIsLoading } = useExport(exportProps)
-  const headerButtons = ({ defaultButtons }) => {
+  const defaultHeaderButtons = ({ defaultButtons }) => {
     return (
       <>
         <CanAccess>{defaultButtons}</CanAccess>
@@ -55,7 +57,10 @@ export const ListPage: React.FC<ListPageProps> = ({
 
   return (
     <CanAccess>
-      <List headerButtons={headerButtons} title={title}>
+      <List 
+        headerButtons={headerButtons || defaultHeaderButtons}
+        title={title}
+      >
         {description && (
           <Card
             className={'description'}

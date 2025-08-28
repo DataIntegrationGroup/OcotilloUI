@@ -1,9 +1,12 @@
 import { useMemo } from 'react'
-import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
+import { ShowButton, EditButton, useDataGrid, ExportButton } from '@refinedev/mui'
+import { useExport } from '@refinedev/core'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
 import { IWell, ISpring } from '@/interfaces/ocotillo/IThing'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
+import { CreateButton } from '@refinedev/mui'
+import { useNavigation } from '@refinedev/core'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
@@ -73,6 +76,16 @@ export const WellList: React.FC = () => {
     },
   })
 
+  const { triggerExport, isLoading: exportIsLoading } = useExport({
+    resource: 'thing',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_type: ['water well', 'geothermal well'],
+      },
+    },
+  })
+
   const columns = useMemo<GridColDef<IWell>[]>(
     () => [
       idColumnDef(),
@@ -117,6 +130,23 @@ export const WellList: React.FC = () => {
     []
   )
 
+  const { push } = useNavigation()
+
+  const customHeaderButtons = ({ defaultButtons }) => {
+    return (
+      <>
+        <CreateButton
+          onClick={() => push('/ocotillo/well-inventory-form')}
+        />
+        <ExportButton
+          variant={'contained'}
+          loading={exportIsLoading}
+          onClick={triggerExport}
+        />
+      </>
+    )
+  }
+
   return (
     <ListPage
       title="Wells"
@@ -128,6 +158,7 @@ export const WellList: React.FC = () => {
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}
+      headerButtons={customHeaderButtons}
     />
   )
 }
