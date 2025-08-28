@@ -156,7 +156,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
         setValue(getFieldName('utm_zone'), 13)
       }
       if (!utmDatum) {
-        setValue(getFieldName('utm_datum'), 'WGS84')
+        setValue(getFieldName('utm_datum'), 'NAD83')
       }
     }
   }, [setValue, utmZone, utmDatum])
@@ -264,8 +264,8 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           control={control}
           name={getFieldName('utm_datum')}
           options={[
-            { value: 'WGS84', label: 'WGS84' },
-            { value: 'NAD83', label: 'NAD83' }
+            { value: 'NAD83', label: 'NAD83' },
+            { value: 'WGS84', label: 'WGS84' }
           ]}
           disabled={!useUTM}
           required={useUTM}
