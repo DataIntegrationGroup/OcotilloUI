@@ -31,10 +31,12 @@ import {
   SchemaDefaults,
 } from './well_inventory.schema'
 import { CreateEditWellScreen } from '@/components/form/thing/CreateEditWellScreen'
+import { useNavigation } from '@refinedev/core'
 
 export const WellInventoryForm: React.FC = () => {
   const { open, close } = useNotification()
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const { push } = useNavigation()
 
   const { autocompleteProps: locationAutocompleteProps } =
     useAutocomplete<ILocation>({
@@ -120,6 +122,8 @@ export const WellInventoryForm: React.FC = () => {
 
   // state for form submission for after submit page display
   const [submissionResult, setSubmissionResult] = useState<'success' | 'error' | null>(null)
+  //state to handle created well id for show navigation
+  const [createdWellId, setCreatedWellId] = useState<number | null>(null)
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: createWellInventoryForm,
@@ -130,7 +134,7 @@ export const WellInventoryForm: React.FC = () => {
         message: 'Submitting Well Inventory Form...',
       })
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       close?.('well-inventory-submission')
       open?.({
         type: 'success',
@@ -138,6 +142,7 @@ export const WellInventoryForm: React.FC = () => {
         description: 'Your well inventory form has been submitted.',
       })
       setSubmissionResult('success')
+      setCreatedWellId(data.well.data.id as number)
     },
     onError: (error) => {
       close?.('well-inventory-submission')
@@ -280,7 +285,18 @@ export const WellInventoryForm: React.FC = () => {
                 </Button>
                 <Button
                   variant="outlined"
-                  onClick={() => window.location.href = 'well?pageSize=25&current=1'}
+                  onClick={() => {
+                    if (createdWellId) {
+                      push(`/ocotillo/well/show/${createdWellId}`)
+                    }
+                  }}
+                  disabled={!createdWellId}
+                >
+                  View Created Well
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => push('/ocotillo/well')}
                 >
                   View All Wells
                 </Button>
@@ -303,7 +319,7 @@ export const WellInventoryForm: React.FC = () => {
                 </Button>
                 <Button
                   variant="outlined"
-                  onClick={() => window.location.href = '/ocotillo/well?pageSize=25&current=1'}
+                  onClick={() => push('/ocotillo/well')}
                 >
                   Go Back to Wells
                 </Button>
