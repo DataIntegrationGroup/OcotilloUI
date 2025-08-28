@@ -73,16 +73,33 @@ export const WellInventoryForm: React.FC = () => {
   })
 
   // ------------------------------------------------------------
-  // Step Labels
+  // Step Labels with Descriptions
   // ------------------------------------------------------------
 
   const steps = [
-    'Location Information',
-    'Well Information',
-    'Well Screens',
-    'Contacts',
-    'Assets',
-    'Review & Submit',
+    {
+      label: 'Location Information',
+      description: 'Define the geographic location for the well'
+    },
+    {
+      label: 'Well Information',
+      description: 'Enter well details including depth, diameter, and construction'
+    },
+    {
+      label: 'Well Screens',
+      description: 'Configure well screen intervals and specifications'
+    },
+    {
+      label: 'Contacts',
+      description: 'Add responsible parties and contact information'
+    },
+    {
+      label: 'Assets',
+      description: 'Upload documents, photos, and related files'
+    },
+    {
+      label: 'Review & Submit'
+    },
   ]
 
   // ------------------------------------------------------------
@@ -330,6 +347,7 @@ export const WellInventoryForm: React.FC = () => {
     ) : (
       <FormStepper
         title="Well Inventory Form"
+        description="This form is used to create a new water well in the database."
         steps={steps}
         currentStep={currentStep}
         onNext={handleNext}
@@ -359,11 +377,7 @@ const LocationStep: React.FC<{
   locationAutocompleteProps: any
 }> = ({ control, watch, setValue, errors, locationAutocompleteProps }) => (
   <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Location Information
-      </Typography>
-    </Grid>
+
 
     {/* Location Mode Selection */}
     <Grid size={12}>
@@ -371,7 +385,7 @@ const LocationStep: React.FC<{
         <ControlledRadioFormSelection
           control={control}
           name="locationMode"
-          label="Location Selection"
+          label=""
           options={[
             {
               value: 'new',
@@ -456,20 +470,17 @@ const WellStep: React.FC<{
   errors: any
 }> = ({ control, watch, errors }) => (
   <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Well Information
-      </Typography>
-    </Grid>
 
     {/*  Well Form ----------------------------------------*/}
     {/*  /components/form/thing/CreateEditWell.tsx */}
-    <CreateEditWell
-      control={control}
-      errors={errors}
-      mode="step"
-      fieldPrefix="well."
-    />
+    <Grid container spacing={2} sx={{ mt: 3 }}>
+      <CreateEditWell
+        control={control}
+        errors={errors}
+        mode="step"
+        fieldPrefix="well."
+      />
+    </Grid>
   </Grid>
 )
 
@@ -491,11 +502,6 @@ const WellScreensStep: React.FC<{
   removeWellScreen,
 }) => (
   <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Well Screens
-      </Typography>
-    </Grid>
 
     {wellScreenFields.map((field, screenIndex) => (
       <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
@@ -564,11 +570,6 @@ const ContactsStep: React.FC<{
   removeContact,
 }) => (
   <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Contacts
-      </Typography>
-    </Grid>
 
     {contactFields.map((field, contactIndex) => (
       <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
@@ -633,11 +634,6 @@ const AssetsStep: React.FC<{
   removeAsset,
 }) => (
   <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Assets
-      </Typography>
-    </Grid>
 
     {assetFields.map((field, index) => (
       <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
@@ -783,7 +779,7 @@ const ReviewStep: React.FC<{
 
   return (
     <FormReview
-      title="Review Your Information"
+      title=""
       description="Please review all the information below before submitting. You can go back to any step to make changes by clicking on the step label."
       sections={sections}
     />

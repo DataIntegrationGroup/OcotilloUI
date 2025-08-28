@@ -11,12 +11,19 @@ import {
   StepButton,
   StepContent,
   Divider,
+  Typography,
 } from '@mui/material'
 import { NavigateNext, NavigateBefore, Check } from '@mui/icons-material'
 
+interface StepInfo {
+  label: string
+  description?: string
+}
+
 interface FormStepperProps {
   title?: string
-  steps: string[]
+  description?: string
+  steps: (string | StepInfo)[]
   currentStep: number
   onNext: () => void
   onBack: () => void
@@ -32,7 +39,7 @@ interface FormStepperProps {
  * FormStepper - Reusable multi-step form component
  * 
  * @param title - form title (optional)
- * @param steps - array of step labels
+ * @param steps - array of step labels or step info objects
  * @param currentStep - current active step (0-based)
  * @param onNext - function to handle next step
  * @param onBack - function to handle previous step
@@ -69,6 +76,7 @@ interface FormStepperProps {
 
 export const FormStepper: React.FC<FormStepperProps> = ({
   title = "Multi-Step Form",
+  description = "This form is...",
   steps,
   currentStep,
   onNext,
@@ -80,9 +88,16 @@ export const FormStepper: React.FC<FormStepperProps> = ({
   showResetButton = true,
   onStepClick
 }) => {
+  const getStepInfo = (step: string | StepInfo, index: number): StepInfo => {
+    if (typeof step === 'string') {
+      return { label: step }
+    }
+    return step
+  }
+
   return (
     <Card>
-      <CardHeader title={title} />
+      <CardHeader title={title} subheader={description} />
       <CardContent sx={{ padding: '2rem' }}>
         <Box
           component="form"
@@ -98,52 +113,66 @@ export const FormStepper: React.FC<FormStepperProps> = ({
           }}
         >
           <Stepper activeStep={currentStep} orientation="vertical" sx={{ mb: 4 }}>
-            {steps.map((label, index) => (
-              <Step key={label}>
-                <StepButton 
-                  onClick={() => onStepClick?.(index)}
-                >
-                  <StepLabel>{label}</StepLabel>
-                </StepButton>
-                <StepContent>
-                  <Box sx={{ mb: 2 }}>
-                    {index === currentStep && children}
-                    {index === currentStep && (
-                      <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                        {index > 0 && (
-                          <Button
-                            onClick={onBack}
-                            startIcon={<NavigateBefore />}
-                            variant="outlined"
-                          >
-                            Back
-                          </Button>
-                        )}
-                        {currentStep < steps.length - 1 ? (
-                          <Button
-                            type="button"
-                            onClick={onNext}
-                            endIcon={<NavigateNext />}
-                            variant="contained"
-                          >
-                            Next
-                          </Button>
-                        ) : (
-                          <Button
-                            type="submit"
-                            variant="contained"
-                            disabled={isSubmitting}
-                            startIcon={<Check />}
-                          >
-                            {isSubmitting ? 'Submitting...' : 'Submit Form'}
-                          </Button>
+            {steps.map((step, index) => {
+              const stepInfo = getStepInfo(step, index)
+              return (
+                <Step key={stepInfo.label}>
+                  <StepButton 
+                    onClick={() => onStepClick?.(index)}
+                  >
+                    <StepLabel>
+                      <Box>
+                        <Typography variant="body1" fontWeight="bold">
+                          {stepInfo.label}
+                        </Typography>
+                        {stepInfo.description && (
+                          <Typography variant="body2">
+                            {stepInfo.description}
+                          </Typography>
                         )}
                       </Box>
-                    )}
-                  </Box>
-                </StepContent>
-              </Step>
-            ))}
+                    </StepLabel>
+                  </StepButton>
+                  <StepContent>
+                    <Box sx={{ mb: 2 }}>
+                      {index === currentStep && children}
+                      {index === currentStep && (
+                        <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                          {index > 0 && (
+                            <Button
+                              onClick={onBack}
+                              startIcon={<NavigateBefore />}
+                              variant="outlined"
+                            >
+                              Back
+                            </Button>
+                          )}
+                          {currentStep < steps.length - 1 ? (
+                            <Button
+                              type="button"
+                              onClick={onNext}
+                              endIcon={<NavigateNext />}
+                              variant="contained"
+                            >
+                              Next
+                            </Button>
+                          ) : (
+                            <Button
+                              type="submit"
+                              variant="contained"
+                              disabled={isSubmitting}
+                              startIcon={<Check />}
+                            >
+                              {isSubmitting ? 'Submitting...' : 'Submit Form'}
+                            </Button>
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  </StepContent>
+                </Step>
+              )
+            })}
           </Stepper>
 
           {/* Form Actions */}
