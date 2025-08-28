@@ -376,12 +376,12 @@ const LocationStep: React.FC<{
             {
               value: 'new',
               label: 'Create a new location',
-              description: 'Add new location details for this well',
+              description: 'Add details for a new point',
             },
             {
               value: 'existing',
-              label: 'Use existing location',
-              description: 'Select from database',
+              label: 'Select an existing location',
+              description: 'Choose from database',
             },
           ]}
           onValueChange={(value) => {

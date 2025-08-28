@@ -235,11 +235,14 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
                 color="primary"
               />
             }
-            label="Toggle between using UTM or Lat/Long coordinates"
+            label="Toggle between using Northing/Easting or Latitude/Longitude"
           />
         </Box>
         <Typography variant="body1" color="text.primary">
-           You are using: {useUTM ? 'UTM (Easting/Northing)' : 'Latitude/Longitude (Decimal Degrees)'}
+           You are using: {useUTM ? 'Northing/Easting (UTM)' : 'Decimal Degrees (Lat/Long)'}
+          </Typography>
+          <Typography variant="body2" color="text.primary">
+            Unit conversions are automatic
           </Typography>
       </Grid>
 
