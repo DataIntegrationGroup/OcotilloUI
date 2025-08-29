@@ -39,6 +39,21 @@ export const wellInventoryStepSchemas: Yup.ObjectSchema<any>[] = [
     }),
   }),
   Yup.object({
+    wellScreens: Yup.array().of(
+      Yup.object({
+        screen_depth_top: Yup.number()
+          .nullable()
+          .positive('Screen depth top must be positive')
+          .typeError('Screen depth top must be a valid number'),
+        screen_depth_bottom: Yup.number()
+          .nullable()
+          .positive('Screen depth bottom must be positive')
+          .typeError('Screen depth bottom must be a valid number'),
+        screen_description: Yup.string().nullable(),
+      })
+    ),
+  }),
+  Yup.object({
     contacts: Yup.array()
       .of(
         Yup.object({
@@ -119,12 +134,20 @@ export const SchemaDefaults: Partial<IWellInventoryForm> = {
   },
   well: {
     name: '',
+    release_status: '',
     thing_type: 'well',
     well_depth: undefined,
     hole_depth: undefined,
     well_type: '',
     notes: '',
   },
+  wellScreens: [
+    {
+      screen_depth_top: undefined,
+      screen_depth_bottom: undefined,
+      screen_description: '',
+    },
+  ],
   contacts: [
     {
       name: '',

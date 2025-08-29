@@ -9,12 +9,14 @@ export const LocationCreate: React.FC = () => {
   const {
     saveButtonProps,
     control,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<ILocation, HttpError, Nullable<ILocation>>()
 
   return (
     <Create saveButtonProps={saveButtonProps}>
-      <CreateEditLocation control={control} errors={errors} mode="standalone" />
+      <CreateEditLocation control={control} errors={errors} mode="standalone" watch={watch} setValue={setValue} />
     </Create>
   )
 }

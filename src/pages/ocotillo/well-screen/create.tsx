@@ -8,7 +8,6 @@ import { CreateEditWellScreen } from '@/components/form/thing/CreateEditWellScre
 export const WellScreenCreate: React.FC = () => {
   const {
     saveButtonProps,
-    register,
     control,
     setValue,
     formState: { errors },
@@ -19,7 +18,6 @@ export const WellScreenCreate: React.FC = () => {
       <CreateEditWellScreen
         errors={errors}
         control={control}
-        register={register}
         setValue={setValue}
         mode={'standalone'}
       />

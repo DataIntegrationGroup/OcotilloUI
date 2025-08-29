@@ -1,34 +1,27 @@
 import type { HttpError } from '@refinedev/core'
-import { Edit } from '@refinedev/mui'
-import Box from '@mui/material/Box'
-import TextField from '@mui/material/TextField'
+import { Create } from '@refinedev/mui'
 import { useForm } from '@refinedev/react-hook-form'
-
-import type { Nullable } from '@/interfaces'
+import { Nullable } from '@/interfaces'
 import { IThingIdLink } from '@/interfaces/ocotillo/IThing'
-import { DatePicker } from '@mui/x-date-pickers'
-import { Controller } from 'react-hook-form'
-import dayjs from 'dayjs'
 import { CreateEditThingIdLink } from '@/components/form/thing/CreateEditThingIdLink'
 
-export const ThingIdLinkEdit: React.FC = () => {
+export const ThingIdLinkCreate: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     register,
-    watch,
     control,
+    watch,
     formState: { errors },
   } = useForm<IThingIdLink, HttpError, Nullable<IThingIdLink>>()
 
   return (
-    <Edit saveButtonProps={saveButtonProps}>
+    <Create saveButtonProps={saveButtonProps}>
       <CreateEditThingIdLink
         register={register}
         watch={watch}
         control={control}
         errors={errors}
       />
-    </Edit>
+    </Create>
   )
 }

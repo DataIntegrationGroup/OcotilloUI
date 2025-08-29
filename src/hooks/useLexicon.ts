@@ -3,7 +3,7 @@ import { ITerm } from '@/interfaces/ocotillo/ILexicon'
 
 export const useLexicon = ({ category }) => {
   const data = useList<ITerm>({
-    resource: 'lexicon',
+    resource: 'lexicon/term',
     dataProviderName: 'ocotillo',
     queryOptions: {
       cacheTime: 1000 * 60 * 5, // 5 minutes

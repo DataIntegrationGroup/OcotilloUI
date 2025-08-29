@@ -15,9 +15,11 @@ export interface IThing {
 }
 
 export interface IWell extends IThing {
-  well_depth: number
-  hole_depth: number
-  well_type: string
+  well_depth?: number | null
+  hole_depth?: number | null
+  well_type?: string | null
+  well_construction_notes?: string | null
+  group_id?: number | null
 }
 
 export interface ISpring extends IThing {

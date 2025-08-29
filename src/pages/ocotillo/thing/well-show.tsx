@@ -1,5 +1,5 @@
 import { useList, useResourceParams, useShow } from '@refinedev/core'
-import { Show, useDataGrid } from '@refinedev/mui'
+import { CreateButton, Show, useDataGrid } from '@refinedev/mui'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
@@ -25,6 +25,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { settings } from '@/settings'
 import { ContactsComponent } from '@/components/ContactsComponent'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
+import { actionColumnDef } from '@/components/CommonColumnDefs'
 
 function indexOfMax(arr) {
   if (arr.length === 0) {
@@ -73,7 +74,7 @@ const WaterlevelStats = ({
 
   useEffect(() => {
     if (observations.length === 0) return
-    const depths = observations.map((obs) => Number(obs.depth_to_water))
+    const depths = observations.map((obs) => Number(obs.depth_to_water_bgs))
 
     setMaxDepth(Math.max(...depths))
     setMaxDepthDatetime(observations[indexOfMax(depths)].observation_datetime)
@@ -162,7 +163,7 @@ export const WellShow = () => {
         data:
           observations.map((obs) => ({
             phenomenonTime: new Date(obs.observation_datetime),
-            result: Number(obs.depth_to_water),
+            result: Number(obs.depth_to_water_bgs),
           })) || [],
       },
     ]
@@ -179,8 +180,8 @@ export const WellShow = () => {
         minWidth: 180,
       },
       {
-        field: 'depth_to_water',
-        headerName: 'Depth To Water (ft)',
+        field: 'depth_to_water_bgs',
+        headerName: 'Depth To Water (ft bgs)',
         type: 'number',
         minWidth: 150,
       },
@@ -224,6 +225,7 @@ export const WellShow = () => {
         type: 'number',
         minWidth: 200,
       },
+      actionColumnDef({ resource: 'ocotillo.thing/well-screen' }),
     ]
   }, [])
 
@@ -316,6 +318,7 @@ export const WellShow = () => {
             <CardHeader title="Equipment" />
             <Box padding={2}>
               <DataGrid
+                rowHeight={settings.rowHeight}
                 rows={sensorDataGridProps.rows}
                 columns={sensorColumns}
                 pageSizeOptions={[10]}
@@ -331,8 +334,10 @@ export const WellShow = () => {
         <Grid size={12}>
           <Card>
             <CardHeader title="Well Screens" />
+            <CreateButton />
             <Box padding={2}>
               <DataGrid
+                rowHeight={settings.rowHeight}
                 rows={wellScreenDataGridProps.rows}
                 columns={wellScreenColumns}
                 pageSizeOptions={[10]}
@@ -376,6 +381,7 @@ export const WellShow = () => {
               {assets && assets.length > 0 && (
                 <Box>
                   <DataGrid
+                    rowHeight={settings.rowHeight}
                     columns={assetColumns}
                     rows={assets}
                     pageSizeOptions={[10]}

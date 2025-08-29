@@ -30,10 +30,13 @@ import {
   wellInventoryStepSchemas,
   SchemaDefaults,
 } from './well_inventory.schema'
+import { CreateEditWellScreen } from '@/components/form/thing/CreateEditWellScreen'
+import { useNavigation } from '@refinedev/core'
 
 export const WellInventoryForm: React.FC = () => {
   const { open, close } = useNotification()
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const { push } = useNavigation()
 
   const { autocompleteProps: locationAutocompleteProps } =
     useAutocomplete<ILocation>({
@@ -70,15 +73,33 @@ export const WellInventoryForm: React.FC = () => {
   })
 
   // ------------------------------------------------------------
-  // Step Labels
+  // Step Labels with Descriptions
   // ------------------------------------------------------------
 
   const steps = [
-    'Location Information',
-    'Well Information',
-    'Contacts',
-    'Assets',
-    'Review & Submit',
+    {
+      label: 'Location Information',
+      description: 'Define the geographic location for the well'
+    },
+    {
+      label: 'Well Information',
+      description: 'Enter well details including depth, diameter, and construction'
+    },
+    {
+      label: 'Well Screens',
+      description: 'Configure well screen intervals and specifications'
+    },
+    {
+      label: 'Contacts',
+      description: 'Add responsible parties and contact information'
+    },
+    {
+      label: 'Assets',
+      description: 'Upload documents, photos, and related files'
+    },
+    {
+      label: 'Review & Submit'
+    },
   ]
 
   // ------------------------------------------------------------
@@ -103,9 +124,23 @@ export const WellInventoryForm: React.FC = () => {
     name: 'assets',
   })
 
+  const {
+    fields: wellScreenFields,
+    append: appendWellScreen,
+    remove: removeWellScreen,
+  } = useFieldArray({
+    control,
+    name: 'wellScreens',
+  })
+
   // ------------------------------------------------------------
   // Form Submission Mutation
   // ------------------------------------------------------------
+
+  // state for form submission for after submit page display
+  const [submissionResult, setSubmissionResult] = useState<'success' | 'error' | null>(null)
+  //state to handle created well id for show navigation
+  const [createdWellId, setCreatedWellId] = useState<number | null>(null)
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: createWellInventoryForm,
@@ -116,16 +151,15 @@ export const WellInventoryForm: React.FC = () => {
         message: 'Submitting Well Inventory Form...',
       })
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       close?.('well-inventory-submission')
       open?.({
         type: 'success',
         message: 'Form Submitted Successfully!',
         description: 'Your well inventory form has been submitted.',
       })
-      reset(SchemaDefaults)
-      setSelectedFiles([])
-      gotoStep(0)
+      setSubmissionResult('success')
+      setCreatedWellId(data.well.data.id as number)
     },
     onError: (error) => {
       close?.('well-inventory-submission')
@@ -134,6 +168,7 @@ export const WellInventoryForm: React.FC = () => {
         message: 'Failed to Submit Form',
         description: 'Please check your input and try again later.',
       })
+      setSubmissionResult('error')
       console.error('Form submission error:', error)
     },
   })
@@ -165,6 +200,18 @@ export const WellInventoryForm: React.FC = () => {
     gotoStep(currentStep - 1)
   }
 
+  //step click navigation
+  const handleStepClick = (stepIndex: number) => {
+    gotoStep(stepIndex)
+  }
+
+  //handler for going back to beginning of form after successful submission
+  const handleCreateAnother = () => {
+    setSubmissionResult(null)
+    reset(SchemaDefaults)
+    gotoStep(0)
+  }
+
   // ------------------------------------------------------------
   // Render Step Content
   // ------------------------------------------------------------
@@ -185,6 +232,18 @@ export const WellInventoryForm: React.FC = () => {
         return <WellStep control={control} watch={watch} errors={errors} />
       case 2:
         return (
+          <WellScreensStep
+            control={control}
+            watch={watch}
+            setValue={setValue}
+            errors={errors}
+            wellScreenFields={wellScreenFields}
+            appendWellScreen={appendWellScreen}
+            removeWellScreen={removeWellScreen}
+          />
+        )
+      case 3:
+        return (
           <ContactsStep
             control={control}
             watch={watch}
@@ -195,7 +254,7 @@ export const WellInventoryForm: React.FC = () => {
             removeContact={removeContact}
           />
         )
-      case 3:
+      case 4:
         return (
           <AssetsStep
             control={control}
@@ -209,7 +268,7 @@ export const WellInventoryForm: React.FC = () => {
             removeAsset={removeAsset}
           />
         )
-      case 4:
+      case 5:
         return <ReviewStep watch={watch} />
       default:
         return null
@@ -221,18 +280,87 @@ export const WellInventoryForm: React.FC = () => {
   // ------------------------------------------------------------
 
   return (
-    <FormStepper
-      title="Well Inventory Form"
-      steps={steps}
-      currentStep={currentStep}
-      onNext={handleNext}
-      onBack={handleBack}
-      onSubmit={handleSubmit(handleFormSubmit)}
-      onReset={handleReset}
-      isSubmitting={isPending}
-    >
-      {renderFormByStep(currentStep)}
-    </FormStepper>
+    <>
+    {submissionResult ? (
+      // Show result page when there's a submission result
+      <Card sx={{ p: 4, textAlign: 'center' }}>
+          {submissionResult === 'success' ? (
+            <>
+              <Typography variant="h4" color="success.main" gutterBottom>
+                Well Created Successfully!
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 3 }}>
+                Your well has been submitted and saved.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                <Button
+                  variant="contained"
+                  onClick={handleCreateAnother}
+                  startIcon={<Add />}
+                >
+                  Create Another Well
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    if (createdWellId) {
+                      push(`/ocotillo/well/show/${createdWellId}`)
+                    }
+                  }}
+                  disabled={!createdWellId}
+                >
+                  View Created Well
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => push('/ocotillo/well')}
+                >
+                  View All Wells
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <>
+              <Typography variant="h4" color="error.main" gutterBottom>
+                Something Went Wrong
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 3 }}>
+                There was an error submitting your form. Please try again.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                <Button
+                  variant="contained"
+                  onClick={() => setSubmissionResult(null)}
+                >
+                  Try Again
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => push('/ocotillo/well')}
+                >
+                  Go Back to Wells
+                </Button>
+              </Box>
+            </>
+          )}
+        </Card>
+    ) : (
+      <FormStepper
+        title="Well Inventory Form"
+        description="This form is used to create a new water well in the database."
+        steps={steps}
+        currentStep={currentStep}
+        onNext={handleNext}
+        onBack={handleBack}
+        onSubmit={handleSubmit(handleFormSubmit)}
+        onReset={handleReset}
+        isSubmitting={isPending}
+        onStepClick={handleStepClick}
+      >
+        {renderFormByStep(currentStep)}
+      </FormStepper>
+    )}
+  </>
   )
 }
 
@@ -249,11 +377,7 @@ const LocationStep: React.FC<{
   locationAutocompleteProps: any
 }> = ({ control, watch, setValue, errors, locationAutocompleteProps }) => (
   <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Location Information
-      </Typography>
-    </Grid>
+
 
     {/* Location Mode Selection */}
     <Grid size={12}>
@@ -261,17 +385,17 @@ const LocationStep: React.FC<{
         <ControlledRadioFormSelection
           control={control}
           name="locationMode"
-          label="Location Selection"
+          label=""
           options={[
             {
               value: 'new',
               label: 'Create a new location',
-              description: 'Add new location details for this well',
+              description: 'Add details for a new point',
             },
             {
               value: 'existing',
-              label: 'Use existing location',
-              description: 'Select from database',
+              label: 'Select an existing location',
+              description: 'Choose from database',
             },
           ]}
           onValueChange={(value) => {
@@ -346,20 +470,84 @@ const WellStep: React.FC<{
   errors: any
 }> = ({ control, watch, errors }) => (
   <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Well Information
-      </Typography>
-    </Grid>
 
     {/*  Well Form ----------------------------------------*/}
     {/*  /components/form/thing/CreateEditWell.tsx */}
-    <CreateEditWell
-      control={control}
-      errors={errors}
-      mode="step"
-      fieldPrefix="well."
-    />
+    <Grid container spacing={2} sx={{ mt: 3 }}>
+      <CreateEditWell
+        control={control}
+        errors={errors}
+        mode="step"
+        fieldPrefix="well."
+      />
+    </Grid>
+  </Grid>
+)
+
+const WellScreensStep: React.FC<{
+  control: any
+  watch: any
+  setValue: any
+  errors: any
+  wellScreenFields: any
+  appendWellScreen: any
+  removeWellScreen: any
+}> = ({
+  control,
+  watch,
+  setValue,
+  errors,
+  wellScreenFields,
+  appendWellScreen,
+  removeWellScreen,
+}) => (
+  <Grid container spacing={3}>
+
+    {wellScreenFields.map((field, screenIndex) => (
+      <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
+        <CreateEditWellScreen
+          control={control}
+          watch={watch}
+          setValue={setValue}
+          errors={errors}
+          mode="step"
+          fieldPrefix={`wellScreens.${screenIndex}.`}
+          screenIndex={screenIndex}
+          onRemoveScreen={removeWellScreen}
+          onAddScreen={
+            screenIndex === wellScreenFields.length - 1
+              ? () =>
+                  appendWellScreen({
+                    screen_depth_top: null,
+                    screen_depth_bottom: null,
+                    screen_description: '',
+                  })
+              : undefined
+          }
+          canRemoveScreen={wellScreenFields.length > 1}
+          totalScreens={wellScreenFields.length}
+        />
+      </Grid>
+    ))}
+
+    {/* Show Add Screen button when no screens exist */}
+    {wellScreenFields.length === 0 && (
+      <Grid size={12}>
+        <Button
+          variant="outlined"
+          onClick={() =>
+            appendWellScreen({
+              screen_depth_top: null,
+              screen_depth_bottom: null,
+              screen_description: '',
+            })
+          }
+          startIcon={<Add />}
+        >
+          Add Well Screen
+        </Button>
+      </Grid>
+    )}
   </Grid>
 )
 
@@ -382,11 +570,6 @@ const ContactsStep: React.FC<{
   removeContact,
 }) => (
   <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Contacts
-      </Typography>
-    </Grid>
 
     {contactFields.map((field, contactIndex) => (
       <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
@@ -451,11 +634,6 @@ const AssetsStep: React.FC<{
   removeAsset,
 }) => (
   <Grid container spacing={3}>
-    <Grid size={12}>
-      <Typography variant="h6" gutterBottom>
-        Assets
-      </Typography>
-    </Grid>
 
     {assetFields.map((field, index) => (
       <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
@@ -567,6 +745,14 @@ const ReviewStep: React.FC<{
       ],
     },
     {
+      title: `Well Screens (${formData.wellScreens?.length || 0})`,
+      items:
+        formData.wellScreens?.map((screen, index) => ({
+          label: `Screen ${index + 1}`,
+          value: `Top: ${screen.screen_depth_top || 'N/A'} ft, Bottom: ${screen.screen_depth_bottom || 'N/A'} ft, Description: ${screen.screen_description || 'None'}`,
+        })) || [],
+    },
+    {
       title: `Contacts (${formData.contacts?.length || 0})`,
       items: [],
       groupedItems:
@@ -593,8 +779,8 @@ const ReviewStep: React.FC<{
 
   return (
     <FormReview
-      title="Review Your Information"
-      description="Please review all the information below before submitting. You can go back to any step to make changes."
+      title=""
+      description="Please review all the information below before submitting. You can go back to any step to make changes by clicking on the step label."
       sections={sections}
     />
   )

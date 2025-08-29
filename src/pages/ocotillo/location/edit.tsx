@@ -11,12 +11,14 @@ export const LocationEdit: React.FC = () => {
     saveButtonProps,
     refineCore: { query: queryResult },
     control,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<ILocation, HttpError, Nullable<ILocation>>()
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <CreateEditLocation control={control} errors={errors} mode="standalone" />
+      <CreateEditLocation control={control} errors={errors} mode="standalone" watch={watch} setValue={setValue} />
     </Edit>
   )
 }

@@ -1,11 +1,9 @@
-import { useMemo, useState } from 'react'
-import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
+import { useMemo } from 'react'
+import { useDataGrid } from '@refinedev/mui'
+import { GridColDef } from '@mui/x-data-grid'
 import { IAsset } from '@/interfaces/ocotillo/IAsset'
-import { List } from '@refinedev/mui'
-import { Card, CardHeader, Typography } from '@mui/material'
+import { Card, Typography } from '@mui/material'
 import { ListPage } from '@/components/ListPage'
-import { Box } from '@mui/system'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 
 export const AssetList: React.FC = () => {
