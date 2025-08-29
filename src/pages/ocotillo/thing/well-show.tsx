@@ -74,7 +74,7 @@ const WaterlevelStats = ({
 
   useEffect(() => {
     if (observations.length === 0) return
-    const depths = observations.map((obs) => Number(obs.value))
+    const depths = observations.map((obs) => Number(obs.depth_to_water_bgs))
 
     setMaxDepth(Math.max(...depths))
     setMaxDepthDatetime(observations[indexOfMax(depths)].observation_datetime)
@@ -163,7 +163,7 @@ export const WellShow = () => {
         data:
           observations.map((obs) => ({
             phenomenonTime: new Date(obs.observation_datetime),
-            result: Number(obs.value),
+            result: Number(obs.depth_to_water_bgs),
           })) || [],
       },
     ]
@@ -180,8 +180,8 @@ export const WellShow = () => {
         minWidth: 180,
       },
       {
-        field: 'value',
-        headerName: 'Depth To Water (ft)',
+        field: 'depth_to_water_bgs',
+        headerName: 'Depth To Water (ft bgs)',
         type: 'number',
         minWidth: 150,
       },
