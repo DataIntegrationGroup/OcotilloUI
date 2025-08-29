@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import { IThingIdLink } from '@/interfaces/ocotillo/IThing'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { extractThingTypeResource, linkColumn } from '@/utils/link'
+import { Launch } from '@mui/icons-material'
 
 export const ThingIdLinkList = () => {
   const { dataGridProps } = useDataGrid({
@@ -47,6 +48,44 @@ export const ThingIdLinkList = () => {
         headerName: 'Alternate ID',
         type: 'string',
         minWidth: 150,
+        renderCell: (params) => {
+          if (params.row.alternate_organization === 'USGS') {
+            return (
+              <a
+                href={`https://waterdata.usgs.gov/nwis/uv?site_no=${params.value}`}
+              >
+                {params.value}{' '}
+              </a>
+            )
+          } else if (params.row.relation === 'OSEPOD') {
+            let basin = params.value.split('-')[0]
+            let nbr = params.value.split('-')[1]
+
+            return (
+              <>
+                <a
+                  href={
+                    `https://services2.arcgis.com/qXZbWTdPDbTjl7Dy/arcgis/rest/services/` +
+                    `OSE_PODs/FeatureServer/0/query?` +
+                    `where=+db_file%3D%27${params.value}%27&f=pjson&outFields=*"`
+                  }
+                >
+                  {params.value}
+                </a>
+                <a
+                  href={
+                    `https://nmwrrs.ose.nm.gov/ReportDispatcher` +
+                    `?type=WRHTML&name=WaterRightSummaryHTML.jrxml` +
+                    `&basin=${basin}&nbr=${nbr}&suffix=`
+                  }
+                >
+                  <Launch />
+                </a>
+              </>
+            )
+          }
+          return params.value
+        },
       },
       {
         field: 'alternate_organization',

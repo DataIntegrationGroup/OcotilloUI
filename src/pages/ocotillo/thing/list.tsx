@@ -3,7 +3,7 @@ import { ShowButton, EditButton, useDataGrid, ExportButton } from '@refinedev/mu
 import { useExport } from '@refinedev/core'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
-import { IWell, ISpring } from '@/interfaces/ocotillo/IThing'
+import { ISpring, IWell } from '@/interfaces/ocotillo/IThing'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { CreateButton } from '@refinedev/mui'
 import { useNavigation } from '@refinedev/core'

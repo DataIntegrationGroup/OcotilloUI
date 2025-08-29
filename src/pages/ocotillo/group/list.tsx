@@ -1,11 +1,6 @@
-import { useMemo, useState } from 'react'
-import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
-import {
-  DataGrid,
-  GridCheckIcon,
-  GridCheckCircleIcon,
-  GridColDef,
-} from '@mui/x-data-grid'
+import { useMemo } from 'react'
+import { useDataGrid } from '@refinedev/mui'
+import { GridCheckCircleIcon, GridColDef } from '@mui/x-data-grid'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
 
 import { ListPage } from '@/components/ListPage'

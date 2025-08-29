@@ -19,6 +19,10 @@ export const ContactsComponent = ({ contacts }) => {
         flex: 1,
       },
       {
+        field: 'role',
+        headerName: 'Role',
+      },
+      {
         field: 'email',
         headerName: 'Email',
         flex: 1,

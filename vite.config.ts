@@ -33,6 +33,8 @@ export default defineConfig(({ mode }) => {
       include: ['@emotion/react', '@emotion/styled', '@mui/material/Tooltip'],
     },
     server: {
+        host: "0.0.0.0",
+        port: 5173,
       proxy: {
         '/api': {
           target: env.VITE_API_URL,

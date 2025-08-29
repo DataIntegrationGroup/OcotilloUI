@@ -21,7 +21,7 @@ axiosInstance.interceptors.request.use(
 )
 
 const refreshAuthLogic = async (failedRequest) => {
-  const token = getAccessToken(true)
+  const token = await getAccessToken(true)
   failedRequest.response.config.headers['Authorization'] = 'Bearer ' + token
   return Promise.resolve()
 }
@@ -112,7 +112,7 @@ export const ocotilloDataProvider: DataProvider = {
       total: data.total,
     }
   },
-  getMany: async ({ resource, ids, meta }) => {
+  getMany: async ({ resource, ids }) => {
     const params = new URLSearchParams()
 
     if (ids) {
