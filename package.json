@@ -1,5 +1,5 @@
 {
-  "name": "NMBGMRDataManager",
+  "name": "ocotillo-ui",
   "version": "0.3.0",
   "private": true,
   "type": "module",
@@ -76,6 +76,7 @@
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "cypress": "^15.0.0",
     "prettier": "3.5.3",
     "typescript": "^5.4.2",
     "vite": "^6.2.2",

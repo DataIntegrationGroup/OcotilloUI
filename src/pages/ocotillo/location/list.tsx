@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
+import { useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
 import { ILocation } from '@/interfaces/ocotillo/ILocation'

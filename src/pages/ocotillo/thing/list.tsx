@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
-import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
+import { useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
-import { IWell, ISpring } from '@/interfaces/ocotillo/IThing'
+import { ISpring, IWell } from '@/interfaces/ocotillo/IThing'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 
 export const SpringList: React.FC = () => {

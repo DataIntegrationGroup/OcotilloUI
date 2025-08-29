@@ -1,5 +1,5 @@
 import { useList, useResourceParams, useShow } from '@refinedev/core'
-import { Show, useDataGrid } from '@refinedev/mui'
+import { CreateButton, Show, useDataGrid } from '@refinedev/mui'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
@@ -25,6 +25,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { settings } from '@/settings'
 import { ContactsComponent } from '@/components/ContactsComponent'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
+import { actionColumnDef } from '@/components/CommonColumnDefs'
 
 function indexOfMax(arr) {
   if (arr.length === 0) {
@@ -224,6 +225,7 @@ export const WellShow = () => {
         type: 'number',
         minWidth: 200,
       },
+      actionColumnDef({ resource: 'ocotillo.thing/well-screen' }),
     ]
   }, [])
 
@@ -316,6 +318,7 @@ export const WellShow = () => {
             <CardHeader title="Equipment" />
             <Box padding={2}>
               <DataGrid
+                rowHeight={settings.rowHeight}
                 rows={sensorDataGridProps.rows}
                 columns={sensorColumns}
                 pageSizeOptions={[10]}
@@ -331,8 +334,10 @@ export const WellShow = () => {
         <Grid size={12}>
           <Card>
             <CardHeader title="Well Screens" />
+            <CreateButton />
             <Box padding={2}>
               <DataGrid
+                rowHeight={settings.rowHeight}
                 rows={wellScreenDataGridProps.rows}
                 columns={wellScreenColumns}
                 pageSizeOptions={[10]}
@@ -376,6 +381,7 @@ export const WellShow = () => {
               {assets && assets.length > 0 && (
                 <Box>
                   <DataGrid
+                    rowHeight={settings.rowHeight}
                     columns={assetColumns}
                     rows={assets}
                     pageSizeOptions={[10]}

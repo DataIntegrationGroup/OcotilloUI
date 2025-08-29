@@ -55,7 +55,7 @@ import {
   ThingIdLinkCreate,
   ThingIdLinkEdit,
   ThingIdLinkShow,
-} from '@/pages/ocotillo/thing_id_link'
+} from '@/pages/ocotillo/thing-id-link'
 
 import {
   TermCreate,

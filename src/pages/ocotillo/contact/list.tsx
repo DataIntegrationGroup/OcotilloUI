@@ -1,18 +1,18 @@
 import React, { useMemo, useState } from 'react'
-import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
+import { List, useDataGrid } from '@refinedev/mui'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
+  IAddress,
   IContact,
   IEmail,
   IPhone,
-  IAddress,
 } from '@/interfaces/ocotillo/IContact'
-import { List } from '@refinedev/mui'
 import { Card, CardHeader, Typography } from '@mui/material'
 import EmailIcon from '@mui/icons-material/Email'
 import HomeIcon from '@mui/icons-material/Home'
 import { Phone } from '@mui/icons-material'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
+import { useLink } from '@refinedev/core'
 
 const IconCardHeader = ({ text, icon }) => {
   return (
@@ -41,6 +41,7 @@ export const ContactList: React.FC = () => {
   //     staleTime: 30000, // Consider data fresh for 30 seconds
   //   },
   // }
+  const Link = useLink()
 
   const columns = useMemo<GridColDef<IContact>[]>(
     () => [
@@ -48,18 +49,29 @@ export const ContactList: React.FC = () => {
       {
         field: 'things',
         headerName: 'Things',
-        type: 'number',
+        type: 'string',
         minWidth: 150,
         valueGetter: (value, row) =>
           row.things.map((thing) => thing.name).join('; '),
-      },
-      {
-        field: 'thing_ids',
-        headerName: 'Thing IDs',
-        type: 'number',
-        minWidth: 150,
-        valueGetter: (value, row) =>
-          row.things.map((thing) => thing.id).join('; '),
+        renderCell: (params) => {
+          return (
+            <div>
+              {params.row.things.map((thing) => (
+                <Link
+                  go={{
+                    to: {
+                      resource: 'ocotillo.thing-well',
+                      action: 'show',
+                      id: thing.id,
+                    },
+                  }}
+                >
+                  {thing.name}
+                </Link>
+              ))}
+            </div>
+          )
+        },
       },
       {
         field: 'name',

@@ -1,11 +1,10 @@
 import { useMemo } from 'react'
-import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
+import { useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
 import { ISample } from '@/interfaces/ocotillo/ISample'
-import { idColumnDef, actionColumnDef } from '@/components/CommonColumnDefs'
+import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { extractThingTypeResource, linkColumn } from '@/utils/link'
-import { useLink } from '@refinedev/core'
 
 export const SampleList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISample>({

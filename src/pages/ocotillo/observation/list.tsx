@@ -1,14 +1,7 @@
-import { useMemo, useState } from 'react'
-import { ShowButton, EditButton, useDataGrid } from '@refinedev/mui'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import {
-  IContact,
-  IEmail,
-  IPhone,
-  IAddress,
-} from '@/interfaces/ocotillo/IContact'
-import { List } from '@refinedev/mui'
-import { Card, CardHeader } from '@mui/material'
+import { useMemo } from 'react'
+import { useDataGrid } from '@refinedev/mui'
+import { GridColDef } from '@mui/x-data-grid'
+import { IContact } from '@/interfaces/ocotillo/IContact'
 import { ListPage } from '@/components'
 import {
   IGroundwaterLevelObservation,
