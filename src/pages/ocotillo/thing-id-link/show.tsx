@@ -1,8 +1,6 @@
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
-import { Stack, Typography } from '@mui/material'
 import { useShow } from '@refinedev/core'
-import { Show, TextFieldComponent as TextField } from '@refinedev/mui'
-import { ISensor } from '@/interfaces/ocotillo/ISensor'
+import { Show } from '@refinedev/mui'
 import { IThingIdLink } from '@/interfaces/ocotillo/IThing'
 
 export const ThingIdLinkShow = () => {
