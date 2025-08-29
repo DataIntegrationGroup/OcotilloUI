@@ -214,7 +214,13 @@ export const ocotilloDataProvider: DataProvider = {
       resource === 'thing/well' ||
       resource === 'thing/spring'
     ) {
-      const response = await axiosCall(`thing/${id}`, {
+      //work around for water-well patch endpoint
+      let endpoint = `thing/${id}`
+      if (resource === 'thing/well') {
+        endpoint = `thing/water-well/${id}`
+      }
+      
+      const response = await axiosCall(endpoint, {
         method: 'PATCH',
         data: JSON.stringify(variables),
         headers: {
