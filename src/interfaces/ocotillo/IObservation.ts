@@ -1,5 +1,5 @@
 export interface IGroundwaterLevelObservationAttributes {
-  depth_to_water: number
+  value: number
 }
 
 export interface IObservationAttributes {
