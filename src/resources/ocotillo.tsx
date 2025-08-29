@@ -25,7 +25,7 @@ let tables: {
   show?: string
   create?: string
   list?: string
-  meta: { label?: string; icon?: JSX.Element }
+  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
 }[] = [
   {
     name: 'asset',
@@ -100,6 +100,7 @@ let tables: {
     show: '/ocotillo/lexicon/term/show/:id',
     create: '/ocotillo/lexicon/term/create',
     meta: {
+      disabled: true,
       label: 'Lexicon',
       icon: <LibraryBooksOutlined />,
     },
@@ -110,6 +111,7 @@ let tables: {
     show: '/ocotillo/lexicon/category/show/:id',
     create: '/ocotillo/lexicon/category/create',
     meta: {
+      disabled: true,
       label: 'Category',
       icon: <LibraryBooksOutlined />,
     },
@@ -155,7 +157,7 @@ let forms: {
     edit: '/ocotillo/groundwater-level-form/edit/:id',
     show: '/ocotillo/groundwater-level-form/show/:id',
     meta: {
-      // disabled: true,
+      disabled: true,
       label: 'Groundwater Level Form (Beta)',
       icon: <Construction />,
     },
@@ -180,7 +182,7 @@ let things: {
   show?: string
   create?: string
   list: string
-  meta: { label?: string; icon?: JSX.Element }
+  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
 }[] = [
   {
     name: 'thing-well',
@@ -211,6 +213,7 @@ let things: {
     show: '/ocotillo/thing-id-link/show/:id',
     create: '/ocotillo/thing-id-link/create',
     meta: {
+      disabled: true,
       label: 'ID links',
       icon: <Link />,
     },
