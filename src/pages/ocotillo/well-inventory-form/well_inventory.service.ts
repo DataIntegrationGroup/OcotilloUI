@@ -27,9 +27,10 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
 
   // Create well (thing)
   const wellResponse = await ocotilloDataProvider.create({
-    resource: 'ocotillo.thing/well',
+    resource: 'ocotillo.thing/water-well',
     variables: {
       name: data.well.name,
+      release_status: data.well.release_status,
       location_id: locationId,
       well_depth: data.well.well_depth,
       hole_depth: data.well.hole_depth,

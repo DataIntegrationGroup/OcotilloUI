@@ -38,6 +38,11 @@ export const CreateEditWell: React.FC<CreateEditWellProps> = ({
     category: 'well_type' 
   })
 
+  //get release status options
+  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
+    category: 'release_status' 
+  })
+
   return (
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, md: 6 }}>
@@ -46,6 +51,17 @@ export const CreateEditWell: React.FC<CreateEditWellProps> = ({
           fullWidth
           control={control}
           name={getFieldName('name')}
+          required
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledSelectField
+          label="Release Status"
+          fullWidth
+          control={control}
+          name={getFieldName('release_status')}
+          options={releaseStatusOptions}
           required
         />
       </Grid>

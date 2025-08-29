@@ -134,6 +134,7 @@ export const SchemaDefaults: Partial<IWellInventoryForm> = {
   },
   well: {
     name: '',
+    release_status: '',
     thing_type: 'well',
     well_depth: undefined,
     hole_depth: undefined,
