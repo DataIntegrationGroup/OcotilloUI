@@ -33,7 +33,7 @@ export const createGroundwaterLevelForm = async (
       sample_id: sampleResponse.data.id,
       observed_property: observation.observed_property,
       observation_datetime: observation.observation_datetime,
-      depth_to_water: observation.depth_to_water,
+      depth_to_water_bgs: observation.depth_to_water_bgs,
       measuring_point_height: observation.measuring_point_height,
       sensor_id: observation.sensor_id,
       release_status: observation.release_status,

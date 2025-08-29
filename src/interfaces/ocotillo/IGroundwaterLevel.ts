@@ -21,6 +21,7 @@ export interface IGroundwaterLevelForm {
     observed_property: string
     observation_datetime: Date
     value: number
+    depth_to_water_bgs: number
     measuring_point_height: number
     release_status: string
     level_status: string

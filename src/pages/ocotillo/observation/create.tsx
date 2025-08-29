@@ -35,15 +35,15 @@ export const GroundwaterLevelObservationCreate: React.FC = () => {
         autoComplete="off"
       >
         <TextField
-          {...register('depth_to_water', {
+          {...register('depth_to_water_bgs', {
             required: 'This field is required',
           })}
-          error={!!errors.depth_to_water}
-          helperText={errors.depth_to_water?.message}
+          error={!!errors.depth_to_water_bgs}
+          helperText={errors.depth_to_water_bgs?.message}
           margin="normal"
           fullWidth
-          label="Name"
-          name="name"
+          label="Depth to Water (BGS)"
+          name="depth_to_water_bgs"
           autoFocus
         />
 
