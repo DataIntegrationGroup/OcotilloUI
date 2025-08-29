@@ -198,7 +198,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   //TODO: add back elevation when availabe via API
   useEffect(() => {
     if (setValue && latitude && longitude && elevation) {
-      setValue(getFieldName('point'), `POINT(${longitude} ${latitude})`) 
+      setValue(getFieldName('point'), `POINT(${longitude} ${latitude} ${elevation})`) 
     }
   }, [setValue, latitude, longitude, elevation])
 
