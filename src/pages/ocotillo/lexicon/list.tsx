@@ -71,7 +71,7 @@ export const LexiconList: React.FC = () => {
       headerName: 'Category',
       width: 150,
       valueGetter: (params) => {
-        return params.map((c) => c.category.name).join(', ')
+        return params.map((c) => c.name).join(', ')
       },
       sortable: false,
       filterable: false,
@@ -111,6 +111,14 @@ export const LexiconList: React.FC = () => {
             rowHeight={settings.rowHeight}
             columns={categoryColumns}
             onRowClick={(params) => setSelectedCategory(params.row)}
+            getRowClassName={(params) =>
+              params.id === selectedCategory?.id ? 'selected-row' : ''
+            }
+            sx={{
+              '& .selected-row': {
+                backgroundColor: (theme) => theme.palette.secondary.light,
+              },
+            }}
           />
         </Card>
         <Card>

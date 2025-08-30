@@ -100,7 +100,7 @@ let tables: {
     show: '/ocotillo/lexicon/term/show/:id',
     create: '/ocotillo/lexicon/term/create',
     meta: {
-      disabled: true,
+      disabled: false,
       label: 'Lexicon',
       icon: <LibraryBooksOutlined />,
     },

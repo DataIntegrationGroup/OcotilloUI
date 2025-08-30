@@ -2,7 +2,7 @@ export interface ITerm {
   id: number
   term: string
   definition: string
-  category: string
+  categories: string
   created_at: Date
 }
 
