@@ -71,16 +71,30 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
   const mapRef = useRef<MapRef>(null)
   const [selectedThingFeatureCollection, setSelectedThingFeatureCollection] =
     useState(null)
-  // const [selectedThing, setSelectedThing] = useState<IWell | null>(null)
   const [tableRows, setTableRows] = useState([])
-  // console.log(selectedThingFeatureCollection)
-  const coords =
-    selectedThingFeatureCollection?.features[0]?.geometry.coordinates
-  const initialViewState = {
-    longitude: coords ? coords[0] : -106.4,
-    latitude: coords ? coords[1] : 34.5,
+  const [initialViewState, setInitialViewState] = useState({
+    longitude: -106.4,
+    latitude: 34.5,
     zoom: 10,
-  }
+  })
+
+  // Set initial view state based on the first option's coordinates, if available
+  useEffect(() => {
+    if (!selectedThingFeatureCollection) return
+
+    console.log(
+      'selectedThingFeatureCollection',
+      selectedThingFeatureCollection
+    )
+    const coords =
+      selectedThingFeatureCollection?.features[0]?.geometry.coordinates
+    const initialViewState = {
+      longitude: coords ? coords[0] : -106.4,
+      latitude: coords ? coords[1] : 34.5,
+      zoom: 10,
+    }
+    setInitialViewState(initialViewState)
+  }, [selectedThingFeatureCollection])
 
   const thing_id = watch('thing_id')
   useEffect(() => {
@@ -99,16 +113,17 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
       { name: 'Well Type', value: thing?.well_type || '' },
       { name: 'Well Depth (ft)', value: thing?.well_depth || '' },
       { name: 'Hole Depth (ft)', value: thing?.hole_depth || '' },
-      { name: 'Location Name', value: thing?.location.name || '' },
+      { name: 'Location Name', value: thing?.active_location.name || '' },
       {
         name: 'Location Release Status',
-        value: thing?.location.release_status || '',
+        value: thing?.active_location.release_status || '',
       },
       { name: 'Created At', value: thing?.created_at },
       { name: 'Geometry Type', value: thing?.geometry?.type || '' },
       {
         name: 'Coordinates',
-        value: JSON.stringify(thing?.geometry?.coordinates) || '',
+        value:
+          JSON.stringify(thing?.active_location.geometry?.coordinates) || '',
       },
     ]
 
@@ -152,12 +167,13 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
   }, [selectedThingFeatureCollection, spatialSearchWKT])
 
   const updateMap = (newValue: IThing[] | undefined) => {
+    console.log('updateMap', newValue)
     if (!newValue) {
       setSelectedThingFeatureCollection({
         type: 'FeatureCollection',
         features: [],
       })
-    } else if (newValue[0]?.geometry === null) {
+    } else if (newValue[0]?.active_location === null) {
       setSelectedThingFeatureCollection({
         type: 'FeatureCollection',
         features: [],
@@ -168,7 +184,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
         features: newValue.map((item) => ({
           type: 'Feature',
           id: item.id,
-          geometry: item.geometry,
+          geometry: wellknown.parse(item.active_location.point),
           properties: {
             name: item.name,
             id: item.id,

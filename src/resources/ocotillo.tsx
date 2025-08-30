@@ -111,7 +111,7 @@ let tables: {
     show: '/ocotillo/lexicon/category/show/:id',
     create: '/ocotillo/lexicon/category/create',
     meta: {
-      disabled: true,
+      disabled: false,
       label: 'Category',
       icon: <LibraryBooksOutlined />,
     },
@@ -157,7 +157,7 @@ let forms: {
     edit: '/ocotillo/groundwater-level-form/edit/:id',
     show: '/ocotillo/groundwater-level-form/show/:id',
     meta: {
-      disabled: true,
+      disabled: false,
       label: 'Groundwater Level Form (Beta)',
       icon: <Construction />,
     },

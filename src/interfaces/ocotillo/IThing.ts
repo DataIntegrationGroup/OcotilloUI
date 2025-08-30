@@ -1,4 +1,5 @@
 import { number, object } from 'yup'
+import { ILocation } from '@/interfaces/ocotillo/ILocation'
 
 export interface IThing {
   id: number
@@ -7,11 +8,11 @@ export interface IThing {
   release_status: string
   thing_type: string
   location_id: number
-  location?: object
-  geometry?: {
-    type: string
-    coordinates: number[][]
-  }
+  active_location: ILocation
+  // geometry?: {
+  //   type: string
+  //   coordinates: number[][]
+  // }
 }
 
 export interface IWell extends IThing {
