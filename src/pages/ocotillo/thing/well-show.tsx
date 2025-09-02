@@ -291,6 +291,61 @@ export const WellShow = () => {
     return [
       { field: 'name', headerName: 'Name', minWidth: 150, flex: 1 },
       { field: 'role', headerName: 'Role', minWidth: 120 },
+      {
+        field: 'emails',
+        headerName: 'Email',
+        minWidth: 200,
+        renderCell: (params) => {
+          if (!params.row.emails || params.row.emails.length === 0) return '-'
+          return (
+            <div>
+              {params.row.emails.map((email, idx) => (
+                <div key={idx} style={{ marginBottom: '2px' }}>
+                  {email.email}
+                </div>
+              ))}
+            </div>
+          )
+        },
+      },
+      {
+        field: 'phones',
+        headerName: 'Phone',
+        minWidth: 150,
+        renderCell: (params) => {
+          if (!params.row.phones || params.row.phones.length === 0) return '-'
+          return (
+            <div>
+              {params.row.phones.map((phone, idx) => (
+                <div key={idx} style={{ marginBottom: '2px' }}>
+                  {phone.phone_number}
+                </div>
+              ))}
+            </div>
+          )
+        },
+      },
+      {
+        field: 'addresses',
+        headerName: 'Address',
+        minWidth: 250,
+        renderCell: (params) => {
+          if (!params.row.addresses || params.row.addresses.length === 0) return '-'
+          return (
+            <div>
+              {params.row.addresses.map((address, idx) => (
+                <div key={idx} style={{ marginBottom: '2px' }}>
+                  {address.address_line_1}
+                  {address.address_line_2 && `, ${address.address_line_2}`}
+                  {address.city && `, ${address.city}`}
+                  {address.state && ` ${address.state}`}
+                  {address.postal_code && ` ${address.postal_code}`}
+                </div>
+              ))}
+            </div>
+          )
+        },
+      },
       actionColumnDef({ resource: 'ocotillo.contact' }),
     ]
   }, [])
