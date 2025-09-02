@@ -32,7 +32,6 @@ import Contacts from '@mui/icons-material/Contacts'
 import Image from '@mui/icons-material/Image'
 import InfoIcon from '@mui/icons-material/Info'
 import { settings } from '@/settings'
-import { ContactsComponent } from '@/components/ContactsComponent'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
 import { AnalyticsOutlined, StackedLineChart, TableChartOutlined } from '@mui/icons-material'
@@ -259,7 +258,7 @@ export const WellShow = () => {
     },
   })
 
-  const { data: contacts } = useList({
+  const { dataGridProps: contactDataGridProps } = useDataGrid({
     resource: 'contact',
     dataProviderName: 'ocotillo',
     meta: {
@@ -288,10 +287,19 @@ export const WellShow = () => {
     ]
   }, [])
 
+  const contactColumns: GridColDef[] = useMemo(() => {
+    return [
+      { field: 'name', headerName: 'Name', minWidth: 150, flex: 1 },
+      { field: 'role', headerName: 'Role', minWidth: 120 },
+      actionColumnDef({ resource: 'ocotillo.contact' }),
+    ]
+  }, [])
+
   const assetColumns: GridColDef[] = useMemo(() => {
     return [
       { field: 'name', headerName: 'Name', minWidth: 150 },
       { field: 'uri', headerName: 'URL', flex: 1 },
+      actionColumnDef({ resource: 'ocotillo.asset' }),
     ]
   }, [])
 
@@ -306,7 +314,7 @@ export const WellShow = () => {
   })
 
   const sensorColumns: GridColDef<ISensor>[] = useMemo(() => {
-    return [...sensorDefaultColumns]
+    return [...sensorDefaultColumns, actionColumnDef({ resource: 'ocotillo.sensor' })]
   }, [])
 
   return (
@@ -470,11 +478,14 @@ export const WellShow = () => {
         <Card elevation={2}>
           <CardHeader 
             title={
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <SettingsInputAntenna color="primary" />
-                <Typography variant="body1" fontWeight="bold">
-                  Equipment
-                </Typography>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <SettingsInputAntenna color="primary" />
+                  <Typography variant="body1" fontWeight="bold">
+                    Equipment
+                  </Typography>
+                </Stack>
+                <CreateButton resource="ocotillo.sensor" />
               </Stack>
             }
           />
@@ -510,7 +521,7 @@ export const WellShow = () => {
                     Well Screens
                   </Typography>
                 </Stack>
-                <CreateButton />
+                <CreateButton resource="ocotillo.thing/well-screen" />
               </Stack>
             }
           />
@@ -540,15 +551,34 @@ export const WellShow = () => {
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
           >
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Contacts color="primary" />
-              <Typography variant="body1" fontWeight="bold">
-                Contacts
-              </Typography>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Contacts color="primary" />
+                <Typography variant="body1" fontWeight="bold">
+                  Contacts
+                </Typography>
+              </Stack>
+              <CreateButton resource="ocotillo.contact" />
             </Stack>
           </AccordionSummary>
           <AccordionDetails sx={{ p: 3 }}>
-            {contacts && <ContactsComponent contacts={contacts.data} />}
+            <DataGrid
+              rowHeight={settings.rowHeight}
+              rows={contactDataGridProps.rows}
+              columns={contactColumns}
+              pageSizeOptions={[10, 25, 50]}
+              initialState={{
+                pagination: {
+                  paginationModel: { pageSize: 10, page: 0 },
+                },
+              }}
+              sx={{
+                border: 'none',
+                '& .MuiDataGrid-cell': {
+                  borderBottom: '1px solid #f0f0f0',
+                },
+              }}
+            />
           </AccordionDetails>
         </Accordion>
 
@@ -557,11 +587,14 @@ export const WellShow = () => {
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
           >
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Image color="primary" />
-              <Typography variant="body1" fontWeight="bold">
-                Attachments
-              </Typography>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Image color="primary" />
+                <Typography variant="body1" fontWeight="bold">
+                  Attachments
+                </Typography>
+              </Stack>
+              <CreateButton resource="ocotillo.asset" />
             </Stack>
           </AccordionSummary>
           <AccordionDetails sx={{ p: 3 }}>
