@@ -213,7 +213,7 @@ let things: {
     show: '/ocotillo/thing-id-link/show/:id',
     create: '/ocotillo/thing-id-link/create',
     meta: {
-      disabled: true,
+      disabled: false,
       label: 'ID links',
       icon: <Link />,
     },
