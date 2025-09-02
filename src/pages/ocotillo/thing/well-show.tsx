@@ -7,10 +7,14 @@ import {
   AccordionDetails,
   AccordionSummary,
   Card,
+  CardContent,
   CardHeader,
+  Chip,
   CircularProgress,
+  Divider,
   ImageList,
   ImageListItem,
+  Stack,
   Typography,
 } from '@mui/material'
 import { Hydrograph } from '@/components/Hydrographs/Hydrograph'
@@ -22,10 +26,16 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { IObservation } from '@/interfaces/ocotillo/IObservation'
 import { ISensor } from '@/interfaces/ocotillo/ISensor'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import SettingsInputAntenna from '@mui/icons-material/SettingsInputAntenna'
+import MoreVertOutlined from '@mui/icons-material/MoreVertOutlined'
+import Contacts from '@mui/icons-material/Contacts'
+import Image from '@mui/icons-material/Image'
+import InfoIcon from '@mui/icons-material/Info'
 import { settings } from '@/settings'
 import { ContactsComponent } from '@/components/ContactsComponent'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
+import { AnalyticsOutlined, StackedLineChart, TableChartOutlined } from '@mui/icons-material'
 
 function indexOfMax(arr) {
   if (arr.length === 0) {
@@ -82,19 +92,68 @@ const WaterlevelStats = ({
     setMinDepth(Math.min(...depths))
   }, [observations])
 
+  if (observations.length === 0) {
+    return (
+      <Card elevation={2}>
+        <CardHeader 
+          title={
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <AnalyticsOutlined color="primary" />
+              <Typography variant="body1" fontWeight="bold">
+                Water Level Statistics
+              </Typography>
+            </Stack>
+          }
+        />
+        <CardContent>
+          <Box textAlign="center" py={4}>
+            <Typography variant="body1" color="text.secondary" gutterBottom>
+              No water level data available
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Water level observations will appear here once data is collected
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
-    <Card>
-      <CardHeader title="Water Level Stats" />
-      <Box padding={2}>
-        <Typography variant="body1">
-          Max Depth: {maxDepth.toFixed(2)} ft --
-          {new Date(maxDepthDatetime).toLocaleString()}
-        </Typography>
-        <Typography variant="body1">
-          Min Depth: {minDepth.toFixed(2)} ft --
-          {new Date(minDepthDatetime).toLocaleString()}
-        </Typography>
-      </Box>
+    <Card elevation={2}>
+      <CardHeader 
+        title={
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <AnalyticsOutlined color="primary" />
+            <Typography variant="body1" fontWeight="bold">
+              Water Level Statistics
+            </Typography>
+          </Stack>
+        }
+      />
+      <CardContent>
+        <Stack spacing={2}>
+          <Box>
+            <Typography variant="body1" fontWeight="bold">
+              Maximum Depth: {maxDepth.toFixed(2)} ft
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {new Date(maxDepthDatetime).toLocaleString()}
+            </Typography>
+          </Box>
+          
+          <Divider />
+          
+          <Box>
+            <Typography variant="body1" fontWeight="bold">
+              Minimum Depth: {minDepth.toFixed(2)} ft
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {new Date(minDepthDatetime).toLocaleString()}
+            </Typography>
+          </Box>
+        </Stack>
+      </CardContent>
     </Card>
   )
 }
@@ -252,156 +311,297 @@ export const WellShow = () => {
 
   return (
     <Show isLoading={isLoading || observationsIsloading}>
-      <Grid container spacing={2}>
-        <Grid size={6}>
-          <Card>
-            <CardHeader title={`Well: ${record?.name || 'Loading...'}`} />
-            <Box padding={2}>
-              <Typography variant="body1">
-                Release Status: {record?.release_status || ''}
-              </Typography>
-              <Typography variant="body1">
-                Well Type: {record?.well_type || ''}
-              </Typography>
-              <Typography variant="body1">
-                Hole Depth (ft): {record?.hole_depth || ''}
-              </Typography>
-              <Typography variant="body1">
-                Well Depth (ft): {record?.well_depth || ''}
-              </Typography>
-            </Box>
-          </Card>
-        </Grid>
-        <Grid size={6}>
-          <WaterlevelStats observations={observations} />
-        </Grid>
-        <Grid size={6}>
-          <Card>
-            <CardHeader title="Hydrograph" />
-            <Box position={'relative'}>
-              {observationsIsloading && (
-                <Box
-                  position="absolute"
-                  top="50%"
-                  left="50%"
-                  sx={{ transform: 'translate(-50%, -50%)' }}
-                >
-                  <CircularProgress />
-                </Box>
-              )}
-              <Hydrograph
-                datasource={hydrographDatasource}
-                refresh={refreshHydrograph}
+      <Stack spacing={3}>
+        {/* Title and Stats */}
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card elevation={2} sx={{ height: '100%' }}>
+              <CardHeader 
+                title={
+                  <Typography variant="h4" fontWeight="bold">
+                    {record?.name || 'Loading...'}
+                  </Typography>
+                }
               />
-            </Box>
-          </Card>
-        </Grid>
-        <Grid size={6}>
-          <Card>
-            <DataGrid
-              rows={observations}
-              loading={observationsIsloading}
-              getRowId={(row) => row.id}
-              rowHeight={settings.rowHeight}
-              columns={observationColumns}
-              pageSizeOptions={[10]}
-              initialState={{
-                pagination: {
-                  paginationModel: { pageSize: 10, page: 0 },
-                },
-              }}
-            />
-          </Card>
-        </Grid>
-        <Grid size={12}>
-          <Card>
-            <CardHeader title="Equipment" />
-            <Box padding={2}>
-              <DataGrid
-                rowHeight={settings.rowHeight}
-                rows={sensorDataGridProps.rows}
-                columns={sensorColumns}
-                pageSizeOptions={[10]}
-                initialState={{
-                  pagination: {
-                    paginationModel: { pageSize: 10, page: 0 },
-                  },
-                }}
-              />
-            </Box>
-          </Card>
-        </Grid>
-        <Grid size={12}>
-          <Card>
-            <CardHeader title="Well Screens" />
-            <CreateButton />
-            <Box padding={2}>
-              <DataGrid
-                rowHeight={settings.rowHeight}
-                rows={wellScreenDataGridProps.rows}
-                columns={wellScreenColumns}
-                pageSizeOptions={[10]}
-                initialState={{
-                  pagination: {
-                    paginationModel: { pageSize: 10, page: 0 },
-                  },
-                }}
-              />
-            </Box>
-          </Card>
-        </Grid>
-        <Grid size={12}>
-          <Accordion expanded>
-            <AccordionSummary>
-              <Typography>
-                <b>Contacts</b>
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              {contacts && <ContactsComponent contacts={contacts.data} />}
-            </AccordionDetails>
-          </Accordion>
+              <CardContent>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2} flexWrap="wrap">
+                    <Chip 
+                      label={record?.well_type || 'Unknown Type'} 
+                      color="primary" 
+                      variant="outlined"
+                    />
+                    <Chip 
+                      label={record?.release_status || 'Unknown Status'} 
+                      color='warning'
+                      variant="outlined"
+                    />
+                  </Stack>
+                  
+                  <Stack direction="row" spacing={4} mt={2}>
+                    <Box>
+                      <Typography variant="body1" fontWeight="bold">
+                        Hole Depth: {record?.hole_depth || 'N/A'} ft
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body1" fontWeight="bold">
+                        Well Depth: {record?.well_depth || 'N/A'} ft
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <WaterlevelStats observations={observations} />
+          </Grid>
         </Grid>
 
-        <Grid size={12}>
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel2-content"
-              id="panel2-header"
-            >
-              <Typography>Attachments</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              {(!assets || assets.length === 0) && (
-                <Typography variant="body2" color="textSecondary">
-                  No attachments available.
-                </Typography>
-              )}
-              {assets && assets.length > 0 && (
-                <Box>
+        {/* Hydrograph / Water Level */}
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card elevation={2} sx={{ height: '100%' }}>
+              <CardHeader 
+                title={
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <StackedLineChart color="primary" />
+                    <Typography variant="body1" fontWeight="bold">
+                      Hydrograph
+                    </Typography>
+                  </Stack>
+                }
+              />
+              <CardContent>
+                {observations.length === 0 ? (
+                  <Box 
+                    display="flex" 
+                    alignItems="center" 
+                    justifyContent="center" 
+                    sx={{ minHeight: 200 }}
+                  >
+                    <Box textAlign="center">
+                      <Typography variant="body1" color="text.secondary" gutterBottom>
+                        No Hydrograph Data
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Water level observations are needed to generate a hydrograph
+                      </Typography>
+                    </Box>
+                  </Box>
+                ) : (
+                  <Box position="relative" sx={{ minHeight: 420, overflow: 'hidden' }}>
+                    {observationsIsloading && (
+                      <Box
+                        position="absolute"
+                        top="50%"
+                        left="50%"
+                        sx={{ transform: 'translate(-50%, -50%)' }}
+                      >
+                        <CircularProgress />
+                      </Box>
+                    )}
+                    <Hydrograph
+                      datasource={hydrographDatasource}
+                      refresh={refreshHydrograph}
+                    />
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card elevation={2} sx={{ height: '100%' }}>
+              <CardHeader 
+                title={
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <TableChartOutlined color="primary" />
+                    <Typography variant="body1" fontWeight="bold">
+                      Recent Water Level Observations
+                    </Typography>
+                  </Stack>
+                }
+              />
+              <CardContent>
+                {observations.length === 0 ? (
+                  <Box 
+                    display="flex" 
+                    alignItems="center" 
+                    justifyContent="center" 
+                    sx={{ minHeight: 200 }}
+                  >
+                    <Box textAlign="center">
+                      <Typography variant="body1" color="text.secondary" gutterBottom>
+                        No observations recorded
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Water level measurements will appear here
+                      </Typography>
+                    </Box>
+                  </Box>
+                ) : (
                   <DataGrid
+                    rows={observations}
+                    loading={observationsIsloading}
+                    getRowId={(row) => row.id}
                     rowHeight={settings.rowHeight}
-                    columns={assetColumns}
-                    rows={assets}
-                    pageSizeOptions={[10]}
+                    columns={observationColumns}
+                    pageSizeOptions={[10, 25, 50]}
                     initialState={{
                       pagination: {
                         paginationModel: { pageSize: 10, page: 0 },
                       },
                     }}
-                    // pageSizeOptions={[]}
-                    // initialState={{
-                    //   pagination: {
-                    //     paginationModel: { pageSize: 10, page: 0 },
-                    //   },
-                    // }}
+                    sx={{
+                      border: 'none',
+                      '& .MuiDataGrid-cell': {
+                        borderBottom: '1px solid #f0f0f0',
+                      },
+                    }}
                   />
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Equipment */}
+        <Card elevation={2}>
+          <CardHeader 
+            title={
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <SettingsInputAntenna color="primary" />
+                <Typography variant="body1" fontWeight="bold">
+                  Equipment
+                </Typography>
+              </Stack>
+            }
+          />
+          <CardContent>
+            <DataGrid
+              rowHeight={settings.rowHeight}
+              rows={sensorDataGridProps.rows}
+              columns={sensorColumns}
+              pageSizeOptions={[10, 25, 50]}
+              initialState={{
+                pagination: {
+                  paginationModel: { pageSize: 10, page: 0 },
+                },
+              }}
+              sx={{
+                border: 'none',
+                '& .MuiDataGrid-cell': {
+                  borderBottom: '1px solid #f0f0f0',
+                },
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Well Screens */}
+        <Card elevation={2}>
+          <CardHeader 
+            title={
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <MoreVertOutlined color="primary" />
+                  <Typography variant="body1" fontWeight="bold">
+                    Well Screens
+                  </Typography>
+                </Stack>
+                <CreateButton />
+              </Stack>
+            }
+          />
+          <CardContent>
+            <DataGrid
+              rowHeight={settings.rowHeight}
+              rows={wellScreenDataGridProps.rows}
+              columns={wellScreenColumns}
+              pageSizeOptions={[10, 25, 50]}
+              initialState={{
+                pagination: {
+                  paginationModel: { pageSize: 10, page: 0 },
+                },
+              }}
+              sx={{
+                border: 'none',
+                '& .MuiDataGrid-cell': {
+                  borderBottom: '1px solid #f0f0f0',
+                },
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Contacts */}
+        <Accordion defaultExpanded>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+          >
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Contacts color="primary" />
+              <Typography variant="body1" fontWeight="bold">
+                Contacts
+              </Typography>
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 3 }}>
+            {contacts && <ContactsComponent contacts={contacts.data} />}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Assets*/}
+        <Accordion>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+          >
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Image color="primary" />
+              <Typography variant="body1" fontWeight="bold">
+                Attachments
+              </Typography>
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 3 }}>
+            {(!assets || assets.length === 0) && (
+              <Box textAlign="center" py={4}>
+                <Image sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="body1" color="text.secondary">
+                  No attachments available.
+                </Typography>
+              </Box>
+            )}
+            {assets && assets.length > 0 && (
+              <Stack spacing={3}>
+                <DataGrid
+                  rowHeight={settings.rowHeight}
+                  columns={assetColumns}
+                  rows={assets}
+                  pageSizeOptions={[10, 25, 50]}
+                  initialState={{
+                    pagination: {
+                      paginationModel: { pageSize: 10, page: 0 },
+                    },
+                  }}
+                  sx={{
+                    border: 'none',
+                    '& .MuiDataGrid-cell': {
+                      borderBottom: '1px solid #f0f0f0',
+                    },
+                  }}
+                />
+                <Box>
+                  <Typography variant="body1" fontWeight="bold" gutterBottom>
+                    Image Gallery
+                  </Typography>
                   <ImageList
                     sx={{
                       display: 'flex',
                       flexDirection: 'row',
                       overflowX: 'auto',
+                      gap: 2,
                     }}
                     cols={3}
                   >
@@ -410,7 +610,15 @@ export const WellShow = () => {
                         img: { signed_url: string; name?: string },
                         idx: number
                       ) => (
-                        <ImageListItem key={idx} sx={{ minWidth: 200 }}>
+                        <ImageListItem 
+                          key={idx} 
+                          sx={{ 
+                            minWidth: 200,
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                            boxShadow: 2,
+                          }}
+                        >
                           <img
                             src={img.signed_url}
                             alt={img.name || `Attachment ${idx + 1}`}
@@ -425,30 +633,33 @@ export const WellShow = () => {
                     )}
                   </ImageList>
                 </Box>
-              )}
-            </AccordionDetails>
-          </Accordion>
-        </Grid>
-        <Grid size={12}>
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel2-content"
-              id="panel2-header"
-            >
-              <Typography>Details</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Card>
-                <DynamicShowDisplay<IWell>
-                  record={record}
-                  fieldConfigs={fieldConfigs}
-                />
-              </Card>
-            </AccordionDetails>
-          </Accordion>
-        </Grid>
-      </Grid>
+              </Stack>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* All details listed */}
+        <Accordion>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+          >
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <InfoIcon color="primary" />
+              <Typography variant="body1" fontWeight="bold">
+                Technical Details
+              </Typography>
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 3 }}>
+            <Card elevation={1}>
+              <DynamicShowDisplay<IWell>
+                record={record}
+                fieldConfigs={fieldConfigs}
+              />
+            </Card>
+          </AccordionDetails>
+        </Accordion>
+      </Stack>
     </Show>
   )
 }
