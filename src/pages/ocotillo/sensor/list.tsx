@@ -29,14 +29,14 @@ export const sensorDefaultColumns: GridColDef<ISensor>[] = [
     flex: 1,
   },
   {
-    field: 'date_installed',
+    field: 'datetime_installed',
     headerName: 'Date Installed',
     type: 'string',
     minWidth: 120,
     flex: 1,
   },
   {
-    field: 'date_removed',
+    field: 'datetime_removed',
     headerName: 'Date Removed',
     type: 'string',
     minWidth: 120,

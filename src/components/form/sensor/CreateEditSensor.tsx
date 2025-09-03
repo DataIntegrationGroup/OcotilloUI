@@ -1,6 +1,6 @@
 import { Control, FieldErrors } from 'react-hook-form'
 import Grid from '@mui/material/Grid2'
-import { ControlledTextField, ControlledSelectField } from '@/components'
+import { ControlledTextField, ControlledSelectField, ControlledDateField } from '@/components'
 import { useLexicon } from '@/hooks'
 
 /**
@@ -13,14 +13,14 @@ import { useLexicon } from '@/hooks'
  * @param fieldPrefix - The prefix for the field names
  */
 
-interface CreateEditSampleProps {
+interface CreateEditSensorProps {
   control: Control<any>
   errors?: FieldErrors<any>
   mode?: 'standalone' | 'step'
   fieldPrefix?: string
 }
 
-export const CreateEditSensor: React.FC<CreateEditSampleProps> = ({
+export const CreateEditSensor: React.FC<CreateEditSensorProps> = ({
   control,
   errors,
   mode = 'standalone',
@@ -29,10 +29,10 @@ export const CreateEditSensor: React.FC<CreateEditSampleProps> = ({
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
-
-  //get well type options
-  const { options: wellTypeOptions, isLoading: wellTypeLoading } = useLexicon({
-    category: 'well_type',
+  
+  //get relesae status options
+  const { options: releaseStatusOptions } = useLexicon({
+    category: 'release_status',
   })
 
   return (
@@ -47,46 +47,75 @@ export const CreateEditSensor: React.FC<CreateEditSampleProps> = ({
         />
       </Grid>
 
-      {/*<Grid size={{ xs: 12, md: 6 }}>*/}
-      {/*  <ControlledSelectField*/}
-      {/*    label="Sample Type"*/}
-      {/*    fullWidth*/}
-      {/*    control={control}*/}
-      {/*    name={getFieldName('well_type')}*/}
-      {/*    options={wellTypeOptions}*/}
-      {/*    required*/}
-      {/*  />*/}
-      {/*</Grid>*/}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Model"
+          fullWidth
+          control={control}
+          name={getFieldName('model')}
+          required
+        />
+      </Grid>
 
-      {/*<Grid size={{ xs: 12, md: 6 }}>*/}
-      {/*  <ControlledTextField*/}
-      {/*    label="Sample Depth (ft)"*/}
-      {/*    fullWidth*/}
-      {/*    type="number"*/}
-      {/*    control={control}*/}
-      {/*    name={getFieldName('well_depth')}*/}
-      {/*  />*/}
-      {/*</Grid>*/}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Serial No"
+          fullWidth
+          control={control}
+          name={getFieldName('serial_no')}
+          required
+        />
+      </Grid>
 
-      {/*<Grid size={{ xs: 12, md: 6 }}>*/}
-      {/*  <ControlledTextField*/}
-      {/*    label="Hole Depth (ft)"*/}
-      {/*    fullWidth*/}
-      {/*    type="number"*/}
-      {/*    control={control}*/}
-      {/*    name={getFieldName('hole_depth')}*/}
-      {/*  />*/}
-      {/*</Grid>*/}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledDateField
+          label="Date Installed"
+          fullWidth
+          control={control}
+          name={getFieldName('datetime_installed')}
+          required
+        />
+      </Grid>
 
-      {/*<Grid size={12}>*/}
-      {/*  <ControlledTextField*/}
-      {/*    label="Notes"*/}
-      {/*    control={control}*/}
-      {/*    name={getFieldName('notes')}*/}
-      {/*    multiline*/}
-      {/*    minRows={3}*/}
-      {/*  />*/}
-      {/*</Grid>*/}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledDateField
+          label="Date Removed"
+          fullWidth
+          control={control}
+          name={getFieldName('datetime_removed')}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Recording Interval"
+          type="number"
+          fullWidth
+          control={control}
+          name={getFieldName('recording_interval')}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Notes"
+          fullWidth
+          control={control}
+          name={getFieldName('notes')}
+          multiline
+          minRows={3}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledSelectField
+          label="Release Status"
+          control={control}
+          name={getFieldName('release_status')}
+          options={releaseStatusOptions}
+        />
+      </Grid>
+
     </Grid>
   )
 }
