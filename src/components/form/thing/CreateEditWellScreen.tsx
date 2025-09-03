@@ -3,6 +3,8 @@ import Grid from '@mui/material/Grid2'
 import { ControlledTextField } from '@/components'
 import { Button, Typography } from '@mui/material'
 import { Add, Delete } from '@mui/icons-material'
+import { ControlledSelectField } from '@/components/Controlled/ControlledSelectField'
+import { useLexicon } from '@/hooks'
 
 interface CreateEditWellScreenProps {
   control: Control<any>
@@ -34,6 +36,11 @@ export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
+
+  //get release status options
+  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
+    category: 'release_status' 
+  })
 
   return (
     <Grid container spacing={2} alignItems="center">
@@ -71,6 +78,16 @@ export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
           multiline
           minRows={2}
           fullWidth
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledSelectField
+          label="Release Status"
+          fullWidth
+          control={control}
+          name={getFieldName('release_status')}
+          options={releaseStatusOptions}
         />
       </Grid>
 

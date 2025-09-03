@@ -66,16 +66,16 @@ export const SampleList: React.FC = () => {
       // TODO: this is an issue because thing_id may not link to a Well. It may link to some other type of thing,
       //  e.g. a Spring.
       linkColumn(
-        extractThingTypeResource((params) => params.row.thing.thing_type),
+        extractThingTypeResource((params) => params.row.thing?.thing_type),
         {
-          field: 'thing_id',
+          field: 'thing.id',
           headerName: 'Thing',
           type: 'number',
           minWidth: 120,
           flex: 1,
         },
         (params) => {
-          return params.row.thing.name
+          return params.row.thing?.name || 'No Thing'
         }
       ),
     ],

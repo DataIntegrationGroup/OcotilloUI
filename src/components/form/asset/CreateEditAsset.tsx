@@ -6,6 +6,8 @@ import FileUploadIcon from '@mui/icons-material/FileUpload'
 import { Add, Delete } from '@mui/icons-material'
 import Grid from '@mui/material/Grid2'
 import { useState } from 'react'
+import { ControlledSelectField } from '@/components/Controlled/ControlledSelectField'
+import { useLexicon } from '@/hooks'
 
 interface CreateEditAssetProps {
   control: any
@@ -46,6 +48,11 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
+
+  //get release status options
+  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
+    category: 'release_status' 
+  })
 
   const dataProvider = useDataProvider()
   const provider = dataProvider('ocotillo')
@@ -175,6 +182,17 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
               required
             />
           )}
+        />
+      </Grid>
+
+      {/* Release Status Section */}
+      <Grid size={12}>
+        <ControlledSelectField
+          label="Release Status"
+          fullWidth
+          control={control}
+          name={getFieldName('release_status')}
+          options={releaseStatusOptions}
         />
       </Grid>
 

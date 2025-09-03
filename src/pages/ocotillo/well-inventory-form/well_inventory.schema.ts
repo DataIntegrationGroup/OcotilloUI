@@ -26,6 +26,7 @@ export const wellInventoryStepSchemas: Yup.ObjectSchema<any>[] = [
   Yup.object({
     well: Yup.object({
       name: Yup.string().required('Well name is required'),
+      release_status: Yup.string().required('Release status is required'),
       well_depth: Yup.number()
         .nullable()
         .positive('Well depth must be positive')
@@ -50,6 +51,7 @@ export const wellInventoryStepSchemas: Yup.ObjectSchema<any>[] = [
           .positive('Screen depth bottom must be positive')
           .typeError('Screen depth bottom must be a valid number'),
         screen_description: Yup.string().nullable(),
+        release_status: Yup.string().required('Release status is required'),
       })
     ),
   }),
@@ -59,16 +61,19 @@ export const wellInventoryStepSchemas: Yup.ObjectSchema<any>[] = [
         Yup.object({
           name: Yup.string().required('Contact name is required'),
           role: Yup.string().required('Contact role is required'),
+          release_status: Yup.string().required('Release status is required'),
           emails: Yup.array().of(
             Yup.object({
               email: Yup.string().email('Invalid email format'),
               email_type: Yup.string().required('Email type is required'),
+              release_status: Yup.string().required('Release status is required'),
             })
           ),
           phones: Yup.array().of(
             Yup.object({
               phone_number: Yup.string().required('Phone number is required'),
               phone_type: Yup.string().required('Phone type is required'),
+              release_status: Yup.string().required('Release status is required'),
             })
           ),
           addresses: Yup.array().of(
@@ -80,7 +85,9 @@ export const wellInventoryStepSchemas: Yup.ObjectSchema<any>[] = [
               city: Yup.string().required('City is required'),
               state: Yup.string().required('State is required'),
               postal_code: Yup.string().required('Postal code is required'),
+              country: Yup.string().required('Country is required'),
               address_type: Yup.string().required('Address type is required'),
+              release_status: Yup.string().required('Release status is required'),
             })
           ),
         })
@@ -92,6 +99,7 @@ export const wellInventoryStepSchemas: Yup.ObjectSchema<any>[] = [
       Yup.object({
         label: Yup.string().required('Asset label is required'),
         name: Yup.string().required('Asset name is required'),
+        release_status: Yup.string().required('Release status is required'),
         storage_path: Yup.string().when('file', {
           is: (file: any) => file !== null && file !== undefined,
           then: (schema) => schema.required('Storage path is required'),
@@ -134,7 +142,7 @@ export const SchemaDefaults: Partial<IWellInventoryForm> = {
   },
   well: {
     name: '',
-    release_status: '',
+    release_status: 'draft',
     thing_type: 'well',
     well_depth: undefined,
     hole_depth: undefined,
@@ -146,12 +154,14 @@ export const SchemaDefaults: Partial<IWellInventoryForm> = {
       screen_depth_top: undefined,
       screen_depth_bottom: undefined,
       screen_description: '',
+      release_status: 'draft',
     },
   ],
   contacts: [
     {
       name: '',
       role: '',
+      release_status: 'private',
       emails: [],
       phones: [],
       addresses: [],

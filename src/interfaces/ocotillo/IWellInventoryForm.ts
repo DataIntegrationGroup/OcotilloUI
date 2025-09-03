@@ -21,18 +21,22 @@ export interface IWellInventoryForm {
     screen_depth_top?: number
     screen_depth_bottom?: number
     screen_description?: string
+    release_status: string
   }>
   contacts: Array<{
     name: string
     role: string
+    release_status: string
     emails?: Array<{
       email: string
       email_type: string
+      release_status: string
     }>
     phones?: Array<{
       phone_number: string
       phone_type: string
       country_code?: string
+      release_status: string
     }>
     addresses?: Array<{
       address_line_1: string
@@ -41,6 +45,7 @@ export interface IWellInventoryForm {
       state: string
       postal_code: string
       address_type: string
+      release_status: string
     }>
   }>
   assets?: Array<{
@@ -52,5 +57,6 @@ export interface IWellInventoryForm {
     uri: string
     file?: File
     thing_id?: number | null
+    release_status: string
   }>
 }

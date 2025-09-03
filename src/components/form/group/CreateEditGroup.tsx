@@ -9,6 +9,8 @@ import { useRef, useEffect, useState } from 'react'
 import { MapPolygonComponent } from '@/components/MapPolygonComponent'
 import Grid from '@mui/material/Grid2'
 import wellknown from 'wellknown'
+import { useLexicon } from '@/hooks'
+import { ControlledSelectField } from '@/components/Controlled/ControlledSelectField'
 
 export const CreateEditGroup = ({
   control,
@@ -16,7 +18,18 @@ export const CreateEditGroup = ({
   errors,
   setValue,
   mode,
+  fieldPrefix = '',
 }) => {
+
+  const getFieldName = (fieldName: string) => {
+    return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
+  }
+
+  //release status options
+  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
+    category: 'release_status' 
+  })
+
   const { autocompleteProps } = useAutocomplete<IGroup>({
     resource: 'group',
     dataProviderName: 'ocotillo',
@@ -49,15 +62,15 @@ export const CreateEditGroup = ({
       const map = mapRef.current.getMap()
       const bounds = map.getBounds()
       const wktString = wellknown.stringify({
-        type: 'Polygon',
+        type: 'MultiPolygon',
         coordinates: [
-          [
+          [[
             [bounds.getWest(), bounds.getSouth()],
             [bounds.getEast(), bounds.getSouth()],
             [bounds.getEast(), bounds.getNorth()],
             [bounds.getWest(), bounds.getNorth()],
             [bounds.getWest(), bounds.getSouth()],
-          ],
+          ]],
         ],
       })
       setValue('project_area', wktString)
@@ -80,7 +93,7 @@ export const CreateEditGroup = ({
           autoFocus
         />
       </Grid>
-      <Grid size={12}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Controller
           name="parent_group_id"
           control={control}
@@ -104,6 +117,26 @@ export const CreateEditGroup = ({
               )}
             />
           )}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledSelectField
+          label="Release Status"
+          fullWidth
+          control={control}
+          name={getFieldName('release_status')}
+          options={releaseStatusOptions}
+        />
+      </Grid>
+      <Grid size={{ xs: 12}}>
+        <TextField
+          {...register('description')}
+          error={!!errors.description}
+          helperText={errors.description?.message}
+          margin="normal"
+          fullWidth
+          label="Description"
+          name="description"
         />
       </Grid>
       <Grid size={12}>

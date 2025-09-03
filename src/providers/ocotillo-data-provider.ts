@@ -128,7 +128,7 @@ export const ocotilloDataProvider: DataProvider = {
   getOne: async ({ resource, id, meta }) => {
     resource = cleanResourceName(resource)
     /**
-     * for 'things' use a query parameter structure ?thing_id=123
+     * for 'things' use path parameter structure /thing/123
      * same for well things, spring things, etc.
      */
     if (
@@ -136,9 +136,7 @@ export const ocotilloDataProvider: DataProvider = {
       resource === 'thing/well' ||
       resource === 'thing/spring'
     ) {
-      const params = new URLSearchParams()
-      params.append('thing_id', id.toString())
-      let url: string = `thing?${params.toString()}`
+      let url: string = `thing/${id}`
       const response = await fetcher(url, meta.requestConfig)
 
       if (response.status < 200 || response.status > 299) throw response

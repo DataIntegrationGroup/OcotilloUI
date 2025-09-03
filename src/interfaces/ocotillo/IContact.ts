@@ -7,20 +7,25 @@ export interface IContact {
   role: string
   thing_id: number
   created_at: Date
+  release_status: string
 }
 
 export interface IEmail {
   id: number
   email: string
   email_type: string
-  // contact_id: number
+  created_at: Date
+  release_status: string
+  contact_id: number
 }
 
 export interface IPhone {
   id: number
   phone_number: string
   phone_type: string
-  // contact_id: number
+  created_at: Date
+  release_status: string
+  contact_id: number
 }
 
 export interface IAddress {
@@ -30,6 +35,9 @@ export interface IAddress {
   city: string
   state: string
   postal_code: string
+  country: string
   address_type: string
-  // contact_id: number
+  created_at: Date
+  release_status: string
+  contact_id: number
 }

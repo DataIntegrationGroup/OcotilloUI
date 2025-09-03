@@ -3,5 +3,7 @@ export interface IGroup {
   name: string
   parent_group_id: number
   created_at: Date
-  project_area: string
+  release_status: string 
+  description: string | null 
+  project_area?: string | null
 }
