@@ -28,6 +28,9 @@ export interface ISpring extends IThing {
 }
 
 export interface IThingIdLink {
+  id: number
+  created_at: Date
+  release_status: string
   thing_id: number
   thing: IThing
   relation: string
