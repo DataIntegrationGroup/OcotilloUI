@@ -128,6 +128,17 @@ export const CreateEditGroup = ({
           options={releaseStatusOptions}
         />
       </Grid>
+      <Grid size={{ xs: 12}}>
+        <TextField
+          {...register('description')}
+          error={!!errors.description}
+          helperText={errors.description?.message}
+          margin="normal"
+          fullWidth
+          label="Description"
+          name="description"
+        />
+      </Grid>
       <Grid size={12}>
         <Typography>Project Area</Typography>
         <Button variant={'contained'} onClick={handleMapExtentSearch}>
