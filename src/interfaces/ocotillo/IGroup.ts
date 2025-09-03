@@ -5,4 +5,5 @@ export interface IGroup {
   created_at: Date
   release_status: string 
   description: string | null 
+  project_area?: string | null
 }

@@ -11,12 +11,12 @@ export const SensorShow = () => {
 
   //custom configs for sensor date fields
   const fieldConfigs = {
-    date_installed: {
+    datetime_installed: {
       label: 'Date Installed',
       formatter: (value: string) =>
         value ? new Date(value).toLocaleString() : '',
     },
-    date_removed: {
+    datetime_removed: {
       label: 'Date Removed',
       formatter: (value: string) =>
         value ? new Date(value).toLocaleString() : '',
