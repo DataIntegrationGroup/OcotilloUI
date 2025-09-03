@@ -521,6 +521,7 @@ const WellScreensStep: React.FC<{
                     screen_depth_top: null,
                     screen_depth_bottom: null,
                     screen_description: '',
+                    release_status: 'draft',
                   })
               : undefined
           }
@@ -540,6 +541,7 @@ const WellScreensStep: React.FC<{
               screen_depth_top: null,
               screen_depth_bottom: null,
               screen_description: '',
+              release_status: 'draft',
             })
           }
           startIcon={<Add />}
@@ -594,6 +596,7 @@ const ContactsStep: React.FC<{
                     emails: [],
                     phones: [],
                     addresses: [],
+                    release_status: 'private',
                   })
               : undefined
           }
@@ -659,6 +662,7 @@ const AssetsStep: React.FC<{
               mime_type: '',
               size: 0,
               url: '',
+              release_status: 'draft',
             })
           }}
           canRemoveAsset={assetFields.length >= 1}
@@ -685,6 +689,7 @@ const AssetsStep: React.FC<{
               mime_type: '',
               size: 0,
               url: '',
+              release_status: 'draft',
             })
           }
           startIcon={<Add />}
@@ -742,6 +747,7 @@ const ReviewStep: React.FC<{
             : '',
         },
         { label: 'Notes', value: formData.well?.notes || 'None' },
+        { label: 'Release Status', value: formData.well?.release_status },
       ],
     },
     {
@@ -749,7 +755,7 @@ const ReviewStep: React.FC<{
       items:
         formData.wellScreens?.map((screen, index) => ({
           label: `Screen ${index + 1}`,
-          value: `Top: ${screen.screen_depth_top || 'N/A'} ft, Bottom: ${screen.screen_depth_bottom || 'N/A'} ft, Description: ${screen.screen_description || 'None'}`,
+          value: `Top: ${screen.screen_depth_top || 'N/A'} ft, Bottom: ${screen.screen_depth_bottom || 'N/A'} ft, Description: ${screen.screen_description || 'None'}, Release Status: ${screen.release_status || 'None'}`,
         })) || [],
     },
     {
@@ -765,6 +771,7 @@ const ReviewStep: React.FC<{
             label: `Addresses`,
             value: `${contact.addresses?.length || 0} address(es)`,
           },
+          { label: 'Release Status', value: contact.release_status },
         ]) || [],
     },
     {
@@ -773,6 +780,7 @@ const ReviewStep: React.FC<{
         formData.assets?.map((asset, index) => ({
           label: `Asset ${index + 1}`,
           value: `${asset.label || 'Not specified'} - ${asset.name || 'Not specified'}`,
+          release_status: asset.release_status,
         })) || [],
     },
   ]

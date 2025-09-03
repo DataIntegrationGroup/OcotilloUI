@@ -175,7 +175,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                 onClick={() => appendEmail({ 
                   email: '', 
                   email_type: 'Primary',
-                  release_status: 'draft'
+                  release_status: 'private'
                 })}
                 variant="outlined"
                 size="small"
@@ -237,7 +237,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                   country_code: '+1', 
                   phone_number: '', 
                   phone_type: 'Primary',
-                  release_status: 'draft'
+                  release_status: 'private'
                 })}
                 variant="outlined"
                 size="small"
@@ -315,7 +315,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                   postal_code: '', 
                   country: 'United States',
                   address_type: 'Primary',
-                  release_status: 'draft'
+                  release_status: 'private'
                 })}
                 variant="outlined"
                 size="small"

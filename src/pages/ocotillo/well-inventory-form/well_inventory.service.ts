@@ -53,6 +53,7 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
             screen_depth_top: screen.screen_depth_top || null,
             screen_type: 'PVC', // default value
             screen_description: screen.screen_description || '',
+            release_status: screen.release_status,
           },
         })
       }
@@ -69,17 +70,20 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
         role: contact.role,
         thing_id: wellId,
         emails: contact.emails || [],
+        release_status: contact.release_status,
         phones:
           contact.phones?.map((phone) => ({
             phone_number: phone.country_code
               ? `${phone.country_code}${phone.phone_number}`
               : phone.phone_number,
             phone_type: phone.phone_type,
+            release_status: phone.release_status,
           })) || [],
         addresses:
           contact.addresses?.map((address) => ({
             ...address,
             country: 'United States',
+            release_status: address.release_status,
           })) || [],
       },
     })
@@ -103,6 +107,7 @@ export const createWellInventoryForm = async (data: IWellInventoryForm) => {
             size: asset.size,
             uri: asset.uri,
             thing_id: wellId,
+            release_status: asset.release_status,
           },
         })
 
