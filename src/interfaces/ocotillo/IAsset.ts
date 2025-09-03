@@ -5,6 +5,7 @@ export interface IAsset {
   storage_path: string
   storage_service: string
   created_at: Date
+  release_status: string
   mime_type: string
   size: number
   file: any
