@@ -673,12 +673,6 @@ export const WellShow = () => {
                       paginationModel: { pageSize: 10, page: 0 },
                     },
                   }}
-                  sx={{
-                    border: 'none',
-                    '& .MuiDataGrid-cell': {
-                      borderBottom: '1px solid #f0f0f0',
-                    },
-                  }}
                 />
                 <Box>
                   <Typography variant="body1" fontWeight="bold" gutterBottom>
