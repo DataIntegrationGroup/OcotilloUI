@@ -17,13 +17,35 @@ export const extractThingTypeResource = (getThingType: Function) => {
 
 export const linkColumn = (
   resource: string | Function,
-  options: object,
+  options: { field: string; [key: string]: any },
   renderLabel?: Function
 ) => {
   const Link = useLink()
   return {
     ...options,
     renderCell: (params) => {
+      const getNestedValue = (obj: any, path: string) => {
+        if (!obj) return null
+        return path.split('.').reduce((current, key) => {
+          if (current === null || current === undefined) return null
+          return current[key]
+        }, obj)
+      }
+      
+      const fieldPath = options.field;
+      let id = null;
+      
+      if (fieldPath.includes('.')) {
+        // Handle nested field access
+        id = getNestedValue(params.row, fieldPath)
+      } else {
+        id = params.value
+      }
+      // Don't render link if ID is missing
+      if (!id) {
+        return renderLabel ? renderLabel(params) : '-'
+      }
+      
       return (
         <Link
           go={{
@@ -31,7 +53,7 @@ export const linkColumn = (
               resource:
                 typeof resource === 'string' ? resource : resource(params),
               action: 'show',
-              id: params.value,
+              id: id, 
             },
           }}
         >
