@@ -106,6 +106,11 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
     category: 'address_type' 
   })
 
+  //get release status options
+  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
+    category: 'release_status' 
+  })
+
   return (
     <Grid container spacing={3}>
       {/* Contact Header with canRemoveContact button */}
@@ -138,7 +143,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 6 }}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <ControlledSelectField
           label="Contact Role"
           fullWidth
@@ -146,6 +151,15 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
           name={getFieldName('role')}
           options={contactRoleOptions}
           required
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 3 }}>
+        <ControlledSelectField
+          label="Release Status"
+          fullWidth
+          control={control}
+          name={getFieldName('release_status')}
+          options={releaseStatusOptions}
         />
       </Grid>
 
@@ -158,7 +172,11 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
               <Typography variant="h6">Emails</Typography>
               <Button
                 startIcon={<Add />}
-                onClick={() => appendEmail({ email: '', email_type: 'Primary' })}
+                onClick={() => appendEmail({ 
+                  email: '', 
+                  email_type: 'Primary',
+                  release_status: 'draft'
+                })}
                 variant="outlined"
                 size="small"
               >
@@ -186,6 +204,15 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 2 }}>
+                  <ControlledSelectField
+                    label="Release Status"
+                    fullWidth
+                    control={control}
+                    name={`${getFieldName('emails')}.${emailIndex}.release_status`}
+                    options={releaseStatusOptions}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 2 }}>
                   <Button
                     startIcon={<Delete />}
                     onClick={() => removeEmail(emailIndex)}
@@ -209,7 +236,8 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                 onClick={() => appendPhone({ 
                   country_code: '+1', 
                   phone_number: '', 
-                  phone_type: 'Primary' 
+                  phone_type: 'Primary',
+                  release_status: 'draft'
                 })}
                 variant="outlined"
                 size="small"
@@ -250,6 +278,15 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 2 }}>
+                  <ControlledSelectField
+                    label="Release Status"
+                    fullWidth
+                    control={control}
+                    name={`${getFieldName('phones')}.${phoneIndex}.release_status`}
+                    options={releaseStatusOptions}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 2 }}>
                   <Button
                     startIcon={<Delete />}
                     onClick={() => removePhone(phoneIndex)}
@@ -276,7 +313,9 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                   city: '', 
                   state: '', 
                   postal_code: '', 
-                  address_type: 'Primary' 
+                  country: 'United States',
+                  address_type: 'Primary',
+                  release_status: 'draft'
                 })}
                 variant="outlined"
                 size="small"
@@ -305,15 +344,13 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 2 }}>
-                  <Button
-                    startIcon={<Delete />}
-                    onClick={() => removeAddress(addressIndex)}
-                    variant="outlined"
-                    color="error"
+                  <ControlledSelectField
+                    label="Release Status"
                     fullWidth
-                  >
-                    Remove
-                  </Button>
+                    control={control}
+                    name={`${getFieldName('addresses')}.${addressIndex}.release_status`}
+                    options={releaseStatusOptions}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ControlledTextField
@@ -349,6 +386,17 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                     name={`${getFieldName('addresses')}.${addressIndex}.postal_code`}
                     required
                   />
+                </Grid>
+                <Grid size={{ xs: 12, md: 2 }}>
+                  <Button
+                    startIcon={<Delete />}
+                    onClick={() => removeAddress(addressIndex)}
+                    variant="outlined"
+                    color="error"
+                    fullWidth
+                  >
+                    Remove
+                  </Button>
                 </Grid>
               </Grid>
             ))}
