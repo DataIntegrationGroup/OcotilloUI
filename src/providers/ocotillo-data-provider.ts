@@ -1,7 +1,9 @@
 import type { DataProvider } from '@refinedev/core'
 import { settings } from '@/settings'
 
-const API_URL = `${settings.ocotillo_api_url}`
+const API_URL = process.env.NODE_ENV === 'test' 
+  ? 'http://127.0.0.1:4010'  // Mock server for tests
+  : `${settings.ocotillo_api_url}`
 
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import createAuthRefreshInterceptor from 'axios-auth-refresh'
