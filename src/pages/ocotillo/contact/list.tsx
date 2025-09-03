@@ -85,6 +85,7 @@ export const ContactList: React.FC = () => {
         type: 'string',
         minWidth: 150,
       },
+      { field: 'contact_type', headerName: 'Contact Type', minWidth: 150 },
       {
         field: 'created_at',
         headerName: 'Created At',

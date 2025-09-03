@@ -34,7 +34,11 @@ import InfoIcon from '@mui/icons-material/Info'
 import { settings } from '@/settings'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
-import { AnalyticsOutlined, StackedLineChart, TableChartOutlined } from '@mui/icons-material'
+import {
+  AnalyticsOutlined,
+  StackedLineChart,
+  TableChartOutlined,
+} from '@mui/icons-material'
 
 function indexOfMax(arr) {
   if (arr.length === 0) {
@@ -94,7 +98,7 @@ const WaterlevelStats = ({
   if (observations.length === 0) {
     return (
       <Card elevation={2}>
-        <CardHeader 
+        <CardHeader
           title={
             <Stack direction="row" alignItems="center" spacing={1}>
               <AnalyticsOutlined color="primary" />
@@ -120,7 +124,7 @@ const WaterlevelStats = ({
 
   return (
     <Card elevation={2}>
-      <CardHeader 
+      <CardHeader
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <AnalyticsOutlined color="primary" />
@@ -140,9 +144,9 @@ const WaterlevelStats = ({
               {new Date(maxDepthDatetime).toLocaleString()}
             </Typography>
           </Box>
-          
+
           <Divider />
-          
+
           <Box>
             <Typography variant="body1" fontWeight="bold">
               Minimum Depth: {minDepth.toFixed(2)} ft
@@ -291,6 +295,7 @@ export const WellShow = () => {
     return [
       { field: 'name', headerName: 'Name', minWidth: 150, flex: 1 },
       { field: 'role', headerName: 'Role', minWidth: 120 },
+      { field: 'contact_type', headerName: 'Contact Type', minWidth: 150 },
       {
         field: 'emails',
         headerName: 'Email',
@@ -330,7 +335,8 @@ export const WellShow = () => {
         headerName: 'Address',
         minWidth: 250,
         renderCell: (params) => {
-          if (!params.row.addresses || params.row.addresses.length === 0) return '-'
+          if (!params.row.addresses || params.row.addresses.length === 0)
+            return '-'
           return (
             <div>
               {params.row.addresses.map((address, idx) => (
@@ -369,7 +375,10 @@ export const WellShow = () => {
   })
 
   const sensorColumns: GridColDef<ISensor>[] = useMemo(() => {
-    return [...sensorDefaultColumns, actionColumnDef({ resource: 'ocotillo.sensor' })]
+    return [
+      ...sensorDefaultColumns,
+      actionColumnDef({ resource: 'ocotillo.sensor' }),
+    ]
   }, [])
 
   return (
@@ -379,7 +388,7 @@ export const WellShow = () => {
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 6 }}>
             <Card elevation={2} sx={{ height: '100%' }}>
-              <CardHeader 
+              <CardHeader
                 title={
                   <Typography variant="h4" fontWeight="bold">
                     {record?.name || 'Loading...'}
@@ -389,18 +398,18 @@ export const WellShow = () => {
               <CardContent>
                 <Stack spacing={2}>
                   <Stack direction="row" spacing={2} flexWrap="wrap">
-                    <Chip 
-                      label={record?.well_type || 'Unknown Type'} 
-                      color="primary" 
+                    <Chip
+                      label={record?.well_type || 'Unknown Type'}
+                      color="primary"
                       variant="outlined"
                     />
-                    <Chip 
-                      label={record?.release_status || 'Unknown Status'} 
-                      color='warning'
+                    <Chip
+                      label={record?.release_status || 'Unknown Status'}
+                      color="warning"
                       variant="outlined"
                     />
                   </Stack>
-                  
+
                   <Stack direction="row" spacing={4} mt={2}>
                     <Box>
                       <Typography variant="body1" fontWeight="bold">
@@ -426,7 +435,7 @@ export const WellShow = () => {
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 6 }}>
             <Card elevation={2} sx={{ height: '100%' }}>
-              <CardHeader 
+              <CardHeader
                 title={
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <StackedLineChart color="primary" />
@@ -438,23 +447,31 @@ export const WellShow = () => {
               />
               <CardContent>
                 {observations.length === 0 ? (
-                  <Box 
-                    display="flex" 
-                    alignItems="center" 
-                    justifyContent="center" 
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
                     sx={{ minHeight: 200 }}
                   >
                     <Box textAlign="center">
-                      <Typography variant="body1" color="text.secondary" gutterBottom>
+                      <Typography
+                        variant="body1"
+                        color="text.secondary"
+                        gutterBottom
+                      >
                         No Hydrograph Data
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Water level observations are needed to generate a hydrograph
+                        Water level observations are needed to generate a
+                        hydrograph
                       </Typography>
                     </Box>
                   </Box>
                 ) : (
-                  <Box position="relative" sx={{ minHeight: 420, overflow: 'hidden' }}>
+                  <Box
+                    position="relative"
+                    sx={{ minHeight: 420, overflow: 'hidden' }}
+                  >
                     {observationsIsloading && (
                       <Box
                         position="absolute"
@@ -476,7 +493,7 @@ export const WellShow = () => {
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Card elevation={2} sx={{ height: '100%' }}>
-              <CardHeader 
+              <CardHeader
                 title={
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <TableChartOutlined color="primary" />
@@ -488,14 +505,18 @@ export const WellShow = () => {
               />
               <CardContent>
                 {observations.length === 0 ? (
-                  <Box 
-                    display="flex" 
-                    alignItems="center" 
-                    justifyContent="center" 
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
                     sx={{ minHeight: 200 }}
                   >
                     <Box textAlign="center">
-                      <Typography variant="body1" color="text.secondary" gutterBottom>
+                      <Typography
+                        variant="body1"
+                        color="text.secondary"
+                        gutterBottom
+                      >
                         No observations recorded
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -531,9 +552,13 @@ export const WellShow = () => {
 
         {/* Equipment */}
         <Card elevation={2}>
-          <CardHeader 
+          <CardHeader
             title={
-              <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <SettingsInputAntenna color="primary" />
                   <Typography variant="body1" fontWeight="bold">
@@ -567,9 +592,13 @@ export const WellShow = () => {
 
         {/* Well Screens */}
         <Card elevation={2}>
-          <CardHeader 
+          <CardHeader
             title={
-              <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <MoreVertOutlined color="primary" />
                   <Typography variant="body1" fontWeight="bold">
@@ -603,10 +632,13 @@ export const WellShow = () => {
 
         {/* Contacts */}
         <Accordion defaultExpanded>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-          >
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ width: '100%' }}
+            >
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Contacts color="primary" />
                 <Typography variant="body1" fontWeight="bold">
@@ -639,10 +671,13 @@ export const WellShow = () => {
 
         {/* Assets*/}
         <Accordion>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-          >
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ width: '100%' }}
+            >
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Image color="primary" />
                 <Typography variant="body1" fontWeight="bold">
@@ -692,9 +727,9 @@ export const WellShow = () => {
                         img: { signed_url: string; name?: string },
                         idx: number
                       ) => (
-                        <ImageListItem 
-                          key={idx} 
-                          sx={{ 
+                        <ImageListItem
+                          key={idx}
+                          sx={{
                             minWidth: 200,
                             borderRadius: 2,
                             overflow: 'hidden',
@@ -722,9 +757,7 @@ export const WellShow = () => {
 
         {/* All details listed */}
         <Accordion>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-          >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Stack direction="row" alignItems="center" spacing={1}>
               <InfoIcon color="primary" />
               <Typography variant="body1" fontWeight="bold">
