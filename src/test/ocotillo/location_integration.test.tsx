@@ -61,7 +61,7 @@ describe('Ocotillo Integration Tests: Location', () => {
     const testData = {
       name: 'Test Location',
       notes: 'Test notes',
-      point: 'POINT(-106.6504 35.0844)',
+      point: 'POINT(-106.6504 35.0844 5000)',
       release_status: 'public'
     }
 
