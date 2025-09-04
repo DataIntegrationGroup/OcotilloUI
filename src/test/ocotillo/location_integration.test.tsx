@@ -96,7 +96,7 @@ describe('Ocotillo Integration Tests: Location', () => {
       id: 1,
       name: 'Updated Location',
       notes: 'Updated notes',
-      point: 'POINT(-106.6504 35.0844)',
+      point: 'POINT(-106.6504 35.0844 5000)',
       release_status: 'public'
     }
 
