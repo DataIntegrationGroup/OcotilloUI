@@ -3,7 +3,7 @@ import { ILocation } from '@/interfaces/ocotillo/ILocation'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import { LocationSchema } from '@/pages/ocotillo/location/schema'
 
-// Add a small delay between tests
+// small delay to not overwhelm mock server
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 describe('Ocotillo Integration Tests: Location', () => {
