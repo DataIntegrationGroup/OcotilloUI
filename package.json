@@ -8,7 +8,12 @@
     "build:ci": "VITE_DISABLE_SOURCEMAP=true VITE_SENTRY_TELEMETRY_DISABLED=true NODE_OPTIONS='--max-old-space-size=4096' tsc && refine build",
     "dev": "refine dev",
     "refine": "refine",
-    "start": "refine start"
+    "start": "refine start",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "mock:server": "prism mock https://ocotillo-api-dot-waterdatainitiative-271000.appspot.com/openapi.json --dynamic --port 4010"
   },
   "browserslist": {
     "production": [
@@ -71,16 +76,24 @@
   },
   "devDependencies": {
     "@sentry/vite-plugin": "^3.4.0",
+    "@stoplight/prism-cli": "^5.14.2",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/lodash": "^4.17.17",
     "@types/node": "^18.16.2",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
     "cypress": "^15.0.0",
+    "jsdom": "^26.1.0",
     "prettier": "3.5.3",
     "typescript": "^5.4.2",
     "vite": "^6.2.2",
-    "vite-tsconfig-paths": "^5.0.1"
+    "vite-tsconfig-paths": "^5.0.1",
+    "vitest": "^3.2.4"
   },
   "refine": {
     "projectId": "wCqQ1f-agx0FN-70pXIr"
