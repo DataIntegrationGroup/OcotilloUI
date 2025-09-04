@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ILocation } from '@/interfaces/ocotillo/ILocation'
-import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider' // Use the real data provider!
+import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
+import { LocationSchema } from '@/pages/ocotillo/location/schema'
 
 // Add a small delay between tests
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-describe('Ocotillo Location API Integration Tests', () => {
+describe('Ocotillo Integration Tests: Location', () => {
   beforeEach(async () => {
-    // Add a small delay between tests to avoid overwhelming the mock server
     await delay(100)
   })
 
@@ -23,11 +23,16 @@ describe('Ocotillo Location API Integration Tests', () => {
     
     if (result.data.length > 0) {
       const location = result.data[0] as ILocation
-      expect(location).toHaveProperty('id')
-      expect(location).toHaveProperty('name')
-      expect(location).toHaveProperty('point')
-      expect(location).toHaveProperty('release_status')
-      expect(location).toHaveProperty('created_at')
+      
+      // Validate against schema 
+      try {
+        const validatedLocation = await LocationSchema.validate(location, { strict: true })
+        expect(validatedLocation).toBeDefined()
+      } catch (error) {
+        console.error('Schema validation failed:', error.message)
+        console.error('Location data:', JSON.stringify(location, null, 2))
+        throw new Error(`API response doesn't match ILocation interface: ${error.message}`)
+      }
     }
   })
 
@@ -41,44 +46,82 @@ describe('Ocotillo Location API Integration Tests', () => {
     expect(result).toHaveProperty('data')
     
     const location = result.data as ILocation
-    expect(location).toHaveProperty('id')
-    expect(location).toHaveProperty('name')
-    expect(location).toHaveProperty('point')
-    expect(location).toHaveProperty('release_status')
-    expect(location).toHaveProperty('created_at')
+    
+    // Validate against schema
+    try {
+      const validatedLocation = await LocationSchema.validate(location, { strict: true })
+      expect(validatedLocation).toBeDefined()
+    } catch (error) {
+      console.error('Schema validation failed:', error.message)
+      throw new Error(`API response doesn't match ILocation interface: ${error.message}`)
+    }
   })
 
   it('should create location using data provider', async () => {
-    const newLocationData = {
+    const testData = {
       name: 'Test Location',
       notes: 'Test notes',
       point: 'POINT(-106.6504 35.0844)',
       release_status: 'public'
     }
 
-    console.log('About to create location with data:', newLocationData)
-
     try {
       const result = await ocotilloDataProvider.create({
         resource: 'ocotillo.location',
-        variables: newLocationData
+        variables: testData
       })
       
-      console.log('Create result:', JSON.stringify(result, null, 2))
       expect(result).toHaveProperty('data')
       
       const createdLocation = result.data as ILocation
-      console.log('Created location:', JSON.stringify(createdLocation, null, 2))
       
-      expect(createdLocation).toHaveProperty('id')
-      expect(createdLocation).toHaveProperty('name')
-      expect(createdLocation).toHaveProperty('point')
-      expect(createdLocation).toHaveProperty('release_status')
-      expect(createdLocation).toHaveProperty('created_at')
+      // Validate the schema
+      try {
+        const validatedLocation = await LocationSchema.validate(createdLocation)
+        expect(validatedLocation).toBeDefined()
+      } catch (error) {
+        console.error('Created location schema validation failed:', error.message)
+        console.error('Created location data:', JSON.stringify(createdLocation, null, 2))
+        throw new Error(`Created location doesn't match ILocation interface: ${error.message}`)
+      }
       
-      expect(createdLocation.id).toBeDefined()
     } catch (error) {
       console.error('Create failed with error:', error)
+      throw error
+    }
+  })
+
+  it('should update location using data provider', async () => {
+    const testData = {
+      id: 1,
+      name: 'Updated Location',
+      notes: 'Updated notes',
+      point: 'POINT(-106.6504 35.0844)',
+      release_status: 'public'
+    }
+
+    try {
+      const result = await ocotilloDataProvider.update({
+        resource: 'ocotillo.location',
+        id: 1,
+        variables: testData
+      })
+
+      expect(result).toHaveProperty('data')
+
+      const updatedLocation = result.data as ILocation
+
+      // Validate the schema
+      try {
+        const validatedLocation = await LocationSchema.validate(updatedLocation, { strict: true })
+        expect(validatedLocation).toBeDefined()
+      } catch (error) {
+        console.error('Updated location schema validation failed:', error.message)
+        console.error('Updated location data:', JSON.stringify(updatedLocation, null, 2))
+        throw new Error(`Updated location doesn't match ILocation interface: ${error.message}`)
+      }
+    } catch (error) {
+      console.error('Update failed with error:', error)
       throw error
     }
   })
