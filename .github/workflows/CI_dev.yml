@@ -2,7 +2,6 @@ name: CI Integration Test Suite
 
 on:
   pull_request:
-    branches: [ pre-production ]
 
 jobs:
   test:
