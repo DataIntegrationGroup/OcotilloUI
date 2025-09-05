@@ -2,9 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { ILocation } from '@/interfaces/ocotillo/ILocation'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import { LocationSchema } from '@/pages/ocotillo/location/schema'
-
-// small delay to not overwhelm mock server
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+import { delay } from '@/test/delay'
 
 describe('Ocotillo Integration Tests: Location', () => {
   beforeEach(async () => {
