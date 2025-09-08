@@ -165,7 +165,7 @@ export const ocotilloDataProvider: DataProvider = {
     return { data }
   },
   create: async ({ resource, variables }) => {
-    console.log('asdfs', resource)
+    //console.log('asdfs', resource)
     resource = cleanResourceName(resource)
 
     const response = await axiosCall(`${resource}`, {

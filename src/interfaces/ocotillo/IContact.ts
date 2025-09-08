@@ -1,11 +1,13 @@
 import { IThing } from '@/interfaces/ocotillo/IThing'
 
 export interface IContact {
-  things: [IThing]
+  things?: IThing[]
   id: number
   name: string
-  role: string
-  thing_id: number
+  role?: string
+  thing_id?: number
+  contact_type?: string
+  organization?: string
   created_at: Date
   release_status: string
 }
