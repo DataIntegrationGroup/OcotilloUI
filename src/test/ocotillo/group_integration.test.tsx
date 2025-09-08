@@ -4,7 +4,7 @@ import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import { delay } from '@/test/delay'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
 
-describe.skip('Ocotillo Integration Tests: Group', () => {
+describe('Ocotillo Integration Tests: Group', () => {
   beforeEach(async () => {
     await delay(100)
   })
@@ -64,7 +64,8 @@ describe.skip('Ocotillo Integration Tests: Group', () => {
         name: 'Test Group',
         parent_group_id: 1,
         project_area: 'Test Project Area',
-        description: 'Test Description'
+        description: 'Test Description',
+        release_status: 'public'
       }
     })
 
