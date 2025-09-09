@@ -1,13 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { SampleResponseSchema, SampleCreateSchema, SampleUpdateSchema } from '@/pages/ocotillo/sample/schema'
+import { describe, it, expect } from 'vitest'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import { delay } from '@/test/delay'
-import { ISample } from '@/interfaces/ocotillo/ISample'
+import {
+  zSampleResponse,
+  zCreateSample,
+  zUpdateSample
+} from '@/generated/zod.gen'
+import {
+  SampleResponse,
+  CreateSample,
+  UpdateSample
+} from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Sample', () => {
-  beforeEach(async () => {
-    await delay(100)
-  })
 
   it('should fetch samples using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
@@ -21,12 +25,12 @@ describe('Ocotillo Integration Tests: Sample', () => {
     expect(Array.isArray(result.data)).toBe(true)
     
     if (result.data.length > 0) {
-      const sample = result.data[0] as ISample
+      const sample = result.data[0] as SampleResponse
       
       
       // Validate against schema
       try {
-        const validatedSample = await SampleResponseSchema.validate(sample, { strict: true })
+        const validatedSample = zSampleResponse.parse(sample)
         expect(validatedSample).toBeDefined()
       } catch (error) {
         console.error('Schema validation failed:', error.message)
@@ -45,11 +49,11 @@ describe('Ocotillo Integration Tests: Sample', () => {
 
     expect(result).toHaveProperty('data')
 
-    const sample = result.data as ISample
+    const sample = result.data as SampleResponse
     
     // Validate against schema
     try {
-        const validatedSample = await SampleResponseSchema.validate(sample, { strict: true })
+        const validatedSample = zSampleResponse.parse(sample)
         expect(validatedSample).toBeDefined()
     } catch (error) {
         console.error('Schema validation failed:', error.message)
@@ -59,7 +63,7 @@ describe('Ocotillo Integration Tests: Sample', () => {
   })
 
   it('should create a sample using data provider', async () => {
-    const createData = SampleCreateSchema.cast({
+    const createData: CreateSample = zCreateSample.parse({
         thing_id: 1,
         sample_type: 'groundwater',
         field_sample_id: 'test',
@@ -81,10 +85,10 @@ describe('Ocotillo Integration Tests: Sample', () => {
     })
 
     expect(result).toHaveProperty('data')
-    const sample = result.data as ISample
+    const sample = result.data as SampleResponse
     // Validate against schema
     try {
-      const validatedSample = await SampleResponseSchema.validate(sample, { strict: true })
+      const validatedSample = zSampleResponse.parse(sample)
       expect(validatedSample).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -94,9 +98,20 @@ describe('Ocotillo Integration Tests: Sample', () => {
   })
 
   it('should update a sample using data provider', async () => {
-    const updateData = SampleUpdateSchema.cast({
+    const updateData: UpdateSample = zUpdateSample.parse({
       id: 1,
       sample_type: 'surface water',
+      field_sample_id: 'test',
+      sample_date: '2025-01-08T21:15:18.139Z',
+      release_status: 'public',
+      sampler_name: 'updated',
+      qc_sample: 'original',
+      sensor_id: 1,
+      sample_matrix: 'test',
+      sample_method: 'manual',
+      duplicate_sample_number: 1,
+      sample_top: 1,
+      sample_bottom: 1,
     })
 
     const result = await ocotilloDataProvider.update({
@@ -106,10 +121,10 @@ describe('Ocotillo Integration Tests: Sample', () => {
     })
 
     expect(result).toHaveProperty('data')
-    const sample = result.data as ISample
+    const sample = result.data as SampleResponse
     // Validate against schema
     try {
-      const validatedSample = await SampleResponseSchema.validate(sample, { strict: true })
+      const validatedSample = zSampleResponse.parse(sample)
       expect(validatedSample).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
