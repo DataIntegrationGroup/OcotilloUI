@@ -11,7 +11,7 @@ import {
   UpdateGroup
 } from '@/generated/types.gen'
 
-describe.skip('Ocotillo Integration Tests: Group', () => {
+describe('Ocotillo Integration Tests: Group', () => {
 
   it('should fetch groups using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
@@ -64,6 +64,7 @@ describe.skip('Ocotillo Integration Tests: Group', () => {
   it('should create group using data provider', async () => {
     const testData: CreateGroup = zCreateGroup.parse({
       name: 'Test Group',
+      release_status: 'public',
       parent_group_id: 1,
       project_area: 'Test Project Area',
       description: 'Test Description'
@@ -92,6 +93,7 @@ describe.skip('Ocotillo Integration Tests: Group', () => {
   it('should update group using data provider', async () => {
     const testData: UpdateGroup = zUpdateGroup.parse({
       name: 'Updated Test Group',
+      release_status: 'public',
       parent_group_id: 1,
       project_area: 'Updated Test Project Area',
       description: 'Updated Test Description'
