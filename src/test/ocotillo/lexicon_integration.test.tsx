@@ -1,13 +1,23 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { TermSchema, CategorySchema } from '@/pages/ocotillo/lexicon/schema'
+import { describe, it, expect } from 'vitest'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import { delay } from '@/test/delay'
-import { ITerm, ICategory } from '@/interfaces/ocotillo/ILexicon'
+import {
+  zLexiconTermResponse,
+  zLexiconCategoryResponse,
+  zCreateLexiconTerm,
+  zCreateLexiconCategory,
+  zUpdateLexiconTerm,
+  zUpdateLexiconCategory
+} from '@/generated/zod.gen'
+import {
+  LexiconTermResponse,
+  LexiconCategoryResponse,
+  CreateLexiconTerm,
+  CreateLexiconCategory,
+  UpdateLexiconTerm,
+  UpdateLexiconCategory,
+} from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Lexicon', () => {
-  beforeEach(async () => {
-    await delay(100)
-  })
 
   it('should fetch terms using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
@@ -20,11 +30,11 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
     expect(Array.isArray(result.data)).toBe(true)
 
     if (result.data.length > 0) {
-      const term = result.data[0] as ITerm
+      const term = result.data[0] as LexiconTermResponse
 
       // Validate against schema
       try {
-        const validatedTerm = await TermSchema.validate(term, { strict: true })
+        const validatedTerm = zLexiconTermResponse.parse(term)
         expect(validatedTerm).toBeDefined()
       } catch (error) {
         console.error('Schema validation failed:', error.message)
@@ -43,11 +53,11 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
 
     expect(result).toHaveProperty('data')
 
-    const term = result.data as ITerm
+    const term = result.data as LexiconTermResponse
 
     // Validate against schema
     try {
-      const validatedTerm = await TermSchema.validate(term, { strict: true })
+      const validatedTerm = zLexiconTermResponse.parse(term)
       expect(validatedTerm).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -57,22 +67,24 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
   })
 
   it('should create term using data provider', async () => {
+    const testData: CreateLexiconTerm = zCreateLexiconTerm.parse({
+      term: 'Test Term',
+      definition: 'This is a test term definition',
+      categories: [{ id: 1, name: 'Test Category' }] 
+    })
+
     const result = await ocotilloDataProvider.create({
       resource: 'lexicon/term',
-      variables: {
-        term: 'Test Term',
-        definition: 'This is a test term definition',
-        categories: [{ id: 1, name: 'Test Category' }] 
-      }
+      variables: testData
     })
 
     expect(result).toHaveProperty('data')
 
-    const createdTerm = result.data as ITerm
+    const createdTerm = result.data as LexiconTermResponse
 
     // Validate against schema
     try {
-      const validatedTerm = await TermSchema.validate(createdTerm, { strict: true })
+      const validatedTerm = zLexiconTermResponse.parse(createdTerm)
       expect(validatedTerm).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -82,23 +94,25 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
   })
 
   it('should update term using data provider', async () => {
+    const testData: UpdateLexiconTerm = zUpdateLexiconTerm.parse({
+      term: 'Updated Test Term',
+      definition: 'This is an updated test term definition',
+      categories: [{ id: 1, name: 'Test Category 1' }, { id: 2, name: 'Test Category 2' }] 
+    })
+
     const result = await ocotilloDataProvider.update({
       resource: 'lexicon/term',
       id: 1,
-      variables: {
-        term: 'Updated Test Term',
-        definition: 'This is an updated test term definition',
-        categories: [{ id: 1, name: 'Test Category 1' }, { id: 2, name: 'Test Category 2' }] 
-      }
+      variables: testData
     })
 
     expect(result).toHaveProperty('data')
 
-    const updatedTerm = result.data as ITerm
+    const updatedTerm = result.data as LexiconTermResponse
 
     // Validate against schema
     try {
-      const validatedTerm = await TermSchema.validate(updatedTerm, { strict: true })
+      const validatedTerm = zLexiconTermResponse.parse(updatedTerm)
       expect(validatedTerm).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -118,11 +132,11 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
     expect(Array.isArray(result.data)).toBe(true)
 
     if (result.data.length > 0) {
-      const category = result.data[0] as ICategory
+      const category = result.data[0] as LexiconCategoryResponse
 
       // Validate against schema
       try {
-        const validatedCategory = await CategorySchema.validate(category, { strict: true })
+        const validatedCategory = zLexiconCategoryResponse.parse(category)
         expect(validatedCategory).toBeDefined()
       } catch (error) {
         console.error('Schema validation failed:', error.message)
@@ -141,11 +155,11 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
 
     expect(result).toHaveProperty('data')
 
-    const category = result.data as ICategory
+    const category = result.data as LexiconCategoryResponse
 
     // Validate against schema
     try {
-      const validatedCategory = await CategorySchema.validate(category, { strict: true })
+      const validatedCategory = zLexiconCategoryResponse.parse(category)
       expect(validatedCategory).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -155,20 +169,22 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
   })
 
   it('should create category using data provider', async () => {
+    const testData: CreateLexiconCategory = zCreateLexiconCategory.parse({
+      name: 'Test Category'
+    })
+
     const result = await ocotilloDataProvider.create({
       resource: 'lexicon/category',
-      variables: {
-        name: 'Test Category'
-      }
+      variables: testData
     })
 
     expect(result).toHaveProperty('data')
 
-    const createdCategory = result.data as ICategory
+    const createdCategory = result.data as LexiconCategoryResponse
 
     // Validate against schema
     try {
-      const validatedCategory = await CategorySchema.validate(createdCategory, { strict: true })
+      const validatedCategory = zLexiconCategoryResponse.parse(createdCategory)
       expect(validatedCategory).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -178,21 +194,23 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
   })
 
   it('should update category using data provider', async () => {
+    const testData: UpdateLexiconCategory = zUpdateLexiconCategory.parse({
+      name: 'Updated Test Category'
+    })
+
     const result = await ocotilloDataProvider.update({
       resource: 'lexicon/category',
       id: 1,
-      variables: {
-        name: 'Updated Test Category'
-      }
+      variables: testData
     })
 
     expect(result).toHaveProperty('data')
 
-    const updatedCategory = result.data as ICategory
+    const updatedCategory = result.data as LexiconCategoryResponse
 
     // Validate against schema
     try {
-      const validatedCategory = await CategorySchema.validate(updatedCategory, { strict: true })
+      const validatedCategory = zLexiconCategoryResponse.parse(updatedCategory)
       expect(validatedCategory).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
