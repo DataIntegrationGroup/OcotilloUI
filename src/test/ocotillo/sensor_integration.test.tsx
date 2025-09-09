@@ -1,13 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { SensorResponseSchema, SensorCreateSchema, SensorUpdateSchema } from '@/pages/ocotillo/sensor/schema'
+import { describe, it, expect } from 'vitest'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import { delay } from '@/test/delay'
-import { ISensor } from '@/interfaces/ocotillo/ISensor'
+import {
+  zSensorResponse,
+  zCreateSensor,
+  zUpdateSensor
+} from '@/generated/zod.gen'
+import {
+  SensorResponse,
+  CreateSensor,
+  UpdateSensor
+} from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Sensor', () => {
-  beforeEach(async () => {
-    await delay(100)
-  })
 
   it('should fetch sensors using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
@@ -21,11 +25,11 @@ describe('Ocotillo Integration Tests: Sensor', () => {
     expect(Array.isArray(result.data)).toBe(true)
 
     if (result.data.length > 0) {
-      const sensor = result.data[0] as ISensor
+      const sensor = result.data[0] as SensorResponse
 
       // Validate against schema
       try {
-        const validatedSensor = await SensorResponseSchema.validate(sensor, { strict: true })
+        const validatedSensor = zSensorResponse.parse(sensor)
         expect(validatedSensor).toBeDefined()
       } catch (error) {
         console.error('Schema validation failed:', error.message)
@@ -44,11 +48,11 @@ describe('Ocotillo Integration Tests: Sensor', () => {
 
   expect(result).toHaveProperty('data')
 
-  const sensor = result.data as ISensor
+  const sensor = result.data as SensorResponse
   
   // Validate against schema
   try {
-    const validatedSensor = await SensorResponseSchema.validate(sensor, { strict: true })
+    const validatedSensor = zSensorResponse.parse(sensor)
     expect(validatedSensor).toBeDefined()
   } catch (error) {
     console.error('Schema validation failed:', error.message)
@@ -58,7 +62,7 @@ describe('Ocotillo Integration Tests: Sensor', () => {
   })
 
   it('should create a sensor using data provider', async () => {
-    const createData = SensorCreateSchema.cast({
+    const createData: CreateSensor = zCreateSensor.parse({
       name: 'Test Sensor',
       model: 'Test Model',
       serial_no: '1234567890',
@@ -75,10 +79,10 @@ describe('Ocotillo Integration Tests: Sensor', () => {
   })
 
   expect(result).toHaveProperty('data')
-  const sensor = result.data as ISensor
+  const sensor = result.data as SensorResponse
   // Validate against schema
   try {
-    const validatedSensor = await SensorResponseSchema.validate(sensor, { strict: true })
+    const validatedSensor = zSensorResponse.parse(sensor)
     expect(validatedSensor).toBeDefined()
   } catch (error) {
     console.error('Schema validation failed:', error.message)
@@ -88,7 +92,7 @@ describe('Ocotillo Integration Tests: Sensor', () => {
   })
 
   it('should update a sensor using data provider', async () => {
-    const updateData = SensorUpdateSchema.cast({
+    const updateData: UpdateSensor = zUpdateSensor.parse({
       id: 1,
       name: 'Updated Test Sensor',
       model: 'Updated Test Model',
@@ -106,10 +110,10 @@ describe('Ocotillo Integration Tests: Sensor', () => {
   })
 
   expect(result).toHaveProperty('data')
-  const sensor = result.data as ISensor
+  const sensor = result.data as SensorResponse
   // Validate against schema
   try {
-    const validatedSensor = await SensorResponseSchema.validate(sensor, { strict: true })
+    const validatedSensor = zSensorResponse.parse(sensor)
     expect(validatedSensor).toBeDefined()
   } catch (error) {
     console.error('Schema validation failed:', error.message)
