@@ -1,13 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { ILocation } from '@/interfaces/ocotillo/ILocation'
+import { describe, it, expect } from 'vitest'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import { LocationSchema } from '@/pages/ocotillo/location/schema'
-import { delay } from '@/test/delay'
+import {
+  zLocationResponse,
+  zCreateLocation,
+  zUpdateLocation,
+} from '@/generated/zod.gen'
+import {
+  LocationResponse,
+  CreateLocation,
+  UpdateLocation,
+} from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Location', () => {
-  beforeEach(async () => {
-    await delay(100)
-  })
 
   it('should fetch locations using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
@@ -20,11 +24,11 @@ describe('Ocotillo Integration Tests: Location', () => {
     expect(Array.isArray(result.data)).toBe(true)
     
     if (result.data.length > 0) {
-      const location = result.data[0] as ILocation
+      const location = result.data[0] as LocationResponse
       
       // Validate against schema 
       try {
-        const validatedLocation = await LocationSchema.validate(location, { strict: true })
+        const validatedLocation = zLocationResponse.parse(location)
         expect(validatedLocation).toBeDefined()
       } catch (error) {
         console.error('Schema validation failed:', error.message)
@@ -43,11 +47,11 @@ describe('Ocotillo Integration Tests: Location', () => {
     
     expect(result).toHaveProperty('data')
     
-    const location = result.data as ILocation
+    const location = result.data as LocationResponse
     
     // Validate against schema
     try {
-      const validatedLocation = await LocationSchema.validate(location, { strict: true })
+      const validatedLocation = zLocationResponse.parse(location)
       expect(validatedLocation).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -56,12 +60,12 @@ describe('Ocotillo Integration Tests: Location', () => {
   })
 
   it('should create location using data provider', async () => {
-    const testData = {
+    const testData: CreateLocation = zCreateLocation.parse({
       name: 'Test Location',
       notes: 'Test notes',
       point: 'POINT(-106.6504 35.0844 5000)',
       release_status: 'public'
-    }
+    })
 
     try {
       const result = await ocotilloDataProvider.create({
@@ -71,11 +75,11 @@ describe('Ocotillo Integration Tests: Location', () => {
       
       expect(result).toHaveProperty('data')
       
-      const createdLocation = result.data as ILocation
+      const createdLocation = result.data as LocationResponse
       
       // Validate the schema
       try {
-        const validatedLocation = await LocationSchema.validate(createdLocation)
+        const validatedLocation = zLocationResponse.parse(createdLocation)
         expect(validatedLocation).toBeDefined()
       } catch (error) {
         console.error('Created location schema validation failed:', error.message)
@@ -90,13 +94,13 @@ describe('Ocotillo Integration Tests: Location', () => {
   })
 
   it('should update location using data provider', async () => {
-    const testData = {
+    const testData: UpdateLocation = zUpdateLocation.parse({
       id: 1,
       name: 'Updated Location',
       notes: 'Updated notes',
       point: 'POINT(-106.6504 35.0844 5000)',
       release_status: 'public'
-    }
+    })
 
     try {
       const result = await ocotilloDataProvider.update({
@@ -107,11 +111,11 @@ describe('Ocotillo Integration Tests: Location', () => {
 
       expect(result).toHaveProperty('data')
 
-      const updatedLocation = result.data as ILocation
+      const updatedLocation = result.data as LocationResponse
 
       // Validate the schema
       try {
-        const validatedLocation = await LocationSchema.validate(updatedLocation, { strict: true })
+        const validatedLocation = zLocationResponse.parse(updatedLocation)
         expect(validatedLocation).toBeDefined()
       } catch (error) {
         console.error('Updated location schema validation failed:', error.message)
