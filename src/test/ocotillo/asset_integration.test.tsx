@@ -1,13 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { AssetSchema } from '@/pages/ocotillo/asset/schema'
+import { describe, it, expect } from 'vitest'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import { delay } from '@/test/delay'
-import { IAsset } from '@/interfaces/ocotillo/IAsset'
+import {
+  zAssetResponse,
+  zCreateAsset,
+  zUpdateAsset
+} from '@/generated/zod.gen'
+import {
+  AssetResponse,
+  CreateAsset,
+  UpdateAsset
+} from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Asset', () => {
-  beforeEach(async () => {
-    await delay(100)
-  })
 
   it('should fetch assets using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
@@ -20,11 +24,11 @@ describe('Ocotillo Integration Tests: Asset', () => {
     expect(Array.isArray(result.data)).toBe(true)
 
     if (result.data.length > 0) {
-      const asset = result.data[0] as IAsset
+      const asset = result.data[0] as AssetResponse
 
       // Validate against schema
       try {
-        const validatedAsset = await AssetSchema.validate(asset, { strict: true })
+        const validatedAsset = zAssetResponse.parse(asset)
         expect(validatedAsset).toBeDefined()
       } catch (error) {
         console.error('Schema validation failed:', error.message)
@@ -43,11 +47,11 @@ describe('Ocotillo Integration Tests: Asset', () => {
 
   expect(result).toHaveProperty('data')
 
-  const asset = result.data as IAsset
+  const asset = result.data as AssetResponse
 
   // Validate against schema
   try {
-    const validatedAsset = await AssetSchema.validate(asset, { strict: true })
+    const validatedAsset = zAssetResponse.parse(asset)
     expect(validatedAsset).toBeDefined()
   } catch (error) {
     console.error('Schema validation failed:', error.message)
@@ -57,34 +61,60 @@ describe('Ocotillo Integration Tests: Asset', () => {
   })
 
   it('should create asset using data provider', async () => {
+    const testData: CreateAsset = zCreateAsset.parse({
+      label: 'Test Asset Label',
+      name: 'Test Asset',
+      storage_path: '/test/path/asset.txt',
+      release_status: 'public',
+      mime_type: 'text/plain',
+      size: 1024,
+      thing_id: 1,
+      uri: 'https://example.com/test-asset.txt'
+    })
     const result = await ocotilloDataProvider.create({
       resource: 'asset',
-      variables: {
-        label: 'Test Asset Label',
-        name: 'Test Asset',
-        storage_path: '/test/path/asset.txt',
-        storage_service: 'local',
-        release_status: 'public',
-        mime_type: 'text/plain',
-        size: 1024,
-        file: null,
-        thing_id: null,
-        uri: 'https://example.com/test-asset.txt',
-        signed_url: 'https://example.com/signed/test-asset.txt'
-      }
+      variables: testData
     })
 
     expect(result).toHaveProperty('data')
 
-    const createdAsset = result.data as IAsset
+    const createdAsset = result.data as AssetResponse
 
     // Validate against schema
     try {
-      const validatedAsset = await AssetSchema.validate(createdAsset, { strict: true })
+      const validatedAsset = zAssetResponse.parse(createdAsset)
       expect(validatedAsset).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
       console.error('Asset data:', JSON.stringify(createdAsset, null, 2))
+      throw new Error(`API response doesn't match IAsset interface: ${error.message}`)
+    }
+  })
+
+  it.skip('should update asset using data provider', async () => {
+    const testData: UpdateAsset = zUpdateAsset.parse({
+      label: 'Updated Test Asset Label',
+      name: 'Updated Test Asset',
+      release_status: 'public',
+    })
+
+    const result = await ocotilloDataProvider.update({
+      resource: 'asset',
+      id: 1,
+      variables: testData
+    })
+
+    expect(result).toHaveProperty('data')
+
+    const updatedAsset = result.data as AssetResponse
+
+    // Validate against schema
+    try {
+      const validatedAsset = zAssetResponse.parse(updatedAsset)
+      expect(validatedAsset).toBeDefined()
+    } catch (error) {
+      console.error('Schema validation failed:', error.message)
+      console.error('Asset data:', JSON.stringify(updatedAsset, null, 2))
       throw new Error(`API response doesn't match IAsset interface: ${error.message}`)
     }
   })
