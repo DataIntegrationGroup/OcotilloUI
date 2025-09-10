@@ -1,13 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { GroupSchema } from '@/pages/ocotillo/group/schema'
+import { describe, it, expect } from 'vitest'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import { delay } from '@/test/delay'
-import { IGroup } from '@/interfaces/ocotillo/IGroup'
+import {
+  zGroupResponse,
+  zCreateGroup,
+  zUpdateGroup
+} from '@/generated/zod.gen'
+import {
+  GroupResponse,
+  CreateGroup,
+  UpdateGroup
+} from '@/generated/types.gen'
 
-describe.skip('Ocotillo Integration Tests: Group', () => {
-  beforeEach(async () => {
-    await delay(100)
-  })
+describe('Ocotillo Integration Tests: Group', () => {
 
   it('should fetch groups using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
@@ -20,12 +24,12 @@ describe.skip('Ocotillo Integration Tests: Group', () => {
   expect(Array.isArray(result.data)).toBe(true)
 
   if (result.data.length > 0) {
-    const group = result.data[0] as IGroup
+    const group = result.data[0] as GroupResponse
   
 
   // Validate against schema
   try {
-    const validatedGroup = await GroupSchema.validate(group, { strict: true })
+    const validatedGroup = zGroupResponse.parse(group)
     expect(validatedGroup).toBeDefined()
   } catch (error) {
     console.error('Schema validation failed:', error.message)
@@ -44,11 +48,11 @@ describe.skip('Ocotillo Integration Tests: Group', () => {
 
   expect(result).toHaveProperty('data')
 
-  const group = result.data as IGroup
+  const group = result.data as GroupResponse
 
   // Validate against schema
   try {
-    const validatedGroup = await GroupSchema.validate(group, { strict: true })
+    const validatedGroup = zGroupResponse.parse(group)
     expect(validatedGroup).toBeDefined()
   } catch (error) {
     console.error('Schema validation failed:', error.message)
@@ -58,23 +62,26 @@ describe.skip('Ocotillo Integration Tests: Group', () => {
   })
 
   it('should create group using data provider', async () => {
+    const testData: CreateGroup = zCreateGroup.parse({
+      name: 'Test Group',
+      release_status: 'public',
+      parent_group_id: 1,
+      project_area: 'Test Project Area',
+      description: 'Test Description'
+    })
+
     const result = await ocotilloDataProvider.create({
       resource: 'group',
-      variables: {
-        name: 'Test Group',
-        parent_group_id: 1,
-        project_area: 'Test Project Area',
-        description: 'Test Description'
-      }
+      variables: testData
     })
 
     expect(result).toHaveProperty('data')
 
-    const createdGroup = result.data as IGroup
+    const createdGroup = result.data as GroupResponse
 
     // Validate against schema
     try {
-      const validatedGroup = await GroupSchema.validate(createdGroup, { strict: true })
+      const validatedGroup = zGroupResponse.parse(createdGroup)
       expect(validatedGroup).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -84,24 +91,27 @@ describe.skip('Ocotillo Integration Tests: Group', () => {
   })
 
   it('should update group using data provider', async () => {
+    const testData: UpdateGroup = zUpdateGroup.parse({
+      name: 'Updated Test Group',
+      release_status: 'public',
+      parent_group_id: 1,
+      project_area: 'Updated Test Project Area',
+      description: 'Updated Test Description'
+    })
+
     const result = await ocotilloDataProvider.update({
       resource: 'group',
       id: 1,
-      variables: {
-        name: 'Updated Test Group',
-        parent_group_id: 1,
-        project_area: 'Updated Test Project Area',
-        description: 'Updated Test Description'
-      }
+      variables: testData
     })
 
   expect(result).toHaveProperty('data')
 
-  const updatedGroup = result.data as IGroup
+  const updatedGroup = result.data as GroupResponse
 
   // Validate against schema
   try {
-    const validatedGroup = await GroupSchema.validate(updatedGroup, { strict: true })
+    const validatedGroup = zGroupResponse.parse(updatedGroup)
     expect(validatedGroup).toBeDefined()
   } catch (error) {
     console.error('Schema validation failed:', error.message)
