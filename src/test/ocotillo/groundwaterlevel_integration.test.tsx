@@ -1,13 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { GroundwaterLevelObservationResponseSchema, GroundwaterLevelObservationCreateSchema, GroundwaterLevelObservationUpdateSchema } from '@/pages/ocotillo/observation/schema'
+import { describe, it, expect } from 'vitest'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import { delay } from '@/test/delay'
-import { IGroundwaterLevelObservation } from '@/interfaces/ocotillo/IObservation'
+import {
+  zGroundwaterLevelObservationResponse,
+  zCreateGroundwaterLevelObservation,
+  zUpdateGroundwaterLevelObservation
+} from '@/generated/zod.gen'
+import {
+  GroundwaterLevelObservationResponse,
+  CreateGroundwaterLevelObservation,
+  UpdateGroundwaterLevelObservation
+} from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
-  beforeEach(async () => {
-    await delay(100)
-  })
 
   it('should fetch groundwater level observations using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
@@ -20,11 +24,11 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
     expect(Array.isArray(result.data)).toBe(true)
 
     if (result.data.length > 0) {
-      const observation = result.data[0] as IGroundwaterLevelObservation
+      const observation = result.data[0] as GroundwaterLevelObservationResponse
 
       // Validate against schema
       try {
-        const validatedObservation = await GroundwaterLevelObservationResponseSchema.validate(observation, { strict: true })
+        const validatedObservation = zGroundwaterLevelObservationResponse.parse(observation)
         expect(validatedObservation).toBeDefined()
       } catch (error) {
         console.error('Schema validation failed:', error.message)
@@ -43,11 +47,11 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
 
     expect(result).toHaveProperty('data')
 
-    const observation = result.data as IGroundwaterLevelObservation
+    const observation = result.data as GroundwaterLevelObservationResponse
 
     // Validate against schema
     try {
-      const validatedObservation = await GroundwaterLevelObservationResponseSchema.validate(observation, { strict: true })
+      const validatedObservation = zGroundwaterLevelObservationResponse.parse(observation)
       expect(validatedObservation).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -57,7 +61,7 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
   })
 
   it('should create a groundwater level observation using data provider', async () => {
-    const createData = GroundwaterLevelObservationCreateSchema.cast({
+    const createData = zCreateGroundwaterLevelObservation.parse({
       sample_id: 1,
       sensor_id: 1,
       observed_property: 'groundwater level',
@@ -76,10 +80,10 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
   })
 
   expect(result).toHaveProperty('data')
-  const observation = result.data as IGroundwaterLevelObservation
+  const observation = result.data as GroundwaterLevelObservationResponse
   // Validate against schema
   try {
-    const validatedObservation = await GroundwaterLevelObservationResponseSchema.validate(observation, { strict: true })
+    const validatedObservation = zGroundwaterLevelObservationResponse.parse(observation)
     expect(validatedObservation).toBeDefined()
   } catch (error) {
     console.error('Schema validation failed:', error.message)
@@ -89,7 +93,7 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
   })
 
   it('should update a groundwater level observation using data provider', async () => {
-    const updateData = GroundwaterLevelObservationUpdateSchema.cast({
+    const updateData: UpdateGroundwaterLevelObservation = zUpdateGroundwaterLevelObservation.parse({
       id: 1,
       observed_property: 'groundwater level',
       observation_datetime: '2025-02-08T21:15:18.139Z',
@@ -110,10 +114,10 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
   })
 
   expect(result).toHaveProperty('data')
-  const observation = result.data as IGroundwaterLevelObservation
+  const observation = result.data as GroundwaterLevelObservationResponse
   // Validate against schema
   try {
-    const validatedObservation = await GroundwaterLevelObservationResponseSchema.validate(observation, { strict: true })
+    const validatedObservation = zGroundwaterLevelObservationResponse.parse(observation)
     expect(validatedObservation).toBeDefined()
   } catch (error) {
     console.error('Schema validation failed:', error.message)
