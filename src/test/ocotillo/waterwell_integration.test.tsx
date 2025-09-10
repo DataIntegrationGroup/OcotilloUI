@@ -1,13 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { WaterWellResponseSchema, WaterWellCreateSchema, WaterWellUpdateSchema } from '@/pages/ocotillo/thing/schema'
+import { describe, it, expect } from 'vitest'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import { delay } from '@/test/delay'
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import {
+  zWellResponse,
+  zCreateWell,
+  zUpdateWell
+} from '@/generated/zod.gen'
+import {
+  WellResponse,
+  CreateWell,
+  UpdateWell
+} from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Water Well', () => {
-  beforeEach(async () => {
-    await delay(100)
-  })
 
   it('should fetch water wells using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
@@ -20,11 +24,11 @@ describe('Ocotillo Integration Tests: Water Well', () => {
     expect(Array.isArray(result.data)).toBe(true)
 
     if (result.data.length > 0) {
-      const well = result.data[0] as IWell
+      const well = result.data[0] as WellResponse
 
       // Validate against schema
       try {
-        const validatedWell = await WaterWellResponseSchema.validate(well, { strict: true })
+        const validatedWell = zWellResponse.parse(well)
         expect(validatedWell).toBeDefined()
       } catch (error) {
         console.error('Schema validation failed:', error.message)
@@ -43,11 +47,11 @@ describe('Ocotillo Integration Tests: Water Well', () => {
 
     expect(result).toHaveProperty('data')
 
-    const well = result.data as IWell
+    const well = result.data as WellResponse
 
     // Validate against schema
     try {
-      const validatedWell = await WaterWellResponseSchema.validate(well, { strict: true })
+      const validatedWell = zWellResponse.parse(well)
       expect(validatedWell).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -57,7 +61,7 @@ describe('Ocotillo Integration Tests: Water Well', () => {
   })
 
   it('should create a water well using data provider', async () => {
-    const createData = WaterWellCreateSchema.cast({
+    const createData: CreateWell = zCreateWell.parse({
       name: 'Test Water Well',
       release_status: 'public',
       thing_type: 'water-well',
@@ -76,11 +80,11 @@ describe('Ocotillo Integration Tests: Water Well', () => {
 
     expect(result).toHaveProperty('data')
 
-    const well = result.data as IWell
+    const well = result.data as WellResponse
 
     // Validate against schema
     try {
-      const validatedWell = await WaterWellResponseSchema.validate(well, { strict: true })
+      const validatedWell = zWellResponse.parse(well)
       expect(validatedWell).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
@@ -90,7 +94,7 @@ describe('Ocotillo Integration Tests: Water Well', () => {
   })
 
   it('should update a water well using data provider', async () => {
-    const updateData = WaterWellUpdateSchema.cast({
+    const updateData: UpdateWell = zUpdateWell.parse({
       id: 1,
       name: 'Updated Test Water Well',
       release_status: 'public',
@@ -111,11 +115,11 @@ describe('Ocotillo Integration Tests: Water Well', () => {
 
     expect(result).toHaveProperty('data')
 
-    const well = result.data as IWell
+    const well = result.data as WellResponse
 
     // Validate against schema
     try {
-      const validatedWell = await WaterWellResponseSchema.validate(well, { strict: true })
+      const validatedWell = zWellResponse.parse(well)
       expect(validatedWell).toBeDefined()
     } catch (error) {
       console.error('Schema validation failed:', error.message)
