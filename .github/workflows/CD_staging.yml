@@ -7,7 +7,7 @@ on:
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
-    environment: pre-production  # aka staging
+    environment: staging
 
     steps:
       # checkout the repo
