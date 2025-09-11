@@ -206,19 +206,15 @@ export const ocotilloDataProvider: DataProvider = {
     resource = cleanResourceName(resource)
 
     /**
-     * for 'things' use path parameter structure for PATCH /thing/123
-     * same for well things, spring things, etc.
+     * custom patch endpoint for water well things
+     * spring things, well-screen things, id-link things use default resource name patch endpoint
+     * TODO: Rename thing/well resources to thing/water-well to reduce custom code
      */
+    // for water wells:
     if (
-      resource === 'thing' ||
-      resource === 'thing/well' ||
-      resource === 'thing/spring'
+      resource === 'thing/well'
     ) {
-      //work around for water-well patch endpoint
-      let endpoint = `thing/${id}`
-      if (resource === 'thing/well') {
-        endpoint = `thing/water-well/${id}`
-      }
+      let endpoint = `thing/water-well/${id}`
       
       const response = await axiosCall(endpoint, {
         method: 'PATCH',

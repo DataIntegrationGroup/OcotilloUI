@@ -2791,20 +2791,6 @@ export type WellScreenResponse = {
     screen_description?: string | null;
 };
 
-export type WarmupAhWarmupGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/_ah/warmup';
-};
-
-export type WarmupAhWarmupGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
 export type UploadAssetAssetUploadPostData = {
     body: BodyUploadAssetAssetUploadPost;
     path?: never;

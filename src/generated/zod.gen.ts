@@ -1869,12 +1869,6 @@ export const zUpdateWellScreen = z.object({
     ]))
 });
 
-export const zWarmupAhWarmupGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.optional(z.never()),
-    query: z.optional(z.never())
-});
-
 export const zUploadAssetAssetUploadPostData = z.object({
     body: zBodyUploadAssetAssetUploadPost,
     path: z.optional(z.never()),

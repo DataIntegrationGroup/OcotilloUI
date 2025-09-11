@@ -13,7 +13,7 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "mock:server": "prism mock https://ocotillo-api-dot-waterdatainitiative-271000.appspot.com/openapi.json --dynamic=false --port 4010",
+    "mock:server": "prism mock https://ocotillo-api-dot-waterdatainitiative-271000.appspot.com/openapi-auth.json --dynamic=false --port 4010",
     "openapi:generate": "npx @hey-api/openapi-ts"
   },
   "browserslist": {
