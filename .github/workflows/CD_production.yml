@@ -1,8 +1,8 @@
-name: CD deploy pre-production to GAE
+name: CD deploy production to GAE
 
 on:
   push:
-    branches: [ main ]
+    branches: [ production ]
 
 jobs:
   deploy-dev:
