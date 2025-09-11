@@ -1,13 +1,13 @@
-name: CD deploy pre-production to GAE
+name: CD deploy staging to GAE
 
 on:
   push:
-    branches: [ pre-production ]
+    branches: [ staging ]
 
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
-    environment: pre-production
+    environment: pre-production  # aka staging
 
     steps:
       # checkout the repo
