@@ -45,7 +45,7 @@ jobs:
         uses: google-github-actions/deploy-appengine@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          deliverables: app.yaml
+          deliverables: app-staging.yaml
           promote: true
 
       #      # Clean up old versions - delete only the oldest version, one created and one destroyed
