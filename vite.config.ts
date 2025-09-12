@@ -60,6 +60,11 @@ export default defineConfig(({ mode }) => {
           'dist/',
         ],
       },
+      server: {
+        deps: {
+          inline: ['@mui/material', '@refinedev/mui']
+        }
+      }
     },
   }
 })
