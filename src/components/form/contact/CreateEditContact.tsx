@@ -111,6 +111,11 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
     category: 'release_status' 
   })
 
+  //get contact type options
+  const { options: contactTypeOptions, isLoading: contactTypeLoading } = useLexicon({ 
+    category: 'contact_type' 
+  })
+
   return (
     <Grid container spacing={3}>
       {/* Contact Header with canRemoveContact button */}
@@ -142,10 +147,20 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
           required
         />
       </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Organization"
+          fullWidth
+          control={control}
+          name={getFieldName('organization')}
+        />
+      </Grid>
 
       <Grid size={{ xs: 12, md: 3 }}>
         <ControlledSelectField
           label="Contact Role"
+          id="contact-role"
+          labelId="contact-role-label"
           fullWidth
           control={control}
           name={getFieldName('role')}
@@ -156,10 +171,23 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
       <Grid size={{ xs: 12, md: 3 }}>
         <ControlledSelectField
           label="Release Status"
+          id="release-status"
+          labelId="release-status-label"
           fullWidth
           control={control}
           name={getFieldName('release_status')}
           options={releaseStatusOptions}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 3 }}>
+        <ControlledSelectField
+          label="Contact Type"
+          id="contact-type"
+          labelId="contact-type-label"
+          fullWidth
+          control={control}
+          name={getFieldName('contact_type')}
+          options={contactTypeOptions}
         />
       </Grid>
 
