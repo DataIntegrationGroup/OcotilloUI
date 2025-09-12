@@ -5,10 +5,11 @@ import { Controller } from 'react-hook-form'
 import { Autocomplete, TextField } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { useState } from 'react'
-
 import { Nullable } from '../../../interfaces'
-import { IContact } from '@/interfaces/ocotillo/IContact'
-import { IThing } from '@/interfaces/ocotillo/IThing'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { zCreateContact } from '@/generated/zod.gen'
+import { CreateContact } from '@/generated/types.gen'
+import { ThingResponse } from '@/generated/types.gen'
 import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
 
 export const ContactCreate: React.FC = () => {
@@ -16,11 +17,16 @@ export const ContactCreate: React.FC = () => {
     saveButtonProps,
     control,
     formState: { errors },
-  } = useForm<IContact, HttpError, Nullable<IContact>>()
+  } = useForm<CreateContact, HttpError, Nullable<CreateContact>>({
+    resolver: zodResolver(zCreateContact),
+    criteriaMode: "all",
+    shouldFocusError: true,
+    reValidateMode: "onSubmit",
+  })
 
-  const [thingValue, setThingValue] = useState<IThing | null>(null)
+  const [thingValue, setThingValue] = useState<ThingResponse | null>(null)
 
-  const { autocompleteProps } = useAutocomplete<IThing>({
+  const { autocompleteProps } = useAutocomplete<ThingResponse>({
     resource: 'thing',
     dataProviderName: 'ocotillo',
     onSearch: (value) => [
