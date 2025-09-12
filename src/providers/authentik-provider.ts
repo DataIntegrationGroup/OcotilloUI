@@ -41,9 +41,9 @@ export const getAccessToken = async (refresh?: boolean) => {
 }
 
 export const getAccessControlGroups = (): string[] => {
-  if (!import.meta.env.PROD && !import.meta.env.VITE_TEST_AUTH) {
-    return ['Admin']
-  }
+  // if (!import.meta.env.PROD && !import.meta.env.VITE_TEST_AUTH) {
+  //   return ['Admin']
+  // }
   const id_token = localStorage.getItem('id_token')
 
   if (!id_token) return null
@@ -55,12 +55,12 @@ export const getAccessControlGroups = (): string[] => {
 export const authentikAuthProvider: AuthProvider = {
   login: async (params) => {
     // const { status } = handleLogin(email, password)
-    const mode = import.meta.env.MODE
-    if (!import.meta.env.PROD && !import.meta.env.VITE_TEST_AUTH) {
-      localStorage.setItem('access_token', 'fake_token')
-      localStorage.setItem('id_token', 'fake_token')
-      return { success: true }
-    }
+    // const mode = import.meta.env.MODE
+    // if (!import.meta.env.PROD && !import.meta.env.VITE_TEST_AUTH) {
+    //   localStorage.setItem('access_token', 'fake_token')
+    //   localStorage.setItem('id_token', 'fake_token')
+    //   return { success: true }
+    // }
 
     const codeVerifier = generateCodeVerifier()
     const codeChallenge = await generateCodeChallenge(codeVerifier)
