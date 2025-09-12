@@ -1,13 +1,13 @@
-name: CD deploy pre-production to GAE
+name: CD deploy production to GAE
 
 on:
   push:
-    branches: [ pre-production ]
+    branches: [ production ]
 
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
-    environment: pre-production
+    environment: production
 
     steps:
       # checkout the repo
@@ -23,16 +23,12 @@ jobs:
       - name: Install deps & build
         env:
           VITE_APP_TITLE: "NMBGMR Ocotillo"
-          #          VITE_NMBGMR_AMP_API_URL: ${{ secrets.VITE_NMBGMR_AMP_API_URL_DEV }}
-          #          VITE_NMBGMR_GEOTHERMAL_API_URL: ${{ secrets.VITE_NMBGMR_GEOTHERMAL_API_URL_DEV }}
-          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN_DEV }}
-          #          VITE_FIEF_BASE_URL: ${{ secrets.VITE_FIEF_BASE_URL_DEV }}
-          #          VITE_FIEF_CLIENT_ID: ${{ secrets.VITE_FIEF_CLIENT_ID_DEV }}
-          VITE_BASE_URL: ${{ secrets.VITE_BASE_URL_DEV }}
-          VITE_AUTHENTIK_CLIENT_ID: ${{ secrets.VITE_AUTHENTIK_CLIENT_ID }}
-          VITE_AUTHENTIK_URL: ${{ secrets.VITE_AUTHENTIK_URL }}
-          VITE_AUTHENTIK_REDIRECT_URI: ${{ secrets.VITE_AUTHENTIK_REDIRECT_URI }}
-          VITE_OCOTILLO_API_URL: ${{ secrets.VITE_OCOTILLO_API_URL }}
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
+          VITE_BASE_URL: '/'
+          VITE_AUTHENTIK_CLIENT_ID: ${{ vars.VITE_AUTHENTIK_CLIENT_ID }}
+          VITE_AUTHENTIK_URL: ${{ vars.VITE_AUTHENTIK_URL }}
+          VITE_AUTHENTIK_REDIRECT_URI: ${{ vars.VITE_AUTHENTIK_REDIRECT_URI }}
+          VITE_OCOTILLO_API_URL: ${{ vars.VITE_OCOTILLO_API_URL }}
 
         run: |
           npm ci
@@ -42,23 +38,23 @@ jobs:
       # authenticate to Google Cloud
       - uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY_DEV }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       # deploy to App Engine
       - id: deploy
         uses: google-github-actions/deploy-appengine@v2
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID_DEV }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
           deliverables: app.yaml
           promote: true
 
       # Clean up old versions - delete only the oldest version, one created and one destroyed
       - name: Clean up oldest version
         run: |
-          OLDEST_VERSION=$(gcloud app versions list --service=ocotillo --project=${{ secrets.GCP_PROJECT_ID_DEV }} --format="value(id)" --sort-by="version.createTime" | head -n 1)
+          OLDEST_VERSION=$(gcloud app versions list --service=ocotillo --project=${{ vars.GCP_PROJECT_ID }} --format="value(id)" --sort-by="version.createTime" | head -n 1)
           if [ ! -z "$OLDEST_VERSION" ]; then
             echo "Deleting oldest version: $OLDEST_VERSION"
-            gcloud app versions delete $OLDEST_VERSION --service=ocotillo --project=${{ secrets.GCP_PROJECT_ID_DEV }} --quiet
+            gcloud app versions delete $OLDEST_VERSION --service=ocotillo --project=${{ vars.GCP_PROJECT_ID }} --quiet
               echo "Deleted oldest version: $OLDEST_VERSION"
             else
               echo "No versions to delete"
