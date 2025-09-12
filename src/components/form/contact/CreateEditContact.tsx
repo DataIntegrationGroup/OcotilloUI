@@ -144,7 +144,6 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
           fullWidth
           control={control}
           name={getFieldName('name')}
-          required
         />
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
@@ -177,6 +176,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
           control={control}
           name={getFieldName('release_status')}
           options={releaseStatusOptions}
+          required
         />
       </Grid>
       <Grid size={{ xs: 12, md: 3 }}>
@@ -188,6 +188,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
           control={control}
           name={getFieldName('contact_type')}
           options={contactTypeOptions}
+          required
         />
       </Grid>
 
