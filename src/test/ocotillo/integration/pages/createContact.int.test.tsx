@@ -39,7 +39,7 @@ vi.mock('@refinedev/mui', async () => {
   }
 })
 
-describe('Contact Create - Basic Integration Test', () => {
+describe('Contact Create - Required Fields Integration Test', () => {
 
   const renderCreateContact = () => {
     return render(
