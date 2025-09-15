@@ -4,7 +4,6 @@ import { useForm } from '@refinedev/react-hook-form'
 import { Controller } from 'react-hook-form'
 import { Autocomplete, TextField } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { useState } from 'react'
 import { Nullable } from '../../../interfaces'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { zCreateContact } from '@/generated/zod.gen'
@@ -19,12 +18,8 @@ export const ContactCreate: React.FC = () => {
     formState: { errors },
   } = useForm<CreateContact, HttpError, Nullable<CreateContact>>({
     resolver: zodResolver(zCreateContact),
-    criteriaMode: "all",
-    shouldFocusError: true,
-    reValidateMode: "onSubmit",
+    mode: "onSubmit",
   })
-
-  const [thingValue, setThingValue] = useState<ThingResponse | null>(null)
 
   const { autocompleteProps } = useAutocomplete<ThingResponse>({
     resource: 'thing',
@@ -45,13 +40,15 @@ export const ContactCreate: React.FC = () => {
           <Controller
             name="thing_id"
             control={control}
-            rules={{ required: 'This field is required' }}
             render={({ field }) => (
               <Autocomplete
                 {...autocompleteProps}
-                value={thingValue}
+                value={
+                  autocompleteProps.options.find(
+                    (option) => option.id === field.value
+                  ) || null
+                }
                 onChange={(_, newValue) => {
-                  setThingValue(newValue)
                   field.onChange(newValue?.id || null)
                 }}
                 getOptionKey={(option) => option.id}
