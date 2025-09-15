@@ -95,7 +95,7 @@ export const WellInventoryForm = () => {
   const { control, handleSubmit, reset, setValue, watch, setError } =
     useForm<IWellInventoryForm>({
       defaultValues: SchemaDefaults,
-      resolver: yupResolver(WellInventorySchema),
+      resolver: yupResolver(WellInventorySchema as any),
     })
 
   const { fields, append, remove } = useFieldArray({
