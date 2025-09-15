@@ -21,6 +21,7 @@ export const LoadingControlledSelectField = <T,>({
   resetFn,
   multiple = false,
   showAsterisk = false,
+  defaultValue,
   ...props
 }: {
   isLoading?: boolean
@@ -35,7 +36,8 @@ export const LoadingControlledSelectField = <T,>({
   resetFn: () => void
   multiple?: boolean
   showAsterisk?: boolean
-} & SelectProps) => {
+  defaultValue?: string | number
+} & Omit<SelectProps, 'defaultValue' | 'variant'>) => {
   const { disabled } = props
 
   if (isLoading) return <SkeletonFormField />
@@ -100,6 +102,7 @@ export const LoadingControlledSelectField = <T,>({
             multiple={multiple}
             onOpen={handleSelectOpen}
             showAsterisk={showAsterisk}
+            defaultValue={defaultValue}
             {...props}
           />
         </div>
