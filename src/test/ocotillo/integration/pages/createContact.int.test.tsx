@@ -9,6 +9,8 @@ import type { CreateContact } from '@/generated/types.gen'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { render } from '@/test/test-utils'
 
+//* @TODO This test should be updated to handle email/phone/address arrays
+
 // Mock the useLexicon hook for necessary fields
 vi.mock('@/hooks/useLexicon', () => ({
   useLexicon: () => ({
