@@ -37,7 +37,8 @@ Object.defineProperty(global, 'localStorage', {
     writable: true,
   })
   
-  // Mock the authentication provider
+  // Mock the authentication provider (for node api contract tests)
+  // For integration page tests we mock the authentik provider in the test-provider.tsx file
   vi.mock('@/providers/authentik-provider', () => ({
     getAccessToken: vi.fn().mockResolvedValue('mock-token'),
     getAccessControlGroups: vi.fn().mockReturnValue(['Admin']),
