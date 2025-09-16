@@ -21,6 +21,7 @@ const mockAuthProvider = {
   logout: vi.fn().mockResolvedValue({ success: true }),
   check: vi.fn().mockResolvedValue({ authenticated: true }),
   getPermissions: vi.fn().mockResolvedValue({ data: [] }),
+  getAccessControlGroups: vi.fn().mockReturnValue(['Admin']),
   getIdentity: vi.fn().mockResolvedValue({ data: { id: 1, name: 'Test User' } }),
   onError: vi.fn().mockResolvedValue({})
 }

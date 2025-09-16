@@ -40,6 +40,7 @@ Object.defineProperty(global, 'localStorage', {
   // Mock the authentication provider
   vi.mock('@/providers/authentik-provider', () => ({
     getAccessToken: vi.fn().mockResolvedValue('mock-token'),
+    getAccessControlGroups: vi.fn().mockReturnValue(['Admin']),
   }))
 
 // Global test setup
