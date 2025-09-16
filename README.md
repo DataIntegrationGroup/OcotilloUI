@@ -95,6 +95,17 @@ VITE_APP_TITLE="NMBGMR Ocotillo"
 - `npm run build`: Builds the app for production (outputs to `dist/`).
 - `npm run start`: Serves the production build locally.
 - `npm run refine`: Runs Refine CLI commands.
+- `npm run mock:server`: Runs the mock server for running the test suite
+- `npm run test:run`: Runs the test suite a single time
+
+## Running the Test Suite
+
+The test suite uses the data provider against a mock server, and the mock server needs to be running:
+
+```bash
+npm run mock:server
+npm run test:run
+```
 
 ## Building for Production
 
