@@ -151,13 +151,13 @@ describe('Contact Edit - Required Fields Integration Test', () => {
       const contactTypeSelect = screen.getByRole('combobox', { name: /contact type/i })
 
       // Clear and fill text inputs
-      await user.clear(nameInput)
+      await user.click(nameInput)
       await user.keyboard('{Control>}a{/Control}')
-      await user.keyboard('{Backspace}')
+      await user.keyboard('{Delete}')
       await user.type(nameInput, testFormData.name)
-      await user.clear(orgInput)
+      await user.click(orgInput)
       await user.keyboard('{Control>}a{/Control}')
-      await user.keyboard('{Backspace}')
+      await user.keyboard('{Delete}')
       await user.type(orgInput, testFormData.organization)
 
       // Select thing from autocomplete
