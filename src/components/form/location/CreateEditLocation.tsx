@@ -393,6 +393,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           control={control}
           name={getFieldName('elevation_method')}
           options={elevationMethodOptions}
+          disabled={elevationMethodLoading}
           
         />
       </Grid>
@@ -403,6 +404,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           control={control}
           name={getFieldName('release_status')}
           options={releaseStatusOptions}
+          disabled={releaseStatusLoading}
         />
       </Grid>
 
