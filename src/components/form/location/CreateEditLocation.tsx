@@ -69,6 +69,11 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
     category: 'release_status' 
   })
 
+  //get elevation method options
+  const { options: elevationMethodOptions, isLoading: elevationMethodLoading } = useLexicon({ 
+    category: 'elevation_method' 
+  })
+
   // use useWatch to get form values reactively
   const latitude = useWatch({ control, name: getFieldName('latitude') })
   const longitude = useWatch({ control, name: getFieldName('longitude') })
@@ -175,10 +180,8 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       const elevationInFeet = elevationQuery.data.value.toFixed(2)
       
       if (setValue) {
-        setValue(getFieldName('elevation'), elevationInFeet)
-        setValue(getFieldName('elevation_accuracy'), 1.74)
-        setValue(getFieldName('elevation_datum'), 'NAVD88')
-        setValue(getFieldName('elevation_method'), 'USGS DEM')
+        setValue(getFieldName('elevation'), Number(elevationInFeet))
+        setValue(getFieldName('elevation_accuracy'), Number(1.74))
       }
     }
   }, [autoGenerateElevation, elevationQuery.isSuccess, elevationQuery.data, setValue])
@@ -189,42 +192,18 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
     if (!checked && setValue) {
       setValue(getFieldName('elevation'), undefined)
       setValue(getFieldName('elevation_accuracy'), undefined)
-      setValue(getFieldName('elevation_datum'), '')
-      setValue(getFieldName('elevation_method'), '')
     }
   }
 
-  //auto-generate WKT point from latitude and longitude and elevation
-  //TODO: add back elevation when availabe via API
+  //auto-generate WKT point from latitude and longitude
   useEffect(() => {
-    if (setValue && latitude && longitude && elevation) {
-      setValue(getFieldName('point'), `POINT(${longitude} ${latitude} ${elevation})`) 
+    if (setValue && latitude && longitude) {
+      setValue(getFieldName('point'), `POINT(${longitude} ${latitude})`) 
     }
-  }, [setValue, latitude, longitude, elevation])
+  }, [setValue, latitude, longitude])
 
   return (
     <Grid container spacing={3}>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
-          label="Location Name"
-          fullWidth
-          control={control}
-          name={getFieldName('name')}
-          required
-        />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledSelectField
-          label="Release Status"
-          fullWidth
-          control={control}
-          name={getFieldName('release_status')}
-          options={releaseStatusOptions}
-          required
-        />
-      </Grid>
-
       <Grid size={12}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <FormControlLabel
@@ -320,6 +299,23 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
         />
       </Grid>
 
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Coordinate Accuracy (ft)"
+          control={control}
+          name={getFieldName('coordinate_accuracy')}
+          type="number"
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ControlledTextField
+          label="Coordinate Method"
+          control={control}
+          name={getFieldName('coordinate_method')}
+        />
+      </Grid>
+
       <Grid size={12}>
         <Typography variant="body1" sx={{ paddingBottom: '10px' }}>
           Click on the map to set a location, or enter coordinates above.
@@ -404,22 +400,21 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
-          label="Elevation Datum"
+        <ControlledSelectField
+          label="Elevation Method"
           control={control}
-          name={getFieldName('elevation_datum')}
-          placeholder="NAVD88"
-          disabled={autoGenerateElevation}
+          name={getFieldName('elevation_method')}
+          options={elevationMethodOptions}
+          
         />
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
-          label="Elevation Method"
+        <ControlledSelectField
+          label="Release Status"
           control={control}
-          name={getFieldName('elevation_method')}
-          placeholder="USGS DEM"
-          disabled={autoGenerateElevation}
+          name={getFieldName('release_status')}
+          options={releaseStatusOptions}
         />
       </Grid>
 
