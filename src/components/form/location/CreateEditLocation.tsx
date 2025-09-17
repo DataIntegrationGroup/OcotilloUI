@@ -14,7 +14,7 @@ import {
 import { useLexicon } from '@/hooks'
 import { useEffect, useRef, useState } from 'react'
 import { MapRef, ViewState, Source, Layer } from 'react-map-gl'
-import { Typography, FormControlLabel, Switch, Box, InputAdornment, IconButton, Tooltip } from '@mui/material'
+import { Typography, FormControlLabel, Switch, Box, TextField, Select, MenuItem } from '@mui/material'
 import wellknown from 'wellknown'
 import { convertUTMToLonLat, convertLonLatToUTM } from '@/utils/UtmToLonLat'
 import { useElevation } from '@/hooks/useElevation'
@@ -52,8 +52,23 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
   
+  //boolean to toggle mode between UTM and Lat/Long
   const [useUTM, setUseUTM] = useState(false)
+
+  //Local state for UTM zone/datum/easting/northing/lat/long since only point is sent to backend
+  const [utmZone, setUtmZone] = useState(13)
+  const [utmDatum, setUtmDatum] = useState('NAD83')
+  const [latitude, setLatitude] = useState('')
+  const [longitude, setLongitude] = useState('')
+  const [easting, setEasting] = useState('')
+  const [northing, setNorthing] = useState('')
+
   const [autoGenerateElevation, setAutoGenerateElevation] = useState(true)
+  
+  // Only watch the actual form fields
+  const point = useWatch({ control, name: getFieldName('point') })
+  const elevation = useWatch({ control, name: getFieldName('elevation') })
+
   const mapRef = useRef<MapRef>(null)
   const [viewState, setViewState] = useState<ViewState>({
     latitude: 34.068279,
@@ -74,32 +89,24 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
     category: 'elevation_method' 
   })
 
-  // use useWatch to get form values reactively
-  const latitude = useWatch({ control, name: getFieldName('latitude') })
-  const longitude = useWatch({ control, name: getFieldName('longitude') })
-  const point = useWatch({ control, name: getFieldName('point') })
-  const easting = useWatch({ control, name: getFieldName('easting') })
-  const northing = useWatch({ control, name: getFieldName('northing') })
-  const utmZone = useWatch({ control, name: getFieldName('utm_zone') })
-  const utmDatum = useWatch({ control, name: getFieldName('utm_datum') })
-  const elevation = useWatch({ control, name: getFieldName('elevation') })
-
+  //get coordinate method options
+  const { options: coordinateMethodOptions, isLoading: coordinateMethodLoading } = useLexicon({ 
+    category: 'coordinate_method' 
+  })
 
   //get lat long from WKT point when edit location is loaded
   useEffect(() => {
     if (setValue && point) {
-      if (point) {
-        try {
-          const geometry = wellknown.parse(point)
-          if (geometry.type === 'Point' && geometry.coordinates) {
-            const [lng, lat] = geometry.coordinates
-            setValue(getFieldName('longitude'), lng)
-            setValue(getFieldName('latitude'), lat)
-            setViewState(prev => ({ ...prev, longitude: lng, latitude: lat }))
-          }
-        } catch (e) {
-          console.error('Error parsing WKT point:', e)
+      try {
+        const geometry = wellknown.parse(point)
+        if (geometry.type === 'Point' && geometry.coordinates) {
+          const [lng, lat] = geometry.coordinates
+          setLongitude(lng.toString())
+          setLatitude(lat.toString())
+          setViewState(prev => ({ ...prev, longitude: lng, latitude: lat }))
         }
+      } catch (e) {
+        console.error('Error parsing WKT point:', e)
       }
     }
   }, [setValue, point])
@@ -124,47 +131,32 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
 
   //handle map click to set lat and long or easting and northing
   const handleMapClick = (e: any) => {
-    if (setValue) {
-      const { lng, lat } = e.lngLat
-      if (useUTM) {
-        const [easting, northing] = convertLonLatToUTM(lng, lat, Number(utmZone) || 13, utmDatum || 'WGS84')
-        setValue(getFieldName('easting'), easting.toFixed(3))
-        setValue(getFieldName('northing'), northing.toFixed(3))
-      } else {
-        setValue(getFieldName('longitude'), lng.toFixed(10))
-        setValue(getFieldName('latitude'), lat.toFixed(10))
-      }
+    const { lng, lat } = e.lngLat
+    if (useUTM) {
+      const [easting, northing] = convertLonLatToUTM(lng, lat, utmZone, utmDatum)
+      setEasting(easting.toFixed(3))
+      setNorthing(northing.toFixed(3))
+    } else {
+      setLongitude(lng.toFixed(10))
+      setLatitude(lat.toFixed(10))
     }
   }
 
-  // Handle automatic coordinate conversions using helper util functions
+  // Handle automatic coordinate conversions
   useEffect(() => {
-    if (!setValue || !utmZone || !utmDatum) return;
-
     if (useUTM && easting && northing) {
       // UTM to Lat/Long
-      const [lng, lat] = convertUTMToLonLat(Number(easting), Number(northing), Number(utmZone), utmDatum);
-      setValue(getFieldName('longitude'), lng.toFixed(10));
-      setValue(getFieldName('latitude'), lat.toFixed(10));
+      const [lng, lat] = convertUTMToLonLat(Number(easting), Number(northing), utmZone, utmDatum)
+      setLongitude(lng.toFixed(10))
+      setLatitude(lat.toFixed(10))
     } else if (!useUTM && latitude && longitude) {
       // Lat/Long to UTM
-      const [easting, northing] = convertLonLatToUTM(Number(longitude), Number(latitude), utmZone, utmDatum);
-      setValue(getFieldName('easting'), easting.toFixed(3));
-      setValue(getFieldName('northing'), northing.toFixed(3));
+      const [easting, northing] = convertLonLatToUTM(Number(longitude), Number(latitude), utmZone, utmDatum)
+      setEasting(easting.toFixed(3))
+      setNorthing(northing.toFixed(3))
     }
-  }, [useUTM, setValue, easting, northing, latitude, longitude, utmZone, utmDatum]);
+  }, [useUTM, easting, northing, latitude, longitude, utmZone, utmDatum])
 
-  // Set default UTM values when component mounts if they don't exist
-  useEffect(() => {
-    if (setValue) {
-      if (!utmZone) {
-        setValue(getFieldName('utm_zone'), 13)
-      }
-      if (!utmDatum) {
-        setValue(getFieldName('utm_datum'), 'NAD83')
-      }
-    }
-  }, [setValue, utmZone, utmDatum])
 
   // handle coordinate system toggle
   const handleCoordinateSystemToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,7 +164,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   }
 
   // use elevation hook to fetch form USGS DEM
-  const elevationQuery = useElevation(longitude, latitude, autoGenerateElevation)
+  const elevationQuery = useElevation(Number(longitude), Number(latitude), autoGenerateElevation)
 
   // Set form values when elevation data is fetched
   useEffect(() => {
@@ -219,83 +211,80 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
         </Box>
         <Typography variant="body1" color="text.primary">
            You are using: {useUTM ? 'Northing/Easting (UTM)' : 'Decimal Degrees (Lat/Long)'}
-          </Typography>
-          <Typography variant="body2" color="text.primary">
-            Unit conversions are automatic
-          </Typography>
+        </Typography>
+        <Typography variant="body2" color="text.primary">
+          Unit conversions are automatic
+        </Typography>
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
+        <TextField
           label="UTM Zone"
-          control={control}
-          name={getFieldName('utm_zone')}
+          value={utmZone}
+          onChange={(e) => setUtmZone(Number(e.target.value))}
           type="number"
           placeholder="13"
           disabled={!useUTM}
-          required={useUTM}
+          fullWidth
         />
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledSelectField
-          label="UTM Datum"
-          control={control}
-          name={getFieldName('utm_datum')}
-          options={[
-            { value: 'NAD83', label: 'NAD83' },
-            { value: 'WGS84', label: 'WGS84' }
-          ]}
+        <Select
+          value={utmDatum}
+          onChange={(e) => setUtmDatum(e.target.value)}
           disabled={!useUTM}
-          required={useUTM}
-        />
+          fullWidth
+        >
+          <MenuItem value="NAD83">NAD83</MenuItem>
+        </Select>
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
+        <TextField
           label="Easting (UTM X)"
-          control={control}
-          name={getFieldName('easting')}
+          value={easting}
+          onChange={(e) => setEasting(e.target.value)}
           type="number"
           placeholder="500000"
           disabled={!useUTM}
-          required={useUTM}
+          fullWidth
         />
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
+        <TextField
           label="Northing (UTM Y)"
-          control={control}
-          name={getFieldName('northing')}
+          value={northing}
+          onChange={(e) => setNorthing(e.target.value)}
           type="number"
           placeholder="4000000"
           disabled={!useUTM}
-          required={useUTM}
+          fullWidth
         />
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
+        <TextField
           label="Latitude (decimal degrees)"
-          control={control}
-          name={getFieldName('latitude')}
+          value={latitude}
+          onChange={(e) => setLatitude(e.target.value)}
           type="number"
           placeholder="34.068279"
           disabled={useUTM}
-          required={!useUTM}
+          fullWidth
         />
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
+        <TextField
           label="Longitude (decimal degrees)"
-          control={control}
-          name={getFieldName('longitude')}
+          value={longitude}
+          onChange={(e) => setLongitude(e.target.value)}
           type="number"
           placeholder="-106.904192"
           disabled={useUTM}
-          required={!useUTM}
+          fullWidth
         />
       </Grid>
 
@@ -309,10 +298,12 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
+        <ControlledSelectField
           label="Coordinate Method"
           control={control}
           name={getFieldName('coordinate_method')}
+          options={coordinateMethodOptions}
+          disabled={coordinateMethodLoading}
         />
       </Grid>
 
@@ -339,10 +330,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
                     type: 'Feature',
                     geometry: {
                       type: 'Point',
-                      coordinates: [
-                        Number(longitude),
-                        Number(latitude)
-                      ]
+                      coordinates: [Number(longitude), Number(latitude)]
                     },
                     properties: {}
                   }
@@ -436,7 +424,6 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           disabled
         />
       </Grid>
-
     </Grid>
   )
 } 
