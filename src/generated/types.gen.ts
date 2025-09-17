@@ -533,6 +533,22 @@ export type CreateLocation = {
      * Point
      */
     point: string;
+    /**
+     * Elevation Accuracy
+     */
+    elevation_accuracy?: number | null;
+    /**
+     * Elevation Method
+     */
+    elevation_method?: string | null;
+    /**
+     * Coordinate Accuracy
+     */
+    coordinate_accuracy?: number | null;
+    /**
+     * Coordinate Method
+     */
+    coordinate_method?: string | null;
 };
 
 /**
@@ -1159,15 +1175,47 @@ export type LocationResponse = {
     /**
      * Release Status
      */
-    release_status: string;
+    release_status: string | null;
     /**
      * Name
      */
-    name?: string | null;
+    name: string | null;
+    /**
+     * Notes
+     */
+    notes: string | null;
     /**
      * Point
      */
     point: string;
+    /**
+     * Elevation Accuracy
+     */
+    elevation_accuracy: number | null;
+    /**
+     * Elevation Method
+     */
+    elevation_method: string | null;
+    /**
+     * Coordinate Accuracy
+     */
+    coordinate_accuracy: number | null;
+    /**
+     * Coordinate Method
+     */
+    coordinate_method: string | null;
+    /**
+     * State
+     */
+    state: string | null;
+    /**
+     * County
+     */
+    county: string | null;
+    /**
+     * Quad Name
+     */
+    quad_name: string | null;
 };
 
 /**
@@ -2393,6 +2441,22 @@ export type UpdateLocation = {
      * Point
      */
     point?: string | null;
+    /**
+     * Elevation Accuracy
+     */
+    elevation_accuracy?: number | null;
+    /**
+     * Elevation Method
+     */
+    elevation_method?: string | null;
+    /**
+     * Coordinate Accuracy
+     */
+    coordinate_accuracy?: number | null;
+    /**
+     * Coordinate Method
+     */
+    coordinate_method?: string | null;
 };
 
 /**

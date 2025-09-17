@@ -14,6 +14,7 @@ export const ControlledSelectField = <T,>({
   control,
   name,
   label,
+  labelId,
   options,
   required,
   onOpen,
@@ -23,6 +24,7 @@ export const ControlledSelectField = <T,>({
   control: Control<T>
   name: string
   label: string
+  labelId?: string
   options: { value: string | number; label: string }[]
   required?: boolean
   showAsterisk?: boolean
@@ -32,7 +34,7 @@ export const ControlledSelectField = <T,>({
     control={control as unknown as Control<T>}
     render={({ field, fieldState }) => (
       <FormControl fullWidth error={!!fieldState.error} required={required}>
-        <InputLabel>
+        <InputLabel id={labelId ? labelId : undefined}>
           {label}
           {showAsterisk ? (
             <>
@@ -46,6 +48,7 @@ export const ControlledSelectField = <T,>({
         <Select
           variant="outlined"
           label={label}
+          labelId={labelId ? labelId : undefined}
           {...omit(field, ['required'])}
           {...omit(selectProps, ['required'])}
           value={field.value ?? ''}

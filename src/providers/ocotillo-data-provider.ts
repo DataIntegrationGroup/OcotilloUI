@@ -168,19 +168,51 @@ export const ocotilloDataProvider: DataProvider = {
     //console.log('asdfs', resource)
     resource = cleanResourceName(resource)
 
-    const response = await axiosCall(`${resource}`, {
-      method: 'POST',
-      data: JSON.stringify(variables),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    try {
+      const response = await axiosCall(`${resource}`, {
+        method: 'POST',
+        data: JSON.stringify(variables),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-    if (response.status < 200 || response.status > 299) throw response
+      if (response.status < 200 || response.status > 299) throw response
 
-    const data = await response.data
+      const data = await response.data
 
-    return { data }
+      return { data }
+    } catch (error) {
+      // Transform Pydantic validation errors to Refine format
+      if ((error.response?.status === 422 || error.response?.status === 409) && error.response?.data?.detail) {
+        const pydanticErrors = error.response.data.detail
+        const refinedErrors: Record<string, string[]> = {}
+        
+        //@TODO: this does not handle cross field validation errors
+        // i.e. screen top and bottom must be together, top greater than bottom etc.
+        pydanticErrors.forEach((issue: any) => {
+          const fieldPath = issue.loc.join('.') 
+          const cleanFieldPath = fieldPath.startsWith('body.') 
+            ? fieldPath.substring(5) 
+            : fieldPath
+          if (cleanFieldPath) {
+            if (!refinedErrors[cleanFieldPath]) {
+              refinedErrors[cleanFieldPath] = []
+            }
+            refinedErrors[cleanFieldPath].push(issue.msg)
+          }
+        })
+        
+        const transformedError = new Error('Validation Error')
+        ;(transformedError as any).status = error.response.status
+        ;(transformedError as any).errors = refinedErrors
+        ;(transformedError as any).fieldErrors = refinedErrors
+        
+        throw transformedError
+      }
+      
+      throw error
+    }
   },
   custom: async ({ url, method, payload, headers }) => {
     const config: AxiosRequestConfig = {
@@ -205,18 +237,37 @@ export const ocotilloDataProvider: DataProvider = {
   update: async ({ resource, id, variables }) => {
     resource = cleanResourceName(resource)
 
-    /**
-     * custom patch endpoint for water well things
-     * spring things, well-screen things, id-link things use default resource name patch endpoint
-     * TODO: Rename thing/well resources to thing/water-well to reduce custom code
-     */
-    // for water wells:
-    if (
-      resource === 'thing/well'
-    ) {
-      let endpoint = `thing/water-well/${id}`
-      
-      const response = await axiosCall(endpoint, {
+    try {
+      /**
+       * custom patch endpoint for water well things
+       * spring things, well-screen things, id-link things use default resource name patch endpoint
+       * TODO: Rename thing/well resources to thing/water-well to reduce custom code
+       */
+      // for water wells:
+      if (
+        resource === 'thing/well'
+      ) {
+        let endpoint = `thing/water-well/${id}`
+        
+        const response = await axiosCall(endpoint, {
+          method: 'PATCH',
+          data: JSON.stringify(variables),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (response.status < 200 || response.status > 299) throw response
+
+        const data = await response.data
+
+        return { data }
+      }
+
+      /**
+       * for other resources, use path parameter structure PATCH /location/123
+       */
+      const response = await axiosCall(`${resource}/${id}`, {
         method: 'PATCH',
         data: JSON.stringify(variables),
         headers: {
@@ -229,24 +280,35 @@ export const ocotilloDataProvider: DataProvider = {
       const data = await response.data
 
       return { data }
+    } catch (error) {
+      // Transform Pydantic validation errors to Refine format
+      if ((error.response?.status === 422 || error.response?.status === 409) && error.response?.data?.detail) {
+        const pydanticErrors = error.response.data.detail
+        const refinedErrors: Record<string, string[]> = {}
+        
+        pydanticErrors.forEach((issue: any) => {
+          const fieldPath = issue.loc.join('.') 
+          const cleanFieldPath = fieldPath.startsWith('body.') 
+            ? fieldPath.substring(5) 
+            : fieldPath
+          if (cleanFieldPath) {
+            if (!refinedErrors[cleanFieldPath]) {
+              refinedErrors[cleanFieldPath] = []
+            }
+            refinedErrors[cleanFieldPath].push(issue.msg)
+          }
+        })
+        
+        const transformedError = new Error('Validation Error')
+        ;(transformedError as any).status = error.response.status
+        ;(transformedError as any).errors = refinedErrors
+        ;(transformedError as any).fieldErrors = refinedErrors
+        
+        throw transformedError
+      }
+      
+      throw error
     }
-
-    /**
-     * for other resources, use path parameter structure PATCH /location/123
-     */
-    const response = await axiosCall(`${resource}/${id}`, {
-      method: 'PATCH',
-      data: JSON.stringify(variables),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (response.status < 200 || response.status > 299) throw response
-
-    const data = await response.data
-
-    return { data }
   },
   getApiUrl: () => API_URL,
   deleteOne: () => {

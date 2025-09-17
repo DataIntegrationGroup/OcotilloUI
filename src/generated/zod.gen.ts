@@ -113,12 +113,47 @@ export const zLocationResponse = z.object({
     created_at: z.iso.datetime({
         offset: true
     }),
-    release_status: z.string(),
-    name: z.optional(z.union([
+    release_status: z.union([
         z.string(),
         z.null()
-    ])),
-    point: z.string()
+    ]),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]),
+    notes: z.union([
+        z.string(),
+        z.null()
+    ]),
+    point: z.string(),
+    elevation_accuracy: z.union([
+        z.number(),
+        z.null()
+    ]),
+    elevation_method: z.union([
+        z.string(),
+        z.null()
+    ]),
+    coordinate_accuracy: z.union([
+        z.number(),
+        z.null()
+    ]),
+    coordinate_method: z.union([
+        z.string(),
+        z.null()
+    ]),
+    state: z.union([
+        z.string(),
+        z.null()
+    ]),
+    county: z.union([
+        z.string(),
+        z.null()
+    ]),
+    quad_name: z.union([
+        z.string(),
+        z.null()
+    ])
 });
 
 /**
@@ -420,7 +455,23 @@ export const zCreateLocation = z.object({
         z.string(),
         z.null()
     ])),
-    point: z.string()
+    point: z.string(),
+    elevation_accuracy: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    elevation_method: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    coordinate_accuracy: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    coordinate_method: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
 });
 
 /**
@@ -1604,6 +1655,22 @@ export const zUpdateLocation = z.object({
         z.null()
     ])),
     point: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    elevation_accuracy: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    elevation_method: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    coordinate_accuracy: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    coordinate_method: z.optional(z.union([
         z.string(),
         z.null()
     ]))
