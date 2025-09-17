@@ -522,10 +522,6 @@ export type CreateLocation = {
      */
     release_status?: string | null;
     /**
-     * Name
-     */
-    name?: string | null;
-    /**
      * Notes
      */
     notes?: string | null;
@@ -533,6 +529,10 @@ export type CreateLocation = {
      * Point
      */
     point: string;
+    /**
+     * Elevation
+     */
+    elevation: number;
     /**
      * Elevation Accuracy
      */
@@ -1177,10 +1177,6 @@ export type LocationResponse = {
      */
     release_status: string | null;
     /**
-     * Name
-     */
-    name: string | null;
-    /**
      * Notes
      */
     notes: string | null;
@@ -1188,6 +1184,18 @@ export type LocationResponse = {
      * Point
      */
     point: string;
+    /**
+     * Elevation
+     */
+    elevation: number | null;
+    /**
+     * Horizontal Datum
+     */
+    horizontal_datum?: string;
+    /**
+     * Vertical Daum
+     */
+    vertical_daum?: string;
     /**
      * Elevation Accuracy
      */
@@ -2430,10 +2438,6 @@ export type UpdateLocation = {
      */
     release_status?: string | null;
     /**
-     * Name
-     */
-    name?: string | null;
-    /**
      * Notes
      */
     notes?: string | null;
@@ -2441,6 +2445,10 @@ export type UpdateLocation = {
      * Point
      */
     point?: string | null;
+    /**
+     * Elevation
+     */
+    elevation?: number | null;
     /**
      * Elevation Accuracy
      */
@@ -6546,5 +6554,5 @@ export type UpdateWellScreenThingWellScreenWellScreenIdPatchResponses = {
 export type UpdateWellScreenThingWellScreenWellScreenIdPatchResponse = UpdateWellScreenThingWellScreenWellScreenIdPatchResponses[keyof UpdateWellScreenThingWellScreenWellScreenIdPatchResponses];
 
 export type ClientOptions = {
-    baseUrl: 'https://ocotillo-api-dot-waterdatainitiative-271000.appspot.com' | (string & {});
+    baseUrl: 'https://ocotillo-api-staging.newmexicowaterdata.org' | (string & {});
 };

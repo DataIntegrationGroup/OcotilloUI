@@ -1,7 +1,7 @@
 import { defineConfig } from '@hey-api/openapi-ts'
 
 export default defineConfig({
-  input: 'https://ocotillo-api-dot-waterdatainitiative-271000.appspot.com/openapi-auth.json',
+  input: 'https://ocotillo-api-staging.newmexicowaterdata.org/openapi-auth.json',
   output: {path: './src/generated', clean: true},
   plugins: [
     {

@@ -117,15 +117,17 @@ export const zLocationResponse = z.object({
         z.string(),
         z.null()
     ]),
-    name: z.union([
-        z.string(),
-        z.null()
-    ]),
     notes: z.union([
         z.string(),
         z.null()
     ]),
     point: z.string(),
+    elevation: z.union([
+        z.number(),
+        z.null()
+    ]),
+    horizontal_datum: z.optional(z.string()).default('WGS84'),
+    vertical_daum: z.optional(z.string()).default('NAVD88'),
     elevation_accuracy: z.union([
         z.number(),
         z.null()
@@ -447,15 +449,12 @@ export const zCreateLocation = z.object({
         z.string(),
         z.null()
     ])),
-    name: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
     notes: z.optional(z.union([
         z.string(),
         z.null()
     ])),
     point: z.string(),
+    elevation: z.number(),
     elevation_accuracy: z.optional(z.union([
         z.number(),
         z.null()
@@ -1646,16 +1645,16 @@ export const zUpdateLocation = z.object({
         z.string(),
         z.null()
     ])),
-    name: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
     notes: z.optional(z.union([
         z.string(),
         z.null()
     ])),
     point: z.optional(z.union([
         z.string(),
+        z.null()
+    ])),
+    elevation: z.optional(z.union([
+        z.number(),
         z.null()
     ])),
     elevation_accuracy: z.optional(z.union([
