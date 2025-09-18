@@ -300,6 +300,8 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       <Grid size={{ xs: 12, md: 6 }}>
         <ControlledSelectField
           label="Coordinate Method"
+          id="coordinate-method"
+          labelId="coordinate-method-label"
           control={control}
           name={getFieldName('coordinate_method')}
           options={coordinateMethodOptions}
@@ -390,17 +392,20 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       <Grid size={{ xs: 12, md: 6 }}>
         <ControlledSelectField
           label="Elevation Method"
+          id="elevation-method"
+          labelId="elevation-method-label"
           control={control}
           name={getFieldName('elevation_method')}
           options={elevationMethodOptions}
           disabled={elevationMethodLoading}
-          
         />
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
         <ControlledSelectField
           label="Release Status"
+          id="release-status"
+          labelId="release-status-label"
           control={control}
           name={getFieldName('release_status')}
           options={releaseStatusOptions}
