@@ -64,9 +64,7 @@ export default defineConfig(({ mode }) => {
         deps: {
           inline: ['@mui/material', '@refinedev/mui']
         }
-      },
-      maxWorkers: "90%",
-      minWorkers: 1,
+      }
     },
   }
 })
