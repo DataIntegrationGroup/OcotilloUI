@@ -11,7 +11,12 @@ export default defineConfig({
   e2e: {
     baseUrl: 'http://localhost:5173',
     setupNodeEvents(on, config) {
-      // implement node event listeners here
+      process.env.NODE_ENV = 'test'
     },
+    env: {
+      // set test auth variable to true to mock Authentik provider token
+      VITE_TEST_AUTH: true,
+      NODE_ENV: 'test',
+    }
   },
 });
