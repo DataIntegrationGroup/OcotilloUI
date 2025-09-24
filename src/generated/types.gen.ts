@@ -333,67 +333,6 @@ export type CreateEmail = {
 };
 
 /**
- * CreateGeochronologyAge
- * Schema for creating a geochronology age entry.
- */
-export type CreateGeochronologyAge = {
-    /**
-     * Location Id
-     */
-    location_id: number;
-    /**
-     * Age
-     */
-    age: number;
-    /**
-     * Age Error
-     */
-    age_error: number;
-    /**
-     * Method
-     */
-    method: string;
-};
-
-/**
- * CreateGeothermalObservation
- */
-export type CreateGeothermalObservation = {
-    /**
-     * Observed Property
-     */
-    observed_property: string;
-    /**
-     * Observation Datetime
-     */
-    observation_datetime: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
-    /**
-     * Sample Id
-     */
-    sample_id?: number | null;
-    /**
-     * Sensor Id
-     */
-    sensor_id: number;
-    /**
-     * Value
-     */
-    value: number | null;
-    /**
-     * Unit
-     */
-    unit: string | null;
-    /**
-     * Observation Depth
-     */
-    observation_depth: number;
-};
-
-/**
  * CreateGroundwaterLevelObservation
  */
 export type CreateGroundwaterLevelObservation = {
@@ -412,7 +351,7 @@ export type CreateGroundwaterLevelObservation = {
     /**
      * Sample Id
      */
-    sample_id?: number | null;
+    sample_id: number;
     /**
      * Sensor Id
      */
@@ -614,53 +553,45 @@ export type CreateSample = {
      */
     sample_date: string;
     /**
-     * Sample Top
+     * Depth Top
      */
-    sample_top?: number | null;
+    depth_top?: number | null;
     /**
-     * Sample Bottom
+     * Depth Bottom
      */
-    sample_bottom?: number | null;
+    depth_bottom?: number | null;
     /**
      * Release Status
      */
     release_status: string;
     /**
-     * Thing Id
+     * Field Activity Id
      */
-    thing_id: number;
+    field_activity_id: number;
     /**
-     * Sample Type
+     * Field Event Contact Id
      */
-    sample_type: string;
+    field_event_contact_id: number;
     /**
-     * Field Sample Id
+     * Sample Name
      */
-    field_sample_id: string;
-    /**
-     * Sampler Name
-     */
-    sampler_name: string;
-    /**
-     * Qc Sample
-     */
-    qc_sample?: string;
-    /**
-     * Sensor Id
-     */
-    sensor_id?: number | null;
+    sample_name: string;
     /**
      * Sample Matrix
      */
-    sample_matrix?: string | null;
+    sample_matrix: string;
     /**
      * Sample Method
      */
-    sample_method?: string | null;
+    sample_method: string;
     /**
-     * Duplicate Sample Number
+     * Qc Type
      */
-    duplicate_sample_number?: number | null;
+    qc_type: string;
+    /**
+     * Notes
+     */
+    notes?: string | null;
 };
 
 /**
@@ -771,7 +702,7 @@ export type CreateWaterChemistryObservation = {
     /**
      * Sample Id
      */
-    sample_id?: number | null;
+    sample_id: number;
     /**
      * Sensor Id
      */
@@ -921,24 +852,9 @@ export type FeatureCollectionResponse = {
 };
 
 /**
- * GeoJSONGeometry
- * Geometry schema for GeoJSON response.
+ * FieldActivityResponse
  */
-export type GeoJsonGeometry = {
-    /**
-     * Type
-     */
-    type: string;
-    /**
-     * Coordinates
-     */
-    coordinates: Array<number> | Array<Array<number>> | Array<Array<Array<number>>> | Array<Array<Array<Array<number>>>>;
-};
-
-/**
- * GeothermalObservationResponse
- */
-export type GeothermalObservationResponse = {
+export type FieldActivityResponse = {
     /**
      * Id
      */
@@ -952,33 +868,58 @@ export type GeothermalObservationResponse = {
      */
     release_status: string;
     /**
-     * Sample Id
+     * Field Event Id
      */
-    sample_id: number;
+    field_event_id: number;
     /**
-     * Sensor Id
+     * Activity Type
      */
-    sensor_id: number;
+    activity_type: string;
+};
+
+/**
+ * FieldEventResponse
+ */
+export type FieldEventResponse = {
     /**
-     * Observation Datetime
+     * Id
      */
-    observation_datetime: string;
+    id: number;
     /**
-     * Observed Property
+     * Created At
      */
-    observed_property: string;
+    created_at: string;
     /**
-     * Value
+     * Release Status
      */
-    value: number | null;
+    release_status: string;
     /**
-     * Unit
+     * Thing Id
      */
-    unit: string;
+    thing_id: number;
     /**
-     * Observation Depth
+     * Event Date
      */
-    observation_depth: number | null;
+    event_date: string;
+    /**
+     * Notes
+     */
+    notes: string | null;
+};
+
+/**
+ * GeoJSONGeometry
+ * Geometry schema for GeoJSON response.
+ */
+export type GeoJsonGeometry = {
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Coordinates
+     */
+    coordinates: Array<number> | Array<Array<number>> | Array<Array<Array<number>>> | Array<Array<Array<Array<number>>>>;
 };
 
 /**
@@ -1269,10 +1210,6 @@ export type ObservationResponse = {
      */
     unit: string;
     /**
-     * Observation Depth
-     */
-    observation_depth: number | null;
-    /**
      * Depth To Water Bgs
      */
     depth_to_water_bgs: number | null;
@@ -1372,32 +1309,6 @@ export type PageEmailResponse = {
      * Items
      */
     items: Array<EmailResponse>;
-    /**
-     * Total
-     */
-    total: number;
-    /**
-     * Page
-     */
-    page: number;
-    /**
-     * Size
-     */
-    size: number;
-    /**
-     * Pages
-     */
-    pages: number;
-};
-
-/**
- * Page[GeothermalObservationResponse]
- */
-export type PageGeothermalObservationResponse = {
-    /**
-     * Items
-     */
-    items: Array<GeothermalObservationResponse>;
     /**
      * Total
      */
@@ -1938,6 +1849,12 @@ export type ResourceNotFoundResponse = {
 
 /**
  * SampleResponse
+ * Developer's note
+ *
+ * The frontend uses multiple fields for a thing, field_even, and field_activity,
+ * which is why full ThingResponse, FieldEventResponse, and FieldActivityResponse
+ * are returned. If the response becomes too large and slow, we can use
+ * <model>.model_dump() and exlude fields to reduce the size.
  */
 export type SampleResponse = {
     /**
@@ -1953,50 +1870,49 @@ export type SampleResponse = {
      */
     release_status: string;
     thing: ThingResponse;
+    field_event: FieldEventResponse;
+    field_activity: FieldActivityResponse;
+    contact: ContactResponse;
     /**
-     * Sample Type
+     * Field Activity Id
      */
-    sample_type: string;
+    field_activity_id: number;
     /**
-     * Field Sample Id
+     * Field Event Contact Id
      */
-    field_sample_id: string;
+    field_event_contact_id: number;
     /**
      * Sample Date
      */
     sample_date: string;
     /**
-     * Sampler Name
+     * Sample Name
      */
-    sampler_name: string;
-    /**
-     * Qc Sample
-     */
-    qc_sample: string;
-    /**
-     * Sensor Id
-     */
-    sensor_id: number | null;
+    sample_name: string;
     /**
      * Sample Matrix
      */
-    sample_matrix: string | null;
+    sample_matrix: string;
     /**
      * Sample Method
      */
-    sample_method: string | null;
+    sample_method: string;
     /**
-     * Duplicate Sample Number
+     * Qc Type
      */
-    duplicate_sample_number: number | null;
+    qc_type: string;
     /**
-     * Sample Top
+     * Notes
      */
-    sample_top: number | null;
+    notes: string | null;
     /**
-     * Sample Bottom
+     * Depth Top
      */
-    sample_bottom: number | null;
+    depth_top: number | null;
+    /**
+     * Depth Bottom
+     */
+    depth_bottom: number | null;
 };
 
 /**
@@ -2275,44 +2191,6 @@ export type UpdateEmail = {
 };
 
 /**
- * UpdateGeothermalObservation
- */
-export type UpdateGeothermalObservation = {
-    /**
-     * Observed Property
-     */
-    observed_property?: string | null;
-    /**
-     * Observation Datetime
-     */
-    observation_datetime?: string | null;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
-    /**
-     * Sample Id
-     */
-    sample_id?: number | null;
-    /**
-     * Sensor Id
-     */
-    sensor_id?: number | null;
-    /**
-     * Value
-     */
-    value?: number | null;
-    /**
-     * Unit
-     */
-    unit?: string | null;
-    /**
-     * Observation Depth
-     */
-    observation_depth?: number | null;
-};
-
-/**
  * UpdateGroundwaterLevelObservation
  */
 export type UpdateGroundwaterLevelObservation = {
@@ -2492,9 +2370,6 @@ export type UpdatePhone = {
 
 /**
  * UpdateSample
- * Development notes:
- *
- * setting <type> = None makes the field optional, but if it is defined it must be of that type.
  */
 export type UpdateSample = {
     /**
@@ -2502,41 +2377,29 @@ export type UpdateSample = {
      */
     sample_date?: string | null;
     /**
-     * Sample Top
+     * Depth Top
      */
-    sample_top?: number | null;
+    depth_top?: number | null;
     /**
-     * Sample Bottom
+     * Depth Bottom
      */
-    sample_bottom?: number | null;
+    depth_bottom?: number | null;
     /**
      * Release Status
      */
     release_status?: string | null;
     /**
-     * Thing Id
+     * Field Activity Id
      */
-    thing_id?: number | null;
+    field_activity_id?: number | null;
     /**
-     * Sample Type
+     * Field Event Contact Id
      */
-    sample_type?: string | null;
+    field_event_contact_id?: number | null;
     /**
-     * Field Sample Id
+     * Sample Name
      */
-    field_sample_id?: string | null;
-    /**
-     * Sampler Name
-     */
-    sampler_name?: string | null;
-    /**
-     * Qc Sample
-     */
-    qc_sample?: string | null;
-    /**
-     * Sensor Id
-     */
-    sensor_id?: number | null;
+    sample_name?: string | null;
     /**
      * Sample Matrix
      */
@@ -2546,9 +2409,13 @@ export type UpdateSample = {
      */
     sample_method?: string | null;
     /**
-     * Duplicate Sample Number
+     * Qc Type
      */
-    duplicate_sample_number?: number | null;
+    qc_type?: string | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
 };
 
 /**
@@ -3847,57 +3714,6 @@ export type GetContactAddressesContactContactIdAddressGetResponses = {
 
 export type GetContactAddressesContactContactIdAddressGetResponse = GetContactAddressesContactContactIdAddressGetResponses[keyof GetContactAddressesContactContactIdAddressGetResponses];
 
-export type GetGeochronologyAgeGeochronologyAgeGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Method
-         */
-        method?: string;
-    };
-    url: '/geochronology/age';
-};
-
-export type GetGeochronologyAgeGeochronologyAgeGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetGeochronologyAgeGeochronologyAgeGetError = GetGeochronologyAgeGeochronologyAgeGetErrors[keyof GetGeochronologyAgeGeochronologyAgeGetErrors];
-
-export type GetGeochronologyAgeGeochronologyAgeGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type CreateAgeGeochronologyAgePostData = {
-    body: CreateGeochronologyAge;
-    path?: never;
-    query?: never;
-    url: '/geochronology/age';
-};
-
-export type CreateAgeGeochronologyAgePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CreateAgeGeochronologyAgePostError = CreateAgeGeochronologyAgePostErrors[keyof CreateAgeGeochronologyAgePostErrors];
-
-export type CreateAgeGeochronologyAgePostResponses = {
-    /**
-     * Successful Response
-     */
-    201: unknown;
-};
-
 export type GetGeospatialGeospatialGetData = {
     body?: never;
     path?: never;
@@ -4973,98 +4789,6 @@ export type AddWaterChemistryObservationObservationWaterChemistryPostResponses =
 
 export type AddWaterChemistryObservationObservationWaterChemistryPostResponse = AddWaterChemistryObservationObservationWaterChemistryPostResponses[keyof AddWaterChemistryObservationObservationWaterChemistryPostResponses];
 
-export type GetGeothermalObservationsObservationGeothermalGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Thing Id
-         */
-        thing_id?: number | null;
-        /**
-         * Sensor Id
-         */
-        sensor_id?: number | null;
-        /**
-         * Sample Id
-         */
-        sample_id?: number | null;
-        /**
-         * Start Time
-         */
-        start_time?: string | null;
-        /**
-         * End Time
-         */
-        end_time?: string | null;
-        /**
-         * Sort
-         */
-        sort?: string | null;
-        /**
-         * Order
-         */
-        order?: string | null;
-        /**
-         * Filter
-         */
-        filter?: string;
-        /**
-         * Page
-         * Page number
-         */
-        page?: number;
-        /**
-         * Size
-         */
-        size?: number;
-    };
-    url: '/observation/geothermal';
-};
-
-export type GetGeothermalObservationsObservationGeothermalGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetGeothermalObservationsObservationGeothermalGetError = GetGeothermalObservationsObservationGeothermalGetErrors[keyof GetGeothermalObservationsObservationGeothermalGetErrors];
-
-export type GetGeothermalObservationsObservationGeothermalGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: PageGeothermalObservationResponse;
-};
-
-export type GetGeothermalObservationsObservationGeothermalGetResponse = GetGeothermalObservationsObservationGeothermalGetResponses[keyof GetGeothermalObservationsObservationGeothermalGetResponses];
-
-export type AddGeothermalObservationObservationGeothermalPostData = {
-    body: CreateGeothermalObservation;
-    path?: never;
-    query?: never;
-    url: '/observation/geothermal';
-};
-
-export type AddGeothermalObservationObservationGeothermalPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type AddGeothermalObservationObservationGeothermalPostError = AddGeothermalObservationObservationGeothermalPostErrors[keyof AddGeothermalObservationObservationGeothermalPostErrors];
-
-export type AddGeothermalObservationObservationGeothermalPostResponses = {
-    /**
-     * Successful Response
-     */
-    201: GeothermalObservationResponse;
-};
-
-export type AddGeothermalObservationObservationGeothermalPostResponse = AddGeothermalObservationObservationGeothermalPostResponses[keyof AddGeothermalObservationObservationGeothermalPostResponses];
-
 export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetData = {
     body?: never;
     path: {
@@ -5184,66 +4908,6 @@ export type UpdateWaterChemistryObservationObservationWaterChemistryObservationI
 };
 
 export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponse = UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses[keyof UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses];
-
-export type GetGeothermalObservationByIdObservationGeothermalObservationIdGetData = {
-    body?: never;
-    path: {
-        /**
-         * Observation Id
-         */
-        observation_id: number;
-    };
-    query?: never;
-    url: '/observation/geothermal/{observation_id}';
-};
-
-export type GetGeothermalObservationByIdObservationGeothermalObservationIdGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetGeothermalObservationByIdObservationGeothermalObservationIdGetError = GetGeothermalObservationByIdObservationGeothermalObservationIdGetErrors[keyof GetGeothermalObservationByIdObservationGeothermalObservationIdGetErrors];
-
-export type GetGeothermalObservationByIdObservationGeothermalObservationIdGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: GeothermalObservationResponse;
-};
-
-export type GetGeothermalObservationByIdObservationGeothermalObservationIdGetResponse = GetGeothermalObservationByIdObservationGeothermalObservationIdGetResponses[keyof GetGeothermalObservationByIdObservationGeothermalObservationIdGetResponses];
-
-export type UpdateGeothermalObservationObservationGeothermalObservationIdPatchData = {
-    body: UpdateGeothermalObservation;
-    path: {
-        /**
-         * Observation Id
-         */
-        observation_id: number;
-    };
-    query?: never;
-    url: '/observation/geothermal/{observation_id}';
-};
-
-export type UpdateGeothermalObservationObservationGeothermalObservationIdPatchErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type UpdateGeothermalObservationObservationGeothermalObservationIdPatchError = UpdateGeothermalObservationObservationGeothermalObservationIdPatchErrors[keyof UpdateGeothermalObservationObservationGeothermalObservationIdPatchErrors];
-
-export type UpdateGeothermalObservationObservationGeothermalObservationIdPatchResponses = {
-    /**
-     * Successful Response
-     */
-    200: GeothermalObservationResponse;
-};
-
-export type UpdateGeothermalObservationObservationGeothermalObservationIdPatchResponse = UpdateGeothermalObservationObservationGeothermalObservationIdPatchResponses[keyof UpdateGeothermalObservationObservationGeothermalObservationIdPatchResponses];
 
 export type GetAllObservationsObservationGetData = {
     body?: never;
