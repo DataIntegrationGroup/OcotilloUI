@@ -1,0 +1,13 @@
+{
+    "id": 1,
+    "latitude": 34.068279,
+    "longitude": -106.904192,
+    "elevation": 5000,
+    "elevation_accuracy": 1.74,
+    "elevation_method": "GPS",
+    "coordinate_accuracy": 10,
+    "coordinate_method": "GPS",
+    "release_status": "Public",
+    "notes": "Existing test location",
+    "point": "POINT(-106.904192 34.068279)"
+}
