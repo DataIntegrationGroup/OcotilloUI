@@ -64,19 +64,17 @@ describe('Ocotillo Integration Tests: Sample', () => {
 
   it('should create a sample using data provider', async () => {
     const createData: CreateSample = zCreateSample.parse({
-        thing_id: 1,
-        sample_type: 'groundwater',
-        field_sample_id: 'test',
         sample_date: '2025-01-08T21:15:18.139Z',
+        depth_top: 1.0,
+        depth_bottom: 2.0,
         release_status: 'public',
-        sampler_name: 'test',
-        qc_sample: 'original',
-        sensor_id: 1,
-        sample_matrix: 'test',
+        field_activity_id: 1,
+        field_event_contact_id: 1,
+        sample_name: 'test-sample',
+        sample_matrix: 'groundwater',
         sample_method: 'manual',
-        duplicate_sample_number: 1,
-        sample_top: 1,
-        sample_bottom: 1,
+        qc_type: 'original',
+        notes: 'Test sample creation'
       })
       
     const result = await ocotilloDataProvider.create({
@@ -99,19 +97,17 @@ describe('Ocotillo Integration Tests: Sample', () => {
 
   it('should update a sample using data provider', async () => {
     const updateData: UpdateSample = zUpdateSample.parse({
-      id: 1,
-      sample_type: 'surface water',
-      field_sample_id: 'test',
       sample_date: '2025-01-08T21:15:18.139Z',
+      depth_top: 1.5,
+      depth_bottom: 2.5,
       release_status: 'public',
-      sampler_name: 'updated',
-      qc_sample: 'original',
-      sensor_id: 1,
-      sample_matrix: 'test',
+      field_activity_id: 1,
+      field_event_contact_id: 1,
+      sample_name: 'updated-sample',
+      sample_matrix: 'surface water',
       sample_method: 'manual',
-      duplicate_sample_number: 1,
-      sample_top: 1,
-      sample_bottom: 1,
+      qc_type: 'original',
+      notes: 'Updated sample data'
     })
 
     const result = await ocotilloDataProvider.update({
