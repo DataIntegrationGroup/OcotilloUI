@@ -1,44 +1,11 @@
-import '@testing-library/jest-dom'
-import { expect, afterEach, beforeAll, vi } from 'vitest'
+import { afterEach, beforeAll, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
-import * as matchers from '@testing-library/jest-dom/matchers'
 import { checkMockServerHealth } from './mock-server'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 
 process.env.NODE_ENV = 'test'
-
-expect.extend(matchers)
-
-// Mock window.matchMedia for color context provider in jsdom (undefined in node)
-if (typeof window !== 'undefined') {
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn().mockImplementation(query => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(), 
-      removeListener: vi.fn(), 
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
-  })
-}
-
-// Mock localStorage for node environment
-Object.defineProperty(global, 'localStorage', {
-    value: {
-      getItem: vi.fn((key) => key === 'colorMode' ? 'light' : 'mock-token'),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
-    },
-    writable: true,
-  })
   
   // Mock the authentication provider (for node api contract tests)
-  // For integration page tests we mock the authentik provider in the test-provider.tsx file
   vi.mock('@/providers/authentik-provider', () => ({
     getAccessToken: vi.fn().mockResolvedValue('mock-token'),
     getAccessControlGroups: vi.fn().mockReturnValue(['Admin']),
