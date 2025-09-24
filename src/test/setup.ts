@@ -1,5 +1,4 @@
-import { afterEach, beforeAll, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { beforeAll, vi } from 'vitest'
 import { checkMockServerHealth } from './mock-server'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 
@@ -32,7 +31,3 @@ beforeAll(async () => {
     }
   })
 
-// Cleanup after each test case
-afterEach(() => {
-  cleanup()
-})
