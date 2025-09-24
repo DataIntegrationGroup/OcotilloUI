@@ -13,7 +13,8 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "mock:server": "prism mock https://ocotillo-api-staging.newmexicowaterdata.org/openapi-auth.json --dynamic=false --port 4010",
+    "mock:server:contract": "prism mock https://ocotillo-api-staging.newmexicowaterdata.org/openapi-auth.json --dynamic=false --port 4010",
+    "mock:server:cypress": "prism mock https://ocotillo-api-staging.newmexicowaterdata.org/openapi-auth.json --dynamic=true --port 4010 --seed 12345",
     "openapi:generate": "npx @hey-api/openapi-ts"
   },
   "browserslist": {
