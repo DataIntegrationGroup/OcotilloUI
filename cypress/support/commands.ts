@@ -30,7 +30,7 @@ Cypress.Commands.add('logout', () => {
 declare global {
   namespace Cypress {
     interface Chainable {
-      login(email?: string): Chainable<void>
+      login(): Chainable<void>
       logout(): Chainable<void>
     }
   }
