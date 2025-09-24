@@ -8,6 +8,7 @@ import {
 import Grid from '@mui/material/Grid2'
 import {
   ControlledTextField,
+  ControlledNumberField,
   ControlledSelectField,
   MapComponent,
 } from '@/components'
@@ -289,11 +290,10 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
+        <ControlledNumberField
           label="Coordinate Accuracy (ft)"
           control={control}
           name={getFieldName('coordinate_accuracy')}
-          type="number"
         />
       </Grid>
 
@@ -367,11 +367,10 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
+        <ControlledNumberField
           label="Elevation (ft)"
           control={control}
           name={getFieldName('elevation')}
-          type="number"
           placeholder="5000"
           disabled={autoGenerateElevation}
           required={!autoGenerateElevation}
@@ -379,11 +378,10 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledTextField
+        <ControlledNumberField
           label="Elevation Accuracy (ft)"
           control={control}
           name={getFieldName('elevation_accuracy')}
-          type="number"
           placeholder="1.74"
           disabled={autoGenerateElevation}
         />
