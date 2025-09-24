@@ -1,0 +1,54 @@
+name: Cypress Test Suite
+
+on:
+  pull_request:
+
+jobs:
+  install:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cypress install
+        uses: cypress-io/github-action@v6
+        with:
+          # Disable running of tests within install job
+          runTests: false
+          build: npm run build
+        env:
+          VITE_BASE_URL: http://localhost:4173
+          VITE_OCOTILLO_API_URL: http://127.0.0.1:4010
+
+      - name: Save build folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          if-no-files-found: error
+          path: build
+
+  cypress-run:
+    runs-on: ubuntu-24.04
+    needs: install
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download the build folder
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: build
+
+      - name: Start mock server
+        run: |
+          # Start mock server in background
+          npm run mock:server:cypress &
+          # Wait for server to start
+          sleep 10
+          
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          start: npm start
+          browser: chrome
