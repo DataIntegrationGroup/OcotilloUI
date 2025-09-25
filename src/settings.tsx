@@ -1,3 +1,5 @@
+import { cypressCheck } from './utils/CypressCheck';
+
 export const settings = {
   rowHeight: 27,
   filterDebounceMs: 1000,
@@ -7,7 +9,9 @@ export const settings = {
     import.meta.env.VITE_NMBGMR_AMP_API_URL || 'http://localhost:8009',
 
   ocotillo_api_url:
-    import.meta.env.VITE_OCOTILLO_API_URL || 'http://localhost:8000',
+    cypressCheck() || process.env.NODE_ENV === 'test'
+    ? 'http://127.0.0.1:4010'
+    : import.meta.env.VITE_OCOTILLO_API_URL || 'http://localhost:8000',
 
   st2_url: 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
   nmbgmr_geothermal_api_url:

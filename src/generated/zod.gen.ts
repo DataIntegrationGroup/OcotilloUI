@@ -117,15 +117,17 @@ export const zLocationResponse = z.object({
         z.string(),
         z.null()
     ]),
-    name: z.union([
-        z.string(),
-        z.null()
-    ]),
     notes: z.union([
         z.string(),
         z.null()
     ]),
     point: z.string(),
+    elevation: z.union([
+        z.number(),
+        z.null()
+    ]),
+    horizontal_datum: z.optional(z.string()).default('WGS84'),
+    vertical_daum: z.optional(z.string()).default('NAVD88'),
     elevation_accuracy: z.union([
         z.number(),
         z.null()
@@ -321,42 +323,6 @@ export const zCreateContact = z.object({
 });
 
 /**
- * CreateGeochronologyAge
- * Schema for creating a geochronology age entry.
- */
-export const zCreateGeochronologyAge = z.object({
-    location_id: z.int(),
-    age: z.number(),
-    age_error: z.number(),
-    method: z.string()
-});
-
-/**
- * CreateGeothermalObservation
- */
-export const zCreateGeothermalObservation = z.object({
-    observed_property: z.string(),
-    observation_datetime: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
-    sample_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
-    sensor_id: z.int(),
-    value: z.union([
-        z.number(),
-        z.null()
-    ]),
-    unit: z.union([
-        z.string(),
-        z.null()
-    ]),
-    observation_depth: z.number()
-});
-
-/**
  * CreateGroundwaterLevelObservation
  */
 export const zCreateGroundwaterLevelObservation = z.object({
@@ -365,10 +331,7 @@ export const zCreateGroundwaterLevelObservation = z.object({
         offset: true
     }),
     release_status: z.string(),
-    sample_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
+    sample_id: z.int(),
     sensor_id: z.int(),
     value: z.union([
         z.number(),
@@ -447,15 +410,12 @@ export const zCreateLocation = z.object({
         z.string(),
         z.null()
     ])),
-    name: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
     notes: z.optional(z.union([
         z.string(),
         z.null()
     ])),
     point: z.string(),
+    elevation: z.number(),
     elevation_accuracy: z.optional(z.union([
         z.number(),
         z.null()
@@ -500,34 +460,23 @@ export const zCreateSample = z.object({
     sample_date: z.iso.datetime({
         offset: true
     }),
-    sample_top: z.optional(z.union([
+    depth_top: z.optional(z.union([
         z.number(),
         z.null()
     ])),
-    sample_bottom: z.optional(z.union([
+    depth_bottom: z.optional(z.union([
         z.number(),
         z.null()
     ])),
     release_status: z.string(),
-    thing_id: z.int(),
-    sample_type: z.string(),
-    field_sample_id: z.string(),
-    sampler_name: z.string(),
-    qc_sample: z.optional(z.string()).default('Original'),
-    sensor_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
-    sample_matrix: z.optional(z.union([
+    field_activity_id: z.int(),
+    field_event_contact_id: z.int(),
+    sample_name: z.string(),
+    sample_matrix: z.string(),
+    sample_method: z.string(),
+    qc_type: z.string(),
+    notes: z.optional(z.union([
         z.string(),
-        z.null()
-    ])),
-    sample_method: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    duplicate_sample_number: z.optional(z.union([
-        z.int(),
         z.null()
     ]))
 });
@@ -607,10 +556,7 @@ export const zCreateWaterChemistryObservation = z.object({
         offset: true
     }),
     release_status: z.string(),
-    sample_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
+    sample_id: z.int(),
     sensor_id: z.int(),
     value: z.union([
         z.number(),
@@ -708,27 +654,33 @@ export const zFeatureCollectionResponse = z.object({
 });
 
 /**
- * GeothermalObservationResponse
+ * FieldActivityResponse
  */
-export const zGeothermalObservationResponse = z.object({
+export const zFieldActivityResponse = z.object({
     id: z.int(),
     created_at: z.iso.datetime({
         offset: true
     }),
     release_status: z.string(),
-    sample_id: z.int(),
-    sensor_id: z.int(),
-    observation_datetime: z.iso.datetime({
+    field_event_id: z.int(),
+    activity_type: z.string()
+});
+
+/**
+ * FieldEventResponse
+ */
+export const zFieldEventResponse = z.object({
+    id: z.int(),
+    created_at: z.iso.datetime({
         offset: true
     }),
-    observed_property: z.string(),
-    value: z.union([
-        z.number(),
-        z.null()
-    ]),
-    unit: z.string(),
-    observation_depth: z.union([
-        z.number(),
+    release_status: z.string(),
+    thing_id: z.int(),
+    event_date: z.iso.datetime({
+        offset: true
+    }),
+    notes: z.union([
+        z.string(),
         z.null()
     ])
 });
@@ -879,10 +831,6 @@ export const zObservationResponse = z.object({
         z.null()
     ]),
     unit: z.string(),
-    observation_depth: z.union([
-        z.number(),
-        z.null()
-    ]),
     depth_to_water_bgs: z.union([
         z.number(),
         z.null()
@@ -935,17 +883,6 @@ export const zPageContactResponse = z.object({
  */
 export const zPageEmailResponse = z.object({
     items: z.array(zEmailResponse),
-    total: z.int().gte(0),
-    page: z.int().gte(1),
-    size: z.int().gte(1),
-    pages: z.int().gte(0)
-});
-
-/**
- * Page[GeothermalObservationResponse]
- */
-export const zPageGeothermalObservationResponse = z.object({
-    items: z.array(zGeothermalObservationResponse),
     total: z.int().gte(0),
     page: z.int().gte(1),
     size: z.int().gte(1),
@@ -1042,6 +979,12 @@ export const zPagePhoneResponse = z.object({
 
 /**
  * SampleResponse
+ * Developer's note
+ *
+ * The frontend uses multiple fields for a thing, field_even, and field_activity,
+ * which is why full ThingResponse, FieldEventResponse, and FieldActivityResponse
+ * are returned. If the response becomes too large and slow, we can use
+ * <model>.model_dump() and exlude fields to reduce the size.
  */
 export const zSampleResponse = z.object({
     id: z.int(),
@@ -1050,34 +993,27 @@ export const zSampleResponse = z.object({
     }),
     release_status: z.string(),
     thing: zThingResponse,
-    sample_type: z.string(),
-    field_sample_id: z.string(),
+    field_event: zFieldEventResponse,
+    field_activity: zFieldActivityResponse,
+    contact: zContactResponse,
+    field_activity_id: z.int(),
+    field_event_contact_id: z.int(),
     sample_date: z.iso.datetime({
         offset: true
     }),
-    sampler_name: z.string(),
-    qc_sample: z.string(),
-    sensor_id: z.union([
-        z.int(),
-        z.null()
-    ]),
-    sample_matrix: z.union([
+    sample_name: z.string(),
+    sample_matrix: z.string(),
+    sample_method: z.string(),
+    qc_type: z.string(),
+    notes: z.union([
         z.string(),
         z.null()
     ]),
-    sample_method: z.union([
-        z.string(),
-        z.null()
-    ]),
-    duplicate_sample_number: z.union([
-        z.int(),
-        z.null()
-    ]),
-    sample_top: z.union([
+    depth_top: z.union([
         z.number(),
         z.null()
     ]),
-    sample_bottom: z.union([
+    depth_bottom: z.union([
         z.number(),
         z.null()
     ])
@@ -1480,46 +1416,6 @@ export const zUpdateEmail = z.object({
 });
 
 /**
- * UpdateGeothermalObservation
- */
-export const zUpdateGeothermalObservation = z.object({
-    observed_property: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    observation_datetime: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
-    release_status: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    sample_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
-    sensor_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
-    value: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    unit: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    observation_depth: z.optional(z.union([
-        z.number(),
-        z.null()
-    ]))
-});
-
-/**
  * UpdateGroundwaterLevelObservation
  */
 export const zUpdateGroundwaterLevelObservation = z.object({
@@ -1646,16 +1542,16 @@ export const zUpdateLocation = z.object({
         z.string(),
         z.null()
     ])),
-    name: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
     notes: z.optional(z.union([
         z.string(),
         z.null()
     ])),
     point: z.optional(z.union([
         z.string(),
+        z.null()
+    ])),
+    elevation: z.optional(z.union([
+        z.number(),
         z.null()
     ])),
     elevation_accuracy: z.optional(z.union([
@@ -1701,9 +1597,6 @@ export const zUpdatePhone = z.object({
 
 /**
  * UpdateSample
- * Development notes:
- *
- * setting <type> = None makes the field optional, but if it is defined it must be of that type.
  */
 export const zUpdateSample = z.object({
     sample_date: z.optional(z.union([
@@ -1712,11 +1605,11 @@ export const zUpdateSample = z.object({
         }),
         z.null()
     ])),
-    sample_top: z.optional(z.union([
+    depth_top: z.optional(z.union([
         z.number(),
         z.null()
     ])),
-    sample_bottom: z.optional(z.union([
+    depth_bottom: z.optional(z.union([
         z.number(),
         z.null()
     ])),
@@ -1724,28 +1617,16 @@ export const zUpdateSample = z.object({
         z.string(),
         z.null()
     ])),
-    thing_id: z.optional(z.union([
+    field_activity_id: z.optional(z.union([
         z.int(),
         z.null()
     ])),
-    sample_type: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    field_sample_id: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    sampler_name: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    qc_sample: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    sensor_id: z.optional(z.union([
+    field_event_contact_id: z.optional(z.union([
         z.int(),
+        z.null()
+    ])),
+    sample_name: z.optional(z.union([
+        z.string(),
         z.null()
     ])),
     sample_matrix: z.optional(z.union([
@@ -1756,8 +1637,12 @@ export const zUpdateSample = z.object({
         z.string(),
         z.null()
     ])),
-    duplicate_sample_number: z.optional(z.union([
-        z.int(),
+    qc_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    notes: z.optional(z.union([
+        z.string(),
         z.null()
     ]))
 });
@@ -2332,20 +2217,6 @@ export const zGetContactAddressesContactContactIdAddressGetData = z.object({
  */
 export const zGetContactAddressesContactContactIdAddressGetResponse = zPageAddressResponse;
 
-export const zGetGeochronologyAgeGeochronologyAgeGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.optional(z.never()),
-    query: z.optional(z.object({
-        method: z.optional(z.string()).default('arar')
-    }))
-});
-
-export const zCreateAgeGeochronologyAgePostData = z.object({
-    body: zCreateGeochronologyAge,
-    path: z.optional(z.never()),
-    query: z.optional(z.never())
-});
-
 export const zGetGeospatialGeospatialGetData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -2828,64 +2699,6 @@ export const zAddWaterChemistryObservationObservationWaterChemistryPostData = z.
  */
 export const zAddWaterChemistryObservationObservationWaterChemistryPostResponse = zWaterChemistryObservationResponse;
 
-export const zGetGeothermalObservationsObservationGeothermalGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.optional(z.never()),
-    query: z.optional(z.object({
-        thing_id: z.optional(z.union([
-            z.int(),
-            z.null()
-        ])),
-        sensor_id: z.optional(z.union([
-            z.int(),
-            z.null()
-        ])),
-        sample_id: z.optional(z.union([
-            z.int(),
-            z.null()
-        ])),
-        start_time: z.optional(z.union([
-            z.iso.datetime({
-                offset: true
-            }),
-            z.null()
-        ])),
-        end_time: z.optional(z.union([
-            z.iso.datetime({
-                offset: true
-            }),
-            z.null()
-        ])),
-        sort: z.optional(z.union([
-            z.string(),
-            z.null()
-        ])),
-        order: z.optional(z.union([
-            z.string(),
-            z.null()
-        ])),
-        filter: z.optional(z.string()),
-        page: z.optional(z.int().gte(1)).default(1),
-        size: z.optional(z.int().gte(1).lte(10000)).default(25)
-    }))
-});
-
-/**
- * Successful Response
- */
-export const zGetGeothermalObservationsObservationGeothermalGetResponse = zPageGeothermalObservationResponse;
-
-export const zAddGeothermalObservationObservationGeothermalPostData = z.object({
-    body: zCreateGeothermalObservation,
-    path: z.optional(z.never()),
-    query: z.optional(z.never())
-});
-
-/**
- * Successful Response
- */
-export const zAddGeothermalObservationObservationGeothermalPostResponse = zGeothermalObservationResponse;
-
 export const zGetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetData = z.object({
     body: z.optional(z.never()),
     path: z.object({
@@ -2937,32 +2750,6 @@ export const zUpdateWaterChemistryObservationObservationWaterChemistryObservatio
  * Successful Response
  */
 export const zUpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponse = zWaterChemistryObservationResponse;
-
-export const zGetGeothermalObservationByIdObservationGeothermalObservationIdGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.object({
-        observation_id: z.int()
-    }),
-    query: z.optional(z.never())
-});
-
-/**
- * Successful Response
- */
-export const zGetGeothermalObservationByIdObservationGeothermalObservationIdGetResponse = zGeothermalObservationResponse;
-
-export const zUpdateGeothermalObservationObservationGeothermalObservationIdPatchData = z.object({
-    body: zUpdateGeothermalObservation,
-    path: z.object({
-        observation_id: z.int()
-    }),
-    query: z.optional(z.never())
-});
-
-/**
- * Successful Response
- */
-export const zUpdateGeothermalObservationObservationGeothermalObservationIdPatchResponse = zGeothermalObservationResponse;
 
 export const zGetAllObservationsObservationGetData = z.object({
     body: z.optional(z.never()),

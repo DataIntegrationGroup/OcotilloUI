@@ -61,10 +61,14 @@ describe('Ocotillo Integration Tests: Location', () => {
 
   it('should create location using data provider', async () => {
     const testData: CreateLocation = zCreateLocation.parse({
-      name: 'Test Location',
+      point: 'POINT(-106.904192 34.068279)', 
+      elevation: 5000, 
       notes: 'Test notes',
-      point: 'POINT(-106.6504 35.0844 5000)',
-      release_status: 'public'
+      release_status: 'Public',
+      coordinate_method: 'GPS, uncorrected',
+      elevation_method: 'Interpolated from Digital Elevation Model (DEM)',
+      coordinate_accuracy: 10,
+      elevation_accuracy: 1.74
     })
 
     try {
@@ -96,10 +100,14 @@ describe('Ocotillo Integration Tests: Location', () => {
   it('should update location using data provider', async () => {
     const testData: UpdateLocation = zUpdateLocation.parse({
       id: 1,
-      name: 'Updated Location',
+      point: 'POINT(-106.904192 34.068279)',
+      elevation: 6000,
       notes: 'Updated notes',
-      point: 'POINT(-106.6504 35.0844 5000)',
-      release_status: 'public'
+      release_status: 'Private',
+      coordinate_method: 'GPS, uncorrected',
+      elevation_method: 'Interpolated from Digital Elevation Model (DEM)',
+      coordinate_accuracy: 12,
+      elevation_accuracy: 1.84
     })
 
     try {
