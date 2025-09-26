@@ -996,8 +996,6 @@ export const zSampleResponse = z.object({
     field_event: zFieldEventResponse,
     field_activity: zFieldActivityResponse,
     contact: zContactResponse,
-    field_activity_id: z.int(),
-    field_event_contact_id: z.int(),
     sample_date: z.iso.datetime({
         offset: true
     }),
@@ -2839,6 +2837,10 @@ export const zGetSamplesSampleGetData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
     query: z.optional(z.object({
+        thing_id: z.optional(z.union([
+            z.int(),
+            z.null()
+        ])),
         sort: z.optional(z.string()),
         order: z.optional(z.string()),
         filter: z.optional(z.string()),

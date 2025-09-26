@@ -1874,14 +1874,6 @@ export type SampleResponse = {
     field_activity: FieldActivityResponse;
     contact: ContactResponse;
     /**
-     * Field Activity Id
-     */
-    field_activity_id: number;
-    /**
-     * Field Event Contact Id
-     */
-    field_event_contact_id: number;
-    /**
      * Sample Date
      */
     sample_date: string;
@@ -5065,6 +5057,10 @@ export type GetSamplesSampleGetData = {
     body?: never;
     path?: never;
     query?: {
+        /**
+         * Thing Id
+         */
+        thing_id?: number | null;
         /**
          * Sort
          */
