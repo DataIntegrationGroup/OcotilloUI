@@ -72,15 +72,16 @@ This application uses Vite environment variables. The following variables are re
 
 ```bash
 VITE_APP_TITLE="NMBGMR Ocotillo"
-VITE_NMBGMR_AMP_API_URL="https://your-amp-api-url"
-VITE_NMBGMR_GEOTHERMAL_API_URL="https://your-geothermal-api-url"
-VITE_OCOTILLO_API_URL="https://your-ocotillo-api-url"
+VITE_NMBGMR_AMP_API_URL="https://your-amp-development-api-url"
+VITE_NMBGMR_GEOTHERMAL_API_URL="https://your-geothermal-development-api-url"
+VITE_OCOTILLO_API_URL="https://your-ocotillo-development-api-url"
 VITE_REFINE_PROJECT_ID="your-refine-project-id"
 VITE_MAPBOX_TOKEN="your-mapbox-token"
 VITE_AUTHENTIK_CLIENT_ID="your-authentik-client-id"
 VITE_AUTHENTIK_URL="https://your-authentik-domain"
 VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"
 ```
+- If you plan to develop against a locally hosted version of an API, change your API Urls accoringly
 
 ## Available Scripts
 
