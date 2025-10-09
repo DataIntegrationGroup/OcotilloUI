@@ -103,11 +103,11 @@ VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"
 
 This test suite uses the data provider against a mock server for contract tests or unit tests, and the mock server needs to be running first:
 
-- start mock server
+- Start mock server
 ```bash
 npm run mock:server:vitest
 ```
-- run vitest suite once
+- Run vitest suite once
 ```bash
 npm run test:run
 ```
@@ -116,18 +116,23 @@ npm run test:run
 
 This test suite runs Cypress for E2E or Component tests, and the mock server and app build need to be running:
 
-- start mock server (with seed set)
+- Start mock server (with seed set)
 ```bash
 npm run mock:server:cypress
 ```
-- serve production build locally (matches CI Cypress workflow)
+- Serve production build locally (matches CI Cypress workflow)
 ```bash
 npm run build
 npm run start
 ```
-- open cypress testing environment to run tests and interact with Cypress against your locally running app
+- Open Cypress testing environment to run tests and interact with Cypress against your locally running app
 ```bash
 npx cypress open
+```
+or
+- Run Cypress tests once in headless mode against your locally running app
+```bash
+npx cypress run
 ```
 
 ## Tests in CI and Openapi-TS Generation
@@ -135,11 +140,11 @@ npx cypress open
 Both the Vitest and Cypress test suites run via a Github action on PR. The Vitest contract tests may fail because of changes to the Ocotillo API if you have not recently run the test suite locally.
 In the case of failing contract tests, you'll have to make sure your types and zod schemas are up to date with the openapi.json spec by:
 
-- running the opnenapi-ts generation from the Ocotillo Staging API `openapi.json` spec:
+- Running the opnenapi-ts generation from the Ocotillo Staging API `openapi.json` spec:
 ```bash
 npm run openapi:generate
 ```
-- fixing any failing tests and related code
+- Fixing any failing tests and related code
 
 ## Building and Serving Production Build
 
