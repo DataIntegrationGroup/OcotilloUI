@@ -173,11 +173,15 @@ export const zThingResponse = z.object({
         zLocationResponse,
         z.null()
     ])),
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
     ])),
-    well_type: z.optional(z.union([
+    well_purpose: z.optional(z.union([
         z.string(),
         z.null()
     ])),
@@ -326,7 +330,7 @@ export const zCreateContact = z.object({
  * CreateGroundwaterLevelObservation
  */
 export const zCreateGroundwaterLevelObservation = z.object({
-    observed_property: z.string(),
+    parameter_id: z.int(),
     observation_datetime: z.iso.datetime({
         offset: true
     }),
@@ -342,7 +346,7 @@ export const zCreateGroundwaterLevelObservation = z.object({
         z.null()
     ]),
     measuring_point_height: z.number(),
-    level_status: z.string()
+    groundwater_level_reason: z.string()
 });
 
 /**
@@ -387,7 +391,7 @@ export const zCreateLexiconCategory = z.object({
 export const zCreateLexiconTerm = z.object({
     term: z.string(),
     definition: z.string(),
-    categories: z.array(zCreateLexiconCategory)
+    categories: z.array(z.string())
 });
 
 /**
@@ -470,7 +474,7 @@ export const zCreateSample = z.object({
     ])),
     release_status: z.string(),
     field_activity_id: z.int(),
-    field_event_contact_id: z.int(),
+    field_event_participant_id: z.int(),
     sample_name: z.string(),
     sample_matrix: z.string(),
     sample_method: z.string(),
@@ -530,6 +534,7 @@ export const zCreateSpring = z.object({
         z.null()
     ])),
     name: z.string(),
+    first_visit_date: z.iso.date(),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -551,7 +556,7 @@ export const zCreateThingIdLink = z.object({
  * CreateWaterChemistryObservation
  */
 export const zCreateWaterChemistryObservation = z.object({
-    observed_property: z.string(),
+    parameter_id: z.int(),
     observation_datetime: z.iso.datetime({
         offset: true
     }),
@@ -583,7 +588,8 @@ export const zCreateWell = z.object({
         z.null()
     ])),
     name: z.string(),
-    well_type: z.optional(z.union([
+    first_visit_date: z.iso.date(),
+    well_purpose: z.optional(z.union([
         z.string(),
         z.null()
     ])),
@@ -686,6 +692,30 @@ export const zFieldEventResponse = z.object({
 });
 
 /**
+ * ParameterResponse
+ * Pydantic model for the response of a parameter.
+ * This model can be extended to include additional fields as needed.
+ */
+export const zParameterResponse = z.object({
+    id: z.int(),
+    created_at: z.iso.datetime({
+        offset: true
+    }),
+    release_status: z.string(),
+    parameter_name: z.string(),
+    matrix: z.string(),
+    parameter_type: z.union([
+        z.string(),
+        z.null()
+    ]),
+    cas_number: z.union([
+        z.string(),
+        z.null()
+    ]),
+    default_unit: z.string()
+});
+
+/**
  * GroundwaterLevelObservationResponse
  */
 export const zGroundwaterLevelObservationResponse = z.object({
@@ -699,7 +729,7 @@ export const zGroundwaterLevelObservationResponse = z.object({
     observation_datetime: z.iso.datetime({
         offset: true
     }),
-    observed_property: z.string(),
+    parameter: zParameterResponse,
     value: z.union([
         z.number(),
         z.null()
@@ -713,7 +743,7 @@ export const zGroundwaterLevelObservationResponse = z.object({
         z.number(),
         z.null()
     ]),
-    level_status: z.union([
+    groundwater_level_reason: z.union([
         z.string(),
         z.null()
     ])
@@ -825,7 +855,7 @@ export const zObservationResponse = z.object({
     observation_datetime: z.iso.datetime({
         offset: true
     }),
-    observed_property: z.string(),
+    parameter: zParameterResponse,
     value: z.union([
         z.number(),
         z.null()
@@ -839,7 +869,7 @@ export const zObservationResponse = z.object({
         z.number(),
         z.null()
     ]),
-    level_status: z.union([
+    groundwater_level_reason: z.union([
         z.string(),
         z.null()
     ])
@@ -1092,6 +1122,10 @@ export const zSpringResponse = z.object({
         zLocationResponse,
         z.null()
     ])),
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -1161,7 +1195,7 @@ export const zWaterChemistryObservationResponse = z.object({
     observation_datetime: z.iso.datetime({
         offset: true
     }),
-    observed_property: z.string(),
+    parameter: zParameterResponse,
     value: z.union([
         z.number(),
         z.null()
@@ -1196,7 +1230,11 @@ export const zWellResponse = z.object({
         zLocationResponse,
         z.null()
     ])),
-    well_type: z.optional(z.union([
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    well_purpose: z.optional(z.union([
         z.string(),
         z.null()
     ])),
@@ -1417,8 +1455,8 @@ export const zUpdateEmail = z.object({
  * UpdateGroundwaterLevelObservation
  */
 export const zUpdateGroundwaterLevelObservation = z.object({
-    observed_property: z.optional(z.union([
-        z.string(),
+    parameter_id: z.optional(z.union([
+        z.int(),
         z.null()
     ])),
     observation_datetime: z.optional(z.union([
@@ -1451,7 +1489,7 @@ export const zUpdateGroundwaterLevelObservation = z.object({
         z.number(),
         z.null()
     ])),
-    level_status: z.optional(z.union([
+    groundwater_level_reason: z.optional(z.union([
         z.string(),
         z.null()
     ]))
@@ -1619,7 +1657,7 @@ export const zUpdateSample = z.object({
         z.int(),
         z.null()
     ])),
-    field_event_contact_id: z.optional(z.union([
+    field_event_participant_id: z.optional(z.union([
         z.int(),
         z.null()
     ])),
@@ -1699,6 +1737,10 @@ export const zUpdateSpring = z.object({
         z.string(),
         z.null()
     ])),
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -1731,8 +1773,8 @@ export const zUpdateThingIdLink = z.object({
  * UpdateWaterChemistryObservation
  */
 export const zUpdateWaterChemistryObservation = z.object({
-    observed_property: z.optional(z.union([
-        z.string(),
+    parameter_id: z.optional(z.union([
+        z.int(),
         z.null()
     ])),
     observation_datetime: z.optional(z.union([
@@ -1775,7 +1817,11 @@ export const zUpdateWell = z.object({
         z.string(),
         z.null()
     ])),
-    well_type: z.optional(z.union([
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    well_purpose: z.optional(z.union([
         z.string(),
         z.null()
     ])),
