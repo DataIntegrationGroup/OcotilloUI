@@ -83,14 +83,14 @@ VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"
 ```
 - If you plan to develop against a locally hosted version of an API, change your API Urls accoringly
 
-## Commonly Used Scripts/Commands - Dev and Build
+## Scripts/Commands - Dev and Build
 
 - `npm run dev`: Runs the app in development mode with hot-reloading.
 - `npm run build`: Builds the app for production (outputs to `dist/`).
 - `npm run start`: Serves the production build locally.
 - `npm run refine`: Runs Refine CLI commands.
 
-## Commonly Used Scripts/Commands - Mock Servers, Testing, Type/Zod Generation
+## Scripts/Commands - Mock Servers, Testing, Type/Zod Generation
 
 - `npm run mock:server:vitest`: Runs a Prism mock server to run the vitest test suite.
 - `npm run mock:server:cypress`: Runs a Prism mock server to run the cypress test suite.
@@ -114,7 +114,7 @@ npm run test:run
 
 ## Running the Cypress Test Suite
 
-This test suite runs Cypress for E2E or Component tests, and the mock server and dev app need to be running:
+This test suite runs Cypress for E2E or Component tests, and the mock server and app build need to be running:
 
 - start mock server (with seed set)
 ```bash
