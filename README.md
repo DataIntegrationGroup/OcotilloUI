@@ -91,8 +91,9 @@ VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"
 - `npm run refine`: Runs Refine CLI commands.
 
 - `npm run mock:server:vitest`: Runs a Prism mock server to run the vitest test suite.
-- `npm run mock:server:cypress`: Runs the mock server to run the cypress test suite.
-- `npm run test:run`: Runs the test suite a single time
+- `npm run mock:server:cypress`: Runs a Prism mock server to run the cypress test suite.
+- `npm run test:run`: Runs the Vitest test suite a single time
+- `npx cypress run`: Runs the Cypress test suite in headless mode a single time
 
 - `npm run openapi:generate`: Runs hey-api typescript generation for types and zod validation files into `/generated`
 
@@ -104,7 +105,7 @@ This test suite uses the data provider against a mock server for contract tests 
 ```bash
 npm run mock:server:vitest
 ```
-run vitest suite once
+- run vitest suite once
 ```bash
 npm run test:run
 ```
