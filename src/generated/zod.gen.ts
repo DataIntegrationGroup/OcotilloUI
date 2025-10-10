@@ -169,14 +169,14 @@ export const zThingResponse = z.object({
     release_status: z.string(),
     name: z.string(),
     thing_type: z.string(),
-    active_location: z.optional(z.union([
+    current_location: z.union([
         zLocationResponse,
         z.null()
-    ])),
-    first_visit_date: z.optional(z.union([
+    ]),
+    first_visit_date: z.union([
         z.iso.date(),
         z.null()
-    ])),
+    ]),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -189,8 +189,24 @@ export const zThingResponse = z.object({
         z.number(),
         z.null()
     ])),
+    well_depth_unit: z.optional(z.string()).default('ft'),
     hole_depth: z.optional(z.union([
         z.number(),
+        z.null()
+    ])),
+    hole_depth_unit: z.optional(z.string()).default('ft'),
+    well_casing_diameter: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_diameter_unit: z.optional(z.string()).default('in'),
+    well_casing_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_depth_unit: z.optional(z.string()).default('ft'),
+    well_casing_material: z.optional(z.union([
+        z.string(),
         z.null()
     ])),
     well_construction_notes: z.optional(z.union([
@@ -410,6 +426,7 @@ export const zCreateLexiconTriple = z.object({
  * Schema for creating a sample location.
  */
 export const zCreateLocation = z.object({
+    point: z.string(),
     release_status: z.optional(z.union([
         z.string(),
         z.null()
@@ -418,7 +435,6 @@ export const zCreateLocation = z.object({
         z.string(),
         z.null()
     ])),
-    point: z.string(),
     elevation: z.number(),
     elevation_accuracy: z.optional(z.union([
         z.number(),
@@ -525,16 +541,19 @@ export const zCreateSensor = z.object({
  */
 export const zCreateSpring = z.object({
     release_status: z.string(),
-    location_id: z.optional(z.union([
+    location_id: z.union([
         z.int(),
         z.null()
-    ])),
+    ]),
     group_id: z.optional(z.union([
         z.int(),
         z.null()
     ])),
     name: z.string(),
-    first_visit_date: z.iso.date(),
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -578,30 +597,45 @@ export const zCreateWaterChemistryObservation = z.object({
  * Schema for creating a well.
  */
 export const zCreateWell = z.object({
-    release_status: z.string(),
-    location_id: z.optional(z.union([
-        z.int(),
+    well_depth: z.optional(z.union([
+        z.number().gt(0),
         z.null()
     ])),
+    hole_depth: z.optional(z.union([
+        z.number().gt(0),
+        z.null()
+    ])),
+    well_casing_depth: z.optional(z.union([
+        z.number().gt(0),
+        z.null()
+    ])),
+    release_status: z.string(),
+    location_id: z.union([
+        z.int(),
+        z.null()
+    ]),
     group_id: z.optional(z.union([
         z.int(),
         z.null()
     ])),
     name: z.string(),
-    first_visit_date: z.iso.date(),
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
     well_purpose: z.optional(z.union([
         z.string(),
         z.null()
     ])),
-    well_depth: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    hole_depth: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
     well_construction_notes: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_casing_diameter: z.optional(z.union([
+        z.number().gt(0),
+        z.null()
+    ])),
+    well_casing_material: z.optional(z.union([
         z.string(),
         z.null()
     ]))
@@ -614,8 +648,8 @@ export const zCreateWell = z.object({
 export const zCreateWellScreen = z.object({
     release_status: z.string(),
     thing_id: z.int(),
-    screen_depth_bottom: z.number(),
-    screen_depth_top: z.number(),
+    screen_depth_bottom: z.number().gt(0),
+    screen_depth_top: z.number().gt(0),
     screen_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -1118,14 +1152,14 @@ export const zSpringResponse = z.object({
     release_status: z.string(),
     name: z.string(),
     thing_type: z.string(),
-    active_location: z.optional(z.union([
+    current_location: z.union([
         zLocationResponse,
         z.null()
-    ])),
-    first_visit_date: z.optional(z.union([
+    ]),
+    first_visit_date: z.union([
         z.iso.date(),
         z.null()
-    ])),
+    ]),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -1226,14 +1260,14 @@ export const zWellResponse = z.object({
     release_status: z.string(),
     name: z.string(),
     thing_type: z.string(),
-    active_location: z.optional(z.union([
+    current_location: z.union([
         zLocationResponse,
         z.null()
-    ])),
-    first_visit_date: z.optional(z.union([
+    ]),
+    first_visit_date: z.union([
         z.iso.date(),
         z.null()
-    ])),
+    ]),
     well_purpose: z.optional(z.union([
         z.string(),
         z.null()
@@ -1242,8 +1276,24 @@ export const zWellResponse = z.object({
         z.number(),
         z.null()
     ])),
+    well_depth_unit: z.optional(z.string()).default('ft'),
     hole_depth: z.optional(z.union([
         z.number(),
+        z.null()
+    ])),
+    hole_depth_unit: z.optional(z.string()).default('ft'),
+    well_casing_diameter: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_diameter_unit: z.optional(z.string()).default('in'),
+    well_casing_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_depth_unit: z.optional(z.string()).default('ft'),
+    well_casing_material: z.optional(z.union([
+        z.string(),
         z.null()
     ])),
     well_construction_notes: z.optional(z.union([
@@ -1276,7 +1326,9 @@ export const zWellScreenResponse = z.object({
     thing_id: z.int(),
     thing: zWellResponse,
     screen_depth_bottom: z.number(),
+    screen_depth_bottom_unit: z.optional(z.string()).default('ft'),
     screen_depth_top: z.number(),
+    screen_depth_top_unit: z.optional(z.string()).default('ft'),
     screen_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -1574,15 +1626,15 @@ export const zUpdateLexiconTriple = z.object({
  * Schema for updating a location.
  */
 export const zUpdateLocation = z.object({
+    point: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     release_status: z.optional(z.union([
         z.string(),
         z.null()
     ])),
     notes: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    point: z.optional(z.union([
         z.string(),
         z.null()
     ])),
@@ -1809,6 +1861,18 @@ export const zUpdateWaterChemistryObservation = z.object({
  * UpdateWell
  */
 export const zUpdateWell = z.object({
+    well_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    hole_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
     release_status: z.optional(z.union([
         z.string(),
         z.null()
@@ -1825,15 +1889,15 @@ export const zUpdateWell = z.object({
         z.string(),
         z.null()
     ])),
-    well_depth: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    hole_depth: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
     well_construction_notes: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_casing_diameter: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_material: z.optional(z.union([
         z.string(),
         z.null()
     ]))

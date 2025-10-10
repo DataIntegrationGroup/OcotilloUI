@@ -457,6 +457,10 @@ export type CreateLexiconTriple = {
  */
 export type CreateLocation = {
     /**
+     * Point
+     */
+    point: string;
+    /**
      * Release Status
      */
     release_status?: string | null;
@@ -464,10 +468,6 @@ export type CreateLocation = {
      * Notes
      */
     notes?: string | null;
-    /**
-     * Point
-     */
-    point: string;
     /**
      * Elevation
      */
@@ -645,7 +645,7 @@ export type CreateSpring = {
     /**
      * Location Id
      */
-    location_id?: number | null;
+    location_id: number | null;
     /**
      * Group Id
      */
@@ -657,7 +657,7 @@ export type CreateSpring = {
     /**
      * First Visit Date
      */
-    first_visit_date: string;
+    first_visit_date?: string | null;
     /**
      * Spring Type
      */
@@ -727,13 +727,28 @@ export type CreateWaterChemistryObservation = {
  */
 export type CreateWell = {
     /**
+     * Well Depth
+     * Well depth in feet
+     */
+    well_depth?: number | null;
+    /**
+     * Hole Depth
+     * Hole depth in feet
+     */
+    hole_depth?: number | null;
+    /**
+     * Well Casing Depth
+     * Well casing depth in feet
+     */
+    well_casing_depth?: number | null;
+    /**
      * Release Status
      */
     release_status: string;
     /**
      * Location Id
      */
-    location_id?: number | null;
+    location_id: number | null;
     /**
      * Group Id
      */
@@ -745,23 +760,24 @@ export type CreateWell = {
     /**
      * First Visit Date
      */
-    first_visit_date: string;
+    first_visit_date?: string | null;
     /**
      * Well Purpose
      */
     well_purpose?: string | null;
     /**
-     * Well Depth
-     */
-    well_depth?: number | null;
-    /**
-     * Hole Depth
-     */
-    hole_depth?: number | null;
-    /**
      * Well Construction Notes
      */
     well_construction_notes?: string | null;
+    /**
+     * Well Casing Diameter
+     * Well casing diameter in inches
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Material
+     */
+    well_casing_material?: string | null;
 };
 
 /**
@@ -779,10 +795,12 @@ export type CreateWellScreen = {
     thing_id: number;
     /**
      * Screen Depth Bottom
+     * Screen depth bottom in feet
      */
     screen_depth_bottom: number;
     /**
      * Screen Depth Top
+     * Screen depth top in feet
      */
     screen_depth_top: number;
     /**
@@ -2020,11 +2038,11 @@ export type SpringResponse = {
      * Thing Type
      */
     thing_type: string;
-    active_location?: LocationResponse | null;
+    current_location: LocationResponse | null;
     /**
      * First Visit Date
      */
-    first_visit_date?: string | null;
+    first_visit_date: string | null;
     /**
      * Spring Type
      */
@@ -2090,11 +2108,11 @@ export type ThingResponse = {
      * Thing Type
      */
     thing_type: string;
-    active_location?: LocationResponse | null;
+    current_location: LocationResponse | null;
     /**
      * First Visit Date
      */
-    first_visit_date?: string | null;
+    first_visit_date: string | null;
     /**
      * Spring Type
      */
@@ -2108,9 +2126,37 @@ export type ThingResponse = {
      */
     well_depth?: number | null;
     /**
+     * Well Depth Unit
+     */
+    well_depth_unit?: string;
+    /**
      * Hole Depth
      */
     hole_depth?: number | null;
+    /**
+     * Hole Depth Unit
+     */
+    hole_depth_unit?: string;
+    /**
+     * Well Casing Diameter
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Diameter Unit
+     */
+    well_casing_diameter_unit?: string;
+    /**
+     * Well Casing Depth
+     */
+    well_casing_depth?: number | null;
+    /**
+     * Well Casing Depth Unit
+     */
+    well_casing_depth_unit?: string;
+    /**
+     * Well Casing Material
+     */
+    well_casing_material?: string | null;
     /**
      * Well Construction Notes
      */
@@ -2354,6 +2400,10 @@ export type UpdateLexiconTriple = {
  */
 export type UpdateLocation = {
     /**
+     * Point
+     */
+    point?: string | null;
+    /**
      * Release Status
      */
     release_status?: string | null;
@@ -2361,10 +2411,6 @@ export type UpdateLocation = {
      * Notes
      */
     notes?: string | null;
-    /**
-     * Point
-     */
-    point?: string | null;
     /**
      * Elevation
      */
@@ -2581,6 +2627,18 @@ export type UpdateWaterChemistryObservation = {
  */
 export type UpdateWell = {
     /**
+     * Well Depth
+     */
+    well_depth?: number | null;
+    /**
+     * Hole Depth
+     */
+    hole_depth?: number | null;
+    /**
+     * Well Casing Depth
+     */
+    well_casing_depth?: number | null;
+    /**
      * Release Status
      */
     release_status?: string | null;
@@ -2597,17 +2655,17 @@ export type UpdateWell = {
      */
     well_purpose?: string | null;
     /**
-     * Well Depth
-     */
-    well_depth?: number | null;
-    /**
-     * Hole Depth
-     */
-    hole_depth?: number | null;
-    /**
      * Well Construction Notes
      */
     well_construction_notes?: string | null;
+    /**
+     * Well Casing Diameter
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Material
+     */
+    well_casing_material?: string | null;
 };
 
 /**
@@ -2718,11 +2776,11 @@ export type WellResponse = {
      * Thing Type
      */
     thing_type: string;
-    active_location?: LocationResponse | null;
+    current_location: LocationResponse | null;
     /**
      * First Visit Date
      */
-    first_visit_date?: string | null;
+    first_visit_date: string | null;
     /**
      * Well Purpose
      */
@@ -2732,9 +2790,37 @@ export type WellResponse = {
      */
     well_depth?: number | null;
     /**
+     * Well Depth Unit
+     */
+    well_depth_unit?: string;
+    /**
      * Hole Depth
      */
     hole_depth?: number | null;
+    /**
+     * Hole Depth Unit
+     */
+    hole_depth_unit?: string;
+    /**
+     * Well Casing Diameter
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Diameter Unit
+     */
+    well_casing_diameter_unit?: string;
+    /**
+     * Well Casing Depth
+     */
+    well_casing_depth?: number | null;
+    /**
+     * Well Casing Depth Unit
+     */
+    well_casing_depth_unit?: string;
+    /**
+     * Well Casing Material
+     */
+    well_casing_material?: string | null;
     /**
      * Well Construction Notes
      */
@@ -2768,9 +2854,17 @@ export type WellScreenResponse = {
      */
     screen_depth_bottom: number;
     /**
+     * Screen Depth Bottom Unit
+     */
+    screen_depth_bottom_unit?: string;
+    /**
      * Screen Depth Top
      */
     screen_depth_top: number;
+    /**
+     * Screen Depth Top Unit
+     */
+    screen_depth_top_unit?: string;
     /**
      * Screen Type
      */
