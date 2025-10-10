@@ -61,7 +61,7 @@ describe('Ocotillo Integration Tests: Spring', () => {
   })
 
   it('should create spring using data provider', async () => {
-    const createData: CreateSpring = zCreateSpring.parse({
+    const createData = zCreateSpring.parse({
       name: 'Test Spring',
       release_status: 'public',
       first_visit_date: '2025-01-08',

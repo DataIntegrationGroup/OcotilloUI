@@ -61,7 +61,7 @@ describe('Ocotillo Integration Tests: Water Well', () => {
   })
 
   it('should create a water well using data provider', async () => {
-    const createData: CreateWell = zCreateWell.parse({
+    const createData = zCreateWell.parse({
       name: 'Test Water Well',
       release_status: 'public',
       first_visit_date: '2025-01-08',
