@@ -1,4 +1,3 @@
-import React from 'react'
 import { Select, MenuItem } from '@mui/material'
 
 export const BaseMapSelect = ({ baseMap, setBaseMap }) => {

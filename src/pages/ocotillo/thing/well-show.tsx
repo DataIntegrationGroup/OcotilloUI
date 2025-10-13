@@ -35,131 +35,11 @@ import { settings } from '@/settings'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
 import {
-  AnalyticsOutlined,
+  Map,
   StackedLineChart,
   TableChartOutlined,
 } from '@mui/icons-material'
-
-function indexOfMax(arr) {
-  if (arr.length === 0) {
-    return -1
-  }
-
-  let max = arr[0]
-  let maxIndex = 0
-
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i] > max) {
-      maxIndex = i
-      max = arr[i]
-    }
-  }
-
-  return maxIndex
-}
-function indexOfMin(arr) {
-  if (arr.length === 0) {
-    return -1
-  }
-
-  let min = arr[0]
-  let minIndex = 0
-
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i] < min) {
-      minIndex = i
-      min = arr[i]
-    }
-  }
-
-  return minIndex
-}
-
-const WaterlevelStats = ({
-  observations,
-}: {
-  observations: readonly IObservation[]
-}) => {
-  const [maxDepth, setMaxDepth] = useState(0)
-  const [minDepth, setMinDepth] = useState(0)
-  const [maxDepthDatetime, setMaxDepthDatetime] = useState<string>('')
-  const [minDepthDatetime, setMinDepthDatetime] = useState<string>('')
-
-  useEffect(() => {
-    if (observations.length === 0) return
-    const depths = observations.map((obs) => Number(obs.depth_to_water_bgs))
-
-    setMaxDepth(Math.max(...depths))
-    setMaxDepthDatetime(observations[indexOfMax(depths)].observation_datetime)
-    setMinDepthDatetime(observations[indexOfMin(depths)].observation_datetime)
-    setMinDepth(Math.min(...depths))
-  }, [observations])
-
-  if (observations.length === 0) {
-    return (
-      <Card elevation={2}>
-        <CardHeader
-          title={
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <AnalyticsOutlined color="primary" />
-              <Typography variant="body1" fontWeight="bold">
-                Water Level Statistics
-              </Typography>
-            </Stack>
-          }
-        />
-        <CardContent>
-          <Box textAlign="center" py={4}>
-            <Typography variant="body1" color="text.secondary" gutterBottom>
-              No water level data available
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Water level observations will appear here once data is collected
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <Card elevation={2}>
-      <CardHeader
-        title={
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <AnalyticsOutlined color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Water Level Statistics
-            </Typography>
-          </Stack>
-        }
-      />
-      <CardContent>
-        <Stack spacing={2}>
-          <Box>
-            <Typography variant="body1" fontWeight="bold">
-              Maximum Depth: {maxDepth.toFixed(2)} ft
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {new Date(maxDepthDatetime).toLocaleString()}
-            </Typography>
-          </Box>
-
-          <Divider />
-
-          <Box>
-            <Typography variant="body1" fontWeight="bold">
-              Minimum Depth: {minDepth.toFixed(2)} ft
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {new Date(minDepthDatetime).toLocaleString()}
-            </Typography>
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
-  )
-}
+import { MapComponent } from '@/components'
 
 export const WellShow = () => {
   const { queryResult } = useShow({})
@@ -213,7 +93,6 @@ export const WellShow = () => {
   const { rows: observations, loading: observationsIsloading } =
     observationDataGridProps
 
-  // console.log('props', observationDataGridProps)
   useEffect(() => {
     if (!observations || observations.length === 0) return
 
@@ -408,26 +287,101 @@ export const WellShow = () => {
                       color="warning"
                       variant="outlined"
                     />
+                    <Chip
+                      label={record?.group_id || 'Unknown Group'}
+                      color="secondary"
+                      variant="outlined"
+                    />
                   </Stack>
 
                   <Stack direction="row" spacing={4} mt={2}>
                     <Box>
                       <Typography variant="body1" fontWeight="bold">
-                        Hole Depth: {record?.hole_depth || 'N/A'} ft
+                        Hole Depth: {record?.hole_depth || 'N/A'} {record?.hole_depth ? " ft" : null}
                       </Typography>
                     </Box>
                     <Box>
                       <Typography variant="body1" fontWeight="bold">
-                        Well Depth: {record?.well_depth || 'N/A'} ft
+                        Well Depth: {record?.well_depth || 'N/A'} {record?.well_depth ? " ft" : null}
                       </Typography>
                     </Box>
                   </Stack>
+
+                  <Stack direction="row" spacing={4} mt={2}>
+                    <Box>
+                      <Typography variant="body1" fontWeight="bold">
+                        Northing: {record?.active_location?.name || 'N/A'}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body1" fontWeight="bold">
+                        Easting: {record?.active_location?.point || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  <Stack direction="row" spacing={4} mt={2}>
+                    <Box>
+                      <Typography variant="body1" fontWeight="bold">
+                        Latitude/Longitude: {record?.active_location?.name || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+
+                  <Stack direction="row" spacing={4} mt={2}>
+                    <Box>
+                      <Typography variant="body1" fontWeight="bold">
+                        Elevation: {record?.active_location?.name || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+
+                  <Typography variant="h6" fontWeight="bold">
+                    Alternate IDs
+                  </Typography>
+
+                  <Stack direction="column" spacing={2} mt={2}>
+                    <Box>
+                      <Typography variant="body1" fontWeight="bold">
+                        OSE: {record?.active_location?.name || 'N/A'}
+                      </Typography>
+                    </Box>
+
+                    <Box>
+                      <Typography variant="body1" fontWeight="bold">
+                        USGS: {record?.active_location?.name || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
                 </Stack>
               </CardContent>
             </Card>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <WaterlevelStats observations={observations} />
+            {/*
+              <WaterlevelStats observations={observations} />
+            */}
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Card elevation={2} sx={{ height: '100%' }}>
+                <CardHeader
+                  title={
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Map color="primary" />
+                      <Typography variant="body1" fontWeight="bold">
+                        Interactive Satellite Map
+                      </Typography>
+                    </Stack>
+                  }
+                />
+                <CardContent>
+                  <MapComponent />
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
         </Grid>
 
