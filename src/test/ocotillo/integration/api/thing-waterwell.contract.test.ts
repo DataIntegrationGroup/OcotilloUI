@@ -61,14 +61,14 @@ describe('Ocotillo Integration Tests: Water Well', () => {
   })
 
   it('should create a water well using data provider', async () => {
-    const createData: CreateWell = zCreateWell.parse({
+    const createData = zCreateWell.parse({
       name: 'Test Water Well',
       release_status: 'public',
-      thing_type: 'water-well',
+      first_visit_date: '2025-01-08',
       location_id: 1,
       well_depth: 10,
       hole_depth: 10,
-      well_type: 'water-well',
+      well_purpose: 'monitoring',
       well_construction_notes: 'Test construction notes',
       group_id: 1,
     })
@@ -95,16 +95,13 @@ describe('Ocotillo Integration Tests: Water Well', () => {
 
   it('should update a water well using data provider', async () => {
     const updateData: UpdateWell = zUpdateWell.parse({
-      id: 1,
       name: 'Updated Test Water Well',
       release_status: 'public',
-      thing_type: 'water-well',
-      location_id: 1,
+      first_visit_date: '2025-01-08',
       well_depth: 10,
       hole_depth: 10,
-      well_type: 'water-well',
-      well_construction_notes: 'Updated test construction notes',
-      group_id: 1,
+      well_purpose: 'monitoring',
+      well_construction_notes: 'Updated test construction notes'
     })
 
     const result = await ocotilloDataProvider.update({

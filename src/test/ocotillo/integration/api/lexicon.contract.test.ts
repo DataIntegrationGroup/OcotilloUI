@@ -70,7 +70,7 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
     const testData: CreateLexiconTerm = zCreateLexiconTerm.parse({
       term: 'Test Term',
       definition: 'This is a test term definition',
-      categories: [{ id: 1, name: 'Test Category' }] 
+      categories: ['Test Category'] 
     })
 
     const result = await ocotilloDataProvider.create({
@@ -96,8 +96,7 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
   it('should update term using data provider', async () => {
     const testData: UpdateLexiconTerm = zUpdateLexiconTerm.parse({
       term: 'Updated Test Term',
-      definition: 'This is an updated test term definition',
-      categories: [{ id: 1, name: 'Test Category 1' }, { id: 2, name: 'Test Category 2' }] 
+      definition: 'This is an updated test term definition'
     })
 
     const result = await ocotilloDataProvider.update({

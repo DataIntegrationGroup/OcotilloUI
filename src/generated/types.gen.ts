@@ -337,9 +337,9 @@ export type CreateEmail = {
  */
 export type CreateGroundwaterLevelObservation = {
     /**
-     * Observed Property
+     * Parameter Id
      */
-    observed_property: string;
+    parameter_id: number;
     /**
      * Observation Datetime
      */
@@ -369,9 +369,9 @@ export type CreateGroundwaterLevelObservation = {
      */
     measuring_point_height: number;
     /**
-     * Level Status
+     * Groundwater Level Reason
      */
-    level_status: string;
+    groundwater_level_reason: string;
 };
 
 /**
@@ -434,7 +434,7 @@ export type CreateLexiconTerm = {
     /**
      * Categories
      */
-    categories: Array<CreateLexiconCategory>;
+    categories: Array<string>;
 };
 
 /**
@@ -457,6 +457,10 @@ export type CreateLexiconTriple = {
  */
 export type CreateLocation = {
     /**
+     * Point
+     */
+    point: string;
+    /**
      * Release Status
      */
     release_status?: string | null;
@@ -464,10 +468,6 @@ export type CreateLocation = {
      * Notes
      */
     notes?: string | null;
-    /**
-     * Point
-     */
-    point: string;
     /**
      * Elevation
      */
@@ -569,9 +569,9 @@ export type CreateSample = {
      */
     field_activity_id: number;
     /**
-     * Field Event Contact Id
+     * Field Event Participant Id
      */
-    field_event_contact_id: number;
+    field_event_participant_id: number;
     /**
      * Sample Name
      */
@@ -645,7 +645,7 @@ export type CreateSpring = {
     /**
      * Location Id
      */
-    location_id?: number | null;
+    location_id: number | null;
     /**
      * Group Id
      */
@@ -654,6 +654,10 @@ export type CreateSpring = {
      * Name
      */
     name: string;
+    /**
+     * First Visit Date
+     */
+    first_visit_date?: string | null;
     /**
      * Spring Type
      */
@@ -688,9 +692,9 @@ export type CreateThingIdLink = {
  */
 export type CreateWaterChemistryObservation = {
     /**
-     * Observed Property
+     * Parameter Id
      */
-    observed_property: string;
+    parameter_id: number;
     /**
      * Observation Datetime
      */
@@ -723,13 +727,28 @@ export type CreateWaterChemistryObservation = {
  */
 export type CreateWell = {
     /**
+     * Well Depth
+     * Well depth in feet
+     */
+    well_depth?: number | null;
+    /**
+     * Hole Depth
+     * Hole depth in feet
+     */
+    hole_depth?: number | null;
+    /**
+     * Well Casing Depth
+     * Well casing depth in feet
+     */
+    well_casing_depth?: number | null;
+    /**
      * Release Status
      */
     release_status: string;
     /**
      * Location Id
      */
-    location_id?: number | null;
+    location_id: number | null;
     /**
      * Group Id
      */
@@ -739,21 +758,26 @@ export type CreateWell = {
      */
     name: string;
     /**
-     * Well Type
+     * First Visit Date
      */
-    well_type?: string | null;
+    first_visit_date?: string | null;
     /**
-     * Well Depth
+     * Well Purpose
      */
-    well_depth?: number | null;
-    /**
-     * Hole Depth
-     */
-    hole_depth?: number | null;
+    well_purpose?: string | null;
     /**
      * Well Construction Notes
      */
     well_construction_notes?: string | null;
+    /**
+     * Well Casing Diameter
+     * Well casing diameter in inches
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Material
+     */
+    well_casing_material?: string | null;
 };
 
 /**
@@ -771,10 +795,12 @@ export type CreateWellScreen = {
     thing_id: number;
     /**
      * Screen Depth Bottom
+     * Screen depth bottom in feet
      */
     screen_depth_bottom: number;
     /**
      * Screen Depth Top
+     * Screen depth top in feet
      */
     screen_depth_top: number;
     /**
@@ -950,10 +976,7 @@ export type GroundwaterLevelObservationResponse = {
      * Observation Datetime
      */
     observation_datetime: string;
-    /**
-     * Observed Property
-     */
-    observed_property: string;
+    parameter: ParameterResponse;
     /**
      * Value
      */
@@ -971,9 +994,9 @@ export type GroundwaterLevelObservationResponse = {
      */
     measuring_point_height: number | null;
     /**
-     * Level Status
+     * Groundwater Level Reason
      */
-    level_status: string | null;
+    groundwater_level_reason: string | null;
 };
 
 /**
@@ -1197,10 +1220,7 @@ export type ObservationResponse = {
      * Observation Datetime
      */
     observation_datetime: string;
-    /**
-     * Observed Property
-     */
-    observed_property: string;
+    parameter: ParameterResponse;
     /**
      * Value
      */
@@ -1218,9 +1238,9 @@ export type ObservationResponse = {
      */
     measuring_point_height: number | null;
     /**
-     * Level Status
+     * Groundwater Level Reason
      */
-    level_status: string | null;
+    groundwater_level_reason: string | null;
 };
 
 /**
@@ -1772,6 +1792,46 @@ export type PageDict = {
 };
 
 /**
+ * ParameterResponse
+ * Pydantic model for the response of a parameter.
+ * This model can be extended to include additional fields as needed.
+ */
+export type ParameterResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Release Status
+     */
+    release_status: string;
+    /**
+     * Parameter Name
+     */
+    parameter_name: string;
+    /**
+     * Matrix
+     */
+    matrix: string;
+    /**
+     * Parameter Type
+     */
+    parameter_type: string | null;
+    /**
+     * Cas Number
+     */
+    cas_number: string | null;
+    /**
+     * Default Unit
+     */
+    default_unit: string;
+};
+
+/**
  * PhoneResponse
  * Response schema for phone details.
  */
@@ -1978,7 +2038,11 @@ export type SpringResponse = {
      * Thing Type
      */
     thing_type: string;
-    active_location?: LocationResponse | null;
+    current_location: LocationResponse | null;
+    /**
+     * First Visit Date
+     */
+    first_visit_date: string | null;
     /**
      * Spring Type
      */
@@ -2044,23 +2108,55 @@ export type ThingResponse = {
      * Thing Type
      */
     thing_type: string;
-    active_location?: LocationResponse | null;
+    current_location: LocationResponse | null;
+    /**
+     * First Visit Date
+     */
+    first_visit_date: string | null;
     /**
      * Spring Type
      */
     spring_type?: string | null;
     /**
-     * Well Type
+     * Well Purpose
      */
-    well_type?: string | null;
+    well_purpose?: string | null;
     /**
      * Well Depth
      */
     well_depth?: number | null;
     /**
+     * Well Depth Unit
+     */
+    well_depth_unit?: string;
+    /**
      * Hole Depth
      */
     hole_depth?: number | null;
+    /**
+     * Hole Depth Unit
+     */
+    hole_depth_unit?: string;
+    /**
+     * Well Casing Diameter
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Diameter Unit
+     */
+    well_casing_diameter_unit?: string;
+    /**
+     * Well Casing Depth
+     */
+    well_casing_depth?: number | null;
+    /**
+     * Well Casing Depth Unit
+     */
+    well_casing_depth_unit?: string;
+    /**
+     * Well Casing Material
+     */
+    well_casing_material?: string | null;
     /**
      * Well Construction Notes
      */
@@ -2187,9 +2283,9 @@ export type UpdateEmail = {
  */
 export type UpdateGroundwaterLevelObservation = {
     /**
-     * Observed Property
+     * Parameter Id
      */
-    observed_property?: string | null;
+    parameter_id?: number | null;
     /**
      * Observation Datetime
      */
@@ -2219,9 +2315,9 @@ export type UpdateGroundwaterLevelObservation = {
      */
     measuring_point_height?: number | null;
     /**
-     * Level Status
+     * Groundwater Level Reason
      */
-    level_status?: string | null;
+    groundwater_level_reason?: string | null;
 };
 
 /**
@@ -2304,6 +2400,10 @@ export type UpdateLexiconTriple = {
  */
 export type UpdateLocation = {
     /**
+     * Point
+     */
+    point?: string | null;
+    /**
      * Release Status
      */
     release_status?: string | null;
@@ -2311,10 +2411,6 @@ export type UpdateLocation = {
      * Notes
      */
     notes?: string | null;
-    /**
-     * Point
-     */
-    point?: string | null;
     /**
      * Elevation
      */
@@ -2385,9 +2481,9 @@ export type UpdateSample = {
      */
     field_activity_id?: number | null;
     /**
-     * Field Event Contact Id
+     * Field Event Participant Id
      */
-    field_event_contact_id?: number | null;
+    field_event_participant_id?: number | null;
     /**
      * Sample Name
      */
@@ -2461,6 +2557,10 @@ export type UpdateSpring = {
      */
     name?: string | null;
     /**
+     * First Visit Date
+     */
+    first_visit_date?: string | null;
+    /**
      * Spring Type
      */
     spring_type?: string | null;
@@ -2493,9 +2593,9 @@ export type UpdateThingIdLink = {
  */
 export type UpdateWaterChemistryObservation = {
     /**
-     * Observed Property
+     * Parameter Id
      */
-    observed_property?: string | null;
+    parameter_id?: number | null;
     /**
      * Observation Datetime
      */
@@ -2527,18 +2627,6 @@ export type UpdateWaterChemistryObservation = {
  */
 export type UpdateWell = {
     /**
-     * Release Status
-     */
-    release_status?: string | null;
-    /**
-     * Name
-     */
-    name?: string | null;
-    /**
-     * Well Type
-     */
-    well_type?: string | null;
-    /**
      * Well Depth
      */
     well_depth?: number | null;
@@ -2547,9 +2635,37 @@ export type UpdateWell = {
      */
     hole_depth?: number | null;
     /**
+     * Well Casing Depth
+     */
+    well_casing_depth?: number | null;
+    /**
+     * Release Status
+     */
+    release_status?: string | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * First Visit Date
+     */
+    first_visit_date?: string | null;
+    /**
+     * Well Purpose
+     */
+    well_purpose?: string | null;
+    /**
      * Well Construction Notes
      */
     well_construction_notes?: string | null;
+    /**
+     * Well Casing Diameter
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Material
+     */
+    well_casing_material?: string | null;
 };
 
 /**
@@ -2624,10 +2740,7 @@ export type WaterChemistryObservationResponse = {
      * Observation Datetime
      */
     observation_datetime: string;
-    /**
-     * Observed Property
-     */
-    observed_property: string;
+    parameter: ParameterResponse;
     /**
      * Value
      */
@@ -2663,19 +2776,51 @@ export type WellResponse = {
      * Thing Type
      */
     thing_type: string;
-    active_location?: LocationResponse | null;
+    current_location: LocationResponse | null;
     /**
-     * Well Type
+     * First Visit Date
      */
-    well_type?: string | null;
+    first_visit_date: string | null;
+    /**
+     * Well Purpose
+     */
+    well_purpose?: string | null;
     /**
      * Well Depth
      */
     well_depth?: number | null;
     /**
+     * Well Depth Unit
+     */
+    well_depth_unit?: string;
+    /**
      * Hole Depth
      */
     hole_depth?: number | null;
+    /**
+     * Hole Depth Unit
+     */
+    hole_depth_unit?: string;
+    /**
+     * Well Casing Diameter
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Diameter Unit
+     */
+    well_casing_diameter_unit?: string;
+    /**
+     * Well Casing Depth
+     */
+    well_casing_depth?: number | null;
+    /**
+     * Well Casing Depth Unit
+     */
+    well_casing_depth_unit?: string;
+    /**
+     * Well Casing Material
+     */
+    well_casing_material?: string | null;
     /**
      * Well Construction Notes
      */
@@ -2709,9 +2854,17 @@ export type WellScreenResponse = {
      */
     screen_depth_bottom: number;
     /**
+     * Screen Depth Bottom Unit
+     */
+    screen_depth_bottom_unit?: string;
+    /**
      * Screen Depth Top
      */
     screen_depth_top: number;
+    /**
+     * Screen Depth Top Unit
+     */
+    screen_depth_top_unit?: string;
     /**
      * Screen Type
      */
