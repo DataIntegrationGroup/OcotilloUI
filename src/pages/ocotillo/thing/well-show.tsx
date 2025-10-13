@@ -11,7 +11,6 @@ import {
   CardHeader,
   Chip,
   CircularProgress,
-  Divider,
   ImageList,
   ImageListItem,
   Stack,
@@ -364,24 +363,21 @@ export const WellShow = () => {
             {/*
               <WaterlevelStats observations={observations} />
             */}
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card elevation={2} sx={{ height: '100%' }}>
-                <CardHeader
-                  title={
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Map color="primary" />
-                      <Typography variant="body1" fontWeight="bold">
-                        Interactive Satellite Map
-                      </Typography>
-                    </Stack>
-                  }
-                />
-                <CardContent>
-                  <MapComponent />
-                </CardContent>
-              </Card>
-            </Grid>
+            <Card elevation={2} sx={{ height: '100%' }}>
+              <CardHeader
+                title={
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Map color="primary" />
+                    <Typography variant="body1" fontWeight="bold">
+                      Interactive Satellite Map
+                    </Typography>
+                  </Stack>
+                }
+              />
+              <CardContent>
+                <MapComponent />
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
 
