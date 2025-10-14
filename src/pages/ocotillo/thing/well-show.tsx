@@ -16,7 +16,6 @@ import {
 } from '@mui/material'
 import { useEffect, useMemo, useState } from 'react'
 import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
-import { IObservation } from '@/interfaces/ocotillo/IObservation'
 import { Box } from '@mui/system'
 import Grid from '@mui/material/Grid2'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
@@ -30,11 +29,11 @@ import InfoIcon from '@mui/icons-material/Info'
 import { settings } from '@/settings'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
-import { TableChartOutlined } from '@mui/icons-material'
 import {
   CoreWellInfoCard,
   InteractiveSatelliteMapCard,
   HydrographCard,
+  RecentWaterLevelObservationsCard,
 } from '@/components'
 
 export const WellShow = () => {
@@ -237,26 +236,6 @@ export const WellShow = () => {
     setHydrographDatasource(source)
   }, [observations])
 
-  const observationColumns: GridColDef<IObservation>[] = useMemo(() => {
-    return [
-      {
-        field: 'observation_datetime',
-        headerName: 'Date/Time',
-        valueGetter: (params) => new Date(params),
-        type: 'dateTime',
-        minWidth: 180,
-      },
-      {
-        field: 'depth_to_water_bgs',
-        headerName: 'Depth To Water (ft bgs)',
-        type: 'number',
-        minWidth: 150,
-      },
-      { field: 'release_status', headerName: 'Release Status', minWidth: 150 },
-      { field: 'level_status', headerName: 'Level Status', minWidth: 150 },
-    ]
-  }, [])
-
   return (
     <Show isLoading={isLoading}>
       <Stack spacing={2}>
@@ -276,64 +255,13 @@ export const WellShow = () => {
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Card elevation={2} sx={{ height: '100%' }}>
-              <CardHeader
-                title={
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <TableChartOutlined color="primary" />
-                    <Typography variant="body1" fontWeight="bold">
-                      Recent Water Level Observations
-                    </Typography>
-                  </Stack>
-                }
-              />
-              <CardContent>
-                {observations.length === 0 ? (
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    sx={{ minHeight: 200 }}
-                  >
-                    <Box textAlign="center">
-                      <Typography
-                        variant="body1"
-                        color="text.secondary"
-                        gutterBottom
-                      >
-                        No observations recorded
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Water level measurements will appear here
-                      </Typography>
-                    </Box>
-                  </Box>
-                ) : (
-                  <DataGrid
-                    rows={observations}
-                    loading={observationsIsloading}
-                    getRowId={(row) => row.id}
-                    rowHeight={settings.rowHeight}
-                    columns={observationColumns}
-                    pageSizeOptions={[10, 25, 50]}
-                    initialState={{
-                      pagination: {
-                        paginationModel: { pageSize: 10, page: 0 },
-                      },
-                    }}
-                    sx={{
-                      border: 'none',
-                      '& .MuiDataGrid-cell': {
-                        borderBottom: '1px solid #f0f0f0',
-                      },
-                    }}
-                  />
-                )}
-              </CardContent>
-            </Card>
+            <RecentWaterLevelObservationsCard
+              well={well}
+              rows={observations}
+              isLoading={observationsIsloading}
+            />
           </Grid>
         </Grid>
-
         {/* Equipment */}
         <Card elevation={2}>
           <CardHeader

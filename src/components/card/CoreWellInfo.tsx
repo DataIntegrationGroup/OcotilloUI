@@ -56,6 +56,7 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
               alignItems="center"
               justifyContent="space-around"
             >
+              {/* Need Well Purpose */}
               <Chip
                 sx={{ fontFamily: 'monospace' }}
                 label={
@@ -141,15 +142,13 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">OSE:</Typography>
-            <Typography variant="body1">
-              {well?.current_location?.notes || 'N/A'}
-            </Typography>
+            {/* Need OSE url & link name */}
+            <Typography variant="body1">N/A</Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">USGS:</Typography>
-            <Typography variant="body1">
-              {well?.current_location?.notes || 'N/A'}
-            </Typography>
+            {/* Need OSE url & link name */}
+            <Typography variant="body1">N/A</Typography>
           </Grid>
         </Grid>
       </CardContent>
