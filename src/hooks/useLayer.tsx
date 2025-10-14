@@ -12,25 +12,31 @@ export const useLayer = ({
   const { data, isLoading } = useOne({
     dataProviderName: 'ocotillo',
     resource: 'geospatial',
-    id: undefined,
+    id: null,
     queryOptions: {
-      cacheTime: 60000, // Cache for 1 minute
-      staleTime: 30000, // Consider data fresh for 30 seconds
+      cacheTime: 60000,
+      staleTime: 30000,
     },
     meta: {
       requestConfig: {
         params: {
-          thing_type: thing_type,
+          thing_type,
           format: 'geojson',
         },
       },
     },
   })
 
+  // Always return valid GeoJSON
+  const safeGeoJSON =
+    data?.data && data.data.type === 'FeatureCollection'
+      ? data.data
+      : { type: 'FeatureCollection', features: [] }
+
   return {
-    sourceProps: { type: 'geojson', data: data?.data },
+    sourceProps: { type: 'geojson', data: safeGeoJSON },
     layerProps: {
-      label: label,
+      label,
       type: 'circle' as const,
       paint: {
         'circle-radius': 3,
@@ -39,6 +45,6 @@ export const useLayer = ({
         'circle-stroke-width': 1,
       },
     },
-    isLoading: isLoading,
+    isLoading,
   }
 }
