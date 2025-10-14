@@ -7,13 +7,6 @@ import {
   Box,
   Card,
   LinearProgress,
-  TableHead,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableContainer,
-  Paper,
   CardHeader,
   Typography,
   CardContent,
@@ -22,6 +15,7 @@ import {
   Checkbox,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
+import { MapPopup } from '@/components'
 
 export const MapView: React.FC = () => {
   const THING_LAYERS = useThingLayers()
@@ -52,7 +46,7 @@ export const MapView: React.FC = () => {
     })
   }
 
-  const onMapPointClick = (e: any, points: any[]) => {
+  const onMapPointClick = (_: any, points: any[]) => {
     const selectedPoint = points[0]
     if (selectedPoint.properties.thing_type === 'water well') {
       show('ocotillo.thing-well', selectedPoint.properties.id)
@@ -64,46 +58,9 @@ export const MapView: React.FC = () => {
     features = features.filter((f) => f.layer.id.startsWith('location-'))
     if (features.length > 0) {
       mapRef.current.getCanvas().style.cursor = 'pointer'
-      const children = (
-        <Box sx={{ width: '300px' }}>
-          <h3 style={{ color: 'black' }}>Click for more details</h3>
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell align={'right'}>
-                    <strong>ID</strong>
-                  </TableCell>
-                  <TableCell align={'right'}>
-                    <strong>Name</strong>
-                  </TableCell>
-                  <TableCell align={'right'}>
-                    <strong>Type</strong>
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {features.map((feature, index) => (
-                  <TableRow key={index}>
-                    <TableCell component="th" scope="row" align={'right'}>
-                      {feature.properties.id}
-                    </TableCell>
-                    <TableCell align={'right'}>
-                      {feature.properties.name}
-                    </TableCell>
-                    <TableCell align={'right'}>
-                      {feature.properties.thing_type}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      )
       setPopupContent({
         coordinates: features[0].geometry.coordinates,
-        children,
+        children: <MapPopup features={features} />,
         maxWidth: '800px',
       })
     } else {

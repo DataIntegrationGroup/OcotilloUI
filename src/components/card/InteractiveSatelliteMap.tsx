@@ -9,17 +9,82 @@ import {
   Typography,
 } from '@mui/material'
 import { Map } from '@mui/icons-material'
-import { Layer, Source } from 'react-map-gl'
-import { MapComponent } from '@/components'
+import { Layer, MapRef, Source } from 'react-map-gl'
+import { MapComponent, MapPopup } from '@/components'
 import { useThingLayers } from '@/hooks'
+import { parseWktPoint } from '@/utils'
+import { useEffect, useRef, useState } from 'react'
+import { useGo } from '@refinedev/core'
 
 export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
+  const mapRef = useRef<MapRef>(null)
   const THING_LAYERS = useThingLayers()
+  const [popupContent, setPopupContent] = useState<any>(null)
+  const go = useGo()
+
   const waterWellsLayer = THING_LAYERS['water-wells']
   const { sourceProps, layerProps } = waterWellsLayer
 
+  const coords = well ? parseWktPoint(well?.current_location?.point) : null
+
+  // Automatically zoom to well coordinates when map loads or well changes
+  useEffect(() => {
+    if (!coords || !mapRef.current) return
+
+    const map = mapRef.current.getMap()
+    map.flyTo({
+      center: [coords.lon, coords.lat],
+      zoom: 14,
+      essential: true, // for accessibility
+    })
+  }, [well?.id])
+
   if (!well) {
     return <LoadingCard />
+  }
+
+  const highlightFeature = coords
+    ? {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [coords.lon, coords.lat],
+            },
+            properties: { name: well.name },
+          },
+        ],
+      }
+    : null
+
+  const onMapPointClick = (_: any, points: any[]) => {
+    const selectedPoint = points[0]
+    if (selectedPoint.properties.thing_type === 'water well') {
+      go({
+        to: {
+          resource: 'ocotillo.thing-well',
+          action: 'show',
+          id: selectedPoint.properties.id,
+        },
+      })
+    }
+  }
+
+  const onMapMouseMove = (_e: any, features: any[], mapRef: any) => {
+    features = features.filter((f) => f.layer.id.startsWith('location-'))
+    if (features.length > 0) {
+      mapRef.current.getCanvas().style.cursor = 'pointer'
+      setPopupContent({
+        coordinates: features[0].geometry.coordinates,
+        children: <MapPopup features={features} />,
+        maxWidth: '800px',
+      })
+    } else {
+      mapRef.current.getCanvas().style.cursor = 'grab'
+      setPopupContent(null)
+    }
   }
 
   return (
@@ -41,10 +106,39 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             borderColor: 'divider',
           }}
         >
-          <MapComponent>
+          <MapComponent
+            mapRef={mapRef}
+            initialViewState={{
+              longitude: coords?.lon || -106.0,
+              latitude: coords?.lat || 35.0,
+              zoom: 10,
+            }}
+            onPointClick={onMapPointClick}
+            onMouseMoveCallback={onMapMouseMove}
+            setPopupContent={setPopupContent}
+            popupContent={popupContent}
+          >
             <Source id="water-wells" {...sourceProps}>
               <Layer id="location-water-wells" {...layerProps} />
             </Source>
+            {highlightFeature && (
+              <Source
+                id="highlight-well"
+                type="geojson"
+                data={highlightFeature}
+              >
+                <Layer
+                  id="highlight-layer"
+                  type="circle"
+                  paint={{
+                    'circle-radius': 6,
+                    'circle-color': '#ff4d4d', // bright red highlight
+                    'circle-stroke-color': '#ffffff',
+                    'circle-stroke-width': 2,
+                  }}
+                />
+              </Source>
+            )}
           </MapComponent>
         </Box>
       </CardContent>
