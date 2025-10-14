@@ -1,7 +1,7 @@
-import { useList, useResourceParams, useShow } from '@refinedev/core'
+import { HttpError, useList, useResourceParams, useShow } from '@refinedev/core'
 import { CreateButton, Show, useDataGrid } from '@refinedev/mui'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import { IGroup, IWell } from '@/interfaces/ocotillo/IThing'
 import {
   Accordion,
   AccordionDetails,
@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Chip,
   CircularProgress,
   ImageList,
   ImageListItem,
@@ -33,17 +32,28 @@ import InfoIcon from '@mui/icons-material/Info'
 import { settings } from '@/settings'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
-import {
-  Map,
-  StackedLineChart,
-  TableChartOutlined,
-} from '@mui/icons-material'
-import { MapComponent } from '@/components'
+import { Map, StackedLineChart, TableChartOutlined } from '@mui/icons-material'
+import { CoreWellInfo, MapComponent } from '@/components'
+import { useQuery } from '@tanstack/react-query'
+import { ampApiFetch } from '@/utils'
 
 export const WellShow = () => {
-  const { queryResult } = useShow({})
-  const { data, isLoading } = queryResult
-  const record = data?.data as IWell
+  const {
+    queryResult: { data, isLoading },
+  } = useShow<IWell, HttpError>()
+
+  const record = data?.data
+
+  const groupQuery = useQuery<IGroup | null>({
+    queryKey: ['group', record?.group_id],
+    queryFn: async () => {
+      if (!record?.group_id) return null
+      return ampApiFetch(`/group/${record.group_id}`, '')
+    },
+    enabled: Boolean(record?.group_id),
+  })
+
+  console.log({ groupQuery })
 
   // Custom configs for wells
   const fieldConfigs = {
@@ -261,114 +271,18 @@ export const WellShow = () => {
 
   return (
     <Show isLoading={isLoading || observationsIsloading}>
-      <Stack spacing={3}>
-        {/* Title and Stats */}
-        <Grid container spacing={3}>
+      <Stack spacing={2}>
+        <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Card elevation={2} sx={{ height: '100%' }}>
-              <CardHeader
-                title={
-                  <Typography variant="h4" fontWeight="bold">
-                    {record?.name || 'Loading...'}
-                  </Typography>
-                }
-              />
-              <CardContent>
-                <Stack spacing={2}>
-                  <Stack direction="row" spacing={2} flexWrap="wrap">
-                    <Chip
-                      label={record?.well_type || 'Unknown Type'}
-                      color="primary"
-                      variant="outlined"
-                    />
-                    <Chip
-                      label={record?.release_status || 'Unknown Status'}
-                      color="warning"
-                      variant="outlined"
-                    />
-                    <Chip
-                      label={record?.group_id || 'Unknown Group'}
-                      color="secondary"
-                      variant="outlined"
-                    />
-                  </Stack>
-
-                  <Stack direction="row" spacing={4} mt={2}>
-                    <Box>
-                      <Typography variant="body1" fontWeight="bold">
-                        Hole Depth: {record?.hole_depth || 'N/A'} {record?.hole_depth ? " ft" : null}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="body1" fontWeight="bold">
-                        Well Depth: {record?.well_depth || 'N/A'} {record?.well_depth ? " ft" : null}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  <Stack direction="row" spacing={4} mt={2}>
-                    <Box>
-                      <Typography variant="body1" fontWeight="bold">
-                        Northing: {record?.active_location?.name || 'N/A'}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="body1" fontWeight="bold">
-                        Easting: {record?.active_location?.point || 'N/A'}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  <Stack direction="row" spacing={4} mt={2}>
-                    <Box>
-                      <Typography variant="body1" fontWeight="bold">
-                        Latitude/Longitude: {record?.active_location?.name || 'N/A'}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-
-                  <Stack direction="row" spacing={4} mt={2}>
-                    <Box>
-                      <Typography variant="body1" fontWeight="bold">
-                        Elevation: {record?.active_location?.name || 'N/A'}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-
-                  <Typography variant="h6" fontWeight="bold">
-                    Alternate IDs
-                  </Typography>
-
-                  <Stack direction="column" spacing={2} mt={2}>
-                    <Box>
-                      <Typography variant="body1" fontWeight="bold">
-                        OSE: {record?.active_location?.name || 'N/A'}
-                      </Typography>
-                    </Box>
-
-                    <Box>
-                      <Typography variant="body1" fontWeight="bold">
-                        USGS: {record?.active_location?.name || 'N/A'}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                </Stack>
-              </CardContent>
-            </Card>
+            <CoreWellInfo well={record} />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            {/*
-              <WaterlevelStats observations={observations} />
-            */}
             <Card elevation={2} sx={{ height: '100%' }}>
               <CardHeader
                 title={
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <Map color="primary" />
-                    <Typography variant="body1" fontWeight="bold">
+                    <Typography variant="body1">
                       Interactive Satellite Map
                     </Typography>
                   </Stack>
@@ -382,7 +296,7 @@ export const WellShow = () => {
         </Grid>
 
         {/* Hydrograph / Water Level */}
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
             <Card elevation={2} sx={{ height: '100%' }}>
               <CardHeader
