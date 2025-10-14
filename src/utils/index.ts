@@ -1,5 +1,5 @@
-export * from './AmpApiFetch'
-export * from './AmpApiUriBuilder'
+export * from './ApiFetch'
+export * from './ApiUriBuilder'
 export * from './FallbackWithDefault'
 export * from './FetchLookupTable'
 export * from './GetFieldPathsFromLoc'

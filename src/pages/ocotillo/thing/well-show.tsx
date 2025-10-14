@@ -34,8 +34,6 @@ import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
 import { Map, StackedLineChart, TableChartOutlined } from '@mui/icons-material'
 import { CoreWellInfo, MapComponent } from '@/components'
-import { useQuery } from '@tanstack/react-query'
-import { ampApiFetch } from '@/utils'
 
 export const WellShow = () => {
   const {
@@ -43,17 +41,6 @@ export const WellShow = () => {
   } = useShow<IWell, HttpError>()
 
   const record = data?.data
-
-  const groupQuery = useQuery<IGroup | null>({
-    queryKey: ['group', record?.group_id],
-    queryFn: async () => {
-      if (!record?.group_id) return null
-      return ampApiFetch(`/group/${record.group_id}`, '')
-    },
-    enabled: Boolean(record?.group_id),
-  })
-
-  console.log({ groupQuery })
 
   // Custom configs for wells
   const fieldConfigs = {

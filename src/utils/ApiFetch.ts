@@ -1,6 +1,6 @@
 import { ApiUriBuilder } from '@/utils'
 import { settings } from '@/settings'
-import { getAccessToken } from '@/providers/fief-provider'
+import { getAccessToken } from '@/providers/authentik-provider'
 
 export const fetchConfig = (accessToken: string, method: string = 'GET') => {
   return {
@@ -28,7 +28,7 @@ export const apiFetch = async ({
     ? endpoint.slice(1)
     : endpoint
 
-  const url = new AmpApiUriBuilder(settings.ocotillo_api_url)
+  const url = new ApiUriBuilder(settings.ocotillo_api_url)
     .setEndpoint(normalizedEndpoint)
     .build()
 

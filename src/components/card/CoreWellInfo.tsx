@@ -1,4 +1,4 @@
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import { IGroup, IWell } from '@/interfaces/ocotillo/IThing'
 import {
   Card,
   CardContent,
@@ -11,6 +11,8 @@ import {
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { convertLonLatToUTM, parseWktPoint } from '@/utils'
+import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from '@/utils'
 
 export const CoreWellInfo = ({ well }: { well: IWell }) => {
   const coords = parseWktPoint(well?.current_location?.point)
@@ -21,6 +23,22 @@ export const CoreWellInfo = ({ well }: { well: IWell }) => {
   if (!well) {
     return <LoadingCard />
   }
+
+  const groupQuery = useQuery<IGroup | null>({
+    queryKey: ['group', well?.group_id],
+    queryFn: async () => {
+      const groupId =
+        well?.group_id ?? (import.meta.env.MODE === 'development' ? 1 : null)
+
+      if (!groupId) return null
+
+      return apiFetch({
+        endpoint: `/group/${groupId}`,
+        failureMessage: 'Failed to fetch group',
+      })
+    },
+    enabled: Boolean(well?.group_id) || import.meta.env.MODE === 'development',
+  })
 
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
@@ -51,11 +69,23 @@ export const CoreWellInfo = ({ well }: { well: IWell }) => {
                 }
                 color="error"
               />
-              <Chip
-                sx={{ fontFamily: 'monospace' }}
-                label={well?.group_id || 'UNKNOWN GROUP'}
-                color="primary"
-              />
+              {groupQuery.isLoading ? (
+                <Skeleton
+                  variant="rectangular"
+                  width={150}
+                  height={35}
+                  sx={{ borderRadius: '2rem' }}
+                />
+              ) : (
+                <Chip
+                  sx={{ fontFamily: 'monospace' }}
+                  label={
+                    groupQuery?.data?.name?.toLocaleUpperCase() ||
+                    'UNKNOWN GROUP'
+                  }
+                  color="primary"
+                />
+              )}
             </Stack>
           </Grid>
           <Grid size={{ xs: 12 }}>
