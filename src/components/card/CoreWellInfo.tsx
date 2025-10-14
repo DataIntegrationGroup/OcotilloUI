@@ -14,7 +14,7 @@ import { convertLonLatToUTM, parseWktPoint } from '@/utils'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '@/utils'
 
-export const CoreWellInfo = ({ well }: { well: IWell }) => {
+export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
   const coords = parseWktPoint(well?.current_location?.point)
   const [easting, northing] = coords
     ? convertLonLatToUTM(coords.lon, coords.lat)
@@ -28,7 +28,10 @@ export const CoreWellInfo = ({ well }: { well: IWell }) => {
     queryKey: ['group', well?.group_id],
     queryFn: async () => {
       const groupId =
-        well?.group_id ?? (import.meta.env.MODE === 'development' ? 1 : null)
+        well?.group_id ??
+        (import.meta.env.MODE === 'development' && well?.name
+          ? getDeterministicGroupId(well.name)
+          : null)
 
       if (!groupId) return null
 
@@ -221,3 +224,19 @@ const LoadingCard = () => (
     </CardContent>
   </Card>
 )
+
+/**
+ * Deterministically hash a string (e.g., well name) to a number between 1 and 55.
+ * For development purposes only
+ */
+function getDeterministicGroupId(name: string, max: number = 55): number {
+  // Simple non-cryptographic hash (fast, consistent)
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash << 5) - hash + name.charCodeAt(i)
+    hash |= 0 // convert to 32-bit integer
+  }
+
+  // Normalize to 1..max (e.g. 1–55)
+  return (Math.abs(hash) % max) + 1
+}
