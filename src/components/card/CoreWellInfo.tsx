@@ -1,6 +1,5 @@
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
-  Box,
   Card,
   CardContent,
   CardHeader,
@@ -127,7 +126,7 @@ export const CoreWellInfo = ({ well }: { well: IWell }) => {
 
 const LoadingCard = () => (
   <Card elevation={2} sx={{ height: '100%' }}>
-    <CardHeader title={<Typography variant="h5">Loading...</Typography>} />
+    <CardHeader title={<Skeleton variant="text" width={150} height={32} />} />
     <CardContent>
       <Grid container spacing={4}>
         <Grid size={{ xs: 12 }}>
@@ -138,95 +137,55 @@ const LoadingCard = () => (
             alignItems="center"
             justifyContent="space-around"
           >
-            <Skeleton
-              variant="rectangular"
-              width={120}
-              height={35}
-              sx={{ borderRadius: '2rem' }}
-            />
-            <Skeleton
-              variant="rectangular"
-              width={120}
-              height={35}
-              sx={{ borderRadius: '2rem' }}
-            />
-            <Skeleton
-              variant="rectangular"
-              width={120}
-              height={35}
-              sx={{ borderRadius: '2rem' }}
-            />
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton
+                key={i}
+                variant="rectangular"
+                width={150}
+                height={35}
+                sx={{ borderRadius: '2rem' }}
+              />
+            ))}
           </Stack>
         </Grid>
         <Grid size={{ xs: 12 }}>
           <Divider />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton
-            variant="rectangular"
-            width={200}
-            height={35}
-            sx={{ borderRadius: '0.5rem' }}
-          />
+          <Skeleton variant="text" width={120} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={100} height={24} />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton
-            variant="rectangular"
-            width={200}
-            height={35}
-            sx={{ borderRadius: '0.5rem' }}
-          />
+          <Skeleton variant="text" width={120} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={100} height={24} />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton
-            variant="rectangular"
-            width={200}
-            height={35}
-            sx={{ borderRadius: '0.5rem' }}
-          />
+          <Skeleton variant="text" width={100} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={90} height={24} />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton
-            variant="rectangular"
-            width={200}
-            height={35}
-            sx={{ borderRadius: '0.5rem' }}
-          />
+          <Skeleton variant="text" width={100} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={90} height={24} />
         </Grid>
         <Grid size={{ xs: 12 }}>
-          <Skeleton
-            variant="rectangular"
-            width={200}
-            height={35}
-            sx={{ borderRadius: '0.5rem' }}
-          />
+          <Skeleton variant="text" width={200} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={180} height={24} />
         </Grid>
         <Grid size={{ xs: 12 }}>
-          <Skeleton
-            variant="rectangular"
-            width={200}
-            height={35}
-            sx={{ borderRadius: '0.5rem' }}
-          />
+          <Skeleton variant="text" width={120} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={80} height={24} />
         </Grid>
         <Grid size={{ xs: 12 }}>
-          <Typography variant="h6">Alternate IDs</Typography>
+          <Typography variant="h4">Alternate IDs</Typography>
+          <Divider />
         </Grid>
-        <Grid size={{ xs: 12 }}>
-          <Skeleton
-            variant="rectangular"
-            width={200}
-            height={35}
-            sx={{ borderRadius: '0.5rem' }}
-          />
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Skeleton variant="text" width={80} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={100} height={24} />
         </Grid>
-        <Grid size={{ xs: 12 }}>
-          <Skeleton
-            variant="rectangular"
-            width={200}
-            height={35}
-            sx={{ borderRadius: '0.5rem' }}
-          />
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Skeleton variant="text" width={80} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={100} height={24} />
         </Grid>
       </Grid>
     </CardContent>
