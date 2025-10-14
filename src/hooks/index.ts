@@ -1,1 +1,3 @@
-export { useLexicon } from './useLexicon' 
+export * from './useLexicon'
+export * from './useLayer'
+export * from './useThingLayers'

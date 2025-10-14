@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ShowButton, EditButton, useDataGrid, ExportButton } from '@refinedev/mui'
+import { useDataGrid, ExportButton } from '@refinedev/mui'
 import { useExport } from '@refinedev/core'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
@@ -135,9 +135,7 @@ export const WellList: React.FC = () => {
   const customHeaderButtons = ({ defaultButtons }) => {
     return (
       <>
-        <CreateButton
-          onClick={() => push('/ocotillo/well-inventory-form')}
-        />
+        <CreateButton onClick={() => push('/ocotillo/well-inventory-form')} />
         <ExportButton
           variant={'contained'}
           loading={exportIsLoading}
