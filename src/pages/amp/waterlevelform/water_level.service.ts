@@ -3,7 +3,7 @@ import { lookupTableQueryConfig } from '@/pages/pages.config'
 import { useQuery } from '@tanstack/react-query'
 import { IWaterLevelForm } from '@/interfaces/amp'
 import { settings } from '@/settings'
-import { AmpApiUriBuilder, removeEmptyFields, fetchLookupTable } from '@/utils'
+import { ApiUriBuilder, removeEmptyFields, fetchLookupTable } from '@/utils'
 import { Page } from '@/interfaces'
 
 const fetchLevelStatuses = async (): Promise<
@@ -104,7 +104,7 @@ export const createWaterLevelForm = async ({
   }
 
   const accessToken = await getAccessToken()
-  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+  const url = new ApiUriBuilder(settings.nmbgmr_amp_api_url)
     .setEndpoint('processes/water-level-form/execute')
     .build()
 
@@ -143,7 +143,7 @@ export const fetchCoordinates = async (
   pointid: string
 ): Promise<{ x: number; y: number }> => {
   const accessToken = await getAccessToken()
-  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+  const url = new ApiUriBuilder(settings.nmbgmr_amp_api_url)
     .setEndpoint('locations')
     .addParam('pointid', pointid)
     .build()
@@ -204,7 +204,7 @@ export const fetchManualWaterLevels = async (
   pointid: string
 ): Promise<Page<WaterLevel>> => {
   const accessToken = await getAccessToken()
-  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+  const url = new ApiUriBuilder(settings.nmbgmr_amp_api_url)
     .setEndpoint('waterlevels/manual')
     .addParam('pointid', pointid)
     .addParam('omit_null_measurements', 'true')
@@ -244,7 +244,7 @@ export const fetchContinuousWaterLevels = async (
   pointid: string
 ): Promise<Page<WaterLevel>> => {
   const accessToken = await getAccessToken()
-  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+  const url = new ApiUriBuilder(settings.nmbgmr_amp_api_url)
     .setEndpoint('waterlevels/continuous')
     .addParam('pointid', pointid)
     .addParam('omit_null_measurements', 'true')
@@ -285,7 +285,7 @@ export const getMPHeightFromPointId = (pointid: string, enabled: boolean) => {
     queryKey: ['MPHeightFromPointId', pointid],
     queryFn: async () => {
       const accessToken = await getAccessToken()
-      const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+      const url = new ApiUriBuilder(settings.nmbgmr_amp_api_url)
         .setEndpoint('wells')
         .addParam('pointid', pointid)
         .build()

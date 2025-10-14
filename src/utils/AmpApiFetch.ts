@@ -28,7 +28,7 @@ export const apiFetch = async ({
     ? endpoint.slice(1)
     : endpoint
 
-  const url = new AmpApiUriBuilder(settings.ocotillo_api_url)
+  const url = new ApiUriBuilder(settings.ocotillo_api_url)
     .setEndpoint(normalizedEndpoint)
     .build()
 
