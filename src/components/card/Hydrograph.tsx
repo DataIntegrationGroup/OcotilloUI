@@ -56,19 +56,10 @@ export const HydrographCard = ({
             </Box>
           </Box>
         ) : (
-          <Box position="relative" sx={{ minHeight: 420, overflow: 'hidden' }}>
-            {isLoading && (
-              <Box
-                position="absolute"
-                top="50%"
-                left="50%"
-                sx={{ transform: 'translate(-50%, -50%)' }}
-              >
-                <CircularProgress />
-              </Box>
-            )}
-            <Hydrograph datasource={dataSource} />
-          </Box>
+          <Hydrograph
+            datasource={dataSource}
+            options={{ showToolbox: true, invertYAxis: true }}
+          />
         )}
       </CardContent>
     </Card>

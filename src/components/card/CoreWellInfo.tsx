@@ -35,7 +35,7 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
         failureMessage: 'Failed to fetch group',
       })
     },
-    enabled: Boolean(well?.group_id),
+    enabled: Boolean(groupId),
   })
 
   return (
@@ -136,12 +136,10 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">OSE:</Typography>
-            {/* Need OSE url & link name */}
             <Typography variant="body1">N/A</Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">USGS:</Typography>
-            {/* Need OSE url & link name */}
             <Typography variant="body1">N/A</Typography>
           </Grid>
         </Grid>

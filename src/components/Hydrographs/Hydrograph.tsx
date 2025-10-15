@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type {
   IHydrographDatasource,
   IHydrographOptions,
 } from '@/interfaces/st2'
-import { transform } from '@/components/Hydrographs/util'
+import { Box, useTheme } from '@mui/material'
+import { transform } from '@/utils'
 
 export const ST2Hydrograph: React.FC<{
   datasource: IHydrographDatasource[]
@@ -16,160 +17,142 @@ export const ST2Hydrograph: React.FC<{
   )
 }
 
-export const Hydrograph: React.FC<{
+interface HydrographProps {
   datasource: IHydrographDatasource[]
   refresh?: number
   options?: IHydrographOptions
   onEvents?: any
-}> = ({ datasource, refresh, options, onEvents }) => {
-  const xtag = 'phenomenonTime'
-  const ytag = 'result'
+  sx?: object
+}
 
-  let series = []
-  let dataset = []
-  let seriesNames = []
-  const [chartData] = useState({ series, dataset, seriesNames })
+export const Hydrograph: React.FC<HydrographProps> = ({
+  datasource,
+  refresh,
+  options,
+  onEvents,
+  sx,
+}) => {
+  const theme = useTheme()
 
-  useEffect(() => {
-    if (datasource && datasource.length > 0) {
-      series = datasource.map((s) => {
-        return {
-          type: s.style || 'line',
-          symbol: 'circle',
-          name: s.name,
-          datasetId: s.id.toString(),
-          clip: false,
-        }
-      })
-      dataset = datasource.map((s, index) => {
-        let ref = s.data[0][ytag]
+  const chartData = useMemo(() => {
+    if (!datasource?.length) return { series: [], dataset: [], seriesNames: [] }
 
-        let obj = { id: s.id.toString() }
-        let offset = 0
-        if (index === 0) {
-          offset = 0
-        } else {
-          let pref = datasource[index - 1].data[0][ytag]
-          let vs = datasource[index - 1].data.map((obs) => obs[ytag] - pref)
-          offset = Math.max(...vs) * 1.1
-        }
+    const xtag = 'phenomenonTime'
+    const ytag = 'result'
 
-        obj['source'] = s.data.map((obs) => [
+    const dataset = datasource.map((s, index) => {
+      const ref = s.data[0]?.[ytag] ?? 0
+      let offset = 0
+
+      if (index > 0) {
+        const prev = datasource[index - 1]
+        const pref = prev.data[0]?.[ytag] ?? 0
+        const diffs = prev.data.map((obs) => obs[ytag] - pref)
+        offset = Math.max(...diffs) * 1.1
+      }
+
+      return {
+        id: s.id.toString(),
+        source: s.data.map((obs) => [
           new Date(obs[xtag]),
-          transform(obs[ytag], ref, offset, options).toFixed(2),
-        ])
-        return obj
-      })
+          Number(
+            transform({
+              value: obs[ytag],
+              reference: ref,
+              offset,
+              options,
+            }).toFixed(2)
+          ),
+        ]),
+      }
+    })
 
-      seriesNames = datasource.map((d) => d.name)
+    const series = datasource.map((s) => ({
+      type: s.style || 'line',
+      symbol: 'circle',
+      name: s.name,
+      datasetId: s.id.toString(),
+      clip: false,
+    }))
 
-      // setChartData({series, dataset, seriesNames})
-      setOption((prev) => {
-        return { ...prev, series, dataset }
-      })
-    }
+    const seriesNames = datasource.map((d) => d.name)
+
+    return { dataset, series, seriesNames }
   }, [datasource])
 
-  let yaxisTitle = 'Depth To Water Below Ground Surface (ft)'
+  const yaxisTitle = useMemo(() => {
+    if (options?.useNormalization)
+      return 'Normalized Depth To Water Below Ground Surface (ft)'
+    if (options?.useElevation)
+      return 'Groundwater Elevation Above Sea Level (ft)'
+    if (options?.useCompact)
+      return 'Compact Depth To Water Below Ground Surface (ft)'
+    return 'Depth To Water Below Ground Surface (ft)'
+  }, [options])
 
-  if (options?.useNormalization) {
-    yaxisTitle = 'Normalized Depth To Water Below Ground Surface (ft)'
-  } else if (options?.useElevation) {
-    yaxisTitle = 'Groundwater Elevation Above Sea Level (ft)'
-  } else if (options?.useCompact) {
-    yaxisTitle = 'Compact Depth To Water Below Ground Surface (ft)'
-  }
+  const dataZoomRange = useMemo(() => {
+    switch (options?.dataZoom) {
+      case 'latest':
+        return { start: 80, end: 100 }
+      case 'earliest':
+        return { start: 0, end: 20 }
+      default:
+        return { start: -1, end: 100 }
+    }
+  }, [options])
 
-  let dataZoomStart = -1
-  let dataZoomEnd = 100
-  if (options?.dataZoom == 'latest') {
-    dataZoomStart = 80
-    dataZoomEnd = 100
-  } else if (options?.dataZoom == 'earliest') {
-    dataZoomStart = 0
-    dataZoomEnd = 20
-  }
-
-  const baseoption = {
-    animation: false,
-    dataset: chartData.dataset,
-    series: chartData.series,
-    toolbox: {
-      feature: {
-        dataZoom: [
-          { show: true, title: { zoom: 'Zoom In', back: 'Zoom Out' } },
-          { type: 'inside', title: { zoom: 'Zoom In', back: 'Zoom Out' } },
-        ],
-        restore: {},
-        saveAsImage: {},
-        dataView: { show: true },
-        brush: {
-          type: ['lineX', 'clear'],
-        },
+  const chartOption = useMemo(
+    () => ({
+      animation: false,
+      dataset: chartData.dataset,
+      series: chartData.series,
+      toolbox: options?.showToolbox
+        ? {
+            feature: {
+              dataZoom: [{ show: true }, { type: 'inside' }],
+              restore: {},
+              saveAsImage: {},
+              dataView: { show: true },
+              brush: { type: ['lineX', 'clear'] },
+            },
+          }
+        : undefined,
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'cross', animation: false },
+        backgroundColor: theme.palette.background.paper,
       },
-    },
-    grid: {
-      right: '20%', // Adjust the right property to create space for the legend
-    },
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'cross',
-        animation: false,
-        label: {
-          backgroundColor: '#505765',
-        },
+      dataZoom: [
+        { show: true, realtime: true, ...dataZoomRange },
+        { type: 'inside', realtime: true, ...dataZoomRange },
+      ],
+      xAxis: {
+        type: 'time',
+        splitLine: { show: true },
+        axisLabel: { color: theme.palette.text.secondary },
       },
-    },
-    dataZoom: [
-      {
-        show: true,
-        realtime: true,
-        start: dataZoomStart,
-        end: dataZoomEnd,
+      yAxis: {
+        inverse: options?.invertYAxis ?? true,
+        name: yaxisTitle,
+        nameLocation: 'center',
+        nameGap: 50,
+        scale: true,
+        axisLabel: { color: theme.palette.text.secondary },
       },
-      {
-        type: 'inside',
-        realtime: true,
-        start: dataZoomStart,
-        end: dataZoomEnd,
-      },
-    ],
-    xAxis: {
-      type: 'time',
-      splitLine: {
-        show: true, // This will display vertical grid lines
-      },
-    },
-    yAxis: {
-      inverse: true,
-      name: yaxisTitle,
-      nameLocation: 'center',
-      nameGap: 75,
-      scale: true,
-    },
-    brush: {
-      outOfBrush: {
-        colorAlpha: 0.25,
-      },
-    },
-  }
-
-  const [option, setOption] = useState(baseoption)
+      brush: { outOfBrush: { colorAlpha: 0.25 } },
+      color: ['#0277BD', '#F57C00', '#2E7D32'],
+    }),
+    [chartData, dataZoomRange, yaxisTitle, options, theme]
+  )
 
   return (
-    <div
-      style={{
-        height: '400px',
-        paddingBottom: 20,
-      }}
-    >
+    <Box component="div" sx={{ height: 400, ...sx }}>
       <ReactECharts
         key={refresh}
-        option={option}
+        option={chartOption}
         style={{ width: '100%', height: '100%' }}
         onEvents={onEvents}
       />
-    </div>
+    </Box>
   )
 }
