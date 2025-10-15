@@ -1,13 +1,13 @@
 import type { IHydrographOptions } from '@/interfaces/st2'
 
 export interface TransformParams {
-  // Raw observation value
+  // Raw observed value
   value: number
   // Reference or baseline value
   reference?: number
   // Optional offset applied
   offset?: number
-  // Configuration flags controlling how values are rendered
+  // Config flags for controlling how values are transformed
   options?: IHydrographOptions
 }
 

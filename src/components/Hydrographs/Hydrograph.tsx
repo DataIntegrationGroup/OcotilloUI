@@ -25,13 +25,13 @@ interface HydrographProps {
   sx?: object
 }
 
-export const Hydrograph: React.FC<HydrographProps> = ({
+export const Hydrograph = ({
   datasource,
   refresh,
   options,
   onEvents,
   sx,
-}) => {
+}: HydrographProps) => {
   const theme = useTheme()
 
   const chartData = useMemo(() => {
