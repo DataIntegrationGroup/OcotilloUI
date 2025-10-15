@@ -24,15 +24,10 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
     return <LoadingCard />
   }
 
+  const groupId = well?.group_id
   const groupQuery = useQuery<IGroup | null>({
-    queryKey: ['group', well?.group_id],
+    queryKey: ['group', groupId],
     queryFn: async () => {
-      const groupId =
-        well?.group_id ??
-        (import.meta.env.MODE === 'development' && well?.name
-          ? getDeterministicGroupId(well.name)
-          : null)
-
       if (!groupId) return null
 
       return apiFetch({
@@ -40,7 +35,7 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
         failureMessage: 'Failed to fetch group',
       })
     },
-    enabled: Boolean(well?.group_id) || import.meta.env.MODE === 'development',
+    enabled: Boolean(well?.group_id),
   })
 
   return (
@@ -56,7 +51,6 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
               alignItems="center"
               justifyContent="space-around"
             >
-              {/* Need Well Purpose */}
               <Chip
                 sx={{ fontFamily: 'monospace' }}
                 label={
@@ -223,19 +217,3 @@ const LoadingCard = () => (
     </CardContent>
   </Card>
 )
-
-/**
- * Deterministically hash a string (e.g., well name) to a number between 1 and 55.
- * For development purposes only
- */
-function getDeterministicGroupId(name: string, max: number = 55): number {
-  // Simple non-cryptographic hash (fast, consistent)
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash << 5) - hash + name.charCodeAt(i)
-    hash |= 0 // convert to 32-bit integer
-  }
-
-  // Normalize to 1..max (e.g. 1–55)
-  return (Math.abs(hash) % max) + 1
-}
