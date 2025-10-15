@@ -18,6 +18,7 @@ import { useGo } from '@refinedev/core'
 
 export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   const mapRef = useRef<MapRef>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const THING_LAYERS = useThingLayers()
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
@@ -99,11 +100,16 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
       />
       <CardContent>
         <Box
+          ref={containerRef}
           sx={{
+            position: 'relative',
             borderRadius: 2,
             overflow: 'hidden',
             border: '2.5px solid',
             borderColor: 'divider',
+            height: 650,
+            width: '100%',
+            display: 'flex',
           }}
         >
           <MapComponent
@@ -117,6 +123,8 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             onMouseMoveCallback={onMapMouseMove}
             setPopupContent={setPopupContent}
             popupContent={popupContent}
+            style={{ flex: 1, width: '100%', height: '100%' }}
+            containerRef={containerRef}
           >
             <Source id="water-wells" {...sourceProps}>
               <Layer id="location-water-wells" {...layerProps} />

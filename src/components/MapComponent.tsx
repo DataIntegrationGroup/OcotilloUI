@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Map, MapRef, NavigationControl, Popup } from 'react-map-gl'
 import { MapboxStyleSwitcherControl } from 'mapbox-gl-style-switcher'
 import { ControlPosition } from 'react-map-gl'
@@ -40,9 +40,10 @@ interface MapComponentProps {
     pitch?: number
   }
   style?: React.CSSProperties
+  containerRef?: any
 }
 
-export const MapComponent: React.FC<MapComponentProps> = ({
+export const MapComponent = ({
   mapRef: externalMapRef,
   children,
   onClick,
@@ -64,11 +65,26 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     show: true,
     position: 'top-left' as ControlPosition,
   },
-  style = { width: '100%', height: '650px' },
-}) => {
+  style = { width: '100%', height: '100%' },
+  containerRef,
+}: MapComponentProps) => {
   const [isDrawing, setIsDrawing] = useState(false)
   const [_viewState, setViewState] = useState(initialViewState)
   const mapRef = externalMapRef ?? useRef<MapRef>(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    const observer = new ResizeObserver(() => {
+      // Force Mapbox to recalc size when container changes
+      if (mapRef?.current) {
+        mapRef.current.resize()
+      }
+    })
+
+    observer.observe(containerRef.current)
+    return () => observer.disconnect()
+  }, [mapRef])
 
   const handleMapLoad = useCallback(() => {
     if (!mapRef.current) return
