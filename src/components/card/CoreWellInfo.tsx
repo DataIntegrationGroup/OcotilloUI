@@ -103,16 +103,10 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
               {well?.well_depth ? well?.well_depth_unit : null}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Northing:</Typography>
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="h6">Northing/Easting:</Typography>
             <Typography variant="body1">
-              {northing?.toFixed(0) || 'N/A'}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Easting:</Typography>
-            <Typography variant="body1">
-              {easting?.toFixed(0) || 'N/A'}
+              {`${northing?.toFixed(0) || 'N/A'}, ${easting?.toFixed(0) || 'N/A'}`}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
