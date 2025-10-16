@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Layer, Source } from 'react-map-gl'
 import MapComponent from '@/components/MapComponent'
 import { useGo } from '@refinedev/core'
@@ -18,6 +18,7 @@ import Grid from '@mui/material/Grid2'
 import { MapPopup } from '@/components'
 
 export const MapView: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const THING_LAYERS = useThingLayers()
   const [visibleLayers, setVisibleLayers] = React.useState<string[]>(
     Object.keys(THING_LAYERS)
@@ -138,14 +139,19 @@ export const MapView: React.FC = () => {
           </Grid>
           <Grid size={{ xs: 9 }}>
             <Box
+              component="div"
+              ref={containerRef}
               sx={{
                 borderRadius: 2,
                 overflow: 'hidden',
                 border: '2.5px solid',
                 borderColor: 'divider',
+                height: 650,
+                width: '100%',
               }}
             >
               <MapComponent
+                containerRef={containerRef}
                 showDrawControls={{ show: true, position: 'top-right' }}
                 setPopupContent={setPopupContent}
                 popupContent={popupContent}
