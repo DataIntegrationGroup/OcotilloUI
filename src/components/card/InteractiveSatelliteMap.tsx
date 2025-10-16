@@ -100,6 +100,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
       />
       <CardContent>
         <Box
+          cypress-data-testid="ocotillo-map-container"
           ref={containerRef}
           sx={{
             position: 'relative',

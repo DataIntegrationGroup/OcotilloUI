@@ -139,6 +139,7 @@ export const MapView: React.FC = () => {
           </Grid>
           <Grid size={{ xs: 9 }}>
             <Box
+              data-testid="ocotillo-map-container"
               component="div"
               ref={containerRef}
               sx={{
