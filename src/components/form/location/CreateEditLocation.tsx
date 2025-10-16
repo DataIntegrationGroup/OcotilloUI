@@ -1,9 +1,9 @@
-import { 
-    Control, 
-    UseFormWatch, 
-    UseFormSetValue, 
-    FieldErrors,
-    useWatch,
+import {
+  Control,
+  UseFormWatch,
+  UseFormSetValue,
+  FieldErrors,
+  useWatch,
 } from 'react-hook-form'
 import Grid from '@mui/material/Grid2'
 import {
@@ -15,7 +15,15 @@ import {
 import { useLexicon } from '@/hooks'
 import { useEffect, useRef, useState } from 'react'
 import { MapRef, ViewState, Source, Layer } from 'react-map-gl'
-import { Typography, FormControlLabel, Switch, Box, TextField, Select, MenuItem } from '@mui/material'
+import {
+  Typography,
+  FormControlLabel,
+  Switch,
+  Box,
+  TextField,
+  Select,
+  MenuItem,
+} from '@mui/material'
 import wellknown from 'wellknown'
 import { convertUTMToLonLat, convertLonLatToUTM } from '@/utils/UtmToLonLat'
 import { useElevation } from '@/hooks/useElevation'
@@ -23,7 +31,7 @@ import { useElevation } from '@/hooks/useElevation'
 /**
  * CreateEditLocation Component
  * A reusable form component for creating and editing location information.
- * 
+ *
  * @param control - The control object from useForm
  * @param watch - The watch object from useForm
  * @param setValue - The setValue function from useForm
@@ -43,16 +51,16 @@ interface CreateEditLocationProps {
 
 export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   control,
-  watch,
   setValue,
-  errors,
   mode = 'standalone',
-  fieldPrefix = ''
+  fieldPrefix = '',
 }) => {
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
-  
+
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
   //boolean to toggle mode between UTM and Lat/Long
   const [useUTM, setUseUTM] = useState(false)
 
@@ -65,10 +73,9 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   const [northing, setNorthing] = useState('')
 
   const [autoGenerateElevation, setAutoGenerateElevation] = useState(true)
-  
+
   // Only watch the actual form fields
   const point = useWatch({ control, name: getFieldName('point') })
-  const elevation = useWatch({ control, name: getFieldName('elevation') })
 
   const mapRef = useRef<MapRef>(null)
   const [viewState, setViewState] = useState<ViewState>({
@@ -81,18 +88,23 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   })
 
   //get release status options
-  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
-    category: 'release_status' 
-  })
+  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } =
+    useLexicon({
+      category: 'release_status',
+    })
 
   //get elevation method options
-  const { options: elevationMethodOptions, isLoading: elevationMethodLoading } = useLexicon({ 
-    category: 'elevation_method' 
-  })
+  const { options: elevationMethodOptions, isLoading: elevationMethodLoading } =
+    useLexicon({
+      category: 'elevation_method',
+    })
 
   //get coordinate method options
-  const { options: coordinateMethodOptions, isLoading: coordinateMethodLoading } = useLexicon({ 
-    category: 'coordinate_method' 
+  const {
+    options: coordinateMethodOptions,
+    isLoading: coordinateMethodLoading,
+  } = useLexicon({
+    category: 'coordinate_method',
   })
 
   //get lat long from WKT point when edit location is loaded
@@ -104,7 +116,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           const [lng, lat] = geometry.coordinates
           setLongitude(lng.toString())
           setLatitude(lat.toString())
-          setViewState(prev => ({ ...prev, longitude: lng, latitude: lat }))
+          setViewState((prev) => ({ ...prev, longitude: lng, latitude: lat }))
         }
       } catch (e) {
         console.error('Error parsing WKT point:', e)
@@ -116,14 +128,14 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   useEffect(() => {
     if (latitude && longitude) {
       if (!isNaN(Number(latitude)) && !isNaN(Number(longitude))) {
-        setViewState(prev => ({
+        setViewState((prev) => ({
           ...prev,
           longitude: Number(longitude),
-          latitude: Number(latitude)
+          latitude: Number(latitude),
         }))
         if (mapRef.current) {
           mapRef.current.flyTo({
-            center: [Number(longitude), Number(latitude)]
+            center: [Number(longitude), Number(latitude)],
           })
         }
       }
@@ -134,7 +146,12 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   const handleMapClick = (e: any) => {
     const { lng, lat } = e.lngLat
     if (useUTM) {
-      const [easting, northing] = convertLonLatToUTM(lng, lat, utmZone, utmDatum)
+      const [easting, northing] = convertLonLatToUTM(
+        lng,
+        lat,
+        utmZone,
+        utmDatum
+      )
       setEasting(easting.toFixed(3))
       setNorthing(northing.toFixed(3))
     } else {
@@ -147,37 +164,61 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   useEffect(() => {
     if (useUTM && easting && northing) {
       // UTM to Lat/Long
-      const [lng, lat] = convertUTMToLonLat(Number(easting), Number(northing), utmZone, utmDatum)
+      const [lng, lat] = convertUTMToLonLat(
+        Number(easting),
+        Number(northing),
+        utmZone,
+        utmDatum
+      )
       setLongitude(lng.toFixed(10))
       setLatitude(lat.toFixed(10))
     } else if (!useUTM && latitude && longitude) {
       // Lat/Long to UTM
-      const [easting, northing] = convertLonLatToUTM(Number(longitude), Number(latitude), utmZone, utmDatum)
+      const [easting, northing] = convertLonLatToUTM(
+        Number(longitude),
+        Number(latitude),
+        utmZone,
+        utmDatum
+      )
       setEasting(easting.toFixed(3))
       setNorthing(northing.toFixed(3))
     }
   }, [useUTM, easting, northing, latitude, longitude, utmZone, utmDatum])
 
-
   // handle coordinate system toggle
-  const handleCoordinateSystemToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoordinateSystemToggle = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setUseUTM(event.target.checked)
   }
 
   // use elevation hook to fetch form USGS DEM
-  const elevationQuery = useElevation(Number(longitude), Number(latitude), autoGenerateElevation)
+  const elevationQuery = useElevation(
+    Number(longitude),
+    Number(latitude),
+    autoGenerateElevation
+  )
 
   // Set form values when elevation data is fetched
   useEffect(() => {
-    if (autoGenerateElevation && elevationQuery.isSuccess && elevationQuery.data) {
+    if (
+      autoGenerateElevation &&
+      elevationQuery.isSuccess &&
+      elevationQuery.data
+    ) {
       const elevationInFeet = elevationQuery.data.value.toFixed(2)
-      
+
       if (setValue) {
         setValue(getFieldName('elevation'), Number(elevationInFeet))
         setValue(getFieldName('elevation_accuracy'), Number(1.74))
       }
     }
-  }, [autoGenerateElevation, elevationQuery.isSuccess, elevationQuery.data, setValue])
+  }, [
+    autoGenerateElevation,
+    elevationQuery.isSuccess,
+    elevationQuery.data,
+    setValue,
+  ])
 
   // clear elevation fields when turning off auto-generation
   const handleElevationToggle = (checked: boolean) => {
@@ -191,7 +232,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   //auto-generate WKT point from latitude and longitude
   useEffect(() => {
     if (setValue && latitude && longitude) {
-      setValue(getFieldName('point'), `POINT(${longitude} ${latitude})`) 
+      setValue(getFieldName('point'), `POINT(${longitude} ${latitude})`)
     }
   }, [setValue, latitude, longitude])
 
@@ -211,7 +252,8 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           />
         </Box>
         <Typography variant="body1" color="text.primary">
-           You are using: {useUTM ? 'Northing/Easting (UTM)' : 'Decimal Degrees (Lat/Long)'}
+          You are using:{' '}
+          {useUTM ? 'Northing/Easting (UTM)' : 'Decimal Degrees (Lat/Long)'}
         </Typography>
         <Typography variant="body2" color="text.primary">
           Unit conversions are automatic
@@ -296,7 +338,6 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           name={getFieldName('coordinate_accuracy')}
         />
       </Grid>
-
       <Grid size={{ xs: 12, md: 6 }}>
         <ControlledSelectField
           label="Coordinate Method"
@@ -308,12 +349,12 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           disabled={coordinateMethodLoading}
         />
       </Grid>
-
-      <Grid size={12}>
+      <Grid size={12} ref={containerRef} component="div">
         <Typography variant="body1" sx={{ paddingBottom: '10px' }}>
           Click on the map to set a location, or enter coordinates above.
         </Typography>
         <MapComponent
+          containerRef={containerRef}
           mapRef={mapRef}
           initialViewState={viewState}
           style={{ height: '350px', width: '100%' }}
@@ -332,11 +373,11 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
                     type: 'Feature',
                     geometry: {
                       type: 'Point',
-                      coordinates: [Number(longitude), Number(latitude)]
+                      coordinates: [Number(longitude), Number(latitude)],
                     },
-                    properties: {}
-                  }
-                ]
+                    properties: {},
+                  },
+                ],
               }}
             >
               <Layer
@@ -431,4 +472,4 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       </Grid>
     </Grid>
   )
-} 
+}
