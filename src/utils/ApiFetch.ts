@@ -1,6 +1,6 @@
 import { ApiUriBuilder } from '@/utils'
 import { settings } from '@/settings'
-import { getAccessToken } from '@/providers/fief-provider'
+import { getAccessToken } from '@/providers/authentik-provider'
 
 export const fetchConfig = (accessToken: string, method: string = 'GET') => {
   return {

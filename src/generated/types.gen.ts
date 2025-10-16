@@ -971,7 +971,7 @@ export type GroundwaterLevelObservationResponse = {
     /**
      * Sensor Id
      */
-    sensor_id: number;
+    sensor_id: number | null;
     /**
      * Observation Datetime
      */
@@ -1215,7 +1215,7 @@ export type ObservationResponse = {
     /**
      * Sensor Id
      */
-    sensor_id: number;
+    sensor_id: number | null;
     /**
      * Observation Datetime
      */
@@ -2735,7 +2735,7 @@ export type WaterChemistryObservationResponse = {
     /**
      * Sensor Id
      */
-    sensor_id: number;
+    sensor_id: number | null;
     /**
      * Observation Datetime
      */

@@ -759,7 +759,10 @@ export const zGroundwaterLevelObservationResponse = z.object({
     }),
     release_status: z.string(),
     sample_id: z.int(),
-    sensor_id: z.int(),
+    sensor_id: z.union([
+        z.int(),
+        z.null()
+    ]),
     observation_datetime: z.iso.datetime({
         offset: true
     }),
@@ -885,7 +888,10 @@ export const zObservationResponse = z.object({
     }),
     release_status: z.string(),
     sample_id: z.int(),
-    sensor_id: z.int(),
+    sensor_id: z.union([
+        z.int(),
+        z.null()
+    ]),
     observation_datetime: z.iso.datetime({
         offset: true
     }),
@@ -1225,7 +1231,10 @@ export const zWaterChemistryObservationResponse = z.object({
     }),
     release_status: z.string(),
     sample_id: z.int(),
-    sensor_id: z.int(),
+    sensor_id: z.union([
+        z.int(),
+        z.null()
+    ]),
     observation_datetime: z.iso.datetime({
         offset: true
     }),
