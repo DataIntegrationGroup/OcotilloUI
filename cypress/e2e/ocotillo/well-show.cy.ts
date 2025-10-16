@@ -4,8 +4,8 @@ describe('Thing Well Show Page', () => {
   beforeEach(() => {
     cy.login()
 
-    cy.intercept('GET', '**/thing/16').as('getWell')
-    cy.visit('/ocotillo/well/show/16')
+    cy.intercept('GET', '**/thing/107').as('getWell')
+    cy.visit('/ocotillo/well/show/107')
     cy.wait('@getWell')
   })
 
