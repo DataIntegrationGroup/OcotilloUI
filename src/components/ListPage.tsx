@@ -3,7 +3,7 @@ import { DataGrid } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import React from 'react'
 import { useExport } from '@refinedev/core'
-import { Card, Typography, useTheme } from '@mui/material'
+import { Card, Typography } from '@mui/material'
 import { CanAccess } from '@refinedev/core'
 
 type ListPageProps = {
@@ -35,7 +35,7 @@ export const ListPage: React.FC<ListPageProps> = ({
     exportProps = { pageSize: 1000 }
   }
 
-  const handleSelectionChangeWrapper = (selectionModel) => {
+  const handleSelectionChangeWrapper = (selectionModel: any) => {
     if (onSelectionChange) {
       onSelectionChange(selectionModel)
     }
@@ -82,9 +82,10 @@ export const ListPage: React.FC<ListPageProps> = ({
           disableRowSelectionOnClick={false}
           rowHeight={settings.rowHeight}
           getRowId={getRowId ? getRowId : (row) => row.PointID}
-          columns={columns}
           onRowSelectionModelChange={handleSelectionChangeWrapper}
           loading={isLoading}
+          columns={columns}
+          columnPinningModel={{ right: ['actions'] }}
         />
       </List>
     </CanAccess>
