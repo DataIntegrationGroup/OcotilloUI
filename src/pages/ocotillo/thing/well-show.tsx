@@ -23,7 +23,6 @@ import { ISensor } from '@/interfaces/ocotillo/ISensor'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SettingsInputAntenna from '@mui/icons-material/SettingsInputAntenna'
 import MoreVertOutlined from '@mui/icons-material/MoreVertOutlined'
-import Contacts from '@mui/icons-material/Contacts'
 import Image from '@mui/icons-material/Image'
 import InfoIcon from '@mui/icons-material/Info'
 import { settings } from '@/settings'
@@ -34,6 +33,7 @@ import {
   InteractiveSatelliteMapCard,
   HydrographCard,
   RecentWaterLevelObservationsCard,
+  ContactsAccordion,
 } from '@/components'
 
 export const WellShow = () => {
@@ -83,16 +83,6 @@ export const WellShow = () => {
     },
   })
 
-  const { dataGridProps: contactDataGridProps } = useDataGrid({
-    resource: 'contact',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: id,
-      },
-    },
-  })
-
   const wellScreenColumns: GridColDef[] = useMemo(() => {
     return [
       { field: 'screen_type', headerName: 'Screen Type', minWidth: 150 },
@@ -109,71 +99,6 @@ export const WellShow = () => {
         minWidth: 200,
       },
       actionColumnDef({ resource: 'ocotillo.thing/well-screen' }),
-    ]
-  }, [])
-
-  const contactColumns: GridColDef[] = useMemo(() => {
-    return [
-      { field: 'name', headerName: 'Name', minWidth: 150, flex: 1 },
-      { field: 'role', headerName: 'Role', minWidth: 120 },
-      { field: 'contact_type', headerName: 'Contact Type', minWidth: 150 },
-      {
-        field: 'emails',
-        headerName: 'Email',
-        minWidth: 200,
-        renderCell: (params: any) => {
-          if (!params.row.emails || params.row.emails.length === 0) return '-'
-          return (
-            <div>
-              {params.row.emails.map((email: any, idx: number) => (
-                <div key={idx} style={{ marginBottom: '2px' }}>
-                  {email.email}
-                </div>
-              ))}
-            </div>
-          )
-        },
-      },
-      {
-        field: 'phones',
-        headerName: 'Phone',
-        minWidth: 150,
-        renderCell: (params: any) => {
-          if (!params.row.phones || params.row.phones.length === 0) return '-'
-          return (
-            <div>
-              {params.row.phones.map((phone: any, idx: number) => (
-                <div key={idx} style={{ marginBottom: '2px' }}>
-                  {phone.phone_number}
-                </div>
-              ))}
-            </div>
-          )
-        },
-      },
-      {
-        field: 'addresses',
-        headerName: 'Address',
-        minWidth: 250,
-        renderCell: (params: any) => {
-          if (!params.row.addresses || params.row.addresses.length === 0)
-            return '-'
-          return (
-            <div>
-              {params.row.addresses.map((address: any, idx: number) => (
-                <div key={idx} style={{ marginBottom: '2px' }}>
-                  {address.address_line_1}
-                  {address.address_line_2 && `, ${address.address_line_2}`}
-                  {address.city && `, ${address.city}`}
-                  {address.state && ` ${address.state}`}
-                  {address.postal_code && ` ${address.postal_code}`}
-                </div>
-              ))}
-            </div>
-          )
-        },
-      },
-      actionColumnDef({ resource: 'ocotillo.contact' }),
     ]
   }, [])
 
@@ -348,43 +273,7 @@ export const WellShow = () => {
           </CardContent>
         </Card>
         <div>
-          <Accordion defaultExpanded>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{ width: '100%' }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Contacts color="primary" />
-                  <Typography variant="body1" fontWeight="bold">
-                    Contacts
-                  </Typography>
-                </Stack>
-                <CreateButton resource="ocotillo.contact" />
-              </Stack>
-            </AccordionSummary>
-            <AccordionDetails sx={{ p: 3 }}>
-              <DataGrid
-                rowHeight={settings.rowHeight}
-                rows={contactDataGridProps.rows}
-                columns={contactColumns}
-                pageSizeOptions={[10, 25, 50]}
-                initialState={{
-                  pagination: {
-                    paginationModel: { pageSize: 10, page: 0 },
-                  },
-                }}
-                sx={{
-                  border: 'none',
-                  '& .MuiDataGrid-cell': {
-                    borderBottom: '1px solid #f0f0f0',
-                  },
-                }}
-              />
-            </AccordionDetails>
-          </Accordion>
+          <ContactsAccordion id={well?.id} />
           <Accordion>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Stack
