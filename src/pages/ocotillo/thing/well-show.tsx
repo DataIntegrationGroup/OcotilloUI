@@ -1,5 +1,5 @@
 import { HttpError, useList, useResourceParams, useShow } from '@refinedev/core'
-import { CreateButton, Show, useDataGrid } from '@refinedev/mui'
+import { Breadcrumb, CreateButton, Show, useDataGrid } from '@refinedev/mui'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
@@ -237,7 +237,13 @@ export const WellShow = () => {
   }, [observations])
 
   return (
-    <Show isLoading={isLoading}>
+    <Show
+      isLoading={isLoading}
+      breadcrumb={<Breadcrumb hideIcons={true} />}
+      title={
+        <Typography variant="h5">{`Show Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
+      }
+    >
       <Stack spacing={2}>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>

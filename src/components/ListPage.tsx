@@ -1,4 +1,4 @@
-import { ExportButton, List } from '@refinedev/mui'
+import { Breadcrumb, ExportButton, List } from '@refinedev/mui'
 import { DataGrid } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import React from 'react'
@@ -57,9 +57,10 @@ export const ListPage: React.FC<ListPageProps> = ({
 
   return (
     <CanAccess>
-      <List 
+      <List
         headerButtons={headerButtons || defaultHeaderButtons}
         title={title}
+        breadcrumb={<Breadcrumb hideIcons={true} />}
       >
         {description && (
           <Card
