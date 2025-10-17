@@ -1,4 +1,4 @@
-import { HttpError, useList, useResourceParams, useShow } from '@refinedev/core'
+import { HttpError, useResourceParams, useShow } from '@refinedev/core'
 import { Breadcrumb, CreateButton, Show, useDataGrid } from '@refinedev/mui'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 import { IWell } from '@/interfaces/ocotillo/IThing'
@@ -9,14 +9,11 @@ import {
   Card,
   CardContent,
   CardHeader,
-  ImageList,
-  ImageListItem,
   Stack,
   Typography,
 } from '@mui/material'
 import { useEffect, useMemo, useState } from 'react'
 import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
-import { Box } from '@mui/system'
 import Grid from '@mui/material/Grid2'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { ISensor } from '@/interfaces/ocotillo/ISensor'
@@ -34,6 +31,7 @@ import {
   HydrographCard,
   RecentWaterLevelObservationsCard,
   ContactsAccordion,
+  AttachmentsAccordion,
 } from '@/components'
 
 export const WellShow = () => {
@@ -55,23 +53,7 @@ export const WellShow = () => {
   const [hydrographDatasource, setHydrographDatasource] = useState<
     IHydrographDatasource[]
   >([])
-  const [assets, setAssets] = useState([])
   const { id } = useResourceParams()
-
-  const { data: assetsData } = useList({
-    resource: 'asset',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: id,
-      },
-    },
-  })
-
-  useEffect(() => {
-    if (!assetsData || !assetsData.data || assetsData.total === 0) return
-    setAssets(assetsData.data)
-  }, [assetsData])
 
   const { dataGridProps: wellScreenDataGridProps } = useDataGrid({
     resource: 'thing/well-screen',
@@ -99,14 +81,6 @@ export const WellShow = () => {
         minWidth: 200,
       },
       actionColumnDef({ resource: 'ocotillo.thing/well-screen' }),
-    ]
-  }, [])
-
-  const assetColumns: GridColDef[] = useMemo(() => {
-    return [
-      { field: 'name', headerName: 'Name', minWidth: 150 },
-      { field: 'uri', headerName: 'URL', flex: 1 },
-      actionColumnDef({ resource: 'ocotillo.asset' }),
     ]
   }, [])
 
@@ -274,92 +248,7 @@ export const WellShow = () => {
         </Card>
         <div>
           <ContactsAccordion id={well?.id} />
-          <Accordion>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{ width: '100%' }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Image color="primary" />
-                  <Typography variant="body1" fontWeight="bold">
-                    Attachments
-                  </Typography>
-                </Stack>
-                <CreateButton resource="ocotillo.asset" />
-              </Stack>
-            </AccordionSummary>
-            <AccordionDetails sx={{ p: 3 }}>
-              {(!assets || assets.length === 0) && (
-                <Box textAlign="center" py={4}>
-                  <Image
-                    sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }}
-                  />
-                  <Typography variant="body1" color="text.secondary">
-                    No attachments available.
-                  </Typography>
-                </Box>
-              )}
-              {assets && assets.length > 0 && (
-                <Stack spacing={3}>
-                  <DataGrid
-                    rowHeight={settings.rowHeight}
-                    columns={assetColumns}
-                    rows={assets}
-                    pageSizeOptions={[10, 25, 50]}
-                    initialState={{
-                      pagination: {
-                        paginationModel: { pageSize: 10, page: 0 },
-                      },
-                    }}
-                  />
-                  <Box>
-                    <Typography variant="body1" fontWeight="bold" gutterBottom>
-                      Image Gallery
-                    </Typography>
-                    <ImageList
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        overflowX: 'auto',
-                        gap: 2,
-                      }}
-                      cols={3}
-                    >
-                      {(assets ?? []).map(
-                        (
-                          img: { signed_url: string; name?: string },
-                          idx: number
-                        ) => (
-                          <ImageListItem
-                            key={idx}
-                            sx={{
-                              minWidth: 200,
-                              borderRadius: 2,
-                              overflow: 'hidden',
-                              boxShadow: 2,
-                            }}
-                          >
-                            <img
-                              src={img.signed_url}
-                              alt={img.name || `Attachment ${idx + 1}`}
-                              style={{
-                                width: '100%',
-                                height: 'auto',
-                                borderRadius: 8,
-                              }}
-                            />
-                          </ImageListItem>
-                        )
-                      )}
-                    </ImageList>
-                  </Box>
-                </Stack>
-              )}
-            </AccordionDetails>
-          </Accordion>
+          <AttachmentsAccordion id={well?.id} />
           <Accordion>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Stack direction="row" alignItems="center" spacing={1}>
