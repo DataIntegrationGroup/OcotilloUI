@@ -1,11 +1,8 @@
 import { HttpError, useResourceParams, useShow } from '@refinedev/core'
 import { Breadcrumb, CreateButton, Show, useDataGrid } from '@refinedev/mui'
-import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
+  Box,
   Card,
   CardContent,
   CardHeader,
@@ -17,11 +14,8 @@ import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
 import Grid from '@mui/material/Grid2'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { ISensor } from '@/interfaces/ocotillo/ISensor'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SettingsInputAntenna from '@mui/icons-material/SettingsInputAntenna'
 import MoreVertOutlined from '@mui/icons-material/MoreVertOutlined'
-import Image from '@mui/icons-material/Image'
-import InfoIcon from '@mui/icons-material/Info'
 import { settings } from '@/settings'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
@@ -33,6 +27,7 @@ import {
   ContactsAccordion,
   AttachmentsAccordion,
 } from '@/components'
+import { TechnicalDetailsAccordion } from '@/components/accordion/TechnicalDetails'
 
 export const WellShow = () => {
   const {
@@ -40,15 +35,6 @@ export const WellShow = () => {
   } = useShow<IWell, HttpError>()
 
   const well = data?.data
-
-  // Custom configs for wells
-  const fieldConfigs = {
-    created_at: {
-      label: 'Created At',
-      formatter: (value: string) =>
-        value ? new Date(value).toLocaleString() : '',
-    },
-  }
 
   const [hydrographDatasource, setHydrographDatasource] = useState<
     IHydrographDatasource[]
@@ -246,28 +232,11 @@ export const WellShow = () => {
             />
           </CardContent>
         </Card>
-        <div>
+        <Box component="div">
           <ContactsAccordion id={well?.id} />
           <AttachmentsAccordion id={well?.id} />
-          <Accordion>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <InfoIcon color="primary" />
-                <Typography variant="body1" fontWeight="bold">
-                  Technical Details
-                </Typography>
-              </Stack>
-            </AccordionSummary>
-            <AccordionDetails sx={{ p: 3 }}>
-              <Card elevation={1}>
-                <DynamicShowDisplay<IWell>
-                  record={well}
-                  fieldConfigs={fieldConfigs}
-                />
-              </Card>
-            </AccordionDetails>
-          </Accordion>
-        </div>
+          <TechnicalDetailsAccordion well={well} />
+        </Box>
       </Stack>
     </Show>
   )
