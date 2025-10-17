@@ -9,7 +9,7 @@ export const idColumnDef = () => {
   }
 }
 
-export const actionColumnDef = ({ resource } = {}) => {
+export const actionColumnDef = ({ resource = {} }: { resource: any }) => {
   return {
     field: 'actions',
     headerName: 'Actions',
@@ -46,6 +46,5 @@ export const actionColumnDef = ({ resource } = {}) => {
     align: 'center',
     headerAlign: 'center',
     minWidth: 210,
-    // flex: 0.3,
   }
 }
