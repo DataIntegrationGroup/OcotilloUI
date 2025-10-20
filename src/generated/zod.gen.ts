@@ -181,10 +181,7 @@ export const zThingResponse = z.object({
         z.string(),
         z.null()
     ])),
-    well_purpose: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
+    well_purposes: z.optional(z.array(z.string())).default([]),
     well_depth: z.optional(z.union([
         z.number(),
         z.null()
@@ -205,10 +202,7 @@ export const zThingResponse = z.object({
         z.null()
     ])),
     well_casing_depth_unit: z.optional(z.string()).default('ft'),
-    well_casing_material: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
+    well_casing_materials: z.optional(z.array(z.string())).default([]),
     well_construction_notes: z.optional(z.union([
         z.string(),
         z.null()
@@ -506,17 +500,9 @@ export const zCreateSample = z.object({
  * Schema for creating a new sensor.
  */
 export const zCreateSensor = z.object({
-    datetime_installed: z.iso.datetime({
-        offset: true
-    }),
-    datetime_removed: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
     release_status: z.string(),
     name: z.string(),
+    sensor_type: z.string(),
     model: z.optional(z.union([
         z.string(),
         z.null()
@@ -525,8 +511,16 @@ export const zCreateSensor = z.object({
         z.string(),
         z.null()
     ])),
-    recording_interval: z.optional(z.union([
-        z.int(),
+    pcn_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    owner_agency: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    sensor_status: z.optional(z.union([
+        z.string(),
         z.null()
     ])),
     notes: z.optional(z.union([
@@ -623,8 +617,8 @@ export const zCreateWell = z.object({
         z.iso.date(),
         z.null()
     ])),
-    well_purpose: z.optional(z.union([
-        z.string(),
+    well_purposes: z.optional(z.union([
+        z.array(z.string()),
         z.null()
     ])),
     well_construction_notes: z.optional(z.union([
@@ -635,8 +629,8 @@ export const zCreateWell = z.object({
         z.number().gt(0),
         z.null()
     ])),
-    well_casing_material: z.optional(z.union([
-        z.string(),
+    well_casing_materials: z.optional(z.union([
+        z.array(z.string()),
         z.null()
     ]))
 });
@@ -1108,6 +1102,7 @@ export const zSensorResponse = z.object({
     }),
     release_status: z.string(),
     name: z.string(),
+    sensor_type: z.string(),
     model: z.union([
         z.string(),
         z.null()
@@ -1116,17 +1111,16 @@ export const zSensorResponse = z.object({
         z.string(),
         z.null()
     ]),
-    datetime_installed: z.iso.datetime({
-        offset: true
-    }),
-    datetime_removed: z.union([
-        z.iso.datetime({
-            offset: true
-        }),
+    pcn_number: z.union([
+        z.string(),
         z.null()
     ]),
-    recording_interval: z.union([
-        z.int(),
+    owner_agency: z.union([
+        z.string(),
+        z.null()
+    ]),
+    sensor_status: z.union([
+        z.string(),
         z.null()
     ]),
     notes: z.union([
@@ -1277,10 +1271,7 @@ export const zWellResponse = z.object({
         z.iso.date(),
         z.null()
     ]),
-    well_purpose: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
+    well_purposes: z.optional(z.array(z.string())).default([]),
     well_depth: z.optional(z.union([
         z.number(),
         z.null()
@@ -1301,10 +1292,7 @@ export const zWellResponse = z.object({
         z.null()
     ])),
     well_casing_depth_unit: z.optional(z.string()).default('ft'),
-    well_casing_material: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
+    well_casing_materials: z.optional(z.array(z.string())).default([]),
     well_construction_notes: z.optional(z.union([
         z.string(),
         z.null()
@@ -1748,23 +1736,15 @@ export const zUpdateSample = z.object({
  * UpdateSensor
  */
 export const zUpdateSensor = z.object({
-    datetime_installed: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
-    datetime_removed: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
     release_status: z.optional(z.union([
         z.string(),
         z.null()
     ])),
     name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    sensor_type: z.optional(z.union([
         z.string(),
         z.null()
     ])),
@@ -1776,8 +1756,16 @@ export const zUpdateSensor = z.object({
         z.string(),
         z.null()
     ])),
-    recording_interval: z.optional(z.union([
-        z.int(),
+    pcn_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    owner_agency: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    sensor_status: z.optional(z.union([
+        z.string(),
         z.null()
     ])),
     notes: z.optional(z.union([
@@ -1894,8 +1882,8 @@ export const zUpdateWell = z.object({
         z.iso.date(),
         z.null()
     ])),
-    well_purpose: z.optional(z.union([
-        z.string(),
+    well_purposes: z.optional(z.union([
+        z.array(z.string()),
         z.null()
     ])),
     well_construction_notes: z.optional(z.union([
@@ -1906,8 +1894,8 @@ export const zUpdateWell = z.object({
         z.number(),
         z.null()
     ])),
-    well_casing_material: z.optional(z.union([
-        z.string(),
+    well_casing_materials: z.optional(z.union([
+        z.array(z.string()),
         z.null()
     ]))
 });
@@ -3031,7 +3019,7 @@ export const zGetSensorsSensorGetData = z.object({
     path: z.optional(z.never()),
     query: z.optional(z.object({
         thing_id: z.optional(z.int()),
-        observed_property: z.optional(z.string()),
+        parameter_id: z.optional(z.int()),
         sort: z.optional(z.union([
             z.string(),
             z.null()
