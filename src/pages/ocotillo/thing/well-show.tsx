@@ -27,7 +27,6 @@ import {
   ContactsAccordion,
   AttachmentsAccordion,
 } from '@/components'
-import { TechnicalDetailsAccordion } from '@/components/accordion/TechnicalDetails'
 
 export const WellShow = () => {
   const {
@@ -235,7 +234,6 @@ export const WellShow = () => {
         <Box component="div">
           <ContactsAccordion id={well?.id} />
           <AttachmentsAccordion id={well?.id} />
-          <TechnicalDetailsAccordion well={well} />
         </Box>
       </Stack>
     </Show>
