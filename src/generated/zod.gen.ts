@@ -181,10 +181,7 @@ export const zThingResponse = z.object({
         z.string(),
         z.null()
     ])),
-    well_purpose: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
+    well_purposes: z.optional(z.array(z.string())).default([]),
     well_depth: z.optional(z.union([
         z.number(),
         z.null()
@@ -205,10 +202,7 @@ export const zThingResponse = z.object({
         z.null()
     ])),
     well_casing_depth_unit: z.optional(z.string()).default('ft'),
-    well_casing_material: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
+    well_casing_materials: z.optional(z.array(z.string())).default([]),
     well_construction_notes: z.optional(z.union([
         z.string(),
         z.null()
@@ -506,17 +500,9 @@ export const zCreateSample = z.object({
  * Schema for creating a new sensor.
  */
 export const zCreateSensor = z.object({
-    datetime_installed: z.iso.datetime({
-        offset: true
-    }),
-    datetime_removed: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
     release_status: z.string(),
     name: z.string(),
+    sensor_type: z.string(),
     model: z.optional(z.union([
         z.string(),
         z.null()
@@ -525,8 +511,16 @@ export const zCreateSensor = z.object({
         z.string(),
         z.null()
     ])),
-    recording_interval: z.optional(z.union([
-        z.int(),
+    pcn_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    owner_agency: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    sensor_status: z.optional(z.union([
+        z.string(),
         z.null()
     ])),
     notes: z.optional(z.union([
@@ -623,8 +617,8 @@ export const zCreateWell = z.object({
         z.iso.date(),
         z.null()
     ])),
-    well_purpose: z.optional(z.union([
-        z.string(),
+    well_purposes: z.optional(z.union([
+        z.array(z.string()),
         z.null()
     ])),
     well_construction_notes: z.optional(z.union([
@@ -635,8 +629,8 @@ export const zCreateWell = z.object({
         z.number().gt(0),
         z.null()
     ])),
-    well_casing_material: z.optional(z.union([
-        z.string(),
+    well_casing_materials: z.optional(z.union([
+        z.array(z.string()),
         z.null()
     ]))
 });
@@ -658,6 +652,85 @@ export const zCreateWellScreen = z.object({
         z.string(),
         z.null()
     ]))
+});
+
+/**
+ * SensorResponse
+ */
+export const zSensorResponse = z.object({
+    id: z.int(),
+    created_at: z.iso.datetime({
+        offset: true
+    }),
+    release_status: z.string(),
+    name: z.string(),
+    sensor_type: z.string(),
+    model: z.union([
+        z.string(),
+        z.null()
+    ]),
+    serial_no: z.union([
+        z.string(),
+        z.null()
+    ]),
+    pcn_number: z.union([
+        z.string(),
+        z.null()
+    ]),
+    owner_agency: z.union([
+        z.string(),
+        z.null()
+    ]),
+    sensor_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    notes: z.union([
+        z.string(),
+        z.null()
+    ])
+});
+
+/**
+ * DeploymentResponse
+ */
+export const zDeploymentResponse = z.object({
+    id: z.int(),
+    created_at: z.iso.datetime({
+        offset: true
+    }),
+    release_status: z.string(),
+    thing_id: z.int(),
+    sensor: zSensorResponse,
+    installation_date: z.iso.date(),
+    removal_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    recording_interval: z.union([
+        z.int(),
+        z.null()
+    ]),
+    recording_interval_units: z.union([
+        z.string(),
+        z.null()
+    ]),
+    hanging_cable_length: z.union([
+        z.number(),
+        z.null()
+    ]),
+    hanging_point_height: z.union([
+        z.number(),
+        z.null()
+    ]),
+    hanging_point_description: z.union([
+        z.string(),
+        z.null()
+    ]),
+    notes: z.union([
+        z.string(),
+        z.null()
+    ])
 });
 
 /**
@@ -949,6 +1022,17 @@ export const zPageContactResponse = z.object({
 });
 
 /**
+ * Page[DeploymentResponse]
+ */
+export const zPageDeploymentResponse = z.object({
+    items: z.array(zDeploymentResponse),
+    total: z.int().gte(0),
+    page: z.int().gte(1),
+    size: z.int().gte(1),
+    pages: z.int().gte(0)
+});
+
+/**
  * Page[EmailResponse]
  */
 export const zPageEmailResponse = z.object({
@@ -1099,43 +1183,6 @@ export const zPageSampleResponse = z.object({
 });
 
 /**
- * SensorResponse
- */
-export const zSensorResponse = z.object({
-    id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
-    name: z.string(),
-    model: z.union([
-        z.string(),
-        z.null()
-    ]),
-    serial_no: z.union([
-        z.string(),
-        z.null()
-    ]),
-    datetime_installed: z.iso.datetime({
-        offset: true
-    }),
-    datetime_removed: z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ]),
-    recording_interval: z.union([
-        z.int(),
-        z.null()
-    ]),
-    notes: z.union([
-        z.string(),
-        z.null()
-    ])
-});
-
-/**
  * Page[SensorResponse]
  */
 export const zPageSensorResponse = z.object({
@@ -1277,10 +1324,7 @@ export const zWellResponse = z.object({
         z.iso.date(),
         z.null()
     ]),
-    well_purpose: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
+    well_purposes: z.optional(z.array(z.string())).default([]),
     well_depth: z.optional(z.union([
         z.number(),
         z.null()
@@ -1301,10 +1345,7 @@ export const zWellResponse = z.object({
         z.null()
     ])),
     well_casing_depth_unit: z.optional(z.string()).default('ft'),
-    well_casing_material: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
+    well_casing_materials: z.optional(z.array(z.string())).default([]),
     well_construction_notes: z.optional(z.union([
         z.string(),
         z.null()
@@ -1748,23 +1789,15 @@ export const zUpdateSample = z.object({
  * UpdateSensor
  */
 export const zUpdateSensor = z.object({
-    datetime_installed: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
-    datetime_removed: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
     release_status: z.optional(z.union([
         z.string(),
         z.null()
     ])),
     name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    sensor_type: z.optional(z.union([
         z.string(),
         z.null()
     ])),
@@ -1776,8 +1809,16 @@ export const zUpdateSensor = z.object({
         z.string(),
         z.null()
     ])),
-    recording_interval: z.optional(z.union([
-        z.int(),
+    pcn_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    owner_agency: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    sensor_status: z.optional(z.union([
+        z.string(),
         z.null()
     ])),
     notes: z.optional(z.union([
@@ -1894,8 +1935,8 @@ export const zUpdateWell = z.object({
         z.iso.date(),
         z.null()
     ])),
-    well_purpose: z.optional(z.union([
-        z.string(),
+    well_purposes: z.optional(z.union([
+        z.array(z.string()),
         z.null()
     ])),
     well_construction_notes: z.optional(z.union([
@@ -1906,8 +1947,8 @@ export const zUpdateWell = z.object({
         z.number(),
         z.null()
     ])),
-    well_casing_material: z.optional(z.union([
-        z.string(),
+    well_casing_materials: z.optional(z.union([
+        z.array(z.string()),
         z.null()
     ]))
 });
@@ -3031,7 +3072,7 @@ export const zGetSensorsSensorGetData = z.object({
     path: z.optional(z.never()),
     query: z.optional(z.object({
         thing_id: z.optional(z.int()),
-        observed_property: z.optional(z.string()),
+        parameter_id: z.optional(z.int()),
         sort: z.optional(z.union([
             z.string(),
             z.null()
@@ -3404,6 +3445,22 @@ export const zGetThingIdLinksThingThingIdIdLinkGetData = z.object({
  * Successful Response
  */
 export const zGetThingIdLinksThingThingIdIdLinkGetResponse = zPageThingIdLinkResponse;
+
+export const zGetThingDeploymentsThingThingIdDeploymentGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        thing_id: z.int()
+    }),
+    query: z.optional(z.object({
+        page: z.optional(z.int().gte(1)).default(1),
+        size: z.optional(z.int().gte(1).lte(10000)).default(25)
+    }))
+});
+
+/**
+ * Successful Response
+ */
+export const zGetThingDeploymentsThingThingIdDeploymentGetResponse = zPageDeploymentResponse;
 
 export const zDeleteWellScreenThingWellScreenWellScreenIdDeleteData = z.object({
     body: z.optional(z.never()),

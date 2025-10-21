@@ -132,7 +132,7 @@ export const WellList: React.FC = () => {
 
   const { push } = useNavigation()
 
-  const customHeaderButtons = ({ defaultButtons }) => {
+  const customHeaderButtons = () => {
     return (
       <>
         <CreateButton onClick={() => push('/ocotillo/well-inventory-form')} />

@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { MapPopup } from '@/components'
+import { Breadcrumb, List } from '@refinedev/mui'
 
 export const MapView: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -71,112 +72,113 @@ export const MapView: React.FC = () => {
   }
 
   return (
-    <Card elevation={2}>
-      <CardHeader title={<Typography variant="h5">Map</Typography>} />
-      <CardContent>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 3 }}>
-            <Card elevation={2}>
-              <Grid container spacing={1} p={2}>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="h4">Layers</Typography>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Divider />
-                </Grid>
-                {Object.entries(THING_LAYERS).map((layer) => {
-                  const [key, layerDef] = layer
-                  const { layerProps, isLoading } = layerDef
-                  const color = layerProps.paint['circle-color']
-
-                  return (
-                    <Grid
-                      container
-                      size={{ xs: 12 }}
-                      key={key}
-                      spacing={1}
-                      px={1}
-                    >
-                      <Grid size={{ xs: 10 }}>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={visibleLayers.includes(key)}
-                              onChange={onLayerChangeWrapper(key)}
-                              color="primary"
-                            />
-                          }
-                          label={layerProps.label}
-                        />
-                      </Grid>
-                      <Grid
-                        size={{ xs: 2 }}
-                        display="flex"
-                        justifyContent="right"
-                        alignItems="center"
-                      >
-                        <Box
-                          sx={{
-                            width: 16,
-                            height: 16,
-                            display: 'inline-block',
-                            backgroundColor: color,
-                            borderRadius: '4px',
-                            marginRight: 1,
-                          }}
-                        />
-                      </Grid>
-                      <Grid size={{ xs: 12 }}>
-                        <Box sx={{ height: 4, width: '100%' }}>
-                          {isLoading && <LinearProgress sx={{ height: 4 }} />}
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  )
-                })}
+    <List
+      breadcrumb={<Breadcrumb hideIcons={true} />}
+      title="Map"
+      canCreate={false}
+    >
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 3 }}>
+          <Card elevation={2}>
+            <Grid container spacing={1} p={2}>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="h4">Layers</Typography>
               </Grid>
-            </Card>
-          </Grid>
-          <Grid size={{ xs: 9 }}>
-            <Box
-              data-testid="ocotillo-map-container"
-              component="div"
-              ref={containerRef}
-              sx={{
-                borderRadius: 2,
-                overflow: 'hidden',
-                border: '2.5px solid',
-                borderColor: 'divider',
-                height: 650,
-                width: '100%',
-              }}
-            >
-              <MapComponent
-                containerRef={containerRef}
-                showDrawControls={{ show: true, position: 'top-right' }}
-                setPopupContent={setPopupContent}
-                popupContent={popupContent}
-                onPointClick={onMapPointClick}
-                onMouseMoveCallback={onMapMouseMove}
-              >
-                {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
-                  if (!visibleLayers.includes(key)) return null
-                  const { sourceProps, layerProps } = layerDef
-                  return (
-                    <Source id={key} key={key} {...sourceProps}>
-                      <Layer
-                        id={`location-${key}`}
-                        key={`layer-${key}`}
-                        {...layerProps}
+              <Grid size={{ xs: 12 }}>
+                <Divider />
+              </Grid>
+              {Object.entries(THING_LAYERS).map((layer) => {
+                const [key, layerDef] = layer
+                const { layerProps, isLoading } = layerDef
+                const color = layerProps.paint['circle-color']
+
+                return (
+                  <Grid
+                    container
+                    size={{ xs: 12 }}
+                    key={key}
+                    spacing={1}
+                    px={1}
+                  >
+                    <Grid size={{ xs: 10 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={visibleLayers.includes(key)}
+                            onChange={onLayerChangeWrapper(key)}
+                            color="primary"
+                          />
+                        }
+                        label={layerProps.label}
                       />
-                    </Source>
-                  )
-                })}
-              </MapComponent>
-            </Box>
-          </Grid>
+                    </Grid>
+                    <Grid
+                      size={{ xs: 2 }}
+                      display="flex"
+                      justifyContent="right"
+                      alignItems="center"
+                    >
+                      <Box
+                        sx={{
+                          width: 16,
+                          height: 16,
+                          display: 'inline-block',
+                          backgroundColor: color,
+                          borderRadius: '4px',
+                          marginRight: 1,
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <Box sx={{ height: 4, width: '100%' }}>
+                        {isLoading && <LinearProgress sx={{ height: 4 }} />}
+                      </Box>
+                    </Grid>
+                  </Grid>
+                )
+              })}
+            </Grid>
+          </Card>
         </Grid>
-      </CardContent>
-    </Card>
+        <Grid size={{ xs: 9 }}>
+          <Box
+            data-testid="ocotillo-map-container"
+            component="div"
+            ref={containerRef}
+            sx={{
+              borderRadius: 2,
+              overflow: 'hidden',
+              border: '2.5px solid',
+              borderColor: 'divider',
+              height: 650,
+              width: '100%',
+            }}
+          >
+            <MapComponent
+              containerRef={containerRef}
+              showDrawControls={{ show: true, position: 'top-right' }}
+              setPopupContent={setPopupContent}
+              popupContent={popupContent}
+              onPointClick={onMapPointClick}
+              onMouseMoveCallback={onMapMouseMove}
+            >
+              {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
+                if (!visibleLayers.includes(key)) return null
+                const { sourceProps, layerProps } = layerDef
+                return (
+                  <Source id={key} key={key} {...sourceProps}>
+                    <Layer
+                      id={`location-${key}`}
+                      key={`layer-${key}`}
+                      {...layerProps}
+                    />
+                  </Source>
+                )
+              })}
+            </MapComponent>
+          </Box>
+        </Grid>
+      </Grid>
+    </List>
   )
 }

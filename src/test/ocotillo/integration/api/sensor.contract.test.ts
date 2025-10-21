@@ -3,23 +3,21 @@ import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zSensorResponse,
   zCreateSensor,
-  zUpdateSensor
+  zUpdateSensor,
 } from '@/generated/zod.gen'
 import {
   SensorResponse,
   CreateSensor,
-  UpdateSensor
+  UpdateSensor,
 } from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Sensor', () => {
-
   it('should fetch sensors using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'sensor',
-      pagination: { current: 1, pageSize: 10 }
+      pagination: { current: 1, pageSize: 10 },
     })
-    
-    
+
     expect(result).toHaveProperty('data')
     expect(result).toHaveProperty('total')
     expect(Array.isArray(result.data)).toBe(true)
@@ -34,7 +32,9 @@ describe('Ocotillo Integration Tests: Sensor', () => {
       } catch (error) {
         console.error('Schema validation failed:', error.message)
         console.error('Sensor data:', JSON.stringify(sensor, null, 2))
-        throw new Error(`API response doesn't match ISensor interface: ${error.message}`)
+        throw new Error(
+          `API response doesn't match ISensor interface: ${error.message}`
+        )
       }
     }
   })
@@ -43,22 +43,24 @@ describe('Ocotillo Integration Tests: Sensor', () => {
     const result = await ocotilloDataProvider.getOne({
       resource: 'sensor',
       id: 1,
-      meta: {}
+      meta: {},
     })
 
-  expect(result).toHaveProperty('data')
+    expect(result).toHaveProperty('data')
 
-  const sensor = result.data as SensorResponse
-  
-  // Validate against schema
-  try {
-    const validatedSensor = zSensorResponse.parse(sensor)
-    expect(validatedSensor).toBeDefined()
-  } catch (error) {
-    console.error('Schema validation failed:', error.message)
-    console.error('Sensor data:', JSON.stringify(sensor, null, 2))
-    throw new Error(`API response doesn't match ISensor interface: ${error.message}`)
-  }
+    const sensor = result.data as SensorResponse
+
+    // Validate against schema
+    try {
+      const validatedSensor = zSensorResponse.parse(sensor)
+      expect(validatedSensor).toBeDefined()
+    } catch (error) {
+      console.error('Schema validation failed:', error.message)
+      console.error('Sensor data:', JSON.stringify(sensor, null, 2))
+      throw new Error(
+        `API response doesn't match ISensor interface: ${error.message}`
+      )
+    }
   })
 
   it('should create a sensor using data provider', async () => {
@@ -66,29 +68,32 @@ describe('Ocotillo Integration Tests: Sensor', () => {
       name: 'Test Sensor',
       model: 'Test Model',
       serial_no: '1234567890',
+      sensor_type: 'pressure',
       datetime_installed: '2025-01-08T21:15:18.139Z',
       datetime_removed: '2025-01-08T21:15:18.139Z',
       recording_interval: 10,
       notes: 'Test Notes',
-      release_status: 'public'
+      release_status: 'public',
     })
 
-  const result = await ocotilloDataProvider.create({
-    resource: 'sensor',
-    variables: createData
-  })
+    const result = await ocotilloDataProvider.create({
+      resource: 'sensor',
+      variables: createData,
+    })
 
-  expect(result).toHaveProperty('data')
-  const sensor = result.data as SensorResponse
-  // Validate against schema
-  try {
-    const validatedSensor = zSensorResponse.parse(sensor)
-    expect(validatedSensor).toBeDefined()
-  } catch (error) {
-    console.error('Schema validation failed:', error.message)
-    console.error('Sensor data:', JSON.stringify(sensor, null, 2))
-    throw new Error(`API response doesn't match ISensor interface: ${error.message}`)
-  }
+    expect(result).toHaveProperty('data')
+    const sensor = result.data as SensorResponse
+    // Validate against schema
+    try {
+      const validatedSensor = zSensorResponse.parse(sensor)
+      expect(validatedSensor).toBeDefined()
+    } catch (error) {
+      console.error('Schema validation failed:', error.message)
+      console.error('Sensor data:', JSON.stringify(sensor, null, 2))
+      throw new Error(
+        `API response doesn't match ISensor interface: ${error.message}`
+      )
+    }
   })
 
   it('should update a sensor using data provider', async () => {
@@ -97,28 +102,31 @@ describe('Ocotillo Integration Tests: Sensor', () => {
       name: 'Updated Test Sensor',
       model: 'Updated Test Model',
       serial_no: '1234567890',
+      sensor_type: 'pressure',
       datetime_installed: '2025-01-08T21:15:18.139Z',
       datetime_removed: '2025-01-08T21:15:18.139Z',
       recording_interval: 10,
-      notes: 'Updated Test Notes'
+      notes: 'Updated Test Notes',
     })
 
-  const result = await ocotilloDataProvider.update({
-    resource: 'sensor',
-    id: 1,
-    variables: updateData
-  })
+    const result = await ocotilloDataProvider.update({
+      resource: 'sensor',
+      id: 1,
+      variables: updateData,
+    })
 
-  expect(result).toHaveProperty('data')
-  const sensor = result.data as SensorResponse
-  // Validate against schema
-  try {
-    const validatedSensor = zSensorResponse.parse(sensor)
-    expect(validatedSensor).toBeDefined()
-  } catch (error) {
-    console.error('Schema validation failed:', error.message)
-    console.error('Sensor data:', JSON.stringify(sensor, null, 2))
-    throw new Error(`API response doesn't match ISensor interface: ${error.message}`)
-  }
+    expect(result).toHaveProperty('data')
+    const sensor = result.data as SensorResponse
+    // Validate against schema
+    try {
+      const validatedSensor = zSensorResponse.parse(sensor)
+      expect(validatedSensor).toBeDefined()
+    } catch (error) {
+      console.error('Schema validation failed:', error.message)
+      console.error('Sensor data:', JSON.stringify(sensor, null, 2))
+      throw new Error(
+        `API response doesn't match ISensor interface: ${error.message}`
+      )
+    }
   })
 })

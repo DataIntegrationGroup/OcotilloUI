@@ -600,14 +600,6 @@ export type CreateSample = {
  */
 export type CreateSensor = {
     /**
-     * Datetime Installed
-     */
-    datetime_installed: string;
-    /**
-     * Datetime Removed
-     */
-    datetime_removed?: string | null;
-    /**
      * Release Status
      */
     release_status: string;
@@ -615,6 +607,10 @@ export type CreateSensor = {
      * Name
      */
     name: string;
+    /**
+     * Sensor Type
+     */
+    sensor_type: string;
     /**
      * Model
      */
@@ -624,9 +620,17 @@ export type CreateSensor = {
      */
     serial_no?: string | null;
     /**
-     * Recording Interval
+     * Pcn Number
      */
-    recording_interval?: number | null;
+    pcn_number?: string | null;
+    /**
+     * Owner Agency
+     */
+    owner_agency?: string | null;
+    /**
+     * Sensor Status
+     */
+    sensor_status?: string | null;
     /**
      * Notes
      */
@@ -762,9 +766,9 @@ export type CreateWell = {
      */
     first_visit_date?: string | null;
     /**
-     * Well Purpose
+     * Well Purposes
      */
-    well_purpose?: string | null;
+    well_purposes?: Array<string> | null;
     /**
      * Well Construction Notes
      */
@@ -775,9 +779,9 @@ export type CreateWell = {
      */
     well_casing_diameter?: number | null;
     /**
-     * Well Casing Material
+     * Well Casing Materials
      */
-    well_casing_material?: string | null;
+    well_casing_materials?: Array<string> | null;
 };
 
 /**
@@ -811,6 +815,61 @@ export type CreateWellScreen = {
      * Screen Description
      */
     screen_description?: string | null;
+};
+
+/**
+ * DeploymentResponse
+ */
+export type DeploymentResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Release Status
+     */
+    release_status: string;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    sensor: SensorResponse;
+    /**
+     * Installation Date
+     */
+    installation_date: string;
+    /**
+     * Removal Date
+     */
+    removal_date: string | null;
+    /**
+     * Recording Interval
+     */
+    recording_interval: number | null;
+    /**
+     * Recording Interval Units
+     */
+    recording_interval_units: string | null;
+    /**
+     * Hanging Cable Length
+     */
+    hanging_cable_length: number | null;
+    /**
+     * Hanging Point Height
+     */
+    hanging_point_height: number | null;
+    /**
+     * Hanging Point Description
+     */
+    hanging_point_description: string | null;
+    /**
+     * Notes
+     */
+    notes: string | null;
 };
 
 /**
@@ -1303,6 +1362,32 @@ export type PageContactResponse = {
      * Items
      */
     items: Array<ContactResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
+
+/**
+ * Page[DeploymentResponse]
+ */
+export type PageDeploymentResponse = {
+    /**
+     * Items
+     */
+    items: Array<DeploymentResponse>;
     /**
      * Total
      */
@@ -1988,6 +2073,10 @@ export type SensorResponse = {
      */
     name: string;
     /**
+     * Sensor Type
+     */
+    sensor_type: string;
+    /**
      * Model
      */
     model: string | null;
@@ -1996,17 +2085,17 @@ export type SensorResponse = {
      */
     serial_no: string | null;
     /**
-     * Datetime Installed
+     * Pcn Number
      */
-    datetime_installed: string;
+    pcn_number: string | null;
     /**
-     * Datetime Removed
+     * Owner Agency
      */
-    datetime_removed: string | null;
+    owner_agency: string | null;
     /**
-     * Recording Interval
+     * Sensor Status
      */
-    recording_interval: number | null;
+    sensor_status: string | null;
     /**
      * Notes
      */
@@ -2118,9 +2207,9 @@ export type ThingResponse = {
      */
     spring_type?: string | null;
     /**
-     * Well Purpose
+     * Well Purposes
      */
-    well_purpose?: string | null;
+    well_purposes?: Array<string>;
     /**
      * Well Depth
      */
@@ -2154,9 +2243,9 @@ export type ThingResponse = {
      */
     well_casing_depth_unit?: string;
     /**
-     * Well Casing Material
+     * Well Casing Materials
      */
-    well_casing_material?: string | null;
+    well_casing_materials?: Array<string>;
     /**
      * Well Construction Notes
      */
@@ -2511,14 +2600,6 @@ export type UpdateSample = {
  */
 export type UpdateSensor = {
     /**
-     * Datetime Installed
-     */
-    datetime_installed?: string | null;
-    /**
-     * Datetime Removed
-     */
-    datetime_removed?: string | null;
-    /**
      * Release Status
      */
     release_status?: string | null;
@@ -2526,6 +2607,10 @@ export type UpdateSensor = {
      * Name
      */
     name?: string | null;
+    /**
+     * Sensor Type
+     */
+    sensor_type?: string | null;
     /**
      * Model
      */
@@ -2535,9 +2620,17 @@ export type UpdateSensor = {
      */
     serial_no?: string | null;
     /**
-     * Recording Interval
+     * Pcn Number
      */
-    recording_interval?: number | null;
+    pcn_number?: string | null;
+    /**
+     * Owner Agency
+     */
+    owner_agency?: string | null;
+    /**
+     * Sensor Status
+     */
+    sensor_status?: string | null;
     /**
      * Notes
      */
@@ -2651,9 +2744,9 @@ export type UpdateWell = {
      */
     first_visit_date?: string | null;
     /**
-     * Well Purpose
+     * Well Purposes
      */
-    well_purpose?: string | null;
+    well_purposes?: Array<string> | null;
     /**
      * Well Construction Notes
      */
@@ -2663,9 +2756,9 @@ export type UpdateWell = {
      */
     well_casing_diameter?: number | null;
     /**
-     * Well Casing Material
+     * Well Casing Materials
      */
-    well_casing_material?: string | null;
+    well_casing_materials?: Array<string> | null;
 };
 
 /**
@@ -2782,9 +2875,9 @@ export type WellResponse = {
      */
     first_visit_date: string | null;
     /**
-     * Well Purpose
+     * Well Purposes
      */
-    well_purpose?: string | null;
+    well_purposes?: Array<string>;
     /**
      * Well Depth
      */
@@ -2818,9 +2911,9 @@ export type WellResponse = {
      */
     well_casing_depth_unit?: string;
     /**
-     * Well Casing Material
+     * Well Casing Materials
      */
-    well_casing_material?: string | null;
+    well_casing_materials?: Array<string>;
     /**
      * Well Construction Notes
      */
@@ -5381,9 +5474,9 @@ export type GetSensorsSensorGetData = {
          */
         thing_id?: number;
         /**
-         * Observed Property
+         * Parameter Id
          */
-        observed_property?: string;
+        parameter_id?: number;
         /**
          * Sort
          */
@@ -6305,6 +6398,46 @@ export type GetThingIdLinksThingThingIdIdLinkGetResponses = {
 };
 
 export type GetThingIdLinksThingThingIdIdLinkGetResponse = GetThingIdLinksThingThingIdIdLinkGetResponses[keyof GetThingIdLinksThingThingIdIdLinkGetResponses];
+
+export type GetThingDeploymentsThingThingIdDeploymentGetData = {
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing/{thing_id}/deployment';
+};
+
+export type GetThingDeploymentsThingThingIdDeploymentGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetThingDeploymentsThingThingIdDeploymentGetError = GetThingDeploymentsThingThingIdDeploymentGetErrors[keyof GetThingDeploymentsThingThingIdDeploymentGetErrors];
+
+export type GetThingDeploymentsThingThingIdDeploymentGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageDeploymentResponse;
+};
+
+export type GetThingDeploymentsThingThingIdDeploymentGetResponse = GetThingDeploymentsThingThingIdDeploymentGetResponses[keyof GetThingDeploymentsThingThingIdDeploymentGetResponses];
 
 export type DeleteWellScreenThingWellScreenWellScreenIdDeleteData = {
     body?: never;
