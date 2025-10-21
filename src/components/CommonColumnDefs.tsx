@@ -2,14 +2,14 @@ import { Box } from '@mui/material'
 import { DeleteButton, EditButton, ShowButton } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 
-export const idColumnDef = () => {
-  return {
-    field: 'id',
-    headerName: 'ID',
-    type: 'string',
-    width: 100,
-  }
-}
+export const idColumnDef = <
+  T extends { id: string | number },
+>(): GridColDef<T> => ({
+  field: 'id',
+  headerName: 'ID',
+  type: 'string',
+  width: 100,
+})
 
 export const actionColumnDef = ({
   resource,
