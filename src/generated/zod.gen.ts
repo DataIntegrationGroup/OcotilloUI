@@ -655,6 +655,85 @@ export const zCreateWellScreen = z.object({
 });
 
 /**
+ * SensorResponse
+ */
+export const zSensorResponse = z.object({
+    id: z.int(),
+    created_at: z.iso.datetime({
+        offset: true
+    }),
+    release_status: z.string(),
+    name: z.string(),
+    sensor_type: z.string(),
+    model: z.union([
+        z.string(),
+        z.null()
+    ]),
+    serial_no: z.union([
+        z.string(),
+        z.null()
+    ]),
+    pcn_number: z.union([
+        z.string(),
+        z.null()
+    ]),
+    owner_agency: z.union([
+        z.string(),
+        z.null()
+    ]),
+    sensor_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    notes: z.union([
+        z.string(),
+        z.null()
+    ])
+});
+
+/**
+ * DeploymentResponse
+ */
+export const zDeploymentResponse = z.object({
+    id: z.int(),
+    created_at: z.iso.datetime({
+        offset: true
+    }),
+    release_status: z.string(),
+    thing_id: z.int(),
+    sensor: zSensorResponse,
+    installation_date: z.iso.date(),
+    removal_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    recording_interval: z.union([
+        z.int(),
+        z.null()
+    ]),
+    recording_interval_units: z.union([
+        z.string(),
+        z.null()
+    ]),
+    hanging_cable_length: z.union([
+        z.number(),
+        z.null()
+    ]),
+    hanging_point_height: z.union([
+        z.number(),
+        z.null()
+    ]),
+    hanging_point_description: z.union([
+        z.string(),
+        z.null()
+    ]),
+    notes: z.union([
+        z.string(),
+        z.null()
+    ])
+});
+
+/**
  * GeoJSONGeometry
  * Geometry schema for GeoJSON response.
  */
@@ -943,6 +1022,17 @@ export const zPageContactResponse = z.object({
 });
 
 /**
+ * Page[DeploymentResponse]
+ */
+export const zPageDeploymentResponse = z.object({
+    items: z.array(zDeploymentResponse),
+    total: z.int().gte(0),
+    page: z.int().gte(1),
+    size: z.int().gte(1),
+    pages: z.int().gte(0)
+});
+
+/**
  * Page[EmailResponse]
  */
 export const zPageEmailResponse = z.object({
@@ -1090,43 +1180,6 @@ export const zPageSampleResponse = z.object({
     page: z.int().gte(1),
     size: z.int().gte(1),
     pages: z.int().gte(0)
-});
-
-/**
- * SensorResponse
- */
-export const zSensorResponse = z.object({
-    id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
-    name: z.string(),
-    sensor_type: z.string(),
-    model: z.union([
-        z.string(),
-        z.null()
-    ]),
-    serial_no: z.union([
-        z.string(),
-        z.null()
-    ]),
-    pcn_number: z.union([
-        z.string(),
-        z.null()
-    ]),
-    owner_agency: z.union([
-        z.string(),
-        z.null()
-    ]),
-    sensor_status: z.union([
-        z.string(),
-        z.null()
-    ]),
-    notes: z.union([
-        z.string(),
-        z.null()
-    ])
 });
 
 /**
@@ -3392,6 +3445,22 @@ export const zGetThingIdLinksThingThingIdIdLinkGetData = z.object({
  * Successful Response
  */
 export const zGetThingIdLinksThingThingIdIdLinkGetResponse = zPageThingIdLinkResponse;
+
+export const zGetThingDeploymentsThingThingIdDeploymentGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        thing_id: z.int()
+    }),
+    query: z.optional(z.object({
+        page: z.optional(z.int().gte(1)).default(1),
+        size: z.optional(z.int().gte(1).lte(10000)).default(25)
+    }))
+});
+
+/**
+ * Successful Response
+ */
+export const zGetThingDeploymentsThingThingIdDeploymentGetResponse = zPageDeploymentResponse;
 
 export const zDeleteWellScreenThingWellScreenWellScreenIdDeleteData = z.object({
     body: z.optional(z.never()),

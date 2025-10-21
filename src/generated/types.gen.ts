@@ -818,6 +818,61 @@ export type CreateWellScreen = {
 };
 
 /**
+ * DeploymentResponse
+ */
+export type DeploymentResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Release Status
+     */
+    release_status: string;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    sensor: SensorResponse;
+    /**
+     * Installation Date
+     */
+    installation_date: string;
+    /**
+     * Removal Date
+     */
+    removal_date: string | null;
+    /**
+     * Recording Interval
+     */
+    recording_interval: number | null;
+    /**
+     * Recording Interval Units
+     */
+    recording_interval_units: string | null;
+    /**
+     * Hanging Cable Length
+     */
+    hanging_cable_length: number | null;
+    /**
+     * Hanging Point Height
+     */
+    hanging_point_height: number | null;
+    /**
+     * Hanging Point Description
+     */
+    hanging_point_description: string | null;
+    /**
+     * Notes
+     */
+    notes: string | null;
+};
+
+/**
  * EmailResponse
  * Response schema for email details.
  */
@@ -1307,6 +1362,32 @@ export type PageContactResponse = {
      * Items
      */
     items: Array<ContactResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
+
+/**
+ * Page[DeploymentResponse]
+ */
+export type PageDeploymentResponse = {
+    /**
+     * Items
+     */
+    items: Array<DeploymentResponse>;
     /**
      * Total
      */
@@ -6317,6 +6398,46 @@ export type GetThingIdLinksThingThingIdIdLinkGetResponses = {
 };
 
 export type GetThingIdLinksThingThingIdIdLinkGetResponse = GetThingIdLinksThingThingIdIdLinkGetResponses[keyof GetThingIdLinksThingThingIdIdLinkGetResponses];
+
+export type GetThingDeploymentsThingThingIdDeploymentGetData = {
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing/{thing_id}/deployment';
+};
+
+export type GetThingDeploymentsThingThingIdDeploymentGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetThingDeploymentsThingThingIdDeploymentGetError = GetThingDeploymentsThingThingIdDeploymentGetErrors[keyof GetThingDeploymentsThingThingIdDeploymentGetErrors];
+
+export type GetThingDeploymentsThingThingIdDeploymentGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageDeploymentResponse;
+};
+
+export type GetThingDeploymentsThingThingIdDeploymentGetResponse = GetThingDeploymentsThingThingIdDeploymentGetResponses[keyof GetThingDeploymentsThingThingIdDeploymentGetResponses];
 
 export type DeleteWellScreenThingWellScreenWellScreenIdDeleteData = {
     body?: never;
