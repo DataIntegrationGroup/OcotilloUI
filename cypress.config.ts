@@ -1,5 +1,7 @@
 import { defineConfig } from "cypress";
 
+const cucumber = require("cypress-cucumber-preprocessor").default;
+
 export default defineConfig({
   component: {
     devServer: {
@@ -10,7 +12,9 @@ export default defineConfig({
 
   e2e: {
     baseUrl: 'http://localhost:4173',
+    specPattern: "**/*.feature",
     setupNodeEvents(on, config) {
+      on("file:preprocessor", cucumber())
       process.env.NODE_ENV = 'test'
     },
     env: {
