@@ -41,8 +41,8 @@ export const getAccessToken = async (refresh?: boolean) => {
 }
 
 export const getAccessControlGroups = (): string[] => {
-  if (!import.meta.env.PROD && !import.meta.env.VITE_TEST_AUTH) {
-    return ['Admin']
+  if (!import.meta.env.PROD && import.meta.env.VITE_TEST_AUTH) {
+    return ['OcotilloAdmin']
   }
   const id_token = localStorage.getItem('id_token')
 
@@ -56,7 +56,7 @@ export const authentikAuthProvider: AuthProvider = {
   login: async (params) => {
     // const { status } = handleLogin(email, password)
     // const mode = import.meta.env.MODE
-    if (!import.meta.env.PROD && !import.meta.env.VITE_TEST_AUTH) {
+    if (!import.meta.env.PROD && import.meta.env.VITE_TEST_AUTH) {
       localStorage.setItem('access_token', 'fake_token')
       localStorage.setItem('id_token', 'fake_token')
       return { success: true }
@@ -103,6 +103,14 @@ export const authentikAuthProvider: AuthProvider = {
 
   // Returns the current user's profile
   getIdentity: async () => {
+
+    if (!import.meta.env.PROD && import.meta.env.VITE_TEST_AUTH) {
+      return {
+        id: 'test',
+        avatar: gravatarUrl(''),
+        email: '',
+      }
+    }
     const token = localStorage.getItem('id_token')
     if (!token) return null
 

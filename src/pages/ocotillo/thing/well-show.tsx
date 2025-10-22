@@ -99,8 +99,41 @@ export const WellShow = () => {
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
+
+  const { dataGridProps: idLinkDataGridProps } = useDataGrid({
+    resource: `thing/${id}/id-link`,
+    dataProviderName: 'ocotillo',
+    // meta: {
+    //   params: {
+    //     thing_id: id,
+    //   },
+    // },
+    queryOptions: {
+      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
+    },
+  })
+  const idLinkColumns = useMemo(()=>{
+    return [
+      { field: 'alternate_id', headerName: 'Alternate ID', minWidth: 150 },
+      { field: 'alternate_organization', headerName: 'Organization', minWidth: 150 },
+      { field: 'relation', headerName: 'Relation', minWidth: 150 },
+    ]
+  }, [])
+
   const { rows: observations, loading: observationsIsloading } =
     observationDataGridProps
+
+  const {rows: idLinks, loading: idLinksIsloading} = idLinkDataGridProps
+  const usgs_id = idLinks?.find((link: any) => link.alternate_organization === 'USGS')?.alternate_id || 'N/A'
+  const osepod_id = idLinks?.find((link: any) => link.alternate_organization === 'NMOSE'
+  && link.relation === 'OSEPOD'
+  )?.alternate_id || 'N/A'
+
+  useEffect(() => {
+    if (!idLinks || idLinks.length === 0) return
+    if (idLinksIsloading) return
+  }, [idLinks, idLinksIsloading])
 
   useEffect(() => {
     if (!observations || observations.length === 0) return
@@ -131,7 +164,10 @@ export const WellShow = () => {
       <Stack spacing={2}>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <CoreWellInfoCard well={well} />
+            <CoreWellInfoCard well={well}
+                              usgs_id={usgs_id}
+                              osepod_id={osepod_id}
+            />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <InteractiveSatelliteMapCard well={well} />
@@ -231,6 +267,48 @@ export const WellShow = () => {
             />
           </CardContent>
         </Card>
+
+        {/* Alternate IDs */}
+        <Card elevation={2}>
+          <CardHeader
+            title={
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+              >
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <MoreVertOutlined color="primary" />
+                  <Typography variant="body1" fontWeight="bold">
+                    Alternate IDs
+                  </Typography>
+                </Stack>
+                <CreateButton resource="ocotillo.thing/id-link" />
+              </Stack>
+            }
+          />
+
+          <CardContent>
+            <DataGrid
+              rowHeight={settings.rowHeight}
+              rows={idLinkDataGridProps.rows}
+              columns={idLinkColumns}
+              pageSizeOptions={[10, 25, 50]}
+              initialState={{
+                pagination: {
+                  paginationModel: { pageSize: 10, page: 0 },
+                },
+              }}
+            />
+          </CardContent>
+        </Card>
+        {/* OSE Card */}
+        <Card elevation={2}>
+        </Card>
+        {/* USGS Card */}
+        <Card elevation={2}>
+        </Card>
+
         <Box component="div">
           <ContactsAccordion id={well?.id} />
           <AttachmentsAccordion id={well?.id} />
