@@ -30,6 +30,7 @@
     ]
   },
   "dependencies": {
+    "@badeball/cypress-cucumber-preprocessor": "^23.2.1",
     "@base-ui-components/react": "^1.0.0-alpha.6",
     "@casl/ability": "^6.7.3",
     "@emotion/react": "^11.13.3",
@@ -79,6 +80,7 @@
     "zod": "^4.1.8"
   },
   "devDependencies": {
+    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.6",
     "@hey-api/openapi-ts": "^0.82.5",
     "@sentry/vite-plugin": "^3.4.0",
     "@stoplight/prism-cli": "^5.14.2",
@@ -103,5 +105,9 @@
   },
   "refine": {
     "projectId": "wCqQ1f-agx0FN-70pXIr"
+  },
+  "cypress-cucumber-preprocessor": {
+    "nonGlobalStepDefinitions": true,
+    "stepDefinitions": "cypress/e2e/ocotillo/steps/**/*.ts"
   }
 }
