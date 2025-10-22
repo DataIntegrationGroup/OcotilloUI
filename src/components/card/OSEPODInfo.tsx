@@ -11,37 +11,26 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
+import { useOSEPODInfo } from '@/hooks/useOSEPODInfo'
 
 export const OSEPODInfo = ({pod_id}) => {
-  const [rows, setRows] = useState([])
-  useEffect(() => {
-    const url=`https://services2.arcgis.com/qXZbWTdPDbTjl7Dy/arcgis/rest/services/OSE_PODs/FeatureServer/0/query?where=+db_file%3D%27${pod_id}%27&f=pjson&outFields=*&outSR=4326`
-    fetch(url).then((res) => res.json()).then((data) =>
-    {
-      if (data.features && data.features.length > 0) {
-        const attributes = data.features[0].attributes
-        const newRows = Object.keys(attributes).map((key, index) => ({
-          id: index,
-          name: key,
-          value: attributes[key],
-        }))
-        setRows(newRows)
-      } else {
-        setRows([])
-      }
-    }).catch((error) => {
-      console.error('Error fetching OSE POD info:', error)
-    })
-
-  }, [pod_id])
-
+  const podInfoQuery = useOSEPODInfo(pod_id)
   return <>
-
-    { rows.length === 0 &&
-    <Typography variant="body1">
+    { podInfoQuery.data?.length === 0 &&
+    <Typography variant="body1"
+    color={'text.secondary'}
+    padding={1}>
       No OSE POD data available for this well.
     </Typography>}
-    { rows.length > 0 &&
+
+    {podInfoQuery.isError &&
+      <Typography variant="body1"
+      color={'warning.main'}
+                  padding={1}
+      >Error fetching OSE POD info.
+      </Typography>}
+
+    { podInfoQuery.data?.length > 0 &&
     <TableContainer component={Paper} sx={{ maxHeight: 300 }}>
     <Table stickyHeader aria-label="sticky table">
       <TableHead>
@@ -51,9 +40,8 @@ export const OSEPODInfo = ({pod_id}) => {
         </TableRow>
       </TableHead>
       <TableBody>
-        { rows.map((row) => {
+        { podInfoQuery.data?.map((row) => {
           let value
-          console.log(row.name, row.name=='nmwrrs_wrsum_url')
           if (row.name=='nmwrrs_wrsum_url'){
             value = <div>
               <a target={'_blank'} href={row.value}>link</a>
@@ -70,7 +58,6 @@ export const OSEPODInfo = ({pod_id}) => {
               <TableCell sx={{paddingTop: '2px', paddingBottom: '2px'}}>
                 {value}
               </TableCell>
-
             </TableRow>
           })}
       </TableBody>

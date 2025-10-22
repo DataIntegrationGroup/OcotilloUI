@@ -285,7 +285,8 @@ export const WellShow = () => {
                     Alternate IDs
                   </Typography>
                 </Stack>
-                <CreateButton resource="ocotillo.thing/id-link" />
+                {/* disabled until id-link CRUD completed */}
+                {/*<CreateButton resource="ocotillo.thing/id-link" />*/}
               </Stack>
             }
           />
