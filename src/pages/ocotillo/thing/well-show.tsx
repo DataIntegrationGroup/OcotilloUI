@@ -26,6 +26,8 @@ import {
   RecentWaterLevelObservationsCard,
   ContactsAccordion,
   AttachmentsAccordion,
+  USGSInfo,
+  OSEPODInfo
 } from '@/components'
 
 export const WellShow = () => {
@@ -302,17 +304,23 @@ export const WellShow = () => {
             />
           </CardContent>
         </Card>
-        {/* OSE Card */}
-        <Card elevation={2}>
-        </Card>
-        {/* USGS Card */}
-        <Card elevation={2}>
-        </Card>
 
         <Box component="div">
           <ContactsAccordion id={well?.id} />
           <AttachmentsAccordion id={well?.id} />
         </Box>
+
+          {/* OSE Card */}
+          <Card elevation={2}>
+            <CardHeader title={'OSEPOD Information'}/>
+            <OSEPODInfo pod_id={osepod_id}/>
+          </Card>
+          {/* USGS Card */}
+          <Card elevation={2}>
+            <CardHeader title={'USGS Information'}/>
+            <USGSInfo site_id={usgs_id}/>
+          </Card>
+
       </Stack>
     </Show>
   )
