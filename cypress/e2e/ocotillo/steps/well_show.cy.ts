@@ -69,3 +69,119 @@ Then("I see the Attachments section", () => {
         .contains('Attachments')
         .should('be.visible');
 });
+
+// Well Information assertions
+//Chips will have random text in test environment
+Then("I should see the well name or point ID", () => {
+    cy.get('.MuiChip-label')
+        .should('be.visible');
+});
+Then("I should see the well purpose", () => {
+    cy.get('.MuiChip-label')
+        .should('be.visible');
+});
+Then("I should see the release status", () => {
+    cy.get('.MuiChip-label')
+        .should('be.visible');
+});
+Then("I should see the hole depth", () => {
+    cy.get('.MuiTypography-root')
+        .contains('Hole Depth:')
+        .should('be.visible');
+});
+Then("I should see the well depth", () => {
+    cy.get('.MuiTypography-root')
+        .contains('Well Depth:')
+        .should('be.visible');
+});
+Then("I should see the coordinates", () => {
+    cy.get('.MuiTypography-root')
+        .contains('Northing/Easting:')
+        .should('be.visible');
+});
+Then("I should see the elevation", () => {
+    cy.get('.MuiTypography-root')
+        .contains('Elevation:')
+        .should('be.visible');
+});
+Then("I should see the alternate IDs", () => {
+    cy.get('.MuiTypography-root')
+        .contains('Alternate IDs')
+        .should('be.visible');
+});
+
+//Map section assertions
+Then("I should see the interactive satellite map", () => {
+    cy.get('.MuiCard-root')
+        .contains('Map')
+        .should('be.visible');
+});
+
+//Hydrograph and Recent Water Level Observations section assertions
+Then("I should see the hydrograph visualization", () => {
+    cy.get('.MuiCard-root')
+        .contains('Hydrograph')
+        .should('be.visible');
+});
+Then("I should see the recent water level observations table", () => {
+    cy.get('.MuiCard-root')
+        .contains('Recent Water Level Observations')
+        .should('be.visible');
+});
+
+//Contacts section assertions
+Then("I should see the contacts table", () => {
+    cy.get('.MuiAccordion-root')
+        .contains('Contacts')
+        .should('exist');
+});
+
+Then("the table should show contact names", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Name')
+        .should('exist');
+});
+Then("the table should show contact roles", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Role')
+        .should('exist');
+});
+Then("the table should show contact types", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Contact Type')
+        .should('exist');
+});
+Then("the table should show email addresses", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Email')
+        .should('exist');
+});
+Then("the table should show phone numbers", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Phone')
+        .should('exist');
+});
+Then("I should see the create contact button", () => {
+    cy.get('.MuiButton-root')
+        .contains('Create')
+        .should('exist');
+});
+
+//Equipment Section assertions
+Then("I should see the equipment table", () => {
+    cy.get('.MuiCard-root')
+        .contains('Equipment')
+        .should('exist');
+});
+Then("I should see the create equipment button", () => {
+    cy.get('.MuiButton-root')
+        .contains('Create')
+        .should('exist');
+});
+
+//Attachments Section assertions
+Then("I should see the attachments section", () => {
+    cy.get('.MuiAccordion-root')
+        .contains('Attachments')
+        .should('be.visible');
+});

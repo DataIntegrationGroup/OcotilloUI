@@ -18,3 +18,37 @@ Feature: Well Detail Page
     And I see the Equipment section
     And I see the Well Screens section
     And I see the Attachments section
+
+  @acceptance-criteria
+  Scenario: Well information displays core physical attributes
+    Then I should see the well name or point ID
+    And I should see the well purpose
+    And I should see the release status
+    And I should see the hole depth
+    And I should see the well depth
+    And I should see the coordinates
+    And I should see the elevation
+    And I should see the alternate IDs
+
+  Scenario: Map section displays interactive satellite view
+    Then I should see the interactive satellite map
+
+  Scenario: Hydrograph and observations are grouped together
+    Then I should see the hydrograph visualization
+    And I should see the recent water level observations table
+
+  Scenario: Contacts section displays table with required fields
+    Then I should see the contacts table
+    And the table should show contact names
+    And the table should show contact roles
+    And the table should show contact types
+    And the table should show email addresses
+    And the table should show phone numbers
+    And I should see the create contact button
+
+  Scenario: Equipment section displays installed equipment
+    Then I should see the equipment table
+    And I should see the create equipment button
+
+  Scenario: Attachments section displays attachments
+    Then I should see the attachments section
