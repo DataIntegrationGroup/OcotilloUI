@@ -49,6 +49,20 @@ Feature: Well Detail Page
   Scenario: Equipment section displays installed equipment
     Then I should see the equipment table
     And I should see the create equipment button
+    And the table should show equipment names
+    And the table should show equipment models
+    And the table should show serial numbers
+    And the table should show installation dates
+    And the table should show removal dates
+    And the table should show recording intervals
+    And the table should show equipment notes
+
+  Scenario: Well Screens section displays screen information
+    Then I should see the well screens table
+    And I should see the create well screen button
+    And the table should show screen types
+    And the table should show screen top depths
+    And the table should show screen bottom depths
 
   Scenario: Attachments section displays attachments
     Then I should see the attachments section

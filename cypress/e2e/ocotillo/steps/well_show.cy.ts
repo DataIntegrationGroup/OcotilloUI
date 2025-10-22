@@ -20,7 +20,6 @@ Then('It should show all well response elements', () => {
     });
 });
 
-// Better element-specific assertions based on actual component structure
 Then('I see the header Show Well', () => {
     cy.get('.refine-pageHeader-title')
         .should('contain.text', 'Show Well')
@@ -28,7 +27,6 @@ Then('I see the header Show Well', () => {
 });
 
 Then("I see the Map", () => {
-    // Look for the InteractiveSatelliteMapCard component
     cy.get('.MuiCard-root')
         .contains('Map')
         .should('be.visible');
@@ -176,6 +174,69 @@ Then("I should see the equipment table", () => {
 Then("I should see the create equipment button", () => {
     cy.get('.MuiButton-root')
         .contains('Create')
+        .should('exist');
+});
+
+Then("the table should show equipment names", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Name')
+        .should('exist');
+});
+Then("the table should show equipment models", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Model')
+        .should('exist');
+});
+Then("the table should show serial numbers", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Serial No')
+        .should('exist');
+});
+Then("the table should show installation dates", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Date Installed')
+        .should('exist');
+});
+Then("the table should show removal dates", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Date Removed')
+        .should('exist');
+});
+Then("the table should show recording intervals", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Recording Interval')
+        .should('exist');
+});
+Then("the table should show equipment notes", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Notes')
+        .should('exist');
+});
+
+//Well Screens Section assertions
+Then("I should see the well screens table", () => {
+    cy.get('.MuiCard-root')
+        .contains('Well Screens')
+        .should('exist');
+});
+Then("I should see the create well screen button", () => {
+    cy.get('.MuiButton-root')
+        .contains('Create')
+        .should('exist');
+});
+Then("the table should show screen types", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Screen Type')
+        .should('exist');
+});
+Then("the table should show screen top depths", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Screen Top Depth (ft)')
+        .should('exist');
+});
+Then("the table should show screen bottom depths", () => {
+    cy.get('.MuiDataGrid-columnHeaderTitle')
+        .contains('Screen Bottom Depth (ft)')
         .should('exist');
 });
 
