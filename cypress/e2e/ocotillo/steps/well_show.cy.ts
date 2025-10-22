@@ -21,8 +21,8 @@ Then('It should show all well response elements', () => {
 });
 
 Then('I see the header Show Well', () => {
-    cy.get('.refine-pageHeader-title')
-        .should('contain.text', 'Show Well')
+    cy.get('.MuiCardHeader-root')
+        .contains('Show Well')
         .should('be.visible');
 });
 
