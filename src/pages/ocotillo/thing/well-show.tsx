@@ -1,8 +1,14 @@
-import { HttpError, useResourceParams, useShow } from '@refinedev/core'
+import {
+  HttpError,
+  usePermissions,
+  useResourceParams,
+  useShow,
+} from '@refinedev/core'
 import { Breadcrumb, CreateButton, Show, useDataGrid } from '@refinedev/mui'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -27,6 +33,7 @@ import {
   ContactsAccordion,
   AttachmentsAccordion,
 } from '@/components'
+import { Download } from '@mui/icons-material'
 
 export const WellShow = () => {
   const {
@@ -127,6 +134,12 @@ export const WellShow = () => {
       title={
         <Typography variant="h5">{`Show Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
       }
+      headerButtons={({ defaultButtons }) => (
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {defaultButtons}
+          <DownloadButton well={well} isLoading={isLoading} />
+        </Box>
+      )}
     >
       <Stack spacing={2}>
         <Grid container spacing={2}>
@@ -237,5 +250,29 @@ export const WellShow = () => {
         </Box>
       </Stack>
     </Show>
+  )
+}
+
+export const DownloadButton = ({
+  well,
+  isLoading,
+}: {
+  well: IWell
+  isLoading: boolean
+}) => {
+  const { data: permissions, isLoading: isPermissionsLoading } =
+    usePermissions<string[]>()
+
+  const isViewer = permissions?.includes('AMPViewer') ?? false
+
+  return (
+    <Button
+      disabled={isLoading || isPermissionsLoading || !isViewer}
+      variant="text"
+      startIcon={<Download />}
+      onClick={() => console.log(`Download PDF for ${well.name}`)}
+    >
+      Download PDF
+    </Button>
   )
 }
