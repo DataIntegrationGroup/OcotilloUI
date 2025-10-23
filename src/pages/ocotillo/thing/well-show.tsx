@@ -1,5 +1,6 @@
 import {
   HttpError,
+  useNotification,
   usePermissions,
   useResourceParams,
   useShow,
@@ -34,6 +35,9 @@ import {
   AttachmentsAccordion,
 } from '@/components'
 import { Download } from '@mui/icons-material'
+import { usePDF } from 'react-to-pdf'
+import { buildPdfFilename } from '@/utils'
+import { WellShowPdfPreview } from './well-show-pdf-preview'
 
 export const WellShow = () => {
   const {
@@ -260,19 +264,65 @@ export const DownloadButton = ({
   well: IWell
   isLoading: boolean
 }) => {
+  const { toPDF, targetRef } = usePDF()
   const { data: permissions, isLoading: isPermissionsLoading } =
     usePermissions<string[]>()
+  const { open: notify } = useNotification()
+
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const isViewer = permissions?.includes('AMPViewer') ?? false
+  const disabled =
+    isLoading || isPermissionsLoading || !isViewer || isGenerating
+
+  const handleDownload = () => {
+    try {
+      setIsGenerating(true)
+
+      const filename = buildPdfFilename(well)
+
+      toPDF({ filename })
+
+      notify?.({
+        message: 'PDF generated successfully',
+        type: 'success',
+        description: filename,
+      })
+    } catch (error) {
+      notify?.({
+        message: 'PDF Generation Failed',
+        type: 'error',
+      })
+    } finally {
+      setIsGenerating(false)
+    }
+  }
 
   return (
-    <Button
-      disabled={isLoading || isPermissionsLoading || !isViewer}
-      variant="text"
-      startIcon={<Download />}
-      onClick={() => console.log(`Download PDF for ${well.name}`)}
-    >
-      Download PDF
-    </Button>
+    <>
+      <Button
+        disabled={disabled}
+        variant="text"
+        startIcon={<Download />}
+        onClick={handleDownload}
+      >
+        {isGenerating ? 'Generating...' : 'Download PDF'}
+      </Button>
+
+      {/* Hidden PDF Content */}
+      <Box
+        ref={targetRef}
+        sx={{
+          position: 'absolute',
+          top: '-9999px',
+          left: '-9999px',
+          width: '800px',
+          p: 2,
+          bgcolor: 'white',
+        }}
+      >
+        <WellShowPdfPreview />
+      </Box>
+    </>
   )
 }

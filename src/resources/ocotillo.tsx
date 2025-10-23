@@ -1,8 +1,7 @@
+import { WellShowPdfPreview } from '@/pages/ocotillo/thing/well-show-pdf-preview'
 import {
-  CategoryOutlined,
   Place,
   Construction,
-  DashboardOutlined,
   ScienceOutlined,
   SettingsInputAntenna,
   ScaleOutlined,
@@ -182,7 +181,14 @@ let things: {
   show?: string
   create?: string
   list: string
-  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
+  meta: {
+    label?: string
+    icon?: JSX.Element
+    disabled?: boolean
+    parent?: string
+    nestedLevel?: number
+    routes?: { path: string; element: JSX.Element }[]
+  }
 }[] = [
   {
     name: 'thing-well',
@@ -193,6 +199,12 @@ let things: {
     meta: {
       label: 'Wells',
       icon: <Construction />,
+      routes: [
+        {
+          path: '/ocotillo/well/pdf-preview/:id',
+          element: <WellShowPdfPreview />,
+        },
+      ],
     },
   },
   {
@@ -243,8 +255,6 @@ things = things.map((b) => {
   }
 })
 
-console.log(things)
-
 let observations: {
   name: string
   edit?: string
@@ -287,8 +297,6 @@ let ocotillo = [
       icon: <Map />,
     },
   },
-
-  // tables
   {
     name: 'tables',
     icon: <WidgetsOutlined />,
@@ -297,7 +305,6 @@ let ocotillo = [
     },
   },
   ...tables,
-
   {
     name: 'thing',
     icon: <WidgetsOutlined />,
@@ -318,7 +325,6 @@ let ocotillo = [
     },
   },
   ...observations,
-  // Apps
   {
     name: 'apps',
     icon: <Apps />,
@@ -347,8 +353,6 @@ let ocotillo = [
       icon: <ScienceOutlined />,
     },
   },
-
-  // Forms
   {
     name: 'forms',
     icon: <DynamicFormOutlined />,
@@ -357,14 +361,6 @@ let ocotillo = [
     },
   },
   ...forms,
-
-  // {
-  //   name: 'Apps',
-  //   icon: <WidgetsOutlined />,
-  //   meta: {
-  //     label: 'Things',
-  //   },
-  // },
 ]
 
 export const ocotilloResources = ocotillo.map((b) => {
@@ -380,7 +376,6 @@ export const ocotilloResources = ocotillo.map((b) => {
   }
 })
 
-console.log(ocotilloResources)
 //
 // let amp = [
 //   {
