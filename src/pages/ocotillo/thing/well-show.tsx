@@ -37,7 +37,7 @@ import {
 import { Download } from '@mui/icons-material'
 import { usePDF } from 'react-to-pdf'
 import { buildPdfFilename } from '@/utils'
-import { WellShowPdfPreview } from './well-show-pdf-preview'
+import { PDF } from './well-show-pdf-preview'
 
 export const WellShow = () => {
   const {
@@ -321,7 +321,7 @@ export const DownloadButton = ({
           bgcolor: 'white',
         }}
       >
-        <WellShowPdfPreview />
+        <PDF well={well} />
       </Box>
     </>
   )

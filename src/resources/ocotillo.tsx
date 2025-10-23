@@ -1,4 +1,4 @@
-import { WellShowPdfPreview } from '@/pages/ocotillo/thing/well-show-pdf-preview'
+import { WellShowPdfPreview } from '@/pages/ocotillo/thing'
 import {
   Place,
   Construction,
@@ -187,7 +187,7 @@ let things: {
     disabled?: boolean
     parent?: string
     nestedLevel?: number
-    routes?: { path: string; element: JSX.Element }[]
+    routes?: { path: string; element: JSX.Element; meta: any }[]
   }
 }[] = [
   {
@@ -203,6 +203,7 @@ let things: {
         {
           path: '/ocotillo/well/pdf-preview/:id',
           element: <WellShowPdfPreview />,
+          meta: { resource: 'thing-well' },
         },
       ],
     },
@@ -243,15 +244,25 @@ let things: {
   },
 ]
 
+// things = things.map((b) => {
+//   let meta = b.meta || {}
+//   if (!meta['parent']) {
+//     meta['parent'] = 'ocotillo.thing'
+//   }
+//   meta['nestedLevel'] = 3
+//   return {
+//     ...b,
+//     meta,
+//   }
+// })
 things = things.map((b) => {
-  let meta = b.meta || {}
-  if (!meta['parent']) {
-    meta['parent'] = 'ocotillo.thing'
-  }
-  meta['nestedLevel'] = 3
   return {
     ...b,
-    meta: meta,
+    meta: {
+      ...b.meta,
+      parent: b.meta?.parent ?? 'ocotillo.thing',
+      nestedLevel: 3,
+    },
   }
 })
 

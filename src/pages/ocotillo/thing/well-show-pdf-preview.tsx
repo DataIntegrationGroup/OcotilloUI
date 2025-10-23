@@ -1,12 +1,15 @@
 import { IWell } from '@/interfaces/ocotillo/IThing'
-import { Box, Typography } from '@mui/material'
+import { convertLonLatToUTM, parseWktPoint } from '@/utils'
+import { Box, Card, CardContent, Typography } from '@mui/material'
+import Grid from '@mui/material/Grid2'
 import { HttpError, useShow } from '@refinedev/core'
+import { Show } from '@refinedev/mui'
 import { useParams } from 'react-router-dom'
 
 export const WellShowPdfPreview = () => {
   const { id } = useParams()
   const {
-    queryResult: { data, isLoading: _isLoading },
+    queryResult: { data, isLoading },
   } = useShow<IWell, HttpError>({
     resource: 'thing-well',
     id,
@@ -15,10 +18,143 @@ export const WellShowPdfPreview = () => {
   const well = data?.data
 
   return (
-    <Box>
-      <Typography variant="h1">Well Report: {well?.name}</Typography>
-      <pre>{JSON.stringify(well, null, 2)}</pre>
-      {/* Add more PDF-only content here */}
+    <Show
+      resource="thing-well"
+      recordItemId={id}
+      isLoading={isLoading}
+      title={
+        <Typography variant="h5">{`Preview Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
+      }
+    >
+      <Card elevation={2}>
+        <CardContent>
+          <PDF well={well} />
+        </CardContent>
+      </Card>
+    </Show>
+  )
+}
+
+export const PDF = ({ well }: { well: IWell }) => {
+  const coords = parseWktPoint(well?.current_location?.point)
+  const [easting, northing] = coords
+    ? convertLonLatToUTM(coords.lon, coords.lat)
+    : [undefined, undefined]
+
+  return (
+    <Grid container spacing={2}>
+      <Grid size={{ xs: 12 }}>
+        <Typography variant="h1" textAlign="center">
+          Field Compilation Notes
+        </Typography>
+      </Grid>
+      <Grid size={{ xs: 6 }}>
+        <Typography variant="body1">Well Id: {safe(well?.name)}</Typography>
+      </Grid>
+      <Grid size={{ xs: 6 }}>
+        <DateBoxes />
+      </Grid>
+      <Grid size={{ xs: 6 }}>
+        <Typography variant="body1">Site Name: {safe(well?.name)}</Typography>
+        <Typography variant="body1">Easting: {safe(easting)}</Typography>
+        <Typography variant="body1">Northing: {safe(northing)}</Typography>
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <pre>{JSON.stringify(well, null, 2)}</pre>
+      </Grid>
+    </Grid>
+  )
+}
+
+const safe = (v: React.ReactNode, fallback = 'N/A') =>
+  v === null || v === undefined || v === '' ? fallback : v
+
+const DateBoxes = () => {
+  const groups = [
+    { count: 4, label: 'Y' },
+    { dash: true },
+    { count: 2, label: 'M' },
+    { dash: true },
+    { count: 2, label: 'D' },
+  ]
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        gap: 1,
+      }}
+    >
+      {/* Title */}
+      <Typography
+        variant="body1"
+        sx={{ fontWeight: 700, mb: 0.5, alignSelf: 'center' }}
+      >
+        Date:
+      </Typography>
+
+      {/* Boxes Row */}
+      <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {groups.map((g, gi) =>
+            g.dash ? (
+              <Typography
+                key={`dash-${gi}`}
+                sx={{ fontWeight: 700, fontSize: 20, mx: 0.5 }}
+              >
+                –
+              </Typography>
+            ) : (
+              // Render a group of boxes
+              <Box key={`group-${gi}`} sx={{ display: 'flex', gap: 0.5 }}>
+                {Array.from({ length: g.count }).map((_, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      width: 26,
+                      height: 32,
+                      border: '2px solid',
+                      borderColor: 'grey.600',
+                      borderRadius: 0.5,
+                    }}
+                  />
+                ))}
+              </Box>
+            )
+          )}
+        </Box>
+
+        {/* Labels Row */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+          {groups.map((g, gi) =>
+            g.dash ? (
+              // keep spacing under dash for alignment
+              <Box key={`dashlbl-${gi}`} sx={{ width: 20 }} />
+            ) : (
+              <Box
+                key={`lbl-${gi}`}
+                sx={{
+                  display: 'flex',
+                  gap: 2.255,
+                  ml: 1,
+                }}
+              >
+                {Array.from({ length: g.count }).map((_, i) => (
+                  <Typography
+                    key={i}
+                    variant="caption"
+                    sx={{ fontWeight: 700, letterSpacing: 1, fontSize: 20 }}
+                  >
+                    {g.label}
+                  </Typography>
+                ))}
+              </Box>
+            )
+          )}
+        </Box>
+      </Box>
     </Box>
   )
 }
