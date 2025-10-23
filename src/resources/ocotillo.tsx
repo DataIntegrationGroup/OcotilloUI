@@ -1,7 +1,8 @@
-import { WellShowPdfPreview } from '@/pages/ocotillo/thing'
 import {
+  CategoryOutlined,
   Place,
   Construction,
+  DashboardOutlined,
   ScienceOutlined,
   SettingsInputAntenna,
   ScaleOutlined,
@@ -181,14 +182,7 @@ let things: {
   show?: string
   create?: string
   list: string
-  meta: {
-    label?: string
-    icon?: JSX.Element
-    disabled?: boolean
-    parent?: string
-    nestedLevel?: number
-    routes?: { path: string; element: JSX.Element; meta: any }[]
-  }
+  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
 }[] = [
   {
     name: 'thing-well',
@@ -199,13 +193,6 @@ let things: {
     meta: {
       label: 'Wells',
       icon: <Construction />,
-      routes: [
-        {
-          path: '/ocotillo/well/pdf-preview/:id',
-          element: <WellShowPdfPreview />,
-          meta: { resource: 'thing-well' },
-        },
-      ],
     },
   },
   {
@@ -244,27 +231,19 @@ let things: {
   },
 ]
 
-// things = things.map((b) => {
-//   let meta = b.meta || {}
-//   if (!meta['parent']) {
-//     meta['parent'] = 'ocotillo.thing'
-//   }
-//   meta['nestedLevel'] = 3
-//   return {
-//     ...b,
-//     meta,
-//   }
-// })
 things = things.map((b) => {
+  let meta = b.meta || {}
+  if (!meta['parent']) {
+    meta['parent'] = 'ocotillo.thing'
+  }
+  meta['nestedLevel'] = 3
   return {
     ...b,
-    meta: {
-      ...b.meta,
-      parent: b.meta?.parent ?? 'ocotillo.thing',
-      nestedLevel: 3,
-    },
+    meta: meta,
   }
 })
+
+console.log(things)
 
 let observations: {
   name: string
@@ -308,6 +287,8 @@ let ocotillo = [
       icon: <Map />,
     },
   },
+
+  // tables
   {
     name: 'tables',
     icon: <WidgetsOutlined />,
@@ -316,6 +297,7 @@ let ocotillo = [
     },
   },
   ...tables,
+
   {
     name: 'thing',
     icon: <WidgetsOutlined />,
@@ -336,6 +318,7 @@ let ocotillo = [
     },
   },
   ...observations,
+  // Apps
   {
     name: 'apps',
     icon: <Apps />,
@@ -364,6 +347,8 @@ let ocotillo = [
       icon: <ScienceOutlined />,
     },
   },
+
+  // Forms
   {
     name: 'forms',
     icon: <DynamicFormOutlined />,
@@ -372,6 +357,14 @@ let ocotillo = [
     },
   },
   ...forms,
+
+  // {
+  //   name: 'Apps',
+  //   icon: <WidgetsOutlined />,
+  //   meta: {
+  //     label: 'Things',
+  //   },
+  // },
 ]
 
 export const ocotilloResources = ocotillo.map((b) => {
@@ -387,6 +380,7 @@ export const ocotilloResources = ocotillo.map((b) => {
   }
 })
 
+console.log(ocotilloResources)
 //
 // let amp = [
 //   {
