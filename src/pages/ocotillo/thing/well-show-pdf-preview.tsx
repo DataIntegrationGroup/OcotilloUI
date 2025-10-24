@@ -48,16 +48,58 @@ export const PDF = ({ well }: { well: IWell }) => {
           Field Compilation Notes
         </Typography>
       </Grid>
-      <Grid size={{ xs: 6 }}>
-        <Typography variant="body1">Well Id: {safe(well?.name)}</Typography>
-      </Grid>
-      <Grid size={{ xs: 6 }}>
+      <Grid
+        offset={{ xs: 6 }}
+        size={{ xs: 6 }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+        }}
+      >
         <DateBoxes />
       </Grid>
-      <Grid size={{ xs: 6 }}>
-        <Typography variant="body1">Site Name: {safe(well?.name)}</Typography>
-        <Typography variant="body1">Easting: {safe(easting)}</Typography>
-        <Typography variant="body1">Northing: {safe(northing)}</Typography>
+      <Grid size={{ xs: 12 }}>
+        <LineItem title="Well Id" value={well?.name} />
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <LineItem title="Site Name" value={well?.name} />
+      </Grid>
+      <Grid container size={{ xs: 6 }}>
+        <Grid size={{ xs: 6 }}>
+          <LineItem title="Easting" value={easting?.toFixed(0)} />
+        </Grid>
+        <Grid size={{ xs: 6 }}>
+          <LineItem title="Northing" value={northing?.toFixed(0)} />
+        </Grid>
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <LineItem
+          title="Location Notes"
+          value={well?.current_location?.notes}
+        />
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <LineItem title="Measurement Notes" value={null} />
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <LineItem title="Measuring Point (MP) Height" value={null} />
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <LineItem
+          title="Well Depth"
+          value={
+            well?.well_depth
+              ? `${well?.well_depth} ${well.well_depth_unit}`
+              : null
+          }
+        />
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <LineItem title="Last Measured Date" value={null} />
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <LineItem title="Last Depth to Water" value={null} />
       </Grid>
       <Grid size={{ xs: 12 }}>
         <pre>{JSON.stringify(well, null, 2)}</pre>
@@ -66,8 +108,23 @@ export const PDF = ({ well }: { well: IWell }) => {
   )
 }
 
-const safe = (v: React.ReactNode, fallback = 'N/A') =>
-  v === null || v === undefined || v === '' ? fallback : v
+const LineItem = ({
+  title,
+  value,
+}: {
+  title: string
+  value?: string | number
+}) => {
+  const safe = (v: React.ReactNode, fallback = 'N/A') =>
+    v === null || v === undefined || v === '' ? fallback : v
+
+  return (
+    <Box component="div">
+      <Typography variant="h6">{`${title}:`}</Typography>
+      <Typography variant="body1">{safe(value)}</Typography>
+    </Box>
+  )
+}
 
 const DateBoxes = () => {
   const groups = [
