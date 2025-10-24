@@ -48,16 +48,30 @@ export const PDF = ({ well }: { well: IWell }) => {
           Field Compilation Notes
         </Typography>
       </Grid>
-      <Grid size={{ xs: 6 }}>
-        <Typography variant="body1">Well Id: {safe(well?.name)}</Typography>
+      <Grid
+        size={{ xs: 6 }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+        }}
+      >
+        <LineItem title="Well Id" value={well?.name} />
       </Grid>
-      <Grid size={{ xs: 6 }}>
+      <Grid
+        size={{ xs: 6 }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+        }}
+      >
         <DateBoxes />
       </Grid>
       <Grid size={{ xs: 6 }}>
-        <Typography variant="body1">Site Name: {safe(well?.name)}</Typography>
-        <Typography variant="body1">Easting: {safe(easting)}</Typography>
-        <Typography variant="body1">Northing: {safe(northing)}</Typography>
+        <LineItem title="Site Name" value={well?.name} />
+        <LineItem title="Easting" value={easting} />
+        <LineItem title="Northing" value={northing} />
       </Grid>
       <Grid size={{ xs: 12 }}>
         <pre>{JSON.stringify(well, null, 2)}</pre>
@@ -66,8 +80,23 @@ export const PDF = ({ well }: { well: IWell }) => {
   )
 }
 
-const safe = (v: React.ReactNode, fallback = 'N/A') =>
-  v === null || v === undefined || v === '' ? fallback : v
+const LineItem = ({
+  title,
+  value,
+}: {
+  title: string
+  value?: string | number
+}) => {
+  const safe = (v: React.ReactNode, fallback = 'N/A') =>
+    v === null || v === undefined || v === '' ? fallback : v
+
+  return (
+    <Box component="div">
+      <Typography variant="h6">{`${title}:`}</Typography>
+      <Typography variant="body1">{safe(value)}</Typography>
+    </Box>
+  )
+}
 
 const DateBoxes = () => {
   const groups = [
