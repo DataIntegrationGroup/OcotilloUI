@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useList } from '@refinedev/core'
 import { CreateButton } from '@refinedev/mui'
 import {
@@ -17,23 +17,15 @@ import { settings } from '@/settings'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
 
 export const AttachmentsAccordion = ({ id }: { id?: number }) => {
-  const [assets, setAssets] = useState([])
-
   const { data } = useList({
     resource: 'asset',
     dataProviderName: 'ocotillo',
     meta: {
-      params: {
-        thing_id: id,
-      },
+      params: { thing_id: id },
     },
   })
 
-  useEffect(() => {
-    if (!data || !data.data || data.total === 0) return
-    setAssets(data.data)
-  }, [data])
-
+  const assets = data?.data ?? []
   const columns = useMemo<GridColDef[]>(
     () => [
       { field: 'name', headerName: 'Name', minWidth: 150 },
@@ -97,27 +89,29 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
                 cols={3}
               >
                 {(assets ?? []).map(
-                  (img: { signed_url: string; name?: string }, idx: number) => (
-                    <ImageListItem
-                      key={idx}
-                      sx={{
-                        minWidth: 200,
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                        boxShadow: 2,
-                      }}
-                    >
-                      <img
-                        src={img.signed_url}
-                        alt={img.name || `Attachment ${idx + 1}`}
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          borderRadius: 8,
+                  (img: { signed_url: string; name?: string }, idx: number) =>
+                    img.signed_url ? (
+                      <ImageListItem
+                        key={idx}
+                        sx={{
+                          minWidth: 200,
+                          borderRadius: 2,
+                          overflow: 'hidden',
+                          boxShadow: 2,
                         }}
-                      />
-                    </ImageListItem>
-                  )
+                      >
+                        <Box
+                          component="img"
+                          src={img.signed_url}
+                          alt={img.name || `Attachment ${idx + 1}`}
+                          sx={{
+                            width: '100%',
+                            height: 'auto',
+                            borderRadius: 8,
+                          }}
+                        />
+                      </ImageListItem>
+                    ) : null
                 )}
               </ImageList>
             </Box>
