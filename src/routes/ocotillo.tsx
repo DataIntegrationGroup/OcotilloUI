@@ -13,6 +13,7 @@ import {
   WellEdit,
   WellList,
   WellShow,
+  WellShowPdfPreview,
   SpringShow,
 } from '@/pages/ocotillo/thing'
 import { MapView } from '@/pages/ocotillo/map'
@@ -87,6 +88,7 @@ export const OcotilloRoutes = () => {
       <Route path="well">
         <Route index element={<WellList />} />
         <Route path={'show/:id'} element={<WellShow />} />
+        <Route path={'pdf-preview/:id'} element={<WellShowPdfPreview />} />
         <Route path={'edit/:id'} element={<WellEdit />} />
         <Route path={'create'} element={<WellCreate />} />
       </Route>

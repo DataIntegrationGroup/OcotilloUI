@@ -1,8 +1,15 @@
-import { HttpError, useResourceParams, useShow } from '@refinedev/core'
+import {
+  HttpError,
+  useNotification,
+  usePermissions,
+  useResourceParams,
+  useShow,
+} from '@refinedev/core'
 import { Breadcrumb, CreateButton, Show, useDataGrid } from '@refinedev/mui'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -29,6 +36,10 @@ import {
   USGSInfo,
   OSEPODInfo
 } from '@/components'
+import { Download } from '@mui/icons-material'
+import { usePDF } from 'react-to-pdf'
+import { buildPdfFilename } from '@/utils'
+import { PDF } from './well-show-pdf-preview'
 
 export const WellShow = () => {
   const {
@@ -162,6 +173,12 @@ export const WellShow = () => {
       title={
         <Typography variant="h5">{`Show Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
       }
+      headerButtons={({ defaultButtons }) => (
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {defaultButtons}
+          <DownloadButton well={well} isLoading={isLoading} />
+        </Box>
+      )}
     >
       <Stack spacing={2}>
         <Grid container spacing={2}>
@@ -324,5 +341,75 @@ export const WellShow = () => {
 
       </Stack>
     </Show>
+  )
+}
+
+export const DownloadButton = ({
+  well,
+  isLoading,
+}: {
+  well: IWell
+  isLoading: boolean
+}) => {
+  const { toPDF, targetRef } = usePDF()
+  const { data: permissions, isLoading: isPermissionsLoading } =
+    usePermissions<string[]>()
+  const { open: notify } = useNotification()
+
+  const [isGenerating, setIsGenerating] = useState(false)
+
+  const isViewer = permissions?.includes('AMPViewer') ?? false
+  const disabled =
+    isLoading || isPermissionsLoading || !isViewer || isGenerating
+
+  const handleDownload = () => {
+    try {
+      setIsGenerating(true)
+
+      const filename = buildPdfFilename(well)
+
+      toPDF({ filename })
+
+      notify?.({
+        message: 'PDF generated successfully',
+        type: 'success',
+        description: filename,
+      })
+    } catch (error) {
+      notify?.({
+        message: 'PDF Generation Failed',
+        type: 'error',
+      })
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  return (
+    <>
+      <Button
+        disabled={disabled}
+        variant="text"
+        startIcon={<Download />}
+        onClick={handleDownload}
+      >
+        {isGenerating ? 'Generating...' : 'Download PDF'}
+      </Button>
+
+      {/* Hidden PDF Content */}
+      <Box
+        ref={targetRef}
+        sx={{
+          position: 'absolute',
+          top: '-9999px',
+          left: '-9999px',
+          width: '800px',
+          p: 2,
+          bgcolor: 'white',
+        }}
+      >
+        <PDF well={well} />
+      </Box>
+    </>
   )
 }
