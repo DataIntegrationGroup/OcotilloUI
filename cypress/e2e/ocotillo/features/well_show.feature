@@ -9,7 +9,7 @@ Feature: Well Detail Page
 
   @basic
   Scenario: Page renders all required UI Elements
-    Then It should show all well response elements
+    Then It should receive an api response with the well response schema
     And I see the header Show Well
     And I see the Map
     And I see the Hydrograph

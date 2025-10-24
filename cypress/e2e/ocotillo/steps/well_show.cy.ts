@@ -8,7 +8,7 @@ Given('I open the Well Detail Page for well "{word}"', (wellId: string) => {
     cy.intercept('GET', `/thing/${encodeURIComponent(wellId)}`).as('getWaterwell');
 });
 
-Then('It should show all well response elements', () => {
+Then('It should receive an api response with the well response schema', () => {
     cy.wait('@getWaterwell').then((interception) => {
         const body = interception?.response?.body;
         try {
