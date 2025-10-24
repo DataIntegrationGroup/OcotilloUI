@@ -14,7 +14,9 @@ import { convertLonLatToUTM, parseWktPoint } from '@/utils'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '@/utils'
 
-export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
+export const CoreWellInfoCard = ({well, usgs_id, osepod_id}: { well: IWell, usgs_id: string, osepod_id: string }) => {
+
+  // ({ well }: { well: IWell }) => {
   const coords = parseWktPoint(well?.current_location?.point)
   const [easting, northing] = coords
     ? convertLonLatToUTM(coords.lon, coords.lat)
@@ -130,11 +132,11 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">OSE:</Typography>
-            <Typography variant="body1">N/A</Typography>
+            <Typography variant="body1">{osepod_id}</Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">USGS:</Typography>
-            <Typography variant="body1">N/A</Typography>
+            <Typography variant="body1">{usgs_id}</Typography>
           </Grid>
         </Grid>
       </CardContent>
