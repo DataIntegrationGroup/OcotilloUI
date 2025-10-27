@@ -1,8 +1,9 @@
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import { convertLonLatToUTM, parseWktPoint } from '@/utils'
+import { Masonry } from '@mui/lab'
 import { Box, Card, CardContent, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { HttpError, useShow } from '@refinedev/core'
+import { HttpError, useList, useShow } from '@refinedev/core'
 import { Show } from '@refinedev/mui'
 import { useParams } from 'react-router-dom'
 
@@ -41,6 +42,16 @@ export const PDF = ({ well }: { well: IWell }) => {
     ? convertLonLatToUTM(coords.lon, coords.lat)
     : [undefined, undefined]
 
+  const { data } = useList({
+    resource: 'asset',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: { thing_id: well?.id },
+    },
+  })
+
+  const assets = data?.data ?? []
+
   return (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12 }}>
@@ -63,7 +74,10 @@ export const PDF = ({ well }: { well: IWell }) => {
         <LineItem title="Well Id" value={well?.name} />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <LineItem title="Site Name" value={well?.name} />
+        <LineItem
+          title="Site Name"
+          value={(well as unknown as any)?.site_name}
+        />
       </Grid>
       <Grid container size={{ xs: 6 }}>
         <Grid size={{ xs: 6 }}>
@@ -80,7 +94,10 @@ export const PDF = ({ well }: { well: IWell }) => {
         />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <LineItem title="Measurement Notes" value={null} />
+        <LineItem
+          title="Measurement Notes"
+          value={(well as unknown as any)?.measurement_notes}
+        />
       </Grid>
       <Grid size={{ xs: 12 }}>
         <LineItem title="Measuring Point (MP) Height" value={null} />
@@ -96,14 +113,55 @@ export const PDF = ({ well }: { well: IWell }) => {
         />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <LineItem title="Last Measured Date" value={null} />
+        <LineItem
+          title="Last Measured Date"
+          value={(well as unknown as any)?.last_measured_date}
+        />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <LineItem title="Last Depth to Water" value={null} />
+        <LineItem
+          title="Last Depth to Water"
+          value={(well as unknown as any)?.last_depth_to_water}
+        />
       </Grid>
+
       <Grid size={{ xs: 12 }}>
-        <pre>{JSON.stringify(well, null, 2)}</pre>
+        <Box>
+          <Typography variant="body1" fontWeight="bold" gutterBottom>
+            Image Gallery
+          </Typography>
+
+          <Masonry columns={3} spacing={2}>
+            {assets.map((img: any, idx: number) =>
+              img.signed_url ? (
+                <Box
+                  key={idx}
+                  sx={{
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    boxShadow: 2,
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={img.signed_url}
+                    alt={img.name || `Attachment ${idx + 1}`}
+                    sx={{
+                      width: '100%',
+                      display: 'block',
+                    }}
+                  />
+                </Box>
+              ) : null
+            )}
+          </Masonry>
+        </Box>
       </Grid>
+      {!import.meta.env.PROD ? (
+        <Grid size={{ xs: 12 }}>
+          <pre>{JSON.stringify(well, null, 2)}</pre>
+        </Grid>
+      ) : null}
     </Grid>
   )
 }
