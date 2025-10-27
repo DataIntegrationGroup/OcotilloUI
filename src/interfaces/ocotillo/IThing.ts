@@ -7,6 +7,7 @@ export interface IThing {
   release_status: string
   thing_type: string
   location_id: number
+  active_location?: ILocation | null
 }
 
 export interface IWell extends IThing {
