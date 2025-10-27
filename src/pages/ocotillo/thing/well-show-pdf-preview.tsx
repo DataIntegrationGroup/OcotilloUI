@@ -1,3 +1,4 @@
+import { useRef, useEffect, useState } from 'react'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import { convertLonLatToUTM, parseWktPoint } from '@/utils'
 import { Masonry } from '@mui/lab'
@@ -6,6 +7,7 @@ import Grid from '@mui/material/Grid2'
 import { HttpError, useList, useShow } from '@refinedev/core'
 import { Show } from '@refinedev/mui'
 import { useParams } from 'react-router-dom'
+import html2canvas from 'html2canvas'
 
 export const WellShowPdfPreview = () => {
   const { id } = useParams()
@@ -17,6 +19,21 @@ export const WellShowPdfPreview = () => {
   })
 
   const well = data?.data
+  const previewRef = useRef<HTMLDivElement>(null)
+  const [previewImg, setPreviewImg] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!previewRef.current) return
+
+    html2canvas(previewRef.current, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      imageTimeout: 0,
+    }).then((canvas) => {
+      setPreviewImg(canvas.toDataURL('image/png'))
+    })
+  }, [well])
 
   return (
     <Show
@@ -24,12 +41,44 @@ export const WellShowPdfPreview = () => {
       recordItemId={id}
       isLoading={isLoading}
       title={
-        <Typography variant="h5">{`Preview Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
+        <Typography variant="h5">
+          {`Preview Well${well?.name ? `: ${well?.name}` : ''}`}
+        </Typography>
       }
     >
       <Card elevation={2}>
         <CardContent>
-          <PDF well={well} />
+          {/* This container holds the real DOM that will produce the PDF */}
+          <Box
+            ref={previewRef}
+            sx={{
+              width: '800px',
+              p: 2,
+              bgcolor: 'white',
+            }}
+          >
+            <PDF well={well} />
+          </Box>
+
+          {/* Preview canvas result */}
+          <Typography variant="h6" gutterBottom>
+            PDF Preview
+          </Typography>
+
+          {previewImg ? (
+            <Box
+              component="img"
+              src={previewImg}
+              alt="PDF Preview"
+              sx={{
+                width: '100%',
+                border: '1px solid #ccc',
+                boxShadow: 3,
+              }}
+            />
+          ) : (
+            <Typography>Generating preview...</Typography>
+          )}
         </CardContent>
       </Card>
     </Show>
@@ -51,6 +100,7 @@ export const PDF = ({ well }: { well: IWell }) => {
   })
 
   const assets = data?.data ?? []
+  debugger
 
   return (
     <Grid container spacing={2}>
