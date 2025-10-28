@@ -9,7 +9,7 @@ import {
 } from '@refinedev/core'
 import { useParams } from 'react-router-dom'
 import { Breadcrumb, CreateButton, Show, useDataGrid } from '@refinedev/mui'
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import { IContact, IWell } from '@/interfaces/ocotillo/IThing'
 import {
   Box,
   Button,
@@ -372,12 +372,20 @@ export const DownloadButton = ({
   const { data: permissions, isLoading: isPermissionsLoading } =
     usePermissions<string[]>()
 
-  const { data } = useList({
+  const { data: assetData } = useList({
     resource: 'asset',
     dataProviderName: 'ocotillo',
     meta: { params: { thing_id: well?.id } },
   })
-  const assets = data?.data ?? []
+
+  const { data: contactData } = useList<IContact>({
+    resource: 'contact',
+    dataProviderName: 'ocotillo',
+    meta: { params: { thing_id: well?.id } },
+  })
+
+  const assets = assetData?.data ?? []
+  const contacts = contactData?.data ?? []
 
   const { open: notify } = useNotification()
   const { id } = useParams()
@@ -410,7 +418,9 @@ export const DownloadButton = ({
       const filename = buildPdfFilename(well)
 
       // Generate a PDF blob from the React PDF component
-      const blob = await pdf(<WellPDF well={well} assets={assets} />).toBlob()
+      const blob = await pdf(
+        <WellPDF well={well} assets={assets} contacts={contacts} />
+      ).toBlob()
 
       // Create a temporary download link
       const url = URL.createObjectURL(blob)
