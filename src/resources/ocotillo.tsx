@@ -28,14 +28,25 @@ let tables: {
   meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
 }[] = [
   {
-    name: 'asset',
-    list: '/ocotillo/asset',
-    create: '/ocotillo/asset/create',
-    edit: '/ocotillo/asset/edit/:id',
-    show: '/ocotillo/asset/show/:id',
+    name: 'thing-well',
+    list: '/ocotillo/well',
+    edit: '/ocotillo/well/edit/:id',
+    show: '/ocotillo/well/show/:id',
+    create: '/ocotillo/well/create',
     meta: {
-      label: 'Assets',
-      icon: <Image />,
+      label: 'Wells',
+      icon: <Construction />,
+    },
+  },
+  {
+    name: 'thing-spring',
+    list: '/ocotillo/spring',
+    edit: '/ocotillo/spring/edit/:id',
+    show: '/ocotillo/spring/show/:id',
+    create: '/ocotillo/spring/create',
+    meta: {
+      label: 'Springs',
+      icon: <Spa />,
     },
   },
   {
@@ -46,7 +57,29 @@ let tables: {
     create: '/ocotillo/contact/create',
     meta: {
       icon: <Contacts />,
-      label: 'Contacts',
+      label: 'Contacts / Owners',
+    },
+  },
+  {
+    name: 'group',
+    list: '/ocotillo/group',
+    edit: '/ocotillo/group/edit/:id',
+    show: '/ocotillo/group/show/:id',
+    create: '/ocotillo/group/create',
+    meta: {
+      label: 'Groups / Projects',
+      icon: <Workspaces />,
+    },
+  },
+  {
+    name: 'asset',
+    list: '/ocotillo/asset',
+    create: '/ocotillo/asset/create',
+    edit: '/ocotillo/asset/edit/:id',
+    show: '/ocotillo/asset/show/:id',
+    meta: {
+      label: 'Assets / Attachments',
+      icon: <Image />,
     },
   },
   {
@@ -94,6 +127,29 @@ let tables: {
     },
   },
   {
+    name: 'thing-id-link',
+    list: '/ocotillo/thing-id-link',
+    edit: '/ocotillo/thing-id-link/edit/:id',
+    show: '/ocotillo/thing-id-link/show/:id',
+    create: '/ocotillo/thing-id-link/create',
+    meta: {
+      disabled: false,
+      label: 'Alternate ID links',
+      icon: <Link />,
+    },
+  },
+  {
+    name: 'thing/well-screen',
+    list: '/ocotillo/well-screen',
+    edit: '/ocotillo/well-screen/edit/:id',
+    show: '/ocotillo/well-screen/show/:id',
+    create: '/ocotillo/well-screen/create',
+    meta: {
+      label: 'Well Screens',
+      icon: <MoreVertOutlined />,
+    },
+  },
+  {
     name: 'lexicon/term',
     list: '/ocotillo/lexicon',
     edit: '/ocotillo/lexicon/term/edit/:id',
@@ -101,7 +157,7 @@ let tables: {
     create: '/ocotillo/lexicon/term/create',
     meta: {
       disabled: false,
-      label: 'Lexicon',
+      label: 'Lexicon / Glossary',
       icon: <LibraryBooksOutlined />,
     },
   },
@@ -176,75 +232,6 @@ forms = forms.map((b) => {
   }
 })
 
-let things: {
-  name: string
-  edit?: string
-  show?: string
-  create?: string
-  list: string
-  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
-}[] = [
-  {
-    name: 'thing-well',
-    list: '/ocotillo/well',
-    edit: '/ocotillo/well/edit/:id',
-    show: '/ocotillo/well/show/:id',
-    create: '/ocotillo/well/create',
-    meta: {
-      label: 'Wells',
-      icon: <Construction />,
-    },
-  },
-  {
-    name: 'thing-spring',
-    list: '/ocotillo/spring',
-    edit: '/ocotillo/spring/edit/:id',
-    show: '/ocotillo/spring/show/:id',
-    create: '/ocotillo/spring/create',
-    meta: {
-      label: 'Springs',
-      icon: <Spa />,
-    },
-  },
-  {
-    name: 'thing-id-link',
-    list: '/ocotillo/thing-id-link',
-    edit: '/ocotillo/thing-id-link/edit/:id',
-    show: '/ocotillo/thing-id-link/show/:id',
-    create: '/ocotillo/thing-id-link/create',
-    meta: {
-      disabled: false,
-      label: 'ID links',
-      icon: <Link />,
-    },
-  },
-  {
-    name: 'thing/well-screen',
-    list: '/ocotillo/well-screen',
-    edit: '/ocotillo/well-screen/edit/:id',
-    show: '/ocotillo/well-screen/show/:id',
-    create: '/ocotillo/well-screen/create',
-    meta: {
-      label: 'Well Screens',
-      icon: <MoreVertOutlined />,
-    },
-  },
-]
-
-things = things.map((b) => {
-  let meta = b.meta || {}
-  if (!meta['parent']) {
-    meta['parent'] = 'ocotillo.thing'
-  }
-  meta['nestedLevel'] = 3
-  return {
-    ...b,
-    meta: meta,
-  }
-})
-
-console.log(things)
-
 let observations: {
   name: string
   edit?: string
@@ -298,16 +285,6 @@ let ocotillo = [
   },
   ...tables,
 
-  {
-    name: 'thing',
-    icon: <WidgetsOutlined />,
-    meta: {
-      parent: 'ocotillo.tables',
-      nestedLevel: 2,
-      label: 'Things',
-    },
-  },
-  ...things,
   {
     name: 'observation',
     icon: <ScaleOutlined />,
