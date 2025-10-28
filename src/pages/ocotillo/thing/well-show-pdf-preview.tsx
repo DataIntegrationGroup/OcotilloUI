@@ -1,16 +1,21 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef } from 'react'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import { convertLonLatToUTM, parseWktPoint } from '@/utils'
 import { Masonry } from '@mui/lab'
-import { Box, Card, CardContent, Typography } from '@mui/material'
+import { Box, Card, CardContent, IconButton, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { HttpError, useList, useShow } from '@refinedev/core'
-import { Show } from '@refinedev/mui'
+import { HttpError, useList, useNavigation, useShow } from '@refinedev/core'
+import { ListButton, Show, ShowButton } from '@refinedev/mui'
 import { useParams } from 'react-router-dom'
-import html2canvas from 'html2canvas'
+import { ArrowBack } from '@mui/icons-material'
 
 export const WellShowPdfPreview = () => {
+  const { push } = useNavigation()
   const { id } = useParams()
+
+  const handleBack = () => {
+    push(`/ocotillo/well/show/${id}`)
+  }
   const {
     queryResult: { data, isLoading },
   } = useShow<IWell, HttpError>({
@@ -20,31 +25,29 @@ export const WellShowPdfPreview = () => {
 
   const well = data?.data
   const previewRef = useRef<HTMLDivElement>(null)
-  const [previewImg, setPreviewImg] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!previewRef.current) return
-
-    html2canvas(previewRef.current, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      imageTimeout: 0,
-    }).then((canvas) => {
-      setPreviewImg(canvas.toDataURL('image/png'))
-    })
-  }, [well])
 
   return (
     <Show
       resource="thing-well"
       recordItemId={id}
       isLoading={isLoading}
+      goBack={
+        <IconButton aria-label="return to show page" onClick={handleBack}>
+          <ArrowBack />
+        </IconButton>
+      }
       title={
         <Typography variant="h5">
-          {`Preview Well${well?.name ? `: ${well?.name}` : ''}`}
+          {`PDF Preview Well${well?.name ? `: ${well?.name}` : ''}`}
         </Typography>
       }
+      headerButtons={({ defaultButtons }) => (
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <ShowButton resource="ocotillo.thing-well" recordItemId={id} />
+          <ListButton resource="ocotillo.thing-well" />
+          {defaultButtons}
+        </Box>
+      )}
     >
       <Card elevation={2}>
         <CardContent>
@@ -59,26 +62,6 @@ export const WellShowPdfPreview = () => {
           >
             <PDF well={well} />
           </Box>
-
-          {/* Preview canvas result */}
-          <Typography variant="h6" gutterBottom>
-            PDF Preview
-          </Typography>
-
-          {previewImg ? (
-            <Box
-              component="img"
-              src={previewImg}
-              alt="PDF Preview"
-              sx={{
-                width: '100%',
-                border: '1px solid #ccc',
-                boxShadow: 3,
-              }}
-            />
-          ) : (
-            <Typography>Generating preview...</Typography>
-          )}
         </CardContent>
       </Card>
     </Show>
@@ -100,7 +83,6 @@ export const PDF = ({ well }: { well: IWell }) => {
   })
 
   const assets = data?.data ?? []
-  debugger
 
   return (
     <Grid container spacing={2}>

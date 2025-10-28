@@ -4,16 +4,24 @@ import {
   usePermissions,
   useResourceParams,
   useShow,
+  useNavigation,
 } from '@refinedev/core'
+import { useParams } from 'react-router-dom'
 import { Breadcrumb, CreateButton, Show, useDataGrid } from '@refinedev/mui'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
   Box,
   Button,
+  ButtonGroup,
   Card,
   CardContent,
   CardHeader,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { useEffect, useMemo, useState } from 'react'
@@ -36,7 +44,7 @@ import {
   USGSInfo,
   OSEPODInfo,
 } from '@/components'
-import { Download } from '@mui/icons-material'
+import { ArrowDropDown, Download, Visibility } from '@mui/icons-material'
 import { usePDF } from 'react-to-pdf'
 import { buildPdfFilename } from '@/utils'
 import { PDF } from './well-show-pdf-preview'
@@ -360,11 +368,29 @@ export const DownloadButton = ({
   isLoading: boolean
 }) => {
   const { toPDF, targetRef } = usePDF()
+  const { push } = useNavigation()
   const { data: permissions, isLoading: isPermissionsLoading } =
     usePermissions<string[]>()
   const { open: notify } = useNotification()
+  const { id } = useParams()
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const open = Boolean(anchorEl)
 
   const [isGenerating, setIsGenerating] = useState(false)
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+  }
+
+  const handlePreview = () => {
+    handleMenuClose()
+    push(`/ocotillo/well/pdf-preview/${id}`)
+  }
 
   const isViewer = permissions?.includes('AMPViewer') ?? false
   const disabled =
@@ -394,15 +420,61 @@ export const DownloadButton = ({
   }
 
   return (
-    <>
-      <Button
-        disabled={disabled}
+    <Box>
+      <ButtonGroup
         variant="text"
-        startIcon={<Download />}
-        onClick={handleDownload}
+        color="primary"
+        sx={{
+          // ensures both buttons share height, style, and no gap
+          '& .MuiButton-root': {
+            textTransform: 'none',
+          },
+          // remove default border between buttons
+          '& .MuiButtonGroup-grouped:not(:last-of-type)': {
+            borderRight: 'none',
+          },
+        }}
       >
-        {isGenerating ? 'Generating...' : 'Download PDF'}
-      </Button>
+        <Button
+          disabled={disabled}
+          startIcon={<Download />}
+          onClick={handleDownload}
+          sx={{
+            pl: 3,
+            pr: 2,
+          }}
+        >
+          {isGenerating ? 'Generating...' : 'Download PDF'}
+        </Button>
+        <Tooltip title="more options">
+          <Button
+            onClick={handleMenuOpen}
+            disabled={disabled}
+            sx={{
+              minWidth: 0,
+              px: 1.25,
+            }}
+          >
+            <ArrowDropDown fontSize="small" />
+          </Button>
+        </Tooltip>
+      </ButtonGroup>
+
+      {/* Dropdown Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <MenuItem onClick={handlePreview}>
+          <ListItemIcon>
+            <Visibility />
+          </ListItemIcon>
+          <ListItemText>Preview PDF</ListItemText>
+        </MenuItem>
+      </Menu>
 
       {/* Hidden PDF Content */}
       <Box
@@ -418,6 +490,6 @@ export const DownloadButton = ({
       >
         <PDF well={well} />
       </Box>
-    </>
+    </Box>
   )
 }
