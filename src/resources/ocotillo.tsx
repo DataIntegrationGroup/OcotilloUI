@@ -318,6 +318,7 @@ let ocotillo = [
     name: 'water-chemistry-import',
     list: '/ocotillo/water-chemistry-import',
     meta: {
+      disabled: true,
       label: 'Water Chemistry Import (Coming Soon)',
       parent: 'ocotillo.apps',
       nestedLevel: 2,
