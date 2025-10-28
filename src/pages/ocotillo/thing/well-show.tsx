@@ -5,6 +5,7 @@ import {
   useResourceParams,
   useShow,
   useNavigation,
+  useList,
 } from '@refinedev/core'
 import { useParams } from 'react-router-dom'
 import { Breadcrumb, CreateButton, Show, useDataGrid } from '@refinedev/mui'
@@ -43,11 +44,11 @@ import {
   AttachmentsAccordion,
   USGSInfo,
   OSEPODInfo,
+  WellPDF,
 } from '@/components'
 import { ArrowDropDown, Download, Visibility } from '@mui/icons-material'
-import { usePDF } from 'react-to-pdf'
 import { buildPdfFilename } from '@/utils'
-import { PDF } from './well-show-pdf-preview'
+import { pdf } from '@react-pdf/renderer'
 
 export const WellShow = () => {
   const {
@@ -367,10 +368,17 @@ export const DownloadButton = ({
   well: IWell
   isLoading: boolean
 }) => {
-  const { toPDF, targetRef } = usePDF()
   const { push } = useNavigation()
   const { data: permissions, isLoading: isPermissionsLoading } =
     usePermissions<string[]>()
+
+  const { data } = useList({
+    resource: 'asset',
+    dataProviderName: 'ocotillo',
+    meta: { params: { thing_id: well?.id } },
+  })
+  const assets = data?.data ?? []
+
   const { open: notify } = useNotification()
   const { id } = useParams()
 
@@ -396,13 +404,22 @@ export const DownloadButton = ({
   const disabled =
     isLoading || isPermissionsLoading || !isViewer || isGenerating
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     try {
       setIsGenerating(true)
-
       const filename = buildPdfFilename(well)
 
-      toPDF({ filename })
+      // Generate a PDF blob from the React PDF component
+      const blob = await pdf(<WellPDF well={well} assets={assets} />).toBlob()
+
+      // Create a temporary download link
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`
+      a.click()
+
+      URL.revokeObjectURL(url)
 
       notify?.({
         message: 'PDF generated successfully',
@@ -410,6 +427,7 @@ export const DownloadButton = ({
         description: filename,
       })
     } catch (error) {
+      console.error(error)
       notify?.({
         message: 'PDF Generation Failed',
         type: 'error',
@@ -420,7 +438,7 @@ export const DownloadButton = ({
   }
 
   return (
-    <Box>
+    <>
       <ButtonGroup
         variant="text"
         color="primary"
@@ -459,8 +477,6 @@ export const DownloadButton = ({
           </Button>
         </Tooltip>
       </ButtonGroup>
-
-      {/* Dropdown Menu */}
       <Menu
         anchorEl={anchorEl}
         open={open}
@@ -475,21 +491,6 @@ export const DownloadButton = ({
           <ListItemText>Preview PDF</ListItemText>
         </MenuItem>
       </Menu>
-
-      {/* Hidden PDF Content */}
-      <Box
-        ref={targetRef}
-        sx={{
-          position: 'absolute',
-          top: '-9999px',
-          left: '-9999px',
-          width: '800px',
-          p: 2,
-          bgcolor: 'white',
-        }}
-      >
-        <PDF well={well} />
-      </Box>
-    </Box>
+    </>
   )
 }

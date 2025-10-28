@@ -30,11 +30,17 @@ export default defineConfig(({ mode }) => {
         : []),
     ],
     optimizeDeps: {
-      include: ['@emotion/react', '@emotion/styled', '@mui/material/Tooltip'],
+      include: [
+        '@emotion/react',
+        '@emotion/styled',
+        '@mui/material/Tooltip',
+        'pako',
+        '@react-pdf/renderer',
+      ],
     },
     server: {
-        host: "0.0.0.0",
-        port: 5173,
+      host: '0.0.0.0',
+      port: 5173,
       proxy: {
         '/api': {
           target: env.VITE_API_URL,
@@ -62,9 +68,9 @@ export default defineConfig(({ mode }) => {
       },
       server: {
         deps: {
-          inline: ['@mui/material', '@refinedev/mui']
-        }
-      }
+          inline: ['@mui/material', '@refinedev/mui'],
+        },
+      },
     },
   }
 })
