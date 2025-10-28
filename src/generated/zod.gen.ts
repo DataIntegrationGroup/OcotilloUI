@@ -8,9 +8,7 @@ import { z } from 'zod';
  */
 export const zAddressResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     contact_id: z.int(),
     address_line_1: z.string(),
@@ -39,9 +37,7 @@ export const zAssetResponse = z.object({
     size: z.int(),
     uri: z.string(),
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     storage_service: z.string(),
     signed_url: z.optional(z.union([
@@ -80,9 +76,7 @@ export const zBodyUploadAssetAssetUploadPost = z.object({
  */
 export const zEmailResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     contact_id: z.int(),
     email: z.string(),
@@ -95,13 +89,18 @@ export const zEmailResponse = z.object({
  */
 export const zPhoneResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     contact_id: z.int(),
-    phone_number: z.string(),
-    phone_type: z.string()
+    phone_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    phone_type: z.string(),
+    nma_phone_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
 });
 
 /**
@@ -110,9 +109,7 @@ export const zPhoneResponse = z.object({
  */
 export const zLocationResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.union([
         z.string(),
         z.null()
@@ -163,9 +160,7 @@ export const zLocationResponse = z.object({
  */
 export const zThingResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     name: z.string(),
     thing_type: z.string(),
@@ -215,9 +210,7 @@ export const zThingResponse = z.object({
  */
 export const zContactResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     name: z.union([
         z.string(),
@@ -282,7 +275,10 @@ export const zCreateAsset = z.object({
  * Schema for creating an email.
  */
 export const zCreateEmail = z.object({
-    email: z.string(),
+    email: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     release_status: z.string(),
     contact_id: z.optional(z.union([
         z.int(),
@@ -296,13 +292,20 @@ export const zCreateEmail = z.object({
  * Schema for creating a phone number.
  */
 export const zCreatePhone = z.object({
-    phone_number: z.string(),
+    phone_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     release_status: z.string(),
     contact_id: z.optional(z.union([
         z.int(),
         z.null()
     ])),
-    phone_type: z.optional(z.string()).default('Primary')
+    phone_type: z.optional(z.string()).default('Primary'),
+    nma_phone_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
 });
 
 /**
@@ -659,9 +662,7 @@ export const zCreateWellScreen = z.object({
  */
 export const zSensorResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     name: z.string(),
     sensor_type: z.string(),
@@ -696,9 +697,7 @@ export const zSensorResponse = z.object({
  */
 export const zDeploymentResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     thing_id: z.int(),
     sensor: zSensorResponse,
@@ -771,9 +770,7 @@ export const zFeatureCollectionResponse = z.object({
  */
 export const zFieldActivityResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     field_event_id: z.int(),
     activity_type: z.string()
@@ -784,9 +781,7 @@ export const zFieldActivityResponse = z.object({
  */
 export const zFieldEventResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     thing_id: z.int(),
     event_date: z.iso.datetime({
@@ -805,9 +800,7 @@ export const zFieldEventResponse = z.object({
  */
 export const zParameterResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     parameter_name: z.string(),
     matrix: z.string(),
@@ -827,18 +820,14 @@ export const zParameterResponse = z.object({
  */
 export const zGroundwaterLevelObservationResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     sample_id: z.int(),
     sensor_id: z.union([
         z.int(),
         z.null()
     ]),
-    observation_datetime: z.iso.datetime({
-        offset: true
-    }),
+    observation_datetime: z.string(),
     parameter: zParameterResponse,
     value: z.union([
         z.number(),
@@ -866,9 +855,7 @@ export const zGroundwaterLevelObservationResponse = z.object({
  */
 export const zGroupResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     name: z.string(),
     project_area: z.union([
@@ -911,9 +898,7 @@ export const zHttpValidationError = z.object({
  */
 export const zLexiconCategoryResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     name: z.string(),
     description: z.optional(z.union([
         z.string(),
@@ -928,9 +913,7 @@ export const zLexiconCategoryResponse = z.object({
  */
 export const zLexiconTermResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     term: z.string(),
     definition: z.string(),
     categories: z.optional(z.array(zLexiconCategoryResponse)).default([])
@@ -941,9 +924,7 @@ export const zLexiconTermResponse = z.object({
  */
 export const zLexiconTripleResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     subject: z.string(),
     predicate: z.string(),
     object_: z.string()
@@ -956,18 +937,14 @@ export const zLexiconTripleResponse = z.object({
  */
 export const zObservationResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     sample_id: z.int(),
     sensor_id: z.union([
         z.int(),
         z.null()
     ]),
-    observation_datetime: z.iso.datetime({
-        offset: true
-    }),
+    observation_datetime: z.string(),
     parameter: zParameterResponse,
     value: z.union([
         z.number(),
@@ -1142,17 +1119,13 @@ export const zPagePhoneResponse = z.object({
  */
 export const zSampleResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     thing: zThingResponse,
     field_event: zFieldEventResponse,
     field_activity: zFieldActivityResponse,
     contact: zContactResponse,
-    sample_date: z.iso.datetime({
-        offset: true
-    }),
+    sample_date: z.string(),
     sample_name: z.string(),
     sample_matrix: z.string(),
     sample_method: z.string(),
@@ -1199,9 +1172,7 @@ export const zPageSensorResponse = z.object({
  */
 export const zSpringResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     name: z.string(),
     thing_type: z.string(),
@@ -1235,9 +1206,7 @@ export const zPageSpringResponse = z.object({
  */
 export const zThingIdLinkResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     thing_id: z.int(),
     thing: zThingResponse,
@@ -1273,18 +1242,14 @@ export const zPageThingResponse = z.object({
  */
 export const zWaterChemistryObservationResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     sample_id: z.int(),
     sensor_id: z.union([
         z.int(),
         z.null()
     ]),
-    observation_datetime: z.iso.datetime({
-        offset: true
-    }),
+    observation_datetime: z.string(),
     parameter: zParameterResponse,
     value: z.union([
         z.number(),
@@ -1310,9 +1275,7 @@ export const zPageWaterChemistryObservationResponse = z.object({
  */
 export const zWellResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     name: z.string(),
     thing_type: z.string(),
@@ -1369,9 +1332,7 @@ export const zPageWellResponse = z.object({
  */
 export const zWellScreenResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     release_status: z.string(),
     thing_id: z.int(),
     thing: zWellResponse,
