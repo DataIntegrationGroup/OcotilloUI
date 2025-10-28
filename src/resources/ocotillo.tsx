@@ -201,8 +201,8 @@ let forms: {
     edit: '/ocotillo/well-inventory-form/edit/:id',
     show: '/ocotillo/well-inventory-form/show/:id',
     meta: {
-      disabled: false,
-      label: 'Well Inventory Form',
+      disabled: true,
+      label: 'Well Inventory Form (Coming Soon)',
       icon: <Construction />,
     },
   },
@@ -213,8 +213,8 @@ let forms: {
     edit: '/ocotillo/groundwater-level-form/edit/:id',
     show: '/ocotillo/groundwater-level-form/show/:id',
     meta: {
-      disabled: false,
-      label: 'Groundwater Level Form (Beta)',
+      disabled: true,
+      label: 'Groundwater Level Form (Coming Soon)',
       icon: <Construction />,
     },
   },
