@@ -8,13 +8,13 @@ let base = [
   {
     name: 'ocotillo',
     icon: <FactoryOutlined />,
-    meta: { label: 'NMBGMR (Coming Soon)' },
-  },
-  {
+    meta: { label: 'NMBGMR Ocotillo' },
+  }
+/*   {
     name: 'st2',
     icon: <SensorsOutlinedIcon />,
     meta: { label: 'NMWDI SensorThings' },
-  },
+  }, */
 ]
 
-export const resources = [...base, ...ocotilloResources, ...st2Resources]
+export const resources = [...base, ...ocotilloResources /* ...st2Resources */]

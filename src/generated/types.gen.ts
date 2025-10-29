@@ -317,7 +317,7 @@ export type CreateEmail = {
     /**
      * Email
      */
-    email: string;
+    email?: string | null;
     /**
      * Release Status
      */
@@ -498,7 +498,7 @@ export type CreatePhone = {
     /**
      * Phone Number
      */
-    phone_number: string;
+    phone_number?: string | null;
     /**
      * Release Status
      */
@@ -511,6 +511,10 @@ export type CreatePhone = {
      * Phone Type
      */
     phone_type?: string;
+    /**
+     * Nma Phone Number
+     */
+    nma_phone_number?: string | null;
 };
 
 /**
@@ -1940,11 +1944,15 @@ export type PhoneResponse = {
     /**
      * Phone Number
      */
-    phone_number: string;
+    phone_number?: string | null;
     /**
      * Phone Type
      */
     phone_type: string;
+    /**
+     * Nma Phone Number
+     */
+    nma_phone_number?: string | null;
 };
 
 /**
