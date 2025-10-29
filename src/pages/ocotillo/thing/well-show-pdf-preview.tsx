@@ -45,13 +45,11 @@ export const WellShowPdfPreview = () => {
   const assets = assetData?.data ?? []
   const contacts = contactData?.data ?? []
 
-  console.log({ contacts })
-
   const isLoading = isWellLoading || isAssetLoading || isContactLoading
 
   useEffect(() => {
     if (!isLoading) {
-      const timer = setTimeout(() => setIsViewerReady(true), 250)
+      const timer = setTimeout(() => setIsViewerReady(true), 300)
       return () => clearTimeout(timer)
     }
   }, [isLoading])

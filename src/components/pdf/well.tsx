@@ -71,6 +71,17 @@ const styles = StyleSheet.create({
     objectFit: 'contain',
     alignSelf: 'flex-start',
   },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 40,
+    right: 40,
+    textAlign: 'center',
+  },
+  footerText: {
+    fontSize: 9,
+    color: '#777',
+  },
 })
 
 export const WellPDF = ({
@@ -90,12 +101,28 @@ export const WellPDF = ({
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
 
   const { primaryContact, secondaryContact } = useMemo(() => {
+    if (!contacts?.length)
+      return { primaryContact: undefined, secondaryContact: undefined }
+
+    // Normalize labels to lowercase once for efficiency
+    const normalized = contacts.map((c) => ({
+      ...c,
+      _type: c.contact_type?.toLowerCase() || '',
+    }))
+
     const primary =
-      contacts.find((c) => c.contact_type?.toLowerCase() === 'primary') ??
-      contacts[0]
-    const secondary = contacts.find(
-      (c) => c.contact_type?.toLowerCase() === 'secondary'
-    )
+      normalized.find((c) => c._type === 'primary') ??
+      normalized.find((c) => c._type === 'owner') ??
+      normalized[0]
+
+    // Pick secondary (only if we have >1 contact)
+    let secondary: (typeof contacts)[number] | undefined
+    if (normalized.length > 1) {
+      secondary =
+        normalized.find((c) => c._type === 'secondary') ??
+        normalized.find((c) => c !== primary)
+    }
+
     return { primaryContact: primary, secondaryContact: secondary }
   }, [contacts])
 
@@ -132,69 +159,64 @@ export const WellPDF = ({
             <View style={styles.cell3}></View>
           </View>
         </View>
-        {primaryContact || secondaryContact ? (
-          <View style={styles.section}>
-            <View style={styles.twoByTwoGrid}>
-              <View style={styles.cell2}>
-                <LineItem
-                  title="Primary Contact"
-                  value={primaryContact?.name}
-                />
-              </View>
-              <View style={styles.cell2}>
-                <LineItem
-                  title="Secondary Contact"
-                  value={secondaryContact?.name}
-                />
-              </View>
+        <View style={styles.section}>
+          <View style={styles.twoByTwoGrid}>
+            <View style={styles.cell2}>
+              <LineItem title="Primary Contact" value={primaryContact?.name} />
+            </View>
+            <View style={styles.cell2}>
+              <LineItem
+                title="Secondary Contact"
+                value={secondaryContact?.name}
+              />
+            </View>
 
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Address"
-                  value={formatAddress(primaryContact?.addresses[0])}
-                />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Address"
-                  value={formatAddress(secondaryContact?.addresses[0])}
-                />
-              </View>
+            <View style={styles.cell2}>
+              <SubLineItem
+                title="Address"
+                value={formatAddress(primaryContact?.addresses[0])}
+              />
+            </View>
+            <View style={styles.cell2}>
+              <SubLineItem
+                title="Address"
+                value={formatAddress(secondaryContact?.addresses[0])}
+              />
+            </View>
 
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Phone"
-                  value={
-                    primaryContact?.phones?.[0]?.phone_number ??
-                    primaryContact?.phones?.[0]?.nma_phone_number
-                  }
-                />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Phone"
-                  value={
-                    secondaryContact?.phones?.[0]?.phone_number ??
-                    secondaryContact?.phones?.[0]?.nma_phone_number
-                  }
-                />
-              </View>
+            <View style={styles.cell2}>
+              <SubLineItem
+                title="Phone"
+                value={
+                  primaryContact?.phones?.[0]?.phone_number ??
+                  primaryContact?.phones?.[0]?.nma_phone_number
+                }
+              />
+            </View>
+            <View style={styles.cell2}>
+              <SubLineItem
+                title="Phone"
+                value={
+                  secondaryContact?.phones?.[0]?.phone_number ??
+                  secondaryContact?.phones?.[0]?.nma_phone_number
+                }
+              />
+            </View>
 
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Email"
-                  value={primaryContact?.emails?.[0]?.email}
-                />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Email"
-                  value={secondaryContact?.emails?.[0]?.email}
-                />
-              </View>
+            <View style={styles.cell2}>
+              <SubLineItem
+                title="Email"
+                value={primaryContact?.emails?.[0]?.email}
+              />
+            </View>
+            <View style={styles.cell2}>
+              <SubLineItem
+                title="Email"
+                value={secondaryContact?.emails?.[0]?.email}
+              />
             </View>
           </View>
-        ) : null}
+        </View>
         <View style={styles.section}>
           <LineItem
             title="Location Notes"
@@ -221,10 +243,16 @@ export const WellPDF = ({
             value={(well as unknown as any)?.last_depth_to_water}
           />
         </View>
+        {assets.length === 0 && (
+          <Text style={styles.pageNote}>
+            (No images are associated with this well)
+          </Text>
+        )}
+        <Footer wellId={well?.name} />
       </Page>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Field Compilation Notes</Text>
-        {assets.length > 0 && (
+      {assets.length > 0 && (
+        <Page size="A4" style={styles.page}>
+          <Text style={styles.title}>Field Compilation Notes</Text>
           <View style={styles.section}>
             <Text style={styles.label}>Image Gallery</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
@@ -234,21 +262,17 @@ export const WellPDF = ({
                     <Image style={styles.img} src={img.signed_url} />
                     <Text style={styles.imgLabel}>{img.label}</Text>
                   </View>
-                ) : (
-                  <View style={styles.section}>
-                    <Text style={styles.label}>Image Gallery</Text>
-                    <Text style={styles.value}>No data available</Text>
-                  </View>
-                )
+                ) : null
               )}
             </View>
           </View>
-        )}
-      </Page>
-
+          <Footer wellId={well?.name} />
+        </Page>
+      )}
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Field Compilation Notes</Text>
         <Text style={styles.pageNote}>(Page intentionally left blank)</Text>
+        <Footer wellId={well?.name} />
       </Page>
     </Document>
   )
@@ -308,3 +332,15 @@ export const formatAddress = (a?: IAddress | null): string => {
   // React-PDF supports "\n" for multi-line text
   return lines.join('\n')
 }
+
+const Footer = ({ wellId }: { wellId: string | number }) => (
+  <View
+    fixed
+    style={styles.footer}
+    render={({ pageNumber }) => (
+      <Text style={styles.footerText}>
+        {`Well ID: ${wellId} | Page ${pageNumber}`}
+      </Text>
+    )}
+  />
+)
