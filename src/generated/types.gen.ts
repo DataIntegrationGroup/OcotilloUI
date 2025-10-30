@@ -5,356 +5,350 @@
  * Response schema for address details.
  */
 export type AddressResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Contact Id
-   */
-  contact_id: number
-  /**
-   * Address Line 1
-   */
-  address_line_1: string
-  /**
-   * Address Line 2
-   */
-  address_line_2?: string | null
-  /**
-   * City
-   */
-  city: string
-  /**
-   * State
-   */
-  state: string
-  /**
-   * Postal Code
-   */
-  postal_code: string
-  /**
-   * Country
-   */
-  country: string
-  address_type: AddressType
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Contact Id
+     */
+    contact_id: number;
+    /**
+     * Address Line 1
+     */
+    address_line_1: string;
+    /**
+     * Address Line 2
+     */
+    address_line_2?: string | null;
+    /**
+     * City
+     */
+    city: string;
+    /**
+     * State
+     */
+    state: string;
+    /**
+     * Postal Code
+     */
+    postal_code: string;
+    /**
+     * Country
+     */
+    country: string;
+    address_type: AddressType;
+};
 
 /**
  * AssetResponse
  */
 export type AssetResponse = {
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Label
-   */
-  label?: string | null
-  /**
-   * Storage Path
-   */
-  storage_path: string
-  /**
-   * Mime Type
-   */
-  mime_type: string
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Uri
-   */
-  uri: string
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Storage Service
-   */
-  storage_service: string
-  /**
-   * Signed Url
-   */
-  signed_url?: string | null
-}
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Label
+     */
+    label?: string | null;
+    /**
+     * Storage Path
+     */
+    storage_path: string;
+    /**
+     * Mime Type
+     */
+    mime_type: string;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Uri
+     */
+    uri: string;
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Storage Service
+     */
+    storage_service: string;
+    /**
+     * Signed Url
+     */
+    signed_url?: string | null;
+};
 
 /**
  * AuthorResponse
  * Schema for the response of an author.
  */
 export type AuthorResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Email
-   */
-  email?: string | null
-  /**
-   * Affiliation
-   */
-  affiliation?: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Affiliation
+     */
+    affiliation?: string | null;
+};
 
 /**
  * Body_upload_asset_asset_upload_post
  */
 export type BodyUploadAssetAssetUploadPost = {
-  /**
-   * File
-   */
-  file: Blob | File
-}
+    /**
+     * File
+     */
+    file: Blob | File;
+};
 
 /**
  * ContactResponse
  * Response schema for contact details.
  */
 export type ContactResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Name
-   */
-  name: string | null
-  /**
-   * Organization
-   */
-  organization: string | null
-  role: Role
-  contact_type: ContactType
-  /**
-   * Emails
-   */
-  emails?: Array<EmailResponse>
-  /**
-   * Phones
-   */
-  phones?: Array<PhoneResponse>
-  /**
-   * Addresses
-   */
-  addresses?: Array<AddressResponse>
-  /**
-   * Things
-   */
-  things?: Array<ThingResponse>
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Name
+     */
+    name: string | null;
+    /**
+     * Organization
+     */
+    organization: string | null;
+    role: Role;
+    contact_type: ContactType;
+    /**
+     * Emails
+     */
+    emails?: Array<EmailResponse>;
+    /**
+     * Phones
+     */
+    phones?: Array<PhoneResponse>;
+    /**
+     * Addresses
+     */
+    addresses?: Array<AddressResponse>;
+    /**
+     * Things
+     */
+    things?: Array<ThingResponse>;
+};
 
 /**
  * CreateAddress
  * Schema for creating an address.
  */
 export type CreateAddress = {
-  release_status?: ReleaseStatus
-  /**
-   * Contact Id
-   */
-  contact_id?: number | null
-  /**
-   * Address Line 1
-   */
-  address_line_1: string
-  /**
-   * Address Line 2
-   */
-  address_line_2?: string | null
-  /**
-   * City
-   */
-  city: string
-  /**
-   * State
-   */
-  state?: string
-  /**
-   * Postal Code
-   */
-  postal_code: string
-  /**
-   * Country
-   */
-  country?: string
-  address_type?: AddressType
-}
+    release_status?: ReleaseStatus;
+    /**
+     * Contact Id
+     */
+    contact_id?: number | null;
+    /**
+     * Address Line 1
+     */
+    address_line_1: string;
+    /**
+     * Address Line 2
+     */
+    address_line_2?: string | null;
+    /**
+     * City
+     */
+    city: string;
+    /**
+     * State
+     */
+    state?: string;
+    /**
+     * Postal Code
+     */
+    postal_code: string;
+    /**
+     * Country
+     */
+    country?: string;
+    address_type?: AddressType;
+};
 
 /**
  * CreateAsset
  */
 export type CreateAsset = {
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Label
-   */
-  label?: string | null
-  /**
-   * Storage Path
-   */
-  storage_path: string
-  /**
-   * Mime Type
-   */
-  mime_type: string
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Uri
-   */
-  uri: string
-  release_status?: ReleaseStatus
-  /**
-   * Thing Id
-   */
-  thing_id?: number | null
-}
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Label
+     */
+    label?: string | null;
+    /**
+     * Storage Path
+     */
+    storage_path: string;
+    /**
+     * Mime Type
+     */
+    mime_type: string;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Uri
+     */
+    uri: string;
+    release_status?: ReleaseStatus;
+    /**
+     * Thing Id
+     */
+    thing_id?: number | null;
+};
 
 /**
  * CreateContact
  * Schema for creating a contact.
  */
 export type CreateContact = {
-  /**
-   * Name
-   */
-  name?: string | null
-  /**
-   * Organization
-   */
-  organization?: string | null
-  release_status?: ReleaseStatus
-  /**
-   * Thing Id
-   */
-  thing_id: number
-  role: Role
-  contact_type?: ContactType
-  /**
-   * Emails
-   */
-  emails?: Array<CreateEmail> | null
-  /**
-   * Phones
-   */
-  phones?: Array<CreatePhone> | null
-  /**
-   * Addresses
-   */
-  addresses?: Array<CreateAddress> | null
-}
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Organization
+     */
+    organization?: string | null;
+    release_status?: ReleaseStatus;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    role: Role;
+    contact_type?: ContactType;
+    /**
+     * Emails
+     */
+    emails?: Array<CreateEmail> | null;
+    /**
+     * Phones
+     */
+    phones?: Array<CreatePhone> | null;
+    /**
+     * Addresses
+     */
+    addresses?: Array<CreateAddress> | null;
+};
 
 /**
  * CreateEmail
  * Schema for creating an email.
  */
 export type CreateEmail = {
-  /**
-   * Email
-   */
-  email?: string | null
-  /**
-   * Release Status
-   */
-  release_status: string
-  /**
-   * Contact Id
-   */
-  contact_id?: number | null
-  email_type?: EmailType
-}
+    /**
+     * Email
+     */
+    email: string;
+    release_status?: ReleaseStatus;
+    /**
+     * Contact Id
+     */
+    contact_id?: number | null;
+    email_type?: EmailType;
+};
 
 /**
  * CreateGroundwaterLevelObservation
  */
 export type CreateGroundwaterLevelObservation = {
-  /**
-   * Parameter Id
-   */
-  parameter_id: number
-  /**
-   * Observation Datetime
-   */
-  observation_datetime: string
-  release_status?: ReleaseStatus
-  /**
-   * Sample Id
-   */
-  sample_id: number
-  /**
-   * Sensor Id
-   */
-  sensor_id: number
-  /**
-   * Value
-   */
-  value: number | null
-  /**
-   * Unit
-   */
-  unit: string | null
-  /**
-   * Measuring Point Height
-   */
-  measuring_point_height: number
-  /**
-   * Groundwater Level Reason
-   */
-  groundwater_level_reason: string
-}
+    /**
+     * Parameter Id
+     */
+    parameter_id: number;
+    /**
+     * Observation Datetime
+     */
+    observation_datetime: string;
+    release_status?: ReleaseStatus;
+    /**
+     * Sample Id
+     */
+    sample_id: number;
+    /**
+     * Sensor Id
+     */
+    sensor_id: number;
+    /**
+     * Value
+     */
+    value: number | null;
+    unit: Unit | null;
+    /**
+     * Measuring Point Height
+     */
+    measuring_point_height: number;
+    /**
+     * Groundwater Level Reason
+     */
+    groundwater_level_reason: string;
+};
 
 /**
  * CreateGroup
  * Schema for creating a group.
  */
 export type CreateGroup = {
-  /**
-   * Project Area
-   */
-  project_area?: string | null
-  /**
-   * Description
-   */
-  description?: string | null
-  /**
-   * Parent Group Id
-   */
-  parent_group_id?: number | null
-  release_status?: ReleaseStatus
-  /**
-   * Name
-   */
-  name: string
-}
+    /**
+     * Project Area
+     */
+    project_area?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Parent Group Id
+     */
+    parent_group_id?: number | null;
+    release_status?: ReleaseStatus;
+    /**
+     * Name
+     */
+    name: string;
+};
 
 /**
  * CreateLexiconCategory
@@ -362,15 +356,15 @@ export type CreateGroup = {
  * This model can be extended to include additional fields as needed.
  */
 export type CreateLexiconCategory = {
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Description
-   */
-  description?: string | null
-}
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+};
 
 /**
  * CreateLexiconTerm
@@ -378,19 +372,19 @@ export type CreateLexiconCategory = {
  * This model can be extended to include additional fields as needed.
  */
 export type CreateLexiconTerm = {
-  /**
-   * Term
-   */
-  term: string
-  /**
-   * Definition
-   */
-  definition: string
-  /**
-   * Categories
-   */
-  categories: Array<string>
-}
+    /**
+     * Term
+     */
+    term: string;
+    /**
+     * Definition
+     */
+    definition: string;
+    /**
+     * Categories
+     */
+    categories: Array<string>;
+};
 
 /**
  * CreateLexiconTriple
@@ -398,567 +392,546 @@ export type CreateLexiconTerm = {
  * This model can be extended to include additional fields as needed.
  */
 export type CreateLexiconTriple = {
-  subject: CreateLexiconTerm
-  /**
-   * Predicate
-   */
-  predicate: string
-  object_: CreateLexiconTerm
-}
+    subject: CreateLexiconTerm;
+    /**
+     * Predicate
+     */
+    predicate: string;
+    object_: CreateLexiconTerm;
+};
 
 /**
  * CreateLocation
  * Schema for creating a sample location.
  */
 export type CreateLocation = {
-  /**
-   * Point
-   */
-  point: string
-  release_status?: ReleaseStatus
-  /**
-   * Notes
-   */
-  notes?: string | null
-  /**
-   * Elevation
-   */
-  elevation: number
-  /**
-   * Elevation Accuracy
-   */
-  elevation_accuracy?: number | null
-  elevation_method?: ElevationMethod | null
-  /**
-   * Coordinate Accuracy
-   */
-  coordinate_accuracy?: number | null
-  coordinate_method?: CoordinateMethod | null
-}
+    /**
+     * Point
+     */
+    point: string;
+    release_status?: ReleaseStatus;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Elevation
+     */
+    elevation: number;
+    /**
+     * Elevation Accuracy
+     */
+    elevation_accuracy?: number | null;
+    elevation_method?: ElevationMethod | null;
+    /**
+     * Coordinate Accuracy
+     */
+    coordinate_accuracy?: number | null;
+    coordinate_method?: CoordinateMethod | null;
+};
 
 /**
  * CreatePhone
  * Schema for creating a phone number.
  */
 export type CreatePhone = {
-  /**
-   * Phone Number
-   */
-  phone_number?: string | null
-  /**
-   * Release Status
-   */
-  release_status: string
-  /**
-   * Contact Id
-   */
-  contact_id?: number | null
-  /**
-   * Nma Phone Number
-   */
-  nma_phone_number?: string | null
-}
+    /**
+     * Phone Number
+     */
+    phone_number: string;
+    release_status?: ReleaseStatus;
+    /**
+     * Contact Id
+     */
+    contact_id?: number | null;
+    phone_type?: PhoneType;
+    /**
+     * Nma Phone Number
+     */
+    nma_phone_number?: string | null;
+};
 
 /**
  * CreatePublication
  * Schema for creating a new publication.
  */
 export type CreatePublication = {
-  /**
-   * Title
-   */
-  title: string
-  /**
-   * Authors
-   */
-  authors: Array<string>
-  /**
-   * Year
-   */
-  year: number
-  /**
-   * Doi
-   */
-  doi?: string | null
-  /**
-   * Url
-   */
-  url?: string | null
-  /**
-   * Publication Type
-   */
-  publication_type: string
-}
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Authors
+     */
+    authors: Array<string>;
+    /**
+     * Year
+     */
+    year: number;
+    /**
+     * Doi
+     */
+    doi?: string | null;
+    /**
+     * Url
+     */
+    url?: string | null;
+    publication_type: PublicationType;
+};
 
 /**
  * CreateSample
  */
 export type CreateSample = {
-  /**
-   * Sample Date
-   */
-  sample_date: string
-  /**
-   * Depth Top
-   */
-  depth_top?: number | null
-  /**
-   * Depth Bottom
-   */
-  depth_bottom?: number | null
-  release_status?: ReleaseStatus
-  /**
-   * Field Activity Id
-   */
-  field_activity_id: number
-  /**
-   * Field Event Participant Id
-   */
-  field_event_participant_id: number
-  /**
-   * Sample Name
-   */
-  sample_name: string
-  sample_matrix: SampleMatrix
-  sample_method: SampleMethod
-  qc_type: QcType
-  /**
-   * Notes
-   */
-  notes?: string | null
-}
+    /**
+     * Sample Date
+     */
+    sample_date: string;
+    /**
+     * Depth Top
+     */
+    depth_top?: number | null;
+    /**
+     * Depth Bottom
+     */
+    depth_bottom?: number | null;
+    release_status?: ReleaseStatus;
+    /**
+     * Field Activity Id
+     */
+    field_activity_id: number;
+    /**
+     * Field Event Participant Id
+     */
+    field_event_participant_id: number;
+    /**
+     * Sample Name
+     */
+    sample_name: string;
+    sample_matrix: SampleMatrix;
+    sample_method: SampleMethod;
+    qc_type: QcType;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
 
 /**
  * CreateSensor
  * Schema for creating a new sensor.
  */
 export type CreateSensor = {
-  release_status?: ReleaseStatus
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Sensor Type
-   */
-  sensor_type: string
-  /**
-   * Model
-   */
-  model?: string | null
-  /**
-   * Serial No
-   */
-  serial_no?: string | null
-  /**
-   * Pcn Number
-   */
-  pcn_number?: string | null
-  /**
-   * Owner Agency
-   */
-  owner_agency?: string | null
-  /**
-   * Sensor Status
-   */
-  sensor_status?: string | null
-  /**
-   * Notes
-   */
-  notes?: string | null
-}
+    release_status?: ReleaseStatus;
+    /**
+     * Name
+     */
+    name: string;
+    sensor_type: SensorType;
+    /**
+     * Model
+     */
+    model?: string | null;
+    /**
+     * Serial No
+     */
+    serial_no?: string | null;
+    /**
+     * Pcn Number
+     */
+    pcn_number?: string | null;
+    /**
+     * Owner Agency
+     */
+    owner_agency?: string | null;
+    /**
+     * Sensor Status
+     */
+    sensor_status?: string | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
 
 /**
  * CreateSpring
  * Schema for creating a spring.
  */
 export type CreateSpring = {
-  release_status?: ReleaseStatus
-  /**
-   * Location Id
-   */
-  location_id: number | null
-  /**
-   * Group Id
-   */
-  group_id?: number | null
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * First Visit Date
-   */
-  first_visit_date?: string | null
-  spring_type?: SpringType | null
-}
+    release_status?: ReleaseStatus;
+    /**
+     * Location Id
+     */
+    location_id: number | null;
+    /**
+     * Group Id
+     */
+    group_id?: number | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * First Visit Date
+     */
+    first_visit_date?: string | null;
+    spring_type?: SpringType | null;
+};
 
 /**
  * CreateThingIdLink
  * Schema for creating a link between a thing and its ID.
  */
 export type CreateThingIdLink = {
-  /**
-   * Thing Id
-   */
-  thing_id: number
-  /**
-   * Relation
-   */
-  relation: string
-  /**
-   * Alternate Id
-   */
-  alternate_id: string
-  /**
-   * Alternate Organization
-   */
-  alternate_organization: string
-}
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    /**
+     * Relation
+     */
+    relation: string;
+    /**
+     * Alternate Id
+     */
+    alternate_id: string;
+    /**
+     * Alternate Organization
+     */
+    alternate_organization: string;
+};
 
 /**
  * CreateWaterChemistryObservation
  */
 export type CreateWaterChemistryObservation = {
-  /**
-   * Parameter Id
-   */
-  parameter_id: number
-  /**
-   * Observation Datetime
-   */
-  observation_datetime: string
-  release_status?: ReleaseStatus
-  /**
-   * Sample Id
-   */
-  sample_id: number
-  /**
-   * Sensor Id
-   */
-  sensor_id: number
-  /**
-   * Value
-   */
-  value: number | null
-  /**
-   * Unit
-   */
-  unit: string | null
-}
+    /**
+     * Parameter Id
+     */
+    parameter_id: number;
+    /**
+     * Observation Datetime
+     */
+    observation_datetime: string;
+    release_status?: ReleaseStatus;
+    /**
+     * Sample Id
+     */
+    sample_id: number;
+    /**
+     * Sensor Id
+     */
+    sensor_id: number;
+    /**
+     * Value
+     */
+    value: number | null;
+    unit: Unit | null;
+};
 
 /**
  * CreateWell
  * Schema for creating a well.
  */
 export type CreateWell = {
-  /**
-   * Well Depth
-   * Well depth in feet
-   */
-  well_depth?: number | null
-  /**
-   * Hole Depth
-   * Hole depth in feet
-   */
-  hole_depth?: number | null
-  /**
-   * Well Casing Depth
-   * Well casing depth in feet
-   */
-  well_casing_depth?: number | null
-  release_status?: ReleaseStatus
-  /**
-   * Location Id
-   */
-  location_id: number | null
-  /**
-   * Group Id
-   */
-  group_id?: number | null
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * First Visit Date
-   */
-  first_visit_date?: string | null
-  /**
-   * Well Purposes
-   */
-  well_purposes?: Array<WellPurpose> | null
-  /**
-   * Well Construction Notes
-   */
-  well_construction_notes?: string | null
-  /**
-   * Well Casing Diameter
-   * Well casing diameter in inches
-   */
-  well_casing_diameter?: number | null
-  /**
-   * Well Casing Materials
-   */
-  well_casing_materials?: Array<CasingMaterial> | null
-}
+    /**
+     * Well Depth
+     * Well depth in feet
+     */
+    well_depth?: number | null;
+    /**
+     * Hole Depth
+     * Hole depth in feet
+     */
+    hole_depth?: number | null;
+    /**
+     * Well Casing Depth
+     * Well casing depth in feet
+     */
+    well_casing_depth?: number | null;
+    release_status?: ReleaseStatus;
+    /**
+     * Location Id
+     */
+    location_id: number | null;
+    /**
+     * Group Id
+     */
+    group_id?: number | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * First Visit Date
+     */
+    first_visit_date?: string | null;
+    /**
+     * Well Purposes
+     */
+    well_purposes?: Array<WellPurpose> | null;
+    /**
+     * Well Construction Notes
+     */
+    well_construction_notes?: string | null;
+    /**
+     * Well Casing Diameter
+     * Well casing diameter in inches
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Materials
+     */
+    well_casing_materials?: Array<CasingMaterial> | null;
+};
 
 /**
  * CreateWellScreen
  * Schema for creating a well screen.
  */
 export type CreateWellScreen = {
-  release_status?: ReleaseStatus
-  /**
-   * Thing Id
-   */
-  thing_id: number
-  /**
-   * Screen Depth Bottom
-   * Screen depth bottom in feet
-   */
-  screen_depth_bottom: number
-  /**
-   * Screen Depth Top
-   * Screen depth top in feet
-   */
-  screen_depth_top: number
-  /**
-   * Screen Type
-   */
-  screen_type?: unknown | null
-  /**
-   * Screen Description
-   */
-  screen_description?: string | null
-}
+    release_status?: ReleaseStatus;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    /**
+     * Screen Depth Bottom
+     * Screen depth bottom in feet
+     */
+    screen_depth_bottom: number;
+    /**
+     * Screen Depth Top
+     * Screen depth top in feet
+     */
+    screen_depth_top: number;
+    /**
+     * Screen Type
+     */
+    screen_type?: unknown | null;
+    /**
+     * Screen Description
+     */
+    screen_description?: string | null;
+};
 
 /**
  * DeploymentResponse
  */
 export type DeploymentResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Thing Id
-   */
-  thing_id: number
-  sensor: SensorResponse
-  /**
-   * Installation Date
-   */
-  installation_date: string
-  /**
-   * Removal Date
-   */
-  removal_date: string | null
-  /**
-   * Recording Interval
-   */
-  recording_interval: number | null
-  /**
-   * Recording Interval Units
-   */
-  recording_interval_units: string | null
-  /**
-   * Hanging Cable Length
-   */
-  hanging_cable_length: number | null
-  /**
-   * Hanging Point Height
-   */
-  hanging_point_height: number | null
-  /**
-   * Hanging Point Description
-   */
-  hanging_point_description: string | null
-  /**
-   * Notes
-   */
-  notes: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    sensor: SensorResponse;
+    /**
+     * Installation Date
+     */
+    installation_date: string;
+    /**
+     * Removal Date
+     */
+    removal_date: string | null;
+    /**
+     * Recording Interval
+     */
+    recording_interval: number | null;
+    /**
+     * Recording Interval Units
+     */
+    recording_interval_units: string | null;
+    /**
+     * Hanging Cable Length
+     */
+    hanging_cable_length: number | null;
+    /**
+     * Hanging Point Height
+     */
+    hanging_point_height: number | null;
+    /**
+     * Hanging Point Description
+     */
+    hanging_point_description: string | null;
+    /**
+     * Notes
+     */
+    notes: string | null;
+};
 
 /**
  * EmailResponse
  * Response schema for email details.
  */
 export type EmailResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Contact Id
-   */
-  contact_id: number
-  /**
-   * Email
-   */
-  email: string
-  email_type: EmailType
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Contact Id
+     */
+    contact_id: number;
+    /**
+     * Email
+     */
+    email: string;
+    email_type: EmailType;
+};
 
 /**
  * Feature
  * Feature schema for GeoJSON response.
  */
 export type Feature = {
-  /**
-   * Type
-   */
-  type?: string
-  geometry: GeoJsonGeometry
-  /**
-   * Properties
-   */
-  properties?: {
-    [key: string]: unknown
-  }
-}
+    /**
+     * Type
+     */
+    type?: string;
+    geometry: GeoJsonGeometry;
+    /**
+     * Properties
+     */
+    properties?: {
+        [key: string]: unknown;
+    };
+};
 
 /**
  * FeatureCollectionResponse
  * Response schema for GeoJSON FeatureCollection.
  */
 export type FeatureCollectionResponse = {
-  /**
-   * Type
-   */
-  type?: string
-  /**
-   * Features
-   */
-  features?: Array<Feature>
-}
+    /**
+     * Type
+     */
+    type?: string;
+    /**
+     * Features
+     */
+    features?: Array<Feature>;
+};
 
 /**
  * FieldActivityResponse
  */
 export type FieldActivityResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Field Event Id
-   */
-  field_event_id: number
-  /**
-   * Activity Type
-   */
-  activity_type: string
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Field Event Id
+     */
+    field_event_id: number;
+    activity_type: ActivityType;
+};
 
 /**
  * FieldEventResponse
  */
 export type FieldEventResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Thing Id
-   */
-  thing_id: number
-  /**
-   * Event Date
-   */
-  event_date: string
-  /**
-   * Notes
-   */
-  notes: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    /**
+     * Event Date
+     */
+    event_date: string;
+    /**
+     * Notes
+     */
+    notes: string | null;
+};
 
 /**
  * GeoJSONGeometry
  * Geometry schema for GeoJSON response.
  */
 export type GeoJsonGeometry = {
-  /**
-   * Type
-   */
-  type: string
-  /**
-   * Coordinates
-   */
-  coordinates:
-    | Array<number>
-    | Array<Array<number>>
-    | Array<Array<Array<number>>>
-    | Array<Array<Array<Array<number>>>>
-}
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Coordinates
+     */
+    coordinates: Array<number> | Array<Array<number>> | Array<Array<Array<number>>> | Array<Array<Array<Array<number>>>>;
+};
 
 /**
  * GroundwaterLevelObservationResponse
  */
 export type GroundwaterLevelObservationResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Sample Id
-   */
-  sample_id: number
-  /**
-   * Sensor Id
-   */
-  sensor_id: number | null
-  /**
-   * Observation Datetime
-   */
-  observation_datetime: string
-  parameter: ParameterResponse
-  /**
-   * Value
-   */
-  value: number | null
-  /**
-   * Unit
-   */
-  unit: string
-  /**
-   * Depth To Water Bgs
-   */
-  depth_to_water_bgs: number | null
-  /**
-   * Measuring Point Height
-   */
-  measuring_point_height: number | null
-  /**
-   * Groundwater Level Reason
-   */
-  groundwater_level_reason: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Sample Id
+     */
+    sample_id: number;
+    /**
+     * Sensor Id
+     */
+    sensor_id: number | null;
+    /**
+     * Observation Datetime
+     */
+    observation_datetime: string;
+    parameter: ParameterResponse;
+    /**
+     * Value
+     */
+    value: number | null;
+    unit: Unit;
+    /**
+     * Depth To Water Bgs
+     */
+    depth_to_water_bgs: number | null;
+    /**
+     * Measuring Point Height
+     */
+    measuring_point_height: number | null;
+    /**
+     * Groundwater Level Reason
+     */
+    groundwater_level_reason: string | null;
+};
 
 /**
  * GroupResponse
@@ -966,42 +939,42 @@ export type GroundwaterLevelObservationResponse = {
  * This model can be extended to include additional fields as needed.
  */
 export type GroupResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Project Area
-   */
-  project_area: string | null
-  /**
-   * Description
-   */
-  description: string | null
-  /**
-   * Parent Group Id
-   */
-  parent_group_id: number | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Project Area
+     */
+    project_area: string | null;
+    /**
+     * Description
+     */
+    description: string | null;
+    /**
+     * Parent Group Id
+     */
+    parent_group_id: number | null;
+};
 
 /**
  * HTTPValidationError
  */
 export type HttpValidationError = {
-  /**
-   * Detail
-   */
-  detail?: Array<ValidationError>
-}
+    /**
+     * Detail
+     */
+    detail?: Array<ValidationError>;
+};
 
 /**
  * LexiconCategoryResponse
@@ -1009,23 +982,23 @@ export type HttpValidationError = {
  * This model can be extended to include additional fields as needed.
  */
 export type LexiconCategoryResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Description
-   */
-  description?: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+};
 
 /**
  * LexiconTermResponse
@@ -1033,117 +1006,111 @@ export type LexiconCategoryResponse = {
  * This model can be extended to include additional fields as needed.
  */
 export type LexiconTermResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  /**
-   * Term
-   */
-  term: string
-  /**
-   * Definition
-   */
-  definition: string
-  /**
-   * Categories
-   */
-  categories?: Array<LexiconCategoryResponse>
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Term
+     */
+    term: string;
+    /**
+     * Definition
+     */
+    definition: string;
+    /**
+     * Categories
+     */
+    categories?: Array<LexiconCategoryResponse>;
+};
 
 /**
  * LexiconTripleResponse
  */
 export type LexiconTripleResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  /**
-   * Subject
-   */
-  subject: string
-  /**
-   * Predicate
-   */
-  predicate: string
-  /**
-   * Object
-   */
-  object_: string
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Subject
+     */
+    subject: string;
+    /**
+     * Predicate
+     */
+    predicate: string;
+    /**
+     * Object
+     */
+    object_: string;
+};
 
 /**
  * LocationResponse
  * Response schema for sample location details.
  */
 export type LocationResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Notes
-   */
-  notes: string | null
-  /**
-   * Point
-   */
-  point: string
-  /**
-   * Elevation
-   */
-  elevation: number | null
-  /**
-   * Horizontal Datum
-   */
-  horizontal_datum?: string
-  /**
-   * Vertical Daum
-   */
-  vertical_daum?: string
-  /**
-   * Elevation Accuracy
-   */
-  elevation_accuracy: number | null
-  /**
-   * Elevation Method
-   */
-  elevation_method: string | null
-  /**
-   * Coordinate Accuracy
-   */
-  coordinate_accuracy: number | null
-  /**
-   * Coordinate Method
-   */
-  coordinate_method: string | null
-  /**
-   * State
-   */
-  state: string | null
-  /**
-   * County
-   */
-  county: string | null
-  /**
-   * Quad Name
-   */
-  quad_name: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Notes
+     */
+    notes: string | null;
+    /**
+     * Point
+     */
+    point: string;
+    /**
+     * Elevation
+     */
+    elevation: number | null;
+    /**
+     * Horizontal Datum
+     */
+    horizontal_datum?: string;
+    /**
+     * Vertical Datum
+     */
+    vertical_datum?: string;
+    /**
+     * Elevation Accuracy
+     */
+    elevation_accuracy: number | null;
+    elevation_method: ElevationMethod | null;
+    /**
+     * Coordinate Accuracy
+     */
+    coordinate_accuracy: number | null;
+    coordinate_method: CoordinateMethod | null;
+    /**
+     * State
+     */
+    state: string | null;
+    /**
+     * County
+     */
+    county: string | null;
+    /**
+     * Quad Name
+     */
+    quad_name: string | null;
+};
 
 /**
  * ObservationResponse
@@ -1151,649 +1118,646 @@ export type LocationResponse = {
  * Combines groundwater level and geothermal observation responses.
  */
 export type ObservationResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Sample Id
-   */
-  sample_id: number
-  /**
-   * Sensor Id
-   */
-  sensor_id: number | null
-  /**
-   * Observation Datetime
-   */
-  observation_datetime: string
-  parameter: ParameterResponse
-  /**
-   * Value
-   */
-  value: number | null
-  /**
-   * Unit
-   */
-  unit: string
-  /**
-   * Depth To Water Bgs
-   */
-  depth_to_water_bgs: number | null
-  /**
-   * Measuring Point Height
-   */
-  measuring_point_height: number | null
-  /**
-   * Groundwater Level Reason
-   */
-  groundwater_level_reason: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Sample Id
+     */
+    sample_id: number;
+    /**
+     * Sensor Id
+     */
+    sensor_id: number | null;
+    /**
+     * Observation Datetime
+     */
+    observation_datetime: string;
+    parameter: ParameterResponse;
+    /**
+     * Value
+     */
+    value: number | null;
+    unit: Unit;
+    /**
+     * Depth To Water Bgs
+     */
+    depth_to_water_bgs: number | null;
+    /**
+     * Measuring Point Height
+     */
+    measuring_point_height: number | null;
+    /**
+     * Groundwater Level Reason
+     */
+    groundwater_level_reason: string | null;
+};
 
 /**
  * Page[AddressResponse]
  */
 export type PageAddressResponse = {
-  /**
-   * Items
-   */
-  items: Array<AddressResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<AddressResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[AssetResponse]
  */
 export type PageAssetResponse = {
-  /**
-   * Items
-   */
-  items: Array<AssetResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<AssetResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[ContactResponse]
  */
 export type PageContactResponse = {
-  /**
-   * Items
-   */
-  items: Array<ContactResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<ContactResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[DeploymentResponse]
  */
 export type PageDeploymentResponse = {
-  /**
-   * Items
-   */
-  items: Array<DeploymentResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<DeploymentResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[EmailResponse]
  */
 export type PageEmailResponse = {
-  /**
-   * Items
-   */
-  items: Array<EmailResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<EmailResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[GroundwaterLevelObservationResponse]
  */
 export type PageGroundwaterLevelObservationResponse = {
-  /**
-   * Items
-   */
-  items: Array<GroundwaterLevelObservationResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<GroundwaterLevelObservationResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[GroupResponse]
  */
 export type PageGroupResponse = {
-  /**
-   * Items
-   */
-  items: Array<GroupResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<GroupResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[LexiconCategoryResponse]
  */
 export type PageLexiconCategoryResponse = {
-  /**
-   * Items
-   */
-  items: Array<LexiconCategoryResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<LexiconCategoryResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[LexiconTermResponse]
  */
 export type PageLexiconTermResponse = {
-  /**
-   * Items
-   */
-  items: Array<LexiconTermResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<LexiconTermResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[LexiconTripleResponse]
  */
 export type PageLexiconTripleResponse = {
-  /**
-   * Items
-   */
-  items: Array<LexiconTripleResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<LexiconTripleResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[LocationResponse]
  */
 export type PageLocationResponse = {
-  /**
-   * Items
-   */
-  items: Array<LocationResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<LocationResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[ObservationResponse]
  */
 export type PageObservationResponse = {
-  /**
-   * Items
-   */
-  items: Array<ObservationResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<ObservationResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[PhoneResponse]
  */
 export type PagePhoneResponse = {
-  /**
-   * Items
-   */
-  items: Array<PhoneResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<PhoneResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[SampleResponse]
  */
 export type PageSampleResponse = {
-  /**
-   * Items
-   */
-  items: Array<SampleResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<SampleResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[SensorResponse]
  */
 export type PageSensorResponse = {
-  /**
-   * Items
-   */
-  items: Array<SensorResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<SensorResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[SpringResponse]
  */
 export type PageSpringResponse = {
-  /**
-   * Items
-   */
-  items: Array<SpringResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<SpringResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[ThingIdLinkResponse]
  */
 export type PageThingIdLinkResponse = {
-  /**
-   * Items
-   */
-  items: Array<ThingIdLinkResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<ThingIdLinkResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[ThingResponse]
  */
 export type PageThingResponse = {
-  /**
-   * Items
-   */
-  items: Array<ThingResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<ThingResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[TransducerObservationWithBlockResponse]
  */
 export type PageTransducerObservationWithBlockResponse = {
-  /**
-   * Items
-   */
-  items: Array<TransducerObservationWithBlockResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<TransducerObservationWithBlockResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[WaterChemistryObservationResponse]
  */
 export type PageWaterChemistryObservationResponse = {
-  /**
-   * Items
-   */
-  items: Array<WaterChemistryObservationResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<WaterChemistryObservationResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[WellResponse]
  */
 export type PageWellResponse = {
-  /**
-   * Items
-   */
-  items: Array<WellResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<WellResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[WellScreenResponse]
  */
 export type PageWellScreenResponse = {
-  /**
-   * Items
-   */
-  items: Array<WellScreenResponse>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<WellScreenResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * Page[dict]
  */
 export type PageDict = {
-  /**
-   * Items
-   */
-  items: Array<{
-    [key: string]: unknown
-  }>
-  /**
-   * Total
-   */
-  total: number
-  /**
-   * Page
-   */
-  page: number
-  /**
-   * Size
-   */
-  size: number
-  /**
-   * Pages
-   */
-  pages: number
-}
+    /**
+     * Items
+     */
+    items: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
 
 /**
  * ParameterResponse
@@ -1801,113 +1765,101 @@ export type PageDict = {
  * This model can be extended to include additional fields as needed.
  */
 export type ParameterResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Parameter Name
-   */
-  parameter_name: string
-  /**
-   * Matrix
-   */
-  matrix: string
-  /**
-   * Parameter Type
-   */
-  parameter_type: string | null
-  /**
-   * Cas Number
-   */
-  cas_number: string | null
-  /**
-   * Default Unit
-   */
-  default_unit: string
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    parameter_name: ParameterName;
+    /**
+     * Matrix
+     */
+    matrix: string;
+    parameter_type: ParameterType | null;
+    /**
+     * Cas Number
+     */
+    cas_number: string | null;
+    default_unit: Unit | null;
+};
 
 /**
  * PhoneResponse
  * Response schema for phone details.
  */
 export type PhoneResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Contact Id
-   */
-  contact_id: number
-  /**
-   * Phone Number
-   */
-  phone_number?: string | null
-  /**
-   * Phone Type
-   */
-  phone_type: string
-  /**
-   * Nma Phone Number
-   */
-  nma_phone_number?: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Contact Id
+     */
+    contact_id: number;
+    /**
+     * Phone Number
+     */
+    phone_number?: string | null;
+    /**
+     * Phone Type
+     */
+    phone_type: string;
+    /**
+     * Nma Phone Number
+     */
+    nma_phone_number?: string | null;
+};
 
 /**
  * PublicationResponse
  * Schema for the response of a publication.
  */
 export type PublicationResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Title
-   */
-  title: string
-  /**
-   * Authors
-   */
-  authors: Array<AuthorResponse>
-  /**
-   * Year
-   */
-  year: number
-  /**
-   * Doi
-   */
-  doi?: string | null
-  /**
-   * Url
-   */
-  url?: string | null
-  /**
-   * Publication Type
-   */
-  publication_type: string
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Authors
+     */
+    authors: Array<AuthorResponse>;
+    /**
+     * Year
+     */
+    year: number;
+    /**
+     * Doi
+     */
+    doi?: string | null;
+    /**
+     * Url
+     */
+    url?: string | null;
+    publication_type: PublicationType;
+};
 
 /**
  * ResourceNotFoundResponse
  */
 export type ResourceNotFoundResponse = {
-  /**
-   * Detail
-   */
-  detail: string
-}
+    /**
+     * Detail
+     */
+    detail: string;
+};
 
 /**
  * SampleResponse
@@ -1919,440 +1871,425 @@ export type ResourceNotFoundResponse = {
  * <model>.model_dump() and exlude fields to reduce the size.
  */
 export type SampleResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  thing: ThingResponse
-  field_event: FieldEventResponse
-  field_activity: FieldActivityResponse
-  contact: ContactResponse
-  /**
-   * Sample Date
-   */
-  sample_date: string
-  /**
-   * Sample Name
-   */
-  sample_name: string
-  /**
-   * Sample Matrix
-   */
-  sample_matrix: string
-  /**
-   * Sample Method
-   */
-  sample_method: string
-  /**
-   * Qc Type
-   */
-  qc_type: string
-  /**
-   * Notes
-   */
-  notes: string | null
-  /**
-   * Depth Top
-   */
-  depth_top: number | null
-  /**
-   * Depth Bottom
-   */
-  depth_bottom: number | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    thing: ThingResponse;
+    field_event: FieldEventResponse;
+    field_activity: FieldActivityResponse;
+    contact: ContactResponse;
+    /**
+     * Sample Date
+     */
+    sample_date: string;
+    /**
+     * Sample Name
+     */
+    sample_name: string;
+    sample_matrix: SampleMatrix;
+    sample_method: SampleMethod;
+    qc_type: QcType;
+    /**
+     * Notes
+     */
+    notes: string | null;
+    /**
+     * Depth Top
+     */
+    depth_top: number | null;
+    /**
+     * Depth Bottom
+     */
+    depth_bottom: number | null;
+};
 
 /**
  * SensorResponse
  */
 export type SensorResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Sensor Type
-   */
-  sensor_type: string
-  /**
-   * Model
-   */
-  model: string | null
-  /**
-   * Serial No
-   */
-  serial_no: string | null
-  /**
-   * Pcn Number
-   */
-  pcn_number: string | null
-  /**
-   * Owner Agency
-   */
-  owner_agency: string | null
-  /**
-   * Sensor Status
-   */
-  sensor_status: string | null
-  /**
-   * Notes
-   */
-  notes: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Name
+     */
+    name: string;
+    sensor_type: SensorType;
+    /**
+     * Model
+     */
+    model: string | null;
+    /**
+     * Serial No
+     */
+    serial_no: string | null;
+    /**
+     * Pcn Number
+     */
+    pcn_number: string | null;
+    /**
+     * Owner Agency
+     */
+    owner_agency: string | null;
+    /**
+     * Sensor Status
+     */
+    sensor_status: string | null;
+    /**
+     * Notes
+     */
+    notes: string | null;
+};
 
 /**
  * SpringResponse
  * Response schema for spring details.
  */
 export type SpringResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Thing Type
-   */
-  thing_type: string
-  current_location: LocationResponse | null
-  /**
-   * First Visit Date
-   */
-  first_visit_date: string | null
-  /**
-   * Spring Type
-   */
-  spring_type?: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Thing Type
+     */
+    thing_type: string;
+    current_location: LocationResponse | null;
+    /**
+     * First Visit Date
+     */
+    first_visit_date: string | null;
+    /**
+     * Spring Type
+     */
+    spring_type?: string | null;
+};
 
 /**
  * ThingIdLinkResponse
  */
 export type ThingIdLinkResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Thing Id
-   */
-  thing_id: number
-  thing: ThingResponse
-  /**
-   * Relation
-   */
-  relation: string
-  /**
-   * Alternate Id
-   */
-  alternate_id: string
-  /**
-   * Alternate Organization
-   */
-  alternate_organization: string
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    thing: ThingResponse;
+    /**
+     * Relation
+     */
+    relation: string;
+    /**
+     * Alternate Id
+     */
+    alternate_id: string;
+    /**
+     * Alternate Organization
+     */
+    alternate_organization: string;
+};
 
 /**
  * ThingResponse
  */
 export type ThingResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Thing Type
-   */
-  thing_type: string
-  current_location: LocationResponse | null
-  /**
-   * First Visit Date
-   */
-  first_visit_date: string | null
-  /**
-   * Spring Type
-   */
-  spring_type?: string | null
-  /**
-   * Well Purposes
-   */
-  well_purposes?: Array<WellPurpose>
-  /**
-   * Well Depth
-   */
-  well_depth?: number | null
-  /**
-   * Well Depth Unit
-   */
-  well_depth_unit?: string
-  /**
-   * Hole Depth
-   */
-  hole_depth?: number | null
-  /**
-   * Hole Depth Unit
-   */
-  hole_depth_unit?: string
-  /**
-   * Well Casing Diameter
-   */
-  well_casing_diameter?: number | null
-  /**
-   * Well Casing Diameter Unit
-   */
-  well_casing_diameter_unit?: string
-  /**
-   * Well Casing Depth
-   */
-  well_casing_depth?: number | null
-  /**
-   * Well Casing Depth Unit
-   */
-  well_casing_depth_unit?: string
-  /**
-   * Well Casing Materials
-   */
-  well_casing_materials?: Array<CasingMaterial>
-  /**
-   * Well Construction Notes
-   */
-  well_construction_notes?: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Thing Type
+     */
+    thing_type: string;
+    current_location: LocationResponse | null;
+    /**
+     * First Visit Date
+     */
+    first_visit_date: string | null;
+    /**
+     * Spring Type
+     */
+    spring_type?: string | null;
+    /**
+     * Well Purposes
+     */
+    well_purposes?: Array<WellPurpose>;
+    /**
+     * Well Depth
+     */
+    well_depth?: number | null;
+    /**
+     * Well Depth Unit
+     */
+    well_depth_unit?: string;
+    /**
+     * Hole Depth
+     */
+    hole_depth?: number | null;
+    /**
+     * Hole Depth Unit
+     */
+    hole_depth_unit?: string;
+    /**
+     * Well Casing Diameter
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Diameter Unit
+     */
+    well_casing_diameter_unit?: string;
+    /**
+     * Well Casing Depth
+     */
+    well_casing_depth?: number | null;
+    /**
+     * Well Casing Depth Unit
+     */
+    well_casing_depth_unit?: string;
+    /**
+     * Well Casing Materials
+     */
+    well_casing_materials?: Array<CasingMaterial>;
+    /**
+     * Well Construction Notes
+     */
+    well_construction_notes?: string | null;
+};
 
 /**
  * TransducerObservationBlockResponse
  */
 export type TransducerObservationBlockResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * review_status
-   */
-  review_status: unknown
-  /**
-   * Start Datetime
-   */
-  start_datetime: string
-  /**
-   * End Datetime
-   */
-  end_datetime: string
-  /**
-   * Parameter Id
-   */
-  parameter_id: number
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * review_status
+     */
+    review_status: unknown;
+    /**
+     * Start Datetime
+     */
+    start_datetime: string;
+    /**
+     * End Datetime
+     */
+    end_datetime: string;
+    /**
+     * Parameter Id
+     */
+    parameter_id: number;
+};
 
 /**
  * TransducerObservationResponse
  */
 export type TransducerObservationResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Value
-   */
-  value: number
-  /**
-   * Observation Datetime
-   */
-  observation_datetime: string
-  /**
-   * Parameter Id
-   */
-  parameter_id: number
-  /**
-   * Deployment Id
-   */
-  deployment_id: number
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Value
+     */
+    value: number;
+    /**
+     * Observation Datetime
+     */
+    observation_datetime: string;
+    /**
+     * Parameter Id
+     */
+    parameter_id: number;
+    /**
+     * Deployment Id
+     */
+    deployment_id: number;
+};
 
 /**
  * TransducerObservationWithBlockResponse
  */
 export type TransducerObservationWithBlockResponse = {
-  observation: TransducerObservationResponse
-  block: TransducerObservationBlockResponse
-}
+    observation: TransducerObservationResponse;
+    block: TransducerObservationBlockResponse;
+};
 
 /**
  * UpdateAddress
  * Schema for updating address information.
  */
 export type UpdateAddress = {
-  release_status?: ReleaseStatus | null
-  /**
-   * Contact Id
-   */
-  contact_id?: number | null
-  /**
-   * Address Line 1
-   */
-  address_line_1?: string | null
-  /**
-   * Address Line 2
-   */
-  address_line_2?: string | null
-  /**
-   * City
-   */
-  city?: string | null
-  /**
-   * State
-   */
-  state?: string | null
-  /**
-   * Postal Code
-   */
-  postal_code?: string | null
-  /**
-   * Country
-   */
-  country?: string | null
-  address_type?: AddressType | null
-}
+    release_status?: ReleaseStatus | null;
+    /**
+     * Contact Id
+     */
+    contact_id?: number | null;
+    /**
+     * Address Line 1
+     */
+    address_line_1?: string | null;
+    /**
+     * Address Line 2
+     */
+    address_line_2?: string | null;
+    /**
+     * City
+     */
+    city?: string | null;
+    /**
+     * State
+     */
+    state?: string | null;
+    /**
+     * Postal Code
+     */
+    postal_code?: string | null;
+    /**
+     * Country
+     */
+    country?: string | null;
+    address_type?: AddressType | null;
+};
 
 /**
  * UpdateAsset
  */
 export type UpdateAsset = {
-  release_status?: ReleaseStatus | null
-  /**
-   * Name
-   */
-  name?: string | null
-  /**
-   * Label
-   */
-  label?: string | null
-}
+    release_status?: ReleaseStatus | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Label
+     */
+    label?: string | null;
+};
 
 /**
  * UpdateContact
  * Schema for updating contact information.
  */
 export type UpdateContact = {
-  /**
-   * Name
-   */
-  name?: string | null
-  /**
-   * Organization
-   */
-  organization?: string | null
-  release_status?: ReleaseStatus | null
-  role?: Role | null
-  contact_type?: ContactType | null
-  /**
-   * Thing Id
-   */
-  thing_id?: number | null
-}
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Organization
+     */
+    organization?: string | null;
+    release_status?: ReleaseStatus | null;
+    role?: Role | null;
+    contact_type?: ContactType | null;
+    /**
+     * Thing Id
+     */
+    thing_id?: number | null;
+};
 
 /**
  * UpdateEmail
  * Schema for updating email information.
  */
 export type UpdateEmail = {
-  /**
-   * Email
-   */
-  email?: string | null
-  release_status?: ReleaseStatus | null
-  /**
-   * Contact Id
-   */
-  contact_id?: number | null
-  email_type?: EmailType | null
-}
+    /**
+     * Email
+     */
+    email?: string | null;
+    release_status?: ReleaseStatus | null;
+    /**
+     * Contact Id
+     */
+    contact_id?: number | null;
+    email_type?: EmailType | null;
+};
 
 /**
  * UpdateGroundwaterLevelObservation
  */
 export type UpdateGroundwaterLevelObservation = {
-  /**
-   * Parameter Id
-   */
-  parameter_id?: number | null
-  /**
-   * Observation Datetime
-   */
-  observation_datetime?: string | null
-  release_status?: ReleaseStatus | null
-  /**
-   * Sample Id
-   */
-  sample_id?: number | null
-  /**
-   * Sensor Id
-   */
-  sensor_id?: number | null
-  /**
-   * Value
-   */
-  value?: number | null
-  /**
-   * Unit
-   */
-  unit?: string | null
-  /**
-   * Measuring Point Height
-   */
-  measuring_point_height?: number | null
-  /**
-   * Groundwater Level Reason
-   */
-  groundwater_level_reason?: string | null
-}
+    /**
+     * Parameter Id
+     */
+    parameter_id?: number | null;
+    /**
+     * Observation Datetime
+     */
+    observation_datetime?: string | null;
+    release_status?: ReleaseStatus | null;
+    /**
+     * Sample Id
+     */
+    sample_id?: number | null;
+    /**
+     * Sensor Id
+     */
+    sensor_id?: number | null;
+    /**
+     * Value
+     */
+    value?: number | null;
+    unit?: Unit | null;
+    /**
+     * Measuring Point Height
+     */
+    measuring_point_height?: number | null;
+    /**
+     * Groundwater Level Reason
+     */
+    groundwater_level_reason?: string | null;
+};
 
 /**
  * UpdateGroup
@@ -2360,4495 +2297,4179 @@ export type UpdateGroundwaterLevelObservation = {
  * This model can be extended to include additional fields as needed.
  */
 export type UpdateGroup = {
-  /**
-   * Project Area
-   */
-  project_area?: string | null
-  /**
-   * Description
-   */
-  description?: string | null
-  /**
-   * Parent Group Id
-   */
-  parent_group_id?: number | null
-  release_status?: ReleaseStatus | null
-  /**
-   * Name
-   */
-  name?: string | null
-}
+    /**
+     * Project Area
+     */
+    project_area?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Parent Group Id
+     */
+    parent_group_id?: number | null;
+    release_status?: ReleaseStatus | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+};
 
 /**
  * UpdateLexiconCategory
  */
 export type UpdateLexiconCategory = {
-  /**
-   * Name
-   */
-  name?: string | null
-  /**
-   * Description
-   */
-  description?: string | null
-}
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+};
 
 /**
  * UpdateLexiconTerm
  */
 export type UpdateLexiconTerm = {
-  /**
-   * Term
-   */
-  term?: string | null
-  /**
-   * Definition
-   */
-  definition?: string | null
-}
+    /**
+     * Term
+     */
+    term?: string | null;
+    /**
+     * Definition
+     */
+    definition?: string | null;
+};
 
 /**
  * UpdateLexiconTriple
  */
 export type UpdateLexiconTriple = {
-  /**
-   * Subject
-   */
-  subject?: string | null
-  /**
-   * Predicate
-   */
-  predicate?: string | null
-  /**
-   * Object
-   */
-  object_?: string | null
-}
+    /**
+     * Subject
+     */
+    subject?: string | null;
+    /**
+     * Predicate
+     */
+    predicate?: string | null;
+    /**
+     * Object
+     */
+    object_?: string | null;
+};
 
 /**
  * UpdateLocation
  * Schema for updating a location.
  */
 export type UpdateLocation = {
-  /**
-   * Point
-   */
-  point?: string | null
-  release_status?: ReleaseStatus | null
-  /**
-   * Notes
-   */
-  notes?: string | null
-  /**
-   * Elevation
-   */
-  elevation?: number | null
-  /**
-   * Elevation Accuracy
-   */
-  elevation_accuracy?: number | null
-  elevation_method?: ElevationMethod | null
-  /**
-   * Coordinate Accuracy
-   */
-  coordinate_accuracy?: number | null
-  coordinate_method?: CoordinateMethod | null
-}
+    /**
+     * Point
+     */
+    point?: string | null;
+    release_status?: ReleaseStatus | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Elevation
+     */
+    elevation?: number | null;
+    /**
+     * Elevation Accuracy
+     */
+    elevation_accuracy?: number | null;
+    elevation_method?: ElevationMethod | null;
+    /**
+     * Coordinate Accuracy
+     */
+    coordinate_accuracy?: number | null;
+    coordinate_method?: CoordinateMethod | null;
+};
 
 /**
  * UpdatePhone
  * Schema for updating phone information.
  */
 export type UpdatePhone = {
-  /**
-   * Phone Number
-   */
-  phone_number?: string | null
-  release_status?: ReleaseStatus | null
-  /**
-   * Contact Id
-   */
-  contact_id?: number | null
-  phone_type?: PhoneType | null
-}
+    /**
+     * Phone Number
+     */
+    phone_number?: string | null;
+    release_status?: ReleaseStatus | null;
+    /**
+     * Contact Id
+     */
+    contact_id?: number | null;
+    phone_type?: PhoneType | null;
+};
 
 /**
  * UpdateSample
  */
 export type UpdateSample = {
-  /**
-   * Sample Date
-   */
-  sample_date?: string | null
-  /**
-   * Depth Top
-   */
-  depth_top?: number | null
-  /**
-   * Depth Bottom
-   */
-  depth_bottom?: number | null
-  release_status?: ReleaseStatus | null
-  /**
-   * Field Activity Id
-   */
-  field_activity_id?: number | null
-  /**
-   * Field Event Participant Id
-   */
-  field_event_participant_id?: number | null
-  /**
-   * Sample Name
-   */
-  sample_name?: string | null
-  sample_matrix?: SampleMatrix | null
-  sample_method?: SampleMethod | null
-  qc_type?: QcType | null
-  /**
-   * Notes
-   */
-  notes?: string | null
-}
+    /**
+     * Sample Date
+     */
+    sample_date?: string | null;
+    /**
+     * Depth Top
+     */
+    depth_top?: number | null;
+    /**
+     * Depth Bottom
+     */
+    depth_bottom?: number | null;
+    release_status?: ReleaseStatus | null;
+    /**
+     * Field Activity Id
+     */
+    field_activity_id?: number | null;
+    /**
+     * Field Event Participant Id
+     */
+    field_event_participant_id?: number | null;
+    /**
+     * Sample Name
+     */
+    sample_name?: string | null;
+    sample_matrix?: SampleMatrix | null;
+    sample_method?: SampleMethod | null;
+    qc_type?: QcType | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
 
 /**
  * UpdateSensor
  */
 export type UpdateSensor = {
-  release_status?: ReleaseStatus | null
-  /**
-   * Name
-   */
-  name?: string | null
-  /**
-   * Sensor Type
-   */
-  sensor_type?: string | null
-  /**
-   * Model
-   */
-  model?: string | null
-  /**
-   * Serial No
-   */
-  serial_no?: string | null
-  /**
-   * Pcn Number
-   */
-  pcn_number?: string | null
-  /**
-   * Owner Agency
-   */
-  owner_agency?: string | null
-  /**
-   * Sensor Status
-   */
-  sensor_status?: string | null
-  /**
-   * Notes
-   */
-  notes?: string | null
-}
+    release_status?: ReleaseStatus | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+    sensor_type?: SensorType | null;
+    /**
+     * Model
+     */
+    model?: string | null;
+    /**
+     * Serial No
+     */
+    serial_no?: string | null;
+    /**
+     * Pcn Number
+     */
+    pcn_number?: string | null;
+    /**
+     * Owner Agency
+     */
+    owner_agency?: string | null;
+    /**
+     * Sensor Status
+     */
+    sensor_status?: string | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
 
 /**
  * UpdateSpring
  */
 export type UpdateSpring = {
-  release_status?: ReleaseStatus | null
-  /**
-   * Name
-   */
-  name?: string | null
-  /**
-   * First Visit Date
-   */
-  first_visit_date?: string | null
-  /**
-   * Spring Type
-   */
-  spring_type?: string | null
-}
+    release_status?: ReleaseStatus | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * First Visit Date
+     */
+    first_visit_date?: string | null;
+    /**
+     * Spring Type
+     */
+    spring_type?: string | null;
+};
 
 /**
  * UpdateThingIdLink
  */
 export type UpdateThingIdLink = {
-  release_status?: ReleaseStatus | null
-  /**
-   * Alternate Organization
-   */
-  alternate_organization?: string | null
-  /**
-   * Alternate Id
-   */
-  alternate_id?: string | null
-  /**
-   * Relation
-   */
-  relation?: string | null
-}
+    release_status?: ReleaseStatus | null;
+    /**
+     * Alternate Organization
+     */
+    alternate_organization?: string | null;
+    /**
+     * Alternate Id
+     */
+    alternate_id?: string | null;
+    /**
+     * Relation
+     */
+    relation?: string | null;
+};
 
 /**
  * UpdateWaterChemistryObservation
  */
 export type UpdateWaterChemistryObservation = {
-  /**
-   * Parameter Id
-   */
-  parameter_id?: number | null
-  /**
-   * Observation Datetime
-   */
-  observation_datetime?: string | null
-  release_status?: ReleaseStatus | null
-  /**
-   * Sample Id
-   */
-  sample_id?: number | null
-  /**
-   * Sensor Id
-   */
-  sensor_id?: number | null
-  /**
-   * Value
-   */
-  value?: number | null
-  /**
-   * Unit
-   */
-  unit?: string | null
-}
+    /**
+     * Parameter Id
+     */
+    parameter_id?: number | null;
+    /**
+     * Observation Datetime
+     */
+    observation_datetime?: string | null;
+    release_status?: ReleaseStatus | null;
+    /**
+     * Sample Id
+     */
+    sample_id?: number | null;
+    /**
+     * Sensor Id
+     */
+    sensor_id?: number | null;
+    /**
+     * Value
+     */
+    value?: number | null;
+    unit?: Unit | null;
+};
 
 /**
  * UpdateWell
  */
 export type UpdateWell = {
-  /**
-   * Well Depth
-   */
-  well_depth?: number | null
-  /**
-   * Hole Depth
-   */
-  hole_depth?: number | null
-  /**
-   * Well Casing Depth
-   */
-  well_casing_depth?: number | null
-  release_status?: ReleaseStatus | null
-  /**
-   * Name
-   */
-  name?: string | null
-  /**
-   * First Visit Date
-   */
-  first_visit_date?: string | null
-  /**
-   * Well Purposes
-   */
-  well_purposes?: Array<string> | null
-  /**
-   * Well Construction Notes
-   */
-  well_construction_notes?: string | null
-  /**
-   * Well Casing Diameter
-   */
-  well_casing_diameter?: number | null
-  /**
-   * Well Casing Materials
-   */
-  well_casing_materials?: Array<string> | null
-}
+    /**
+     * Well Depth
+     */
+    well_depth?: number | null;
+    /**
+     * Hole Depth
+     */
+    hole_depth?: number | null;
+    /**
+     * Well Casing Depth
+     */
+    well_casing_depth?: number | null;
+    release_status?: ReleaseStatus | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * First Visit Date
+     */
+    first_visit_date?: string | null;
+    /**
+     * Well Purposes
+     */
+    well_purposes?: Array<string> | null;
+    /**
+     * Well Construction Notes
+     */
+    well_construction_notes?: string | null;
+    /**
+     * Well Casing Diameter
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Materials
+     */
+    well_casing_materials?: Array<string> | null;
+};
 
 /**
  * UpdateWellScreen
  */
 export type UpdateWellScreen = {
-  release_status?: ReleaseStatus | null
-  /**
-   * Screen Depth Bottom
-   */
-  screen_depth_bottom?: number | null
-  /**
-   * Screen Depth Top
-   */
-  screen_depth_top?: number | null
-  /**
-   * Screen Description
-   */
-  screen_description?: string | null
-  /**
-   * Screen Type
-   */
-  screen_type?: string | null
-}
+    release_status?: ReleaseStatus | null;
+    /**
+     * Screen Depth Bottom
+     */
+    screen_depth_bottom?: number | null;
+    /**
+     * Screen Depth Top
+     */
+    screen_depth_top?: number | null;
+    /**
+     * Screen Description
+     */
+    screen_description?: string | null;
+    /**
+     * Screen Type
+     */
+    screen_type?: string | null;
+};
 
 /**
  * ValidationError
  */
 export type ValidationError = {
-  /**
-   * Location
-   */
-  loc: Array<string | number>
-  /**
-   * Message
-   */
-  msg: string
-  /**
-   * Error Type
-   */
-  type: string
-}
+    /**
+     * Location
+     */
+    loc: Array<string | number>;
+    /**
+     * Message
+     */
+    msg: string;
+    /**
+     * Error Type
+     */
+    type: string;
+};
 
 /**
  * WaterChemistryObservationResponse
  */
 export type WaterChemistryObservationResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Sample Id
-   */
-  sample_id: number
-  /**
-   * Sensor Id
-   */
-  sensor_id: number | null
-  /**
-   * Observation Datetime
-   */
-  observation_datetime: string
-  parameter: ParameterResponse
-  /**
-   * Value
-   */
-  value: number | null
-  /**
-   * Unit
-   */
-  unit: string
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Sample Id
+     */
+    sample_id: number;
+    /**
+     * Sensor Id
+     */
+    sensor_id: number | null;
+    /**
+     * Observation Datetime
+     */
+    observation_datetime: string;
+    parameter: ParameterResponse;
+    /**
+     * Value
+     */
+    value: number | null;
+    unit: Unit;
+};
 
 /**
  * WellResponse
  * Response schema for well details.
  */
 export type WellResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Name
-   */
-  name: string
-  /**
-   * Thing Type
-   */
-  thing_type: string
-  current_location: LocationResponse | null
-  /**
-   * First Visit Date
-   */
-  first_visit_date: string | null
-  /**
-   * Well Purposes
-   */
-  well_purposes?: Array<WellPurpose>
-  /**
-   * Well Depth
-   */
-  well_depth?: number | null
-  /**
-   * Well Depth Unit
-   */
-  well_depth_unit?: string
-  /**
-   * Hole Depth
-   */
-  hole_depth?: number | null
-  /**
-   * Hole Depth Unit
-   */
-  hole_depth_unit?: string
-  /**
-   * Well Casing Diameter
-   */
-  well_casing_diameter?: number | null
-  /**
-   * Well Casing Diameter Unit
-   */
-  well_casing_diameter_unit?: string
-  /**
-   * Well Casing Depth
-   */
-  well_casing_depth?: number | null
-  /**
-   * Well Casing Depth Unit
-   */
-  well_casing_depth_unit?: string
-  /**
-   * Well Casing Materials
-   */
-  well_casing_materials?: Array<CasingMaterial>
-  /**
-   * Well Construction Notes
-   */
-  well_construction_notes?: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Thing Type
+     */
+    thing_type: string;
+    current_location: LocationResponse | null;
+    /**
+     * First Visit Date
+     */
+    first_visit_date: string | null;
+    /**
+     * Well Purposes
+     */
+    well_purposes?: Array<WellPurpose>;
+    /**
+     * Well Depth
+     */
+    well_depth?: number | null;
+    /**
+     * Well Depth Unit
+     */
+    well_depth_unit?: string;
+    /**
+     * Hole Depth
+     */
+    hole_depth?: number | null;
+    /**
+     * Hole Depth Unit
+     */
+    hole_depth_unit?: string;
+    /**
+     * Well Casing Diameter
+     */
+    well_casing_diameter?: number | null;
+    /**
+     * Well Casing Diameter Unit
+     */
+    well_casing_diameter_unit?: string;
+    /**
+     * Well Casing Depth
+     */
+    well_casing_depth?: number | null;
+    /**
+     * Well Casing Depth Unit
+     */
+    well_casing_depth_unit?: string;
+    /**
+     * Well Casing Materials
+     */
+    well_casing_materials?: Array<CasingMaterial>;
+    /**
+     * Well Construction Notes
+     */
+    well_construction_notes?: string | null;
+};
 
 /**
  * WellScreenResponse
  * Response schema for well screen details.
  */
 export type WellScreenResponse = {
-  /**
-   * Id
-   */
-  id: number
-  /**
-   * Created At
-   */
-  created_at: string
-  release_status: ReleaseStatus
-  /**
-   * Thing Id
-   */
-  thing_id: number
-  thing: WellResponse
-  /**
-   * Screen Depth Bottom
-   */
-  screen_depth_bottom: number
-  /**
-   * Screen Depth Bottom Unit
-   */
-  screen_depth_bottom_unit?: string
-  /**
-   * Screen Depth Top
-   */
-  screen_depth_top: number
-  /**
-   * Screen Depth Top Unit
-   */
-  screen_depth_top_unit?: string
-  /**
-   * Screen Type
-   */
-  screen_type?: string | null
-  /**
-   * Screen Description
-   */
-  screen_description?: string | null
-}
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    thing: WellResponse;
+    /**
+     * Screen Depth Bottom
+     */
+    screen_depth_bottom: number;
+    /**
+     * Screen Depth Bottom Unit
+     */
+    screen_depth_bottom_unit?: string;
+    /**
+     * Screen Depth Top
+     */
+    screen_depth_top: number;
+    /**
+     * Screen Depth Top Unit
+     */
+    screen_depth_top_unit?: string;
+    /**
+     * Screen Type
+     */
+    screen_type?: string | null;
+    /**
+     * Screen Description
+     */
+    screen_description?: string | null;
+};
+
+/**
+ * activity_type
+ */
+export type ActivityType = 'groundwater level' | 'water chemistry';
 
 /**
  * address_type
  */
-export type AddressType =
-  | 'Primary'
-  | 'Work'
-  | 'Personal'
-  | 'Mailing'
-  | 'Physical'
+export type AddressType = 'Primary' | 'Work' | 'Personal' | 'Mailing' | 'Physical';
 
 /**
  * casing_material
  */
-export type CasingMaterial = 'PVC' | 'Steel' | 'Concrete'
+export type CasingMaterial = 'PVC' | 'Steel' | 'Concrete';
 
 /**
  * contact_type
  */
-export type ContactType = 'Primary' | 'Secondary' | 'Field Event Participant'
+export type ContactType = 'Primary' | 'Secondary' | 'Field Event Participant';
 
 /**
  * coordinate_method
  */
-export type CoordinateMethod =
-  | 'Unknown'
-  | 'Differentially corrected GPS'
-  | 'Survey-grade global positioning system (SGPS)'
-  | 'GPS, uncorrected'
-  | 'Interpolated from map'
-  | 'Interpolated from DEM'
-  | 'Reported'
-  | 'Transit, theodolite, or other survey method'
+export type CoordinateMethod = 'Unknown' | 'Differentially corrected GPS' | 'Survey-grade global positioning system (SGPS)' | 'GPS, uncorrected' | 'Interpolated from map' | 'Interpolated from DEM' | 'Reported' | 'Transit, theodolite, or other survey method';
 
 /**
  * elevation_method
  */
-export type ElevationMethod =
-  | 'Altimeter'
-  | 'Differentially corrected GPS'
-  | 'Survey-grade GPS'
-  | 'Global positioning system (GPS)'
-  | 'LiDAR DEM'
-  | 'Level or other survey method'
-  | 'Interpolated from topographic map'
-  | 'Interpolated from digital elevation model (DEM)'
-  | 'Reported'
-  | 'Survey-grade Global Navigation Satellite Sys, Lvl1'
-  | 'USGS National Elevation Dataset (NED)'
-  | 'Unknown'
+export type ElevationMethod = 'Altimeter' | 'Differentially corrected GPS' | 'Survey-grade GPS' | 'Global positioning system (GPS)' | 'LiDAR DEM' | 'Level or other survey method' | 'Interpolated from topographic map' | 'Interpolated from digital elevation model (DEM)' | 'Reported' | 'Survey-grade Global Navigation Satellite Sys, Lvl1' | 'USGS National Elevation Dataset (NED)' | 'Unknown';
 
 /**
  * email_type
  */
-export type EmailType = 'Primary' | 'Work' | 'Personal'
+export type EmailType = 'Primary' | 'Work' | 'Personal';
+
+/**
+ * parameter_name
+ */
+export type ParameterName = 'groundwater level' | 'temperature' | 'pH' | 'Alkalinity, Total' | 'Alkalinity as CaCO3' | 'Alkalinity as OH-' | 'Calcium' | 'Calcium, total, unfiltered' | 'Chloride' | 'Carbonate' | 'Conductivity, laboratory' | 'Bicarbonate' | 'Hardness (CaCO3)' | 'Ion Balance' | 'Potassium' | 'Potassium, total, unfiltered' | 'Magnesium' | 'Magnesium, total, unfiltered' | 'Sodium' | 'Sodium, total, unfiltered' | 'Sodium and Potassium combined' | 'Sulfate' | 'Total Anions' | 'Total Cations' | 'Total Dissolved Solids' | 'Tritium' | 'Age of Water using dissolved gases' | 'Silver' | 'Silver, total, unfiltered' | 'Aluminum' | 'Aluminum, total, unfiltered' | 'Arsenic' | 'Arsenic, total, unfiltered' | 'Boron' | 'Boron, total, unfiltered' | 'Barium' | 'Barium, total, unfiltered' | 'Beryllium' | 'Beryllium, total, unfiltered' | 'Bromide' | '13C:12C ratio' | '14C content, pmc' | 'Uncorrected C14 age' | 'Cadmium' | 'Cadmium, total, unfiltered' | 'Chlorofluorocarbon-11 avg age' | 'Chlorofluorocarbon-113 avg age' | 'Chlorofluorocarbon-113/12 avg RATIO age' | 'Chlorofluorocarbon-12 avg age' | 'Cobalt' | 'Cobalt, total, unfiltered' | 'Chromium' | 'Chromium, total, unfiltered' | 'Copper' | 'Copper, total, unfiltered' | 'delta O18 sulfate' | 'Sulfate 34 isotope ratio' | 'Fluoride' | 'Iron' | 'Iron, total, unfiltered' | 'Deuterium:Hydrogen ratio' | 'Mercury' | 'Mercury, total, unfiltered' | 'Lithium' | 'Lithium, total, unfiltered' | 'Manganese' | 'Manganese, total, unfiltered' | 'Molybdenum' | 'Molybdenum, total, unfiltered' | 'Nickel' | 'Nickel, total, unfiltered' | 'Nitrite (as NO2)' | 'Nitrite (as N)' | 'Nitrate (as NO3)' | 'Nitrate (as N)' | '18O:16O ratio' | 'Lead' | 'Lead, total, unfiltered' | 'Phosphate' | 'Antimony' | 'Antimony, total, unfiltered' | 'Selenium' | 'Selenium, total, unfiltered' | 'Sulfur hexafluoride' | 'Silicon' | 'Silicon, total, unfiltered' | 'Silica' | 'Tin' | 'Tin, total, unfiltered' | 'Strontium' | 'Strontium, total, unfiltered' | 'Strontium 87:86 ratio' | 'Thorium' | 'Thorium, total, unfiltered' | 'Titanium' | 'Titanium, total, unfiltered' | 'Thallium' | 'Thallium, total, unfiltered' | 'Uranium (total, by ICP-MS)' | 'Uranium, total, unfiltered' | 'Vanadium' | 'Vanadium, total, unfiltered' | 'Zinc' | 'Zinc, total, unfiltered' | 'Corrected C14 in years' | 'Arsenite (arsenic species)' | 'Arsenate (arsenic species)' | 'Cyanide' | 'Estimated recharge temperature' | 'Hydrogen sulfide' | 'Ammonia' | 'Ammonium' | 'Total nitrogen' | 'Total Kjeldahl nitrogen' | 'Dissolved organic carbon' | 'Total organic carbon' | 'delta C13 of dissolved inorganic carbon';
+
+/**
+ * parameter_type
+ */
+export type ParameterType = 'Field Parameter' | 'Metal' | 'Radionuclide' | 'Major Element' | 'Minor Element' | 'Physical property';
 
 /**
  * phone_type
  */
-export type PhoneType = 'Primary' | 'Work' | 'Home' | 'Mobile'
+export type PhoneType = 'Primary' | 'Work' | 'Home' | 'Mobile';
+
+/**
+ * publication_type
+ */
+export type PublicationType = 'Map' | 'Report' | 'Dataset' | 'Model' | 'Software' | 'Paper' | 'Thesis' | 'Book' | 'Conference' | 'Webpage';
 
 /**
  * qc_type
  */
-export type QcType =
-  | 'Normal'
-  | 'Duplicate'
-  | 'Split'
-  | 'Field Blank'
-  | 'Trip Blank'
-  | 'Equipment Blank'
+export type QcType = 'Normal' | 'Duplicate' | 'Split' | 'Field Blank' | 'Trip Blank' | 'Equipment Blank';
 
 /**
  * release_status
  */
-export type ReleaseStatus =
-  | 'draft'
-  | 'provisional'
-  | 'final'
-  | 'published'
-  | 'archived'
-  | 'public'
-  | 'private'
+export type ReleaseStatus = 'draft' | 'provisional' | 'final' | 'published' | 'archived' | 'public' | 'private';
 
 /**
  * role
  */
-export type Role =
-  | 'Unknown'
-  | 'Owner'
-  | 'Manager'
-  | 'Operator'
-  | 'Driller'
-  | 'Geologist'
-  | 'Hydrologist'
-  | 'Hydrogeologist'
-  | 'Engineer'
-  | 'Organization'
-  | 'Specialist'
-  | 'Technician'
-  | 'Research Assistant'
-  | 'Research Scientist'
-  | 'Graduate Student'
-  | 'Biologist'
-  | 'Lab Manager'
-  | 'Publications Manager'
-  | 'Software Developer'
+export type Role = 'Unknown' | 'Owner' | 'Manager' | 'Operator' | 'Driller' | 'Geologist' | 'Hydrologist' | 'Hydrogeologist' | 'Engineer' | 'Organization' | 'Specialist' | 'Technician' | 'Research Assistant' | 'Research Scientist' | 'Graduate Student' | 'Biologist' | 'Lab Manager' | 'Publications Manager' | 'Software Developer';
 
 /**
  * sample_matrix
  */
-export type SampleMatrix = 'water' | 'groundwater' | 'soil'
+export type SampleMatrix = 'water' | 'groundwater' | 'soil';
 
 /**
  * sample_method
  */
-export type SampleMethod =
-  | 'Unknown'
-  | 'Airline measurement'
-  | 'Analog or graphic recorder'
-  | 'Calibrated airline measurement'
-  | 'Differential GPS; especially applicable to surface expression of ground water'
-  | 'Estimated'
-  | 'Transducer'
-  | 'Pressure-gage measurement'
-  | 'Calibrated pressure-gage measurement'
-  | 'Interpreted from geophysical logs'
-  | 'Manometer'
-  | 'Non-recording gage'
-  | 'Observed (required for F, N, and W water level status)'
-  | 'Sonic water level meter (acoustic pulse)'
-  | 'Reported, method not known'
-  | 'Steel-tape measurement'
-  | 'Electric tape measurement (E-probe)'
-  | 'Unknown (for legacy data only; not for new data entry)'
-  | 'Calibrated electric tape; accuracy of equipment has been checked'
-  | 'Calibrated electric cable'
-  | 'Uncalibrated electric cable'
-  | 'Continuous acoustic sounder'
-  | 'Measurement not attempted'
-  | 'null placeholder'
-  | 'bailer'
-  | 'faucet at well head'
-  | 'faucet or outlet at house'
-  | 'grab sample'
-  | 'pump'
-  | 'thief sampler'
+export type SampleMethod = 'Unknown' | 'Airline measurement' | 'Analog or graphic recorder' | 'Calibrated airline measurement' | 'Differential GPS; especially applicable to surface expression of ground water' | 'Estimated' | 'Transducer' | 'Pressure-gage measurement' | 'Calibrated pressure-gage measurement' | 'Interpreted from geophysical logs' | 'Manometer' | 'Non-recording gage' | 'Observed (required for F, N, and W water level status)' | 'Sonic water level meter (acoustic pulse)' | 'Reported, method not known' | 'Steel-tape measurement' | 'Electric tape measurement (E-probe)' | 'Unknown (for legacy data only; not for new data entry)' | 'Calibrated electric tape; accuracy of equipment has been checked' | 'Calibrated electric cable' | 'Uncalibrated electric cable' | 'Continuous acoustic sounder' | 'Measurement not attempted' | 'null placeholder' | 'bailer' | 'faucet at well head' | 'faucet or outlet at house' | 'grab sample' | 'pump' | 'thief sampler';
+
+/**
+ * sensor_type
+ */
+export type SensorType = 'Pressure Transducer' | 'Data Logger' | 'Barometer' | 'Acoustic Sounder' | 'Precip Collector' | 'Camera' | 'Soil Moisture Sensor' | 'Tipping Bucket';
 
 /**
  * spring_type
  */
-export type SpringType =
-  | 'Artesian'
-  | 'Ephemeral'
-  | 'Perennial'
-  | 'Thermal'
-  | 'Mineral'
+export type SpringType = 'Artesian' | 'Ephemeral' | 'Perennial' | 'Thermal' | 'Mineral';
+
+/**
+ * unit
+ */
+export type Unit = 'dimensionless' | 'ft' | 'ftbgs' | 'F' | 'mg/L' | 'mW/m²' | 'W/m²' | 'W/m·K' | 'm²/s' | 'deg C' | 'deg second' | 'deg minute' | 'second' | 'minute' | 'hour';
 
 /**
  * well_purpose
  */
-export type WellPurpose =
-  | 'Unknown'
-  | 'Open, unequipped well'
-  | 'Commercial'
-  | 'Domestic'
-  | 'Power generation'
-  | 'Irrigation'
-  | 'Livestock'
-  | 'Mining'
-  | 'Industrial'
-  | 'Observation'
-  | 'Public supply'
-  | 'Shared domestic'
-  | 'Institutional'
-  | 'Unused'
-  | 'Exploration'
-  | 'Monitoring'
-  | 'Production'
-  | 'Injection'
+export type WellPurpose = 'Unknown' | 'Open, unequipped well' | 'Commercial' | 'Domestic' | 'Power generation' | 'Irrigation' | 'Livestock' | 'Mining' | 'Industrial' | 'Observation' | 'Public supply' | 'Shared domestic' | 'Institutional' | 'Unused' | 'Exploration' | 'Monitoring' | 'Production' | 'Injection';
 
 export type UploadAssetAssetUploadPostData = {
-  body: BodyUploadAssetAssetUploadPost
-  path?: never
-  query?: {
-    /**
-     * Client
-     */
-    client?: unknown
-  }
-  url: '/asset/upload'
-}
+    body: BodyUploadAssetAssetUploadPost;
+    path?: never;
+    query?: {
+        /**
+         * Client
+         */
+        client?: unknown;
+    };
+    url: '/asset/upload';
+};
 
 export type UploadAssetAssetUploadPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UploadAssetAssetUploadPostError =
-  UploadAssetAssetUploadPostErrors[keyof UploadAssetAssetUploadPostErrors]
+export type UploadAssetAssetUploadPostError = UploadAssetAssetUploadPostErrors[keyof UploadAssetAssetUploadPostErrors];
 
 export type UploadAssetAssetUploadPostResponses = {
-  /**
-   * Response Upload Asset Asset Upload Post
-   * Successful Response
-   */
-  201: {
-    [key: string]: unknown
-  }
-}
+    /**
+     * Response Upload Asset Asset Upload Post
+     * Successful Response
+     */
+    201: {
+        [key: string]: unknown;
+    };
+};
 
-export type UploadAssetAssetUploadPostResponse =
-  UploadAssetAssetUploadPostResponses[keyof UploadAssetAssetUploadPostResponses]
+export type UploadAssetAssetUploadPostResponse = UploadAssetAssetUploadPostResponses[keyof UploadAssetAssetUploadPostResponses];
 
 export type ListAssetsAssetGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Thing Id
-     */
-    thing_id?: number
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/asset'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Thing Id
+         */
+        thing_id?: number;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/asset';
+};
 
 export type ListAssetsAssetGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type ListAssetsAssetGetError =
-  ListAssetsAssetGetErrors[keyof ListAssetsAssetGetErrors]
+export type ListAssetsAssetGetError = ListAssetsAssetGetErrors[keyof ListAssetsAssetGetErrors];
 
 export type ListAssetsAssetGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageAssetResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageAssetResponse;
+};
 
-export type ListAssetsAssetGetResponse =
-  ListAssetsAssetGetResponses[keyof ListAssetsAssetGetResponses]
+export type ListAssetsAssetGetResponse = ListAssetsAssetGetResponses[keyof ListAssetsAssetGetResponses];
 
 export type AddAssetAssetPostData = {
-  body: CreateAsset
-  path?: never
-  query?: never
-  url: '/asset'
-}
+    body: CreateAsset;
+    path?: never;
+    query?: never;
+    url: '/asset';
+};
 
 export type AddAssetAssetPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type AddAssetAssetPostError =
-  AddAssetAssetPostErrors[keyof AddAssetAssetPostErrors]
+export type AddAssetAssetPostError = AddAssetAssetPostErrors[keyof AddAssetAssetPostErrors];
 
 export type AddAssetAssetPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: AssetResponse
-}
+    /**
+     * Successful Response
+     */
+    201: AssetResponse;
+};
 
-export type AddAssetAssetPostResponse =
-  AddAssetAssetPostResponses[keyof AddAssetAssetPostResponses]
+export type AddAssetAssetPostResponse = AddAssetAssetPostResponses[keyof AddAssetAssetPostResponses];
 
 export type DeleteAssetAssetAssetIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Asset Id
-     */
-    asset_id: number
-  }
-  query?: never
-  url: '/asset/{asset_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Asset Id
+         */
+        asset_id: number;
+    };
+    query?: never;
+    url: '/asset/{asset_id}';
+};
 
 export type DeleteAssetAssetAssetIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteAssetAssetAssetIdDeleteError =
-  DeleteAssetAssetAssetIdDeleteErrors[keyof DeleteAssetAssetAssetIdDeleteErrors]
+export type DeleteAssetAssetAssetIdDeleteError = DeleteAssetAssetAssetIdDeleteErrors[keyof DeleteAssetAssetAssetIdDeleteErrors];
 
 export type DeleteAssetAssetAssetIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void
-}
+    /**
+     * Successful Response
+     */
+    204: void;
+};
 
-export type DeleteAssetAssetAssetIdDeleteResponse =
-  DeleteAssetAssetAssetIdDeleteResponses[keyof DeleteAssetAssetAssetIdDeleteResponses]
+export type DeleteAssetAssetAssetIdDeleteResponse = DeleteAssetAssetAssetIdDeleteResponses[keyof DeleteAssetAssetAssetIdDeleteResponses];
 
 export type GetAssetAssetAssetIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Asset Id
-     */
-    asset_id: number
-  }
-  query?: {
-    /**
-     * Client
-     */
-    client?: unknown
-  }
-  url: '/asset/{asset_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Asset Id
+         */
+        asset_id: number;
+    };
+    query?: {
+        /**
+         * Client
+         */
+        client?: unknown;
+    };
+    url: '/asset/{asset_id}';
+};
 
 export type GetAssetAssetAssetIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetAssetAssetAssetIdGetError =
-  GetAssetAssetAssetIdGetErrors[keyof GetAssetAssetAssetIdGetErrors]
+export type GetAssetAssetAssetIdGetError = GetAssetAssetAssetIdGetErrors[keyof GetAssetAssetAssetIdGetErrors];
 
 export type GetAssetAssetAssetIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: AssetResponse
-}
+    /**
+     * Successful Response
+     */
+    200: AssetResponse;
+};
 
-export type GetAssetAssetAssetIdGetResponse =
-  GetAssetAssetAssetIdGetResponses[keyof GetAssetAssetAssetIdGetResponses]
+export type GetAssetAssetAssetIdGetResponse = GetAssetAssetAssetIdGetResponses[keyof GetAssetAssetAssetIdGetResponses];
 
 export type UpdateAssetAssetAssetIdPatchData = {
-  body: UpdateAsset
-  path: {
-    /**
-     * Asset Id
-     */
-    asset_id: number
-  }
-  query?: never
-  url: '/asset/{asset_id}'
-}
+    body: UpdateAsset;
+    path: {
+        /**
+         * Asset Id
+         */
+        asset_id: number;
+    };
+    query?: never;
+    url: '/asset/{asset_id}';
+};
 
 export type UpdateAssetAssetAssetIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateAssetAssetAssetIdPatchError =
-  UpdateAssetAssetAssetIdPatchErrors[keyof UpdateAssetAssetAssetIdPatchErrors]
+export type UpdateAssetAssetAssetIdPatchError = UpdateAssetAssetAssetIdPatchErrors[keyof UpdateAssetAssetAssetIdPatchErrors];
 
 export type UpdateAssetAssetAssetIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown
-}
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type RemoveAssetAssetAssetIdRemoveDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Asset Id
-     */
-    asset_id: number
-  }
-  query?: {
-    /**
-     * Client
-     */
-    client?: unknown
-  }
-  url: '/asset/{asset_id}/remove'
-}
+    body?: never;
+    path: {
+        /**
+         * Asset Id
+         */
+        asset_id: number;
+    };
+    query?: {
+        /**
+         * Client
+         */
+        client?: unknown;
+    };
+    url: '/asset/{asset_id}/remove';
+};
 
 export type RemoveAssetAssetAssetIdRemoveDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type RemoveAssetAssetAssetIdRemoveDeleteError =
-  RemoveAssetAssetAssetIdRemoveDeleteErrors[keyof RemoveAssetAssetAssetIdRemoveDeleteErrors]
+export type RemoveAssetAssetAssetIdRemoveDeleteError = RemoveAssetAssetAssetIdRemoveDeleteErrors[keyof RemoveAssetAssetAssetIdRemoveDeleteErrors];
 
 export type RemoveAssetAssetAssetIdRemoveDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void
-}
+    /**
+     * Successful Response
+     */
+    204: void;
+};
 
-export type RemoveAssetAssetAssetIdRemoveDeleteResponse =
-  RemoveAssetAssetAssetIdRemoveDeleteResponses[keyof RemoveAssetAssetAssetIdRemoveDeleteResponses]
+export type RemoveAssetAssetAssetIdRemoveDeleteResponse = RemoveAssetAssetAssetIdRemoveDeleteResponses[keyof RemoveAssetAssetAssetIdRemoveDeleteResponses];
 
 export type GetAuthorPublicationsAuthorAuthorIdPublicationsGetData = {
-  body?: never
-  path: {
-    /**
-     * Author Id
-     */
-    author_id: number
-  }
-  query?: never
-  url: '/author/{author_id}/publications'
-}
+    body?: never;
+    path: {
+        /**
+         * Author Id
+         */
+        author_id: number;
+    };
+    query?: never;
+    url: '/author/{author_id}/publications';
+};
 
 export type GetAuthorPublicationsAuthorAuthorIdPublicationsGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetAuthorPublicationsAuthorAuthorIdPublicationsGetError =
-  GetAuthorPublicationsAuthorAuthorIdPublicationsGetErrors[keyof GetAuthorPublicationsAuthorAuthorIdPublicationsGetErrors]
+export type GetAuthorPublicationsAuthorAuthorIdPublicationsGetError = GetAuthorPublicationsAuthorAuthorIdPublicationsGetErrors[keyof GetAuthorPublicationsAuthorAuthorIdPublicationsGetErrors];
 
 export type GetAuthorPublicationsAuthorAuthorIdPublicationsGetResponses = {
-  /**
-   * Response Get Author Publications Author  Author Id  Publications Get
-   * Successful Response
-   */
-  200: Array<PublicationResponse>
-}
+    /**
+     * Response Get Author Publications Author  Author Id  Publications Get
+     * Successful Response
+     */
+    200: Array<PublicationResponse>;
+};
 
-export type GetAuthorPublicationsAuthorAuthorIdPublicationsGetResponse =
-  GetAuthorPublicationsAuthorAuthorIdPublicationsGetResponses[keyof GetAuthorPublicationsAuthorAuthorIdPublicationsGetResponses]
+export type GetAuthorPublicationsAuthorAuthorIdPublicationsGetResponse = GetAuthorPublicationsAuthorAuthorIdPublicationsGetResponses[keyof GetAuthorPublicationsAuthorAuthorIdPublicationsGetResponses];
 
 export type GetContactsContactGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Sort
-     */
-    sort?: string
-    /**
-     * Order
-     */
-    order?: string
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Thing Id
-     */
-    thing_id?: number | null
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/contact'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Sort
+         */
+        sort?: string;
+        /**
+         * Order
+         */
+        order?: string;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Thing Id
+         */
+        thing_id?: number | null;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/contact';
+};
 
 export type GetContactsContactGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetContactsContactGetError =
-  GetContactsContactGetErrors[keyof GetContactsContactGetErrors]
+export type GetContactsContactGetError = GetContactsContactGetErrors[keyof GetContactsContactGetErrors];
 
 export type GetContactsContactGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageContactResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageContactResponse;
+};
 
-export type GetContactsContactGetResponse =
-  GetContactsContactGetResponses[keyof GetContactsContactGetResponses]
+export type GetContactsContactGetResponse = GetContactsContactGetResponses[keyof GetContactsContactGetResponses];
 
 export type CreateContactContactPostData = {
-  body: CreateContact
-  path?: never
-  query?: never
-  url: '/contact'
-}
+    body: CreateContact;
+    path?: never;
+    query?: never;
+    url: '/contact';
+};
 
 export type CreateContactContactPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type CreateContactContactPostError =
-  CreateContactContactPostErrors[keyof CreateContactContactPostErrors]
+export type CreateContactContactPostError = CreateContactContactPostErrors[keyof CreateContactContactPostErrors];
 
 export type CreateContactContactPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: ContactResponse
-}
+    /**
+     * Successful Response
+     */
+    201: ContactResponse;
+};
 
-export type CreateContactContactPostResponse =
-  CreateContactContactPostResponses[keyof CreateContactContactPostResponses]
+export type CreateContactContactPostResponse = CreateContactContactPostResponses[keyof CreateContactContactPostResponses];
 
 export type GetAddressesContactAddressGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/contact/address'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/contact/address';
+};
 
 export type GetAddressesContactAddressGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetAddressesContactAddressGetError =
-  GetAddressesContactAddressGetErrors[keyof GetAddressesContactAddressGetErrors]
+export type GetAddressesContactAddressGetError = GetAddressesContactAddressGetErrors[keyof GetAddressesContactAddressGetErrors];
 
 export type GetAddressesContactAddressGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageAddressResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageAddressResponse;
+};
 
-export type GetAddressesContactAddressGetResponse =
-  GetAddressesContactAddressGetResponses[keyof GetAddressesContactAddressGetResponses]
+export type GetAddressesContactAddressGetResponse = GetAddressesContactAddressGetResponses[keyof GetAddressesContactAddressGetResponses];
 
 export type CreateAddressContactAddressPostData = {
-  body: CreateAddress
-  path?: never
-  query?: never
-  url: '/contact/address'
-}
+    body: CreateAddress;
+    path?: never;
+    query?: never;
+    url: '/contact/address';
+};
 
 export type CreateAddressContactAddressPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type CreateAddressContactAddressPostError =
-  CreateAddressContactAddressPostErrors[keyof CreateAddressContactAddressPostErrors]
+export type CreateAddressContactAddressPostError = CreateAddressContactAddressPostErrors[keyof CreateAddressContactAddressPostErrors];
 
 export type CreateAddressContactAddressPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: AddressResponse
-}
+    /**
+     * Successful Response
+     */
+    201: AddressResponse;
+};
 
-export type CreateAddressContactAddressPostResponse =
-  CreateAddressContactAddressPostResponses[keyof CreateAddressContactAddressPostResponses]
+export type CreateAddressContactAddressPostResponse = CreateAddressContactAddressPostResponses[keyof CreateAddressContactAddressPostResponses];
 
 export type GetEmailsContactEmailGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/contact/email'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/contact/email';
+};
 
 export type GetEmailsContactEmailGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetEmailsContactEmailGetError =
-  GetEmailsContactEmailGetErrors[keyof GetEmailsContactEmailGetErrors]
+export type GetEmailsContactEmailGetError = GetEmailsContactEmailGetErrors[keyof GetEmailsContactEmailGetErrors];
 
 export type GetEmailsContactEmailGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageEmailResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageEmailResponse;
+};
 
-export type GetEmailsContactEmailGetResponse =
-  GetEmailsContactEmailGetResponses[keyof GetEmailsContactEmailGetResponses]
+export type GetEmailsContactEmailGetResponse = GetEmailsContactEmailGetResponses[keyof GetEmailsContactEmailGetResponses];
 
 export type CreateEmailContactEmailPostData = {
-  body: CreateEmail
-  path?: never
-  query?: never
-  url: '/contact/email'
-}
+    body: CreateEmail;
+    path?: never;
+    query?: never;
+    url: '/contact/email';
+};
 
 export type CreateEmailContactEmailPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type CreateEmailContactEmailPostError =
-  CreateEmailContactEmailPostErrors[keyof CreateEmailContactEmailPostErrors]
+export type CreateEmailContactEmailPostError = CreateEmailContactEmailPostErrors[keyof CreateEmailContactEmailPostErrors];
 
 export type CreateEmailContactEmailPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: EmailResponse
-}
+    /**
+     * Successful Response
+     */
+    201: EmailResponse;
+};
 
-export type CreateEmailContactEmailPostResponse =
-  CreateEmailContactEmailPostResponses[keyof CreateEmailContactEmailPostResponses]
+export type CreateEmailContactEmailPostResponse = CreateEmailContactEmailPostResponses[keyof CreateEmailContactEmailPostResponses];
 
 export type GetPhonesContactPhoneGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/contact/phone'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/contact/phone';
+};
 
 export type GetPhonesContactPhoneGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetPhonesContactPhoneGetError =
-  GetPhonesContactPhoneGetErrors[keyof GetPhonesContactPhoneGetErrors]
+export type GetPhonesContactPhoneGetError = GetPhonesContactPhoneGetErrors[keyof GetPhonesContactPhoneGetErrors];
 
 export type GetPhonesContactPhoneGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PagePhoneResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PagePhoneResponse;
+};
 
-export type GetPhonesContactPhoneGetResponse =
-  GetPhonesContactPhoneGetResponses[keyof GetPhonesContactPhoneGetResponses]
+export type GetPhonesContactPhoneGetResponse = GetPhonesContactPhoneGetResponses[keyof GetPhonesContactPhoneGetResponses];
 
 export type CreatePhoneContactPhonePostData = {
-  body: CreatePhone
-  path?: never
-  query?: never
-  url: '/contact/phone'
-}
+    body: CreatePhone;
+    path?: never;
+    query?: never;
+    url: '/contact/phone';
+};
 
 export type CreatePhoneContactPhonePostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type CreatePhoneContactPhonePostError =
-  CreatePhoneContactPhonePostErrors[keyof CreatePhoneContactPhonePostErrors]
+export type CreatePhoneContactPhonePostError = CreatePhoneContactPhonePostErrors[keyof CreatePhoneContactPhonePostErrors];
 
 export type CreatePhoneContactPhonePostResponses = {
-  /**
-   * Successful Response
-   */
-  201: PhoneResponse
-}
+    /**
+     * Successful Response
+     */
+    201: PhoneResponse;
+};
 
-export type CreatePhoneContactPhonePostResponse =
-  CreatePhoneContactPhonePostResponses[keyof CreatePhoneContactPhonePostResponses]
+export type CreatePhoneContactPhonePostResponse = CreatePhoneContactPhonePostResponses[keyof CreatePhoneContactPhonePostResponses];
 
 export type DeleteContactEmailContactEmailEmailIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Email Id
-     */
-    email_id: number
-  }
-  query?: never
-  url: '/contact/email/{email_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Email Id
+         */
+        email_id: number;
+    };
+    query?: never;
+    url: '/contact/email/{email_id}';
+};
 
 export type DeleteContactEmailContactEmailEmailIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteContactEmailContactEmailEmailIdDeleteError =
-  DeleteContactEmailContactEmailEmailIdDeleteErrors[keyof DeleteContactEmailContactEmailEmailIdDeleteErrors]
+export type DeleteContactEmailContactEmailEmailIdDeleteError = DeleteContactEmailContactEmailEmailIdDeleteErrors[keyof DeleteContactEmailContactEmailEmailIdDeleteErrors];
 
 export type DeleteContactEmailContactEmailEmailIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown
-}
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type GetEmailByIdContactEmailEmailIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Email Id
-     */
-    email_id: number
-  }
-  query?: never
-  url: '/contact/email/{email_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Email Id
+         */
+        email_id: number;
+    };
+    query?: never;
+    url: '/contact/email/{email_id}';
+};
 
 export type GetEmailByIdContactEmailEmailIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetEmailByIdContactEmailEmailIdGetError =
-  GetEmailByIdContactEmailEmailIdGetErrors[keyof GetEmailByIdContactEmailEmailIdGetErrors]
+export type GetEmailByIdContactEmailEmailIdGetError = GetEmailByIdContactEmailEmailIdGetErrors[keyof GetEmailByIdContactEmailEmailIdGetErrors];
 
 export type GetEmailByIdContactEmailEmailIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: EmailResponse
-}
+    /**
+     * Successful Response
+     */
+    200: EmailResponse;
+};
 
-export type GetEmailByIdContactEmailEmailIdGetResponse =
-  GetEmailByIdContactEmailEmailIdGetResponses[keyof GetEmailByIdContactEmailEmailIdGetResponses]
+export type GetEmailByIdContactEmailEmailIdGetResponse = GetEmailByIdContactEmailEmailIdGetResponses[keyof GetEmailByIdContactEmailEmailIdGetResponses];
 
 export type UpdateContactEmailContactEmailEmailIdPatchData = {
-  body: UpdateEmail
-  path: {
-    /**
-     * Email Id
-     */
-    email_id: number
-  }
-  query?: never
-  url: '/contact/email/{email_id}'
-}
+    body: UpdateEmail;
+    path: {
+        /**
+         * Email Id
+         */
+        email_id: number;
+    };
+    query?: never;
+    url: '/contact/email/{email_id}';
+};
 
 export type UpdateContactEmailContactEmailEmailIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateContactEmailContactEmailEmailIdPatchError =
-  UpdateContactEmailContactEmailEmailIdPatchErrors[keyof UpdateContactEmailContactEmailEmailIdPatchErrors]
+export type UpdateContactEmailContactEmailEmailIdPatchError = UpdateContactEmailContactEmailEmailIdPatchErrors[keyof UpdateContactEmailContactEmailEmailIdPatchErrors];
 
 export type UpdateContactEmailContactEmailEmailIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: EmailResponse
-}
+    /**
+     * Successful Response
+     */
+    200: EmailResponse;
+};
 
-export type UpdateContactEmailContactEmailEmailIdPatchResponse =
-  UpdateContactEmailContactEmailEmailIdPatchResponses[keyof UpdateContactEmailContactEmailEmailIdPatchResponses]
+export type UpdateContactEmailContactEmailEmailIdPatchResponse = UpdateContactEmailContactEmailEmailIdPatchResponses[keyof UpdateContactEmailContactEmailEmailIdPatchResponses];
 
 export type DeleteContactPhoneContactPhonePhoneIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Phone Id
-     */
-    phone_id: number
-  }
-  query?: never
-  url: '/contact/phone/{phone_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Phone Id
+         */
+        phone_id: number;
+    };
+    query?: never;
+    url: '/contact/phone/{phone_id}';
+};
 
 export type DeleteContactPhoneContactPhonePhoneIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteContactPhoneContactPhonePhoneIdDeleteError =
-  DeleteContactPhoneContactPhonePhoneIdDeleteErrors[keyof DeleteContactPhoneContactPhonePhoneIdDeleteErrors]
+export type DeleteContactPhoneContactPhonePhoneIdDeleteError = DeleteContactPhoneContactPhonePhoneIdDeleteErrors[keyof DeleteContactPhoneContactPhonePhoneIdDeleteErrors];
 
 export type DeleteContactPhoneContactPhonePhoneIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown
-}
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type GetPhoneByIdContactPhonePhoneIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Phone Id
-     */
-    phone_id: number
-  }
-  query?: never
-  url: '/contact/phone/{phone_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Phone Id
+         */
+        phone_id: number;
+    };
+    query?: never;
+    url: '/contact/phone/{phone_id}';
+};
 
 export type GetPhoneByIdContactPhonePhoneIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetPhoneByIdContactPhonePhoneIdGetError =
-  GetPhoneByIdContactPhonePhoneIdGetErrors[keyof GetPhoneByIdContactPhonePhoneIdGetErrors]
+export type GetPhoneByIdContactPhonePhoneIdGetError = GetPhoneByIdContactPhonePhoneIdGetErrors[keyof GetPhoneByIdContactPhonePhoneIdGetErrors];
 
 export type GetPhoneByIdContactPhonePhoneIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PhoneResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PhoneResponse;
+};
 
-export type GetPhoneByIdContactPhonePhoneIdGetResponse =
-  GetPhoneByIdContactPhonePhoneIdGetResponses[keyof GetPhoneByIdContactPhonePhoneIdGetResponses]
+export type GetPhoneByIdContactPhonePhoneIdGetResponse = GetPhoneByIdContactPhonePhoneIdGetResponses[keyof GetPhoneByIdContactPhonePhoneIdGetResponses];
 
 export type UpdateContactPhoneContactPhonePhoneIdPatchData = {
-  body: UpdatePhone
-  path: {
-    /**
-     * Phone Id
-     */
-    phone_id: number
-  }
-  query?: never
-  url: '/contact/phone/{phone_id}'
-}
+    body: UpdatePhone;
+    path: {
+        /**
+         * Phone Id
+         */
+        phone_id: number;
+    };
+    query?: never;
+    url: '/contact/phone/{phone_id}';
+};
 
 export type UpdateContactPhoneContactPhonePhoneIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateContactPhoneContactPhonePhoneIdPatchError =
-  UpdateContactPhoneContactPhonePhoneIdPatchErrors[keyof UpdateContactPhoneContactPhonePhoneIdPatchErrors]
+export type UpdateContactPhoneContactPhonePhoneIdPatchError = UpdateContactPhoneContactPhonePhoneIdPatchErrors[keyof UpdateContactPhoneContactPhonePhoneIdPatchErrors];
 
 export type UpdateContactPhoneContactPhonePhoneIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: PhoneResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PhoneResponse;
+};
 
-export type UpdateContactPhoneContactPhonePhoneIdPatchResponse =
-  UpdateContactPhoneContactPhonePhoneIdPatchResponses[keyof UpdateContactPhoneContactPhonePhoneIdPatchResponses]
+export type UpdateContactPhoneContactPhonePhoneIdPatchResponse = UpdateContactPhoneContactPhonePhoneIdPatchResponses[keyof UpdateContactPhoneContactPhonePhoneIdPatchResponses];
 
 export type DeleteContactAddressContactAddressAddressIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Address Id
-     */
-    address_id: number
-  }
-  query?: never
-  url: '/contact/address/{address_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Address Id
+         */
+        address_id: number;
+    };
+    query?: never;
+    url: '/contact/address/{address_id}';
+};
 
 export type DeleteContactAddressContactAddressAddressIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteContactAddressContactAddressAddressIdDeleteError =
-  DeleteContactAddressContactAddressAddressIdDeleteErrors[keyof DeleteContactAddressContactAddressAddressIdDeleteErrors]
+export type DeleteContactAddressContactAddressAddressIdDeleteError = DeleteContactAddressContactAddressAddressIdDeleteErrors[keyof DeleteContactAddressContactAddressAddressIdDeleteErrors];
 
 export type DeleteContactAddressContactAddressAddressIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown
-}
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type GetAddressByIdContactAddressAddressIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Address Id
-     */
-    address_id: number
-  }
-  query?: never
-  url: '/contact/address/{address_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Address Id
+         */
+        address_id: number;
+    };
+    query?: never;
+    url: '/contact/address/{address_id}';
+};
 
 export type GetAddressByIdContactAddressAddressIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetAddressByIdContactAddressAddressIdGetError =
-  GetAddressByIdContactAddressAddressIdGetErrors[keyof GetAddressByIdContactAddressAddressIdGetErrors]
+export type GetAddressByIdContactAddressAddressIdGetError = GetAddressByIdContactAddressAddressIdGetErrors[keyof GetAddressByIdContactAddressAddressIdGetErrors];
 
 export type GetAddressByIdContactAddressAddressIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: AddressResponse
-}
+    /**
+     * Successful Response
+     */
+    200: AddressResponse;
+};
 
-export type GetAddressByIdContactAddressAddressIdGetResponse =
-  GetAddressByIdContactAddressAddressIdGetResponses[keyof GetAddressByIdContactAddressAddressIdGetResponses]
+export type GetAddressByIdContactAddressAddressIdGetResponse = GetAddressByIdContactAddressAddressIdGetResponses[keyof GetAddressByIdContactAddressAddressIdGetResponses];
 
 export type UpdateContactAddressContactAddressAddressIdPatchData = {
-  body: UpdateAddress
-  path: {
-    /**
-     * Address Id
-     */
-    address_id: number
-  }
-  query?: never
-  url: '/contact/address/{address_id}'
-}
+    body: UpdateAddress;
+    path: {
+        /**
+         * Address Id
+         */
+        address_id: number;
+    };
+    query?: never;
+    url: '/contact/address/{address_id}';
+};
 
 export type UpdateContactAddressContactAddressAddressIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateContactAddressContactAddressAddressIdPatchError =
-  UpdateContactAddressContactAddressAddressIdPatchErrors[keyof UpdateContactAddressContactAddressAddressIdPatchErrors]
+export type UpdateContactAddressContactAddressAddressIdPatchError = UpdateContactAddressContactAddressAddressIdPatchErrors[keyof UpdateContactAddressContactAddressAddressIdPatchErrors];
 
 export type UpdateContactAddressContactAddressAddressIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: AddressResponse
-}
+    /**
+     * Successful Response
+     */
+    200: AddressResponse;
+};
 
-export type UpdateContactAddressContactAddressAddressIdPatchResponse =
-  UpdateContactAddressContactAddressAddressIdPatchResponses[keyof UpdateContactAddressContactAddressAddressIdPatchResponses]
+export type UpdateContactAddressContactAddressAddressIdPatchResponse = UpdateContactAddressContactAddressAddressIdPatchResponses[keyof UpdateContactAddressContactAddressAddressIdPatchResponses];
 
 export type DeleteContactContactContactIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Contact Id
-     */
-    contact_id: number
-  }
-  query?: never
-  url: '/contact/{contact_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Contact Id
+         */
+        contact_id: number;
+    };
+    query?: never;
+    url: '/contact/{contact_id}';
+};
 
 export type DeleteContactContactContactIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteContactContactContactIdDeleteError =
-  DeleteContactContactContactIdDeleteErrors[keyof DeleteContactContactContactIdDeleteErrors]
+export type DeleteContactContactContactIdDeleteError = DeleteContactContactContactIdDeleteErrors[keyof DeleteContactContactContactIdDeleteErrors];
 
 export type DeleteContactContactContactIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown
-}
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type GetContactByIdContactContactIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Contact Id
-     */
-    contact_id: number
-  }
-  query?: never
-  url: '/contact/{contact_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Contact Id
+         */
+        contact_id: number;
+    };
+    query?: never;
+    url: '/contact/{contact_id}';
+};
 
 export type GetContactByIdContactContactIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetContactByIdContactContactIdGetError =
-  GetContactByIdContactContactIdGetErrors[keyof GetContactByIdContactContactIdGetErrors]
+export type GetContactByIdContactContactIdGetError = GetContactByIdContactContactIdGetErrors[keyof GetContactByIdContactContactIdGetErrors];
 
 export type GetContactByIdContactContactIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: ContactResponse
-}
+    /**
+     * Successful Response
+     */
+    200: ContactResponse;
+};
 
-export type GetContactByIdContactContactIdGetResponse =
-  GetContactByIdContactContactIdGetResponses[keyof GetContactByIdContactContactIdGetResponses]
+export type GetContactByIdContactContactIdGetResponse = GetContactByIdContactContactIdGetResponses[keyof GetContactByIdContactContactIdGetResponses];
 
 export type UpdateContactContactContactIdPatchData = {
-  body: UpdateContact
-  path: {
-    /**
-     * Contact Id
-     */
-    contact_id: number
-  }
-  query?: never
-  url: '/contact/{contact_id}'
-}
+    body: UpdateContact;
+    path: {
+        /**
+         * Contact Id
+         */
+        contact_id: number;
+    };
+    query?: never;
+    url: '/contact/{contact_id}';
+};
 
 export type UpdateContactContactContactIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateContactContactContactIdPatchError =
-  UpdateContactContactContactIdPatchErrors[keyof UpdateContactContactContactIdPatchErrors]
+export type UpdateContactContactContactIdPatchError = UpdateContactContactContactIdPatchErrors[keyof UpdateContactContactContactIdPatchErrors];
 
 export type UpdateContactContactContactIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: ContactResponse
-}
+    /**
+     * Successful Response
+     */
+    200: ContactResponse;
+};
 
-export type UpdateContactContactContactIdPatchResponse =
-  UpdateContactContactContactIdPatchResponses[keyof UpdateContactContactContactIdPatchResponses]
+export type UpdateContactContactContactIdPatchResponse = UpdateContactContactContactIdPatchResponses[keyof UpdateContactContactContactIdPatchResponses];
 
 export type GetContactEmailsContactContactIdEmailGetData = {
-  body?: never
-  path: {
-    /**
-     * Contact Id
-     */
-    contact_id: number
-  }
-  query?: {
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/contact/{contact_id}/email'
-}
+    body?: never;
+    path: {
+        /**
+         * Contact Id
+         */
+        contact_id: number;
+    };
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/contact/{contact_id}/email';
+};
 
 export type GetContactEmailsContactContactIdEmailGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetContactEmailsContactContactIdEmailGetError =
-  GetContactEmailsContactContactIdEmailGetErrors[keyof GetContactEmailsContactContactIdEmailGetErrors]
+export type GetContactEmailsContactContactIdEmailGetError = GetContactEmailsContactContactIdEmailGetErrors[keyof GetContactEmailsContactContactIdEmailGetErrors];
 
 export type GetContactEmailsContactContactIdEmailGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageEmailResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageEmailResponse;
+};
 
-export type GetContactEmailsContactContactIdEmailGetResponse =
-  GetContactEmailsContactContactIdEmailGetResponses[keyof GetContactEmailsContactContactIdEmailGetResponses]
+export type GetContactEmailsContactContactIdEmailGetResponse = GetContactEmailsContactContactIdEmailGetResponses[keyof GetContactEmailsContactContactIdEmailGetResponses];
 
 export type GetContactPhonesContactContactIdPhoneGetData = {
-  body?: never
-  path: {
-    /**
-     * Contact Id
-     */
-    contact_id: number
-  }
-  query?: {
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/contact/{contact_id}/phone'
-}
+    body?: never;
+    path: {
+        /**
+         * Contact Id
+         */
+        contact_id: number;
+    };
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/contact/{contact_id}/phone';
+};
 
 export type GetContactPhonesContactContactIdPhoneGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetContactPhonesContactContactIdPhoneGetError =
-  GetContactPhonesContactContactIdPhoneGetErrors[keyof GetContactPhonesContactContactIdPhoneGetErrors]
+export type GetContactPhonesContactContactIdPhoneGetError = GetContactPhonesContactContactIdPhoneGetErrors[keyof GetContactPhonesContactContactIdPhoneGetErrors];
 
 export type GetContactPhonesContactContactIdPhoneGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PagePhoneResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PagePhoneResponse;
+};
 
-export type GetContactPhonesContactContactIdPhoneGetResponse =
-  GetContactPhonesContactContactIdPhoneGetResponses[keyof GetContactPhonesContactContactIdPhoneGetResponses]
+export type GetContactPhonesContactContactIdPhoneGetResponse = GetContactPhonesContactContactIdPhoneGetResponses[keyof GetContactPhonesContactContactIdPhoneGetResponses];
 
 export type GetContactAddressesContactContactIdAddressGetData = {
-  body?: never
-  path: {
-    /**
-     * Contact Id
-     */
-    contact_id: number
-  }
-  query?: {
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/contact/{contact_id}/address'
-}
+    body?: never;
+    path: {
+        /**
+         * Contact Id
+         */
+        contact_id: number;
+    };
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/contact/{contact_id}/address';
+};
 
 export type GetContactAddressesContactContactIdAddressGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetContactAddressesContactContactIdAddressGetError =
-  GetContactAddressesContactContactIdAddressGetErrors[keyof GetContactAddressesContactContactIdAddressGetErrors]
+export type GetContactAddressesContactContactIdAddressGetError = GetContactAddressesContactContactIdAddressGetErrors[keyof GetContactAddressesContactContactIdAddressGetErrors];
 
 export type GetContactAddressesContactContactIdAddressGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageAddressResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageAddressResponse;
+};
 
-export type GetContactAddressesContactContactIdAddressGetResponse =
-  GetContactAddressesContactContactIdAddressGetResponses[keyof GetContactAddressesContactContactIdAddressGetResponses]
+export type GetContactAddressesContactContactIdAddressGetResponse = GetContactAddressesContactContactIdAddressGetResponses[keyof GetContactAddressesContactContactIdAddressGetResponses];
 
 export type GetGeospatialGeospatialGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * thing_type
-     */
-    thing_type?: Array<string>
-    /**
-     * group
-     */
-    group?: string | number
-    /**
-     * format
-     * Format of the response. 'geojson' for GeoJSON FeatureCollection, 'shapefile' for a shapefile.
-     */
-    format?: string
-  }
-  url: '/geospatial'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * thing_type
+         */
+        thing_type?: Array<string>;
+        /**
+         * group
+         */
+        group?: string | number;
+        /**
+         * format
+         * Format of the response. 'geojson' for GeoJSON FeatureCollection, 'shapefile' for a shapefile.
+         */
+        format?: string;
+    };
+    url: '/geospatial';
+};
 
 export type GetGeospatialGeospatialGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetGeospatialGeospatialGetError =
-  GetGeospatialGeospatialGetErrors[keyof GetGeospatialGeospatialGetErrors]
+export type GetGeospatialGeospatialGetError = GetGeospatialGeospatialGetErrors[keyof GetGeospatialGeospatialGetErrors];
 
 export type GetGeospatialGeospatialGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown
-}
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type GetProjectAreaGeospatialProjectAreaGroupIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Group Id
-     */
-    group_id: number
-  }
-  query?: never
-  url: '/geospatial/project-area/{group_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: number;
+    };
+    query?: never;
+    url: '/geospatial/project-area/{group_id}';
+};
 
 export type GetProjectAreaGeospatialProjectAreaGroupIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetProjectAreaGeospatialProjectAreaGroupIdGetError =
-  GetProjectAreaGeospatialProjectAreaGroupIdGetErrors[keyof GetProjectAreaGeospatialProjectAreaGroupIdGetErrors]
+export type GetProjectAreaGeospatialProjectAreaGroupIdGetError = GetProjectAreaGeospatialProjectAreaGroupIdGetErrors[keyof GetProjectAreaGeospatialProjectAreaGroupIdGetErrors];
 
 export type GetProjectAreaGeospatialProjectAreaGroupIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: FeatureCollectionResponse
-}
+    /**
+     * Successful Response
+     */
+    200: FeatureCollectionResponse;
+};
 
-export type GetProjectAreaGeospatialProjectAreaGroupIdGetResponse =
-  GetProjectAreaGeospatialProjectAreaGroupIdGetResponses[keyof GetProjectAreaGeospatialProjectAreaGroupIdGetResponses]
+export type GetProjectAreaGeospatialProjectAreaGroupIdGetResponse = GetProjectAreaGeospatialProjectAreaGroupIdGetResponses[keyof GetProjectAreaGeospatialProjectAreaGroupIdGetResponses];
 
 export type GetGroupsGroupGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/group'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/group';
+};
 
 export type GetGroupsGroupGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetGroupsGroupGetError =
-  GetGroupsGroupGetErrors[keyof GetGroupsGroupGetErrors]
+export type GetGroupsGroupGetError = GetGroupsGroupGetErrors[keyof GetGroupsGroupGetErrors];
 
 export type GetGroupsGroupGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageGroupResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageGroupResponse;
+};
 
-export type GetGroupsGroupGetResponse =
-  GetGroupsGroupGetResponses[keyof GetGroupsGroupGetResponses]
+export type GetGroupsGroupGetResponse = GetGroupsGroupGetResponses[keyof GetGroupsGroupGetResponses];
 
 export type CreateGroupGroupPostData = {
-  body: CreateGroup
-  path?: never
-  query?: never
-  url: '/group'
-}
+    body: CreateGroup;
+    path?: never;
+    query?: never;
+    url: '/group';
+};
 
 export type CreateGroupGroupPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type CreateGroupGroupPostError =
-  CreateGroupGroupPostErrors[keyof CreateGroupGroupPostErrors]
+export type CreateGroupGroupPostError = CreateGroupGroupPostErrors[keyof CreateGroupGroupPostErrors];
 
 export type CreateGroupGroupPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: GroupResponse
-}
+    /**
+     * Successful Response
+     */
+    201: GroupResponse;
+};
 
-export type CreateGroupGroupPostResponse =
-  CreateGroupGroupPostResponses[keyof CreateGroupGroupPostResponses]
+export type CreateGroupGroupPostResponse = CreateGroupGroupPostResponses[keyof CreateGroupGroupPostResponses];
 
 export type DeleteGroupGroupGroupIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Group Id
-     */
-    group_id: number
-  }
-  query?: never
-  url: '/group/{group_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: number;
+    };
+    query?: never;
+    url: '/group/{group_id}';
+};
 
 export type DeleteGroupGroupGroupIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteGroupGroupGroupIdDeleteError =
-  DeleteGroupGroupGroupIdDeleteErrors[keyof DeleteGroupGroupGroupIdDeleteErrors]
+export type DeleteGroupGroupGroupIdDeleteError = DeleteGroupGroupGroupIdDeleteErrors[keyof DeleteGroupGroupGroupIdDeleteErrors];
 
 export type DeleteGroupGroupGroupIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void
-}
+    /**
+     * Successful Response
+     */
+    204: void;
+};
 
-export type DeleteGroupGroupGroupIdDeleteResponse =
-  DeleteGroupGroupGroupIdDeleteResponses[keyof DeleteGroupGroupGroupIdDeleteResponses]
+export type DeleteGroupGroupGroupIdDeleteResponse = DeleteGroupGroupGroupIdDeleteResponses[keyof DeleteGroupGroupGroupIdDeleteResponses];
 
 export type GetGroupByIdGroupGroupIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Group Id
-     */
-    group_id: number
-  }
-  query?: never
-  url: '/group/{group_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: number;
+    };
+    query?: never;
+    url: '/group/{group_id}';
+};
 
 export type GetGroupByIdGroupGroupIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetGroupByIdGroupGroupIdGetError =
-  GetGroupByIdGroupGroupIdGetErrors[keyof GetGroupByIdGroupGroupIdGetErrors]
+export type GetGroupByIdGroupGroupIdGetError = GetGroupByIdGroupGroupIdGetErrors[keyof GetGroupByIdGroupGroupIdGetErrors];
 
 export type GetGroupByIdGroupGroupIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: GroupResponse
-}
+    /**
+     * Successful Response
+     */
+    200: GroupResponse;
+};
 
-export type GetGroupByIdGroupGroupIdGetResponse =
-  GetGroupByIdGroupGroupIdGetResponses[keyof GetGroupByIdGroupGroupIdGetResponses]
+export type GetGroupByIdGroupGroupIdGetResponse = GetGroupByIdGroupGroupIdGetResponses[keyof GetGroupByIdGroupGroupIdGetResponses];
 
 export type UpdateGroupGroupGroupIdPatchData = {
-  body: UpdateGroup
-  path: {
-    /**
-     * Group Id
-     */
-    group_id: number
-  }
-  query?: never
-  url: '/group/{group_id}'
-}
+    body: UpdateGroup;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: number;
+    };
+    query?: never;
+    url: '/group/{group_id}';
+};
 
 export type UpdateGroupGroupGroupIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateGroupGroupGroupIdPatchError =
-  UpdateGroupGroupGroupIdPatchErrors[keyof UpdateGroupGroupGroupIdPatchErrors]
+export type UpdateGroupGroupGroupIdPatchError = UpdateGroupGroupGroupIdPatchErrors[keyof UpdateGroupGroupGroupIdPatchErrors];
 
 export type UpdateGroupGroupGroupIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: GroupResponse
-}
+    /**
+     * Successful Response
+     */
+    200: GroupResponse;
+};
 
-export type UpdateGroupGroupGroupIdPatchResponse =
-  UpdateGroupGroupGroupIdPatchResponses[keyof UpdateGroupGroupGroupIdPatchResponses]
+export type UpdateGroupGroupGroupIdPatchResponse = UpdateGroupGroupGroupIdPatchResponses[keyof UpdateGroupGroupGroupIdPatchResponses];
 
 export type GetLexiconCategoriesLexiconCategoryGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Sort
-     */
-    sort?: string
-    /**
-     * Order
-     */
-    order?: string
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/lexicon/category'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Sort
+         */
+        sort?: string;
+        /**
+         * Order
+         */
+        order?: string;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/lexicon/category';
+};
 
 export type GetLexiconCategoriesLexiconCategoryGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetLexiconCategoriesLexiconCategoryGetError =
-  GetLexiconCategoriesLexiconCategoryGetErrors[keyof GetLexiconCategoriesLexiconCategoryGetErrors]
+export type GetLexiconCategoriesLexiconCategoryGetError = GetLexiconCategoriesLexiconCategoryGetErrors[keyof GetLexiconCategoriesLexiconCategoryGetErrors];
 
 export type GetLexiconCategoriesLexiconCategoryGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageLexiconCategoryResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageLexiconCategoryResponse;
+};
 
-export type GetLexiconCategoriesLexiconCategoryGetResponse =
-  GetLexiconCategoriesLexiconCategoryGetResponses[keyof GetLexiconCategoriesLexiconCategoryGetResponses]
+export type GetLexiconCategoriesLexiconCategoryGetResponse = GetLexiconCategoriesLexiconCategoryGetResponses[keyof GetLexiconCategoriesLexiconCategoryGetResponses];
 
 export type AddCategoryLexiconCategoryPostData = {
-  body: CreateLexiconCategory
-  path?: never
-  query?: never
-  url: '/lexicon/category'
-}
+    body: CreateLexiconCategory;
+    path?: never;
+    query?: never;
+    url: '/lexicon/category';
+};
 
 export type AddCategoryLexiconCategoryPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type AddCategoryLexiconCategoryPostError =
-  AddCategoryLexiconCategoryPostErrors[keyof AddCategoryLexiconCategoryPostErrors]
+export type AddCategoryLexiconCategoryPostError = AddCategoryLexiconCategoryPostErrors[keyof AddCategoryLexiconCategoryPostErrors];
 
 export type AddCategoryLexiconCategoryPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: LexiconCategoryResponse
-}
+    /**
+     * Successful Response
+     */
+    201: LexiconCategoryResponse;
+};
 
-export type AddCategoryLexiconCategoryPostResponse =
-  AddCategoryLexiconCategoryPostResponses[keyof AddCategoryLexiconCategoryPostResponses]
+export type AddCategoryLexiconCategoryPostResponse = AddCategoryLexiconCategoryPostResponses[keyof AddCategoryLexiconCategoryPostResponses];
 
 export type GetLexiconTermsLexiconTermGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Category
-     */
-    category?: string | null
-    /**
-     * Term
-     */
-    term?: string | null
-    /**
-     * Sort
-     */
-    sort?: string
-    /**
-     * Order
-     */
-    order?: string
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/lexicon/term'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Category
+         */
+        category?: string | null;
+        /**
+         * Term
+         */
+        term?: string | null;
+        /**
+         * Sort
+         */
+        sort?: string;
+        /**
+         * Order
+         */
+        order?: string;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/lexicon/term';
+};
 
 export type GetLexiconTermsLexiconTermGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetLexiconTermsLexiconTermGetError =
-  GetLexiconTermsLexiconTermGetErrors[keyof GetLexiconTermsLexiconTermGetErrors]
+export type GetLexiconTermsLexiconTermGetError = GetLexiconTermsLexiconTermGetErrors[keyof GetLexiconTermsLexiconTermGetErrors];
 
 export type GetLexiconTermsLexiconTermGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageLexiconTermResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageLexiconTermResponse;
+};
 
-export type GetLexiconTermsLexiconTermGetResponse =
-  GetLexiconTermsLexiconTermGetResponses[keyof GetLexiconTermsLexiconTermGetResponses]
+export type GetLexiconTermsLexiconTermGetResponse = GetLexiconTermsLexiconTermGetResponses[keyof GetLexiconTermsLexiconTermGetResponses];
 
 export type AddTermLexiconTermPostData = {
-  body: CreateLexiconTerm
-  path?: never
-  query?: never
-  url: '/lexicon/term'
-}
+    body: CreateLexiconTerm;
+    path?: never;
+    query?: never;
+    url: '/lexicon/term';
+};
 
 export type AddTermLexiconTermPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type AddTermLexiconTermPostError =
-  AddTermLexiconTermPostErrors[keyof AddTermLexiconTermPostErrors]
+export type AddTermLexiconTermPostError = AddTermLexiconTermPostErrors[keyof AddTermLexiconTermPostErrors];
 
 export type AddTermLexiconTermPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: LexiconTermResponse
-}
+    /**
+     * Successful Response
+     */
+    201: LexiconTermResponse;
+};
 
-export type AddTermLexiconTermPostResponse =
-  AddTermLexiconTermPostResponses[keyof AddTermLexiconTermPostResponses]
+export type AddTermLexiconTermPostResponse = AddTermLexiconTermPostResponses[keyof AddTermLexiconTermPostResponses];
 
 export type GetLexiconTriplesLexiconTripleGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Sort
-     */
-    sort?: string
-    /**
-     * Order
-     */
-    order?: string
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/lexicon/triple'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Sort
+         */
+        sort?: string;
+        /**
+         * Order
+         */
+        order?: string;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/lexicon/triple';
+};
 
 export type GetLexiconTriplesLexiconTripleGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetLexiconTriplesLexiconTripleGetError =
-  GetLexiconTriplesLexiconTripleGetErrors[keyof GetLexiconTriplesLexiconTripleGetErrors]
+export type GetLexiconTriplesLexiconTripleGetError = GetLexiconTriplesLexiconTripleGetErrors[keyof GetLexiconTriplesLexiconTripleGetErrors];
 
 export type GetLexiconTriplesLexiconTripleGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageLexiconTripleResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageLexiconTripleResponse;
+};
 
-export type GetLexiconTriplesLexiconTripleGetResponse =
-  GetLexiconTriplesLexiconTripleGetResponses[keyof GetLexiconTriplesLexiconTripleGetResponses]
+export type GetLexiconTriplesLexiconTripleGetResponse = GetLexiconTriplesLexiconTripleGetResponses[keyof GetLexiconTriplesLexiconTripleGetResponses];
 
 export type AddTripleLexiconTriplePostData = {
-  body: CreateLexiconTriple
-  path?: never
-  query?: never
-  url: '/lexicon/triple'
-}
+    body: CreateLexiconTriple;
+    path?: never;
+    query?: never;
+    url: '/lexicon/triple';
+};
 
 export type AddTripleLexiconTriplePostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type AddTripleLexiconTriplePostError =
-  AddTripleLexiconTriplePostErrors[keyof AddTripleLexiconTriplePostErrors]
+export type AddTripleLexiconTriplePostError = AddTripleLexiconTriplePostErrors[keyof AddTripleLexiconTriplePostErrors];
 
 export type AddTripleLexiconTriplePostResponses = {
-  /**
-   * Successful Response
-   */
-  201: LexiconTripleResponse
-}
+    /**
+     * Successful Response
+     */
+    201: LexiconTripleResponse;
+};
 
-export type AddTripleLexiconTriplePostResponse =
-  AddTripleLexiconTriplePostResponses[keyof AddTripleLexiconTriplePostResponses]
+export type AddTripleLexiconTriplePostResponse = AddTripleLexiconTriplePostResponses[keyof AddTripleLexiconTriplePostResponses];
 
 export type DeleteLexiconTermLexiconTermTermIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Term Id
-     */
-    term_id: number
-  }
-  query?: never
-  url: '/lexicon/term/{term_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Term Id
+         */
+        term_id: number;
+    };
+    query?: never;
+    url: '/lexicon/term/{term_id}';
+};
 
 export type DeleteLexiconTermLexiconTermTermIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteLexiconTermLexiconTermTermIdDeleteError =
-  DeleteLexiconTermLexiconTermTermIdDeleteErrors[keyof DeleteLexiconTermLexiconTermTermIdDeleteErrors]
+export type DeleteLexiconTermLexiconTermTermIdDeleteError = DeleteLexiconTermLexiconTermTermIdDeleteErrors[keyof DeleteLexiconTermLexiconTermTermIdDeleteErrors];
 
 export type DeleteLexiconTermLexiconTermTermIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void
-}
+    /**
+     * Successful Response
+     */
+    204: void;
+};
 
-export type DeleteLexiconTermLexiconTermTermIdDeleteResponse =
-  DeleteLexiconTermLexiconTermTermIdDeleteResponses[keyof DeleteLexiconTermLexiconTermTermIdDeleteResponses]
+export type DeleteLexiconTermLexiconTermTermIdDeleteResponse = DeleteLexiconTermLexiconTermTermIdDeleteResponses[keyof DeleteLexiconTermLexiconTermTermIdDeleteResponses];
 
 export type GetLexiconTermLexiconTermTermIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Term Id
-     */
-    term_id: number
-  }
-  query?: never
-  url: '/lexicon/term/{term_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Term Id
+         */
+        term_id: number;
+    };
+    query?: never;
+    url: '/lexicon/term/{term_id}';
+};
 
 export type GetLexiconTermLexiconTermTermIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetLexiconTermLexiconTermTermIdGetError =
-  GetLexiconTermLexiconTermTermIdGetErrors[keyof GetLexiconTermLexiconTermTermIdGetErrors]
+export type GetLexiconTermLexiconTermTermIdGetError = GetLexiconTermLexiconTermTermIdGetErrors[keyof GetLexiconTermLexiconTermTermIdGetErrors];
 
 export type GetLexiconTermLexiconTermTermIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: LexiconTermResponse
-}
+    /**
+     * Successful Response
+     */
+    200: LexiconTermResponse;
+};
 
-export type GetLexiconTermLexiconTermTermIdGetResponse =
-  GetLexiconTermLexiconTermTermIdGetResponses[keyof GetLexiconTermLexiconTermTermIdGetResponses]
+export type GetLexiconTermLexiconTermTermIdGetResponse = GetLexiconTermLexiconTermTermIdGetResponses[keyof GetLexiconTermLexiconTermTermIdGetResponses];
 
 export type UpdateLexiconTermLexiconTermTermIdPatchData = {
-  body: UpdateLexiconTerm
-  path: {
-    /**
-     * Term Id
-     */
-    term_id: number
-  }
-  query?: never
-  url: '/lexicon/term/{term_id}'
-}
+    body: UpdateLexiconTerm;
+    path: {
+        /**
+         * Term Id
+         */
+        term_id: number;
+    };
+    query?: never;
+    url: '/lexicon/term/{term_id}';
+};
 
 export type UpdateLexiconTermLexiconTermTermIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateLexiconTermLexiconTermTermIdPatchError =
-  UpdateLexiconTermLexiconTermTermIdPatchErrors[keyof UpdateLexiconTermLexiconTermTermIdPatchErrors]
+export type UpdateLexiconTermLexiconTermTermIdPatchError = UpdateLexiconTermLexiconTermTermIdPatchErrors[keyof UpdateLexiconTermLexiconTermTermIdPatchErrors];
 
 export type UpdateLexiconTermLexiconTermTermIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: LexiconTermResponse
-}
+    /**
+     * Successful Response
+     */
+    200: LexiconTermResponse;
+};
 
-export type UpdateLexiconTermLexiconTermTermIdPatchResponse =
-  UpdateLexiconTermLexiconTermTermIdPatchResponses[keyof UpdateLexiconTermLexiconTermTermIdPatchResponses]
+export type UpdateLexiconTermLexiconTermTermIdPatchResponse = UpdateLexiconTermLexiconTermTermIdPatchResponses[keyof UpdateLexiconTermLexiconTermTermIdPatchResponses];
 
 export type DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Category Id
-     */
-    category_id: number
-  }
-  query?: never
-  url: '/lexicon/category/{category_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: number;
+    };
+    query?: never;
+    url: '/lexicon/category/{category_id}';
+};
 
 export type DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteError =
-  DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteErrors[keyof DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteErrors]
+export type DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteError = DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteErrors[keyof DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteErrors];
 
 export type DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void
-}
+    /**
+     * Successful Response
+     */
+    204: void;
+};
 
-export type DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteResponse =
-  DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteResponses[keyof DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteResponses]
+export type DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteResponse = DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteResponses[keyof DeleteLexiconCategoryLexiconCategoryCategoryIdDeleteResponses];
 
 export type GetLexiconCategoryLexiconCategoryCategoryIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Category Id
-     */
-    category_id: number
-  }
-  query?: never
-  url: '/lexicon/category/{category_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: number;
+    };
+    query?: never;
+    url: '/lexicon/category/{category_id}';
+};
 
 export type GetLexiconCategoryLexiconCategoryCategoryIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetLexiconCategoryLexiconCategoryCategoryIdGetError =
-  GetLexiconCategoryLexiconCategoryCategoryIdGetErrors[keyof GetLexiconCategoryLexiconCategoryCategoryIdGetErrors]
+export type GetLexiconCategoryLexiconCategoryCategoryIdGetError = GetLexiconCategoryLexiconCategoryCategoryIdGetErrors[keyof GetLexiconCategoryLexiconCategoryCategoryIdGetErrors];
 
 export type GetLexiconCategoryLexiconCategoryCategoryIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: LexiconCategoryResponse
-}
+    /**
+     * Successful Response
+     */
+    200: LexiconCategoryResponse;
+};
 
-export type GetLexiconCategoryLexiconCategoryCategoryIdGetResponse =
-  GetLexiconCategoryLexiconCategoryCategoryIdGetResponses[keyof GetLexiconCategoryLexiconCategoryCategoryIdGetResponses]
+export type GetLexiconCategoryLexiconCategoryCategoryIdGetResponse = GetLexiconCategoryLexiconCategoryCategoryIdGetResponses[keyof GetLexiconCategoryLexiconCategoryCategoryIdGetResponses];
 
 export type UpdateLexiconCategoryLexiconCategoryCategoryIdPatchData = {
-  body: UpdateLexiconCategory
-  path: {
-    /**
-     * Category Id
-     */
-    category_id: number
-  }
-  query?: never
-  url: '/lexicon/category/{category_id}'
-}
+    body: UpdateLexiconCategory;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: number;
+    };
+    query?: never;
+    url: '/lexicon/category/{category_id}';
+};
 
 export type UpdateLexiconCategoryLexiconCategoryCategoryIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateLexiconCategoryLexiconCategoryCategoryIdPatchError =
-  UpdateLexiconCategoryLexiconCategoryCategoryIdPatchErrors[keyof UpdateLexiconCategoryLexiconCategoryCategoryIdPatchErrors]
+export type UpdateLexiconCategoryLexiconCategoryCategoryIdPatchError = UpdateLexiconCategoryLexiconCategoryCategoryIdPatchErrors[keyof UpdateLexiconCategoryLexiconCategoryCategoryIdPatchErrors];
 
 export type UpdateLexiconCategoryLexiconCategoryCategoryIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: LexiconCategoryResponse
-}
+    /**
+     * Successful Response
+     */
+    200: LexiconCategoryResponse;
+};
 
-export type UpdateLexiconCategoryLexiconCategoryCategoryIdPatchResponse =
-  UpdateLexiconCategoryLexiconCategoryCategoryIdPatchResponses[keyof UpdateLexiconCategoryLexiconCategoryCategoryIdPatchResponses]
+export type UpdateLexiconCategoryLexiconCategoryCategoryIdPatchResponse = UpdateLexiconCategoryLexiconCategoryCategoryIdPatchResponses[keyof UpdateLexiconCategoryLexiconCategoryCategoryIdPatchResponses];
 
 export type DeleteLexiconTripleLexiconTripleTripleIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Triple Id
-     */
-    triple_id: number
-  }
-  query?: never
-  url: '/lexicon/triple/{triple_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Triple Id
+         */
+        triple_id: number;
+    };
+    query?: never;
+    url: '/lexicon/triple/{triple_id}';
+};
 
 export type DeleteLexiconTripleLexiconTripleTripleIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteLexiconTripleLexiconTripleTripleIdDeleteError =
-  DeleteLexiconTripleLexiconTripleTripleIdDeleteErrors[keyof DeleteLexiconTripleLexiconTripleTripleIdDeleteErrors]
+export type DeleteLexiconTripleLexiconTripleTripleIdDeleteError = DeleteLexiconTripleLexiconTripleTripleIdDeleteErrors[keyof DeleteLexiconTripleLexiconTripleTripleIdDeleteErrors];
 
 export type DeleteLexiconTripleLexiconTripleTripleIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void
-}
+    /**
+     * Successful Response
+     */
+    204: void;
+};
 
-export type DeleteLexiconTripleLexiconTripleTripleIdDeleteResponse =
-  DeleteLexiconTripleLexiconTripleTripleIdDeleteResponses[keyof DeleteLexiconTripleLexiconTripleTripleIdDeleteResponses]
+export type DeleteLexiconTripleLexiconTripleTripleIdDeleteResponse = DeleteLexiconTripleLexiconTripleTripleIdDeleteResponses[keyof DeleteLexiconTripleLexiconTripleTripleIdDeleteResponses];
 
 export type GetLexiconTripleLexiconTripleTripleIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Triple Id
-     */
-    triple_id: number
-  }
-  query?: never
-  url: '/lexicon/triple/{triple_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Triple Id
+         */
+        triple_id: number;
+    };
+    query?: never;
+    url: '/lexicon/triple/{triple_id}';
+};
 
 export type GetLexiconTripleLexiconTripleTripleIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetLexiconTripleLexiconTripleTripleIdGetError =
-  GetLexiconTripleLexiconTripleTripleIdGetErrors[keyof GetLexiconTripleLexiconTripleTripleIdGetErrors]
+export type GetLexiconTripleLexiconTripleTripleIdGetError = GetLexiconTripleLexiconTripleTripleIdGetErrors[keyof GetLexiconTripleLexiconTripleTripleIdGetErrors];
 
 export type GetLexiconTripleLexiconTripleTripleIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: LexiconTripleResponse
-}
+    /**
+     * Successful Response
+     */
+    200: LexiconTripleResponse;
+};
 
-export type GetLexiconTripleLexiconTripleTripleIdGetResponse =
-  GetLexiconTripleLexiconTripleTripleIdGetResponses[keyof GetLexiconTripleLexiconTripleTripleIdGetResponses]
+export type GetLexiconTripleLexiconTripleTripleIdGetResponse = GetLexiconTripleLexiconTripleTripleIdGetResponses[keyof GetLexiconTripleLexiconTripleTripleIdGetResponses];
 
 export type UpdateLexiconTripleLexiconTripleTripleIdPatchData = {
-  body: UpdateLexiconTriple
-  path: {
-    /**
-     * Triple Id
-     */
-    triple_id: number
-  }
-  query?: never
-  url: '/lexicon/triple/{triple_id}'
-}
+    body: UpdateLexiconTriple;
+    path: {
+        /**
+         * Triple Id
+         */
+        triple_id: number;
+    };
+    query?: never;
+    url: '/lexicon/triple/{triple_id}';
+};
 
 export type UpdateLexiconTripleLexiconTripleTripleIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateLexiconTripleLexiconTripleTripleIdPatchError =
-  UpdateLexiconTripleLexiconTripleTripleIdPatchErrors[keyof UpdateLexiconTripleLexiconTripleTripleIdPatchErrors]
+export type UpdateLexiconTripleLexiconTripleTripleIdPatchError = UpdateLexiconTripleLexiconTripleTripleIdPatchErrors[keyof UpdateLexiconTripleLexiconTripleTripleIdPatchErrors];
 
 export type UpdateLexiconTripleLexiconTripleTripleIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: LexiconTripleResponse
-}
+    /**
+     * Successful Response
+     */
+    200: LexiconTripleResponse;
+};
 
-export type UpdateLexiconTripleLexiconTripleTripleIdPatchResponse =
-  UpdateLexiconTripleLexiconTripleTripleIdPatchResponses[keyof UpdateLexiconTripleLexiconTripleTripleIdPatchResponses]
+export type UpdateLexiconTripleLexiconTripleTripleIdPatchResponse = UpdateLexiconTripleLexiconTripleTripleIdPatchResponses[keyof UpdateLexiconTripleLexiconTripleTripleIdPatchResponses];
 
 export type GetLocationLocationGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Nearby Point
-     */
-    nearby_point?: string
-    /**
-     * Nearby Distance Km
-     */
-    nearby_distance_km?: number
-    /**
-     * Within
-     */
-    within?: string
-    /**
-     * Query
-     */
-    query?: string
-    /**
-     * Sort
-     */
-    sort?: string
-    /**
-     * Order
-     */
-    order?: string
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/location'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Nearby Point
+         */
+        nearby_point?: string;
+        /**
+         * Nearby Distance Km
+         */
+        nearby_distance_km?: number;
+        /**
+         * Within
+         */
+        within?: string;
+        /**
+         * Query
+         */
+        query?: string;
+        /**
+         * Sort
+         */
+        sort?: string;
+        /**
+         * Order
+         */
+        order?: string;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/location';
+};
 
 export type GetLocationLocationGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetLocationLocationGetError =
-  GetLocationLocationGetErrors[keyof GetLocationLocationGetErrors]
+export type GetLocationLocationGetError = GetLocationLocationGetErrors[keyof GetLocationLocationGetErrors];
 
 export type GetLocationLocationGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageLocationResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageLocationResponse;
+};
 
-export type GetLocationLocationGetResponse =
-  GetLocationLocationGetResponses[keyof GetLocationLocationGetResponses]
+export type GetLocationLocationGetResponse = GetLocationLocationGetResponses[keyof GetLocationLocationGetResponses];
 
 export type CreateLocationLocationPostData = {
-  body: CreateLocation
-  path?: never
-  query?: never
-  url: '/location'
-}
+    body: CreateLocation;
+    path?: never;
+    query?: never;
+    url: '/location';
+};
 
 export type CreateLocationLocationPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type CreateLocationLocationPostError =
-  CreateLocationLocationPostErrors[keyof CreateLocationLocationPostErrors]
+export type CreateLocationLocationPostError = CreateLocationLocationPostErrors[keyof CreateLocationLocationPostErrors];
 
 export type CreateLocationLocationPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: LocationResponse
-}
+    /**
+     * Successful Response
+     */
+    201: LocationResponse;
+};
 
-export type CreateLocationLocationPostResponse =
-  CreateLocationLocationPostResponses[keyof CreateLocationLocationPostResponses]
+export type CreateLocationLocationPostResponse = CreateLocationLocationPostResponses[keyof CreateLocationLocationPostResponses];
 
 export type DeleteLocationLocationLocationIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Location Id
-     */
-    location_id: number
-  }
-  query?: never
-  url: '/location/{location_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Location Id
+         */
+        location_id: number;
+    };
+    query?: never;
+    url: '/location/{location_id}';
+};
 
 export type DeleteLocationLocationLocationIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteLocationLocationLocationIdDeleteError =
-  DeleteLocationLocationLocationIdDeleteErrors[keyof DeleteLocationLocationLocationIdDeleteErrors]
+export type DeleteLocationLocationLocationIdDeleteError = DeleteLocationLocationLocationIdDeleteErrors[keyof DeleteLocationLocationLocationIdDeleteErrors];
 
 export type DeleteLocationLocationLocationIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown
-}
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type GetLocationByIdLocationLocationIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Location Id
-     */
-    location_id: number
-  }
-  query?: never
-  url: '/location/{location_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Location Id
+         */
+        location_id: number;
+    };
+    query?: never;
+    url: '/location/{location_id}';
+};
 
 export type GetLocationByIdLocationLocationIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetLocationByIdLocationLocationIdGetError =
-  GetLocationByIdLocationLocationIdGetErrors[keyof GetLocationByIdLocationLocationIdGetErrors]
+export type GetLocationByIdLocationLocationIdGetError = GetLocationByIdLocationLocationIdGetErrors[keyof GetLocationByIdLocationLocationIdGetErrors];
 
 export type GetLocationByIdLocationLocationIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: LocationResponse
-}
+    /**
+     * Successful Response
+     */
+    200: LocationResponse;
+};
 
-export type GetLocationByIdLocationLocationIdGetResponse =
-  GetLocationByIdLocationLocationIdGetResponses[keyof GetLocationByIdLocationLocationIdGetResponses]
+export type GetLocationByIdLocationLocationIdGetResponse = GetLocationByIdLocationLocationIdGetResponses[keyof GetLocationByIdLocationLocationIdGetResponses];
 
 export type UpdateLocationLocationLocationIdPatchData = {
-  body: UpdateLocation
-  path: {
-    /**
-     * Location Id
-     */
-    location_id: number
-  }
-  query?: never
-  url: '/location/{location_id}'
-}
+    body: UpdateLocation;
+    path: {
+        /**
+         * Location Id
+         */
+        location_id: number;
+    };
+    query?: never;
+    url: '/location/{location_id}';
+};
 
 export type UpdateLocationLocationLocationIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateLocationLocationLocationIdPatchError =
-  UpdateLocationLocationLocationIdPatchErrors[keyof UpdateLocationLocationLocationIdPatchErrors]
+export type UpdateLocationLocationLocationIdPatchError = UpdateLocationLocationLocationIdPatchErrors[keyof UpdateLocationLocationLocationIdPatchErrors];
 
 export type UpdateLocationLocationLocationIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: LocationResponse
-}
+    /**
+     * Successful Response
+     */
+    200: LocationResponse;
+};
 
-export type UpdateLocationLocationLocationIdPatchResponse =
-  UpdateLocationLocationLocationIdPatchResponses[keyof UpdateLocationLocationLocationIdPatchResponses]
+export type UpdateLocationLocationLocationIdPatchResponse = UpdateLocationLocationLocationIdPatchResponses[keyof UpdateLocationLocationLocationIdPatchResponses];
 
-export type GetGroundwaterLevelObservationsObservationGroundwaterLevelGetData =
-  {
-    body?: never
-    path?: never
+export type GetGroundwaterLevelObservationsObservationGroundwaterLevelGetData = {
+    body?: never;
+    path?: never;
     query?: {
-      /**
-       * Thing Id
-       */
-      thing_id?: number | null
-      /**
-       * Sensor Id
-       */
-      sensor_id?: number | null
-      /**
-       * Sample Id
-       */
-      sample_id?: number | null
-      /**
-       * Start Time
-       */
-      start_time?: string | null
-      /**
-       * End Time
-       */
-      end_time?: string | null
-      /**
-       * Sort
-       */
-      sort?: string | null
-      /**
-       * Order
-       */
-      order?: string | null
-      /**
-       * Filter
-       */
-      filter?: string
-      /**
-       * Page
-       * Page number
-       */
-      page?: number
-      /**
-       * Size
-       */
-      size?: number
-    }
-    url: '/observation/groundwater-level'
-  }
+        /**
+         * Thing Id
+         */
+        thing_id?: number | null;
+        /**
+         * Sensor Id
+         */
+        sensor_id?: number | null;
+        /**
+         * Sample Id
+         */
+        sample_id?: number | null;
+        /**
+         * Start Time
+         */
+        start_time?: string | null;
+        /**
+         * End Time
+         */
+        end_time?: string | null;
+        /**
+         * Sort
+         */
+        sort?: string | null;
+        /**
+         * Order
+         */
+        order?: string | null;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/observation/groundwater-level';
+};
 
-export type GetGroundwaterLevelObservationsObservationGroundwaterLevelGetErrors =
-  {
+export type GetGroundwaterLevelObservationsObservationGroundwaterLevelGetErrors = {
     /**
      * Validation Error
      */
-    422: HttpValidationError
-  }
+    422: HttpValidationError;
+};
 
-export type GetGroundwaterLevelObservationsObservationGroundwaterLevelGetError =
-  GetGroundwaterLevelObservationsObservationGroundwaterLevelGetErrors[keyof GetGroundwaterLevelObservationsObservationGroundwaterLevelGetErrors]
+export type GetGroundwaterLevelObservationsObservationGroundwaterLevelGetError = GetGroundwaterLevelObservationsObservationGroundwaterLevelGetErrors[keyof GetGroundwaterLevelObservationsObservationGroundwaterLevelGetErrors];
 
-export type GetGroundwaterLevelObservationsObservationGroundwaterLevelGetResponses =
-  {
+export type GetGroundwaterLevelObservationsObservationGroundwaterLevelGetResponses = {
     /**
      * Successful Response
      */
-    200: PageGroundwaterLevelObservationResponse
-  }
+    200: PageGroundwaterLevelObservationResponse;
+};
 
-export type GetGroundwaterLevelObservationsObservationGroundwaterLevelGetResponse =
-  GetGroundwaterLevelObservationsObservationGroundwaterLevelGetResponses[keyof GetGroundwaterLevelObservationsObservationGroundwaterLevelGetResponses]
+export type GetGroundwaterLevelObservationsObservationGroundwaterLevelGetResponse = GetGroundwaterLevelObservationsObservationGroundwaterLevelGetResponses[keyof GetGroundwaterLevelObservationsObservationGroundwaterLevelGetResponses];
 
-export type AddGroundwaterLevelObservationObservationGroundwaterLevelPostData =
-  {
-    body: CreateGroundwaterLevelObservation
-    path?: never
-    query?: never
-    url: '/observation/groundwater-level'
-  }
+export type AddGroundwaterLevelObservationObservationGroundwaterLevelPostData = {
+    body: CreateGroundwaterLevelObservation;
+    path?: never;
+    query?: never;
+    url: '/observation/groundwater-level';
+};
 
-export type AddGroundwaterLevelObservationObservationGroundwaterLevelPostErrors =
-  {
+export type AddGroundwaterLevelObservationObservationGroundwaterLevelPostErrors = {
     /**
      * Validation Error
      */
-    422: HttpValidationError
-  }
+    422: HttpValidationError;
+};
 
-export type AddGroundwaterLevelObservationObservationGroundwaterLevelPostError =
-  AddGroundwaterLevelObservationObservationGroundwaterLevelPostErrors[keyof AddGroundwaterLevelObservationObservationGroundwaterLevelPostErrors]
+export type AddGroundwaterLevelObservationObservationGroundwaterLevelPostError = AddGroundwaterLevelObservationObservationGroundwaterLevelPostErrors[keyof AddGroundwaterLevelObservationObservationGroundwaterLevelPostErrors];
 
-export type AddGroundwaterLevelObservationObservationGroundwaterLevelPostResponses =
-  {
+export type AddGroundwaterLevelObservationObservationGroundwaterLevelPostResponses = {
     /**
      * Successful Response
      */
-    201: GroundwaterLevelObservationResponse
-  }
+    201: GroundwaterLevelObservationResponse;
+};
 
-export type AddGroundwaterLevelObservationObservationGroundwaterLevelPostResponse =
-  AddGroundwaterLevelObservationObservationGroundwaterLevelPostResponses[keyof AddGroundwaterLevelObservationObservationGroundwaterLevelPostResponses]
+export type AddGroundwaterLevelObservationObservationGroundwaterLevelPostResponse = AddGroundwaterLevelObservationObservationGroundwaterLevelPostResponses[keyof AddGroundwaterLevelObservationObservationGroundwaterLevelPostResponses];
 
 export type GetWaterChemistryObservationsObservationWaterChemistryGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Thing Id
-     */
-    thing_id?: number | null
-    /**
-     * Sensor Id
-     */
-    sensor_id?: number | null
-    /**
-     * Sample Id
-     */
-    sample_id?: number | null
-    /**
-     * Start Time
-     */
-    start_time?: string | null
-    /**
-     * End Time
-     */
-    end_time?: string | null
-    /**
-     * Sort
-     */
-    sort?: string | null
-    /**
-     * Order
-     */
-    order?: string | null
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/observation/water-chemistry'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Thing Id
+         */
+        thing_id?: number | null;
+        /**
+         * Sensor Id
+         */
+        sensor_id?: number | null;
+        /**
+         * Sample Id
+         */
+        sample_id?: number | null;
+        /**
+         * Start Time
+         */
+        start_time?: string | null;
+        /**
+         * End Time
+         */
+        end_time?: string | null;
+        /**
+         * Sort
+         */
+        sort?: string | null;
+        /**
+         * Order
+         */
+        order?: string | null;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/observation/water-chemistry';
+};
 
 export type GetWaterChemistryObservationsObservationWaterChemistryGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetWaterChemistryObservationsObservationWaterChemistryGetError =
-  GetWaterChemistryObservationsObservationWaterChemistryGetErrors[keyof GetWaterChemistryObservationsObservationWaterChemistryGetErrors]
+export type GetWaterChemistryObservationsObservationWaterChemistryGetError = GetWaterChemistryObservationsObservationWaterChemistryGetErrors[keyof GetWaterChemistryObservationsObservationWaterChemistryGetErrors];
 
-export type GetWaterChemistryObservationsObservationWaterChemistryGetResponses =
-  {
+export type GetWaterChemistryObservationsObservationWaterChemistryGetResponses = {
     /**
      * Successful Response
      */
-    200: PageWaterChemistryObservationResponse
-  }
+    200: PageWaterChemistryObservationResponse;
+};
 
-export type GetWaterChemistryObservationsObservationWaterChemistryGetResponse =
-  GetWaterChemistryObservationsObservationWaterChemistryGetResponses[keyof GetWaterChemistryObservationsObservationWaterChemistryGetResponses]
+export type GetWaterChemistryObservationsObservationWaterChemistryGetResponse = GetWaterChemistryObservationsObservationWaterChemistryGetResponses[keyof GetWaterChemistryObservationsObservationWaterChemistryGetResponses];
 
 export type AddWaterChemistryObservationObservationWaterChemistryPostData = {
-  body: CreateWaterChemistryObservation
-  path?: never
-  query?: never
-  url: '/observation/water-chemistry'
-}
+    body: CreateWaterChemistryObservation;
+    path?: never;
+    query?: never;
+    url: '/observation/water-chemistry';
+};
 
 export type AddWaterChemistryObservationObservationWaterChemistryPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type AddWaterChemistryObservationObservationWaterChemistryPostError =
-  AddWaterChemistryObservationObservationWaterChemistryPostErrors[keyof AddWaterChemistryObservationObservationWaterChemistryPostErrors]
-
-export type AddWaterChemistryObservationObservationWaterChemistryPostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    201: WaterChemistryObservationResponse
-  }
-
-export type AddWaterChemistryObservationObservationWaterChemistryPostResponse =
-  AddWaterChemistryObservationObservationWaterChemistryPostResponses[keyof AddWaterChemistryObservationObservationWaterChemistryPostResponses]
-
-export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetData =
-  {
-    body?: never
-    path: {
-      /**
-       * Observation Id
-       */
-      observation_id: number
-    }
-    query?: never
-    url: '/observation/groundwater-level/{observation_id}'
-  }
-
-export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetErrors =
-  {
     /**
      * Validation Error
      */
-    422: HttpValidationError
-  }
+    422: HttpValidationError;
+};
 
-export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetError =
-  GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetErrors[keyof GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetErrors]
+export type AddWaterChemistryObservationObservationWaterChemistryPostError = AddWaterChemistryObservationObservationWaterChemistryPostErrors[keyof AddWaterChemistryObservationObservationWaterChemistryPostErrors];
 
-export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetResponses =
-  {
+export type AddWaterChemistryObservationObservationWaterChemistryPostResponses = {
     /**
      * Successful Response
      */
-    200: GroundwaterLevelObservationResponse
-  }
+    201: WaterChemistryObservationResponse;
+};
 
-export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetResponse =
-  GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetResponses[keyof GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetResponses]
+export type AddWaterChemistryObservationObservationWaterChemistryPostResponse = AddWaterChemistryObservationObservationWaterChemistryPostResponses[keyof AddWaterChemistryObservationObservationWaterChemistryPostResponses];
 
-export type UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchData =
-  {
-    body: UpdateGroundwaterLevelObservation
+export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetData = {
+    body?: never;
     path: {
-      /**
-       * Observation Id
-       */
-      observation_id: number
-    }
-    query?: never
-    url: '/observation/groundwater-level/{observation_id}'
-  }
+        /**
+         * Observation Id
+         */
+        observation_id: number;
+    };
+    query?: never;
+    url: '/observation/groundwater-level/{observation_id}';
+};
 
-export type UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchErrors =
-  {
+export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetErrors = {
     /**
      * Validation Error
      */
-    422: HttpValidationError
-  }
+    422: HttpValidationError;
+};
 
-export type UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchError =
-  UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchErrors[keyof UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchErrors]
+export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetError = GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetErrors[keyof GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetErrors];
 
-export type UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchResponses =
-  {
+export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetResponses = {
     /**
      * Successful Response
      */
-    200: GroundwaterLevelObservationResponse
-  }
+    200: GroundwaterLevelObservationResponse;
+};
 
-export type UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchResponse =
-  UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchResponses[keyof UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchResponses]
+export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetResponse = GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetResponses[keyof GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetResponses];
 
-export type GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetData =
-  {
-    body?: never
+export type UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchData = {
+    body: UpdateGroundwaterLevelObservation;
     path: {
-      /**
-       * Observation Id
-       */
-      observation_id: number
-    }
-    query?: never
-    url: '/observation/water-chemistry/{observation_id}'
-  }
+        /**
+         * Observation Id
+         */
+        observation_id: number;
+    };
+    query?: never;
+    url: '/observation/groundwater-level/{observation_id}';
+};
 
-export type GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetErrors =
-  {
+export type UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchErrors = {
     /**
      * Validation Error
      */
-    422: HttpValidationError
-  }
+    422: HttpValidationError;
+};
 
-export type GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetError =
-  GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetErrors[keyof GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetErrors]
+export type UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchError = UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchErrors[keyof UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchErrors];
 
-export type GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetResponses =
-  {
+export type UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchResponses = {
     /**
      * Successful Response
      */
-    200: WaterChemistryObservationResponse
-  }
+    200: GroundwaterLevelObservationResponse;
+};
 
-export type GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetResponse =
-  GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetResponses[keyof GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetResponses]
+export type UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchResponse = UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchResponses[keyof UpdateGroundwaterLevelObservationObservationGroundwaterLevelObservationIdPatchResponses];
 
-export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchData =
-  {
-    body: UpdateWaterChemistryObservation
+export type GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetData = {
+    body?: never;
     path: {
-      /**
-       * Observation Id
-       */
-      observation_id: number
-    }
-    query?: never
-    url: '/observation/water-chemistry/{observation_id}'
-  }
+        /**
+         * Observation Id
+         */
+        observation_id: number;
+    };
+    query?: never;
+    url: '/observation/water-chemistry/{observation_id}';
+};
 
-export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchErrors =
-  {
+export type GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetErrors = {
     /**
      * Validation Error
      */
-    422: HttpValidationError
-  }
+    422: HttpValidationError;
+};
 
-export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchError =
-  UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchErrors[keyof UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchErrors]
+export type GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetError = GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetErrors[keyof GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetErrors];
 
-export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses =
-  {
+export type GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetResponses = {
     /**
      * Successful Response
      */
-    200: WaterChemistryObservationResponse
-  }
+    200: WaterChemistryObservationResponse;
+};
 
-export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponse =
-  UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses[keyof UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses]
+export type GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetResponse = GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetResponses[keyof GetWaterChemistryObservationByIdObservationWaterChemistryObservationIdGetResponses];
 
-export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetData =
-  {
-    body?: never
-    path?: never
+export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchData = {
+    body: UpdateWaterChemistryObservation;
+    path: {
+        /**
+         * Observation Id
+         */
+        observation_id: number;
+    };
+    query?: never;
+    url: '/observation/water-chemistry/{observation_id}';
+};
+
+export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchError = UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchErrors[keyof UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchErrors];
+
+export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: WaterChemistryObservationResponse;
+};
+
+export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponse = UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses[keyof UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses];
+
+export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetData = {
+    body?: never;
+    path?: never;
     query?: {
-      /**
-       * Thing Id
-       */
-      thing_id?: number | null
-      /**
-       * Parameter Id
-       */
-      parameter_id?: number | null
-      /**
-       * Start Time
-       */
-      start_time?: string | null
-      /**
-       * End Time
-       */
-      end_time?: string | null
-      /**
-       * Page
-       * Page number
-       */
-      page?: number
-      /**
-       * Size
-       */
-      size?: number
-    }
-    url: '/observation/transducer-groundwater-level'
-  }
+        /**
+         * Thing Id
+         */
+        thing_id?: number | null;
+        /**
+         * Parameter Id
+         */
+        parameter_id?: number | null;
+        /**
+         * Start Time
+         */
+        start_time?: string | null;
+        /**
+         * End Time
+         */
+        end_time?: string | null;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/observation/transducer-groundwater-level';
+};
 
-export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetErrors =
-  {
+export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetErrors = {
     /**
      * Validation Error
      */
-    422: HttpValidationError
-  }
+    422: HttpValidationError;
+};
 
-export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetError =
-  GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetErrors[keyof GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetErrors]
+export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetError = GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetErrors[keyof GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetErrors];
 
-export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponses =
-  {
+export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponses = {
     /**
      * Successful Response
      */
-    200: PageTransducerObservationWithBlockResponse
-  }
+    200: PageTransducerObservationWithBlockResponse;
+};
 
-export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponse =
-  GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponses[keyof GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponses]
+export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponse = GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponses[keyof GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponses];
 
 export type GetAllObservationsObservationGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Thing Id
-     */
-    thing_id?: number | null
-    /**
-     * Sensor Id
-     */
-    sensor_id?: number | null
-    /**
-     * Sample Id
-     */
-    sample_id?: number | null
-    /**
-     * Start Time
-     */
-    start_time?: string | null
-    /**
-     * End Time
-     */
-    end_time?: string | null
-    /**
-     * Sort
-     */
-    sort?: string | null
-    /**
-     * Order
-     */
-    order?: string | null
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/observation'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Thing Id
+         */
+        thing_id?: number | null;
+        /**
+         * Sensor Id
+         */
+        sensor_id?: number | null;
+        /**
+         * Sample Id
+         */
+        sample_id?: number | null;
+        /**
+         * Start Time
+         */
+        start_time?: string | null;
+        /**
+         * End Time
+         */
+        end_time?: string | null;
+        /**
+         * Sort
+         */
+        sort?: string | null;
+        /**
+         * Order
+         */
+        order?: string | null;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/observation';
+};
 
 export type GetAllObservationsObservationGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetAllObservationsObservationGetError =
-  GetAllObservationsObservationGetErrors[keyof GetAllObservationsObservationGetErrors]
+export type GetAllObservationsObservationGetError = GetAllObservationsObservationGetErrors[keyof GetAllObservationsObservationGetErrors];
 
 export type GetAllObservationsObservationGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageObservationResponse
-}
-
-export type GetAllObservationsObservationGetResponse =
-  GetAllObservationsObservationGetResponses[keyof GetAllObservationsObservationGetResponses]
-
-export type DeleteObservationObservationObservationIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Observation Id
-     */
-    observation_id: number
-  }
-  query?: never
-  url: '/observation/{observation_id}'
-}
-
-export type DeleteObservationObservationObservationIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type DeleteObservationObservationObservationIdDeleteError =
-  DeleteObservationObservationObservationIdDeleteErrors[keyof DeleteObservationObservationObservationIdDeleteErrors]
-
-export type DeleteObservationObservationObservationIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void
-}
-
-export type DeleteObservationObservationObservationIdDeleteResponse =
-  DeleteObservationObservationObservationIdDeleteResponses[keyof DeleteObservationObservationObservationIdDeleteResponses]
-
-export type GetObservationByIdObservationObservationIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Observation Id
-     */
-    observation_id: number
-  }
-  query?: never
-  url: '/observation/{observation_id}'
-}
-
-export type GetObservationByIdObservationObservationIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type GetObservationByIdObservationObservationIdGetError =
-  GetObservationByIdObservationObservationIdGetErrors[keyof GetObservationByIdObservationObservationIdGetErrors]
-
-export type GetObservationByIdObservationObservationIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: ObservationResponse
-}
-
-export type GetObservationByIdObservationObservationIdGetResponse =
-  GetObservationByIdObservationObservationIdGetResponses[keyof GetObservationByIdObservationObservationIdGetResponses]
-
-export type PostPublicationPublicationAddPostData = {
-  body: CreatePublication
-  path?: never
-  query?: never
-  url: '/publication/add'
-}
-
-export type PostPublicationPublicationAddPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type PostPublicationPublicationAddPostError =
-  PostPublicationPublicationAddPostErrors[keyof PostPublicationPublicationAddPostErrors]
-
-export type PostPublicationPublicationAddPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: PublicationResponse
-}
-
-export type PostPublicationPublicationAddPostResponse =
-  PostPublicationPublicationAddPostResponses[keyof PostPublicationPublicationAddPostResponses]
-
-export type GetSamplesSampleGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Thing Id
-     */
-    thing_id?: number | null
-    /**
-     * Sort
-     */
-    sort?: string
-    /**
-     * Order
-     */
-    order?: string
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/sample'
-}
-
-export type GetSamplesSampleGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type GetSamplesSampleGetError =
-  GetSamplesSampleGetErrors[keyof GetSamplesSampleGetErrors]
-
-export type GetSamplesSampleGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageSampleResponse
-}
-
-export type GetSamplesSampleGetResponse =
-  GetSamplesSampleGetResponses[keyof GetSamplesSampleGetResponses]
-
-export type AddSampleSamplePostData = {
-  body: CreateSample
-  path?: never
-  query?: never
-  url: '/sample'
-}
-
-export type AddSampleSamplePostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type AddSampleSamplePostError =
-  AddSampleSamplePostErrors[keyof AddSampleSamplePostErrors]
-
-export type AddSampleSamplePostResponses = {
-  /**
-   * Successful Response
-   */
-  201: SampleResponse
-}
-
-export type AddSampleSamplePostResponse =
-  AddSampleSamplePostResponses[keyof AddSampleSamplePostResponses]
-
-export type DeleteSampleByIdSampleSampleIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Sample Id
-     */
-    sample_id: number
-  }
-  query?: never
-  url: '/sample/{sample_id}'
-}
-
-export type DeleteSampleByIdSampleSampleIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type DeleteSampleByIdSampleSampleIdDeleteError =
-  DeleteSampleByIdSampleSampleIdDeleteErrors[keyof DeleteSampleByIdSampleSampleIdDeleteErrors]
-
-export type DeleteSampleByIdSampleSampleIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown
-}
-
-export type GetSampleByIdSampleSampleIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Sample Id
-     */
-    sample_id: number
-  }
-  query?: never
-  url: '/sample/{sample_id}'
-}
-
-export type GetSampleByIdSampleSampleIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type GetSampleByIdSampleSampleIdGetError =
-  GetSampleByIdSampleSampleIdGetErrors[keyof GetSampleByIdSampleSampleIdGetErrors]
-
-export type GetSampleByIdSampleSampleIdGetResponses = {
-  /**
-   * Response Get Sample By Id Sample  Sample Id  Get
-   * Successful Response
-   */
-  200: SampleResponse | ResourceNotFoundResponse
-}
-
-export type GetSampleByIdSampleSampleIdGetResponse =
-  GetSampleByIdSampleSampleIdGetResponses[keyof GetSampleByIdSampleSampleIdGetResponses]
-
-export type UpdateSampleSampleSampleIdPatchData = {
-  body: UpdateSample
-  path: {
-    /**
-     * Sample Id
-     */
-    sample_id: number
-  }
-  query?: never
-  url: '/sample/{sample_id}'
-}
-
-export type UpdateSampleSampleSampleIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type UpdateSampleSampleSampleIdPatchError =
-  UpdateSampleSampleSampleIdPatchErrors[keyof UpdateSampleSampleSampleIdPatchErrors]
-
-export type UpdateSampleSampleSampleIdPatchResponses = {
-  /**
-   * Response Update Sample Sample  Sample Id  Patch
-   * Successful Response
-   */
-  200: SampleResponse | ResourceNotFoundResponse
-}
-
-export type UpdateSampleSampleSampleIdPatchResponse =
-  UpdateSampleSampleSampleIdPatchResponses[keyof UpdateSampleSampleSampleIdPatchResponses]
-
-export type GetSensorsSensorGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Thing Id
-     */
-    thing_id?: number
-    /**
-     * Parameter Id
-     */
-    parameter_id?: number
-    /**
-     * Sort
-     */
-    sort?: string | null
-    /**
-     * Order
-     */
-    order?: string | null
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/sensor'
-}
-
-export type GetSensorsSensorGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type GetSensorsSensorGetError =
-  GetSensorsSensorGetErrors[keyof GetSensorsSensorGetErrors]
-
-export type GetSensorsSensorGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageSensorResponse
-}
-
-export type GetSensorsSensorGetResponse =
-  GetSensorsSensorGetResponses[keyof GetSensorsSensorGetResponses]
-
-export type AddSensorSensorPostData = {
-  body: CreateSensor
-  path?: never
-  query?: never
-  url: '/sensor'
-}
-
-export type AddSensorSensorPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type AddSensorSensorPostError =
-  AddSensorSensorPostErrors[keyof AddSensorSensorPostErrors]
-
-export type AddSensorSensorPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: SensorResponse
-}
-
-export type AddSensorSensorPostResponse =
-  AddSensorSensorPostResponses[keyof AddSensorSensorPostResponses]
-
-export type DeleteSensorSensorSensorIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Sensor Id
-     */
-    sensor_id: number
-  }
-  query?: never
-  url: '/sensor/{sensor_id}'
-}
-
-export type DeleteSensorSensorSensorIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type DeleteSensorSensorSensorIdDeleteError =
-  DeleteSensorSensorSensorIdDeleteErrors[keyof DeleteSensorSensorSensorIdDeleteErrors]
-
-export type DeleteSensorSensorSensorIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown
-}
-
-export type GetSensorSensorSensorIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Sensor Id
-     */
-    sensor_id: number
-  }
-  query?: never
-  url: '/sensor/{sensor_id}'
-}
-
-export type GetSensorSensorSensorIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type GetSensorSensorSensorIdGetError =
-  GetSensorSensorSensorIdGetErrors[keyof GetSensorSensorSensorIdGetErrors]
-
-export type GetSensorSensorSensorIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: SensorResponse
-}
-
-export type GetSensorSensorSensorIdGetResponse =
-  GetSensorSensorSensorIdGetResponses[keyof GetSensorSensorSensorIdGetResponses]
-
-export type UpdateSensorSensorSensorIdPatchData = {
-  body: UpdateSensor
-  path: {
-    /**
-     * Sensor Id
-     */
-    sensor_id: number
-  }
-  query?: never
-  url: '/sensor/{sensor_id}'
-}
-
-export type UpdateSensorSensorSensorIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type UpdateSensorSensorSensorIdPatchError =
-  UpdateSensorSensorSensorIdPatchErrors[keyof UpdateSensorSensorSensorIdPatchErrors]
-
-export type UpdateSensorSensorSensorIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: SensorResponse
-}
-
-export type UpdateSensorSensorSensorIdPatchResponse =
-  UpdateSensorSensorSensorIdPatchResponses[keyof UpdateSensorSensorSensorIdPatchResponses]
-
-export type SearchApiSearchGetData = {
-  body?: never
-  path?: never
-  query: {
-    /**
-     * Q
-     */
-    q: string
-    /**
-     * Limit
-     */
-    limit?: number
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/search'
-}
-
-export type SearchApiSearchGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type SearchApiSearchGetError =
-  SearchApiSearchGetErrors[keyof SearchApiSearchGetErrors]
-
-export type SearchApiSearchGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageDict
-}
-
-export type SearchApiSearchGetResponse =
-  SearchApiSearchGetResponses[keyof SearchApiSearchGetResponses]
-
-export type GetWaterWellsThingWaterWellGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Sort
-     */
-    sort?: string
-    /**
-     * Order
-     */
-    order?: string
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Query
-     */
-    query?: string
-    /**
-     * Name
-     */
-    name?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/thing/water-well'
-}
-
-export type GetWaterWellsThingWaterWellGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type GetWaterWellsThingWaterWellGetError =
-  GetWaterWellsThingWaterWellGetErrors[keyof GetWaterWellsThingWaterWellGetErrors]
-
-export type GetWaterWellsThingWaterWellGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageWellResponse
-}
-
-export type GetWaterWellsThingWaterWellGetResponse =
-  GetWaterWellsThingWaterWellGetResponses[keyof GetWaterWellsThingWaterWellGetResponses]
-
-export type CreateWellThingWaterWellPostData = {
-  body: CreateWell
-  path?: never
-  query?: never
-  url: '/thing/water-well'
-}
-
-export type CreateWellThingWaterWellPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type CreateWellThingWaterWellPostError =
-  CreateWellThingWaterWellPostErrors[keyof CreateWellThingWaterWellPostErrors]
-
-export type CreateWellThingWaterWellPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: WellResponse
-}
-
-export type CreateWellThingWaterWellPostResponse =
-  CreateWellThingWaterWellPostResponses[keyof CreateWellThingWaterWellPostResponses]
-
-export type GetWellByIdThingWaterWellThingIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Thing Id
-     */
-    thing_id: number
-  }
-  query?: never
-  url: '/thing/water-well/{thing_id}'
-}
-
-export type GetWellByIdThingWaterWellThingIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type GetWellByIdThingWaterWellThingIdGetError =
-  GetWellByIdThingWaterWellThingIdGetErrors[keyof GetWellByIdThingWaterWellThingIdGetErrors]
-
-export type GetWellByIdThingWaterWellThingIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: WellResponse
-}
-
-export type GetWellByIdThingWaterWellThingIdGetResponse =
-  GetWellByIdThingWaterWellThingIdGetResponses[keyof GetWellByIdThingWaterWellThingIdGetResponses]
-
-export type UpdateWaterWellThingWaterWellThingIdPatchData = {
-  body: UpdateWell
-  path: {
-    /**
-     * Thing Id
-     */
-    thing_id: number
-  }
-  query?: never
-  url: '/thing/water-well/{thing_id}'
-}
-
-export type UpdateWaterWellThingWaterWellThingIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type UpdateWaterWellThingWaterWellThingIdPatchError =
-  UpdateWaterWellThingWaterWellThingIdPatchErrors[keyof UpdateWaterWellThingWaterWellThingIdPatchErrors]
-
-export type UpdateWaterWellThingWaterWellThingIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: WellResponse
-}
-
-export type UpdateWaterWellThingWaterWellThingIdPatchResponse =
-  UpdateWaterWellThingWaterWellThingIdPatchResponses[keyof UpdateWaterWellThingWaterWellThingIdPatchResponses]
-
-export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetData = {
-  body?: never
-  path: {
-    /**
-     * Thing Id
-     */
-    thing_id: number
-  }
-  query?: {
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/thing/water-well/{thing_id}/well-screen'
-}
-
-export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
-
-export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetError =
-  GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetErrors[keyof GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetErrors]
-
-export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetResponses =
-  {
     /**
      * Successful Response
      */
-    200: PageWellScreenResponse
-  }
+    200: PageObservationResponse;
+};
 
-export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetResponse =
-  GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetResponses[keyof GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetResponses]
+export type GetAllObservationsObservationGetResponse = GetAllObservationsObservationGetResponses[keyof GetAllObservationsObservationGetResponses];
+
+export type DeleteObservationObservationObservationIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Observation Id
+         */
+        observation_id: number;
+    };
+    query?: never;
+    url: '/observation/{observation_id}';
+};
+
+export type DeleteObservationObservationObservationIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteObservationObservationObservationIdDeleteError = DeleteObservationObservationObservationIdDeleteErrors[keyof DeleteObservationObservationObservationIdDeleteErrors];
+
+export type DeleteObservationObservationObservationIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteObservationObservationObservationIdDeleteResponse = DeleteObservationObservationObservationIdDeleteResponses[keyof DeleteObservationObservationObservationIdDeleteResponses];
+
+export type GetObservationByIdObservationObservationIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Observation Id
+         */
+        observation_id: number;
+    };
+    query?: never;
+    url: '/observation/{observation_id}';
+};
+
+export type GetObservationByIdObservationObservationIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetObservationByIdObservationObservationIdGetError = GetObservationByIdObservationObservationIdGetErrors[keyof GetObservationByIdObservationObservationIdGetErrors];
+
+export type GetObservationByIdObservationObservationIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ObservationResponse;
+};
+
+export type GetObservationByIdObservationObservationIdGetResponse = GetObservationByIdObservationObservationIdGetResponses[keyof GetObservationByIdObservationObservationIdGetResponses];
+
+export type PostPublicationPublicationAddPostData = {
+    body: CreatePublication;
+    path?: never;
+    query?: never;
+    url: '/publication/add';
+};
+
+export type PostPublicationPublicationAddPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PostPublicationPublicationAddPostError = PostPublicationPublicationAddPostErrors[keyof PostPublicationPublicationAddPostErrors];
+
+export type PostPublicationPublicationAddPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: PublicationResponse;
+};
+
+export type PostPublicationPublicationAddPostResponse = PostPublicationPublicationAddPostResponses[keyof PostPublicationPublicationAddPostResponses];
+
+export type GetSamplesSampleGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Thing Id
+         */
+        thing_id?: number | null;
+        /**
+         * Sort
+         */
+        sort?: string;
+        /**
+         * Order
+         */
+        order?: string;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/sample';
+};
+
+export type GetSamplesSampleGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSamplesSampleGetError = GetSamplesSampleGetErrors[keyof GetSamplesSampleGetErrors];
+
+export type GetSamplesSampleGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageSampleResponse;
+};
+
+export type GetSamplesSampleGetResponse = GetSamplesSampleGetResponses[keyof GetSamplesSampleGetResponses];
+
+export type AddSampleSamplePostData = {
+    body: CreateSample;
+    path?: never;
+    query?: never;
+    url: '/sample';
+};
+
+export type AddSampleSamplePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddSampleSamplePostError = AddSampleSamplePostErrors[keyof AddSampleSamplePostErrors];
+
+export type AddSampleSamplePostResponses = {
+    /**
+     * Successful Response
+     */
+    201: SampleResponse;
+};
+
+export type AddSampleSamplePostResponse = AddSampleSamplePostResponses[keyof AddSampleSamplePostResponses];
+
+export type DeleteSampleByIdSampleSampleIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Sample Id
+         */
+        sample_id: number;
+    };
+    query?: never;
+    url: '/sample/{sample_id}';
+};
+
+export type DeleteSampleByIdSampleSampleIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteSampleByIdSampleSampleIdDeleteError = DeleteSampleByIdSampleSampleIdDeleteErrors[keyof DeleteSampleByIdSampleSampleIdDeleteErrors];
+
+export type DeleteSampleByIdSampleSampleIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetSampleByIdSampleSampleIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Sample Id
+         */
+        sample_id: number;
+    };
+    query?: never;
+    url: '/sample/{sample_id}';
+};
+
+export type GetSampleByIdSampleSampleIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSampleByIdSampleSampleIdGetError = GetSampleByIdSampleSampleIdGetErrors[keyof GetSampleByIdSampleSampleIdGetErrors];
+
+export type GetSampleByIdSampleSampleIdGetResponses = {
+    /**
+     * Response Get Sample By Id Sample  Sample Id  Get
+     * Successful Response
+     */
+    200: SampleResponse | ResourceNotFoundResponse;
+};
+
+export type GetSampleByIdSampleSampleIdGetResponse = GetSampleByIdSampleSampleIdGetResponses[keyof GetSampleByIdSampleSampleIdGetResponses];
+
+export type UpdateSampleSampleSampleIdPatchData = {
+    body: UpdateSample;
+    path: {
+        /**
+         * Sample Id
+         */
+        sample_id: number;
+    };
+    query?: never;
+    url: '/sample/{sample_id}';
+};
+
+export type UpdateSampleSampleSampleIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateSampleSampleSampleIdPatchError = UpdateSampleSampleSampleIdPatchErrors[keyof UpdateSampleSampleSampleIdPatchErrors];
+
+export type UpdateSampleSampleSampleIdPatchResponses = {
+    /**
+     * Response Update Sample Sample  Sample Id  Patch
+     * Successful Response
+     */
+    200: SampleResponse | ResourceNotFoundResponse;
+};
+
+export type UpdateSampleSampleSampleIdPatchResponse = UpdateSampleSampleSampleIdPatchResponses[keyof UpdateSampleSampleSampleIdPatchResponses];
+
+export type GetSensorsSensorGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Thing Id
+         */
+        thing_id?: number;
+        /**
+         * Parameter Id
+         */
+        parameter_id?: number;
+        /**
+         * Sort
+         */
+        sort?: string | null;
+        /**
+         * Order
+         */
+        order?: string | null;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/sensor';
+};
+
+export type GetSensorsSensorGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSensorsSensorGetError = GetSensorsSensorGetErrors[keyof GetSensorsSensorGetErrors];
+
+export type GetSensorsSensorGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageSensorResponse;
+};
+
+export type GetSensorsSensorGetResponse = GetSensorsSensorGetResponses[keyof GetSensorsSensorGetResponses];
+
+export type AddSensorSensorPostData = {
+    body: CreateSensor;
+    path?: never;
+    query?: never;
+    url: '/sensor';
+};
+
+export type AddSensorSensorPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddSensorSensorPostError = AddSensorSensorPostErrors[keyof AddSensorSensorPostErrors];
+
+export type AddSensorSensorPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: SensorResponse;
+};
+
+export type AddSensorSensorPostResponse = AddSensorSensorPostResponses[keyof AddSensorSensorPostResponses];
+
+export type DeleteSensorSensorSensorIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Sensor Id
+         */
+        sensor_id: number;
+    };
+    query?: never;
+    url: '/sensor/{sensor_id}';
+};
+
+export type DeleteSensorSensorSensorIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteSensorSensorSensorIdDeleteError = DeleteSensorSensorSensorIdDeleteErrors[keyof DeleteSensorSensorSensorIdDeleteErrors];
+
+export type DeleteSensorSensorSensorIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetSensorSensorSensorIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Sensor Id
+         */
+        sensor_id: number;
+    };
+    query?: never;
+    url: '/sensor/{sensor_id}';
+};
+
+export type GetSensorSensorSensorIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSensorSensorSensorIdGetError = GetSensorSensorSensorIdGetErrors[keyof GetSensorSensorSensorIdGetErrors];
+
+export type GetSensorSensorSensorIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: SensorResponse;
+};
+
+export type GetSensorSensorSensorIdGetResponse = GetSensorSensorSensorIdGetResponses[keyof GetSensorSensorSensorIdGetResponses];
+
+export type UpdateSensorSensorSensorIdPatchData = {
+    body: UpdateSensor;
+    path: {
+        /**
+         * Sensor Id
+         */
+        sensor_id: number;
+    };
+    query?: never;
+    url: '/sensor/{sensor_id}';
+};
+
+export type UpdateSensorSensorSensorIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateSensorSensorSensorIdPatchError = UpdateSensorSensorSensorIdPatchErrors[keyof UpdateSensorSensorSensorIdPatchErrors];
+
+export type UpdateSensorSensorSensorIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: SensorResponse;
+};
+
+export type UpdateSensorSensorSensorIdPatchResponse = UpdateSensorSensorSensorIdPatchResponses[keyof UpdateSensorSensorSensorIdPatchResponses];
+
+export type SearchApiSearchGetData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Q
+         */
+        q: string;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/search';
+};
+
+export type SearchApiSearchGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SearchApiSearchGetError = SearchApiSearchGetErrors[keyof SearchApiSearchGetErrors];
+
+export type SearchApiSearchGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageDict;
+};
+
+export type SearchApiSearchGetResponse = SearchApiSearchGetResponses[keyof SearchApiSearchGetResponses];
+
+export type GetWaterWellsThingWaterWellGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Sort
+         */
+        sort?: string;
+        /**
+         * Order
+         */
+        order?: string;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Query
+         */
+        query?: string;
+        /**
+         * Name
+         */
+        name?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing/water-well';
+};
+
+export type GetWaterWellsThingWaterWellGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWaterWellsThingWaterWellGetError = GetWaterWellsThingWaterWellGetErrors[keyof GetWaterWellsThingWaterWellGetErrors];
+
+export type GetWaterWellsThingWaterWellGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageWellResponse;
+};
+
+export type GetWaterWellsThingWaterWellGetResponse = GetWaterWellsThingWaterWellGetResponses[keyof GetWaterWellsThingWaterWellGetResponses];
+
+export type CreateWellThingWaterWellPostData = {
+    body: CreateWell;
+    path?: never;
+    query?: never;
+    url: '/thing/water-well';
+};
+
+export type CreateWellThingWaterWellPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateWellThingWaterWellPostError = CreateWellThingWaterWellPostErrors[keyof CreateWellThingWaterWellPostErrors];
+
+export type CreateWellThingWaterWellPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: WellResponse;
+};
+
+export type CreateWellThingWaterWellPostResponse = CreateWellThingWaterWellPostResponses[keyof CreateWellThingWaterWellPostResponses];
+
+export type GetWellByIdThingWaterWellThingIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: never;
+    url: '/thing/water-well/{thing_id}';
+};
+
+export type GetWellByIdThingWaterWellThingIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWellByIdThingWaterWellThingIdGetError = GetWellByIdThingWaterWellThingIdGetErrors[keyof GetWellByIdThingWaterWellThingIdGetErrors];
+
+export type GetWellByIdThingWaterWellThingIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: WellResponse;
+};
+
+export type GetWellByIdThingWaterWellThingIdGetResponse = GetWellByIdThingWaterWellThingIdGetResponses[keyof GetWellByIdThingWaterWellThingIdGetResponses];
+
+export type UpdateWaterWellThingWaterWellThingIdPatchData = {
+    body: UpdateWell;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: never;
+    url: '/thing/water-well/{thing_id}';
+};
+
+export type UpdateWaterWellThingWaterWellThingIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateWaterWellThingWaterWellThingIdPatchError = UpdateWaterWellThingWaterWellThingIdPatchErrors[keyof UpdateWaterWellThingWaterWellThingIdPatchErrors];
+
+export type UpdateWaterWellThingWaterWellThingIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: WellResponse;
+};
+
+export type UpdateWaterWellThingWaterWellThingIdPatchResponse = UpdateWaterWellThingWaterWellThingIdPatchResponses[keyof UpdateWaterWellThingWaterWellThingIdPatchResponses];
+
+export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetData = {
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing/water-well/{thing_id}/well-screen';
+};
+
+export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetError = GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetErrors[keyof GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetErrors];
+
+export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageWellScreenResponse;
+};
+
+export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetResponse = GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetResponses[keyof GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetResponses];
 
 export type GetWellScreensThingWellScreenGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Thing Id
-     */
-    thing_id?: number
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/thing/well-screen'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Thing Id
+         */
+        thing_id?: number;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing/well-screen';
+};
 
 export type GetWellScreensThingWellScreenGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetWellScreensThingWellScreenGetError =
-  GetWellScreensThingWellScreenGetErrors[keyof GetWellScreensThingWellScreenGetErrors]
+export type GetWellScreensThingWellScreenGetError = GetWellScreensThingWellScreenGetErrors[keyof GetWellScreensThingWellScreenGetErrors];
 
 export type GetWellScreensThingWellScreenGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageWellScreenResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageWellScreenResponse;
+};
 
-export type GetWellScreensThingWellScreenGetResponse =
-  GetWellScreensThingWellScreenGetResponses[keyof GetWellScreensThingWellScreenGetResponses]
+export type GetWellScreensThingWellScreenGetResponse = GetWellScreensThingWellScreenGetResponses[keyof GetWellScreensThingWellScreenGetResponses];
 
 export type CreateWellscreenThingWellScreenPostData = {
-  body: CreateWellScreen
-  path?: never
-  query?: never
-  url: '/thing/well-screen'
-}
+    body: CreateWellScreen;
+    path?: never;
+    query?: never;
+    url: '/thing/well-screen';
+};
 
 export type CreateWellscreenThingWellScreenPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type CreateWellscreenThingWellScreenPostError =
-  CreateWellscreenThingWellScreenPostErrors[keyof CreateWellscreenThingWellScreenPostErrors]
+export type CreateWellscreenThingWellScreenPostError = CreateWellscreenThingWellScreenPostErrors[keyof CreateWellscreenThingWellScreenPostErrors];
 
 export type CreateWellscreenThingWellScreenPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: WellScreenResponse
-}
+    /**
+     * Successful Response
+     */
+    201: WellScreenResponse;
+};
 
-export type CreateWellscreenThingWellScreenPostResponse =
-  CreateWellscreenThingWellScreenPostResponses[keyof CreateWellscreenThingWellScreenPostResponses]
+export type CreateWellscreenThingWellScreenPostResponse = CreateWellscreenThingWellScreenPostResponses[keyof CreateWellscreenThingWellScreenPostResponses];
 
 export type GetWellScreenByIdThingWellScreenWellscreenIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Wellscreen Id
-     */
-    wellscreen_id: number
-  }
-  query?: never
-  url: '/thing/well-screen/{wellscreen_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Wellscreen Id
+         */
+        wellscreen_id: number;
+    };
+    query?: never;
+    url: '/thing/well-screen/{wellscreen_id}';
+};
 
 export type GetWellScreenByIdThingWellScreenWellscreenIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetWellScreenByIdThingWellScreenWellscreenIdGetError =
-  GetWellScreenByIdThingWellScreenWellscreenIdGetErrors[keyof GetWellScreenByIdThingWellScreenWellscreenIdGetErrors]
+export type GetWellScreenByIdThingWellScreenWellscreenIdGetError = GetWellScreenByIdThingWellScreenWellscreenIdGetErrors[keyof GetWellScreenByIdThingWellScreenWellscreenIdGetErrors];
 
 export type GetWellScreenByIdThingWellScreenWellscreenIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: WellScreenResponse
-}
+    /**
+     * Successful Response
+     */
+    200: WellScreenResponse;
+};
 
-export type GetWellScreenByIdThingWellScreenWellscreenIdGetResponse =
-  GetWellScreenByIdThingWellScreenWellscreenIdGetResponses[keyof GetWellScreenByIdThingWellScreenWellscreenIdGetResponses]
+export type GetWellScreenByIdThingWellScreenWellscreenIdGetResponse = GetWellScreenByIdThingWellScreenWellscreenIdGetResponses[keyof GetWellScreenByIdThingWellScreenWellscreenIdGetResponses];
 
 export type GetSpringsThingSpringGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Sort
-     */
-    sort?: string
-    /**
-     * Order
-     */
-    order?: string
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Query
-     */
-    query?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/thing/spring'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Sort
+         */
+        sort?: string;
+        /**
+         * Order
+         */
+        order?: string;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Query
+         */
+        query?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing/spring';
+};
 
 export type GetSpringsThingSpringGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetSpringsThingSpringGetError =
-  GetSpringsThingSpringGetErrors[keyof GetSpringsThingSpringGetErrors]
+export type GetSpringsThingSpringGetError = GetSpringsThingSpringGetErrors[keyof GetSpringsThingSpringGetErrors];
 
 export type GetSpringsThingSpringGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageSpringResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageSpringResponse;
+};
 
-export type GetSpringsThingSpringGetResponse =
-  GetSpringsThingSpringGetResponses[keyof GetSpringsThingSpringGetResponses]
+export type GetSpringsThingSpringGetResponse = GetSpringsThingSpringGetResponses[keyof GetSpringsThingSpringGetResponses];
 
 export type CreateSpringThingSpringPostData = {
-  body: CreateSpring
-  path?: never
-  query?: never
-  url: '/thing/spring'
-}
+    body: CreateSpring;
+    path?: never;
+    query?: never;
+    url: '/thing/spring';
+};
 
 export type CreateSpringThingSpringPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type CreateSpringThingSpringPostError =
-  CreateSpringThingSpringPostErrors[keyof CreateSpringThingSpringPostErrors]
+export type CreateSpringThingSpringPostError = CreateSpringThingSpringPostErrors[keyof CreateSpringThingSpringPostErrors];
 
 export type CreateSpringThingSpringPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: SpringResponse
-}
+    /**
+     * Successful Response
+     */
+    201: SpringResponse;
+};
 
-export type CreateSpringThingSpringPostResponse =
-  CreateSpringThingSpringPostResponses[keyof CreateSpringThingSpringPostResponses]
+export type CreateSpringThingSpringPostResponse = CreateSpringThingSpringPostResponses[keyof CreateSpringThingSpringPostResponses];
 
 export type GetSpringByIdThingSpringThingIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Thing Id
-     */
-    thing_id: number
-  }
-  query?: never
-  url: '/thing/spring/{thing_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: never;
+    url: '/thing/spring/{thing_id}';
+};
 
 export type GetSpringByIdThingSpringThingIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetSpringByIdThingSpringThingIdGetError =
-  GetSpringByIdThingSpringThingIdGetErrors[keyof GetSpringByIdThingSpringThingIdGetErrors]
+export type GetSpringByIdThingSpringThingIdGetError = GetSpringByIdThingSpringThingIdGetErrors[keyof GetSpringByIdThingSpringThingIdGetErrors];
 
 export type GetSpringByIdThingSpringThingIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: SpringResponse
-}
+    /**
+     * Successful Response
+     */
+    200: SpringResponse;
+};
 
-export type GetSpringByIdThingSpringThingIdGetResponse =
-  GetSpringByIdThingSpringThingIdGetResponses[keyof GetSpringByIdThingSpringThingIdGetResponses]
+export type GetSpringByIdThingSpringThingIdGetResponse = GetSpringByIdThingSpringThingIdGetResponses[keyof GetSpringByIdThingSpringThingIdGetResponses];
 
 export type UpdateSpringThingSpringThingIdPatchData = {
-  body: UpdateSpring
-  path: {
-    /**
-     * Thing Id
-     */
-    thing_id: number
-  }
-  query?: never
-  url: '/thing/spring/{thing_id}'
-}
+    body: UpdateSpring;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: never;
+    url: '/thing/spring/{thing_id}';
+};
 
 export type UpdateSpringThingSpringThingIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateSpringThingSpringThingIdPatchError =
-  UpdateSpringThingSpringThingIdPatchErrors[keyof UpdateSpringThingSpringThingIdPatchErrors]
+export type UpdateSpringThingSpringThingIdPatchError = UpdateSpringThingSpringThingIdPatchErrors[keyof UpdateSpringThingSpringThingIdPatchErrors];
 
 export type UpdateSpringThingSpringThingIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: SpringResponse
-}
+    /**
+     * Successful Response
+     */
+    200: SpringResponse;
+};
 
-export type UpdateSpringThingSpringThingIdPatchResponse =
-  UpdateSpringThingSpringThingIdPatchResponses[keyof UpdateSpringThingSpringThingIdPatchResponses]
+export type UpdateSpringThingSpringThingIdPatchResponse = UpdateSpringThingSpringThingIdPatchResponses[keyof UpdateSpringThingSpringThingIdPatchResponses];
 
 export type GetThingIdLinksThingIdLinkGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Sort
-     */
-    sort?: string
-    /**
-     * Order
-     */
-    order?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/thing/id-link'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Sort
+         */
+        sort?: string;
+        /**
+         * Order
+         */
+        order?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing/id-link';
+};
 
 export type GetThingIdLinksThingIdLinkGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetThingIdLinksThingIdLinkGetError =
-  GetThingIdLinksThingIdLinkGetErrors[keyof GetThingIdLinksThingIdLinkGetErrors]
+export type GetThingIdLinksThingIdLinkGetError = GetThingIdLinksThingIdLinkGetErrors[keyof GetThingIdLinksThingIdLinkGetErrors];
 
 export type GetThingIdLinksThingIdLinkGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageThingIdLinkResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageThingIdLinkResponse;
+};
 
-export type GetThingIdLinksThingIdLinkGetResponse =
-  GetThingIdLinksThingIdLinkGetResponses[keyof GetThingIdLinksThingIdLinkGetResponses]
+export type GetThingIdLinksThingIdLinkGetResponse = GetThingIdLinksThingIdLinkGetResponses[keyof GetThingIdLinksThingIdLinkGetResponses];
 
 export type CreateThingIdLinkThingIdLinkPostData = {
-  body: CreateThingIdLink
-  path?: never
-  query?: never
-  url: '/thing/id-link'
-}
+    body: CreateThingIdLink;
+    path?: never;
+    query?: never;
+    url: '/thing/id-link';
+};
 
 export type CreateThingIdLinkThingIdLinkPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type CreateThingIdLinkThingIdLinkPostError =
-  CreateThingIdLinkThingIdLinkPostErrors[keyof CreateThingIdLinkThingIdLinkPostErrors]
+export type CreateThingIdLinkThingIdLinkPostError = CreateThingIdLinkThingIdLinkPostErrors[keyof CreateThingIdLinkThingIdLinkPostErrors];
 
 export type CreateThingIdLinkThingIdLinkPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: ThingIdLinkResponse
-}
+    /**
+     * Successful Response
+     */
+    201: ThingIdLinkResponse;
+};
 
-export type CreateThingIdLinkThingIdLinkPostResponse =
-  CreateThingIdLinkThingIdLinkPostResponses[keyof CreateThingIdLinkThingIdLinkPostResponses]
+export type CreateThingIdLinkThingIdLinkPostResponse = CreateThingIdLinkThingIdLinkPostResponses[keyof CreateThingIdLinkThingIdLinkPostResponses];
 
 export type DeleteThingIdLinkThingIdLinkLinkIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Link Id
-     */
-    link_id: number
-  }
-  query?: never
-  url: '/thing/id-link/{link_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Link Id
+         */
+        link_id: number;
+    };
+    query?: never;
+    url: '/thing/id-link/{link_id}';
+};
 
 export type DeleteThingIdLinkThingIdLinkLinkIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteThingIdLinkThingIdLinkLinkIdDeleteError =
-  DeleteThingIdLinkThingIdLinkLinkIdDeleteErrors[keyof DeleteThingIdLinkThingIdLinkLinkIdDeleteErrors]
+export type DeleteThingIdLinkThingIdLinkLinkIdDeleteError = DeleteThingIdLinkThingIdLinkLinkIdDeleteErrors[keyof DeleteThingIdLinkThingIdLinkLinkIdDeleteErrors];
 
 export type DeleteThingIdLinkThingIdLinkLinkIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void
-}
+    /**
+     * Successful Response
+     */
+    204: void;
+};
 
-export type DeleteThingIdLinkThingIdLinkLinkIdDeleteResponse =
-  DeleteThingIdLinkThingIdLinkLinkIdDeleteResponses[keyof DeleteThingIdLinkThingIdLinkLinkIdDeleteResponses]
+export type DeleteThingIdLinkThingIdLinkLinkIdDeleteResponse = DeleteThingIdLinkThingIdLinkLinkIdDeleteResponses[keyof DeleteThingIdLinkThingIdLinkLinkIdDeleteResponses];
 
 export type GetThingIdLinksThingIdLinkLinkIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Link Id
-     */
-    link_id: number
-  }
-  query?: never
-  url: '/thing/id-link/{link_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Link Id
+         */
+        link_id: number;
+    };
+    query?: never;
+    url: '/thing/id-link/{link_id}';
+};
 
 export type GetThingIdLinksThingIdLinkLinkIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetThingIdLinksThingIdLinkLinkIdGetError =
-  GetThingIdLinksThingIdLinkLinkIdGetErrors[keyof GetThingIdLinksThingIdLinkLinkIdGetErrors]
+export type GetThingIdLinksThingIdLinkLinkIdGetError = GetThingIdLinksThingIdLinkLinkIdGetErrors[keyof GetThingIdLinksThingIdLinkLinkIdGetErrors];
 
 export type GetThingIdLinksThingIdLinkLinkIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: ThingIdLinkResponse
-}
+    /**
+     * Successful Response
+     */
+    200: ThingIdLinkResponse;
+};
 
-export type GetThingIdLinksThingIdLinkLinkIdGetResponse =
-  GetThingIdLinksThingIdLinkLinkIdGetResponses[keyof GetThingIdLinksThingIdLinkLinkIdGetResponses]
+export type GetThingIdLinksThingIdLinkLinkIdGetResponse = GetThingIdLinksThingIdLinkLinkIdGetResponses[keyof GetThingIdLinksThingIdLinkLinkIdGetResponses];
 
 export type UpdateThingIdLinkThingIdLinkLinkIdPatchData = {
-  body: UpdateThingIdLink
-  path: {
-    /**
-     * Link Id
-     */
-    link_id: number
-  }
-  query?: never
-  url: '/thing/id-link/{link_id}'
-}
+    body: UpdateThingIdLink;
+    path: {
+        /**
+         * Link Id
+         */
+        link_id: number;
+    };
+    query?: never;
+    url: '/thing/id-link/{link_id}';
+};
 
 export type UpdateThingIdLinkThingIdLinkLinkIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateThingIdLinkThingIdLinkLinkIdPatchError =
-  UpdateThingIdLinkThingIdLinkLinkIdPatchErrors[keyof UpdateThingIdLinkThingIdLinkLinkIdPatchErrors]
+export type UpdateThingIdLinkThingIdLinkLinkIdPatchError = UpdateThingIdLinkThingIdLinkLinkIdPatchErrors[keyof UpdateThingIdLinkThingIdLinkLinkIdPatchErrors];
 
 export type UpdateThingIdLinkThingIdLinkLinkIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: ThingIdLinkResponse
-}
+    /**
+     * Successful Response
+     */
+    200: ThingIdLinkResponse;
+};
 
-export type UpdateThingIdLinkThingIdLinkLinkIdPatchResponse =
-  UpdateThingIdLinkThingIdLinkLinkIdPatchResponses[keyof UpdateThingIdLinkThingIdLinkLinkIdPatchResponses]
+export type UpdateThingIdLinkThingIdLinkLinkIdPatchResponse = UpdateThingIdLinkThingIdLinkLinkIdPatchResponses[keyof UpdateThingIdLinkThingIdLinkLinkIdPatchResponses];
 
 export type GetThingsThingGetData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Within
-     */
-    within?: string
-    /**
-     * Query
-     */
-    query?: string
-    /**
-     * Sort
-     */
-    sort?: string
-    /**
-     * Order
-     */
-    order?: string
-    /**
-     * Filter
-     */
-    filter?: string
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/thing'
-}
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Within
+         */
+        within?: string;
+        /**
+         * Query
+         */
+        query?: string;
+        /**
+         * Sort
+         */
+        sort?: string;
+        /**
+         * Order
+         */
+        order?: string;
+        /**
+         * Filter
+         */
+        filter?: string;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing';
+};
 
 export type GetThingsThingGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetThingsThingGetError =
-  GetThingsThingGetErrors[keyof GetThingsThingGetErrors]
+export type GetThingsThingGetError = GetThingsThingGetErrors[keyof GetThingsThingGetErrors];
 
 export type GetThingsThingGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageThingResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageThingResponse;
+};
 
-export type GetThingsThingGetResponse =
-  GetThingsThingGetResponses[keyof GetThingsThingGetResponses]
+export type GetThingsThingGetResponse = GetThingsThingGetResponses[keyof GetThingsThingGetResponses];
 
 export type DeleteThingThingThingIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Thing Id
-     */
-    thing_id: number
-  }
-  query?: never
-  url: '/thing/{thing_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: never;
+    url: '/thing/{thing_id}';
+};
 
 export type DeleteThingThingThingIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteThingThingThingIdDeleteError =
-  DeleteThingThingThingIdDeleteErrors[keyof DeleteThingThingThingIdDeleteErrors]
+export type DeleteThingThingThingIdDeleteError = DeleteThingThingThingIdDeleteErrors[keyof DeleteThingThingThingIdDeleteErrors];
 
 export type DeleteThingThingThingIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void
-}
+    /**
+     * Successful Response
+     */
+    204: void;
+};
 
-export type DeleteThingThingThingIdDeleteResponse =
-  DeleteThingThingThingIdDeleteResponses[keyof DeleteThingThingThingIdDeleteResponses]
+export type DeleteThingThingThingIdDeleteResponse = DeleteThingThingThingIdDeleteResponses[keyof DeleteThingThingThingIdDeleteResponses];
 
 export type GetThingByIdThingThingIdGetData = {
-  body?: never
-  path: {
-    /**
-     * Thing Id
-     */
-    thing_id: number
-  }
-  query?: never
-  url: '/thing/{thing_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: never;
+    url: '/thing/{thing_id}';
+};
 
 export type GetThingByIdThingThingIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetThingByIdThingThingIdGetError =
-  GetThingByIdThingThingIdGetErrors[keyof GetThingByIdThingThingIdGetErrors]
+export type GetThingByIdThingThingIdGetError = GetThingByIdThingThingIdGetErrors[keyof GetThingByIdThingThingIdGetErrors];
 
 export type GetThingByIdThingThingIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: ThingResponse
-}
+    /**
+     * Successful Response
+     */
+    200: ThingResponse;
+};
 
-export type GetThingByIdThingThingIdGetResponse =
-  GetThingByIdThingThingIdGetResponses[keyof GetThingByIdThingThingIdGetResponses]
+export type GetThingByIdThingThingIdGetResponse = GetThingByIdThingThingIdGetResponses[keyof GetThingByIdThingThingIdGetResponses];
 
 export type GetThingIdLinksThingThingIdIdLinkGetData = {
-  body?: never
-  path: {
-    /**
-     * Thing Id
-     */
-    thing_id: number
-  }
-  query?: {
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/thing/{thing_id}/id-link'
-}
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing/{thing_id}/id-link';
+};
 
 export type GetThingIdLinksThingThingIdIdLinkGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetThingIdLinksThingThingIdIdLinkGetError =
-  GetThingIdLinksThingThingIdIdLinkGetErrors[keyof GetThingIdLinksThingThingIdIdLinkGetErrors]
+export type GetThingIdLinksThingThingIdIdLinkGetError = GetThingIdLinksThingThingIdIdLinkGetErrors[keyof GetThingIdLinksThingThingIdIdLinkGetErrors];
 
 export type GetThingIdLinksThingThingIdIdLinkGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageThingIdLinkResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageThingIdLinkResponse;
+};
 
-export type GetThingIdLinksThingThingIdIdLinkGetResponse =
-  GetThingIdLinksThingThingIdIdLinkGetResponses[keyof GetThingIdLinksThingThingIdIdLinkGetResponses]
+export type GetThingIdLinksThingThingIdIdLinkGetResponse = GetThingIdLinksThingThingIdIdLinkGetResponses[keyof GetThingIdLinksThingThingIdIdLinkGetResponses];
 
 export type GetThingDeploymentsThingThingIdDeploymentGetData = {
-  body?: never
-  path: {
-    /**
-     * Thing Id
-     */
-    thing_id: number
-  }
-  query?: {
-    /**
-     * Page
-     * Page number
-     */
-    page?: number
-    /**
-     * Size
-     */
-    size?: number
-  }
-  url: '/thing/{thing_id}/deployment'
-}
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: {
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing/{thing_id}/deployment';
+};
 
 export type GetThingDeploymentsThingThingIdDeploymentGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type GetThingDeploymentsThingThingIdDeploymentGetError =
-  GetThingDeploymentsThingThingIdDeploymentGetErrors[keyof GetThingDeploymentsThingThingIdDeploymentGetErrors]
+export type GetThingDeploymentsThingThingIdDeploymentGetError = GetThingDeploymentsThingThingIdDeploymentGetErrors[keyof GetThingDeploymentsThingThingIdDeploymentGetErrors];
 
 export type GetThingDeploymentsThingThingIdDeploymentGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: PageDeploymentResponse
-}
+    /**
+     * Successful Response
+     */
+    200: PageDeploymentResponse;
+};
 
-export type GetThingDeploymentsThingThingIdDeploymentGetResponse =
-  GetThingDeploymentsThingThingIdDeploymentGetResponses[keyof GetThingDeploymentsThingThingIdDeploymentGetResponses]
+export type GetThingDeploymentsThingThingIdDeploymentGetResponse = GetThingDeploymentsThingThingIdDeploymentGetResponses[keyof GetThingDeploymentsThingThingIdDeploymentGetResponses];
 
 export type DeleteWellScreenThingWellScreenWellScreenIdDeleteData = {
-  body?: never
-  path: {
-    /**
-     * Well Screen Id
-     */
-    well_screen_id: number
-  }
-  query?: never
-  url: '/thing/well-screen/{well_screen_id}'
-}
+    body?: never;
+    path: {
+        /**
+         * Well Screen Id
+         */
+        well_screen_id: number;
+    };
+    query?: never;
+    url: '/thing/well-screen/{well_screen_id}';
+};
 
 export type DeleteWellScreenThingWellScreenWellScreenIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type DeleteWellScreenThingWellScreenWellScreenIdDeleteError =
-  DeleteWellScreenThingWellScreenWellScreenIdDeleteErrors[keyof DeleteWellScreenThingWellScreenWellScreenIdDeleteErrors]
+export type DeleteWellScreenThingWellScreenWellScreenIdDeleteError = DeleteWellScreenThingWellScreenWellScreenIdDeleteErrors[keyof DeleteWellScreenThingWellScreenWellScreenIdDeleteErrors];
 
 export type DeleteWellScreenThingWellScreenWellScreenIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void
-}
+    /**
+     * Successful Response
+     */
+    204: void;
+};
 
-export type DeleteWellScreenThingWellScreenWellScreenIdDeleteResponse =
-  DeleteWellScreenThingWellScreenWellScreenIdDeleteResponses[keyof DeleteWellScreenThingWellScreenWellScreenIdDeleteResponses]
+export type DeleteWellScreenThingWellScreenWellScreenIdDeleteResponse = DeleteWellScreenThingWellScreenWellScreenIdDeleteResponses[keyof DeleteWellScreenThingWellScreenWellScreenIdDeleteResponses];
 
 export type UpdateWellScreenThingWellScreenWellScreenIdPatchData = {
-  body: UpdateWellScreen
-  path: {
-    /**
-     * Well Screen Id
-     */
-    well_screen_id: number
-  }
-  query?: never
-  url: '/thing/well-screen/{well_screen_id}'
-}
+    body: UpdateWellScreen;
+    path: {
+        /**
+         * Well Screen Id
+         */
+        well_screen_id: number;
+    };
+    query?: never;
+    url: '/thing/well-screen/{well_screen_id}';
+};
 
 export type UpdateWellScreenThingWellScreenWellScreenIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError
-}
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
 
-export type UpdateWellScreenThingWellScreenWellScreenIdPatchError =
-  UpdateWellScreenThingWellScreenWellScreenIdPatchErrors[keyof UpdateWellScreenThingWellScreenWellScreenIdPatchErrors]
+export type UpdateWellScreenThingWellScreenWellScreenIdPatchError = UpdateWellScreenThingWellScreenWellScreenIdPatchErrors[keyof UpdateWellScreenThingWellScreenWellScreenIdPatchErrors];
 
 export type UpdateWellScreenThingWellScreenWellScreenIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: WellScreenResponse
-}
+    /**
+     * Successful Response
+     */
+    200: WellScreenResponse;
+};
 
-export type UpdateWellScreenThingWellScreenWellScreenIdPatchResponse =
-  UpdateWellScreenThingWellScreenWellScreenIdPatchResponses[keyof UpdateWellScreenThingWellScreenWellScreenIdPatchResponses]
+export type UpdateWellScreenThingWellScreenWellScreenIdPatchResponse = UpdateWellScreenThingWellScreenWellScreenIdPatchResponses[keyof UpdateWellScreenThingWellScreenWellScreenIdPatchResponses];
 
 export type ClientOptions = {
-  baseUrl: 'https://ocotillo-api-staging.newmexicowaterdata.org' | (string & {})
-}
+    baseUrl: 'https://ocotillo-api-staging.newmexicowaterdata.org' | (string & {});
+};
