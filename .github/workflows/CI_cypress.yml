@@ -18,7 +18,7 @@ jobs:
           build: npm run build
         env:
           VITE_BASE_URL: http://localhost:4173
-          VITE_OCOTILLO_API_URL: http://127.0.0.1:4010
+          VITE_OCOTILLO_API_URL: http://localhost:8000
 
       - name: Save build folder
         uses: actions/upload-artifact@v4
@@ -49,15 +49,34 @@ jobs:
           name: build
           path: dist
 
-      - name: Start mock server
+      - name: Checkout API repo
+        uses: actions/checkout@v4
+        with:
+          repository: DataIntegrationGroup/NMSampleLocations
+          ref: staging
+          path: api-repo
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start API containers
+        working-directory: ./api-repo
         run: |
-          # Start mock server in background
-          npm run mock:server:cypress &
-          # Wait for server to start
-          sleep 10
-          
+          docker compose up -d --build
+          # Wait for API to be healthy (adjust based on your API's health endpoint/port)
+          timeout 180 bash -c 'until curl -f http://localhost:8000/docs || curl -f http://localhost:8000/docs || docker compose logs app | grep -q "Application startup complete"; do sleep 3; done'
+          # Give it a few more seconds for full initialization
+          sleep 5
+
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
           start: npm start
           browser: chrome
+        env:
+          VITE_OCOTILLO_API_URL: http://localhost:8000
+
+      - name: Stop API containers
+        if: always()
+        working-directory: ./api-repo
+        run: docker compose down -v
