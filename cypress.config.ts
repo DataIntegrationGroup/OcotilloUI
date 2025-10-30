@@ -9,7 +9,9 @@ export default defineConfig({
   },
 
   e2e: {
-    baseUrl: 'http://localhost:4173',
+    baseUrl: process.env.CI
+    ? "http://localhost:4173"   
+    : "http://localhost:5173",
     setupNodeEvents(on, config) {
       process.env.NODE_ENV = 'test'
     },
