@@ -23,7 +23,15 @@ let tables: {
   show?: string
   create?: string
   list?: string
-  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
+  meta: {
+    label?: string
+    icon?: JSX.Element
+    disabled?: boolean
+    routes?: any
+    parent?: string
+    nestedLevel?: number
+    hide?: boolean
+  }
 }[] = [
   {
     name: 'thing-well',
@@ -172,6 +180,20 @@ let tables: {
   },
 ]
 
+tables.push({
+  name: 'thing-well-pdf-preview',
+  // Use `list` to register the route path so useMenu() can match it.
+  // It's hidden, so it won't render in the menu.
+  list: '/ocotillo/well/pdf-preview/:id',
+  meta: {
+    label: 'PDF Preview',
+    // IMPORTANT: tie it to the Wells resource in the sidebar tree
+    parent: 'ocotillo.thing-well',
+    nestedLevel: 3,
+    hide: true,
+  },
+})
+
 tables = tables.map((b) => {
   let meta = b.meta || {}
   if (!meta['parent']) {
@@ -224,95 +246,6 @@ forms = forms.map((b) => {
     meta['parent'] = 'ocotillo.forms'
   }
   meta['nestedLevel'] = 2
-  return {
-    ...b,
-    meta: meta,
-  }
-})
-
-let things: {
-  name: string
-  edit?: string
-  show?: string
-  create?: string
-  list: string
-  meta: {
-    label?: string
-    icon?: JSX.Element
-    disabled?: boolean
-    routes?: any
-    parent?: string
-    nestedLevel?: number
-    hide?: boolean
-  }
-}[] = [
-  {
-    name: 'thing-well',
-    list: '/ocotillo/well',
-    edit: '/ocotillo/well/edit/:id',
-    show: '/ocotillo/well/show/:id',
-    create: '/ocotillo/well/create',
-    meta: {
-      label: 'Wells',
-      icon: <Construction />,
-    },
-  },
-  {
-    name: 'thing-spring',
-    list: '/ocotillo/spring',
-    edit: '/ocotillo/spring/edit/:id',
-    show: '/ocotillo/spring/show/:id',
-    create: '/ocotillo/spring/create',
-    meta: {
-      label: 'Springs',
-      icon: <Spa />,
-    },
-  },
-  {
-    name: 'thing-id-link',
-    list: '/ocotillo/thing-id-link',
-    edit: '/ocotillo/thing-id-link/edit/:id',
-    show: '/ocotillo/thing-id-link/show/:id',
-    create: '/ocotillo/thing-id-link/create',
-    meta: {
-      disabled: false,
-      label: 'ID links',
-      icon: <Link />,
-    },
-  },
-  {
-    name: 'thing/well-screen',
-    list: '/ocotillo/well-screen',
-    edit: '/ocotillo/well-screen/edit/:id',
-    show: '/ocotillo/well-screen/show/:id',
-    create: '/ocotillo/well-screen/create',
-    meta: {
-      label: 'Well Screens',
-      icon: <MoreVertOutlined />,
-    },
-  },
-]
-
-things.push({
-  name: 'thing-well-pdf-preview',
-  // Use `list` to register the route path so useMenu() can match it.
-  // It's hidden, so it won't render in the menu.
-  list: '/ocotillo/well/pdf-preview/:id',
-  meta: {
-    label: 'PDF Preview',
-    // IMPORTANT: tie it to the Wells resource in the sidebar tree
-    parent: 'ocotillo.thing-well',
-    nestedLevel: 3,
-    hide: true,
-  },
-})
-
-things = things.map((b) => {
-  let meta = b.meta || {}
-  if (!meta['parent']) {
-    meta['parent'] = 'ocotillo.thing'
-  }
-  meta['nestedLevel'] = 3
   return {
     ...b,
     meta: meta,
@@ -432,7 +365,6 @@ export const ocotilloResources = ocotillo.map((b) => {
 })
 
 if (!import.meta.env.PROD) {
-  console.debug({ things })
   console.debug({ ocotilloResources })
 }
 
