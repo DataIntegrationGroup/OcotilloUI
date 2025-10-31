@@ -1,9 +1,7 @@
 import type { DataProvider } from '@refinedev/core'
 import { settings } from '@/settings'
 
-const API_URL = process.env.NODE_ENV === 'test' 
-  ? 'http://localhost:8000'  // test against local or CI API
-  : `${settings.ocotillo_api_url}`
+const API_URL = settings.ocotillo_api_url
 
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import createAuthRefreshInterceptor from 'axios-auth-refresh'
