@@ -42,7 +42,9 @@ describe('Contact Create Page', () => {
     cy.contains('label', 'Organization').parent().find('input').type('Test Organization');
 
     // thing from autocomplete
-    cy.contains('label', 'Thing').parent().find('input').click()
+    cy.contains('label', 'Thing').parent().find('input').type('TEST')
+    // Wait for the API call to complete
+    cy.wait(500)
     cy.get('[role="listbox"]').should('be.visible');
     cy.get('[role="listbox"] li').first().click();
 
@@ -71,7 +73,9 @@ describe('Contact Create Page', () => {
     cy.contains('label', 'Organization').parent().find('input').type('Test Organization');
 
     // thing from autocomplete
-    cy.contains('label', 'Thing').parent().find('input').click()
+    cy.contains('label', 'Thing').parent().find('input').type('TEST')
+    // Wait for the API call to complete
+    cy.wait(500)
     cy.get('[role="listbox"]').should('be.visible');
     cy.get('[role="listbox"] li').first().click();
 
