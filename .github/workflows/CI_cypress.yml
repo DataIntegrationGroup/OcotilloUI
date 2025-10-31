@@ -75,14 +75,10 @@ jobs:
           # Seed database
           docker compose exec -T app python -m transfers.seed
 
-      - name: Verify API is accessible
+      - name: Test API from browser context
         run: |
-          echo "Checking if API containers are running..."
-          docker ps
-          echo "Testing API connectivity..."
-          curl -v http://localhost:8000/docs || echo "API not reachable!"
-          curl -v http://localhost:8000/thing || echo "Thing endpoint not reachable!"
-          curl -v http://localhost:8000/lexicon/term?category=release_status || echo "Lexicon endpoint not reachable!"
+          # Start a simple test to see if browser can reach API
+          npx cypress run --spec "cypress/e2e/test-api-connectivity.cy.ts" || true
 
       - name: Cypress run
         uses: cypress-io/github-action@v6
