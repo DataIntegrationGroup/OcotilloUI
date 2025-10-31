@@ -66,6 +66,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.PG_TEST_PW }}
           POSTGRES_DB: ${{ secrets.PG_TEST_DB }}
           MODE: development
+          AUTHENTIK_DISABLE_AUTHENTICATION: 1
         run: |
           docker compose up -d --build
           # Wait for API to respond to requests
@@ -85,7 +86,7 @@ jobs:
             cypress/e2e/test-api-connectivity.cy.ts
             cypress/e2e/ocotillo/**/*.cy.ts
         env:
-          DEBUG: cypress:server:*,cypress:driver:*,cypress:network:*
+          DEBUG: cypress:network:*,cypress:server:request
 
       - name: Stop API containers
         if: always()
