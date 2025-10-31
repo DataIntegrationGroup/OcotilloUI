@@ -85,7 +85,7 @@ jobs:
             cypress/e2e/test-api-connectivity.cy.ts
             cypress/e2e/ocotillo/**/*.cy.ts
         env:
-          DEBUG: cypress:server:browser,cypress:server:routes
+          DEBUG: cypress:server:*,cypress:driver:*,cypress:network:*
 
       - name: Stop API containers
         if: always()
