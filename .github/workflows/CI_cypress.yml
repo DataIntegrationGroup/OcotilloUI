@@ -59,7 +59,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Start API containers
+      - name: Start API containers and seed database
         working-directory: ./api-repo
         env:
           POSTGRES_USER: ${{ secrets.PG_TEST_USER }}
@@ -72,10 +72,8 @@ jobs:
           timeout 180 bash -c 'until curl -f http://localhost:8000/docs; do sleep 3; done'
           # Give it a few more seconds for full initialization
           sleep 5
-
-      - name: seed database
-        working-directory: ./api-repo
-        run: docker compose exec app python -m transfers.seed
+          # Seed database
+          docker compose exec -T app python -m transfers.seed
 
       - name: Cypress run
         uses: cypress-io/github-action@v6
