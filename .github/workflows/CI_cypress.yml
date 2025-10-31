@@ -81,7 +81,8 @@ jobs:
           start: npm start
           browser: chrome
         env:
-          VITE_OCOTILLO_API_URL: http://localhost:8000
+          DEBUG: cypress:*
+          CYPRESS_DEBUG: true
 
       - name: Stop API containers
         if: always()
