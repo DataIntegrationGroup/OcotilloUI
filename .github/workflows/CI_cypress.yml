@@ -75,16 +75,15 @@ jobs:
           # Seed database
           docker compose exec -T app python -m transfers.seed
 
-      - name: Test API from browser context
-        run: |
-          # Start a simple test to see if browser can reach API
-          npx cypress run --spec "cypress/e2e/test-api-connectivity.cy.ts" || true
-
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
           start: npm start
           browser: chrome
+          # Run connectivity test first, then all other tests
+          spec: |
+            cypress/e2e/test-api-connectivity.cy.ts
+            cypress/e2e/ocotillo/**/*.cy.ts
         env:
           DEBUG: cypress:server:browser,cypress:server:routes
 
