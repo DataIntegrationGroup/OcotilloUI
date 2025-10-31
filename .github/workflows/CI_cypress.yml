@@ -30,6 +30,7 @@ jobs:
   cypress-run:
     runs-on: ubuntu-24.04
     needs: install
+    environment: staging
     steps:
       - name: Checkout
         uses: actions/checkout@v4
