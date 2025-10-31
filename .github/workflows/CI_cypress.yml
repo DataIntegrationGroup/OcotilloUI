@@ -30,7 +30,6 @@ jobs:
   cypress-run:
     runs-on: ubuntu-24.04
     needs: install
-    environment: staging
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,7 +53,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: DataIntegrationGroup/NMSampleLocations
-          ref: staging
+          ref: cm-seed-db-for-dockerized-frontend-testing
           path: api-repo
 
       - name: Set up Docker Buildx
@@ -73,6 +72,10 @@ jobs:
           timeout 180 bash -c 'until curl -f http://localhost:8000/docs; do sleep 3; done'
           # Give it a few more seconds for full initialization
           sleep 5
+
+      - name: seed database
+        working-directory: ./api-repo
+        run: docker compose exec app python -m transfers.seed
 
       - name: Cypress run
         uses: cypress-io/github-action@v6

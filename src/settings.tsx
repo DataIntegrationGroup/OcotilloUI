@@ -10,7 +10,7 @@ export const settings = {
 
   ocotillo_api_url:
     cypressCheck() || process.env.NODE_ENV === 'test'
-    ? 'http://127.0.0.1:4010'
+    ? 'http://localhost:8000'
     : import.meta.env.VITE_OCOTILLO_API_URL || 'http://localhost:8000',
 
   st2_url: 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
