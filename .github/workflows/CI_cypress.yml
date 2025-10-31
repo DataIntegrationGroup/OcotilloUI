@@ -81,8 +81,7 @@ jobs:
           start: npm start
           browser: chrome
         env:
-          DEBUG: cypress:*
-          CYPRESS_DEBUG: true
+          DEBUG: cypress:server:browser,cypress:server:routes
 
       - name: Stop API containers
         if: always()
