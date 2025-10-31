@@ -68,7 +68,7 @@ jobs:
           MODE: development
         run: |
           docker compose up -d --build
-          # Wait for API to be healthy (adjust based on your API's health endpoint/port)
+          # Wait for API to respond to requests
           timeout 180 bash -c 'until curl -f http://localhost:8000/docs; do sleep 3; done'
           # Give it a few more seconds for full initialization
           sleep 5
