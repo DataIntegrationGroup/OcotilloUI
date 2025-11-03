@@ -1,4 +1,4 @@
-import { cypressCheck } from './utils/CypressCheck';
+import { cypressCheck } from './utils/CypressCheck'
 
 export const settings = {
   rowHeight: 27,
@@ -10,8 +10,8 @@ export const settings = {
 
   ocotillo_api_url:
     cypressCheck() || process.env.NODE_ENV === 'test'
-    ? 'http://localhost:8000'
-    : import.meta.env.VITE_OCOTILLO_API_URL || 'http://localhost:8000',
+      ? 'http://localhost:8000'
+      : import.meta.env.VITE_OCOTILLO_API_URL || 'http://localhost:8000',
 
   st2_url: 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
   nmbgmr_geothermal_api_url:
