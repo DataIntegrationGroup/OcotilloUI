@@ -39,8 +39,11 @@ jobs:
 
       - name: Start FastAPI backend (Docker Compose)
         working-directory: ./api-repo
+        env:
+          INSTALL_DEV: true
         run: |
-          docker compose up -d --build
+          docker compose build --build-arg INSTALL_DEV=$INSTALL_DEV app
+          docker compose up -d
           echo "Waiting for FastAPI to be ready..."
           timeout 180 bash -c 'until curl -f http://localhost:8000/docs; do sleep 3; done'
           echo "FastAPI is up and healthy"
