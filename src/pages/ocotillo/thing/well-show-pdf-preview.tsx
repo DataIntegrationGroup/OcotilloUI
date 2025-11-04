@@ -1,160 +1,105 @@
-import { IWell } from '@/interfaces/ocotillo/IThing'
-import { convertLonLatToUTM, parseWktPoint } from '@/utils'
-import { Box, Card, CardContent, Typography } from '@mui/material'
-import Grid from '@mui/material/Grid2'
-import { HttpError, useShow } from '@refinedev/core'
-import { Show } from '@refinedev/mui'
+import { IContact, IWell } from '@/interfaces/ocotillo/IThing'
+import {
+  Box,
+  Card,
+  CardContent,
+  IconButton,
+  Skeleton,
+  Typography,
+} from '@mui/material'
+import { HttpError, useList, useNavigation, useShow } from '@refinedev/core'
+import { ListButton, Show, ShowButton } from '@refinedev/mui'
 import { useParams } from 'react-router-dom'
+import { ArrowBack } from '@mui/icons-material'
+import { PDFViewer } from '@react-pdf/renderer'
+import { WellPDF } from '@/components'
+import { useEffect, useState } from 'react'
 
 export const WellShowPdfPreview = () => {
+  const { push } = useNavigation()
   const { id } = useParams()
+  const [isViewerReady, setIsViewerReady] = useState(false)
+
+  const handleBack = () => push(`/ocotillo/well/show/${id}`)
+
   const {
-    queryResult: { data, isLoading },
+    queryResult: { data: wellData, isLoading: isWellLoading },
   } = useShow<IWell, HttpError>({
     resource: 'thing-well',
     id,
   })
 
-  const well = data?.data
+  const { data: assetData, isLoading: isAssetLoading } = useList({
+    resource: 'asset',
+    dataProviderName: 'ocotillo',
+    meta: { params: { thing_id: id } },
+  })
+
+  const { data: contactData, isLoading: isContactLoading } = useList<IContact>({
+    resource: 'contact',
+    dataProviderName: 'ocotillo',
+    meta: { params: { thing_id: id } },
+  })
+
+  const well = wellData?.data
+  const assets = assetData?.data ?? []
+  const contacts = contactData?.data ?? []
+
+  const isLoading = isWellLoading || isAssetLoading || isContactLoading
+
+  useEffect(() => {
+    if (!isLoading) {
+      const timer = setTimeout(() => setIsViewerReady(true), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [isLoading])
 
   return (
     <Show
       resource="thing-well"
       recordItemId={id}
       isLoading={isLoading}
-      title={
-        <Typography variant="h5">{`Preview Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
+      goBack={
+        <IconButton aria-label="return to show page" onClick={handleBack}>
+          <ArrowBack />
+        </IconButton>
       }
+      title={
+        <Typography variant="h5">
+          {`PDF Preview Well${well?.name ? `: ${well?.name}` : ''}`}
+        </Typography>
+      }
+      headerButtons={({ defaultButtons }) => (
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <ShowButton resource="ocotillo.thing-well" recordItemId={id} />
+          <ListButton resource="ocotillo.thing-well" />
+          {defaultButtons}
+        </Box>
+      )}
     >
       <Card elevation={2}>
         <CardContent>
-          <PDF well={well} />
+          <Box sx={{ width: '100%', height: '90vh' }}>
+            {(!isViewerReady || isLoading) && (
+              <Skeleton variant="rectangular" height="100%" />
+            )}
+            {!isLoading && (
+              <Box
+                sx={{
+                  opacity: isViewerReady ? 1 : 0,
+                  transition: 'opacity 0.4s ease-in-out',
+                  width: '100%',
+                  height: '100%',
+                }}
+              >
+                <PDFViewer width="100%" height="100%">
+                  <WellPDF well={well} assets={assets} contacts={contacts} />
+                </PDFViewer>
+              </Box>
+            )}
+          </Box>
         </CardContent>
       </Card>
     </Show>
-  )
-}
-
-export const PDF = ({ well }: { well: IWell }) => {
-  const coords = parseWktPoint(well?.current_location?.point)
-  const [easting, northing] = coords
-    ? convertLonLatToUTM(coords.lon, coords.lat)
-    : [undefined, undefined]
-
-  return (
-    <Grid container spacing={2}>
-      <Grid size={{ xs: 12 }}>
-        <Typography variant="h1" textAlign="center">
-          Field Compilation Notes
-        </Typography>
-      </Grid>
-      <Grid size={{ xs: 6 }}>
-        <Typography variant="body1">Well Id: {safe(well?.name)}</Typography>
-      </Grid>
-      <Grid size={{ xs: 6 }}>
-        <DateBoxes />
-      </Grid>
-      <Grid size={{ xs: 6 }}>
-        <Typography variant="body1">Site Name: {safe(well?.name)}</Typography>
-        <Typography variant="body1">Easting: {safe(easting)}</Typography>
-        <Typography variant="body1">Northing: {safe(northing)}</Typography>
-      </Grid>
-      <Grid size={{ xs: 12 }}>
-        <pre>{JSON.stringify(well, null, 2)}</pre>
-      </Grid>
-    </Grid>
-  )
-}
-
-const safe = (v: React.ReactNode, fallback = 'N/A') =>
-  v === null || v === undefined || v === '' ? fallback : v
-
-const DateBoxes = () => {
-  const groups = [
-    { count: 4, label: 'Y' },
-    { dash: true },
-    { count: 2, label: 'M' },
-    { dash: true },
-    { count: 2, label: 'D' },
-  ]
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        gap: 1,
-      }}
-    >
-      {/* Title */}
-      <Typography
-        variant="body1"
-        sx={{ fontWeight: 700, mb: 0.5, alignSelf: 'center' }}
-      >
-        Date:
-      </Typography>
-
-      {/* Boxes Row */}
-      <Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {groups.map((g, gi) =>
-            g.dash ? (
-              <Typography
-                key={`dash-${gi}`}
-                sx={{ fontWeight: 700, fontSize: 20, mx: 0.5 }}
-              >
-                –
-              </Typography>
-            ) : (
-              // Render a group of boxes
-              <Box key={`group-${gi}`} sx={{ display: 'flex', gap: 0.5 }}>
-                {Array.from({ length: g.count }).map((_, i) => (
-                  <Box
-                    key={i}
-                    sx={{
-                      width: 26,
-                      height: 32,
-                      border: '2px solid',
-                      borderColor: 'grey.600',
-                      borderRadius: 0.5,
-                    }}
-                  />
-                ))}
-              </Box>
-            )
-          )}
-        </Box>
-
-        {/* Labels Row */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-          {groups.map((g, gi) =>
-            g.dash ? (
-              // keep spacing under dash for alignment
-              <Box key={`dashlbl-${gi}`} sx={{ width: 20 }} />
-            ) : (
-              <Box
-                key={`lbl-${gi}`}
-                sx={{
-                  display: 'flex',
-                  gap: 2.255,
-                  ml: 1,
-                }}
-              >
-                {Array.from({ length: g.count }).map((_, i) => (
-                  <Typography
-                    key={i}
-                    variant="caption"
-                    sx={{ fontWeight: 700, letterSpacing: 1, fontSize: 20 }}
-                  >
-                    {g.label}
-                  </Typography>
-                ))}
-              </Box>
-            )
-          )}
-        </Box>
-      </Box>
-    </Box>
   )
 }

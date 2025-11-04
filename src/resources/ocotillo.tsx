@@ -1,8 +1,6 @@
 import {
-  CategoryOutlined,
   Place,
   Construction,
-  DashboardOutlined,
   ScienceOutlined,
   SettingsInputAntenna,
   ScaleOutlined,
@@ -25,7 +23,15 @@ let tables: {
   show?: string
   create?: string
   list?: string
-  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
+  meta: {
+    label?: string
+    icon?: JSX.Element
+    disabled?: boolean
+    routes?: any
+    parent?: string
+    nestedLevel?: number
+    hide?: boolean
+  }
 }[] = [
   {
     name: 'thing-well',
@@ -174,6 +180,20 @@ let tables: {
   },
 ]
 
+tables.push({
+  name: 'thing-well-pdf-preview',
+  // Use `list` to register the route path so useMenu() can match it.
+  // It's hidden, so it won't render in the menu.
+  list: '/ocotillo/well/pdf-preview/:id',
+  meta: {
+    label: 'PDF Preview',
+    // IMPORTANT: tie it to the Wells resource in the sidebar tree
+    parent: 'ocotillo.thing-well',
+    nestedLevel: 3,
+    hide: true,
+  },
+})
+
 tables = tables.map((b) => {
   let meta = b.meta || {}
   if (!meta['parent']) {
@@ -274,8 +294,6 @@ let ocotillo = [
       icon: <Map />,
     },
   },
-
-  // tables
   {
     name: 'tables',
     icon: <WidgetsOutlined />,
@@ -284,7 +302,6 @@ let ocotillo = [
     },
   },
   ...tables,
-
   {
     name: 'observation',
     icon: <ScaleOutlined />,
@@ -295,7 +312,6 @@ let ocotillo = [
     },
   },
   ...observations,
-  // Apps
   {
     name: 'apps',
     icon: <Apps />,
@@ -325,8 +341,6 @@ let ocotillo = [
       icon: <ScienceOutlined />,
     },
   },
-
-  // Forms
   {
     name: 'forms',
     icon: <DynamicFormOutlined />,
@@ -335,14 +349,6 @@ let ocotillo = [
     },
   },
   ...forms,
-
-  // {
-  //   name: 'Apps',
-  //   icon: <WidgetsOutlined />,
-  //   meta: {
-  //     label: 'Things',
-  //   },
-  // },
 ]
 
 export const ocotilloResources = ocotillo.map((b) => {
@@ -358,7 +364,10 @@ export const ocotilloResources = ocotillo.map((b) => {
   }
 })
 
-console.log(ocotilloResources)
+if (!import.meta.env.PROD) {
+  console.debug({ ocotilloResources })
+}
+
 //
 // let amp = [
 //   {

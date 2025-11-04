@@ -13,10 +13,7 @@ export type AddressResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Contact Id
      */
@@ -45,10 +42,7 @@ export type AddressResponse = {
      * Country
      */
     country: string;
-    /**
-     * Address Type
-     */
-    address_type: string;
+    address_type: AddressType;
 };
 
 /**
@@ -87,10 +81,7 @@ export type AssetResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Storage Service
      */
@@ -147,10 +138,7 @@ export type ContactResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Name
      */
@@ -159,14 +147,8 @@ export type ContactResponse = {
      * Organization
      */
     organization: string | null;
-    /**
-     * Role
-     */
-    role: string;
-    /**
-     * Contact Type
-     */
-    contact_type: string;
+    role: Role;
+    contact_type: ContactType;
     /**
      * Emails
      */
@@ -190,10 +172,7 @@ export type ContactResponse = {
  * Schema for creating an address.
  */
 export type CreateAddress = {
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Contact Id
      */
@@ -222,10 +201,7 @@ export type CreateAddress = {
      * Country
      */
     country?: string;
-    /**
-     * Address Type
-     */
-    address_type?: string;
+    address_type?: AddressType;
 };
 
 /**
@@ -256,10 +232,7 @@ export type CreateAsset = {
      * Uri
      */
     uri: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Thing Id
      */
@@ -279,22 +252,13 @@ export type CreateContact = {
      * Organization
      */
     organization?: string | null;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Thing Id
      */
     thing_id: number;
-    /**
-     * Role
-     */
-    role: string;
-    /**
-     * Contact Type
-     */
-    contact_type?: string;
+    role: Role;
+    contact_type?: ContactType;
     /**
      * Emails
      */
@@ -317,19 +281,13 @@ export type CreateEmail = {
     /**
      * Email
      */
-    email?: string | null;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    email: string;
+    release_status?: ReleaseStatus;
     /**
      * Contact Id
      */
     contact_id?: number | null;
-    /**
-     * Email Type
-     */
-    email_type?: string;
+    email_type?: EmailType;
 };
 
 /**
@@ -344,10 +302,7 @@ export type CreateGroundwaterLevelObservation = {
      * Observation Datetime
      */
     observation_datetime: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Sample Id
      */
@@ -360,10 +315,7 @@ export type CreateGroundwaterLevelObservation = {
      * Value
      */
     value: number | null;
-    /**
-     * Unit
-     */
-    unit: string | null;
+    unit: Unit | null;
     /**
      * Measuring Point Height
      */
@@ -391,10 +343,7 @@ export type CreateGroup = {
      * Parent Group Id
      */
     parent_group_id?: number | null;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Name
      */
@@ -460,10 +409,7 @@ export type CreateLocation = {
      * Point
      */
     point: string;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus;
     /**
      * Notes
      */
@@ -476,18 +422,12 @@ export type CreateLocation = {
      * Elevation Accuracy
      */
     elevation_accuracy?: number | null;
-    /**
-     * Elevation Method
-     */
-    elevation_method?: string | null;
+    elevation_method?: ElevationMethod | null;
     /**
      * Coordinate Accuracy
      */
     coordinate_accuracy?: number | null;
-    /**
-     * Coordinate Method
-     */
-    coordinate_method?: string | null;
+    coordinate_method?: CoordinateMethod | null;
 };
 
 /**
@@ -498,19 +438,13 @@ export type CreatePhone = {
     /**
      * Phone Number
      */
-    phone_number?: string | null;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    phone_number: string;
+    release_status?: ReleaseStatus;
     /**
      * Contact Id
      */
     contact_id?: number | null;
-    /**
-     * Phone Type
-     */
-    phone_type?: string;
+    phone_type?: PhoneType;
     /**
      * Nma Phone Number
      */
@@ -542,10 +476,7 @@ export type CreatePublication = {
      * Url
      */
     url?: string | null;
-    /**
-     * Publication Type
-     */
-    publication_type: string;
+    publication_type: PublicationType;
 };
 
 /**
@@ -564,10 +495,7 @@ export type CreateSample = {
      * Depth Bottom
      */
     depth_bottom?: number | null;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Field Activity Id
      */
@@ -580,18 +508,9 @@ export type CreateSample = {
      * Sample Name
      */
     sample_name: string;
-    /**
-     * Sample Matrix
-     */
-    sample_matrix: string;
-    /**
-     * Sample Method
-     */
-    sample_method: string;
-    /**
-     * Qc Type
-     */
-    qc_type: string;
+    sample_matrix: SampleMatrix;
+    sample_method: SampleMethod;
+    qc_type: QcType;
     /**
      * Notes
      */
@@ -603,18 +522,12 @@ export type CreateSample = {
  * Schema for creating a new sensor.
  */
 export type CreateSensor = {
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Name
      */
     name: string;
-    /**
-     * Sensor Type
-     */
-    sensor_type: string;
+    sensor_type: SensorType;
     /**
      * Model
      */
@@ -646,10 +559,7 @@ export type CreateSensor = {
  * Schema for creating a spring.
  */
 export type CreateSpring = {
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Location Id
      */
@@ -666,10 +576,7 @@ export type CreateSpring = {
      * First Visit Date
      */
     first_visit_date?: string | null;
-    /**
-     * Spring Type
-     */
-    spring_type?: string | null;
+    spring_type?: SpringType | null;
 };
 
 /**
@@ -707,10 +614,7 @@ export type CreateWaterChemistryObservation = {
      * Observation Datetime
      */
     observation_datetime: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Sample Id
      */
@@ -723,10 +627,7 @@ export type CreateWaterChemistryObservation = {
      * Value
      */
     value: number | null;
-    /**
-     * Unit
-     */
-    unit: string | null;
+    unit: Unit | null;
 };
 
 /**
@@ -749,10 +650,7 @@ export type CreateWell = {
      * Well casing depth in feet
      */
     well_casing_depth?: number | null;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Location Id
      */
@@ -772,7 +670,7 @@ export type CreateWell = {
     /**
      * Well Purposes
      */
-    well_purposes?: Array<string> | null;
+    well_purposes?: Array<WellPurpose> | null;
     /**
      * Well Construction Notes
      */
@@ -785,7 +683,7 @@ export type CreateWell = {
     /**
      * Well Casing Materials
      */
-    well_casing_materials?: Array<string> | null;
+    well_casing_materials?: Array<CasingMaterial> | null;
 };
 
 /**
@@ -793,10 +691,7 @@ export type CreateWell = {
  * Schema for creating a well screen.
  */
 export type CreateWellScreen = {
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status?: ReleaseStatus;
     /**
      * Thing Id
      */
@@ -814,7 +709,7 @@ export type CreateWellScreen = {
     /**
      * Screen Type
      */
-    screen_type?: string | null;
+    screen_type?: unknown | null;
     /**
      * Screen Description
      */
@@ -833,10 +728,7 @@ export type DeploymentResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Thing Id
      */
@@ -889,10 +781,7 @@ export type EmailResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Contact Id
      */
@@ -901,10 +790,7 @@ export type EmailResponse = {
      * Email
      */
     email: string;
-    /**
-     * Email Type
-     */
-    email_type: string;
+    email_type: EmailType;
 };
 
 /**
@@ -952,18 +838,12 @@ export type FieldActivityResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Field Event Id
      */
     field_event_id: number;
-    /**
-     * Activity Type
-     */
-    activity_type: string;
+    activity_type: ActivityType;
 };
 
 /**
@@ -978,10 +858,7 @@ export type FieldEventResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Thing Id
      */
@@ -1023,10 +900,7 @@ export type GroundwaterLevelObservationResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Sample Id
      */
@@ -1044,10 +918,7 @@ export type GroundwaterLevelObservationResponse = {
      * Value
      */
     value: number | null;
-    /**
-     * Unit
-     */
-    unit: string;
+    unit: Unit;
     /**
      * Depth To Water Bgs
      */
@@ -1076,10 +947,7 @@ export type GroupResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Name
      */
@@ -1199,10 +1067,7 @@ export type LocationResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string | null;
+    release_status: ReleaseStatus;
     /**
      * Notes
      */
@@ -1220,25 +1085,19 @@ export type LocationResponse = {
      */
     horizontal_datum?: string;
     /**
-     * Vertical Daum
+     * Vertical Datum
      */
-    vertical_daum?: string;
+    vertical_datum?: string;
     /**
      * Elevation Accuracy
      */
     elevation_accuracy: number | null;
-    /**
-     * Elevation Method
-     */
-    elevation_method: string | null;
+    elevation_method: ElevationMethod | null;
     /**
      * Coordinate Accuracy
      */
     coordinate_accuracy: number | null;
-    /**
-     * Coordinate Method
-     */
-    coordinate_method: string | null;
+    coordinate_method: CoordinateMethod | null;
     /**
      * State
      */
@@ -1267,10 +1126,7 @@ export type ObservationResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Sample Id
      */
@@ -1288,10 +1144,7 @@ export type ObservationResponse = {
      * Value
      */
     value: number | null;
-    /**
-     * Unit
-     */
-    unit: string;
+    unit: Unit;
     /**
      * Depth To Water Bgs
      */
@@ -1775,6 +1628,32 @@ export type PageThingResponse = {
 };
 
 /**
+ * Page[TransducerObservationWithBlockResponse]
+ */
+export type PageTransducerObservationWithBlockResponse = {
+    /**
+     * Items
+     */
+    items: Array<TransducerObservationWithBlockResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
+
+/**
  * Page[WaterChemistryObservationResponse]
  */
 export type PageWaterChemistryObservationResponse = {
@@ -1894,30 +1773,18 @@ export type ParameterResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
-    /**
-     * Parameter Name
-     */
-    parameter_name: string;
+    release_status: ReleaseStatus;
+    parameter_name: ParameterName;
     /**
      * Matrix
      */
     matrix: string;
-    /**
-     * Parameter Type
-     */
-    parameter_type: string | null;
+    parameter_type: ParameterType | null;
     /**
      * Cas Number
      */
     cas_number: string | null;
-    /**
-     * Default Unit
-     */
-    default_unit: string;
+    default_unit: Unit | null;
 };
 
 /**
@@ -1933,10 +1800,7 @@ export type PhoneResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Contact Id
      */
@@ -1984,10 +1848,7 @@ export type PublicationResponse = {
      * Url
      */
     url?: string | null;
-    /**
-     * Publication Type
-     */
-    publication_type: string;
+    publication_type: PublicationType;
 };
 
 /**
@@ -2018,10 +1879,7 @@ export type SampleResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     thing: ThingResponse;
     field_event: FieldEventResponse;
     field_activity: FieldActivityResponse;
@@ -2034,18 +1892,9 @@ export type SampleResponse = {
      * Sample Name
      */
     sample_name: string;
-    /**
-     * Sample Matrix
-     */
-    sample_matrix: string;
-    /**
-     * Sample Method
-     */
-    sample_method: string;
-    /**
-     * Qc Type
-     */
-    qc_type: string;
+    sample_matrix: SampleMatrix;
+    sample_method: SampleMethod;
+    qc_type: QcType;
     /**
      * Notes
      */
@@ -2072,18 +1921,12 @@ export type SensorResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Name
      */
     name: string;
-    /**
-     * Sensor Type
-     */
-    sensor_type: string;
+    sensor_type: SensorType;
     /**
      * Model
      */
@@ -2123,10 +1966,7 @@ export type SpringResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Name
      */
@@ -2158,10 +1998,7 @@ export type ThingIdLinkResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Thing Id
      */
@@ -2193,10 +2030,7 @@ export type ThingResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Name
      */
@@ -2217,7 +2051,7 @@ export type ThingResponse = {
     /**
      * Well Purposes
      */
-    well_purposes?: Array<string>;
+    well_purposes?: Array<WellPurpose>;
     /**
      * Well Depth
      */
@@ -2253,7 +2087,7 @@ export type ThingResponse = {
     /**
      * Well Casing Materials
      */
-    well_casing_materials?: Array<string>;
+    well_casing_materials?: Array<CasingMaterial>;
     /**
      * Well Construction Notes
      */
@@ -2261,14 +2095,81 @@ export type ThingResponse = {
 };
 
 /**
+ * TransducerObservationBlockResponse
+ */
+export type TransducerObservationBlockResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * review_status
+     */
+    review_status: unknown;
+    /**
+     * Start Datetime
+     */
+    start_datetime: string;
+    /**
+     * End Datetime
+     */
+    end_datetime: string;
+    /**
+     * Parameter Id
+     */
+    parameter_id: number;
+};
+
+/**
+ * TransducerObservationResponse
+ */
+export type TransducerObservationResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Value
+     */
+    value: number;
+    /**
+     * Observation Datetime
+     */
+    observation_datetime: string;
+    /**
+     * Parameter Id
+     */
+    parameter_id: number;
+    /**
+     * Deployment Id
+     */
+    deployment_id: number;
+};
+
+/**
+ * TransducerObservationWithBlockResponse
+ */
+export type TransducerObservationWithBlockResponse = {
+    observation: TransducerObservationResponse;
+    block: TransducerObservationBlockResponse;
+};
+
+/**
  * UpdateAddress
  * Schema for updating address information.
  */
 export type UpdateAddress = {
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Contact Id
      */
@@ -2297,20 +2198,14 @@ export type UpdateAddress = {
      * Country
      */
     country?: string | null;
-    /**
-     * Address Type
-     */
-    address_type?: string | null;
+    address_type?: AddressType | null;
 };
 
 /**
  * UpdateAsset
  */
 export type UpdateAsset = {
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Name
      */
@@ -2334,18 +2229,9 @@ export type UpdateContact = {
      * Organization
      */
     organization?: string | null;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
-    /**
-     * Role
-     */
-    role?: string | null;
-    /**
-     * Contact Type
-     */
-    contact_type?: string | null;
+    release_status?: ReleaseStatus | null;
+    role?: Role | null;
+    contact_type?: ContactType | null;
     /**
      * Thing Id
      */
@@ -2361,18 +2247,12 @@ export type UpdateEmail = {
      * Email
      */
     email?: string | null;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Contact Id
      */
     contact_id?: number | null;
-    /**
-     * Email Type
-     */
-    email_type?: string | null;
+    email_type?: EmailType | null;
 };
 
 /**
@@ -2387,10 +2267,7 @@ export type UpdateGroundwaterLevelObservation = {
      * Observation Datetime
      */
     observation_datetime?: string | null;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Sample Id
      */
@@ -2403,10 +2280,7 @@ export type UpdateGroundwaterLevelObservation = {
      * Value
      */
     value?: number | null;
-    /**
-     * Unit
-     */
-    unit?: string | null;
+    unit?: Unit | null;
     /**
      * Measuring Point Height
      */
@@ -2435,10 +2309,7 @@ export type UpdateGroup = {
      * Parent Group Id
      */
     parent_group_id?: number | null;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Name
      */
@@ -2500,10 +2371,7 @@ export type UpdateLocation = {
      * Point
      */
     point?: string | null;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Notes
      */
@@ -2516,18 +2384,12 @@ export type UpdateLocation = {
      * Elevation Accuracy
      */
     elevation_accuracy?: number | null;
-    /**
-     * Elevation Method
-     */
-    elevation_method?: string | null;
+    elevation_method?: ElevationMethod | null;
     /**
      * Coordinate Accuracy
      */
     coordinate_accuracy?: number | null;
-    /**
-     * Coordinate Method
-     */
-    coordinate_method?: string | null;
+    coordinate_method?: CoordinateMethod | null;
 };
 
 /**
@@ -2539,18 +2401,12 @@ export type UpdatePhone = {
      * Phone Number
      */
     phone_number?: string | null;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Contact Id
      */
     contact_id?: number | null;
-    /**
-     * Phone Type
-     */
-    phone_type?: string | null;
+    phone_type?: PhoneType | null;
 };
 
 /**
@@ -2569,10 +2425,7 @@ export type UpdateSample = {
      * Depth Bottom
      */
     depth_bottom?: number | null;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Field Activity Id
      */
@@ -2585,18 +2438,9 @@ export type UpdateSample = {
      * Sample Name
      */
     sample_name?: string | null;
-    /**
-     * Sample Matrix
-     */
-    sample_matrix?: string | null;
-    /**
-     * Sample Method
-     */
-    sample_method?: string | null;
-    /**
-     * Qc Type
-     */
-    qc_type?: string | null;
+    sample_matrix?: SampleMatrix | null;
+    sample_method?: SampleMethod | null;
+    qc_type?: QcType | null;
     /**
      * Notes
      */
@@ -2607,18 +2451,12 @@ export type UpdateSample = {
  * UpdateSensor
  */
 export type UpdateSensor = {
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Name
      */
     name?: string | null;
-    /**
-     * Sensor Type
-     */
-    sensor_type?: string | null;
+    sensor_type?: SensorType | null;
     /**
      * Model
      */
@@ -2649,10 +2487,7 @@ export type UpdateSensor = {
  * UpdateSpring
  */
 export type UpdateSpring = {
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Name
      */
@@ -2671,10 +2506,7 @@ export type UpdateSpring = {
  * UpdateThingIdLink
  */
 export type UpdateThingIdLink = {
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Alternate Organization
      */
@@ -2701,10 +2533,7 @@ export type UpdateWaterChemistryObservation = {
      * Observation Datetime
      */
     observation_datetime?: string | null;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Sample Id
      */
@@ -2717,10 +2546,7 @@ export type UpdateWaterChemistryObservation = {
      * Value
      */
     value?: number | null;
-    /**
-     * Unit
-     */
-    unit?: string | null;
+    unit?: Unit | null;
 };
 
 /**
@@ -2739,10 +2565,7 @@ export type UpdateWell = {
      * Well Casing Depth
      */
     well_casing_depth?: number | null;
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Name
      */
@@ -2773,10 +2596,7 @@ export type UpdateWell = {
  * UpdateWellScreen
  */
 export type UpdateWellScreen = {
-    /**
-     * Release Status
-     */
-    release_status?: string | null;
+    release_status?: ReleaseStatus | null;
     /**
      * Screen Depth Bottom
      */
@@ -2825,10 +2645,7 @@ export type WaterChemistryObservationResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Sample Id
      */
@@ -2846,10 +2663,7 @@ export type WaterChemistryObservationResponse = {
      * Value
      */
     value: number | null;
-    /**
-     * Unit
-     */
-    unit: string;
+    unit: Unit;
 };
 
 /**
@@ -2865,10 +2679,7 @@ export type WellResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Name
      */
@@ -2885,7 +2696,7 @@ export type WellResponse = {
     /**
      * Well Purposes
      */
-    well_purposes?: Array<string>;
+    well_purposes?: Array<WellPurpose>;
     /**
      * Well Depth
      */
@@ -2921,7 +2732,7 @@ export type WellResponse = {
     /**
      * Well Casing Materials
      */
-    well_casing_materials?: Array<string>;
+    well_casing_materials?: Array<CasingMaterial>;
     /**
      * Well Construction Notes
      */
@@ -2941,10 +2752,7 @@ export type WellScreenResponse = {
      * Created At
      */
     created_at: string;
-    /**
-     * Release Status
-     */
-    release_status: string;
+    release_status: ReleaseStatus;
     /**
      * Thing Id
      */
@@ -2975,6 +2783,106 @@ export type WellScreenResponse = {
      */
     screen_description?: string | null;
 };
+
+/**
+ * activity_type
+ */
+export type ActivityType = 'groundwater level' | 'water chemistry';
+
+/**
+ * address_type
+ */
+export type AddressType = 'Primary' | 'Work' | 'Personal' | 'Mailing' | 'Physical';
+
+/**
+ * casing_material
+ */
+export type CasingMaterial = 'PVC' | 'Steel' | 'Concrete';
+
+/**
+ * contact_type
+ */
+export type ContactType = 'Primary' | 'Secondary' | 'Field Event Participant';
+
+/**
+ * coordinate_method
+ */
+export type CoordinateMethod = 'Unknown' | 'Differentially corrected GPS' | 'Survey-grade global positioning system (SGPS)' | 'GPS, uncorrected' | 'Interpolated from map' | 'Interpolated from DEM' | 'Reported' | 'Transit, theodolite, or other survey method';
+
+/**
+ * elevation_method
+ */
+export type ElevationMethod = 'Altimeter' | 'Differentially corrected GPS' | 'Survey-grade GPS' | 'Global positioning system (GPS)' | 'LiDAR DEM' | 'Level or other survey method' | 'Interpolated from topographic map' | 'Interpolated from digital elevation model (DEM)' | 'Reported' | 'Survey-grade Global Navigation Satellite Sys, Lvl1' | 'USGS National Elevation Dataset (NED)' | 'Unknown';
+
+/**
+ * email_type
+ */
+export type EmailType = 'Primary' | 'Work' | 'Personal';
+
+/**
+ * parameter_name
+ */
+export type ParameterName = 'groundwater level' | 'temperature' | 'pH' | 'Alkalinity, Total' | 'Alkalinity as CaCO3' | 'Alkalinity as OH-' | 'Calcium' | 'Calcium, total, unfiltered' | 'Chloride' | 'Carbonate' | 'Conductivity, laboratory' | 'Bicarbonate' | 'Hardness (CaCO3)' | 'Ion Balance' | 'Potassium' | 'Potassium, total, unfiltered' | 'Magnesium' | 'Magnesium, total, unfiltered' | 'Sodium' | 'Sodium, total, unfiltered' | 'Sodium and Potassium combined' | 'Sulfate' | 'Total Anions' | 'Total Cations' | 'Total Dissolved Solids' | 'Tritium' | 'Age of Water using dissolved gases' | 'Silver' | 'Silver, total, unfiltered' | 'Aluminum' | 'Aluminum, total, unfiltered' | 'Arsenic' | 'Arsenic, total, unfiltered' | 'Boron' | 'Boron, total, unfiltered' | 'Barium' | 'Barium, total, unfiltered' | 'Beryllium' | 'Beryllium, total, unfiltered' | 'Bromide' | '13C:12C ratio' | '14C content, pmc' | 'Uncorrected C14 age' | 'Cadmium' | 'Cadmium, total, unfiltered' | 'Chlorofluorocarbon-11 avg age' | 'Chlorofluorocarbon-113 avg age' | 'Chlorofluorocarbon-113/12 avg RATIO age' | 'Chlorofluorocarbon-12 avg age' | 'Cobalt' | 'Cobalt, total, unfiltered' | 'Chromium' | 'Chromium, total, unfiltered' | 'Copper' | 'Copper, total, unfiltered' | 'delta O18 sulfate' | 'Sulfate 34 isotope ratio' | 'Fluoride' | 'Iron' | 'Iron, total, unfiltered' | 'Deuterium:Hydrogen ratio' | 'Mercury' | 'Mercury, total, unfiltered' | 'Lithium' | 'Lithium, total, unfiltered' | 'Manganese' | 'Manganese, total, unfiltered' | 'Molybdenum' | 'Molybdenum, total, unfiltered' | 'Nickel' | 'Nickel, total, unfiltered' | 'Nitrite (as NO2)' | 'Nitrite (as N)' | 'Nitrate (as NO3)' | 'Nitrate (as N)' | '18O:16O ratio' | 'Lead' | 'Lead, total, unfiltered' | 'Phosphate' | 'Antimony' | 'Antimony, total, unfiltered' | 'Selenium' | 'Selenium, total, unfiltered' | 'Sulfur hexafluoride' | 'Silicon' | 'Silicon, total, unfiltered' | 'Silica' | 'Tin' | 'Tin, total, unfiltered' | 'Strontium' | 'Strontium, total, unfiltered' | 'Strontium 87:86 ratio' | 'Thorium' | 'Thorium, total, unfiltered' | 'Titanium' | 'Titanium, total, unfiltered' | 'Thallium' | 'Thallium, total, unfiltered' | 'Uranium (total, by ICP-MS)' | 'Uranium, total, unfiltered' | 'Vanadium' | 'Vanadium, total, unfiltered' | 'Zinc' | 'Zinc, total, unfiltered' | 'Corrected C14 in years' | 'Arsenite (arsenic species)' | 'Arsenate (arsenic species)' | 'Cyanide' | 'Estimated recharge temperature' | 'Hydrogen sulfide' | 'Ammonia' | 'Ammonium' | 'Total nitrogen' | 'Total Kjeldahl nitrogen' | 'Dissolved organic carbon' | 'Total organic carbon' | 'delta C13 of dissolved inorganic carbon';
+
+/**
+ * parameter_type
+ */
+export type ParameterType = 'Field Parameter' | 'Metal' | 'Radionuclide' | 'Major Element' | 'Minor Element' | 'Physical property';
+
+/**
+ * phone_type
+ */
+export type PhoneType = 'Primary' | 'Work' | 'Home' | 'Mobile';
+
+/**
+ * publication_type
+ */
+export type PublicationType = 'Map' | 'Report' | 'Dataset' | 'Model' | 'Software' | 'Paper' | 'Thesis' | 'Book' | 'Conference' | 'Webpage';
+
+/**
+ * qc_type
+ */
+export type QcType = 'Normal' | 'Duplicate' | 'Split' | 'Field Blank' | 'Trip Blank' | 'Equipment Blank';
+
+/**
+ * release_status
+ */
+export type ReleaseStatus = 'draft' | 'provisional' | 'final' | 'published' | 'archived' | 'public' | 'private';
+
+/**
+ * role
+ */
+export type Role = 'Unknown' | 'Owner' | 'Manager' | 'Operator' | 'Driller' | 'Geologist' | 'Hydrologist' | 'Hydrogeologist' | 'Engineer' | 'Organization' | 'Specialist' | 'Technician' | 'Research Assistant' | 'Research Scientist' | 'Graduate Student' | 'Biologist' | 'Lab Manager' | 'Publications Manager' | 'Software Developer';
+
+/**
+ * sample_matrix
+ */
+export type SampleMatrix = 'water' | 'groundwater' | 'soil';
+
+/**
+ * sample_method
+ */
+export type SampleMethod = 'Unknown' | 'Airline measurement' | 'Analog or graphic recorder' | 'Calibrated airline measurement' | 'Differential GPS; especially applicable to surface expression of ground water' | 'Estimated' | 'Transducer' | 'Pressure-gage measurement' | 'Calibrated pressure-gage measurement' | 'Interpreted from geophysical logs' | 'Manometer' | 'Non-recording gage' | 'Observed (required for F, N, and W water level status)' | 'Sonic water level meter (acoustic pulse)' | 'Reported, method not known' | 'Steel-tape measurement' | 'Electric tape measurement (E-probe)' | 'Unknown (for legacy data only; not for new data entry)' | 'Calibrated electric tape; accuracy of equipment has been checked' | 'Calibrated electric cable' | 'Uncalibrated electric cable' | 'Continuous acoustic sounder' | 'Measurement not attempted' | 'null placeholder' | 'bailer' | 'faucet at well head' | 'faucet or outlet at house' | 'grab sample' | 'pump' | 'thief sampler';
+
+/**
+ * sensor_type
+ */
+export type SensorType = 'Pressure Transducer' | 'Data Logger' | 'Barometer' | 'Acoustic Sounder' | 'Precip Collector' | 'Camera' | 'Soil Moisture Sensor' | 'Tipping Bucket';
+
+/**
+ * spring_type
+ */
+export type SpringType = 'Artesian' | 'Ephemeral' | 'Perennial' | 'Thermal' | 'Mineral';
+
+/**
+ * unit
+ */
+export type Unit = 'dimensionless' | 'ft' | 'ftbgs' | 'F' | 'mg/L' | 'mW/m²' | 'W/m²' | 'W/m·K' | 'm²/s' | 'deg C' | 'deg second' | 'deg minute' | 'second' | 'minute' | 'hour';
+
+/**
+ * well_purpose
+ */
+export type WellPurpose = 'Unknown' | 'Open, unequipped well' | 'Commercial' | 'Domestic' | 'Power generation' | 'Irrigation' | 'Livestock' | 'Mining' | 'Industrial' | 'Observation' | 'Public supply' | 'Shared domestic' | 'Institutional' | 'Unused' | 'Exploration' | 'Monitoring' | 'Production' | 'Injection';
 
 export type UploadAssetAssetUploadPostData = {
     body: BodyUploadAssetAssetUploadPost;
@@ -5155,6 +5063,57 @@ export type UpdateWaterChemistryObservationObservationWaterChemistryObservationI
 
 export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponse = UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses[keyof UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses];
 
+export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Thing Id
+         */
+        thing_id?: number | null;
+        /**
+         * Parameter Id
+         */
+        parameter_id?: number | null;
+        /**
+         * Start Time
+         */
+        start_time?: string | null;
+        /**
+         * End Time
+         */
+        end_time?: string | null;
+        /**
+         * Page
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/observation/transducer-groundwater-level';
+};
+
+export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetError = GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetErrors[keyof GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetErrors];
+
+export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageTransducerObservationWithBlockResponse;
+};
+
+export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponse = GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponses[keyof GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponses];
+
 export type GetAllObservationsObservationGetData = {
     body?: never;
     path?: never;
@@ -5704,6 +5663,10 @@ export type GetWaterWellsThingWaterWellGetData = {
          * Query
          */
         query?: string;
+        /**
+         * Name
+         */
+        name?: string;
         /**
          * Page
          * Page number

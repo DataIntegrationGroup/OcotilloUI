@@ -1,4 +1,3 @@
-import { number, object } from 'yup'
 import { ILocation } from '@/interfaces/ocotillo/ILocation'
 
 export interface IThing {
@@ -8,7 +7,7 @@ export interface IThing {
   release_status: string
   thing_type: string
   location_id: number
-  active_location: ILocation
+  active_location?: ILocation | null
 }
 
 export interface IWell extends IThing {
@@ -57,4 +56,53 @@ export interface IGroup {
   updated_by_id?: string | null
   release_status?: string | null
   parent_group?: IGroup | null
+}
+
+export interface IEmail {
+  id?: number | string
+  created_at?: string
+  updated_at?: string
+
+  email: string
+  email_type: string // e.g., "personal", "work", etc.
+}
+
+export interface IPhone {
+  id?: number | string
+  created_at?: string
+  updated_at?: string
+
+  phone_number?: string | null
+  phone_type: string // e.g., "mobile", "landline", etc.
+  nma_phone_number?: string | null
+}
+
+export interface IAddress {
+  id?: number | string
+  created_at?: string
+  updated_at?: string
+
+  address_line_1: string
+  address_line_2?: string | null
+  city: string
+  state: string
+  postal_code: string
+  country: string
+  address_type: string
+}
+
+export interface IContact {
+  id?: number | string
+  created_at?: string
+  updated_at?: string
+
+  name?: string | null
+  organization?: string | null
+  role: string
+  contact_type: string
+
+  emails: IEmail[]
+  phones: IPhone[]
+  addresses: IAddress[]
+  things: IThing[]
 }

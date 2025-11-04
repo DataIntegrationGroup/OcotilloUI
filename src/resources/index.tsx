@@ -1,8 +1,6 @@
-import WaterDropOutlined from '@mui/icons-material/WaterDropOutlined'
 import { st2Resources } from '@/resources/st2'
-import SensorsOutlinedIcon from '@mui/icons-material/SensorsOutlined'
 import { ocotilloResources } from '@/resources/ocotillo'
-import { FactoryOutlined } from '@mui/icons-material'
+import { FactoryOutlined, SensorsOutlined } from '@mui/icons-material'
 
 let base = [
   {
@@ -12,7 +10,7 @@ let base = [
   }
 /*   {
     name: 'st2',
-    icon: <SensorsOutlinedIcon />,
+    icon: <SensorsOutlined />,
     meta: { label: 'NMWDI SensorThings' },
   }, */
 ]

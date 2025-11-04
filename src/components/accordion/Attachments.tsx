@@ -5,14 +5,13 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  ImageList,
-  ImageListItem,
   Stack,
   Typography,
   Box,
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { ExpandMore, Image } from '@mui/icons-material'
+import { Masonry } from '@mui/lab'
 import { settings } from '@/settings'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
 
@@ -79,41 +78,31 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
               <Typography variant="body1" fontWeight="bold" gutterBottom>
                 Image Gallery
               </Typography>
-              <ImageList
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  overflowX: 'auto',
-                  gap: 2,
-                }}
-                cols={3}
-              >
-                {(assets ?? []).map(
-                  (img: { signed_url: string; name?: string }, idx: number) =>
-                    img.signed_url ? (
-                      <ImageListItem
-                        key={idx}
+
+              <Masonry columns={3} spacing={2}>
+                {assets.map((img: any, idx: number) =>
+                  img.signed_url ? (
+                    <Box
+                      key={idx}
+                      sx={{
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        boxShadow: 2,
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={img.signed_url}
+                        alt={img.name || `Attachment ${idx + 1}`}
                         sx={{
-                          minWidth: 200,
-                          borderRadius: 2,
-                          overflow: 'hidden',
-                          boxShadow: 2,
+                          width: '100%',
+                          display: 'block',
                         }}
-                      >
-                        <Box
-                          component="img"
-                          src={img.signed_url}
-                          alt={img.name || `Attachment ${idx + 1}`}
-                          sx={{
-                            width: '100%',
-                            height: 'auto',
-                            borderRadius: 8,
-                          }}
-                        />
-                      </ImageListItem>
-                    ) : null
+                      />
+                    </Box>
+                  ) : null
                 )}
-              </ImageList>
+              </Masonry>
             </Box>
           </Stack>
         )}
