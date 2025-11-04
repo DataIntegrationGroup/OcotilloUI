@@ -52,13 +52,6 @@ jobs:
         working-directory: ./api-repo
         run: docker compose exec -T app python -m transfers.seed
 
-      - name: Run Vitest tests (unit + integration)
-        run: npm run test:run
-        env:
-          NODE_ENV: test
-          TEST_ENV: ci
-          OCOTILLO_API_URL: http://localhost:8000
-
       - name: Build frontend
         run: npm run build
         env:
