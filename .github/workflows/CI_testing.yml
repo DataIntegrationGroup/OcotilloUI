@@ -1,0 +1,81 @@
+name: Full Integration Tests
+
+on:
+  pull_request:
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-24.04
+
+    env:
+      NODE_ENV: test
+      OCOTILLO_API_URL: http://localhost:8000
+      VITE_OCOTILLO_API_URL: http://localhost:8000
+      POSTGRES_USER: ${{ secrets.PG_TEST_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.PG_TEST_PW }}
+      POSTGRES_DB: ${{ secrets.PG_TEST_DB }}
+      MODE: development
+      AUTHENTIK_DISABLE_AUTHENTICATION: ${{ secrets.AUTHENTIK_TEST }}
+
+    steps:
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+
+      - name: Checkout FastAPI backend (NMSampleLocations staging)
+        uses: actions/checkout@v4
+        with:
+          repository: DataIntegrationGroup/NMSampleLocations
+          ref: staging
+          path: api-repo
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start FastAPI backend (Docker Compose)
+        working-directory: ./api-repo
+        run: |
+          docker compose up -d --build
+          echo "Waiting for FastAPI to be ready..."
+          timeout 180 bash -c 'until curl -f http://localhost:8000/docs; do sleep 3; done'
+          echo "FastAPI is up and healthy"
+
+      - name: Seed database
+        working-directory: ./api-repo
+        run: docker compose exec -T app python -m transfers.seed
+
+      - name: Run Vitest tests (unit + integration)
+        run: npm run test:run
+        env:
+          NODE_ENV: test
+          TEST_ENV: ci
+          OCOTILLO_API_URL: http://localhost:8000
+
+      - name: Build frontend
+        run: npm run build
+        env:
+          VITE_BASE_URL: http://localhost:4173
+          VITE_OCOTILLO_API_URL: http://localhost:8000
+
+      - name: Run Cypress e2e tests
+        uses: cypress-io/github-action@v6
+        with:
+          start: npm start
+          browser: chrome
+          spec: |
+            cypress/e2e/test-api-connectivity.cy.ts
+            cypress/e2e/ocotillo/**/*.cy.ts
+        env:
+          DEBUG: cypress:network:*,cypress:server:request
+          VITE_OCOTILLO_API_URL: http://localhost:8000
+
+      - name: Stop API containers
+        if: always()
+        working-directory: ./api-repo
+        run: docker compose down
+
