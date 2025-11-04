@@ -47,7 +47,7 @@ jobs:
 
       - name: Seed database
         working-directory: ./api-repo
-        run: docker compose exec -T app python -m transfers.seed
+        run: docker compose exec -T app python -m transfers.transfer
 
       - name: Run Vitest tests (unit + integration)
         run: npm run test:run
