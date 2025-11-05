@@ -1,5 +1,9 @@
 import { cypressCheck } from './utils/CypressCheck'
 
+const isCypress = cypressCheck()
+const isVitest = process.env.VITEST === 'true'
+const isTest = process.env.NODE_ENV === 'test'
+
 export const settings = {
   rowHeight: 27,
   filterDebounceMs: 1000,
@@ -9,9 +13,11 @@ export const settings = {
     import.meta.env.VITE_NMBGMR_AMP_API_URL || 'http://localhost:8009',
 
   ocotillo_api_url:
-    cypressCheck() || process.env.NODE_ENV === 'test'
-      ? 'http://localhost:8000'
-      : import.meta.env.VITE_OCOTILLO_API_URL || 'http://localhost:8000',
+    isVitest || (isTest && !isCypress)
+      ? 'http://127.0.0.1:4010' // mock server for Vitest
+      : isCypress
+        ? 'http://localhost:8000' // real CI local FastAPI backend for Cypress
+        : import.meta.env.VITE_OCOTILLO_API_URL || 'http://localhost:8000',
 
   st2_url: 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
   nmbgmr_geothermal_api_url:
