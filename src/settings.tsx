@@ -1,8 +1,17 @@
 import { cypressCheck } from './utils/CypressCheck'
 
+const getNodeEnv = (key: string) => {
+  if (typeof process !== 'undefined' && process.env) return process.env[key]
+  return undefined
+}
+
 const isCypress = cypressCheck()
-const isVitest = process.env.VITEST === 'true'
-const isTest = process.env.NODE_ENV === 'test'
+const isVitest =
+  getNodeEnv('VITEST') === 'true' || import.meta.env.VITEST === 'true'
+const isTest =
+  getNodeEnv('NODE_ENV') === 'test' ||
+  import.meta.env.MODE === 'test' ||
+  import.meta.env.NODE_ENV === 'test'
 
 export const settings = {
   rowHeight: 27,
