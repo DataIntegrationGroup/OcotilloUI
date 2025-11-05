@@ -87,6 +87,11 @@ export const accessControlProvider = {
   can: async ({ resource, action, params }) => {
     const groups = getAccessControlGroups()
 
+    // Require new EarlyAccessAdmin group for Create/Edit/Delete operations
+    if ((action === 'create' || action === 'edit' || action === 'delete') && !groups.includes('EarlyAccessAdmin')) {
+      return { can: false }
+    }
+
     const ability = defineUserAbility(groups)
     const can = ability.can(action, resource)
     return { can }
