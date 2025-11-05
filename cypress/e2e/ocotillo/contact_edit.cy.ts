@@ -57,8 +57,6 @@ describe('Contact Edit Page', () => {
     cy.contains('label', 'Contact Type').parent().find('[role="combobox"]').click();
     cy.get('[role="listbox"] li').first().click();
 
-    cy.wait(5000); // wait for save button to be enabled
-
     cy.get('button').contains(/save/i).click();
 
     // Wait for the update contact api call to complete

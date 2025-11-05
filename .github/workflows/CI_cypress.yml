@@ -1,4 +1,4 @@
-name: Full Integration Tests
+name: Cypress Test Suite
 
 on:
   pull_request:
