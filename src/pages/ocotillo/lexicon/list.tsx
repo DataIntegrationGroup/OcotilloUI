@@ -1,13 +1,13 @@
 import { DataGrid } from '@mui/x-data-grid'
 import { settings } from '@/settings'
-import { CreateButton, ExportButton, List, useDataGrid } from '@refinedev/mui'
+import { ExportButton, List, useDataGrid } from '@refinedev/mui'
 import React from 'react'
-import { Card, Typography } from '@mui/material'
+import { Card, CardContent, CardHeader, Typography } from '@mui/material'
+import Grid from '@mui/material/Grid2'
 import { useExport } from '@refinedev/core'
-import { actionColumnDef } from '@/components/CommonColumnDefs'
 
 export const LexiconList: React.FC = () => {
-  const headerButtons = ({ defaultButtons }) => {
+  const headerButtons = () => {
     const { triggerExport: triggerTermExport, isLoading: exportTermIsLoading } =
       useExport({
         pageSize: 1000,
@@ -25,20 +25,15 @@ export const LexiconList: React.FC = () => {
 
     return (
       <>
-        <CreateButton>Term</CreateButton>
-        <CreateButton resource={'ocotillo.lexicon/category'}>
-          Category
-        </CreateButton>
-
         <ExportButton
-          variant={'contained'}
+          variant="contained"
           loading={exportTermIsLoading}
           onClick={triggerTermExport}
         >
           Export Terms
         </ExportButton>
         <ExportButton
-          variant={'contained'}
+          variant="contained"
           loading={exportCategoryIsLoading}
           onClick={triggerCategoryExport}
         >
@@ -70,13 +65,12 @@ export const LexiconList: React.FC = () => {
       field: 'categories',
       headerName: 'Category',
       width: 150,
-      valueGetter: (params) => {
-        return params.map((c) => c.name).join(', ')
+      valueGetter: (params: any) => {
+        return params.map((c: { name: string }) => c.name).join(', ')
       },
       sortable: false,
       filterable: false,
     },
-    actionColumnDef(),
   ]
   const { dataGridProps: categoryDataGridProps } = useDataGrid({
     resource: 'lexicon/category',
@@ -89,54 +83,68 @@ export const LexiconList: React.FC = () => {
   const categoryColumns = [
     { field: 'name', headerName: 'Name', width: 200 },
     { field: 'description', headerName: 'Description', width: 300 },
-    actionColumnDef({ resource: 'ocotillo.lexicon/category' }),
   ]
 
   return (
-    <>
-      <List headerButtons={headerButtons} title={'Lexicon'}>
-        <Card sx={{ marginTop: 1, marginBottom: 1, padding: 1 }}>
-          <Typography variant="body1">
-            {'The Lexicon (aka Glossary) stores all the terms and definitions used in' +
-              ' the data sytem'}
-          </Typography>
-        </Card>
-        <Card>
-          <Typography variant={'h3'}>Categories</Typography>
-          <DataGrid
-            pagination
-            pageSizeOptions={[5, 10, 25]}
-            paginationModel={{ pageSize: 10, page: 0 }}
-            {...categoryDataGridProps}
-            rowHeight={settings.rowHeight}
-            columns={categoryColumns}
-            onRowClick={(params) => setSelectedCategory(params.row)}
-            getRowClassName={(params) =>
-              params.id === selectedCategory?.id ? 'selected-row' : ''
-            }
+    <List headerButtons={headerButtons} title={'Lexicon'}>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12 }}>
+          <Card
+            className="description"
+            variant="outlined"
             sx={{
-              '& .selected-row': {
-                backgroundColor: (theme) => theme.palette.secondary.light,
-              },
+              marginTop: 1,
+              marginBottom: 1,
+              padding: 1,
             }}
-          />
-        </Card>
-        <Card>
-          <Typography variant={'h3'}>Terms</Typography>
-          <DataGrid
-            pagination
-            pageSizeOptions={[5, 10, 25]}
-            paginationModel={{ pageSize: 10, page: 0 }}
-            {...termDataGridProps}
-            disableRowSelectionOnClick={false}
-            rowHeight={settings.rowHeight}
-            columns={termColumns}
-
-            // onRowSelectionModelChange={handleSelectionChangeWrapper}
-            // loading={isLoading}
-          />
-        </Card>
-      </List>
-    </>
+          >
+            <Typography variant="body1">
+              The Lexicon (aka Glossary) stores all the terms and definitions
+              used in the data sytem
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 6 }}>
+          <Card elevation={2}>
+            <CardHeader title="Categories" />
+            <CardContent>
+              <DataGrid
+                pagination
+                pageSizeOptions={[5, 10, 25]}
+                paginationModel={{ pageSize: 10, page: 0 }}
+                {...categoryDataGridProps}
+                rowHeight={settings.rowHeight}
+                columns={categoryColumns}
+                onRowClick={(params) => setSelectedCategory(params.row)}
+                getRowClassName={(params) =>
+                  params.id === selectedCategory?.id ? 'selected-row' : ''
+                }
+                sx={{
+                  '& .selected-row': {
+                    backgroundColor: (theme) => theme.palette.secondary.light,
+                  },
+                }}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 6 }}>
+          <Card elevation={2}>
+            <CardHeader title="Terms" />
+            <CardContent>
+              <DataGrid
+                pagination
+                pageSizeOptions={[5, 10, 25]}
+                paginationModel={{ pageSize: 10, page: 0 }}
+                {...termDataGridProps}
+                disableRowSelectionOnClick={false}
+                rowHeight={settings.rowHeight}
+                columns={termColumns}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </List>
   )
 }
