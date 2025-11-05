@@ -102,6 +102,12 @@ describe('Location Edit Page', () => {
       .clear()
       .type('-106.900000')
 
+    cy.contains('label', 'Coordinate Method')
+      .parent()
+      .find('[role="combobox"]')
+      .click()
+    cy.get('[role="listbox"] li').first().click()
+
     // Turn off auto-generate elevation to manually set elevation
     cy.contains('label', 'Auto-generate elevation from USGS DEM')
       .parent()
