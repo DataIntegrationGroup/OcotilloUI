@@ -150,6 +150,10 @@ export type ContactResponse = {
     role: Role;
     contact_type: ContactType;
     /**
+     * Incomplete Nma Phones
+     */
+    incomplete_nma_phones?: Array<string>;
+    /**
      * Emails
      */
     emails?: Array<EmailResponse>;
@@ -445,10 +449,6 @@ export type CreatePhone = {
      */
     contact_id?: number | null;
     phone_type?: PhoneType;
-    /**
-     * Nma Phone Number
-     */
-    nma_phone_number?: string | null;
 };
 
 /**
@@ -706,10 +706,7 @@ export type CreateWellScreen = {
      * Screen depth top in feet
      */
     screen_depth_top: number;
-    /**
-     * Screen Type
-     */
-    screen_type?: unknown | null;
+    screen_type?: ScreenType | null;
     /**
      * Screen Description
      */
@@ -1813,10 +1810,6 @@ export type PhoneResponse = {
      * Phone Type
      */
     phone_type: string;
-    /**
-     * Nma Phone Number
-     */
-    nma_phone_number?: string | null;
 };
 
 /**
@@ -2107,10 +2100,7 @@ export type TransducerObservationBlockResponse = {
      */
     created_at: string;
     release_status: ReleaseStatus;
-    /**
-     * review_status
-     */
-    review_status: unknown;
+    review_status: ReviewStatus;
     /**
      * Start Datetime
      */
@@ -2850,6 +2840,11 @@ export type QcType = 'Normal' | 'Duplicate' | 'Split' | 'Field Blank' | 'Trip Bl
 export type ReleaseStatus = 'draft' | 'provisional' | 'final' | 'published' | 'archived' | 'public' | 'private';
 
 /**
+ * review_status
+ */
+export type ReviewStatus = 'approved' | 'not reviewed';
+
+/**
  * role
  */
 export type Role = 'Unknown' | 'Owner' | 'Manager' | 'Operator' | 'Driller' | 'Geologist' | 'Hydrologist' | 'Hydrogeologist' | 'Engineer' | 'Organization' | 'Specialist' | 'Technician' | 'Research Assistant' | 'Research Scientist' | 'Graduate Student' | 'Biologist' | 'Lab Manager' | 'Publications Manager' | 'Software Developer';
@@ -2863,6 +2858,11 @@ export type SampleMatrix = 'water' | 'groundwater' | 'soil';
  * sample_method
  */
 export type SampleMethod = 'Unknown' | 'Airline measurement' | 'Analog or graphic recorder' | 'Calibrated airline measurement' | 'Differential GPS; especially applicable to surface expression of ground water' | 'Estimated' | 'Transducer' | 'Pressure-gage measurement' | 'Calibrated pressure-gage measurement' | 'Interpreted from geophysical logs' | 'Manometer' | 'Non-recording gage' | 'Observed (required for F, N, and W water level status)' | 'Sonic water level meter (acoustic pulse)' | 'Reported, method not known' | 'Steel-tape measurement' | 'Electric tape measurement (E-probe)' | 'Unknown (for legacy data only; not for new data entry)' | 'Calibrated electric tape; accuracy of equipment has been checked' | 'Calibrated electric cable' | 'Uncalibrated electric cable' | 'Continuous acoustic sounder' | 'Measurement not attempted' | 'null placeholder' | 'bailer' | 'faucet at well head' | 'faucet or outlet at house' | 'grab sample' | 'pump' | 'thief sampler';
+
+/**
+ * screen_type
+ */
+export type ScreenType = 'PVC' | 'Steel' | 'Concrete';
 
 /**
  * sensor_type

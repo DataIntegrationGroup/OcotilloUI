@@ -163,11 +163,7 @@ export const zPhoneResponse = z.object({
         z.string(),
         z.null()
     ])),
-    phone_type: z.string(),
-    nma_phone_number: z.optional(z.union([
-        z.string(),
-        z.null()
-    ]))
+    phone_type: z.string()
 });
 
 /**
@@ -351,6 +347,7 @@ export const zContactResponse = z.object({
     ]),
     role: zRole,
     contact_type: zContactType,
+    incomplete_nma_phones: z.optional(z.array(z.string())).default([]),
     emails: z.optional(z.array(zEmailResponse)).default([]),
     phones: z.optional(z.array(zPhoneResponse)).default([]),
     addresses: z.optional(z.array(zAddressResponse)).default([]),
@@ -434,11 +431,7 @@ export const zCreatePhone = z.object({
         z.int(),
         z.null()
     ])),
-    phone_type: z.optional(zPhoneType),
-    nma_phone_number: z.optional(z.union([
-        z.string(),
-        z.null()
-    ]))
+    phone_type: z.optional(zPhoneType)
 });
 
 /**
@@ -888,6 +881,15 @@ export const zCreateWell = z.object({
 });
 
 /**
+ * screen_type
+ */
+export const zScreenType = z.enum([
+    'PVC',
+    'Steel',
+    'Concrete'
+]);
+
+/**
  * CreateWellScreen
  * Schema for creating a well screen.
  */
@@ -897,7 +899,7 @@ export const zCreateWellScreen = z.object({
     screen_depth_bottom: z.number().gt(0),
     screen_depth_top: z.number().gt(0),
     screen_type: z.optional(z.union([
-        z.unknown(),
+        zScreenType,
         z.null()
     ])),
     screen_description: z.optional(z.union([
@@ -1648,13 +1650,21 @@ export const zTransducerObservationResponse = z.object({
 });
 
 /**
+ * review_status
+ */
+export const zReviewStatus = z.enum([
+    'approved',
+    'not reviewed'
+]);
+
+/**
  * TransducerObservationBlockResponse
  */
 export const zTransducerObservationBlockResponse = z.object({
     id: z.int(),
     created_at: z.string(),
     release_status: zReleaseStatus,
-    review_status: z.unknown(),
+    review_status: zReviewStatus,
     start_datetime: z.iso.datetime({
         offset: true
     }),

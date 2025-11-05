@@ -5,7 +5,7 @@ describe('Thing Well Show Page', () => {
     cy.login()
 
     cy.intercept('GET', '**/thing/**').as('getWell')
-    cy.visit('/ocotillo/well/show/107')
+    cy.visit('/ocotillo/well/show/1')
     cy.wait('@getWell')
   })
 
