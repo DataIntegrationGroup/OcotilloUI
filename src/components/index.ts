@@ -1,5 +1,6 @@
 export * from './Auth'
-export * from './accordion'
+export * from './Button'
+export * from './Accordion'
 export * from './ClearableSelect'
 export * from './ConfirmDialog'
 export * from './Controlled'
