@@ -125,12 +125,6 @@ export const WellShow = () => {
     },
   })
 
-  // useEffect(() => {
-  //   if (!hasNextPage || transducerIsLoading) return
-  //   fetchNextPage()
-  // }, [hasNextPage, transducerIsLoading, fetchNextPage])
-  //
-
   const { dataGridProps: observationDataGridProps } = useDataGrid({
     resource: 'observation/groundwater-level',
     dataProviderName: 'ocotillo',
