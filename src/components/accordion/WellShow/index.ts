@@ -1,4 +1,5 @@
-export * from './Contacts'
 export * from './Attachments'
 export * from './AlternateIds'
+export * from './Equipment'
+export * from './Contacts'
 export * from './WellScreens'
