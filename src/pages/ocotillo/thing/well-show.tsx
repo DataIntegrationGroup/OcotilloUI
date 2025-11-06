@@ -15,7 +15,6 @@ import Grid from '@mui/material/Grid2'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { ISensor } from '@/interfaces/ocotillo/ISensor'
 import SettingsInputAntenna from '@mui/icons-material/SettingsInputAntenna'
-import MoreVertOutlined from '@mui/icons-material/MoreVertOutlined'
 import { settings } from '@/settings'
 import { sensorDefaultColumns } from '@/pages/ocotillo/sensor'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
@@ -30,6 +29,7 @@ import {
   USGSInfoCard,
   OSEPODInfoCard,
   WellPDFDownloadButton as DownloadButton,
+  WellScreensAccordion,
 } from '@/components'
 
 export const WellShow = () => {
@@ -43,35 +43,6 @@ export const WellShow = () => {
     IHydrographDatasource[]
   >([])
   const { id } = useResourceParams()
-
-  const { dataGridProps: wellScreenDataGridProps } = useDataGrid({
-    resource: 'thing/well-screen',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: id,
-      },
-    },
-  })
-
-  const wellScreenColumns: GridColDef[] = useMemo(() => {
-    return [
-      { field: 'screen_type', headerName: 'Screen Type', minWidth: 150 },
-      {
-        field: 'screen_depth_top',
-        headerName: 'Screen Top Depth (ft)',
-        type: 'number',
-        minWidth: 150,
-      },
-      {
-        field: 'screen_depth_bottom',
-        headerName: 'Screen Bottom Depth (ft)',
-        type: 'number',
-        minWidth: 200,
-      },
-      actionColumnDef({ resource: 'ocotillo.thing/well-screen' }),
-    ]
-  }, [])
 
   const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
     resource: 'sensor',
@@ -230,47 +201,8 @@ export const WellShow = () => {
             />
           </CardContent>
         </Card>
-
-        {/* Well Screens */}
-        <Card elevation={2}>
-          <CardHeader
-            title={
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <MoreVertOutlined color="primary" />
-                  <Typography variant="body1" fontWeight="bold">
-                    Well Screens
-                  </Typography>
-                </Stack>
-                <CreateButton resource="ocotillo.thing/well-screen" />
-              </Stack>
-            }
-          />
-          <CardContent>
-            <DataGrid
-              rowHeight={settings.rowHeight}
-              rows={wellScreenDataGridProps.rows}
-              columns={wellScreenColumns}
-              pageSizeOptions={[10, 25, 50]}
-              initialState={{
-                pagination: {
-                  paginationModel: { pageSize: 10, page: 0 },
-                },
-              }}
-              sx={{
-                border: 'none',
-                '& .MuiDataGrid-cell': {
-                  borderBottom: '1px solid #f0f0f0',
-                },
-              }}
-            />
-          </CardContent>
-        </Card>
         <Box component="div">
+          <WellScreensAccordion id={well?.id} />
           <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
           <ContactsAccordion id={well?.id} />
           <AttachmentsAccordion id={well?.id} />
