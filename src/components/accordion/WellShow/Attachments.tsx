@@ -35,7 +35,7 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
   )
 
   return (
-    <Accordion>
+    <Accordion elevation={2}>
       <AccordionSummary expandIcon={<ExpandMore />}>
         <Stack
           direction="row"

@@ -31,7 +31,7 @@ export const AlternateIdsAccordion = ({
   )
 
   return (
-    <Accordion defaultExpanded>
+    <Accordion defaultExpanded elevation={2}>
       <AccordionSummary expandIcon={<ExpandMore />}>
         <Stack
           direction="row"

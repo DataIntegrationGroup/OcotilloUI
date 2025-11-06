@@ -94,7 +94,7 @@ export const ContactsAccordion = ({ id }: { id?: number }) => {
   )
 
   return (
-    <Accordion defaultExpanded>
+    <Accordion defaultExpanded elevation={2}>
       <AccordionSummary expandIcon={<ExpandMore />}>
         <Stack
           direction="row"
