@@ -1,28 +1,12 @@
-import {
-  HttpError,
-  useNotification,
-  usePermissions,
-  useResourceParams,
-  useShow,
-  useNavigation,
-  useList,
-} from '@refinedev/core'
-import { useParams } from 'react-router-dom'
+import { HttpError, useResourceParams, useShow } from '@refinedev/core'
 import { Breadcrumb, CreateButton, Show, useDataGrid } from '@refinedev/mui'
-import { IContact, IWell } from '@/interfaces/ocotillo/IThing'
+import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
   Box,
-  Button,
-  ButtonGroup,
   Card,
   CardContent,
   CardHeader,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
   Stack,
-  Tooltip,
   Typography,
 } from '@mui/material'
 import { useEffect, useMemo, useState } from 'react'
@@ -42,13 +26,11 @@ import {
   RecentWaterLevelObservationsCard,
   ContactsAccordion,
   AttachmentsAccordion,
-  USGSInfo,
-  OSEPODInfo,
-  WellPDF,
+  AlternateIdsAccordion,
+  USGSInfoCard,
+  OSEPODInfoCard,
+  WellPDFDownloadButton as DownloadButton,
 } from '@/components'
-import { ArrowDropDown, Download, Visibility } from '@mui/icons-material'
-import { buildPdfFilename } from '@/utils'
-import { pdf } from '@react-pdf/renderer'
 
 export const WellShow = () => {
   const {
@@ -125,27 +107,11 @@ export const WellShow = () => {
   const { dataGridProps: idLinkDataGridProps } = useDataGrid({
     resource: `thing/${id}/id-link`,
     dataProviderName: 'ocotillo',
-    // meta: {
-    //   params: {
-    //     thing_id: id,
-    //   },
-    // },
     queryOptions: {
       cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
-  const idLinkColumns = useMemo(() => {
-    return [
-      { field: 'alternate_id', headerName: 'Alternate ID', minWidth: 150 },
-      {
-        field: 'alternate_organization',
-        headerName: 'Organization',
-        minWidth: 150,
-      },
-      { field: 'relation', headerName: 'Relation', minWidth: 150 },
-    ]
-  }, [])
 
   const { rows: observations, loading: observationsIsloading } =
     observationDataGridProps
@@ -304,203 +270,14 @@ export const WellShow = () => {
             />
           </CardContent>
         </Card>
-
-        {/* Alternate IDs */}
-        <Card elevation={2}>
-          <CardHeader
-            title={
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <MoreVertOutlined color="primary" />
-                  <Typography variant="body1" fontWeight="bold">
-                    Alternate IDs
-                  </Typography>
-                </Stack>
-                {/* disabled until id-link CRUD completed */}
-                {/*<CreateButton resource="ocotillo.thing/id-link" />*/}
-              </Stack>
-            }
-          />
-
-          <CardContent>
-            <DataGrid
-              rowHeight={settings.rowHeight}
-              rows={idLinkDataGridProps.rows}
-              columns={idLinkColumns}
-              pageSizeOptions={[10, 25, 50]}
-              initialState={{
-                pagination: {
-                  paginationModel: { pageSize: 10, page: 0 },
-                },
-              }}
-            />
-          </CardContent>
-        </Card>
-
         <Box component="div">
+          <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
           <ContactsAccordion id={well?.id} />
           <AttachmentsAccordion id={well?.id} />
         </Box>
-
-        {/* OSE Card */}
-        <Card elevation={2}>
-          <CardHeader title={'OSEPOD Information'} />
-          <OSEPODInfo pod_id={osepod_id} />
-        </Card>
-        {/* USGS Card */}
-        <Card elevation={2}>
-          <CardHeader title={'USGS Information'} />
-          <USGSInfo site_id={usgs_id} />
-        </Card>
+        <OSEPODInfoCard pod_id={osepod_id} />
+        <USGSInfoCard site_id={usgs_id} />
       </Stack>
     </Show>
-  )
-}
-
-export const DownloadButton = ({
-  well,
-  isLoading,
-}: {
-  well: IWell
-  isLoading: boolean
-}) => {
-  const { push } = useNavigation()
-  const { data: permissions, isLoading: isPermissionsLoading } =
-    usePermissions<string[]>()
-
-  const { data: assetData } = useList({
-    resource: 'asset',
-    dataProviderName: 'ocotillo',
-    meta: { params: { thing_id: well?.id } },
-  })
-
-  const { data: contactData } = useList<IContact>({
-    resource: 'contact',
-    dataProviderName: 'ocotillo',
-    meta: { params: { thing_id: well?.id } },
-  })
-
-  const assets = assetData?.data ?? []
-  const contacts = contactData?.data ?? []
-
-  const { open: notify } = useNotification()
-  const { id } = useParams()
-
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const open = Boolean(anchorEl)
-
-  const [isGenerating, setIsGenerating] = useState(false)
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleMenuClose = () => {
-    setAnchorEl(null)
-  }
-
-  const handlePreview = () => {
-    handleMenuClose()
-    push(`/ocotillo/well/pdf-preview/${id}`)
-  }
-
-  const isViewer = permissions?.includes('AMPViewer') ?? false
-  const disabled =
-    isLoading || isPermissionsLoading || !isViewer || isGenerating
-
-  const handleDownload = async () => {
-    try {
-      setIsGenerating(true)
-      const filename = buildPdfFilename(well)
-
-      // Generate a PDF blob from the React PDF component
-      const blob = await pdf(
-        <WellPDF well={well} assets={assets} contacts={contacts} />
-      ).toBlob()
-
-      // Create a temporary download link
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`
-      a.click()
-
-      URL.revokeObjectURL(url)
-
-      notify?.({
-        message: 'PDF generated successfully',
-        type: 'success',
-        description: filename,
-      })
-    } catch (error) {
-      console.error(error)
-      notify?.({
-        message: 'PDF Generation Failed',
-        type: 'error',
-      })
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  return (
-    <>
-      <ButtonGroup
-        variant="text"
-        color="primary"
-        sx={{
-          // ensures both buttons share height, style, and no gap
-          '& .MuiButton-root': {
-            textTransform: 'none',
-          },
-          // remove default border between buttons
-          '& .MuiButtonGroup-grouped:not(:last-of-type)': {
-            borderRight: 'none',
-          },
-        }}
-      >
-        <Button
-          disabled={disabled}
-          startIcon={<Download />}
-          onClick={handleDownload}
-          sx={{
-            pl: 3,
-            pr: 2,
-          }}
-        >
-          {isGenerating ? 'Generating...' : 'Download PDF'}
-        </Button>
-        <Tooltip title="more options">
-          <Button
-            onClick={handleMenuOpen}
-            disabled={disabled}
-            sx={{
-              minWidth: 0,
-              px: 1.25,
-            }}
-          >
-            <ArrowDropDown fontSize="small" />
-          </Button>
-        </Tooltip>
-      </ButtonGroup>
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleMenuClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <MenuItem onClick={handlePreview}>
-          <ListItemIcon>
-            <Visibility />
-          </ListItemIcon>
-          <ListItemText>Preview PDF</ListItemText>
-        </MenuItem>
-      </Menu>
-    </>
   )
 }

@@ -1,4 +1,5 @@
 export * from './Auth'
+export * from './Button'
 export * from './accordion'
 export * from './ClearableSelect'
 export * from './ConfirmDialog'
