@@ -1,12 +1,13 @@
+import { useState, useCallback } from 'react'
 import { DataGrid } from '@mui/x-data-grid'
-import { settings } from '@/settings'
 import { ExportButton, List, useDataGrid } from '@refinedev/mui'
-import React from 'react'
+import { alpha } from '@mui/material/styles'
 import { Card, CardContent, CardHeader, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { useExport } from '@refinedev/core'
+import { settings } from '@/settings'
 
-export const LexiconList: React.FC = () => {
+export const LexiconList = () => {
   const headerButtons = () => {
     const { triggerExport: triggerTermExport, isLoading: exportTermIsLoading } =
       useExport({
@@ -27,22 +28,33 @@ export const LexiconList: React.FC = () => {
       <>
         <ExportButton
           variant="contained"
-          loading={exportTermIsLoading}
-          onClick={triggerTermExport}
-        >
-          Export Terms
-        </ExportButton>
-        <ExportButton
-          variant="contained"
           loading={exportCategoryIsLoading}
           onClick={triggerCategoryExport}
         >
           Export Categories
         </ExportButton>
+        <ExportButton
+          variant="contained"
+          loading={exportTermIsLoading}
+          onClick={triggerTermExport}
+        >
+          Export Terms
+        </ExportButton>
       </>
     )
   }
-  const [selectedCategory, setSelectedCategory] = React.useState(null)
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const handleRowClick = useCallback((params?: any) => {
+    setSelectedCategory((prev?: any) =>
+      prev?.id === params.row.id ? null : params.row
+    )
+  }, [])
+
+  const getRowClassName = useCallback(
+    (params?: any) =>
+      params.id === selectedCategory?.id ? 'selected-row' : '',
+    [selectedCategory]
+  )
 
   const { dataGridProps: termDataGridProps } = useDataGrid({
     resource: 'lexicon/term',
@@ -86,7 +98,7 @@ export const LexiconList: React.FC = () => {
   ]
 
   return (
-    <List headerButtons={headerButtons} title={'Lexicon'}>
+    <List headerButtons={headerButtons} title="Lexicon / Glossary">
       <Grid container spacing={2}>
         <Grid size={{ xs: 12 }}>
           <Card
@@ -115,13 +127,15 @@ export const LexiconList: React.FC = () => {
                 {...categoryDataGridProps}
                 rowHeight={settings.rowHeight}
                 columns={categoryColumns}
-                onRowClick={(params) => setSelectedCategory(params.row)}
-                getRowClassName={(params) =>
-                  params.id === selectedCategory?.id ? 'selected-row' : ''
-                }
+                onRowClick={handleRowClick}
+                getRowClassName={getRowClassName}
                 sx={{
                   '& .selected-row': {
-                    backgroundColor: (theme) => theme.palette.secondary.light,
+                    bgcolor: (theme) => theme.palette.secondary.light,
+                    '&:hover': {
+                      bgcolor: (theme) =>
+                        alpha(theme.palette.secondary.light, 0.75),
+                    },
                   },
                 }}
               />
@@ -134,10 +148,10 @@ export const LexiconList: React.FC = () => {
             <CardContent>
               <DataGrid
                 pagination
+                disableRowSelectionOnClick
                 pageSizeOptions={[5, 10, 25]}
                 paginationModel={{ pageSize: 10, page: 0 }}
                 {...termDataGridProps}
-                disableRowSelectionOnClick={false}
                 rowHeight={settings.rowHeight}
                 columns={termColumns}
               />
