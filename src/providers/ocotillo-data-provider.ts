@@ -79,8 +79,13 @@ export const ocotilloDataProvider: DataProvider = {
     }
 
     if (pagination) {
-      params.append('page', pagination.current.toString())
-      params.append('size', pagination.pageSize.toString())
+      console.log(pagination)
+      if (pagination.current !== undefined && pagination.pageSize !== undefined) {
+        params.append('page', pagination.current.toString())
+      }
+      if (pagination.pageSize !== undefined){
+        params.append('size', pagination.pageSize.toString())
+      }
     }
 
     if (sorters && sorters.length > 0) {

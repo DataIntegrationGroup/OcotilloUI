@@ -6,6 +6,7 @@ import {
   useShow,
   useNavigation,
   useList,
+  useInfiniteList,
 } from '@refinedev/core'
 import { useParams } from 'react-router-dom'
 import { Breadcrumb, CreateButton, Show, useDataGrid } from '@refinedev/mui'
@@ -108,6 +109,28 @@ export const WellShow = () => {
     ]
   }, [])
 
+  const { isLoading: transducerIsLoading,
+    fetchNextPage,
+    hasNextPage,
+          data: transducerData } = useInfiniteList({
+    resource: 'observation/transducer-groundwater-level',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: id,
+      },
+    },
+    pagination: {
+      pageSize: 10000,
+    },
+  })
+
+  // useEffect(() => {
+  //   if (!hasNextPage || transducerIsLoading) return
+  //   fetchNextPage()
+  // }, [hasNextPage, transducerIsLoading, fetchNextPage])
+  //
+
   const { dataGridProps: observationDataGridProps } = useDataGrid({
     resource: 'observation/groundwater-level',
     dataProviderName: 'ocotillo',
@@ -182,6 +205,34 @@ export const WellShow = () => {
     ]
     setHydrographDatasource(source)
   }, [observations])
+
+  useEffect(() => {
+    console.log('transducerData', transducerData)
+
+    if (!transducerData || transducerData.pages.length === 0) return
+    if (transducerIsLoading) return
+    if (hasNextPage) {
+      fetchNextPage()
+      return
+    }
+
+    const allTransducerRows = transducerData.pages.flatMap(page => page.data) ?? []
+    console.log('allTransducerRows', allTransducerRows)
+    const source: IHydrographDatasource[] =
+      {
+        id: 2,
+        name: 'Transducer',
+        style: 'line',
+        data:
+          allTransducerRows.map((obs) => ({
+            phenomenonTime: new Date(obs.observation.observation_datetime),
+            result: Number(obs.observation.value),
+          })) || [],
+      }
+    console.log('source', source)
+    setHydrographDatasource((prevState)=> [...prevState, source])
+
+  }, [transducerData, transducerIsLoading, hasNextPage, fetchNextPage])
 
   return (
     <Show
