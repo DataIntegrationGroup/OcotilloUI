@@ -26,6 +26,7 @@ interface MergedRow {
   sensor_model?: string
   serial_no?: string
   recording_interval: string
+  recording_interval_display: string
   installation_date?: string | null
   removal_date?: string | null
   isUnattached?: boolean
@@ -132,7 +133,7 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
         flex: 1,
       },
       {
-        field: 'recording_interval',
+        field: 'recording_interval_display',
         headerName: 'Recording Interval',
         type: 'number',
         minWidth: 100,
