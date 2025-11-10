@@ -6,7 +6,7 @@ export const useThingLayers = () => ({
     label: 'Water Wells',
     color: '#9cd0ab',
   }),
-  springs: useLayer({
+  /* springs: useLayer({
     thing_type: 'spring',
     label: 'Springs',
     color: '#f0c0a0',
@@ -25,5 +25,5 @@ export const useThingLayers = () => ({
     thing_type: 'meteorological station',
     label: 'Meteorological Stations',
     color: '#2b7dc0',
-  }),
+  }), */
 })

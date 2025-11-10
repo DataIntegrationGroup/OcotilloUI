@@ -78,7 +78,12 @@ const defineUserAbility = (groups: string[]) => {
     if (groups.includes('OcotilloAdmin')) {
       can('manage', 'all')
     }
-
+    
+    if (!groups.includes('OcotilloAdmin')) {
+      cannot('create', 'all')
+      cannot('edit', 'all')
+      cannot('delete', 'all')
+    }
 
   })
 }
