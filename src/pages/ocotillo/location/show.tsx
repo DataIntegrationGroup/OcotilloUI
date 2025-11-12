@@ -2,6 +2,7 @@ import { useShow } from '@refinedev/core'
 import { Show } from '@refinedev/mui'
 import { ILocation } from '@/interfaces/ocotillo/ILocation'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
+import { FieldConfigs } from '@/interfaces'
 
 export const LocationShow = () => {
   const { queryResult } = useShow({})
@@ -9,7 +10,7 @@ export const LocationShow = () => {
   const record = data?.data as ILocation
 
   //custom configs for location
-  const fieldConfigs = {
+  const fieldConfigs: FieldConfigs<ILocation> = {
     created_at: {
       label: 'Created At',
       formatter: (value: string) =>

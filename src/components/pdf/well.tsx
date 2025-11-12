@@ -1,6 +1,6 @@
 import { IAddress, IContact, IWell } from '@/interfaces/ocotillo/IThing'
 import { BaseRecord } from '@refinedev/core'
-import { buildPdfFilename, convertLonLatToUTM, parseWktPoint } from '@/utils'
+import { buildPdfFilename } from '@/utils'
 import {
   Document,
   Page,
@@ -93,11 +93,6 @@ export const WellPDF = ({
   assets: BaseRecord[]
   contacts: IContact[]
 }) => {
-  const coords = parseWktPoint(well?.current_location?.point)
-  const [easting, northing] = coords
-    ? convertLonLatToUTM(coords.lon, coords.lat)
-    : [undefined, undefined]
-
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
 
   const { primaryContact, secondaryContact } = useMemo(() => {
@@ -151,10 +146,20 @@ export const WellPDF = ({
               <Text style={styles.label}>Date:</Text>
             </View>
             <View style={styles.cell3}>
-              <LineItem title="Easting" value={easting?.toFixed(0)} />
+              <LineItem
+                title="Easting"
+                value={well?.current_location?.properties?.utm_coordinates?.easting?.toFixed(
+                  0
+                )}
+              />
             </View>
             <View style={styles.cell3}>
-              <LineItem title="Northing" value={northing?.toFixed(0)} />
+              <LineItem
+                title="Northing"
+                value={well?.current_location?.properties?.utm_coordinates?.northing?.toFixed(
+                  0
+                )}
+              />
             </View>
             <View style={styles.cell3}></View>
           </View>
@@ -218,10 +223,6 @@ export const WellPDF = ({
           </View>
         </View>
         <View style={styles.section}>
-          <LineItem
-            title="Location Notes"
-            value={well?.current_location?.notes}
-          />
           <LineItem
             title="Measurement Notes"
             value={(well as unknown as any)?.measurement_notes}

@@ -14,6 +14,7 @@ export interface ILocation {
       horizontal_datum?: string | null
     }
   }
+  created_at?: string
 }
 
 export interface GeoPoint3D extends GeoJSON.Point {

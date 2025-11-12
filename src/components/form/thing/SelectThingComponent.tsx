@@ -1,6 +1,6 @@
 import { Box } from '@mui/system'
 import { useAutocomplete } from '@refinedev/mui'
-import { IWell, IThing } from '@/interfaces/ocotillo/IThing'
+import { IThing } from '@/interfaces/ocotillo/IThing'
 import { Controller } from 'react-hook-form'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
@@ -173,7 +173,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
         type: 'FeatureCollection',
         features: [],
       })
-    } else if (newValue[0]?.active_location === null) {
+    } else if (newValue[0]?.current_location === null) {
       setSelectedThingFeatureCollection({
         type: 'FeatureCollection',
         features: [],
@@ -184,7 +184,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
         features: newValue.map((item) => ({
           type: 'Feature',
           id: item.id,
-          geometry: wellknown.parse(item.active_location.point),
+          geometry: item.current_location.geometry,
           properties: {
             name: item.name,
             id: item.id,
@@ -292,7 +292,6 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
         <Grid size={4}>
           <Card sx={{ height: '100%', padding: 2 }}>
             <Typography variant="h6">Well Details</Typography>
-
             <TableContainer>
               <Table size={'small'}>
                 <TableBody>
@@ -307,22 +306,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
                 </TableBody>
               </Table>
             </TableContainer>
-            {/*{selectedThing && <Box sx={{ marginTop: 2 }}>*/}
-            {/*  */}
-            {/*  */}
-            {/*  */}
-            {/*</Box>}*/}
           </Card>
-          {/*<Box*/}
-          {/*  sx={{*/}
-          {/*    backgroundColor: theme.palette.background.main,*/}
-          {/*    padding: 2,*/}
-          {/*    height: '100%',*/}
-          {/*    border: '1px solid #000',*/}
-          {/*  }}*/}
-          {/*>*/}
-          {/*  <Typography variant="h6">Well Details</Typography>*/}
-          {/*</Box>*/}
         </Grid>
       </Grid>
     </Box>
