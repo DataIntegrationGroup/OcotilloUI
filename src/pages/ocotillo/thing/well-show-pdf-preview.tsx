@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material'
 import { HttpError, useList, useNavigation, useShow } from '@refinedev/core'
-import { ListButton, Show, ShowButton } from '@refinedev/mui'
+import { ListButton, Show, ShowButton, useDataGrid } from '@refinedev/mui'
 import { useParams } from 'react-router-dom'
 import { ArrowBack } from '@mui/icons-material'
 import { PDFViewer } from '@react-pdf/renderer'
@@ -29,6 +29,22 @@ export const WellShowPdfPreview = () => {
     id,
   })
 
+  const {
+    dataGridProps: { rows: observations, loading: isObservationsloading },
+  } = useDataGrid({
+    resource: 'observation/groundwater-level',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: id,
+      },
+    },
+    queryOptions: {
+      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
+    },
+  })
+
   const { data: assetData, isLoading: isAssetLoading } = useList({
     resource: 'asset',
     dataProviderName: 'ocotillo',
@@ -45,7 +61,8 @@ export const WellShowPdfPreview = () => {
   const assets = assetData?.data ?? []
   const contacts = contactData?.data ?? []
 
-  const isLoading = isWellLoading || isAssetLoading || isContactLoading
+  const isLoading =
+    isWellLoading || isAssetLoading || isContactLoading || isObservationsloading
 
   useEffect(() => {
     if (!isLoading) {
@@ -93,7 +110,12 @@ export const WellShowPdfPreview = () => {
                 }}
               >
                 <PDFViewer width="100%" height="100%">
-                  <WellPDF well={well} assets={assets} contacts={contacts} />
+                  <WellPDF
+                    well={well}
+                    assets={assets}
+                    contacts={contacts}
+                    observations={observations}
+                  />
                 </PDFViewer>
               </Box>
             )}

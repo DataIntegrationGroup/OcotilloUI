@@ -36,6 +36,12 @@ export const CoreWellInfoCard = ({
               flexWrap="wrap"
               alignItems="center"
               justifyContent="space-around"
+              sx={{
+                gap: 2,
+                rowGap: 2,
+                columnGap: 2,
+                mt: 1,
+              }}
             >
               {(well?.well_purposes && well.well_purposes.length > 0
                 ? well.well_purposes

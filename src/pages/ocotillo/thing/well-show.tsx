@@ -1,6 +1,6 @@
 import { HttpError, useResourceParams, useShow } from '@refinedev/core'
 import { Breadcrumb, Show, useDataGrid } from '@refinedev/mui'
-import { IGroup, IWell } from '@/interfaces/ocotillo/IThing'
+import { IWell } from '@/interfaces/ocotillo/IThing'
 import { Box, Stack, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
@@ -32,7 +32,9 @@ export const WellShow = () => {
   >([])
   const { id } = useResourceParams()
 
-  const { dataGridProps: observationDataGridProps } = useDataGrid({
+  const {
+    dataGridProps: { rows: observations, loading: observationsIsloading },
+  } = useDataGrid({
     resource: 'observation/groundwater-level',
     dataProviderName: 'ocotillo',
     meta: {
@@ -54,9 +56,6 @@ export const WellShow = () => {
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
-
-  const { rows: observations, loading: observationsIsloading } =
-    observationDataGridProps
 
   const { rows: idLinks, loading: idLinksIsloading } = idLinkDataGridProps
   const usgs_id =

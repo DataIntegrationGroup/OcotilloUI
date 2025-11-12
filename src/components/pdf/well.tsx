@@ -10,6 +10,7 @@ import {
   Image,
 } from '@react-pdf/renderer'
 import { useMemo } from 'react'
+import { IObservation } from '@/interfaces/ocotillo/IObservation'
 
 const styles = StyleSheet.create({
   page: {
@@ -38,11 +39,11 @@ const styles = StyleSheet.create({
   },
   cell3: {
     width: '32%', // slightly less than 1/3 for spacing
-    marginBottom: 1,
+    marginBottom: 1.5,
   },
   cell2: {
     width: '48%', // slightly less than 1/2 for spacing
-    marginBottom: 1,
+    marginBottom: 1.5,
   },
   label: {
     fontSize: 12,
@@ -88,12 +89,27 @@ export const WellPDF = ({
   well,
   assets,
   contacts,
+  observations,
 }: {
   well: IWell
   assets: BaseRecord[]
   contacts: IContact[]
+  observations: readonly Partial<IObservation>[]
 }) => {
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
+
+  const { mostRecentObservation } = useMemo(() => {
+    if (!observations?.length) return { mostRecentObservation: undefined }
+
+    // Sort descending by observation_datetime (most recent first)
+    const sorted = [...observations].sort((a, b) => {
+      const aTime = new Date(a.observation_datetime ?? 0).getTime()
+      const bTime = new Date(b.observation_datetime ?? 0).getTime()
+      return bTime - aTime
+    })
+
+    return { mostRecentObservation: sorted[0] }
+  }, [observations])
 
   const { primaryContact, secondaryContact } = useMemo(() => {
     if (!contacts?.length)
@@ -136,32 +152,52 @@ export const WellPDF = ({
             <View style={styles.cell3}>
               <LineItem title="Well Id" value={well?.name} />
             </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Site Name"
-                value={(well as unknown as any)?.site_name}
-              />
-            </View>
+            <View style={styles.cell3}></View>
             <View style={styles.cell3}>
               <Text style={styles.label}>Date:</Text>
             </View>
             <View style={styles.cell3}>
               <LineItem
-                title="Easting"
-                value={well?.current_location?.properties?.utm_coordinates?.easting?.toFixed(
-                  0
-                )}
+                title="Easting/Northing"
+                value={`${well?.current_location?.properties?.utm_coordinates?.easting?.toFixed(0)}, ${well?.current_location?.properties?.utm_coordinates?.northing?.toFixed(0)}`}
               />
             </View>
             <View style={styles.cell3}>
               <LineItem
-                title="Northing"
-                value={well?.current_location?.properties?.utm_coordinates?.northing?.toFixed(
-                  0
-                )}
+                title="Vertical Datum"
+                value={well?.current_location?.properties?.vertical_datum}
               />
             </View>
             <View style={styles.cell3}></View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Latitude/Longitude"
+                value={
+                  well?.current_location?.geometry?.coordinates
+                    ? `${well?.current_location?.geometry?.coordinates?.[0]?.toFixed(6)}, ${well?.current_location?.geometry?.coordinates?.[1]?.toFixed(6)}`
+                    : 'N/A'
+                }
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Elevation"
+                value={`${
+                  well?.current_location?.properties?.elevation?.toFixed(0) ||
+                  'N/A'
+                } ${
+                  well?.current_location?.properties?.elevation_unit
+                    ? ` ${well?.current_location?.properties?.elevation_unit}`
+                    : null
+                }`}
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Elevation Method"
+                value={well?.current_location?.properties?.elevation_method}
+              />
+            </View>
           </View>
         </View>
         <View style={styles.section}>
@@ -227,22 +263,63 @@ export const WellPDF = ({
             title="Measurement Notes"
             value={(well as unknown as any)?.measurement_notes}
           />
-          <LineItem
-            title="Well Depth"
-            value={
-              well?.well_depth
-                ? `${well?.well_depth} ${well.well_depth_unit}`
-                : null
-            }
-          />
-          <LineItem
-            title="Last Measured Date"
-            value={(well as unknown as any)?.last_measured_date}
-          />
-          <LineItem
-            title="Last Depth to Water"
-            value={(well as unknown as any)?.last_depth_to_water}
-          />
+          <View style={styles.twoByTwoGrid}>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Hole Depth"
+                value={
+                  well?.hole_depth
+                    ? `${well?.hole_depth} ${well?.hole_depth_unit}`
+                    : null
+                }
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Well Depth"
+                value={
+                  well?.well_depth
+                    ? `${well?.well_depth} ${well.well_depth_unit}`
+                    : null
+                }
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Measuring Point Height"
+                value={
+                  well?.measuring_point_height
+                    ? `${well?.measuring_point_height} ${well?.measuring_point_height_unit}`
+                    : null
+                }
+              />
+            </View>
+          </View>
+          <View style={styles.twoByTwoGrid}>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Last Measured Date"
+                value={
+                  mostRecentObservation?.observation_datetime
+                    ? new Date(mostRecentObservation.observation_datetime)
+                        .toISOString()
+                        .slice(0, 10)
+                    : null
+                }
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Last Depth to Water"
+                value={
+                  mostRecentObservation?.depth_to_water_bgs != null
+                    ? `${mostRecentObservation.depth_to_water_bgs.toFixed(2)} ${mostRecentObservation.unit}`
+                    : null
+                }
+              />
+            </View>
+            <View style={styles.cell3}></View>
+          </View>
         </View>
         {assets.length === 0 && (
           <Text style={styles.pageNote}>

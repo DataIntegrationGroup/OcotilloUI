@@ -20,7 +20,7 @@ export const RecentWaterLevelObservationsCard = ({
   isLoading = false,
 }: {
   well: IWell
-  rows: readonly any[]
+  rows: readonly IObservation[]
   isLoading: boolean
 }) => {
   if (!well || isLoading) {
