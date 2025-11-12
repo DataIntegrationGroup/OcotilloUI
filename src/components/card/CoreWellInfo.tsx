@@ -1,4 +1,4 @@
-import { IGroup, IWell } from '@/interfaces/ocotillo/IThing'
+import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
   Card,
   CardContent,
@@ -10,35 +10,19 @@ import {
   Typography,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { convertLonLatToUTM, parseWktPoint } from '@/utils'
-import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from '@/utils'
 
-export const CoreWellInfoCard = ({well, usgs_id, osepod_id}: { well: IWell, usgs_id: string, osepod_id: string }) => {
-
-  // ({ well }: { well: IWell }) => {
-  const coords = parseWktPoint(well?.current_location?.point)
-  const [easting, northing] = coords
-    ? convertLonLatToUTM(coords.lon, coords.lat)
-    : [undefined, undefined]
-
+export const CoreWellInfoCard = ({
+  well,
+  usgs_id,
+  osepod_id,
+}: {
+  well: IWell
+  usgs_id: string
+  osepod_id: string
+}) => {
   if (!well) {
     return <LoadingCard />
   }
-
-  const groupId = well?.group_id
-  const groupQuery = useQuery<IGroup | null>({
-    queryKey: ['group', groupId],
-    queryFn: async () => {
-      if (!groupId) return null
-
-      return apiFetch({
-        endpoint: `/group/${groupId}`,
-        failureMessage: 'Failed to fetch group',
-      })
-    },
-    enabled: Boolean(groupId),
-  })
 
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
@@ -53,15 +37,17 @@ export const CoreWellInfoCard = ({well, usgs_id, osepod_id}: { well: IWell, usgs
               alignItems="center"
               justifyContent="space-around"
             >
-              <Chip
-                sx={{ fontFamily: 'monospace' }}
-                label={
-                  well?.well_purpose?.toLocaleUpperCase() ||
-                  well?.thing_type?.toLocaleUpperCase() ||
-                  'UNKNOWN TYPE'
-                }
-                color="info"
-              />
+              {(well?.well_purposes && well.well_purposes.length > 0
+                ? well.well_purposes
+                : [well?.thing_type || 'UNKNOWN TYPE']
+              ).map((p) => (
+                <Chip
+                  key={p}
+                  sx={{ fontFamily: 'monospace' }}
+                  label={p?.toLocaleUpperCase() || 'UNKNOWN TYPE'}
+                  color="info"
+                />
+              ))}
               <Chip
                 sx={{ fontFamily: 'monospace' }}
                 label={
@@ -69,23 +55,13 @@ export const CoreWellInfoCard = ({well, usgs_id, osepod_id}: { well: IWell, usgs
                 }
                 color="error"
               />
-              {groupQuery.isLoading ? (
-                <Skeleton
-                  variant="rectangular"
-                  width={150}
-                  height={35}
-                  sx={{ borderRadius: '2rem' }}
-                />
-              ) : (
+              {well?.groups?.map((g) => (
                 <Chip
                   sx={{ fontFamily: 'monospace' }}
-                  label={
-                    groupQuery?.data?.name?.toLocaleUpperCase() ||
-                    'UNKNOWN GROUP'
-                  }
+                  label={g?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
                   color="primary"
                 />
-              )}
+              ))}
             </Stack>
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -106,24 +82,48 @@ export const CoreWellInfoCard = ({well, usgs_id, osepod_id}: { well: IWell, usgs
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
+            <Typography variant="h6">Measuring Point Height:</Typography>
+            <Typography variant="body1">
+              {well?.measuring_point_height || 'N/A'}{' '}
+              {well?.measuring_point_height
+                ? well?.measuring_point_height_unit
+                : null}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Northing/Easting:</Typography>
             <Typography variant="body1">
-              {`${northing?.toFixed(0) || 'N/A'}, ${easting?.toFixed(0) || 'N/A'}`}
+              {`${well?.current_location?.properties?.utm_coordinates?.easting?.toFixed(0) || 'N/A'}, ${well?.current_location?.properties?.utm_coordinates?.northing?.toFixed(0) || 'N/A'}`}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography variant="h6">Vertical Datum:</Typography>
+            <Typography variant="body1">
+              {well?.current_location?.properties?.vertical_datum || 'N/A'}{' '}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Typography variant="h6">Latitude/Longitude:</Typography>
             <Typography variant="body1">
-              {coords
-                ? `${coords.lat?.toFixed(6)}, ${coords.lon?.toFixed(6)}`
+              {well?.current_location?.geometry?.coordinates
+                ? `${well?.current_location?.geometry?.coordinates?.[0]?.toFixed(6)}, ${well?.current_location?.geometry?.coordinates?.[1]?.toFixed(6)}`
                 : 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Elevation:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.elevation?.toFixed(0) || 'N/A'}
-              {well?.current_location?.elevation ? ' ft' : null}
+              {well?.current_location?.properties?.elevation?.toFixed(0) ||
+                'N/A'}
+              {well?.current_location?.properties?.elevation_unit
+                ? ` ${well?.current_location?.properties?.elevation_unit}`
+                : null}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography variant="h6">Elevation Method:</Typography>
+            <Typography variant="body1">
+              {well?.current_location?.properties?.elevation_method || 'N/A'}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>

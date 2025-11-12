@@ -1,17 +1,21 @@
 export interface ILocation {
-  id: number
-  county: string
-  state: string
-  quad_name: string
-  elevation: number
-  elevation_accuracy: number | null
-  elevation_method: string | null
-  horizontal_datum: string | null
-  vertical_datum: string | null
-  coordinate_accuracy: number | null
-  coordinate_method: string | null
-  notes: string | null
-  point: string
-  release_status: string
-  created_at: string
+  geometry: GeoPoint3D
+  properties: {
+    elevation?: number | null
+    elevation_accuracy?: number | null
+    elevation_method?: string | null
+    elevation_unit?: string | null
+    horizontal_datum?: string | null
+    vertical_datum?: string | null
+    utm_coordinates?: {
+      easting?: number | null
+      northing?: number | null
+      utm_zone?: number | string | null
+      horizontal_datum?: string | null
+    }
+  }
+}
+
+export interface GeoPoint3D extends GeoJSON.Point {
+  coordinates: [number, number, number]
 }
