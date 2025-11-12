@@ -178,28 +178,36 @@ const LoadingCard = () => (
           <Divider />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={120} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={100} height={24} />
+          <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={60} height={24} />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={120} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={100} height={24} />
+          <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={60} height={24} />
+        </Grid>
+        <Grid size={{ xs: 12 }}>
+          <Skeleton variant="text" width={220} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={60} height={24} />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={100} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={90} height={24} />
+          <Skeleton variant="text" width={180} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={160} height={24} />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={100} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
           <Skeleton variant="text" width={90} height={24} />
         </Grid>
         <Grid size={{ xs: 12 }}>
           <Skeleton variant="text" width={200} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={180} height={24} />
+          <Skeleton variant="text" width={240} height={24} />
         </Grid>
-        <Grid size={{ xs: 12 }}>
-          <Skeleton variant="text" width={120} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={80} height={24} />
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={90} height={24} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" width={90} height={24} />
         </Grid>
         <Grid size={{ xs: 12 }}>
           <Typography variant="h4">Alternate IDs</Typography>
@@ -207,11 +215,11 @@ const LoadingCard = () => (
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <Skeleton variant="text" width={80} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={100} height={24} />
+          <Skeleton variant="text" width={60} height={24} />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <Skeleton variant="text" width={80} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={100} height={24} />
+          <Skeleton variant="text" width={60} height={24} />
         </Grid>
       </Grid>
     </CardContent>
