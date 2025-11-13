@@ -211,7 +211,12 @@ export const WellPDF = ({
                 value={secondaryContact?.name}
               />
             </View>
-
+            <View style={styles.cell2}>
+              <SubLineItem title="Role" value={primaryContact?.role} />
+            </View>
+            <View style={styles.cell2}>
+              <SubLineItem title="Role" value={secondaryContact?.role} />
+            </View>
             <View style={styles.cell2}>
               <SubLineItem
                 title="Address"
