@@ -119,7 +119,7 @@ export const CoreWellInfoCard = ({
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Elevation:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.properties?.elevation?.toFixed(0) ||
+              {well?.current_location?.properties?.elevation?.toFixed(2) ||
                 'N/A'}
               {well?.current_location?.properties?.elevation_unit
                 ? ` ${well?.current_location?.properties?.elevation_unit}`
