@@ -45,7 +45,7 @@ jobs:
           docker compose build --build-arg INSTALL_DEV=$INSTALL_DEV app
           docker compose up -d
           echo "Waiting for FastAPI to be ready..."
-          timeout 180 bash -c 'until curl -f http://localhost:8000/docs; do sleep 3; done'
+          timeout 180 bash -c 'until curl -f http://localhost:8000/docs-auth; do sleep 3; done'
           echo "FastAPI is up and healthy"
 
       - name: Seed database
