@@ -41,6 +41,11 @@ jobs:
         working-directory: ./api-repo
         env:
           INSTALL_DEV: true
+          POSTGRES_USER: ${{ secrets.PG_TEST_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.PG_TEST_PW }}
+          POSTGRES_DB: ${{ secrets.PG_TEST_DB }}
+          POSTGRES_HOST: ${{ secrets.PG_TEST_HOST }}
+          POSTGRES_PORT: ${{ secrets.PG_TEST_PORT }}
         run: |
           docker compose build --build-arg INSTALL_DEV=$INSTALL_DEV app
           docker compose up -d
