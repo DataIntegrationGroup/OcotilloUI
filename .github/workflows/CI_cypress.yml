@@ -41,6 +41,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug env inside compose step
+        working-directory: ./api-repo
+        run: |
+          echo "POSTGRES_USER=$POSTGRES_USER"
+          echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
+          echo "POSTGRES_DB=$POSTGRES_DB"
+          echo "POSTGRES_HOST=$POSTGRES_HOST"
+          echo "POSTGRES_PORT=$POSTGRES_PORT"
+
       - name: Start FastAPI backend (Docker Compose)
         working-directory: ./api-repo
         env:
@@ -48,6 +57,20 @@ jobs:
         run: |
           docker compose build --build-arg INSTALL_DEV=$INSTALL_DEV app
           docker compose up -d
+
+      - name: Exec inside DB container
+        working-directory: ./api-repo
+        run: docker compose exec -T db pg_isready -U $POSTGRES_USER -d $POSTGRES_DB || true
+
+      - name: Debug DB connectivity from app container
+        working-directory: ./api-repo
+        run: |
+          docker compose exec -T app bash -c "
+            echo 'Testing ping to db container:' &&
+            ping -c 3 db || true &&
+            echo 'Testing port 5432...' &&
+            nc -zv db 5432 || true
+          "
 
       - name: Show early API logs (startup)
         working-directory: ./api-repo
