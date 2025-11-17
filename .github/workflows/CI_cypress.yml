@@ -84,7 +84,12 @@ jobs:
         working-directory: ./api-repo
         run: |
           echo "Waiting for FastAPI to be ready..."
-          timeout 180 bash -c 'until curl -f http://localhost:8000/docs; do sleep 3; done'
+          timeout 720 bash -c '
+            until curl -sf http://localhost:8000/docs; do 
+              echo "FastAPI not up yet, retrying..."
+              sleep 3
+            done
+          '
           echo "FastAPI is up and healthy"
 
       - name: Show API logs after readiness probe
