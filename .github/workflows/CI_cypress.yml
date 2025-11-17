@@ -72,6 +72,10 @@ jobs:
             nc -zv db 5432 || true
           "
 
+      - name: Show DB logs
+        working-directory: ./api-repo
+        run: docker compose logs --tail=200 db || true
+
       - name: Show early API logs (startup)
         working-directory: ./api-repo
         run: docker compose logs --tail=200 app || true
