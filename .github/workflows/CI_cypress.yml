@@ -18,8 +18,8 @@ jobs:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${{ secrets.PG_TEST_PW }}
-      POSTGRES_DB: ${{ secrets.PG_TEST_DB }}
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres  
 
     steps:
       - name: Checkout frontend
