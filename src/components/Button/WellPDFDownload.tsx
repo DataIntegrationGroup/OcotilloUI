@@ -20,6 +20,7 @@ import { WellPDF } from '@/components'
 import { ArrowDropDown, Download, Visibility } from '@mui/icons-material'
 import { buildPdfFilename } from '@/utils'
 import { pdf } from '@react-pdf/renderer'
+import { useDataGrid } from '@refinedev/mui'
 
 export const WellPDFDownloadButton = ({
   well,
@@ -31,6 +32,22 @@ export const WellPDFDownloadButton = ({
   const { push } = useNavigation()
   const { data: permissions, isLoading: isPermissionsLoading } =
     usePermissions<string[]>()
+
+  const {
+    dataGridProps: { rows: observations, loading: isObservationsloading },
+  } = useDataGrid({
+    resource: 'observation/groundwater-level',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: well?.id,
+      },
+    },
+    queryOptions: {
+      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
+    },
+  })
 
   const { data: assetData } = useList({
     resource: 'asset',
@@ -70,7 +87,11 @@ export const WellPDFDownloadButton = ({
 
   const isViewer = permissions?.includes('AMPViewer') ?? false
   const disabled =
-    isLoading || isPermissionsLoading || !isViewer || isGenerating
+    isLoading ||
+    isPermissionsLoading ||
+    !isViewer ||
+    isGenerating ||
+    isObservationsloading
 
   const handleDownload = async () => {
     try {
@@ -79,7 +100,12 @@ export const WellPDFDownloadButton = ({
 
       // Generate a PDF blob from the React PDF component
       const blob = await pdf(
-        <WellPDF well={well} assets={assets} contacts={contacts} />
+        <WellPDF
+          well={well}
+          assets={assets}
+          contacts={contacts}
+          observations={observations}
+        />
       ).toBlob()
 
       // Create a temporary download link

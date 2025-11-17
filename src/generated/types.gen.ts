@@ -5072,10 +5072,6 @@ export type GetTransducerGroundwaterLevelObservationsObservationTransducerGround
          */
         thing_id?: number | null;
         /**
-         * Parameter Id
-         */
-        parameter_id?: number | null;
-        /**
          * Start Time
          */
         start_time?: string | null;

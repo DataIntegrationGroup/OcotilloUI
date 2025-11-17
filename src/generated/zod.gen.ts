@@ -3334,10 +3334,6 @@ export const zGetTransducerGroundwaterLevelObservationsObservationTransducerGrou
             z.int(),
             z.null()
         ])),
-        parameter_id: z.optional(z.union([
-            z.int(),
-            z.null()
-        ])),
         start_time: z.optional(z.union([
             z.iso.datetime({
                 offset: true
