@@ -7,25 +7,35 @@ export interface IThing {
   release_status: string
   thing_type: string
   location_id: number
-  active_location?: ILocation | null
+  current_location?: ILocation | null
+  first_visit_date?: string | null
+  groups?: IGroup[]
+  monitoring_status?: string | null
+  alternate_ids?: IThingIdLink[]
 }
 
 export interface IWell extends IThing {
-  current_location?: ILocation | null
-  first_visit_date?: string | null
-  hole_depth?: number | null
-  hole_depth_unit?: string | null
+  well_purposes?: string[] | null
   well_depth?: number | null
   well_depth_unit?: string | null
-  well_type?: string | null
-  well_casing_depth?: number | null
-  well_casing_depth_unit?: string | null
+
+  hole_depth?: number | null
+  hole_depth_unit?: string | null
+
   well_casing_diameter?: number | null
   well_casing_diameter_unit?: string | null
-  well_casing_material?: string | null
+
+  well_casing_depth?: number | null
+  well_casing_depth_unit?: string | null
+
+  well_casing_materials?: string[] | null
   well_construction_notes?: string | null
-  well_purpose?: string | null
-  group_id?: number | null
+
+  well_status?: string | null
+
+  measuring_point_height?: number | null
+  measuring_point_height_unit?: string | null
+  measuring_point_description?: string | null
 }
 
 export interface ISpring extends IThing {
@@ -34,7 +44,7 @@ export interface ISpring extends IThing {
 
 export interface IThingIdLink {
   id: number
-  created_at: Date
+  created_at: string // API returns ISO string, not Date object
   release_status: string
   thing_id: number
   thing: IThing
@@ -56,6 +66,8 @@ export interface IGroup {
   updated_by_id?: string | null
   release_status?: string | null
   parent_group?: IGroup | null
+  monitoring_frequency?: string | null
+  group_type?: string | null
 }
 
 export interface IEmail {

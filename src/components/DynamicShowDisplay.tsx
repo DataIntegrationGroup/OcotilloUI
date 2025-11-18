@@ -1,33 +1,27 @@
 import { Stack, Typography, Box } from '@mui/material'
 import { TextFieldComponent as TextField } from '@refinedev/mui'
+import { FieldConfigs } from '@/interfaces'
 
 /**
  * DynamicShowDisplay Component
  * A component to use on the show.tsx pages to dynamically display the fields of a record.
  * This component is to be used as a default on show.tsx pages. It processes the json response from the api and displays the fields
  * in a basic way. More avanced shows should be created on a per entity basis.
- * 
+ *
  * @param record - The record to display
  * @param fieldConfigs - The field configurations for custom field display, field config interface:
  *      label: the label to display for the field
  *      formatter: a function to format the value of the field (optional)
  *      hidden: whether to hide the field (boolean) (optional)
- * 
+ *
  * @param excludeFields - The fields to exclude
  * @param autoFormatLabels - Whether to automatically format the labels
  */
 
-//field config interface
-interface FieldConfig {
-  label: string
-  formatter?: (value: any) => string | React.ReactNode
-  hidden?: boolean
-}
-
 //component props
 interface DynamicShowDisplayProps<T> {
   record: T
-  fieldConfigs?: Partial<Record<keyof T, FieldConfig>>
+  fieldConfigs?: FieldConfigs<T>
   excludeFields?: Array<keyof T>
   autoFormatLabels?: boolean
 }
@@ -36,26 +30,29 @@ export const DynamicShowDisplay = <T extends Record<string, any>>({
   record,
   fieldConfigs = {},
   excludeFields = [],
-  autoFormatLabels = true
+  autoFormatLabels = true,
 }: DynamicShowDisplayProps<T>) => {
-  
   const formatLabel = (key: string): string => {
     if (!autoFormatLabels) return key
     return key
       .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, str => str.toUpperCase())
+      .replace(/^./, (str) => str.toUpperCase())
       .replace(/_/g, ' ')
   }
 
   //handle value for rendering arrays nad objects from json response
   const renderValue = (value: any): React.ReactNode => {
     if (value === null || value === undefined) {
-      return <Typography variant="body2" color="text.secondary">-</Typography>
+      return (
+        <Typography variant="body2" color="text.secondary">
+          -
+        </Typography>
+      )
     }
     //handle arrays and objects!!
     if (Array.isArray(value) || typeof value === 'object') {
       return (
-        <Typography variant="body2" sx={{whiteSpace: 'pre-wrap' }}>
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
           {JSON.stringify(value, null, 2)}
         </Typography>
       )

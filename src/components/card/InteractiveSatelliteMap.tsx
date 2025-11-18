@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import {
   Box,
@@ -12,8 +13,6 @@ import { Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
 import { MapComponent, MapPopup } from '@/components'
 import { useThingLayers } from '@/hooks'
-import { parseWktPoint } from '@/utils'
-import { useEffect, useRef, useState } from 'react'
 import { useGo } from '@refinedev/core'
 
 export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
@@ -26,15 +25,16 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   const waterWellsLayer = THING_LAYERS['water-wells']
   const { sourceProps, layerProps } = waterWellsLayer
 
-  const coords = well ? parseWktPoint(well?.current_location?.point) : null
+  const coordinates = well?.current_location?.geometry?.coordinates ?? []
+  const [lon, lat] = coordinates
 
   // Automatically zoom to well coordinates when map loads or well changes
   useEffect(() => {
-    if (!coords || !mapRef.current) return
+    if (!lon || !lat || !mapRef.current) return
 
     const map = mapRef.current.getMap()
     map.flyTo({
-      center: [coords.lon, coords.lat],
+      center: [lon, lat],
       zoom: 14,
       essential: true, // for accessibility
     })
@@ -44,21 +44,22 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
     return <LoadingCard />
   }
 
-  const highlightFeature = coords
-    ? {
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [coords.lon, coords.lat],
+  const highlightFeature =
+    lon && lat
+      ? {
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [lon, lat],
+              },
+              properties: { name: well.name },
             },
-            properties: { name: well.name },
-          },
-        ],
-      }
-    : null
+          ],
+        }
+      : null
 
   const onMapPointClick = (_: any, points: any[]) => {
     const selectedPoint = points[0]
@@ -116,8 +117,8 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
           <MapComponent
             mapRef={mapRef}
             initialViewState={{
-              longitude: coords?.lon || -106.0,
-              latitude: coords?.lat || 35.0,
+              longitude: lon || -106.0,
+              latitude: lat || 35.0,
               zoom: 10,
             }}
             onPointClick={onMapPointClick}
