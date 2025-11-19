@@ -15,7 +15,6 @@ import TableContainer from '@mui/material/TableContainer'
 import TableRow from '@mui/material/TableRow'
 
 import Grid from '@mui/material/Grid2'
-import wellknown from 'wellknown'
 import bbox from '@turf/bbox'
 import { SpatialSearchComponent } from '@/components/SpatialSearchComponent'
 
