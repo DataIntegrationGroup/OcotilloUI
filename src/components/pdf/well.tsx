@@ -264,10 +264,6 @@ export const WellPDF = ({
           </View>
         </View>
         <View style={styles.section}>
-          <LineItem
-            title="Measurement Notes"
-            value={(well as unknown as any)?.measurement_notes}
-          />
           <View style={styles.twoByTwoGrid}>
             <View style={styles.cell3}>
               <LineItem
@@ -325,6 +321,9 @@ export const WellPDF = ({
             </View>
             <View style={styles.cell3}></View>
           </View>
+          <LineItem title="Water Notes" value={well?.water_notes} />
+          <LineItem title="Measuring Notes" value={well?.measuring_notes} />
+          <LineItem title="Notes" value={well?.notes} />
         </View>
         {assets.length === 0 && (
           <Text style={styles.pageNote}>
