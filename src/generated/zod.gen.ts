@@ -99,6 +99,7 @@ export const zBodyUploadAssetAssetUploadPost = z.object({
  */
 export const zRole = z.enum([
     'Unknown',
+    'Principal Investigator',
     'Owner',
     'Manager',
     'Operator',
@@ -167,6 +168,18 @@ export const zPhoneResponse = z.object({
 });
 
 /**
+ * GeoJSONGeometry
+ */
+export const zSchemasLocationGeoJsonGeometry = z.object({
+    type: z.optional(z.string()).default('Point'),
+    coordinates: z.tuple([
+        z.unknown(),
+        z.unknown(),
+        z.unknown()
+    ])
+});
+
+/**
  * elevation_method
  */
 export const zElevationMethod = z.enum([
@@ -185,64 +198,336 @@ export const zElevationMethod = z.enum([
 ]);
 
 /**
- * coordinate_method
+ * GeoJSONUTMCoordinates
  */
-export const zCoordinateMethod = z.enum([
-    'Unknown',
-    'Differentially corrected GPS',
-    'Survey-grade global positioning system (SGPS)',
-    'GPS, uncorrected',
-    'Interpolated from map',
-    'Interpolated from DEM',
-    'Reported',
-    'Transit, theodolite, or other survey method'
-]);
+export const zGeoJsonutmCoordinates = z.object({
+    easting: z.number(),
+    northing: z.number(),
+    utm_zone: z.optional(z.int()).default(13),
+    horizontal_datum: z.optional(z.string()).default('NAD83')
+});
 
 /**
- * LocationResponse
- * Response schema for sample location details.
+ * NoteResponse
+ * Response schema for Note details.
  */
-export const zLocationResponse = z.object({
+export const zNoteResponse = z.object({
+    note_type: z.string(),
+    content: z.string(),
     id: z.int(),
     created_at: z.string(),
     release_status: zReleaseStatus,
-    notes: z.union([
-        z.string(),
-        z.null()
-    ]),
-    point: z.string(),
-    elevation: z.union([
-        z.number(),
-        z.null()
-    ]),
-    horizontal_datum: z.optional(z.string()).default('WGS84'),
+    target_id: z.int(),
+    target_table: z.string()
+});
+
+/**
+ * GeoJSONProperties
+ */
+export const zGeoJsonProperties = z.object({
+    elevation: z.number(),
+    elevation_unit: z.optional(z.string()).default('ft'),
     vertical_datum: z.optional(z.string()).default('NAVD88'),
-    elevation_accuracy: z.union([
-        z.number(),
-        z.null()
-    ]),
     elevation_method: z.union([
         zElevationMethod,
         z.null()
     ]),
-    coordinate_accuracy: z.union([
-        z.number(),
-        z.null()
-    ]),
-    coordinate_method: z.union([
-        zCoordinateMethod,
-        z.null()
-    ]),
-    state: z.union([
+    utm_coordinates: z.optional(zGeoJsonutmCoordinates),
+    notes: z.optional(z.array(zNoteResponse)).default([])
+});
+
+/**
+ * LocationGeoJSONResponse
+ */
+export const zLocationGeoJsonResponse = z.object({
+    type: z.optional(z.string()).default('Feature'),
+    geometry: zSchemasLocationGeoJsonGeometry,
+    properties: zGeoJsonProperties
+});
+
+/**
+ * group_type
+ */
+export const zGroupType = z.enum([
+    'Monitoring Plan',
+    'Geographic Area',
+    'Historical'
+]);
+
+/**
+ * GroupResponse
+ * Pydantic model for the response of a group.
+ * This model can be extended to include additional fields as needed.
+ */
+export const zGroupResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    name: z.string(),
+    description: z.union([
         z.string(),
         z.null()
     ]),
-    county: z.union([
+    project_area: z.union([
         z.string(),
         z.null()
     ]),
-    quad_name: z.union([
-        z.string(),
+    group_type: z.union([
+        zGroupType,
+        z.null()
+    ]),
+    parent_group_id: z.union([
+        z.int(),
+        z.null()
+    ])
+});
+
+/**
+ * organization
+ */
+export const zOrganization = z.enum([
+    'Unknown',
+    'NMSU',
+    'USGS',
+    'TWDB',
+    'NMED',
+    'NMOSE',
+    'NMBGMR',
+    'Bernalillo County',
+    'BLM',
+    'BLM Taos Office',
+    'SFC',
+    'SFC, Fire Facilities',
+    'SFC, Utilities Dept.',
+    'SFC, Valle Vista Water Utility, Inc.',
+    'City of Santa Fe',
+    'City of Santa Fe WWTP',
+    'City of Santa Fe, Municipal Recreation Complex',
+    'City of Santa Fe, Sangre de Cristo Water Co.',
+    'NMISC',
+    'PVACD',
+    'Bayard',
+    'SNL',
+    'USFS',
+    'NMT',
+    'NPS',
+    'NMRWA',
+    'NMDOT',
+    'Taos SWCD',
+    'Otero SWCD',
+    'Northeastern SWCD',
+    'CDWR',
+    'Pendaries Village',
+    'A&T Pump & Well Service, LLC',
+    'A. G. Wassenaar, Inc',
+    'AMEC',
+    'Balleau Groundwater, Inc',
+    'CDM Smith',
+    'CH2M Hill',
+    'Corbin Consulting, Inc',
+    'Chevron',
+    'Daniel B. Stephens & Associates, Inc',
+    'EnecoTech',
+    'Faith Engineering, Inc',
+    'Foster Well Service, Inc',
+    'Glorieta Geoscience, Inc',
+    'Golder Associates, Inc',
+    "Hathorn's Well Service, Inc",
+    'Hydroscience Associates, Inc',
+    'IC Tech, Inc',
+    'John Shomaker & Associates, Inc',
+    'Kuckleman Pump Service',
+    'Los Golondrinas',
+    'Minton Engineers',
+    'MJDarrconsult, Inc',
+    'Puerta del Canon Ranch',
+    'Rodgers & Company, Inc',
+    'San Pedro Creek Estates HOA',
+    'Statewide Drilling, Inc',
+    'Tec Drilling Limited',
+    'Tetra Tech, Inc',
+    'Thompson Drilling, Inc',
+    'Witcher & Associates',
+    'Zeigler Geologic Consulting, LLC',
+    'Sandia Well Service, Inc',
+    'San Marcos Association',
+    'URS',
+    'Vista del Oro',
+    'Abeyta Engineering, Inc',
+    'Adobe Ranch',
+    'Agua Fria Community Water Association',
+    'Apache Gap Ranch',
+    'Aspendale Mountain Retreat',
+    'Augustin Plains Ranch LLC',
+    'B & B Cattle Co',
+    'Berridge Distributing Company',
+    "Bishop's Lodge",
+    'Bonanza Creek Ranch',
+    'Bug Scuffle Water Association',
+    'Wehinahpay Mountain Camp',
+    'Campbell Ranch',
+    'Capitol Ford Santa Fe',
+    'Cemex, Inc',
+    'Cerro Community Center',
+    'Santa Fe Jewish Center',
+    'Chupadero MDWCA',
+    'Cielo Lumbre HOA',
+    'Circle Cross Ranch',
+    'City of Alamogordo',
+    'City of Portales, Public Works Dept.',
+    'City of Socorro',
+    'Commonwealth Conservancy',
+    'Country Club Garden Mobile Home Park',
+    'Crossroads Cattle Co., Ltd',
+    'Double H Ranch',
+    'E.A. Meadows East',
+    'El Camino Realty, Inc',
+    'Eldorado Area Water & Sanitation District',
+    'Bourbon Grill at El Gancho',
+    'El Prado HOA',
+    'El Rancho de las Golondrinas',
+    'El Rito Canyon MDWCA',
+    'Encantado Enterprises',
+    'Estrella Concepts LLC',
+    'Farr Cattle Company',
+    'Sixteen Springs Fire Department',
+    'Fire Water Lodge',
+    'Ford County Land & Cattle Company, Inc',
+    'Friendly Construction, Inc',
+    'Hacienda Del Cerezo',
+    'Hefker Vega Ranch',
+    'High Nogal Ranch',
+    'Holloman Air Force Base',
+    'Hyde Park Estates MDWCA',
+    'Desert Village RV & Mobile Home Park',
+    'K. Schmitt Trust',
+    'La Cienega MDWCA',
+    'La Vista HOA',
+    'Lamy MDWCA',
+    'Land Ventures LLC',
+    'Las Lagunitas',
+    'Las Lagunitas HOA',
+    'Living World Ministries',
+    'Los Atrevidos, Inc',
+    'Los Prados HOA',
+    'Malaga MDWCA & SWA',
+    'Mangas Outfitters',
+    'Medina Gravel Pit',
+    'Mendenhall Trading Co',
+    'Mesa Verde Ranch',
+    'NMDGF',
+    'NMSU College of Agriculture',
+    'Naiche Development',
+    'NRAO',
+    'NMSA',
+    'Nogal MDWCA',
+    'O Bar O Ranch',
+    'OMI Wastewater Treatment Plant',
+    'Old Road Ranch Pardners Ltd',
+    'PNM Service Center',
+    'Peace Tabernacle Church',
+    'Pecos Trail Inn',
+    'Pelican Spa',
+    'Pistachio Tree Ranch',
+    'Rancho Encantado',
+    'Rancho San Lucas',
+    'Rancho San Marcos',
+    'Rancho Viejo Partnership',
+    'Ranney Ranch',
+    'Rio En Medio MDWCA',
+    'San Acacia MDWCA',
+    'San Juan Residences',
+    'Sangre de Cristo Center',
+    'Sangre de Cristo Estates',
+    'Santa Fe Community College',
+    'Santa Fe County, Fire Facilities',
+    'Santa Fe County, Utilities Dept.',
+    'Valle Vista Water Utility',
+    'Santa Fe County, Valle Vista Water Utility, Inc.',
+    'Santa Fe Downs',
+    'Santa Fe Horse Park',
+    'Santa Fe Opera',
+    'Santa Fe Waldorf School',
+    'Shidoni Foundry and Gallery',
+    'Sierra Grande Lodge',
+    'Sierra Vista Retirement Community',
+    'Slash Triangle Ranch',
+    'Stagecoach Motel',
+    'State of New Mexico',
+    'Stephenson Ranch',
+    'Sun Broadcasting Network',
+    'Tano Rd LLC',
+    'UNM-Taos',
+    'Tee Pee Ranch/Tee Pee Subdivision',
+    'Tent Rock, Inc',
+    'Tesuque MDWCA',
+    'The Great Cloud Zen Center',
+    'Three Rivers Ranch',
+    'Timberon Water and Sanitation District',
+    'Town of Magdalena',
+    'Town of Taos',
+    'Town of Taos, National Guard Armory',
+    'Trinity Ranch',
+    'Tularosa Basin National Desalination Research Facility',
+    'Turquoise Trail Charter School',
+    'US Bureau of Indian Affairs, Santa Fe Indian School',
+    'USFS, Carson NF, Taos Office',
+    'USFS, Cibola NF, Magdalena Ranger District',
+    'USFS, Santa Fe NF, Espanola Ranger District',
+    'Ute Mountain Farms',
+    'VA Hospital',
+    'Velte',
+    'Vereda Serena Property',
+    'Village of Corona',
+    'Village of Floyd',
+    'Village of Melrose',
+    'Village of Vaughn',
+    'Vista Land Company',
+    'Vista Redonda MDWCA',
+    'Vista de Oro de Placitas Water Users Coop',
+    'Walker Ranch',
+    'Wild & Woolley Trailer Ranch',
+    'Winter Brothers',
+    'Yates Petroleum Corporation',
+    'Zamora Accounting Services',
+    'PLSS'
+]);
+
+/**
+ * ThingIdLinkResponse
+ */
+export const zThingIdLinkResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    thing_id: z.int(),
+    relation: z.string(),
+    alternate_id: z.string(),
+    alternate_organization: zOrganization
+});
+
+/**
+ * monitoring_frequency
+ */
+export const zMonitoringFrequency = z.enum([
+    'Monthly',
+    'Bimonthly',
+    'Bimonthly reported',
+    'Quarterly',
+    'Biannual',
+    'Annual',
+    'Decadal',
+    'Event-based'
+]);
+
+/**
+ * MonitoringFrequencyResponse
+ */
+export const zMonitoringFrequencyResponse = z.object({
+    monitoring_frequency: zMonitoringFrequency,
+    start_date: z.iso.date(),
+    end_date: z.union([
+        z.iso.date(),
         z.null()
     ])
 });
@@ -289,14 +574,19 @@ export const zThingResponse = z.object({
     release_status: zReleaseStatus,
     name: z.string(),
     thing_type: z.string(),
-    current_location: z.union([
-        zLocationResponse,
-        z.null()
-    ]),
+    current_location: zLocationGeoJsonResponse,
     first_visit_date: z.union([
         z.iso.date(),
         z.null()
     ]),
+    notes: z.optional(z.array(zNoteResponse)).default([]),
+    groups: z.optional(z.array(zGroupResponse)).default([]),
+    monitoring_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
+    monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -307,6 +597,10 @@ export const zThingResponse = z.object({
         z.null()
     ])),
     well_depth_unit: z.optional(z.string()).default('ft'),
+    well_depth_source: z.union([
+        z.string(),
+        z.null()
+    ]),
     hole_depth: z.optional(z.union([
         z.number(),
         z.null()
@@ -325,6 +619,31 @@ export const zThingResponse = z.object({
     well_casing_materials: z.optional(z.array(zCasingMaterial)).default([]),
     well_construction_notes: z.optional(z.union([
         z.string(),
+        z.null()
+    ])),
+    well_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    measuring_point_height: z.union([
+        z.number(),
+        z.null()
+    ]),
+    measuring_point_height_unit: z.optional(z.string()).default('ft'),
+    measuring_point_description: z.union([
+        z.string(),
+        z.null()
+    ]),
+    water_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    measuring_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    general_notes: z.optional(z.union([
+        z.array(zNoteResponse),
         z.null()
     ]))
 });
@@ -483,7 +802,8 @@ export const zUnit = z.enum([
     'deg minute',
     'second',
     'minute',
-    'hour'
+    'hour',
+    'm'
 ]);
 
 /**
@@ -566,33 +886,25 @@ export const zCreateLexiconTriple = z.object({
 });
 
 /**
+ * CreateNote
+ * Schema for creating a new Note. The parent object's ID and type will be
+ * taken from the URL path, not the request body.
+ */
+export const zCreateNote = z.object({
+    note_type: z.string(),
+    content: z.string(),
+    release_status: z.optional(zReleaseStatus)
+});
+
+/**
  * CreateLocation
  * Schema for creating a sample location.
  */
 export const zCreateLocation = z.object({
     point: z.string(),
     release_status: z.optional(zReleaseStatus),
-    notes: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    elevation: z.number(),
-    elevation_accuracy: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    elevation_method: z.optional(z.union([
-        zElevationMethod,
-        z.null()
-    ])),
-    coordinate_accuracy: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    coordinate_method: z.optional(z.union([
-        zCoordinateMethod,
-        z.null()
-    ]))
+    notes: z.optional(z.array(zCreateNote)).default([]),
+    elevation: z.number()
 });
 
 /**
@@ -848,6 +1160,7 @@ export const zCreateWell = z.object({
         z.number().gt(0),
         z.null()
     ])),
+    measuring_point_height: z.number().gte(0),
     release_status: z.optional(zReleaseStatus),
     location_id: z.union([
         z.int(),
@@ -876,6 +1189,14 @@ export const zCreateWell = z.object({
     ])),
     well_casing_materials: z.optional(z.union([
         z.array(zCasingMaterial),
+        z.null()
+    ])),
+    measuring_point_description: z.union([
+        z.string(),
+        z.null()
+    ]),
+    notes: z.optional(z.union([
+        z.array(zCreateNote),
         z.null()
     ]))
 });
@@ -987,7 +1308,7 @@ export const zDeploymentResponse = z.object({
  * GeoJSONGeometry
  * Geometry schema for GeoJSON response.
  */
-export const zGeoJsonGeometry = z.object({
+export const zSchemasThingGeoJsonGeometry = z.object({
     type: z.string(),
     coordinates: z.union([
         z.array(z.number()),
@@ -1003,7 +1324,7 @@ export const zGeoJsonGeometry = z.object({
  */
 export const zFeature = z.object({
     type: z.optional(z.string()).default('Feature'),
-    geometry: zGeoJsonGeometry,
+    geometry: zSchemasThingGeoJsonGeometry,
     properties: z.optional(z.record(z.string(), z.unknown())).default({})
 });
 
@@ -1246,30 +1567,6 @@ export const zGroundwaterLevelObservationResponse = z.object({
 });
 
 /**
- * GroupResponse
- * Pydantic model for the response of a group.
- * This model can be extended to include additional fields as needed.
- */
-export const zGroupResponse = z.object({
-    id: z.int(),
-    created_at: z.string(),
-    release_status: zReleaseStatus,
-    name: z.string(),
-    project_area: z.union([
-        z.string(),
-        z.null()
-    ]),
-    description: z.union([
-        z.string(),
-        z.null()
-    ]),
-    parent_group_id: z.union([
-        z.int(),
-        z.null()
-    ])
-});
-
-/**
  * ValidationError
  */
 export const zValidationError = z.object({
@@ -1325,6 +1622,40 @@ export const zLexiconTripleResponse = z.object({
     subject: z.string(),
     predicate: z.string(),
     object_: z.string()
+});
+
+/**
+ * LocationResponse
+ * Response schema for sample location details.
+ */
+export const zLocationResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    notes: z.optional(z.array(zNoteResponse)).default([]),
+    point: z.string(),
+    elevation: z.union([
+        z.number(),
+        z.null()
+    ]),
+    horizontal_datum: z.optional(z.string()).default('WGS84'),
+    vertical_datum: z.optional(z.string()).default('NAVD88'),
+    elevation_method: z.union([
+        zElevationMethod,
+        z.null()
+    ]),
+    state: z.union([
+        z.string(),
+        z.null()
+    ]),
+    county: z.union([
+        z.string(),
+        z.null()
+    ]),
+    quad_name: z.union([
+        z.string(),
+        z.null()
+    ])
 });
 
 /**
@@ -1573,14 +1904,19 @@ export const zSpringResponse = z.object({
     release_status: zReleaseStatus,
     name: z.string(),
     thing_type: z.string(),
-    current_location: z.union([
-        zLocationResponse,
-        z.null()
-    ]),
+    current_location: zLocationGeoJsonResponse,
     first_visit_date: z.union([
         z.iso.date(),
         z.null()
     ]),
+    notes: z.optional(z.array(zNoteResponse)).default([]),
+    groups: z.optional(z.array(zGroupResponse)).default([]),
+    monitoring_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
+    monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -1596,20 +1932,6 @@ export const zPageSpringResponse = z.object({
     page: z.int().gte(1),
     size: z.int().gte(1),
     pages: z.int().gte(0)
-});
-
-/**
- * ThingIdLinkResponse
- */
-export const zThingIdLinkResponse = z.object({
-    id: z.int(),
-    created_at: z.string(),
-    release_status: zReleaseStatus,
-    thing_id: z.int(),
-    thing: zThingResponse,
-    relation: z.string(),
-    alternate_id: z.string(),
-    alternate_organization: z.string()
 });
 
 /**
@@ -1735,20 +2057,29 @@ export const zWellResponse = z.object({
     release_status: zReleaseStatus,
     name: z.string(),
     thing_type: z.string(),
-    current_location: z.union([
-        zLocationResponse,
-        z.null()
-    ]),
+    current_location: zLocationGeoJsonResponse,
     first_visit_date: z.union([
         z.iso.date(),
         z.null()
     ]),
+    notes: z.optional(z.array(zNoteResponse)).default([]),
+    groups: z.optional(z.array(zGroupResponse)).default([]),
+    monitoring_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
+    monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
     well_purposes: z.optional(z.array(zWellPurpose)).default([]),
     well_depth: z.optional(z.union([
         z.number(),
         z.null()
     ])),
     well_depth_unit: z.optional(z.string()).default('ft'),
+    well_depth_source: z.union([
+        z.string(),
+        z.null()
+    ]),
     hole_depth: z.optional(z.union([
         z.number(),
         z.null()
@@ -1767,6 +2098,28 @@ export const zWellResponse = z.object({
     well_casing_materials: z.optional(z.array(zCasingMaterial)).default([]),
     well_construction_notes: z.optional(z.union([
         z.string(),
+        z.null()
+    ])),
+    well_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    measuring_point_height: z.number(),
+    measuring_point_height_unit: z.optional(z.string()).default('ft'),
+    measuring_point_description: z.union([
+        z.string(),
+        z.null()
+    ]),
+    water_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    measuring_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    general_notes: z.optional(z.union([
+        z.array(zNoteResponse),
         z.null()
     ]))
 });
@@ -2089,8 +2442,41 @@ export const zUpdateLexiconTriple = z.object({
 });
 
 /**
+ * UpdateNote
+ * Schema for updating an existing Note. All fields are optional
+ */
+export const zUpdateNote = z.object({
+    release_status: z.optional(z.union([
+        zReleaseStatus,
+        z.null()
+    ])),
+    note_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    content: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
+});
+
+/**
+ * coordinate_method
+ */
+export const zCoordinateMethod = z.enum([
+    'Unknown',
+    'Differentially corrected GPS',
+    'Survey-grade global positioning system (SGPS)',
+    'GPS, uncorrected',
+    'Interpolated from map',
+    'Interpolated from DEM',
+    'Reported',
+    'Transit, theodolite, or other survey method'
+]);
+
+/**
  * UpdateLocation
- * Schema for updating a location.
+ * Schema for updating a location. Notes are managed via the polymorphic Notes table.
  */
 export const zUpdateLocation = z.object({
     point: z.optional(z.union([
@@ -2101,10 +2487,7 @@ export const zUpdateLocation = z.object({
         zReleaseStatus,
         z.null()
     ])),
-    notes: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
+    notes: z.optional(z.array(zUpdateNote)).default([]),
     elevation: z.optional(z.union([
         z.number(),
         z.null()
@@ -2337,6 +2720,10 @@ export const zUpdateWell = z.object({
         z.null()
     ])),
     well_casing_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    measuring_point_height: z.optional(z.union([
         z.number(),
         z.null()
     ])),
