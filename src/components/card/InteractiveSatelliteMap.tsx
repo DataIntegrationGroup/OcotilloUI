@@ -26,7 +26,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   const waterWellsLayer = THING_LAYERS['water-wells']
   const { sourceProps, layerProps } = waterWellsLayer
 
-  const { lon, lat } = parseWktPoint(well.current_location)
+  const { lon, lat } = parseWktPoint(well?.current_location)
 
   // Automatically zoom to well coordinates when map loads or well changes
   useEffect(() => {
