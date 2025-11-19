@@ -15,6 +15,7 @@ import TableContainer from '@mui/material/TableContainer'
 import TableRow from '@mui/material/TableRow'
 
 import Grid from '@mui/material/Grid2'
+import wellknown from 'wellknown'
 import bbox from '@turf/bbox'
 import { SpatialSearchComponent } from '@/components/SpatialSearchComponent'
 
@@ -183,7 +184,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
         features: newValue.map((item) => ({
           type: 'Feature',
           id: item.id,
-          geometry: item.current_location.geometry,
+          geometry: wellknown.parse(item.current_location.point),
           properties: {
             name: item.name,
             id: item.id,

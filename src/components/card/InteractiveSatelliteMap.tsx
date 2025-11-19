@@ -12,6 +12,7 @@ import {
 import { Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
 import { MapComponent, MapPopup } from '@/components'
+import { parseWktPoint } from '@/utils'
 import { useThingLayers } from '@/hooks'
 import { useGo } from '@refinedev/core'
 
@@ -25,8 +26,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   const waterWellsLayer = THING_LAYERS['water-wells']
   const { sourceProps, layerProps } = waterWellsLayer
 
-  const coordinates = well?.current_location?.geometry?.coordinates ?? []
-  const [lon, lat] = coordinates
+  const { lon, lat } = parseWktPoint(well.current_location)
 
   // Automatically zoom to well coordinates when map loads or well changes
   useEffect(() => {

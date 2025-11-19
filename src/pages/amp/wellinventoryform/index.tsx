@@ -204,7 +204,10 @@ export const WellInventoryForm = () => {
         ;[newX, newY] = convertUTMToLonLat(currentX, currentY, utmZone)
       } else if (coordinateType === 'gcs' && newType === 'utm') {
         // Convert GCS → UTM
-        ;[newX, newY] = convertLonLatToUTM(currentX, currentY, utmZone)
+        ;({ easting: newX, northing: newY } = convertLonLatToUTM(
+          { lon: currentX, lat: currentY },
+          utmZone
+        ))
       }
 
       // Set new values in the form
