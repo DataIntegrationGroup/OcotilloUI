@@ -113,6 +113,7 @@ export const WellInventoryBulkImport: React.FC = () => {
         </Typography>
       }
       saveButtonProps={{
+        children: 'Upload',
         onClick: handleSubmit,
         disabled: !selectedFile || isSubmitting,
         loading: isSubmitting,
@@ -144,7 +145,7 @@ export const WellInventoryBulkImport: React.FC = () => {
                   endIcon={<FileUploadIcon />}
                   disabled={isSubmitting}
                 >
-                  Upload File
+                  Select File
                 </LoadingButton>
                 {selectedFile && (
                   <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
