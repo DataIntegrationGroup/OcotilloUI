@@ -62,6 +62,7 @@ const defineUserAbility = (groups: string[]) => {
 
       can('list', 'ocotillo.apps')
       can('list', 'ocotillo.water-chemistry-import')
+      can('list', 'ocotillo.well-inventory-bulk-import')
       can('list', 'ocotillo.hydrograph-corrector')
     }
 
