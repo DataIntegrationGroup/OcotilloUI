@@ -11,7 +11,7 @@ import { IWell } from '@/interfaces/ocotillo/IThing'
 
 export const NotesAccordion = ({ well }: { well?: IWell }) => {
   return (
-    <Accordion elevation={2}>
+    <Accordion defaultExpanded elevation={2}>
       <AccordionSummary
         expandIcon={<ExpandMore />}
         // Match the visual height of summaries that contain a CreateButton
@@ -52,6 +52,12 @@ export const NotesAccordion = ({ well }: { well?: IWell }) => {
             <Typography variant="h6">Measuring Notes:</Typography>
             <Typography variant="body1">
               {well?.measuring_notes || 'N/A'}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="h6">Construction Notes:</Typography>
+            <Typography variant="body1">
+              {well?.well_construction_notes || 'N/A'}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
