@@ -69,6 +69,7 @@ import { GroundwaterLevelForm } from '@/pages/ocotillo/groundwater-level-form/st
 import { WellInventoryForm } from '@/pages/ocotillo/well-inventory-form'
 import { LexiconList } from '@/pages/ocotillo/lexicon'
 import { WaterChemistryApp } from '@/pages/ocotillo/water-chemistry-app'
+import { WellInventoryBulkImport } from '@/pages/ocotillo/well-inventory-bulk-import'
 import {
   WellScreenCreate,
   WellScreenEdit,
@@ -160,6 +161,9 @@ export const OcotilloRoutes = () => {
       // Apps
       <Route path={'water-chemistry-import'}>
         <Route index element={<WaterChemistryApp />} />
+      </Route>
+      <Route path={'well-inventory-bulk-import'}>
+        <Route index element={<WellInventoryBulkImport />} />
       </Route>
       // Forms
       <Route path="groundwater-level-form">
