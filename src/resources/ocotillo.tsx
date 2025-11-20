@@ -15,6 +15,7 @@ import {
   Workspaces,
   MoreVertOutlined,
   LibraryBooksOutlined,
+  UploadFile,
 } from '@mui/icons-material'
 
 let tables: {
@@ -339,6 +340,16 @@ let ocotillo = [
       parent: 'ocotillo.apps',
       nestedLevel: 2,
       icon: <ScienceOutlined />,
+    },
+  },
+  {
+    name: 'well-inventory-bulk-import',
+    list: '/ocotillo/well-inventory-bulk-import',
+    meta: {
+      label: 'Well Inventory Bulk Import',
+      parent: 'ocotillo.apps',
+      nestedLevel: 2,
+      icon: <UploadFile />,
     },
   },
   {
