@@ -213,11 +213,13 @@ export const ocotilloDataProvider: DataProvider = {
     }
   },
   custom: async ({ url, method, payload, headers }) => {
+    const isFormData = payload instanceof FormData
+    
     const config: AxiosRequestConfig = {
       url: `${API_URL}/${url}`,
       method: method || 'GET',
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...headers,
       },
     }
@@ -226,12 +228,20 @@ export const ocotilloDataProvider: DataProvider = {
       config.data = payload
     }
 
-    const response = await axiosInstance(config)
+    try {
+      const response = await axiosInstance(config)
 
-    if (response.status < 200 || response.status > 299) throw response
+      if (response.status < 200 || response.status > 299) throw response
 
-    return { data: response.data }
+      return { data: response.data }
+    } catch (error: any) {
+      /**
+       * TODO: Add better error handling for bulk import based on API Pydantic validation errors
+       */
+      throw error
+    }
   },
+
   update: async ({ resource, id, variables }) => {
     resource = cleanResourceName(resource)
 
