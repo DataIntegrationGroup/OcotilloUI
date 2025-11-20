@@ -1,5 +1,5 @@
 export interface ILocation {
-  id: number
+  id: NonNullable<number>
   elevation?: number | null
   elevation_accuracy?: number | null
   elevation_method?: string | null

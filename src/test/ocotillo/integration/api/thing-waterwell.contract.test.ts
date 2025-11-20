@@ -64,6 +64,7 @@ describe('Ocotillo Integration Tests: Water Well', () => {
       well_depth: 10,
       hole_depth: 10,
       measuring_point_height: 10,
+      measuring_point_description: 'Test Measuring Point Description',
       well_purpose: 'monitoring',
       well_construction_notes: 'Test construction notes',
       group_id: 1,
