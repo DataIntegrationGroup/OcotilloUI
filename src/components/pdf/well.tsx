@@ -137,8 +137,14 @@ export const WellPDF = ({
     return { primaryContact: primary, secondaryContact: secondary }
   }, [contacts])
 
-  const { lon, lat } = parseWktPoint(well.current_location)
-  const { easting, northing } = convertLonLatToUTM({ lon, lat })
+  const coords = well?.current_location?.geometry?.coordinates as
+    | [number, number, number?]
+    | undefined
+
+  const [lon, lat, elevation] = coords ?? []
+
+  const { easting, northing } =
+    well?.current_location?.properties?.utm_coordinates
 
   return (
     <Document
@@ -168,7 +174,7 @@ export const WellPDF = ({
             <View style={styles.cell3}>
               <LineItem
                 title="Vertical Datum"
-                value={well?.current_location?.vertical_datum}
+                value={well?.current_location?.properties?.vertical_datum}
               />
             </View>
             <View style={styles.cell3}></View>
@@ -176,7 +182,7 @@ export const WellPDF = ({
               <LineItem
                 title="Latitude/Longitude"
                 value={
-                  well?.current_location?.point
+                  well?.current_location?.geometry
                     ? `${lat?.toFixed(6)}, ${lon?.toFixed(6)}`
                     : 'N/A'
                 }
@@ -185,11 +191,9 @@ export const WellPDF = ({
             <View style={styles.cell3}>
               <LineItem
                 title="Elevation"
-                value={`${
-                  well?.current_location?.elevation?.toFixed(0) || 'N/A'
-                } ${
-                  well?.current_location?.elevation_unit
-                    ? ` ${well?.current_location?.elevation_unit}`
+                value={`${elevation?.toFixed(0) || 'N/A'} ${
+                  well?.current_location?.properties?.elevation_unit
+                    ? ` ${well?.current_location?.properties?.elevation_unit}`
                     : null
                 }`}
               />
@@ -197,7 +201,7 @@ export const WellPDF = ({
             <View style={styles.cell3}>
               <LineItem
                 title="Elevation Method"
-                value={well?.current_location?.elevation_method}
+                value={well?.current_location?.properties?.elevation_method}
               />
             </View>
           </View>
@@ -323,9 +327,16 @@ export const WellPDF = ({
             </View>
             <View style={styles.cell3}></View>
           </View>
-          <LineItem title="Water Notes" value={well?.water_notes} />
-          <LineItem title="Measuring Notes" value={well?.measuring_notes} />
-          <LineItem title="Notes" value={well?.notes} />
+          <LineItem title="Water Notes" value={well?.water_notes?.content} />
+          <LineItem
+            title="Measuring Notes"
+            value={well?.measuring_notes?.content}
+          />
+          <LineItem title="Notes" value={well?.notes?.content} />
+          <LineItem
+            title="General Notes"
+            value={well?.general_notes?.content}
+          />
         </View>
         {assets.length === 0 && (
           <Text style={styles.pageNote}>
