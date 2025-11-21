@@ -19,7 +19,12 @@ import FileUploadIcon from '@mui/icons-material/FileUpload'
 import InfoIcon from '@mui/icons-material/Info'
 
 interface UploadResult {
-  validation_errors: any[]
+  validation_errors: Array<{
+    row: number
+    field: string
+    error: string
+    value?: string
+  }>
   summary: {
     total_rows_processed: number
     total_rows_imported: number
@@ -83,14 +88,26 @@ export const WellInventoryBulkImport: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error uploading file:', error)
-      const errorMessage = error.message || 'An error occurred while uploading the file.'
       
-      openNotification({
-        message: 'Upload failed',
-        description: errorMessage,
-        type: 'error',
-      })
-      setUploadResult(null)
+      // Handle 422 validation errors from bulk import
+      if (error.status === 422 && error.data) {
+        setUploadResult(error.data as UploadResult)
+        const errorCount = error.data.summary?.validation_errors_or_warnings || 0
+        openNotification({
+          message: 'Upload failed - Validation Errors',
+          description: `${errorCount} validation error(s) found. No wells were imported.`,
+          type: 'error',
+        })
+      } else {
+        const errorMessage = error.message || 'An error occurred while uploading the file.'
+        
+        openNotification({
+          message: 'Upload failed',
+          description: errorMessage,
+          type: 'error',
+        })
+        setUploadResult(null)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -161,12 +178,25 @@ export const WellInventoryBulkImport: React.FC = () => {
           <Card sx={{ p: 4 }}>
             <Stack spacing={3}>
               <Box sx={{ textAlign: 'left' }}>
-                <Typography variant="h4" color="success.main" gutterBottom>
-                  Upload Completed Successfully!
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 3 }}>
-                  The well inventory file has been imported successfully.
-                </Typography>
+                {uploadResult.summary.total_rows_imported > 0 ? (
+                  <>
+                    <Typography variant="h4" color="success.main" gutterBottom>
+                      Upload Completed Successfully!
+                    </Typography>
+                    <Typography variant="body1" sx={{ mb: 3 }}>
+                      The well inventory file has been imported successfully.
+                    </Typography>
+                  </>
+                ) : (
+                  <>
+                    <Typography variant="h4" color="error.main" gutterBottom>
+                      Upload Failed - Validation Errors
+                    </Typography>
+                    <Typography variant="body1" sx={{ mb: 3 }}>
+                      No wells were imported due to validation errors. Please review the errors below and fix your CSV file.
+                    </Typography>
+                  </>
+                )}
               </Box>
 
               <Box>
@@ -176,19 +206,21 @@ export const WellInventoryBulkImport: React.FC = () => {
                 <Stack direction="row" spacing={2} sx={{ mt: 2 }} flexWrap="wrap" gap={1}>
                   <Chip
                     label={`${uploadResult.summary.total_rows_processed} rows processed`}
-                    color="success"
+                    color={uploadResult.summary.total_rows_imported > 0 ? "success" : "default"}
                     variant="outlined"
                   />
                   <Chip
                     label={`${uploadResult.summary.total_rows_imported} wells imported`}
-                    color="success"
+                    color={uploadResult.summary.total_rows_imported > 0 ? "success" : "error"}
                     variant="outlined"
                   />
+                  {uploadResult.summary.validation_errors_or_warnings > 0 && (
                     <Chip
-                      label={`${uploadResult.summary.validation_errors_or_warnings} warnings`}
-                      color="warning"
+                      label={`${uploadResult.summary.validation_errors_or_warnings} error(s)`}
+                      color="error"
                       variant="outlined"
                     />
+                  )}
                 </Stack>
               </Box>
 
@@ -223,16 +255,32 @@ export const WellInventoryBulkImport: React.FC = () => {
               {uploadResult.validation_errors &&
                 uploadResult.validation_errors.length > 0 && (
                   <Box>
-                    <Alert severity="warning" icon={<InfoIcon />}>
+                    <Alert 
+                      severity={uploadResult.summary.total_rows_imported > 0 ? "warning" : "error"} 
+                      icon={<InfoIcon />}
+                    >
                       <Typography variant="subtitle2" gutterBottom>
-                        Validation Warnings
+                        Validation Errors
                       </Typography>
                       <List dense>
                         {uploadResult.validation_errors.map((error, index) => (
-                          <ListItem key={index}>
+                          <ListItem key={index} sx={{ flexDirection: 'column', alignItems: 'flex-start', py: 1 }}>
                             <ListItemText
-                              primary={typeof error === 'string' ? error : JSON.stringify(error)}
+                              primary={
+                                <Typography variant="body2" component="span">
+                                  <strong>Row {error.row}</strong> - <strong>{error.field}</strong>
+                                </Typography>
+                              }
+                              secondary={
+                                <Typography variant="body2" component="span" sx={{ mt: 0.5, display: 'block' }}>
+                                  {error.error}
+                                  {error.value !== undefined && error.value !== '' && (
+                                    <span> (Value: "{error.value}")</span>
+                                  )}
+                                </Typography>
+                              }
                             />
+                            {index < uploadResult.validation_errors.length - 1 && <Divider sx={{ width: '100%', mt: 1 }} />}
                           </ListItem>
                         ))}
                       </List>
@@ -242,7 +290,7 @@ export const WellInventoryBulkImport: React.FC = () => {
 
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'left' }}>
                 <Button variant="contained" onClick={handleReset}>
-                  Upload Another File
+                  Select Another File
                 </Button>
               </Box>
             </Stack>
