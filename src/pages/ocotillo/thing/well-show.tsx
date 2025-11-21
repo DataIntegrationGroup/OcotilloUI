@@ -18,6 +18,7 @@ import {
   WellPDFDownloadButton as DownloadButton,
   WellScreensAccordion,
   EquipmentAccordion,
+  NotesAccordion,
 } from '@/components'
 
 export const WellShow = () => {
@@ -133,6 +134,7 @@ export const WellShow = () => {
           </Grid>
         </Grid>
         <Box component="div">
+          <NotesAccordion well={well} />
           <EquipmentAccordion id={well?.id} />
           <WellScreensAccordion id={well?.id} />
           <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />

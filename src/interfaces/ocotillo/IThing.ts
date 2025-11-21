@@ -1,10 +1,12 @@
 import { ILocation } from '@/interfaces/ocotillo/ILocation'
+import { z } from 'zod'
+import { zReleaseStatus, zWellPurpose } from '@/generated/zod.gen'
 
 export interface IThing {
-  id: number
+  id: NonNullable<number>
   name: string
   created_at: string
-  release_status: string
+  release_status: z.infer<typeof zReleaseStatus>
   thing_type: string
   location_id: number
   current_location?: ILocation | null
@@ -12,15 +14,18 @@ export interface IThing {
   groups?: IGroup[]
   monitoring_status?: string | null
   alternate_ids?: IThingIdLink[]
+  water_notes?: string | null
+  measuring_notes?: string | null
+  notes?: string | null
 }
 
 export interface IWell extends IThing {
-  well_purposes?: string[] | null
-  well_depth?: number | null
-  well_depth_unit?: string | null
-
+  first_visit_date?: string | null
   hole_depth?: number | null
   hole_depth_unit?: string | null
+
+  well_depth?: number | null
+  well_depth_unit?: string | null
 
   well_casing_diameter?: number | null
   well_casing_diameter_unit?: string | null
@@ -31,6 +36,7 @@ export interface IWell extends IThing {
   well_casing_materials?: string[] | null
   well_construction_notes?: string | null
 
+  well_purposes?: z.infer<typeof zWellPurpose>[] | null
   well_status?: string | null
 
   measuring_point_height?: number | null
@@ -43,7 +49,7 @@ export interface ISpring extends IThing {
 }
 
 export interface IThingIdLink {
-  id: number
+  id: NonNullable<number>
   created_at: string // API returns ISO string, not Date object
   release_status: string
   thing_id: number
@@ -54,7 +60,7 @@ export interface IThingIdLink {
 }
 
 export interface IGroup {
-  id: number
+  id: NonNullable<number>
   name: string
   description?: string | null
   project_area?: GeoJSON.MultiPolygon | string | null

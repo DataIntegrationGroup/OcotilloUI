@@ -184,7 +184,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
         features: newValue.map((item) => ({
           type: 'Feature',
           id: item.id,
-          geometry: item.current_location.geometry,
+          geometry: wellknown.parse(item.current_location.point),
           properties: {
             name: item.name,
             id: item.id,

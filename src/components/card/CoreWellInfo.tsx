@@ -1,4 +1,5 @@
 import { IWell } from '@/interfaces/ocotillo/IThing'
+import { convertLonLatToUTM, parseWktPoint } from '@/utils'
 import {
   Card,
   CardContent,
@@ -23,6 +24,9 @@ export const CoreWellInfoCard = ({
   if (!well) {
     return <LoadingCard />
   }
+
+  const { lon, lat } = parseWktPoint(well.current_location)
+  const { easting, northing } = convertLonLatToUTM({ lon, lat })
 
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
@@ -99,37 +103,36 @@ export const CoreWellInfoCard = ({
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Northing/Easting:</Typography>
             <Typography variant="body1">
-              {`${well?.current_location?.properties?.utm_coordinates?.easting?.toFixed(0) || 'N/A'}, ${well?.current_location?.properties?.utm_coordinates?.northing?.toFixed(0) || 'N/A'}`}
+              {`${easting?.toFixed(0) || 'N/A'}, ${northing?.toFixed(0) || 'N/A'}`}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Vertical Datum:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.properties?.vertical_datum || 'N/A'}{' '}
+              {well?.current_location?.vertical_datum || 'N/A'}{' '}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Typography variant="h6">Latitude/Longitude:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.geometry?.coordinates
-                ? `${well?.current_location?.geometry?.coordinates?.[0]?.toFixed(6)}, ${well?.current_location?.geometry?.coordinates?.[1]?.toFixed(6)}`
+              {well?.current_location?.point
+                ? `${lat?.toFixed(6)}, ${lon?.[1]?.toFixed(6)}`
                 : 'N/A'}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Elevation:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.properties?.elevation?.toFixed(2) ||
-                'N/A'}
-              {well?.current_location?.properties?.elevation_unit
-                ? ` ${well?.current_location?.properties?.elevation_unit}`
+              {well?.current_location?.elevation?.toFixed(2) || 'N/A'}
+              {well?.current_location?.elevation_unit
+                ? ` ${well?.current_location?.elevation_unit}`
                 : null}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Elevation Method:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.properties?.elevation_method || 'N/A'}
+              {well?.current_location?.elevation_method || 'N/A'}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
