@@ -1,4 +1,4 @@
-import { ILocation } from '@/interfaces/ocotillo/ILocation'
+import { ILocationGeo } from '@/interfaces/ocotillo/ILocation'
 import { z } from 'zod'
 import {
   zReleaseStatus,
@@ -13,7 +13,7 @@ export interface IThing {
   release_status: z.infer<typeof zReleaseStatus>
   thing_type: string
   location_id: number
-  current_location?: ILocation | null
+  current_location?: ILocationGeo | null
   first_visit_date?: string | null
   groups?: IGroup[]
   monitoring_status?: string | null
