@@ -101,13 +101,13 @@ export const WellInventoryBulkImport: React.FC = () => {
       setFieldErrors(fieldErrorMap)
       
       openNotification({
-        message: 'CSV imported',
-        description: `Imported ${newRows.length} row(s). Please review and fix any validation errors.`,
+        message: 'CSV data added to table',
+        description: `Imported ${newRows.length} row(s) to the table below. Please review and fix any validation errors.`,
         type: 'success',
       })
     } catch (error: any) {
       openNotification({
-        message: 'CSV import failed',
+        message: 'CSV data add to table failed',
         description: error.message || 'Failed to parse CSV file',
         type: 'error',
       })
@@ -502,6 +502,22 @@ export const WellInventoryBulkImport: React.FC = () => {
     }
     
     return [
+        {
+        field: 'actions',
+        headerName: 'Actions',
+        width: 100,
+        sortable: false,
+        pinned: 'right',
+        renderCell: (params) => (
+          <IconButton
+            size="small"
+            onClick={() => handleDeleteRow(params.row.id)}
+            color="error"
+          >
+            <DeleteIcon />
+          </IconButton>
+        ),
+      },
       // Required fields - most important
       {
         field: 'well_name_point_id',
@@ -662,22 +678,6 @@ export const WellInventoryBulkImport: React.FC = () => {
         width: 180,
         editable: true,
       },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        width: 100,
-        sortable: false,
-        pinned: 'right',
-        renderCell: (params) => (
-          <IconButton
-            size="small"
-            onClick={() => handleDeleteRow(params.row.id)}
-            color="error"
-          >
-            <DeleteIcon />
-          </IconButton>
-        ),
-      },
     ]
   }, [fieldErrors])
 
@@ -793,10 +793,6 @@ export const WellInventoryBulkImport: React.FC = () => {
                     }}
                     disableRowSelectionOnClick
                     sx={{
-                        '& .MuiDataGrid-cell': {
-                        borderRight: "1px solid #000",
-                        borderBottom: "1px solid #000",
-                      },
                       '& .error-row': {
                         backgroundColor: 'rgba(211, 47, 47, 0.08)',
                         '&:hover': {
