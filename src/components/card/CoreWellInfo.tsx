@@ -121,7 +121,7 @@ export const CoreWellInfoCard = ({
             <Typography variant="h6">Latitude/Longitude:</Typography>
             <Typography variant="body1">
               {well?.current_location?.geometry
-                ? `${lat?.toFixed(6)}, ${lon?.[1]?.toFixed(6)}`
+                ? `${lat?.toFixed(6)}, ${lon?.toFixed(6)}`
                 : 'N/A'}
             </Typography>
           </Grid>
