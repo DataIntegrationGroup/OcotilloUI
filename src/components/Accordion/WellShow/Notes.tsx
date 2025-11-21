@@ -45,13 +45,13 @@ export const NotesAccordion = ({ well }: { well?: IWell }) => {
           <Grid size={{ xs: 12 }}>
             <Typography variant="h6">Water Notes:</Typography>
             <Typography variant="body1">
-              {well?.water_notes || 'N/A'}
+              {well?.water_notes?.content || 'N/A'}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Typography variant="h6">Measuring Notes:</Typography>
             <Typography variant="body1">
-              {well?.measuring_notes || 'N/A'}
+              {well?.measuring_notes?.content || 'N/A'}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -62,7 +62,15 @@ export const NotesAccordion = ({ well }: { well?: IWell }) => {
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Typography variant="h6">Notes:</Typography>
-            <Typography variant="body1">{well?.notes || 'N/A'}</Typography>
+            <Typography variant="body1">
+              {well?.notes?.content || 'N/A'}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="h6">General Notes:</Typography>
+            <Typography variant="body1">
+              {well?.general_notes?.content || 'N/A'}
+            </Typography>
           </Grid>
         </Grid>
       </AccordionDetails>

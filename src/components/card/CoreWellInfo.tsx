@@ -1,5 +1,4 @@
 import { IWell } from '@/interfaces/ocotillo/IThing'
-import { convertLonLatToUTM, parseWktPoint } from '@/utils'
 import {
   Card,
   CardContent,
@@ -25,8 +24,14 @@ export const CoreWellInfoCard = ({
     return <LoadingCard />
   }
 
-  const { lon, lat } = parseWktPoint(well.current_location)
-  const { easting, northing } = convertLonLatToUTM({ lon, lat })
+  const coords = well?.current_location?.geometry?.coordinates as
+    | [number, number, number?]
+    | undefined
+
+  const [lon, lat, elevation] = coords ?? []
+
+  const { easting, northing } =
+    well?.current_location?.properties?.utm_coordinates
 
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
@@ -109,13 +114,13 @@ export const CoreWellInfoCard = ({
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Vertical Datum:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.vertical_datum || 'N/A'}{' '}
+              {well?.current_location?.properties?.vertical_datum || 'N/A'}{' '}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Typography variant="h6">Latitude/Longitude:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.point
+              {well?.current_location?.geometry
                 ? `${lat?.toFixed(6)}, ${lon?.[1]?.toFixed(6)}`
                 : 'N/A'}
             </Typography>
@@ -123,16 +128,16 @@ export const CoreWellInfoCard = ({
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Elevation:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.elevation?.toFixed(2) || 'N/A'}
-              {well?.current_location?.elevation_unit
-                ? ` ${well?.current_location?.elevation_unit}`
+              {elevation?.toFixed(2) || 'N/A'}
+              {well?.current_location?.properties?.elevation_unit
+                ? ` ${well?.current_location?.properties?.elevation_unit}`
                 : null}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Elevation Method:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.elevation_method || 'N/A'}
+              {well?.current_location?.properties?.elevation_method || 'N/A'}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>

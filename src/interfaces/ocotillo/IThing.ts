@@ -1,6 +1,10 @@
 import { ILocation } from '@/interfaces/ocotillo/ILocation'
 import { z } from 'zod'
-import { zReleaseStatus, zWellPurpose } from '@/generated/zod.gen'
+import {
+  zReleaseStatus,
+  zWellPurpose,
+  zNoteResponse,
+} from '@/generated/zod.gen'
 
 export interface IThing {
   id: NonNullable<number>
@@ -14,9 +18,10 @@ export interface IThing {
   groups?: IGroup[]
   monitoring_status?: string | null
   alternate_ids?: IThingIdLink[]
-  water_notes?: string | null
-  measuring_notes?: string | null
-  notes?: string | null
+  water_notes?: z.infer<typeof zNoteResponse>
+  measuring_notes?: z.infer<typeof zNoteResponse>
+  notes?: z.infer<typeof zNoteResponse>
+  general_notes?: z.infer<typeof zNoteResponse>
 }
 
 export interface IWell extends IThing {
