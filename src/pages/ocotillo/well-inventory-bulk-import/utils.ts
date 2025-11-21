@@ -1,3 +1,4 @@
+import { parseCSV as parseCSVGeneric } from '@/utils/ParseCSV'
 import { wellInventoryRowSchema } from './schema'
 import type { WellInventoryRow } from './schema'
 
@@ -97,125 +98,11 @@ const allFieldNames = [
   'sample_possible',
 ]
 
-const requiredFields = [
-  'project',
-  'well_name_point_id',
-  'site_name',
-  'date_time',
-  'field_staff',
-  'utm_easting',
-  'utm_northing',
-  'utm_zone',
-  'elevation_ft',
-  'elevation_method',
-  'measuring_point_height_ft',
-]
-
 export function parseCSV(file: File): Promise<WellInventoryRow[]> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result as string
-        const lines = text.split('\n').filter(line => line.trim())
-        
-        if (lines.length < 2) {
-          reject(new Error('CSV must have at least a header row and one data row'))
-          return
-        }
-        
-        // Parse header
-        const headers = parseCSVLine(lines[0])
-        const headerMap = new Map<string, number>()
-        headers.forEach((header, index) => {
-          headerMap.set(header.trim().toLowerCase(), index)
-        })
-        
-        // Check for required headers
-        const missingHeaders = requiredFields.filter(
-          header => !headerMap.has(header.toLowerCase())
-        )
-        
-        if (missingHeaders.length > 0) {
-          reject(new Error(`Missing required headers: ${missingHeaders.join(', ')}`))
-          return
-        }
-        
-        // Parse data rows
-        const rows: WellInventoryRow[] = []
-        const wellNamePointIds = new Set<string>()
-        
-        for (let i = 1; i < lines.length; i++) {
-          const values = parseCSVLine(lines[i])
-          
-          // Skip empty rows
-          if (values.every(v => !v.trim())) continue
-          
-          const row: any = {}
-          allFieldNames.forEach(header => {
-            const index = headerMap.get(header.toLowerCase())
-            if (index !== undefined && index < values.length) {
-              const value = values[index]?.trim() || ''
-              row[header] = value
-            } else {
-              // Set default empty value for missing optional fields
-              row[header] = ''
-            }
-          })
-          
-          // Check for duplicate well_name_point_id
-          if (row.well_name_point_id && wellNamePointIds.has(row.well_name_point_id)) {
-            reject(new Error(`Duplicate well_name_point_id found: "${row.well_name_point_id}" at row ${i + 1}`))
-            return
-          }
-          if (row.well_name_point_id) {
-            wellNamePointIds.add(row.well_name_point_id)
-          }
-          
-          rows.push(row)
-        }
-        
-        resolve(rows)
-      } catch (error) {
-        reject(error)
-      }
-    }
-    
-    reader.onerror = () => reject(new Error('Failed to read file'))
-    reader.readAsText(file, 'UTF-8')
-  })
+  return parseCSVGeneric<WellInventoryRow>(file, allFieldNames)
 }
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = []
-  let current = ''
-  let inQuotes = false
-  
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i]
-    
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        // Escaped quote
-        current += '"'
-        i++
-      } else {
-        // Toggle quote state
-        inQuotes = !inQuotes
-      }
-    } else if (char === ',' && !inQuotes) {
-      result.push(current)
-      current = ''
-    } else {
-      current += char
-    }
-  }
-  
-  result.push(current)
-  return result
-}
-
+// Parse a single row using the schema and return the errors
 export function validateRow(row: any, rowIndex: number): { isValid: boolean; errors: string[] } {
   const result = wellInventoryRowSchema.safeParse(row)
   
@@ -231,6 +118,7 @@ export function validateRow(row: any, rowIndex: number): { isValid: boolean; err
   return { isValid: false, errors }
 }
 
+// Validate all rows and return the errors
 export function validateAllRows(rows: any[]): Array<{ rowIndex: number; errors: string[] }> {
   const validationErrors: Array<{ rowIndex: number; errors: string[] }> = []
   const wellNamePointIds = new Set<string>()
@@ -239,18 +127,9 @@ export function validateAllRows(rows: any[]): Array<{ rowIndex: number; errors: 
     const validation = validateRow(row, index)
     const errors = [...validation.errors]
     
-    // Check for duplicate well_name_point_id
-    if (row.well_name_point_id) {
-      if (wellNamePointIds.has(row.well_name_point_id)) {
-        errors.push(`well_name_point_id: Duplicate value "${row.well_name_point_id}" found`)
-      } else {
-        wellNamePointIds.add(row.well_name_point_id)
-      }
-    }
-    
     if (errors.length > 0) {
       validationErrors.push({
-        rowIndex: index + 1, // 1-based for display
+        rowIndex: index + 1, // 1-based for display due to table header row
         errors,
       })
     }
