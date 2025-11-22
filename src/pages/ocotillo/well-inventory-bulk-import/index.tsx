@@ -13,7 +13,6 @@ import {
   IconButton,
   Tooltip,
 } from '@mui/material'
-import { LoadingButton } from '@mui/lab'
 import { Create } from '@refinedev/mui'
 import { useNotification, useDataProvider } from '@refinedev/core'
 import { useState, useMemo } from 'react'
@@ -22,8 +21,11 @@ import InfoIcon from '@mui/icons-material/Info'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import { DataGrid, type GridColDef, type GridRowModel } from '@mui/x-data-grid'
-import { parseCSV, validateAllRows } from './utils'
+import Papa from 'papaparse'
+import { parseCSV } from '@/utils/ParseCSV'
+import { validateAllRows, allFieldNames, createEmptyRow } from './utils'
 import { wellInventoryRowSchema, type WellInventoryRow } from './schema'
+import { createGridColumns } from './grid-defs'
 
 interface UploadResult {
   validation_errors: Array<{
@@ -40,7 +42,7 @@ interface UploadResult {
   wells: string[]
 }
 
-interface TableRow extends Omit<WellInventoryRow, 'utm_easting' | 'utm_northing' | 'utm_zone' | 'elevation_ft' | 'measuring_point_height_ft'> {
+export interface TableRow extends Omit<WellInventoryRow, 'utm_easting' | 'utm_northing' | 'utm_zone' | 'elevation_ft' | 'measuring_point_height_ft'> {
   id: number
   _errors?: string[]
   utm_easting?: number | string
@@ -65,7 +67,7 @@ export const WellInventoryBulkImport: React.FC = () => {
     if (!file) return
 
     try {
-      const parsedRows = await parseCSV(file)
+      const parsedRows = await parseCSV<WellInventoryRow>(file, allFieldNames)
       const newRows: TableRow[] = parsedRows.map((row, index) => ({
         ...row,
         id: Date.now() + index,
@@ -102,7 +104,7 @@ export const WellInventoryBulkImport: React.FC = () => {
       
       openNotification({
         message: 'CSV data added to table',
-        description: `Imported ${newRows.length} row(s) to the table below. Please review and fix any validation errors.`,
+        description: `Added ${newRows.length} row(s) to the table from the CSV file. Please review and fix any validation errors.`,
         type: 'success',
       })
     } catch (error: any) {
@@ -120,96 +122,7 @@ export const WellInventoryBulkImport: React.FC = () => {
   const handleAddRow = () => {
     const newRow: TableRow = {
       id: Date.now(),
-      // Required fields
-      project: '',
-      well_name_point_id: '',
-      site_name: '',
-      date_time: '',
-      field_staff: '',
-      utm_easting: '',
-      utm_northing: '',
-      utm_zone: '',
-      elevation_ft: '',
-      elevation_method: '',
-      measuring_point_height_ft: '',
-      // Optional fields - initialize as empty strings
-      field_staff_2: '',
-      field_staff_3: '',
-      contact_1_name: '',
-      contact_1_organization: '',
-      contact_1_role: '',
-      contact_1_type: '',
-      contact_1_phone_1: '',
-      contact_1_phone_1_type: '',
-      contact_1_phone_2: '',
-      contact_1_phone_2_type: '',
-      contact_1_email_1: '',
-      contact_1_email_1_type: '',
-      contact_1_email_2: '',
-      contact_1_email_2_type: '',
-      contact_1_address_1_line_1: '',
-      contact_1_address_1_line_2: '',
-      contact_1_address_1_type: '',
-      contact_1_address_1_state: '',
-      contact_1_address_1_city: '',
-      contact_1_address_1_postal_code: '',
-      contact_1_address_2_line_1: '',
-      contact_1_address_2_line_2: '',
-      contact_1_address_2_type: '',
-      contact_1_address_2_state: '',
-      contact_1_address_2_city: '',
-      contact_1_address_2_postal_code: '',
-      contact_2_name: '',
-      contact_2_organization: '',
-      contact_2_role: '',
-      contact_2_type: '',
-      contact_2_phone_1: '',
-      contact_2_phone_1_type: '',
-      contact_2_phone_2: '',
-      contact_2_phone_2_type: '',
-      contact_2_email_1: '',
-      contact_2_email_1_type: '',
-      contact_2_email_2: '',
-      contact_2_email_2_type: '',
-      contact_2_address_1_line_1: '',
-      contact_2_address_1_line_2: '',
-      contact_2_address_1_type: '',
-      contact_2_address_1_state: '',
-      contact_2_address_1_city: '',
-      contact_2_address_1_postal_code: '',
-      contact_2_address_2_line_1: '',
-      contact_2_address_2_line_2: '',
-      contact_2_address_2_type: '',
-      contact_2_address_2_state: '',
-      contact_2_address_2_city: '',
-      contact_2_address_2_postal_code: '',
-      directions_to_site: '',
-      specific_location_of_well: '',
-      repeat_measurement_permission: '',
-      sampling_permission: '',
-      datalogger_installation_permission: '',
-      public_availability_acknowledgement: '',
-      result_communication_preference: '',
-      contact_special_requests_notes: '',
-      ose_well_record_id: '',
-      date_drilled: '',
-      completion_source: '',
-      total_well_depth_ft: undefined,
-      historic_depth_to_water_ft: undefined,
-      depth_source: '',
-      well_pump_type: '',
-      well_pump_depth_ft: undefined,
-      is_open: undefined,
-      datalogger_possible: undefined,
-      casing_diameter_ft: undefined,
-      measuring_point_description: '',
-      well_purpose: '',
-      well_purpose_2: '',
-      well_hole_status: '',
-      monitoring_frequency: '',
-      sampling_scenario_notes: '',
-      well_measuring_notes: '',
-      sample_possible: undefined,
+      ...createEmptyRow(),
     }
     setRows([...rows, newRow])
   }
@@ -259,23 +172,6 @@ export const WellInventoryBulkImport: React.FC = () => {
       })
     }
     
-    // Check for duplicate well_name_point_id
-    if (newRow.well_name_point_id) {
-      const duplicate = updatedRows.find(
-        (row) => row.id !== newRow.id && row.well_name_point_id === newRow.well_name_point_id
-      )
-      if (duplicate) {
-        const errorMsg = `well_name_point_id: Duplicate value "${newRow.well_name_point_id}" found`
-        errors.push(errorMsg)
-        
-        const key = `${newRow.id}-well_name_point_id`
-        if (!fieldErrorMap.has(key)) {
-          fieldErrorMap.set(key, new Set())
-        }
-        fieldErrorMap.get(key)!.add(`Duplicate value "${newRow.well_name_point_id}" found`)
-      }
-    }
-    
     if (errors.length > 0) {
       errorMap.set(newRow.id, errors)
     } else {
@@ -287,6 +183,9 @@ export const WellInventoryBulkImport: React.FC = () => {
     return newRow
   }
 
+ /*
+  * Handle submit to return rows to csv and upload to the API
+ */
   const handleSubmit = async () => {
     if (rows.length === 0) {
       openNotification({
@@ -320,55 +219,84 @@ export const WellInventoryBulkImport: React.FC = () => {
     setIsSubmitting(true)
 
     try {
-      // Convert rows to CSV format
-      const csvContent = convertRowsToCSV(rows)
-      const blob = new Blob([csvContent], { type: 'text/csv' })
-      const file = new File([blob], 'well-inventory.csv', { type: 'text/csv' })
-
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const result = await provider.custom({
-        url: 'well-inventory-csv',
-        method: 'post',
-        payload: formData,
-        headers: {},
-      })
-
-      if (result?.data) {
-        setUploadResult(result.data as UploadResult)
-      }
-
-      openNotification({
-        message: 'Upload successful',
-        description: 'The well inventory file has been imported successfully.',
-        type: 'success',
-      })
-    } catch (error: any) {
-      console.error('Error uploading file:', error)
-      
-      // Handle 422 validation errors from bulk import
-      if (error.status === 422 && error.data) {
-        setUploadResult(error.data as UploadResult)
-        const errorCount = error.data.summary?.validation_errors_or_warnings || 0
-        openNotification({
-          message: 'Upload failed - Validation Errors',
-          description: `${errorCount} validation error(s) found. No wells were imported.`,
-          type: 'error',
+        // Convert rows to CSV format
+        const csvContent = convertRowsToCSV(rows)
+        const blob = new Blob([csvContent], { type: 'text/csv' })
+        const file = new File([blob], 'well-inventory.csv', { type: 'text/csv' })
+    
+        const formData = new FormData()
+        formData.append('file', file)
+    
+        const result = await provider.custom({
+          url: 'well-inventory-csv',
+          method: 'post',
+          payload: formData,
+          headers: {},
         })
-      } else {
-        const errorMessage = error.message || 'An error occurred while uploading the file.'
+    
+        if (result?.data) {
+          setUploadResult(result.data as UploadResult)
+        }
+    
+        openNotification({
+          message: 'Upload successful',
+          description: 'The well inventory file has been imported successfully.',
+          type: 'success',
+        })
+      } catch (error: any) {
+        console.error('Error uploading file:', error)
         
-        openNotification({
-          message: 'Upload failed',
-          description: errorMessage,
-          type: 'error',
-        })
-        setUploadResult(null)
+        // Handle 422 validation errors from bulk import
+        if (error.status === 422 && error.data) {
+          const apiErrors = error.data as UploadResult
+          const errorCount = apiErrors.summary?.validation_errors_or_warnings || 0
+          
+          // Map API validation errors back to table rows
+          const errorMap = new Map<number, string[]>()
+          const fieldErrorMap = new Map<string, Set<string>>()
+          
+          if (apiErrors.validation_errors) {
+            apiErrors.validation_errors.forEach((apiError) => {
+              // API errors have row numbers (1-based), match to table rows
+              const tableRow = rows[apiError.row - 1] // Convert to 0-based index
+              if (tableRow) {
+                const existingErrors = errorMap.get(tableRow.id) || []
+                const errorMsg = `${apiError.field}: ${apiError.error}`
+                errorMap.set(tableRow.id, [...existingErrors, errorMsg])
+                
+                // Track field-level error
+                const key = `${tableRow.id}-${apiError.field}`
+                if (!fieldErrorMap.has(key)) {
+                  fieldErrorMap.set(key, new Set())
+                }
+                fieldErrorMap.get(key)!.add(apiError.error)
+              }
+            })
+          }
+          
+          setValidationErrors(errorMap)
+          setFieldErrors(fieldErrorMap)
+          
+          // DON'T set uploadResult - keep table visible
+          
+          openNotification({
+            message: 'Upload failed - Validation Errors',
+            description: `${errorCount} validation error(s) found. Please fix the errors in the table and try again.`,
+            type: 'error',
+          })
+        } else {
+          const errorMessage = error.message || 'An error occurred while uploading the file.'
+          
+          openNotification({
+            message: 'Upload failed',
+            description: errorMessage,
+            type: 'error',
+          })
+          // Don't set uploadResult on other errors either - keep table visible
+        }
+      } finally {
+        setIsSubmitting(false)
       }
-    } finally {
-      setIsSubmitting(false)
-    }
   }
 
   const handleReset = () => {
@@ -382,304 +310,35 @@ export const WellInventoryBulkImport: React.FC = () => {
   }
 
   const convertRowsToCSV = (rows: TableRow[]): string => {
-    const headers = [
-      // Required
-      'project',
-      'well_name_point_id',
-      'site_name',
-      'date_time',
-      'field_staff',
-      'utm_easting',
-      'utm_northing',
-      'utm_zone',
-      'elevation_ft',
-      'elevation_method',
-      'measuring_point_height_ft',
-      // Optional
-      'field_staff_2',
-      'field_staff_3',
-      'contact_1_name',
-      'contact_1_organization',
-      'contact_1_role',
-      'contact_1_type',
-      'contact_1_phone_1',
-      'contact_1_phone_1_type',
-      'contact_1_phone_2',
-      'contact_1_phone_2_type',
-      'contact_1_email_1',
-      'contact_1_email_1_type',
-      'contact_1_email_2',
-      'contact_1_email_2_type',
-      'contact_1_address_1_line_1',
-      'contact_1_address_1_line_2',
-      'contact_1_address_1_type',
-      'contact_1_address_1_state',
-      'contact_1_address_1_city',
-      'contact_1_address_1_postal_code',
-      'contact_1_address_2_line_1',
-      'contact_1_address_2_line_2',
-      'contact_1_address_2_type',
-      'contact_1_address_2_state',
-      'contact_1_address_2_city',
-      'contact_1_address_2_postal_code',
-      'contact_2_name',
-      'contact_2_organization',
-      'contact_2_role',
-      'contact_2_type',
-      'contact_2_phone_1',
-      'contact_2_phone_1_type',
-      'contact_2_phone_2',
-      'contact_2_phone_2_type',
-      'contact_2_email_1',
-      'contact_2_email_1_type',
-      'contact_2_email_2',
-      'contact_2_email_2_type',
-      'contact_2_address_1_line_1',
-      'contact_2_address_1_line_2',
-      'contact_2_address_1_type',
-      'contact_2_address_1_state',
-      'contact_2_address_1_city',
-      'contact_2_address_1_postal_code',
-      'contact_2_address_2_line_1',
-      'contact_2_address_2_line_2',
-      'contact_2_address_2_type',
-      'contact_2_address_2_state',
-      'contact_2_address_2_city',
-      'contact_2_address_2_postal_code',
-      'directions_to_site',
-      'specific_location_of_well',
-      'repeat_measurement_permission',
-      'sampling_permission',
-      'datalogger_installation_permission',
-      'public_availability_acknowledgement',
-      'result_communication_preference',
-      'contact_special_requests_notes',
-      'ose_well_record_id',
-      'date_drilled',
-      'completion_source',
-      'total_well_depth_ft',
-      'historic_depth_to_water_ft',
-      'depth_source',
-      'well_pump_type',
-      'well_pump_depth_ft',
-      'is_open',
-      'datalogger_possible',
-      'casing_diameter_ft',
-      'measuring_point_description',
-      'well_purpose',
-      'well_purpose_2',
-      'well_hole_status',
-      'monitoring_frequency',
-      'sampling_scenario_notes',
-      'well_measuring_notes',
-      'sample_possible',
-    ]
-    
-    const csvRows = [
-      headers.join(','),
-      ...rows.map(row =>
-        headers
-          .map(header => {
-            const value = row[header as keyof WellInventoryRow] ?? ''
-            // Convert undefined/null to empty string, keep numbers as strings
-            const stringValue = value === undefined || value === null ? '' : String(value)
-            // Escape quotes and wrap in quotes if contains comma or quote
-            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-              return `"${stringValue.replace(/"/g, '""')}"`
-            }
-            return stringValue
-          })
-          .join(',')
-      ),
-    ]
-    
-    return csvRows.join('\n')
+    // Convert TableRow to WellInventoryRow (remove id and _errors, handle utm_zone)
+    const csvData = rows.map((row) => {
+      const csvRow: any = {}
+      allFieldNames.forEach((fieldName) => {
+        let value = row[fieldName as keyof WellInventoryRow]
+        
+        // Append 'N' to utm_zone
+        if (fieldName === 'utm_zone' && value) {
+          value = `${value}N` as any
+        }
+        
+        // Convert undefined/null to empty string
+        csvRow[fieldName] = value === undefined || value === null ? '' : String(value)
+      })
+      return csvRow
+    })
+
+    return Papa.unparse(csvData, {
+      columns: allFieldNames,
+    })
   }
 
-  const columns: GridColDef<TableRow>[] = useMemo(() => {
+  const columns = useMemo(() => {
     const getCellError = (rowId: number, fieldName: string): boolean => {
       return fieldErrors.has(`${rowId}-${fieldName}`)
     }
     
-    return [
-        {
-        field: 'actions',
-        headerName: 'Actions',
-        width: 100,
-        sortable: false,
-        pinned: 'right',
-        renderCell: (params) => (
-          <IconButton
-            size="small"
-            onClick={() => handleDeleteRow(params.row.id)}
-            color="error"
-          >
-            <DeleteIcon />
-          </IconButton>
-        ),
-      },
-      // Required fields - most important
-      {
-        field: 'well_name_point_id',
-        headerName: 'Well Name/Point ID',
-        width: 180,
-        editable: true,
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'well_name_point_id') ? 'error-cell' : ''
-        },
-      },
-      {
-        field: 'project',
-        headerName: 'Project',
-        width: 150,
-        editable: true,
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'project') ? 'error-cell' : ''
-        },
-      },
-      {
-        field: 'site_name',
-        headerName: 'Site Name',
-        width: 150,
-        editable: true,
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'site_name') ? 'error-cell' : ''
-        },
-      },
-      {
-        field: 'date_time',
-        headerName: 'Date/Time',
-        width: 200,
-        editable: true,
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'date_time') ? 'error-cell' : ''
-        },
-      },
-      {
-        field: 'field_staff',
-        headerName: 'Field Staff',
-        width: 150,
-        editable: true,
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'field_staff') ? 'error-cell' : ''
-        },
-      },
-      {
-        field: 'utm_easting',
-        headerName: 'UTM Easting',
-        width: 130,
-        editable: true,
-        type: 'number',
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'utm_easting') ? 'error-cell' : ''
-        },
-      },
-      {
-        field: 'utm_northing',
-        headerName: 'UTM Northing',
-        width: 130,
-        editable: true,
-        type: 'number',
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'utm_northing') ? 'error-cell' : ''
-        },
-      },
-      {
-        field: 'utm_zone',
-        headerName: 'UTM Zone',
-        width: 100,
-        editable: true,
-        type: 'number',
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'utm_zone') ? 'error-cell' : ''
-        },
-      },
-      {
-        field: 'elevation_ft',
-        headerName: 'Elevation (ft)',
-        width: 130,
-        editable: true,
-        type: 'number',
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'elevation_ft') ? 'error-cell' : ''
-        },
-      },
-      {
-        field: 'elevation_method',
-        headerName: 'Elevation Method',
-        width: 150,
-        editable: true,
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'elevation_method') ? 'error-cell' : ''
-        },
-      },
-      {
-        field: 'measuring_point_height_ft',
-        headerName: 'MP Height (ft)',
-        width: 130,
-        editable: true,
-        type: 'number',
-        required: true,
-        cellClassName: (params) => {
-          return getCellError(params.row.id, 'measuring_point_height_ft') ? 'error-cell' : ''
-        },
-      },
-      // Key optional fields
-      {
-        field: 'total_well_depth_ft',
-        headerName: 'Total Depth (ft)',
-        width: 140,
-        editable: true,
-        type: 'number',
-      },
-      {
-        field: 'well_purpose',
-        headerName: 'Well Purpose',
-        width: 150,
-        editable: true,
-      },
-      {
-        field: 'well_hole_status',
-        headerName: 'Hole Status',
-        width: 130,
-        editable: true,
-      },
-      {
-        field: 'monitoring_frequency',
-        headerName: 'Monitoring Freq',
-        width: 150,
-        editable: true,
-      },
-      {
-        field: 'contact_1_name',
-        headerName: 'Contact 1 Name',
-        width: 150,
-        editable: true,
-      },
-      {
-        field: 'contact_1_phone_1',
-        headerName: 'Contact 1 Phone',
-        width: 150,
-        editable: true,
-      },
-      {
-        field: 'contact_1_email_1',
-        headerName: 'Contact 1 Email',
-        width: 180,
-        editable: true,
-      },
-    ]
-  }, [fieldErrors])
+    return createGridColumns(getCellError, handleDeleteRow)
+  }, [fieldErrors, handleDeleteRow])
 
   const hasValidationErrors = validationErrors.size > 0
   const errorCount = validationErrors.size
@@ -806,29 +465,6 @@ export const WellInventoryBulkImport: React.FC = () => {
                           backgroundColor: 'rgba(211, 47, 47, 0.3) !important',
                         },
                       },
-                    }}
-                    columnVisibilityModel={{
-                      // Hide less commonly used fields by default, but they're still editable
-                      field_staff_2: false,
-                      field_staff_3: false,
-                      contact_1_organization: false,
-                      contact_1_role: false,
-                      contact_1_type: false,
-                      contact_1_phone_2: false,
-                      contact_1_phone_2_type: false,
-                      contact_1_email_2: false,
-                      contact_1_email_2_type: false,
-                      contact_1_address_1_line_2: false,
-                      contact_1_address_1_type: false,
-                      contact_1_address_1_state: false,
-                      contact_1_address_1_city: false,
-                      contact_1_address_1_postal_code: false,
-                      contact_1_address_2_line_1: false,
-                      contact_1_address_2_line_2: false,
-                      contact_1_address_2_type: false,
-                      contact_1_address_2_state: false,
-                      contact_1_address_2_city: false,
-                      contact_1_address_2_postal_code: false,
                     }}
                   />
                 </Box>
