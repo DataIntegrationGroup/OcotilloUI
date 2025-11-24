@@ -18,12 +18,11 @@ import { useNotification, useDataProvider } from '@refinedev/core'
 import { useState, useMemo } from 'react'
 import FileUploadIcon from '@mui/icons-material/FileUpload'
 import InfoIcon from '@mui/icons-material/Info'
-import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import { DataGrid, type GridColDef, type GridRowModel } from '@mui/x-data-grid'
 import Papa from 'papaparse'
 import { parseCSV } from '@/utils/ParseCSV'
-import { validateAllRows, allFieldNames, createEmptyRow } from './utils'
+import { validateAllRows, allFieldNames } from './utils'
 import { wellInventoryRowSchema, type WellInventoryRow } from './schema'
 import { createGridColumns } from './grid-defs'
 
@@ -117,14 +116,6 @@ export const WellInventoryBulkImport: React.FC = () => {
     
     // Reset file input
     event.target.value = ''
-  }
-
-  const handleAddRow = () => {
-    const newRow: TableRow = {
-      id: Date.now(),
-      ...createEmptyRow(),
-    }
-    setRows([...rows, newRow])
   }
 
   const handleDeleteRow = (id: number) => {
@@ -362,7 +353,13 @@ export const WellInventoryBulkImport: React.FC = () => {
           <>
             <Box>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                Fill out the table below or import a CSV file to bulk import well inventory data.
+                Import a CSV file to validate your well inventorydata and then submit in bulk.
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Note: All fields are editable. Scroll horizontally to see additional columns. Data will not be saved until you submit, and it will be validated a second time on submission.
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Note: Well screens and well attachments are not supported in this bulk import.
               </Typography>
             </Box>
 
@@ -384,14 +381,6 @@ export const WellInventoryBulkImport: React.FC = () => {
                   Import CSV
                 </Button>
               </label>
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={handleAddRow}
-                disabled={isSubmitting}
-              >
-                Add Row
-              </Button>
               {rows.length > 0 && (
                 <Chip
                   label={`${rows.length} row(s)`}
