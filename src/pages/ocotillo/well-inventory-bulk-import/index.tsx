@@ -10,15 +10,13 @@ import {
   ListItem,
   ListItemText,
   Divider,
-  IconButton,
-  Tooltip,
+  Link,
 } from '@mui/material'
 import { Create } from '@refinedev/mui'
 import { useNotification, useDataProvider } from '@refinedev/core'
 import { useState, useMemo } from 'react'
 import FileUploadIcon from '@mui/icons-material/FileUpload'
 import InfoIcon from '@mui/icons-material/Info'
-import DeleteIcon from '@mui/icons-material/Delete'
 import { DataGrid, type GridColDef, type GridRowModel } from '@mui/x-data-grid'
 import Papa from 'papaparse'
 import { parseCSV } from '@/utils/ParseCSV'
@@ -382,6 +380,19 @@ export const WellInventoryBulkImport: React.FC = () => {
                   Import CSV
                 </Button>
               </label>
+              <Link
+                href="https://docs.google.com/spreadsheets/d/1USYvb-A_-jsdY3qoPQBdkfjv5jjjYGaympp8SMAqJDo/edit?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ textDecoration: 'none' }}
+              >
+                <Button
+                  variant="outlined"
+                  disabled={isSubmitting}
+                >
+                  CSV Template
+                </Button>
+              </Link>
               {rows.length > 0 && (
                 <Chip
                   label={`${rows.length} row(s)`}
