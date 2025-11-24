@@ -321,6 +321,16 @@ let ocotillo = [
     },
   },
   {
+    name: 'well-inventory-bulk-import',
+    list: '/ocotillo/well-inventory-bulk-import',
+    meta: {
+      label: 'Well Inventory Bulk Import',
+      parent: 'ocotillo.apps',
+      nestedLevel: 2,
+      icon: <UploadFile />,
+    },
+  },
+  {
     name: 'hydrograph-corrector',
     list: '/ocotillo/hydrograph-corrector',
     meta: {
@@ -340,16 +350,6 @@ let ocotillo = [
       parent: 'ocotillo.apps',
       nestedLevel: 2,
       icon: <ScienceOutlined />,
-    },
-  },
-  {
-    name: 'well-inventory-bulk-import',
-    list: '/ocotillo/well-inventory-bulk-import',
-    meta: {
-      label: 'Well Inventory Bulk Import',
-      parent: 'ocotillo.apps',
-      nestedLevel: 2,
-      icon: <UploadFile />,
     },
   },
   {
