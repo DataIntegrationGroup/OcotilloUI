@@ -351,7 +351,7 @@ export const WellInventoryBulkImport: React.FC = () => {
           <>
             <Box>
               <Typography variant="h6" sx={{ mb: 2 }}>
-                Import a CSV file to validate your well inventory data and submit in bulk.
+                Upload a CSV file to validate your well inventory data and submit in bulk.
               </Typography>
               <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 2 }}>
                 <Typography variant="body2">
@@ -377,7 +377,7 @@ export const WellInventoryBulkImport: React.FC = () => {
                   startIcon={<FileUploadIcon />}
                   disabled={isSubmitting}
                 >
-                  Import CSV
+                  Upload CSV
                 </Button>
               </label>
               <Link
