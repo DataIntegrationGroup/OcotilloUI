@@ -409,7 +409,7 @@ export const WellInventoryBulkImport: React.FC = () => {
               )}
               {rows.length > 0 && !hasValidationErrors && (
                 <Chip
-                  label="No validation errors found"
+                  label="No validation errors found - ready to attempt submission"
                   color="success"
                   variant="outlined"
                 />
