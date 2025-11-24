@@ -20,6 +20,7 @@ import {
   Skeleton,
   Button,
   Drawer,
+  Box
 } from '@mui/material'
 import {
   DarkModeRounded,
@@ -119,7 +120,9 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
     <AppBar position="sticky">
       {helpDrawer}
 
-      <Toolbar>
+      <Toolbar
+        disableGutters
+        sx={{ px: 2, minHeight: { xs: 72, md: 88 }, py: 0.5 }}>
         <HamburgerMenu />
         <Stack
           direction="row"
@@ -127,7 +130,7 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
           justifyContent="flex-end"
           alignItems="center"
         >
-          <SearchBar />
+            <SearchBar />
 
           <Stack
             direction="row"
