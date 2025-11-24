@@ -352,15 +352,16 @@ export const WellInventoryBulkImport: React.FC = () => {
         {!uploadResult && (
           <>
             <Box>
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                Import a CSV file to validate your well inventorydata and then submit in bulk.
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Import a CSV file to validate your well inventory data and submit in bulk.
               </Typography>
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                Note: All fields are editable. Scroll horizontally to see additional columns. Data will not be saved until you submit, and it will be validated a second time on submission.
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                Note: Well screens and well attachments are not supported in this bulk import.
-              </Typography>
+              <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 2 }}>
+                <Typography variant="body2">
+                  All fields are editable. Scroll horizontally to see additional columns. Data will not be saved until you submit, and will be validated once more on submission.
+                  <br />
+                  Well screens and well attachments are not supported in this bulk import. Submit button is below the table.
+                </Typography>
+              </Alert>
             </Box>
 
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -440,6 +441,13 @@ export const WellInventoryBulkImport: React.FC = () => {
                       return validationErrors.has(params.row.id) ? 'error-row' : ''
                     }}
                     disableRowSelectionOnClick
+                    slots={{
+                        noRowsOverlay: () => (
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                            <Typography>No rows to display. Import a CSV file to get started.</Typography>
+                          </Box>
+                        )
+                      }}
                     sx={{
                       '& .error-row': {
                         backgroundColor: 'rgba(211, 47, 47, 0.08)',
