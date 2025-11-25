@@ -9,7 +9,7 @@ import {
 } from '@mui/material'
 import { Search } from 'react-flaticons'
 import Stack from '@mui/material/Stack'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AddressCard,
   EmailCard,
@@ -18,37 +18,29 @@ import {
   WellCard,
 } from '@/components/SearchResultCard'
 import { useList, useGo } from '@refinedev/core'
-import { debounce } from 'lodash'
+import { useDebounce } from './util'
 
 export const SearchBar = () => {
-  const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedQuery = useDebounce(searchQuery, 300)
+
   const [selectedValue, setSelectedValue] = useState(null)
 
-  const debouncedSetSearchQuery = useCallback(
-    debounce((value) => {
-      setSearchQuery(value)
-    }, 250),
-    [setSearchQuery]
-  )
-
-  const handleSearch = (value: string) => {
-    setSearchInput(value)
-    debouncedSetSearchQuery(value) // Use the debounced function to set the search query
-  }
-
-  const { data: searchResultData } = useList({
+  const { data, isFetching } = useList({
     resource: 'search',
     dataProviderName: 'ocotillo',
     queryOptions: {
-      enabled: !!searchQuery,
+      enabled: debouncedQuery.length >= 2,
+      staleTime: 60 * 1000,
+      keepPreviousData: true,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
     meta: {
-      params: { q: searchQuery },
+      params: { q: debouncedQuery },
     },
   })
+
   const go = useGo()
   useEffect(() => {
     if (!selectedValue) return
@@ -58,13 +50,22 @@ export const SearchBar = () => {
       const WATER_WELL = 'water well'
       const thing_url = thing_type === WATER_WELL ? 'well' : 'spring'
 
+      const id = selectedValue?.properties?.id ?? ''
       go({
-        to: `ocotillo/${thing_url}/show/` + selectedValue?.properties.id,
+        to: `ocotillo/${thing_url}/show/${id}`,
       })
     }
   }, [selectedValue])
 
-  const searchResults = searchResultData?.data ?? []
+  const searchResults = useMemo(() => {
+    return (
+      data?.data?.map((r) => ({
+        label: r.label ?? '',
+        group: r.group ?? 'Results',
+        raw: r,
+      })) ?? []
+    )
+  }, [data])
 
   return (
     <Box
@@ -79,6 +80,11 @@ export const SearchBar = () => {
       }}
     >
       <Autocomplete
+        loading={isFetching}
+        loadingText="Searching..."
+        noOptionsText={
+          searchQuery.length === 0 ? 'Type to search' : 'No results'
+        }
         sx={{
           width: '100%',
           '& .MuiOutlinedInput-root': {
@@ -123,11 +129,10 @@ export const SearchBar = () => {
               : option.label === (value as any).label // matching an object
         }
         // control the text field
-        inputValue={searchInput}
+        inputValue={searchQuery}
         onInputChange={(_, newInput) => {
-          // setSearchInput(newInput)
-          console.log('input changed')
-          handleSearch(newInput)
+          console.log('Input changed:', { newInput })
+          setSearchQuery(newInput)
         }}
         // control the selected value
         value={selectedValue}
