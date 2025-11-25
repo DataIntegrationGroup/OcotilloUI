@@ -135,21 +135,11 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
             alignItems="center"
             justifyContent="center"
           >
-            {helpButton}
-
-            <IconButton onClick={() => setMode()}>
-              {mode === 'dark' ? (
-                <LightModeOutlined sx={{ color: '#FFD700' }} />
-              ) : (
-                <DarkModeRounded sx={{ color: '#F9F9F9' }} />
-              )}
-            </IconButton>
-
             {isLoading ? (
               <Skeleton
                 variant="circular"
                 animation="pulse"
-                sx={{ bgcolor: 'rgba(255, 255, 255, 0.25)' }}
+                sx={{ bgcolor: 'rgba(255, 255, 255, 0.55)' }}
               >
                 <Avatar />
               </Skeleton>

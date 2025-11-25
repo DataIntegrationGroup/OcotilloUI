@@ -55,12 +55,8 @@ export const SearchBar = () => {
 
     if (selectedValue.group == 'Wells') {
       const thing_type = selectedValue?.properties?.thing_type
-      let thing_url
-      if (thing_type === 'water well') {
-        thing_url = 'well'
-      } else {
-        thing_url = 'spring'
-      }
+      const WATER_WELL = 'water well'
+      const thing_url = thing_type === WATER_WELL ? 'well' : 'spring'
 
       go({
         to: `ocotillo/${thing_url}/show/` + selectedValue?.properties.id,
@@ -221,10 +217,12 @@ export const SearchBar = () => {
               borderRadius: '10px',
               margin: '10px',
             }}
-            label="Search"
+            label=""
+            aria-label="Search"
             slotProps={{
               input: {
                 ...params.InputProps,
+                disableUnderline: true,
                 startAdornment: (
                   <InputAdornment position="start">
                     <Search color="primary" />
