@@ -335,6 +335,7 @@ export const WellInventoryBulkImport: React.FC = () => {
         onClick: handleSubmit,
         disabled: rows.length === 0 || isSubmitting || hasValidationErrors,
         loading: isSubmitting,
+        sx: { display: 'none'}
       }}
     >
       <Stack spacing={3}>
@@ -350,9 +351,7 @@ export const WellInventoryBulkImport: React.FC = () => {
                   <br />
                   If validation fails on submission, the table will be updated to show the errors and you will be able to fix the errors and submit again.
                   <br />
-                  Well screens and well attachments are not supported in this bulk import. 
-                  <br />
-                  The submit button is below the table.
+                  Well screens and well attachments are not supported in this bulk import.
                 </Typography>
               </Alert>
             </Box>
@@ -388,6 +387,14 @@ export const WellInventoryBulkImport: React.FC = () => {
                   CSV Template
                 </Button>
               </Link>
+              <Button
+                  variant="contained"
+                  onClick={handleSubmit}
+                  disabled={rows.length === 0 || isSubmitting || hasValidationErrors}
+                  loading={isSubmitting}
+                >
+                  Submit
+              </Button>
               {rows.length > 0 && (
                 <Chip
                   label={`${rows.length} row(s)`}
