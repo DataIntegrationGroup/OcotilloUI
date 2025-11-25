@@ -44,7 +44,7 @@ export interface TableRow extends Omit<WellInventoryRow, 'utm_easting' | 'utm_no
   _errors?: string[]
   utm_easting?: number | string
   utm_northing?: number | string
-  utm_zone?: number | string
+  utm_zone?: string 
   elevation_ft?: number | string
   measuring_point_height_ft?: number | string
 }
@@ -101,7 +101,7 @@ export const WellInventoryBulkImport: React.FC = () => {
       
       openNotification({
         message: 'CSV data added to table',
-        description: `Added ${newRows.length} row(s) to the table from the CSV file. Please review and fix any validation errors.`,
+        description: `Added ${newRows.length} row(s) to the table from the CSV file. Please review and fix any errors before submitting.`,
         type: 'success',
       })
     } catch (error: any) {
@@ -264,12 +264,9 @@ export const WellInventoryBulkImport: React.FC = () => {
           }
           
           setValidationErrors(errorMap)
-          setFieldErrors(fieldErrorMap)
-          
-          // DON'T set uploadResult - keep table visible
-          
+          setFieldErrors(fieldErrorMap)          
           openNotification({
-            message: 'Upload failed - Validation Errors',
+            message: 'Import failed - Validation Errors',
             description: `${errorCount} validation error(s) found. Please fix the errors in the table and try again.`,
             type: 'error',
           })
@@ -277,11 +274,10 @@ export const WellInventoryBulkImport: React.FC = () => {
           const errorMessage = error.message || 'An error occurred while uploading the file.'
           
           openNotification({
-            message: 'Upload failed',
+            message: 'Import failed',
             description: errorMessage,
             type: 'error',
           })
-          // Don't set uploadResult on other errors either - keep table visible
         }
       } finally {
         setIsSubmitting(false)
@@ -299,19 +295,14 @@ export const WellInventoryBulkImport: React.FC = () => {
   }
 
   const convertRowsToCSV = (rows: TableRow[]): string => {
-    // Convert TableRow to WellInventoryRow (remove id and _errors, handle utm_zone)
+    // Convert TableRow to WellInventoryRow (remove id and _errors)
     const csvData = rows.map((row) => {
       const csvRow: any = {}
       allFieldNames.forEach((fieldName) => {
         let value = row[fieldName as keyof WellInventoryRow]
         
-        // Append 'N' to utm_zone
-        if (fieldName === 'utm_zone' && value) {
-          value = `${value}N` as any
-        }
-        
-        // Convert undefined/null to empty string
-        csvRow[fieldName] = value === undefined || value === null ? '' : String(value)
+        // Convert undefined/null to empty string (Papa.unparse would output "undefined"/"null" otherwise)
+        csvRow[fieldName] = value == null ? '' : String(value)
       })
       return csvRow
     })
@@ -355,9 +346,13 @@ export const WellInventoryBulkImport: React.FC = () => {
               </Typography>
               <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 2 }}>
                 <Typography variant="body2">
-                  All fields are editable. Scroll horizontally to see additional columns. Data will not be saved until you submit, and will be validated once more on submission.
+                  All fields are editable. Scroll horizontally to see additional columns. Data will not be saved until you submit.
                   <br />
-                  Well screens and well attachments are not supported in this bulk import. Submit button is below the table.
+                  If validation fails on submission, the table will be updated to show the errors and you will be able to fix the errors and submit again.
+                  <br />
+                  Well screens and well attachments are not supported in this bulk import. 
+                  <br />
+                  The submit button is below the table.
                 </Typography>
               </Alert>
             </Box>
@@ -409,7 +404,7 @@ export const WellInventoryBulkImport: React.FC = () => {
               )}
               {rows.length > 0 && !hasValidationErrors && (
                 <Chip
-                  label="No validation errors found - ready to attempt submission"
+                  label="No missing fields found - ready to attempt submission"
                   color="success"
                   variant="outlined"
                 />
@@ -501,16 +496,16 @@ export const WellInventoryBulkImport: React.FC = () => {
                 {uploadResult.summary.total_rows_imported > 0 ? (
                   <>
                     <Typography variant="h4" color="success.main" gutterBottom>
-                      Upload Completed Successfully!
+                      Import Completed Successfully!
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 3 }}>
-                      The well inventory file has been imported successfully.
+                      The well inventory data has been imported successfully.
                     </Typography>
                   </>
                 ) : (
                   <>
                     <Typography variant="h4" color="error.main" gutterBottom>
-                      Upload Failed - Validation Errors
+                      Import Failed - Validation Errors
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 3 }}>
                       No wells were imported due to validation errors. Please review the errors below and fix your CSV file.

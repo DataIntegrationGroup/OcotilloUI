@@ -7,18 +7,19 @@ export type { WellInventoryRow }
 export const allFieldNames: string[] = Object.keys(wellInventoryRowSchema.shape)
 
 // Fields that should be initialized as empty strings (for editable table cells)
-export const requiredNumericFields = ['utm_easting', 'utm_northing', 'utm_zone', 'elevation_ft', 'measuring_point_height_ft']
+export const requiredNumericFields = ['utm_easting', 'utm_northing', 'elevation_ft', 'measuring_point_height_ft']
+export const requiredStringFields = ['utm_zone']
 export const optionalNumericFields = ['total_well_depth_ft', 'historic_depth_to_water_ft', 'well_pump_depth_ft', 'casing_diameter_ft']
 export const booleanFields = ['is_open', 'datalogger_possible', 'sample_possible']
 
-// All numeric fields (required + optional)
+// All numeric fields
 export const numericFields = [...requiredNumericFields, ...optionalNumericFields]
 
-// Required string fields (from schema - fields that are not optional and not numeric/boolean)
-const requiredStringFields = ['project', 'well_name_point_id', 'site_name', 'date_time', 'field_staff', 'elevation_method']
+// Required string fields 
+const otherRequiredStringFields = ['project', 'well_name_point_id', 'site_name', 'date_time', 'field_staff', 'elevation_method']
 
 // All required fields
-export const requiredFields = [...requiredStringFields, ...requiredNumericFields]
+export const requiredFields = [...otherRequiredStringFields, ...requiredStringFields, ...requiredNumericFields]
 
 // Create an empty row with all fields initialized
 export function createEmptyRow(): WellInventoryRow {
@@ -26,16 +27,19 @@ export function createEmptyRow(): WellInventoryRow {
   
   allFieldNames.forEach((fieldName) => {
     if (requiredNumericFields.includes(fieldName)) {
-      // Required numeric fields - initialize as empty string for table editing
+      // Required numeric fields
+      row[fieldName] = ''
+    } else if (requiredStringFields.includes(fieldName)) {
+      // Required string fields 
       row[fieldName] = ''
     } else if (optionalNumericFields.includes(fieldName)) {
-      // Optional numeric fields - initialize as undefined
+      // Optional numeric fields
       row[fieldName] = undefined
     } else if (booleanFields.includes(fieldName)) {
-      // Optional boolean fields - initialize as undefined
+      // Optional boolean fields
       row[fieldName] = undefined
     } else {
-      // String fields - initialize as empty string
+      // Other string fields
       row[fieldName] = ''
     }
   })
@@ -62,7 +66,6 @@ export function validateRow(row: any, rowIndex: number): { isValid: boolean; err
 // Validate all rows and return the errors
 export function validateAllRows(rows: any[]): Array<{ rowIndex: number; errors: string[] }> {
   const validationErrors: Array<{ rowIndex: number; errors: string[] }> = []
-  const wellNamePointIds = new Set<string>()
   
   rows.forEach((row, index) => {
     const validation = validateRow(row, index)
