@@ -163,74 +163,45 @@ export const SearchBar = () => {
           },
         }}
         renderGroup={(params) => (
-          <Collapse
-            key={params.group}
-            in={Boolean(params.children)}
-            timeout="auto"
-          >
-            <Stack
-              sx={{
-                padding: '10px',
-                backgroundColor: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? theme.palette.grey[100]
-                    : theme.palette.grey[800],
-                borderRadius: '10px',
-                margin: '10px',
-              }}
-            >
-              <Typography variant={'h3'}>{params.group}</Typography>
-              <Divider sx={{ marginBottom: '5px' }} />
+          <Collapse key={params.group} in>
+            <Stack sx={{ p: 1.5 }}>
+              <Typography variant="h6" sx={{ opacity: 0.7 }}>
+                {params.group}
+              </Typography>
+              <Divider sx={{ mb: 1 }} />
               {params.children}
             </Stack>
           </Collapse>
         )}
         renderOption={(props, option) => (
-          <li
-            {...props}
-            style={{ padding: '10px' }}
-            key={option.label + option.group}
-          >
-            <Stack direction="row" alignItems="center" spacing={2}>
-              <div>
-                <Typography
-                  sx={{ display: 'block' }}
-                  variant="subtitle1"
-                  component="div"
-                >
-                  {option.label}
+          <li {...props} key={option.label}>
+            <Stack spacing={0.3}>
+              <Typography variant="subtitle1">
+                {highlight(option.label, query)}
+              </Typography>
+
+              {option.description && (
+                <Typography variant="body2">
+                  {highlight(option.description, query)}
                 </Typography>
-                <Typography variant={'body1'}>{option.description}</Typography>
-                {/*Well result*/}
-                {option.group === 'Wells' && (
-                  <div style={{ color: '#666' }}>
-                    <WellCard option={option} />
-                  </div>
-                )}
-                {/*Spring result*/}
-                {option.group === 'Springs' && (
-                  <div style={{ color: '#666' }}>
-                    <SpringCard option={option} />
-                  </div>
-                )}
-                {/*Contact result*/}
-                {option.group === 'Contacts' && (
-                  <div style={{ color: '#666' }}>
-                    {option.properties.address.map((address) => (
-                      <AddressCard
-                        key={'address' + address.id}
-                        option={address}
-                      />
-                    ))}
-                    {option.properties.phone.map((phone) => (
-                      <PhoneCard key={'phone' + phone.id} option={phone} />
-                    ))}
-                    {option.properties.email.map((email) => (
-                      <EmailCard key={'email' + email.id} option={email} />
-                    ))}
-                  </div>
-                )}
-              </div>
+              )}
+
+              {/* Custom metadata cards */}
+              {option.group === 'Wells' && <WellCard option={option} />}
+              {option.group === 'Springs' && <SpringCard option={option} />}
+              {option.group === 'Contacts' && (
+                <>
+                  {option.properties.address.map((a) => (
+                    <AddressCard key={a.id} option={a} />
+                  ))}
+                  {option.properties.phone.map((p) => (
+                    <PhoneCard key={p.id} option={p} />
+                  ))}
+                  {option.properties.email.map((e) => (
+                    <EmailCard key={e.id} option={e} />
+                  ))}
+                </>
+              )}
             </Stack>
           </li>
         )}
