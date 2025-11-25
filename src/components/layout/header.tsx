@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useState } from 'react'
 import {
   useGetIdentity,
   useActiveAuthProvider,
@@ -6,33 +6,21 @@ import {
   useLogout,
   useWarnAboutChange,
   useTranslate,
-  useResourceParams,
 } from '@refinedev/core'
 import {
   AppBar,
   Avatar,
   Stack,
   Toolbar,
-  IconButton,
   ListItemIcon,
   Menu,
   MenuItem,
   Skeleton,
-  Button,
-  Drawer,
 } from '@mui/material'
-import {
-  DarkModeRounded,
-  HelpSharp,
-  LightModeOutlined,
-  LogoutOutlined,
-  PersonOutline,
-} from '@mui/icons-material'
+import { LogoutOutlined, PersonOutline } from '@mui/icons-material'
 import type { RefineThemedLayoutV2HeaderProps } from '@refinedev/mui'
 import { HamburgerMenu } from './hamburgerMenu'
-import { ColorModeContext } from '../../contexts'
 import SearchBar from '@/components/SearchBar'
-import { useHelp } from '@/hooks/useHelp'
 
 const stringAvatar = (name: string) => {
   // Reduce the string into a numerical hash value
@@ -71,10 +59,7 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
   })
 
-  const { helpDrawer, helpButton } = useHelp()
-
   const translate = useTranslate()
-  const { mode, setMode } = useContext(ColorModeContext)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
 
@@ -117,8 +102,6 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
 
   return (
     <AppBar position="sticky">
-      {helpDrawer}
-
       <Toolbar>
         <HamburgerMenu />
         <Stack
@@ -126,9 +109,9 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
           width="100%"
           justifyContent="flex-end"
           alignItems="center"
+          gap="12px"
         >
           <SearchBar />
-
           <Stack
             direction="row"
             gap="16px"
@@ -143,23 +126,15 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
               >
                 <Avatar />
               </Skeleton>
+            ) : user?.avatar ? (
+              <Avatar
+                onClick={handleMenuOpen}
+                src={user?.avatar}
+                alt={user?.name}
+              />
             ) : (
-              <>
-                {user?.avatar ? (
-                  <Avatar
-                    onClick={handleMenuOpen}
-                    src={user?.avatar}
-                    alt={user?.name}
-                  />
-                ) : (
-                  <Avatar
-                    onClick={handleMenuOpen}
-                    {...stringAvatar(user?.name)}
-                  />
-                )}
-              </>
+              <Avatar onClick={handleMenuOpen} {...stringAvatar(user?.name)} />
             )}
-
             <Menu
               anchorEl={anchorEl}
               open={open}
