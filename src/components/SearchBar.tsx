@@ -9,7 +9,7 @@ import {
 } from '@mui/material'
 import { Search } from 'react-flaticons'
 import Stack from '@mui/material/Stack'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AddressCard,
   EmailCard,
@@ -23,16 +23,18 @@ import { useDebounce, useAbortableList } from '../hooks'
 export const SearchBar = () => {
   const go = useGo()
 
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  const MIN_LENGTH_FOR_SEARCH = 1
   const [query, setQuery] = useState('')
-  const debounced = useDebounce(query, 250)
+  const debounced = useDebounce(query, 500)
   const [selected, setSelected] = useState(null)
 
   const { data, isFetching } = useAbortableList({
     resource: 'search',
     dataProviderName: 'ocotillo',
     queryOptions: {
-      enabled: debounced.length >= 2,
-      keepPreviousData: true,
+      enabled: debounced.length >= MIN_LENGTH_FOR_SEARCH,
       staleTime: 120_000,
       refetchOnReconnect: false,
       refetchOnWindowFocus: false,
@@ -67,6 +69,22 @@ export const SearchBar = () => {
       go({ to: `ocotillo/${url}/show/${properties?.id}` })
     }
   }, [selected])
+
+  // Add hotkeys for navigation
+  const isMac = navigator.platform.toUpperCase().includes('MAC')
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const cmdKey = isMac ? e.metaKey : e.ctrlKey
+
+      if (cmdKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault() // stop browser search box
+        inputRef.current?.focus()
+      }
+    }
+
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   // Highlight matched text
   const highlight = (text: string, query: string) => {
@@ -219,12 +237,13 @@ export const SearchBar = () => {
         renderInput={(params) => (
           <TextField
             {...params}
+            inputRef={inputRef}
+            label=""
+            aria-label="Search"
             sx={{
               borderRadius: '10px',
               margin: '10px',
             }}
-            label=""
-            aria-label="Search"
             slotProps={{
               input: {
                 ...params.InputProps,
@@ -232,6 +251,33 @@ export const SearchBar = () => {
                 startAdornment: (
                   <InputAdornment position="start">
                     <Search color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <kbd
+                      aria-hidden={true}
+                      style={{
+                        display: 'inline-block',
+                        userSelect: 'none',
+                        whiteSpace: 'pre',
+                        background: '#f5f5f5',
+                        marginRight: 8,
+                        paddingLeft: 4,
+                        paddingRight: 4,
+                        paddingTop: 2,
+                        paddingBottom: 2,
+                        lineHeight: '20px',
+                        fontSize: '1rem',
+                        fontWeight: 'bold',
+                        fontFamily: 'monospace',
+                        letterSpacing: isMac ? '1.5px' : '0.5px',
+                        border: '1px solid #ccc',
+                        borderRadius: '7px',
+                      }}
+                    >
+                      {isMac ? '⌘K' : 'Ctrl+K'}
+                    </kbd>
                   </InputAdornment>
                 ),
               },
