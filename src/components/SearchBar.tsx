@@ -17,55 +17,73 @@ import {
   SpringCard,
   WellCard,
 } from '@/components/SearchResultCard'
-import { useList, useGo } from '@refinedev/core'
-import { useDebounce } from './util'
+import { useGo } from '@refinedev/core'
+import { useDebounce, useAbortableList } from '../hooks'
 
 export const SearchBar = () => {
-  const [searchQuery, setSearchQuery] = useState('')
-  const debouncedQuery = useDebounce(searchQuery, 300)
+  const go = useGo()
 
-  const [selectedValue, setSelectedValue] = useState(null)
+  const [query, setQuery] = useState('')
+  const debounced = useDebounce(query, 250)
+  const [selected, setSelected] = useState(null)
 
-  const { data, isFetching } = useList({
+  const { data, isFetching } = useAbortableList({
     resource: 'search',
     dataProviderName: 'ocotillo',
     queryOptions: {
-      enabled: debouncedQuery.length >= 2,
-      staleTime: 60 * 1000,
+      enabled: debounced.length >= 2,
       keepPreviousData: true,
-      refetchOnWindowFocus: false,
+      staleTime: 120_000,
       refetchOnReconnect: false,
+      refetchOnWindowFocus: false,
     },
     meta: {
-      params: { q: debouncedQuery },
+      params: { q: debounced },
     },
   })
 
-  const go = useGo()
-  useEffect(() => {
-    if (!selectedValue) return
-
-    if (selectedValue.group == 'Wells') {
-      const thing_type = selectedValue?.properties?.thing_type
-      const WATER_WELL = 'water well'
-      const thing_url = thing_type === WATER_WELL ? 'well' : 'spring'
-
-      const id = selectedValue?.properties?.id ?? ''
-      go({
-        to: `ocotillo/${thing_url}/show/${id}`,
-      })
-    }
-  }, [selectedValue])
-
-  const searchResults = useMemo(() => {
+  // Normalize options
+  const results = useMemo(() => {
     return (
       data?.data?.map((r) => ({
-        label: r.label ?? '',
-        group: r.group ?? 'Results',
+        label: r.label,
+        description: r.description,
+        group: r.group || 'Results',
+        properties: r.properties,
         raw: r,
       })) ?? []
     )
   }, [data])
+
+  // Navigate automatically when a result is chosen
+  useEffect(() => {
+    if (!selected) return
+    const { group, properties } = selected
+
+    if (group === 'Wells') {
+      const type = properties?.thing_type
+      const WATER_WELL = 'water well'
+      const url = type === WATER_WELL ? 'well' : 'spring'
+      go({ to: `ocotillo/${url}/show/${properties?.id}` })
+    }
+  }, [selected])
+
+  // Highlight matched text
+  const highlight = (text: string, query: string) => {
+    if (!query) return text
+    const idx = text.toLowerCase().indexOf(query.toLowerCase())
+    if (idx === -1) return text
+
+    return (
+      <>
+        {text.substring(0, idx)}
+        <strong style={{ color: '#1976d2' }}>
+          {text.substring(idx, idx + query.length)}
+        </strong>
+        {text.substring(idx + query.length)}
+      </>
+    )
+  }
 
   return (
     <Box
@@ -80,11 +98,22 @@ export const SearchBar = () => {
       }}
     >
       <Autocomplete
+        freeSolo
+        openOnFocus
+        disableClearable
         loading={isFetching}
         loadingText="Searching..."
-        noOptionsText={
-          searchQuery.length === 0 ? 'Type to search' : 'No results'
+        noOptionsText={query.length === 0 ? 'Type to search' : 'No results'}
+        options={results}
+        value={selected}
+        inputValue={query}
+        onInputChange={(_, v) => setQuery(v)}
+        onChange={(_, v) => setSelected(v)}
+        getOptionLabel={(o) => (typeof o === 'string' ? o : o.label || '')}
+        isOptionEqualToValue={(o, v) =>
+          o?.label === (typeof v === 'string' ? v : v?.label)
         }
+        groupBy={(o) => o.group}
         sx={{
           width: '100%',
           '& .MuiOutlinedInput-root': {
@@ -115,34 +144,6 @@ export const SearchBar = () => {
             },
           },
         }}
-        options={searchResults}
-        getOptionLabel={
-          (option) =>
-            typeof option === 'string'
-              ? option // user‑typed string
-              : (option.label ?? '') // your object’s label
-        }
-        isOptionEqualToValue={
-          (option, value) =>
-            typeof value === 'string'
-              ? option.label === value // matching a freeSolo string
-              : option.label === (value as any).label // matching an object
-        }
-        // control the text field
-        inputValue={searchQuery}
-        onInputChange={(_, newInput) => {
-          console.log('Input changed:', { newInput })
-          setSearchQuery(newInput)
-        }}
-        // control the selected value
-        value={selectedValue}
-        onChange={(_, newValue) => {
-          setSelectedValue(newValue)
-        }}
-        openOnFocus
-        disableClearable
-        freeSolo
-        groupBy={(option) => option?.group}
         renderGroup={(params) => (
           <Collapse
             key={params.group}
