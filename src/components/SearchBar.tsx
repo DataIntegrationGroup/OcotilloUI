@@ -4,12 +4,14 @@ import {
   Collapse,
   Divider,
   InputAdornment,
+  ListItem,
+  ListItemButton,
   TextField,
   Typography,
 } from '@mui/material'
 import { Search } from 'react-flaticons'
 import Stack from '@mui/material/Stack'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AddressCard,
   EmailCard,
@@ -17,58 +19,121 @@ import {
   SpringCard,
   WellCard,
 } from '@/components/SearchResultCard'
-import { useList, useGo } from '@refinedev/core'
-import { debounce } from 'lodash'
+import { useGo } from '@refinedev/core'
+import { useDebounce, useAbortableList } from '../hooks'
 
 export const SearchBar = () => {
-  const [searchInput, setSearchInput] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedValue, setSelectedValue] = useState(null)
+  const go = useGo()
 
-  const debouncedSetSearchQuery = useCallback(
-    debounce((value) => {
-      setSearchQuery(value)
-    }, 250),
-    [setSearchQuery]
-  )
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
-  const handleSearch = (value: string) => {
-    setSearchInput(value)
-    debouncedSetSearchQuery(value) // Use the debounced function to set the search query
-  }
+  const MIN_LENGTH_FOR_SEARCH = 1
+  const [query, setQuery] = useState('')
+  const debounced = useDebounce(query, 500)
+  const [selected, setSelected] = useState(null)
 
-  const { data: searchResultData } = useList({
+  const { data, isFetching, isError } = useAbortableList({
     resource: 'search',
     dataProviderName: 'ocotillo',
+    pagination: {
+      pageSize: 100,
+    },
     queryOptions: {
-      enabled: !!searchQuery,
-      refetchOnWindowFocus: false,
+      enabled: debounced.length >= MIN_LENGTH_FOR_SEARCH,
+      staleTime: 120_000,
       refetchOnReconnect: false,
+      refetchOnWindowFocus: false,
     },
     meta: {
-      params: { q: searchQuery },
+      params: { q: debounced },
     },
   })
-  const go = useGo()
-  useEffect(() => {
-    if (!selectedValue) return
 
-    if (selectedValue.group == 'Wells') {
-      const thing_type = selectedValue?.properties?.thing_type
-      let thing_url
-      if (thing_type === 'water well') {
-        thing_url = 'well'
-      } else {
-        thing_url = 'spring'
+  // Normalize options
+  const results = useMemo(() => {
+    if (query.trim().length === 0) {
+      return []
+    }
+
+    if (!isFetching) {
+      if (isError) {
+        return [
+          {
+            __error: true,
+            label: 'Search failed. Please try again.',
+            group: 'Messages',
+          },
+        ]
       }
 
-      go({
-        to: `ocotillo/${thing_url}/show/` + selectedValue?.properties.id,
-      })
+      if (!isError && data?.data?.length === 0) {
+        return [
+          {
+            __empty: true,
+            label: 'No results found. Try a well ID, site name, or contact.',
+            group: 'Messages',
+          },
+        ]
+      }
     }
-  }, [selectedValue])
 
-  const searchResults = searchResultData?.data ?? []
+    // Normal results
+    return (
+      data?.data.map((r) => ({
+        label: r.label,
+        description: r.description,
+        group: r.group || 'Results',
+        properties: r.properties,
+        raw: r,
+      })) ?? []
+    )
+  }, [data, query, isFetching])
+
+  // Navigate automatically when a result is chosen
+  useEffect(() => {
+    if (!selected) return
+    const { group, properties } = selected
+
+    if (group === 'Wells') {
+      const type = properties?.thing_type
+      const WATER_WELL = 'water well'
+      const url = type === WATER_WELL ? 'well' : 'spring'
+      go({ to: `ocotillo/${url}/show/${properties?.id}` })
+    }
+  }, [selected])
+
+  // Add hotkeys for navigation
+  const isMac = navigator.platform.toUpperCase().includes('MAC')
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const cmdKey = isMac ? e.metaKey : e.ctrlKey
+
+      if (cmdKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault() // stop browser search box
+        inputRef.current?.focus()
+      }
+    }
+
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  // Highlight matched text
+  const highlight = (text: string, query: string) => {
+    if (!query) return text
+    const idx = text?.toLowerCase()?.indexOf(query?.toLowerCase())
+    if (idx === -1) return text
+
+    return (
+      <>
+        {text?.substring(0, idx)}
+        <strong style={{ color: '#1976d2' }}>
+          {text?.substring(idx, idx + query.length)}
+        </strong>
+        {text?.substring(idx + query.length)}
+      </>
+    )
+  }
 
   return (
     <Box
@@ -83,6 +148,27 @@ export const SearchBar = () => {
       }}
     >
       <Autocomplete
+        freeSolo
+        openOnFocus
+        disableClearable
+        loading={isFetching}
+        loadingText="Searching..."
+        options={results}
+        value={selected}
+        inputValue={query}
+        // Prevent MUI from filtering out our "__empty" placeholder option.
+        // Without this, the listbox never opens and renderOption won't fire.
+        filterOptions={(options) => options}
+        onInputChange={(_, v) => setQuery(v)}
+        onChange={(_, v) => setSelected(v)}
+        getOptionLabel={(o) => {
+          if (o.__empty) return o.label
+          return typeof o === 'string' ? o : o.label || ''
+        }}
+        isOptionEqualToValue={(o, v) =>
+          o?.label === (typeof v === 'string' ? v : v?.label)
+        }
+        groupBy={(o) => o.group || null}
         sx={{
           width: '100%',
           '& .MuiOutlinedInput-root': {
@@ -103,131 +189,145 @@ export const SearchBar = () => {
         slotProps={{
           paper: {
             sx: {
-              maxHeight: 600, // Optional: set max height
+              maxHeight: 600,
             },
           },
           listbox: {
             sx: {
-              maxHeight: 600, // Optional: set max height
+              maxHeight: 600,
               overflowY: 'auto', // Enable scrolling if content exceeds max height
             },
           },
         }}
-        options={searchResults}
-        getOptionLabel={
-          (option) =>
-            typeof option === 'string'
-              ? option // user‑typed string
-              : (option.label ?? '') // your object’s label
-        }
-        isOptionEqualToValue={
-          (option, value) =>
-            typeof value === 'string'
-              ? option.label === value // matching a freeSolo string
-              : option.label === (value as any).label // matching an object
-        }
-        // control the text field
-        inputValue={searchInput}
-        onInputChange={(_, newInput) => {
-          // setSearchInput(newInput)
-          console.log('input changed')
-          handleSearch(newInput)
-        }}
-        // control the selected value
-        value={selectedValue}
-        onChange={(_, newValue) => {
-          setSelectedValue(newValue)
-        }}
-        openOnFocus
-        disableClearable
-        freeSolo
-        groupBy={(option) => option?.group}
         renderGroup={(params) => (
-          <Collapse
-            key={params.group}
-            in={Boolean(params.children)}
-            timeout="auto"
-          >
-            <Stack
-              sx={{
-                padding: '10px',
-                backgroundColor: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? theme.palette.grey[100]
-                    : theme.palette.grey[800],
-                borderRadius: '10px',
-                margin: '10px',
-              }}
-            >
-              <Typography variant={'h3'}>{params.group}</Typography>
-              <Divider sx={{ marginBottom: '5px' }} />
+          <Collapse key={params.group} in>
+            <Stack sx={{ p: 1.5 }}>
+              <Typography variant="h6" sx={{ opacity: 0.7 }}>
+                {params.group}
+              </Typography>
+              <Divider sx={{ mb: 1 }} />
               {params.children}
             </Stack>
           </Collapse>
         )}
-        renderOption={(props, option) => (
-          <li
-            {...props}
-            style={{ padding: '10px' }}
-            key={option.label + option.group}
-          >
-            <Stack direction="row" alignItems="center" spacing={2}>
-              <div>
-                <Typography
-                  sx={{ display: 'block' }}
-                  variant="subtitle1"
-                  component="div"
+        renderOption={(props, option) => {
+          if (option.__empty || option.__error) {
+            return (
+              <li
+                style={{
+                  padding: '12px',
+                  textAlign: 'center',
+                  listStyle: 'none',
+                  fontSize: '14px',
+                }}
+              >
+                {option.label}
+              </li>
+            )
+          }
+
+          return (
+            <li {...props} key={option.label}>
+              <ListItem disablePadding>
+                <ListItemButton
+                  sx={{
+                    alignItems: 'flex-start',
+                    borderRadius: '8px',
+                    my: 0.5,
+                    px: 2,
+                    py: 1.5,
+                    border: '1px solid #eee',
+                    boxShadow: 1,
+                  }}
                 >
-                  {option.label}
-                </Typography>
-                <Typography variant={'body1'}>{option.description}</Typography>
-                {/*Well result*/}
-                {option.group === 'Wells' && (
-                  <div style={{ color: '#666' }}>
-                    <WellCard option={option} />
-                  </div>
-                )}
-                {/*Spring result*/}
-                {option.group === 'Springs' && (
-                  <div style={{ color: '#666' }}>
-                    <SpringCard option={option} />
-                  </div>
-                )}
-                {/*Contact result*/}
-                {option.group === 'Contacts' && (
-                  <div style={{ color: '#666' }}>
-                    {option.properties.address.map((address) => (
-                      <AddressCard
-                        key={'address' + address.id}
-                        option={address}
-                      />
-                    ))}
-                    {option.properties.phone.map((phone) => (
-                      <PhoneCard key={'phone' + phone.id} option={phone} />
-                    ))}
-                    {option.properties.email.map((email) => (
-                      <EmailCard key={'email' + email.id} option={email} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </Stack>
-          </li>
-        )}
+                  <Stack spacing={1} sx={{ width: '100%' }}>
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      {highlight(option.label, query)}
+                    </Typography>
+                    {option.description && (
+                      <Typography variant="body2" color="text.secondary">
+                        {highlight(option.description, query)}
+                      </Typography>
+                    )}
+                    <Divider />
+                    <Box sx={{ pt: 0.5 }}>
+                      {option.group === 'Wells' && <WellCard option={option} />}
+                      {option.group === 'Springs' && (
+                        <SpringCard option={option} />
+                      )}
+                      {option.group === 'Contacts' && (
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'flex-start',
+                            gap: 2,
+                          }}
+                        >
+                          {option.properties.address.map((a) => (
+                            <AddressCard key={a.id} option={a} />
+                          ))}
+                          {option.properties.phone.map((p) => (
+                            <PhoneCard key={p.id} option={p} />
+                          ))}
+                          {option.properties.email.map((e) => (
+                            <EmailCard key={e.id} option={e} />
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  </Stack>
+                </ListItemButton>
+              </ListItem>
+            </li>
+          )
+        }}
         renderInput={(params) => (
           <TextField
             {...params}
+            inputRef={inputRef}
+            label=""
+            aria-label="Search"
+            placeholder="Search for a well or spring by ID or site name…"
             sx={{
+              position: 'relative',
               borderRadius: '10px',
               margin: '10px',
             }}
-            label="Search"
             slotProps={{
               input: {
                 ...params.InputProps,
+                disableUnderline: true,
                 startAdornment: (
                   <InputAdornment position="start">
                     <Search color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <kbd
+                      aria-hidden={true}
+                      style={{
+                        display: 'inline-block',
+                        userSelect: 'none',
+                        whiteSpace: 'pre',
+                        background: '#f5f5f5',
+                        marginRight: 8,
+                        paddingLeft: 4,
+                        paddingRight: 4,
+                        paddingTop: 2,
+                        paddingBottom: 2,
+                        lineHeight: '20px',
+                        fontSize: '1rem',
+                        fontWeight: 'bold',
+                        fontFamily: 'monospace',
+                        letterSpacing: isMac ? '1.5px' : '0.5px',
+                        border: '1px solid #ccc',
+                        borderRadius: '7px',
+                      }}
+                    >
+                      {isMac ? '⌘K' : 'Ctrl+K'}
+                    </kbd>
                   </InputAdornment>
                 ),
               },

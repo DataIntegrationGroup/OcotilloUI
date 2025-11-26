@@ -1,5 +1,4 @@
 import { MapboxStyleDefinition } from 'mapbox-gl-style-switcher'
-import { useLayer } from '@/hooks'
 
 export const MAPBOX_BASEMAPS: MapboxStyleDefinition[] = [
   { title: 'Light', uri: 'mapbox://styles/mapbox/light-v11' },
