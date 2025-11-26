@@ -1,96 +1,65 @@
-import { Card, Chip, Grid2, Typography } from '@mui/material'
-import { Box } from '@mui/system'
+import { Chip, Box } from '@mui/material'
 
-export function AddressCard({ option }) {
-  return (
-    <Card sx={{ padding: '5px', margin: '5px' }}>
-      <Chip size="small" color="default" label={option.type} />
-      <Typography variant={'body1'}>
-        {option.address_line_1}, {option.address_line_2}, {option.city},{' '}
-        {option.state} {option.zip_code}
-      </Typography>
-    </Card>
-  )
-}
+export const AddressCard = ({ option }) => (
+  <Chip size="small" color="default" label={`Address: ${option}`} />
+)
 
-export function PhoneCard({ option }) {
-  return (
-    <Card sx={{ padding: '5px', margin: '5px' }}>
-      <Chip size="small" color="default" label={option.type} />
-      <Typography variant={'body1'}>{option.phone_number}</Typography>
-    </Card>
-  )
-}
+export const PhoneCard = ({ option }) => (
+  <Chip size="small" color="default" label={`Phone: ${option}`} />
+)
 
-export function EmailCard({ option }) {
-  return (
-    <Card sx={{ padding: '5px', margin: '5px' }}>
-      <Chip size="small" color="default" label={option.type} />
-      <Typography variant={'body1'}>{option.email}</Typography>
-    </Card>
-  )
-}
+export const EmailCard = ({ option }) => (
+  <Chip size="small" color="default" label={`Email: ${option}`} />
+)
 
-export function WellCard({ option }) {
+export const WellCard = ({ option }) => {
   return (
-    <Card sx={{ padding: '5px', margin: '5px', width: '800px' }}>
-      {/*<Grid2 container spacing={2}>*/}
-      {/*  <Grid2 size={6}>*/}
-      <Box>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+        gap: 2,
+      }}
+    >
+      {option.properties.well_type ? (
         <Chip
           size="small"
           color="default"
           label={option.properties.well_type}
         />
+      ) : null}
+      {option.properties.hole_depth ? (
         <Chip
           size="small"
           color="default"
-          label={`Hole Depth (ft): ${option.properties.hole_depth || ''}`}
+          label={`Hole Depth: ${option.properties?.hole_depth} ft`}
         />
+      ) : null}
+      {option.properties.well_depth ? (
         <Chip
           size="small"
           color="default"
-          label={`Well Depth (ft): ${option.properties.well_depth || ''}`}
+          label={`Well Depth: ${option.properties?.well_depth} ft`}
         />
-      </Box>
-      {/*</Grid2>*/}
-      {/*  <Grid2 size={6} justifyContent={''}>*/}
-      {/*    <Box>*/}
-      {/*      <Chip*/}
-      {/*        size="small"*/}
-      {/*        color="default"*/}
-      {/*        label={option.properties.series.observed_property}*/}
-      {/*      />*/}
-      {/*      <Chip*/}
-      {/*        size="small"*/}
-      {/*        color={*/}
-      {/*          option.properties.series.sensor === 'manual'*/}
-      {/*            ? 'primary'*/}
-      {/*            : 'secondary'*/}
-      {/*        }*/}
-      {/*        label={option.properties.series.sensor}*/}
-      {/*      />*/}
-      {/*    </Box>*/}
-      {/*  </Grid2>*/}
-      {/*</Grid2>*/}
-    </Card>
+      ) : null}
+    </Box>
   )
 }
 
-export function SpringCard({ option }) {
+export const SpringCard = ({ option }) => {
   return (
-    <Card sx={{ padding: '5px', margin: '5px', width: '800px' }}>
-      <Grid2 container spacing={2}>
-        <Grid2 size={6}>
-          <Box>
-            <Chip
-              size="small"
-              color="default"
-              label={option.properties.county}
-            />
-          </Box>
-        </Grid2>
-      </Grid2>
-    </Card>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+        gap: 2,
+      }}
+    >
+      {option.properties.county ? (
+        <Chip size="small" color="default" label={option.properties.county} />
+      ) : null}
+    </Box>
   )
 }
