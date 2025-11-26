@@ -3976,9 +3976,9 @@ export const zSearchApiSearchGetData = z.object({
     path: z.optional(z.never()),
     query: z.object({
         q: z.string(),
+        size: z.optional(z.int().gte(1).lte(10000)).default(25),
         limit: z.optional(z.int()).default(25),
-        page: z.optional(z.int().gte(1)).default(1),
-        size: z.optional(z.int().gte(1).lte(10000)).default(25)
+        page: z.optional(z.int().gte(1)).default(1)
     })
 });
 
