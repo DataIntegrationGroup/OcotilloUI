@@ -4,6 +4,8 @@ import {
   Collapse,
   Divider,
   InputAdornment,
+  ListItem,
+  ListItemButton,
   TextField,
   Typography,
 } from '@mui/material'
@@ -33,6 +35,9 @@ export const SearchBar = () => {
   const { data, isFetching } = useAbortableList({
     resource: 'search',
     dataProviderName: 'ocotillo',
+    pagination: {
+      pageSize: 100,
+    },
     queryOptions: {
       enabled: debounced.length >= MIN_LENGTH_FOR_SEARCH,
       staleTime: 120_000,
@@ -46,8 +51,25 @@ export const SearchBar = () => {
 
   // Normalize options
   const results = useMemo(() => {
+    if (query.trim().length === 0) {
+      return []
+    }
+
+    // Search has finished AND no results?
+    if (!isFetching && data?.data?.length === 0) {
+      return [
+        {
+          __empty: true,
+          label:
+            'No results found, please try a known ID, site name, or contact name',
+          group: 'Messages',
+        },
+      ]
+    }
+
+    // Normal results
     return (
-      data?.data?.map((r) => ({
+      data?.data.map((r) => ({
         label: r.label,
         description: r.description,
         group: r.group || 'Results',
@@ -55,7 +77,7 @@ export const SearchBar = () => {
         raw: r,
       })) ?? []
     )
-  }, [data])
+  }, [data, query, isFetching])
 
   // Navigate automatically when a result is chosen
   useEffect(() => {
@@ -89,16 +111,16 @@ export const SearchBar = () => {
   // Highlight matched text
   const highlight = (text: string, query: string) => {
     if (!query) return text
-    const idx = text.toLowerCase().indexOf(query.toLowerCase())
+    const idx = text?.toLowerCase()?.indexOf(query?.toLowerCase())
     if (idx === -1) return text
 
     return (
       <>
-        {text.substring(0, idx)}
+        {text?.substring(0, idx)}
         <strong style={{ color: '#1976d2' }}>
-          {text.substring(idx, idx + query.length)}
+          {text?.substring(idx, idx + query.length)}
         </strong>
-        {text.substring(idx + query.length)}
+        {text?.substring(idx + query.length)}
       </>
     )
   }
@@ -121,17 +143,22 @@ export const SearchBar = () => {
         disableClearable
         loading={isFetching}
         loadingText="Searching..."
-        noOptionsText={query.length === 0 ? 'Type to search' : 'No results'}
         options={results}
         value={selected}
         inputValue={query}
+        // Prevent MUI from filtering out our "__empty" placeholder option.
+        // Without this, the listbox never opens and renderOption won't fire.
+        filterOptions={(options) => options}
         onInputChange={(_, v) => setQuery(v)}
         onChange={(_, v) => setSelected(v)}
-        getOptionLabel={(o) => (typeof o === 'string' ? o : o.label || '')}
+        getOptionLabel={(o) => {
+          if (o.__empty) return o.label
+          return typeof o === 'string' ? o : o.label || ''
+        }}
         isOptionEqualToValue={(o, v) =>
           o?.label === (typeof v === 'string' ? v : v?.label)
         }
-        groupBy={(o) => o.group}
+        groupBy={(o) => o.group || null}
         sx={{
           width: '100%',
           '& .MuiOutlinedInput-root': {
@@ -152,12 +179,12 @@ export const SearchBar = () => {
         slotProps={{
           paper: {
             sx: {
-              maxHeight: 600, // Optional: set max height
+              maxHeight: 600,
             },
           },
           listbox: {
             sx: {
-              maxHeight: 600, // Optional: set max height
+              maxHeight: 600,
               overflowY: 'auto', // Enable scrolling if content exceeds max height
             },
           },
@@ -173,45 +200,89 @@ export const SearchBar = () => {
             </Stack>
           </Collapse>
         )}
-        renderOption={(props, option) => (
-          <li {...props} key={option.label}>
-            <Stack spacing={0.3}>
-              <Typography variant="subtitle1">
-                {highlight(option.label, query)}
-              </Typography>
+        renderOption={(props, option) => {
+          if (option.__empty) {
+            return (
+              <li
+                style={{
+                  padding: '12px',
+                  textAlign: 'center',
+                  listStyle: 'none',
+                  fontSize: '14px',
+                }}
+              >
+                {option.label}
+              </li>
+            )
+          }
 
-              {option.description && (
-                <Typography variant="body2">
-                  {highlight(option.description, query)}
-                </Typography>
-              )}
+          console.log({ option })
 
-              {/* Custom metadata cards */}
-              {option.group === 'Wells' && <WellCard option={option} />}
-              {option.group === 'Springs' && <SpringCard option={option} />}
-              {option.group === 'Contacts' && (
-                <>
-                  {option.properties.address.map((a) => (
-                    <AddressCard key={a.id} option={a} />
-                  ))}
-                  {option.properties.phone.map((p) => (
-                    <PhoneCard key={p.id} option={p} />
-                  ))}
-                  {option.properties.email.map((e) => (
-                    <EmailCard key={e.id} option={e} />
-                  ))}
-                </>
-              )}
-            </Stack>
-          </li>
-        )}
+          return (
+            <li {...props} key={option.label}>
+              <ListItem disablePadding>
+                <ListItemButton
+                  sx={{
+                    alignItems: 'flex-start',
+                    borderRadius: '8px',
+                    my: 0.5,
+                    px: 2,
+                    py: 1.5,
+                    border: '1px solid #eee',
+                    boxShadow: 1,
+                  }}
+                >
+                  <Stack spacing={1} sx={{ width: '100%' }}>
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      {highlight(option.label, query)}
+                    </Typography>
+                    {option.description && (
+                      <Typography variant="body2" color="text.secondary">
+                        {highlight(option.description, query)}
+                      </Typography>
+                    )}
+                    <Divider />
+                    <Box sx={{ pt: 0.5 }}>
+                      {option.group === 'Wells' && <WellCard option={option} />}
+                      {option.group === 'Springs' && (
+                        <SpringCard option={option} />
+                      )}
+                      {option.group === 'Contacts' && (
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'flex-start',
+                            gap: 2,
+                          }}
+                        >
+                          {option.properties.address.map((a) => (
+                            <AddressCard key={a.id} option={a} />
+                          ))}
+                          {option.properties.phone.map((p) => (
+                            <PhoneCard key={p.id} option={p} />
+                          ))}
+                          {option.properties.email.map((e) => (
+                            <EmailCard key={e.id} option={e} />
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  </Stack>
+                </ListItemButton>
+              </ListItem>
+            </li>
+          )
+        }}
         renderInput={(params) => (
           <TextField
             {...params}
             inputRef={inputRef}
             label=""
             aria-label="Search"
+            placeholder="Search for a well or spring by ID or site name…"
             sx={{
+              position: 'relative',
               borderRadius: '10px',
               margin: '10px',
             }}
