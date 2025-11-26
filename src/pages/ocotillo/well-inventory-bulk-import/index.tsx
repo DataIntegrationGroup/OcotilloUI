@@ -14,23 +14,19 @@ import {
 } from '@mui/material'
 import { Create } from '@refinedev/mui'
 import { useNotification, useDataProvider } from '@refinedev/core'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import FileUploadIcon from '@mui/icons-material/FileUpload'
 import InfoIcon from '@mui/icons-material/Info'
-import { DataGrid, type GridColDef, type GridRowModel } from '@mui/x-data-grid'
+import { DataGrid, type GridRowModel } from '@mui/x-data-grid'
 import Papa from 'papaparse'
 import { parseCSV } from '@/utils/ParseCSV'
-import { validateAllRows, allFieldNames } from './utils'
+import { validateAllRows, allFieldNames, mapValidationErrors, mapApiErrors, type ErrorMap, type FieldErrorMap, type ApiValidationError } from './utils'
 import { wellInventoryRowSchema, type WellInventoryRow } from './schema'
 import { createGridColumns } from './grid-defs'
+import type { FetchValidationError } from '@/interfaces/FetchValidationError'
 
 interface UploadResult {
-  validation_errors: Array<{
-    row: number
-    field: string
-    error: string
-    value?: string
-  }>
+  validation_errors: ApiValidationError[]
   summary: {
     total_rows_processed: number
     total_rows_imported: number
@@ -53,11 +49,27 @@ export const WellInventoryBulkImport: React.FC = () => {
   const [rows, setRows] = useState<TableRow[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null)
-  const [validationErrors, setValidationErrors] = useState<Map<number, string[]>>(new Map())
-  const [fieldErrors, setFieldErrors] = useState<Map<string, Set<string>>>(new Map()) // Map of "rowId-fieldName" to error messages
+  const [validationErrors, setValidationErrors] = useState<ErrorMap>(new Map())
+  const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>(new Map())
   const { open: openNotification } = useNotification()
   const dataProvider = useDataProvider()
   const provider = dataProvider('ocotillo')
+
+  // Clear errors for a specific row
+  const clearRowErrors = useCallback((rowId: number) => {
+    setValidationErrors(prev => {
+      const next = new Map(prev)
+      next.delete(rowId)
+      return next
+    })
+    setFieldErrors(prev => {
+      const next = new Map(prev)
+      Array.from(next.keys())
+        .filter(key => key.startsWith(`${rowId}-`))
+        .forEach(key => next.delete(key))
+      return next
+    })
+  }, [])
 
   const handleCSVImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -71,31 +83,8 @@ export const WellInventoryBulkImport: React.FC = () => {
       }))
       setRows(newRows)
       
-      // Validate imported rows
       const errors = validateAllRows(newRows)
-      const errorMap = new Map<number, string[]>()
-      const fieldErrorMap = new Map<string, Set<string>>()
-      
-      errors.forEach(({ rowIndex, errors }) => {
-        const tableRow = newRows[rowIndex - 1]
-        if (tableRow) {
-          errorMap.set(tableRow.id, errors)
-          
-          // Extract field-level errors
-          errors.forEach(error => {
-            const match = error.match(/^([^:]+):\s*(.+)$/)
-            if (match) {
-              const fieldName = match[1].trim()
-              const errorMessage = match[2].trim()
-              const key = `${tableRow.id}-${fieldName}`
-              if (!fieldErrorMap.has(key)) {
-                fieldErrorMap.set(key, new Set())
-              }
-              fieldErrorMap.get(key)!.add(errorMessage)
-            }
-          })
-        }
-      })
+      const [errorMap, fieldErrorMap] = mapValidationErrors(errors, newRows)
       setValidationErrors(errorMap)
       setFieldErrors(fieldErrorMap)
       
@@ -104,77 +93,65 @@ export const WellInventoryBulkImport: React.FC = () => {
         description: `Added ${newRows.length} row(s) to the table from the CSV file. Please review and fix any errors before submitting.`,
         type: 'success',
       })
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to parse CSV file'
       openNotification({
-        message: 'CSV data add to table failed',
-        description: error.message || 'Failed to parse CSV file',
+        message: 'CSV import failed',
+        description: message,
         type: 'error',
       })
+    } finally {
+      event.target.value = ''
     }
-    
-    // Reset file input
-    event.target.value = ''
   }
 
-  const handleDeleteRow = (id: number) => {
-    setRows(rows.filter(row => row.id !== id))
-    const newErrors = new Map(validationErrors)
-    newErrors.delete(id)
-    setValidationErrors(newErrors)
-    
-    // Clear field errors for this row
-    const newFieldErrors = new Map(fieldErrors)
-    Array.from(newFieldErrors.keys())
-      .filter(key => key.startsWith(`${id}-`))
-      .forEach(key => newFieldErrors.delete(key))
-    setFieldErrors(newFieldErrors)
-  }
+  const handleDeleteRow = useCallback((id: number) => {
+    setRows(prev => prev.filter(row => row.id !== id))
+    clearRowErrors(id)
+  }, [clearRowErrors])
 
-  const processRowUpdate = (newRow: GridRowModel): GridRowModel => {
-    const updatedRows = rows.map((row) => (row.id === newRow.id ? (newRow as TableRow) : row))
-    setRows(updatedRows)
+  const processRowUpdate = useCallback((newRow: GridRowModel): GridRowModel => {
+    setRows(prev => prev.map(row => row.id === newRow.id ? (newRow as TableRow) : row))
     
-    // Validate the updated row
     const validation = wellInventoryRowSchema.safeParse(newRow)
-    const errorMap = new Map(validationErrors)
-    const fieldErrorMap = new Map(fieldErrors)
-    
-    // Clear existing errors for this row
-    Array.from(fieldErrorMap.keys())
-      .filter(key => key.startsWith(`${newRow.id}-`))
-      .forEach(key => fieldErrorMap.delete(key))
-    
-    const errors: string[] = []
     
     if (!validation.success) {
+      const errors: string[] = []
+      const fieldErrorMap = new Map<string, Set<string>>()
+
       validation.error.issues.forEach(err => {
         const field = err.path.join('.')
-        const errorMsg = `${field}: ${err.message}`
-        errors.push(errorMsg)
+        errors.push(`${field}: ${err.message}`)
         
-        // Track field-level error
         const key = `${newRow.id}-${field}`
         if (!fieldErrorMap.has(key)) {
           fieldErrorMap.set(key, new Set())
         }
         fieldErrorMap.get(key)!.add(err.message)
       })
-    }
-    
-    if (errors.length > 0) {
-      errorMap.set(newRow.id, errors)
-    } else {
-      errorMap.delete(newRow.id)
-    }
-    
-    setValidationErrors(errorMap)
-    setFieldErrors(fieldErrorMap)
-    return newRow
-  }
 
- /*
-  * Handle submit to return rows to csv and upload to the API
- */
+      setValidationErrors(prev => {
+        const next = new Map(prev)
+        next.set(newRow.id, errors)
+        return next
+      })
+      setFieldErrors(prev => {
+        const next = new Map(prev)
+        // Clear existing errors for this row
+        Array.from(next.keys())
+          .filter(key => key.startsWith(`${newRow.id}-`))
+          .forEach(key => next.delete(key))
+        // Add new errors
+        fieldErrorMap.forEach((value, key) => next.set(key, value))
+        return next
+      })
+    } else {
+      clearRowErrors(newRow.id)
+    }
+    
+    return newRow
+  }, [clearRowErrors])
+
   const handleSubmit = async () => {
     if (rows.length === 0) {
       openNotification({
@@ -185,18 +162,10 @@ export const WellInventoryBulkImport: React.FC = () => {
       return
     }
 
-    // Validate all rows before submission
     const errors = validateAllRows(rows)
     if (errors.length > 0) {
-      const errorMap = new Map<number, string[]>()
-      errors.forEach(({ rowIndex, errors }) => {
-        const tableRow = rows[rowIndex - 1]
-        if (tableRow) {
-          errorMap.set(tableRow.id, errors)
-        }
-      })
+      const [errorMap] = mapValidationErrors(errors, rows)
       setValidationErrors(errorMap)
-      
       openNotification({
         message: 'Validation errors found',
         description: `Please fix ${errors.length} validation error(s) before submitting.`,
@@ -208,80 +177,57 @@ export const WellInventoryBulkImport: React.FC = () => {
     setIsSubmitting(true)
 
     try {
-        // Convert rows to CSV format
-        const csvContent = convertRowsToCSV(rows)
-        const blob = new Blob([csvContent], { type: 'text/csv' })
-        const file = new File([blob], 'well-inventory.csv', { type: 'text/csv' })
-    
-        const formData = new FormData()
-        formData.append('file', file)
-    
-        const result = await provider.custom({
-          url: 'well-inventory-csv',
-          method: 'post',
-          payload: formData,
-          headers: {},
-        })
-    
-        if (result?.data) {
-          setUploadResult(result.data as UploadResult)
-        }
-    
-        openNotification({
-          message: 'Upload successful',
-          description: 'The well inventory file has been imported successfully.',
-          type: 'success',
-        })
-      } catch (error: any) {
-        console.error('Error uploading file:', error)
-        
-        // Handle 422 validation errors from bulk import
-        if (error.status === 422 && error.data) {
-          const apiErrors = error.data as UploadResult
-          const errorCount = apiErrors.summary?.validation_errors_or_warnings || 0
-          
-          // Map API validation errors back to table rows
-          const errorMap = new Map<number, string[]>()
-          const fieldErrorMap = new Map<string, Set<string>>()
-          
-          if (apiErrors.validation_errors) {
-            apiErrors.validation_errors.forEach((apiError) => {
-              // API errors have row numbers (1-based), match to table rows
-              const tableRow = rows[apiError.row - 1] // Convert to 0-based index
-              if (tableRow) {
-                const existingErrors = errorMap.get(tableRow.id) || []
-                const errorMsg = `${apiError.field}: ${apiError.error}`
-                errorMap.set(tableRow.id, [...existingErrors, errorMsg])
-                
-                // Track field-level error
-                const key = `${tableRow.id}-${apiError.field}`
-                if (!fieldErrorMap.has(key)) {
-                  fieldErrorMap.set(key, new Set())
-                }
-                fieldErrorMap.get(key)!.add(apiError.error)
-              }
-            })
-          }
-          
-          setValidationErrors(errorMap)
-          setFieldErrors(fieldErrorMap)          
-          openNotification({
-            message: 'Import failed - Validation Errors',
-            description: `${errorCount} validation error(s) found. Please fix the errors in the table and try again.`,
-            type: 'error',
-          })
-        } else {
-          const errorMessage = error.message || 'An error occurred while uploading the file.'
-          
-          openNotification({
-            message: 'Import failed',
-            description: errorMessage,
-            type: 'error',
-          })
-        }
-      } finally {
-        setIsSubmitting(false)
+      const csvContent = convertRowsToCSV(rows)
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const file = new File([blob], 'well-inventory.csv', { type: 'text/csv' })
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const result = await provider.custom({
+        url: 'well-inventory-csv',
+        method: 'post',
+        payload: formData,
+        headers: {},
+      })
+
+      if (result?.data) {
+        setUploadResult(result.data as UploadResult)
       }
+
+      openNotification({
+        message: 'Upload successful',
+        description: 'The well inventory file has been imported successfully.',
+        type: 'success',
+      })
+    } catch (error) {
+      const fetchError = error as FetchValidationError & { data?: UploadResult }
+      
+      if (fetchError.status === 422 && fetchError.data && 'validation_errors' in fetchError.data) {
+        const apiErrors = fetchError.data
+        const errorCount = apiErrors.summary?.validation_errors_or_warnings ?? 0
+        
+        if (apiErrors.validation_errors) {
+          const [errorMap, fieldErrorMap] = mapApiErrors(apiErrors.validation_errors, rows)
+          setValidationErrors(errorMap)
+          setFieldErrors(fieldErrorMap)
+        }
+        
+        openNotification({
+          message: 'Import failed - Validation Errors',
+          description: `${errorCount} validation error(s) found. Please fix the errors in the table and try again.`,
+          type: 'error',
+        })
+      } else {
+        const message = fetchError.message || 'An error occurred while uploading the file.'
+        openNotification({
+          message: 'Import failed',
+          description: message,
+          type: 'error',
+        })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleReset = () => {
@@ -455,7 +401,11 @@ export const WellInventoryBulkImport: React.FC = () => {
                     columns={columns}
                     processRowUpdate={processRowUpdate}
                     onProcessRowUpdateError={(error) => {
-                      console.error('Row update error:', error)
+                      openNotification({
+                        message: 'Row update failed',
+                        description: error instanceof Error ? error.message : 'Failed to update row',
+                        type: 'error',
+                      })
                     }}
                     getRowClassName={(params) => {
                       return validationErrors.has(params.row.id) ? 'error-row' : ''
