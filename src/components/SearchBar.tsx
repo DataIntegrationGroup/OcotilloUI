@@ -32,7 +32,7 @@ export const SearchBar = () => {
   const debounced = useDebounce(query, 500)
   const [selected, setSelected] = useState(null)
 
-  const { data, isFetching } = useAbortableList({
+  const { data, isFetching, isError } = useAbortableList({
     resource: 'search',
     dataProviderName: 'ocotillo',
     pagination: {
@@ -55,16 +55,26 @@ export const SearchBar = () => {
       return []
     }
 
-    // Search has finished AND no results?
-    if (!isFetching && data?.data?.length === 0) {
-      return [
-        {
-          __empty: true,
-          label:
-            'No results found, please try a known ID, site name, or contact name',
-          group: 'Messages',
-        },
-      ]
+    if (!isFetching) {
+      if (isError) {
+        return [
+          {
+            __error: true,
+            label: 'Search failed. Please try again.',
+            group: 'Messages',
+          },
+        ]
+      }
+
+      if (!isError && data?.data?.length === 0) {
+        return [
+          {
+            __empty: true,
+            label: 'No results found. Try a well ID, site name, or contact.',
+            group: 'Messages',
+          },
+        ]
+      }
     }
 
     // Normal results
@@ -201,7 +211,7 @@ export const SearchBar = () => {
           </Collapse>
         )}
         renderOption={(props, option) => {
-          if (option.__empty) {
+          if (option.__empty || option.__error) {
             return (
               <li
                 style={{
@@ -215,8 +225,6 @@ export const SearchBar = () => {
               </li>
             )
           }
-
-          console.log({ option })
 
           return (
             <li {...props} key={option.label}>
