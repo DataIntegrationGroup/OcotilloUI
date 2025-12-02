@@ -56,7 +56,6 @@ describe('Location Edit Page', () => {
 
     // Check other fields
     cy.contains('label', 'Release Status').should('exist')
-    cy.contains('label', 'Notes').should('exist')
     cy.contains('label', 'WKT Point (Auto-generated)').should('exist')
 
     cy.get('button').contains(/save/i).should('exist')
@@ -80,11 +79,6 @@ describe('Location Edit Page', () => {
       .parent()
       .find('input')
       .should('have.value', '1.74')
-    cy.contains('label', 'Notes')
-      .parent()
-      .find('textarea')
-      .first()
-      .should('have.value', 'Existing test location')
   })
 
   it('should allow user to update only required fields and submit location', () => {
@@ -205,14 +199,6 @@ describe('Location Edit Page', () => {
       .find('[role="combobox"]')
       .click()
     cy.get('[role="listbox"] li').first().click()
-
-    // notes field
-    cy.contains('label', 'Notes')
-      .parent()
-      .find('textarea')
-      .first()
-      .clear()
-      .type('Updated test location for automated testing')
 
     cy.get('button').contains(/save/i).click()
 

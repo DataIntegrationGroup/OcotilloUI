@@ -59,7 +59,6 @@ describe('Location Create Page', () => {
 
     // Check other fields
     cy.contains('label', 'Release Status').should('exist')
-    cy.contains('label', 'Notes').should('exist')
     cy.contains('label', 'WKT Point (Auto-generated)').should('exist')
 
     // Come back to testing the map
@@ -144,13 +143,6 @@ describe('Location Create Page', () => {
       .find('[role="combobox"]')
       .click()
     cy.get('[role="listbox"] li').first().click()
-
-    // notes field
-    cy.contains('label', 'Notes')
-      .parent()
-      .find('textarea')
-      .first()
-      .type('Test location for automated testing')
 
     cy.get('button').contains(/save/i).click()
 

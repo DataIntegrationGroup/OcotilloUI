@@ -25,7 +25,11 @@ import {
   MenuItem,
 } from '@mui/material'
 import wellknown from 'wellknown'
-import { convertUTMToLonLat, convertLonLatToUTM } from '@/utils/UtmToLonLat'
+import {
+  convertUTMToLonLat,
+  convertLonLatToUTM,
+  Datum,
+} from '@/utils/UtmToLonLat'
 import { useElevation } from '@/hooks/useElevation'
 
 /**
@@ -66,7 +70,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
 
   //Local state for UTM zone/datum/easting/northing/lat/long since only point is sent to backend
   const [utmZone, setUtmZone] = useState(13)
-  const [utmDatum, setUtmDatum] = useState('NAD83')
+  const [utmDatum, setUtmDatum] = useState<Datum>('NAD83')
   const [latitude, setLatitude] = useState('')
   const [longitude, setLongitude] = useState('')
   const [easting, setEasting] = useState('')
@@ -144,18 +148,17 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
 
   //handle map click to set lat and long or easting and northing
   const handleMapClick = (e: any) => {
-    const { lng, lat } = e.lngLat
+    const { lng: lon, lat } = e.lngLat
     if (useUTM) {
-      const [easting, northing] = convertLonLatToUTM(
-        lng,
-        lat,
+      const { easting, northing } = convertLonLatToUTM(
+        { lon, lat },
         utmZone,
         utmDatum
       )
       setEasting(easting.toFixed(3))
       setNorthing(northing.toFixed(3))
     } else {
-      setLongitude(lng.toFixed(10))
+      setLongitude(lon.toFixed(10))
       setLatitude(lat.toFixed(10))
     }
   }
@@ -174,9 +177,8 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       setLatitude(lat.toFixed(10))
     } else if (!useUTM && latitude && longitude) {
       // Lat/Long to UTM
-      const [easting, northing] = convertLonLatToUTM(
-        Number(longitude),
-        Number(latitude),
+      const { easting, northing } = convertLonLatToUTM(
+        { lon: Number(longitude), lat: Number(latitude) },
         utmZone,
         utmDatum
       )
@@ -275,7 +277,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       <Grid size={{ xs: 12, md: 6 }}>
         <Select
           value={utmDatum}
-          onChange={(e) => setUtmDatum(e.target.value)}
+          onChange={(e) => setUtmDatum(e.target.value as Datum)}
           disabled={!useUTM}
           fullWidth
         >
@@ -449,16 +451,6 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
           name={getFieldName('release_status')}
           options={releaseStatusOptions}
           disabled={releaseStatusLoading}
-        />
-      </Grid>
-
-      <Grid size={12}>
-        <ControlledTextField
-          label="Notes"
-          control={control}
-          name={getFieldName('notes')}
-          multiline
-          minRows={3}
         />
       </Grid>
 

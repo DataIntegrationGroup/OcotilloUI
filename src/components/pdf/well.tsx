@@ -1,6 +1,6 @@
 import { IAddress, IContact, IWell } from '@/interfaces/ocotillo/IThing'
 import { BaseRecord } from '@refinedev/core'
-import { buildPdfFilename } from '@/utils'
+import { convertLonLatToUTM, parseWktPoint, buildPdfFilename } from '@/utils'
 import {
   Document,
   Page,
@@ -137,6 +137,15 @@ export const WellPDF = ({
     return { primaryContact: primary, secondaryContact: secondary }
   }, [contacts])
 
+  const coords = well?.current_location?.geometry?.coordinates as
+    | [number, number, number?]
+    | undefined
+
+  const [lon, lat, elevation] = coords ?? []
+
+  const { easting, northing } =
+    well?.current_location?.properties?.utm_coordinates
+
   return (
     <Document
       title={filename}
@@ -159,7 +168,7 @@ export const WellPDF = ({
             <View style={styles.cell3}>
               <LineItem
                 title="Easting/Northing"
-                value={`${well?.current_location?.properties?.utm_coordinates?.easting?.toFixed(0)}, ${well?.current_location?.properties?.utm_coordinates?.northing?.toFixed(0)}`}
+                value={`${easting?.toFixed(0)}, ${northing?.toFixed(0)}`}
               />
             </View>
             <View style={styles.cell3}>
@@ -173,8 +182,8 @@ export const WellPDF = ({
               <LineItem
                 title="Latitude/Longitude"
                 value={
-                  well?.current_location?.geometry?.coordinates
-                    ? `${well?.current_location?.geometry?.coordinates?.[0]?.toFixed(6)}, ${well?.current_location?.geometry?.coordinates?.[1]?.toFixed(6)}`
+                  well?.current_location?.geometry
+                    ? `${lat?.toFixed(6)}, ${lon?.toFixed(6)}`
                     : 'N/A'
                 }
               />
@@ -182,10 +191,7 @@ export const WellPDF = ({
             <View style={styles.cell3}>
               <LineItem
                 title="Elevation"
-                value={`${
-                  well?.current_location?.properties?.elevation?.toFixed(0) ||
-                  'N/A'
-                } ${
+                value={`${elevation?.toFixed(0) || 'N/A'} ${
                   well?.current_location?.properties?.elevation_unit
                     ? ` ${well?.current_location?.properties?.elevation_unit}`
                     : null
@@ -264,10 +270,6 @@ export const WellPDF = ({
           </View>
         </View>
         <View style={styles.section}>
-          <LineItem
-            title="Measurement Notes"
-            value={(well as unknown as any)?.measurement_notes}
-          />
           <View style={styles.twoByTwoGrid}>
             <View style={styles.cell3}>
               <LineItem
@@ -325,6 +327,16 @@ export const WellPDF = ({
             </View>
             <View style={styles.cell3}></View>
           </View>
+          <LineItem title="Water Notes" value={well?.water_notes?.content} />
+          <LineItem
+            title="Measuring Notes"
+            value={well?.measuring_notes?.content}
+          />
+          <LineItem title="Notes" value={well?.notes?.content} />
+          <LineItem
+            title="General Notes"
+            value={well?.general_notes?.content}
+          />
         </View>
         {assets.length === 0 && (
           <Text style={styles.pageNote}>

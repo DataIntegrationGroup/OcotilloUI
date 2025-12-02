@@ -24,6 +24,15 @@ export const CoreWellInfoCard = ({
     return <LoadingCard />
   }
 
+  const coords = well?.current_location?.geometry?.coordinates as
+    | [number, number, number?]
+    | undefined
+
+  const [lon, lat, elevation] = coords ?? []
+
+  const { easting, northing } =
+    well?.current_location?.properties?.utm_coordinates
+
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
       <CardHeader title={<Typography variant="h5">{well?.name}</Typography>} />
@@ -99,7 +108,7 @@ export const CoreWellInfoCard = ({
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Northing/Easting:</Typography>
             <Typography variant="body1">
-              {`${well?.current_location?.properties?.utm_coordinates?.easting?.toFixed(0) || 'N/A'}, ${well?.current_location?.properties?.utm_coordinates?.northing?.toFixed(0) || 'N/A'}`}
+              {`${easting?.toFixed(0) || 'N/A'}, ${northing?.toFixed(0) || 'N/A'}`}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -111,16 +120,15 @@ export const CoreWellInfoCard = ({
           <Grid size={{ xs: 12 }}>
             <Typography variant="h6">Latitude/Longitude:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.geometry?.coordinates
-                ? `${well?.current_location?.geometry?.coordinates?.[0]?.toFixed(6)}, ${well?.current_location?.geometry?.coordinates?.[1]?.toFixed(6)}`
+              {well?.current_location?.geometry
+                ? `${lat?.toFixed(6)}, ${lon?.toFixed(6)}`
                 : 'N/A'}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Elevation:</Typography>
             <Typography variant="body1">
-              {well?.current_location?.properties?.elevation?.toFixed(2) ||
-                'N/A'}
+              {elevation?.toFixed(2) || 'N/A'}
               {well?.current_location?.properties?.elevation_unit
                 ? ` ${well?.current_location?.properties?.elevation_unit}`
                 : null}

@@ -417,21 +417,28 @@ export type CreateLocation = {
     /**
      * Notes
      */
-    notes?: string | null;
+    notes?: Array<CreateNote>;
     /**
      * Elevation
      */
     elevation: number;
+};
+
+/**
+ * CreateNote
+ * Schema for creating a new Note. The parent object's ID and type will be
+ * taken from the URL path, not the request body.
+ */
+export type CreateNote = {
     /**
-     * Elevation Accuracy
+     * Note Type
      */
-    elevation_accuracy?: number | null;
-    elevation_method?: ElevationMethod | null;
+    note_type: string;
     /**
-     * Coordinate Accuracy
+     * Content
      */
-    coordinate_accuracy?: number | null;
-    coordinate_method?: CoordinateMethod | null;
+    content: string;
+    release_status?: ReleaseStatus;
 };
 
 /**
@@ -650,6 +657,11 @@ export type CreateWell = {
      * Well casing depth in feet
      */
     well_casing_depth?: number | null;
+    /**
+     * Measuring Point Height
+     * Measuring point height in feet
+     */
+    measuring_point_height: number;
     release_status?: ReleaseStatus;
     /**
      * Location Id
@@ -684,6 +696,14 @@ export type CreateWell = {
      * Well Casing Materials
      */
     well_casing_materials?: Array<CasingMaterial> | null;
+    /**
+     * Measuring Point Description
+     */
+    measuring_point_description: string | null;
+    /**
+     * Notes
+     */
+    notes?: Array<CreateNote> | null;
 };
 
 /**
@@ -799,7 +819,7 @@ export type Feature = {
      * Type
      */
     type?: string;
-    geometry: GeoJsonGeometry;
+    geometry: SchemasThingGeoJsonGeometry;
     /**
      * Properties
      */
@@ -871,18 +891,49 @@ export type FieldEventResponse = {
 };
 
 /**
- * GeoJSONGeometry
- * Geometry schema for GeoJSON response.
+ * GeoJSONProperties
  */
-export type GeoJsonGeometry = {
+export type GeoJsonProperties = {
     /**
-     * Type
+     * Elevation
      */
-    type: string;
+    elevation: number;
     /**
-     * Coordinates
+     * Elevation Unit
      */
-    coordinates: Array<number> | Array<Array<number>> | Array<Array<Array<number>>> | Array<Array<Array<Array<number>>>>;
+    elevation_unit?: string;
+    /**
+     * Vertical Datum
+     */
+    vertical_datum?: string;
+    elevation_method: ElevationMethod | null;
+    utm_coordinates?: GeoJsonutmCoordinates;
+    /**
+     * Notes
+     */
+    notes?: Array<NoteResponse>;
+};
+
+/**
+ * GeoJSONUTMCoordinates
+ */
+export type GeoJsonutmCoordinates = {
+    /**
+     * Easting
+     */
+    easting: number;
+    /**
+     * Northing
+     */
+    northing: number;
+    /**
+     * Utm Zone
+     */
+    utm_zone?: number;
+    /**
+     * Horizontal Datum
+     */
+    horizontal_datum?: string;
 };
 
 /**
@@ -950,13 +1001,14 @@ export type GroupResponse = {
      */
     name: string;
     /**
-     * Project Area
-     */
-    project_area: string | null;
-    /**
      * Description
      */
     description: string | null;
+    /**
+     * Project Area
+     */
+    project_area: string | null;
+    group_type: GroupType | null;
     /**
      * Parent Group Id
      */
@@ -1052,6 +1104,18 @@ export type LexiconTripleResponse = {
 };
 
 /**
+ * LocationGeoJSONResponse
+ */
+export type LocationGeoJsonResponse = {
+    /**
+     * Type
+     */
+    type?: string;
+    geometry: SchemasLocationGeoJsonGeometry;
+    properties: GeoJsonProperties;
+};
+
+/**
  * LocationResponse
  * Response schema for sample location details.
  */
@@ -1068,7 +1132,7 @@ export type LocationResponse = {
     /**
      * Notes
      */
-    notes: string | null;
+    notes?: Array<NoteResponse>;
     /**
      * Point
      */
@@ -1085,16 +1149,7 @@ export type LocationResponse = {
      * Vertical Datum
      */
     vertical_datum?: string;
-    /**
-     * Elevation Accuracy
-     */
-    elevation_accuracy: number | null;
     elevation_method: ElevationMethod | null;
-    /**
-     * Coordinate Accuracy
-     */
-    coordinate_accuracy: number | null;
-    coordinate_method: CoordinateMethod | null;
     /**
      * State
      */
@@ -1107,6 +1162,53 @@ export type LocationResponse = {
      * Quad Name
      */
     quad_name: string | null;
+};
+
+/**
+ * MonitoringFrequencyResponse
+ */
+export type MonitoringFrequencyResponse = {
+    monitoring_frequency: MonitoringFrequency;
+    /**
+     * Start Date
+     */
+    start_date: string;
+    /**
+     * End Date
+     */
+    end_date: string | null;
+};
+
+/**
+ * NoteResponse
+ * Response schema for Note details.
+ */
+export type NoteResponse = {
+    /**
+     * Note Type
+     */
+    note_type: string;
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Target Id
+     */
+    target_id: number;
+    /**
+     * Target Table
+     */
+    target_table: string;
 };
 
 /**
@@ -1968,11 +2070,31 @@ export type SpringResponse = {
      * Thing Type
      */
     thing_type: string;
-    current_location: LocationResponse | null;
+    current_location: LocationGeoJsonResponse;
     /**
      * First Visit Date
      */
     first_visit_date: string | null;
+    /**
+     * Notes
+     */
+    notes?: Array<NoteResponse>;
+    /**
+     * Groups
+     */
+    groups?: Array<GroupResponse>;
+    /**
+     * Monitoring Status
+     */
+    monitoring_status: string | null;
+    /**
+     * Alternate Ids
+     */
+    alternate_ids?: Array<ThingIdLinkResponse>;
+    /**
+     * Monitoring Frequencies
+     */
+    monitoring_frequencies?: Array<MonitoringFrequencyResponse>;
     /**
      * Spring Type
      */
@@ -1996,7 +2118,6 @@ export type ThingIdLinkResponse = {
      * Thing Id
      */
     thing_id: number;
-    thing: ThingResponse;
     /**
      * Relation
      */
@@ -2005,10 +2126,7 @@ export type ThingIdLinkResponse = {
      * Alternate Id
      */
     alternate_id: string;
-    /**
-     * Alternate Organization
-     */
-    alternate_organization: string;
+    alternate_organization: Organization;
 };
 
 /**
@@ -2032,11 +2150,31 @@ export type ThingResponse = {
      * Thing Type
      */
     thing_type: string;
-    current_location: LocationResponse | null;
+    current_location: LocationGeoJsonResponse;
     /**
      * First Visit Date
      */
     first_visit_date: string | null;
+    /**
+     * Notes
+     */
+    notes?: Array<NoteResponse>;
+    /**
+     * Groups
+     */
+    groups?: Array<GroupResponse>;
+    /**
+     * Monitoring Status
+     */
+    monitoring_status: string | null;
+    /**
+     * Alternate Ids
+     */
+    alternate_ids?: Array<ThingIdLinkResponse>;
+    /**
+     * Monitoring Frequencies
+     */
+    monitoring_frequencies?: Array<MonitoringFrequencyResponse>;
     /**
      * Spring Type
      */
@@ -2053,6 +2191,10 @@ export type ThingResponse = {
      * Well Depth Unit
      */
     well_depth_unit?: string;
+    /**
+     * Well Depth Source
+     */
+    well_depth_source: string | null;
     /**
      * Hole Depth
      */
@@ -2085,6 +2227,34 @@ export type ThingResponse = {
      * Well Construction Notes
      */
     well_construction_notes?: string | null;
+    /**
+     * Well Status
+     */
+    well_status: string | null;
+    /**
+     * Measuring Point Height
+     */
+    measuring_point_height: number | null;
+    /**
+     * Measuring Point Height Unit
+     */
+    measuring_point_height_unit?: string;
+    /**
+     * Measuring Point Description
+     */
+    measuring_point_description: string | null;
+    /**
+     * Water Notes
+     */
+    water_notes?: Array<NoteResponse> | null;
+    /**
+     * Measuring Notes
+     */
+    measuring_notes?: Array<NoteResponse> | null;
+    /**
+     * General Notes
+     */
+    general_notes?: Array<NoteResponse> | null;
 };
 
 /**
@@ -2354,7 +2524,7 @@ export type UpdateLexiconTriple = {
 
 /**
  * UpdateLocation
- * Schema for updating a location.
+ * Schema for updating a location. Notes are managed via the polymorphic Notes table.
  */
 export type UpdateLocation = {
     /**
@@ -2365,7 +2535,7 @@ export type UpdateLocation = {
     /**
      * Notes
      */
-    notes?: string | null;
+    notes?: Array<UpdateNote>;
     /**
      * Elevation
      */
@@ -2380,6 +2550,22 @@ export type UpdateLocation = {
      */
     coordinate_accuracy?: number | null;
     coordinate_method?: CoordinateMethod | null;
+};
+
+/**
+ * UpdateNote
+ * Schema for updating an existing Note. All fields are optional
+ */
+export type UpdateNote = {
+    release_status?: ReleaseStatus | null;
+    /**
+     * Note Type
+     */
+    note_type?: string | null;
+    /**
+     * Content
+     */
+    content?: string | null;
 };
 
 /**
@@ -2555,6 +2741,10 @@ export type UpdateWell = {
      * Well Casing Depth
      */
     well_casing_depth?: number | null;
+    /**
+     * Measuring Point Height
+     */
+    measuring_point_height?: number | null;
     release_status?: ReleaseStatus | null;
     /**
      * Name
@@ -2678,11 +2868,31 @@ export type WellResponse = {
      * Thing Type
      */
     thing_type: string;
-    current_location: LocationResponse | null;
+    current_location: LocationGeoJsonResponse;
     /**
      * First Visit Date
      */
     first_visit_date: string | null;
+    /**
+     * Notes
+     */
+    notes?: Array<NoteResponse>;
+    /**
+     * Groups
+     */
+    groups?: Array<GroupResponse>;
+    /**
+     * Monitoring Status
+     */
+    monitoring_status: string | null;
+    /**
+     * Alternate Ids
+     */
+    alternate_ids?: Array<ThingIdLinkResponse>;
+    /**
+     * Monitoring Frequencies
+     */
+    monitoring_frequencies?: Array<MonitoringFrequencyResponse>;
     /**
      * Well Purposes
      */
@@ -2695,6 +2905,10 @@ export type WellResponse = {
      * Well Depth Unit
      */
     well_depth_unit?: string;
+    /**
+     * Well Depth Source
+     */
+    well_depth_source: string | null;
     /**
      * Hole Depth
      */
@@ -2727,6 +2941,34 @@ export type WellResponse = {
      * Well Construction Notes
      */
     well_construction_notes?: string | null;
+    /**
+     * Well Status
+     */
+    well_status: string | null;
+    /**
+     * Measuring Point Height
+     */
+    measuring_point_height: number;
+    /**
+     * Measuring Point Height Unit
+     */
+    measuring_point_height_unit?: string;
+    /**
+     * Measuring Point Description
+     */
+    measuring_point_description: string | null;
+    /**
+     * Water Notes
+     */
+    water_notes?: Array<NoteResponse> | null;
+    /**
+     * Measuring Notes
+     */
+    measuring_notes?: Array<NoteResponse> | null;
+    /**
+     * General Notes
+     */
+    general_notes?: Array<NoteResponse> | null;
 };
 
 /**
@@ -2810,6 +3052,21 @@ export type ElevationMethod = 'Altimeter' | 'Differentially corrected GPS' | 'Su
 export type EmailType = 'Primary' | 'Work' | 'Personal';
 
 /**
+ * group_type
+ */
+export type GroupType = 'Monitoring Plan' | 'Geographic Area' | 'Historical';
+
+/**
+ * monitoring_frequency
+ */
+export type MonitoringFrequency = 'Monthly' | 'Bimonthly' | 'Bimonthly reported' | 'Quarterly' | 'Biannual' | 'Annual' | 'Decadal' | 'Event-based';
+
+/**
+ * organization
+ */
+export type Organization = 'Unknown' | 'NMSU' | 'USGS' | 'TWDB' | 'NMED' | 'NMOSE' | 'NMBGMR' | 'Bernalillo County' | 'BLM' | 'BLM Taos Office' | 'SFC' | 'SFC, Fire Facilities' | 'SFC, Utilities Dept.' | 'SFC, Valle Vista Water Utility, Inc.' | 'City of Santa Fe' | 'City of Santa Fe WWTP' | 'City of Santa Fe, Municipal Recreation Complex' | 'City of Santa Fe, Sangre de Cristo Water Co.' | 'NMISC' | 'PVACD' | 'Bayard' | 'SNL' | 'USFS' | 'NMT' | 'NPS' | 'NMRWA' | 'NMDOT' | 'Taos SWCD' | 'Otero SWCD' | 'Northeastern SWCD' | 'CDWR' | 'Pendaries Village' | 'A&T Pump & Well Service, LLC' | 'A. G. Wassenaar, Inc' | 'AMEC' | 'Balleau Groundwater, Inc' | 'CDM Smith' | 'CH2M Hill' | 'Corbin Consulting, Inc' | 'Chevron' | 'Daniel B. Stephens & Associates, Inc' | 'EnecoTech' | 'Faith Engineering, Inc' | 'Foster Well Service, Inc' | 'Glorieta Geoscience, Inc' | 'Golder Associates, Inc' | "Hathorn's Well Service, Inc" | 'Hydroscience Associates, Inc' | 'IC Tech, Inc' | 'John Shomaker & Associates, Inc' | 'Kuckleman Pump Service' | 'Los Golondrinas' | 'Minton Engineers' | 'MJDarrconsult, Inc' | 'Puerta del Canon Ranch' | 'Rodgers & Company, Inc' | 'San Pedro Creek Estates HOA' | 'Statewide Drilling, Inc' | 'Tec Drilling Limited' | 'Tetra Tech, Inc' | 'Thompson Drilling, Inc' | 'Witcher & Associates' | 'Zeigler Geologic Consulting, LLC' | 'Sandia Well Service, Inc' | 'San Marcos Association' | 'URS' | 'Vista del Oro' | 'Abeyta Engineering, Inc' | 'Adobe Ranch' | 'Agua Fria Community Water Association' | 'Apache Gap Ranch' | 'Aspendale Mountain Retreat' | 'Augustin Plains Ranch LLC' | 'B & B Cattle Co' | 'Berridge Distributing Company' | "Bishop's Lodge" | 'Bonanza Creek Ranch' | 'Bug Scuffle Water Association' | 'Wehinahpay Mountain Camp' | 'Campbell Ranch' | 'Capitol Ford Santa Fe' | 'Cemex, Inc' | 'Cerro Community Center' | 'Santa Fe Jewish Center' | 'Chupadero MDWCA' | 'Cielo Lumbre HOA' | 'Circle Cross Ranch' | 'City of Alamogordo' | 'City of Portales, Public Works Dept.' | 'City of Socorro' | 'Commonwealth Conservancy' | 'Country Club Garden Mobile Home Park' | 'Crossroads Cattle Co., Ltd' | 'Double H Ranch' | 'E.A. Meadows East' | 'El Camino Realty, Inc' | 'Eldorado Area Water & Sanitation District' | 'Bourbon Grill at El Gancho' | 'El Prado HOA' | 'El Rancho de las Golondrinas' | 'El Rito Canyon MDWCA' | 'Encantado Enterprises' | 'Estrella Concepts LLC' | 'Farr Cattle Company' | 'Sixteen Springs Fire Department' | 'Fire Water Lodge' | 'Ford County Land & Cattle Company, Inc' | 'Friendly Construction, Inc' | 'Hacienda Del Cerezo' | 'Hefker Vega Ranch' | 'High Nogal Ranch' | 'Holloman Air Force Base' | 'Hyde Park Estates MDWCA' | 'Desert Village RV & Mobile Home Park' | 'K. Schmitt Trust' | 'La Cienega MDWCA' | 'La Vista HOA' | 'Lamy MDWCA' | 'Land Ventures LLC' | 'Las Lagunitas' | 'Las Lagunitas HOA' | 'Living World Ministries' | 'Los Atrevidos, Inc' | 'Los Prados HOA' | 'Malaga MDWCA & SWA' | 'Mangas Outfitters' | 'Medina Gravel Pit' | 'Mendenhall Trading Co' | 'Mesa Verde Ranch' | 'NMDGF' | 'NMSU College of Agriculture' | 'Naiche Development' | 'NRAO' | 'NMSA' | 'Nogal MDWCA' | 'O Bar O Ranch' | 'OMI Wastewater Treatment Plant' | 'Old Road Ranch Pardners Ltd' | 'PNM Service Center' | 'Peace Tabernacle Church' | 'Pecos Trail Inn' | 'Pelican Spa' | 'Pistachio Tree Ranch' | 'Rancho Encantado' | 'Rancho San Lucas' | 'Rancho San Marcos' | 'Rancho Viejo Partnership' | 'Ranney Ranch' | 'Rio En Medio MDWCA' | 'San Acacia MDWCA' | 'San Juan Residences' | 'Sangre de Cristo Center' | 'Sangre de Cristo Estates' | 'Santa Fe Community College' | 'Santa Fe County, Fire Facilities' | 'Santa Fe County, Utilities Dept.' | 'Valle Vista Water Utility' | 'Santa Fe County, Valle Vista Water Utility, Inc.' | 'Santa Fe Downs' | 'Santa Fe Horse Park' | 'Santa Fe Opera' | 'Santa Fe Waldorf School' | 'Shidoni Foundry and Gallery' | 'Sierra Grande Lodge' | 'Sierra Vista Retirement Community' | 'Slash Triangle Ranch' | 'Stagecoach Motel' | 'State of New Mexico' | 'Stephenson Ranch' | 'Sun Broadcasting Network' | 'Tano Rd LLC' | 'UNM-Taos' | 'Tee Pee Ranch/Tee Pee Subdivision' | 'Tent Rock, Inc' | 'Tesuque MDWCA' | 'The Great Cloud Zen Center' | 'Three Rivers Ranch' | 'Timberon Water and Sanitation District' | 'Town of Magdalena' | 'Town of Taos' | 'Town of Taos, National Guard Armory' | 'Trinity Ranch' | 'Tularosa Basin National Desalination Research Facility' | 'Turquoise Trail Charter School' | 'US Bureau of Indian Affairs, Santa Fe Indian School' | 'USFS, Carson NF, Taos Office' | 'USFS, Cibola NF, Magdalena Ranger District' | 'USFS, Santa Fe NF, Espanola Ranger District' | 'Ute Mountain Farms' | 'VA Hospital' | 'Velte' | 'Vereda Serena Property' | 'Village of Corona' | 'Village of Floyd' | 'Village of Melrose' | 'Village of Vaughn' | 'Vista Land Company' | 'Vista Redonda MDWCA' | 'Vista de Oro de Placitas Water Users Coop' | 'Walker Ranch' | 'Wild & Woolley Trailer Ranch' | 'Winter Brothers' | 'Yates Petroleum Corporation' | 'Zamora Accounting Services' | 'PLSS';
+
+/**
  * parameter_name
  */
 export type ParameterName = 'groundwater level' | 'temperature' | 'pH' | 'Alkalinity, Total' | 'Alkalinity as CaCO3' | 'Alkalinity as OH-' | 'Calcium' | 'Calcium, total, unfiltered' | 'Chloride' | 'Carbonate' | 'Conductivity, laboratory' | 'Bicarbonate' | 'Hardness (CaCO3)' | 'Ion Balance' | 'Potassium' | 'Potassium, total, unfiltered' | 'Magnesium' | 'Magnesium, total, unfiltered' | 'Sodium' | 'Sodium, total, unfiltered' | 'Sodium and Potassium combined' | 'Sulfate' | 'Total Anions' | 'Total Cations' | 'Total Dissolved Solids' | 'Tritium' | 'Age of Water using dissolved gases' | 'Silver' | 'Silver, total, unfiltered' | 'Aluminum' | 'Aluminum, total, unfiltered' | 'Arsenic' | 'Arsenic, total, unfiltered' | 'Boron' | 'Boron, total, unfiltered' | 'Barium' | 'Barium, total, unfiltered' | 'Beryllium' | 'Beryllium, total, unfiltered' | 'Bromide' | '13C:12C ratio' | '14C content, pmc' | 'Uncorrected C14 age' | 'Cadmium' | 'Cadmium, total, unfiltered' | 'Chlorofluorocarbon-11 avg age' | 'Chlorofluorocarbon-113 avg age' | 'Chlorofluorocarbon-113/12 avg RATIO age' | 'Chlorofluorocarbon-12 avg age' | 'Cobalt' | 'Cobalt, total, unfiltered' | 'Chromium' | 'Chromium, total, unfiltered' | 'Copper' | 'Copper, total, unfiltered' | 'delta O18 sulfate' | 'Sulfate 34 isotope ratio' | 'Fluoride' | 'Iron' | 'Iron, total, unfiltered' | 'Deuterium:Hydrogen ratio' | 'Mercury' | 'Mercury, total, unfiltered' | 'Lithium' | 'Lithium, total, unfiltered' | 'Manganese' | 'Manganese, total, unfiltered' | 'Molybdenum' | 'Molybdenum, total, unfiltered' | 'Nickel' | 'Nickel, total, unfiltered' | 'Nitrite (as NO2)' | 'Nitrite (as N)' | 'Nitrate (as NO3)' | 'Nitrate (as N)' | '18O:16O ratio' | 'Lead' | 'Lead, total, unfiltered' | 'Phosphate' | 'Antimony' | 'Antimony, total, unfiltered' | 'Selenium' | 'Selenium, total, unfiltered' | 'Sulfur hexafluoride' | 'Silicon' | 'Silicon, total, unfiltered' | 'Silica' | 'Tin' | 'Tin, total, unfiltered' | 'Strontium' | 'Strontium, total, unfiltered' | 'Strontium 87:86 ratio' | 'Thorium' | 'Thorium, total, unfiltered' | 'Titanium' | 'Titanium, total, unfiltered' | 'Thallium' | 'Thallium, total, unfiltered' | 'Uranium (total, by ICP-MS)' | 'Uranium, total, unfiltered' | 'Vanadium' | 'Vanadium, total, unfiltered' | 'Zinc' | 'Zinc, total, unfiltered' | 'Corrected C14 in years' | 'Arsenite (arsenic species)' | 'Arsenate (arsenic species)' | 'Cyanide' | 'Estimated recharge temperature' | 'Hydrogen sulfide' | 'Ammonia' | 'Ammonium' | 'Total nitrogen' | 'Total Kjeldahl nitrogen' | 'Dissolved organic carbon' | 'Total organic carbon' | 'delta C13 of dissolved inorganic carbon';
@@ -2847,7 +3104,7 @@ export type ReviewStatus = 'approved' | 'not reviewed';
 /**
  * role
  */
-export type Role = 'Unknown' | 'Owner' | 'Manager' | 'Operator' | 'Driller' | 'Geologist' | 'Hydrologist' | 'Hydrogeologist' | 'Engineer' | 'Organization' | 'Specialist' | 'Technician' | 'Research Assistant' | 'Research Scientist' | 'Graduate Student' | 'Biologist' | 'Lab Manager' | 'Publications Manager' | 'Software Developer';
+export type Role = 'Unknown' | 'Principal Investigator' | 'Owner' | 'Manager' | 'Operator' | 'Driller' | 'Geologist' | 'Hydrologist' | 'Hydrogeologist' | 'Engineer' | 'Organization' | 'Specialist' | 'Technician' | 'Research Assistant' | 'Research Scientist' | 'Graduate Student' | 'Biologist' | 'Lab Manager' | 'Publications Manager' | 'Software Developer';
 
 /**
  * sample_matrix
@@ -2858,6 +3115,40 @@ export type SampleMatrix = 'water' | 'groundwater' | 'soil';
  * sample_method
  */
 export type SampleMethod = 'Unknown' | 'Airline measurement' | 'Analog or graphic recorder' | 'Calibrated airline measurement' | 'Differential GPS; especially applicable to surface expression of ground water' | 'Estimated' | 'Transducer' | 'Pressure-gage measurement' | 'Calibrated pressure-gage measurement' | 'Interpreted from geophysical logs' | 'Manometer' | 'Non-recording gage' | 'Observed (required for F, N, and W water level status)' | 'Sonic water level meter (acoustic pulse)' | 'Reported, method not known' | 'Steel-tape measurement' | 'Electric tape measurement (E-probe)' | 'Unknown (for legacy data only; not for new data entry)' | 'Calibrated electric tape; accuracy of equipment has been checked' | 'Calibrated electric cable' | 'Uncalibrated electric cable' | 'Continuous acoustic sounder' | 'Measurement not attempted' | 'null placeholder' | 'bailer' | 'faucet at well head' | 'faucet or outlet at house' | 'grab sample' | 'pump' | 'thief sampler';
+
+/**
+ * GeoJSONGeometry
+ */
+export type SchemasLocationGeoJsonGeometry = {
+    /**
+     * Type
+     */
+    type?: string;
+    /**
+     * Coordinates
+     * Coordinates in [longitude, latitude, elevation] format
+     */
+    coordinates: [
+        unknown,
+        unknown,
+        unknown
+    ];
+};
+
+/**
+ * GeoJSONGeometry
+ * Geometry schema for GeoJSON response.
+ */
+export type SchemasThingGeoJsonGeometry = {
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Coordinates
+     */
+    coordinates: Array<number> | Array<Array<number>> | Array<Array<Array<number>>> | Array<Array<Array<Array<number>>>>;
+};
 
 /**
  * screen_type
@@ -2877,7 +3168,7 @@ export type SpringType = 'Artesian' | 'Ephemeral' | 'Perennial' | 'Thermal' | 'M
 /**
  * unit
  */
-export type Unit = 'dimensionless' | 'ft' | 'ftbgs' | 'F' | 'mg/L' | 'mW/m²' | 'W/m²' | 'W/m·K' | 'm²/s' | 'deg C' | 'deg second' | 'deg minute' | 'second' | 'minute' | 'hour';
+export type Unit = 'dimensionless' | 'ft' | 'ftbgs' | 'F' | 'mg/L' | 'mW/m²' | 'W/m²' | 'W/m·K' | 'm²/s' | 'deg C' | 'deg second' | 'deg minute' | 'second' | 'minute' | 'hour' | 'm';
 
 /**
  * well_purpose
@@ -5605,6 +5896,10 @@ export type SearchApiSearchGetData = {
          */
         q: string;
         /**
+         * Size
+         */
+        size?: number;
+        /**
          * Limit
          */
         limit?: number;
@@ -5613,10 +5908,6 @@ export type SearchApiSearchGetData = {
          * Page number
          */
         page?: number;
-        /**
-         * Size
-         */
-        size?: number;
     };
     url: '/search';
 };

@@ -1,22 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import {
-  zWellResponse,
-  zCreateWell,
-  zUpdateWell
-} from '@/generated/zod.gen'
-import {
-  WellResponse,
-  CreateWell,
-  UpdateWell
-} from '@/generated/types.gen'
+import { zWellResponse, zCreateWell, zUpdateWell } from '@/generated/zod.gen'
+import { WellResponse, CreateWell, UpdateWell } from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Water Well', () => {
-
   it('should fetch water wells using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'thing/water-well',
-      pagination: { current: 1, pageSize: 10 }
+      pagination: { current: 1, pageSize: 10 },
     })
 
     expect(result).toHaveProperty('data')
@@ -33,7 +24,9 @@ describe('Ocotillo Integration Tests: Water Well', () => {
       } catch (error) {
         console.error('Schema validation failed:', error.message)
         console.error('Water well data:', JSON.stringify(well, null, 2))
-        throw new Error(`API response doesn't match IWaterWell interface: ${error.message}`)
+        throw new Error(
+          `API response doesn't match IWaterWell interface: ${error.message}`
+        )
       }
     }
   })
@@ -42,7 +35,7 @@ describe('Ocotillo Integration Tests: Water Well', () => {
     const result = await ocotilloDataProvider.getOne({
       resource: 'thing/water-well',
       id: 1,
-      meta: {}
+      meta: {},
     })
 
     expect(result).toHaveProperty('data')
@@ -56,7 +49,9 @@ describe('Ocotillo Integration Tests: Water Well', () => {
     } catch (error) {
       console.error('Schema validation failed:', error.message)
       console.error('Water well data:', JSON.stringify(well, null, 2))
-      throw new Error(`API response doesn't match IWell interface: ${error.message}`)
+      throw new Error(
+        `API response doesn't match IWell interface: ${error.message}`
+      )
     }
   })
 
@@ -68,6 +63,8 @@ describe('Ocotillo Integration Tests: Water Well', () => {
       location_id: 1,
       well_depth: 10,
       hole_depth: 10,
+      measuring_point_height: 10,
+      measuring_point_description: 'Test Measuring Point Description',
       well_purpose: 'monitoring',
       well_construction_notes: 'Test construction notes',
       group_id: 1,
@@ -75,7 +72,7 @@ describe('Ocotillo Integration Tests: Water Well', () => {
 
     const result = await ocotilloDataProvider.create({
       resource: 'thing/water-well',
-      variables: createData
+      variables: createData,
     })
 
     expect(result).toHaveProperty('data')
@@ -89,7 +86,9 @@ describe('Ocotillo Integration Tests: Water Well', () => {
     } catch (error) {
       console.error('Schema validation failed:', error.message)
       console.error('Water well data:', JSON.stringify(well, null, 2))
-      throw new Error(`API response doesn't match IWell interface: ${error.message}`)
+      throw new Error(
+        `API response doesn't match IWell interface: ${error.message}`
+      )
     }
   })
 
@@ -101,13 +100,13 @@ describe('Ocotillo Integration Tests: Water Well', () => {
       well_depth: 10,
       hole_depth: 10,
       well_purpose: 'monitoring',
-      well_construction_notes: 'Updated test construction notes'
+      well_construction_notes: 'Updated test construction notes',
     })
 
     const result = await ocotilloDataProvider.update({
       resource: 'thing/water-well',
       id: 1,
-      variables: updateData
+      variables: updateData,
     })
 
     expect(result).toHaveProperty('data')
@@ -121,7 +120,9 @@ describe('Ocotillo Integration Tests: Water Well', () => {
     } catch (error) {
       console.error('Schema validation failed:', error.message)
       console.error('Water well data:', JSON.stringify(well, null, 2))
-      throw new Error(`API response doesn't match IWell interface: ${error.message}`)
+      throw new Error(
+        `API response doesn't match IWell interface: ${error.message}`
+      )
     }
   })
 })

@@ -48,9 +48,10 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
   })
 
   const { dataGridProps: deploymentsDataGridProps } = useDataGrid({
-    resource: `thing/${id}/deployment`,
+    resource: id ? `thing/${id}/deployment` : undefined,
     dataProviderName: 'ocotillo',
     queryOptions: {
+      enabled: Boolean(id),
       cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },

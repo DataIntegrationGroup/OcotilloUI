@@ -66,7 +66,17 @@ describe('Ocotillo Integration Tests: Location', () => {
     const testData: CreateLocation = zCreateLocation.parse({
       point: 'POINT(-106.904192 34.068279)',
       elevation: 5000,
-      notes: 'Test notes',
+      notes: [
+        {
+          note_type: 'type',
+          content: 'Test notes',
+          id: 1,
+          created_at: 'date',
+          release_status: 'public',
+          target_id: 1,
+          target_table: 'Location',
+        },
+      ],
       release_status: 'public',
       coordinate_method: 'GPS, uncorrected',
       elevation_method: 'Interpolated from digital elevation model (DEM)',
@@ -112,7 +122,17 @@ describe('Ocotillo Integration Tests: Location', () => {
       id: 1,
       point: 'POINT(-106.904192 34.068279)',
       elevation: 6000,
-      notes: 'Updated notes',
+      notes: [
+        {
+          note_type: 'type',
+          content: 'Test notes',
+          id: 1,
+          created_at: 'date',
+          release_status: 'public',
+          target_id: 1,
+          target_table: 'Location',
+        },
+      ],
       release_status: 'private',
       coordinate_method: 'GPS, uncorrected',
       elevation_method: 'Interpolated from digital elevation model (DEM)',
