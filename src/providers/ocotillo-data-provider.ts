@@ -236,7 +236,7 @@ export const ocotilloDataProvider: DataProvider = {
       return { data: response.data }
     } catch (error: any) {
       /**
-       * TODO: Add better error handling for bulk import based on API Pydantic validation errors
+       * 422 Error handling for bulk well inventory import based on API Pydantic validation errors
        */
       if (error.response?.status === 422 && error.response?.data?.validation_errors) {
         const transformedError = new Error('Validation errors occurred during import')
