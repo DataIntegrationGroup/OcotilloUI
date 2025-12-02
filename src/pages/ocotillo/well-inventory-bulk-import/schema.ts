@@ -1,36 +1,7 @@
 import { z } from 'zod'
-
-const optionalNumber = z.preprocess(
-  (val) => {
-    if (val === '' || val === null || val === undefined) return undefined
-    const num = Number(val)
-    return isNaN(num) ? undefined : num
-  },
-  z.number().optional()
-)
-
-const optionalString = z.string().optional().or(z.literal(''))
-
-// Required number field (rejects empty strings)
-const requiredNumber = (message: string) =>
-  z.preprocess(
-    (val) => {
-      if (val === '' || val === null || val === undefined) return NaN
-      return val
-    },
-    z.coerce.number().refine((val) => !isNaN(val), { message })
-  )
-
-// Optional boolean field (allows empty strings)
-const optionalBoolean = z.preprocess(
-  (val) => {
-    if (val === '' || val === null || val === undefined) return undefined
-    if (typeof val === 'boolean') return val
-    const str = String(val).toLowerCase()
-    return str === 'true' || str === '1' || str === 'yes'
-  },
-  z.boolean().optional()
-)
+import { optionalNumber } from '@/utils/zod/optionalNumber'
+import { requiredNumber } from '@/utils/zod/requiredNumber'
+import { optionalBoolean } from '@/utils/zod/optionalBoolean'
 
 export const wellInventoryRowSchema = z.object({
   // Required fields
