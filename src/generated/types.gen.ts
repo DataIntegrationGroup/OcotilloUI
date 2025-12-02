@@ -5896,6 +5896,10 @@ export type SearchApiSearchGetData = {
          */
         q: string;
         /**
+         * Size
+         */
+        size?: number;
+        /**
          * Limit
          */
         limit?: number;
@@ -5904,10 +5908,6 @@ export type SearchApiSearchGetData = {
          * Page number
          */
         page?: number;
-        /**
-         * Size
-         */
-        size?: number;
     };
     url: '/search';
 };
