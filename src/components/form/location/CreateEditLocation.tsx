@@ -456,16 +456,6 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
 
       <Grid size={12}>
         <ControlledTextField
-          label="Notes"
-          control={control}
-          name={getFieldName('notes')}
-          multiline
-          minRows={3}
-        />
-      </Grid>
-
-      <Grid size={12}>
-        <ControlledTextField
           label="WKT Point (Auto-generated)"
           control={control}
           name={getFieldName('point')}
