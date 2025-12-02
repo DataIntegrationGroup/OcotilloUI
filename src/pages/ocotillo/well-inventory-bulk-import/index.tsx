@@ -87,7 +87,7 @@ export const WellInventoryBulkImport: React.FC = () => {
 
     //parse the file
     try {
-      const parsedRows = await parseCSV<WellInventoryRow>(file, allFieldNames)
+      const parsedRows: Awaited<WellInventoryRow[]> = await parseCSV<WellInventoryRow>(file, allFieldNames)
       const newRows: TableRow[] = parsedRows.map((row, index) => ({
         ...row,
         id: Date.now() + index,
