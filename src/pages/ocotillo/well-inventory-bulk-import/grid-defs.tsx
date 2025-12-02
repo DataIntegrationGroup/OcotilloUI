@@ -4,15 +4,6 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import { allFieldNames, requiredFields, numericFields, booleanFields } from './utils'
 import type { TableRow } from './index'
 
-// Helper to convert field name to display name
-// Converts snake_case to Title Case (e.g., "well_name_point_id" -> "Well Name Point Id")
-const getDisplayName = (fieldName: string): string => {
-  return fieldName
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-}
-
 export function createGridColumns(
   getCellError: (rowId: number, fieldName: string) => boolean,
   handleDeleteRow: (id: number) => void
@@ -25,7 +16,7 @@ export function createGridColumns(
 
     const baseColumn: GridColDef<TableRow> = {
       field: fieldName,
-      headerName: getDisplayName(fieldName),
+      headerName: fieldName,
       width: 150,
       editable: true,
       cellClassName: (params) => {
