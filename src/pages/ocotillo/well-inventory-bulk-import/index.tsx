@@ -72,9 +72,20 @@ export const WellInventoryBulkImport: React.FC = () => {
   }, [])
 
   const handleCSVImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    //If multiple file upload is attempted (should not be possible), notify the user
+    if (event.target.files?.length && event.target.files.length > 1) {
+      openNotification({
+        message: 'Only one file can be uploaded at a time',
+        description: 'Please upload only one file at a time.',
+        type: 'error',
+      })
+      return
+    }
+    //get file
     const file = event.target.files?.[0]
     if (!file) return
 
+    //parse the file
     try {
       const parsedRows = await parseCSV<WellInventoryRow>(file, allFieldNames)
       const newRows: TableRow[] = parsedRows.map((row, index) => ({
@@ -308,6 +319,7 @@ export const WellInventoryBulkImport: React.FC = () => {
                   id="csv-input"
                   type="file"
                   accept=".csv"
+                  multiple={false}
                   style={{ display: 'none' }}
                   onChange={handleCSVImport}
                 />
