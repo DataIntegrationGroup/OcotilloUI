@@ -1,0 +1,2 @@
+project,well_name_point_id,site_name,date_time,field_staff,utm_easting,utm_northing,utm_zone,elevation_ft,elevation_method,measuring_point_height_ft,measuring_point_description
+Test Project_2,WELL-002,SITE-001,2024-01-15 10:30:00,John Smith,352342,4040485,13N,5500.5,Survey-grade GPS,2.5,Top of casing
