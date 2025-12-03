@@ -31,7 +31,7 @@ export const CoreWellInfoCard = ({
   const [lon, lat, elevation] = coords ?? []
 
   const { easting, northing } =
-    well?.current_location?.properties?.utm_coordinates
+    well?.current_location?.properties?.utm_coordinates ?? { easting: null, northing: null }
 
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
@@ -106,7 +106,7 @@ export const CoreWellInfoCard = ({
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Northing/Easting:</Typography>
+            <Typography variant="h6">Easting/Northing:</Typography>
             <Typography variant="body1">
               {`${easting?.toFixed(0) || 'N/A'}, ${northing?.toFixed(0) || 'N/A'}`}
             </Typography>
