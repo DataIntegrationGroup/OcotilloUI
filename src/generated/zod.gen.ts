@@ -233,7 +233,15 @@ export const zGeoJsonProperties = z.object({
         z.null()
     ]),
     utm_coordinates: z.optional(zGeoJsonutmCoordinates),
-    notes: z.optional(z.array(zNoteResponse)).default([])
+    notes: z.optional(z.array(zNoteResponse)).default([]),
+    nma_date_created: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    nma_site_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ]))
 });
 
 /**
@@ -287,6 +295,81 @@ export const zGroupResponse = z.object({
  */
 export const zOrganization = z.enum([
     'Unknown',
+    'City of Aztec',
+    'Daybreak Investments',
+    'Vallecitos HOA',
+    'Naiche Development',
+    'Santa Fe County; Santa Fe Animal Shelter',
+    'El Guicu Ditch Association',
+    'Santa Fe Municipal Airport',
+    'Uluru Development',
+    "AllSup's Convenience Stores",
+    'Santa Fe Downs',
+    'City of Truth or Consequences, WWTP',
+    'Riverbend Hotsprings',
+    'Armendaris Ranch',
+    'El Paso Water',
+    'BLM, Socorro Field Office',
+    'USFWS',
+    'NPS',
+    'Sile MDWCA',
+    'Pena Blanca Water & Sanitation District',
+    'Town of Questa',
+    'Lamy MDWCA',
+    'Town of Cerro',
+    'Farr Cattle Company',
+    'Carrizozo Orchard',
+    'USFS, Kiowa Grasslands',
+    'Cloud Country West Subdivision',
+    'Chama West Water Users Association',
+    'El Rito Regional Water and Waste Water Association',
+    'West Rim MDWUA',
+    'Village of Willard',
+    'Quemado Municipal Water & SWA',
+    'Coyote Creek MDWUA',
+    'La Joya CWDA',
+    'NM Firefighters Training Academy',
+    'Cebolleta Land Grant',
+    'Madrid Water Co-op',
+    'Sun Valley Water and Sanitation',
+    'Bluewater Lake MDWCA',
+    'Bluewater Acres Domestic WUA',
+    'Lybrook MDWCA',
+    'New Mexico Museum of Natural History',
+    'Hillsboro MDWCA',
+    'Tyrone MDWCA',
+    'Santa Clara Water System',
+    'Casas Adobes MDWCA',
+    'Lake Roberts WUA',
+    'El Creston MDWCA',
+    'Reserve Municipality Water Works',
+    'Bayard',
+    'Town of Estancia',
+    'Pie Town MDWCA',
+    'Roosevelt SWCD',
+    'Otis MDWCA',
+    'White Cliffs MDWUA',
+    'Vista Linda Water Co-op',
+    'Anasazi Trails Water Co-op',
+    'Canon MDWCA',
+    'Placitas Trails Water Co-op',
+    'BLM, Roswell Office',
+    'Forked Lightning Ranch',
+    'Cottonwood RWA',
+    'Pinon Ridge WUA',
+    'McSherry Farms',
+    'Agua Sana WUA',
+    'Chamita MDWCA',
+    'W Spear-bar Ranch',
+    'Village of Capitan',
+    'Brazos MDWCA',
+    'Alto Alps HOA',
+    'Chiricahua Desert Museum',
+    'Bike Ranch',
+    'Hachita MDWCA',
+    'Carrizozo Municipal Water',
+    'Dunhill Ranch',
+    'Santa Fe Conservation Trust',
     'NMSU',
     'USGS',
     'TWDB',
@@ -306,11 +389,9 @@ export const zOrganization = z.enum([
     'City of Santa Fe, Sangre de Cristo Water Co.',
     'NMISC',
     'PVACD',
-    'Bayard',
     'SNL',
     'USFS',
     'NMT',
-    'NPS',
     'NMRWA',
     'NMDOT',
     'Taos SWCD',
@@ -389,7 +470,6 @@ export const zOrganization = z.enum([
     'El Rito Canyon MDWCA',
     'Encantado Enterprises',
     'Estrella Concepts LLC',
-    'Farr Cattle Company',
     'Sixteen Springs Fire Department',
     'Fire Water Lodge',
     'Ford County Land & Cattle Company, Inc',
@@ -403,7 +483,6 @@ export const zOrganization = z.enum([
     'K. Schmitt Trust',
     'La Cienega MDWCA',
     'La Vista HOA',
-    'Lamy MDWCA',
     'Land Ventures LLC',
     'Las Lagunitas',
     'Las Lagunitas HOA',
@@ -417,7 +496,6 @@ export const zOrganization = z.enum([
     'Mesa Verde Ranch',
     'NMDGF',
     'NMSU College of Agriculture',
-    'Naiche Development',
     'NRAO',
     'NMSA',
     'Nogal MDWCA',
@@ -444,7 +522,6 @@ export const zOrganization = z.enum([
     'Santa Fe County, Utilities Dept.',
     'Valle Vista Water Utility',
     'Santa Fe County, Valle Vista Water Utility, Inc.',
-    'Santa Fe Downs',
     'Santa Fe Horse Park',
     'Santa Fe Opera',
     'Santa Fe Waldorf School',
@@ -566,6 +643,362 @@ export const zCasingMaterial = z.enum([
 ]);
 
 /**
+ * well_construction_method
+ */
+export const zWellConstructionMethod = z.enum([
+    'Air-Rotary',
+    'Bored or augered',
+    'Cable-tool',
+    'Hydraulic rotary (mud or water)',
+    'Air percussion',
+    'Reverse rotary',
+    'Driven',
+    'Other (explain in notes)'
+]);
+
+/**
+ * well_pump_type
+ */
+export const zWellPumpType = z.enum([
+    'Submersible',
+    'Jet',
+    'Line Shaft',
+    'Hand'
+]);
+
+/**
+ * permission_type
+ */
+export const zPermissionType = z.enum([
+    'Water Level Sample',
+    'Water Chemistry Sample',
+    'Datalogger Installation'
+]);
+
+/**
+ * PermissionHistoryResponse
+ * Even though permission_allowed and start_date are not-nullable in the
+ * database, they are nullable here to accommodate cases where no permission
+ * record exists for a given permission type.
+ */
+export const zPermissionHistoryResponse = z.object({
+    permission_type: zPermissionType,
+    permission_allowed: z.union([
+        z.boolean(),
+        z.null()
+    ]),
+    start_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    end_date: z.union([
+        z.iso.date(),
+        z.null()
+    ])
+});
+
+/**
+ * formation_code
+ */
+export const zFormationCode = z.enum([
+    '000EXRV',
+    '000IRSV',
+    '050QUAL',
+    '100QBAS',
+    '110ALVM',
+    '110AVMB',
+    '110BLSN',
+    '110NTGU',
+    '110PTODC',
+    '111MCCR',
+    '112ANCH',
+    '112CURB',
+    '112LAMA',
+    '112LAMAb',
+    '112LGUN',
+    '112QTBF',
+    '112QTBFlac',
+    '112QTBFpd',
+    '112QTBFppm',
+    '112SNTF',
+    '112SNTFA',
+    '112SNTFOB',
+    '112SNTFP',
+    '112TRTO',
+    '120DTIL',
+    '120ELRT',
+    '120IRSV',
+    '120SBLC',
+    '120SRVB',
+    '120SRVBf',
+    '120TSBV_Lower',
+    '120TSBV_Upper',
+    '121CHMT',
+    '121CHMTv',
+    '121CHMTvs',
+    '121OGLL',
+    '121PUYEF',
+    '121TSUQ',
+    '121TSUQa',
+    '121TSUQacu',
+    '121TSUQacuf',
+    '121TSUQaml',
+    '121TSUQb',
+    '121TSUQbfl',
+    '121TSUQbfm',
+    '121TSUQbp',
+    '121TSUQce',
+    '121TSUQe',
+    '121TSUQs',
+    '121TSUQsa',
+    '121TSUQsc',
+    '121TSUQsf',
+    '122CHOC',
+    '122CRTO',
+    '122OJOC',
+    '122PICR',
+    '122PPTS',
+    '122SNTFP',
+    '123DTILSPRS',
+    '123DTMGandbas',
+    '123DTMGign',
+    '123DTMGrhydac',
+    '123ESPN',
+    '123GLST',
+    '123PICS',
+    '123PICSc',
+    '123PICSl',
+    '123SPRSDTMGlava',
+    '123SPRSlower',
+    '123SPRSmid_uppe',
+    '124BACA',
+    '124CBMN',
+    '124LLVS',
+    '124PSCN',
+    '124RGIN',
+    '124SNJS',
+    '124TPCS',
+    '125NCMN',
+    '125NCMNS',
+    '125RTON',
+    '130CALDFLOOR',
+    '180TKSCC_Upper',
+    '180TKTR',
+    '210CRCS',
+    '210GLUPC_Lower',
+    '210HOSTD',
+    '210MCDK',
+    '210MNCS',
+    '210MNCSL',
+    '210MNCSU',
+    '211CLFHV',
+    '211CRLL',
+    '211CRVC',
+    '211DKOT',
+    '211DLCO',
+    '211DLTN',
+    '211FRHS',
+    '211FRLD',
+    '211FRMG',
+    '211GBSNC',
+    '211GLLG',
+    '211GLLP',
+    '211GRRG',
+    '211GRRS',
+    '211HOST',
+    '211KRLD',
+    '211LWIS',
+    '211MENF',
+    '211MENFU',
+    '211MVRD',
+    '211OJAM',
+    '211PCCF',
+    '211PIRR',
+    '211PNLK',
+    '211SMKH',
+    '211TLLS',
+    '212KTRP',
+    '217PRGR',
+    '220ENRD',
+    '220JURC',
+    '220NAVJ',
+    '221BLFF',
+    '221CSPG',
+    '221ERADU',
+    '221MRSN',
+    '221MRSN/BBSN',
+    '221MRSN/JCKP',
+    '221MRSN/RCAP',
+    '221MRSN/WWCN',
+    '221SLWS',
+    '221SMVL',
+    '221TDLT',
+    '221WSRC',
+    '221ZUNIS',
+    '231AGZC',
+    '231AGZCU',
+    '231CHNL',
+    '231CORR',
+    '231DCKM',
+    '231PFDF',
+    '231PFDFL',
+    '231PFDFM',
+    '231PFDFU',
+    '231RCKP',
+    '231SNRS',
+    '231SNSL',
+    '231SRMP',
+    '231WNGT',
+    '260SNAN',
+    '260SNAN_lower',
+    '261SNGL',
+    '300YESO',
+    '300YESO_lower',
+    '300YESO_upper',
+    '310ABO',
+    '310DCLL',
+    '310GLOR',
+    '310MBLC',
+    '310TRRS',
+    '310YESO',
+    '310YESOG',
+    '312CSTL',
+    '312RSLR',
+    '313ARTS',
+    '313BLCN',
+    '313BRUC',
+    '313CKBF',
+    '313CLBD',
+    '313CPTN',
+    '313GDLP',
+    '313GOSP',
+    '313SADG',
+    '313SADR',
+    '313TNSL',
+    '313YATS',
+    '315LABR',
+    '315YESOABO',
+    '318ABO',
+    '318BSPG',
+    '318JOYT',
+    '318YESO',
+    '319BRSM',
+    '320HLDR',
+    '320PENN',
+    '320SNDI',
+    '321SGDC',
+    '322BEMN',
+    '325GBLR',
+    '325MDER',
+    '325MDERL',
+    '325MDERU',
+    '325SAND',
+    '326MGDL',
+    '340EPRS',
+    '350PZBA',
+    '350PZBB',
+    '400EMBD',
+    '400PCMB',
+    '400PREC',
+    '400PRECintr',
+    '400PRST',
+    '400TUSS',
+    '410PRCG',
+    '410PRCGf',
+    '410PRCQ',
+    '410PRCQf',
+    '121GILA',
+    '312DYLK',
+    '120WMVL',
+    '313GRBG',
+    '318ABOL',
+    '318ABOU',
+    '112SNTFU',
+    '310FRNR',
+    '312OCHO',
+    '313AZOT',
+    '313QUEN',
+    '319HUCO',
+    '313SVRV',
+    '313CABD',
+    '320GRMS',
+    '211CLRDH',
+    '120BRLM',
+    '122RUBO',
+    '313SADRL',
+    '313SADRU',
+    '313BRNL',
+    '318CPDR',
+    '121BDHC',
+    '313SADY',
+    '221SRFLL',
+    '221BLUF',
+    '221COSP',
+    '317ABYS',
+    '221BRSB',
+    '310SYDR',
+    '400SDVL',
+    '221SRFL',
+    '310SGRC',
+    '231TCVS',
+    '211DCRS',
+    '211ALSN',
+    '211LVNN',
+    '211MORD',
+    '210PRMD',
+    '124ANMS',
+    '211NBRR',
+    '111ALVM',
+    '122SNTFL',
+    '111CPLN',
+    '120CRSN',
+    '111CRMS',
+    '111CRMSA',
+    '111SPOL',
+    '110TURT',
+    '221RCPR',
+    '320BLNG',
+    '112ANCHsr',
+    '121TSUQae',
+    '230TRSC',
+    '122TSUQdx',
+    '123PICSu',
+    '123PICSm',
+    '123PICSmc',
+    '120VBVC',
+    '120VCSS',
+    '124DMDT',
+    '325ALMT',
+    '400SAND',
+    '318VCPK',
+    '318BSVP',
+    '100ALVM',
+    '310PRMN',
+    '110AVPS',
+    '313CRCX',
+    '112SLBL',
+    '112SBCRC',
+    '313CRDM',
+    '112SBDM',
+    '120BLSN',
+    '112SBCR',
+    '112HCBL',
+    '120IVIG',
+    '112RLBL',
+    '112EFBL',
+    '112GRBL',
+    '123SAND',
+    '210MRNH',
+    '320ALMT',
+    '313DLRM',
+    '300PLZC',
+    '122SPRS',
+    '110AVTV',
+    '313DMBS',
+    '120ERSV'
+]);
+
+/**
  * ThingResponse
  */
 export const zThingResponse = z.object({
@@ -621,6 +1054,39 @@ export const zThingResponse = z.object({
         z.string(),
         z.null()
     ])),
+    well_completion_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    well_completion_date_source: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_driller_name: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_construction_method: z.union([
+        zWellConstructionMethod,
+        z.null()
+    ]),
+    well_construction_method_source: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_pump_type: z.union([
+        zWellPumpType,
+        z.null()
+    ]),
+    well_pump_depth: z.union([
+        z.number(),
+        z.null()
+    ]),
+    well_pump_depth_unit: z.optional(z.string()).default('ft'),
+    is_suitable_for_datalogger: z.union([
+        z.boolean(),
+        z.null()
+    ]),
     well_status: z.union([
         z.string(),
         z.null()
@@ -634,6 +1100,7 @@ export const zThingResponse = z.object({
         z.string(),
         z.null()
     ]),
+    aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
     water_notes: z.optional(z.union([
         z.array(zNoteResponse),
         z.null()
@@ -645,7 +1112,12 @@ export const zThingResponse = z.object({
     general_notes: z.optional(z.union([
         z.array(zNoteResponse),
         z.null()
-    ]))
+    ])),
+    permissions: z.array(zPermissionHistoryResponse),
+    formation_completion_code: z.union([
+        zFormationCode,
+        z.null()
+    ])
 });
 
 /**
@@ -1031,6 +1503,8 @@ export const zCreateSample = z.object({
  * sensor_type
  */
 export const zSensorType = z.enum([
+    'DiverLink',
+    'Diver Cable',
     'Pressure Transducer',
     'Data Logger',
     'Barometer',
@@ -1191,12 +1665,44 @@ export const zCreateWell = z.object({
         z.array(zCasingMaterial),
         z.null()
     ])),
-    measuring_point_description: z.union([
+    measuring_point_description: z.optional(z.union([
         z.string(),
         z.null()
-    ]),
+    ])),
     notes: z.optional(z.union([
         z.array(zCreateNote),
+        z.null()
+    ])),
+    well_completion_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    well_completion_date_source: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_driller_name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_construction_method: z.optional(z.union([
+        zWellConstructionMethod,
+        z.null()
+    ])),
+    well_construction_method_source: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_pump_type: z.optional(z.union([
+        zWellPumpType,
+        z.null()
+    ])),
+    is_suitable_for_datalogger: z.union([
+        z.boolean(),
+        z.null()
+    ]),
+    formation_completion_code: z.optional(z.union([
+        zFormationCode,
         z.null()
     ]))
 });
@@ -1217,6 +1723,14 @@ export const zScreenType = z.enum([
 export const zCreateWellScreen = z.object({
     release_status: z.optional(zReleaseStatus),
     thing_id: z.int(),
+    aquifer_system_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    geologic_formation_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
     screen_depth_bottom: z.number().gt(0),
     screen_depth_top: z.number().gt(0),
     screen_type: z.optional(z.union([
@@ -1655,7 +2169,15 @@ export const zLocationResponse = z.object({
     quad_name: z.union([
         z.string(),
         z.null()
-    ])
+    ]),
+    nma_date_created: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    nma_site_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ]))
 });
 
 /**
@@ -2100,6 +2622,39 @@ export const zWellResponse = z.object({
         z.string(),
         z.null()
     ])),
+    well_completion_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    well_completion_date_source: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_driller_name: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_construction_method: z.union([
+        zWellConstructionMethod,
+        z.null()
+    ]),
+    well_construction_method_source: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_pump_type: z.union([
+        zWellPumpType,
+        z.null()
+    ]),
+    well_pump_depth: z.union([
+        z.number(),
+        z.null()
+    ]),
+    well_pump_depth_unit: z.optional(z.string()).default('ft'),
+    is_suitable_for_datalogger: z.union([
+        z.boolean(),
+        z.null()
+    ]),
     well_status: z.union([
         z.string(),
         z.null()
@@ -2110,6 +2665,7 @@ export const zWellResponse = z.object({
         z.string(),
         z.null()
     ]),
+    aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
     water_notes: z.optional(z.union([
         z.array(zNoteResponse),
         z.null()
@@ -2121,7 +2677,12 @@ export const zWellResponse = z.object({
     general_notes: z.optional(z.union([
         z.array(zNoteResponse),
         z.null()
-    ]))
+    ])),
+    permissions: z.array(zPermissionHistoryResponse),
+    formation_completion_code: z.union([
+        zFormationCode,
+        z.null()
+    ])
 });
 
 /**
@@ -2145,6 +2706,26 @@ export const zWellScreenResponse = z.object({
     release_status: zReleaseStatus,
     thing_id: z.int(),
     thing: zWellResponse,
+    aquifer_system_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    aquifer_system: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    aquifer_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    geologic_formation_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    geologic_formation: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     screen_depth_bottom: z.number(),
     screen_depth_bottom_unit: z.optional(z.string()).default('ft'),
     screen_depth_top: z.number(),
@@ -2763,6 +3344,14 @@ export const zUpdateWell = z.object({
 export const zUpdateWellScreen = z.object({
     release_status: z.optional(z.union([
         zReleaseStatus,
+        z.null()
+    ])),
+    aquifer_system_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    geologic_formation_id: z.optional(z.union([
+        z.int(),
         z.null()
     ])),
     screen_depth_bottom: z.optional(z.union([

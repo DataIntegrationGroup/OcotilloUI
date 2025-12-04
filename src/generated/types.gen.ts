@@ -699,11 +699,34 @@ export type CreateWell = {
     /**
      * Measuring Point Description
      */
-    measuring_point_description: string | null;
+    measuring_point_description?: string | null;
     /**
      * Notes
      */
     notes?: Array<CreateNote> | null;
+    /**
+     * Well Completion Date
+     */
+    well_completion_date?: string | null;
+    /**
+     * Well Completion Date Source
+     */
+    well_completion_date_source?: string | null;
+    /**
+     * Well Driller Name
+     */
+    well_driller_name?: string | null;
+    well_construction_method?: WellConstructionMethod | null;
+    /**
+     * Well Construction Method Source
+     */
+    well_construction_method_source?: string | null;
+    well_pump_type?: WellPumpType | null;
+    /**
+     * Is Suitable For Datalogger
+     */
+    is_suitable_for_datalogger: boolean | null;
+    formation_completion_code?: FormationCode | null;
 };
 
 /**
@@ -716,6 +739,14 @@ export type CreateWellScreen = {
      * Thing Id
      */
     thing_id: number;
+    /**
+     * Aquifer System Id
+     */
+    aquifer_system_id?: number | null;
+    /**
+     * Geologic Formation Id
+     */
+    geologic_formation_id?: number | null;
     /**
      * Screen Depth Bottom
      * Screen depth bottom in feet
@@ -912,6 +943,14 @@ export type GeoJsonProperties = {
      * Notes
      */
     notes?: Array<NoteResponse>;
+    /**
+     * Nma Date Created
+     */
+    nma_date_created?: string | null;
+    /**
+     * Nma Site Date
+     */
+    nma_site_date?: string | null;
 };
 
 /**
@@ -1162,6 +1201,14 @@ export type LocationResponse = {
      * Quad Name
      */
     quad_name: string | null;
+    /**
+     * Nma Date Created
+     */
+    nma_date_created?: string | null;
+    /**
+     * Nma Site Date
+     */
+    nma_site_date?: string | null;
 };
 
 /**
@@ -1887,6 +1934,28 @@ export type ParameterResponse = {
 };
 
 /**
+ * PermissionHistoryResponse
+ * Even though permission_allowed and start_date are not-nullable in the
+ * database, they are nullable here to accommodate cases where no permission
+ * record exists for a given permission type.
+ */
+export type PermissionHistoryResponse = {
+    permission_type: PermissionType;
+    /**
+     * Permission Allowed
+     */
+    permission_allowed: boolean | null;
+    /**
+     * Start Date
+     */
+    start_date: string | null;
+    /**
+     * End Date
+     */
+    end_date: string | null;
+};
+
+/**
  * PhoneResponse
  * Response schema for phone details.
  */
@@ -2228,6 +2297,36 @@ export type ThingResponse = {
      */
     well_construction_notes?: string | null;
     /**
+     * Well Completion Date
+     */
+    well_completion_date: string | null;
+    /**
+     * Well Completion Date Source
+     */
+    well_completion_date_source: string | null;
+    /**
+     * Well Driller Name
+     */
+    well_driller_name: string | null;
+    well_construction_method: WellConstructionMethod | null;
+    /**
+     * Well Construction Method Source
+     */
+    well_construction_method_source: string | null;
+    well_pump_type: WellPumpType | null;
+    /**
+     * Well Pump Depth
+     */
+    well_pump_depth: number | null;
+    /**
+     * Well Pump Depth Unit
+     */
+    well_pump_depth_unit?: string;
+    /**
+     * Is Suitable For Datalogger
+     */
+    is_suitable_for_datalogger: boolean | null;
+    /**
      * Well Status
      */
     well_status: string | null;
@@ -2244,6 +2343,12 @@ export type ThingResponse = {
      */
     measuring_point_description: string | null;
     /**
+     * Aquifers
+     */
+    aquifers?: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
      * Water Notes
      */
     water_notes?: Array<NoteResponse> | null;
@@ -2255,6 +2360,11 @@ export type ThingResponse = {
      * General Notes
      */
     general_notes?: Array<NoteResponse> | null;
+    /**
+     * Permissions
+     */
+    permissions: Array<PermissionHistoryResponse>;
+    formation_completion_code: FormationCode | null;
 };
 
 /**
@@ -2778,6 +2888,14 @@ export type UpdateWell = {
 export type UpdateWellScreen = {
     release_status?: ReleaseStatus | null;
     /**
+     * Aquifer System Id
+     */
+    aquifer_system_id?: number | null;
+    /**
+     * Geologic Formation Id
+     */
+    geologic_formation_id?: number | null;
+    /**
      * Screen Depth Bottom
      */
     screen_depth_bottom?: number | null;
@@ -2942,6 +3060,36 @@ export type WellResponse = {
      */
     well_construction_notes?: string | null;
     /**
+     * Well Completion Date
+     */
+    well_completion_date: string | null;
+    /**
+     * Well Completion Date Source
+     */
+    well_completion_date_source: string | null;
+    /**
+     * Well Driller Name
+     */
+    well_driller_name: string | null;
+    well_construction_method: WellConstructionMethod | null;
+    /**
+     * Well Construction Method Source
+     */
+    well_construction_method_source: string | null;
+    well_pump_type: WellPumpType | null;
+    /**
+     * Well Pump Depth
+     */
+    well_pump_depth: number | null;
+    /**
+     * Well Pump Depth Unit
+     */
+    well_pump_depth_unit?: string;
+    /**
+     * Is Suitable For Datalogger
+     */
+    is_suitable_for_datalogger: boolean | null;
+    /**
      * Well Status
      */
     well_status: string | null;
@@ -2958,6 +3106,12 @@ export type WellResponse = {
      */
     measuring_point_description: string | null;
     /**
+     * Aquifers
+     */
+    aquifers?: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
      * Water Notes
      */
     water_notes?: Array<NoteResponse> | null;
@@ -2969,6 +3123,11 @@ export type WellResponse = {
      * General Notes
      */
     general_notes?: Array<NoteResponse> | null;
+    /**
+     * Permissions
+     */
+    permissions: Array<PermissionHistoryResponse>;
+    formation_completion_code: FormationCode | null;
 };
 
 /**
@@ -2990,6 +3149,26 @@ export type WellScreenResponse = {
      */
     thing_id: number;
     thing: WellResponse;
+    /**
+     * Aquifer System Id
+     */
+    aquifer_system_id?: number | null;
+    /**
+     * Aquifer System
+     */
+    aquifer_system?: string | null;
+    /**
+     * Aquifer Type
+     */
+    aquifer_type?: string | null;
+    /**
+     * Geologic Formation Id
+     */
+    geologic_formation_id?: number | null;
+    /**
+     * Geologic Formation
+     */
+    geologic_formation?: string | null;
     /**
      * Screen Depth Bottom
      */
@@ -3052,6 +3231,11 @@ export type ElevationMethod = 'Altimeter' | 'Differentially corrected GPS' | 'Su
 export type EmailType = 'Primary' | 'Work' | 'Personal';
 
 /**
+ * formation_code
+ */
+export type FormationCode = '000EXRV' | '000IRSV' | '050QUAL' | '100QBAS' | '110ALVM' | '110AVMB' | '110BLSN' | '110NTGU' | '110PTODC' | '111MCCR' | '112ANCH' | '112CURB' | '112LAMA' | '112LAMAb' | '112LGUN' | '112QTBF' | '112QTBFlac' | '112QTBFpd' | '112QTBFppm' | '112SNTF' | '112SNTFA' | '112SNTFOB' | '112SNTFP' | '112TRTO' | '120DTIL' | '120ELRT' | '120IRSV' | '120SBLC' | '120SRVB' | '120SRVBf' | '120TSBV_Lower' | '120TSBV_Upper' | '121CHMT' | '121CHMTv' | '121CHMTvs' | '121OGLL' | '121PUYEF' | '121TSUQ' | '121TSUQa' | '121TSUQacu' | '121TSUQacuf' | '121TSUQaml' | '121TSUQb' | '121TSUQbfl' | '121TSUQbfm' | '121TSUQbp' | '121TSUQce' | '121TSUQe' | '121TSUQs' | '121TSUQsa' | '121TSUQsc' | '121TSUQsf' | '122CHOC' | '122CRTO' | '122OJOC' | '122PICR' | '122PPTS' | '122SNTFP' | '123DTILSPRS' | '123DTMGandbas' | '123DTMGign' | '123DTMGrhydac' | '123ESPN' | '123GLST' | '123PICS' | '123PICSc' | '123PICSl' | '123SPRSDTMGlava' | '123SPRSlower' | '123SPRSmid_uppe' | '124BACA' | '124CBMN' | '124LLVS' | '124PSCN' | '124RGIN' | '124SNJS' | '124TPCS' | '125NCMN' | '125NCMNS' | '125RTON' | '130CALDFLOOR' | '180TKSCC_Upper' | '180TKTR' | '210CRCS' | '210GLUPC_Lower' | '210HOSTD' | '210MCDK' | '210MNCS' | '210MNCSL' | '210MNCSU' | '211CLFHV' | '211CRLL' | '211CRVC' | '211DKOT' | '211DLCO' | '211DLTN' | '211FRHS' | '211FRLD' | '211FRMG' | '211GBSNC' | '211GLLG' | '211GLLP' | '211GRRG' | '211GRRS' | '211HOST' | '211KRLD' | '211LWIS' | '211MENF' | '211MENFU' | '211MVRD' | '211OJAM' | '211PCCF' | '211PIRR' | '211PNLK' | '211SMKH' | '211TLLS' | '212KTRP' | '217PRGR' | '220ENRD' | '220JURC' | '220NAVJ' | '221BLFF' | '221CSPG' | '221ERADU' | '221MRSN' | '221MRSN/BBSN' | '221MRSN/JCKP' | '221MRSN/RCAP' | '221MRSN/WWCN' | '221SLWS' | '221SMVL' | '221TDLT' | '221WSRC' | '221ZUNIS' | '231AGZC' | '231AGZCU' | '231CHNL' | '231CORR' | '231DCKM' | '231PFDF' | '231PFDFL' | '231PFDFM' | '231PFDFU' | '231RCKP' | '231SNRS' | '231SNSL' | '231SRMP' | '231WNGT' | '260SNAN' | '260SNAN_lower' | '261SNGL' | '300YESO' | '300YESO_lower' | '300YESO_upper' | '310ABO' | '310DCLL' | '310GLOR' | '310MBLC' | '310TRRS' | '310YESO' | '310YESOG' | '312CSTL' | '312RSLR' | '313ARTS' | '313BLCN' | '313BRUC' | '313CKBF' | '313CLBD' | '313CPTN' | '313GDLP' | '313GOSP' | '313SADG' | '313SADR' | '313TNSL' | '313YATS' | '315LABR' | '315YESOABO' | '318ABO' | '318BSPG' | '318JOYT' | '318YESO' | '319BRSM' | '320HLDR' | '320PENN' | '320SNDI' | '321SGDC' | '322BEMN' | '325GBLR' | '325MDER' | '325MDERL' | '325MDERU' | '325SAND' | '326MGDL' | '340EPRS' | '350PZBA' | '350PZBB' | '400EMBD' | '400PCMB' | '400PREC' | '400PRECintr' | '400PRST' | '400TUSS' | '410PRCG' | '410PRCGf' | '410PRCQ' | '410PRCQf' | '121GILA' | '312DYLK' | '120WMVL' | '313GRBG' | '318ABOL' | '318ABOU' | '112SNTFU' | '310FRNR' | '312OCHO' | '313AZOT' | '313QUEN' | '319HUCO' | '313SVRV' | '313CABD' | '320GRMS' | '211CLRDH' | '120BRLM' | '122RUBO' | '313SADRL' | '313SADRU' | '313BRNL' | '318CPDR' | '121BDHC' | '313SADY' | '221SRFLL' | '221BLUF' | '221COSP' | '317ABYS' | '221BRSB' | '310SYDR' | '400SDVL' | '221SRFL' | '310SGRC' | '231TCVS' | '211DCRS' | '211ALSN' | '211LVNN' | '211MORD' | '210PRMD' | '124ANMS' | '211NBRR' | '111ALVM' | '122SNTFL' | '111CPLN' | '120CRSN' | '111CRMS' | '111CRMSA' | '111SPOL' | '110TURT' | '221RCPR' | '320BLNG' | '112ANCHsr' | '121TSUQae' | '230TRSC' | '122TSUQdx' | '123PICSu' | '123PICSm' | '123PICSmc' | '120VBVC' | '120VCSS' | '124DMDT' | '325ALMT' | '400SAND' | '318VCPK' | '318BSVP' | '100ALVM' | '310PRMN' | '110AVPS' | '313CRCX' | '112SLBL' | '112SBCRC' | '313CRDM' | '112SBDM' | '120BLSN' | '112SBCR' | '112HCBL' | '120IVIG' | '112RLBL' | '112EFBL' | '112GRBL' | '123SAND' | '210MRNH' | '320ALMT' | '313DLRM' | '300PLZC' | '122SPRS' | '110AVTV' | '313DMBS' | '120ERSV';
+
+/**
  * group_type
  */
 export type GroupType = 'Monitoring Plan' | 'Geographic Area' | 'Historical';
@@ -3064,7 +3248,7 @@ export type MonitoringFrequency = 'Monthly' | 'Bimonthly' | 'Bimonthly reported'
 /**
  * organization
  */
-export type Organization = 'Unknown' | 'NMSU' | 'USGS' | 'TWDB' | 'NMED' | 'NMOSE' | 'NMBGMR' | 'Bernalillo County' | 'BLM' | 'BLM Taos Office' | 'SFC' | 'SFC, Fire Facilities' | 'SFC, Utilities Dept.' | 'SFC, Valle Vista Water Utility, Inc.' | 'City of Santa Fe' | 'City of Santa Fe WWTP' | 'City of Santa Fe, Municipal Recreation Complex' | 'City of Santa Fe, Sangre de Cristo Water Co.' | 'NMISC' | 'PVACD' | 'Bayard' | 'SNL' | 'USFS' | 'NMT' | 'NPS' | 'NMRWA' | 'NMDOT' | 'Taos SWCD' | 'Otero SWCD' | 'Northeastern SWCD' | 'CDWR' | 'Pendaries Village' | 'A&T Pump & Well Service, LLC' | 'A. G. Wassenaar, Inc' | 'AMEC' | 'Balleau Groundwater, Inc' | 'CDM Smith' | 'CH2M Hill' | 'Corbin Consulting, Inc' | 'Chevron' | 'Daniel B. Stephens & Associates, Inc' | 'EnecoTech' | 'Faith Engineering, Inc' | 'Foster Well Service, Inc' | 'Glorieta Geoscience, Inc' | 'Golder Associates, Inc' | "Hathorn's Well Service, Inc" | 'Hydroscience Associates, Inc' | 'IC Tech, Inc' | 'John Shomaker & Associates, Inc' | 'Kuckleman Pump Service' | 'Los Golondrinas' | 'Minton Engineers' | 'MJDarrconsult, Inc' | 'Puerta del Canon Ranch' | 'Rodgers & Company, Inc' | 'San Pedro Creek Estates HOA' | 'Statewide Drilling, Inc' | 'Tec Drilling Limited' | 'Tetra Tech, Inc' | 'Thompson Drilling, Inc' | 'Witcher & Associates' | 'Zeigler Geologic Consulting, LLC' | 'Sandia Well Service, Inc' | 'San Marcos Association' | 'URS' | 'Vista del Oro' | 'Abeyta Engineering, Inc' | 'Adobe Ranch' | 'Agua Fria Community Water Association' | 'Apache Gap Ranch' | 'Aspendale Mountain Retreat' | 'Augustin Plains Ranch LLC' | 'B & B Cattle Co' | 'Berridge Distributing Company' | "Bishop's Lodge" | 'Bonanza Creek Ranch' | 'Bug Scuffle Water Association' | 'Wehinahpay Mountain Camp' | 'Campbell Ranch' | 'Capitol Ford Santa Fe' | 'Cemex, Inc' | 'Cerro Community Center' | 'Santa Fe Jewish Center' | 'Chupadero MDWCA' | 'Cielo Lumbre HOA' | 'Circle Cross Ranch' | 'City of Alamogordo' | 'City of Portales, Public Works Dept.' | 'City of Socorro' | 'Commonwealth Conservancy' | 'Country Club Garden Mobile Home Park' | 'Crossroads Cattle Co., Ltd' | 'Double H Ranch' | 'E.A. Meadows East' | 'El Camino Realty, Inc' | 'Eldorado Area Water & Sanitation District' | 'Bourbon Grill at El Gancho' | 'El Prado HOA' | 'El Rancho de las Golondrinas' | 'El Rito Canyon MDWCA' | 'Encantado Enterprises' | 'Estrella Concepts LLC' | 'Farr Cattle Company' | 'Sixteen Springs Fire Department' | 'Fire Water Lodge' | 'Ford County Land & Cattle Company, Inc' | 'Friendly Construction, Inc' | 'Hacienda Del Cerezo' | 'Hefker Vega Ranch' | 'High Nogal Ranch' | 'Holloman Air Force Base' | 'Hyde Park Estates MDWCA' | 'Desert Village RV & Mobile Home Park' | 'K. Schmitt Trust' | 'La Cienega MDWCA' | 'La Vista HOA' | 'Lamy MDWCA' | 'Land Ventures LLC' | 'Las Lagunitas' | 'Las Lagunitas HOA' | 'Living World Ministries' | 'Los Atrevidos, Inc' | 'Los Prados HOA' | 'Malaga MDWCA & SWA' | 'Mangas Outfitters' | 'Medina Gravel Pit' | 'Mendenhall Trading Co' | 'Mesa Verde Ranch' | 'NMDGF' | 'NMSU College of Agriculture' | 'Naiche Development' | 'NRAO' | 'NMSA' | 'Nogal MDWCA' | 'O Bar O Ranch' | 'OMI Wastewater Treatment Plant' | 'Old Road Ranch Pardners Ltd' | 'PNM Service Center' | 'Peace Tabernacle Church' | 'Pecos Trail Inn' | 'Pelican Spa' | 'Pistachio Tree Ranch' | 'Rancho Encantado' | 'Rancho San Lucas' | 'Rancho San Marcos' | 'Rancho Viejo Partnership' | 'Ranney Ranch' | 'Rio En Medio MDWCA' | 'San Acacia MDWCA' | 'San Juan Residences' | 'Sangre de Cristo Center' | 'Sangre de Cristo Estates' | 'Santa Fe Community College' | 'Santa Fe County, Fire Facilities' | 'Santa Fe County, Utilities Dept.' | 'Valle Vista Water Utility' | 'Santa Fe County, Valle Vista Water Utility, Inc.' | 'Santa Fe Downs' | 'Santa Fe Horse Park' | 'Santa Fe Opera' | 'Santa Fe Waldorf School' | 'Shidoni Foundry and Gallery' | 'Sierra Grande Lodge' | 'Sierra Vista Retirement Community' | 'Slash Triangle Ranch' | 'Stagecoach Motel' | 'State of New Mexico' | 'Stephenson Ranch' | 'Sun Broadcasting Network' | 'Tano Rd LLC' | 'UNM-Taos' | 'Tee Pee Ranch/Tee Pee Subdivision' | 'Tent Rock, Inc' | 'Tesuque MDWCA' | 'The Great Cloud Zen Center' | 'Three Rivers Ranch' | 'Timberon Water and Sanitation District' | 'Town of Magdalena' | 'Town of Taos' | 'Town of Taos, National Guard Armory' | 'Trinity Ranch' | 'Tularosa Basin National Desalination Research Facility' | 'Turquoise Trail Charter School' | 'US Bureau of Indian Affairs, Santa Fe Indian School' | 'USFS, Carson NF, Taos Office' | 'USFS, Cibola NF, Magdalena Ranger District' | 'USFS, Santa Fe NF, Espanola Ranger District' | 'Ute Mountain Farms' | 'VA Hospital' | 'Velte' | 'Vereda Serena Property' | 'Village of Corona' | 'Village of Floyd' | 'Village of Melrose' | 'Village of Vaughn' | 'Vista Land Company' | 'Vista Redonda MDWCA' | 'Vista de Oro de Placitas Water Users Coop' | 'Walker Ranch' | 'Wild & Woolley Trailer Ranch' | 'Winter Brothers' | 'Yates Petroleum Corporation' | 'Zamora Accounting Services' | 'PLSS';
+export type Organization = 'Unknown' | 'City of Aztec' | 'Daybreak Investments' | 'Vallecitos HOA' | 'Naiche Development' | 'Santa Fe County; Santa Fe Animal Shelter' | 'El Guicu Ditch Association' | 'Santa Fe Municipal Airport' | 'Uluru Development' | "AllSup's Convenience Stores" | 'Santa Fe Downs' | 'City of Truth or Consequences, WWTP' | 'Riverbend Hotsprings' | 'Armendaris Ranch' | 'El Paso Water' | 'BLM, Socorro Field Office' | 'USFWS' | 'NPS' | 'Sile MDWCA' | 'Pena Blanca Water & Sanitation District' | 'Town of Questa' | 'Lamy MDWCA' | 'Town of Cerro' | 'Farr Cattle Company' | 'Carrizozo Orchard' | 'USFS, Kiowa Grasslands' | 'Cloud Country West Subdivision' | 'Chama West Water Users Association' | 'El Rito Regional Water and Waste Water Association' | 'West Rim MDWUA' | 'Village of Willard' | 'Quemado Municipal Water & SWA' | 'Coyote Creek MDWUA' | 'La Joya CWDA' | 'NM Firefighters Training Academy' | 'Cebolleta Land Grant' | 'Madrid Water Co-op' | 'Sun Valley Water and Sanitation' | 'Bluewater Lake MDWCA' | 'Bluewater Acres Domestic WUA' | 'Lybrook MDWCA' | 'New Mexico Museum of Natural History' | 'Hillsboro MDWCA' | 'Tyrone MDWCA' | 'Santa Clara Water System' | 'Casas Adobes MDWCA' | 'Lake Roberts WUA' | 'El Creston MDWCA' | 'Reserve Municipality Water Works' | 'Bayard' | 'Town of Estancia' | 'Pie Town MDWCA' | 'Roosevelt SWCD' | 'Otis MDWCA' | 'White Cliffs MDWUA' | 'Vista Linda Water Co-op' | 'Anasazi Trails Water Co-op' | 'Canon MDWCA' | 'Placitas Trails Water Co-op' | 'BLM, Roswell Office' | 'Forked Lightning Ranch' | 'Cottonwood RWA' | 'Pinon Ridge WUA' | 'McSherry Farms' | 'Agua Sana WUA' | 'Chamita MDWCA' | 'W Spear-bar Ranch' | 'Village of Capitan' | 'Brazos MDWCA' | 'Alto Alps HOA' | 'Chiricahua Desert Museum' | 'Bike Ranch' | 'Hachita MDWCA' | 'Carrizozo Municipal Water' | 'Dunhill Ranch' | 'Santa Fe Conservation Trust' | 'NMSU' | 'USGS' | 'TWDB' | 'NMED' | 'NMOSE' | 'NMBGMR' | 'Bernalillo County' | 'BLM' | 'BLM Taos Office' | 'SFC' | 'SFC, Fire Facilities' | 'SFC, Utilities Dept.' | 'SFC, Valle Vista Water Utility, Inc.' | 'City of Santa Fe' | 'City of Santa Fe WWTP' | 'City of Santa Fe, Municipal Recreation Complex' | 'City of Santa Fe, Sangre de Cristo Water Co.' | 'NMISC' | 'PVACD' | 'SNL' | 'USFS' | 'NMT' | 'NMRWA' | 'NMDOT' | 'Taos SWCD' | 'Otero SWCD' | 'Northeastern SWCD' | 'CDWR' | 'Pendaries Village' | 'A&T Pump & Well Service, LLC' | 'A. G. Wassenaar, Inc' | 'AMEC' | 'Balleau Groundwater, Inc' | 'CDM Smith' | 'CH2M Hill' | 'Corbin Consulting, Inc' | 'Chevron' | 'Daniel B. Stephens & Associates, Inc' | 'EnecoTech' | 'Faith Engineering, Inc' | 'Foster Well Service, Inc' | 'Glorieta Geoscience, Inc' | 'Golder Associates, Inc' | "Hathorn's Well Service, Inc" | 'Hydroscience Associates, Inc' | 'IC Tech, Inc' | 'John Shomaker & Associates, Inc' | 'Kuckleman Pump Service' | 'Los Golondrinas' | 'Minton Engineers' | 'MJDarrconsult, Inc' | 'Puerta del Canon Ranch' | 'Rodgers & Company, Inc' | 'San Pedro Creek Estates HOA' | 'Statewide Drilling, Inc' | 'Tec Drilling Limited' | 'Tetra Tech, Inc' | 'Thompson Drilling, Inc' | 'Witcher & Associates' | 'Zeigler Geologic Consulting, LLC' | 'Sandia Well Service, Inc' | 'San Marcos Association' | 'URS' | 'Vista del Oro' | 'Abeyta Engineering, Inc' | 'Adobe Ranch' | 'Agua Fria Community Water Association' | 'Apache Gap Ranch' | 'Aspendale Mountain Retreat' | 'Augustin Plains Ranch LLC' | 'B & B Cattle Co' | 'Berridge Distributing Company' | "Bishop's Lodge" | 'Bonanza Creek Ranch' | 'Bug Scuffle Water Association' | 'Wehinahpay Mountain Camp' | 'Campbell Ranch' | 'Capitol Ford Santa Fe' | 'Cemex, Inc' | 'Cerro Community Center' | 'Santa Fe Jewish Center' | 'Chupadero MDWCA' | 'Cielo Lumbre HOA' | 'Circle Cross Ranch' | 'City of Alamogordo' | 'City of Portales, Public Works Dept.' | 'City of Socorro' | 'Commonwealth Conservancy' | 'Country Club Garden Mobile Home Park' | 'Crossroads Cattle Co., Ltd' | 'Double H Ranch' | 'E.A. Meadows East' | 'El Camino Realty, Inc' | 'Eldorado Area Water & Sanitation District' | 'Bourbon Grill at El Gancho' | 'El Prado HOA' | 'El Rancho de las Golondrinas' | 'El Rito Canyon MDWCA' | 'Encantado Enterprises' | 'Estrella Concepts LLC' | 'Sixteen Springs Fire Department' | 'Fire Water Lodge' | 'Ford County Land & Cattle Company, Inc' | 'Friendly Construction, Inc' | 'Hacienda Del Cerezo' | 'Hefker Vega Ranch' | 'High Nogal Ranch' | 'Holloman Air Force Base' | 'Hyde Park Estates MDWCA' | 'Desert Village RV & Mobile Home Park' | 'K. Schmitt Trust' | 'La Cienega MDWCA' | 'La Vista HOA' | 'Land Ventures LLC' | 'Las Lagunitas' | 'Las Lagunitas HOA' | 'Living World Ministries' | 'Los Atrevidos, Inc' | 'Los Prados HOA' | 'Malaga MDWCA & SWA' | 'Mangas Outfitters' | 'Medina Gravel Pit' | 'Mendenhall Trading Co' | 'Mesa Verde Ranch' | 'NMDGF' | 'NMSU College of Agriculture' | 'NRAO' | 'NMSA' | 'Nogal MDWCA' | 'O Bar O Ranch' | 'OMI Wastewater Treatment Plant' | 'Old Road Ranch Pardners Ltd' | 'PNM Service Center' | 'Peace Tabernacle Church' | 'Pecos Trail Inn' | 'Pelican Spa' | 'Pistachio Tree Ranch' | 'Rancho Encantado' | 'Rancho San Lucas' | 'Rancho San Marcos' | 'Rancho Viejo Partnership' | 'Ranney Ranch' | 'Rio En Medio MDWCA' | 'San Acacia MDWCA' | 'San Juan Residences' | 'Sangre de Cristo Center' | 'Sangre de Cristo Estates' | 'Santa Fe Community College' | 'Santa Fe County, Fire Facilities' | 'Santa Fe County, Utilities Dept.' | 'Valle Vista Water Utility' | 'Santa Fe County, Valle Vista Water Utility, Inc.' | 'Santa Fe Horse Park' | 'Santa Fe Opera' | 'Santa Fe Waldorf School' | 'Shidoni Foundry and Gallery' | 'Sierra Grande Lodge' | 'Sierra Vista Retirement Community' | 'Slash Triangle Ranch' | 'Stagecoach Motel' | 'State of New Mexico' | 'Stephenson Ranch' | 'Sun Broadcasting Network' | 'Tano Rd LLC' | 'UNM-Taos' | 'Tee Pee Ranch/Tee Pee Subdivision' | 'Tent Rock, Inc' | 'Tesuque MDWCA' | 'The Great Cloud Zen Center' | 'Three Rivers Ranch' | 'Timberon Water and Sanitation District' | 'Town of Magdalena' | 'Town of Taos' | 'Town of Taos, National Guard Armory' | 'Trinity Ranch' | 'Tularosa Basin National Desalination Research Facility' | 'Turquoise Trail Charter School' | 'US Bureau of Indian Affairs, Santa Fe Indian School' | 'USFS, Carson NF, Taos Office' | 'USFS, Cibola NF, Magdalena Ranger District' | 'USFS, Santa Fe NF, Espanola Ranger District' | 'Ute Mountain Farms' | 'VA Hospital' | 'Velte' | 'Vereda Serena Property' | 'Village of Corona' | 'Village of Floyd' | 'Village of Melrose' | 'Village of Vaughn' | 'Vista Land Company' | 'Vista Redonda MDWCA' | 'Vista de Oro de Placitas Water Users Coop' | 'Walker Ranch' | 'Wild & Woolley Trailer Ranch' | 'Winter Brothers' | 'Yates Petroleum Corporation' | 'Zamora Accounting Services' | 'PLSS';
 
 /**
  * parameter_name
@@ -3075,6 +3259,11 @@ export type ParameterName = 'groundwater level' | 'temperature' | 'pH' | 'Alkali
  * parameter_type
  */
 export type ParameterType = 'Field Parameter' | 'Metal' | 'Radionuclide' | 'Major Element' | 'Minor Element' | 'Physical property';
+
+/**
+ * permission_type
+ */
+export type PermissionType = 'Water Level Sample' | 'Water Chemistry Sample' | 'Datalogger Installation';
 
 /**
  * phone_type
@@ -3158,7 +3347,7 @@ export type ScreenType = 'PVC' | 'Steel' | 'Concrete';
 /**
  * sensor_type
  */
-export type SensorType = 'Pressure Transducer' | 'Data Logger' | 'Barometer' | 'Acoustic Sounder' | 'Precip Collector' | 'Camera' | 'Soil Moisture Sensor' | 'Tipping Bucket';
+export type SensorType = 'DiverLink' | 'Diver Cable' | 'Pressure Transducer' | 'Data Logger' | 'Barometer' | 'Acoustic Sounder' | 'Precip Collector' | 'Camera' | 'Soil Moisture Sensor' | 'Tipping Bucket';
 
 /**
  * spring_type
@@ -3169,6 +3358,16 @@ export type SpringType = 'Artesian' | 'Ephemeral' | 'Perennial' | 'Thermal' | 'M
  * unit
  */
 export type Unit = 'dimensionless' | 'ft' | 'ftbgs' | 'F' | 'mg/L' | 'mW/m²' | 'W/m²' | 'W/m·K' | 'm²/s' | 'deg C' | 'deg second' | 'deg minute' | 'second' | 'minute' | 'hour' | 'm';
+
+/**
+ * well_construction_method
+ */
+export type WellConstructionMethod = 'Air-Rotary' | 'Bored or augered' | 'Cable-tool' | 'Hydraulic rotary (mud or water)' | 'Air percussion' | 'Reverse rotary' | 'Driven' | 'Other (explain in notes)';
+
+/**
+ * well_pump_type
+ */
+export type WellPumpType = 'Submersible' | 'Jet' | 'Line Shaft' | 'Hand';
 
 /**
  * well_purpose
