@@ -66,7 +66,7 @@ describe('Ocotillo Integration Tests: Water Well', () => {
       group_id: 1,
       name: 'Test Water Well',
       first_visit_date: '2025-01-08',
-      well_purposes: ['monitoring'],
+      well_purposes: ['Monitoring'],
       well_construction_notes: 'Test construction notes',
       well_casing_diameter: 10,
       well_casing_materials: null,
