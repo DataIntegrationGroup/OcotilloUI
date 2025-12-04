@@ -57,17 +57,22 @@ describe('Ocotillo Integration Tests: Water Well', () => {
 
   it('should create a water well using data provider', async () => {
     const createData = zCreateWell.parse({
-      name: 'Test Water Well',
-      release_status: 'public',
-      first_visit_date: '2025-01-08',
-      location_id: 1,
       well_depth: 10,
       hole_depth: 10,
+      well_casing_depth: 10,
       measuring_point_height: 10,
-      measuring_point_description: 'Test Measuring Point Description',
-      well_purpose: 'monitoring',
-      well_construction_notes: 'Test construction notes',
+      release_status: 'public',
+      location_id: 1,
       group_id: 1,
+      name: 'Test Water Well',
+      first_visit_date: '2025-01-08',
+      well_purposes: ['Monitoring'],
+      well_construction_notes: 'Test construction notes',
+      well_casing_diameter: 10,
+      well_casing_materials: null,
+      measuring_point_description: 'Test Measuring Point Description',
+      notes: null,
+      is_suitable_for_datalogger: true,
     })
 
     const result = await ocotilloDataProvider.create({
