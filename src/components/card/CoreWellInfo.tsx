@@ -1,4 +1,5 @@
 import { IWell } from '@/interfaces/ocotillo/IThing'
+import { Label } from '@mui/icons-material'
 import {
   Card,
   CardContent,
@@ -30,8 +31,8 @@ export const CoreWellInfoCard = ({
 
   const [lon, lat, elevation] = coords ?? []
 
-  const { easting, northing } =
-    well?.current_location?.properties?.utm_coordinates ?? { easting: null, northing: null }
+  const { easting, northing } = well?.current_location?.properties
+    ?.utm_coordinates ?? { easting: null, northing: null }
 
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
@@ -52,31 +53,56 @@ export const CoreWellInfoCard = ({
                 mt: 1,
               }}
             >
-              {(well?.well_purposes && well.well_purposes.length > 0
-                ? well.well_purposes
-                : [well?.thing_type || 'UNKNOWN TYPE']
-              ).map((p) => (
+              <Stack spacing={1}>
+                <Typography
+                  variant="overline"
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <Label /> WELL PURPOSES
+                </Typography>
+                {(well?.well_purposes && well.well_purposes.length > 0
+                  ? well.well_purposes
+                  : [well?.thing_type || 'UNKNOWN TYPE']
+                ).map((p) => (
+                  <Chip
+                    key={p}
+                    sx={{ fontFamily: 'monospace', width: 'fit-content' }}
+                    label={p?.toLocaleUpperCase() || 'UNKNOWN TYPE'}
+                    color="info"
+                  />
+                ))}
+              </Stack>
+              <Stack spacing={1}>
+                <Typography
+                  variant="overline"
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <Label /> RELEASE STATUS
+                </Typography>
                 <Chip
-                  key={p}
-                  sx={{ fontFamily: 'monospace' }}
-                  label={p?.toLocaleUpperCase() || 'UNKNOWN TYPE'}
-                  color="info"
+                  sx={{ fontFamily: 'monospace', width: 'fit-content' }}
+                  label={
+                    well?.release_status?.toLocaleUpperCase() ||
+                    'UNKNOWN STATUS'
+                  }
+                  color="error"
                 />
-              ))}
-              <Chip
-                sx={{ fontFamily: 'monospace' }}
-                label={
-                  well?.release_status?.toLocaleUpperCase() || 'UNKNOWN STATUS'
-                }
-                color="error"
-              />
-              {well?.groups?.map((g) => (
-                <Chip
-                  sx={{ fontFamily: 'monospace' }}
-                  label={g?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
-                  color="primary"
-                />
-              ))}
+              </Stack>
+              <Stack spacing={1}>
+                <Typography
+                  variant="overline"
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <Label /> GROUPS
+                </Typography>
+                {well?.groups?.map((g) => (
+                  <Chip
+                    sx={{ fontFamily: 'monospace', width: 'fit-content' }}
+                    label={g?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
+                    color="primary"
+                  />
+                ))}
+              </Stack>
             </Stack>
           </Grid>
           <Grid size={{ xs: 12 }}>
