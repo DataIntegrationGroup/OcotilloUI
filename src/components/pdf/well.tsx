@@ -154,7 +154,7 @@ export const WellPDF = ({
       language="en-US"
       subject="Well Field Data Report"
     >
-      {false ? <Page size="A4" style={styles.page}>
+      <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Field Compilation Notes</Text>
         <View style={styles.section}>
           <View style={styles.twoByTwoGrid}>
@@ -343,7 +343,7 @@ export const WellPDF = ({
           </Text>
         )}
         <Footer wellId={well?.name} />
-      </Page> : null}
+      </Page>
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Field Compilation Notes</Text>
         <View style={styles.section}>
