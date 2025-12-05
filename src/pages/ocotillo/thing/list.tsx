@@ -10,14 +10,8 @@ import { useNavigation } from '@refinedev/core'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
-    resource: 'thing',
+    resource: 'thing/spring',
     dataProviderName: 'ocotillo',
-
-    meta: {
-      params: {
-        thing_type: ['spring'],
-      },
-    },
   })
 
   const columns = useMemo<GridColDef<ISpring>[]>(
@@ -67,13 +61,8 @@ export const SpringList: React.FC = () => {
 
 export const WellList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IWell>({
-    resource: 'thing',
+    resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_type: ['water well', 'geothermal well'],
-      },
-    },
   })
 
   const { triggerExport, isLoading: exportIsLoading } = useExport({
