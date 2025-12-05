@@ -107,15 +107,9 @@ export const AdditionalWellInformationAccordion = ({
             <Typography variant="h3">Construction Info</Typography>
           </Grid>
           <Grid size={{ xs: 3 }}>
-            <Typography variant="h6">Date:</Typography>
+            <Typography variant="h6">Completion Date:</Typography>
             <Typography variant="body1">
               {well?.well_completion_date || 'N/A'}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 9 }}>
-            <Typography variant="h6">Source of the Completion Info:</Typography>
-            <Typography variant="body1">
-              {well?.well_completion_date_source || 'N/A'}
             </Typography>
           </Grid>
           <Grid size={{ xs: 3 }}>
@@ -131,8 +125,14 @@ export const AdditionalWellInformationAccordion = ({
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
+            <Typography variant="h6">Completion Date Source:</Typography>
+            <Typography variant="body1">
+              {well?.well_completion_date_source || 'N/A'}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12 }}>
             <Typography variant="h6">
-              Source of the Construction Info:
+              Construction Method Source:
             </Typography>
             <Typography variant="body1">
               {well?.well_construction_method_source || 'N/A'}
@@ -141,7 +141,7 @@ export const AdditionalWellInformationAccordion = ({
           <Grid size={{ xs: 12 }}>
             <Typography variant="h3">Well Physical Properties</Typography>
           </Grid>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 3 }}>
             <Typography variant="h6">Casing Diameter:</Typography>
             <Typography variant="body1">
               {well?.well_casing_diameter || 'N/A'}
@@ -150,7 +150,7 @@ export const AdditionalWellInformationAccordion = ({
                 : null}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 9, lg: 3 }}>
             <Typography variant="h6">Casing Depth:</Typography>
             <Typography variant="body1">
               {well?.well_casing_depth || 'N/A'}
@@ -159,19 +159,19 @@ export const AdditionalWellInformationAccordion = ({
                 : null}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Typography variant="h6">Casing Materials:</Typography>
             <Typography variant="body1">
               {well?.well_casing_materials?.join(', ') || 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 3 }}>
             <Typography variant="h6">Pump Type:</Typography>
             <Typography variant="body1">
               {well?.well_pump_type || 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 9 }}>
             <Typography variant="h6">Pump Depth:</Typography>
             <Typography variant="body1">
               {well?.well_pump_depth || 'N/A'}
@@ -194,7 +194,7 @@ export const AdditionalWellInformationAccordion = ({
             <Typography variant="h3">Geology Information</Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <Typography variant="h6">Formation Zone:</Typography>
+            <Typography variant="h6">Formation Completion Code:</Typography>
             <Typography variant="body1">
               {well?.formation_completion_code || 'N/A'}
             </Typography>
@@ -210,8 +210,8 @@ export const AdditionalWellInformationAccordion = ({
             <Typography variant="body1">
               {well?.aquifers && well.aquifers.length > 0
                 ? [
-                    ...new Set(well.aquifers.flatMap((a) => a.aquifer_types)),
-                  ].join(', ')
+                  ...new Set(well.aquifers.flatMap((a) => a.aquifer_types)),
+                ].join(', ')
                 : 'N/A'}
             </Typography>
           </Grid>

@@ -1,6 +1,6 @@
 import { IAddress, IContact, IWell } from '@/interfaces/ocotillo/IThing'
 import { BaseRecord } from '@refinedev/core'
-import { convertLonLatToUTM, parseWktPoint, buildPdfFilename } from '@/utils'
+import { buildPdfFilename } from '@/utils'
 import {
   Document,
   Page,
@@ -148,13 +148,13 @@ export const WellPDF = ({
 
   return (
     <Document
-      title={filename}
+      title={filename || ''}
       author="NMBGMR Ocotillo"
       creator="NMBGMR Ocotillo System"
       language="en-US"
       subject="Well Field Data Report"
     >
-      <Page size="A4" style={styles.page}>
+      {false ? <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Field Compilation Notes</Text>
         <View style={styles.section}>
           <View style={styles.twoByTwoGrid}>
@@ -191,11 +191,10 @@ export const WellPDF = ({
             <View style={styles.cell3}>
               <LineItem
                 title="Elevation"
-                value={`${elevation?.toFixed(0) || 'N/A'} ${
-                  well?.current_location?.properties?.elevation_unit
-                    ? ` ${well?.current_location?.properties?.elevation_unit}`
-                    : null
-                }`}
+                value={`${elevation?.toFixed(0) || 'N/A'} ${well?.current_location?.properties?.elevation_unit
+                  ? ` ${well?.current_location?.properties?.elevation_unit}`
+                  : null
+                  }`}
               />
             </View>
             <View style={styles.cell3}>
@@ -309,8 +308,8 @@ export const WellPDF = ({
                 value={
                   mostRecentObservation?.observation_datetime
                     ? new Date(mostRecentObservation.observation_datetime)
-                        .toISOString()
-                        .slice(0, 10)
+                      .toISOString()
+                      .slice(0, 10)
                     : null
                 }
               />
@@ -344,6 +343,105 @@ export const WellPDF = ({
           </Text>
         )}
         <Footer wellId={well?.name} />
+      </Page> : null}
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.title}>Field Compilation Notes</Text>
+        <View style={styles.section}>
+          <View style={styles.twoByTwoGrid}>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Driller Name"
+                value={well?.well_driller_name}
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Completion Date"
+                value={well?.well_completion_date}
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Completion Date Source"
+                value={well?.well_completion_date_source}
+              />
+            </View>
+          </View>
+          <View style={styles.twoByTwoGrid}>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Construction Method Source"
+                value={well?.well_construction_method_source}
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Casing Diameter"
+                value={
+                  well?.well_casing_diameter ?
+                    `${well?.well_casing_diameter} ${well?.well_casing_diameter_unit}`
+                    : null
+                }
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Casing Materials"
+                value={well?.well_casing_materials.join(', ')}
+              />
+            </View>
+          </View>
+          <View style={styles.twoByTwoGrid}>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Pump Type"
+                value={well?.well_pump_type}
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Pump Depth"
+                value={
+                  well?.well_pump_depth ?
+                    `${well?.well_pump_depth} ${well?.well_pump_depth_unit}`
+                    : null
+                }
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Is open and suitable for a datalogger?"
+                value={well?.is_suitable_for_datalogger?.toString()}
+              />
+            </View>
+          </View>
+          <View style={styles.twoByTwoGrid}>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Formation Completion Code"
+                value={well?.formation_completion_code}
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Aquifer Systems"
+                value={well?.aquifers?.map((a) => a.aquifer_system).join(', ')}
+              />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Aquifer Types"
+                value={
+                  well?.aquifers && well.aquifers.length > 0
+                    ? [
+                      ...new Set(well.aquifers.flatMap((a) => a.aquifer_types)),
+                    ].join(', ')
+                    : null
+                }
+              />
+            </View>
+          </View>
+        </View>
       </Page>
       {assets.length > 0 && (
         <Page size="A4" style={styles.page}>
