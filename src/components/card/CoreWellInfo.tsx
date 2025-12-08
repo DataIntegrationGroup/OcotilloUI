@@ -30,8 +30,8 @@ export const CoreWellInfoCard = ({
 
   const [lon, lat, elevation] = coords ?? []
 
-  const { easting, northing } =
-    well?.current_location?.properties?.utm_coordinates ?? { easting: null, northing: null }
+  const { easting, northing } = well?.current_location?.properties
+    ?.utm_coordinates ?? { easting: null, northing: null }
 
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
@@ -96,13 +96,19 @@ export const CoreWellInfoCard = ({
               {well?.well_depth ? well?.well_depth_unit : null}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Measuring Point Height:</Typography>
             <Typography variant="body1">
               {well?.measuring_point_height || 'N/A'}{' '}
               {well?.measuring_point_height
                 ? well?.measuring_point_height_unit
                 : null}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography variant="h6">Measuring Point Description:</Typography>
+            <Typography variant="body1">
+              {well?.measuring_point_description || 'N/A'}{' '}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>

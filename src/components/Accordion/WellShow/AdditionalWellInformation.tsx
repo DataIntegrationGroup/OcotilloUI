@@ -50,23 +50,19 @@ export const AdditionalWellInformationAccordion = ({
       <AccordionDetails sx={{ p: 3 }}>
         <Grid container spacing={4}>
           <Grid size={{ xs: 12 }}>
-            <Typography variant="h3">Permissions</Typography>
+            <Typography variant="h3">Owner Permissions</Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
             {(!well?.permissions || well.permissions.length === 0) && (
               <Typography variant="body1">N/A</Typography>
             )}
-
             <Stack spacing={2}>
               {well?.permissions?.map((p, i) => (
                 <Box key={i}>
                   <Stack direction="row" alignItems="center" spacing={2}>
-                    {/* Permission type */}
                     <Typography variant="subtitle1" sx={{ minWidth: 200 }}>
                       {p.permission_type}
                     </Typography>
-
-                    {/* Allowed chip */}
                     <Chip
                       label={
                         p.permission_allowed === true
@@ -84,18 +80,17 @@ export const AdditionalWellInformationAccordion = ({
                       }
                       sx={{ fontFamily: 'monospace' }}
                     />
+                    {(p.start_date || p.end_date) && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 0.5 }}
+                      >
+                        From {p.start_date ?? 'Unknown'} to{' '}
+                        {p.end_date ?? 'Unkown'}
+                      </Typography>
+                    )}
                   </Stack>
-                  {(p.start_date || p.end_date) && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 0.5 }}
-                    >
-                      From {p.start_date ?? 'Unknown'} to{' '}
-                      {p.end_date ?? 'Present'}
-                    </Typography>
-                  )}
-
                   {i < well.permissions.length - 1 && (
                     <Divider sx={{ mt: 2 }} />
                   )}
@@ -131,9 +126,7 @@ export const AdditionalWellInformationAccordion = ({
             </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <Typography variant="h6">
-              Construction Method Source:
-            </Typography>
+            <Typography variant="h6">Construction Method Source:</Typography>
             <Typography variant="body1">
               {well?.well_construction_method_source || 'N/A'}
             </Typography>
@@ -144,7 +137,7 @@ export const AdditionalWellInformationAccordion = ({
           <Grid size={{ xs: 3 }}>
             <Typography variant="h6">Casing Diameter:</Typography>
             <Typography variant="body1">
-              {well?.well_casing_diameter || 'N/A'}
+              {well?.well_casing_diameter?.toFixed(2) || 'N/A'}
               {well?.well_casing_diameter
                 ? ` ${well?.well_casing_diameter_unit}`
                 : null}
@@ -153,7 +146,7 @@ export const AdditionalWellInformationAccordion = ({
           <Grid size={{ xs: 9, lg: 3 }}>
             <Typography variant="h6">Casing Depth:</Typography>
             <Typography variant="body1">
-              {well?.well_casing_depth || 'N/A'}
+              {well?.well_casing_depth?.toFixed(2) || 'N/A'}
               {well?.well_casing_depth
                 ? ` ${well?.well_casing_depth_unit}`
                 : null}
@@ -174,7 +167,7 @@ export const AdditionalWellInformationAccordion = ({
           <Grid size={{ xs: 9 }}>
             <Typography variant="h6">Pump Depth:</Typography>
             <Typography variant="body1">
-              {well?.well_pump_depth || 'N/A'}
+              {well?.well_pump_depth?.toFixed(2) || 'N/A'}
               {well?.well_pump_depth ? ` ${well?.well_pump_depth_unit}` : null}
             </Typography>
           </Grid>
@@ -210,8 +203,8 @@ export const AdditionalWellInformationAccordion = ({
             <Typography variant="body1">
               {well?.aquifers && well.aquifers.length > 0
                 ? [
-                  ...new Set(well.aquifers.flatMap((a) => a.aquifer_types)),
-                ].join(', ')
+                    ...new Set(well.aquifers.flatMap((a) => a.aquifer_types)),
+                  ].join(', ')
                 : 'N/A'}
             </Typography>
           </Grid>
