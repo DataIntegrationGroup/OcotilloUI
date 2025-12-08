@@ -101,31 +101,31 @@ export const AdditionalWellInformationAccordion = ({
           <Grid size={{ xs: 12 }}>
             <Typography variant="h3">Construction Info</Typography>
           </Grid>
-          <Grid size={{ xs: 3 }}>
+          <Grid size={{ xs: 6, lg: 3 }}>
             <Typography variant="h6">Completion Date:</Typography>
             <Typography variant="body1">
               {well?.well_completion_date || 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 3 }}>
+          <Grid size={{ xs: 6, lg: 3 }}>
             <Typography variant="h6">Driller Name:</Typography>
             <Typography variant="body1">
               {well?.well_driller_name || 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 9 }}>
-            <Typography variant="h6">Method:</Typography>
+          <Grid size={{ xs: 12, lg: 6 }}>
+            <Typography variant="h6">Construction Method:</Typography>
             <Typography variant="body1">
               {well?.well_construction_method || 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Typography variant="h6">Completion Date Source:</Typography>
             <Typography variant="body1">
               {well?.well_completion_date_source || 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Typography variant="h6">Construction Method Source:</Typography>
             <Typography variant="body1">
               {well?.well_construction_method_source || 'N/A'}
@@ -134,7 +134,7 @@ export const AdditionalWellInformationAccordion = ({
           <Grid size={{ xs: 12 }}>
             <Typography variant="h3">Well Physical Properties</Typography>
           </Grid>
-          <Grid size={{ xs: 3 }}>
+          <Grid size={{ xs: 6, lg: 3 }}>
             <Typography variant="h6">Casing Diameter:</Typography>
             <Typography variant="body1">
               {well?.well_casing_diameter?.toFixed(2) || 'N/A'}
@@ -143,7 +143,7 @@ export const AdditionalWellInformationAccordion = ({
                 : null}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 9, lg: 3 }}>
+          <Grid size={{ xs: 6, lg: 3 }}>
             <Typography variant="h6">Casing Depth:</Typography>
             <Typography variant="body1">
               {well?.well_casing_depth?.toFixed(2) || 'N/A'}
@@ -158,20 +158,20 @@ export const AdditionalWellInformationAccordion = ({
               {well?.well_casing_materials?.join(', ') || 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 3 }}>
+          <Grid size={{ xs: 6, lg: 3 }}>
             <Typography variant="h6">Pump Type:</Typography>
             <Typography variant="body1">
               {well?.well_pump_type || 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 9 }}>
+          <Grid size={{ xs: 6, lg: 3 }}>
             <Typography variant="h6">Pump Depth:</Typography>
             <Typography variant="body1">
               {well?.well_pump_depth?.toFixed(2) || 'N/A'}
               {well?.well_pump_depth ? ` ${well?.well_pump_depth_unit}` : null}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Typography variant="h6">
               Is open and suitable for a datalogger?
             </Typography>
@@ -192,13 +192,13 @@ export const AdditionalWellInformationAccordion = ({
               {well?.formation_completion_code || 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Typography variant="h6">Aquifer Systems:</Typography>
             <Typography variant="body1">
               {well?.aquifers?.map((a) => a.aquifer_system).join(', ') || 'N/A'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Typography variant="h6">Aquifer Types:</Typography>
             <Typography variant="body1">
               {well?.aquifers && well.aquifers.length > 0
