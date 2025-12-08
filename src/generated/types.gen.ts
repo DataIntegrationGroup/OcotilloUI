@@ -684,10 +684,6 @@ export type CreateWell = {
      */
     well_purposes?: Array<WellPurpose> | null;
     /**
-     * Well Construction Notes
-     */
-    well_construction_notes?: string | null;
-    /**
      * Well Casing Diameter
      * Well casing diameter in inches
      */
@@ -2145,10 +2141,6 @@ export type SpringResponse = {
      */
     first_visit_date: string | null;
     /**
-     * Notes
-     */
-    notes?: Array<NoteResponse>;
-    /**
      * Groups
      */
     groups?: Array<GroupResponse>;
@@ -2164,6 +2156,10 @@ export type SpringResponse = {
      * Monitoring Frequencies
      */
     monitoring_frequencies?: Array<MonitoringFrequencyResponse>;
+    /**
+     * General Notes
+     */
+    general_notes?: Array<NoteResponse> | null;
     /**
      * Spring Type
      */
@@ -2225,10 +2221,6 @@ export type ThingResponse = {
      */
     first_visit_date: string | null;
     /**
-     * Notes
-     */
-    notes?: Array<NoteResponse>;
-    /**
      * Groups
      */
     groups?: Array<GroupResponse>;
@@ -2244,6 +2236,10 @@ export type ThingResponse = {
      * Monitoring Frequencies
      */
     monitoring_frequencies?: Array<MonitoringFrequencyResponse>;
+    /**
+     * General Notes
+     */
+    general_notes?: Array<NoteResponse> | null;
     /**
      * Spring Type
      */
@@ -2292,10 +2288,6 @@ export type ThingResponse = {
      * Well Casing Materials
      */
     well_casing_materials?: Array<CasingMaterial>;
-    /**
-     * Well Construction Notes
-     */
-    well_construction_notes?: string | null;
     /**
      * Well Completion Date
      */
@@ -2357,9 +2349,9 @@ export type ThingResponse = {
      */
     measuring_notes?: Array<NoteResponse> | null;
     /**
-     * General Notes
+     * Construction Notes
      */
-    general_notes?: Array<NoteResponse> | null;
+    construction_notes?: Array<NoteResponse> | null;
     /**
      * Permissions
      */
@@ -2992,10 +2984,6 @@ export type WellResponse = {
      */
     first_visit_date: string | null;
     /**
-     * Notes
-     */
-    notes?: Array<NoteResponse>;
-    /**
      * Groups
      */
     groups?: Array<GroupResponse>;
@@ -3011,6 +2999,10 @@ export type WellResponse = {
      * Monitoring Frequencies
      */
     monitoring_frequencies?: Array<MonitoringFrequencyResponse>;
+    /**
+     * General Notes
+     */
+    general_notes?: Array<NoteResponse> | null;
     /**
      * Well Purposes
      */
@@ -3055,10 +3047,6 @@ export type WellResponse = {
      * Well Casing Materials
      */
     well_casing_materials?: Array<CasingMaterial>;
-    /**
-     * Well Construction Notes
-     */
-    well_construction_notes?: string | null;
     /**
      * Well Completion Date
      */
@@ -3120,9 +3108,9 @@ export type WellResponse = {
      */
     measuring_notes?: Array<NoteResponse> | null;
     /**
-     * General Notes
+     * Construction Notes
      */
-    general_notes?: Array<NoteResponse> | null;
+    construction_notes?: Array<NoteResponse> | null;
     /**
      * Permissions
      */
@@ -3248,7 +3236,7 @@ export type MonitoringFrequency = 'Monthly' | 'Bimonthly' | 'Bimonthly reported'
 /**
  * organization
  */
-export type Organization = 'Unknown' | 'City of Aztec' | 'Daybreak Investments' | 'Vallecitos HOA' | 'Naiche Development' | 'Santa Fe County; Santa Fe Animal Shelter' | 'El Guicu Ditch Association' | 'Santa Fe Municipal Airport' | 'Uluru Development' | "AllSup's Convenience Stores" | 'Santa Fe Downs' | 'City of Truth or Consequences, WWTP' | 'Riverbend Hotsprings' | 'Armendaris Ranch' | 'El Paso Water' | 'BLM, Socorro Field Office' | 'USFWS' | 'NPS' | 'Sile MDWCA' | 'Pena Blanca Water & Sanitation District' | 'Town of Questa' | 'Lamy MDWCA' | 'Town of Cerro' | 'Farr Cattle Company' | 'Carrizozo Orchard' | 'USFS, Kiowa Grasslands' | 'Cloud Country West Subdivision' | 'Chama West Water Users Association' | 'El Rito Regional Water and Waste Water Association' | 'West Rim MDWUA' | 'Village of Willard' | 'Quemado Municipal Water & SWA' | 'Coyote Creek MDWUA' | 'La Joya CWDA' | 'NM Firefighters Training Academy' | 'Cebolleta Land Grant' | 'Madrid Water Co-op' | 'Sun Valley Water and Sanitation' | 'Bluewater Lake MDWCA' | 'Bluewater Acres Domestic WUA' | 'Lybrook MDWCA' | 'New Mexico Museum of Natural History' | 'Hillsboro MDWCA' | 'Tyrone MDWCA' | 'Santa Clara Water System' | 'Casas Adobes MDWCA' | 'Lake Roberts WUA' | 'El Creston MDWCA' | 'Reserve Municipality Water Works' | 'Bayard' | 'Town of Estancia' | 'Pie Town MDWCA' | 'Roosevelt SWCD' | 'Otis MDWCA' | 'White Cliffs MDWUA' | 'Vista Linda Water Co-op' | 'Anasazi Trails Water Co-op' | 'Canon MDWCA' | 'Placitas Trails Water Co-op' | 'BLM, Roswell Office' | 'Forked Lightning Ranch' | 'Cottonwood RWA' | 'Pinon Ridge WUA' | 'McSherry Farms' | 'Agua Sana WUA' | 'Chamita MDWCA' | 'W Spear-bar Ranch' | 'Village of Capitan' | 'Brazos MDWCA' | 'Alto Alps HOA' | 'Chiricahua Desert Museum' | 'Bike Ranch' | 'Hachita MDWCA' | 'Carrizozo Municipal Water' | 'Dunhill Ranch' | 'Santa Fe Conservation Trust' | 'NMSU' | 'USGS' | 'TWDB' | 'NMED' | 'NMOSE' | 'NMBGMR' | 'Bernalillo County' | 'BLM' | 'BLM Taos Office' | 'SFC' | 'SFC, Fire Facilities' | 'SFC, Utilities Dept.' | 'SFC, Valle Vista Water Utility, Inc.' | 'City of Santa Fe' | 'City of Santa Fe WWTP' | 'City of Santa Fe, Municipal Recreation Complex' | 'City of Santa Fe, Sangre de Cristo Water Co.' | 'NMISC' | 'PVACD' | 'SNL' | 'USFS' | 'NMT' | 'NMRWA' | 'NMDOT' | 'Taos SWCD' | 'Otero SWCD' | 'Northeastern SWCD' | 'CDWR' | 'Pendaries Village' | 'A&T Pump & Well Service, LLC' | 'A. G. Wassenaar, Inc' | 'AMEC' | 'Balleau Groundwater, Inc' | 'CDM Smith' | 'CH2M Hill' | 'Corbin Consulting, Inc' | 'Chevron' | 'Daniel B. Stephens & Associates, Inc' | 'EnecoTech' | 'Faith Engineering, Inc' | 'Foster Well Service, Inc' | 'Glorieta Geoscience, Inc' | 'Golder Associates, Inc' | "Hathorn's Well Service, Inc" | 'Hydroscience Associates, Inc' | 'IC Tech, Inc' | 'John Shomaker & Associates, Inc' | 'Kuckleman Pump Service' | 'Los Golondrinas' | 'Minton Engineers' | 'MJDarrconsult, Inc' | 'Puerta del Canon Ranch' | 'Rodgers & Company, Inc' | 'San Pedro Creek Estates HOA' | 'Statewide Drilling, Inc' | 'Tec Drilling Limited' | 'Tetra Tech, Inc' | 'Thompson Drilling, Inc' | 'Witcher & Associates' | 'Zeigler Geologic Consulting, LLC' | 'Sandia Well Service, Inc' | 'San Marcos Association' | 'URS' | 'Vista del Oro' | 'Abeyta Engineering, Inc' | 'Adobe Ranch' | 'Agua Fria Community Water Association' | 'Apache Gap Ranch' | 'Aspendale Mountain Retreat' | 'Augustin Plains Ranch LLC' | 'B & B Cattle Co' | 'Berridge Distributing Company' | "Bishop's Lodge" | 'Bonanza Creek Ranch' | 'Bug Scuffle Water Association' | 'Wehinahpay Mountain Camp' | 'Campbell Ranch' | 'Capitol Ford Santa Fe' | 'Cemex, Inc' | 'Cerro Community Center' | 'Santa Fe Jewish Center' | 'Chupadero MDWCA' | 'Cielo Lumbre HOA' | 'Circle Cross Ranch' | 'City of Alamogordo' | 'City of Portales, Public Works Dept.' | 'City of Socorro' | 'Commonwealth Conservancy' | 'Country Club Garden Mobile Home Park' | 'Crossroads Cattle Co., Ltd' | 'Double H Ranch' | 'E.A. Meadows East' | 'El Camino Realty, Inc' | 'Eldorado Area Water & Sanitation District' | 'Bourbon Grill at El Gancho' | 'El Prado HOA' | 'El Rancho de las Golondrinas' | 'El Rito Canyon MDWCA' | 'Encantado Enterprises' | 'Estrella Concepts LLC' | 'Sixteen Springs Fire Department' | 'Fire Water Lodge' | 'Ford County Land & Cattle Company, Inc' | 'Friendly Construction, Inc' | 'Hacienda Del Cerezo' | 'Hefker Vega Ranch' | 'High Nogal Ranch' | 'Holloman Air Force Base' | 'Hyde Park Estates MDWCA' | 'Desert Village RV & Mobile Home Park' | 'K. Schmitt Trust' | 'La Cienega MDWCA' | 'La Vista HOA' | 'Land Ventures LLC' | 'Las Lagunitas' | 'Las Lagunitas HOA' | 'Living World Ministries' | 'Los Atrevidos, Inc' | 'Los Prados HOA' | 'Malaga MDWCA & SWA' | 'Mangas Outfitters' | 'Medina Gravel Pit' | 'Mendenhall Trading Co' | 'Mesa Verde Ranch' | 'NMDGF' | 'NMSU College of Agriculture' | 'NRAO' | 'NMSA' | 'Nogal MDWCA' | 'O Bar O Ranch' | 'OMI Wastewater Treatment Plant' | 'Old Road Ranch Pardners Ltd' | 'PNM Service Center' | 'Peace Tabernacle Church' | 'Pecos Trail Inn' | 'Pelican Spa' | 'Pistachio Tree Ranch' | 'Rancho Encantado' | 'Rancho San Lucas' | 'Rancho San Marcos' | 'Rancho Viejo Partnership' | 'Ranney Ranch' | 'Rio En Medio MDWCA' | 'San Acacia MDWCA' | 'San Juan Residences' | 'Sangre de Cristo Center' | 'Sangre de Cristo Estates' | 'Santa Fe Community College' | 'Santa Fe County, Fire Facilities' | 'Santa Fe County, Utilities Dept.' | 'Valle Vista Water Utility' | 'Santa Fe County, Valle Vista Water Utility, Inc.' | 'Santa Fe Horse Park' | 'Santa Fe Opera' | 'Santa Fe Waldorf School' | 'Shidoni Foundry and Gallery' | 'Sierra Grande Lodge' | 'Sierra Vista Retirement Community' | 'Slash Triangle Ranch' | 'Stagecoach Motel' | 'State of New Mexico' | 'Stephenson Ranch' | 'Sun Broadcasting Network' | 'Tano Rd LLC' | 'UNM-Taos' | 'Tee Pee Ranch/Tee Pee Subdivision' | 'Tent Rock, Inc' | 'Tesuque MDWCA' | 'The Great Cloud Zen Center' | 'Three Rivers Ranch' | 'Timberon Water and Sanitation District' | 'Town of Magdalena' | 'Town of Taos' | 'Town of Taos, National Guard Armory' | 'Trinity Ranch' | 'Tularosa Basin National Desalination Research Facility' | 'Turquoise Trail Charter School' | 'US Bureau of Indian Affairs, Santa Fe Indian School' | 'USFS, Carson NF, Taos Office' | 'USFS, Cibola NF, Magdalena Ranger District' | 'USFS, Santa Fe NF, Espanola Ranger District' | 'Ute Mountain Farms' | 'VA Hospital' | 'Velte' | 'Vereda Serena Property' | 'Village of Corona' | 'Village of Floyd' | 'Village of Melrose' | 'Village of Vaughn' | 'Vista Land Company' | 'Vista Redonda MDWCA' | 'Vista de Oro de Placitas Water Users Coop' | 'Walker Ranch' | 'Wild & Woolley Trailer Ranch' | 'Winter Brothers' | 'Yates Petroleum Corporation' | 'Zamora Accounting Services' | 'PLSS';
+export type Organization = 'Unknown' | 'City of Aztec' | 'Daybreak Investments' | 'Vallecitos HOA' | 'SFC, Santa Fe Animal Shelter' | 'El Guicu Ditch Association' | 'Santa Fe Municipal Airport' | 'Uluru Development' | "AllSup's Convenience Stores" | 'Santa Fe Downs Resort' | 'City of Truth or Consequences, WWTP' | 'Riverbend Hotsprings' | 'Armendaris Ranch' | 'El Paso Water' | 'BLM, Socorro Field Office' | 'USFWS' | 'Sile MDWCA' | 'Pena Blanca Water & Sanitation District' | 'Town of Questa' | 'Town of Cerro' | 'Farr Cattle Company' | 'Carrizozo Orchard' | 'USFS, Kiowa Grasslands' | 'Cloud Country West Subdivision' | 'Chama West WUA' | 'El Rito Regional Water and Waste Water Association' | 'West Rim MDWUA' | 'Village of Willard' | 'Quemado Municipal Water & SWA' | 'Coyote Creek MDWUA' | 'Lamy MDWCA' | 'La Joya CWDA' | 'NM Firefighters Training Academy' | 'Cebolleta Land Grant' | 'Madrid Water Co-op' | 'Sun Valley Water and Sanitation' | 'Bluewater Lake MDWCA' | 'Bluewater Acres Domestic WUA' | 'Lybrook MDWCA' | 'New Mexico Museum of Natural History' | 'Hillsboro MDWCA' | 'Tyrone MDWCA' | 'Santa Clara Water System' | 'Casas Adobes MDWCA' | 'Lake Roberts WUA' | 'El Creston MDWCA' | 'Reserve Municipality Water Works' | 'Town of Estancia' | 'Pie Town MDWCA' | 'Roosevelt SWCD' | 'Otis MDWCA' | 'White Cliffs MDWUA' | 'Vista Linda Water Co-op' | 'Anasazi Trails Water Co-op' | 'Canon MDWCA' | 'Placitas Trails Water Co-op' | 'BLM, Roswell Office' | 'Forked Lightning Ranch' | 'Cottonwood RWA' | 'Pinon Ridge WUA' | 'McSherry Farms' | 'Agua Sana WUA' | 'Chamita MDWCA' | 'W Spear-bar Ranch' | 'Village of Capitan' | 'Brazos MDWCA' | 'Alto Alps HOA' | 'Chiricahua Desert Museum' | 'Bike Ranch' | 'Hachita MDWCA' | 'Carrizozo Municipal Water' | 'Dunhill Ranch' | 'Santa Fe Conservation Trust' | 'NMSU' | 'USGS' | 'TWDB' | 'NMED' | 'NMOSE' | 'NMBGMR' | 'Bernalillo County' | 'BLM' | 'BLM Taos Office' | 'SFC' | 'SFC, Fire Facilities' | 'SFC, Utilities Dept.' | 'SFC, Valle Vista Water Utility, Inc.' | 'City of Santa Fe' | 'City of Santa Fe WWTP' | 'City of Santa Fe, Municipal Recreation Complex' | 'City of Santa Fe, Sangre de Cristo Water Co.' | 'NMISC' | 'PVACD' | 'Bayard' | 'SNL' | 'USFS' | 'NMT' | 'NPS' | 'NMRWA' | 'NMDOT' | 'Taos SWCD' | 'Otero SWCD' | 'Northeastern SWCD' | 'CDWR' | 'Pendaries Village' | 'A&T Pump & Well Service, LLC' | 'A. G. Wassenaar, Inc' | 'AMEC' | 'Balleau Groundwater, Inc' | 'CDM Smith' | 'CH2M Hill' | 'Corbin Consulting, Inc' | 'Chevron' | 'Daniel B. Stephens & Associates, Inc' | 'EnecoTech' | 'Faith Engineering, Inc' | 'Foster Well Service, Inc' | 'Glorieta Geoscience, Inc' | 'Golder Associates, Inc' | "Hathorn's Well Service, Inc" | 'Hydroscience Associates, Inc' | 'IC Tech, Inc' | 'John Shomaker & Associates, Inc' | 'Kuckleman Pump Service' | 'Los Golondrinas' | 'Minton Engineers' | 'MJDarrconsult, Inc' | 'Puerta del Canon Ranch' | 'Rodgers & Company, Inc' | 'San Pedro Creek Estates HOA' | 'Statewide Drilling, Inc' | 'Tec Drilling Limited' | 'Tetra Tech, Inc' | 'Thompson Drilling, Inc' | 'Witcher & Associates' | 'Zeigler Geologic Consulting, LLC' | 'Sandia Well Service, Inc' | 'San Marcos Association' | 'URS' | 'Vista del Oro' | 'Abeyta Engineering, Inc' | 'Adobe Ranch' | 'Agua Fria Community Water Association' | 'Apache Gap Ranch' | 'Aspendale Mountain Retreat' | 'Augustin Plains Ranch LLC' | 'B & B Cattle Co' | 'Berridge Distributing Company' | "Bishop's Lodge" | 'Bonanza Creek Ranch' | 'Bug Scuffle Water Association' | 'Wehinahpay Mountain Camp' | 'Campbell Ranch' | 'Capitol Ford Santa Fe' | 'Cemex, Inc' | 'Cerro Community Center' | 'Santa Fe Jewish Center' | 'Chupadero MDWCA' | 'Cielo Lumbre HOA' | 'Circle Cross Ranch' | 'City of Alamogordo' | 'City of Portales, Public Works Dept.' | 'City of Socorro' | 'Commonwealth Conservancy' | 'Country Club Garden Mobile Home Park' | 'Crossroads Cattle Co., Ltd' | 'Double H Ranch' | 'E.A. Meadows East' | 'El Camino Realty, Inc' | 'Eldorado Area Water & Sanitation District' | 'Bourbon Grill at El Gancho' | 'El Prado HOA' | 'El Rancho de las Golondrinas' | 'El Rito Canyon MDWCA' | 'Encantado Enterprises' | 'Estrella Concepts LLC' | 'Sixteen Springs Fire Department' | 'Fire Water Lodge' | 'Ford County Land & Cattle Company, Inc' | 'Friendly Construction, Inc' | 'Hacienda Del Cerezo' | 'Hefker Vega Ranch' | 'High Nogal Ranch' | 'Holloman Air Force Base' | 'Hyde Park Estates MDWCA' | 'Desert Village RV & Mobile Home Park' | 'K. Schmitt Trust' | 'La Cienega MDWCA' | 'La Vista HOA' | 'Land Ventures LLC' | 'Las Lagunitas' | 'Las Lagunitas HOA' | 'Living World Ministries' | 'Los Atrevidos, Inc' | 'Los Prados HOA' | 'Malaga MDWCA & SWA' | 'Mangas Outfitters' | 'Medina Gravel Pit' | 'Mendenhall Trading Co' | 'Mesa Verde Ranch' | 'NMDGF' | 'NMSU College of Agriculture' | 'Naiche Development' | 'NRAO' | 'NMSA' | 'Nogal MDWCA' | 'O Bar O Ranch' | 'OMI Wastewater Treatment Plant' | 'Old Road Ranch Pardners Ltd' | 'PNM Service Center' | 'Peace Tabernacle Church' | 'Pecos Trail Inn' | 'Pelican Spa' | 'Pistachio Tree Ranch' | 'Rancho Encantado' | 'Rancho San Lucas' | 'Rancho San Marcos' | 'Rancho Viejo Partnership' | 'Ranney Ranch' | 'Rio En Medio MDWCA' | 'San Acacia MDWCA' | 'San Juan Residences' | 'Sangre de Cristo Estates' | 'Santa Fe Community College' | 'Sangre de Cristo Center' | 'Santa Fe Horse Park' | 'Santa Fe Opera' | 'Santa Fe Waldorf School' | 'Shidoni Foundry and Gallery' | 'Sierra Grande Lodge' | 'Sierra Vista Retirement Community' | 'Slash Triangle Ranch' | 'Stagecoach Motel' | 'State of New Mexico' | 'Stephenson Ranch' | 'Sun Broadcasting Network' | 'Tano Rd LLC' | 'UNM-Taos' | 'Tee Pee Ranch/Tee Pee Subdivision' | 'Tent Rock, Inc' | 'Tesuque MDWCA' | 'The Great Cloud Zen Center' | 'Three Rivers Ranch' | 'Timberon Water and Sanitation District' | 'Town of Magdalena' | 'Town of Taos' | 'Town of Taos, National Guard Armory' | 'Trinity Ranch' | 'Tularosa Basin National Desalination Research Facility' | 'Turquoise Trail Charter School' | 'US Bureau of Indian Affairs, Santa Fe Indian School' | 'USFS, Carson NF, Taos Office' | 'USFS, Cibola NF, Magdalena Ranger District' | 'USFS, Santa Fe NF, Espanola Ranger District' | 'Ute Mountain Farms' | 'VA Hospital' | 'Velte' | 'Vereda Serena Property' | 'Village of Corona' | 'Village of Floyd' | 'Village of Melrose' | 'Village of Vaughn' | 'Vista Land Company' | 'Vista Redonda MDWCA' | 'Vista de Oro de Placitas Water Users Coop' | 'Walker Ranch' | 'Wild & Woolley Trailer Ranch' | 'Winter Brothers' | 'Yates Petroleum Corporation' | 'Zamora Accounting Services' | 'PLSS';
 
 /**
  * parameter_name

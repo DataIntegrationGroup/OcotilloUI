@@ -298,35 +298,33 @@ export const zOrganization = z.enum([
     'City of Aztec',
     'Daybreak Investments',
     'Vallecitos HOA',
-    'Naiche Development',
-    'Santa Fe County; Santa Fe Animal Shelter',
+    'SFC, Santa Fe Animal Shelter',
     'El Guicu Ditch Association',
     'Santa Fe Municipal Airport',
     'Uluru Development',
     "AllSup's Convenience Stores",
-    'Santa Fe Downs',
+    'Santa Fe Downs Resort',
     'City of Truth or Consequences, WWTP',
     'Riverbend Hotsprings',
     'Armendaris Ranch',
     'El Paso Water',
     'BLM, Socorro Field Office',
     'USFWS',
-    'NPS',
     'Sile MDWCA',
     'Pena Blanca Water & Sanitation District',
     'Town of Questa',
-    'Lamy MDWCA',
     'Town of Cerro',
     'Farr Cattle Company',
     'Carrizozo Orchard',
     'USFS, Kiowa Grasslands',
     'Cloud Country West Subdivision',
-    'Chama West Water Users Association',
+    'Chama West WUA',
     'El Rito Regional Water and Waste Water Association',
     'West Rim MDWUA',
     'Village of Willard',
     'Quemado Municipal Water & SWA',
     'Coyote Creek MDWUA',
+    'Lamy MDWCA',
     'La Joya CWDA',
     'NM Firefighters Training Academy',
     'Cebolleta Land Grant',
@@ -343,7 +341,6 @@ export const zOrganization = z.enum([
     'Lake Roberts WUA',
     'El Creston MDWCA',
     'Reserve Municipality Water Works',
-    'Bayard',
     'Town of Estancia',
     'Pie Town MDWCA',
     'Roosevelt SWCD',
@@ -389,9 +386,11 @@ export const zOrganization = z.enum([
     'City of Santa Fe, Sangre de Cristo Water Co.',
     'NMISC',
     'PVACD',
+    'Bayard',
     'SNL',
     'USFS',
     'NMT',
+    'NPS',
     'NMRWA',
     'NMDOT',
     'Taos SWCD',
@@ -496,6 +495,7 @@ export const zOrganization = z.enum([
     'Mesa Verde Ranch',
     'NMDGF',
     'NMSU College of Agriculture',
+    'Naiche Development',
     'NRAO',
     'NMSA',
     'Nogal MDWCA',
@@ -515,13 +515,9 @@ export const zOrganization = z.enum([
     'Rio En Medio MDWCA',
     'San Acacia MDWCA',
     'San Juan Residences',
-    'Sangre de Cristo Center',
     'Sangre de Cristo Estates',
     'Santa Fe Community College',
-    'Santa Fe County, Fire Facilities',
-    'Santa Fe County, Utilities Dept.',
-    'Valle Vista Water Utility',
-    'Santa Fe County, Valle Vista Water Utility, Inc.',
+    'Sangre de Cristo Center',
     'Santa Fe Horse Park',
     'Santa Fe Opera',
     'Santa Fe Waldorf School',
@@ -1012,7 +1008,6 @@ export const zThingResponse = z.object({
         z.iso.date(),
         z.null()
     ]),
-    notes: z.optional(z.array(zNoteResponse)).default([]),
     groups: z.optional(z.array(zGroupResponse)).default([]),
     monitoring_status: z.union([
         z.string(),
@@ -1020,6 +1015,10 @@ export const zThingResponse = z.object({
     ]),
     alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
     monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
+    general_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -1050,10 +1049,6 @@ export const zThingResponse = z.object({
     ])),
     well_casing_depth_unit: z.optional(z.string()).default('ft'),
     well_casing_materials: z.optional(z.array(zCasingMaterial)).default([]),
-    well_construction_notes: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
     well_completion_date: z.union([
         z.iso.date(),
         z.null()
@@ -1109,7 +1104,7 @@ export const zThingResponse = z.object({
         z.array(zNoteResponse),
         z.null()
     ])),
-    general_notes: z.optional(z.union([
+    construction_notes: z.optional(z.union([
         z.array(zNoteResponse),
         z.null()
     ])),
@@ -1634,7 +1629,7 @@ export const zCreateWell = z.object({
         z.number().gt(0),
         z.null()
     ])),
-    measuring_point_height: z.number().gte(0),
+    measuring_point_height: z.number(),
     release_status: z.optional(zReleaseStatus),
     location_id: z.union([
         z.int(),
@@ -1651,10 +1646,6 @@ export const zCreateWell = z.object({
     ])),
     well_purposes: z.optional(z.union([
         z.array(zWellPurpose),
-        z.null()
-    ])),
-    well_construction_notes: z.optional(z.union([
-        z.string(),
         z.null()
     ])),
     well_casing_diameter: z.optional(z.union([
@@ -2431,7 +2422,6 @@ export const zSpringResponse = z.object({
         z.iso.date(),
         z.null()
     ]),
-    notes: z.optional(z.array(zNoteResponse)).default([]),
     groups: z.optional(z.array(zGroupResponse)).default([]),
     monitoring_status: z.union([
         z.string(),
@@ -2439,6 +2429,10 @@ export const zSpringResponse = z.object({
     ]),
     alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
     monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
+    general_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -2584,7 +2578,6 @@ export const zWellResponse = z.object({
         z.iso.date(),
         z.null()
     ]),
-    notes: z.optional(z.array(zNoteResponse)).default([]),
     groups: z.optional(z.array(zGroupResponse)).default([]),
     monitoring_status: z.union([
         z.string(),
@@ -2592,6 +2585,10 @@ export const zWellResponse = z.object({
     ]),
     alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
     monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
+    general_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
     well_purposes: z.optional(z.array(zWellPurpose)).default([]),
     well_depth: z.optional(z.union([
         z.number(),
@@ -2618,10 +2615,6 @@ export const zWellResponse = z.object({
     ])),
     well_casing_depth_unit: z.optional(z.string()).default('ft'),
     well_casing_materials: z.optional(z.array(zCasingMaterial)).default([]),
-    well_construction_notes: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
     well_completion_date: z.union([
         z.iso.date(),
         z.null()
@@ -2674,7 +2667,7 @@ export const zWellResponse = z.object({
         z.array(zNoteResponse),
         z.null()
     ])),
-    general_notes: z.optional(z.union([
+    construction_notes: z.optional(z.union([
         z.array(zNoteResponse),
         z.null()
     ])),
