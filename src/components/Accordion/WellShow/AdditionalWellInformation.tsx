@@ -195,7 +195,7 @@ export const AdditionalWellInformationAccordion = ({
           <Grid size={{ xs: 12, lg: 6 }}>
             <Typography variant="h6">Aquifer Systems:</Typography>
             <Typography variant="body1">
-              {well?.aquifers
+              {(well?.aquifers ?? [])
                 ?.map((a) => a?.aquifer_system)
                 ?.filter(Boolean)
                 ?.join(', ') || 'N/A'}

@@ -403,7 +403,7 @@ export const WellPDF = ({
             <View style={styles.cell3}>
               <LineItem
                 title="Casing Materials"
-                value={well?.well_casing_materials?.join(', ')}
+                value={(well?.well_casing_materials ?? []).join(', ')}
               />
             </View>
           </View>
@@ -442,10 +442,10 @@ export const WellPDF = ({
             <View style={styles.cell2}>
               <LineItem
                 title="Aquifer Systems"
-                value={well?.aquifers
-                  ?.map((a) => a?.aquifer_system)
-                  ?.filter(Boolean)
-                  ?.join(', ')}
+                value={(well?.aquifers ?? [])
+                  .map((a) => a?.aquifer_system)
+                  .filter(Boolean)
+                  .join(', ')}
               />
             </View>
             <View style={styles.cell2}>
