@@ -39,11 +39,11 @@ const styles = StyleSheet.create({
   },
   cell3: {
     width: '32%', // slightly less than 1/3 for spacing
-    marginBottom: 1.5,
+    marginBottom: 2,
   },
   cell2: {
     width: '48%', // slightly less than 1/2 for spacing
-    marginBottom: 1.5,
+    marginBottom: 2,
   },
   label: {
     fontSize: 12,
@@ -148,7 +148,7 @@ export const WellPDF = ({
 
   return (
     <Document
-      title={filename || ''}
+      title={filename || null}
       author="NMBGMR Ocotillo"
       creator="NMBGMR Ocotillo System"
       language="en-US"
@@ -191,10 +191,11 @@ export const WellPDF = ({
             <View style={styles.cell3}>
               <LineItem
                 title="Elevation"
-                value={`${elevation?.toFixed(0) || 'N/A'} ${well?.current_location?.properties?.elevation_unit
-                  ? ` ${well?.current_location?.properties?.elevation_unit}`
-                  : null
-                  }`}
+                value={`${elevation?.toFixed(2) || 'N/A'} ${
+                  well?.current_location?.properties?.elevation_unit
+                    ? ` ${well?.current_location?.properties?.elevation_unit}`
+                    : null
+                }`}
               />
             </View>
             <View style={styles.cell3}>
@@ -308,8 +309,8 @@ export const WellPDF = ({
                 value={
                   mostRecentObservation?.observation_datetime
                     ? new Date(mostRecentObservation.observation_datetime)
-                      .toISOString()
-                      .slice(0, 10)
+                        .toISOString()
+                        .slice(0, 10)
                     : null
                 }
               />
@@ -350,36 +351,51 @@ export const WellPDF = ({
           <View style={styles.twoByTwoGrid}>
             <View style={styles.cell3}>
               <LineItem
-                title="Driller Name"
-                value={well?.well_driller_name}
-              />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
                 title="Completion Date"
                 value={well?.well_completion_date}
               />
             </View>
             <View style={styles.cell3}>
+              <LineItem title="Driller Name" value={well?.well_driller_name} />
+            </View>
+            <View style={styles.cell3}>
+              <LineItem
+                title="Construction Method"
+                value={well?.well_construction_method}
+              />
+            </View>
+          </View>
+          <View style={styles.twoByTwoGrid}>
+            <View style={styles.cell2}>
               <LineItem
                 title="Completion Date Source"
                 value={well?.well_completion_date_source}
+              />
+            </View>
+            <View style={styles.cell2}>
+              <LineItem
+                title="Construction Method Source"
+                value={well?.well_construction_method_source}
               />
             </View>
           </View>
           <View style={styles.twoByTwoGrid}>
             <View style={styles.cell3}>
               <LineItem
-                title="Construction Method Source"
-                value={well?.well_construction_method_source}
+                title="Casing Diameter"
+                value={
+                  well?.well_casing_diameter
+                    ? `${well?.well_casing_diameter?.toFixed(2)} ${well?.well_casing_diameter_unit}`
+                    : null
+                }
               />
             </View>
             <View style={styles.cell3}>
               <LineItem
-                title="Casing Diameter"
+                title="Casing Depth"
                 value={
-                  well?.well_casing_diameter ?
-                    `${well?.well_casing_diameter} ${well?.well_casing_diameter_unit}`
+                  well?.well_casing_depth
+                    ? `${well?.well_casing_depth?.toFixed(2)} ${well?.well_casing_depth_unit}`
                     : null
                 }
               />
@@ -393,17 +409,14 @@ export const WellPDF = ({
           </View>
           <View style={styles.twoByTwoGrid}>
             <View style={styles.cell3}>
-              <LineItem
-                title="Pump Type"
-                value={well?.well_pump_type}
-              />
+              <LineItem title="Pump Type" value={well?.well_pump_type} />
             </View>
             <View style={styles.cell3}>
               <LineItem
                 title="Pump Depth"
                 value={
-                  well?.well_pump_depth ?
-                    `${well?.well_pump_depth} ${well?.well_pump_depth_unit}`
+                  well?.well_pump_depth
+                    ? `${well?.well_pump_depth?.toFixed(2)} ${well?.well_pump_depth_unit}`
                     : null
                 }
               />
@@ -422,20 +435,26 @@ export const WellPDF = ({
                 value={well?.formation_completion_code}
               />
             </View>
-            <View style={styles.cell3}>
+            <View style={styles.cell3}></View>
+            <View style={styles.cell3}></View>
+          </View>
+          <View style={styles.twoByTwoGrid}>
+            <View style={styles.cell2}>
               <LineItem
                 title="Aquifer Systems"
                 value={well?.aquifers?.map((a) => a.aquifer_system).join(', ')}
               />
             </View>
-            <View style={styles.cell3}>
+            <View style={styles.cell2}>
               <LineItem
                 title="Aquifer Types"
                 value={
                   well?.aquifers && well.aquifers.length > 0
                     ? [
-                      ...new Set(well.aquifers.flatMap((a) => a.aquifer_types)),
-                    ].join(', ')
+                        ...new Set(
+                          well.aquifers.flatMap((a) => a.aquifer_types)
+                        ),
+                      ].join(', ')
                     : null
                 }
               />
@@ -471,6 +490,13 @@ export const WellPDF = ({
   )
 }
 
+const formatTitle = (title: string) => {
+  if (title.endsWith(':') || title.endsWith('?')) {
+    return title
+  }
+  return `${title}:`
+}
+
 const LineItem = ({
   title,
   value,
@@ -483,7 +509,7 @@ const LineItem = ({
 
   return (
     <View style={styles.section}>
-      <Text style={styles.label}>{title}:</Text>
+      <Text style={styles.label}>{formatTitle(title)}</Text>
       <Text style={styles.value}>{safe(value)}</Text>
     </View>
   )
@@ -501,7 +527,7 @@ const SubLineItem = ({
 
   return (
     <View style={styles.subSection}>
-      <Text style={styles.label}>{title}:</Text>
+      <Text style={styles.label}>{formatTitle(title)}</Text>
       <Text style={styles.value}>{safe(value)}</Text>
     </View>
   )
