@@ -1,3 +1,4 @@
+export * from './AdditionalWellInformation'
 export * from './Attachments'
 export * from './AlternateIds'
 export * from './Contacts'

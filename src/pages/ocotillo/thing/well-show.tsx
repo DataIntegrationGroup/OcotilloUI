@@ -19,6 +19,7 @@ import {
   WellScreensAccordion,
   EquipmentAccordion,
   NotesAccordion,
+  AdditionalWellInformationAccordion,
 } from '@/components'
 
 export const WellShow = () => {
@@ -134,6 +135,7 @@ export const WellShow = () => {
           </Grid>
         </Grid>
         <Box component="div">
+          <AdditionalWellInformationAccordion well={well} />
           <NotesAccordion well={well} />
           <EquipmentAccordion id={well?.id} />
           <WellScreensAccordion id={well?.id} />
