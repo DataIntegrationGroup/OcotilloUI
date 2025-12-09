@@ -9,6 +9,7 @@ export type BaseResult = {
 export type AssetResult = BaseResult & {
   group: GroupType.Assets
   properties: {
+    id: number
     storage_service: 'gcs' | 's3' | string
     storage_path: string
     mime_type: string

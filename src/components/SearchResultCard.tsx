@@ -122,7 +122,7 @@ export const ContactCard = ({
               key={`${e}-${i}`}
               size="small"
               color="default"
-              label={`Email: ${highlight(e, query)}`}
+              label={<>Email: {highlight(e, query)}</>}
             />
           ))}
         </Box>

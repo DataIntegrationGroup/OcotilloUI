@@ -89,22 +89,27 @@ export const SearchBar = () => {
   }, [data, query, isFetching, isError])
 
   // Navigate automatically when a result is chosen
-  useEffect(() => {
-    if (!selected) return
-
-    switch (selected.group) {
-      case GroupType.Wells: {
-        const isWaterWell = selected.properties.thing_type === 'water well'
+  const navigateToResult = (option: SearchResult) => {
+    switch (option.group) {
+      case GroupType.Wells:
+      case GroupType.Springs: {
+        const isWaterWell = option.properties.thing_type === 'water well'
         go({
-          to: `ocotillo/${isWaterWell ? 'well' : 'spring'}/show/${selected.properties.id}`,
+          to: `ocotillo/${isWaterWell ? 'well' : 'spring'}/show/${option.properties.id}`,
         })
         break
       }
       case GroupType.Contacts:
-        go({ to: `ocotillo/contact/show/${selected.properties.id}` })
+        go({ to: `ocotillo/contact/show/${option.properties.id}` })
+        break
+
+      case GroupType.Assets:
+        go({
+          to: `ocotillo/assets/show/${option.properties.id}`,
+        })
         break
     }
-  }, [selected, go])
+  }
 
   // Add hotkeys for navigation
   const isMac = navigator.platform.toUpperCase().includes('MAC')
@@ -147,7 +152,11 @@ export const SearchBar = () => {
         // Without this, the listbox never opens and renderOption won't fire.
         filterOptions={(options) => options}
         onInputChange={(_, v) => setQuery(v)}
-        onChange={(_, v) => setSelected(v)}
+        onChange={(_, value) => {
+          if (!value || typeof value === 'string') return
+          setSelected(value)
+          navigateToResult(value)
+        }}
         getOptionLabel={(o) => {
           if (o.__empty) return o.label
           return typeof o === 'string' ? o : o.label || ''
@@ -228,6 +237,11 @@ export const SearchBar = () => {
                     py: 1.5,
                     border: '1px solid #eee',
                     boxShadow: 1,
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation() // prevents double select
+                    navigateToResult(option)
+                    setSelected(option)
                   }}
                 >
                   <Stack spacing={1} sx={{ width: '100%' }}>
