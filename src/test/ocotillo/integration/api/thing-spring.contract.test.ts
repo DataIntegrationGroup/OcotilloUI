@@ -3,20 +3,15 @@ import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zSpringResponse,
   zCreateSpring,
-  zUpdateSpring
+  zUpdateSpring,
 } from '@/generated/zod.gen'
-import {
-  SpringResponse,
-  CreateSpring,
-  UpdateSpring
-} from '@/generated/types.gen' 
+import { SpringResponse, UpdateSpring } from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Spring', () => {
-
   it('should fetch springs using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'thing/spring',
-      pagination: { current: 1, pageSize: 10 }
+      pagination: { current: 1, pageSize: 10 },
     })
 
     expect(result).toHaveProperty('data')
@@ -26,15 +21,17 @@ describe('Ocotillo Integration Tests: Spring', () => {
     if (result.data.length > 0) {
       const spring = result.data[0] as SpringResponse
 
-    // Validate against schema
-    try {
-      const validatedSpring = zSpringResponse.parse(spring)
-      expect(validatedSpring).toBeDefined()
-    } catch (error) {
-      console.error('Schema validation failed:', error.message)
-      console.error('Spring data:', JSON.stringify(spring, null, 2))
-      throw new Error(`API response doesn't match ISpring interface: ${error.message}`)
-    }
+      // Validate against schema
+      try {
+        const validatedSpring = zSpringResponse.parse(spring)
+        expect(validatedSpring).toBeDefined()
+      } catch (error) {
+        console.error('Schema validation failed:', error.message)
+        console.error('Spring data:', JSON.stringify(spring, null, 2))
+        throw new Error(
+          `API response doesn't match ISpring interface: ${error.message}`
+        )
+      }
     }
   })
 
@@ -42,7 +39,7 @@ describe('Ocotillo Integration Tests: Spring', () => {
     const result = await ocotilloDataProvider.getOne({
       resource: 'thing/spring',
       id: 1,
-      meta: {}
+      meta: {},
     })
 
     expect(result).toHaveProperty('data')
@@ -56,22 +53,25 @@ describe('Ocotillo Integration Tests: Spring', () => {
     } catch (error) {
       console.error('Schema validation failed:', error.message)
       console.error('Spring data:', JSON.stringify(spring, null, 2))
-      throw new Error(`API response doesn't match ISpring interface: ${error.message}`)
+      throw new Error(
+        `API response doesn't match ISpring interface: ${error.message}`
+      )
     }
   })
 
   it('should create spring using data provider', async () => {
-    const createData: CreateSpring = zCreateSpring.parse({
+    const createData = zCreateSpring.parse({
       name: 'Test Spring',
       release_status: 'public',
+      first_visit_date: '2025-01-08',
       location_id: 1,
       group_id: 1,
-      spring_type: 'artesian',
+      spring_type: 'Artesian',
     })
 
     const result = await ocotilloDataProvider.create({
       resource: 'thing/spring',
-      variables: createData
+      variables: createData,
     })
 
     expect(result).toHaveProperty('data')
@@ -85,7 +85,9 @@ describe('Ocotillo Integration Tests: Spring', () => {
     } catch (error) {
       console.error('Schema validation failed:', error.message)
       console.error('Spring data:', JSON.stringify(spring, null, 2))
-      throw new Error(`API response doesn't match ISpring interface: ${error.message}`)
+      throw new Error(
+        `API response doesn't match ISpring interface: ${error.message}`
+      )
     }
   })
 
@@ -93,13 +95,14 @@ describe('Ocotillo Integration Tests: Spring', () => {
     const updateData: UpdateSpring = zUpdateSpring.parse({
       name: 'Updated Test Spring',
       release_status: 'public',
+      first_visit_date: '2025-01-08',
       spring_type: 'artesian',
     })
 
     const result = await ocotilloDataProvider.update({
       resource: 'thing/spring',
       id: 1,
-      variables: updateData
+      variables: updateData,
     })
 
     expect(result).toHaveProperty('data')
@@ -113,7 +116,9 @@ describe('Ocotillo Integration Tests: Spring', () => {
     } catch (error) {
       console.error('Schema validation failed:', error.message)
       console.error('Spring data:', JSON.stringify(spring, null, 2))
-      throw new Error(`API response doesn't match ISpring interface: ${error.message}`)
+      throw new Error(
+        `API response doesn't match ISpring interface: ${error.message}`
+      )
     }
   })
 })

@@ -3,15 +3,37 @@
 import { z } from 'zod';
 
 /**
+ * release_status
+ */
+export const zReleaseStatus = z.enum([
+    'draft',
+    'provisional',
+    'final',
+    'published',
+    'archived',
+    'public',
+    'private'
+]);
+
+/**
+ * address_type
+ */
+export const zAddressType = z.enum([
+    'Primary',
+    'Work',
+    'Personal',
+    'Mailing',
+    'Physical'
+]);
+
+/**
  * AddressResponse
  * Response schema for address details.
  */
 export const zAddressResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     contact_id: z.int(),
     address_line_1: z.string(),
     address_line_2: z.optional(z.union([
@@ -22,7 +44,7 @@ export const zAddressResponse = z.object({
     state: z.string(),
     postal_code: z.string(),
     country: z.string(),
-    address_type: z.string()
+    address_type: zAddressType
 });
 
 /**
@@ -39,10 +61,8 @@ export const zAssetResponse = z.object({
     size: z.int(),
     uri: z.string(),
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     storage_service: z.string(),
     signed_url: z.optional(z.union([
         z.string(),
@@ -75,18 +95,60 @@ export const zBodyUploadAssetAssetUploadPost = z.object({
 });
 
 /**
+ * role
+ */
+export const zRole = z.enum([
+    'Unknown',
+    'Principal Investigator',
+    'Owner',
+    'Manager',
+    'Operator',
+    'Driller',
+    'Geologist',
+    'Hydrologist',
+    'Hydrogeologist',
+    'Engineer',
+    'Organization',
+    'Specialist',
+    'Technician',
+    'Research Assistant',
+    'Research Scientist',
+    'Graduate Student',
+    'Biologist',
+    'Lab Manager',
+    'Publications Manager',
+    'Software Developer'
+]);
+
+/**
+ * contact_type
+ */
+export const zContactType = z.enum([
+    'Primary',
+    'Secondary',
+    'Field Event Participant'
+]);
+
+/**
+ * email_type
+ */
+export const zEmailType = z.enum([
+    'Primary',
+    'Work',
+    'Personal'
+]);
+
+/**
  * EmailResponse
  * Response schema for email details.
  */
 export const zEmailResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     contact_id: z.int(),
     email: z.string(),
-    email_type: z.string()
+    email_type: zEmailType
 });
 
 /**
@@ -95,67 +157,26 @@ export const zEmailResponse = z.object({
  */
 export const zPhoneResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     contact_id: z.int(),
-    phone_number: z.string(),
+    phone_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     phone_type: z.string()
 });
 
 /**
- * LocationResponse
- * Response schema for sample location details.
+ * ThingResponseForContact
+ * Response schema for thing details related to a contact. All that is needed
+ * are the id and name
  */
-export const zLocationResponse = z.object({
+export const zThingResponseForContact = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
-    name: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    point: z.string()
-});
-
-/**
- * ThingResponse
- */
-export const zThingResponse = z.object({
-    id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
-    name: z.string(),
-    thing_type: z.string(),
-    active_location: z.optional(z.union([
-        zLocationResponse,
-        z.null()
-    ])),
-    spring_type: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    well_type: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    well_depth: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    hole_depth: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    well_construction_notes: z.optional(z.union([
-        z.string(),
-        z.null()
-    ]))
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    name: z.string()
 });
 
 /**
@@ -164,10 +185,8 @@ export const zThingResponse = z.object({
  */
 export const zContactResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     name: z.union([
         z.string(),
         z.null()
@@ -176,12 +195,13 @@ export const zContactResponse = z.object({
         z.string(),
         z.null()
     ]),
-    role: z.string(),
-    contact_type: z.string(),
+    role: zRole,
+    contact_type: zContactType,
+    incomplete_nma_phones: z.optional(z.array(z.string())).default([]),
     emails: z.optional(z.array(zEmailResponse)).default([]),
     phones: z.optional(z.array(zPhoneResponse)).default([]),
     addresses: z.optional(z.array(zAddressResponse)).default([]),
-    things: z.optional(z.array(zThingResponse)).default([])
+    things: z.optional(z.array(zThingResponseForContact)).default([])
 });
 
 /**
@@ -189,7 +209,7 @@ export const zContactResponse = z.object({
  * Schema for creating an address.
  */
 export const zCreateAddress = z.object({
-    release_status: z.string(),
+    release_status: z.optional(zReleaseStatus),
     contact_id: z.optional(z.union([
         z.int(),
         z.null()
@@ -203,7 +223,7 @@ export const zCreateAddress = z.object({
     state: z.optional(z.string()).default('NM'),
     postal_code: z.string(),
     country: z.optional(z.string()).default('United States'),
-    address_type: z.optional(z.string()).default('Primary')
+    address_type: z.optional(zAddressType)
 });
 
 /**
@@ -219,7 +239,7 @@ export const zCreateAsset = z.object({
     mime_type: z.string(),
     size: z.int(),
     uri: z.string(),
-    release_status: z.string(),
+    release_status: z.optional(zReleaseStatus),
     thing_id: z.optional(z.union([
         z.int(),
         z.null()
@@ -232,13 +252,23 @@ export const zCreateAsset = z.object({
  */
 export const zCreateEmail = z.object({
     email: z.string(),
-    release_status: z.string(),
+    release_status: z.optional(zReleaseStatus),
     contact_id: z.optional(z.union([
         z.int(),
         z.null()
     ])),
-    email_type: z.optional(z.string()).default('Primary')
+    email_type: z.optional(zEmailType)
 });
+
+/**
+ * phone_type
+ */
+export const zPhoneType = z.enum([
+    'Primary',
+    'Work',
+    'Home',
+    'Mobile'
+]);
 
 /**
  * CreatePhone
@@ -246,12 +276,12 @@ export const zCreateEmail = z.object({
  */
 export const zCreatePhone = z.object({
     phone_number: z.string(),
-    release_status: z.string(),
+    release_status: z.optional(zReleaseStatus),
     contact_id: z.optional(z.union([
         z.int(),
         z.null()
     ])),
-    phone_type: z.optional(z.string()).default('Primary')
+    phone_type: z.optional(zPhoneType)
 });
 
 /**
@@ -267,10 +297,10 @@ export const zCreateContact = z.object({
         z.string(),
         z.null()
     ])),
-    release_status: z.string(),
+    release_status: z.optional(zReleaseStatus),
     thing_id: z.int(),
-    role: z.string(),
-    contact_type: z.optional(z.string()).default('Primary'),
+    role: zRole,
+    contact_type: z.optional(zContactType),
     emails: z.optional(z.union([
         z.array(zCreateEmail),
         z.null()
@@ -286,65 +316,48 @@ export const zCreateContact = z.object({
 });
 
 /**
- * CreateGeochronologyAge
- * Schema for creating a geochronology age entry.
+ * unit
  */
-export const zCreateGeochronologyAge = z.object({
-    location_id: z.int(),
-    age: z.number(),
-    age_error: z.number(),
-    method: z.string()
-});
-
-/**
- * CreateGeothermalObservation
- */
-export const zCreateGeothermalObservation = z.object({
-    observed_property: z.string(),
-    observation_datetime: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
-    sample_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
-    sensor_id: z.int(),
-    value: z.union([
-        z.number(),
-        z.null()
-    ]),
-    unit: z.union([
-        z.string(),
-        z.null()
-    ]),
-    observation_depth: z.number()
-});
+export const zUnit = z.enum([
+    'dimensionless',
+    'ft',
+    'ftbgs',
+    'F',
+    'mg/L',
+    'mW/m²',
+    'W/m²',
+    'W/m·K',
+    'm²/s',
+    'deg C',
+    'deg second',
+    'deg minute',
+    'second',
+    'minute',
+    'hour',
+    'm'
+]);
 
 /**
  * CreateGroundwaterLevelObservation
  */
 export const zCreateGroundwaterLevelObservation = z.object({
-    observed_property: z.string(),
+    parameter_id: z.int(),
     observation_datetime: z.iso.datetime({
         offset: true
     }),
-    release_status: z.string(),
-    sample_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
+    release_status: z.optional(zReleaseStatus),
+    sample_id: z.int(),
     sensor_id: z.int(),
     value: z.union([
         z.number(),
         z.null()
     ]),
     unit: z.union([
-        z.string(),
+        zUnit,
         z.null()
     ]),
     measuring_point_height: z.number(),
-    level_status: z.string()
+    groundwater_level_reason: z.string()
 });
 
 /**
@@ -364,7 +377,7 @@ export const zCreateGroup = z.object({
         z.int(),
         z.null()
     ])),
-    release_status: z.string(),
+    release_status: z.optional(zReleaseStatus),
     name: z.string()
 });
 
@@ -389,7 +402,7 @@ export const zCreateLexiconCategory = z.object({
 export const zCreateLexiconTerm = z.object({
     term: z.string(),
     definition: z.string(),
-    categories: z.array(zCreateLexiconCategory)
+    categories: z.array(z.string())
 });
 
 /**
@@ -404,24 +417,42 @@ export const zCreateLexiconTriple = z.object({
 });
 
 /**
+ * CreateNote
+ * Schema for creating a new Note. The parent object's ID and type will be
+ * taken from the URL path, not the request body.
+ */
+export const zCreateNote = z.object({
+    note_type: z.string(),
+    content: z.string(),
+    release_status: z.optional(zReleaseStatus)
+});
+
+/**
  * CreateLocation
  * Schema for creating a sample location.
  */
 export const zCreateLocation = z.object({
-    release_status: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    name: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    notes: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    point: z.string()
+    point: z.string(),
+    release_status: z.optional(zReleaseStatus),
+    notes: z.optional(z.array(zCreateNote)).default([]),
+    elevation: z.number()
 });
+
+/**
+ * publication_type
+ */
+export const zPublicationType = z.enum([
+    'Map',
+    'Report',
+    'Dataset',
+    'Model',
+    'Software',
+    'Paper',
+    'Thesis',
+    'Book',
+    'Conference',
+    'Webpage'
+]);
 
 /**
  * CreatePublication
@@ -439,8 +470,65 @@ export const zCreatePublication = z.object({
         z.string(),
         z.null()
     ])),
-    publication_type: z.string()
+    publication_type: zPublicationType
 });
+
+/**
+ * sample_matrix
+ */
+export const zSampleMatrix = z.enum([
+    'water',
+    'groundwater',
+    'soil'
+]);
+
+/**
+ * sample_method
+ */
+export const zSampleMethod = z.enum([
+    'Unknown',
+    'Airline measurement',
+    'Analog or graphic recorder',
+    'Calibrated airline measurement',
+    'Differential GPS; especially applicable to surface expression of ground water',
+    'Estimated',
+    'Transducer',
+    'Pressure-gage measurement',
+    'Calibrated pressure-gage measurement',
+    'Interpreted from geophysical logs',
+    'Manometer',
+    'Non-recording gage',
+    'Observed (required for F, N, and W water level status)',
+    'Sonic water level meter (acoustic pulse)',
+    'Reported, method not known',
+    'Steel-tape measurement',
+    'Electric tape measurement (E-probe)',
+    'Unknown (for legacy data only; not for new data entry)',
+    'Calibrated electric tape; accuracy of equipment has been checked',
+    'Calibrated electric cable',
+    'Uncalibrated electric cable',
+    'Continuous acoustic sounder',
+    'Measurement not attempted',
+    'null placeholder',
+    'bailer',
+    'faucet at well head',
+    'faucet or outlet at house',
+    'grab sample',
+    'pump',
+    'thief sampler'
+]);
+
+/**
+ * qc_type
+ */
+export const zQcType = z.enum([
+    'Normal',
+    'Duplicate',
+    'Split',
+    'Field Blank',
+    'Trip Blank',
+    'Equipment Blank'
+]);
 
 /**
  * CreateSample
@@ -449,54 +537,51 @@ export const zCreateSample = z.object({
     sample_date: z.iso.datetime({
         offset: true
     }),
-    sample_top: z.optional(z.union([
+    depth_top: z.optional(z.union([
         z.number(),
         z.null()
     ])),
-    sample_bottom: z.optional(z.union([
+    depth_bottom: z.optional(z.union([
         z.number(),
         z.null()
     ])),
-    release_status: z.string(),
-    thing_id: z.int(),
-    sample_type: z.string(),
-    field_sample_id: z.string(),
-    sampler_name: z.string(),
-    qc_sample: z.optional(z.string()).default('Original'),
-    sensor_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
-    sample_matrix: z.optional(z.union([
+    release_status: z.optional(zReleaseStatus),
+    field_activity_id: z.int(),
+    field_event_participant_id: z.int(),
+    sample_name: z.string(),
+    sample_matrix: zSampleMatrix,
+    sample_method: zSampleMethod,
+    qc_type: zQcType,
+    notes: z.optional(z.union([
         z.string(),
-        z.null()
-    ])),
-    sample_method: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    duplicate_sample_number: z.optional(z.union([
-        z.int(),
         z.null()
     ]))
 });
+
+/**
+ * sensor_type
+ */
+export const zSensorType = z.enum([
+    'DiverLink',
+    'Diver Cable',
+    'Pressure Transducer',
+    'Data Logger',
+    'Barometer',
+    'Acoustic Sounder',
+    'Precip Collector',
+    'Camera',
+    'Soil Moisture Sensor',
+    'Tipping Bucket'
+]);
 
 /**
  * CreateSensor
  * Schema for creating a new sensor.
  */
 export const zCreateSensor = z.object({
-    datetime_installed: z.iso.datetime({
-        offset: true
-    }),
-    datetime_removed: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
-    release_status: z.string(),
+    release_status: z.optional(zReleaseStatus),
     name: z.string(),
+    sensor_type: zSensorType,
     model: z.optional(z.union([
         z.string(),
         z.null()
@@ -505,8 +590,16 @@ export const zCreateSensor = z.object({
         z.string(),
         z.null()
     ])),
-    recording_interval: z.optional(z.union([
-        z.int(),
+    pcn_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    owner_agency: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    sensor_status: z.optional(z.union([
+        z.string(),
         z.null()
     ])),
     notes: z.optional(z.union([
@@ -516,22 +609,37 @@ export const zCreateSensor = z.object({
 });
 
 /**
+ * spring_type
+ */
+export const zSpringType = z.enum([
+    'Artesian',
+    'Ephemeral',
+    'Perennial',
+    'Thermal',
+    'Mineral'
+]);
+
+/**
  * CreateSpring
  * Schema for creating a spring.
  */
 export const zCreateSpring = z.object({
-    release_status: z.string(),
-    location_id: z.optional(z.union([
+    release_status: z.optional(zReleaseStatus),
+    location_id: z.union([
         z.int(),
         z.null()
-    ])),
+    ]),
     group_id: z.optional(z.union([
         z.int(),
         z.null()
     ])),
     name: z.string(),
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
     spring_type: z.optional(z.union([
-        z.string(),
+        zSpringType,
         z.null()
     ]))
 });
@@ -551,70 +659,495 @@ export const zCreateThingIdLink = z.object({
  * CreateWaterChemistryObservation
  */
 export const zCreateWaterChemistryObservation = z.object({
-    observed_property: z.string(),
+    parameter_id: z.int(),
     observation_datetime: z.iso.datetime({
         offset: true
     }),
-    release_status: z.string(),
-    sample_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
+    release_status: z.optional(zReleaseStatus),
+    sample_id: z.int(),
     sensor_id: z.int(),
     value: z.union([
         z.number(),
         z.null()
     ]),
     unit: z.union([
-        z.string(),
+        zUnit,
         z.null()
     ])
 });
+
+/**
+ * well_purpose
+ */
+export const zWellPurpose = z.enum([
+    'Unknown',
+    'Open, unequipped well',
+    'Commercial',
+    'Domestic',
+    'Power generation',
+    'Irrigation',
+    'Livestock',
+    'Mining',
+    'Industrial',
+    'Observation',
+    'Public supply',
+    'Shared domestic',
+    'Institutional',
+    'Unused',
+    'Exploration',
+    'Monitoring',
+    'Production',
+    'Injection'
+]);
+
+/**
+ * casing_material
+ */
+export const zCasingMaterial = z.enum([
+    'PVC',
+    'Steel',
+    'Concrete'
+]);
+
+/**
+ * well_construction_method
+ */
+export const zWellConstructionMethod = z.enum([
+    'Air-Rotary',
+    'Bored or augered',
+    'Cable-tool',
+    'Hydraulic rotary (mud or water)',
+    'Air percussion',
+    'Reverse rotary',
+    'Driven',
+    'Other (explain in notes)'
+]);
+
+/**
+ * well_pump_type
+ */
+export const zWellPumpType = z.enum([
+    'Submersible',
+    'Jet',
+    'Line Shaft',
+    'Hand'
+]);
+
+/**
+ * formation_code
+ */
+export const zFormationCode = z.enum([
+    '000EXRV',
+    '000IRSV',
+    '050QUAL',
+    '100QBAS',
+    '110ALVM',
+    '110AVMB',
+    '110BLSN',
+    '110NTGU',
+    '110PTODC',
+    '111MCCR',
+    '112ANCH',
+    '112CURB',
+    '112LAMA',
+    '112LAMAb',
+    '112LGUN',
+    '112QTBF',
+    '112QTBFlac',
+    '112QTBFpd',
+    '112QTBFppm',
+    '112SNTF',
+    '112SNTFA',
+    '112SNTFOB',
+    '112SNTFP',
+    '112TRTO',
+    '120DTIL',
+    '120ELRT',
+    '120IRSV',
+    '120SBLC',
+    '120SRVB',
+    '120SRVBf',
+    '120TSBV_Lower',
+    '120TSBV_Upper',
+    '121CHMT',
+    '121CHMTv',
+    '121CHMTvs',
+    '121OGLL',
+    '121PUYEF',
+    '121TSUQ',
+    '121TSUQa',
+    '121TSUQacu',
+    '121TSUQacuf',
+    '121TSUQaml',
+    '121TSUQb',
+    '121TSUQbfl',
+    '121TSUQbfm',
+    '121TSUQbp',
+    '121TSUQce',
+    '121TSUQe',
+    '121TSUQs',
+    '121TSUQsa',
+    '121TSUQsc',
+    '121TSUQsf',
+    '122CHOC',
+    '122CRTO',
+    '122OJOC',
+    '122PICR',
+    '122PPTS',
+    '122SNTFP',
+    '123DTILSPRS',
+    '123DTMGandbas',
+    '123DTMGign',
+    '123DTMGrhydac',
+    '123ESPN',
+    '123GLST',
+    '123PICS',
+    '123PICSc',
+    '123PICSl',
+    '123SPRSDTMGlava',
+    '123SPRSlower',
+    '123SPRSmid_uppe',
+    '124BACA',
+    '124CBMN',
+    '124LLVS',
+    '124PSCN',
+    '124RGIN',
+    '124SNJS',
+    '124TPCS',
+    '125NCMN',
+    '125NCMNS',
+    '125RTON',
+    '130CALDFLOOR',
+    '180TKSCC_Upper',
+    '180TKTR',
+    '210CRCS',
+    '210GLUPC_Lower',
+    '210HOSTD',
+    '210MCDK',
+    '210MNCS',
+    '210MNCSL',
+    '210MNCSU',
+    '211CLFHV',
+    '211CRLL',
+    '211CRVC',
+    '211DKOT',
+    '211DLCO',
+    '211DLTN',
+    '211FRHS',
+    '211FRLD',
+    '211FRMG',
+    '211GBSNC',
+    '211GLLG',
+    '211GLLP',
+    '211GRRG',
+    '211GRRS',
+    '211HOST',
+    '211KRLD',
+    '211LWIS',
+    '211MENF',
+    '211MENFU',
+    '211MVRD',
+    '211OJAM',
+    '211PCCF',
+    '211PIRR',
+    '211PNLK',
+    '211SMKH',
+    '211TLLS',
+    '212KTRP',
+    '217PRGR',
+    '220ENRD',
+    '220JURC',
+    '220NAVJ',
+    '221BLFF',
+    '221CSPG',
+    '221ERADU',
+    '221MRSN',
+    '221MRSN/BBSN',
+    '221MRSN/JCKP',
+    '221MRSN/RCAP',
+    '221MRSN/WWCN',
+    '221SLWS',
+    '221SMVL',
+    '221TDLT',
+    '221WSRC',
+    '221ZUNIS',
+    '231AGZC',
+    '231AGZCU',
+    '231CHNL',
+    '231CORR',
+    '231DCKM',
+    '231PFDF',
+    '231PFDFL',
+    '231PFDFM',
+    '231PFDFU',
+    '231RCKP',
+    '231SNRS',
+    '231SNSL',
+    '231SRMP',
+    '231WNGT',
+    '260SNAN',
+    '260SNAN_lower',
+    '261SNGL',
+    '300YESO',
+    '300YESO_lower',
+    '300YESO_upper',
+    '310ABO',
+    '310DCLL',
+    '310GLOR',
+    '310MBLC',
+    '310TRRS',
+    '310YESO',
+    '310YESOG',
+    '312CSTL',
+    '312RSLR',
+    '313ARTS',
+    '313BLCN',
+    '313BRUC',
+    '313CKBF',
+    '313CLBD',
+    '313CPTN',
+    '313GDLP',
+    '313GOSP',
+    '313SADG',
+    '313SADR',
+    '313TNSL',
+    '313YATS',
+    '315LABR',
+    '315YESOABO',
+    '318ABO',
+    '318BSPG',
+    '318JOYT',
+    '318YESO',
+    '319BRSM',
+    '320HLDR',
+    '320PENN',
+    '320SNDI',
+    '321SGDC',
+    '322BEMN',
+    '325GBLR',
+    '325MDER',
+    '325MDERL',
+    '325MDERU',
+    '325SAND',
+    '326MGDL',
+    '340EPRS',
+    '350PZBA',
+    '350PZBB',
+    '400EMBD',
+    '400PCMB',
+    '400PREC',
+    '400PRECintr',
+    '400PRST',
+    '400TUSS',
+    '410PRCG',
+    '410PRCGf',
+    '410PRCQ',
+    '410PRCQf',
+    '121GILA',
+    '312DYLK',
+    '120WMVL',
+    '313GRBG',
+    '318ABOL',
+    '318ABOU',
+    '112SNTFU',
+    '310FRNR',
+    '312OCHO',
+    '313AZOT',
+    '313QUEN',
+    '319HUCO',
+    '313SVRV',
+    '313CABD',
+    '320GRMS',
+    '211CLRDH',
+    '120BRLM',
+    '122RUBO',
+    '313SADRL',
+    '313SADRU',
+    '313BRNL',
+    '318CPDR',
+    '121BDHC',
+    '313SADY',
+    '221SRFLL',
+    '221BLUF',
+    '221COSP',
+    '317ABYS',
+    '221BRSB',
+    '310SYDR',
+    '400SDVL',
+    '221SRFL',
+    '310SGRC',
+    '231TCVS',
+    '211DCRS',
+    '211ALSN',
+    '211LVNN',
+    '211MORD',
+    '210PRMD',
+    '124ANMS',
+    '211NBRR',
+    '111ALVM',
+    '122SNTFL',
+    '111CPLN',
+    '120CRSN',
+    '111CRMS',
+    '111CRMSA',
+    '111SPOL',
+    '110TURT',
+    '221RCPR',
+    '320BLNG',
+    '112ANCHsr',
+    '121TSUQae',
+    '230TRSC',
+    '122TSUQdx',
+    '123PICSu',
+    '123PICSm',
+    '123PICSmc',
+    '120VBVC',
+    '120VCSS',
+    '124DMDT',
+    '325ALMT',
+    '400SAND',
+    '318VCPK',
+    '318BSVP',
+    '100ALVM',
+    '310PRMN',
+    '110AVPS',
+    '313CRCX',
+    '112SLBL',
+    '112SBCRC',
+    '313CRDM',
+    '112SBDM',
+    '120BLSN',
+    '112SBCR',
+    '112HCBL',
+    '120IVIG',
+    '112RLBL',
+    '112EFBL',
+    '112GRBL',
+    '123SAND',
+    '210MRNH',
+    '320ALMT',
+    '313DLRM',
+    '300PLZC',
+    '122SPRS',
+    '110AVTV',
+    '313DMBS',
+    '120ERSV'
+]);
 
 /**
  * CreateWell
  * Schema for creating a well.
  */
 export const zCreateWell = z.object({
-    release_status: z.string(),
-    location_id: z.optional(z.union([
-        z.int(),
+    well_depth: z.optional(z.union([
+        z.number().gt(0),
         z.null()
     ])),
+    hole_depth: z.optional(z.union([
+        z.number().gt(0),
+        z.null()
+    ])),
+    well_casing_depth: z.optional(z.union([
+        z.number().gt(0),
+        z.null()
+    ])),
+    measuring_point_height: z.number(),
+    release_status: z.optional(zReleaseStatus),
+    location_id: z.union([
+        z.int(),
+        z.null()
+    ]),
     group_id: z.optional(z.union([
         z.int(),
         z.null()
     ])),
     name: z.string(),
-    well_type: z.optional(z.union([
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    well_purposes: z.optional(z.union([
+        z.array(zWellPurpose),
+        z.null()
+    ])),
+    well_casing_diameter: z.optional(z.union([
+        z.number().gt(0),
+        z.null()
+    ])),
+    well_casing_materials: z.optional(z.union([
+        z.array(zCasingMaterial),
+        z.null()
+    ])),
+    measuring_point_description: z.optional(z.union([
         z.string(),
         z.null()
     ])),
-    well_depth: z.optional(z.union([
-        z.number(),
+    notes: z.optional(z.union([
+        z.array(zCreateNote),
         z.null()
     ])),
-    hole_depth: z.optional(z.union([
-        z.number(),
+    well_completion_date: z.optional(z.union([
+        z.iso.date(),
         z.null()
     ])),
-    well_construction_notes: z.optional(z.union([
+    well_completion_date_source: z.optional(z.union([
         z.string(),
+        z.null()
+    ])),
+    well_driller_name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_construction_method: z.optional(z.union([
+        zWellConstructionMethod,
+        z.null()
+    ])),
+    well_construction_method_source: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_pump_type: z.optional(z.union([
+        zWellPumpType,
+        z.null()
+    ])),
+    is_suitable_for_datalogger: z.union([
+        z.boolean(),
+        z.null()
+    ]),
+    formation_completion_code: z.optional(z.union([
+        zFormationCode,
         z.null()
     ]))
 });
+
+/**
+ * screen_type
+ */
+export const zScreenType = z.enum([
+    'PVC',
+    'Steel',
+    'Concrete'
+]);
 
 /**
  * CreateWellScreen
  * Schema for creating a well screen.
  */
 export const zCreateWellScreen = z.object({
-    release_status: z.string(),
+    release_status: z.optional(zReleaseStatus),
     thing_id: z.int(),
-    screen_depth_bottom: z.number(),
-    screen_depth_top: z.number(),
+    aquifer_system_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    geologic_formation_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    screen_depth_bottom: z.number().gt(0),
+    screen_depth_top: z.number().gt(0),
     screen_type: z.optional(z.union([
-        z.string(),
+        zScreenType,
         z.null()
     ])),
     screen_description: z.optional(z.union([
@@ -624,10 +1157,85 @@ export const zCreateWellScreen = z.object({
 });
 
 /**
+ * SensorResponse
+ */
+export const zSensorResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    name: z.string(),
+    sensor_type: zSensorType,
+    model: z.union([
+        z.string(),
+        z.null()
+    ]),
+    serial_no: z.union([
+        z.string(),
+        z.null()
+    ]),
+    pcn_number: z.union([
+        z.string(),
+        z.null()
+    ]),
+    owner_agency: z.union([
+        z.string(),
+        z.null()
+    ]),
+    sensor_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    notes: z.union([
+        z.string(),
+        z.null()
+    ])
+});
+
+/**
+ * DeploymentResponse
+ */
+export const zDeploymentResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    thing_id: z.int(),
+    sensor: zSensorResponse,
+    installation_date: z.iso.date(),
+    removal_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    recording_interval: z.union([
+        z.int(),
+        z.null()
+    ]),
+    recording_interval_units: z.union([
+        z.string(),
+        z.null()
+    ]),
+    hanging_cable_length: z.union([
+        z.number(),
+        z.null()
+    ]),
+    hanging_point_height: z.union([
+        z.number(),
+        z.null()
+    ]),
+    hanging_point_description: z.union([
+        z.string(),
+        z.null()
+    ]),
+    notes: z.union([
+        z.string(),
+        z.null()
+    ])
+});
+
+/**
  * GeoJSONGeometry
  * Geometry schema for GeoJSON response.
  */
-export const zGeoJsonGeometry = z.object({
+export const zSchemasThingGeoJsonGeometry = z.object({
     type: z.string(),
     coordinates: z.union([
         z.array(z.number()),
@@ -643,7 +1251,7 @@ export const zGeoJsonGeometry = z.object({
  */
 export const zFeature = z.object({
     type: z.optional(z.string()).default('Feature'),
-    geometry: zGeoJsonGeometry,
+    geometry: zSchemasThingGeoJsonGeometry,
     properties: z.optional(z.record(z.string(), z.unknown())).default({})
 });
 
@@ -657,27 +1265,262 @@ export const zFeatureCollectionResponse = z.object({
 });
 
 /**
- * GeothermalObservationResponse
+ * activity_type
  */
-export const zGeothermalObservationResponse = z.object({
+export const zActivityType = z.enum([
+    'groundwater level',
+    'water chemistry'
+]);
+
+/**
+ * FieldActivityResponse
+ */
+export const zFieldActivityResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    field_event_id: z.int(),
+    activity_type: zActivityType
+});
+
+/**
+ * FieldEventResponse
+ */
+export const zFieldEventResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    thing_id: z.int(),
+    event_date: z.iso.datetime({
         offset: true
     }),
-    release_status: z.string(),
-    sample_id: z.int(),
-    sensor_id: z.int(),
-    observation_datetime: z.iso.datetime({
-        offset: true
-    }),
-    observed_property: z.string(),
-    value: z.union([
-        z.number(),
+    notes: z.union([
+        z.string(),
+        z.null()
+    ])
+});
+
+/**
+ * elevation_method
+ */
+export const zElevationMethod = z.enum([
+    'Altimeter',
+    'Differentially corrected GPS',
+    'Survey-grade GPS',
+    'Global positioning system (GPS)',
+    'LiDAR DEM',
+    'Level or other survey method',
+    'Interpolated from topographic map',
+    'Interpolated from digital elevation model (DEM)',
+    'Reported',
+    'Survey-grade Global Navigation Satellite Sys, Lvl1',
+    'USGS National Elevation Dataset (NED)',
+    'Unknown'
+]);
+
+/**
+ * GeoJSONUTMCoordinates
+ */
+export const zGeoJsonutmCoordinates = z.object({
+    easting: z.number(),
+    northing: z.number(),
+    utm_zone: z.optional(z.int()).default(13),
+    horizontal_datum: z.optional(z.string()).default('NAD83')
+});
+
+/**
+ * NoteResponse
+ * Response schema for Note details.
+ */
+export const zNoteResponse = z.object({
+    note_type: z.string(),
+    content: z.string(),
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    target_id: z.int(),
+    target_table: z.string()
+});
+
+/**
+ * GeoJSONProperties
+ */
+export const zGeoJsonProperties = z.object({
+    elevation: z.number(),
+    elevation_unit: z.optional(z.string()).default('ft'),
+    vertical_datum: z.optional(z.string()).default('NAVD88'),
+    elevation_method: z.union([
+        zElevationMethod,
         z.null()
     ]),
-    unit: z.string(),
-    observation_depth: z.union([
-        z.number(),
+    utm_coordinates: z.optional(zGeoJsonutmCoordinates),
+    notes: z.optional(z.array(zNoteResponse)).default([]),
+    nma_date_created: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    nma_site_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ]))
+});
+
+/**
+ * parameter_name
+ */
+export const zParameterName = z.enum([
+    'groundwater level',
+    'temperature',
+    'pH',
+    'Alkalinity, Total',
+    'Alkalinity as CaCO3',
+    'Alkalinity as OH-',
+    'Calcium',
+    'Calcium, total, unfiltered',
+    'Chloride',
+    'Carbonate',
+    'Conductivity, laboratory',
+    'Bicarbonate',
+    'Hardness (CaCO3)',
+    'Ion Balance',
+    'Potassium',
+    'Potassium, total, unfiltered',
+    'Magnesium',
+    'Magnesium, total, unfiltered',
+    'Sodium',
+    'Sodium, total, unfiltered',
+    'Sodium and Potassium combined',
+    'Sulfate',
+    'Total Anions',
+    'Total Cations',
+    'Total Dissolved Solids',
+    'Tritium',
+    'Age of Water using dissolved gases',
+    'Silver',
+    'Silver, total, unfiltered',
+    'Aluminum',
+    'Aluminum, total, unfiltered',
+    'Arsenic',
+    'Arsenic, total, unfiltered',
+    'Boron',
+    'Boron, total, unfiltered',
+    'Barium',
+    'Barium, total, unfiltered',
+    'Beryllium',
+    'Beryllium, total, unfiltered',
+    'Bromide',
+    '13C:12C ratio',
+    '14C content, pmc',
+    'Uncorrected C14 age',
+    'Cadmium',
+    'Cadmium, total, unfiltered',
+    'Chlorofluorocarbon-11 avg age',
+    'Chlorofluorocarbon-113 avg age',
+    'Chlorofluorocarbon-113/12 avg RATIO age',
+    'Chlorofluorocarbon-12 avg age',
+    'Cobalt',
+    'Cobalt, total, unfiltered',
+    'Chromium',
+    'Chromium, total, unfiltered',
+    'Copper',
+    'Copper, total, unfiltered',
+    'delta O18 sulfate',
+    'Sulfate 34 isotope ratio',
+    'Fluoride',
+    'Iron',
+    'Iron, total, unfiltered',
+    'Deuterium:Hydrogen ratio',
+    'Mercury',
+    'Mercury, total, unfiltered',
+    'Lithium',
+    'Lithium, total, unfiltered',
+    'Manganese',
+    'Manganese, total, unfiltered',
+    'Molybdenum',
+    'Molybdenum, total, unfiltered',
+    'Nickel',
+    'Nickel, total, unfiltered',
+    'Nitrite (as NO2)',
+    'Nitrite (as N)',
+    'Nitrate (as NO3)',
+    'Nitrate (as N)',
+    '18O:16O ratio',
+    'Lead',
+    'Lead, total, unfiltered',
+    'Phosphate',
+    'Antimony',
+    'Antimony, total, unfiltered',
+    'Selenium',
+    'Selenium, total, unfiltered',
+    'Sulfur hexafluoride',
+    'Silicon',
+    'Silicon, total, unfiltered',
+    'Silica',
+    'Tin',
+    'Tin, total, unfiltered',
+    'Strontium',
+    'Strontium, total, unfiltered',
+    'Strontium 87:86 ratio',
+    'Thorium',
+    'Thorium, total, unfiltered',
+    'Titanium',
+    'Titanium, total, unfiltered',
+    'Thallium',
+    'Thallium, total, unfiltered',
+    'Uranium (total, by ICP-MS)',
+    'Uranium, total, unfiltered',
+    'Vanadium',
+    'Vanadium, total, unfiltered',
+    'Zinc',
+    'Zinc, total, unfiltered',
+    'Corrected C14 in years',
+    'Arsenite (arsenic species)',
+    'Arsenate (arsenic species)',
+    'Cyanide',
+    'Estimated recharge temperature',
+    'Hydrogen sulfide',
+    'Ammonia',
+    'Ammonium',
+    'Total nitrogen',
+    'Total Kjeldahl nitrogen',
+    'Dissolved organic carbon',
+    'Total organic carbon',
+    'delta C13 of dissolved inorganic carbon'
+]);
+
+/**
+ * parameter_type
+ */
+export const zParameterType = z.enum([
+    'Field Parameter',
+    'Metal',
+    'Radionuclide',
+    'Major Element',
+    'Minor Element',
+    'Physical property'
+]);
+
+/**
+ * ParameterResponse
+ * Pydantic model for the response of a parameter.
+ * This model can be extended to include additional fields as needed.
+ */
+export const zParameterResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    parameter_name: zParameterName,
+    matrix: z.string(),
+    parameter_type: z.union([
+        zParameterType,
+        z.null()
+    ]),
+    cas_number: z.union([
+        z.string(),
+        z.null()
+    ]),
+    default_unit: z.union([
+        zUnit,
         z.null()
     ])
 });
@@ -687,21 +1530,20 @@ export const zGeothermalObservationResponse = z.object({
  */
 export const zGroundwaterLevelObservationResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     sample_id: z.int(),
-    sensor_id: z.int(),
-    observation_datetime: z.iso.datetime({
-        offset: true
-    }),
-    observed_property: z.string(),
+    sensor_id: z.union([
+        z.int(),
+        z.null()
+    ]),
+    observation_datetime: z.string(),
+    parameter: zParameterResponse,
     value: z.union([
         z.number(),
         z.null()
     ]),
-    unit: z.string(),
+    unit: zUnit,
     depth_to_water_bgs: z.union([
         z.number(),
         z.null()
@@ -710,11 +1552,20 @@ export const zGroundwaterLevelObservationResponse = z.object({
         z.number(),
         z.null()
     ]),
-    level_status: z.union([
+    groundwater_level_reason: z.union([
         z.string(),
         z.null()
     ])
 });
+
+/**
+ * group_type
+ */
+export const zGroupType = z.enum([
+    'Monitoring Plan',
+    'Geographic Area',
+    'Historical'
+]);
 
 /**
  * GroupResponse
@@ -723,17 +1574,19 @@ export const zGroundwaterLevelObservationResponse = z.object({
  */
 export const zGroupResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     name: z.string(),
+    description: z.union([
+        z.string(),
+        z.null()
+    ]),
     project_area: z.union([
         z.string(),
         z.null()
     ]),
-    description: z.union([
-        z.string(),
+    group_type: z.union([
+        zGroupType,
         z.null()
     ]),
     parent_group_id: z.union([
@@ -768,9 +1621,7 @@ export const zHttpValidationError = z.object({
  */
 export const zLexiconCategoryResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     name: z.string(),
     description: z.optional(z.union([
         z.string(),
@@ -785,9 +1636,7 @@ export const zLexiconCategoryResponse = z.object({
  */
 export const zLexiconTermResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     term: z.string(),
     definition: z.string(),
     categories: z.optional(z.array(zLexiconCategoryResponse)).default([])
@@ -798,12 +1647,99 @@ export const zLexiconTermResponse = z.object({
  */
 export const zLexiconTripleResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
+    created_at: z.string(),
     subject: z.string(),
     predicate: z.string(),
     object_: z.string()
+});
+
+/**
+ * GeoJSONGeometry
+ */
+export const zSchemasLocationGeoJsonGeometry = z.object({
+    type: z.optional(z.string()).default('Point'),
+    coordinates: z.tuple([
+        z.unknown(),
+        z.unknown(),
+        z.unknown()
+    ])
+});
+
+/**
+ * LocationGeoJSONResponse
+ */
+export const zLocationGeoJsonResponse = z.object({
+    type: z.optional(z.string()).default('Feature'),
+    geometry: zSchemasLocationGeoJsonGeometry,
+    properties: zGeoJsonProperties
+});
+
+/**
+ * LocationResponse
+ * Response schema for sample location details.
+ */
+export const zLocationResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    notes: z.optional(z.array(zNoteResponse)).default([]),
+    point: z.string(),
+    elevation: z.union([
+        z.number(),
+        z.null()
+    ]),
+    horizontal_datum: z.optional(z.string()).default('WGS84'),
+    vertical_datum: z.optional(z.string()).default('NAVD88'),
+    elevation_method: z.union([
+        zElevationMethod,
+        z.null()
+    ]),
+    state: z.union([
+        z.string(),
+        z.null()
+    ]),
+    county: z.union([
+        z.string(),
+        z.null()
+    ]),
+    quad_name: z.union([
+        z.string(),
+        z.null()
+    ]),
+    nma_date_created: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    nma_site_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ]))
+});
+
+/**
+ * monitoring_frequency
+ */
+export const zMonitoringFrequency = z.enum([
+    'Monthly',
+    'Bimonthly',
+    'Bimonthly reported',
+    'Quarterly',
+    'Biannual',
+    'Annual',
+    'Decadal',
+    'Event-based'
+]);
+
+/**
+ * MonitoringFrequencyResponse
+ */
+export const zMonitoringFrequencyResponse = z.object({
+    monitoring_frequency: zMonitoringFrequency,
+    start_date: z.iso.date(),
+    end_date: z.union([
+        z.iso.date(),
+        z.null()
+    ])
 });
 
 /**
@@ -813,25 +1749,20 @@ export const zLexiconTripleResponse = z.object({
  */
 export const zObservationResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     sample_id: z.int(),
-    sensor_id: z.int(),
-    observation_datetime: z.iso.datetime({
-        offset: true
-    }),
-    observed_property: z.string(),
+    sensor_id: z.union([
+        z.int(),
+        z.null()
+    ]),
+    observation_datetime: z.string(),
+    parameter: zParameterResponse,
     value: z.union([
         z.number(),
         z.null()
     ]),
-    unit: z.string(),
-    observation_depth: z.union([
-        z.number(),
-        z.null()
-    ]),
+    unit: zUnit,
     depth_to_water_bgs: z.union([
         z.number(),
         z.null()
@@ -840,7 +1771,7 @@ export const zObservationResponse = z.object({
         z.number(),
         z.null()
     ]),
-    level_status: z.union([
+    groundwater_level_reason: z.union([
         z.string(),
         z.null()
     ])
@@ -880,10 +1811,10 @@ export const zPageContactResponse = z.object({
 });
 
 /**
- * Page[EmailResponse]
+ * Page[DeploymentResponse]
  */
-export const zPageEmailResponse = z.object({
-    items: z.array(zEmailResponse),
+export const zPageDeploymentResponse = z.object({
+    items: z.array(zDeploymentResponse),
     total: z.int().gte(0),
     page: z.int().gte(1),
     size: z.int().gte(1),
@@ -891,10 +1822,10 @@ export const zPageEmailResponse = z.object({
 });
 
 /**
- * Page[GeothermalObservationResponse]
+ * Page[EmailResponse]
  */
-export const zPageGeothermalObservationResponse = z.object({
-    items: z.array(zGeothermalObservationResponse),
+export const zPageEmailResponse = z.object({
+    items: z.array(zEmailResponse),
     total: z.int().gte(0),
     page: z.int().gte(1),
     size: z.int().gte(1),
@@ -990,43 +1921,477 @@ export const zPagePhoneResponse = z.object({
 });
 
 /**
- * SampleResponse
+ * organization
  */
-export const zSampleResponse = z.object({
+export const zOrganization = z.enum([
+    'Unknown',
+    'City of Aztec',
+    'Daybreak Investments',
+    'Vallecitos HOA',
+    'SFC, Santa Fe Animal Shelter',
+    'El Guicu Ditch Association',
+    'Santa Fe Municipal Airport',
+    'Uluru Development',
+    "AllSup's Convenience Stores",
+    'Santa Fe Downs Resort',
+    'City of Truth or Consequences, WWTP',
+    'Riverbend Hotsprings',
+    'Armendaris Ranch',
+    'El Paso Water',
+    'BLM, Socorro Field Office',
+    'USFWS',
+    'Sile MDWCA',
+    'Pena Blanca Water & Sanitation District',
+    'Town of Questa',
+    'Town of Cerro',
+    'Farr Cattle Company',
+    'Carrizozo Orchard',
+    'USFS, Kiowa Grasslands',
+    'Cloud Country West Subdivision',
+    'Chama West WUA',
+    'El Rito Regional Water and Waste Water Association',
+    'West Rim MDWUA',
+    'Village of Willard',
+    'Quemado Municipal Water & SWA',
+    'Coyote Creek MDWUA',
+    'Lamy MDWCA',
+    'La Joya CWDA',
+    'NM Firefighters Training Academy',
+    'Cebolleta Land Grant',
+    'Madrid Water Co-op',
+    'Sun Valley Water and Sanitation',
+    'Bluewater Lake MDWCA',
+    'Bluewater Acres Domestic WUA',
+    'Lybrook MDWCA',
+    'New Mexico Museum of Natural History',
+    'Hillsboro MDWCA',
+    'Tyrone MDWCA',
+    'Santa Clara Water System',
+    'Casas Adobes MDWCA',
+    'Lake Roberts WUA',
+    'El Creston MDWCA',
+    'Reserve Municipality Water Works',
+    'Town of Estancia',
+    'Pie Town MDWCA',
+    'Roosevelt SWCD',
+    'Otis MDWCA',
+    'White Cliffs MDWUA',
+    'Vista Linda Water Co-op',
+    'Anasazi Trails Water Co-op',
+    'Canon MDWCA',
+    'Placitas Trails Water Co-op',
+    'BLM, Roswell Office',
+    'Forked Lightning Ranch',
+    'Cottonwood RWA',
+    'Pinon Ridge WUA',
+    'McSherry Farms',
+    'Agua Sana WUA',
+    'Chamita MDWCA',
+    'W Spear-bar Ranch',
+    'Village of Capitan',
+    'Brazos MDWCA',
+    'Alto Alps HOA',
+    'Chiricahua Desert Museum',
+    'Bike Ranch',
+    'Hachita MDWCA',
+    'Carrizozo Municipal Water',
+    'Dunhill Ranch',
+    'Santa Fe Conservation Trust',
+    'NMSU',
+    'USGS',
+    'TWDB',
+    'NMED',
+    'NMOSE',
+    'NMBGMR',
+    'Bernalillo County',
+    'BLM',
+    'BLM Taos Office',
+    'SFC',
+    'SFC, Fire Facilities',
+    'SFC, Utilities Dept.',
+    'SFC, Valle Vista Water Utility, Inc.',
+    'City of Santa Fe',
+    'City of Santa Fe WWTP',
+    'City of Santa Fe, Municipal Recreation Complex',
+    'City of Santa Fe, Sangre de Cristo Water Co.',
+    'NMISC',
+    'PVACD',
+    'Bayard',
+    'SNL',
+    'USFS',
+    'NMT',
+    'NPS',
+    'NMRWA',
+    'NMDOT',
+    'Taos SWCD',
+    'Otero SWCD',
+    'Northeastern SWCD',
+    'CDWR',
+    'Pendaries Village',
+    'A&T Pump & Well Service, LLC',
+    'A. G. Wassenaar, Inc',
+    'AMEC',
+    'Balleau Groundwater, Inc',
+    'CDM Smith',
+    'CH2M Hill',
+    'Corbin Consulting, Inc',
+    'Chevron',
+    'Daniel B. Stephens & Associates, Inc',
+    'EnecoTech',
+    'Faith Engineering, Inc',
+    'Foster Well Service, Inc',
+    'Glorieta Geoscience, Inc',
+    'Golder Associates, Inc',
+    "Hathorn's Well Service, Inc",
+    'Hydroscience Associates, Inc',
+    'IC Tech, Inc',
+    'John Shomaker & Associates, Inc',
+    'Kuckleman Pump Service',
+    'Los Golondrinas',
+    'Minton Engineers',
+    'MJDarrconsult, Inc',
+    'Puerta del Canon Ranch',
+    'Rodgers & Company, Inc',
+    'San Pedro Creek Estates HOA',
+    'Statewide Drilling, Inc',
+    'Tec Drilling Limited',
+    'Tetra Tech, Inc',
+    'Thompson Drilling, Inc',
+    'Witcher & Associates',
+    'Zeigler Geologic Consulting, LLC',
+    'Sandia Well Service, Inc',
+    'San Marcos Association',
+    'URS',
+    'Vista del Oro',
+    'Abeyta Engineering, Inc',
+    'Adobe Ranch',
+    'Agua Fria Community Water Association',
+    'Apache Gap Ranch',
+    'Aspendale Mountain Retreat',
+    'Augustin Plains Ranch LLC',
+    'B & B Cattle Co',
+    'Berridge Distributing Company',
+    "Bishop's Lodge",
+    'Bonanza Creek Ranch',
+    'Bug Scuffle Water Association',
+    'Wehinahpay Mountain Camp',
+    'Campbell Ranch',
+    'Capitol Ford Santa Fe',
+    'Cemex, Inc',
+    'Cerro Community Center',
+    'Santa Fe Jewish Center',
+    'Chupadero MDWCA',
+    'Cielo Lumbre HOA',
+    'Circle Cross Ranch',
+    'City of Alamogordo',
+    'City of Portales, Public Works Dept.',
+    'City of Socorro',
+    'Commonwealth Conservancy',
+    'Country Club Garden Mobile Home Park',
+    'Crossroads Cattle Co., Ltd',
+    'Double H Ranch',
+    'E.A. Meadows East',
+    'El Camino Realty, Inc',
+    'Eldorado Area Water & Sanitation District',
+    'Bourbon Grill at El Gancho',
+    'El Prado HOA',
+    'El Rancho de las Golondrinas',
+    'El Rito Canyon MDWCA',
+    'Encantado Enterprises',
+    'Estrella Concepts LLC',
+    'Sixteen Springs Fire Department',
+    'Fire Water Lodge',
+    'Ford County Land & Cattle Company, Inc',
+    'Friendly Construction, Inc',
+    'Hacienda Del Cerezo',
+    'Hefker Vega Ranch',
+    'High Nogal Ranch',
+    'Holloman Air Force Base',
+    'Hyde Park Estates MDWCA',
+    'Desert Village RV & Mobile Home Park',
+    'K. Schmitt Trust',
+    'La Cienega MDWCA',
+    'La Vista HOA',
+    'Land Ventures LLC',
+    'Las Lagunitas',
+    'Las Lagunitas HOA',
+    'Living World Ministries',
+    'Los Atrevidos, Inc',
+    'Los Prados HOA',
+    'Malaga MDWCA & SWA',
+    'Mangas Outfitters',
+    'Medina Gravel Pit',
+    'Mendenhall Trading Co',
+    'Mesa Verde Ranch',
+    'NMDGF',
+    'NMSU College of Agriculture',
+    'Naiche Development',
+    'NRAO',
+    'NMSA',
+    'Nogal MDWCA',
+    'O Bar O Ranch',
+    'OMI Wastewater Treatment Plant',
+    'Old Road Ranch Pardners Ltd',
+    'PNM Service Center',
+    'Peace Tabernacle Church',
+    'Pecos Trail Inn',
+    'Pelican Spa',
+    'Pistachio Tree Ranch',
+    'Rancho Encantado',
+    'Rancho San Lucas',
+    'Rancho San Marcos',
+    'Rancho Viejo Partnership',
+    'Ranney Ranch',
+    'Rio En Medio MDWCA',
+    'San Acacia MDWCA',
+    'San Juan Residences',
+    'Sangre de Cristo Estates',
+    'Santa Fe Community College',
+    'Sangre de Cristo Center',
+    'Santa Fe Horse Park',
+    'Santa Fe Opera',
+    'Santa Fe Waldorf School',
+    'Shidoni Foundry and Gallery',
+    'Sierra Grande Lodge',
+    'Sierra Vista Retirement Community',
+    'Slash Triangle Ranch',
+    'Stagecoach Motel',
+    'State of New Mexico',
+    'Stephenson Ranch',
+    'Sun Broadcasting Network',
+    'Tano Rd LLC',
+    'UNM-Taos',
+    'Tee Pee Ranch/Tee Pee Subdivision',
+    'Tent Rock, Inc',
+    'Tesuque MDWCA',
+    'The Great Cloud Zen Center',
+    'Three Rivers Ranch',
+    'Timberon Water and Sanitation District',
+    'Town of Magdalena',
+    'Town of Taos',
+    'Town of Taos, National Guard Armory',
+    'Trinity Ranch',
+    'Tularosa Basin National Desalination Research Facility',
+    'Turquoise Trail Charter School',
+    'US Bureau of Indian Affairs, Santa Fe Indian School',
+    'USFS, Carson NF, Taos Office',
+    'USFS, Cibola NF, Magdalena Ranger District',
+    'USFS, Santa Fe NF, Espanola Ranger District',
+    'Ute Mountain Farms',
+    'VA Hospital',
+    'Velte',
+    'Vereda Serena Property',
+    'Village of Corona',
+    'Village of Floyd',
+    'Village of Melrose',
+    'Village of Vaughn',
+    'Vista Land Company',
+    'Vista Redonda MDWCA',
+    'Vista de Oro de Placitas Water Users Coop',
+    'Walker Ranch',
+    'Wild & Woolley Trailer Ranch',
+    'Winter Brothers',
+    'Yates Petroleum Corporation',
+    'Zamora Accounting Services',
+    'PLSS'
+]);
+
+/**
+ * ThingIdLinkResponse
+ */
+export const zThingIdLinkResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
-    thing: zThingResponse,
-    sample_type: z.string(),
-    field_sample_id: z.string(),
-    sample_date: z.iso.datetime({
-        offset: true
-    }),
-    sampler_name: z.string(),
-    qc_sample: z.string(),
-    sensor_id: z.union([
-        z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    thing_id: z.int(),
+    relation: z.string(),
+    alternate_id: z.string(),
+    alternate_organization: zOrganization
+});
+
+/**
+ * permission_type
+ */
+export const zPermissionType = z.enum([
+    'Water Level Sample',
+    'Water Chemistry Sample',
+    'Datalogger Installation'
+]);
+
+/**
+ * PermissionHistoryResponse
+ * Even though permission_allowed and start_date are not-nullable in the
+ * database, they are nullable here to accommodate cases where no permission
+ * record exists for a given permission type.
+ */
+export const zPermissionHistoryResponse = z.object({
+    permission_type: zPermissionType,
+    permission_allowed: z.union([
+        z.boolean(),
         z.null()
     ]),
-    sample_matrix: z.union([
+    start_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    end_date: z.union([
+        z.iso.date(),
+        z.null()
+    ])
+});
+
+/**
+ * ThingResponse
+ */
+export const zThingResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    name: z.string(),
+    thing_type: z.string(),
+    current_location: zLocationGeoJsonResponse,
+    first_visit_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    groups: z.optional(z.array(zGroupResponse)).default([]),
+    monitoring_status: z.union([
         z.string(),
         z.null()
     ]),
-    sample_method: z.union([
+    alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
+    monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
+    general_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    spring_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_purposes: z.optional(z.array(zWellPurpose)).default([]),
+    well_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_depth_unit: z.optional(z.string()).default('ft'),
+    well_depth_source: z.union([
         z.string(),
         z.null()
     ]),
-    duplicate_sample_number: z.union([
-        z.int(),
+    hole_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    hole_depth_unit: z.optional(z.string()).default('ft'),
+    well_casing_diameter: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_diameter_unit: z.optional(z.string()).default('in'),
+    well_casing_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_depth_unit: z.optional(z.string()).default('ft'),
+    well_casing_materials: z.optional(z.array(zCasingMaterial)).default([]),
+    well_completion_date: z.union([
+        z.iso.date(),
         z.null()
     ]),
-    sample_top: z.union([
+    well_completion_date_source: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_driller_name: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_construction_method: z.union([
+        zWellConstructionMethod,
+        z.null()
+    ]),
+    well_construction_method_source: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_pump_type: z.union([
+        zWellPumpType,
+        z.null()
+    ]),
+    well_pump_depth: z.union([
         z.number(),
         z.null()
     ]),
-    sample_bottom: z.union([
+    well_pump_depth_unit: z.optional(z.string()).default('ft'),
+    is_suitable_for_datalogger: z.union([
+        z.boolean(),
+        z.null()
+    ]),
+    well_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    measuring_point_height: z.union([
+        z.number(),
+        z.null()
+    ]),
+    measuring_point_height_unit: z.optional(z.string()).default('ft'),
+    measuring_point_description: z.union([
+        z.string(),
+        z.null()
+    ]),
+    aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
+    water_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    measuring_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    construction_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    permissions: z.array(zPermissionHistoryResponse),
+    formation_completion_code: z.union([
+        zFormationCode,
+        z.null()
+    ])
+});
+
+/**
+ * SampleResponse
+ * Developer's note
+ *
+ * The frontend uses multiple fields for a thing, field_even, and field_activity,
+ * which is why full ThingResponse, FieldEventResponse, and FieldActivityResponse
+ * are returned. If the response becomes too large and slow, we can use
+ * <model>.model_dump() and exlude fields to reduce the size.
+ */
+export const zSampleResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    thing: zThingResponse,
+    field_event: zFieldEventResponse,
+    field_activity: zFieldActivityResponse,
+    contact: zContactResponse,
+    sample_date: z.string(),
+    sample_name: z.string(),
+    sample_matrix: zSampleMatrix,
+    sample_method: zSampleMethod,
+    qc_type: zQcType,
+    notes: z.union([
+        z.string(),
+        z.null()
+    ]),
+    depth_top: z.union([
+        z.number(),
+        z.null()
+    ]),
+    depth_bottom: z.union([
         z.number(),
         z.null()
     ])
@@ -1041,43 +2406,6 @@ export const zPageSampleResponse = z.object({
     page: z.int().gte(1),
     size: z.int().gte(1),
     pages: z.int().gte(0)
-});
-
-/**
- * SensorResponse
- */
-export const zSensorResponse = z.object({
-    id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
-    name: z.string(),
-    model: z.union([
-        z.string(),
-        z.null()
-    ]),
-    serial_no: z.union([
-        z.string(),
-        z.null()
-    ]),
-    datetime_installed: z.iso.datetime({
-        offset: true
-    }),
-    datetime_removed: z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ]),
-    recording_interval: z.union([
-        z.int(),
-        z.null()
-    ]),
-    notes: z.union([
-        z.string(),
-        z.null()
-    ])
 });
 
 /**
@@ -1097,14 +2425,24 @@ export const zPageSensorResponse = z.object({
  */
 export const zSpringResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     name: z.string(),
     thing_type: z.string(),
-    active_location: z.optional(z.union([
-        zLocationResponse,
+    current_location: zLocationGeoJsonResponse,
+    first_visit_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    groups: z.optional(z.array(zGroupResponse)).default([]),
+    monitoring_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
+    monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
+    general_notes: z.optional(z.union([
+        z.array(zNoteResponse),
         z.null()
     ])),
     spring_type: z.optional(z.union([
@@ -1122,22 +2460,6 @@ export const zPageSpringResponse = z.object({
     page: z.int().gte(1),
     size: z.int().gte(1),
     pages: z.int().gte(0)
-});
-
-/**
- * ThingIdLinkResponse
- */
-export const zThingIdLinkResponse = z.object({
-    id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
-    thing_id: z.int(),
-    thing: zThingResponse,
-    relation: z.string(),
-    alternate_id: z.string(),
-    alternate_organization: z.string()
 });
 
 /**
@@ -1163,25 +2485,83 @@ export const zPageThingResponse = z.object({
 });
 
 /**
+ * TransducerObservationResponse
+ */
+export const zTransducerObservationResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    value: z.number(),
+    observation_datetime: z.iso.datetime({
+        offset: true
+    }),
+    parameter_id: z.int(),
+    deployment_id: z.int()
+});
+
+/**
+ * review_status
+ */
+export const zReviewStatus = z.enum([
+    'approved',
+    'not reviewed'
+]);
+
+/**
+ * TransducerObservationBlockResponse
+ */
+export const zTransducerObservationBlockResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    review_status: zReviewStatus,
+    start_datetime: z.iso.datetime({
+        offset: true
+    }),
+    end_datetime: z.iso.datetime({
+        offset: true
+    }),
+    parameter_id: z.int()
+});
+
+/**
+ * TransducerObservationWithBlockResponse
+ */
+export const zTransducerObservationWithBlockResponse = z.object({
+    observation: zTransducerObservationResponse,
+    block: zTransducerObservationBlockResponse
+});
+
+/**
+ * Page[TransducerObservationWithBlockResponse]
+ */
+export const zPageTransducerObservationWithBlockResponse = z.object({
+    items: z.array(zTransducerObservationWithBlockResponse),
+    total: z.int().gte(0),
+    page: z.int().gte(1),
+    size: z.int().gte(1),
+    pages: z.int().gte(0)
+});
+
+/**
  * WaterChemistryObservationResponse
  */
 export const zWaterChemistryObservationResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     sample_id: z.int(),
-    sensor_id: z.int(),
-    observation_datetime: z.iso.datetime({
-        offset: true
-    }),
-    observed_property: z.string(),
+    sensor_id: z.union([
+        z.int(),
+        z.null()
+    ]),
+    observation_datetime: z.string(),
+    parameter: zParameterResponse,
     value: z.union([
         z.number(),
         z.null()
     ]),
-    unit: z.string()
+    unit: zUnit
 });
 
 /**
@@ -1201,32 +2581,113 @@ export const zPageWaterChemistryObservationResponse = z.object({
  */
 export const zWellResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     name: z.string(),
     thing_type: z.string(),
-    active_location: z.optional(z.union([
-        zLocationResponse,
+    current_location: zLocationGeoJsonResponse,
+    first_visit_date: z.union([
+        z.iso.date(),
         z.null()
-    ])),
-    well_type: z.optional(z.union([
+    ]),
+    groups: z.optional(z.array(zGroupResponse)).default([]),
+    monitoring_status: z.union([
         z.string(),
         z.null()
+    ]),
+    alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
+    monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
+    general_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
     ])),
+    well_purposes: z.optional(z.array(zWellPurpose)).default([]),
     well_depth: z.optional(z.union([
         z.number(),
         z.null()
     ])),
+    well_depth_unit: z.optional(z.string()).default('ft'),
+    well_depth_source: z.union([
+        z.string(),
+        z.null()
+    ]),
     hole_depth: z.optional(z.union([
         z.number(),
         z.null()
     ])),
-    well_construction_notes: z.optional(z.union([
+    hole_depth_unit: z.optional(z.string()).default('ft'),
+    well_casing_diameter: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_diameter_unit: z.optional(z.string()).default('in'),
+    well_casing_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_depth_unit: z.optional(z.string()).default('ft'),
+    well_casing_materials: z.optional(z.array(zCasingMaterial)).default([]),
+    well_completion_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    well_completion_date_source: z.union([
         z.string(),
         z.null()
-    ]))
+    ]),
+    well_driller_name: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_construction_method: z.union([
+        zWellConstructionMethod,
+        z.null()
+    ]),
+    well_construction_method_source: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_pump_type: z.union([
+        zWellPumpType,
+        z.null()
+    ]),
+    well_pump_depth: z.union([
+        z.number(),
+        z.null()
+    ]),
+    well_pump_depth_unit: z.optional(z.string()).default('ft'),
+    is_suitable_for_datalogger: z.union([
+        z.boolean(),
+        z.null()
+    ]),
+    well_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    measuring_point_height: z.number(),
+    measuring_point_height_unit: z.optional(z.string()).default('ft'),
+    measuring_point_description: z.union([
+        z.string(),
+        z.null()
+    ]),
+    aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
+    water_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    measuring_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    construction_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    permissions: z.array(zPermissionHistoryResponse),
+    formation_completion_code: z.union([
+        zFormationCode,
+        z.null()
+    ])
 });
 
 /**
@@ -1246,14 +2707,34 @@ export const zPageWellResponse = z.object({
  */
 export const zWellScreenResponse = z.object({
     id: z.int(),
-    created_at: z.iso.datetime({
-        offset: true
-    }),
-    release_status: z.string(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
     thing_id: z.int(),
     thing: zWellResponse,
+    aquifer_system_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    aquifer_system: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    aquifer_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    geologic_formation_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    geologic_formation: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     screen_depth_bottom: z.number(),
+    screen_depth_bottom_unit: z.optional(z.string()).default('ft'),
     screen_depth_top: z.number(),
+    screen_depth_top_unit: z.optional(z.string()).default('ft'),
     screen_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -1303,7 +2784,7 @@ export const zPublicationResponse = z.object({
         z.string(),
         z.null()
     ])),
-    publication_type: z.string()
+    publication_type: zPublicationType
 });
 
 /**
@@ -1319,7 +2800,7 @@ export const zResourceNotFoundResponse = z.object({
  */
 export const zUpdateAddress = z.object({
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     contact_id: z.optional(z.union([
@@ -1351,7 +2832,7 @@ export const zUpdateAddress = z.object({
         z.null()
     ])),
     address_type: z.optional(z.union([
-        z.string(),
+        zAddressType,
         z.null()
     ]))
 });
@@ -1361,7 +2842,7 @@ export const zUpdateAddress = z.object({
  */
 export const zUpdateAsset = z.object({
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     name: z.optional(z.union([
@@ -1388,15 +2869,15 @@ export const zUpdateContact = z.object({
         z.null()
     ])),
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     role: z.optional(z.union([
-        z.string(),
+        zRole,
         z.null()
     ])),
     contact_type: z.optional(z.union([
-        z.string(),
+        zContactType,
         z.null()
     ])),
     thing_id: z.optional(z.union([
@@ -1415,7 +2896,7 @@ export const zUpdateEmail = z.object({
         z.null()
     ])),
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     contact_id: z.optional(z.union([
@@ -1423,47 +2904,7 @@ export const zUpdateEmail = z.object({
         z.null()
     ])),
     email_type: z.optional(z.union([
-        z.string(),
-        z.null()
-    ]))
-});
-
-/**
- * UpdateGeothermalObservation
- */
-export const zUpdateGeothermalObservation = z.object({
-    observed_property: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    observation_datetime: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
-    release_status: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    sample_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
-    sensor_id: z.optional(z.union([
-        z.int(),
-        z.null()
-    ])),
-    value: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    unit: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    observation_depth: z.optional(z.union([
-        z.number(),
+        zEmailType,
         z.null()
     ]))
 });
@@ -1472,8 +2913,8 @@ export const zUpdateGeothermalObservation = z.object({
  * UpdateGroundwaterLevelObservation
  */
 export const zUpdateGroundwaterLevelObservation = z.object({
-    observed_property: z.optional(z.union([
-        z.string(),
+    parameter_id: z.optional(z.union([
+        z.int(),
         z.null()
     ])),
     observation_datetime: z.optional(z.union([
@@ -1483,7 +2924,7 @@ export const zUpdateGroundwaterLevelObservation = z.object({
         z.null()
     ])),
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     sample_id: z.optional(z.union([
@@ -1499,14 +2940,14 @@ export const zUpdateGroundwaterLevelObservation = z.object({
         z.null()
     ])),
     unit: z.optional(z.union([
-        z.string(),
+        zUnit,
         z.null()
     ])),
     measuring_point_height: z.optional(z.union([
         z.number(),
         z.null()
     ])),
-    level_status: z.optional(z.union([
+    groundwater_level_reason: z.optional(z.union([
         z.string(),
         z.null()
     ]))
@@ -1531,7 +2972,7 @@ export const zUpdateGroup = z.object({
         z.null()
     ])),
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     name: z.optional(z.union([
@@ -1587,24 +3028,70 @@ export const zUpdateLexiconTriple = z.object({
 });
 
 /**
+ * UpdateNote
+ * Schema for updating an existing Note. All fields are optional
+ */
+export const zUpdateNote = z.object({
+    release_status: z.optional(z.union([
+        zReleaseStatus,
+        z.null()
+    ])),
+    note_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    content: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
+});
+
+/**
+ * coordinate_method
+ */
+export const zCoordinateMethod = z.enum([
+    'Unknown',
+    'Differentially corrected GPS',
+    'Survey-grade global positioning system (SGPS)',
+    'GPS, uncorrected',
+    'Interpolated from map',
+    'Interpolated from DEM',
+    'Reported',
+    'Transit, theodolite, or other survey method'
+]);
+
+/**
  * UpdateLocation
- * Schema for updating a location.
+ * Schema for updating a location. Notes are managed via the polymorphic Notes table.
  */
 export const zUpdateLocation = z.object({
-    release_status: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    name: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    notes: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
     point: z.optional(z.union([
         z.string(),
+        z.null()
+    ])),
+    release_status: z.optional(z.union([
+        zReleaseStatus,
+        z.null()
+    ])),
+    notes: z.optional(z.array(zUpdateNote)).default([]),
+    elevation: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    elevation_accuracy: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    elevation_method: z.optional(z.union([
+        zElevationMethod,
+        z.null()
+    ])),
+    coordinate_accuracy: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    coordinate_method: z.optional(z.union([
+        zCoordinateMethod,
         z.null()
     ]))
 });
@@ -1619,7 +3106,7 @@ export const zUpdatePhone = z.object({
         z.null()
     ])),
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     contact_id: z.optional(z.union([
@@ -1627,16 +3114,13 @@ export const zUpdatePhone = z.object({
         z.null()
     ])),
     phone_type: z.optional(z.union([
-        z.string(),
+        zPhoneType,
         z.null()
     ]))
 });
 
 /**
  * UpdateSample
- * Development notes:
- *
- * setting <type> = None makes the field optional, but if it is defined it must be of that type.
  */
 export const zUpdateSample = z.object({
     sample_date: z.optional(z.union([
@@ -1645,52 +3129,44 @@ export const zUpdateSample = z.object({
         }),
         z.null()
     ])),
-    sample_top: z.optional(z.union([
+    depth_top: z.optional(z.union([
         z.number(),
         z.null()
     ])),
-    sample_bottom: z.optional(z.union([
+    depth_bottom: z.optional(z.union([
         z.number(),
         z.null()
     ])),
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
-    thing_id: z.optional(z.union([
+    field_activity_id: z.optional(z.union([
         z.int(),
         z.null()
     ])),
-    sample_type: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    field_sample_id: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    sampler_name: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    qc_sample: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    sensor_id: z.optional(z.union([
+    field_event_participant_id: z.optional(z.union([
         z.int(),
+        z.null()
+    ])),
+    sample_name: z.optional(z.union([
+        z.string(),
         z.null()
     ])),
     sample_matrix: z.optional(z.union([
-        z.string(),
+        zSampleMatrix,
         z.null()
     ])),
     sample_method: z.optional(z.union([
-        z.string(),
+        zSampleMethod,
         z.null()
     ])),
-    duplicate_sample_number: z.optional(z.union([
-        z.int(),
+    qc_type: z.optional(z.union([
+        zQcType,
+        z.null()
+    ])),
+    notes: z.optional(z.union([
+        z.string(),
         z.null()
     ]))
 });
@@ -1699,24 +3175,16 @@ export const zUpdateSample = z.object({
  * UpdateSensor
  */
 export const zUpdateSensor = z.object({
-    datetime_installed: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
-    datetime_removed: z.optional(z.union([
-        z.iso.datetime({
-            offset: true
-        }),
-        z.null()
-    ])),
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     name: z.optional(z.union([
         z.string(),
+        z.null()
+    ])),
+    sensor_type: z.optional(z.union([
+        zSensorType,
         z.null()
     ])),
     model: z.optional(z.union([
@@ -1727,8 +3195,16 @@ export const zUpdateSensor = z.object({
         z.string(),
         z.null()
     ])),
-    recording_interval: z.optional(z.union([
-        z.int(),
+    pcn_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    owner_agency: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    sensor_status: z.optional(z.union([
+        z.string(),
         z.null()
     ])),
     notes: z.optional(z.union([
@@ -1742,11 +3218,15 @@ export const zUpdateSensor = z.object({
  */
 export const zUpdateSpring = z.object({
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     name: z.optional(z.union([
         z.string(),
+        z.null()
+    ])),
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
         z.null()
     ])),
     spring_type: z.optional(z.union([
@@ -1760,7 +3240,7 @@ export const zUpdateSpring = z.object({
  */
 export const zUpdateThingIdLink = z.object({
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     alternate_organization: z.optional(z.union([
@@ -1781,8 +3261,8 @@ export const zUpdateThingIdLink = z.object({
  * UpdateWaterChemistryObservation
  */
 export const zUpdateWaterChemistryObservation = z.object({
-    observed_property: z.optional(z.union([
-        z.string(),
+    parameter_id: z.optional(z.union([
+        z.int(),
         z.null()
     ])),
     observation_datetime: z.optional(z.union([
@@ -1792,7 +3272,7 @@ export const zUpdateWaterChemistryObservation = z.object({
         z.null()
     ])),
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
         z.null()
     ])),
     sample_id: z.optional(z.union([
@@ -1808,7 +3288,7 @@ export const zUpdateWaterChemistryObservation = z.object({
         z.null()
     ])),
     unit: z.optional(z.union([
-        z.string(),
+        zUnit,
         z.null()
     ]))
 });
@@ -1817,18 +3297,6 @@ export const zUpdateWaterChemistryObservation = z.object({
  * UpdateWell
  */
 export const zUpdateWell = z.object({
-    release_status: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    name: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    well_type: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
     well_depth: z.optional(z.union([
         z.number(),
         z.null()
@@ -1837,8 +3305,40 @@ export const zUpdateWell = z.object({
         z.number(),
         z.null()
     ])),
+    well_casing_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    measuring_point_height: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    release_status: z.optional(z.union([
+        zReleaseStatus,
+        z.null()
+    ])),
+    name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    first_visit_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    well_purposes: z.optional(z.union([
+        z.array(z.string()),
+        z.null()
+    ])),
     well_construction_notes: z.optional(z.union([
         z.string(),
+        z.null()
+    ])),
+    well_casing_diameter: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_materials: z.optional(z.union([
+        z.array(z.string()),
         z.null()
     ]))
 });
@@ -1848,7 +3348,15 @@ export const zUpdateWell = z.object({
  */
 export const zUpdateWellScreen = z.object({
     release_status: z.optional(z.union([
-        z.string(),
+        zReleaseStatus,
+        z.null()
+    ])),
+    aquifer_system_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    geologic_formation_id: z.optional(z.union([
+        z.int(),
         z.null()
     ])),
     screen_depth_bottom: z.optional(z.union([
@@ -2264,20 +3772,6 @@ export const zGetContactAddressesContactContactIdAddressGetData = z.object({
  * Successful Response
  */
 export const zGetContactAddressesContactContactIdAddressGetResponse = zPageAddressResponse;
-
-export const zGetGeochronologyAgeGeochronologyAgeGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.optional(z.never()),
-    query: z.optional(z.object({
-        method: z.optional(z.string()).default('arar')
-    }))
-});
-
-export const zCreateAgeGeochronologyAgePostData = z.object({
-    body: zCreateGeochronologyAge,
-    path: z.optional(z.never()),
-    query: z.optional(z.never())
-});
 
 export const zGetGeospatialGeospatialGetData = z.object({
     body: z.optional(z.never()),
@@ -2761,64 +4255,6 @@ export const zAddWaterChemistryObservationObservationWaterChemistryPostData = z.
  */
 export const zAddWaterChemistryObservationObservationWaterChemistryPostResponse = zWaterChemistryObservationResponse;
 
-export const zGetGeothermalObservationsObservationGeothermalGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.optional(z.never()),
-    query: z.optional(z.object({
-        thing_id: z.optional(z.union([
-            z.int(),
-            z.null()
-        ])),
-        sensor_id: z.optional(z.union([
-            z.int(),
-            z.null()
-        ])),
-        sample_id: z.optional(z.union([
-            z.int(),
-            z.null()
-        ])),
-        start_time: z.optional(z.union([
-            z.iso.datetime({
-                offset: true
-            }),
-            z.null()
-        ])),
-        end_time: z.optional(z.union([
-            z.iso.datetime({
-                offset: true
-            }),
-            z.null()
-        ])),
-        sort: z.optional(z.union([
-            z.string(),
-            z.null()
-        ])),
-        order: z.optional(z.union([
-            z.string(),
-            z.null()
-        ])),
-        filter: z.optional(z.string()),
-        page: z.optional(z.int().gte(1)).default(1),
-        size: z.optional(z.int().gte(1).lte(10000)).default(25)
-    }))
-});
-
-/**
- * Successful Response
- */
-export const zGetGeothermalObservationsObservationGeothermalGetResponse = zPageGeothermalObservationResponse;
-
-export const zAddGeothermalObservationObservationGeothermalPostData = z.object({
-    body: zCreateGeothermalObservation,
-    path: z.optional(z.never()),
-    query: z.optional(z.never())
-});
-
-/**
- * Successful Response
- */
-export const zAddGeothermalObservationObservationGeothermalPostResponse = zGeothermalObservationResponse;
-
 export const zGetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetData = z.object({
     body: z.optional(z.never()),
     path: z.object({
@@ -2871,31 +4307,35 @@ export const zUpdateWaterChemistryObservationObservationWaterChemistryObservatio
  */
 export const zUpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponse = zWaterChemistryObservationResponse;
 
-export const zGetGeothermalObservationByIdObservationGeothermalObservationIdGetData = z.object({
+export const zGetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetData = z.object({
     body: z.optional(z.never()),
-    path: z.object({
-        observation_id: z.int()
-    }),
-    query: z.optional(z.never())
+    path: z.optional(z.never()),
+    query: z.optional(z.object({
+        thing_id: z.optional(z.union([
+            z.int(),
+            z.null()
+        ])),
+        start_time: z.optional(z.union([
+            z.iso.datetime({
+                offset: true
+            }),
+            z.null()
+        ])),
+        end_time: z.optional(z.union([
+            z.iso.datetime({
+                offset: true
+            }),
+            z.null()
+        ])),
+        page: z.optional(z.int().gte(1)).default(1),
+        size: z.optional(z.int().gte(1).lte(10000)).default(25)
+    }))
 });
 
 /**
  * Successful Response
  */
-export const zGetGeothermalObservationByIdObservationGeothermalObservationIdGetResponse = zGeothermalObservationResponse;
-
-export const zUpdateGeothermalObservationObservationGeothermalObservationIdPatchData = z.object({
-    body: zUpdateGeothermalObservation,
-    path: z.object({
-        observation_id: z.int()
-    }),
-    query: z.optional(z.never())
-});
-
-/**
- * Successful Response
- */
-export const zUpdateGeothermalObservationObservationGeothermalObservationIdPatchResponse = zGeothermalObservationResponse;
+export const zGetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetResponse = zPageTransducerObservationWithBlockResponse;
 
 export const zGetAllObservationsObservationGetData = z.object({
     body: z.optional(z.never()),
@@ -2985,6 +4425,10 @@ export const zGetSamplesSampleGetData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
     query: z.optional(z.object({
+        thing_id: z.optional(z.union([
+            z.int(),
+            z.null()
+        ])),
         sort: z.optional(z.string()),
         order: z.optional(z.string()),
         filter: z.optional(z.string()),
@@ -3056,7 +4500,7 @@ export const zGetSensorsSensorGetData = z.object({
     path: z.optional(z.never()),
     query: z.optional(z.object({
         thing_id: z.optional(z.int()),
-        observed_property: z.optional(z.string()),
+        parameter_id: z.optional(z.int()),
         sort: z.optional(z.union([
             z.string(),
             z.null()
@@ -3126,9 +4570,9 @@ export const zSearchApiSearchGetData = z.object({
     path: z.optional(z.never()),
     query: z.object({
         q: z.string(),
+        size: z.optional(z.int().gte(1).lte(10000)).default(25),
         limit: z.optional(z.int()).default(25),
-        page: z.optional(z.int().gte(1)).default(1),
-        size: z.optional(z.int().gte(1).lte(10000)).default(25)
+        page: z.optional(z.int().gte(1)).default(1)
     })
 });
 
@@ -3145,6 +4589,7 @@ export const zGetWaterWellsThingWaterWellGetData = z.object({
         order: z.optional(z.string()),
         filter: z.optional(z.string()),
         query: z.optional(z.string()),
+        name: z.optional(z.string()),
         page: z.optional(z.int().gte(1)).default(1),
         size: z.optional(z.int().gte(1).lte(10000)).default(25)
     }))
@@ -3429,6 +4874,22 @@ export const zGetThingIdLinksThingThingIdIdLinkGetData = z.object({
  * Successful Response
  */
 export const zGetThingIdLinksThingThingIdIdLinkGetResponse = zPageThingIdLinkResponse;
+
+export const zGetThingDeploymentsThingThingIdDeploymentGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        thing_id: z.int()
+    }),
+    query: z.optional(z.object({
+        page: z.optional(z.int().gte(1)).default(1),
+        size: z.optional(z.int().gte(1).lte(10000)).default(25)
+    }))
+});
+
+/**
+ * Successful Response
+ */
+export const zGetThingDeploymentsThingThingIdDeploymentGetResponse = zPageDeploymentResponse;
 
 export const zDeleteWellScreenThingWellScreenWellScreenIdDeleteData = z.object({
     body: z.optional(z.never()),

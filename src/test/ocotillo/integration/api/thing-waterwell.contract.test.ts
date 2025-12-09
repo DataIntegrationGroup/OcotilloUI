@@ -1,22 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import {
-  zWellResponse,
-  zCreateWell,
-  zUpdateWell
-} from '@/generated/zod.gen'
-import {
-  WellResponse,
-  CreateWell,
-  UpdateWell
-} from '@/generated/types.gen'
+import { zWellResponse, zCreateWell, zUpdateWell } from '@/generated/zod.gen'
+import { WellResponse, CreateWell, UpdateWell } from '@/generated/types.gen'
 
 describe('Ocotillo Integration Tests: Water Well', () => {
-
   it('should fetch water wells using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'thing/water-well',
-      pagination: { current: 1, pageSize: 10 }
+      pagination: { current: 1, pageSize: 10 },
     })
 
     expect(result).toHaveProperty('data')
@@ -33,7 +24,9 @@ describe('Ocotillo Integration Tests: Water Well', () => {
       } catch (error) {
         console.error('Schema validation failed:', error.message)
         console.error('Water well data:', JSON.stringify(well, null, 2))
-        throw new Error(`API response doesn't match IWaterWell interface: ${error.message}`)
+        throw new Error(
+          `API response doesn't match IWaterWell interface: ${error.message}`
+        )
       }
     }
   })
@@ -42,7 +35,7 @@ describe('Ocotillo Integration Tests: Water Well', () => {
     const result = await ocotilloDataProvider.getOne({
       resource: 'thing/water-well',
       id: 1,
-      meta: {}
+      meta: {},
     })
 
     expect(result).toHaveProperty('data')
@@ -56,26 +49,35 @@ describe('Ocotillo Integration Tests: Water Well', () => {
     } catch (error) {
       console.error('Schema validation failed:', error.message)
       console.error('Water well data:', JSON.stringify(well, null, 2))
-      throw new Error(`API response doesn't match IWell interface: ${error.message}`)
+      throw new Error(
+        `API response doesn't match IWell interface: ${error.message}`
+      )
     }
   })
 
   it('should create a water well using data provider', async () => {
-    const createData: CreateWell = zCreateWell.parse({
-      name: 'Test Water Well',
-      release_status: 'public',
-      thing_type: 'water-well',
-      location_id: 1,
+    const createData = zCreateWell.parse({
       well_depth: 10,
       hole_depth: 10,
-      well_type: 'water-well',
-      well_construction_notes: 'Test construction notes',
+      well_casing_depth: 10,
+      measuring_point_height: 10,
+      release_status: 'public',
+      location_id: 1,
       group_id: 1,
+      name: 'Test Water Well',
+      first_visit_date: '2025-01-08',
+      well_purposes: ['Monitoring'],
+      well_construction_notes: 'Test construction notes',
+      well_casing_diameter: 10,
+      well_casing_materials: null,
+      measuring_point_description: 'Test Measuring Point Description',
+      notes: null,
+      is_suitable_for_datalogger: true,
     })
 
     const result = await ocotilloDataProvider.create({
       resource: 'thing/water-well',
-      variables: createData
+      variables: createData,
     })
 
     expect(result).toHaveProperty('data')
@@ -89,28 +91,27 @@ describe('Ocotillo Integration Tests: Water Well', () => {
     } catch (error) {
       console.error('Schema validation failed:', error.message)
       console.error('Water well data:', JSON.stringify(well, null, 2))
-      throw new Error(`API response doesn't match IWell interface: ${error.message}`)
+      throw new Error(
+        `API response doesn't match IWell interface: ${error.message}`
+      )
     }
   })
 
   it('should update a water well using data provider', async () => {
     const updateData: UpdateWell = zUpdateWell.parse({
-      id: 1,
       name: 'Updated Test Water Well',
       release_status: 'public',
-      thing_type: 'water-well',
-      location_id: 1,
+      first_visit_date: '2025-01-08',
       well_depth: 10,
       hole_depth: 10,
-      well_type: 'water-well',
+      well_purpose: 'monitoring',
       well_construction_notes: 'Updated test construction notes',
-      group_id: 1,
     })
 
     const result = await ocotilloDataProvider.update({
       resource: 'thing/water-well',
       id: 1,
-      variables: updateData
+      variables: updateData,
     })
 
     expect(result).toHaveProperty('data')
@@ -124,7 +125,9 @@ describe('Ocotillo Integration Tests: Water Well', () => {
     } catch (error) {
       console.error('Schema validation failed:', error.message)
       console.error('Water well data:', JSON.stringify(well, null, 2))
-      throw new Error(`API response doesn't match IWell interface: ${error.message}`)
+      throw new Error(
+        `API response doesn't match IWell interface: ${error.message}`
+      )
     }
   })
 })

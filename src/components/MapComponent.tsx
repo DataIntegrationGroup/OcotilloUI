@@ -1,27 +1,22 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Map, MapRef, NavigationControl, Popup } from 'react-map-gl'
-import { ColorModeContext } from '@/contexts'
-import DrawControl from './DrawControl'
-import 'mapbox-gl/dist/mapbox-gl.css'
-import GeocoderControl from './GeocoderControl'
+import { MapboxStyleSwitcherControl } from 'mapbox-gl-style-switcher'
 import { ControlPosition } from 'react-map-gl'
 import { CircularProgress } from '@mui/material'
-import { settings } from '@/settings'
-import { BaseMapSelect } from '@/components/BaseMapSelect'
 
-// export const getMapStyle = (mode: string, zoom: number) => {
-//   return zoom > 10
-//     ? 'mapbox://styles/mapbox/satellite-streets-v12'
-//     : mode === 'dark'
-//       ? 'mapbox://styles/mapbox/dark-v11'
-//       : 'mapbox://styles/mapbox/light-v11'
-// }
+import type { MapLayerMouseEvent, MapGeoJSONFeature } from 'react-map-gl'
+
+import GeocoderControl from './GeocoderControl'
+import DrawControl from './DrawControl'
+
+import { settings } from '@/settings'
+
+import { DEFAULT_MAPBOX_BASEMAP, MAPBOX_BASEMAPS } from '@/constants'
+
+import 'mapbox-gl/dist/mapbox-gl.css'
+import 'mapbox-gl-style-switcher/styles.css'
+
+type SelectionPolygons = Record<string, any>
 
 interface MapComponentProps {
   children?: any
@@ -45,10 +40,11 @@ interface MapComponentProps {
     pitch?: number
   }
   style?: React.CSSProperties
+  containerRef?: any
 }
 
-export const MapComponent: React.FC<MapComponentProps> = ({
-  mapRef,
+export const MapComponent = ({
+  mapRef: externalMapRef,
   children,
   onClick,
   onPointClick,
@@ -69,27 +65,51 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     show: true,
     position: 'top-left' as ControlPosition,
   },
-  style = { width: '100%', height: '650px' },
-}) => {
-  const { mode } = useContext(ColorModeContext)
+  style = { width: '100%', height: '100%' },
+  containerRef,
+}: MapComponentProps) => {
   const [isDrawing, setIsDrawing] = useState(false)
-
-  const [baseMap, setBaseMap] = useState('dark-v11')
-  const [mapStyle, setMapStyle] = useState(
-    mode === 'dark'
-      ? 'mapbox://styles/mapbox/dark-v11'
-      : 'mapbox://styles/mapbox/light-v11'
-  )
+  const [_viewState, setViewState] = useState(initialViewState)
+  const mapRef = externalMapRef ?? useRef<MapRef>(null)
 
   useEffect(() => {
-    if (!mapRef.current) return
-    console.log('setting map style', baseMap)
-    setMapStyle('mapbox://styles/mapbox/' + baseMap)
-  }, [baseMap])
+    if (!containerRef.current) return
 
-  if (mapRef === undefined) {
-    mapRef = useRef<MapRef>(null)
-  }
+    const observer = new ResizeObserver(() => {
+      // Force Mapbox to recalc size when container changes
+      if (mapRef?.current) {
+        mapRef.current.resize()
+      }
+    })
+
+    observer.observe(containerRef.current)
+    return () => observer.disconnect()
+  }, [mapRef])
+
+  const handleMapLoad = useCallback(() => {
+    if (!mapRef.current) return
+    const map = mapRef.current.getMap()
+
+    // Prevent duplicates if map reloads or component re-renders
+    if ((map as any)._styleSwitcherAdded) return
+    ;(map as any)._styleSwitcherAdded = true
+
+    const styleSwitcher = new MapboxStyleSwitcherControl(MAPBOX_BASEMAPS, {
+      defaultStyle: DEFAULT_MAPBOX_BASEMAP,
+    })
+
+    map.addControl(styleSwitcher, 'top-right')
+
+    map.on('remove', () => {
+      try {
+        map.removeControl(styleSwitcher)
+        ;(map as any)._styleSwitcherAdded = false
+      } catch (err) {
+        console.warn('Map style switcher already removed.')
+      }
+    })
+  }, [mapRef])
+
   if (!initialViewState) {
     initialViewState = {
       longitude: -106.4,
@@ -97,73 +117,67 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       zoom: 6,
     }
   }
-  const [viewState, setViewState] = useState(initialViewState)
 
-  const getCurrentPoints = (e) => {
-    if (!mapRef || !mapRef.current) {
-      return [[]]
-    }
+  const getCurrentPoints = (e: MapLayerMouseEvent): MapGeoJSONFeature[] => {
+    if (!mapRef?.current) return []
 
-    let features = mapRef.current.queryRenderedFeatures(e.point)
-    return features.filter((f) => f.type === 'Feature')
+    const features = mapRef.current.queryRenderedFeatures(e.point)
+    return features.filter(
+      (f: MapGeoJSONFeature): f is MapGeoJSONFeature => f.type === 'Feature'
+    )
   }
 
-  const onUpdate = useCallback((e) => {
-    if (!setSelectionPolygons) {
-      return
-    }
+  const onUpdate = useCallback(
+    (e: any) => {
+      if (!setSelectionPolygons) return
 
-    setSelectionPolygons((currFeatures) => {
-      const newFeatures = { ...currFeatures }
-      for (const f of e.features) {
-        newFeatures[f.id] = f
-      }
-      return newFeatures
-    })
-  }, [])
+      setSelectionPolygons((currFeatures: Record<string, any>) => {
+        const newFeatures = { ...currFeatures }
+        for (const f of e.features) {
+          newFeatures[f.id as string] = f
+        }
+        return newFeatures
+      })
+    },
+    [setSelectionPolygons]
+  )
 
-  const onDelete = useCallback((e) => {
-    if (!setSelectionPolygons) {
-      return
-    }
-    setSelectionPolygons((currFeatures) => {
-      const newFeatures = { ...currFeatures }
-      for (const f of e.features) {
-        delete newFeatures[f.id]
-      }
-      return newFeatures
-    })
-  }, [])
+  const onDelete = useCallback(
+    (e: any) => {
+      if (!setSelectionPolygons) return
 
-  const onMouseMove = (e) => {
-    if (mapRef === undefined) {
-      return
-    }
+      setSelectionPolygons((currFeatures: SelectionPolygons) => {
+        const newFeatures = { ...currFeatures }
+        for (const f of e.features) {
+          delete newFeatures[f.id as string]
+        }
+        return newFeatures
+      })
+    },
+    [setSelectionPolygons]
+  )
 
-    if (isDrawing === true) {
-      return
-    }
+  const onMouseMove = (e: MapLayerMouseEvent) => {
+    if (!mapRef?.current || isDrawing) return
 
-    const features = getCurrentPoints(e)
-    if (onMouseMoveCallback !== undefined) {
+    const features: MapGeoJSONFeature[] = getCurrentPoints(e)
+    if (onMouseMoveCallback) {
       onMouseMoveCallback(e, features, mapRef)
     }
   }
 
-  const onModeChange = useCallback((e) => {
+  const onModeChange = useCallback((e: any) => {
     setIsDrawing(e.mode === 'draw_polygon')
   }, [])
 
-  const onSelectionChange = useCallback((e) => {
+  const onSelectionChange = useCallback((e: any) => {
     setIsDrawing(e.features.length > 0)
   }, [])
 
   const handleMouseClick = useCallback(
-    (e) => {
+    (e: MapLayerMouseEvent) => {
       if (onPointClick) {
-        // Get the current points under the mouse click
-        const currentPoints = getCurrentPoints(e)
-        // Call the onPointClick callback with the event and current points
+        const currentPoints: MapGeoJSONFeature[] = getCurrentPoints(e)
         if (currentPoints.length > 0) {
           onPointClick(e, currentPoints)
         }
@@ -173,66 +187,62 @@ export const MapComponent: React.FC<MapComponentProps> = ({
         onClick(e)
       }
     },
-    [onClick]
+    [onClick, onPointClick]
   )
 
   return (
-    <div>
-      <BaseMapSelect baseMap={baseMap} setBaseMap={setBaseMap} />
-      <Map
-        ref={mapRef}
-        mapboxAccessToken={settings.mapboxToken}
-        initialViewState={initialViewState}
-        onClick={handleMouseClick}
-        onMove={(evt) => setViewState(evt.viewState)}
-        terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
-        style={style}
-        mapStyle={mapStyle}
-        // mapStyle={getMapStyle(mode, viewState.zoom)}
-        onMouseMove={onMouseMove}
-      >
-        {showGeocoder?.show && (
-          <GeocoderControl
-            token={settings.mapboxToken}
-            position={showGeocoder?.position}
-          />
-        )}
-        {showNavigation?.show && (
-          <NavigationControl position={showNavigation?.position} />
-        )}
-        {showDrawControls?.show && (
-          <DrawControl
-            displayControlsDefault={false}
-            controls={{
-              polygon: true,
-              trash: true,
-              combine_features: true,
-              uncombine_features: true,
-            }}
-            onCreate={onUpdate}
-            onUpdate={onUpdate}
-            onDelete={onDelete}
-            onModeChange={onModeChange}
-            onSelectionChange={onSelectionChange}
-            position={showDrawControls?.position}
-          />
-        )}
-
-        {popupContent !== undefined && popupContent !== null && (
-          <Popup
-            latitude={popupContent.coordinates[1]}
-            longitude={popupContent.coordinates[0]}
-            closeButton={false}
-            closeOnClick
-            maxWidth={popupContent.maxWidth}
-          >
-            {popupContent.children}
-          </Popup>
-        )}
-        {isLoading && <CircularProgress />}
-        {children}
-      </Map>
-    </div>
+    <Map
+      ref={mapRef}
+      mapboxAccessToken={settings.mapboxToken}
+      initialViewState={initialViewState}
+      terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
+      onClick={handleMouseClick}
+      onMove={(evt) => setViewState(evt.viewState)}
+      onMouseMove={onMouseMove}
+      onLoad={handleMapLoad}
+      style={style}
+      mapStyle={DEFAULT_MAPBOX_BASEMAP}
+    >
+      {showGeocoder?.show && (
+        <GeocoderControl
+          token={settings.mapboxToken}
+          position={showGeocoder?.position}
+        />
+      )}
+      {showNavigation?.show && (
+        <NavigationControl position={showNavigation?.position} />
+      )}
+      {showDrawControls?.show && (
+        <DrawControl
+          displayControlsDefault={false}
+          controls={{
+            polygon: true,
+            trash: true,
+            combine_features: true,
+            uncombine_features: true,
+          }}
+          onCreate={onUpdate}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onModeChange={onModeChange}
+          onSelectionChange={onSelectionChange}
+          position={showDrawControls?.position}
+        />
+      )}
+      {popupContent !== undefined && popupContent !== null && (
+        <Popup
+          latitude={popupContent.coordinates[1]}
+          longitude={popupContent.coordinates[0]}
+          closeButton={false}
+          closeOnClick
+          maxWidth={popupContent.maxWidth}
+        >
+          {popupContent.children}
+        </Popup>
+      )}
+      {isLoading && <CircularProgress />}
+      {children}
+    </Map>
   )
 }
 

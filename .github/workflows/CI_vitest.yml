@@ -1,4 +1,4 @@
-name: CI Integration Test Suite
+name: Vitest Test Suite
 
 on:
   pull_request:
@@ -43,7 +43,7 @@ jobs:
     - name: Run tests with mock server
       run: |
         # Start mock server in background
-        npm run mock:server &
+        npm run mock:server:vitest &
         
         # Wait for server to start
         sleep 5

@@ -5,10 +5,10 @@ import { ILocation, IOwner, IWellInventoryForm } from '@/interfaces/amp'
 import { Page } from '@/interfaces'
 import { settings } from '@/settings'
 import {
-  AmpApiUriBuilder,
+  ApiUriBuilder,
   removeEmptyFields,
   fetchLookupTable,
-  ampApiFetch,
+  apiFetch,
 } from '@/utils'
 
 const fetchProjects = async (): Promise<
@@ -207,12 +207,12 @@ export const getCoordinateMethods = () => {
 }
 
 const fetchNewPointIDPreview = async (prefix: string, siteType: string) => {
-  return await ampApiFetch(
-    `authorized/well_inventory/newly-generated-pointid?pointid_prefix=${encodeURIComponent(
+  return await apiFetch({
+    endpoint: `authorized/well_inventory/newly-generated-pointid?pointid_prefix=${encodeURIComponent(
       prefix
     )}&site_type=${encodeURIComponent(siteType)}`,
-    'Failed to fetch new Point ID preview'
-  )
+    failureMessage: 'Failed to fetch new Point ID preview',
+  })
 }
 
 export const getNewPointIDPreview = (prefix: string, siteType: string) => {
@@ -251,7 +251,7 @@ export const createWellInventoryForm = async ({
   }
 
   const accessToken = await getAccessToken()
-  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
+  const url = new ApiUriBuilder(settings.nmbgmr_amp_api_url)
     .setEndpoint('authorized/well_inventory')
     .build()
 
@@ -320,10 +320,10 @@ export const fetchOwnerSearch = async ({
     size: size.toString(),
   })
 
-  return await ampApiFetch(
-    `authorized/locations/owners-search?${queryParams.toString()}`,
-    'Failed to fetch owners'
-  )
+  return await apiFetch({
+    endpoint: `authorized/locations/owners-search?${queryParams.toString()}`,
+    failureMessage: 'Failed to fetch owners',
+  })
 }
 
 export interface ElevationResponse {

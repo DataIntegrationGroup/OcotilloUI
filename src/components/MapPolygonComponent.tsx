@@ -4,7 +4,7 @@ import MapComponent from '@/components/MapComponent'
 interface MapPolygonComponentProps {
   mapRef: any
   polygon: any
-  setPolygon: (any) => void
+  setPolygon: (arg0: any) => void
 }
 
 export const MapPolygonComponent: React.FC<MapPolygonComponentProps> = ({

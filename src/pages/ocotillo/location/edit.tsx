@@ -3,22 +3,31 @@ import { Edit } from '@refinedev/mui'
 import { useForm } from '@refinedev/react-hook-form'
 
 import type { Nullable } from '@/interfaces'
-import { ILocation } from '@/interfaces/ocotillo/ILocation'
 import { CreateEditLocation } from '@/components/form/location/CreateEditLocation'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { zUpdateLocation } from '@/generated/zod.gen'
+import { UpdateLocation } from '@/generated/types.gen'  
 
 export const LocationEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     control,
     watch,
     setValue,
     formState: { errors },
-  } = useForm<ILocation, HttpError, Nullable<ILocation>>()
+  } = useForm<UpdateLocation, HttpError, Nullable<UpdateLocation>>({
+    resolver: zodResolver(zUpdateLocation),
+    mode: "onSubmit",
+  })
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <CreateEditLocation control={control} errors={errors} mode="standalone" watch={watch} setValue={setValue} />
+      <CreateEditLocation 
+        control={control}
+        errors={errors} 
+        mode="standalone" 
+        watch={watch} 
+        setValue={setValue} />
     </Edit>
   )
 }

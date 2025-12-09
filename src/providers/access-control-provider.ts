@@ -18,20 +18,22 @@ const editor = (can: any, cannot, resource: string) => {
   cannot('delete', resource)
 }
 
+
 const defineUserAbility = (groups: string[]) => {
   return defineAbility((can, cannot) => {
     const resources = [
       'ocotillo.sensor',
-      'ocotillo.lexicon',
       'ocotillo.group',
       'ocotillo.location',
       'ocotillo.sample',
       'ocotillo.asset',
       'ocotillo.contact',
     ]
+
     if (groups.includes('Viewer')) {
       can('list', 'ocotillo')
       can('list', 'ocotillo.map')
+      can('list', 'ocotillo.lexicon')
 
       resources.forEach((resource) => {
         viewer(can, cannot, resource)
@@ -63,9 +65,26 @@ const defineUserAbility = (groups: string[]) => {
       can('list', 'ocotillo.hydrograph-corrector')
     }
 
-    if (groups.includes('Admin')) {
+    if (groups.includes('LexiconEditor')) {
+      editor(can, cannot, 'ocotillo.lexicon/term')
+      editor(can, cannot, 'ocotillo.lexicon/category')
+    }
+
+    if (groups.includes('LexiconAdmin')) {
+      can('manage', 'ocotillo.lexicon/term')
+      can('manage', 'ocotillo.lexicon/category')
+    }
+
+    if (groups.includes('OcotilloAdmin')) {
       can('manage', 'all')
     }
+    
+    if (!groups.includes('OcotilloAdmin')) {
+      cannot('create', 'all')
+      cannot('edit', 'all')
+      cannot('delete', 'all')
+    }
+
   })
 }
 

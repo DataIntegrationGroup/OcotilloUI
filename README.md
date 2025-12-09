@@ -22,10 +22,10 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 
 ## Features
 
-- CRUD operations for NMBGMR databases through a unified Admin Dashboard
-- User authentication and authorization via Fief
+- CRUD operations for Ocotillo system through a unified Admin Dashboard
+- User authentication and authorization via Authentik
 - Interactive map visualizations using Mapbox GL
-- Data validation with React Hook Form and Yup
+- Data validation with React Hook Form and Zod
 - Theming and layout via Material UI
 
 ## Tech Stack
@@ -34,9 +34,10 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 - Refine.dev (Admin Dashboard framework)
 - Vite (Next-generation frontend build tool)
 - Material UI (UI components)
-- React Hook Form & Yup (Forms & validation)
+- React Hook Form & Zod (Forms & validation)
 - Mapbox GL (Map visualizations)
-- Fief (Authentication)
+- Authentik (Authentication)
+- Cypress (E2E Testing)
 
 ## Prerequisites
 
@@ -54,13 +55,11 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
    ```bash
    npm install
    ```
-3. Create environment variable files:
+3. Create environment variable file for development:
    ```bash
    cp .env.development.example .env.development
-   cp .env.devserver.example .env.devserver
-   cp .env.production.example .env.production
    ```
-4. Update the `.env.*` files with your API URLs, tokens, and Fief credentials.
+4. Update the `.env.*` files with your API URLs, tokens, and Authentik credentials.
 5. Run the development server:
    ```bash
    npm run dev
@@ -69,34 +68,85 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 
 ## Configuration
 
-This application uses Vite environment variables. The following variables are required in `.env.development` and
-`.env.devserver`:
+This application uses Vite environment variables. The following variables are required in `.env.development`:
 
 ```bash
 VITE_APP_TITLE="NMBGMR Ocotillo"
-VITE_NMBGMR_AMP_API_URL="https://your-amp-api-url"
-VITE_NMBGMR_GEOTHERMAL_API_URL="https://your-geothermal-api-url"
+VITE_NMBGMR_AMP_API_URL="https://your-amp-development-api-url"
+VITE_NMBGMR_GEOTHERMAL_API_URL="https://your-geothermal-development-api-url"
+VITE_OCOTILLO_API_URL="https://your-ocotillo-development-api-url"
 VITE_REFINE_PROJECT_ID="your-refine-project-id"
 VITE_MAPBOX_TOKEN="your-mapbox-token"
-VITE_FIEF_BASE_URL="https://your-fief-domain"
-VITE_FIEF_CLIENT_ID="your-fief-client-id"
+VITE_AUTHENTIK_CLIENT_ID="your-authentik-client-id"
+VITE_AUTHENTIK_URL="https://your-authentik-domain"
+VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"
 ```
+- If you plan to develop against a locally hosted version of an API, change your API Urls accoringly
 
-In `.env.production`, you can set:
-
-```bash
-VITE_API_URL="https://your-production-api-url"
-VITE_APP_TITLE="NMBGMR Ocotillo"
-```
-
-## Available Scripts
+## Scripts/Commands - Dev and Build
 
 - `npm run dev`: Runs the app in development mode with hot-reloading.
 - `npm run build`: Builds the app for production (outputs to `dist/`).
 - `npm run start`: Serves the production build locally.
 - `npm run refine`: Runs Refine CLI commands.
 
-## Building for Production
+## Scripts/Commands - Mock Servers, Testing, Type/Zod Generation
+
+- `npm run mock:server:vitest`: Runs a Prism mock server to run the vitest test suite.
+- `npm run mock:server:cypress`: Runs a Prism mock server to run the cypress test suite.
+- `npm run test:run`: Runs the Vitest test suite a single time.
+- `npx cypress open`: Opens the Cypress browser to run and interact with Cypress tests.
+- `npx cypress run`: Runs the Cypress test suite in headless mode a single time.
+- `npm run openapi:generate`: Runs hey-api typescript generation for types and zod schemas in `/generated`
+
+## Running the Vitest Test Suite
+
+This test suite uses the data provider against a mock server for contract tests or unit tests, and the mock server needs to be running first:
+
+- Start mock server
+```bash
+npm run mock:server:vitest
+```
+- Run vitest suite once
+```bash
+npm run test:run
+```
+
+## Running the Cypress Test Suite
+
+This test suite runs Cypress for E2E or Component tests, and the mock server and app build need to be running:
+
+- Start mock server (with seed set)
+```bash
+npm run mock:server:cypress
+```
+- Serve production build locally (matches CI Cypress workflow)
+```bash
+npm run build
+npm run start
+```
+- Open Cypress testing environment to run tests and interact with Cypress against your locally running app
+```bash
+npx cypress open
+```
+or
+- Run Cypress tests once in headless mode against your locally running app
+```bash
+npx cypress run
+```
+
+## Tests in CI and Openapi-TS Generation
+
+Both the Vitest and Cypress test suites run via a Github action on PR. The Vitest contract tests may fail because of changes to the Ocotillo API if you have not recently run the test suite locally.
+In the case of failing contract tests, you'll have to make sure your types and zod schemas are up to date with the openapi.json spec by:
+
+- Running the opnenapi-ts generation from the Ocotillo Staging API `openapi.json` spec:
+```bash
+npm run openapi:generate
+```
+- Fixing any failing tests and related code
+
+## Building and Serving Production Build
 
 ```bash
 npm run build
@@ -122,3 +172,4 @@ New Mexico Bureau of Geology & Mineral Resources
 - [Refine.dev](https://refine.dev)
 - [Mapbox GL](https://docs.mapbox.com/mapbox-gl-js/)
 - [Material UI](https://mui.com)
+- [Cypress](https://www.cypress.io/)

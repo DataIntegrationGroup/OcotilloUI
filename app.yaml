@@ -5,7 +5,9 @@ handlers:
   - url: /(.*\..+)$
     static_files: dist/\1
     upload: dist/(.*\..+)$
+    secure: always
   # Catch all handler to index.html
   - url: /.*
     static_files: dist/index.html
     upload: dist/index.html
+    secure: always

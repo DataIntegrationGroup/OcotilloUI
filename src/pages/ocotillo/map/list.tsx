@@ -1,87 +1,28 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Layer, Source } from 'react-map-gl'
 import MapComponent from '@/components/MapComponent'
-import {
-  useDataProvider,
-  useList,
-  useOne,
-  useGo,
-  useGetToPath,
-  useResource,
-} from '@refinedev/core'
+import { useGo } from '@refinedev/core'
+import { useThingLayers } from '@/hooks'
 import {
   Box,
   Card,
-  CircularProgress,
   LinearProgress,
-  TableHead,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableContainer,
-  Paper,
+  CardHeader,
+  Typography,
+  CardContent,
+  Divider,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-
-const useLayer = (thing_type: string, label: string, color: string) => {
-  const { data, isLoading } = useOne({
-    dataProviderName: 'ocotillo',
-    resource: 'geospatial',
-    id: null,
-    queryOptions: {
-      cacheTime: 60000, // Cache for 1 minute
-      staleTime: 30000, // Consider data fresh for 30 seconds
-    },
-    meta: {
-      requestConfig: {
-        params: {
-          thing_type: thing_type,
-          format: 'geojson',
-        },
-      },
-    },
-  })
-
-  return {
-    sourceProps: { type: 'geojson', data: data?.data },
-    layerProps: {
-      label: label,
-      type: 'circle' as const,
-      paint: {
-        'circle-radius': 3,
-        'circle-color': color,
-        'circle-stroke-color': '#ffffff',
-        'circle-stroke-width': 1,
-      },
-    },
-    isLoading: isLoading,
-  }
-}
+import { MapPopup } from '@/components'
+import { Breadcrumb, List } from '@refinedev/mui'
 
 export const MapView: React.FC = () => {
-  const defaultLayers = {
-    'water-wells': useLayer('water well', 'Water Wells', '#9cd0ab'),
-    springs: useLayer('spring', 'Springs', '#f0c0a0'),
-    'ephemeral-streams': useLayer(
-      'ephemeral stream',
-      'Ephemeral Streams',
-      '#f5df73'
-    ),
-    'perennial-streams': useLayer(
-      'perennial stream',
-      'Perennial Streams',
-      '#da55c4'
-    ),
-    'meteorological-stations': useLayer(
-      'meteorological station',
-      'Meteorological Stations',
-      '#2b7dc0'
-    ),
-  }
-
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const THING_LAYERS = useThingLayers()
   const [visibleLayers, setVisibleLayers] = React.useState<string[]>(
-    Object.keys(defaultLayers)
+    Object.keys(THING_LAYERS)
   )
   const [popupContent, setPopupContent] = useState<any>(null)
 
@@ -107,9 +48,8 @@ export const MapView: React.FC = () => {
     })
   }
 
-  const onMapPointClick = (e: any, points: any[]) => {
+  const onMapPointClick = (_: any, points: any[]) => {
     const selectedPoint = points[0]
-    // console.log('selectedPoint', selectedPoint.properties)
     if (selectedPoint.properties.thing_type === 'water well') {
       show('ocotillo.thing-well', selectedPoint.properties.id)
     } else if (selectedPoint.properties.thing_type === 'spring') {
@@ -120,47 +60,9 @@ export const MapView: React.FC = () => {
     features = features.filter((f) => f.layer.id.startsWith('location-'))
     if (features.length > 0) {
       mapRef.current.getCanvas().style.cursor = 'pointer'
-      // SetMapPopupContent({ features, setPopupContent })
-      const children = (
-        <Box sx={{ width: '300px' }}>
-          <h3 style={{ color: 'black' }}>Click for more details</h3>
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell align={'right'}>
-                    <strong>ID</strong>
-                  </TableCell>
-                  <TableCell align={'right'}>
-                    <strong>Name</strong>
-                  </TableCell>
-                  <TableCell align={'right'}>
-                    <strong>Type</strong>
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {features.map((feature, index) => (
-                  <TableRow key={index}>
-                    <TableCell component="th" scope="row" align={'right'}>
-                      {feature.properties.id}
-                    </TableCell>
-                    <TableCell align={'right'}>
-                      {feature.properties.name}
-                    </TableCell>
-                    <TableCell align={'right'}>
-                      {feature.properties.thing_type}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      )
       setPopupContent({
         coordinates: features[0].geometry.coordinates,
-        children,
+        children: <MapPopup features={features} />,
         maxWidth: '800px',
       })
     } else {
@@ -170,30 +72,52 @@ export const MapView: React.FC = () => {
   }
 
   return (
-    <Box>
+    <List
+      breadcrumb={<Breadcrumb hideIcons={true} />}
+      title="Map"
+      canCreate={false}
+    >
       <Grid container spacing={3}>
-        <Grid size={3}>
-          <Card>
-            <Box sx={{ padding: 2 }}>
-              <h2>Layers</h2>
-              {Object.entries(defaultLayers).map((layer) => {
+        <Grid size={{ xs: 3 }}>
+          <Card elevation={2}>
+            <Grid container spacing={1} p={2}>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="h4">Layers</Typography>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Divider />
+              </Grid>
+              {Object.entries(THING_LAYERS).map((layer) => {
                 const [key, layerDef] = layer
                 const { layerProps, isLoading } = layerDef
                 const color = layerProps.paint['circle-color']
 
                 return (
-                  <Grid container key={key}>
-                    <Grid size={10}>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={visibleLayers.includes(key)}
-                          onChange={onLayerChangeWrapper(key)}
-                        />
-                        {layerProps.label}
-                      </label>
+                  <Grid
+                    container
+                    size={{ xs: 12 }}
+                    key={key}
+                    spacing={1}
+                    px={1}
+                  >
+                    <Grid size={{ xs: 10 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={visibleLayers.includes(key)}
+                            onChange={onLayerChangeWrapper(key)}
+                            color="primary"
+                          />
+                        }
+                        label={layerProps.label}
+                      />
                     </Grid>
-                    <Grid size={2}>
+                    <Grid
+                      size={{ xs: 2 }}
+                      display="flex"
+                      justifyContent="right"
+                      alignItems="center"
+                    >
                       <Box
                         sx={{
                           width: 16,
@@ -205,38 +129,56 @@ export const MapView: React.FC = () => {
                         }}
                       />
                     </Grid>
-                    <Grid size={12}>{isLoading && <LinearProgress />}</Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <Box sx={{ height: 4, width: '100%' }}>
+                        {isLoading && <LinearProgress sx={{ height: 4 }} />}
+                      </Box>
+                    </Grid>
                   </Grid>
                 )
               })}
-            </Box>
+            </Grid>
           </Card>
         </Grid>
-        <Grid size={9}>
-          <MapComponent
-            showDrawControls={{ show: true, position: 'top-right' }}
-            // setSelectionPolygons={setSelectionPolygons}
-            setPopupContent={setPopupContent}
-            popupContent={popupContent}
-            onPointClick={onMapPointClick}
-            onMouseMoveCallback={onMapMouseMove}
+        <Grid size={{ xs: 9 }}>
+          <Box
+            data-testid="ocotillo-map-container"
+            component="div"
+            ref={containerRef}
+            sx={{
+              borderRadius: 2,
+              overflow: 'hidden',
+              border: '2.5px solid',
+              borderColor: 'divider',
+              height: 650,
+              width: '100%',
+            }}
           >
-            {Object.entries(defaultLayers).map(([key, layerDef]) => {
-              if (!visibleLayers.includes(key)) return null
-              const { sourceProps, layerProps } = layerDef
-              return (
-                <Source id={key} key={key} {...sourceProps}>
-                  <Layer
-                    id={`location-${key}`}
-                    key={`layer-${key}`}
-                    {...layerProps}
-                  />
-                </Source>
-              )
-            })}
-          </MapComponent>
+            <MapComponent
+              containerRef={containerRef}
+              showDrawControls={{ show: true, position: 'top-right' }}
+              setPopupContent={setPopupContent}
+              popupContent={popupContent}
+              onPointClick={onMapPointClick}
+              onMouseMoveCallback={onMapMouseMove}
+            >
+              {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
+                if (!visibleLayers.includes(key)) return null
+                const { sourceProps, layerProps } = layerDef
+                return (
+                  <Source id={key} key={key} {...sourceProps}>
+                    <Layer
+                      id={`location-${key}`}
+                      key={`layer-${key}`}
+                      {...layerProps}
+                    />
+                  </Source>
+                )
+              })}
+            </MapComponent>
+          </Box>
         </Grid>
       </Grid>
-    </Box>
+    </List>
   )
 }

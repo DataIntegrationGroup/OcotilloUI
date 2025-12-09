@@ -1,27 +1,13 @@
-import { expect, afterEach, beforeAll, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
-import * as matchers from '@testing-library/jest-dom/matchers'
+import { beforeAll, vi } from 'vitest'
 import { checkMockServerHealth } from './mock-server'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 
 process.env.NODE_ENV = 'test'
-
-expect.extend(matchers)
-
-// Mock localStorage for node environment
-Object.defineProperty(global, 'localStorage', {
-    value: {
-      getItem: vi.fn(() => 'mock-token'),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
-    },
-    writable: true,
-  })
   
-  // Mock the authentication provider
+  // Mock the authentication provider (for node api contract tests)
   vi.mock('@/providers/authentik-provider', () => ({
     getAccessToken: vi.fn().mockResolvedValue('mock-token'),
+    getAccessControlGroups: vi.fn().mockReturnValue(['Admin']),
   }))
 
 // Global test setup
@@ -45,7 +31,3 @@ beforeAll(async () => {
     }
   })
 
-// Cleanup after each test case
-afterEach(() => {
-  cleanup()
-})

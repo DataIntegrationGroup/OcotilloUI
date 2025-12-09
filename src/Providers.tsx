@@ -1,14 +1,16 @@
 import { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ColorModeContextProvider } from '@/contexts'
-import { RefineSnackbarProvider, useNotificationProvider } from '@refinedev/mui'
+import {
+  Breadcrumb,
+  RefineSnackbarProvider,
+  useNotificationProvider,
+} from '@refinedev/mui'
 import { DevtoolsProvider, DevtoolsPanel } from '@refinedev/devtools'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import CssBaseline from '@mui/material/CssBaseline'
 import GlobalStyles from '@mui/material/GlobalStyles'
-import { FiefAuthProvider } from '@fief/fief/react'
-// import { authProvider } from '@/providers/fief-provider'
 import { Action, IResourceItem, Refine } from '@refinedev/core'
 import { ampDataProvider } from './providers/amp-data-provider'
 import { geochronologyDataProvider } from './providers/geochronology-data-provider'
@@ -20,7 +22,6 @@ import routerProvider, {
   UnsavedChangesNotifier,
 } from '@refinedev/react-router-v6'
 import { accessControlProvider } from '@/providers/access-control-provider'
-import { settings } from './settings'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import { authentikAuthProvider } from '@/providers/authentik-provider'
 
@@ -62,18 +63,14 @@ export const Providers = ({ children }: { children: ReactNode }) => (
             syncWithLocation: true,
             warnWhenUnsavedChanges: true,
             projectId: import.meta.env.VITE_REFINE_PROJECT_ID,
+            breadcrumb: <Breadcrumb hideIcons />,
           }}
         >
           <UnsavedChangesNotifier />
           <DocumentTitleHandler handler={customTitleHandler} />
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <QueryClientProvider client={queryClient}>
-              {/*<FiefAuthProvider*/}
-              {/*  baseURL={settings.fief.baseURL}*/}
-              {/*  clientId={settings.fief.clientId}*/}
-              {/*>*/}
               {children}
-              {/*</FiefAuthProvider>*/}
             </QueryClientProvider>
           </LocalizationProvider>
         </Refine>

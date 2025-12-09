@@ -1,4 +1,4 @@
-import { AmpApiUriBuilder } from '@/utils'
+import { ApiUriBuilder } from '@/utils'
 import { settings } from '@/settings'
 import { getAccessToken } from '@/providers/fief-provider'
 
@@ -12,21 +12,30 @@ export const fetchConfig = (accessToken: string, method: string = 'GET') => {
   }
 }
 
-export const ampApiFetch = async (
-  endpoint: string,
-  failure_message: string,
-  method: string = 'GET',
-  version: string = 'v0'
-): Promise<any> => {
+export const apiFetch = async ({
+  endpoint,
+  failureMessage = 'Request failed',
+  method = 'GET',
+}: {
+  endpoint: string
+  failureMessage?: string
+  method?: string
+}): Promise<any> => {
   const accessToken = await getAccessToken()
-  const url = new AmpApiUriBuilder(settings.nmbgmr_amp_api_url)
-    .setVersion(version)
-    .setEndpoint(endpoint)
+
+  // Normalize endpoint to always begin without leading slash
+  const normalizedEndpoint = endpoint.startsWith('/')
+    ? endpoint.slice(1)
+    : endpoint
+
+  const url = new ApiUriBuilder(settings.ocotillo_api_url)
+    .setEndpoint(normalizedEndpoint)
     .build()
 
   const response = await fetch(url, fetchConfig(accessToken, method))
+
   if (!response.ok) {
-    throw new Error(`${failure_message}: ${response.statusText}`)
+    throw new Error(`${failureMessage}: ${response.statusText}`)
   }
 
   return response.json()

@@ -111,7 +111,7 @@ export const WaterLevelForm = () => {
     watch,
   } = useForm<IWaterLevelForm>({
     defaultValues: SchemaDefaults,
-    resolver: yupResolver(WaterLevelSchema),
+    resolver: yupResolver(WaterLevelSchema as any),
   })
 
   const pointId = watch('pointid')

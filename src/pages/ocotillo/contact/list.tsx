@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { List, useDataGrid } from '@refinedev/mui'
+import { Breadcrumb, List, useDataGrid } from '@refinedev/mui'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
   IAddress,
@@ -7,25 +7,11 @@ import {
   IEmail,
   IPhone,
 } from '@/interfaces/ocotillo/IContact'
-import { Card, CardHeader, Typography } from '@mui/material'
-import EmailIcon from '@mui/icons-material/Email'
-import HomeIcon from '@mui/icons-material/Home'
-import { Phone } from '@mui/icons-material'
+import { Card, CardHeader, SxProps, Typography } from '@mui/material'
+import { Email, Home, Phone } from '@mui/icons-material'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { useLink } from '@refinedev/core'
-
-const IconCardHeader = ({ text, icon }) => {
-  return (
-    <CardHeader
-      title={
-        <span style={{ display: 'flex', alignItems: 'center' }}>
-          {icon}
-          {text}
-        </span>
-      }
-    />
-  )
-}
+import { settings } from '@/settings'
 
 export const ContactList: React.FC = () => {
   const [selectedContactId, setSelectedContactId] = useState<number | null>(
@@ -33,14 +19,6 @@ export const ContactList: React.FC = () => {
   )
 
   const { dataGridProps } = useDataGrid<IContact>()
-  //   {
-  //   resource: 'contact',
-  //   dataProviderName: 'dataforge',
-  //   queryOptions: {
-  //     cacheTime: 60000, // Cache for 1 minute
-  //     staleTime: 30000, // Consider data fresh for 30 seconds
-  //   },
-  // }
   const Link = useLink()
 
   const columns = useMemo<GridColDef<IContact>[]>(
@@ -51,7 +29,7 @@ export const ContactList: React.FC = () => {
         headerName: 'Things',
         type: 'string',
         minWidth: 150,
-        valueGetter: (value, row) =>
+        valueGetter: (_, row) =>
           row.things.map((thing) => thing.name).join('; '),
         renderCell: (params) => {
           return (
@@ -103,7 +81,55 @@ export const ContactList: React.FC = () => {
     meta: { enabled: !!selectedContactId },
   })
 
-  const emailColumns = useMemo<GridColDef<IEmail>[]>(
+  const { dataGridProps: phoneDataGridProps } = useDataGrid<IEmail>({
+    dataProviderName: 'ocotillo',
+    resource: `contact/${selectedContactId}/phone`,
+    meta: { enabled: !!selectedContactId },
+  })
+
+  const { dataGridProps: addressDataGridProps } = useDataGrid<IAddress>({
+    dataProviderName: 'ocotillo',
+    resource: `contact/${selectedContactId}/address`,
+    meta: { enabled: !!selectedContactId },
+  })
+
+  return (
+    <List breadcrumb={<Breadcrumb hideIcons={true} />}>
+      <Card
+        className={'description'}
+        variant="outlined"
+        sx={{
+          marginTop: 1,
+          marginBottom: 1,
+          padding: 1,
+        }}
+      >
+        <Typography variant="body1">
+          {'Contacts are used to represent people or organizations.'}
+        </Typography>
+      </Card>
+      <DataGrid
+        {...dataGridProps}
+        rowHeight={settings.rowHeight}
+        disableRowSelectionOnClick={false}
+        columns={columns}
+        onRowSelectionModelChange={(params) => {
+          setSelectedContactId(params.length > 0 ? (params[0] as number) : null)
+        }}
+      />
+      {selectedContactId && (
+        <>
+          <EmailInfoCard dataGridProps={emailDataGridProps} />
+          <PhoneInfoCard dataGridProps={phoneDataGridProps} />
+          <AddressInfoCard dataGridProps={addressDataGridProps} />
+        </>
+      )}
+    </List>
+  )
+}
+
+const EmailInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
+  const columns = useMemo<GridColDef<IEmail>[]>(
     () => [
       idColumnDef(),
       {
@@ -122,13 +148,18 @@ export const ContactList: React.FC = () => {
     []
   )
 
-  const { dataGridProps: phoneDataGridProps } = useDataGrid<IEmail>({
-    dataProviderName: 'ocotillo',
-    resource: `contact/${selectedContactId}/phone`,
-    meta: { enabled: !!selectedContactId },
-  })
+  return (
+    <InfoCard
+      title="Email"
+      icon={<Email />}
+      dataGridProps={dataGridProps}
+      columns={columns}
+    />
+  )
+}
 
-  const phoneColumns = useMemo<GridColDef<IPhone>[]>(
+const PhoneInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
+  const columns = useMemo<GridColDef<IPhone>[]>(
     () => [
       idColumnDef(),
       {
@@ -147,13 +178,18 @@ export const ContactList: React.FC = () => {
     []
   )
 
-  const { dataGridProps: addressDataGridProps } = useDataGrid<IAddress>({
-    dataProviderName: 'ocotillo',
-    resource: `contact/${selectedContactId}/address`,
-    meta: { enabled: !!selectedContactId },
-  })
+  return (
+    <InfoCard
+      title="Phone"
+      icon={<Phone />}
+      dataGridProps={dataGridProps}
+      columns={columns}
+    />
+  )
+}
 
-  const addressColumns = useMemo<GridColDef<IAddress>[]>(
+const AddressInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
+  const columns = useMemo<GridColDef<IAddress>[]>(
     () => [
       idColumnDef(),
       {
@@ -196,59 +232,49 @@ export const ContactList: React.FC = () => {
     []
   )
 
-  const description = 'Contacts are used to represent people or organizations.'
   return (
-    <>
-      <List>
-        <Card
-          className={'description'}
-          variant="outlined"
-          sx={{
-            marginTop: 1,
-            marginBottom: 1,
-            padding: 1,
-          }}
-        >
-          <Typography variant="body1">{description}</Typography>
-        </Card>
-
-        <DataGrid
-          {...dataGridProps}
-          disableRowSelectionOnClick={false}
-          columns={columns}
-          onRowSelectionModelChange={(params) => {
-            setSelectedContactId(
-              params.length > 0 ? (params[0] as number) : null
-            )
-          }}
-        />
-        {selectedContactId && (
-          <>
-            <Card sx={{ marginTop: 2 }}>
-              <IconCardHeader
-                text={'Email'}
-                icon={<EmailIcon style={{ marginRight: 8 }} />}
-              />
-              <DataGrid {...emailDataGridProps} columns={emailColumns} />
-            </Card>
-            <Card sx={{ marginTop: 2 }}>
-              <IconCardHeader
-                text={'Phone'}
-                icon={<Phone style={{ marginRight: 8 }} />}
-              />
-              <DataGrid {...phoneDataGridProps} columns={phoneColumns} />
-            </Card>
-            <Card sx={{ marginTop: 2 }}>
-              {/*<CardHeader title={'Address'} />*/}
-              <IconCardHeader
-                text={'Address'}
-                icon={<HomeIcon style={{ marginRight: 8 }} />}
-              />
-              <DataGrid {...addressDataGridProps} columns={addressColumns} />
-            </Card>
-          </>
-        )}
-      </List>
-    </>
+    <InfoCard
+      title="Address"
+      icon={<Home />}
+      dataGridProps={dataGridProps}
+      columns={columns}
+    />
   )
 }
+
+const InfoCard = ({
+  title,
+  icon,
+  dataGridProps,
+  columns,
+}: {
+  title: string
+  icon: React.ReactNode
+  dataGridProps: any
+  columns: any[]
+}) => (
+  <Card sx={{ mt: 2 }}>
+    <IconCardHeader text={title} icon={icon} />
+    <DataGrid {...dataGridProps} columns={columns} />
+  </Card>
+)
+
+const IconCardHeader = ({
+  text,
+  icon,
+  sx,
+}: {
+  text: string
+  icon: React.ReactNode
+  sx?: SxProps
+}) => (
+  <CardHeader
+    sx={sx}
+    title={
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {icon}
+        {text}
+      </span>
+    }
+  />
+)

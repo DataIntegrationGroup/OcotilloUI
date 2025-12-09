@@ -1,8 +1,6 @@
 import {
-  CategoryOutlined,
   Place,
   Construction,
-  DashboardOutlined,
   ScienceOutlined,
   SettingsInputAntenna,
   ScaleOutlined,
@@ -25,17 +23,36 @@ let tables: {
   show?: string
   create?: string
   list?: string
-  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
+  meta: {
+    label?: string
+    icon?: JSX.Element
+    disabled?: boolean
+    routes?: any
+    parent?: string
+    nestedLevel?: number
+    hide?: boolean
+  }
 }[] = [
   {
-    name: 'asset',
-    list: '/ocotillo/asset',
-    create: '/ocotillo/asset/create',
-    edit: '/ocotillo/asset/edit/:id',
-    show: '/ocotillo/asset/show/:id',
+    name: 'thing-well',
+    list: '/ocotillo/well',
+    edit: '/ocotillo/well/edit/:id',
+    show: '/ocotillo/well/show/:id',
+    create: '/ocotillo/well/create',
     meta: {
-      label: 'Assets',
-      icon: <Image />,
+      label: 'Wells',
+      icon: <Construction />,
+    },
+  },
+  {
+    name: 'thing-spring',
+    list: '/ocotillo/spring',
+    edit: '/ocotillo/spring/edit/:id',
+    show: '/ocotillo/spring/show/:id',
+    create: '/ocotillo/spring/create',
+    meta: {
+      label: 'Springs',
+      icon: <Spa />,
     },
   },
   {
@@ -46,7 +63,29 @@ let tables: {
     create: '/ocotillo/contact/create',
     meta: {
       icon: <Contacts />,
-      label: 'Contacts',
+      label: 'Contacts / Owners',
+    },
+  },
+  {
+    name: 'group',
+    list: '/ocotillo/group',
+    edit: '/ocotillo/group/edit/:id',
+    show: '/ocotillo/group/show/:id',
+    create: '/ocotillo/group/create',
+    meta: {
+      label: 'Groups / Projects',
+      icon: <Workspaces />,
+    },
+  },
+  {
+    name: 'asset',
+    list: '/ocotillo/asset',
+    create: '/ocotillo/asset/create',
+    edit: '/ocotillo/asset/edit/:id',
+    show: '/ocotillo/asset/show/:id',
+    meta: {
+      label: 'Assets / Attachments',
+      icon: <Image />,
     },
   },
   {
@@ -94,6 +133,29 @@ let tables: {
     },
   },
   {
+    name: 'thing-id-link',
+    list: '/ocotillo/thing-id-link',
+    edit: '/ocotillo/thing-id-link/edit/:id',
+    show: '/ocotillo/thing-id-link/show/:id',
+    create: '/ocotillo/thing-id-link/create',
+    meta: {
+      disabled: false,
+      label: 'Alternate ID links',
+      icon: <Link />,
+    },
+  },
+  {
+    name: 'thing/well-screen',
+    list: '/ocotillo/well-screen',
+    edit: '/ocotillo/well-screen/edit/:id',
+    show: '/ocotillo/well-screen/show/:id',
+    create: '/ocotillo/well-screen/create',
+    meta: {
+      label: 'Well Screens',
+      icon: <MoreVertOutlined />,
+    },
+  },
+  {
     name: 'lexicon/term',
     list: '/ocotillo/lexicon',
     edit: '/ocotillo/lexicon/term/edit/:id',
@@ -101,7 +163,7 @@ let tables: {
     create: '/ocotillo/lexicon/term/create',
     meta: {
       disabled: false,
-      label: 'Lexicon',
+      label: 'Lexicon / Glossary',
       icon: <LibraryBooksOutlined />,
     },
   },
@@ -117,6 +179,20 @@ let tables: {
     },
   },
 ]
+
+tables.push({
+  name: 'thing-well-pdf-preview',
+  // Use `list` to register the route path so useMenu() can match it.
+  // It's hidden, so it won't render in the menu.
+  list: '/ocotillo/well/pdf-preview/:id',
+  meta: {
+    label: 'PDF Preview',
+    // IMPORTANT: tie it to the Wells resource in the sidebar tree
+    parent: 'ocotillo.thing-well',
+    nestedLevel: 3,
+    hide: true,
+  },
+})
 
 tables = tables.map((b) => {
   let meta = b.meta || {}
@@ -145,8 +221,8 @@ let forms: {
     edit: '/ocotillo/well-inventory-form/edit/:id',
     show: '/ocotillo/well-inventory-form/show/:id',
     meta: {
-      disabled: false,
-      label: 'Well Inventory Form',
+      disabled: true,
+      label: 'Well Inventory Form (Coming Soon)',
       icon: <Construction />,
     },
   },
@@ -157,8 +233,8 @@ let forms: {
     edit: '/ocotillo/groundwater-level-form/edit/:id',
     show: '/ocotillo/groundwater-level-form/show/:id',
     meta: {
-      disabled: false,
-      label: 'Groundwater Level Form (Beta)',
+      disabled: true,
+      label: 'Groundwater Level Form (Coming Soon)',
       icon: <Construction />,
     },
   },
@@ -175,75 +251,6 @@ forms = forms.map((b) => {
     meta: meta,
   }
 })
-
-let things: {
-  name: string
-  edit?: string
-  show?: string
-  create?: string
-  list: string
-  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
-}[] = [
-  {
-    name: 'thing-well',
-    list: '/ocotillo/well',
-    edit: '/ocotillo/well/edit/:id',
-    show: '/ocotillo/well/show/:id',
-    create: '/ocotillo/well/create',
-    meta: {
-      label: 'Wells',
-      icon: <Construction />,
-    },
-  },
-  {
-    name: 'thing-spring',
-    list: '/ocotillo/spring',
-    edit: '/ocotillo/spring/edit/:id',
-    show: '/ocotillo/spring/show/:id',
-    create: '/ocotillo/spring/create',
-    meta: {
-      label: 'Springs',
-      icon: <Spa />,
-    },
-  },
-  {
-    name: 'thing-id-link',
-    list: '/ocotillo/thing-id-link',
-    edit: '/ocotillo/thing-id-link/edit/:id',
-    show: '/ocotillo/thing-id-link/show/:id',
-    create: '/ocotillo/thing-id-link/create',
-    meta: {
-      disabled: false,
-      label: 'ID links',
-      icon: <Link />,
-    },
-  },
-  {
-    name: 'thing/well-screen',
-    list: '/ocotillo/well-screen',
-    edit: '/ocotillo/well-screen/edit/:id',
-    show: '/ocotillo/well-screen/show/:id',
-    create: '/ocotillo/well-screen/create',
-    meta: {
-      label: 'Well Screens',
-      icon: <MoreVertOutlined />,
-    },
-  },
-]
-
-things = things.map((b) => {
-  let meta = b.meta || {}
-  if (!meta['parent']) {
-    meta['parent'] = 'ocotillo.thing'
-  }
-  meta['nestedLevel'] = 3
-  return {
-    ...b,
-    meta: meta,
-  }
-})
-
-console.log(things)
 
 let observations: {
   name: string
@@ -287,8 +294,6 @@ let ocotillo = [
       icon: <Map />,
     },
   },
-
-  // tables
   {
     name: 'tables',
     icon: <WidgetsOutlined />,
@@ -297,17 +302,6 @@ let ocotillo = [
     },
   },
   ...tables,
-
-  {
-    name: 'thing',
-    icon: <WidgetsOutlined />,
-    meta: {
-      parent: 'ocotillo.tables',
-      nestedLevel: 2,
-      label: 'Things',
-    },
-  },
-  ...things,
   {
     name: 'observation',
     icon: <ScaleOutlined />,
@@ -318,7 +312,6 @@ let ocotillo = [
     },
   },
   ...observations,
-  // Apps
   {
     name: 'apps',
     icon: <Apps />,
@@ -341,14 +334,13 @@ let ocotillo = [
     name: 'water-chemistry-import',
     list: '/ocotillo/water-chemistry-import',
     meta: {
+      disabled: true,
       label: 'Water Chemistry Import (Coming Soon)',
       parent: 'ocotillo.apps',
       nestedLevel: 2,
       icon: <ScienceOutlined />,
     },
   },
-
-  // Forms
   {
     name: 'forms',
     icon: <DynamicFormOutlined />,
@@ -357,14 +349,6 @@ let ocotillo = [
     },
   },
   ...forms,
-
-  // {
-  //   name: 'Apps',
-  //   icon: <WidgetsOutlined />,
-  //   meta: {
-  //     label: 'Things',
-  //   },
-  // },
 ]
 
 export const ocotilloResources = ocotillo.map((b) => {
@@ -380,7 +364,10 @@ export const ocotilloResources = ocotillo.map((b) => {
   }
 })
 
-console.log(ocotilloResources)
+if (!import.meta.env.PROD) {
+  console.debug({ ocotilloResources })
+}
+
 //
 // let amp = [
 //   {

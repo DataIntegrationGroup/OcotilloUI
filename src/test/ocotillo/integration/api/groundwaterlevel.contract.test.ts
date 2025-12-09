@@ -62,16 +62,15 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
 
   it('should create a groundwater level observation using data provider', async () => {
     const createData = zCreateGroundwaterLevelObservation.parse({
+      parameter_id: 1,
+      observation_datetime: '2025-01-08T21:15:18.139Z',
+      release_status: 'public',
       sample_id: 1,
       sensor_id: 1,
-      observed_property: 'groundwater level',
-      observation_datetime: '2025-01-08T21:15:18.139Z',
       value: 6,
       unit: 'ft',
-      depth_to_water_bgs: 10,
       measuring_point_height: 4,
-      release_status: 'public',
-      level_status: 'normal'
+      groundwater_level_reason: 'Water level not affected'
     })
 
   const result = await ocotilloDataProvider.create({
@@ -94,17 +93,15 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
 
   it('should update a groundwater level observation using data provider', async () => {
     const updateData: UpdateGroundwaterLevelObservation = zUpdateGroundwaterLevelObservation.parse({
-      id: 1,
-      observed_property: 'groundwater level',
+      parameter_id: 1,
       observation_datetime: '2025-02-08T21:15:18.139Z',
+      release_status: 'draft',
       sample_id: 1,
       sensor_id: 1,
       value: 5,
       unit: 'ft',
-      depth_to_water_bgs: 10,
       measuring_point_height: 5,
-      release_status: 'draft',
-      level_status: 'normal'
+      groundwater_level_reason: 'Water level not affected '
     })
 
   const result = await ocotilloDataProvider.update({

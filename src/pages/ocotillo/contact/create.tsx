@@ -4,11 +4,11 @@ import { useForm } from '@refinedev/react-hook-form'
 import { Controller } from 'react-hook-form'
 import { Autocomplete, TextField } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { useState } from 'react'
-
 import { Nullable } from '../../../interfaces'
-import { IContact } from '@/interfaces/ocotillo/IContact'
-import { IThing } from '@/interfaces/ocotillo/IThing'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { zCreateContact } from '@/generated/zod.gen'
+import { CreateContact } from '@/generated/types.gen'
+import { ThingResponse } from '@/generated/types.gen'
 import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
 
 export const ContactCreate: React.FC = () => {
@@ -16,11 +16,12 @@ export const ContactCreate: React.FC = () => {
     saveButtonProps,
     control,
     formState: { errors },
-  } = useForm<IContact, HttpError, Nullable<IContact>>()
+  } = useForm<CreateContact, HttpError, Nullable<CreateContact>>({
+    resolver: zodResolver(zCreateContact),
+    mode: "onSubmit",
+  })
 
-  const [thingValue, setThingValue] = useState<IThing | null>(null)
-
-  const { autocompleteProps } = useAutocomplete<IThing>({
+  const { autocompleteProps } = useAutocomplete<ThingResponse>({
     resource: 'thing',
     dataProviderName: 'ocotillo',
     onSearch: (value) => [
@@ -39,13 +40,15 @@ export const ContactCreate: React.FC = () => {
           <Controller
             name="thing_id"
             control={control}
-            rules={{ required: 'This field is required' }}
             render={({ field }) => (
               <Autocomplete
                 {...autocompleteProps}
-                value={thingValue}
+                value={
+                  autocompleteProps.options.find(
+                    (option) => option.id === field.value
+                  ) || null
+                }
                 onChange={(_, newValue) => {
-                  setThingValue(newValue)
                   field.onChange(newValue?.id || null)
                 }}
                 getOptionKey={(option) => option.id}

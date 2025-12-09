@@ -35,7 +35,7 @@ export const LoadingControlledSelectField = <T,>({
   resetFn: () => void
   multiple?: boolean
   showAsterisk?: boolean
-} & SelectProps) => {
+  } & SelectProps) => {
   const { disabled } = props
 
   if (isLoading) return <SkeletonFormField />

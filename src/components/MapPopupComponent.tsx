@@ -1,50 +1,89 @@
 import {
+  TableHead,
   Table,
-  TableContainer,
-  TableCell,
-  TableRow,
   TableBody,
-} from "@mui/material";
+  TableRow,
+  TableCell,
+  TableContainer,
+  Paper,
+  Typography,
+  Divider,
+  Stack,
+} from '@mui/material'
 
-export function mToFt(m: number) {
-  return (m * 3.28084).toFixed(2);
-}
-
-export const SetMapPopupContent = ({ features, setPopupContent }) => {
-  const transposedData = [
-    { key: "Name", values: features.map((point) => point.properties.PointID) },
-    {
-      key: "Alternate Site ID",
-      values: features.map((point) => point.properties.AlternateSiteID),
-    },
-  ];
-
-  setPopupContent({
-    coordinates: features[0].geometry.coordinates,
-    children: (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
+export const MapPopup = ({ features }: { features: any[] }) => (
+  <Paper
+    elevation={0}
+    sx={{
+      width: 320,
+      p: 2,
+      borderRadius: 2,
+      backgroundColor: 'background.paper',
+    }}
+  >
+    <Stack spacing={1.5}>
+      <Typography
+        variant="h6"
+        color="text.primary"
+        sx={{ fontWeight: 600 }}
+        gutterBottom
       >
-        <h3 style={{ color: "black" }}>Click for more details</h3>
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <TableContainer>
-            <Table>
-              <TableBody>
-                {transposedData.map((row, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{row.key}</TableCell>
-                    <TableCell>{row.values[0]}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-      </div>
-    ),
-  });
-};
+        Click for more details
+      </Typography>
+
+      <Divider />
+
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell align="left">
+                <Typography variant="subtitle2" fontWeight="bold">
+                  ID
+                </Typography>
+              </TableCell>
+              <TableCell align="left">
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Name
+                </Typography>
+              </TableCell>
+              <TableCell align="left">
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Type
+                </Typography>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {features.map((feature, index: number) => (
+              <TableRow
+                key={index}
+                hover
+                sx={{
+                  '&:hover': { backgroundColor: 'action.hover' },
+                  transition: 'background-color 0.2s ease',
+                }}
+              >
+                <TableCell>
+                  <Typography variant="body2" color="text.secondary">
+                    {feature.properties.id}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" color="text.primary">
+                    {feature.properties.name || '—'}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" color="text.secondary">
+                    {feature.properties.thing_type || '—'}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Stack>
+  </Paper>
+)
