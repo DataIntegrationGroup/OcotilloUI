@@ -95,17 +95,33 @@ export const SearchBar = () => {
       case GroupType.Springs: {
         const isWaterWell = option.properties.thing_type === 'water well'
         go({
-          to: `ocotillo/${isWaterWell ? 'well' : 'spring'}/show/${option.properties.id}`,
+          to: {
+            resource: isWaterWell
+              ? 'ocotillo.thing-well'
+              : 'ocotillo.thing-spring',
+            action: 'show',
+            id: option.properties.id,
+          },
         })
         break
       }
       case GroupType.Contacts:
-        go({ to: `ocotillo/contact/show/${option.properties.id}` })
+        go({
+          to: {
+            resource: 'ocotillo.contact',
+            action: 'show',
+            id: option.properties.id,
+          },
+        })
         break
 
       case GroupType.Assets:
         go({
-          to: `ocotillo/assets/show/${option.properties.id}`,
+          to: {
+            resource: 'ocotillo.assets',
+            action: 'show',
+            id: option.properties.id,
+          },
         })
         break
     }
@@ -240,8 +256,8 @@ export const SearchBar = () => {
                   }}
                   onClick={(e) => {
                     e.stopPropagation() // prevents double select
-                    navigateToResult(option)
                     setSelected(option)
+                    navigateToResult(option)
                   }}
                 >
                   <Stack spacing={1} sx={{ width: '100%' }}>
