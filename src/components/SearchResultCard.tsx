@@ -89,7 +89,7 @@ export const ContactCard = ({
   const { address, phone, email, things } = contact.properties
 
   const hasContactInfo =
-    address.length > 0 || phone.length > 0 || email.length > 0
+    address?.length > 0 || phone?.length > 0 || email?.length > 0
 
   return (
     <Stack spacing={1}>
@@ -128,7 +128,7 @@ export const ContactCard = ({
         </Box>
       )}
 
-      {things.length > 0 && (
+      {things?.length > 0 && (
         <>
           <Typography variant="caption" sx={{ opacity: 0.7 }}>
             Related wells & springs
