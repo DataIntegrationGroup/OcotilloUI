@@ -168,7 +168,7 @@ export type ContactResponse = {
     /**
      * Things
      */
-    things?: Array<ThingResponse>;
+    things?: Array<ThingResponseForContact>;
 };
 
 /**
@@ -2357,6 +2357,27 @@ export type ThingResponse = {
      */
     permissions: Array<PermissionHistoryResponse>;
     formation_completion_code: FormationCode | null;
+};
+
+/**
+ * ThingResponseForContact
+ * Response schema for thing details related to a contact. All that is needed
+ * are the id and name
+ */
+export type ThingResponseForContact = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Name
+     */
+    name: string;
 };
 
 /**

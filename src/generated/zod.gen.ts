@@ -168,951 +168,15 @@ export const zPhoneResponse = z.object({
 });
 
 /**
- * GeoJSONGeometry
+ * ThingResponseForContact
+ * Response schema for thing details related to a contact. All that is needed
+ * are the id and name
  */
-export const zSchemasLocationGeoJsonGeometry = z.object({
-    type: z.optional(z.string()).default('Point'),
-    coordinates: z.tuple([
-        z.unknown(),
-        z.unknown(),
-        z.unknown()
-    ])
-});
-
-/**
- * elevation_method
- */
-export const zElevationMethod = z.enum([
-    'Altimeter',
-    'Differentially corrected GPS',
-    'Survey-grade GPS',
-    'Global positioning system (GPS)',
-    'LiDAR DEM',
-    'Level or other survey method',
-    'Interpolated from topographic map',
-    'Interpolated from digital elevation model (DEM)',
-    'Reported',
-    'Survey-grade Global Navigation Satellite Sys, Lvl1',
-    'USGS National Elevation Dataset (NED)',
-    'Unknown'
-]);
-
-/**
- * GeoJSONUTMCoordinates
- */
-export const zGeoJsonutmCoordinates = z.object({
-    easting: z.number(),
-    northing: z.number(),
-    utm_zone: z.optional(z.int()).default(13),
-    horizontal_datum: z.optional(z.string()).default('NAD83')
-});
-
-/**
- * NoteResponse
- * Response schema for Note details.
- */
-export const zNoteResponse = z.object({
-    note_type: z.string(),
-    content: z.string(),
+export const zThingResponseForContact = z.object({
     id: z.int(),
     created_at: z.string(),
     release_status: zReleaseStatus,
-    target_id: z.int(),
-    target_table: z.string()
-});
-
-/**
- * GeoJSONProperties
- */
-export const zGeoJsonProperties = z.object({
-    elevation: z.number(),
-    elevation_unit: z.optional(z.string()).default('ft'),
-    vertical_datum: z.optional(z.string()).default('NAVD88'),
-    elevation_method: z.union([
-        zElevationMethod,
-        z.null()
-    ]),
-    utm_coordinates: z.optional(zGeoJsonutmCoordinates),
-    notes: z.optional(z.array(zNoteResponse)).default([]),
-    nma_date_created: z.optional(z.union([
-        z.iso.date(),
-        z.null()
-    ])),
-    nma_site_date: z.optional(z.union([
-        z.iso.date(),
-        z.null()
-    ]))
-});
-
-/**
- * LocationGeoJSONResponse
- */
-export const zLocationGeoJsonResponse = z.object({
-    type: z.optional(z.string()).default('Feature'),
-    geometry: zSchemasLocationGeoJsonGeometry,
-    properties: zGeoJsonProperties
-});
-
-/**
- * group_type
- */
-export const zGroupType = z.enum([
-    'Monitoring Plan',
-    'Geographic Area',
-    'Historical'
-]);
-
-/**
- * GroupResponse
- * Pydantic model for the response of a group.
- * This model can be extended to include additional fields as needed.
- */
-export const zGroupResponse = z.object({
-    id: z.int(),
-    created_at: z.string(),
-    release_status: zReleaseStatus,
-    name: z.string(),
-    description: z.union([
-        z.string(),
-        z.null()
-    ]),
-    project_area: z.union([
-        z.string(),
-        z.null()
-    ]),
-    group_type: z.union([
-        zGroupType,
-        z.null()
-    ]),
-    parent_group_id: z.union([
-        z.int(),
-        z.null()
-    ])
-});
-
-/**
- * organization
- */
-export const zOrganization = z.enum([
-    'Unknown',
-    'City of Aztec',
-    'Daybreak Investments',
-    'Vallecitos HOA',
-    'SFC, Santa Fe Animal Shelter',
-    'El Guicu Ditch Association',
-    'Santa Fe Municipal Airport',
-    'Uluru Development',
-    "AllSup's Convenience Stores",
-    'Santa Fe Downs Resort',
-    'City of Truth or Consequences, WWTP',
-    'Riverbend Hotsprings',
-    'Armendaris Ranch',
-    'El Paso Water',
-    'BLM, Socorro Field Office',
-    'USFWS',
-    'Sile MDWCA',
-    'Pena Blanca Water & Sanitation District',
-    'Town of Questa',
-    'Town of Cerro',
-    'Farr Cattle Company',
-    'Carrizozo Orchard',
-    'USFS, Kiowa Grasslands',
-    'Cloud Country West Subdivision',
-    'Chama West WUA',
-    'El Rito Regional Water and Waste Water Association',
-    'West Rim MDWUA',
-    'Village of Willard',
-    'Quemado Municipal Water & SWA',
-    'Coyote Creek MDWUA',
-    'Lamy MDWCA',
-    'La Joya CWDA',
-    'NM Firefighters Training Academy',
-    'Cebolleta Land Grant',
-    'Madrid Water Co-op',
-    'Sun Valley Water and Sanitation',
-    'Bluewater Lake MDWCA',
-    'Bluewater Acres Domestic WUA',
-    'Lybrook MDWCA',
-    'New Mexico Museum of Natural History',
-    'Hillsboro MDWCA',
-    'Tyrone MDWCA',
-    'Santa Clara Water System',
-    'Casas Adobes MDWCA',
-    'Lake Roberts WUA',
-    'El Creston MDWCA',
-    'Reserve Municipality Water Works',
-    'Town of Estancia',
-    'Pie Town MDWCA',
-    'Roosevelt SWCD',
-    'Otis MDWCA',
-    'White Cliffs MDWUA',
-    'Vista Linda Water Co-op',
-    'Anasazi Trails Water Co-op',
-    'Canon MDWCA',
-    'Placitas Trails Water Co-op',
-    'BLM, Roswell Office',
-    'Forked Lightning Ranch',
-    'Cottonwood RWA',
-    'Pinon Ridge WUA',
-    'McSherry Farms',
-    'Agua Sana WUA',
-    'Chamita MDWCA',
-    'W Spear-bar Ranch',
-    'Village of Capitan',
-    'Brazos MDWCA',
-    'Alto Alps HOA',
-    'Chiricahua Desert Museum',
-    'Bike Ranch',
-    'Hachita MDWCA',
-    'Carrizozo Municipal Water',
-    'Dunhill Ranch',
-    'Santa Fe Conservation Trust',
-    'NMSU',
-    'USGS',
-    'TWDB',
-    'NMED',
-    'NMOSE',
-    'NMBGMR',
-    'Bernalillo County',
-    'BLM',
-    'BLM Taos Office',
-    'SFC',
-    'SFC, Fire Facilities',
-    'SFC, Utilities Dept.',
-    'SFC, Valle Vista Water Utility, Inc.',
-    'City of Santa Fe',
-    'City of Santa Fe WWTP',
-    'City of Santa Fe, Municipal Recreation Complex',
-    'City of Santa Fe, Sangre de Cristo Water Co.',
-    'NMISC',
-    'PVACD',
-    'Bayard',
-    'SNL',
-    'USFS',
-    'NMT',
-    'NPS',
-    'NMRWA',
-    'NMDOT',
-    'Taos SWCD',
-    'Otero SWCD',
-    'Northeastern SWCD',
-    'CDWR',
-    'Pendaries Village',
-    'A&T Pump & Well Service, LLC',
-    'A. G. Wassenaar, Inc',
-    'AMEC',
-    'Balleau Groundwater, Inc',
-    'CDM Smith',
-    'CH2M Hill',
-    'Corbin Consulting, Inc',
-    'Chevron',
-    'Daniel B. Stephens & Associates, Inc',
-    'EnecoTech',
-    'Faith Engineering, Inc',
-    'Foster Well Service, Inc',
-    'Glorieta Geoscience, Inc',
-    'Golder Associates, Inc',
-    "Hathorn's Well Service, Inc",
-    'Hydroscience Associates, Inc',
-    'IC Tech, Inc',
-    'John Shomaker & Associates, Inc',
-    'Kuckleman Pump Service',
-    'Los Golondrinas',
-    'Minton Engineers',
-    'MJDarrconsult, Inc',
-    'Puerta del Canon Ranch',
-    'Rodgers & Company, Inc',
-    'San Pedro Creek Estates HOA',
-    'Statewide Drilling, Inc',
-    'Tec Drilling Limited',
-    'Tetra Tech, Inc',
-    'Thompson Drilling, Inc',
-    'Witcher & Associates',
-    'Zeigler Geologic Consulting, LLC',
-    'Sandia Well Service, Inc',
-    'San Marcos Association',
-    'URS',
-    'Vista del Oro',
-    'Abeyta Engineering, Inc',
-    'Adobe Ranch',
-    'Agua Fria Community Water Association',
-    'Apache Gap Ranch',
-    'Aspendale Mountain Retreat',
-    'Augustin Plains Ranch LLC',
-    'B & B Cattle Co',
-    'Berridge Distributing Company',
-    "Bishop's Lodge",
-    'Bonanza Creek Ranch',
-    'Bug Scuffle Water Association',
-    'Wehinahpay Mountain Camp',
-    'Campbell Ranch',
-    'Capitol Ford Santa Fe',
-    'Cemex, Inc',
-    'Cerro Community Center',
-    'Santa Fe Jewish Center',
-    'Chupadero MDWCA',
-    'Cielo Lumbre HOA',
-    'Circle Cross Ranch',
-    'City of Alamogordo',
-    'City of Portales, Public Works Dept.',
-    'City of Socorro',
-    'Commonwealth Conservancy',
-    'Country Club Garden Mobile Home Park',
-    'Crossroads Cattle Co., Ltd',
-    'Double H Ranch',
-    'E.A. Meadows East',
-    'El Camino Realty, Inc',
-    'Eldorado Area Water & Sanitation District',
-    'Bourbon Grill at El Gancho',
-    'El Prado HOA',
-    'El Rancho de las Golondrinas',
-    'El Rito Canyon MDWCA',
-    'Encantado Enterprises',
-    'Estrella Concepts LLC',
-    'Sixteen Springs Fire Department',
-    'Fire Water Lodge',
-    'Ford County Land & Cattle Company, Inc',
-    'Friendly Construction, Inc',
-    'Hacienda Del Cerezo',
-    'Hefker Vega Ranch',
-    'High Nogal Ranch',
-    'Holloman Air Force Base',
-    'Hyde Park Estates MDWCA',
-    'Desert Village RV & Mobile Home Park',
-    'K. Schmitt Trust',
-    'La Cienega MDWCA',
-    'La Vista HOA',
-    'Land Ventures LLC',
-    'Las Lagunitas',
-    'Las Lagunitas HOA',
-    'Living World Ministries',
-    'Los Atrevidos, Inc',
-    'Los Prados HOA',
-    'Malaga MDWCA & SWA',
-    'Mangas Outfitters',
-    'Medina Gravel Pit',
-    'Mendenhall Trading Co',
-    'Mesa Verde Ranch',
-    'NMDGF',
-    'NMSU College of Agriculture',
-    'Naiche Development',
-    'NRAO',
-    'NMSA',
-    'Nogal MDWCA',
-    'O Bar O Ranch',
-    'OMI Wastewater Treatment Plant',
-    'Old Road Ranch Pardners Ltd',
-    'PNM Service Center',
-    'Peace Tabernacle Church',
-    'Pecos Trail Inn',
-    'Pelican Spa',
-    'Pistachio Tree Ranch',
-    'Rancho Encantado',
-    'Rancho San Lucas',
-    'Rancho San Marcos',
-    'Rancho Viejo Partnership',
-    'Ranney Ranch',
-    'Rio En Medio MDWCA',
-    'San Acacia MDWCA',
-    'San Juan Residences',
-    'Sangre de Cristo Estates',
-    'Santa Fe Community College',
-    'Sangre de Cristo Center',
-    'Santa Fe Horse Park',
-    'Santa Fe Opera',
-    'Santa Fe Waldorf School',
-    'Shidoni Foundry and Gallery',
-    'Sierra Grande Lodge',
-    'Sierra Vista Retirement Community',
-    'Slash Triangle Ranch',
-    'Stagecoach Motel',
-    'State of New Mexico',
-    'Stephenson Ranch',
-    'Sun Broadcasting Network',
-    'Tano Rd LLC',
-    'UNM-Taos',
-    'Tee Pee Ranch/Tee Pee Subdivision',
-    'Tent Rock, Inc',
-    'Tesuque MDWCA',
-    'The Great Cloud Zen Center',
-    'Three Rivers Ranch',
-    'Timberon Water and Sanitation District',
-    'Town of Magdalena',
-    'Town of Taos',
-    'Town of Taos, National Guard Armory',
-    'Trinity Ranch',
-    'Tularosa Basin National Desalination Research Facility',
-    'Turquoise Trail Charter School',
-    'US Bureau of Indian Affairs, Santa Fe Indian School',
-    'USFS, Carson NF, Taos Office',
-    'USFS, Cibola NF, Magdalena Ranger District',
-    'USFS, Santa Fe NF, Espanola Ranger District',
-    'Ute Mountain Farms',
-    'VA Hospital',
-    'Velte',
-    'Vereda Serena Property',
-    'Village of Corona',
-    'Village of Floyd',
-    'Village of Melrose',
-    'Village of Vaughn',
-    'Vista Land Company',
-    'Vista Redonda MDWCA',
-    'Vista de Oro de Placitas Water Users Coop',
-    'Walker Ranch',
-    'Wild & Woolley Trailer Ranch',
-    'Winter Brothers',
-    'Yates Petroleum Corporation',
-    'Zamora Accounting Services',
-    'PLSS'
-]);
-
-/**
- * ThingIdLinkResponse
- */
-export const zThingIdLinkResponse = z.object({
-    id: z.int(),
-    created_at: z.string(),
-    release_status: zReleaseStatus,
-    thing_id: z.int(),
-    relation: z.string(),
-    alternate_id: z.string(),
-    alternate_organization: zOrganization
-});
-
-/**
- * monitoring_frequency
- */
-export const zMonitoringFrequency = z.enum([
-    'Monthly',
-    'Bimonthly',
-    'Bimonthly reported',
-    'Quarterly',
-    'Biannual',
-    'Annual',
-    'Decadal',
-    'Event-based'
-]);
-
-/**
- * MonitoringFrequencyResponse
- */
-export const zMonitoringFrequencyResponse = z.object({
-    monitoring_frequency: zMonitoringFrequency,
-    start_date: z.iso.date(),
-    end_date: z.union([
-        z.iso.date(),
-        z.null()
-    ])
-});
-
-/**
- * well_purpose
- */
-export const zWellPurpose = z.enum([
-    'Unknown',
-    'Open, unequipped well',
-    'Commercial',
-    'Domestic',
-    'Power generation',
-    'Irrigation',
-    'Livestock',
-    'Mining',
-    'Industrial',
-    'Observation',
-    'Public supply',
-    'Shared domestic',
-    'Institutional',
-    'Unused',
-    'Exploration',
-    'Monitoring',
-    'Production',
-    'Injection'
-]);
-
-/**
- * casing_material
- */
-export const zCasingMaterial = z.enum([
-    'PVC',
-    'Steel',
-    'Concrete'
-]);
-
-/**
- * well_construction_method
- */
-export const zWellConstructionMethod = z.enum([
-    'Air-Rotary',
-    'Bored or augered',
-    'Cable-tool',
-    'Hydraulic rotary (mud or water)',
-    'Air percussion',
-    'Reverse rotary',
-    'Driven',
-    'Other (explain in notes)'
-]);
-
-/**
- * well_pump_type
- */
-export const zWellPumpType = z.enum([
-    'Submersible',
-    'Jet',
-    'Line Shaft',
-    'Hand'
-]);
-
-/**
- * permission_type
- */
-export const zPermissionType = z.enum([
-    'Water Level Sample',
-    'Water Chemistry Sample',
-    'Datalogger Installation'
-]);
-
-/**
- * PermissionHistoryResponse
- * Even though permission_allowed and start_date are not-nullable in the
- * database, they are nullable here to accommodate cases where no permission
- * record exists for a given permission type.
- */
-export const zPermissionHistoryResponse = z.object({
-    permission_type: zPermissionType,
-    permission_allowed: z.union([
-        z.boolean(),
-        z.null()
-    ]),
-    start_date: z.union([
-        z.iso.date(),
-        z.null()
-    ]),
-    end_date: z.union([
-        z.iso.date(),
-        z.null()
-    ])
-});
-
-/**
- * formation_code
- */
-export const zFormationCode = z.enum([
-    '000EXRV',
-    '000IRSV',
-    '050QUAL',
-    '100QBAS',
-    '110ALVM',
-    '110AVMB',
-    '110BLSN',
-    '110NTGU',
-    '110PTODC',
-    '111MCCR',
-    '112ANCH',
-    '112CURB',
-    '112LAMA',
-    '112LAMAb',
-    '112LGUN',
-    '112QTBF',
-    '112QTBFlac',
-    '112QTBFpd',
-    '112QTBFppm',
-    '112SNTF',
-    '112SNTFA',
-    '112SNTFOB',
-    '112SNTFP',
-    '112TRTO',
-    '120DTIL',
-    '120ELRT',
-    '120IRSV',
-    '120SBLC',
-    '120SRVB',
-    '120SRVBf',
-    '120TSBV_Lower',
-    '120TSBV_Upper',
-    '121CHMT',
-    '121CHMTv',
-    '121CHMTvs',
-    '121OGLL',
-    '121PUYEF',
-    '121TSUQ',
-    '121TSUQa',
-    '121TSUQacu',
-    '121TSUQacuf',
-    '121TSUQaml',
-    '121TSUQb',
-    '121TSUQbfl',
-    '121TSUQbfm',
-    '121TSUQbp',
-    '121TSUQce',
-    '121TSUQe',
-    '121TSUQs',
-    '121TSUQsa',
-    '121TSUQsc',
-    '121TSUQsf',
-    '122CHOC',
-    '122CRTO',
-    '122OJOC',
-    '122PICR',
-    '122PPTS',
-    '122SNTFP',
-    '123DTILSPRS',
-    '123DTMGandbas',
-    '123DTMGign',
-    '123DTMGrhydac',
-    '123ESPN',
-    '123GLST',
-    '123PICS',
-    '123PICSc',
-    '123PICSl',
-    '123SPRSDTMGlava',
-    '123SPRSlower',
-    '123SPRSmid_uppe',
-    '124BACA',
-    '124CBMN',
-    '124LLVS',
-    '124PSCN',
-    '124RGIN',
-    '124SNJS',
-    '124TPCS',
-    '125NCMN',
-    '125NCMNS',
-    '125RTON',
-    '130CALDFLOOR',
-    '180TKSCC_Upper',
-    '180TKTR',
-    '210CRCS',
-    '210GLUPC_Lower',
-    '210HOSTD',
-    '210MCDK',
-    '210MNCS',
-    '210MNCSL',
-    '210MNCSU',
-    '211CLFHV',
-    '211CRLL',
-    '211CRVC',
-    '211DKOT',
-    '211DLCO',
-    '211DLTN',
-    '211FRHS',
-    '211FRLD',
-    '211FRMG',
-    '211GBSNC',
-    '211GLLG',
-    '211GLLP',
-    '211GRRG',
-    '211GRRS',
-    '211HOST',
-    '211KRLD',
-    '211LWIS',
-    '211MENF',
-    '211MENFU',
-    '211MVRD',
-    '211OJAM',
-    '211PCCF',
-    '211PIRR',
-    '211PNLK',
-    '211SMKH',
-    '211TLLS',
-    '212KTRP',
-    '217PRGR',
-    '220ENRD',
-    '220JURC',
-    '220NAVJ',
-    '221BLFF',
-    '221CSPG',
-    '221ERADU',
-    '221MRSN',
-    '221MRSN/BBSN',
-    '221MRSN/JCKP',
-    '221MRSN/RCAP',
-    '221MRSN/WWCN',
-    '221SLWS',
-    '221SMVL',
-    '221TDLT',
-    '221WSRC',
-    '221ZUNIS',
-    '231AGZC',
-    '231AGZCU',
-    '231CHNL',
-    '231CORR',
-    '231DCKM',
-    '231PFDF',
-    '231PFDFL',
-    '231PFDFM',
-    '231PFDFU',
-    '231RCKP',
-    '231SNRS',
-    '231SNSL',
-    '231SRMP',
-    '231WNGT',
-    '260SNAN',
-    '260SNAN_lower',
-    '261SNGL',
-    '300YESO',
-    '300YESO_lower',
-    '300YESO_upper',
-    '310ABO',
-    '310DCLL',
-    '310GLOR',
-    '310MBLC',
-    '310TRRS',
-    '310YESO',
-    '310YESOG',
-    '312CSTL',
-    '312RSLR',
-    '313ARTS',
-    '313BLCN',
-    '313BRUC',
-    '313CKBF',
-    '313CLBD',
-    '313CPTN',
-    '313GDLP',
-    '313GOSP',
-    '313SADG',
-    '313SADR',
-    '313TNSL',
-    '313YATS',
-    '315LABR',
-    '315YESOABO',
-    '318ABO',
-    '318BSPG',
-    '318JOYT',
-    '318YESO',
-    '319BRSM',
-    '320HLDR',
-    '320PENN',
-    '320SNDI',
-    '321SGDC',
-    '322BEMN',
-    '325GBLR',
-    '325MDER',
-    '325MDERL',
-    '325MDERU',
-    '325SAND',
-    '326MGDL',
-    '340EPRS',
-    '350PZBA',
-    '350PZBB',
-    '400EMBD',
-    '400PCMB',
-    '400PREC',
-    '400PRECintr',
-    '400PRST',
-    '400TUSS',
-    '410PRCG',
-    '410PRCGf',
-    '410PRCQ',
-    '410PRCQf',
-    '121GILA',
-    '312DYLK',
-    '120WMVL',
-    '313GRBG',
-    '318ABOL',
-    '318ABOU',
-    '112SNTFU',
-    '310FRNR',
-    '312OCHO',
-    '313AZOT',
-    '313QUEN',
-    '319HUCO',
-    '313SVRV',
-    '313CABD',
-    '320GRMS',
-    '211CLRDH',
-    '120BRLM',
-    '122RUBO',
-    '313SADRL',
-    '313SADRU',
-    '313BRNL',
-    '318CPDR',
-    '121BDHC',
-    '313SADY',
-    '221SRFLL',
-    '221BLUF',
-    '221COSP',
-    '317ABYS',
-    '221BRSB',
-    '310SYDR',
-    '400SDVL',
-    '221SRFL',
-    '310SGRC',
-    '231TCVS',
-    '211DCRS',
-    '211ALSN',
-    '211LVNN',
-    '211MORD',
-    '210PRMD',
-    '124ANMS',
-    '211NBRR',
-    '111ALVM',
-    '122SNTFL',
-    '111CPLN',
-    '120CRSN',
-    '111CRMS',
-    '111CRMSA',
-    '111SPOL',
-    '110TURT',
-    '221RCPR',
-    '320BLNG',
-    '112ANCHsr',
-    '121TSUQae',
-    '230TRSC',
-    '122TSUQdx',
-    '123PICSu',
-    '123PICSm',
-    '123PICSmc',
-    '120VBVC',
-    '120VCSS',
-    '124DMDT',
-    '325ALMT',
-    '400SAND',
-    '318VCPK',
-    '318BSVP',
-    '100ALVM',
-    '310PRMN',
-    '110AVPS',
-    '313CRCX',
-    '112SLBL',
-    '112SBCRC',
-    '313CRDM',
-    '112SBDM',
-    '120BLSN',
-    '112SBCR',
-    '112HCBL',
-    '120IVIG',
-    '112RLBL',
-    '112EFBL',
-    '112GRBL',
-    '123SAND',
-    '210MRNH',
-    '320ALMT',
-    '313DLRM',
-    '300PLZC',
-    '122SPRS',
-    '110AVTV',
-    '313DMBS',
-    '120ERSV'
-]);
-
-/**
- * ThingResponse
- */
-export const zThingResponse = z.object({
-    id: z.int(),
-    created_at: z.string(),
-    release_status: zReleaseStatus,
-    name: z.string(),
-    thing_type: z.string(),
-    current_location: zLocationGeoJsonResponse,
-    first_visit_date: z.union([
-        z.iso.date(),
-        z.null()
-    ]),
-    groups: z.optional(z.array(zGroupResponse)).default([]),
-    monitoring_status: z.union([
-        z.string(),
-        z.null()
-    ]),
-    alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
-    monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
-    general_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
-    spring_type: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    well_purposes: z.optional(z.array(zWellPurpose)).default([]),
-    well_depth: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    well_depth_unit: z.optional(z.string()).default('ft'),
-    well_depth_source: z.union([
-        z.string(),
-        z.null()
-    ]),
-    hole_depth: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    hole_depth_unit: z.optional(z.string()).default('ft'),
-    well_casing_diameter: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    well_casing_diameter_unit: z.optional(z.string()).default('in'),
-    well_casing_depth: z.optional(z.union([
-        z.number(),
-        z.null()
-    ])),
-    well_casing_depth_unit: z.optional(z.string()).default('ft'),
-    well_casing_materials: z.optional(z.array(zCasingMaterial)).default([]),
-    well_completion_date: z.union([
-        z.iso.date(),
-        z.null()
-    ]),
-    well_completion_date_source: z.union([
-        z.string(),
-        z.null()
-    ]),
-    well_driller_name: z.union([
-        z.string(),
-        z.null()
-    ]),
-    well_construction_method: z.union([
-        zWellConstructionMethod,
-        z.null()
-    ]),
-    well_construction_method_source: z.union([
-        z.string(),
-        z.null()
-    ]),
-    well_pump_type: z.union([
-        zWellPumpType,
-        z.null()
-    ]),
-    well_pump_depth: z.union([
-        z.number(),
-        z.null()
-    ]),
-    well_pump_depth_unit: z.optional(z.string()).default('ft'),
-    is_suitable_for_datalogger: z.union([
-        z.boolean(),
-        z.null()
-    ]),
-    well_status: z.union([
-        z.string(),
-        z.null()
-    ]),
-    measuring_point_height: z.union([
-        z.number(),
-        z.null()
-    ]),
-    measuring_point_height_unit: z.optional(z.string()).default('ft'),
-    measuring_point_description: z.union([
-        z.string(),
-        z.null()
-    ]),
-    aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
-    water_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
-    measuring_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
-    construction_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
-    permissions: z.array(zPermissionHistoryResponse),
-    formation_completion_code: z.union([
-        zFormationCode,
-        z.null()
-    ])
+    name: z.string()
 });
 
 /**
@@ -1137,7 +201,7 @@ export const zContactResponse = z.object({
     emails: z.optional(z.array(zEmailResponse)).default([]),
     phones: z.optional(z.array(zPhoneResponse)).default([]),
     addresses: z.optional(z.array(zAddressResponse)).default([]),
-    things: z.optional(z.array(zThingResponse)).default([])
+    things: z.optional(z.array(zThingResponseForContact)).default([])
 });
 
 /**
@@ -1613,6 +677,364 @@ export const zCreateWaterChemistryObservation = z.object({
 });
 
 /**
+ * well_purpose
+ */
+export const zWellPurpose = z.enum([
+    'Unknown',
+    'Open, unequipped well',
+    'Commercial',
+    'Domestic',
+    'Power generation',
+    'Irrigation',
+    'Livestock',
+    'Mining',
+    'Industrial',
+    'Observation',
+    'Public supply',
+    'Shared domestic',
+    'Institutional',
+    'Unused',
+    'Exploration',
+    'Monitoring',
+    'Production',
+    'Injection'
+]);
+
+/**
+ * casing_material
+ */
+export const zCasingMaterial = z.enum([
+    'PVC',
+    'Steel',
+    'Concrete'
+]);
+
+/**
+ * well_construction_method
+ */
+export const zWellConstructionMethod = z.enum([
+    'Air-Rotary',
+    'Bored or augered',
+    'Cable-tool',
+    'Hydraulic rotary (mud or water)',
+    'Air percussion',
+    'Reverse rotary',
+    'Driven',
+    'Other (explain in notes)'
+]);
+
+/**
+ * well_pump_type
+ */
+export const zWellPumpType = z.enum([
+    'Submersible',
+    'Jet',
+    'Line Shaft',
+    'Hand'
+]);
+
+/**
+ * formation_code
+ */
+export const zFormationCode = z.enum([
+    '000EXRV',
+    '000IRSV',
+    '050QUAL',
+    '100QBAS',
+    '110ALVM',
+    '110AVMB',
+    '110BLSN',
+    '110NTGU',
+    '110PTODC',
+    '111MCCR',
+    '112ANCH',
+    '112CURB',
+    '112LAMA',
+    '112LAMAb',
+    '112LGUN',
+    '112QTBF',
+    '112QTBFlac',
+    '112QTBFpd',
+    '112QTBFppm',
+    '112SNTF',
+    '112SNTFA',
+    '112SNTFOB',
+    '112SNTFP',
+    '112TRTO',
+    '120DTIL',
+    '120ELRT',
+    '120IRSV',
+    '120SBLC',
+    '120SRVB',
+    '120SRVBf',
+    '120TSBV_Lower',
+    '120TSBV_Upper',
+    '121CHMT',
+    '121CHMTv',
+    '121CHMTvs',
+    '121OGLL',
+    '121PUYEF',
+    '121TSUQ',
+    '121TSUQa',
+    '121TSUQacu',
+    '121TSUQacuf',
+    '121TSUQaml',
+    '121TSUQb',
+    '121TSUQbfl',
+    '121TSUQbfm',
+    '121TSUQbp',
+    '121TSUQce',
+    '121TSUQe',
+    '121TSUQs',
+    '121TSUQsa',
+    '121TSUQsc',
+    '121TSUQsf',
+    '122CHOC',
+    '122CRTO',
+    '122OJOC',
+    '122PICR',
+    '122PPTS',
+    '122SNTFP',
+    '123DTILSPRS',
+    '123DTMGandbas',
+    '123DTMGign',
+    '123DTMGrhydac',
+    '123ESPN',
+    '123GLST',
+    '123PICS',
+    '123PICSc',
+    '123PICSl',
+    '123SPRSDTMGlava',
+    '123SPRSlower',
+    '123SPRSmid_uppe',
+    '124BACA',
+    '124CBMN',
+    '124LLVS',
+    '124PSCN',
+    '124RGIN',
+    '124SNJS',
+    '124TPCS',
+    '125NCMN',
+    '125NCMNS',
+    '125RTON',
+    '130CALDFLOOR',
+    '180TKSCC_Upper',
+    '180TKTR',
+    '210CRCS',
+    '210GLUPC_Lower',
+    '210HOSTD',
+    '210MCDK',
+    '210MNCS',
+    '210MNCSL',
+    '210MNCSU',
+    '211CLFHV',
+    '211CRLL',
+    '211CRVC',
+    '211DKOT',
+    '211DLCO',
+    '211DLTN',
+    '211FRHS',
+    '211FRLD',
+    '211FRMG',
+    '211GBSNC',
+    '211GLLG',
+    '211GLLP',
+    '211GRRG',
+    '211GRRS',
+    '211HOST',
+    '211KRLD',
+    '211LWIS',
+    '211MENF',
+    '211MENFU',
+    '211MVRD',
+    '211OJAM',
+    '211PCCF',
+    '211PIRR',
+    '211PNLK',
+    '211SMKH',
+    '211TLLS',
+    '212KTRP',
+    '217PRGR',
+    '220ENRD',
+    '220JURC',
+    '220NAVJ',
+    '221BLFF',
+    '221CSPG',
+    '221ERADU',
+    '221MRSN',
+    '221MRSN/BBSN',
+    '221MRSN/JCKP',
+    '221MRSN/RCAP',
+    '221MRSN/WWCN',
+    '221SLWS',
+    '221SMVL',
+    '221TDLT',
+    '221WSRC',
+    '221ZUNIS',
+    '231AGZC',
+    '231AGZCU',
+    '231CHNL',
+    '231CORR',
+    '231DCKM',
+    '231PFDF',
+    '231PFDFL',
+    '231PFDFM',
+    '231PFDFU',
+    '231RCKP',
+    '231SNRS',
+    '231SNSL',
+    '231SRMP',
+    '231WNGT',
+    '260SNAN',
+    '260SNAN_lower',
+    '261SNGL',
+    '300YESO',
+    '300YESO_lower',
+    '300YESO_upper',
+    '310ABO',
+    '310DCLL',
+    '310GLOR',
+    '310MBLC',
+    '310TRRS',
+    '310YESO',
+    '310YESOG',
+    '312CSTL',
+    '312RSLR',
+    '313ARTS',
+    '313BLCN',
+    '313BRUC',
+    '313CKBF',
+    '313CLBD',
+    '313CPTN',
+    '313GDLP',
+    '313GOSP',
+    '313SADG',
+    '313SADR',
+    '313TNSL',
+    '313YATS',
+    '315LABR',
+    '315YESOABO',
+    '318ABO',
+    '318BSPG',
+    '318JOYT',
+    '318YESO',
+    '319BRSM',
+    '320HLDR',
+    '320PENN',
+    '320SNDI',
+    '321SGDC',
+    '322BEMN',
+    '325GBLR',
+    '325MDER',
+    '325MDERL',
+    '325MDERU',
+    '325SAND',
+    '326MGDL',
+    '340EPRS',
+    '350PZBA',
+    '350PZBB',
+    '400EMBD',
+    '400PCMB',
+    '400PREC',
+    '400PRECintr',
+    '400PRST',
+    '400TUSS',
+    '410PRCG',
+    '410PRCGf',
+    '410PRCQ',
+    '410PRCQf',
+    '121GILA',
+    '312DYLK',
+    '120WMVL',
+    '313GRBG',
+    '318ABOL',
+    '318ABOU',
+    '112SNTFU',
+    '310FRNR',
+    '312OCHO',
+    '313AZOT',
+    '313QUEN',
+    '319HUCO',
+    '313SVRV',
+    '313CABD',
+    '320GRMS',
+    '211CLRDH',
+    '120BRLM',
+    '122RUBO',
+    '313SADRL',
+    '313SADRU',
+    '313BRNL',
+    '318CPDR',
+    '121BDHC',
+    '313SADY',
+    '221SRFLL',
+    '221BLUF',
+    '221COSP',
+    '317ABYS',
+    '221BRSB',
+    '310SYDR',
+    '400SDVL',
+    '221SRFL',
+    '310SGRC',
+    '231TCVS',
+    '211DCRS',
+    '211ALSN',
+    '211LVNN',
+    '211MORD',
+    '210PRMD',
+    '124ANMS',
+    '211NBRR',
+    '111ALVM',
+    '122SNTFL',
+    '111CPLN',
+    '120CRSN',
+    '111CRMS',
+    '111CRMSA',
+    '111SPOL',
+    '110TURT',
+    '221RCPR',
+    '320BLNG',
+    '112ANCHsr',
+    '121TSUQae',
+    '230TRSC',
+    '122TSUQdx',
+    '123PICSu',
+    '123PICSm',
+    '123PICSmc',
+    '120VBVC',
+    '120VCSS',
+    '124DMDT',
+    '325ALMT',
+    '400SAND',
+    '318VCPK',
+    '318BSVP',
+    '100ALVM',
+    '310PRMN',
+    '110AVPS',
+    '313CRCX',
+    '112SLBL',
+    '112SBCRC',
+    '313CRDM',
+    '112SBDM',
+    '120BLSN',
+    '112SBCR',
+    '112HCBL',
+    '120IVIG',
+    '112RLBL',
+    '112EFBL',
+    '112GRBL',
+    '123SAND',
+    '210MRNH',
+    '320ALMT',
+    '313DLRM',
+    '300PLZC',
+    '122SPRS',
+    '110AVTV',
+    '313DMBS',
+    '120ERSV'
+]);
+
+/**
  * CreateWell
  * Schema for creating a well.
  */
@@ -1879,6 +1301,71 @@ export const zFieldEventResponse = z.object({
 });
 
 /**
+ * elevation_method
+ */
+export const zElevationMethod = z.enum([
+    'Altimeter',
+    'Differentially corrected GPS',
+    'Survey-grade GPS',
+    'Global positioning system (GPS)',
+    'LiDAR DEM',
+    'Level or other survey method',
+    'Interpolated from topographic map',
+    'Interpolated from digital elevation model (DEM)',
+    'Reported',
+    'Survey-grade Global Navigation Satellite Sys, Lvl1',
+    'USGS National Elevation Dataset (NED)',
+    'Unknown'
+]);
+
+/**
+ * GeoJSONUTMCoordinates
+ */
+export const zGeoJsonutmCoordinates = z.object({
+    easting: z.number(),
+    northing: z.number(),
+    utm_zone: z.optional(z.int()).default(13),
+    horizontal_datum: z.optional(z.string()).default('NAD83')
+});
+
+/**
+ * NoteResponse
+ * Response schema for Note details.
+ */
+export const zNoteResponse = z.object({
+    note_type: z.string(),
+    content: z.string(),
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    target_id: z.int(),
+    target_table: z.string()
+});
+
+/**
+ * GeoJSONProperties
+ */
+export const zGeoJsonProperties = z.object({
+    elevation: z.number(),
+    elevation_unit: z.optional(z.string()).default('ft'),
+    vertical_datum: z.optional(z.string()).default('NAVD88'),
+    elevation_method: z.union([
+        zElevationMethod,
+        z.null()
+    ]),
+    utm_coordinates: z.optional(zGeoJsonutmCoordinates),
+    notes: z.optional(z.array(zNoteResponse)).default([]),
+    nma_date_created: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    nma_site_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ]))
+});
+
+/**
  * parameter_name
  */
 export const zParameterName = z.enum([
@@ -2072,6 +1559,43 @@ export const zGroundwaterLevelObservationResponse = z.object({
 });
 
 /**
+ * group_type
+ */
+export const zGroupType = z.enum([
+    'Monitoring Plan',
+    'Geographic Area',
+    'Historical'
+]);
+
+/**
+ * GroupResponse
+ * Pydantic model for the response of a group.
+ * This model can be extended to include additional fields as needed.
+ */
+export const zGroupResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    name: z.string(),
+    description: z.union([
+        z.string(),
+        z.null()
+    ]),
+    project_area: z.union([
+        z.string(),
+        z.null()
+    ]),
+    group_type: z.union([
+        zGroupType,
+        z.null()
+    ]),
+    parent_group_id: z.union([
+        z.int(),
+        z.null()
+    ])
+});
+
+/**
  * ValidationError
  */
 export const zValidationError = z.object({
@@ -2130,6 +1654,27 @@ export const zLexiconTripleResponse = z.object({
 });
 
 /**
+ * GeoJSONGeometry
+ */
+export const zSchemasLocationGeoJsonGeometry = z.object({
+    type: z.optional(z.string()).default('Point'),
+    coordinates: z.tuple([
+        z.unknown(),
+        z.unknown(),
+        z.unknown()
+    ])
+});
+
+/**
+ * LocationGeoJSONResponse
+ */
+export const zLocationGeoJsonResponse = z.object({
+    type: z.optional(z.string()).default('Feature'),
+    geometry: zSchemasLocationGeoJsonGeometry,
+    properties: zGeoJsonProperties
+});
+
+/**
  * LocationResponse
  * Response schema for sample location details.
  */
@@ -2169,6 +1714,32 @@ export const zLocationResponse = z.object({
         z.iso.date(),
         z.null()
     ]))
+});
+
+/**
+ * monitoring_frequency
+ */
+export const zMonitoringFrequency = z.enum([
+    'Monthly',
+    'Bimonthly',
+    'Bimonthly reported',
+    'Quarterly',
+    'Biannual',
+    'Annual',
+    'Decadal',
+    'Event-based'
+]);
+
+/**
+ * MonitoringFrequencyResponse
+ */
+export const zMonitoringFrequencyResponse = z.object({
+    monitoring_frequency: zMonitoringFrequency,
+    start_date: z.iso.date(),
+    end_date: z.union([
+        z.iso.date(),
+        z.null()
+    ])
 });
 
 /**
@@ -2347,6 +1918,447 @@ export const zPagePhoneResponse = z.object({
     page: z.int().gte(1),
     size: z.int().gte(1),
     pages: z.int().gte(0)
+});
+
+/**
+ * organization
+ */
+export const zOrganization = z.enum([
+    'Unknown',
+    'City of Aztec',
+    'Daybreak Investments',
+    'Vallecitos HOA',
+    'SFC, Santa Fe Animal Shelter',
+    'El Guicu Ditch Association',
+    'Santa Fe Municipal Airport',
+    'Uluru Development',
+    "AllSup's Convenience Stores",
+    'Santa Fe Downs Resort',
+    'City of Truth or Consequences, WWTP',
+    'Riverbend Hotsprings',
+    'Armendaris Ranch',
+    'El Paso Water',
+    'BLM, Socorro Field Office',
+    'USFWS',
+    'Sile MDWCA',
+    'Pena Blanca Water & Sanitation District',
+    'Town of Questa',
+    'Town of Cerro',
+    'Farr Cattle Company',
+    'Carrizozo Orchard',
+    'USFS, Kiowa Grasslands',
+    'Cloud Country West Subdivision',
+    'Chama West WUA',
+    'El Rito Regional Water and Waste Water Association',
+    'West Rim MDWUA',
+    'Village of Willard',
+    'Quemado Municipal Water & SWA',
+    'Coyote Creek MDWUA',
+    'Lamy MDWCA',
+    'La Joya CWDA',
+    'NM Firefighters Training Academy',
+    'Cebolleta Land Grant',
+    'Madrid Water Co-op',
+    'Sun Valley Water and Sanitation',
+    'Bluewater Lake MDWCA',
+    'Bluewater Acres Domestic WUA',
+    'Lybrook MDWCA',
+    'New Mexico Museum of Natural History',
+    'Hillsboro MDWCA',
+    'Tyrone MDWCA',
+    'Santa Clara Water System',
+    'Casas Adobes MDWCA',
+    'Lake Roberts WUA',
+    'El Creston MDWCA',
+    'Reserve Municipality Water Works',
+    'Town of Estancia',
+    'Pie Town MDWCA',
+    'Roosevelt SWCD',
+    'Otis MDWCA',
+    'White Cliffs MDWUA',
+    'Vista Linda Water Co-op',
+    'Anasazi Trails Water Co-op',
+    'Canon MDWCA',
+    'Placitas Trails Water Co-op',
+    'BLM, Roswell Office',
+    'Forked Lightning Ranch',
+    'Cottonwood RWA',
+    'Pinon Ridge WUA',
+    'McSherry Farms',
+    'Agua Sana WUA',
+    'Chamita MDWCA',
+    'W Spear-bar Ranch',
+    'Village of Capitan',
+    'Brazos MDWCA',
+    'Alto Alps HOA',
+    'Chiricahua Desert Museum',
+    'Bike Ranch',
+    'Hachita MDWCA',
+    'Carrizozo Municipal Water',
+    'Dunhill Ranch',
+    'Santa Fe Conservation Trust',
+    'NMSU',
+    'USGS',
+    'TWDB',
+    'NMED',
+    'NMOSE',
+    'NMBGMR',
+    'Bernalillo County',
+    'BLM',
+    'BLM Taos Office',
+    'SFC',
+    'SFC, Fire Facilities',
+    'SFC, Utilities Dept.',
+    'SFC, Valle Vista Water Utility, Inc.',
+    'City of Santa Fe',
+    'City of Santa Fe WWTP',
+    'City of Santa Fe, Municipal Recreation Complex',
+    'City of Santa Fe, Sangre de Cristo Water Co.',
+    'NMISC',
+    'PVACD',
+    'Bayard',
+    'SNL',
+    'USFS',
+    'NMT',
+    'NPS',
+    'NMRWA',
+    'NMDOT',
+    'Taos SWCD',
+    'Otero SWCD',
+    'Northeastern SWCD',
+    'CDWR',
+    'Pendaries Village',
+    'A&T Pump & Well Service, LLC',
+    'A. G. Wassenaar, Inc',
+    'AMEC',
+    'Balleau Groundwater, Inc',
+    'CDM Smith',
+    'CH2M Hill',
+    'Corbin Consulting, Inc',
+    'Chevron',
+    'Daniel B. Stephens & Associates, Inc',
+    'EnecoTech',
+    'Faith Engineering, Inc',
+    'Foster Well Service, Inc',
+    'Glorieta Geoscience, Inc',
+    'Golder Associates, Inc',
+    "Hathorn's Well Service, Inc",
+    'Hydroscience Associates, Inc',
+    'IC Tech, Inc',
+    'John Shomaker & Associates, Inc',
+    'Kuckleman Pump Service',
+    'Los Golondrinas',
+    'Minton Engineers',
+    'MJDarrconsult, Inc',
+    'Puerta del Canon Ranch',
+    'Rodgers & Company, Inc',
+    'San Pedro Creek Estates HOA',
+    'Statewide Drilling, Inc',
+    'Tec Drilling Limited',
+    'Tetra Tech, Inc',
+    'Thompson Drilling, Inc',
+    'Witcher & Associates',
+    'Zeigler Geologic Consulting, LLC',
+    'Sandia Well Service, Inc',
+    'San Marcos Association',
+    'URS',
+    'Vista del Oro',
+    'Abeyta Engineering, Inc',
+    'Adobe Ranch',
+    'Agua Fria Community Water Association',
+    'Apache Gap Ranch',
+    'Aspendale Mountain Retreat',
+    'Augustin Plains Ranch LLC',
+    'B & B Cattle Co',
+    'Berridge Distributing Company',
+    "Bishop's Lodge",
+    'Bonanza Creek Ranch',
+    'Bug Scuffle Water Association',
+    'Wehinahpay Mountain Camp',
+    'Campbell Ranch',
+    'Capitol Ford Santa Fe',
+    'Cemex, Inc',
+    'Cerro Community Center',
+    'Santa Fe Jewish Center',
+    'Chupadero MDWCA',
+    'Cielo Lumbre HOA',
+    'Circle Cross Ranch',
+    'City of Alamogordo',
+    'City of Portales, Public Works Dept.',
+    'City of Socorro',
+    'Commonwealth Conservancy',
+    'Country Club Garden Mobile Home Park',
+    'Crossroads Cattle Co., Ltd',
+    'Double H Ranch',
+    'E.A. Meadows East',
+    'El Camino Realty, Inc',
+    'Eldorado Area Water & Sanitation District',
+    'Bourbon Grill at El Gancho',
+    'El Prado HOA',
+    'El Rancho de las Golondrinas',
+    'El Rito Canyon MDWCA',
+    'Encantado Enterprises',
+    'Estrella Concepts LLC',
+    'Sixteen Springs Fire Department',
+    'Fire Water Lodge',
+    'Ford County Land & Cattle Company, Inc',
+    'Friendly Construction, Inc',
+    'Hacienda Del Cerezo',
+    'Hefker Vega Ranch',
+    'High Nogal Ranch',
+    'Holloman Air Force Base',
+    'Hyde Park Estates MDWCA',
+    'Desert Village RV & Mobile Home Park',
+    'K. Schmitt Trust',
+    'La Cienega MDWCA',
+    'La Vista HOA',
+    'Land Ventures LLC',
+    'Las Lagunitas',
+    'Las Lagunitas HOA',
+    'Living World Ministries',
+    'Los Atrevidos, Inc',
+    'Los Prados HOA',
+    'Malaga MDWCA & SWA',
+    'Mangas Outfitters',
+    'Medina Gravel Pit',
+    'Mendenhall Trading Co',
+    'Mesa Verde Ranch',
+    'NMDGF',
+    'NMSU College of Agriculture',
+    'Naiche Development',
+    'NRAO',
+    'NMSA',
+    'Nogal MDWCA',
+    'O Bar O Ranch',
+    'OMI Wastewater Treatment Plant',
+    'Old Road Ranch Pardners Ltd',
+    'PNM Service Center',
+    'Peace Tabernacle Church',
+    'Pecos Trail Inn',
+    'Pelican Spa',
+    'Pistachio Tree Ranch',
+    'Rancho Encantado',
+    'Rancho San Lucas',
+    'Rancho San Marcos',
+    'Rancho Viejo Partnership',
+    'Ranney Ranch',
+    'Rio En Medio MDWCA',
+    'San Acacia MDWCA',
+    'San Juan Residences',
+    'Sangre de Cristo Estates',
+    'Santa Fe Community College',
+    'Sangre de Cristo Center',
+    'Santa Fe Horse Park',
+    'Santa Fe Opera',
+    'Santa Fe Waldorf School',
+    'Shidoni Foundry and Gallery',
+    'Sierra Grande Lodge',
+    'Sierra Vista Retirement Community',
+    'Slash Triangle Ranch',
+    'Stagecoach Motel',
+    'State of New Mexico',
+    'Stephenson Ranch',
+    'Sun Broadcasting Network',
+    'Tano Rd LLC',
+    'UNM-Taos',
+    'Tee Pee Ranch/Tee Pee Subdivision',
+    'Tent Rock, Inc',
+    'Tesuque MDWCA',
+    'The Great Cloud Zen Center',
+    'Three Rivers Ranch',
+    'Timberon Water and Sanitation District',
+    'Town of Magdalena',
+    'Town of Taos',
+    'Town of Taos, National Guard Armory',
+    'Trinity Ranch',
+    'Tularosa Basin National Desalination Research Facility',
+    'Turquoise Trail Charter School',
+    'US Bureau of Indian Affairs, Santa Fe Indian School',
+    'USFS, Carson NF, Taos Office',
+    'USFS, Cibola NF, Magdalena Ranger District',
+    'USFS, Santa Fe NF, Espanola Ranger District',
+    'Ute Mountain Farms',
+    'VA Hospital',
+    'Velte',
+    'Vereda Serena Property',
+    'Village of Corona',
+    'Village of Floyd',
+    'Village of Melrose',
+    'Village of Vaughn',
+    'Vista Land Company',
+    'Vista Redonda MDWCA',
+    'Vista de Oro de Placitas Water Users Coop',
+    'Walker Ranch',
+    'Wild & Woolley Trailer Ranch',
+    'Winter Brothers',
+    'Yates Petroleum Corporation',
+    'Zamora Accounting Services',
+    'PLSS'
+]);
+
+/**
+ * ThingIdLinkResponse
+ */
+export const zThingIdLinkResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    thing_id: z.int(),
+    relation: z.string(),
+    alternate_id: z.string(),
+    alternate_organization: zOrganization
+});
+
+/**
+ * permission_type
+ */
+export const zPermissionType = z.enum([
+    'Water Level Sample',
+    'Water Chemistry Sample',
+    'Datalogger Installation'
+]);
+
+/**
+ * PermissionHistoryResponse
+ * Even though permission_allowed and start_date are not-nullable in the
+ * database, they are nullable here to accommodate cases where no permission
+ * record exists for a given permission type.
+ */
+export const zPermissionHistoryResponse = z.object({
+    permission_type: zPermissionType,
+    permission_allowed: z.union([
+        z.boolean(),
+        z.null()
+    ]),
+    start_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    end_date: z.union([
+        z.iso.date(),
+        z.null()
+    ])
+});
+
+/**
+ * ThingResponse
+ */
+export const zThingResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    name: z.string(),
+    thing_type: z.string(),
+    current_location: zLocationGeoJsonResponse,
+    first_visit_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    groups: z.optional(z.array(zGroupResponse)).default([]),
+    monitoring_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
+    monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
+    general_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    spring_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_purposes: z.optional(z.array(zWellPurpose)).default([]),
+    well_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_depth_unit: z.optional(z.string()).default('ft'),
+    well_depth_source: z.union([
+        z.string(),
+        z.null()
+    ]),
+    hole_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    hole_depth_unit: z.optional(z.string()).default('ft'),
+    well_casing_diameter: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_diameter_unit: z.optional(z.string()).default('in'),
+    well_casing_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_casing_depth_unit: z.optional(z.string()).default('ft'),
+    well_casing_materials: z.optional(z.array(zCasingMaterial)).default([]),
+    well_completion_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
+    well_completion_date_source: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_driller_name: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_construction_method: z.union([
+        zWellConstructionMethod,
+        z.null()
+    ]),
+    well_construction_method_source: z.union([
+        z.string(),
+        z.null()
+    ]),
+    well_pump_type: z.union([
+        zWellPumpType,
+        z.null()
+    ]),
+    well_pump_depth: z.union([
+        z.number(),
+        z.null()
+    ]),
+    well_pump_depth_unit: z.optional(z.string()).default('ft'),
+    is_suitable_for_datalogger: z.union([
+        z.boolean(),
+        z.null()
+    ]),
+    well_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    measuring_point_height: z.union([
+        z.number(),
+        z.null()
+    ]),
+    measuring_point_height_unit: z.optional(z.string()).default('ft'),
+    measuring_point_description: z.union([
+        z.string(),
+        z.null()
+    ]),
+    aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
+    water_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    measuring_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    construction_notes: z.optional(z.union([
+        z.array(zNoteResponse),
+        z.null()
+    ])),
+    permissions: z.array(zPermissionHistoryResponse),
+    formation_completion_code: z.union([
+        zFormationCode,
+        z.null()
+    ])
 });
 
 /**
