@@ -13,14 +13,15 @@ import { Search } from 'react-flaticons'
 import Stack from '@mui/material/Stack'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  AddressCard,
-  EmailCard,
-  PhoneCard,
+  AssetCard,
+  ContactCard,
   SpringCard,
   WellCard,
 } from '@/components/SearchResultCard'
 import { useGo } from '@refinedev/core'
 import { useDebounce, useAbortableList } from '../hooks'
+import { GroupType } from '@/constants'
+import { SearchResult } from '@/interfaces/ocotillo/SearchResult'
 
 export const SearchBar = () => {
   const go = useGo()
@@ -50,57 +51,59 @@ export const SearchBar = () => {
   })
 
   // Normalize options
-  const results = useMemo(() => {
-    if (query.trim().length === 0) {
-      return []
-    }
+  const results: SearchResult[] = useMemo(() => {
+    if (!query.trim()) return []
 
     if (!isFetching) {
       if (isError) {
         return [
           {
-            __error: true,
+            group: GroupType.Messages,
             label: 'Search failed. Please try again.',
-            group: 'Messages',
+            __error: true,
           },
         ]
       }
 
-      if (!isError && data?.data?.length === 0) {
+      if (data?.data?.length === 0) {
         return [
           {
-            __empty: true,
+            group: GroupType.Messages,
             label: 'No results found. Try a well ID, site name, or contact.',
-            group: 'Messages',
+            __empty: true,
           },
         ]
       }
     }
 
-    // Normal results
-    return (
+    const normalized =
       data?.data.map((r) => ({
         label: r.label,
         description: r.description,
-        group: r.group || 'Results',
+        group: r.group as GroupType,
         properties: r.properties,
-        raw: r,
       })) ?? []
-    )
-  }, [data, query, isFetching])
+
+    return dedupeResults(normalized)
+  }, [data, query, isFetching, isError])
 
   // Navigate automatically when a result is chosen
   useEffect(() => {
     if (!selected) return
-    const { group, properties } = selected
 
-    if (group === 'Wells') {
-      const type = properties?.thing_type
-      const WATER_WELL = 'water well'
-      const url = type === WATER_WELL ? 'well' : 'spring'
-      go({ to: `ocotillo/${url}/show/${properties?.id}` })
+    switch (selected.group) {
+      case GroupType.Wells: {
+        const isWaterWell = selected.properties.thing_type === 'water well'
+        go({
+          to: `ocotillo/${isWaterWell ? 'well' : 'spring'}/show/${selected.properties.id}`,
+        })
+        break
+      }
+      case GroupType.Contacts:
+        go({ to: `ocotillo/contact/show/${selected.properties.id}` })
+        break
     }
-  }, [selected])
+  }, [selected, go])
 
   // Add hotkeys for navigation
   const isMac = navigator.platform.toUpperCase().includes('MAC')
@@ -168,7 +171,7 @@ export const SearchBar = () => {
         isOptionEqualToValue={(o, v) =>
           o?.label === (typeof v === 'string' ? v : v?.label)
         }
-        groupBy={(o) => o.group || null}
+        groupBy={(o) => o.group ?? GroupType.Messages}
         sx={{
           width: '100%',
           '& .MuiOutlinedInput-root': {
@@ -227,7 +230,10 @@ export const SearchBar = () => {
           }
 
           return (
-            <li {...props} key={option.label}>
+            <li
+              {...props}
+              key={`${option.group}-${option.properties?.id ?? option.label}`}
+            >
               <ListItem disablePadding>
                 <ListItemButton
                   sx={{
@@ -251,29 +257,17 @@ export const SearchBar = () => {
                     )}
                     <Divider />
                     <Box sx={{ pt: 0.5 }}>
-                      {option.group === 'Wells' && <WellCard option={option} />}
-                      {option.group === 'Springs' && (
-                        <SpringCard option={option} />
+                      {option.group === GroupType.Wells && (
+                        <WellCard well={option} />
                       )}
-                      {option.group === 'Contacts' && (
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            justifyContent: 'flex-start',
-                            gap: 2,
-                          }}
-                        >
-                          {option.properties.address.map((a) => (
-                            <AddressCard key={a.id} option={a} />
-                          ))}
-                          {option.properties.phone.map((p) => (
-                            <PhoneCard key={p.id} option={p} />
-                          ))}
-                          {option.properties.email.map((e) => (
-                            <EmailCard key={e.id} option={e} />
-                          ))}
-                        </Box>
+                      {option.group === GroupType.Springs && (
+                        <SpringCard spring={option} />
+                      )}
+                      {option.group === GroupType.Contacts && (
+                        <ContactCard contact={option} />
+                      )}
+                      {option.group === GroupType.Assets && (
+                        <AssetCard asset={option} />
                       )}
                     </Box>
                   </Stack>
@@ -287,6 +281,7 @@ export const SearchBar = () => {
             {...params}
             inputRef={inputRef}
             label=""
+            autoComplete="off"
             aria-label="Search"
             placeholder="Search for a well or spring by ID or site name…"
             sx={{
@@ -297,7 +292,6 @@ export const SearchBar = () => {
             slotProps={{
               input: {
                 ...params.InputProps,
-                disableUnderline: true,
                 startAdornment: (
                   <InputAdornment position="start">
                     <Search color="primary" />
@@ -337,6 +331,24 @@ export const SearchBar = () => {
       />
     </Box>
   )
+}
+
+const dedupeResults = (items: SearchResult[]): SearchResult[] => {
+  const seen = new Set<string>()
+
+  return items.filter((item) => {
+    // Messages don't have properties.id → always keep
+    if (item.group === GroupType.Messages) return true
+
+    const id = (item as any).properties?.id
+    if (!id) return true
+
+    const key = `${item.group}-${id}`
+
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 export default SearchBar
