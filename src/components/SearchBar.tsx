@@ -22,6 +22,7 @@ import { useGo } from '@refinedev/core'
 import { useDebounce, useAbortableList } from '../hooks'
 import { GroupType } from '@/constants'
 import { SearchResult } from '@/interfaces/ocotillo/SearchResult'
+import { highlight } from '@/utils'
 
 export const SearchBar = () => {
   const go = useGo()
@@ -120,23 +121,6 @@ export const SearchBar = () => {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
-
-  // Highlight matched text
-  const highlight = (text: string, query: string) => {
-    if (!query) return text
-    const idx = text?.toLowerCase()?.indexOf(query?.toLowerCase())
-    if (idx === -1) return text
-
-    return (
-      <>
-        {text?.substring(0, idx)}
-        <strong style={{ color: '#1976d2' }}>
-          {text?.substring(idx, idx + query.length)}
-        </strong>
-        {text?.substring(idx + query.length)}
-      </>
-    )
-  }
 
   return (
     <Box
@@ -264,10 +248,10 @@ export const SearchBar = () => {
                         <SpringCard spring={option} />
                       )}
                       {option.group === GroupType.Contacts && (
-                        <ContactCard contact={option} />
+                        <ContactCard contact={option} query={query} />
                       )}
                       {option.group === GroupType.Assets && (
-                        <AssetCard asset={option} />
+                        <AssetCard asset={option} query={query} />
                       )}
                     </Box>
                   </Stack>

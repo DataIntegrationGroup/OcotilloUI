@@ -5,12 +5,14 @@ import {
   WellResult,
 } from '@/interfaces/ocotillo/SearchResult'
 import { Place, WaterDrop } from '@mui/icons-material'
-import { useGo } from '@refinedev/core'
+import { highlight } from '@/utils'
 
 const ThingChip = ({
   thing,
+  query,
 }: {
   thing: { id: number; label: string; thing_type: string }
+  query: string
 }) => {
   const isWaterWell = thing.thing_type === 'water well'
 
@@ -19,15 +21,17 @@ const ThingChip = ({
       size="small"
       variant="outlined"
       icon={isWaterWell ? <WaterDrop /> : <Place />}
-      label={thing.label}
+      label={highlight(thing.label, query)}
     />
   )
 }
 
 export const AssetCard = ({
   asset,
+  query,
 }: {
   asset: Pick<AssetResult, 'properties'>
+  query: string
 }) => {
   const { storage_service, storage_path, mime_type, size, things } =
     asset.properties
@@ -44,7 +48,7 @@ export const AssetCard = ({
         <Chip
           size="small"
           color="default"
-          label={`Storage Path: ${storage_path}`}
+          label={<>Storage Path: {highlight(storage_path, query)}</>}
         />
         <Chip size="small" color="default" label={`Size: ${size} MB`} />
         <Chip size="small" color="default" label={`Type: ${mime_type}`} />
@@ -62,7 +66,12 @@ export const AssetCard = ({
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {things?.map((thing) => (
-              <Chip key={thing} size="small" variant="outlined" label={thing} />
+              <Chip
+                key={thing}
+                size="small"
+                variant="outlined"
+                label={highlight(thing, query)}
+              />
             ))}
           </Box>
         </>
@@ -72,8 +81,10 @@ export const AssetCard = ({
 }
 export const ContactCard = ({
   contact,
+  query,
 }: {
   contact: Pick<ContactResult, 'properties'>
+  query: string
 }) => {
   const { address, phone, email, things } = contact.properties
 
@@ -95,7 +106,7 @@ export const ContactCard = ({
               key={`${a}-${i}`}
               size="small"
               color="default"
-              label={`Address: ${a}`}
+              label={<>Address: {highlight(a, query)}</>}
             />
           ))}
           {phone.map((p, i) => (
@@ -111,7 +122,7 @@ export const ContactCard = ({
               key={`${e}-${i}`}
               size="small"
               color="default"
-              label={`Email: ${e}`}
+              label={`Email: ${highlight(e, query)}`}
             />
           ))}
         </Box>
@@ -124,7 +135,7 @@ export const ContactCard = ({
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {things.map((thing) => (
-              <ThingChip thing={thing} />
+              <ThingChip thing={thing} query={query} />
             ))}
           </Box>
         </>
