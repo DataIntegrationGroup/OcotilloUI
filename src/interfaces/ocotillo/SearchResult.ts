@@ -6,6 +6,12 @@ export type BaseResult = {
   description?: string
 }
 
+export type RelatedThing = {
+  id: number
+  label: string
+  thing_type: string
+}
+
 export type AssetResult = BaseResult & {
   group: GroupType.Assets
   properties: {
@@ -14,14 +20,8 @@ export type AssetResult = BaseResult & {
     storage_path: string
     mime_type: string
     size: number
-    things: string[]
+    things: RelatedThing[]
   }
-}
-
-export type RelatedThing = {
-  id: number
-  label: string
-  thing_type: string
 }
 
 export type ContactResult = BaseResult & {

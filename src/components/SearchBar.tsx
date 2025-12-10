@@ -118,7 +118,7 @@ export const SearchBar = () => {
       case GroupType.Assets:
         go({
           to: {
-            resource: 'ocotillo.assets',
+            resource: 'ocotillo.asset',
             action: 'show',
             id: option.properties.id,
           },

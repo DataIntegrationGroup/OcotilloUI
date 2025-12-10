@@ -1,6 +1,11 @@
 // Highlight matched text
-export const highlight = (text: string, query: string) => {
+export const highlight = (
+  text: string,
+  query: string
+): JSX.Element | string => {
   if (!query) return text
+  if (typeof text !== 'string') return text
+
   const idx = text?.toLowerCase()?.indexOf(query?.toLowerCase())
   if (idx === -1) return text
 

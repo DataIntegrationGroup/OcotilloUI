@@ -66,12 +66,7 @@ export const AssetCard = ({
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {things?.map((thing) => (
-              <Chip
-                key={thing}
-                size="small"
-                variant="outlined"
-                label={highlight(thing, query)}
-              />
+              <ThingChip key={thing.id} thing={thing} query={query} />
             ))}
           </Box>
         </>
@@ -101,7 +96,7 @@ export const ContactCard = ({
             gap: 1,
           }}
         >
-          {address.map((a, i) => (
+          {address?.map((a, i) => (
             <Chip
               key={`${a}-${i}`}
               size="small"
@@ -109,7 +104,7 @@ export const ContactCard = ({
               label={<>Address: {highlight(a, query)}</>}
             />
           ))}
-          {phone.map((p, i) => (
+          {phone?.map((p, i) => (
             <Chip
               key={`${p}-${i}`}
               size="small"
@@ -117,7 +112,7 @@ export const ContactCard = ({
               label={`Phone: ${p}`}
             />
           ))}
-          {email.map((e, i) => (
+          {email?.map((e, i) => (
             <Chip
               key={`${e}-${i}`}
               size="small"
@@ -134,8 +129,8 @@ export const ContactCard = ({
             Related wells & springs
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {things.map((thing) => (
-              <ThingChip thing={thing} query={query} />
+            {things?.map((thing) => (
+              <ThingChip key={thing.id} thing={thing} query={query} />
             ))}
           </Box>
         </>
@@ -173,8 +168,13 @@ export const WellCard = ({
         />
       ) : null}
       {well.properties.well_purposes
-        ? well.properties.well_purposes?.map((wp: string) => (
-            <Chip size="small" color="default" label={`Purpose: ${wp}`} />
+        ? well.properties.well_purposes?.map((wp: string, index) => (
+            <Chip
+              key={`${wp}-${index}`}
+              size="small"
+              color="default"
+              label={`Purpose: ${wp}`}
+            />
           ))
         : null}
     </Box>
