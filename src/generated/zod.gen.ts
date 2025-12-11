@@ -2261,10 +2261,8 @@ export const zThingResponse = z.object({
     ]),
     alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
     monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
-    general_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
+    general_notes: z.optional(z.array(zNoteResponse)).default([]),
+    sampling_procedure_notes: z.optional(z.array(zNoteResponse)).default([]),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -2342,18 +2340,8 @@ export const zThingResponse = z.object({
         z.null()
     ]),
     aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
-    water_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
-    measuring_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
-    construction_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
+    water_notes: z.optional(z.array(zNoteResponse)).default([]),
+    construction_notes: z.optional(z.array(zNoteResponse)).default([]),
     permissions: z.array(zPermissionHistoryResponse),
     formation_completion_code: z.union([
         zFormationCode,
@@ -2441,10 +2429,8 @@ export const zSpringResponse = z.object({
     ]),
     alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
     monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
-    general_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
+    general_notes: z.optional(z.array(zNoteResponse)).default([]),
+    sampling_procedure_notes: z.optional(z.array(zNoteResponse)).default([]),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -2597,10 +2583,8 @@ export const zWellResponse = z.object({
     ]),
     alternate_ids: z.optional(z.array(zThingIdLinkResponse)).default([]),
     monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
-    general_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
+    general_notes: z.optional(z.array(zNoteResponse)).default([]),
+    sampling_procedure_notes: z.optional(z.array(zNoteResponse)).default([]),
     well_purposes: z.optional(z.array(zWellPurpose)).default([]),
     well_depth: z.optional(z.union([
         z.number(),
@@ -2671,18 +2655,8 @@ export const zWellResponse = z.object({
         z.null()
     ]),
     aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
-    water_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
-    measuring_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
-    construction_notes: z.optional(z.union([
-        z.array(zNoteResponse),
-        z.null()
-    ])),
+    water_notes: z.optional(z.array(zNoteResponse)).default([]),
+    construction_notes: z.optional(z.array(zNoteResponse)).default([]),
     permissions: z.array(zPermissionHistoryResponse),
     formation_completion_code: z.union([
         zFormationCode,

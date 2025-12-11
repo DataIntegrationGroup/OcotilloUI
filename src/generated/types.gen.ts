@@ -2159,7 +2159,11 @@ export type SpringResponse = {
     /**
      * General Notes
      */
-    general_notes?: Array<NoteResponse> | null;
+    general_notes?: Array<NoteResponse>;
+    /**
+     * Sampling Procedure Notes
+     */
+    sampling_procedure_notes?: Array<NoteResponse>;
     /**
      * Spring Type
      */
@@ -2239,7 +2243,11 @@ export type ThingResponse = {
     /**
      * General Notes
      */
-    general_notes?: Array<NoteResponse> | null;
+    general_notes?: Array<NoteResponse>;
+    /**
+     * Sampling Procedure Notes
+     */
+    sampling_procedure_notes?: Array<NoteResponse>;
     /**
      * Spring Type
      */
@@ -2343,15 +2351,11 @@ export type ThingResponse = {
     /**
      * Water Notes
      */
-    water_notes?: Array<NoteResponse> | null;
-    /**
-     * Measuring Notes
-     */
-    measuring_notes?: Array<NoteResponse> | null;
+    water_notes?: Array<NoteResponse>;
     /**
      * Construction Notes
      */
-    construction_notes?: Array<NoteResponse> | null;
+    construction_notes?: Array<NoteResponse>;
     /**
      * Permissions
      */
@@ -3023,7 +3027,11 @@ export type WellResponse = {
     /**
      * General Notes
      */
-    general_notes?: Array<NoteResponse> | null;
+    general_notes?: Array<NoteResponse>;
+    /**
+     * Sampling Procedure Notes
+     */
+    sampling_procedure_notes?: Array<NoteResponse>;
     /**
      * Well Purposes
      */
@@ -3123,15 +3131,11 @@ export type WellResponse = {
     /**
      * Water Notes
      */
-    water_notes?: Array<NoteResponse> | null;
-    /**
-     * Measuring Notes
-     */
-    measuring_notes?: Array<NoteResponse> | null;
+    water_notes?: Array<NoteResponse>;
     /**
      * Construction Notes
      */
-    construction_notes?: Array<NoteResponse> | null;
+    construction_notes?: Array<NoteResponse>;
     /**
      * Permissions
      */
