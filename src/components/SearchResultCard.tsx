@@ -109,7 +109,7 @@ export const ContactCard = ({
               key={`${p}-${i}`}
               size="small"
               color="default"
-              label={`Phone: ${p}`}
+              label={<>Phone: {highlight(p, query)}</>}
             />
           ))}
           {email?.map((e, i) => (
