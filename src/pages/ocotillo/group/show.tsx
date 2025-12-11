@@ -60,7 +60,8 @@ export const GroupShow = () => {
                 })}
               >
                 <Typography variant="body2" color="error">
-                  Failed to load map.
+                  Something went wrong while trying to load the group/project
+                  area on a map.
                 </Typography>
               </Box>
             }
