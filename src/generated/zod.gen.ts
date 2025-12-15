@@ -88,13 +88,6 @@ export const zAuthorResponse = z.object({
 });
 
 /**
- * Body_upload_asset_asset_upload_post
- */
-export const zBodyUploadAssetAssetUploadPost = z.object({
-    file: z.string()
-});
-
-/**
  * role
  */
 export const zRole = z.enum([
@@ -3351,11 +3344,58 @@ export const zUpdateWellScreen = z.object({
     ]))
 });
 
+/**
+ * WaterLevelBulkUploadSummary
+ */
+export const zWaterLevelBulkUploadSummary = z.object({
+    total_rows_processed: z.int(),
+    total_rows_imported: z.int(),
+    validation_errors_or_warnings: z.int()
+});
+
+/**
+ * WaterLevelBulkUploadRow
+ */
+export const zWaterLevelBulkUploadRow = z.object({
+    well_name_point_id: z.string(),
+    field_event_id: z.int(),
+    field_activity_id: z.int(),
+    sample_id: z.int(),
+    observation_id: z.int(),
+    measurement_date_time: z.string(),
+    level_status: z.string(),
+    data_quality: z.string()
+});
+
+/**
+ * WaterLevelBulkUploadResponse
+ */
+export const zWaterLevelBulkUploadResponse = z.object({
+    summary: zWaterLevelBulkUploadSummary,
+    water_levels: z.array(zWaterLevelBulkUploadRow),
+    validation_errors: z.array(z.string())
+});
+
+/**
+ * Body_bulk_upload_groundwater_levels_observation_groundwater_level_bulk_upload_post
+ */
+export const zFastapiCompatV2BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost = z.object({
+    file: z.string()
+});
+
+/**
+ * Body_upload_asset_asset_upload_post
+ */
+export const zFastapiCompatV2BodyUploadAssetAssetUploadPost = z.object({
+    file: z.string()
+});
+
 export const zUploadAssetAssetUploadPostData = z.object({
-    body: zBodyUploadAssetAssetUploadPost,
+    body: zFastapiCompatV2BodyUploadAssetAssetUploadPost,
     path: z.optional(z.never()),
     query: z.optional(z.object({
-        client: z.optional(z.unknown())
+        client: z.optional(z.unknown()),
+        bucket: z.optional(z.string())
     }))
 });
 
@@ -3410,7 +3450,8 @@ export const zGetAssetAssetAssetIdGetData = z.object({
         asset_id: z.int()
     }),
     query: z.optional(z.object({
-        client: z.optional(z.unknown())
+        client: z.optional(z.unknown()),
+        bucket: z.optional(z.string())
     }))
 });
 
@@ -3433,7 +3474,8 @@ export const zRemoveAssetAssetAssetIdRemoveDeleteData = z.object({
         asset_id: z.int()
     }),
     query: z.optional(z.object({
-        client: z.optional(z.unknown())
+        client: z.optional(z.unknown()),
+        bucket: z.optional(z.string())
     }))
 });
 
@@ -4228,6 +4270,17 @@ export const zAddWaterChemistryObservationObservationWaterChemistryPostData = z.
  * Successful Response
  */
 export const zAddWaterChemistryObservationObservationWaterChemistryPostResponse = zWaterChemistryObservationResponse;
+
+export const zBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostData = z.object({
+    body: zFastapiCompatV2BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost,
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostResponse = zWaterLevelBulkUploadResponse;
 
 export const zGetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetData = z.object({
     body: z.optional(z.never()),
