@@ -28,7 +28,7 @@ export const CoreWellInfoCard = ({
     | [number, number, number?]
     | undefined
 
-  const [lon, lat, elevation] = coords ?? []
+  const [lon, lat] = coords ?? []
 
   const { easting, northing } = well?.current_location?.properties
     ?.utm_coordinates ?? { easting: null, northing: null }
