@@ -5,11 +5,13 @@ import {
   Card,
   CardContent,
   CardHeader,
+  IconButton,
   Skeleton,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material'
-import { Map } from '@mui/icons-material'
+import { Directions, Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
 import { MapComponent, MapPopup } from '@/components'
 import { parseWktPoint } from '@/utils'
@@ -93,6 +95,11 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
     }
   }
 
+  const googleMapsUrl =
+    lon && lat
+      ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`
+      : null
+
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
       <CardHeader
@@ -101,6 +108,20 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             <Map color="primary" />
             <Typography variant="body1">Interactive Satellite Map</Typography>
           </Stack>
+        }
+        action={
+          googleMapsUrl && (
+            <Tooltip title="Open in Google Maps">
+              <IconButton
+                component="a"
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Directions />
+              </IconButton>
+            </Tooltip>
+          )
         }
       />
       <CardContent>
