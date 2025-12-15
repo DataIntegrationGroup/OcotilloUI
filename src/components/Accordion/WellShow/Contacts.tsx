@@ -36,34 +36,18 @@ export const ContactsAccordion = ({ id }: { id?: number }) => {
         field: 'emails',
         headerName: 'Email',
         minWidth: 200,
-        renderCell: (params: any) => {
-          if (!params.row.emails || params.row.emails.length === 0) return '-'
-          return (
-            <Box component="div">
-              {params.row.emails.map((email: any, idx: number) => (
-                <Box component="div" key={idx} sx={{ mb: '2px' }}>
-                  {email.email}
-                </Box>
-              ))}
-            </Box>
-          )
+        renderCell: ({ row }: any) => {
+          const emails = row.emails?.map((e: any) => e.email).join(', ')
+          return emails || '-'
         },
       },
       {
         field: 'phones',
         headerName: 'Phone',
         minWidth: 150,
-        renderCell: (params: any) => {
-          if (!params.row.phones || params.row.phones.length === 0) return '-'
-          return (
-            <div>
-              {params.row.phones.map((phone: any, idx: number) => (
-                <div key={idx} style={{ marginBottom: '2px' }}>
-                  {phone.phone_number}
-                </div>
-              ))}
-            </div>
-          )
+        renderCell: ({ row }: any) => {
+          const phones = row.phones?.map((p: any) => p.phone_number).join(', ')
+          return phones || '-'
         },
       },
       {
@@ -74,17 +58,17 @@ export const ContactsAccordion = ({ id }: { id?: number }) => {
           if (!params.row.addresses || params.row.addresses.length === 0)
             return '-'
           return (
-            <div>
+            <Box component="div">
               {params.row.addresses.map((address: any, idx: number) => (
-                <div key={idx} style={{ marginBottom: '2px' }}>
+                <Box component="div" key={idx} style={{ marginBottom: '2px' }}>
                   {address.address_line_1}
                   {address.address_line_2 && `, ${address.address_line_2}`}
                   {address.city && `, ${address.city}`}
                   {address.state && ` ${address.state}`}
                   {address.postal_code && ` ${address.postal_code}`}
-                </div>
+                </Box>
               ))}
-            </div>
+            </Box>
           )
         },
       },
