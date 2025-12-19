@@ -141,7 +141,7 @@ export const WellPDF = ({
     | [number, number, number?]
     | undefined
 
-  const [lon, lat, elevation] = coords ?? []
+  const [lon, lat] = coords ?? []
 
   const { easting, northing } =
     well?.current_location?.properties?.utm_coordinates
@@ -191,7 +191,7 @@ export const WellPDF = ({
             <View style={styles.cell3}>
               <LineItem
                 title="Elevation"
-                value={`${elevation?.toFixed(2) || 'N/A'} ${
+                value={`${well?.current_location?.properties?.elevation?.toFixed(2) || 'N/A'} ${
                   well?.current_location?.properties?.elevation_unit
                     ? ` ${well?.current_location?.properties?.elevation_unit}`
                     : null
