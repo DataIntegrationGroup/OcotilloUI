@@ -89,6 +89,7 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
       serial_no: r.sensor?.serial_no ?? '-',
       datetime_installed: r.installation_date ?? null,
       datetime_removed: r.removal_date ?? null,
+      hanging_cable_length: r.hanging_cable_length ?? null,
       recording_interval_display: r.recording_interval
         ? `${r.recording_interval} ${r.recording_interval_units}`
         : null,
@@ -136,6 +137,13 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
       {
         field: 'recording_interval_display',
         headerName: 'Recording Interval',
+        type: 'number',
+        minWidth: 100,
+        flex: 1,
+      },
+      {
+        field: 'hanging_cable_length',
+        headerName: 'Hanging Cable Length',
         type: 'number',
         minWidth: 100,
         flex: 1,
