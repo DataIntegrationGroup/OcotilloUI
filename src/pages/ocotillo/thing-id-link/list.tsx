@@ -17,7 +17,7 @@ export const ThingIdLinkList = () => {
       idColumnDef(),
       {
         field: 'thing_id',
-        headerName: 'Thing',
+        headerName: 'Thing ID',
         type: 'string',
         minWidth: 150,
       },
