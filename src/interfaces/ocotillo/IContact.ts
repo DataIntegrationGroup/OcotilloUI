@@ -2,6 +2,10 @@ import { IThing } from '@/interfaces/ocotillo/IThing'
 
 export interface IContact {
   things?: IThing[]
+  emails?: IEmail[]
+  phones?: IPhone[]
+  addresses?: IAddress[]
+
   id: number
   name: string
   role?: string
