@@ -4,7 +4,6 @@ import { GridColDef } from '@mui/x-data-grid'
 import { useMemo } from 'react'
 import { IThingIdLink } from '@/interfaces/ocotillo/IThing'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { extractThingTypeResource, linkColumn } from '@/utils/link'
 import { Launch } from '@mui/icons-material'
 
 export const ThingIdLinkList = () => {
@@ -16,26 +15,11 @@ export const ThingIdLinkList = () => {
   const columns = useMemo<GridColDef<IThingIdLink>[]>(
     () => [
       idColumnDef(),
-      linkColumn(
-        extractThingTypeResource((params) => params.row.thing.thing_type),
-        {
-          field: 'thing_id',
-          headerName: 'Thing',
-          type: 'string',
-          minWidth: 150,
-        },
-        (params) => {
-          return params.row.thing.name
-        }
-      ),
       {
-        field: 'thing_type',
-        headerName: 'Thing Type',
+        field: 'thing_id',
+        headerName: 'Thing',
         type: 'string',
         minWidth: 150,
-        valueGetter: (value, row) => {
-          return row.thing.thing_type
-        },
       },
       {
         field: 'relation',
