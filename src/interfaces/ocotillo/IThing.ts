@@ -93,7 +93,6 @@ export interface IThingIdLink {
   created_at: string // API returns ISO string, not Date object
   release_status: string
   thing_id: number
-  thing: IThing
   relation: string
   alternate_id: string
   alternate_organization: string
