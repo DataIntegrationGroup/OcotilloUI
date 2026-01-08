@@ -143,6 +143,7 @@ export const WellPDF = ({
     ...(well?.construction_notes ?? []),
     ...(well?.general_notes ?? []),
     ...(well?.current_location?.properties?.notes ?? []),
+    ...(well?.sampling_procedure_notes ?? []),
   ]
 
   const noteSections = groupNotesByType(allNotes, { defaultTitle: 'Notes' })
