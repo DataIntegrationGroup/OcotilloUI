@@ -14,6 +14,7 @@ jobs:
       VITE_OCOTILLO_API_URL: http://localhost:8000
       AUTHENTIK_DISABLE_AUTHENTICATION: ${{ secrets.AUTHENTIK_TEST }}
       SESSION_SECRET_KEY: your_secret_key_here
+      UVICORN_RELOAD: "false"
 
       # --- DATABASE VALUES FOR DOCKER COMPOSE ---
       POSTGRES_HOST: db
