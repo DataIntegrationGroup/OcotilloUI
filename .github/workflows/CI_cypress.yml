@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: DataIntegrationGroup/OcotilloAPI
-          ref: staging
+          ref: cm-docker-compose-fix
           path: api-repo
 
       - name: Set up Node.js
