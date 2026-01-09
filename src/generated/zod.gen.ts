@@ -564,7 +564,11 @@ export const zSensorType = z.enum([
     'Precip Collector',
     'Camera',
     'Soil Moisture Sensor',
-    'Tipping Bucket'
+    'Tipping Bucket',
+    'Weather Station',
+    'Weir',
+    'Snow Lysimeter',
+    'Lysimeter'
 ]);
 
 /**
@@ -4943,3 +4947,27 @@ export const zUpdateWellScreenThingWellScreenWellScreenIdPatchData = z.object({
  * Successful Response
  */
 export const zUpdateWellScreenThingWellScreenWellScreenIdPatchResponse = zWellScreenResponse;
+
+export const zReadNgwmnWaterlevelsNgwmnWaterlevelsPointidGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        pointid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+export const zReadNgwmnWellconstructionNgwmnWellconstructionPointidGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        pointid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+export const zReadNgwmnLithologyNgwmnLithologyPointidGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        pointid: z.string()
+    }),
+    query: z.optional(z.never())
+});

@@ -3441,7 +3441,7 @@ export type ScreenType = 'PVC' | 'Steel' | 'Concrete';
 /**
  * sensor_type
  */
-export type SensorType = 'DiverLink' | 'Diver Cable' | 'Pressure Transducer' | 'Data Logger' | 'Barometer' | 'Acoustic Sounder' | 'Precip Collector' | 'Camera' | 'Soil Moisture Sensor' | 'Tipping Bucket';
+export type SensorType = 'DiverLink' | 'Diver Cable' | 'Pressure Transducer' | 'Data Logger' | 'Barometer' | 'Acoustic Sounder' | 'Precip Collector' | 'Camera' | 'Soil Moisture Sensor' | 'Tipping Bucket' | 'Weather Station' | 'Weir' | 'Snow Lysimeter' | 'Lysimeter';
 
 /**
  * spring_type
@@ -7086,6 +7086,90 @@ export type UpdateWellScreenThingWellScreenWellScreenIdPatchResponses = {
 };
 
 export type UpdateWellScreenThingWellScreenWellScreenIdPatchResponse = UpdateWellScreenThingWellScreenWellScreenIdPatchResponses[keyof UpdateWellScreenThingWellScreenWellScreenIdPatchResponses];
+
+export type ReadNgwmnWaterlevelsNgwmnWaterlevelsPointidGetData = {
+    body?: never;
+    path: {
+        /**
+         * Pointid
+         */
+        pointid: string;
+    };
+    query?: never;
+    url: '/ngwmn/waterlevels/{pointid}';
+};
+
+export type ReadNgwmnWaterlevelsNgwmnWaterlevelsPointidGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadNgwmnWaterlevelsNgwmnWaterlevelsPointidGetError = ReadNgwmnWaterlevelsNgwmnWaterlevelsPointidGetErrors[keyof ReadNgwmnWaterlevelsNgwmnWaterlevelsPointidGetErrors];
+
+export type ReadNgwmnWaterlevelsNgwmnWaterlevelsPointidGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ReadNgwmnWellconstructionNgwmnWellconstructionPointidGetData = {
+    body?: never;
+    path: {
+        /**
+         * Pointid
+         */
+        pointid: string;
+    };
+    query?: never;
+    url: '/ngwmn/wellconstruction/{pointid}';
+};
+
+export type ReadNgwmnWellconstructionNgwmnWellconstructionPointidGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadNgwmnWellconstructionNgwmnWellconstructionPointidGetError = ReadNgwmnWellconstructionNgwmnWellconstructionPointidGetErrors[keyof ReadNgwmnWellconstructionNgwmnWellconstructionPointidGetErrors];
+
+export type ReadNgwmnWellconstructionNgwmnWellconstructionPointidGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ReadNgwmnLithologyNgwmnLithologyPointidGetData = {
+    body?: never;
+    path: {
+        /**
+         * Pointid
+         */
+        pointid: string;
+    };
+    query?: never;
+    url: '/ngwmn/lithology/{pointid}';
+};
+
+export type ReadNgwmnLithologyNgwmnLithologyPointidGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadNgwmnLithologyNgwmnLithologyPointidGetError = ReadNgwmnLithologyNgwmnLithologyPointidGetErrors[keyof ReadNgwmnLithologyNgwmnLithologyPointidGetErrors];
+
+export type ReadNgwmnLithologyNgwmnLithologyPointidGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type ClientOptions = {
     baseUrl: 'https://ocotillo-api-staging.newmexicowaterdata.org' | (string & {});
