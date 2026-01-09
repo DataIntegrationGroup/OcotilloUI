@@ -13,6 +13,7 @@ jobs:
       OCOTILLO_API_URL: http://localhost:8000
       VITE_OCOTILLO_API_URL: http://localhost:8000
       AUTHENTIK_DISABLE_AUTHENTICATION: ${{ secrets.AUTHENTIK_TEST }}
+      SESSION_SECRET_KEY: your_secret_key_here
 
       # --- DATABASE VALUES FOR DOCKER COMPOSE ---
       POSTGRES_HOST: db
@@ -25,10 +26,10 @@ jobs:
       - name: Checkout frontend
         uses: actions/checkout@v4
 
-      - name: Checkout FastAPI backend (NMSampleLocations staging)
+      - name: Checkout FastAPI backend (OcotilloAPI staging)
         uses: actions/checkout@v4
         with:
-          repository: DataIntegrationGroup/NMSampleLocations
+          repository: DataIntegrationGroup/OcotilloAPI
           ref: staging
           path: api-repo
 
