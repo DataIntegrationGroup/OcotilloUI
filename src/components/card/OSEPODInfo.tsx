@@ -12,9 +12,9 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
-import { useOSEPODInfo } from '@/hooks/useOSEPODInfo'
 import { Engineering } from '@mui/icons-material'
-import { ExternalLink } from '../ExternalLink'
+import { useOSEPODInfo } from '@/hooks/useOSEPODInfo'
+import { ExternalLink } from '@/components'
 
 export const OSEPODInfoCard = ({ pod_id }) => {
   const podInfoQuery = useOSEPODInfo(pod_id)
