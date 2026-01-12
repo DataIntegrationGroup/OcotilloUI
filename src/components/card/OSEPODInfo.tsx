@@ -14,6 +14,7 @@ import {
 } from '@mui/material'
 import { useOSEPODInfo } from '@/hooks/useOSEPODInfo'
 import { Engineering } from '@mui/icons-material'
+import { ExternalLink } from '../ExternalLink'
 
 export const OSEPODInfoCard = ({ pod_id }) => {
   const podInfoQuery = useOSEPODInfo(pod_id)
@@ -71,13 +72,7 @@ export const OSEPODInfoCard = ({ pod_id }) => {
                     <TableCell sx={{ py: 0.5 }}>{row.name}</TableCell>
                     <TableCell sx={{ py: 0.5 }}>
                       {row.name === 'nmwrrs_wrsum_url' ? (
-                        <a
-                          href={row.value}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          link
-                        </a>
+                        <ExternalLink href={row.value}>link</ExternalLink>
                       ) : (
                         row.value
                       )}

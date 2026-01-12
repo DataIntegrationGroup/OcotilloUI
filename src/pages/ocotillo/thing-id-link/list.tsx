@@ -1,4 +1,4 @@
-import { ListPage } from '@/components'
+import { ExternalLink, ListPage } from '@/components'
 import { useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { useMemo } from 'react'
@@ -35,11 +35,11 @@ export const ThingIdLinkList = () => {
         renderCell: (params) => {
           if (params.row.alternate_organization === 'USGS') {
             return (
-              <a
+              <ExternalLink
                 href={`https://waterdata.usgs.gov/nwis/uv?site_no=${params.value}`}
               >
-                {params.value}{' '}
-              </a>
+                {params.value}
+              </ExternalLink>
             )
           } else if (params.row.relation === 'OSEPOD') {
             let basin = params.value.split('-')[0]
@@ -47,24 +47,16 @@ export const ThingIdLinkList = () => {
 
             return (
               <>
-                <a
-                  href={
-                    `https://services2.arcgis.com/qXZbWTdPDbTjl7Dy/arcgis/rest/services/` +
-                    `OSE_PODs/FeatureServer/0/query?` +
-                    `where=+db_file%3D%27${params.value}%27&f=pjson&outFields=*"`
-                  }
+                <ExternalLink
+                  href={`https://services2.arcgis.com/qXZbWTdPDbTjl7Dy/arcgis/rest/services/OSE_PODs/FeatureServer/0/query?where=+db_file%3D%27${params.value}%27&f=pjson&outFields=*"`}
                 >
                   {params.value}
-                </a>
-                <a
-                  href={
-                    `https://nmwrrs.ose.nm.gov/ReportDispatcher` +
-                    `?type=WRHTML&name=WaterRightSummaryHTML.jrxml` +
-                    `&basin=${basin}&nbr=${nbr}&suffix=`
-                  }
+                </ExternalLink>
+                <ExternalLink
+                  href={`https://nmwrrs.ose.nm.gov/ReportDispatcher?type=WRHTML&name=WaterRightSummaryHTML.jrxml&basin=${basin}&nbr=${nbr}&suffix=`}
                 >
                   <Launch />
-                </a>
+                </ExternalLink>
               </>
             )
           }
@@ -90,6 +82,7 @@ export const ThingIdLinkList = () => {
   )
   return (
     <ListPage
+      title={'Thing ID Links'}
       getRowId={(row) => row.id}
       columns={columns}
       dataGridProps={dataGridProps}

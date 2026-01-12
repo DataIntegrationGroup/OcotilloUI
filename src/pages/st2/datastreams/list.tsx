@@ -123,26 +123,26 @@ export const ST2DatastreamList = () => {
       {
         field: 'unitOfMeasurement',
         headerName: 'Unit',
-        valueGetter: (value, row) => row.unitOfMeasurement?.symbol,
+        valueGetter: (_, row) => row.unitOfMeasurement?.symbol,
         minWidth: 25,
       },
       {
         field: 'agency',
         headerName: 'Agency',
-        valueGetter: (value, row) => row.Thing?.properties?.agency,
+        valueGetter: (_, row) => row.Thing?.properties?.agency,
         minWidth: 150,
       },
       {
         field: 'Location',
         headerName: 'Location',
-        valueGetter: (value, row) =>
+        valueGetter: (_, row) =>
           row.Thing?.Locations?.map((loc) => loc.name).join(', '),
         minWidth: 300,
       },
       {
         field: 'sensor',
         headerName: 'Sensor',
-        valueGetter: (value, row) => row.Sensor?.name,
+        valueGetter: (_, row) => row.Sensor?.name,
       },
       {
         field: 'locationID',
@@ -171,7 +171,6 @@ export const ST2DatastreamList = () => {
             </div>
           )
         },
-        // valueGetter: params => params.row.Thing?.['@iot.id'], minWidth: 150
       },
       {
         field: 'actions',
@@ -180,7 +179,6 @@ export const ST2DatastreamList = () => {
           return (
             <div>
               <EditButton hideText recordItemId={row['@iot.id']} />
-              {/*<ShowButton hideText recordItemId={row['@iot.id']}/>*/}
             </div>
           )
         },
@@ -209,7 +207,6 @@ export const ST2DatastreamList = () => {
 
   const wrapper = async () => {
     const ps = datastreamIds.map((dsid) => {
-      // get row
       const row = rows.find((row) => {
         return row['@iot.id'] === dsid
       })
@@ -239,24 +236,6 @@ export const ST2DatastreamList = () => {
     wrapper().then()
   }, [activeDatastreamId, datastreamIds, minDate, maxDate])
 
-  // const findDuplicates = async () => {
-  //     const updatedRows = rows.map(async (row) => {
-  //         // row.Sensor.name = 'asdfs';
-  //         console.log('row', row['@iot.id']);
-  //
-  //         const data = await triggerAll({resource: `Datastreams(${row['@iot.id']})/Observations`});
-  //         console.log('hydrograph data', row['@iot.id'], data);
-  //         if (data.length == 0) {
-  //             row.name = `${row.name} (Duplicate)`;
-  //         }
-  //
-  //         return row;
-  //     });
-  //
-  //
-  //     setRows(await Promise.all(updatedRows));
-  // };
-
   return (
     <>
       <ListPage
@@ -277,7 +256,6 @@ export const ST2DatastreamList = () => {
           <AccordionDetails>
             <Card sx={{ padding: 2, margin: 1 }}>
               <ST2Hydrograph
-                // name={locationName}
                 options={hydrographOptions}
                 refresh={refreshHydrograph}
                 datasource={datasource}
@@ -304,19 +282,11 @@ export const ST2DatastreamList = () => {
                   })
                   .flat()}
                 columns={[
-                  // {field: 'resultTime', headerName: 'resultTime', type: 'dateTime', width: 200},
                   {
                     field: 'location',
                     headerName: 'Location',
                     minWidth: 200,
                   },
-                  // {
-                  //     field: 'id', headerName: 'ID',
-                  //     type: 'number', width: 120,
-                  //     valueFormatter: (params) => {
-                  //         return params.id.toString().replace(/,/g, '');
-                  //     }
-                  // },
                   {
                     field: 'phenomenonTime',
                     headerName: 'Measurement Date Time',
