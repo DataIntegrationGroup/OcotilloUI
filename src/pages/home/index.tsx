@@ -254,7 +254,12 @@ const Links = () => {
               }}
             />
           </ListItem>
-          <ListItemButton component="a" href="https://github.com/NMGRL/pychron">
+          <ListItemButton
+            component="a"
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/NMGRL/pychron"
+          >
             <ListItemAvatar>
               <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
                 <AutoAwesome />
@@ -280,6 +285,8 @@ const Links = () => {
           </ListItem>
           <ListItemButton
             component="a"
+            target="_blank"
+            rel="noopener noreferrer"
             href="https://st2.newmexicowaterdata.org/FROST-Server"
           >
             <ListItemAvatar>
