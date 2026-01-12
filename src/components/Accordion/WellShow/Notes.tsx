@@ -8,8 +8,26 @@ import {
 import { ExpandMore, Notes } from '@mui/icons-material'
 import Grid from '@mui/material/Grid2'
 import { IWell } from '@/interfaces/ocotillo/IThing'
+import { groupNotesByType } from '@/utils'
 
 export const NotesAccordion = ({ well }: { well?: IWell }) => {
+  const allNotes = [
+    ...(well?.water_notes ?? []),
+    ...(well?.measuring_notes ?? []),
+    ...(well?.construction_notes ?? []),
+    ...(well?.general_notes ?? []),
+    ...(well?.current_location?.properties?.notes ?? []),
+    ...(well?.sampling_procedure_notes ?? []),
+  ]
+
+  const noteSections = groupNotesByType(allNotes, { defaultTitle: 'Notes' })
+  const sections =
+    noteSections.length > 0 ? noteSections : [{ title: 'Notes', value: null }]
+
+  const renderNotes = (value?: string | null) => value || 'N/A'
+  const formatSectionTitle = (title: string) =>
+    title.toLowerCase().endsWith('notes') ? title : `${title} Notes`
+
   return (
     <Accordion defaultExpanded elevation={2}>
       <AccordionSummary
@@ -42,36 +60,16 @@ export const NotesAccordion = ({ well }: { well?: IWell }) => {
       </AccordionSummary>
       <AccordionDetails sx={{ p: 3 }}>
         <Grid container spacing={4}>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="h6">Water Notes:</Typography>
-            <Typography variant="body1">
-              {well?.water_notes?.content || 'N/A'}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="h6">Measuring Notes:</Typography>
-            <Typography variant="body1">
-              {well?.measuring_notes?.content || 'N/A'}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="h6">Construction Notes:</Typography>
-            <Typography variant="body1">
-              {well?.well_construction_notes || 'N/A'}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="h6">Notes:</Typography>
-            <Typography variant="body1">
-              {well?.notes?.content || 'N/A'}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="h6">General Notes:</Typography>
-            <Typography variant="body1">
-              {well?.general_notes?.content || 'N/A'}
-            </Typography>
-          </Grid>
+          {sections.map((section) => (
+            <Grid key={section.title} size={{ xs: 12 }}>
+              <Typography variant="h6">
+                {formatSectionTitle(section.title)}:
+              </Typography>
+              <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+                {renderNotes(section.value)}
+              </Typography>
+            </Grid>
+          ))}
         </Grid>
       </AccordionDetails>
     </Accordion>

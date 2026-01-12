@@ -18,10 +18,12 @@ export interface IThing {
   groups?: IGroup[]
   monitoring_status?: string | null
   alternate_ids?: IThingIdLink[]
-  water_notes?: z.infer<typeof zNoteResponse>
-  measuring_notes?: z.infer<typeof zNoteResponse>
-  notes?: z.infer<typeof zNoteResponse>
-  general_notes?: z.infer<typeof zNoteResponse>
+  water_notes?: z.infer<typeof zNoteResponse>[]
+  measuring_notes?: z.infer<typeof zNoteResponse>[]
+  notes?: z.infer<typeof zNoteResponse>[]
+  general_notes?: z.infer<typeof zNoteResponse>[]
+  sampling_procedure_notes?: z.infer<typeof zNoteResponse>[]
+  construction_notes?: z.infer<typeof zNoteResponse>[]
 }
 
 export interface IWell extends IThing {
@@ -39,7 +41,6 @@ export interface IWell extends IThing {
   well_casing_depth_unit?: string | null
 
   well_casing_materials?: string[] | null
-  well_construction_notes?: string | null
 
   well_completion_date?: string | null
   well_completion_date_source?: string | null

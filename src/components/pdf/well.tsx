@@ -1,6 +1,6 @@
 import { IAddress, IContact, IWell } from '@/interfaces/ocotillo/IThing'
 import { BaseRecord } from '@refinedev/core'
-import { buildPdfFilename } from '@/utils'
+import { buildPdfFilename, groupNotesByType } from '@/utils'
 import {
   Document,
   Page,
@@ -136,6 +136,21 @@ export const WellPDF = ({
 
     return { primaryContact: primary, secondaryContact: secondary }
   }, [contacts])
+
+  const allNotes = [
+    ...(well?.water_notes ?? []),
+    ...(well?.measuring_notes ?? []),
+    ...(well?.construction_notes ?? []),
+    ...(well?.general_notes ?? []),
+    ...(well?.current_location?.properties?.notes ?? []),
+    ...(well?.sampling_procedure_notes ?? []),
+  ]
+
+  const noteSections = groupNotesByType(allNotes, { defaultTitle: 'Notes' })
+  const sections =
+    noteSections.length > 0 ? noteSections : [{ title: 'Notes', value: null }]
+  const formatSectionTitle = (title: string) =>
+    title.toLowerCase().endsWith('notes') ? title : `${title} Notes`
 
   const coords = well?.current_location?.geometry?.coordinates as
     | [number, number, number?]
@@ -327,16 +342,13 @@ export const WellPDF = ({
             </View>
             <View style={styles.cell3}></View>
           </View>
-          <LineItem title="Water Notes" value={well?.water_notes?.content} />
-          <LineItem
-            title="Measuring Notes"
-            value={well?.measuring_notes?.content}
-          />
-          <LineItem title="Notes" value={well?.notes?.content} />
-          <LineItem
-            title="General Notes"
-            value={well?.general_notes?.content}
-          />
+          {sections.map((section) => (
+            <LineItem
+              key={section.title}
+              title={formatSectionTitle(section.title)}
+              value={section.value ?? undefined}
+            />
+          ))}
         </View>
         {assets.length === 0 && (
           <Text style={styles.pageNote}>
