@@ -1,10 +1,11 @@
-import { ExternalLink, ListPage } from '@/components'
+import { useMemo } from 'react'
 import { useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
-import { useMemo } from 'react'
+import { Box } from '@mui/material'
+import { Launch } from '@mui/icons-material'
 import { IThingIdLink } from '@/interfaces/ocotillo/IThing'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { Launch } from '@mui/icons-material'
+import { ExternalLink, ListPage } from '@/components'
 
 export const ThingIdLinkList = () => {
   const { dataGridProps } = useDataGrid({
@@ -33,34 +34,51 @@ export const ThingIdLinkList = () => {
         type: 'string',
         minWidth: 150,
         renderCell: (params) => {
+          const val = params.value
+
+          // Always be safe: if it's null/undefined, render empty
+          if (val == null) return ''
+
+          // Ensure it's a string for operations like split
+          const s = String(val)
+
           if (params.row.alternate_organization === 'USGS') {
             return (
               <ExternalLink
-                href={`https://waterdata.usgs.gov/nwis/uv?site_no=${params.value}`}
+                href={`https://waterdata.usgs.gov/nwis/uv?site_no=${s}`}
               >
-                {params.value}
+                {s}
               </ExternalLink>
             )
-          } else if (params.row.relation === 'OSEPOD') {
-            let basin = params.value.split('-')[0]
-            let nbr = params.value.split('-')[1]
+          }
+
+          if (params.row.relation === 'OSEPOD') {
+            // Only split if it actually contains "-"
+            const [basin, nbr] = s.split('-')
+            if (!basin || !nbr) return s
 
             return (
-              <>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 <ExternalLink
-                  href={`https://services2.arcgis.com/qXZbWTdPDbTjl7Dy/arcgis/rest/services/OSE_PODs/FeatureServer/0/query?where=+db_file%3D%27${params.value}%27&f=pjson&outFields=*"`}
+                  href={`https://services2.arcgis.com/qXZbWTdPDbTjl7Dy/arcgis/rest/services/OSE_PODs/FeatureServer/0/query?where=+db_file%3D%27${encodeURIComponent(
+                    s
+                  )}%27&f=pjson&outFields=*`}
+                  showIcon={false}
                 >
-                  {params.value}
+                  {s}
                 </ExternalLink>
                 <ExternalLink
-                  href={`https://nmwrrs.ose.nm.gov/ReportDispatcher?type=WRHTML&name=WaterRightSummaryHTML.jrxml&basin=${basin}&nbr=${nbr}&suffix=`}
+                  href={`https://nmwrrs.ose.nm.gov/ReportDispatcher?type=WRHTML&name=WaterRightSummaryHTML.jrxml&basin=${encodeURIComponent(
+                    basin
+                  )}&nbr=${encodeURIComponent(nbr)}&suffix=`}
+                  showIcon={false}
                 >
                   <Launch />
                 </ExternalLink>
-              </>
+              </Box>
             )
           }
-          return params.value
+          return s
         },
       },
       {
@@ -74,19 +92,28 @@ export const ThingIdLinkList = () => {
         headerName: 'Created At',
         type: 'dateTime',
         minWidth: 180,
-        valueGetter: (params) => new Date(params),
+        valueGetter: (params) => (params ? new Date(params) : null),
       },
       actionColumnDef(),
     ],
     []
   )
+
+  const DESCRIPTION = `
+    Thing ID Links are used to associate a Thing with identifiers from
+    external systems or organizations. 
+    These links make it possible to reference the same Thing using
+    alternate identifiers such as OSE POD numbers or USGS site IDs,
+    while preserving a single canonical Thing record in the system.
+    `
+
   return (
     <ListPage
-      title={'Thing ID Links'}
+      title={'Alternative ID Links'}
       getRowId={(row) => row.id}
       columns={columns}
       dataGridProps={dataGridProps}
-      description={'ThingIdLink List'}
+      description={DESCRIPTION}
     />
   )
 }
