@@ -45,9 +45,6 @@ const cleanResourceName = (resource: string) => {
     resource = resource.replace(/^thing-/, 'thing/')
   }
 
-  // if (resource === 'wellthing') {
-  //   resource = 'thing/well'
-  // }
   return resource
 }
 export const ocotilloDataProvider: DataProvider = {
@@ -96,7 +93,6 @@ export const ocotilloDataProvider: DataProvider = {
 
     let url: string = resource
 
-    // const response = await fetcher(`${url}?${params.toString()}`)
     const response = await axiosCall(url, {
       params: params,
       headers: {
@@ -163,7 +159,6 @@ export const ocotilloDataProvider: DataProvider = {
     return { data }
   },
   create: async ({ resource, variables }) => {
-    //console.log('asdfs', resource)
     resource = cleanResourceName(resource)
 
     try {
@@ -182,16 +177,19 @@ export const ocotilloDataProvider: DataProvider = {
       return { data }
     } catch (error) {
       // Transform Pydantic validation errors to Refine format
-      if ((error.response?.status === 422 || error.response?.status === 409) && error.response?.data?.detail) {
+      if (
+        (error.response?.status === 422 || error.response?.status === 409) &&
+        error.response?.data?.detail
+      ) {
         const pydanticErrors = error.response.data.detail
         const refinedErrors: Record<string, string[]> = {}
-        
-        //@TODO: this does not handle cross field validation errors
+
+        // @TODO: this does not handle cross field validation errors
         // i.e. screen top and bottom must be together, top greater than bottom etc.
         pydanticErrors.forEach((issue: any) => {
-          const fieldPath = issue.loc.join('.') 
-          const cleanFieldPath = fieldPath.startsWith('body.') 
-            ? fieldPath.substring(5) 
+          const fieldPath = issue.loc.join('.')
+          const cleanFieldPath = fieldPath.startsWith('body.')
+            ? fieldPath.substring(5)
             : fieldPath
           if (cleanFieldPath) {
             if (!refinedErrors[cleanFieldPath]) {
@@ -200,15 +198,15 @@ export const ocotilloDataProvider: DataProvider = {
             refinedErrors[cleanFieldPath].push(issue.msg)
           }
         })
-        
+
         const transformedError = new Error('Validation Error')
         ;(transformedError as any).status = error.response.status
         ;(transformedError as any).errors = refinedErrors
         ;(transformedError as any).fieldErrors = refinedErrors
-        
+
         throw transformedError
       }
-      
+
       throw error
     }
   },
@@ -242,11 +240,9 @@ export const ocotilloDataProvider: DataProvider = {
        * TODO: Rename thing/well resources to thing/water-well to reduce custom code
        */
       // for water wells:
-      if (
-        resource === 'thing/well'
-      ) {
+      if (resource === 'thing/well') {
         let endpoint = `thing/water-well/${id}`
-        
+
         const response = await axiosCall(endpoint, {
           method: 'PATCH',
           data: JSON.stringify(variables),
@@ -280,14 +276,17 @@ export const ocotilloDataProvider: DataProvider = {
       return { data }
     } catch (error) {
       // Transform Pydantic validation errors to Refine format
-      if ((error.response?.status === 422 || error.response?.status === 409) && error.response?.data?.detail) {
+      if (
+        (error.response?.status === 422 || error.response?.status === 409) &&
+        error.response?.data?.detail
+      ) {
         const pydanticErrors = error.response.data.detail
         const refinedErrors: Record<string, string[]> = {}
-        
+
         pydanticErrors.forEach((issue: any) => {
-          const fieldPath = issue.loc.join('.') 
-          const cleanFieldPath = fieldPath.startsWith('body.') 
-            ? fieldPath.substring(5) 
+          const fieldPath = issue.loc.join('.')
+          const cleanFieldPath = fieldPath.startsWith('body.')
+            ? fieldPath.substring(5)
             : fieldPath
           if (cleanFieldPath) {
             if (!refinedErrors[cleanFieldPath]) {
@@ -296,15 +295,15 @@ export const ocotilloDataProvider: DataProvider = {
             refinedErrors[cleanFieldPath].push(issue.msg)
           }
         })
-        
+
         const transformedError = new Error('Validation Error')
         ;(transformedError as any).status = error.response.status
         ;(transformedError as any).errors = refinedErrors
         ;(transformedError as any).fieldErrors = refinedErrors
-        
+
         throw transformedError
       }
-      
+
       throw error
     }
   },
