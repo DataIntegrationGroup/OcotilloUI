@@ -1,5 +1,5 @@
 import { AuthActionResponse, AuthProvider } from '@refinedev/core'
-import { generateCodeChallenge, generateCodeVerifier } from '@/providers/pcke'
+import { generateCodeChallenge, generateCodeVerifier } from '@/utils'
 import { sha256 } from 'js-sha256'
 import { jwtDecode, JwtPayload } from 'jwt-decode'
 
@@ -103,7 +103,6 @@ export const authentikAuthProvider: AuthProvider = {
 
   // Returns the current user's profile
   getIdentity: async () => {
-
     if (!import.meta.env.PROD && import.meta.env.VITE_TEST_AUTH) {
       return {
         id: 'test',

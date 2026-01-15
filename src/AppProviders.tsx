@@ -1,6 +1,5 @@
 import { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ColorModeContextProvider } from '@/contexts'
 import {
   Breadcrumb,
   RefineSnackbarProvider,
@@ -9,21 +8,23 @@ import {
 import { DevtoolsProvider, DevtoolsPanel } from '@refinedev/devtools'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import CssBaseline from '@mui/material/CssBaseline'
-import GlobalStyles from '@mui/material/GlobalStyles'
+import { CssBaseline, GlobalStyles } from '@mui/material'
 import { Action, IResourceItem, Refine } from '@refinedev/core'
-import { ampDataProvider } from './providers/amp-data-provider'
-import { geochronologyDataProvider } from './providers/geochronology-data-provider'
-import { geothermalDataProvider } from './providers/geothermal-data-provider'
-import { st2DataProvider } from './providers/st2-data-provider'
-import { resources } from './resources'
 import routerProvider, {
   DocumentTitleHandler,
   UnsavedChangesNotifier,
 } from '@refinedev/react-router-v6'
-import { accessControlProvider } from '@/providers/access-control-provider'
-import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
-import { authentikAuthProvider } from '@/providers/authentik-provider'
+import { ColorModeContextProvider } from '@/contexts'
+import {
+  ampDataProvider,
+  authentikAuthProvider,
+  ocotilloDataProvider,
+  accessControlProvider,
+  st2DataProvider,
+  geothermalDataProvider,
+  geochronologyDataProvider,
+} from '@/providers'
+import { resources } from '@/resources'
 
 const queryClient = new QueryClient()
 
@@ -38,7 +39,7 @@ const customTitleHandler = (options: {
     ? `${options.resource.meta.label} | ${import.meta.env.VITE_APP_TITLE || 'NMBGMR Ocotillo'}`
     : `${import.meta.env.VITE_APP_TITLE || 'NMBGMR Ocotillo'}`
 
-export const Providers = ({ children }: { children: ReactNode }) => (
+export const AppProviders = ({ children }: { children: ReactNode }) => (
   <ColorModeContextProvider>
     <CssBaseline />
     <GlobalStyles styles={{ html: { WebkitFontSmoothing: 'auto' } }} />

@@ -1,4 +1,4 @@
-import { getAccessToken } from '@/providers/fief-provider'
+import { getAccessToken } from '@/providers/authentik-provider'
 import { lookupTableQueryConfig } from '@/pages/pages.config'
 import { useQuery } from '@tanstack/react-query'
 import { IWaterLevelForm } from '@/interfaces/amp'

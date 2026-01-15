@@ -1,5 +1,6 @@
 export * from './ApiFetch'
 export * from './ApiUriBuilder'
+export * from './Auth'
 export * from './BuildPdfFilename'
 export * from './FallbackWithDefault'
 export * from './FetchLookupTable'
