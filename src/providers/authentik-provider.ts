@@ -54,8 +54,6 @@ export const getAccessControlGroups = (): string[] => {
 
 export const authentikAuthProvider: AuthProvider = {
   login: async (params) => {
-    // const { status } = handleLogin(email, password)
-    // const mode = import.meta.env.MODE
     if (!import.meta.env.PROD && import.meta.env.VITE_TEST_AUTH) {
       localStorage.setItem('access_token', 'fake_token')
       localStorage.setItem('id_token', 'fake_token')
