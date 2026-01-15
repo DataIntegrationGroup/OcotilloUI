@@ -4,7 +4,7 @@ import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
 import { ISample } from '@/interfaces/ocotillo/ISample'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { extractThingTypeResource, linkColumn } from '@/utils/link'
+import { extractThingTypeResource, linkColumn } from '@/utils'
 
 export const SampleList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISample>({

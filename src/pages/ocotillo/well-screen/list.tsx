@@ -1,12 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { IWellScreen } from '@/interfaces/ocotillo/IWellScreen'
-
 import { ListPage } from '@/components/ListPage'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { useLink } from '@refinedev/core'
-import { linkColumn } from '@/utils/link'
+import { linkColumn } from '@/utils'
 
 export const WellScreenList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IWellScreen>({

@@ -1,18 +1,10 @@
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { useMemo } from 'react'
+import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { Chip } from '@mui/material'
-import { linkColumn } from '@/utils/link'
-import { useLink } from '@refinedev/core'
 
 export const ContactsComponent = ({ contacts }) => {
   const columns: GridColDef[] = useMemo(() => {
     return [
-      // linkColumn('ocotillo.contact', {
-      //   field: 'id',
-      //   headerName: 'ID',
-      //   type: 'string',
-      //   width: 100,
-      // }),
       {
         field: 'name',
         headerName: 'Name',
@@ -30,7 +22,7 @@ export const ContactsComponent = ({ contacts }) => {
         renderCell: (params) => {
           return (
             <>
-              {params.row.emails?.map((p, idx) => (
+              {params.row.emails?.map((p, idx: number) => (
                 <div
                   key={idx}
                   style={{ marginBottom: '5px', marginTop: '5px' }}
@@ -48,7 +40,7 @@ export const ContactsComponent = ({ contacts }) => {
         flex: 1,
         renderCell: (params) => (
           <>
-            {params.row.phones?.map((p, idx) => (
+            {params.row.phones?.map((p, idx: number) => (
               <div key={idx} style={{ marginBottom: '5px', marginTop: '5px' }}>
                 {p.phone_number} <Chip label={p.phone_type} size="small" />
               </div>
@@ -64,7 +56,7 @@ export const ContactsComponent = ({ contacts }) => {
         renderCell: (params) => {
           return (
             <>
-              {params.row.addresses?.map((a, idx) => (
+              {params.row.addresses?.map((a, idx: number) => (
                 <div
                   key={idx}
                   style={{ marginBottom: '5px', marginTop: '5px' }}
