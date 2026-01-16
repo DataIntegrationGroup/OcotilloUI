@@ -1,7 +1,7 @@
 import { useShow } from '@refinedev/core'
 import { Show } from '@refinedev/mui'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
-import { ISpring } from '@/interfaces/ocotillo/IThing'
+import { ISpring } from '@/interfaces/ocotillo'
 
 export const SpringShow = () => {
   const { queryResult } = useShow({})

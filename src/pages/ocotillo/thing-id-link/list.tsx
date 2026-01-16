@@ -3,7 +3,7 @@ import { useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { Box } from '@mui/material'
 import { Launch } from '@mui/icons-material'
-import { IThingIdLink } from '@/interfaces/ocotillo/IThing'
+import { IThingIdLink } from '@/interfaces/ocotillo'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { ExternalLink, ListPage } from '@/components'
 

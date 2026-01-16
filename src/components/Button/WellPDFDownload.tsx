@@ -6,7 +6,7 @@ import {
   useList,
 } from '@refinedev/core'
 import { useParams } from 'react-router-dom'
-import { IContact, IWell } from '@/interfaces/ocotillo/IThing'
+import { IContact, IWell } from '@/interfaces/ocotillo'
 import {
   Button,
   ButtonGroup,

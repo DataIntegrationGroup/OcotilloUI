@@ -1,7 +1,7 @@
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 import { useShow } from '@refinedev/core'
 import { Show } from '@refinedev/mui'
-import { IThingIdLink } from '@/interfaces/ocotillo/IThing'
+import { IThingIdLink } from '@/interfaces/ocotillo'
 
 export const ThingIdLinkShow = () => {
   const { queryResult } = useShow({})
@@ -9,18 +9,7 @@ export const ThingIdLinkShow = () => {
   const record = data?.data as IThingIdLink
 
   //custom configs for sensor date fields
-  const fieldConfigs = {
-    // date_installed: {
-    //   label: 'Date Installed',
-    //   formatter: (value: string) =>
-    //     value ? new Date(value).toLocaleString() : '',
-    // },
-    // date_removed: {
-    //   label: 'Date Removed',
-    //   formatter: (value: string) =>
-    //     value ? new Date(value).toLocaleString() : '',
-    // },
-  }
+  const fieldConfigs = {}
 
   return (
     <Show isLoading={isLoading}>

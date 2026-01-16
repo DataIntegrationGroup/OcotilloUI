@@ -1,4 +1,4 @@
-import { IContact, IWell } from '@/interfaces/ocotillo/IThing'
+import { IContact, IWell } from '@/interfaces/ocotillo'
 import {
   Box,
   Card,

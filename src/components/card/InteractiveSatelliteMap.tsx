@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import { IWell } from '@/interfaces/ocotillo'
 import {
   Box,
   Card,
@@ -14,7 +14,6 @@ import {
 import { Directions, Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
 import { MapComponent, MapPopup } from '@/components'
-import { parseWktPoint } from '@/utils'
 import { useThingLayers } from '@/hooks'
 import { useGo } from '@refinedev/core'
 

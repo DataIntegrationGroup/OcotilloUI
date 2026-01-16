@@ -2,7 +2,7 @@ import type { HttpError } from '@refinedev/core'
 import { Create } from '@refinedev/mui'
 import { useForm } from '@refinedev/react-hook-form'
 import { Nullable } from '@/interfaces'
-import { IThingIdLink } from '@/interfaces/ocotillo/IThing'
+import { IThingIdLink } from '@/interfaces/ocotillo'
 import { CreateEditThingIdLink } from '@/components/form/thing/CreateEditThingIdLink'
 
 export const ThingIdLinkCreate: React.FC = () => {

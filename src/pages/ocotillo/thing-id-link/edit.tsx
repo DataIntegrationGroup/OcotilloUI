@@ -3,7 +3,7 @@ import { Edit } from '@refinedev/mui'
 import { useForm } from '@refinedev/react-hook-form'
 
 import type { Nullable } from '@/interfaces'
-import { IThingIdLink } from '@/interfaces/ocotillo/IThing'
+import { IThingIdLink } from '@/interfaces/ocotillo'
 import { CreateEditThingIdLink } from '@/components/form/thing/CreateEditThingIdLink'
 
 export const ThingIdLinkEdit: React.FC = () => {
