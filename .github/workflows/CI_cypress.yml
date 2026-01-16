@@ -97,9 +97,9 @@ jobs:
         working-directory: ./api-repo
         run: docker compose logs --tail=200 app || true
 
-      - name: Seed database
-        working-directory: ./api-repo
-        run: docker compose exec -T app python -m transfers.seed
+      # - name: Seed database
+      #   working-directory: ./api-repo
+      #   run: docker compose exec -T app python -m transfers.seed
 
       - name: Build frontend
         run: npm run build
