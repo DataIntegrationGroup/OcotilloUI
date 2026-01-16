@@ -1,4 +1,4 @@
-import { useLayer } from './'
+import { useLayer } from '@/hooks'
 
 export const useThingLayers = () => ({
   'water-wells': useLayer({

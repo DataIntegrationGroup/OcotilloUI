@@ -12,7 +12,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
-import { useUSGSSiteInfo } from '@/hooks/useUSGSSiteInfo'
+import { useUSGSSiteInfo } from '@/hooks'
 import { Public } from '@mui/icons-material'
 
 export const USGSInfoCard = ({ site_id }) => {

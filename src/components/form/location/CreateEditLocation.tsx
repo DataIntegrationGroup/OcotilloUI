@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import {
   Control,
   UseFormWatch,
@@ -13,7 +14,6 @@ import {
   MapComponent,
 } from '@/components'
 import { useLexicon } from '@/hooks'
-import { useEffect, useRef, useState } from 'react'
 import { MapRef, ViewState, Source, Layer } from 'react-map-gl'
 import {
   Typography,
@@ -25,12 +25,8 @@ import {
   MenuItem,
 } from '@mui/material'
 import wellknown from 'wellknown'
-import {
-  convertUTMToLonLat,
-  convertLonLatToUTM,
-  Datum,
-} from '@/utils/UtmToLonLat'
-import { useElevation } from '@/hooks/useElevation'
+import { convertUTMToLonLat, convertLonLatToUTM, Datum } from '@/utils'
+import { useElevation } from '@/hooks'
 
 /**
  * CreateEditLocation Component

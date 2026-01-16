@@ -1,13 +1,11 @@
 import { Control, FieldErrors } from 'react-hook-form'
-import Grid from '@mui/material/Grid2'
 import {
   ControlledTextField,
   ControlledSelectField,
   ControlledDateField,
 } from '@/components'
-
-import { useSensor } from '@/hooks/useSensor'
-import { useLexicon } from '@/hooks'
+import Grid from '@mui/material/Grid2'
+import { useLexicon, useSensor } from '@/hooks'
 
 /**
  * CreateEditSample Component
@@ -70,7 +68,6 @@ export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
 
   //sensor options
   const { options: sensorOptions } = useSensor()
-
 
   return (
     <Grid container spacing={3} size={12}>
