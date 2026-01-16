@@ -50,15 +50,6 @@ jobs:
           echo "POSTGRES_HOST=$POSTGRES_HOST"
           echo "POSTGRES_PORT=$POSTGRES_PORT"
 
-      - name: Print app env (DB-related)
-        working-directory: ./api-repo
-        run: |
-          docker compose exec -T app bash -lc 'env | sort | egrep "POSTGRES|DATABASE|SQLALCHEMY|MODE" || true'
-          
-      - name: Verify app sees POSTGRES_HOST
-        working-directory: ./api-repo
-        run: docker compose exec -T app bash -lc 'echo POSTGRES_HOST=$POSTGRES_HOST; env | grep POSTGRES_HOST || true'
-
       - name: Start FastAPI backend (Docker Compose)
         working-directory: ./api-repo
         env:
@@ -67,6 +58,15 @@ jobs:
           docker compose build --build-arg INSTALL_DEV=$INSTALL_DEV app
           docker compose up -d
 
+      - name: Print app env (DB-related)
+        working-directory: ./api-repo
+        run: |
+          docker compose exec -T app bash -lc 'env | sort | egrep "POSTGRES|DATABASE|SQLALCHEMY|MODE" || true'
+          
+      - name: Verify app sees POSTGRES_HOST
+        working-directory: ./api-repo
+        run: docker compose exec -T app bash -lc 'echo POSTGRES_HOST=$POSTGRES_HOST; env | grep POSTGRES_HOST || true'
+        
       - name: Exec inside DB container
         working-directory: ./api-repo
         run: docker compose exec -T db pg_isready -U $POSTGRES_USER -d $POSTGRES_DB || true
