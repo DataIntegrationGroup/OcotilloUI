@@ -1,9 +1,9 @@
+import { useEffect, useState } from 'react'
 import { HttpError, useResourceParams, useShow } from '@refinedev/core'
 import { Breadcrumb, Show, useDataGrid } from '@refinedev/mui'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import { Box, Stack, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
-import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
+import { IHydrographDatasource } from '@/interfaces/st2'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
@@ -137,10 +137,10 @@ export const WellShow = () => {
         <Box component="div">
           <AdditionalWellInformationAccordion well={well} />
           <NotesAccordion well={well} />
+          <ContactsAccordion id={well?.id} />
           <EquipmentAccordion id={well?.id} />
           <WellScreensAccordion id={well?.id} />
           <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
-          <ContactsAccordion id={well?.id} />
           <AttachmentsAccordion id={well?.id} />
         </Box>
         <OSEPODInfoCard pod_id={osepod_id} />
