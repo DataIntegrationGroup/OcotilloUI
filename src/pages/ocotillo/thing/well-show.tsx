@@ -1,9 +1,9 @@
+import { useEffect, useState } from 'react'
 import { HttpError, useResourceParams, useShow } from '@refinedev/core'
 import { Breadcrumb, Show, useDataGrid } from '@refinedev/mui'
 import { IWell } from '@/interfaces/ocotillo/IThing'
 import { Box, Stack, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
-import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
+import { IHydrographDatasource } from '@/interfaces/st2'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,

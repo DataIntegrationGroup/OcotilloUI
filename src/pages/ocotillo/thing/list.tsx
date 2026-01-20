@@ -91,12 +91,6 @@ export const WellList: React.FC = () => {
         minWidth: 150,
       },
       {
-        field: 'well_type',
-        headerName: 'Well Type',
-        type: 'string',
-        minWidth: 150,
-      },
-      {
         field: 'well_depth',
         headerName: 'Well Depth (ft)',
         type: 'string',
