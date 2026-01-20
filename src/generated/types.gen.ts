@@ -116,6 +116,16 @@ export type AuthorResponse = {
 };
 
 /**
+ * Conformance
+ */
+export type Conformance = {
+    /**
+     * Conformsto
+     */
+    conformsTo?: Array<string>;
+};
+
+/**
  * ContactResponse
  * Response schema for contact details.
  */
@@ -713,6 +723,10 @@ export type CreateWell = {
      */
     is_suitable_for_datalogger: boolean | null;
     formation_completion_code?: FormationCode | null;
+    /**
+     * Nma Formation Zone
+     */
+    nma_formation_zone?: string | null;
 };
 
 /**
@@ -1051,6 +1065,24 @@ export type HttpValidationError = {
 };
 
 /**
+ * LandingPage
+ */
+export type LandingPage = {
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Links
+     */
+    links: Array<Link>;
+};
+
+/**
  * LexiconCategoryResponse
  * Pydantic model for the response of a lexicon category.
  * This model can be extended to include additional fields as needed.
@@ -1126,6 +1158,28 @@ export type LexiconTripleResponse = {
      * Object
      */
     object_: string;
+};
+
+/**
+ * Link
+ */
+export type Link = {
+    /**
+     * Href
+     */
+    href: string;
+    /**
+     * Rel
+     */
+    rel: string;
+    /**
+     * Type
+     */
+    type?: string | null;
+    /**
+     * Title
+     */
+    title?: string | null;
 };
 
 /**
@@ -2351,6 +2405,10 @@ export type ThingResponse = {
      */
     permissions: Array<PermissionHistoryResponse>;
     formation_completion_code: FormationCode | null;
+    /**
+     * Nma Formation Zone
+     */
+    nma_formation_zone: string | null;
 };
 
 /**
@@ -2887,6 +2945,10 @@ export type UpdateWell = {
      * Well Casing Materials
      */
     well_casing_materials?: Array<string> | null;
+    /**
+     * Nma Formation Zone
+     */
+    nma_formation_zone?: string | null;
 };
 
 /**
@@ -3202,6 +3264,10 @@ export type WellResponse = {
      */
     permissions: Array<PermissionHistoryResponse>;
     formation_completion_code: FormationCode | null;
+    /**
+     * Nma Formation Zone
+     */
+    nma_formation_zone: string | null;
 };
 
 /**
@@ -4684,6 +4750,171 @@ export type UpdateGroupGroupGroupIdPatchResponses = {
 };
 
 export type UpdateGroupGroupGroupIdPatchResponse = UpdateGroupGroupGroupIdPatchResponses[keyof UpdateGroupGroupGroupIdPatchResponses];
+
+export type LandingPageOgcGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/ogc/';
+};
+
+export type LandingPageOgcGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: LandingPage;
+};
+
+export type LandingPageOgcGetResponse = LandingPageOgcGetResponses[keyof LandingPageOgcGetResponses];
+
+export type ConformanceOgcConformanceGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/ogc/conformance';
+};
+
+export type ConformanceOgcConformanceGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Conformance;
+};
+
+export type ConformanceOgcConformanceGetResponse = ConformanceOgcConformanceGetResponses[keyof ConformanceOgcConformanceGetResponses];
+
+export type CollectionsOgcCollectionsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/ogc/collections';
+};
+
+export type CollectionsOgcCollectionsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type CollectionOgcCollectionsCollectionIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Collection Id
+         */
+        collection_id: string;
+    };
+    query?: never;
+    url: '/ogc/collections/{collection_id}';
+};
+
+export type CollectionOgcCollectionsCollectionIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CollectionOgcCollectionsCollectionIdGetError = CollectionOgcCollectionsCollectionIdGetErrors[keyof CollectionOgcCollectionsCollectionIdGetErrors];
+
+export type CollectionOgcCollectionsCollectionIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ItemsOgcCollectionsCollectionIdItemsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Collection Id
+         */
+        collection_id: string;
+    };
+    query?: {
+        /**
+         * Bbox
+         * minx,miny,maxx,maxy
+         */
+        bbox?: string | null;
+        /**
+         * Datetime
+         */
+        datetime?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Properties
+         * CQL filter
+         */
+        properties?: string | null;
+        /**
+         * Filter
+         */
+        filter?: string | null;
+        /**
+         * Filter-Lang
+         */
+        'filter-lang'?: string | null;
+    };
+    url: '/ogc/collections/{collection_id}/items';
+};
+
+export type ItemsOgcCollectionsCollectionIdItemsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ItemsOgcCollectionsCollectionIdItemsGetError = ItemsOgcCollectionsCollectionIdItemsGetErrors[keyof ItemsOgcCollectionsCollectionIdItemsGetErrors];
+
+export type ItemsOgcCollectionsCollectionIdItemsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ItemOgcCollectionsCollectionIdItemsFidGetData = {
+    body?: never;
+    path: {
+        /**
+         * Collection Id
+         */
+        collection_id: string;
+        /**
+         * Fid
+         */
+        fid: number;
+    };
+    query?: never;
+    url: '/ogc/collections/{collection_id}/items/{fid}';
+};
+
+export type ItemOgcCollectionsCollectionIdItemsFidGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ItemOgcCollectionsCollectionIdItemsFidGetError = ItemOgcCollectionsCollectionIdItemsFidGetErrors[keyof ItemOgcCollectionsCollectionIdItemsFidGetErrors];
+
+export type ItemOgcCollectionsCollectionIdItemsFidGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type GetLexiconCategoriesLexiconCategoryGetData = {
     body?: never;
