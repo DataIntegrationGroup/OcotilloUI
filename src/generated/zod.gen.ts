@@ -88,6 +88,13 @@ export const zAuthorResponse = z.object({
 });
 
 /**
+ * Conformance
+ */
+export const zConformance = z.object({
+    conformsTo: z.optional(z.array(z.string()))
+});
+
+/**
  * role
  */
 export const zRole = z.enum([
@@ -1114,6 +1121,10 @@ export const zCreateWell = z.object({
     formation_completion_code: z.optional(z.union([
         zFormationCode,
         z.null()
+    ])),
+    nma_formation_zone: z.optional(z.union([
+        z.string(),
+        z.null()
     ]))
 });
 
@@ -1609,6 +1620,31 @@ export const zValidationError = z.object({
  */
 export const zHttpValidationError = z.object({
     detail: z.optional(z.array(zValidationError))
+});
+
+/**
+ * Link
+ */
+export const zLink = z.object({
+    href: z.string(),
+    rel: z.string(),
+    type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    title: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
+});
+
+/**
+ * LandingPage
+ */
+export const zLandingPage = z.object({
+    title: z.string(),
+    description: z.string(),
+    links: z.array(zLink)
 });
 
 /**
@@ -2343,6 +2379,10 @@ export const zThingResponse = z.object({
     formation_completion_code: z.union([
         zFormationCode,
         z.null()
+    ]),
+    nma_formation_zone: z.union([
+        z.string(),
+        z.null()
     ])
 });
 
@@ -2657,6 +2697,10 @@ export const zWellResponse = z.object({
     permissions: z.array(zPermissionHistoryResponse),
     formation_completion_code: z.union([
         zFormationCode,
+        z.null()
+    ]),
+    nma_formation_zone: z.union([
+        z.string(),
         z.null()
     ])
 });
@@ -3311,6 +3355,10 @@ export const zUpdateWell = z.object({
     well_casing_materials: z.optional(z.union([
         z.array(z.string()),
         z.null()
+    ])),
+    nma_formation_zone: z.optional(z.union([
+        z.string(),
+        z.null()
     ]))
 });
 
@@ -3883,6 +3931,82 @@ export const zUpdateGroupGroupGroupIdPatchData = z.object({
  * Successful Response
  */
 export const zUpdateGroupGroupGroupIdPatchResponse = zGroupResponse;
+
+export const zLandingPageOgcGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zLandingPageOgcGetResponse = zLandingPage;
+
+export const zConformanceOgcConformanceGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zConformanceOgcConformanceGetResponse = zConformance;
+
+export const zCollectionsOgcCollectionsGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+export const zCollectionOgcCollectionsCollectionIdGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        collection_id: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+export const zItemsOgcCollectionsCollectionIdItemsGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        collection_id: z.string()
+    }),
+    query: z.optional(z.object({
+        bbox: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        datetime: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        limit: z.optional(z.int().gte(1).lte(1000)).default(100),
+        offset: z.optional(z.int().gte(0)).default(0),
+        properties: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        filter: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        'filter-lang': z.optional(z.union([
+            z.string(),
+            z.null()
+        ]))
+    }))
+});
+
+export const zItemOgcCollectionsCollectionIdItemsFidGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        collection_id: z.string(),
+        fid: z.int()
+    }),
+    query: z.optional(z.never())
+});
 
 export const zGetLexiconCategoriesLexiconCategoryGetData = z.object({
     body: z.optional(z.never()),
