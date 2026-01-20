@@ -1,26 +1,20 @@
-import { Route, Routes } from "react-router-dom";
-import { ErrorComponent } from "@refinedev/mui";
-import { GeochronologyDashboard } from "@/pages/geochronology/dashboard";
+import { Route, Routes } from 'react-router-dom'
+import { ErrorComponent } from '@refinedev/mui'
 import {
-  PrincipalInvestigatorCreate,
-  PrincipalInvestigatorList,
-  PrincipalInvestigatorShow,
-} from "@/pages/geochronology/principal_investigators";
-import {
-  ProjectCreate,
-  ProjectList,
-  ProjectShow,
-} from "@/pages/geochronology/projects";
-import {
-  SampleCreate,
-  SampleList,
-  SampleShow,
-} from "@/pages/geochronology/samples";
-import {
+  GeochronologyDashboard,
   MaterialCreate,
   MaterialList,
   MaterialShow,
-} from "@/pages/geochronology/materials";
+  PrincipalInvestigatorCreate,
+  PrincipalInvestigatorList,
+  PrincipalInvestigatorShow,
+  ProjectCreate,
+  ProjectList,
+  ProjectShow,
+  SampleCreate,
+  SampleList,
+  SampleShow,
+} from '@/pages/geochronology'
 
 export const GeochronologyRoutes = () => {
   return (
@@ -48,5 +42,5 @@ export const GeochronologyRoutes = () => {
       </Route>
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
-  );
-};
+  )
+}
