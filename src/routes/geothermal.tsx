@@ -1,10 +1,10 @@
-import { Route, Routes } from "react-router-dom";
-import { GeothermalDashboard } from "@/pages/geothermal/dashboard";
-import { ErrorComponent } from "@refinedev/mui";
+import { Route, Routes } from 'react-router-dom'
+import { ErrorComponent } from '@refinedev/mui'
 import {
+  GeothermalDashboard,
   GeoThermalWellList,
   GeoThermalWellShow,
-} from "@/pages/geothermal/wells";
+} from '@/pages/geothermal'
 
 export const GeothermalRoutes = () => {
   return (
@@ -16,5 +16,5 @@ export const GeothermalRoutes = () => {
       </Route>
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
-  );
-};
+  )
+}
