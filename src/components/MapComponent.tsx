@@ -114,7 +114,7 @@ export const MapComponent = ({
     initialViewState = {
       longitude: -106.4,
       latitude: 34.5,
-      zoom: 6,
+      zoom: 5.85,
     }
   }
 
