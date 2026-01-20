@@ -7,9 +7,7 @@ import {
   Box,
   Card,
   LinearProgress,
-  CardHeader,
   Typography,
-  CardContent,
   Divider,
   FormControlLabel,
   Checkbox,
@@ -78,7 +76,7 @@ export const MapView: React.FC = () => {
       canCreate={false}
     >
       <Grid container spacing={3}>
-        <Grid size={{ xs: 3 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 4, xl: 3 }}>
           <Card elevation={2}>
             <Grid container spacing={1} p={2}>
               <Grid size={{ xs: 12 }}>
@@ -140,7 +138,7 @@ export const MapView: React.FC = () => {
             </Grid>
           </Card>
         </Grid>
-        <Grid size={{ xs: 9 }}>
+        <Grid size={{ xs: 12, lg: 8, xl: 9 }}>
           <Box
             data-testid="ocotillo-map-container"
             component="div"
