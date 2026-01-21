@@ -1,22 +1,46 @@
-# ===============================================================================
-# Copyright 2025 ross
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ===============================================================================
 from pathlib import Path
-import os
-
 from mako.template import Template
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+SRC = REPO_ROOT / "src"
+
+
+def make_interface(label):
+    p = SRC / "interfaces" / "ocotillo" / f"I{label}.ts"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(Template(interface_template).render(label=label))
+
+
+def make_create_edit_form_component(base, label, **kw):
+    p = SRC / "components" / "form" / base / f"CreateEdit{label}.tsx"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(
+        Template(create_edit_form_component_template).render(label=label, **kw)
+    )
+
+
+def _render(root, page, template, resource, label, **kw):
+    p = root / f"{page}.tsx"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(Template(template).render(label=label, resource=resource, **kw))
+
+
+def make_index(root):
+    p = root / "index.tsx"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(
+        "export * from './list'\n"
+        "export * from './show'\n"
+        "export * from './edit'\n"
+        "export * from './create'\n"
+    )
+
+
+def make_page(resource):
+    path = SRC / "pages" / "ocotillo" / resource
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
 
 list_template = """
 import { useMemo, useState } from 'react'
@@ -207,68 +231,25 @@ export const CreateEdit${label} = ({
 """
 
 
-def make_interface(label):
-    p = Path('src', 'interfaces', 'ocotillo', f'I{label}.ts')
-    with open(p, 'w') as wfile:
-        template = Template(interface_template)
-        txt = template.render(label=label)
-        wfile.write(txt)
-
-
 def make_list_page(root, resource, label):
-    _render(root, 'list', list_template, resource, label)
+    _render(root, "list", list_template, resource, label)
 
 
 def make_show_page(root, resource, label):
-    _render(root, 'show', show_template, resource, label)
+    _render(root, "show", show_template, resource, label)
 
 
 def make_edit_page(root, resource, label):
-    _render(root, 'edit', edit_template, resource, label, form='thing')
+    _render(root, "edit", edit_template, resource, label, form="thing")
 
 
 def make_create_page(root, resource, label):
-    _render(root, 'create', create_template, resource, label, form='thing')
-
-
-def make_create_edit_form_component(base, label, **kw):
-    p = Path('src', 'components', 'form', base, f'CreateEdit{label}.tsx')
-    with open(p, 'w') as wfile:
-        template = Template(create_edit_form_component_template)
-        txt = template.render(label=label, **kw)
-        wfile.write(txt)
-
-
-def _render(root, page, template, resource, label, **kw):
-    p = root / f'{page}.tsx'
-    with open(p, 'w') as wfile:
-        template = Template(template)
-        txt = template.render(label=label,
-                              resource=resource, **kw)
-        wfile.write(txt)
-
-
-def make_index(root):
-    p = root / 'index.tsx'
-    with open(p, 'w') as wfile:
-        txt = """export * from './list'
-export * from './show'
-export * from './edit'
-export * from './create' 
-"""
-        wfile.write(txt)
-
-
-def make_page(resource):
-    path = Path('src', 'pages', 'ocotillo', resource)
-    if not path.exists():
-        os.mkdir(path)
-    return path
+    _render(root, "create", create_template, resource, label, form="thing")
 
 
 def main():
-    resource = 'well-screen'
-    label = 'WellScreen'
+    resource = "well-screen"
+    label = "WellScreen"
     make_interface(label)
 
     page_root = make_page(resource)
@@ -277,9 +258,8 @@ def main():
     make_show_page(page_root, resource, label)
     make_create_page(page_root, resource, label)
     make_edit_page(page_root, resource, label)
-    make_create_edit_form_component('thing', label)
+    make_create_edit_form_component("thing", label)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-# ============= EOF =============================================

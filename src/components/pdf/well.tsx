@@ -1,4 +1,4 @@
-import { IAddress, IContact, IWell } from '@/interfaces/ocotillo/IThing'
+import { IAddress, IContact, IWell } from '@/interfaces/ocotillo'
 import { BaseRecord } from '@refinedev/core'
 import { buildPdfFilename, groupNotesByType } from '@/utils'
 import {

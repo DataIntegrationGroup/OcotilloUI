@@ -11,16 +11,15 @@ import { ThemedLayoutV2 } from '@/components/layout'
 import { ThemedHeaderV2 } from '@/components/layout/header'
 import { ThemedSiderV2 } from '@/components/layout/sider'
 import { ThemedTitleV2 } from '@/components/layout/title'
-import { Home } from '@/pages/home'
 import { Callback } from '@/components/Auth'
-import { ST2Routes } from '@/routes/st2'
+import { Home } from '@/pages/home'
+import { OcotilloRoutes, ST2Routes } from '@/routes'
 import { settings } from '@/settings'
-import { Providers } from './Providers'
-import { OcotilloRoutes } from '@/routes/ocotillo'
+import { AppProviders } from '@/AppProviders'
 
 const App: React.FC = () => (
   <BrowserRouter basename={settings.urlprefix}>
-    <Providers>
+    <AppProviders>
       <Routes>
         <Route
           element={
@@ -93,7 +92,7 @@ const App: React.FC = () => (
           <Route path="*" element={<ErrorComponent />} />
         </Route>
       </Routes>
-    </Providers>
+    </AppProviders>
   </BrowserRouter>
 )
 

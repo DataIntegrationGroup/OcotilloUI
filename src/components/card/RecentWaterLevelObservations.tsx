@@ -9,9 +9,8 @@ import {
   Skeleton,
 } from '@mui/material'
 import { TableChartOutlined } from '@mui/icons-material'
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import { IWell, IObservation } from '@/interfaces/ocotillo'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { IObservation } from '@/interfaces/ocotillo/IObservation'
 import { settings } from '@/settings'
 
 export const RecentWaterLevelObservationsCard = ({

@@ -1,32 +1,32 @@
 import { useEffect, useState, useMemo } from 'react'
 import { EditButton, useDataGrid } from '@refinedev/mui'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
-import type {
-  IDatastream,
-  IHydrographDatasource,
-  IHydrographOptions,
-  ISensor,
-} from '@/interfaces/st2'
-import { ListPage } from '@/components/ListPage'
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Card,
   InputLabel,
+  Checkbox,
+  FormControlLabel,
+  Stack,
 } from '@mui/material'
-import { useAll } from '@/useAll'
-import { settings } from '@/settings'
-import { ST2Hydrograph } from '@/components/Hydrographs/Hydrograph'
-import { ClearableSelect } from '@/components/ClearableSelect'
-import Stack from '@mui/material/Stack'
-import { DebouncedTextInput } from '@/components/DebouncedTextInput'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { Dayjs } from 'dayjs'
-import Checkbox from '@mui/material/Checkbox'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { useSelect } from '@refinedev/core'
+import type {
+  IDatastream,
+  IHydrographDatasource,
+  IHydrographOptions,
+  ISensor,
+} from '@/interfaces/st2'
+import { ExpandMore } from '@mui/icons-material'
+import { useAll } from '@/hooks'
+import { settings } from '@/settings'
+import { ListPage } from '@/components/ListPage'
+import { ST2Hydrograph } from '@/components/Hydrographs/Hydrograph'
+import { ClearableSelect } from '@/components/ClearableSelect'
+import { DebouncedTextInput } from '@/components/DebouncedTextInput'
 
 const Agencies = ['BernCo', 'PVACD', 'EBID', 'CABQ']
 const DatastreamKinds = [
@@ -250,7 +250,7 @@ export const ST2DatastreamList = () => {
         isLoading={isLoading}
       >
         <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <AccordionSummary expandIcon={<ExpandMore />}>
             <InputLabel>Hydrograph</InputLabel>
           </AccordionSummary>
           <AccordionDetails>
@@ -264,7 +264,7 @@ export const ST2DatastreamList = () => {
           </AccordionDetails>
         </Accordion>
         <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <AccordionSummary expandIcon={<ExpandMore />}>
             <InputLabel>Observations</InputLabel>
           </AccordionSummary>
           <AccordionDetails>
@@ -308,7 +308,7 @@ export const ST2DatastreamList = () => {
           </AccordionDetails>
         </Accordion>
         <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <AccordionSummary expandIcon={<ExpandMore />}>
             <InputLabel>Filter</InputLabel>
           </AccordionSummary>
           <AccordionDetails>

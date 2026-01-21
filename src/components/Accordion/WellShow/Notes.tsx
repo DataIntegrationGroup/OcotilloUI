@@ -7,7 +7,7 @@ import {
 } from '@mui/material'
 import { ExpandMore, Notes } from '@mui/icons-material'
 import Grid from '@mui/material/Grid2'
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import { IWell } from '@/interfaces/ocotillo'
 import { groupNotesByType } from '@/utils'
 
 export const NotesAccordion = ({ well }: { well?: IWell }) => {

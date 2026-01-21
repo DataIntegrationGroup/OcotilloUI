@@ -10,7 +10,7 @@ import {
 } from '@mui/material'
 import { ExpandMore, Info } from '@mui/icons-material'
 import Grid from '@mui/material/Grid2'
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import { IWell } from '@/interfaces/ocotillo'
 
 export const AdditionalWellInformationAccordion = ({
   well,

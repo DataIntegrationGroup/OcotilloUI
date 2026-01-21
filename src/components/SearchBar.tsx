@@ -1,4 +1,4 @@
-import { Box } from '@mui/system'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Autocomplete,
   Collapse,
@@ -10,8 +10,7 @@ import {
   Typography,
 } from '@mui/material'
 import { Search } from 'react-flaticons'
-import Stack from '@mui/material/Stack'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Stack, Box } from '@mui/material'
 import {
   AssetCard,
   ContactCard,
@@ -19,9 +18,9 @@ import {
   WellCard,
 } from '@/components/SearchResultCard'
 import { useGo } from '@refinedev/core'
-import { useDebounce, useAbortableList } from '../hooks'
+import { useDebounce, useAbortableList } from '@/hooks'
 import { GroupType } from '@/constants'
-import { SearchResult } from '@/interfaces/ocotillo/SearchResult'
+import { SearchResult } from '@/interfaces/ocotillo'
 import { highlight } from '@/utils'
 
 export const SearchBar = () => {

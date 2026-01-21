@@ -1,10 +1,9 @@
-import Typography from '@mui/material/Typography'
-import { Box } from '@mui/system'
+import { Typography, Box } from '@mui/material'
 
 export const GeothermalDashboard = () => {
   return (
     <Box>
-      <Typography variant={'h3'}>Geothermal Dashboard</Typography>
+      <Typography variant="h3">Geothermal Dashboard</Typography>
     </Box>
   )
 }

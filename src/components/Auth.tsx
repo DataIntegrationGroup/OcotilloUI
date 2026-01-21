@@ -1,10 +1,6 @@
-import { useFiefAuth } from '@fief/fief/react'
-import { useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Checkbox from '@mui/material/Checkbox'
-import { fiefURL } from '@/providers/fief-provider'
 
 const AUTHENTIK_URL =
   import.meta.env.VITE_AUTHENTIK_URL || 'http://localhost:8000/'
@@ -15,14 +11,6 @@ const REDIRECT_URI =
   'http://localhost:3000/callback'
 
 export const Callback = () => {
-  // const fiefAuth = useFiefAuth();
-  // const navigate = useNavigate();
-  // useEffect(() => {
-  //   fiefAuth.authCallback(fiefURL("callback")).then(() => {
-  //     navigate("/home");
-  //   });
-  // }, [fiefAuth, navigate]);
-
   const params = new URLSearchParams(window.location.search)
   const code = params.get('code')
   const storedVerifier = localStorage.getItem('pkce_code_verifier')

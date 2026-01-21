@@ -1,4 +1,4 @@
-export function generateCodeVerifier(length = 128) {
+export const generateCodeVerifier = (length = 128) => {
   const possible =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'
   let verifier = ''
@@ -8,7 +8,7 @@ export function generateCodeVerifier(length = 128) {
   return verifier
 }
 
-export async function generateCodeChallenge(verifier: string) {
+export const generateCodeChallenge = async (verifier: string) => {
   const encoder = new TextEncoder()
   const data = encoder.encode(verifier)
   const digest = await crypto.subtle.digest('SHA-256', data)

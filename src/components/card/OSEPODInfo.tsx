@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material'
 import { Engineering } from '@mui/icons-material'
-import { useOSEPODInfo } from '@/hooks/useOSEPODInfo'
+import { useOSEPODInfo } from '@/hooks'
 import { ExternalLink } from '@/components'
 
 export const OSEPODInfoCard = ({ pod_id }) => {
