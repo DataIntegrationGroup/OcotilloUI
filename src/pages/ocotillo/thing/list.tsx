@@ -39,7 +39,7 @@ export const SpringList: React.FC = () => {
       {
         field: 'created_at',
         headerName: 'Created At',
-        minWidth: 180,
+        minWidth: 200,
         valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
@@ -104,7 +104,7 @@ export const WellList: React.FC = () => {
       {
         field: 'created_at',
         headerName: 'Created At',
-        minWidth: 180,
+        minWidth: 200,
         valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),

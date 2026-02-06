@@ -2,8 +2,9 @@ import { useMemo } from 'react'
 import { useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { IAsset } from '@/interfaces/ocotillo/IAsset'
-import { ListPage } from '@/components/ListPage'
+import { ListPage } from '@/components'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
+import { formatAppDateTime } from '@/utils'
 
 export const AssetList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IAsset>({
@@ -39,13 +40,13 @@ export const AssetList: React.FC = () => {
         field: 'storage_path',
         headerName: 'Storage Path',
         type: 'string',
+        minWidth: 350,
       },
       {
         field: 'created_at',
         headerName: 'Created At',
-        type: 'dateTime',
-        minWidth: 180,
-        valueGetter: (params) => new Date(params),
+        minWidth: 200,
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
     ],
@@ -54,6 +55,7 @@ export const AssetList: React.FC = () => {
 
   return (
     <ListPage
+      title={'Assets / Attachments'}
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}
