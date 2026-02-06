@@ -1363,6 +1363,14 @@ export const zGeoJsonProperties = z.object({
     ]),
     utm_coordinates: z.optional(zGeoJsonutmCoordinates),
     notes: z.optional(z.array(zNoteResponse)).default([]),
+    nma_location_notes: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    nma_data_reliability: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     nma_date_created: z.optional(z.union([
         z.iso.date(),
         z.null()
@@ -1552,6 +1560,10 @@ export const zGroundwaterLevelObservationResponse = z.object({
         z.null()
     ]),
     unit: zUnit,
+    nma_data_quality: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     depth_to_water_bgs: z.union([
         z.number(),
         z.null()
@@ -1739,6 +1751,14 @@ export const zLocationResponse = z.object({
         z.string(),
         z.null()
     ]),
+    nma_location_notes: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    nma_data_reliability: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     nma_date_created: z.optional(z.union([
         z.iso.date(),
         z.null()
@@ -1796,6 +1816,10 @@ export const zObservationResponse = z.object({
         z.null()
     ]),
     unit: zUnit,
+    nma_data_quality: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     depth_to_water_bgs: z.union([
         z.number(),
         z.null()
@@ -2584,7 +2608,11 @@ export const zWaterChemistryObservationResponse = z.object({
         z.number(),
         z.null()
     ]),
-    unit: zUnit
+    unit: zUnit,
+    nma_data_quality: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
 });
 
 /**

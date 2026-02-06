@@ -944,6 +944,14 @@ export type GeoJsonProperties = {
      */
     notes?: Array<NoteResponse>;
     /**
+     * Nma Location Notes
+     */
+    nma_location_notes?: string | null;
+    /**
+     * Nma Data Reliability
+     */
+    nma_data_reliability?: string | null;
+    /**
      * Nma Date Created
      */
     nma_date_created?: string | null;
@@ -1006,6 +1014,10 @@ export type GroundwaterLevelObservationResponse = {
      */
     value: number | null;
     unit: Unit;
+    /**
+     * Nma Data Quality
+     */
+    nma_data_quality?: string | null;
     /**
      * Depth To Water Bgs
      */
@@ -1242,6 +1254,14 @@ export type LocationResponse = {
      */
     quad_name: string | null;
     /**
+     * Nma Location Notes
+     */
+    nma_location_notes?: string | null;
+    /**
+     * Nma Data Reliability
+     */
+    nma_data_reliability?: string | null;
+    /**
      * Nma Date Created
      */
     nma_date_created?: string | null;
@@ -1331,6 +1351,10 @@ export type ObservationResponse = {
      */
     value: number | null;
     unit: Unit;
+    /**
+     * Nma Data Quality
+     */
+    nma_data_quality?: string | null;
     /**
      * Depth To Water Bgs
      */
@@ -3031,6 +3055,10 @@ export type WaterChemistryObservationResponse = {
      */
     value: number | null;
     unit: Unit;
+    /**
+     * Nma Data Quality
+     */
+    nma_data_quality?: string | null;
 };
 
 /**
