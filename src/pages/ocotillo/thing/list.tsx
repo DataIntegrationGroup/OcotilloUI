@@ -7,6 +7,7 @@ import { ISpring, IWell } from '@/interfaces/ocotillo'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { CreateButton } from '@refinedev/mui'
 import { useNavigation } from '@refinedev/core'
+import { formatAppDateTime } from '@/utils'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
@@ -38,9 +39,8 @@ export const SpringList: React.FC = () => {
       {
         field: 'created_at',
         headerName: 'Created At',
-        type: 'dateTime',
         minWidth: 180,
-        valueGetter: (params) => new Date(params),
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
     ],
@@ -104,9 +104,8 @@ export const WellList: React.FC = () => {
       {
         field: 'created_at',
         headerName: 'Created At',
-        type: 'dateTime',
         minWidth: 180,
-        valueGetter: (params) => new Date(params),
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
     ],
