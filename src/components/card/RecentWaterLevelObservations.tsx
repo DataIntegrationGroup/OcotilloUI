@@ -12,6 +12,7 @@ import { TableChartOutlined } from '@mui/icons-material'
 import { IWell, IObservation } from '@/interfaces/ocotillo'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
+import { formatAppDateTime } from '@/utils'
 
 export const RecentWaterLevelObservationsCard = ({
   well,
@@ -31,9 +32,8 @@ export const RecentWaterLevelObservationsCard = ({
       {
         field: 'observation_datetime',
         headerName: 'Date/Time',
-        valueGetter: (params) => new Date(params),
-        type: 'dateTime',
-        minWidth: 180,
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
+        minWidth: 200,
       },
       {
         field: 'depth_to_water_bgs',

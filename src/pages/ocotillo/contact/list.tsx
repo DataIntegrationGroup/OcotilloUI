@@ -12,6 +12,7 @@ import { Email, Home, Phone } from '@mui/icons-material'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { useLink } from '@refinedev/core'
 import { settings } from '@/settings'
+import { formatAppDateTime } from '@/utils'
 
 export const ContactList: React.FC = () => {
   const [selectedContactId, setSelectedContactId] = useState<number | null>(
@@ -113,9 +114,8 @@ export const ContactList: React.FC = () => {
       {
         field: 'created_at',
         headerName: 'Created At',
-        type: 'dateTime',
-        minWidth: 180,
-        valueGetter: (params) => new Date(params),
+        minWidth: 200,
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
     ],

@@ -2,9 +2,9 @@ import { useMemo } from 'react'
 import { useDataGrid } from '@refinedev/mui'
 import { GridCheckCircleIcon, GridColDef } from '@mui/x-data-grid'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
-
-import { ListPage } from '@/components/ListPage'
+import { ListPage } from '@/components'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
+import { formatAppDateTime } from '@/utils'
 
 export const GroupList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IGroup>({
@@ -25,6 +25,7 @@ export const GroupList: React.FC = () => {
         field: 'parent_group_id',
         headerName: 'Parent Group ID',
         type: 'string',
+        minWidth: 175,
       },
       {
         field: 'project_area',
@@ -38,9 +39,8 @@ export const GroupList: React.FC = () => {
       {
         field: 'created_at',
         headerName: 'Created At',
-        type: 'dateTime',
-        minWidth: 180,
-        valueGetter: (params) => new Date(params),
+        minWidth: 200,
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
     ],
