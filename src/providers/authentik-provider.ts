@@ -78,7 +78,10 @@ export const authentikAuthProvider: AuthProvider = {
 
     window.location.assign(authUrl.toString())
 
-    return { success: true }
+    // Tell Refine to stay on /login while the browser redirects
+    // to Authentik. This prevents Refine's post-login navigation
+    // from interfering with the external OAuth redirect.
+    return { success: true, redirectTo: '/login' }
   },
 
   // Called when user logs out
