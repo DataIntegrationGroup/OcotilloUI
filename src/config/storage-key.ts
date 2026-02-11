@@ -5,6 +5,4 @@ export const STORAGE_KEYS = {
 
   pkceVerifier: 'pkce_code_verifier',
   pkceState: 'pkce_state',
-
-  redirecting: 'auth_redirecting',
 }

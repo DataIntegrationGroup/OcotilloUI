@@ -14,7 +14,13 @@ import {
   isJwtExpired,
 } from '@/utils'
 import { HttpStatus } from '@/enums'
-import { AUTHENTIK_URL, CLIENT_ID, REDIRECT_URI, STORAGE_KEYS } from '@/config'
+import {
+  AUTHENTIK_URL,
+  CLIENT_ID,
+  REDIRECT_URI,
+  STORAGE_KEYS,
+  IS_TESTING_AUTH,
+} from '@/config'
 
 const gravatarUrl = (email: string) => {
   let hash = email.trim().toLowerCase()
@@ -73,7 +79,7 @@ export const getAccessToken = async (
 }
 
 export const getAccessControlGroups = (): string[] | null => {
-  if (!import.meta.env.PROD && import.meta.env.VITE_TEST_AUTH) {
+  if (IS_TESTING_AUTH) {
     return ['OcotilloAdmin']
   }
 
@@ -90,10 +96,10 @@ export const getAccessControlGroups = (): string[] | null => {
 
 export const authentikAuthProvider: AuthProvider = {
   login: async (_params): Promise<AuthActionResponse> => {
-    if (!import.meta.env.PROD && import.meta.env.VITE_TEST_AUTH) {
+    if (IS_TESTING_AUTH) {
       tokenStore.accessToken = 'fake_token'
       tokenStore.idToken = 'fake_token'
-      return { success: true }
+      return { success: true, redirectTo: '/' }
     }
 
     try {
@@ -152,7 +158,7 @@ export const authentikAuthProvider: AuthProvider = {
     if (!access) return { authenticated: false, redirectTo: '/login' }
 
     // If a JWT is present, then validate expiry.
-    if (isJwtExpired(access)) {
+    if (isJwtExpired(access) && !IS_TESTING_AUTH) {
       tokenStore.accessToken = null
       tokenStore.idToken = null
       tokenStore.refreshToken = null
@@ -173,7 +179,7 @@ export const authentikAuthProvider: AuthProvider = {
     }
     const idToken = tokenStore.idToken
     if (!idToken) return null
-    if (isJwtExpired(idToken)) return null
+    if (isJwtExpired(idToken) && !IS_TESTING_AUTH) return null
 
     try {
       const profile = jwtDecode<AuthentikJwtPayload>(idToken)
