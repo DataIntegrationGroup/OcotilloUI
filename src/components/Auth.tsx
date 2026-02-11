@@ -72,7 +72,7 @@ export const Callback = () => {
           // include some debugging info if available
           const text = await resp.text().catch(() => '')
           setDetails(text || null)
-          throw new Error(`Token exchange failed (${resp.status}). ${text}`)
+          throw new Error('Token exchange failed')
         }
 
         const tokenData = (await resp.json()) as TokenResponse
@@ -89,9 +89,8 @@ export const Callback = () => {
         // Important: clear callback params from URL and leave callback route
         navigate('/', { replace: true })
       } catch (e) {
+        setStatus('error')
         setError(e instanceof Error ? e.message : 'Callback failed')
-        // Optional: send them back to login after a moment
-        // navigate("/login?error=callback_failed", { replace: true });
       }
     })()
   }, [navigate])
@@ -99,7 +98,7 @@ export const Callback = () => {
   const goToLogin = () => navigate('/login', { replace: true })
 
   return (
-    <Container maxWidth="sm" sx={{ py: 6 }}>
+    <Container maxWidth="md" sx={{ py: 6 }}>
       <Card elevation={3}>
         <CardContent>
           {status === 'loading' ? (
@@ -111,7 +110,7 @@ export const Callback = () => {
               </Typography>
             </Stack>
           ) : (
-            <Stack spacing={2}>
+            <Stack spacing={2} alignItems="center" textAlign="center">
               <Typography variant="h6">Sign-in failed</Typography>
 
               <Alert severity="error" variant="outlined">
@@ -136,7 +135,7 @@ export const Callback = () => {
                 </Box>
               ) : null}
 
-              <Button onClick={goToLogin} variant="text">
+              <Button onClick={goToLogin} variant="contained">
                 Back to login
               </Button>
 
