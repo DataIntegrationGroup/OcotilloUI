@@ -68,7 +68,7 @@ describe('Ocotillo Integration Tests: Location', () => {
       elevation: 5000,
       notes: [
         {
-          note_type: 'type',
+          note_type: 'General',
           content: 'Test notes',
           id: 1,
           created_at: 'date',
