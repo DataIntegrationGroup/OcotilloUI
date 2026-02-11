@@ -180,6 +180,37 @@ export const zThingResponseForContact = z.object({
 });
 
 /**
+ * note_type
+ */
+export const zNoteType = z.enum([
+    'Access',
+    'Directions',
+    'Communication',
+    'Construction',
+    'Maintenance',
+    'Historical',
+    'General',
+    'Water',
+    'Sampling Procedure',
+    'Coordinate',
+    'OwnerComment'
+]);
+
+/**
+ * NoteResponse
+ * Response schema for Note details.
+ */
+export const zNoteResponse = z.object({
+    note_type: zNoteType,
+    content: z.string(),
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    target_id: z.int(),
+    target_table: z.string()
+});
+
+/**
  * ContactResponse
  * Response schema for contact details.
  */
@@ -201,7 +232,9 @@ export const zContactResponse = z.object({
     emails: z.optional(z.array(zEmailResponse)).default([]),
     phones: z.optional(z.array(zPhoneResponse)).default([]),
     addresses: z.optional(z.array(zAddressResponse)).default([]),
-    things: z.optional(z.array(zThingResponseForContact)).default([])
+    things: z.optional(z.array(zThingResponseForContact)).default([]),
+    communication_notes: z.optional(z.array(zNoteResponse)).default([]),
+    general_notes: z.optional(z.array(zNoteResponse)).default([])
 });
 
 /**
@@ -285,6 +318,17 @@ export const zCreatePhone = z.object({
 });
 
 /**
+ * CreateNote
+ * Schema for creating a new Note. The parent object's ID and type will be
+ * taken from the URL path, not the request body.
+ */
+export const zCreateNote = z.object({
+    note_type: zNoteType,
+    content: z.string(),
+    release_status: z.optional(zReleaseStatus)
+});
+
+/**
  * CreateContact
  * Schema for creating a contact.
  */
@@ -311,6 +355,10 @@ export const zCreateContact = z.object({
     ])),
     addresses: z.optional(z.union([
         z.array(zCreateAddress),
+        z.null()
+    ])),
+    notes: z.optional(z.union([
+        z.array(zCreateNote),
         z.null()
     ]))
 });
@@ -417,17 +465,6 @@ export const zCreateLexiconTriple = z.object({
 });
 
 /**
- * CreateNote
- * Schema for creating a new Note. The parent object's ID and type will be
- * taken from the URL path, not the request body.
- */
-export const zCreateNote = z.object({
-    note_type: z.string(),
-    content: z.string(),
-    release_status: z.optional(zReleaseStatus)
-});
-
-/**
  * CreateLocation
  * Schema for creating a sample location.
  */
@@ -436,6 +473,32 @@ export const zCreateLocation = z.object({
     release_status: z.optional(zReleaseStatus),
     notes: z.optional(z.array(zCreateNote)).default([]),
     elevation: z.number()
+});
+
+/**
+ * monitoring_frequency
+ */
+export const zMonitoringFrequency = z.enum([
+    'Monthly',
+    'Bimonthly',
+    'Bimonthly reported',
+    'Quarterly',
+    'Biannual',
+    'Annual',
+    'Decadal',
+    'Event-based'
+]);
+
+/**
+ * CreateMonitoringFrequency
+ */
+export const zCreateMonitoringFrequency = z.object({
+    monitoring_frequency: zMonitoringFrequency,
+    start_date: z.iso.date(),
+    end_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ]))
 });
 
 /**
@@ -613,6 +676,17 @@ export const zCreateSensor = z.object({
 });
 
 /**
+ * CreateThingIdLink
+ * Schema for creating a link between a thing and its ID.
+ */
+export const zCreateThingIdLink = z.object({
+    thing_id: z.int(),
+    relation: z.string(),
+    alternate_id: z.string(),
+    alternate_organization: z.string()
+});
+
+/**
  * spring_type
  */
 export const zSpringType = z.enum([
@@ -629,10 +703,10 @@ export const zSpringType = z.enum([
  */
 export const zCreateSpring = z.object({
     release_status: z.optional(zReleaseStatus),
-    location_id: z.union([
+    location_id: z.optional(z.union([
         z.int(),
         z.null()
-    ]),
+    ])),
     group_id: z.optional(z.union([
         z.int(),
         z.null()
@@ -642,21 +716,22 @@ export const zCreateSpring = z.object({
         z.iso.date(),
         z.null()
     ])),
+    notes: z.optional(z.union([
+        z.array(zCreateNote),
+        z.null()
+    ])),
+    alternate_ids: z.optional(z.union([
+        z.array(zCreateThingIdLink),
+        z.null()
+    ])),
+    monitoring_frequencies: z.optional(z.union([
+        z.array(zCreateMonitoringFrequency),
+        z.null()
+    ])),
     spring_type: z.optional(z.union([
         zSpringType,
         z.null()
     ]))
-});
-
-/**
- * CreateThingIdLink
- * Schema for creating a link between a thing and its ID.
- */
-export const zCreateThingIdLink = z.object({
-    thing_id: z.int(),
-    relation: z.string(),
-    alternate_id: z.string(),
-    alternate_organization: z.string()
 });
 
 /**
@@ -702,6 +777,23 @@ export const zWellPurpose = z.enum([
     'Monitoring',
     'Production',
     'Injection'
+]);
+
+/**
+ * origin_type
+ */
+export const zOriginType = z.enum([
+    'Reported by another agency',
+    "From driller's log or well report",
+    'Private geologist, consultant or univ associate',
+    'Interpreted fr geophys logs by source agency',
+    'Memory of owner, operator, driller',
+    'Measured by source agency',
+    'Reported by owner of well',
+    'Reported by person other than driller owner agency',
+    'Measured by NMBGMR staff',
+    'Other',
+    'Data Portal'
 ]);
 
 /**
@@ -1056,11 +1148,15 @@ export const zCreateWell = z.object({
         z.null()
     ])),
     measuring_point_height: z.number(),
+    well_pump_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
     release_status: z.optional(zReleaseStatus),
-    location_id: z.union([
+    location_id: z.optional(z.union([
         z.int(),
         z.null()
-    ]),
+    ])),
     group_id: z.optional(z.union([
         z.int(),
         z.null()
@@ -1070,8 +1166,24 @@ export const zCreateWell = z.object({
         z.iso.date(),
         z.null()
     ])),
+    notes: z.optional(z.union([
+        z.array(zCreateNote),
+        z.null()
+    ])),
+    alternate_ids: z.optional(z.union([
+        z.array(zCreateThingIdLink),
+        z.null()
+    ])),
+    monitoring_frequencies: z.optional(z.union([
+        z.array(zCreateMonitoringFrequency),
+        z.null()
+    ])),
     well_purposes: z.optional(z.union([
         z.array(zWellPurpose),
+        z.null()
+    ])),
+    well_depth_source: z.optional(z.union([
+        zOriginType,
         z.null()
     ])),
     well_casing_diameter: z.optional(z.union([
@@ -1084,10 +1196,6 @@ export const zCreateWell = z.object({
     ])),
     measuring_point_description: z.optional(z.union([
         z.string(),
-        z.null()
-    ])),
-    notes: z.optional(z.union([
-        z.array(zCreateNote),
         z.null()
     ])),
     well_completion_date: z.optional(z.union([
@@ -1114,10 +1222,18 @@ export const zCreateWell = z.object({
         zWellPumpType,
         z.null()
     ])),
-    is_suitable_for_datalogger: z.union([
+    is_suitable_for_datalogger: z.optional(z.union([
         z.boolean(),
         z.null()
-    ]),
+    ])),
+    is_open: z.optional(z.union([
+        z.boolean(),
+        z.null()
+    ])),
+    well_status: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     formation_completion_code: z.optional(z.union([
         zFormationCode,
         z.null()
@@ -1276,6 +1392,7 @@ export const zFeatureCollectionResponse = z.object({
  * activity_type
  */
 export const zActivityType = z.enum([
+    'well inventory',
     'groundwater level',
     'water chemistry'
 ]);
@@ -1332,22 +1449,8 @@ export const zElevationMethod = z.enum([
 export const zGeoJsonutmCoordinates = z.object({
     easting: z.number(),
     northing: z.number(),
-    utm_zone: z.optional(z.int()).default(13),
+    utm_zone: z.optional(z.string()).default('13N'),
     horizontal_datum: z.optional(z.string()).default('NAD83')
-});
-
-/**
- * NoteResponse
- * Response schema for Note details.
- */
-export const zNoteResponse = z.object({
-    note_type: z.string(),
-    content: z.string(),
-    id: z.int(),
-    created_at: z.string(),
-    release_status: zReleaseStatus,
-    target_id: z.int(),
-    target_table: z.string()
 });
 
 /**
@@ -1768,20 +1871,6 @@ export const zLocationResponse = z.object({
         z.null()
     ]))
 });
-
-/**
- * monitoring_frequency
- */
-export const zMonitoringFrequency = z.enum([
-    'Monthly',
-    'Bimonthly',
-    'Bimonthly reported',
-    'Quarterly',
-    'Biannual',
-    'Annual',
-    'Decadal',
-    'Event-based'
-]);
 
 /**
  * MonitoringFrequencyResponse
@@ -2379,11 +2468,15 @@ export const zThingResponse = z.object({
         z.null()
     ]),
     well_pump_depth_unit: z.optional(z.string()).default('ft'),
-    is_suitable_for_datalogger: z.union([
-        z.boolean(),
+    well_status: z.union([
+        z.string(),
         z.null()
     ]),
-    well_status: z.union([
+    open_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    datalogger_suitability_status: z.union([
         z.string(),
         z.null()
     ]),
@@ -2705,11 +2798,15 @@ export const zWellResponse = z.object({
         z.null()
     ]),
     well_pump_depth_unit: z.optional(z.string()).default('ft'),
-    is_suitable_for_datalogger: z.union([
-        z.boolean(),
+    well_status: z.union([
+        z.string(),
         z.null()
     ]),
-    well_status: z.union([
+    open_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    datalogger_suitability_status: z.union([
         z.string(),
         z.null()
     ]),
@@ -3353,6 +3450,10 @@ export const zUpdateWell = z.object({
         z.null()
     ])),
     measuring_point_height: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    well_pump_depth: z.optional(z.union([
         z.number(),
         z.null()
     ])),
@@ -4040,6 +4141,10 @@ export const zGetLexiconCategoriesLexiconCategoryGetData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
     query: z.optional(z.object({
+        name: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
         sort: z.optional(z.string()).default('name'),
         order: z.optional(z.string()).default('asc'),
         filter: z.optional(z.string()),
