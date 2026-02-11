@@ -11,6 +11,7 @@ import {
   generateCodeVerifier,
   generateOAuthState,
   getStatusCode,
+  hasError,
   isJwtExpired,
 } from '@/utils'
 import { HttpStatus } from '@/enums'
@@ -205,10 +206,22 @@ export const authentikAuthProvider: AuthProvider = {
     }
   },
 
+  /**
+   * Called automatically by Refine when a data hook throws.
+   *
+   * This is triggered by hooks like:
+   *   - useList
+   *   - useOne
+   *   - useCreate / useUpdate / useDelete
+   *
+   * Even though we use FastAPI (backend), fetch (HTTP client),
+   * and React Query under Refine, the error shape is not guaranteed.
+   *
+   * Refine forwards whatever the dataProvider throws, so we treat
+   * `params` as `unknown` and narrow it safely.
+   */
   onError: async (params: unknown): Promise<OnErrorResponse> => {
-    const maybe = params as { error?: unknown } | unknown
-    const err = (maybe as any)?.error ?? maybe
-
+    const err = hasError(params) ? params.error : params
     const status = getStatusCode(err)
 
     if (status === HttpStatus.UNAUTHORIZED) {
