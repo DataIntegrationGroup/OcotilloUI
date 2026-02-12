@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { tokenStore, transientStore } from '@/providers/authentik-provider'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Alert,
   Box,
@@ -21,6 +22,7 @@ type TokenResponse = {
 }
 
 export const Callback = () => {
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const ran = useRef(false)
   const [error, setError] = useState<string | null>(null)
@@ -75,6 +77,7 @@ export const Callback = () => {
           throw new Error('Token exchange failed')
         }
 
+        // Persist tokens first (important)
         const tokenData = (await resp.json()) as TokenResponse
 
         tokenStore.refreshToken = tokenData.refresh_token ?? null
@@ -86,7 +89,10 @@ export const Callback = () => {
         localStorage.removeItem(STORAGE_KEYS.pkceVerifier)
         transientStore.pkceState = null
 
-        // Important: clear callback params from URL and leave callback route
+        // Re-check everything under new auth context
+        await queryClient.invalidateQueries()
+
+        // Leave callback route
         navigate('/', { replace: true })
       } catch (e) {
         setStatus('error')
