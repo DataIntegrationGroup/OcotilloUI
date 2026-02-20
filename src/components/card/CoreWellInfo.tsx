@@ -1,15 +1,35 @@
 import { IWell } from '@/interfaces/ocotillo'
 import {
+  Agriculture,
+  Close,
+  Groups,
+  InfoOutlined,
+  LabelOutlined,
+  Public,
+  PublicOff,
+  WaterDrop,
+} from '@mui/icons-material'
+import {
+  Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
   Chip,
   Divider,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Popover,
   Skeleton,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
+import { MouseEvent, useState } from 'react'
 
 export const CoreWellInfoCard = ({
   well,
@@ -33,9 +53,134 @@ export const CoreWellInfoCard = ({
   const { easting, northing } = well?.current_location?.properties
     ?.utm_coordinates ?? { easting: null, northing: null }
 
+  const hasPurposes = !!(
+    well?.well_purposes?.length && well.well_purposes.length > 0
+  )
+
+  const topChipValues = hasPurposes
+    ? well!.well_purposes
+    : [well?.thing_type || 'UNKNOWN TYPE']
+
+  const topChipIcon = hasPurposes ? <WaterDrop /> : <Agriculture />
+  const topChipTooltip = hasPurposes ? 'Well purpose' : 'Well type'
+  const isPublic = well?.release_status?.toLocaleUpperCase() === 'PUBLIC'
+  const isPrivate = well?.release_status?.toLocaleUpperCase() === 'PRIVATE'
+
+  const [legendAnchorEl, setLegendAnchorEl] = useState<null | HTMLElement>(null)
+  const legendOpen = Boolean(legendAnchorEl)
+
+  const openLegend = (e: MouseEvent<HTMLElement>) =>
+    setLegendAnchorEl(e.currentTarget)
+  const closeLegend = () => setLegendAnchorEl(null)
+
+  const topLegend = hasPurposes
+    ? {
+        icon: <WaterDrop fontSize="small" />,
+        title: 'Well purpose',
+        desc: 'What the well is used for (e.g., monitoring, irrigation, municipal use).',
+      }
+    : {
+        icon: <Agriculture fontSize="small" />,
+        title: 'Well type',
+        desc: 'What kind of asset this is (the system “thing type”).',
+      }
+
+  const statusLegend = {
+    icon: isPublic ? (
+      <Public fontSize="small" />
+    ) : isPrivate ? (
+      <PublicOff fontSize="small" />
+    ) : (
+      <LabelOutlined fontSize="small" />
+    ),
+    title: 'Release status',
+    desc: isPublic
+      ? 'Public: visible to everyone who has access to the project.'
+      : isPrivate
+        ? 'Private: restricted visibility.'
+        : 'Unknown: status not set.',
+  }
+
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
-      <CardHeader title={<Typography variant="h5">{well?.name}</Typography>} />
+      <CardHeader
+        title={<Typography variant="h5">{well?.name}</Typography>}
+        action={
+          <>
+            <Button
+              onClick={legendOpen ? closeLegend : openLegend}
+              size="small"
+              startIcon={<InfoOutlined />}
+              variant="text"
+            >
+              Legend
+            </Button>
+
+            <Popover
+              open={legendOpen}
+              anchorEl={legendAnchorEl}
+              onClose={closeLegend}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+              <Box sx={{ p: 2, width: 340, maxWidth: '90vw' }}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  sx={{ mb: 1 }}
+                >
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Chip Legend
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    onClick={closeLegend}
+                    aria-label="Close legend"
+                  >
+                    <Close fontSize="small" />
+                  </IconButton>
+                </Stack>
+
+                <List dense>
+                  <ListItem>
+                    <ListItemIcon>{topLegend.icon}</ListItemIcon>
+                    <ListItemText
+                      primary={topLegend.title}
+                      secondary={topLegend.desc}
+                    />
+                  </ListItem>
+
+                  <ListItem>
+                    <ListItemIcon>{statusLegend.icon}</ListItemIcon>
+                    <ListItemText
+                      primary={statusLegend.title}
+                      secondary={statusLegend.desc}
+                    />
+                  </ListItem>
+
+                  <ListItem>
+                    <ListItemIcon>
+                      <Groups fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Group"
+                      secondary="A team or organization this well belongs to."
+                    />
+                  </ListItem>
+                </List>
+
+                <Divider sx={{ my: 1 }} />
+
+                <Typography variant="caption" color="text.secondary">
+                  Tip: hover chips for quick labels; use Legend for full
+                  explanations.
+                </Typography>
+              </Box>
+            </Popover>
+          </>
+        }
+      />
       <CardContent>
         <Grid container spacing={4}>
           <Grid size={{ xs: 12 }}>
@@ -52,30 +197,46 @@ export const CoreWellInfoCard = ({
                 mt: 1,
               }}
             >
-              {(well?.well_purposes && well.well_purposes.length > 0
-                ? well.well_purposes
-                : [well?.thing_type || 'UNKNOWN TYPE']
-              ).map((p) => (
-                <Chip
-                  key={p}
-                  sx={{ fontFamily: 'monospace' }}
-                  label={p?.toLocaleUpperCase() || 'UNKNOWN TYPE'}
-                  color="info"
-                />
+              {topChipValues.map((p) => (
+                <Tooltip key={p ?? 'UNKNOWN'} title={topChipTooltip} arrow>
+                  <span>
+                    <Chip
+                      icon={topChipIcon}
+                      sx={{ fontFamily: 'monospace', px: 1 }}
+                      label={p?.toLocaleUpperCase() || 'UNKNOWN TYPE'}
+                      color="info"
+                    />
+                  </span>
+                </Tooltip>
               ))}
-              <Chip
-                sx={{ fontFamily: 'monospace' }}
-                label={
-                  well?.release_status?.toLocaleUpperCase() || 'UNKNOWN STATUS'
-                }
-                color="error"
-              />
+
+              <Tooltip title="Release status" arrow>
+                <span>
+                  <Chip
+                    sx={{ fontFamily: 'monospace', px: 1 }}
+                    icon={
+                      isPublic ? <Public /> : isPrivate ? <PublicOff /> : null
+                    }
+                    label={
+                      well?.release_status?.toLocaleUpperCase() ||
+                      'UNKNOWN STATUS'
+                    }
+                    color={isPublic ? 'success' : isPrivate ? 'error' : null}
+                  />
+                </span>
+              </Tooltip>
+
               {well?.groups?.map((g) => (
-                <Chip
-                  sx={{ fontFamily: 'monospace' }}
-                  label={g?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
-                  color="primary"
-                />
+                <Tooltip key={g?.id} title="Group" arrow>
+                  <span>
+                    <Chip
+                      icon={<Groups />}
+                      sx={{ fontFamily: 'monospace', px: 1 }}
+                      label={g?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
+                      color="primary"
+                    />
+                  </span>
+                </Tooltip>
               ))}
             </Stack>
           </Grid>
