@@ -116,6 +116,26 @@ export type AuthorResponse = {
 };
 
 /**
+ * Body_bulk_upload_groundwater_levels_observation_groundwater_level_bulk_upload_post
+ */
+export type BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_asset_asset_upload_post
+ */
+export type BodyUploadAssetAssetUploadPost = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
  * Conformance
  */
 export type Conformance = {
@@ -271,6 +291,10 @@ export type CreateContact = {
     thing_id: number;
     role: Role;
     contact_type?: ContactType;
+    /**
+     * Nma Pk Owners
+     */
+    nma_pk_owners?: string | null;
     /**
      * Emails
      */
@@ -3084,6 +3108,16 @@ export type ValidationError = {
      * Error Type
      */
     type: string;
+    /**
+     * Input
+     */
+    input?: unknown;
+    /**
+     * Context
+     */
+    ctx?: {
+        [key: string]: unknown;
+    };
 };
 
 /**
@@ -3465,26 +3499,6 @@ export type ElevationMethod = 'Altimeter' | 'Differentially corrected GPS' | 'Su
 export type EmailType = 'Primary' | 'Work' | 'Personal';
 
 /**
- * Body_bulk_upload_groundwater_levels_observation_groundwater_level_bulk_upload_post
- */
-export type FastapiCompatV2BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost = {
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_asset_asset_upload_post
- */
-export type FastapiCompatV2BodyUploadAssetAssetUploadPost = {
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
  * formation_code
  */
 export type FormationCode = '000EXRV' | '000IRSV' | '050QUAL' | '100QBAS' | '110ALVM' | '110AVMB' | '110BLSN' | '110NTGU' | '110PTODC' | '111MCCR' | '112ANCH' | '112CURB' | '112LAMA' | '112LAMAb' | '112LGUN' | '112QTBF' | '112QTBFlac' | '112QTBFpd' | '112QTBFppm' | '112SNTF' | '112SNTFA' | '112SNTFOB' | '112SNTFP' | '112TRTO' | '120DTIL' | '120ELRT' | '120IRSV' | '120SBLC' | '120SRVB' | '120SRVBf' | '120TSBV_Lower' | '120TSBV_Upper' | '121CHMT' | '121CHMTv' | '121CHMTvs' | '121OGLL' | '121PUYEF' | '121TSUQ' | '121TSUQa' | '121TSUQacu' | '121TSUQacuf' | '121TSUQaml' | '121TSUQb' | '121TSUQbfl' | '121TSUQbfm' | '121TSUQbp' | '121TSUQce' | '121TSUQe' | '121TSUQs' | '121TSUQsa' | '121TSUQsc' | '121TSUQsf' | '122CHOC' | '122CRTO' | '122OJOC' | '122PICR' | '122PPTS' | '122SNTFP' | '123DTILSPRS' | '123DTMGandbas' | '123DTMGign' | '123DTMGrhydac' | '123ESPN' | '123GLST' | '123PICS' | '123PICSc' | '123PICSl' | '123SPRSDTMGlava' | '123SPRSlower' | '123SPRSmid_uppe' | '124BACA' | '124CBMN' | '124LLVS' | '124PSCN' | '124RGIN' | '124SNJS' | '124TPCS' | '125NCMN' | '125NCMNS' | '125RTON' | '130CALDFLOOR' | '180TKSCC_Upper' | '180TKTR' | '210CRCS' | '210GLUPC_Lower' | '210HOSTD' | '210MCDK' | '210MNCS' | '210MNCSL' | '210MNCSU' | '211CLFHV' | '211CRLL' | '211CRVC' | '211DKOT' | '211DLCO' | '211DLTN' | '211FRHS' | '211FRLD' | '211FRMG' | '211GBSNC' | '211GLLG' | '211GLLP' | '211GRRG' | '211GRRS' | '211HOST' | '211KRLD' | '211LWIS' | '211MENF' | '211MENFU' | '211MVRD' | '211OJAM' | '211PCCF' | '211PIRR' | '211PNLK' | '211SMKH' | '211TLLS' | '212KTRP' | '217PRGR' | '220ENRD' | '220JURC' | '220NAVJ' | '221BLFF' | '221CSPG' | '221ERADU' | '221MRSN' | '221MRSN/BBSN' | '221MRSN/JCKP' | '221MRSN/RCAP' | '221MRSN/WWCN' | '221SLWS' | '221SMVL' | '221TDLT' | '221WSRC' | '221ZUNIS' | '231AGZC' | '231AGZCU' | '231CHNL' | '231CORR' | '231DCKM' | '231PFDF' | '231PFDFL' | '231PFDFM' | '231PFDFU' | '231RCKP' | '231SNRS' | '231SNSL' | '231SRMP' | '231WNGT' | '260SNAN' | '260SNAN_lower' | '261SNGL' | '300YESO' | '300YESO_lower' | '300YESO_upper' | '310ABO' | '310DCLL' | '310GLOR' | '310MBLC' | '310TRRS' | '310YESO' | '310YESOG' | '312CSTL' | '312RSLR' | '313ARTS' | '313BLCN' | '313BRUC' | '313CKBF' | '313CLBD' | '313CPTN' | '313GDLP' | '313GOSP' | '313SADG' | '313SADR' | '313TNSL' | '313YATS' | '315LABR' | '315YESOABO' | '318ABO' | '318BSPG' | '318JOYT' | '318YESO' | '319BRSM' | '320HLDR' | '320PENN' | '320SNDI' | '321SGDC' | '322BEMN' | '325GBLR' | '325MDER' | '325MDERL' | '325MDERU' | '325SAND' | '326MGDL' | '340EPRS' | '350PZBA' | '350PZBB' | '400EMBD' | '400PCMB' | '400PREC' | '400PRECintr' | '400PRST' | '400TUSS' | '410PRCG' | '410PRCGf' | '410PRCQ' | '410PRCQf' | '121GILA' | '312DYLK' | '120WMVL' | '313GRBG' | '318ABOL' | '318ABOU' | '112SNTFU' | '310FRNR' | '312OCHO' | '313AZOT' | '313QUEN' | '319HUCO' | '313SVRV' | '313CABD' | '320GRMS' | '211CLRDH' | '120BRLM' | '122RUBO' | '313SADRL' | '313SADRU' | '313BRNL' | '318CPDR' | '121BDHC' | '313SADY' | '221SRFLL' | '221BLUF' | '221COSP' | '317ABYS' | '221BRSB' | '310SYDR' | '400SDVL' | '221SRFL' | '310SGRC' | '231TCVS' | '211DCRS' | '211ALSN' | '211LVNN' | '211MORD' | '210PRMD' | '124ANMS' | '211NBRR' | '111ALVM' | '122SNTFL' | '111CPLN' | '120CRSN' | '111CRMS' | '111CRMSA' | '111SPOL' | '110TURT' | '221RCPR' | '320BLNG' | '112ANCHsr' | '121TSUQae' | '230TRSC' | '122TSUQdx' | '123PICSu' | '123PICSm' | '123PICSmc' | '120VBVC' | '120VCSS' | '124DMDT' | '325ALMT' | '400SAND' | '318VCPK' | '318BSVP' | '100ALVM' | '310PRMN' | '110AVPS' | '313CRCX' | '112SLBL' | '112SBCRC' | '313CRDM' | '112SBDM' | '120BLSN' | '112SBCR' | '112HCBL' | '120IVIG' | '112RLBL' | '112EFBL' | '112GRBL' | '123SAND' | '210MRNH' | '320ALMT' | '313DLRM' | '300PLZC' | '122SPRS' | '110AVTV' | '313DMBS' | '120ERSV';
@@ -3639,7 +3653,7 @@ export type WellPumpType = 'Submersible' | 'Jet' | 'Line Shaft' | 'Hand';
 export type WellPurpose = 'Unknown' | 'Open, unequipped well' | 'Commercial' | 'Domestic' | 'Power generation' | 'Irrigation' | 'Livestock' | 'Mining' | 'Industrial' | 'Observation' | 'Public supply' | 'Shared domestic' | 'Institutional' | 'Unused' | 'Exploration' | 'Monitoring' | 'Production' | 'Injection';
 
 export type UploadAssetAssetUploadPostData = {
-    body: FastapiCompatV2BodyUploadAssetAssetUploadPost;
+    body: BodyUploadAssetAssetUploadPost;
     path?: never;
     query?: {
         /**
@@ -5879,7 +5893,7 @@ export type AddWaterChemistryObservationObservationWaterChemistryPostResponses =
 export type AddWaterChemistryObservationObservationWaterChemistryPostResponse = AddWaterChemistryObservationObservationWaterChemistryPostResponses[keyof AddWaterChemistryObservationObservationWaterChemistryPostResponses];
 
 export type BulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostData = {
-    body: FastapiCompatV2BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost;
+    body: BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost;
     path?: never;
     query?: never;
     url: '/observation/groundwater-level/bulk-upload';
