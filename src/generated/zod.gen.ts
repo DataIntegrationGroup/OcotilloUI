@@ -88,6 +88,20 @@ export const zAuthorResponse = z.object({
 });
 
 /**
+ * Body_bulk_upload_groundwater_levels_observation_groundwater_level_bulk_upload_post
+ */
+export const zBodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost = z.object({
+    file: z.string()
+});
+
+/**
+ * Body_upload_asset_asset_upload_post
+ */
+export const zBodyUploadAssetAssetUploadPost = z.object({
+    file: z.string()
+});
+
+/**
  * Conformance
  */
 export const zConformance = z.object({
@@ -345,6 +359,10 @@ export const zCreateContact = z.object({
     thing_id: z.int(),
     role: zRole,
     contact_type: z.optional(zContactType),
+    nma_pk_owners: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     emails: z.optional(z.union([
         z.array(zCreateEmail),
         z.null()
@@ -1727,7 +1745,9 @@ export const zValidationError = z.object({
         z.int()
     ])),
     msg: z.string(),
-    type: z.string()
+    type: z.string(),
+    input: z.optional(z.unknown()),
+    ctx: z.optional(z.record(z.string(), z.unknown()))
 });
 
 /**
@@ -3557,22 +3577,8 @@ export const zWaterLevelBulkUploadResponse = z.object({
     validation_errors: z.array(z.string())
 });
 
-/**
- * Body_bulk_upload_groundwater_levels_observation_groundwater_level_bulk_upload_post
- */
-export const zFastapiCompatV2BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost = z.object({
-    file: z.string()
-});
-
-/**
- * Body_upload_asset_asset_upload_post
- */
-export const zFastapiCompatV2BodyUploadAssetAssetUploadPost = z.object({
-    file: z.string()
-});
-
 export const zUploadAssetAssetUploadPostData = z.object({
-    body: zFastapiCompatV2BodyUploadAssetAssetUploadPost,
+    body: zBodyUploadAssetAssetUploadPost,
     path: z.optional(z.never()),
     query: z.optional(z.object({
         client: z.optional(z.unknown()),
@@ -4533,7 +4539,7 @@ export const zAddWaterChemistryObservationObservationWaterChemistryPostData = z.
 export const zAddWaterChemistryObservationObservationWaterChemistryPostResponse = zWaterChemistryObservationResponse;
 
 export const zBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostData = z.object({
-    body: zFastapiCompatV2BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost,
+    body: zBodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost,
     path: z.optional(z.never()),
     query: z.optional(z.never())
 });
