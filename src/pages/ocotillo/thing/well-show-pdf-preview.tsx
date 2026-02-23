@@ -40,7 +40,6 @@ export const WellShowPdfPreview = () => {
       includeNotes: true,
       includeAssets: true,
       includeContacts: true,
-      includeObservations: true,
       includeBlankPage: false,
       density: 'normal',
     },
@@ -177,12 +176,6 @@ export const WellShowPdfPreview = () => {
                       control={control}
                       name="includeAssets"
                       label="Assets/Images"
-                      labelPlacement="end"
-                    />
-                    <ControlledCheckbox
-                      control={control}
-                      name="includeObservations"
-                      label="Observations"
                       labelPlacement="end"
                     />
                     <ControlledCheckbox

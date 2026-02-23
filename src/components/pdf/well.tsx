@@ -306,69 +306,75 @@ export const WellPDF = ({
             </View>
           </View>
         </View>
-        <View style={styles.section}>
-          <View style={styles.twoByTwoGrid}>
-            <View style={styles.cell2}>
-              <LineItem title="Primary Contact" value={primaryContact?.name} />
-            </View>
-            <View style={styles.cell2}>
-              <LineItem
-                title="Secondary Contact"
-                value={secondaryContact?.name}
-              />
-            </View>
-            <View style={styles.cell2}>
-              <SubLineItem title="Role" value={primaryContact?.role} />
-            </View>
-            <View style={styles.cell2}>
-              <SubLineItem title="Role" value={secondaryContact?.role} />
-            </View>
-            <View style={styles.cell2}>
-              <SubLineItem
-                title="Address"
-                value={formatAddress(primaryContact?.addresses[0])}
-              />
-            </View>
-            <View style={styles.cell2}>
-              <SubLineItem
-                title="Address"
-                value={formatAddress(secondaryContact?.addresses[0])}
-              />
-            </View>
 
-            <View style={styles.cell2}>
-              <SubLineItem
-                title="Phone"
-                value={
-                  primaryContact?.phones?.[0]?.phone_number ??
-                  primaryContact?.phones?.[0]?.nma_phone_number
-                }
-              />
-            </View>
-            <View style={styles.cell2}>
-              <SubLineItem
-                title="Phone"
-                value={
-                  secondaryContact?.phones?.[0]?.phone_number ??
-                  secondaryContact?.phones?.[0]?.nma_phone_number
-                }
-              />
-            </View>
-
-            <View style={styles.cell2}>
-              <SubLineItem
-                title="Email"
-                value={primaryContact?.emails?.[0]?.email}
-              />
-            </View>
-            <View style={styles.cell2}>
-              <SubLineItem
-                title="Email"
-                value={secondaryContact?.emails?.[0]?.email}
-              />
+        {/* Contacts – only if enabled */}
+        {options.includeContacts ? (
+          <View style={styles.section}>
+            <View style={styles.twoByTwoGrid}>
+              <View style={styles.cell2}>
+                <LineItem
+                  title="Primary Contact"
+                  value={primaryContact?.name}
+                />
+              </View>
+              <View style={styles.cell2}>
+                <LineItem
+                  title="Secondary Contact"
+                  value={secondaryContact?.name}
+                />
+              </View>
+              <View style={styles.cell2}>
+                <SubLineItem title="Role" value={primaryContact?.role} />
+              </View>
+              <View style={styles.cell2}>
+                <SubLineItem title="Role" value={secondaryContact?.role} />
+              </View>
+              <View style={styles.cell2}>
+                <SubLineItem
+                  title="Address"
+                  value={formatAddress(primaryContact?.addresses?.[0])}
+                />
+              </View>
+              <View style={styles.cell2}>
+                <SubLineItem
+                  title="Address"
+                  value={formatAddress(secondaryContact?.addresses?.[0])}
+                />
+              </View>
+              <View style={styles.cell2}>
+                <SubLineItem
+                  title="Phone"
+                  value={
+                    primaryContact?.phones?.[0]?.phone_number ??
+                    primaryContact?.phones?.[0]?.nma_phone_number
+                  }
+                />
+              </View>
+              <View style={styles.cell2}>
+                <SubLineItem
+                  title="Phone"
+                  value={
+                    secondaryContact?.phones?.[0]?.phone_number ??
+                    secondaryContact?.phones?.[0]?.nma_phone_number
+                  }
+                />
+              </View>
+              <View style={styles.cell2}>
+                <SubLineItem
+                  title="Email"
+                  value={primaryContact?.emails?.[0]?.email}
+                />
+              </View>
+              <View style={styles.cell2}>
+                <SubLineItem
+                  title="Email"
+                  value={secondaryContact?.emails?.[0]?.email}
+                />
+              </View>
             </View>
           </View>
-        </View>
+        ) : null}
+
         <View style={styles.section}>
           <View style={styles.twoByTwoGrid}>
             <View style={styles.cell3}>
@@ -427,15 +433,20 @@ export const WellPDF = ({
             </View>
             <View style={styles.cell3}></View>
           </View>
-          {sections.map((section) => (
-            <LineItem
-              key={section.title}
-              title={formatSectionTitle(section.title)}
-              value={section.value ?? undefined}
-            />
-          ))}
+
+          {/* Notes – only if enabled  */}
+          {options.includeNotes
+            ? noteSections.map((section) => (
+                <LineItem
+                  key={section.title}
+                  title={formatSectionTitle(section.title)}
+                  value={section.value ?? undefined}
+                />
+              ))
+            : null}
         </View>
-        {assets.length === 0 && (
+        {(options.includeAssets !== false && assets.length > 0) ||
+        options.includeAssets === false ? null : (
           <Text style={styles.pageNote}>
             (No images are associated with this well)
           </Text>
@@ -562,7 +573,7 @@ export const WellPDF = ({
           </View>
         </View>
       </Page>
-      {assets.length > 0 && (
+      {assets.length > 0 && options.includeAssets !== false && (
         <Page size="A4" style={styles.page}>
           <Text style={styles.title}>Field Compilation Notes</Text>
           <View style={styles.section}>
