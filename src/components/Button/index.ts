@@ -1,1 +1,1 @@
-export * from './WellPDFDownload'
+export * from './WellPDFPreview'

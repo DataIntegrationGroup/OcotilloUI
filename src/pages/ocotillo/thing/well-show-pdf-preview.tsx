@@ -1,19 +1,32 @@
 import { IContact, IWell } from '@/interfaces/ocotillo'
 import {
+  Accordion,
+  AccordionActions,
+  AccordionDetails,
+  AccordionSummary,
   Box,
+  Button,
   Card,
   CardContent,
+  Divider,
   IconButton,
   Skeleton,
+  Stack,
   Typography,
 } from '@mui/material'
 import { HttpError, useList, useNavigation, useShow } from '@refinedev/core'
 import { ListButton, Show, ShowButton, useDataGrid } from '@refinedev/mui'
 import { useParams } from 'react-router-dom'
-import { ArrowBack } from '@mui/icons-material'
+import { ArrowBack, ExpandMore } from '@mui/icons-material'
 import { PDFViewer } from '@react-pdf/renderer'
-import { WellPDF } from '@/components'
+import {
+  ControlledCheckbox,
+  ControlledRadioFormSelection,
+  WellPDF,
+} from '@/components'
 import { useEffect, useState } from 'react'
+import { IPdfOptions } from '@/interfaces'
+import { useForm } from '@refinedev/react-hook-form'
 
 export const WellShowPdfPreview = () => {
   const { push } = useNavigation()
@@ -21,6 +34,20 @@ export const WellShowPdfPreview = () => {
   const [isViewerReady, setIsViewerReady] = useState(false)
 
   const handleBack = () => push(`/ocotillo/well/show/${id}`)
+
+  const { control, watch, reset } = useForm<IPdfOptions>({
+    defaultValues: {
+      includeNotes: true,
+      includeAssets: true,
+      includeContacts: true,
+      includeObservations: true,
+      includeBlankPage: false,
+      density: 'normal',
+    },
+    mode: 'onChange', // update on every change → live preview
+  })
+
+  const currentOptions = watch()
 
   const {
     queryResult: { data: wellData, isLoading: isWellLoading },
@@ -96,6 +123,90 @@ export const WellShowPdfPreview = () => {
     >
       <Card elevation={2}>
         <CardContent>
+          <Box sx={{ mb: 2 }}>
+            <Accordion
+              defaultExpanded
+              disableGutters
+              variant="outlined"
+              sx={{
+                p: 1,
+                bgcolor: 'grey.50',
+                borderRadius: 2,
+              }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMore />}
+                aria-controls="density-content"
+                id="density-header"
+              >
+                <Typography variant="subtitle1" fontWeight="medium">
+                  PDF Export Options
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                  <ControlledRadioFormSelection
+                    name="density"
+                    control={control}
+                    label="Density:"
+                    options={[
+                      { value: 'normal', label: 'Normal', description: null },
+                      { value: 'dense', label: 'Dense', description: null },
+                      {
+                        value: 'very-dense',
+                        label: 'Very Dense',
+                        description: null,
+                      },
+                    ]}
+                  />
+                  <Stack direction="column">
+                    <Typography>Sections to include:</Typography>
+                    <ControlledCheckbox
+                      control={control}
+                      name="includeNotes"
+                      label="Notes"
+                      labelPlacement="end"
+                    />
+                    <ControlledCheckbox
+                      control={control}
+                      name="includeContacts"
+                      label="Contacts"
+                      labelPlacement="end"
+                    />
+                    <ControlledCheckbox
+                      control={control}
+                      name="includeAssets"
+                      label="Assets/Images"
+                      labelPlacement="end"
+                    />
+                    <ControlledCheckbox
+                      control={control}
+                      name="includeObservations"
+                      label="Observations"
+                      labelPlacement="end"
+                    />
+                    <ControlledCheckbox
+                      control={control}
+                      name="includeBlankPage"
+                      label="Blank Page"
+                      labelPlacement="end"
+                    />
+                  </Stack>
+                </Box>
+
+                <Divider sx={{ mt: 2, mb: 2.5 }} />
+
+                <Typography variant="caption" color="text.secondary">
+                  Changes are applied live to the preview below.
+                </Typography>
+              </AccordionDetails>
+              <AccordionActions sx={{ mt: -6.5 }}>
+                <Button variant="text" onClick={() => reset()}>
+                  Reset
+                </Button>
+              </AccordionActions>
+            </Accordion>
+          </Box>
           <Box sx={{ width: '100%', height: '90vh' }}>
             {(!isViewerReady || isLoading) && (
               <Skeleton variant="rectangular" height="100%" />
@@ -115,6 +226,7 @@ export const WellShowPdfPreview = () => {
                     assets={assets}
                     contacts={contacts}
                     observations={observations}
+                    options={currentOptions}
                   />
                 </PDFViewer>
               </Box>

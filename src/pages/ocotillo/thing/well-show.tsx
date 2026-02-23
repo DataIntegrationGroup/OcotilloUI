@@ -15,7 +15,7 @@ import {
   AlternateIdsAccordion,
   USGSInfoCard,
   OSEPODInfoCard,
-  WellPDFDownloadButton as DownloadButton,
+  WellPDFPreviewButton as PreviewAndDownloadButton,
   WellScreensAccordion,
   EquipmentAccordion,
   NotesAccordion,
@@ -102,7 +102,7 @@ export const WellShow = () => {
       headerButtons={({ defaultButtons }) => (
         <Box sx={{ display: 'flex', gap: 1 }}>
           {defaultButtons}
-          <DownloadButton well={well} isLoading={isLoading} />
+          <PreviewAndDownloadButton well={well} isLoading={isLoading} />
         </Box>
       )}
     >

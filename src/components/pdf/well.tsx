@@ -11,91 +11,176 @@ import {
 } from '@react-pdf/renderer'
 import { useMemo } from 'react'
 import { IObservation } from '@/interfaces/ocotillo/IObservation'
-
-const styles = StyleSheet.create({
-  page: {
-    flexDirection: 'column',
-    backgroundColor: '#ffffff',
-    padding: 20,
-  },
-  title: {
-    fontSize: 20,
-    paddingBottom: 25,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  section: {
-    marginBottom: 10,
-  },
-  subSection: {
-    marginLeft: 16,
-    marginBottom: 0,
-  },
-  twoByTwoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  cell3: {
-    width: '32%', // slightly less than 1/3 for spacing
-    marginBottom: 2,
-  },
-  cell2: {
-    width: '48%', // slightly less than 1/2 for spacing
-    marginBottom: 2,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  value: {
-    fontSize: 12,
-    marginBottom: 5,
-  },
-  imgLabel: {
-    fontSize: 10,
-    margin: 4,
-  },
-  pageNote: {
-    fontSize: 12,
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  img: {
-    width: 175,
-    height: 'auto',
-    marginTop: 4,
-    marginLeft: 4,
-    marginRight: 4,
-    marginBottom: 0,
-    objectFit: 'contain',
-    alignSelf: 'flex-start',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 40,
-    right: 40,
-    textAlign: 'center',
-  },
-  footerText: {
-    fontSize: 9,
-    color: '#777',
-  },
-})
+import { IPdfOptions } from '@/interfaces'
 
 export const WellPDF = ({
   well,
   assets,
   contacts,
   observations,
+  options = {},
 }: {
   well: IWell
   assets: BaseRecord[]
   contacts: IContact[]
   observations: readonly Partial<IObservation>[]
+  options: IPdfOptions
 }) => {
+  const density = options.density ?? 'normal' // default to normal
+
+  // Helper to map density level → multiplier / value
+  const getScale = (normal: number, dense: number, veryDense: number) => {
+    if (density === 'very-dense') return veryDense
+    if (density === 'dense') return dense
+    return normal
+  }
+
+  const styles = StyleSheet.create({
+    page: {
+      flexDirection: 'column',
+      backgroundColor: '#ffffff',
+      padding: getScale(20, 14, 10),
+    },
+    title: {
+      fontSize: getScale(20, 17, 14),
+      paddingBottom: getScale(25, 15, 10),
+      fontWeight: 'bold',
+      textAlign: 'center',
+    },
+    section: {
+      marginBottom: getScale(10, 6, 3),
+    },
+    subSection: {
+      marginLeft: getScale(16, 12, 8),
+      marginBottom: 0,
+    },
+    twoByTwoGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      marginBottom: getScale(10, 6, 3),
+    },
+    cell3: {
+      width: density === 'very-dense' ? '31.5%' : '32%', // tiny squeeze in very-dense
+      marginBottom: getScale(2, 1.5, 1),
+    },
+    cell2: {
+      width: density === 'very-dense' ? '49%' : '48%',
+      marginBottom: getScale(2, 1.5, 1),
+    },
+    label: {
+      fontSize: getScale(12, 11, 9),
+      fontWeight: 'bold',
+    },
+    value: {
+      fontSize: getScale(12, 11, 9),
+      marginBottom: getScale(5, 3, 2),
+    },
+    imgLabel: {
+      fontSize: getScale(10, 9, 7),
+      margin: getScale(4, 3, 2),
+    },
+    pageNote: {
+      fontSize: getScale(12, 10, 9),
+      marginBottom: 5,
+      textAlign: 'center',
+    },
+    img: {
+      width: getScale(175, 140, 100),
+      height: 'auto',
+      marginTop: getScale(4, 3, 2),
+      marginLeft: getScale(4, 3, 2),
+      marginRight: getScale(4, 3, 2),
+      marginBottom: 0,
+      objectFit: 'contain',
+      alignSelf: 'flex-start',
+    },
+    footer: {
+      position: 'absolute',
+      bottom: getScale(20, 14, 10),
+      left: 40,
+      right: 40,
+      textAlign: 'center',
+    },
+    footerText: {
+      fontSize: getScale(9, 8.5, 7.5),
+      color: '#777',
+    },
+  })
+
+  const formatTitle = (title: string) => {
+    if (title.endsWith(':') || title.endsWith('?')) {
+      return title
+    }
+    return `${title}:`
+  }
+
+  const LineItem = ({
+    title,
+    value,
+  }: {
+    title: string
+    value?: string | number
+  }) => {
+    const safe = (v: React.ReactNode, fallback = 'N/A') =>
+      v === null || v === undefined || v === '' ? fallback : v
+
+    return (
+      <View style={styles.section}>
+        <Text style={styles.label}>{formatTitle(title)}</Text>
+        <Text style={styles.value}>{safe(value)}</Text>
+      </View>
+    )
+  }
+
+  const SubLineItem = ({
+    title,
+    value,
+  }: {
+    title: string
+    value?: string | number
+  }) => {
+    const safe = (v: React.ReactNode, fallback = 'N/A') =>
+      v === null || v === undefined || v === '' ? fallback : v
+
+    return (
+      <View style={styles.subSection}>
+        <Text style={styles.label}>{formatTitle(title)}</Text>
+        <Text style={styles.value}>{safe(value)}</Text>
+      </View>
+    )
+  }
+
+  const formatAddress = (a?: IAddress | null): string => {
+    if (!a) return 'N/A'
+
+    const lines: string[] = []
+
+    if (a.address_line_1) lines.push(a.address_line_1)
+    if (a.address_line_2) lines.push(a.address_line_2)
+
+    const cityStateZip = [a.city, a.state, a.postal_code]
+      .filter(Boolean)
+      .join(', ')
+    if (cityStateZip) lines.push(cityStateZip)
+
+    if (a.country) lines.push(a.country)
+
+    // React-PDF supports "\n" for multi-line text
+    return lines.join('\n')
+  }
+
+  const Footer = ({ wellId }: { wellId: string | number }) => (
+    <View
+      fixed
+      style={styles.footer}
+      render={({ pageNumber }) => (
+        <Text style={styles.footerText}>
+          {`Well ID: ${wellId} | Page ${pageNumber}`}
+        </Text>
+      )}
+    />
+  )
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
 
   const { mostRecentObservation } = useMemo(() => {
@@ -496,85 +581,13 @@ export const WellPDF = ({
           <Footer wellId={well?.name} />
         </Page>
       )}
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Field Compilation Notes</Text>
-        <Text style={styles.pageNote}>(Page intentionally left blank)</Text>
-        <Footer wellId={well?.name} />
-      </Page>
+      {options.includeBlankPage ? (
+        <Page size="A4" style={styles.page}>
+          <Text style={styles.title}>Field Compilation Notes</Text>
+          <Text style={styles.pageNote}>(Page intentionally left blank)</Text>
+          <Footer wellId={well?.name} />
+        </Page>
+      ) : null}
     </Document>
   )
 }
-
-const formatTitle = (title: string) => {
-  if (title.endsWith(':') || title.endsWith('?')) {
-    return title
-  }
-  return `${title}:`
-}
-
-const LineItem = ({
-  title,
-  value,
-}: {
-  title: string
-  value?: string | number
-}) => {
-  const safe = (v: React.ReactNode, fallback = 'N/A') =>
-    v === null || v === undefined || v === '' ? fallback : v
-
-  return (
-    <View style={styles.section}>
-      <Text style={styles.label}>{formatTitle(title)}</Text>
-      <Text style={styles.value}>{safe(value)}</Text>
-    </View>
-  )
-}
-
-const SubLineItem = ({
-  title,
-  value,
-}: {
-  title: string
-  value?: string | number
-}) => {
-  const safe = (v: React.ReactNode, fallback = 'N/A') =>
-    v === null || v === undefined || v === '' ? fallback : v
-
-  return (
-    <View style={styles.subSection}>
-      <Text style={styles.label}>{formatTitle(title)}</Text>
-      <Text style={styles.value}>{safe(value)}</Text>
-    </View>
-  )
-}
-
-export const formatAddress = (a?: IAddress | null): string => {
-  if (!a) return 'N/A'
-
-  const lines: string[] = []
-
-  if (a.address_line_1) lines.push(a.address_line_1)
-  if (a.address_line_2) lines.push(a.address_line_2)
-
-  const cityStateZip = [a.city, a.state, a.postal_code]
-    .filter(Boolean)
-    .join(', ')
-  if (cityStateZip) lines.push(cityStateZip)
-
-  if (a.country) lines.push(a.country)
-
-  // React-PDF supports "\n" for multi-line text
-  return lines.join('\n')
-}
-
-const Footer = ({ wellId }: { wellId: string | number }) => (
-  <View
-    fixed
-    style={styles.footer}
-    render={({ pageNumber }) => (
-      <Text style={styles.footerText}>
-        {`Well ID: ${wellId} | Page ${pageNumber}`}
-      </Text>
-    )}
-  />
-)
