@@ -24,6 +24,7 @@ import {
 } from '@mui/material'
 import { ArrowDropDown, Download, Visibility } from '@mui/icons-material'
 import { IPdfOptions } from '@/interfaces'
+import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 
 export const WellPDFPreviewButton = ({
   well,
@@ -170,6 +171,7 @@ export const WellPDFPreviewButton = ({
         <MenuItem
           onClick={() => {
             handleMenuClose()
+            handleDownload(PDF_DEFAULT_VALUES)
           }}
           disabled={disabled}
         >
@@ -177,7 +179,21 @@ export const WellPDFPreviewButton = ({
             <Download />
           </ListItemIcon>
           <ListItemText>
-            {isGenerating ? 'Generating...' : 'Download PDF'}
+            {isGenerating ? 'Generating...' : 'Download Full PDF'}
+          </ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleMenuClose()
+            handleDownload(PDF_SINGLE_PAGE_OPTION)
+          }}
+          disabled={disabled}
+        >
+          <ListItemIcon>
+            <Download />
+          </ListItemIcon>
+          <ListItemText>
+            {isGenerating ? 'Generating...' : 'Download Single-Page PDF'}
           </ListItemText>
         </MenuItem>
       </Menu>

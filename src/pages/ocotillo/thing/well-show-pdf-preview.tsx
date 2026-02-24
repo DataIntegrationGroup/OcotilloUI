@@ -27,6 +27,7 @@ import {
 import { useEffect, useState } from 'react'
 import { IPdfOptions } from '@/interfaces'
 import { useForm } from '@refinedev/react-hook-form'
+import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 
 export const WellShowPdfPreview = () => {
   const { push } = useNavigation()
@@ -35,14 +36,8 @@ export const WellShowPdfPreview = () => {
 
   const handleBack = () => push(`/ocotillo/well/show/${id}`)
 
-  const { control, watch, reset } = useForm<IPdfOptions>({
-    defaultValues: {
-      includeNotes: true,
-      includeAssets: true,
-      includeContacts: true,
-      includeBlankPage: false,
-      density: 'normal',
-    },
+  const { control, watch, reset, setValue } = useForm<IPdfOptions>({
+    defaultValues: PDF_DEFAULT_VALUES,
     mode: 'onChange', // update on every change → live preview
   })
 
@@ -194,6 +189,30 @@ export const WellShowPdfPreview = () => {
                 </Typography>
               </AccordionDetails>
               <AccordionActions sx={{ mt: -6.5 }}>
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    setValue('density', PDF_SINGLE_PAGE_OPTION.density)
+                    setValue(
+                      'includeNotes',
+                      PDF_SINGLE_PAGE_OPTION.includeNotes
+                    )
+                    setValue(
+                      'includeContacts',
+                      PDF_SINGLE_PAGE_OPTION.includeContacts
+                    )
+                    setValue(
+                      'includeAssets',
+                      PDF_SINGLE_PAGE_OPTION.includeAssets
+                    )
+                    setValue(
+                      'includeBlackPage',
+                      PDF_SINGLE_PAGE_OPTION.includeBlankPage
+                    )
+                  }}
+                >
+                  Single Page Mode
+                </Button>
                 <Button variant="text" onClick={() => reset()}>
                   Reset
                 </Button>

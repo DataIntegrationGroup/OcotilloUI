@@ -12,6 +12,7 @@ import {
 import { useMemo } from 'react'
 import { IObservation } from '@/interfaces/ocotillo/IObservation'
 import { IPdfOptions } from '@/interfaces'
+import { PDF_SINGLE_PAGE_OPTION } from '@/config'
 
 export const WellPDF = ({
   well,
@@ -231,9 +232,11 @@ export const WellPDF = ({
     ...(well?.sampling_procedure_notes ?? []),
   ]
 
-  const noteSections = groupNotesByType(allNotes, { defaultTitle: 'Notes' })
-  const sections =
-    noteSections.length > 0 ? noteSections : [{ title: 'Notes', value: null }]
+  const noteSections =
+    groupNotesByType(allNotes, { defaultTitle: 'Notes' }).length > 0
+      ? groupNotesByType(allNotes, { defaultTitle: 'Notes' })
+      : [{ title: 'Notes', value: null }]
+
   const formatSectionTitle = (title: string) =>
     title.toLowerCase().endsWith('notes') ? title : `${title} Notes`
 
@@ -245,6 +248,8 @@ export const WellPDF = ({
 
   const { easting, northing } =
     well?.current_location?.properties?.utm_coordinates
+
+  const isSinglePage = options === PDF_SINGLE_PAGE_OPTION
 
   return (
     <Document
