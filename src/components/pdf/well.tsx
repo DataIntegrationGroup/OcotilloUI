@@ -12,7 +12,6 @@ import {
 import { useMemo } from 'react'
 import { IObservation } from '@/interfaces/ocotillo/IObservation'
 import { IPdfOptions } from '@/interfaces'
-import { PDF_SINGLE_PAGE_OPTION } from '@/config'
 
 export const WellPDF = ({
   well,
@@ -249,7 +248,299 @@ export const WellPDF = ({
   const { easting, northing } =
     well?.current_location?.properties?.utm_coordinates
 
-  const isSinglePage = options === PDF_SINGLE_PAGE_OPTION
+  const CoreInformation = () => (
+    <View style={styles.section}>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell3}>
+          <LineItem title="Well Id" value={well?.name} />
+        </View>
+        <View style={styles.cell3}></View>
+        <View style={styles.cell3}>
+          <Text style={styles.label}>Date:</Text>
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Easting/Northing"
+            value={`${easting?.toFixed(0)}, ${northing?.toFixed(0)}`}
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Vertical Datum"
+            value={well?.current_location?.properties?.vertical_datum}
+          />
+        </View>
+        <View style={styles.cell3}></View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Latitude/Longitude"
+            value={
+              well?.current_location?.geometry
+                ? `${lat?.toFixed(6)}, ${lon?.toFixed(6)}`
+                : 'N/A'
+            }
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Elevation"
+            value={`${well?.current_location?.properties?.elevation?.toFixed(2) || 'N/A'} ${
+              well?.current_location?.properties?.elevation_unit
+                ? ` ${well?.current_location?.properties?.elevation_unit}`
+                : null
+            }`}
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Elevation Method"
+            value={well?.current_location?.properties?.elevation_method}
+          />
+        </View>
+      </View>
+    </View>
+  )
+
+  const ContactInformation = () => (
+    <View style={styles.section}>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell2}>
+          <LineItem title="Primary Contact" value={primaryContact?.name} />
+        </View>
+        <View style={styles.cell2}>
+          <LineItem title="Secondary Contact" value={secondaryContact?.name} />
+        </View>
+        <View style={styles.cell2}>
+          <SubLineItem title="Role" value={primaryContact?.role} />
+        </View>
+        <View style={styles.cell2}>
+          <SubLineItem title="Role" value={secondaryContact?.role} />
+        </View>
+        <View style={styles.cell2}>
+          <SubLineItem
+            title="Address"
+            value={formatAddress(primaryContact?.addresses?.[0])}
+          />
+        </View>
+        <View style={styles.cell2}>
+          <SubLineItem
+            title="Address"
+            value={formatAddress(secondaryContact?.addresses?.[0])}
+          />
+        </View>
+        <View style={styles.cell2}>
+          <SubLineItem
+            title="Phone"
+            value={
+              primaryContact?.phones?.[0]?.phone_number ??
+              primaryContact?.phones?.[0]?.nma_phone_number
+            }
+          />
+        </View>
+        <View style={styles.cell2}>
+          <SubLineItem
+            title="Phone"
+            value={
+              secondaryContact?.phones?.[0]?.phone_number ??
+              secondaryContact?.phones?.[0]?.nma_phone_number
+            }
+          />
+        </View>
+        <View style={styles.cell2}>
+          <SubLineItem
+            title="Email"
+            value={primaryContact?.emails?.[0]?.email}
+          />
+        </View>
+        <View style={styles.cell2}>
+          <SubLineItem
+            title="Email"
+            value={secondaryContact?.emails?.[0]?.email}
+          />
+        </View>
+      </View>
+    </View>
+  )
+
+  const WellInformation = () => (
+    <View style={styles.section}>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Hole Depth"
+            value={
+              well?.hole_depth
+                ? `${well?.hole_depth} ${well?.hole_depth_unit}`
+                : null
+            }
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Well Depth"
+            value={
+              well?.well_depth
+                ? `${well?.well_depth} ${well.well_depth_unit}`
+                : null
+            }
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Measuring Point Height"
+            value={
+              well?.measuring_point_height
+                ? `${well?.measuring_point_height} ${well?.measuring_point_height_unit}`
+                : null
+            }
+          />
+        </View>
+      </View>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Last Measured Date"
+            value={
+              mostRecentObservation?.observation_datetime
+                ? new Date(mostRecentObservation.observation_datetime)
+                    .toISOString()
+                    .slice(0, 10)
+                : null
+            }
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Last Depth to Water"
+            value={
+              mostRecentObservation?.depth_to_water_bgs != null
+                ? `${mostRecentObservation.depth_to_water_bgs.toFixed(2)} ${mostRecentObservation.unit}`
+                : null
+            }
+          />
+        </View>
+        <View style={styles.cell3}></View>
+      </View>
+    </View>
+  )
+
+  const AdditionalInformation = () => (
+    <View style={styles.section}>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Completion Date"
+            value={well?.well_completion_date}
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem title="Driller Name" value={well?.well_driller_name} />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Construction Method"
+            value={well?.well_construction_method}
+          />
+        </View>
+      </View>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell2}>
+          <LineItem
+            title="Completion Date Source"
+            value={well?.well_completion_date_source}
+          />
+        </View>
+        <View style={styles.cell2}>
+          <LineItem
+            title="Construction Method Source"
+            value={well?.well_construction_method_source}
+          />
+        </View>
+      </View>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Casing Diameter"
+            value={
+              well?.well_casing_diameter
+                ? `${well?.well_casing_diameter?.toFixed(2)} ${well?.well_casing_diameter_unit}`
+                : null
+            }
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Casing Depth"
+            value={
+              well?.well_casing_depth
+                ? `${well?.well_casing_depth?.toFixed(2)} ${well?.well_casing_depth_unit}`
+                : null
+            }
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Casing Materials"
+            value={(well?.well_casing_materials ?? []).join(', ')}
+          />
+        </View>
+      </View>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell3}>
+          <LineItem title="Pump Type" value={well?.well_pump_type} />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Pump Depth"
+            value={
+              well?.well_pump_depth
+                ? `${well?.well_pump_depth?.toFixed(2)} ${well?.well_pump_depth_unit}`
+                : null
+            }
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Is open and suitable for a datalogger?"
+            value={well?.is_suitable_for_datalogger?.toString()}
+          />
+        </View>
+      </View>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Formation Completion Code"
+            value={well?.formation_completion_code}
+          />
+        </View>
+        <View style={styles.cell3}></View>
+        <View style={styles.cell3}></View>
+      </View>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell2}>
+          <LineItem
+            title="Aquifer Systems"
+            value={(well?.aquifers ?? [])
+              .map((a) => a?.aquifer_system)
+              .filter(Boolean)
+              .join(', ')}
+          />
+        </View>
+        <View style={styles.cell2}>
+          <LineItem
+            title="Aquifer Types"
+            value={
+              well?.aquifers && well.aquifers.length > 0
+                ? [
+                    ...new Set(well.aquifers.flatMap((a) => a.aquifer_types)),
+                  ].join(', ')
+                : null
+            }
+          />
+        </View>
+      </View>
+    </View>
+  )
 
   return (
     <Document
@@ -261,323 +552,38 @@ export const WellPDF = ({
     >
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Field Compilation Notes</Text>
-        <View style={styles.section}>
-          <View style={styles.twoByTwoGrid}>
-            <View style={styles.cell3}>
-              <LineItem title="Well Id" value={well?.name} />
-            </View>
-            <View style={styles.cell3}></View>
-            <View style={styles.cell3}>
-              <Text style={styles.label}>Date:</Text>
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Easting, Northing"
-                value={`${easting?.toFixed(0)}, ${northing?.toFixed(0)}`}
-              />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Vertical Datum"
-                value={well?.current_location?.properties?.vertical_datum}
-              />
-            </View>
-            <View style={styles.cell3}></View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Latitude/Longitude"
-                value={
-                  well?.current_location?.geometry
-                    ? `${lat?.toFixed(6)}, ${lon?.toFixed(6)}`
-                    : 'N/A'
-                }
-              />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Elevation"
-                value={`${well?.current_location?.properties?.elevation?.toFixed(2) || 'N/A'} ${
-                  well?.current_location?.properties?.elevation_unit
-                    ? ` ${well?.current_location?.properties?.elevation_unit}`
-                    : null
-                }`}
-              />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Elevation Method"
-                value={well?.current_location?.properties?.elevation_method}
-              />
-            </View>
-          </View>
-        </View>
+        <CoreInformation />
 
         {/* Contacts – only if enabled */}
-        {options.includeContacts ? (
-          <View style={styles.section}>
-            <View style={styles.twoByTwoGrid}>
-              <View style={styles.cell2}>
-                <LineItem
-                  title="Primary Contact"
-                  value={primaryContact?.name}
-                />
-              </View>
-              <View style={styles.cell2}>
-                <LineItem
-                  title="Secondary Contact"
-                  value={secondaryContact?.name}
-                />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem title="Role" value={primaryContact?.role} />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem title="Role" value={secondaryContact?.role} />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Address"
-                  value={formatAddress(primaryContact?.addresses?.[0])}
-                />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Address"
-                  value={formatAddress(secondaryContact?.addresses?.[0])}
-                />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Phone"
-                  value={
-                    primaryContact?.phones?.[0]?.phone_number ??
-                    primaryContact?.phones?.[0]?.nma_phone_number
-                  }
-                />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Phone"
-                  value={
-                    secondaryContact?.phones?.[0]?.phone_number ??
-                    secondaryContact?.phones?.[0]?.nma_phone_number
-                  }
-                />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Email"
-                  value={primaryContact?.emails?.[0]?.email}
-                />
-              </View>
-              <View style={styles.cell2}>
-                <SubLineItem
-                  title="Email"
-                  value={secondaryContact?.emails?.[0]?.email}
-                />
-              </View>
-            </View>
-          </View>
-        ) : null}
+        {options.includeContacts ? <ContactInformation /> : null}
 
-        <View style={styles.section}>
-          <View style={styles.twoByTwoGrid}>
-            <View style={styles.cell3}>
+        <WellInformation />
+        {/* Notes – only if enabled  */}
+        {options.includeNotes
+          ? noteSections.map((section) => (
               <LineItem
-                title="Hole Depth"
-                value={
-                  well?.hole_depth
-                    ? `${well?.hole_depth} ${well?.hole_depth_unit}`
-                    : null
-                }
+                key={section.title}
+                title={formatSectionTitle(section.title)}
+                value={section.value ?? undefined}
               />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Well Depth"
-                value={
-                  well?.well_depth
-                    ? `${well?.well_depth} ${well.well_depth_unit}`
-                    : null
-                }
-              />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Measuring Point Height"
-                value={
-                  well?.measuring_point_height
-                    ? `${well?.measuring_point_height} ${well?.measuring_point_height_unit}`
-                    : null
-                }
-              />
-            </View>
-          </View>
-          <View style={styles.twoByTwoGrid}>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Last Measured Date"
-                value={
-                  mostRecentObservation?.observation_datetime
-                    ? new Date(mostRecentObservation.observation_datetime)
-                        .toISOString()
-                        .slice(0, 10)
-                    : null
-                }
-              />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Last Depth to Water"
-                value={
-                  mostRecentObservation?.depth_to_water_bgs != null
-                    ? `${mostRecentObservation.depth_to_water_bgs.toFixed(2)} ${mostRecentObservation.unit}`
-                    : null
-                }
-              />
-            </View>
-            <View style={styles.cell3}></View>
-          </View>
-
-          {/* Notes – only if enabled  */}
-          {options.includeNotes
-            ? noteSections.map((section) => (
-                <LineItem
-                  key={section.title}
-                  title={formatSectionTitle(section.title)}
-                  value={section.value ?? undefined}
-                />
-              ))
-            : null}
-        </View>
+            ))
+          : null}
         {(options.includeAssets !== false && assets.length > 0) ||
         options.includeAssets === false ? null : (
           <Text style={styles.pageNote}>
             (No images are associated with this well)
           </Text>
         )}
+        {density === 'very-dense' ? <AdditionalInformation /> : null}
         <Footer wellId={well?.name} />
       </Page>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Field Compilation Notes</Text>
-        <View style={styles.section}>
-          <View style={styles.twoByTwoGrid}>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Completion Date"
-                value={well?.well_completion_date}
-              />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem title="Driller Name" value={well?.well_driller_name} />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Construction Method"
-                value={well?.well_construction_method}
-              />
-            </View>
-          </View>
-          <View style={styles.twoByTwoGrid}>
-            <View style={styles.cell2}>
-              <LineItem
-                title="Completion Date Source"
-                value={well?.well_completion_date_source}
-              />
-            </View>
-            <View style={styles.cell2}>
-              <LineItem
-                title="Construction Method Source"
-                value={well?.well_construction_method_source}
-              />
-            </View>
-          </View>
-          <View style={styles.twoByTwoGrid}>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Casing Diameter"
-                value={
-                  well?.well_casing_diameter
-                    ? `${well?.well_casing_diameter?.toFixed(2)} ${well?.well_casing_diameter_unit}`
-                    : null
-                }
-              />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Casing Depth"
-                value={
-                  well?.well_casing_depth
-                    ? `${well?.well_casing_depth?.toFixed(2)} ${well?.well_casing_depth_unit}`
-                    : null
-                }
-              />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Casing Materials"
-                value={(well?.well_casing_materials ?? []).join(', ')}
-              />
-            </View>
-          </View>
-          <View style={styles.twoByTwoGrid}>
-            <View style={styles.cell3}>
-              <LineItem title="Pump Type" value={well?.well_pump_type} />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Pump Depth"
-                value={
-                  well?.well_pump_depth
-                    ? `${well?.well_pump_depth?.toFixed(2)} ${well?.well_pump_depth_unit}`
-                    : null
-                }
-              />
-            </View>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Is open and suitable for a datalogger?"
-                value={well?.is_suitable_for_datalogger?.toString()}
-              />
-            </View>
-          </View>
-          <View style={styles.twoByTwoGrid}>
-            <View style={styles.cell3}>
-              <LineItem
-                title="Formation Completion Code"
-                value={well?.formation_completion_code}
-              />
-            </View>
-            <View style={styles.cell3}></View>
-            <View style={styles.cell3}></View>
-          </View>
-          <View style={styles.twoByTwoGrid}>
-            <View style={styles.cell2}>
-              <LineItem
-                title="Aquifer Systems"
-                value={(well?.aquifers ?? [])
-                  .map((a) => a?.aquifer_system)
-                  .filter(Boolean)
-                  .join(', ')}
-              />
-            </View>
-            <View style={styles.cell2}>
-              <LineItem
-                title="Aquifer Types"
-                value={
-                  well?.aquifers && well.aquifers.length > 0
-                    ? [
-                        ...new Set(
-                          well.aquifers.flatMap((a) => a.aquifer_types)
-                        ),
-                      ].join(', ')
-                    : null
-                }
-              />
-            </View>
-          </View>
-        </View>
-      </Page>
+      {density !== 'very-dense' ? (
+        <Page size="A4" style={styles.page}>
+          <Text style={styles.title}>Field Compilation Notes</Text>
+          <AdditionalInformation />
+          <Footer wellId={well?.name} />
+        </Page>
+      ) : null}
       {assets.length > 0 && options.includeAssets !== false && (
         <Page size="A4" style={styles.page}>
           <Text style={styles.title}>Field Compilation Notes</Text>

@@ -171,20 +171,6 @@ export const WellPDFPreviewButton = ({
         <MenuItem
           onClick={() => {
             handleMenuClose()
-            handleDownload(PDF_DEFAULT_VALUES)
-          }}
-          disabled={disabled}
-        >
-          <ListItemIcon>
-            <Download />
-          </ListItemIcon>
-          <ListItemText>
-            {isGenerating ? 'Generating...' : 'Download Full PDF'}
-          </ListItemText>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleMenuClose()
             handleDownload(PDF_SINGLE_PAGE_OPTION)
           }}
           disabled={disabled}
@@ -193,7 +179,7 @@ export const WellPDFPreviewButton = ({
             <Download />
           </ListItemIcon>
           <ListItemText>
-            {isGenerating ? 'Generating...' : 'Download Single-Page PDF'}
+            {isGenerating ? 'Generating...' : 'Download PDF (1-Page)'}
           </ListItemText>
         </MenuItem>
       </Menu>

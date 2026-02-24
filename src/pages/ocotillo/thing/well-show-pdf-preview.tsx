@@ -206,7 +206,7 @@ export const WellShowPdfPreview = () => {
                       PDF_SINGLE_PAGE_OPTION.includeAssets
                     )
                     setValue(
-                      'includeBlackPage',
+                      'includeBlankPage',
                       PDF_SINGLE_PAGE_OPTION.includeBlankPage
                     )
                   }}
