@@ -1,5 +1,6 @@
 export * from './FetchValidationError'
 export * from './ICategory'
+export * from './IPdfDensity'
 export * from './IPdfOptions'
 export * from './IPost'
 export * from './IStatus'
