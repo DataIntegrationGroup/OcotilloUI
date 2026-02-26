@@ -17,7 +17,7 @@ import {
   ImageGallery,
   WellInformation,
 } from '@/components/pdf'
-import { Footer, LineItem } from '@/components/pdf/layout'
+import { Footer, Header, LineItem } from '@/components/pdf/layout'
 
 export const WellPDF = ({
   well,
@@ -33,6 +33,7 @@ export const WellPDF = ({
   options: IPdfOptions
 }) => {
   const density: IPdfDensity = options.density ?? PDF_DEFAULT_VALUES.density
+  const isDense = density === 'dense' || density === 'very-dense'
   const styles = useMemo(() => createPdfStyles(density), [density])
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
   const showAdditionalOnFirstPage = density === 'very-dense'
@@ -40,7 +41,7 @@ export const WellPDF = ({
   const mostRecentObservation = useMostRecentObservation(observations)
   const { primaryContact, secondaryContact } =
     usePrimaryAndSecondaryContact(contacts)
-  const allNotes = useAllNotes(well)
+  const allNotes = useAllNotes(well, options)
 
   return (
     <Document
@@ -51,33 +52,33 @@ export const WellPDF = ({
       subject="Well Field Data Report"
     >
       <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Field Compilation Notes</Text>
-        <CoreInformation well={well} styles={styles} />
-        {options.includeContacts && (
-          <ContactInformation
-            primaryContact={primaryContact}
-            secondaryContact={secondaryContact}
-            styles={styles}
-          />
-        )}
+        <Header styles={styles} />
+        <CoreInformation well={well} styles={styles} dense={isDense} />
+        <ContactInformation
+          primaryContact={primaryContact}
+          secondaryContact={secondaryContact}
+          styles={styles}
+          dense={isDense}
+        />
         <WellInformation
           well={well}
           mostRecent={mostRecentObservation}
           styles={styles}
+          dense={isDense}
+          opts={options}
         />
-        {options.includeNotes &&
-          allNotes.map((section) => (
-            <LineItem
-              key={section.title}
-              title={
-                section.title.toLowerCase().endsWith('notes')
-                  ? section.title
-                  : `${section.title} Notes`
-              }
-              value={section.value ?? undefined}
-              styles={styles}
-            />
-          ))}
+        {allNotes.map((section) => (
+          <LineItem
+            key={section.title}
+            title={
+              section.title.toLowerCase().endsWith('notes')
+                ? section.title
+                : `${section.title} Notes`
+            }
+            value={section.value ?? undefined}
+            styles={styles}
+          />
+        ))}
         {assets.length === 0 && options.includeAssets !== false && (
           <Text style={styles.pageNote}>
             (No images are associated with this well)
@@ -90,21 +91,21 @@ export const WellPDF = ({
       </Page>
       {!showAdditionalOnFirstPage && (
         <Page size="A4" style={styles.page}>
-          <Text style={styles.title}>Field Compilation Notes</Text>
+          <Header styles={styles} />
           <AdditionalInformation well={well} styles={styles} />
           <Footer wellId={well?.name} styles={styles} />
         </Page>
       )}
       {assets.length > 0 && options.includeAssets !== false && (
         <Page size="A4" style={styles.page}>
-          <Text style={styles.title}>Field Compilation Notes</Text>
+          <Header styles={styles} />
           <ImageGallery assets={assets} styles={styles} />
           <Footer wellId={well?.name} styles={styles} />
         </Page>
       )}
       {options.includeBlankPage ? (
         <Page size="A4" style={styles.page}>
-          <Text style={styles.title}>Field Compilation Notes</Text>
+          <Header styles={styles} />
           <Text style={styles.pageNote}>(Page intentionally left blank)</Text>
           <Footer wellId={well?.name} styles={styles} />
         </Page>

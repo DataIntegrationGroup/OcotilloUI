@@ -25,9 +25,10 @@ import {
   WellPDF,
 } from '@/components'
 import { useEffect, useState } from 'react'
-import { IPdfOptions } from '@/interfaces'
+import { IPdfOptions, optionalFields } from '@/interfaces'
 import { useForm } from '@refinedev/react-hook-form'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
+import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 
 export const WellShowPdfPreview = () => {
   const { push } = useNavigation()
@@ -39,6 +40,7 @@ export const WellShowPdfPreview = () => {
   const { control, watch, reset, setValue } = useForm<IPdfOptions>({
     defaultValues: PDF_DEFAULT_VALUES,
     mode: 'onChange', // update on every change → live preview
+    warnWhenUnsavedChanges: false,
   })
 
   const currentOptions = watch()
@@ -154,31 +156,16 @@ export const WellShowPdfPreview = () => {
                     ]}
                   />
                   <Stack direction="column">
-                    <Typography>Sections to include:</Typography>
-                    <ControlledCheckbox
-                      control={control}
-                      name="includeNotes"
-                      label="Notes"
-                      labelPlacement="end"
-                    />
-                    <ControlledCheckbox
-                      control={control}
-                      name="includeContacts"
-                      label="Contacts"
-                      labelPlacement="end"
-                    />
-                    <ControlledCheckbox
-                      control={control}
-                      name="includeAssets"
-                      label="Assets/Images"
-                      labelPlacement="end"
-                    />
-                    <ControlledCheckbox
-                      control={control}
-                      name="includeBlankPage"
-                      label="Blank Page"
-                      labelPlacement="end"
-                    />
+                    <Typography>Optional Fields:</Typography>
+                    {optionalFields.map((fieldName) => (
+                      <ControlledCheckbox
+                        key={fieldName}
+                        control={control}
+                        name={fieldName}
+                        label={getLabelFromOptionalPdfFieldKey(fieldName)}
+                        labelPlacement="end"
+                      />
+                    ))}
                   </Stack>
                 </Box>
 
@@ -192,28 +179,15 @@ export const WellShowPdfPreview = () => {
                 <Button
                   variant="contained"
                   onClick={() => {
-                    setValue('density', PDF_SINGLE_PAGE_OPTION.density)
-                    setValue(
-                      'includeNotes',
-                      PDF_SINGLE_PAGE_OPTION.includeNotes
-                    )
-                    setValue(
-                      'includeContacts',
-                      PDF_SINGLE_PAGE_OPTION.includeContacts
-                    )
-                    setValue(
-                      'includeAssets',
-                      PDF_SINGLE_PAGE_OPTION.includeAssets
-                    )
-                    setValue(
-                      'includeBlankPage',
-                      PDF_SINGLE_PAGE_OPTION.includeBlankPage
-                    )
+                    reset(PDF_SINGLE_PAGE_OPTION)
                   }}
                 >
                   Single Page Mode
                 </Button>
-                <Button variant="text" onClick={() => reset()}>
+                <Button
+                  variant="text"
+                  onClick={() => reset(PDF_DEFAULT_VALUES)}
+                >
                   Reset
                 </Button>
               </AccordionActions>

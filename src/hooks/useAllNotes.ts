@@ -1,25 +1,37 @@
 import { useMemo } from 'react'
 import type { IWell } from '@/interfaces/ocotillo'
 import { groupNotesByType } from '@/utils'
+import { IPdfOptions } from '@/interfaces'
 
 /**
  * Collects notes from multiple well fields and groups them by type.
  * Returns array of grouped sections, with fallback to empty "Notes" section if nothing found.
  */
-export const useAllNotes = (well: IWell | null | undefined) => {
+export const useAllNotes = (
+  well: IWell | null | undefined,
+  options: IPdfOptions = {}
+) => {
   return useMemo(() => {
     if (!well) {
       return [{ title: 'Notes', value: null }]
     }
 
-    const allNotes = [
-      ...(well.water_notes ?? []),
-      ...(well.measuring_notes ?? []),
-      ...(well.construction_notes ?? []),
-      ...(well.general_notes ?? []),
-      ...(well.current_location?.properties?.notes ?? []),
-      ...(well.sampling_procedure_notes ?? []),
-    ].filter(Boolean) // remove any falsy values just in case
+    console.log({ options })
+    const noteSources = [
+      { notes: well.water_notes, include: true },
+      { notes: well.measuring_notes, include: true },
+      {
+        notes: well.construction_notes,
+        include: options.includeConstructionNotes !== false,
+      },
+      { notes: well.general_notes, include: true },
+      { notes: well.sampling_procedure_notes, include: true },
+    ]
+
+    const allNotes = noteSources
+      .filter((source) => source.include)
+      .flatMap((source) => source.notes ?? [])
+      .filter(Boolean)
 
     const grouped = groupNotesByType(allNotes, { defaultTitle: 'Notes' })
 
@@ -29,5 +41,5 @@ export const useAllNotes = (well: IWell | null | undefined) => {
     }
 
     return grouped
-  }, [well])
+  }, [well, options.includeConstructionNotes])
 }

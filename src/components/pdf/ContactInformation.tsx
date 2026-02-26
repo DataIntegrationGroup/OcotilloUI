@@ -7,10 +7,12 @@ export const ContactInformation = ({
   primaryContact,
   secondaryContact,
   styles,
+  dense = false,
 }: {
   primaryContact: IContact
   secondaryContact: IContact
   styles: ReturnType<typeof createPdfStyles>
+  dense?: boolean
 }) => {
   return (
     <View style={styles.section}>
@@ -31,20 +33,6 @@ export const ContactInformation = ({
         </View>
         <View style={styles.cell2}>
           <SubLineItem
-            title="Role"
-            value={primaryContact?.role}
-            styles={styles}
-          />
-        </View>
-        <View style={styles.cell2}>
-          <SubLineItem
-            title="Role"
-            value={secondaryContact?.role}
-            styles={styles}
-          />
-        </View>
-        <View style={styles.cell2}>
-          <SubLineItem
             title="Address"
             value={formatAddress(primaryContact?.addresses?.[0])}
             styles={styles}
@@ -59,12 +47,29 @@ export const ContactInformation = ({
         </View>
         <View style={styles.cell2}>
           <SubLineItem
+            title="Role"
+            value={primaryContact?.role}
+            styles={styles}
+            dense={dense}
+          />
+        </View>
+        <View style={styles.cell2}>
+          <SubLineItem
+            title="Role"
+            value={secondaryContact?.role}
+            styles={styles}
+            dense={dense}
+          />
+        </View>
+        <View style={styles.cell2}>
+          <SubLineItem
             title="Phone"
             value={
               primaryContact?.phones?.[0]?.phone_number ??
               primaryContact?.phones?.[0]?.nma_phone_number
             }
             styles={styles}
+            dense={dense}
           />
         </View>
         <View style={styles.cell2}>
@@ -75,6 +80,7 @@ export const ContactInformation = ({
               secondaryContact?.phones?.[0]?.nma_phone_number
             }
             styles={styles}
+            dense={dense}
           />
         </View>
         <View style={styles.cell2}>
@@ -82,6 +88,7 @@ export const ContactInformation = ({
             title="Email"
             value={primaryContact?.emails?.[0]?.email}
             styles={styles}
+            dense={dense}
           />
         </View>
         <View style={styles.cell2}>
@@ -89,6 +96,7 @@ export const ContactInformation = ({
             title="Email"
             value={secondaryContact?.emails?.[0]?.email}
             styles={styles}
+            dense={dense}
           />
         </View>
       </View>

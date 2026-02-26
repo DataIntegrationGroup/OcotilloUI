@@ -6,9 +6,11 @@ import { createPdfStyles } from '@/utils'
 export const CoreInformation = ({
   well,
   styles,
+  dense = false,
 }: {
   well: IWell
   styles: ReturnType<typeof createPdfStyles>
+  dense?: boolean
 }) => {
   const coords = well?.current_location?.geometry?.coordinates as
     | [number, number]
@@ -21,7 +23,12 @@ export const CoreInformation = ({
     <View style={styles.section}>
       <View style={styles.twoByTwoGrid}>
         <View style={styles.cell3}>
-          <LineItem title="Well Id" value={well?.name} styles={styles} />
+          <LineItem
+            title="Point ID"
+            value={well?.name}
+            styles={styles}
+            dense={dense}
+          />
         </View>
         <View style={styles.cell3}></View>
         <View style={styles.cell3}>
@@ -29,28 +36,26 @@ export const CoreInformation = ({
         </View>
         <View style={styles.cell3}>
           <LineItem
-            title="Easting/Northing"
-            value={`${easting?.toFixed(0)}, ${northing?.toFixed(0)}`}
+            title="Site Name"
+            value={JSON.stringify(well.alternate_ids)}
             styles={styles}
+            dense={dense}
           />
         </View>
         <View style={styles.cell3}>
           <LineItem
-            title="Vertical Datum"
-            value={well?.current_location?.properties?.vertical_datum}
+            title="Easting"
+            value={easting?.toFixed(0)}
             styles={styles}
+            dense={dense}
           />
         </View>
-        <View style={styles.cell3}></View>
         <View style={styles.cell3}>
           <LineItem
-            title="Latitude/Longitude"
-            value={
-              well?.current_location?.geometry
-                ? `${lat?.toFixed(6)}, ${lon?.toFixed(6)}`
-                : 'N/A'
-            }
+            title="Northing"
+            value={northing?.toFixed(0)}
             styles={styles}
+            dense={dense}
           />
         </View>
         <View style={styles.cell3}>
@@ -62,13 +67,23 @@ export const CoreInformation = ({
                 : null
             }`}
             styles={styles}
+            dense={dense}
           />
         </View>
         <View style={styles.cell3}>
           <LineItem
-            title="Elevation Method"
-            value={well?.current_location?.properties?.elevation_method}
+            title="Latitude"
+            value={lat?.toFixed(6)}
             styles={styles}
+            dense={dense}
+          />
+        </View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Longitude"
+            value={lon?.toFixed(6)}
+            styles={styles}
+            dense={dense}
           />
         </View>
       </View>

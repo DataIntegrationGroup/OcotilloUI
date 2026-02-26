@@ -2,30 +2,38 @@ import { View } from '@react-pdf/renderer'
 import { LineItem } from '@/components/pdf/layout'
 import type { IObservation, IWell } from '@/interfaces/ocotillo'
 import { createPdfStyles } from '@/utils'
+import { IPdfOptions } from '@/interfaces'
 
 export const WellInformation = ({
   well,
   mostRecent,
   styles,
+  dense = false,
+  opts,
 }: {
   well: IWell
   mostRecent: Partial<IObservation>
   styles: ReturnType<typeof createPdfStyles>
+  dense?: boolean
+  opts: IPdfOptions
 }) => {
   return (
     <View style={styles.section}>
       <View style={styles.twoByTwoGrid}>
-        <View style={styles.cell3}>
-          <LineItem
-            title="Hole Depth"
-            value={
-              well?.hole_depth
-                ? `${well?.hole_depth} ${well?.hole_depth_unit}`
-                : null
-            }
-            styles={styles}
-          />
-        </View>
+        {opts.includeHoleDepth && (
+          <View style={styles.cell3}>
+            <LineItem
+              title="Hole Depth"
+              value={
+                well?.hole_depth
+                  ? `${well?.hole_depth} ${well?.hole_depth_unit}`
+                  : null
+              }
+              styles={styles}
+              dense={dense}
+            />
+          </View>
+        )}
         <View style={styles.cell3}>
           <LineItem
             title="Well Depth"
@@ -35,6 +43,7 @@ export const WellInformation = ({
                 : null
             }
             styles={styles}
+            dense={dense}
           />
         </View>
         <View style={styles.cell3}>
@@ -46,6 +55,7 @@ export const WellInformation = ({
                 : null
             }
             styles={styles}
+            dense={dense}
           />
         </View>
       </View>
@@ -61,6 +71,7 @@ export const WellInformation = ({
                 : null
             }
             styles={styles}
+            dense={dense}
           />
         </View>
         <View style={styles.cell3}>
@@ -72,6 +83,7 @@ export const WellInformation = ({
                 : null
             }
             styles={styles}
+            dense={dense}
           />
         </View>
         <View style={styles.cell3}></View>
