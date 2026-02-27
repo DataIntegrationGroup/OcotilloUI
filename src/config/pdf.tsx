@@ -12,7 +12,7 @@ export const PDF_DEFAULT_VALUES: IPdfOptions = {
   includeBlankPage: false,
   includeAssets: true,
 
-  density: 'normal',
+  density: 'dense',
 }
 
 export const PDF_SINGLE_PAGE_OPTION: IPdfOptions = {

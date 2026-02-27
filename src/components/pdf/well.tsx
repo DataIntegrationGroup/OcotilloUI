@@ -85,21 +85,32 @@ export const WellPDF = ({
           </Text>
         )}
         {showAdditionalOnFirstPage && (
-          <AdditionalInformation well={well} styles={styles} />
+          <AdditionalInformation
+            well={well}
+            styles={styles}
+            dense={isDense}
+            opts={options}
+          />
         )}
+        {showAdditionalOnFirstPage &&
+          assets.length > 0 &&
+          options.includeAssets !== false && (
+            <ImageGallery assets={assets} styles={styles} />
+          )}
         <Footer wellId={well?.name} styles={styles} />
       </Page>
       {!showAdditionalOnFirstPage && (
         <Page size="A4" style={styles.page}>
           <Header styles={styles} />
-          <AdditionalInformation well={well} styles={styles} />
-          <Footer wellId={well?.name} styles={styles} />
-        </Page>
-      )}
-      {assets.length > 0 && options.includeAssets !== false && (
-        <Page size="A4" style={styles.page}>
-          <Header styles={styles} />
-          <ImageGallery assets={assets} styles={styles} />
+          <AdditionalInformation
+            well={well}
+            styles={styles}
+            dense={isDense}
+            opts={options}
+          />
+          {assets.length > 0 && options.includeAssets !== false && (
+            <ImageGallery assets={assets} styles={styles} />
+          )}
           <Footer wellId={well?.name} styles={styles} />
         </Page>
       )}

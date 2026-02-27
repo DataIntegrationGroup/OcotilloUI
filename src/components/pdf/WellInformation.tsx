@@ -20,20 +20,6 @@ export const WellInformation = ({
   return (
     <View style={styles.section}>
       <View style={styles.twoByTwoGrid}>
-        {opts.includeHoleDepth && (
-          <View style={styles.cell3}>
-            <LineItem
-              title="Hole Depth"
-              value={
-                well?.hole_depth
-                  ? `${well?.hole_depth} ${well?.hole_depth_unit}`
-                  : null
-              }
-              styles={styles}
-              dense={dense}
-            />
-          </View>
-        )}
         <View style={styles.cell3}>
           <LineItem
             title="Well Depth"
@@ -58,6 +44,22 @@ export const WellInformation = ({
             dense={dense}
           />
         </View>
+        {opts.includeHoleDepth ? (
+          <View style={styles.cell3}>
+            <LineItem
+              title="Hole Depth"
+              value={
+                well?.hole_depth
+                  ? `${well?.hole_depth} ${well?.hole_depth_unit}`
+                  : null
+              }
+              styles={styles}
+              dense={dense}
+            />
+          </View>
+        ) : (
+          <View style={styles.cell3}></View>
+        )}
       </View>
       <View style={styles.twoByTwoGrid}>
         <View style={styles.cell3}>

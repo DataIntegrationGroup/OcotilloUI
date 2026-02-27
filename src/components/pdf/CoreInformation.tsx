@@ -19,6 +19,10 @@ export const CoreInformation = ({
   const { easting, northing } =
     well?.current_location?.properties?.utm_coordinates ?? {}
 
+  const siteName: string =
+    well.alternate_ids?.find((alt_id) => (alt_id.relation = 'OSEPOD'))
+      .alternate_id ?? ''
+
   return (
     <View style={styles.section}>
       <View style={styles.twoByTwoGrid}>
@@ -37,7 +41,7 @@ export const CoreInformation = ({
         <View style={styles.cell3}>
           <LineItem
             title="Site Name"
-            value={JSON.stringify(well.alternate_ids)}
+            value={siteName}
             styles={styles}
             dense={dense}
           />

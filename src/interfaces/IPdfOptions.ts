@@ -1,4 +1,4 @@
-export type PdfDensity = 'normal' | 'dense' | 'very-dense'
+import { IPdfDensity } from './IPdfDensity'
 
 export interface IPdfOptions {
   includeHoleDepth?: boolean | null
@@ -12,18 +12,18 @@ export interface IPdfOptions {
   includeBlankPage?: boolean | null
   includeAssets?: boolean | null
 
-  density?: PdfDensity
+  density?: IPdfDensity
 }
 
 export const optionalFields: (keyof IPdfOptions)[] = [
   'includeHoleDepth',
-  'includeAquiferSystems',
+  'includeConstructionNotes',
+  'includeCasingDiameter',
   'includeFormationCompletionCode',
   'includeIsOpenAndSuitableForDataLogger',
+  'includeAquiferSystems',
   'includeAquiferTypes',
-  'includeCasingDiameter',
   'includeHydrograph',
-  'includeConstructionNotes',
   'includeBlankPage',
   'includeAssets',
 ]

@@ -16,8 +16,16 @@ export const useAllNotes = (
       return [{ title: 'Notes', value: null }]
     }
 
-    console.log({ options })
     const noteSources = [
+      {
+        notes: well.current_location?.properties?.notes
+          ?.filter((note) => note.note_type === 'General')
+          .map((note) => ({
+            ...note,
+            note_type: 'Location',
+          })),
+        include: true,
+      },
       { notes: well.water_notes, include: true },
       { notes: well.measuring_notes, include: true },
       {

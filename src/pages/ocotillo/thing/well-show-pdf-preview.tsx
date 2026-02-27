@@ -25,7 +25,12 @@ import {
   WellPDF,
 } from '@/components'
 import { useEffect, useState } from 'react'
-import { IPdfOptions, optionalFields } from '@/interfaces'
+import {
+  IPdfDensity,
+  IPdfOptions,
+  optionalFields,
+  PDF_DENSITIES,
+} from '@/interfaces'
 import { useForm } from '@refinedev/react-hook-form'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { getLabelFromOptionalPdfFieldKey } from '@/utils'
@@ -37,7 +42,7 @@ export const WellShowPdfPreview = () => {
 
   const handleBack = () => push(`/ocotillo/well/show/${id}`)
 
-  const { control, watch, reset, setValue } = useForm<IPdfOptions>({
+  const { control, watch, reset } = useForm<IPdfOptions>({
     defaultValues: PDF_DEFAULT_VALUES,
     mode: 'onChange', // update on every change → live preview
     warnWhenUnsavedChanges: false,
@@ -94,6 +99,15 @@ export const WellShowPdfPreview = () => {
     }
   }, [isLoading])
 
+  const densityOptions = PDF_DENSITIES.map((value) => ({
+    value,
+    label: value
+      .split('-')
+      .map((w) => w[0].toUpperCase() + w.slice(1))
+      .join(' '),
+    description: null as null,
+  }))
+
   return (
     <Show
       resource="thing-well"
@@ -145,15 +159,7 @@ export const WellShowPdfPreview = () => {
                     name="density"
                     control={control}
                     label="Density:"
-                    options={[
-                      { value: 'normal', label: 'Normal', description: null },
-                      { value: 'dense', label: 'Dense', description: null },
-                      {
-                        value: 'very-dense',
-                        label: 'Very Dense',
-                        description: null,
-                      },
-                    ]}
+                    options={densityOptions}
                   />
                   <Stack direction="column">
                     <Typography>Optional Fields:</Typography>
