@@ -1,4 +1,4 @@
-import { IContact, IWell } from '@/interfaces/ocotillo'
+import { IContact, ISensor, IWell } from '@/interfaces/ocotillo'
 import {
   Accordion,
   AccordionActions,
@@ -25,15 +25,12 @@ import {
   WellPDF,
 } from '@/components'
 import { useEffect, useState } from 'react'
-import {
-  IPdfDensity,
-  IPdfOptions,
-  optionalFields,
-  PDF_DENSITIES,
-} from '@/interfaces'
+import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
 import { useForm } from '@refinedev/react-hook-form'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { getLabelFromOptionalPdfFieldKey } from '@/utils'
+import { useSensorDeploymentRows } from '@/hooks'
+import { SensorDeploymentRow } from '@/utils'
 
 export const WellShowPdfPreview = () => {
   const { push } = useNavigation()
@@ -49,6 +46,38 @@ export const WellShowPdfPreview = () => {
   })
 
   const currentOptions = watch()
+
+  const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
+    resource: 'sensor',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: id,
+      },
+    },
+    queryOptions: {
+      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
+    },
+  })
+
+  const { dataGridProps: deploymentsDataGridProps } = useDataGrid({
+    resource: id ? `thing/${id}/deployment` : undefined,
+    dataProviderName: 'ocotillo',
+    queryOptions: {
+      enabled: Boolean(id),
+      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
+    },
+  })
+
+  const sensors = sensorDataGridProps?.rows ?? []
+  const deployments = deploymentsDataGridProps?.rows ?? []
+
+  const sensorDeployments: SensorDeploymentRow[] = useSensorDeploymentRows({
+    deployments,
+    sensors,
+  })
 
   const {
     queryResult: { data: wellData, isLoading: isWellLoading },
@@ -218,6 +247,7 @@ export const WellShowPdfPreview = () => {
                     assets={assets}
                     contacts={contacts}
                     observations={observations}
+                    sensorDeployments={sensorDeployments}
                     options={currentOptions}
                   />
                 </PDFViewer>

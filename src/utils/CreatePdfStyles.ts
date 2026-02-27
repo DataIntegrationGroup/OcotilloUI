@@ -1,7 +1,7 @@
 import { StyleSheet } from '@react-pdf/renderer'
 import { IPdfDensity } from '@/interfaces'
 
-export const createPdfStyles = (density: IPdfDensity = 'normal') => {
+export const createPdfStyles = (density: IPdfDensity = 'dense') => {
   const scale = (n: number, d: number, vd: number) =>
     density === 'very-dense' ? vd : density === 'dense' ? d : n
 
@@ -56,5 +56,32 @@ export const createPdfStyles = (density: IPdfDensity = 'normal') => {
       textAlign: 'center',
     },
     footerText: { fontSize: scale(9, 8.5, 7.5), color: '#777' },
+    table: {
+      marginTop: scale(8, 6, 4),
+      marginBottom: scale(8, 6, 4),
+      borderWidth: 1,
+      borderColor: '#ddd',
+    },
+    tableRowHeader: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderColor: '#ddd',
+      padding: scale(6, 4, 2),
+    },
+    tableRow: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderColor: '#eee',
+      padding: scale(6, 4, 2),
+    },
+    tableCellHeader: {
+      flex: 1,
+      fontSize: scale(8.5, 8, 7.5),
+      fontWeight: 700,
+    },
+    tableCell: {
+      flex: 1,
+      fontSize: scale(8.5, 8, 7.5),
+    },
   })
 }

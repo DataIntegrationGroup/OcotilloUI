@@ -3,7 +3,7 @@ import { BaseRecord } from '@refinedev/core'
 import { Document, Page, Text } from '@react-pdf/renderer'
 import { IPdfDensity, IPdfOptions } from '@/interfaces'
 import { IObservation, IContact, IWell } from '@/interfaces/ocotillo'
-import { buildPdfFilename, createPdfStyles } from '@/utils'
+import { buildPdfFilename, createPdfStyles, SensorDeploymentRow } from '@/utils'
 import { PDF_DEFAULT_VALUES } from '@/config'
 import {
   useAllNotes,
@@ -16,6 +16,7 @@ import {
   ContactInformation,
   ImageGallery,
   WellInformation,
+  SensorDeploymentTable,
 } from '@/components/pdf'
 import { Footer, Header, LineItem } from '@/components/pdf/layout'
 
@@ -25,11 +26,13 @@ export const WellPDF = ({
   contacts,
   observations,
   options = {},
+  sensorDeployments,
 }: {
   well: IWell
   assets: BaseRecord[]
   contacts: IContact[]
   observations: readonly Partial<IObservation>[]
+  sensorDeployments: SensorDeploymentRow[]
   options: IPdfOptions
 }) => {
   const density: IPdfDensity = options.density ?? PDF_DEFAULT_VALUES.density
@@ -85,12 +88,15 @@ export const WellPDF = ({
           </Text>
         )}
         {showAdditionalOnFirstPage && (
-          <AdditionalInformation
-            well={well}
-            styles={styles}
-            dense={isDense}
-            opts={options}
-          />
+          <>
+            <SensorDeploymentTable rows={sensorDeployments} styles={styles} />
+            <AdditionalInformation
+              well={well}
+              styles={styles}
+              dense={isDense}
+              opts={options}
+            />
+          </>
         )}
         {showAdditionalOnFirstPage &&
           assets.length > 0 &&
@@ -102,6 +108,7 @@ export const WellPDF = ({
       {!showAdditionalOnFirstPage && (
         <Page size="A4" style={styles.page}>
           <Header styles={styles} />
+          <SensorDeploymentTable rows={sensorDeployments} styles={styles} />
           <AdditionalInformation
             well={well}
             styles={styles}
