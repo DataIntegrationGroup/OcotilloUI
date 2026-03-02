@@ -54,10 +54,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
   const getDrawerWidth = (isSiderCollapsed: boolean): number =>
     isSiderCollapsed ? 56 : 350
 
-  const [open, setOpen] = useState<{ [key: string]: boolean }>({
-    '/ocotillo': true,
-    '/ocotillo/ocotillo.tables': true,
-  })
+  const [open, setOpen] = useState<{ [key: string]: boolean }>({})
 
   useEffect(() => {
     setOpen((previous) => {
