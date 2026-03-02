@@ -4,7 +4,6 @@ import {
   ScienceOutlined,
   SettingsInputAntenna,
   ScaleOutlined,
-  WidgetsOutlined,
   Contacts,
   Apps,
   DynamicFormOutlined,
@@ -196,10 +195,8 @@ tables.push({
 
 tables = tables.map((b) => {
   let meta = b.meta || {}
-  if (!meta['parent']) {
-    meta['parent'] = 'ocotillo.tables'
-  }
-  meta['nestedLevel'] = 2
+  // No parent: top-level in sidebar
+  meta['nestedLevel'] = 0
   return {
     ...b,
     meta: meta,
@@ -285,6 +282,7 @@ observations = observations.map((b) => {
   }
 })
 
+// V1: Map first, then Wells and rest of table items
 let ocotillo = [
   {
     name: 'map',
@@ -294,20 +292,12 @@ let ocotillo = [
       icon: <Map />,
     },
   },
-  {
-    name: 'tables',
-    icon: <WidgetsOutlined />,
-    meta: {
-      label: 'Tables',
-    },
-  },
   ...tables,
   {
     name: 'observation',
     icon: <ScaleOutlined />,
     meta: {
-      parent: 'ocotillo.tables',
-      nestedLevel: 2,
+      nestedLevel: 0,
       label: 'Observations',
     },
   },
@@ -353,9 +343,7 @@ let ocotillo = [
 
 export const ocotilloResources = ocotillo.map((b) => {
   let meta = b.meta || {}
-  if (!meta['parent']) {
-    meta['parent'] = 'ocotillo'
-  }
+  // No parent: items are top-level in sidebar (no NMBGMR Ocotillo accordion)
   meta['dataProviderName'] = 'ocotillo'
   return {
     ...b,
