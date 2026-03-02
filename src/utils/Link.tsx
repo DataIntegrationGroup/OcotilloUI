@@ -1,4 +1,3 @@
-import { string } from 'yup'
 import { useLink } from '@refinedev/core'
 
 export const extractThingTypeResource = (getThingType: Function) => {
@@ -31,10 +30,10 @@ export const linkColumn = (
           return current[key]
         }, obj)
       }
-      
-      const fieldPath = options.field;
-      let id = null;
-      
+
+      const fieldPath = options.field
+      let id = null
+
       if (fieldPath.includes('.')) {
         // Handle nested field access
         id = getNestedValue(params.row, fieldPath)
@@ -45,7 +44,7 @@ export const linkColumn = (
       if (!id) {
         return renderLabel ? renderLabel(params) : '-'
       }
-      
+
       return (
         <Link
           go={{
@@ -53,7 +52,7 @@ export const linkColumn = (
               resource:
                 typeof resource === 'string' ? resource : resource(params),
               action: 'show',
-              id: id, 
+              id: id,
             },
           }}
         >

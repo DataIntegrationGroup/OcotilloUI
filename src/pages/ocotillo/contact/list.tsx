@@ -12,6 +12,7 @@ import { Email, Home, Phone } from '@mui/icons-material'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { useLink } from '@refinedev/core'
 import { settings } from '@/settings'
+import { formatAppDateTime } from '@/utils'
 
 export const ContactList: React.FC = () => {
   const [selectedContactId, setSelectedContactId] = useState<number | null>(
@@ -65,11 +66,56 @@ export const ContactList: React.FC = () => {
       },
       { field: 'contact_type', headerName: 'Contact Type', minWidth: 150 },
       {
+        field: 'primary_phone',
+        headerName: 'Primary Phone',
+        type: 'string',
+        minWidth: 170,
+        sortable: false,
+        valueGetter: (_, row) => {
+          const primary = pickPrimary(
+            row.phones,
+            (p) => p.phone_type === 'Primary'
+          )
+          return primary?.phone_number ?? ''
+        },
+        renderCell: (params) => {
+          const primary = pickPrimary(
+            params.row.phones,
+            (p) => p.phone_type === 'Primary'
+          )
+          return primary?.phone_number ? (
+            <span>{primary.phone_number}</span>
+          ) : (
+            <span />
+          )
+        },
+      },
+      {
+        field: 'primary_email',
+        headerName: 'Primary Email',
+        type: 'string',
+        minWidth: 220,
+        sortable: false,
+        valueGetter: (_, row) => {
+          const primary = pickPrimary(
+            row.emails,
+            (e) => e.email_type === 'Primary'
+          )
+          return primary?.email ?? ''
+        },
+        renderCell: (params) => {
+          const primary = pickPrimary(
+            params.row.emails,
+            (e) => e.email_type === 'Primary'
+          )
+          return primary?.email ? <span>{primary.email}</span> : <span />
+        },
+      },
+      {
         field: 'created_at',
         headerName: 'Created At',
-        type: 'dateTime',
-        minWidth: 180,
-        valueGetter: (params) => new Date(params),
+        minWidth: 200,
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
     ],
@@ -94,7 +140,10 @@ export const ContactList: React.FC = () => {
   })
 
   return (
-    <List breadcrumb={<Breadcrumb hideIcons={true} />}>
+    <List
+      breadcrumb={<Breadcrumb hideIcons={true} />}
+      title="Contacts / Owners"
+    >
       <Card
         className={'description'}
         variant="outlined"
@@ -278,3 +327,11 @@ const IconCardHeader = ({
     }
   />
 )
+
+const pickPrimary = <T,>(
+  items: T[] | undefined | null,
+  isPrimary: (item: T) => boolean
+): T | undefined => {
+  if (!items || items.length === 0) return undefined
+  return items.find(isPrimary) ?? items[0]
+}

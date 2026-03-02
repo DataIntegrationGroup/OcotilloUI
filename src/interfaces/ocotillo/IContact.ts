@@ -1,45 +1,50 @@
-import { IThing } from '@/interfaces/ocotillo/IThing'
+import { IThing } from '@/interfaces/ocotillo'
+import type {
+  IContactBase,
+  IEmailBase,
+  IPhoneBase,
+  IAddressBase,
+} from '@/interfaces/ocotillo/contact.types'
 
-export interface IContact {
-  things?: IThing[]
+export interface IContact extends IContactBase {
   id: number
   name: string
-  role?: string
-  thing_id?: number
-  contact_type?: string
-  organization?: string
   created_at: Date
   release_status: string
+
+  things?: IThing[]
+  emails?: IEmail[]
+  phones?: IPhone[]
+  addresses?: IAddress[]
 }
 
-export interface IEmail {
+export interface IEmail extends IEmailBase {
   id: number
+  created_at: Date
+  release_status: string
+  contact_id: number
   email: string
   email_type: string
+}
+
+export interface IPhone extends IPhoneBase {
+  id: number
   created_at: Date
   release_status: string
   contact_id: number
-}
-
-export interface IPhone {
-  id: number
   phone_number: string
   phone_type: string
+}
+
+export interface IAddress extends IAddressBase {
+  id: number
   created_at: Date
   release_status: string
   contact_id: number
-}
-
-export interface IAddress {
-  id: number
   address_line_1: string
-  address_line_2?: string
   city: string
   state: string
   postal_code: string
   country: string
   address_type: string
-  created_at: Date
-  release_status: string
-  contact_id: number
 }

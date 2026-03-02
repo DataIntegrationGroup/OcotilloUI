@@ -15,3 +15,11 @@ export const MAPBOX_BASEMAPS: MapboxStyleDefinition[] = [
 ]
 
 export const DEFAULT_MAPBOX_BASEMAP = 'mapbox://styles/mapbox/light-v11'
+
+export enum GroupType {
+  Wells = 'Wells',
+  Springs = 'Springs',
+  Contacts = 'Contacts',
+  Messages = 'Messages',
+  Assets = 'Assets',
+}

@@ -1,5 +1,5 @@
 import type { DataProvider } from '@refinedev/core'
-import { getAccessToken } from './fief-provider'
+import { getAccessToken } from './authentik-provider'
 import { settings } from '@/settings'
 
 const API_URL = `${settings.nmbgmr_amp_api_url}/latest`
@@ -12,12 +12,18 @@ export const axiosInstance: AxiosInstance = axios.create()
 axiosInstance.interceptors.request.use(
   async (config) => {
     const token = await getAccessToken()
-    config.headers.Authorization = `Bearer ${token}`
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    } else {
+      delete config.headers.Authorization
+    }
+
     return config
   },
   (error) => {
     return Promise.reject(error)
-  },
+  }
 )
 
 const refreshAuthLogic = async (failedRequest) => {
@@ -63,7 +69,7 @@ const getPhotos = async (id) => {
           caption: photo.OLEPath,
         }
       }
-    }),
+    })
   )
 
   return { data: photos }

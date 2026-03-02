@@ -2,7 +2,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CircularProgress,
   Stack,
   Typography,
   Box,
@@ -11,7 +10,7 @@ import {
 import { Hydrograph } from '@/components/Hydrographs/Hydrograph'
 import { StackedLineChart } from '@mui/icons-material'
 import { IHydrographDatasource } from '@/interfaces/st2/IHydrographDatasource'
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import { IWell } from '@/interfaces/ocotillo'
 
 export const HydrographCard = ({
   well,

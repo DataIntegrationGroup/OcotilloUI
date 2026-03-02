@@ -1,11 +1,13 @@
-import { Route, Routes } from "react-router-dom";
-import { ST2LocationList } from "@/pages/st2/locations";
-import { ST2WellList } from "@/pages/st2/wells";
-import { ST2DatastreamList } from "@/pages/st2/datastreams";
-import { ST2SensorList } from "@/pages/st2/sensors";
-import { ST2ObservedPropertiesList } from "@/pages/st2/observedProperties";
-import { ST2Dashboard } from "@/pages/st2/dashboard";
-import { ErrorComponent } from "@refinedev/mui";
+import { Route, Routes } from 'react-router-dom'
+import {
+  ST2Dashboard,
+  ST2DatastreamList,
+  ST2LocationList,
+  ST2ObservedPropertiesList,
+  ST2SensorList,
+  ST2WellList,
+} from '@/pages/st2'
+import { ErrorComponent } from '@refinedev/mui'
 
 export const ST2Routes = () => {
   return (
@@ -28,5 +30,5 @@ export const ST2Routes = () => {
       </Route>
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
-  );
-};
+  )
+}

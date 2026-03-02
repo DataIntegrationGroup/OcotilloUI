@@ -1,37 +1,39 @@
-import { Route, Routes } from "react-router-dom";
-import { WaterDashboard } from "@/pages/amp/dashboard";
-import { Querybuilder } from "@/pages/amp/querybuilder";
-import { ReportBuilder } from "@/pages/amp/reportbuilder";
-import { ChemUpload } from "@/pages/amp/chemupload";
-import { WellEdit, WellList, WellShow } from "@/pages/amp/wells";
+import { Route, Routes } from 'react-router-dom'
 import {
+  ChemUpload,
+  EquipmentList,
+  EquipmentShow,
+  HydrographCorrector,
+  WaterDashboard,
+  // Removed until it is in WIP state
+  // ReportBuilder,
+  Querybuilder,
+  WellEdit,
+  WellList,
+  WellShow,
   LocationCreate,
   LocationEdit,
   LocationList,
   LocationShow,
-} from "@/pages/amp/locations";
-import { EquipmentList, EquipmentShow } from "@/pages/amp/equipment";
-import {
   ManualWaterLevelList,
   ManualWaterLevelsCreate,
   ManualWaterLevelsEdit,
   ManualWaterLevelShow,
-} from "@/pages/amp/manualwaterlevels";
-import ManualWaterLevelsBatchUpload from "@/pages/amp/manualwaterlevels/batchupload";
-import { AMPProjectList } from "@/pages/amp/projects";
-import { ProjectShow } from "@/pages/geochronology/projects";
-import { LookupTableList, MeasuringAgencyList } from "@/components/lookuptable";
-import { WellInventoryForm } from "@/pages/amp/wellinventoryform";
-import { HydrographCorrector } from "@/pages/amp/hydrographcorrector";
-import { ErrorComponent } from "@refinedev/mui";
-import { WaterLevelForm } from "@/pages/amp/waterlevelform";
+  AMPProjectList,
+  WellInventoryForm,
+  WaterLevelForm,
+} from '@/pages/amp'
+import ManualWaterLevelsBatchUpload from '@/pages/amp/manualwaterlevels/batchupload'
+import { ProjectShow } from '@/pages/geochronology/projects'
+import { LookupTableList, MeasuringAgencyList } from '@/components/lookuptable'
+import { ErrorComponent } from '@refinedev/mui'
 
 const lookupRoutes = [
-  "measurement_method",
-  "level_status",
-  "data_quality",
-  "data_source",
-];
+  'measurement_method',
+  'level_status',
+  'data_quality',
+  'data_source',
+]
 
 export const AMPRoutes = () => {
   return (
@@ -39,7 +41,7 @@ export const AMPRoutes = () => {
       <Route path="hydrographcorrector" element={<HydrographCorrector />} />
       <Route path="dashboard" element={<WaterDashboard />} />
       <Route path="querybuilder" element={<Querybuilder />} />
-      {/* Removed until is WIP state */}
+      {/* Removed until it is in WIP state */}
       {/* <Route path="reportbuilder" element={<ReportBuilder />} /> */}
       <Route path="chemupload" element={<ChemUpload />} />
       <Route path="wells">
@@ -80,5 +82,5 @@ export const AMPRoutes = () => {
       </Route>
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
-  );
-};
+  )
+}

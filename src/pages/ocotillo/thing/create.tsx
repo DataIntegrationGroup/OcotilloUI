@@ -1,13 +1,11 @@
+import { useState } from 'react'
 import type { HttpError } from '@refinedev/core'
 import { Create } from '@refinedev/mui'
-import Box from '@mui/material/Box'
-import TextField from '@mui/material/TextField'
+import { Box, TextField, Autocomplete } from '@mui/material'
 import { useForm } from '@refinedev/react-hook-form'
-import { Nullable } from '../../../interfaces'
-import { ISpring, IWell } from '@/interfaces/ocotillo/IThing'
-import Autocomplete from '@mui/material/Autocomplete'
+import { Nullable } from '@/interfaces'
+import { ISpring, IWell } from '@/interfaces/ocotillo'
 import { Controller } from 'react-hook-form'
-import { useState } from 'react'
 import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 
 export const SpringCreate: React.FC = () => {
@@ -18,9 +16,6 @@ export const SpringCreate: React.FC = () => {
     formState: { errors },
   } = useForm<IWell, HttpError, Nullable<ISpring>>()
 
-  // const { autocompleteProps } = useAutocomplete<ICategory>({
-  //   resource: "categories",
-  // });
   const [springType, setSpringType] = useState<string | null>(null)
 
   return (

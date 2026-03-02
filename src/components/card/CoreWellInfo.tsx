@@ -1,15 +1,22 @@
-import { IWell } from '@/interfaces/ocotillo/IThing'
+import {
+  Agriculture,
+  Groups,
+  Public,
+  PublicOff,
+  WaterDrop,
+} from '@mui/icons-material'
 import {
   Card,
   CardContent,
   CardHeader,
-  Chip,
   Divider,
   Skeleton,
   Stack,
   Typography,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
+import { IWell } from '@/interfaces/ocotillo'
+import { ChipWithExplain } from '@/components'
 
 export const CoreWellInfoCard = ({
   well,
@@ -28,10 +35,22 @@ export const CoreWellInfoCard = ({
     | [number, number, number?]
     | undefined
 
-  const [lon, lat, elevation] = coords ?? []
+  const [lon, lat] = coords ?? []
 
-  const { easting, northing } =
-    well?.current_location?.properties?.utm_coordinates
+  const { easting, northing } = well?.current_location?.properties
+    ?.utm_coordinates ?? { easting: null, northing: null }
+
+  const hasPurposes = !!(
+    well?.well_purposes?.length && well.well_purposes.length > 0
+  )
+
+  const topChipValues = hasPurposes
+    ? well!.well_purposes
+    : [well?.thing_type || 'UNKNOWN TYPE']
+
+  const topChipIcon = hasPurposes ? <WaterDrop /> : <Agriculture />
+  const isPublic = well?.release_status?.toLocaleUpperCase() === 'PUBLIC'
+  const isPrivate = well?.release_status?.toLocaleUpperCase() === 'PRIVATE'
 
   return (
     <Card elevation={2} sx={{ height: '100%' }}>
@@ -52,29 +71,66 @@ export const CoreWellInfoCard = ({
                 mt: 1,
               }}
             >
-              {(well?.well_purposes && well.well_purposes.length > 0
-                ? well.well_purposes
-                : [well?.thing_type || 'UNKNOWN TYPE']
-              ).map((p) => (
-                <Chip
-                  key={p}
-                  sx={{ fontFamily: 'monospace' }}
+              {topChipValues.map((p, i) => (
+                <ChipWithExplain
+                  key={p ?? `UNKNOWN TYPE #${i}`}
                   label={p?.toLocaleUpperCase() || 'UNKNOWN TYPE'}
+                  icon={topChipIcon}
                   color="info"
+                  tooltip={
+                    hasPurposes
+                      ? 'Well Purposes (click for details)'
+                      : 'Site Type (click for details)'
+                  }
+                  explain={
+                    hasPurposes
+                      ? {
+                          title: 'Well Purposes',
+                          meaning:
+                            'What the well is used for (e.g., irrigation, monitoring, municipal supply).',
+                          source: 'well_purposes',
+                        }
+                      : {
+                          title: 'Site Type',
+                          meaning:
+                            'The category of this site (e.g., water well, monitoring well, diversion, stream, reservoir).',
+                          source: 'thing_type',
+                        }
+                  }
+                  chipSx={{ fontFamily: 'monospace', px: 1 }}
                 />
               ))}
-              <Chip
-                sx={{ fontFamily: 'monospace' }}
+
+              <ChipWithExplain
                 label={
                   well?.release_status?.toLocaleUpperCase() || 'UNKNOWN STATUS'
                 }
-                color="error"
+                icon={isPublic ? <Public /> : isPrivate ? <PublicOff /> : null}
+                color={isPublic ? 'success' : isPrivate ? 'error' : null}
+                tooltip="Visibility (click for details)"
+                explain={{
+                  title: 'Visibility',
+                  meaning:
+                    'Who is allowed to view the data (Public: visible to anyone; Private: authorized users only).',
+                  source: 'release_status',
+                }}
+                chipSx={{ fontFamily: 'monospace', px: 1 }}
               />
-              {well?.groups?.map((g) => (
-                <Chip
-                  sx={{ fontFamily: 'monospace' }}
+
+              {well?.groups?.map((g, i) => (
+                <ChipWithExplain
+                  key={g?.name ?? `UNKNOWN GROUP #${i}`}
+                  icon={<Groups />}
                   label={g?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
                   color="primary"
+                  tooltip="Group or Project (click for details)"
+                  explain={{
+                    title: 'Group or Project',
+                    meaning:
+                      'The organization or existing project this site belongs to.',
+                    source: 'group',
+                  }}
+                  chipSx={{ fontFamily: 'monospace', px: 1 }}
                 />
               ))}
             </Stack>
@@ -96,7 +152,7 @@ export const CoreWellInfoCard = ({
               {well?.well_depth ? well?.well_depth_unit : null}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Measuring Point Height:</Typography>
             <Typography variant="body1">
               {well?.measuring_point_height || 'N/A'}{' '}
@@ -106,7 +162,13 @@ export const CoreWellInfoCard = ({
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Northing/Easting:</Typography>
+            <Typography variant="h6">Measuring Point Description:</Typography>
+            <Typography variant="body1">
+              {well?.measuring_point_description || 'N/A'}{' '}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography variant="h6">Easting, Northing:</Typography>
             <Typography variant="body1">
               {`${easting?.toFixed(0) || 'N/A'}, ${northing?.toFixed(0) || 'N/A'}`}
             </Typography>
@@ -128,7 +190,8 @@ export const CoreWellInfoCard = ({
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Elevation:</Typography>
             <Typography variant="body1">
-              {elevation?.toFixed(2) || 'N/A'}
+              {well?.current_location?.properties?.elevation?.toFixed(2) ||
+                'N/A'}
               {well?.current_location?.properties?.elevation_unit
                 ? ` ${well?.current_location?.properties?.elevation_unit}`
                 : null}

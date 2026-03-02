@@ -3,10 +3,11 @@ import { useDataGrid, ExportButton } from '@refinedev/mui'
 import { useExport } from '@refinedev/core'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
-import { ISpring, IWell } from '@/interfaces/ocotillo/IThing'
+import { ISpring, IWell } from '@/interfaces/ocotillo'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { CreateButton } from '@refinedev/mui'
 import { useNavigation } from '@refinedev/core'
+import { formatAppDateTime } from '@/utils'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
@@ -38,9 +39,8 @@ export const SpringList: React.FC = () => {
       {
         field: 'created_at',
         headerName: 'Created At',
-        type: 'dateTime',
-        minWidth: 180,
-        valueGetter: (params) => new Date(params),
+        minWidth: 200,
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
     ],
@@ -91,12 +91,6 @@ export const WellList: React.FC = () => {
         minWidth: 150,
       },
       {
-        field: 'well_type',
-        headerName: 'Well Type',
-        type: 'string',
-        minWidth: 150,
-      },
-      {
         field: 'well_depth',
         headerName: 'Well Depth (ft)',
         type: 'string',
@@ -110,9 +104,8 @@ export const WellList: React.FC = () => {
       {
         field: 'created_at',
         headerName: 'Created At',
-        type: 'dateTime',
-        minWidth: 180,
-        valueGetter: (params) => new Date(params),
+        minWidth: 200,
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
     ],

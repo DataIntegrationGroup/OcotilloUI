@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
 import { useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
-import { ListPage } from '@/components/ListPage'
+import { ListPage } from '@/components'
 import { ISample } from '@/interfaces/ocotillo/ISample'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { extractThingTypeResource, linkColumn } from '@/utils/link'
+import { extractThingTypeResource, linkColumn } from '@/utils'
+import { formatAppDateTime } from '@/utils'
 
 export const SampleList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISample>({
@@ -26,13 +27,13 @@ export const SampleList: React.FC = () => {
         minWidth: 120,
         flex: 1,
       },
-      actionColumnDef(),
       {
         field: 'sample_date',
         headerName: 'Sample Date',
         type: 'string',
         minWidth: 100,
         flex: 1,
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       {
         field: 'sample_type',
@@ -78,6 +79,7 @@ export const SampleList: React.FC = () => {
           return params.row.thing?.name || 'No Thing'
         }
       ),
+      actionColumnDef(),
     ],
     []
   )

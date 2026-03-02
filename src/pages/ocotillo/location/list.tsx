@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
 import { useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
-import { ListPage } from '@/components/ListPage'
+import { ListPage } from '@/components'
 import { ILocation } from '@/interfaces/ocotillo/ILocation'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
+import { formatAppDateTime } from '@/utils'
 
 export const LocationList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ILocation>({
@@ -25,14 +26,28 @@ export const LocationList: React.FC = () => {
       {
         field: 'notes',
         headerName: 'Notes',
-        type: 'string',
         minWidth: 200,
+        valueGetter: (notes: ILocation['notes']) => {
+          if (!Array.isArray(notes) || notes.length === 0) {
+            return ''
+          }
+
+          return notes
+            .map((note) => {
+              if (!note) return ''
+              const type = note.note_type ?? 'Note'
+              const content = note.content ?? ''
+              return content ? `${type}: ${content}` : type
+            })
+            .filter(Boolean)
+            .join(' • ')
+        },
       },
       {
         field: 'point',
         headerName: 'Point (WKT)',
         type: 'string',
-        minWidth: 200,
+        minWidth: 350,
       },
       {
         field: 'release_status',
@@ -43,9 +58,8 @@ export const LocationList: React.FC = () => {
       {
         field: 'created_at',
         headerName: 'Created At',
-        type: 'dateTime',
-        minWidth: 180,
-        valueGetter: (params) => new Date(params),
+        minWidth: 200,
+        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
     ],
