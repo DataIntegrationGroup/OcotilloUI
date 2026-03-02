@@ -224,7 +224,7 @@ export const WellShowPdfPreview = () => {
 
       yAxis: {
         type: 'value',
-        inverse: currentOptions?.invertYAxis ?? true,
+        inverse: true,
         name: yaxisTitle,
         nameLocation: 'center',
         nameGap: 50,
@@ -240,14 +240,12 @@ export const WellShowPdfPreview = () => {
 
       series: [
         {
-          type: 'line',
+          type: 'scatter',
           name: 'Depth to Water',
           data: pts,
-          showSymbol: false,
           symbol: 'circle',
+          symbolSize: 8,
           clip: false,
-          // optional: makes line a bit nicer
-          // smooth: true,
         },
       ],
     }
