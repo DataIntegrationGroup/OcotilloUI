@@ -54,10 +54,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
   const getDrawerWidth = (isSiderCollapsed: boolean): number =>
     isSiderCollapsed ? 56 : 350
 
-  const [open, setOpen] = useState<{ [key: string]: boolean }>({
-    '/ocotillo': true,
-    '/ocotillo/ocotillo.tables': true,
-  })
+  const [open, setOpen] = useState<{ [key: string]: boolean }>({})
 
   useEffect(() => {
     setOpen((previous) => {
@@ -139,12 +136,10 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
                   sx={{
                     pl: isNested ? nestedLevel * 4 : 2,
                     justifyContent: 'center',
-                    borderRadius: isNested ? '0px' : '10px',
-                    border: isNested ? 0 : 1,
+                    borderRadius: 0,
+                    border: 0,
                     m: 0.5,
-                    backgroundColor: !isNested
-                      ? 'rgba(48,114,122,0.5)'
-                      : 'rgba(48,114,122,0.25)',
+                    backgroundColor: 'rgba(48,114,122,0.5)',
                   }}
                 >
                   <ListItemIcon
