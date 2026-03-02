@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { BaseRecord } from '@refinedev/core'
-import { Document, Page, Text } from '@react-pdf/renderer'
+import { Document, Page, Text, Image } from '@react-pdf/renderer'
 import { IPdfDensity, IPdfOptions } from '@/interfaces'
 import { IObservation, IContact, IWell, ISample } from '@/interfaces/ocotillo'
 import { buildPdfFilename, createPdfStyles, SensorDeploymentRow } from '@/utils'
@@ -28,6 +28,7 @@ export const WellPDF = ({
   observations,
   options = {},
   sensorDeployments,
+  hydrographImage,
 }: {
   well: IWell
   sample: ISample
@@ -36,6 +37,7 @@ export const WellPDF = ({
   observations: readonly Partial<IObservation>[]
   sensorDeployments: SensorDeploymentRow[]
   options: IPdfOptions
+  hydrographImage?: string | null
 }) => {
   const density: IPdfDensity = options.density ?? PDF_DEFAULT_VALUES.density
   const isDense = density === 'dense' || density === 'very-dense'
@@ -101,6 +103,25 @@ export const WellPDF = ({
             />
           </>
         )}
+        {showAdditionalOnFirstPage && options.includeHydrograph !== false && (
+          <>
+            <Text style={styles.title}>Hydrograph</Text>
+            {hydrographImage ? (
+              <Image
+                src={hydrographImage}
+                style={{
+                  width: '100%',
+                  height: 220, // tune this
+                  objectFit: 'contain',
+                  marginTop: 6,
+                  marginBottom: 10,
+                }}
+              />
+            ) : (
+              <Text style={styles.pageNote}>(Hydrograph unavailable)</Text>
+            )}
+          </>
+        )}
         {showAdditionalOnFirstPage &&
           assets.length > 0 &&
           options.includeAssets !== false && (
@@ -124,6 +145,27 @@ export const WellPDF = ({
           <Footer wellId={well?.name} styles={styles} />
         </Page>
       )}
+      {options.includeHydrograph ? (
+        <Page size="A4" style={styles.page}>
+          <Header styles={styles} />
+          <Text style={styles.title}>Hydrograph</Text>
+          {hydrographImage ? (
+            <Image
+              src={hydrographImage}
+              style={{
+                width: '100%',
+                height: 220, // tune this
+                objectFit: 'contain',
+                marginTop: 6,
+                marginBottom: 10,
+              }}
+            />
+          ) : (
+            <Text style={styles.pageNote}>(Hydrograph unavailable)</Text>
+          )}
+          <Footer wellId={well?.name} styles={styles} />
+        </Page>
+      ) : null}
       {options.includeBlankPage ? (
         <Page size="A4" style={styles.page}>
           <Header styles={styles} />

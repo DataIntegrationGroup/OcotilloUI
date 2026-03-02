@@ -13,6 +13,7 @@ import {
   Skeleton,
   Stack,
   Typography,
+  useTheme,
 } from '@mui/material'
 import {
   HttpError,
@@ -28,9 +29,10 @@ import { PDFViewer } from '@react-pdf/renderer'
 import {
   ControlledCheckbox,
   ControlledRadioFormSelection,
+  HydrographPngExporter,
   WellPDF,
 } from '@/components'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
 import { useForm } from '@refinedev/react-hook-form'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
@@ -41,7 +43,9 @@ import { SensorDeploymentRow } from '@/utils'
 export const WellShowPdfPreview = () => {
   const { push } = useNavigation()
   const { id } = useParams()
+  const theme = useTheme()
   const [isViewerReady, setIsViewerReady] = useState(false)
+  const [hydrographImage, setHydrographImage] = useState<string | null>(null)
 
   const handleBack = () => push(`/ocotillo/well/show/${id}`)
 
@@ -168,6 +172,101 @@ export const WellShowPdfPreview = () => {
     description: null as null,
   }))
 
+  const hydrographOption = useMemo(() => {
+    if (!observations?.length) return null
+
+    const pts = observations
+      .filter((o) => o.observation_datetime && typeof o.value === 'number')
+      .map((o) => [
+        new Date(o.observation_datetime!).getTime(),
+        Number(o.value),
+      ])
+      .sort((a, b) => a[0] - b[0])
+
+    const yaxisTitle = currentOptions?.useNormalization
+      ? 'Normalized Depth To Water Below Ground Surface (ft)'
+      : currentOptions?.useElevation
+        ? 'Groundwater Elevation Above Sea Level (ft)'
+        : currentOptions?.useCompact
+          ? 'Compact Depth To Water Below Ground Surface (ft)'
+          : 'Depth To Water Below Ground Surface (ft)'
+
+    return {
+      animation: false,
+      backgroundColor: theme.palette.background.paper,
+
+      toolbox: currentOptions?.showToolbox
+        ? {
+            feature: {
+              dataZoom: [{ show: true }, { type: 'inside' }],
+              restore: {},
+              saveAsImage: {},
+              dataView: { show: true },
+              brush: { type: ['lineX', 'clear'] },
+            },
+          }
+        : undefined,
+
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'cross', animation: false },
+        backgroundColor: theme.palette.background.paper,
+        textStyle: { color: theme.palette.text.primary },
+      },
+
+      dataZoom: [{ type: 'inside' }],
+
+      xAxis: {
+        type: 'time',
+        splitLine: { show: true },
+        axisLabel: { color: theme.palette.text.secondary },
+      },
+
+      yAxis: {
+        type: 'value',
+        inverse: currentOptions?.invertYAxis ?? true,
+        name: yaxisTitle,
+        nameLocation: 'center',
+        nameGap: 50,
+        scale: true,
+        axisLabel: { color: theme.palette.text.secondary },
+        splitLine: { show: true },
+      },
+
+      brush: { outOfBrush: { colorAlpha: 0.25 } },
+
+      // match your theme-ish palette; for single series you can keep just one
+      color: ['#0277BD'],
+
+      series: [
+        {
+          type: 'line',
+          name: 'Depth to Water',
+          data: pts,
+          showSymbol: false,
+          symbol: 'circle',
+          clip: false,
+          // optional: makes line a bit nicer
+          // smooth: true,
+        },
+      ],
+    }
+  }, [
+    observations,
+    currentOptions?.invertYAxis,
+    currentOptions?.useNormalization,
+    currentOptions?.useElevation,
+    currentOptions?.useCompact,
+    currentOptions?.dataZoom,
+    currentOptions?.showToolbox,
+    theme,
+  ])
+
+  useEffect(() => {
+    // reset image when inputs change so you don't keep old chart
+    setHydrographImage(null)
+  }, [id, hydrographOption])
+
   return (
     <Show
       resource="thing-well"
@@ -281,11 +380,18 @@ export const WellShowPdfPreview = () => {
                     observations={observations}
                     sensorDeployments={sensorDeployments}
                     options={currentOptions}
+                    hydrographImage={hydrographImage}
                   />
                 </PDFViewer>
               </Box>
             )}
           </Box>
+          {!isLoading && hydrographOption && (
+            <HydrographPngExporter
+              option={hydrographOption}
+              onPngReady={(png) => setHydrographImage(png)}
+            />
+          )}
         </CardContent>
       </Card>
     </Show>
