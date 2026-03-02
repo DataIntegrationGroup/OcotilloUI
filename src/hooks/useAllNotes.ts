@@ -32,7 +32,13 @@ export const useAllNotes = (
         notes: well.construction_notes,
         include: options.includeConstructionNotes !== false,
       },
-      { notes: well.general_notes, include: true },
+      {
+        notes: well.general_notes?.map((note) => ({
+          ...note,
+          note_type: 'Measurement',
+        })),
+        include: true,
+      },
       { notes: well.sampling_procedure_notes, include: true },
     ]
 

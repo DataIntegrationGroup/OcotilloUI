@@ -15,11 +15,12 @@ import {
   AlternateIdsAccordion,
   USGSInfoCard,
   OSEPODInfoCard,
-  WellPDFPreviewButton as PreviewAndDownloadButton,
+  WellPDFPreviewButton,
   WellScreensAccordion,
   EquipmentAccordion,
   NotesAccordion,
   AdditionalWellInformationAccordion,
+  WellPDFDownloadButton,
 } from '@/components'
 
 export const WellShow = () => {
@@ -102,7 +103,8 @@ export const WellShow = () => {
       headerButtons={({ defaultButtons }) => (
         <Box sx={{ display: 'flex', gap: 1 }}>
           {defaultButtons}
-          <PreviewAndDownloadButton well={well} isLoading={isLoading} />
+          <WellPDFPreviewButton isLoading={isLoading} />
+          <WellPDFDownloadButton well={well} isLoading={isLoading} />
         </Box>
       )}
     >

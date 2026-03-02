@@ -29,6 +29,10 @@ export const createPdfStyles = (density: IPdfDensity = 'dense') => {
       width: density === 'very-dense' ? '31.5%' : '32%',
       marginBottom: scale(2, 1.5, 1),
     },
+    cell3Span2: {
+      width: density === 'very-dense' ? '65.75%' : '66%',
+      marginBottom: scale(2, 1.5, 1),
+    },
     cell2: {
       width: density === 'very-dense' ? '49%' : '48%',
       marginBottom: scale(2, 1.5, 1),

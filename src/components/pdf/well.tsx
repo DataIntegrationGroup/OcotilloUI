@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { BaseRecord } from '@refinedev/core'
 import { Document, Page, Text } from '@react-pdf/renderer'
 import { IPdfDensity, IPdfOptions } from '@/interfaces'
-import { IObservation, IContact, IWell } from '@/interfaces/ocotillo'
+import { IObservation, IContact, IWell, ISample } from '@/interfaces/ocotillo'
 import { buildPdfFilename, createPdfStyles, SensorDeploymentRow } from '@/utils'
 import { PDF_DEFAULT_VALUES } from '@/config'
 import {
@@ -22,6 +22,7 @@ import { Footer, Header, LineItem } from '@/components/pdf/layout'
 
 export const WellPDF = ({
   well,
+  sample,
   assets,
   contacts,
   observations,
@@ -29,6 +30,7 @@ export const WellPDF = ({
   sensorDeployments,
 }: {
   well: IWell
+  sample: ISample
   assets: BaseRecord[]
   contacts: IContact[]
   observations: readonly Partial<IObservation>[]
@@ -66,6 +68,7 @@ export const WellPDF = ({
         <WellInformation
           well={well}
           mostRecent={mostRecentObservation}
+          sample={sample}
           styles={styles}
           dense={isDense}
           opts={options}

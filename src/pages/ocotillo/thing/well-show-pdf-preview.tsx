@@ -1,4 +1,4 @@
-import { IContact, ISensor, IWell } from '@/interfaces/ocotillo'
+import { IContact, ISample, ISensor, IWell } from '@/interfaces/ocotillo'
 import {
   Accordion,
   AccordionActions,
@@ -14,7 +14,13 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { HttpError, useList, useNavigation, useShow } from '@refinedev/core'
+import {
+  HttpError,
+  useList,
+  useNavigation,
+  useOne,
+  useShow,
+} from '@refinedev/core'
 import { ListButton, Show, ShowButton, useDataGrid } from '@refinedev/mui'
 import { useParams } from 'react-router-dom'
 import { ArrowBack, ExpandMore } from '@mui/icons-material'
@@ -87,7 +93,7 @@ export const WellShowPdfPreview = () => {
   })
 
   const {
-    dataGridProps: { rows: observations, loading: isObservationsloading },
+    dataGridProps: { rows: observations, loading: isObservationsLoading },
   } = useDataGrid({
     resource: 'observation/groundwater-level',
     dataProviderName: 'ocotillo',
@@ -118,8 +124,33 @@ export const WellShowPdfPreview = () => {
   const assets = assetData?.data ?? []
   const contacts = contactData?.data ?? []
 
+  const sampleId =
+    observations
+      ?.filter((o) => o.observation_datetime) // only ones with date
+      .sort((a, b) => {
+        // Newest first
+        return (
+          new Date(b.observation_datetime!).getTime() -
+          new Date(a.observation_datetime!).getTime()
+        )
+      })[0]?.sample_id ?? null
+
+  const { data: sampleData, isLoading: isSampleLoading } = useOne<ISample>({
+    resource: 'ocotillo.sample',
+    id: sampleId,
+    queryOptions: {
+      enabled: !!sampleId,
+    },
+  })
+
+  const sample = sampleData?.data
+
   const isLoading =
-    isWellLoading || isAssetLoading || isContactLoading || isObservationsloading
+    isWellLoading ||
+    isAssetLoading ||
+    isContactLoading ||
+    isObservationsLoading ||
+    isSampleLoading
 
   useEffect(() => {
     if (!isLoading) {
@@ -244,6 +275,7 @@ export const WellShowPdfPreview = () => {
                 <PDFViewer width="100%" height="100%">
                   <WellPDF
                     well={well}
+                    sample={sample}
                     assets={assets}
                     contacts={contacts}
                     observations={observations}

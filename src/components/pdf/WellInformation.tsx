@@ -1,18 +1,20 @@
 import { View } from '@react-pdf/renderer'
 import { LineItem } from '@/components/pdf/layout'
-import type { IObservation, IWell } from '@/interfaces/ocotillo'
+import type { IObservation, ISample, IWell } from '@/interfaces/ocotillo'
 import { createPdfStyles } from '@/utils'
 import { IPdfOptions } from '@/interfaces'
 
 export const WellInformation = ({
   well,
   mostRecent,
+  sample,
   styles,
   dense = false,
   opts,
 }: {
   well: IWell
   mostRecent: Partial<IObservation>
+  sample: Partial<ISample>
   styles: ReturnType<typeof createPdfStyles>
   dense?: boolean
   opts: IPdfOptions
@@ -64,6 +66,24 @@ export const WellInformation = ({
       <View style={styles.twoByTwoGrid}>
         <View style={styles.cell3}>
           <LineItem
+            title="WL Method"
+            value={sample?.sample_method}
+            styles={styles}
+            dense={dense}
+          />
+        </View>
+        <View style={styles.cell3Span2}>
+          <LineItem
+            title="Measuring Point"
+            value={well?.measuring_point_description}
+            styles={styles}
+            dense={dense}
+          />
+        </View>
+      </View>
+      <View style={styles.twoByTwoGrid}>
+        <View style={styles.cell3}>
+          <LineItem
             title="Last Measured Date"
             value={
               mostRecent?.observation_datetime
@@ -78,7 +98,7 @@ export const WellInformation = ({
         </View>
         <View style={styles.cell3}>
           <LineItem
-            title="Last Depth to Water"
+            title="Last Depth to Water BGS"
             value={
               mostRecent?.depth_to_water_bgs != null
                 ? `${mostRecent.depth_to_water_bgs.toFixed(2)} ${mostRecent.unit}`
@@ -88,7 +108,14 @@ export const WellInformation = ({
             dense={dense}
           />
         </View>
-        <View style={styles.cell3}></View>
+        <View style={styles.cell3}>
+          <LineItem
+            title="Level Status"
+            value={mostRecent?.groundwater_level_reason}
+            styles={styles}
+            dense={dense}
+          />
+        </View>
       </View>
     </View>
   )
