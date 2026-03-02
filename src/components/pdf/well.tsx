@@ -182,7 +182,7 @@ export const WellPDF = ({
             </View>
             <View style={styles.cell3}>
               <LineItem
-                title="Easting/Northing"
+                title="Easting, Northing"
                 value={`${easting?.toFixed(0)}, ${northing?.toFixed(0)}`}
               />
             </View>
