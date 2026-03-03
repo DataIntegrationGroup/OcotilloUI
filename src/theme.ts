@@ -31,7 +31,7 @@ export const getTheme = (mode: PaletteMode) =>
     },
 
     typography: {
-      fontFamily: ["'Inter Variable'", 'system-ui', 'sans-serif'].join(','),
+      fontFamily: ["'Public Sans Variable'", 'system-ui', 'sans-serif'].join(','),
       h1: {
         fontFamily: "'Outfit Variable', system-ui, sans-serif",
         fontWeight: 700,
@@ -82,7 +82,7 @@ export const getTheme = (mode: PaletteMode) =>
         lineHeight: 1.6,
       },
       body1: {
-        fontFamily: "'Inter Variable', system-ui, sans-serif",
+        fontFamily: "'Public Sans Variable', system-ui, sans-serif",
         fontWeight: 400,
         fontSize: '16px',
         lineHeight: 1.6,
@@ -91,26 +91,26 @@ export const getTheme = (mode: PaletteMode) =>
         },
       },
       body2: {
-        fontFamily: "'Inter Variable', system-ui, sans-serif",
+        fontFamily: "'Public Sans Variable', system-ui, sans-serif",
         fontWeight: 400,
         fontSize: '14px',
         lineHeight: 1.6,
       },
       caption: {
-        fontFamily: "'Inter Variable', system-ui, sans-serif",
+        fontFamily: "'Public Sans Variable', system-ui, sans-serif",
         fontWeight: 400,
         fontSize: '12px',
         lineHeight: 1.5,
       },
       overline: {
-        fontFamily: "'Inter Variable', system-ui, sans-serif",
+        fontFamily: "'Public Sans Variable', system-ui, sans-serif",
         fontWeight: 500,
         fontSize: '11px',
         letterSpacing: '0.1em',
         textTransform: 'uppercase',
       },
       button: {
-        fontFamily: "'Inter Variable', system-ui, sans-serif",
+        fontFamily: "'Public Sans Variable', system-ui, sans-serif",
         fontWeight: 500,
         letterSpacing: '0.04em',
       },
