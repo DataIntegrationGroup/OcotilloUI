@@ -43,50 +43,50 @@ let tables: {
       icon: <Construction />,
     },
   },
-  {
-    name: 'thing-spring',
-    list: '/ocotillo/spring',
-    edit: '/ocotillo/spring/edit/:id',
-    show: '/ocotillo/spring/show/:id',
-    create: '/ocotillo/spring/create',
-    meta: {
-      label: 'Springs',
-      icon: <Spa />,
-    },
-  },
-  {
-    name: 'contact',
-    list: '/ocotillo/contact',
-    edit: '/ocotillo/contact/edit/:id',
-    show: '/ocotillo/contact/show/:id',
-    create: '/ocotillo/contact/create',
-    meta: {
-      icon: <Contacts />,
-      label: 'Contacts / Owners',
-    },
-  },
-  {
-    name: 'group',
-    list: '/ocotillo/group',
-    edit: '/ocotillo/group/edit/:id',
-    show: '/ocotillo/group/show/:id',
-    create: '/ocotillo/group/create',
-    meta: {
-      label: 'Groups / Projects',
-      icon: <Workspaces />,
-    },
-  },
-  {
-    name: 'asset',
-    list: '/ocotillo/asset',
-    create: '/ocotillo/asset/create',
-    edit: '/ocotillo/asset/edit/:id',
-    show: '/ocotillo/asset/show/:id',
-    meta: {
-      label: 'Assets / Attachments',
-      icon: <Image />,
-    },
-  },
+  // {
+  //   name: 'thing-spring',
+  //   list: '/ocotillo/spring',
+  //   edit: '/ocotillo/spring/edit/:id',
+  //   show: '/ocotillo/spring/show/:id',
+  //   create: '/ocotillo/spring/create',
+  //   meta: {
+  //     label: 'Springs',
+  //     icon: <Spa />,
+  //   },
+  // },
+  // {
+  //   name: 'contact',
+  //   list: '/ocotillo/contact',
+  //   edit: '/ocotillo/contact/edit/:id',
+  //   show: '/ocotillo/contact/show/:id',
+  //   create: '/ocotillo/contact/create',
+  //   meta: {
+  //     icon: <Contacts />,
+  //     label: 'Contacts / Owners',
+  //   },
+  // },
+  // {
+  //   name: 'group',
+  //   list: '/ocotillo/group',
+  //   edit: '/ocotillo/group/edit/:id',
+  //   show: '/ocotillo/group/show/:id',
+  //   create: '/ocotillo/group/create',
+  //   meta: {
+  //     label: 'Groups / Projects',
+  //     icon: <Workspaces />,
+  //   },
+  // },
+  // {
+  //   name: 'asset',
+  //   list: '/ocotillo/asset',
+  //   create: '/ocotillo/asset/create',
+  //   edit: '/ocotillo/asset/edit/:id',
+  //   show: '/ocotillo/asset/show/:id',
+  //   meta: {
+  //     label: 'Assets / Attachments',
+  //     icon: <Image />,
+  //   },
+  // },
   {
     name: 'location',
     list: '/ocotillo/location',
@@ -98,85 +98,85 @@ let tables: {
       icon: <Place />,
     },
   },
-  {
-    name: 'sensor',
-    list: '/ocotillo/sensor',
-    create: '/ocotillo/sensor/create',
-    edit: '/ocotillo/sensor/edit/:id',
-    show: '/ocotillo/sensor/show/:id',
-    meta: {
-      label: 'Sensors',
-      icon: <SettingsInputAntenna />,
-    },
-  },
-  {
-    name: 'sample',
-    list: '/ocotillo/sample',
-    show: '/ocotillo/sample/show/:id',
-    edit: '/ocotillo/sample/edit/:id',
-    create: '/ocotillo/sample/create',
-    meta: {
-      label: 'Samples',
-      icon: <ScienceOutlined />,
-    },
-  },
-  {
-    name: 'group',
-    list: '/ocotillo/group',
-    edit: '/ocotillo/group/edit/:id',
-    show: '/ocotillo/group/show/:id',
-    create: '/ocotillo/group/create',
-    meta: {
-      label: 'Groups',
-      icon: <Workspaces />,
-    },
-  },
-  {
-    name: 'thing-id-link',
-    list: '/ocotillo/thing-id-link',
-    edit: '/ocotillo/thing-id-link/edit/:id',
-    show: '/ocotillo/thing-id-link/show/:id',
-    create: '/ocotillo/thing-id-link/create',
-    meta: {
-      disabled: false,
-      label: 'Alternate ID links',
-      icon: <Link />,
-    },
-  },
-  {
-    name: 'thing/well-screen',
-    list: '/ocotillo/well-screen',
-    edit: '/ocotillo/well-screen/edit/:id',
-    show: '/ocotillo/well-screen/show/:id',
-    create: '/ocotillo/well-screen/create',
-    meta: {
-      label: 'Well Screens',
-      icon: <MoreVertOutlined />,
-    },
-  },
-  {
-    name: 'lexicon/term',
-    list: '/ocotillo/lexicon',
-    edit: '/ocotillo/lexicon/term/edit/:id',
-    show: '/ocotillo/lexicon/term/show/:id',
-    create: '/ocotillo/lexicon/term/create',
-    meta: {
-      disabled: false,
-      label: 'Lexicon / Glossary',
-      icon: <LibraryBooksOutlined />,
-    },
-  },
-  {
-    name: 'lexicon/category',
-    edit: '/ocotillo/lexicon/category/edit/:id',
-    show: '/ocotillo/lexicon/category/show/:id',
-    create: '/ocotillo/lexicon/category/create',
-    meta: {
-      disabled: false,
-      label: 'Category',
-      icon: <LibraryBooksOutlined />,
-    },
-  },
+  // {
+  //   name: 'sensor',
+  //   list: '/ocotillo/sensor',
+  //   create: '/ocotillo/sensor/create',
+  //   edit: '/ocotillo/sensor/edit/:id',
+  //   show: '/ocotillo/sensor/show/:id',
+  //   meta: {
+  //     label: 'Sensors',
+  //     icon: <SettingsInputAntenna />,
+  //   },
+  // },
+  // {
+  //   name: 'sample',
+  //   list: '/ocotillo/sample',
+  //   show: '/ocotillo/sample/show/:id',
+  //   edit: '/ocotillo/sample/edit/:id',
+  //   create: '/ocotillo/sample/create',
+  //   meta: {
+  //     label: 'Samples',
+  //     icon: <ScienceOutlined />,
+  //   },
+  // },
+  // {
+  //   name: 'group',
+  //   list: '/ocotillo/group',
+  //   edit: '/ocotillo/group/edit/:id',
+  //   show: '/ocotillo/group/show/:id',
+  //   create: '/ocotillo/group/create',
+  //   meta: {
+  //     label: 'Groups',
+  //     icon: <Workspaces />,
+  //   },
+  // },
+  // {
+  //   name: 'thing-id-link',
+  //   list: '/ocotillo/thing-id-link',
+  //   edit: '/ocotillo/thing-id-link/edit/:id',
+  //   show: '/ocotillo/thing-id-link/show/:id',
+  //   create: '/ocotillo/thing-id-link/create',
+  //   meta: {
+  //     disabled: false,
+  //     label: 'Alternate ID links',
+  //     icon: <Link />,
+  //   },
+  // },
+  // {
+  //   name: 'thing/well-screen',
+  //   list: '/ocotillo/well-screen',
+  //   edit: '/ocotillo/well-screen/edit/:id',
+  //   show: '/ocotillo/well-screen/show/:id',
+  //   create: '/ocotillo/well-screen/create',
+  //   meta: {
+  //     label: 'Well Screens',
+  //     icon: <MoreVertOutlined />,
+  //   },
+  // },
+  // {
+  //   name: 'lexicon/term',
+  //   list: '/ocotillo/lexicon',
+  //   edit: '/ocotillo/lexicon/term/edit/:id',
+  //   show: '/ocotillo/lexicon/term/show/:id',
+  //   create: '/ocotillo/lexicon/term/create',
+  //   meta: {
+  //     disabled: false,
+  //     label: 'Lexicon / Glossary',
+  //     icon: <LibraryBooksOutlined />,
+  //   },
+  // },
+  // {
+  //   name: 'lexicon/category',
+  //   edit: '/ocotillo/lexicon/category/edit/:id',
+  //   show: '/ocotillo/lexicon/category/show/:id',
+  //   create: '/ocotillo/lexicon/category/create',
+  //   meta: {
+  //     disabled: false,
+  //     label: 'Category',
+  //     icon: <LibraryBooksOutlined />,
+  //   },
+  // },
 ]
 
 tables.push({
@@ -301,44 +301,44 @@ let ocotillo = [
       label: 'Observations',
     },
   },
-  ...observations,
-  {
-    name: 'apps',
-    icon: <Apps />,
-    meta: {
-      label: 'Apps',
-    },
-  },
-  {
-    name: 'hydrograph-corrector',
-    list: '/ocotillo/hydrograph-corrector',
-    meta: {
-      disabled: true,
-      label: 'Hydrograph Corrector (Coming Soon)',
-      parent: 'ocotillo.apps',
-      nestedLevel: 2,
-      icon: <Construction />,
-    },
-  },
-  {
-    name: 'water-chemistry-import',
-    list: '/ocotillo/water-chemistry-import',
-    meta: {
-      disabled: true,
-      label: 'Water Chemistry Import (Coming Soon)',
-      parent: 'ocotillo.apps',
-      nestedLevel: 2,
-      icon: <ScienceOutlined />,
-    },
-  },
-  {
-    name: 'forms',
-    icon: <DynamicFormOutlined />,
-    meta: {
-      label: 'Forms',
-    },
-  },
-  ...forms,
+  // ...observations,
+  // {
+  //   name: 'apps',
+  //   icon: <Apps />,
+  //   meta: {
+  //     label: 'Apps',
+  //   },
+  // },
+  // {
+  //   name: 'hydrograph-corrector',
+  //   list: '/ocotillo/hydrograph-corrector',
+  //   meta: {
+  //     disabled: true,
+  //     label: 'Hydrograph Corrector (Coming Soon)',
+  //     parent: 'ocotillo.apps',
+  //     nestedLevel: 2,
+  //     icon: <Construction />,
+  //   },
+  // },
+  // {
+  //   name: 'water-chemistry-import',
+  //   list: '/ocotillo/water-chemistry-import',
+  //   meta: {
+  //     disabled: true,
+  //     label: 'Water Chemistry Import (Coming Soon)',
+  //     parent: 'ocotillo.apps',
+  //     nestedLevel: 2,
+  //     icon: <ScienceOutlined />,
+  //   },
+  // },
+  // {
+  //   name: 'forms',
+  //   icon: <DynamicFormOutlined />,
+  //   meta: {
+  //     label: 'Forms',
+  //   },
+  // },
+  // ...forms,
 ]
 
 export const ocotilloResources = ocotillo.map((b) => {
