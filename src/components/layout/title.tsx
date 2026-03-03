@@ -34,7 +34,7 @@ export const ThemedTitleV2: React.FC<RefineLayoutThemedTitleProps> = ({
         <Typography
           component="span"
           sx={{
-            fontFamily: "'Outfit', system-ui, sans-serif",
+            fontFamily: "'Outfit Variable', system-ui, sans-serif",
             fontWeight: 800,
             fontSize: "1.25rem",
             letterSpacing: "0.1em",
@@ -49,7 +49,7 @@ export const ThemedTitleV2: React.FC<RefineLayoutThemedTitleProps> = ({
         <Typography
           component="span"
           sx={{
-            fontFamily: "'Outfit', system-ui, sans-serif",
+            fontFamily: "'Outfit Variable', system-ui, sans-serif",
             fontWeight: 800,
             fontSize: "1.1rem",
             letterSpacing: "0.2em",
