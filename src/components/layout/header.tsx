@@ -101,7 +101,7 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
   }
 
   return (
-    <AppBar position="sticky">
+    <AppBar position="sticky" color="default" elevation={1}>
       <Toolbar>
         <HamburgerMenu />
         <Stack
