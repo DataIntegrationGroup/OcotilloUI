@@ -8,6 +8,7 @@ import {
   ListItemButton,
   TextField,
   Typography,
+  useTheme,
 } from '@mui/material'
 import { Search } from 'react-flaticons'
 import { Stack, Box } from '@mui/material'
@@ -127,6 +128,7 @@ export const SearchBar = () => {
   }
 
   // Add hotkeys for navigation
+  const theme = useTheme()
   const isMac = navigator.platform.toUpperCase().includes('MAC')
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -318,7 +320,8 @@ export const SearchBar = () => {
                         display: 'inline-block',
                         userSelect: 'none',
                         whiteSpace: 'pre',
-                        background: '#f5f5f5',
+                        background: theme.palette.action.hover,
+                        color: theme.palette.text.secondary,
                         marginRight: 8,
                         paddingLeft: 4,
                         paddingRight: 4,
@@ -329,7 +332,7 @@ export const SearchBar = () => {
                         fontWeight: 'bold',
                         fontFamily: 'monospace',
                         letterSpacing: isMac ? '1.5px' : '0.5px',
-                        border: '1px solid #ccc',
+                        border: `1px solid ${theme.palette.divider}`,
                         borderRadius: '7px',
                       }}
                     >
