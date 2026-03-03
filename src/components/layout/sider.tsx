@@ -1,4 +1,4 @@
-import React, { type CSSProperties, useEffect, useState } from 'react'
+import React, { type CSSProperties, useContext, useEffect, useState } from 'react'
 import {
   CanAccess,
   type ITreeMenu,
@@ -10,8 +10,10 @@ import {
 } from '@refinedev/core'
 import { ThemedTitleV2, useThemedLayoutContext } from '@refinedev/mui'
 import ChevronLeft from '@mui/icons-material/ChevronLeft'
+import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined'
 import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
+import LightModeOutlined from '@mui/icons-material/LightModeOutlined'
 import ListOutlined from '@mui/icons-material/ListOutlined'
 import {
   Box,
@@ -26,6 +28,7 @@ import {
   Paper,
 } from '@mui/material'
 import type { RefineThemedLayoutV2SiderProps } from '@refinedev/mui'
+import { ColorModeContext } from '@/contexts'
 import { Dashboard } from './dashboard'
 import { Logout } from './logout'
 
@@ -41,6 +44,8 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
     mobileSiderOpen,
     setMobileSiderOpen,
   } = useThemedLayoutContext()
+
+  const { mode, setMode } = useContext(ColorModeContext)
 
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu({ meta })
   const TitleFromContext = useTitle()
@@ -378,6 +383,24 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
             }}
           >
             <Sider />
+          </Box>
+          <Box
+            sx={{
+              borderTop: (theme) => `1px solid ${theme.palette.action.focus}`,
+              px: siderCollapsed ? 0 : 1,
+              py: 1,
+              display: 'flex',
+              justifyContent: siderCollapsed ? 'center' : 'flex-start',
+            }}
+          >
+            <Tooltip
+              title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              placement="right"
+            >
+              <IconButton onClick={setMode} size="small">
+                {mode === 'dark' ? <LightModeOutlined /> : <DarkModeOutlined />}
+              </IconButton>
+            </Tooltip>
           </Box>
         </Drawer>
       </Box>
