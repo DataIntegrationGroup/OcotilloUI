@@ -57,7 +57,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
   const Link = routerType === 'legacy' ? LegacyLink : NewLink
 
   const getDrawerWidth = (isSiderCollapsed: boolean): number =>
-    isSiderCollapsed ? 56 : 350
+    isSiderCollapsed ? 56 : 260
 
   const [open, setOpen] = useState<{ [key: string]: boolean }>({})
 
@@ -278,7 +278,6 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
       >
         <Dashboard collapsed={siderCollapsed} selectedKey={selectedKey} />
         {renderTreeView(menuItems, selectedKey)}
-        <Logout collapsed={siderCollapsed} />
       </List>
     )
   }
@@ -364,6 +363,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
               paddingRight: siderCollapsed ? 0 : '8px',
               variant: 'outlined',
               borderRadius: 0,
+              bgcolor: 'transparent',
               borderBottom: (theme) =>
                 `1px solid ${theme.palette.action.focus}`,
             }}
@@ -387,20 +387,24 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
           <Box
             sx={{
               borderTop: (theme) => `1px solid ${theme.palette.action.focus}`,
-              px: siderCollapsed ? 0 : 1,
-              py: 1,
+              px: 0.5,
+              py: 0.5,
               display: 'flex',
-              justifyContent: siderCollapsed ? 'center' : 'flex-start',
+              alignItems: 'center',
+              justifyContent: siderCollapsed ? 'center' : 'space-between',
             }}
           >
-            <Tooltip
-              title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              placement="right"
-            >
-              <IconButton onClick={setMode} size="small">
-                {mode === 'dark' ? <LightModeOutlined /> : <DarkModeOutlined />}
-              </IconButton>
-            </Tooltip>
+            <Logout collapsed={siderCollapsed} />
+            {!siderCollapsed && (
+              <Tooltip
+                title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                placement="right"
+              >
+                <IconButton onClick={setMode} size="small" sx={{ mr: 0.5, ml: 1 }}>
+                  {mode === 'dark' ? <LightModeOutlined /> : <DarkModeOutlined />}
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         </Drawer>
       </Box>
