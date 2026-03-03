@@ -1,37 +1,74 @@
 import { PaletteMode } from '@mui/material'
 import { createTheme } from '@mui/material/styles'
+import type {} from '@mui/x-data-grid/themeAugmentation'
+import colors from 'tailwindcss/colors'
+
+declare module '@mui/material/styles' {
+  interface TypographyVariants {
+    deck: React.CSSProperties
+  }
+  interface TypographyVariantsOptions {
+    deck?: React.CSSProperties
+  }
+}
+declare module '@mui/material/Typography' {
+  interface TypographyPropsVariantOverrides {
+    deck: true
+  }
+}
 
 export const getTheme = (mode: PaletteMode) =>
   createTheme({
     palette: {
       mode,
       primary: {
-        light: '#A6CCD6', // Soft Aqua
-        main: '#006E7B', // Deep Cyan
-        dark: '#004153', // Deep Teal
+        light: colors.sky[300],  // sky-300
+        main: colors.sky[700],   // sky-700
+        dark: colors.sky[900],   // sky-900
       },
       secondary: {
-        light: '#E1E4C6', // Beige Sand
-        main: '#86911A', // Citron Green
-        dark: '#3C410C', // Olive Green
+        light: colors.amber[300], // amber-300
+        main: colors.amber[600],  // amber-600
+        dark: colors.amber[800],  // amber-800
+      },
+      error: {
+        light: colors.red[300],  // red-300
+        main: colors.red[600],   // red-600
+        dark: colors.red[800],   // red-800
       },
       warning: {
-        light: '#F5B9B4', // Muted Rose
-        main: '#C04034', // Curnt Sienna
-        dark: '#5B1610', // Crimson Red
+        light: colors.orange[300], // orange-300
+        main: colors.orange[500],  // orange-500
+        dark: colors.orange[700],  // orange-700
+      },
+      success: {
+        light: colors.emerald[300], // emerald-300
+        main: colors.emerald[700],  // emerald-700
+        dark: colors.emerald[900],  // emerald-900
+      },
+      info: {
+        light: colors.cyan[300], // cyan-300
+        main: colors.cyan[600],  // cyan-600
+        dark: colors.cyan[800],  // cyan-800
       },
       background: {
-        default: mode === 'dark' ? '#121212' : '#f4f4f4',
-        paper: mode === 'dark' ? '#1e1e1e' : '#ffffff',
+        default: mode === 'dark' ? colors.zinc[900] : colors.stone[200],
+        paper: mode === 'dark' ? colors.zinc[800] : colors.stone[50],
       },
       text: {
-        primary: mode === 'dark' ? '#ffffff' : '#333',
-        secondary: mode === 'dark' ? '#bbbbbb' : '#666',
+        primary: mode === 'dark' ? colors.slate[100] : colors.slate[900],
+        secondary: mode === 'dark' ? colors.slate[400] : colors.slate[500],
       },
     },
 
     typography: {
       fontFamily: ["'Public Sans Variable'", 'system-ui', 'sans-serif'].join(','),
+      deck: {
+        fontFamily: ["'Public Sans Variable'", 'system-ui', 'sans-serif'].join(','),
+        fontSize: '20px',
+        lineHeight: 1.5,
+        fontWeight: 400,
+      },
       h1: {
         fontFamily: "'Outfit Variable', system-ui, sans-serif",
         fontWeight: 700,
@@ -156,6 +193,13 @@ export const getTheme = (mode: PaletteMode) =>
           }),
         },
       },
+      MuiDrawer: {
+        styleOverrides: {
+          paper: {
+            backgroundColor: mode === 'dark' ? colors.zinc[950] : colors.stone[300],
+          },
+        },
+      },
       MuiDataGrid: {
         styleOverrides: {
           cell: {
@@ -170,6 +214,13 @@ export const getTheme = (mode: PaletteMode) =>
         styleOverrides: {
           root: {
             paddingLeft: '0px !important',
+          },
+        },
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundImage: 'none',
           },
         },
       },
