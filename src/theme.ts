@@ -156,6 +156,16 @@ export const getTheme = (mode: PaletteMode) =>
           }),
         },
       },
+      MuiDataGrid: {
+        styleOverrides: {
+          cell: {
+            fontVariantNumeric: 'tabular-nums',
+          },
+          columnHeader: {
+            fontVariantNumeric: 'tabular-nums',
+          },
+        },
+      },
       MuiGrid: {
         styleOverrides: {
           root: {
