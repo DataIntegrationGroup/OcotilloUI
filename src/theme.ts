@@ -31,59 +31,88 @@ export const getTheme = (mode: PaletteMode) =>
     },
 
     typography: {
-      fontFamily: ['Roboto Condensed', 'Open Sans', 'Arial', 'sans-serif'].join(
-        ','
-      ),
+      fontFamily: ["'Inter Variable'", 'system-ui', 'sans-serif'].join(','),
       h1: {
-        fontFamily: 'Roboto Condensed',
+        fontFamily: "'Outfit Variable', system-ui, sans-serif",
         fontWeight: 700,
         fontSize: '48px',
         lineHeight: 1.4,
         '@media (max-width:600px)': {
-          // Mobile
           fontSize: '36px',
         },
       },
       h2: {
-        fontFamily: 'Roboto Condensed',
-        fontWeight: 600,
+        fontFamily: "'Outfit Variable', system-ui, sans-serif",
+        fontWeight: 700,
         fontSize: '36px',
         lineHeight: 1.5,
         '@media (max-width:600px)': {
-          // Mobile
           fontSize: '28px',
         },
       },
       h3: {
-        fontFamily: 'Roboto Condensed',
-        fontWeight: 500,
+        fontFamily: "'Outfit Variable', system-ui, sans-serif",
+        fontWeight: 600,
         fontSize: '28px',
         lineHeight: 1.5,
         '@media (max-width:600px)': {
-          // Mobile
           fontSize: '24px',
           lineHeight: 1.6,
         },
       },
       h4: {
-        fontFamily: 'Roboto Condensed',
-        fontWeight: 500,
+        fontFamily: "'Outfit Variable', system-ui, sans-serif",
+        fontWeight: 600,
         fontSize: '22px',
         lineHeight: 1.6,
         '@media (max-width:600px)': {
-          // Mobile
           fontSize: '20px',
         },
       },
+      h5: {
+        fontFamily: "'Outfit Variable', system-ui, sans-serif",
+        fontWeight: 600,
+        fontSize: '18px',
+        lineHeight: 1.6,
+      },
+      h6: {
+        fontFamily: "'Outfit Variable', system-ui, sans-serif",
+        fontWeight: 600,
+        fontSize: '16px',
+        lineHeight: 1.6,
+      },
       body1: {
-        fontFamily: 'Open Sans',
+        fontFamily: "'Inter Variable', system-ui, sans-serif",
         fontWeight: 400,
         fontSize: '16px',
-        lineHeight: 1.5,
+        lineHeight: 1.6,
         '@media (max-width:600px)': {
-          // Mobile
           fontSize: '14px',
         },
+      },
+      body2: {
+        fontFamily: "'Inter Variable', system-ui, sans-serif",
+        fontWeight: 400,
+        fontSize: '14px',
+        lineHeight: 1.6,
+      },
+      caption: {
+        fontFamily: "'Inter Variable', system-ui, sans-serif",
+        fontWeight: 400,
+        fontSize: '12px',
+        lineHeight: 1.5,
+      },
+      overline: {
+        fontFamily: "'Inter Variable', system-ui, sans-serif",
+        fontWeight: 500,
+        fontSize: '11px',
+        letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+      },
+      button: {
+        fontFamily: "'Inter Variable', system-ui, sans-serif",
+        fontWeight: 500,
+        letterSpacing: '0.04em',
       },
     },
     components: {
