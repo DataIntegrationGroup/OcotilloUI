@@ -56,10 +56,8 @@ export const getTheme = (mode: PaletteMode) =>
       },
       divider: mode === 'dark' ? colors.zinc[700] : colors.stone[300],
       background: {
-        default: mode === 'dark' ? colors.zinc[950] : colors.stone[200],
-        // default: mode === 'dark' ? colors.zinc[700] : colors.stone[100],
+        default: mode === 'dark' ? colors.zinc[900] : colors.stone[200],
         paper: mode === 'dark' ? colors.zinc[700] : colors.white,
-        // paper: mode === 'dark' ? colors.zinc[800] : colors.white,
         wrapper: mode === 'dark' ? colors.zinc[800] : colors.stone[100],
       },
       text: {
