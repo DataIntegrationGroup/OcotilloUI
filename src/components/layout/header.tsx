@@ -101,13 +101,13 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
   }
 
   return (
-    <AppBar position="sticky" color="transparent" elevation={0} sx={{ bgcolor: 'background.default', borderBottom: 1, borderColor: 'divider' }}>
-      <Toolbar>
+    <AppBar position="sticky" color="transparent" elevation={0} sx={{ bgcolor: 'background.default' }}>
+      <Toolbar disableGutters sx={{ px: 1 }}>
         <HamburgerMenu />
         <Stack
           direction="row"
           width="100%"
-          justifyContent="flex-end"
+          justifyContent="space-between"
           alignItems="center"
           gap="12px"
         >
