@@ -164,11 +164,23 @@ export const getTheme = (mode: PaletteMode) =>
         },
       },
       MuiButton: {
+        defaultProps: {
+          size: 'small',
+        },
         styleOverrides: {
+          sizeSmall: {
+            fontSize: '0.8125rem',
+            padding: '4px 12px',
+          },
+          sizeMedium: {
+            fontSize: '0.875rem',
+            padding: '6px 16px',
+          },
+          sizeLarge: {
+            fontSize: '0.9375rem',
+            padding: '8px 22px',
+          },
           root: ({ ownerState, theme }) => ({
-            fontSize: '1rem', // Sets the base font size (1rem is typically 16px in most browsers)
-            padding: '0.5em 2.5em', // Vertical padding is half the font size, horizontal padding is two and half times the font size
-
             // Primary Contained
             ...(ownerState.variant === 'contained' &&
               ownerState.color === 'primary' && {
@@ -185,7 +197,7 @@ export const getTheme = (mode: PaletteMode) =>
                 color: theme.palette.primary.main,
                 border: `1px solid ${theme.palette.primary.main}`,
                 '&:hover': {
-                  backgroundColor: `${theme.palette.primary.dark}CC`, // 80% opacity in HEX (CC)
+                  backgroundColor: `${theme.palette.primary.dark}CC`,
                   color: theme.palette.primary.dark,
                   border: `1px solid ${theme.palette.primary.dark}`,
                 },
