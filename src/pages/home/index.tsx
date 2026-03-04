@@ -149,13 +149,7 @@ const Hero = () => {
         }}
       >
         <Typography variant="h1" sx={{ fontSize: { xs: 40, sm: 56, md: 72 } }}>
-          Welcome to Ocotillo.
-        </Typography>
-        <Typography
-          variant="h2"
-          sx={{ fontSize: { xs: 20, sm: 28, md: 34 }, mt: 1 }}
-        >
-          NMBGMR&apos;s Data Management Portal
+          Welcome to Ocotillo
         </Typography>
       </Box>
     </Box>
@@ -167,10 +161,7 @@ const About = () => (
     <Container maxWidth="lg">
       <Stack spacing={3}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-            About Ocotillo
-          </Typography>
-          <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+          <Typography variant="deck" sx={{ color: 'text.secondary' }}>
             Ocotillo is a web application for accessing and working with New
             Mexico Bureau of Geology water data. Right now it provides access to
             groundwater well information from the Aquifer Mapping Program
