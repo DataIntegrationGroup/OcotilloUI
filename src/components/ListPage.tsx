@@ -3,7 +3,7 @@ import { DataGrid } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import React from 'react'
 import { useExport } from '@refinedev/core'
-import { Card, Typography } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { CanAccess } from '@refinedev/core'
 
 type ListPageProps = {
@@ -59,23 +59,27 @@ export const ListPage: React.FC<ListPageProps> = ({
     <CanAccess>
       <List
         headerButtons={headerButtons || defaultHeaderButtons}
-        title={title}
+        title={
+          title ? (
+            <Box>
+              <Typography variant="h3" fontWeight={700}>
+                {title}
+              </Typography>
+              {description && (
+                <Typography
+                  variant="body1"
+                  sx={{ maxWidth: '85ch', mt: 0.5, color: 'text.secondary' }}
+                >
+                  {description}
+                </Typography>
+              )}
+            </Box>
+          ) : undefined
+        }
         breadcrumb={<Breadcrumb hideIcons={true} />}
+        headerProps={{ sx: { '.MuiCardHeader-action': { alignSelf: 'flex-start', mt: 0.5, mr: 0 } } }}
+        contentProps={{ sx: { pt: 1 } }}
       >
-        {description && (
-          <Card
-            className={'description'}
-            variant="outlined"
-            sx={{
-              marginTop: 1,
-              marginBottom: 1,
-              padding: 1,
-            }}
-          >
-            <Typography variant="body1">{description}</Typography>
-          </Card>
-        )}
-
         {children}
         <DataGrid
           {...dataGridProps}
