@@ -3,6 +3,7 @@ import { ThemedLayoutContextProvider } from "@refinedev/mui";
 import { ThemedHeaderV2 as DefaultHeader } from "./header";
 import { ThemedSiderV2 as DefaultSider } from "./sider";
 import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid2";
 import type { RefineThemedLayoutV2Props } from "@refinedev/mui";
 
 export const ThemedLayoutV2: React.FC<RefineThemedLayoutV2Props> = ({
@@ -43,7 +44,9 @@ export const ThemedLayoutV2: React.FC<RefineThemedLayoutV2Props> = ({
               bgcolor: (theme) => theme.palette.background.default,
             }}
           >
-            {children}
+            <Grid container columns={{ xs: 4, md: 12 }}>
+              {children}
+            </Grid>
           </Box>
           {Footer && <Footer />}
         </Box>
