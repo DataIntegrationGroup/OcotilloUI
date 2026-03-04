@@ -7,6 +7,7 @@ import {
   Box,
   Card,
   LinearProgress,
+  Stack,
   Typography,
   Divider,
   FormControlLabel,
@@ -72,33 +73,37 @@ export const MapView: React.FC = () => {
   return (
     <List
       breadcrumb={<Breadcrumb hideIcons={true} />}
-      title="Map"
+      title={
+        <Box>
+          <Typography variant="h3" fontWeight={700}>
+            Map
+          </Typography>
+          <Typography variant="body1" sx={{ maxWidth: '85ch', mt: 0.5, color: 'text.secondary' }}>
+            Explore water wells and springs across New Mexico. Click a point to view site details.
+          </Typography>
+        </Box>
+      }
       canCreate={false}
+      wrapperProps={{
+        elevation: 0,
+        sx: { backgroundColor: 'background.wrapper', boxShadow: 'none', borderRadius: 1, padding: 0 },
+      }}
+      headerProps={{ sx: { '.MuiCardHeader-action': { alignSelf: 'flex-start', mt: 0.5, mr: 0 } } }}
+      contentProps={{ sx: { pt: 1 } }}
     >
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6, lg: 4, xl: 3 }}>
           <Card elevation={2}>
-            <Grid container spacing={1} p={2}>
-              <Grid size={{ xs: 12 }}>
-                <Typography variant="h4">Layers</Typography>
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Divider />
-              </Grid>
-              {Object.entries(THING_LAYERS).map((layer) => {
-                const [key, layerDef] = layer
+            <Stack spacing={1} p={2}>
+              <Typography variant="h4">Layers</Typography>
+              <Divider />
+              {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
                 const { layerProps, isLoading } = layerDef
                 const color = layerProps.paint['circle-color']
 
                 return (
-                  <Grid
-                    container
-                    size={{ xs: 12 }}
-                    key={key}
-                    spacing={1}
-                    px={1}
-                  >
-                    <Grid size={{ xs: 10 }}>
+                  <Stack key={key} spacing={0.5} px={1}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <FormControlLabel
                         control={
                           <Checkbox
@@ -109,33 +114,23 @@ export const MapView: React.FC = () => {
                         }
                         label={layerProps.label}
                       />
-                    </Grid>
-                    <Grid
-                      size={{ xs: 2 }}
-                      display="flex"
-                      justifyContent="right"
-                      alignItems="center"
-                    >
                       <Box
                         sx={{
                           width: 16,
                           height: 16,
-                          display: 'inline-block',
+                          flexShrink: 0,
                           backgroundColor: color,
                           borderRadius: '4px',
-                          marginRight: 1,
                         }}
                       />
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                      <Box sx={{ height: 4, width: '100%' }}>
-                        {isLoading && <LinearProgress sx={{ height: 4 }} />}
-                      </Box>
-                    </Grid>
-                  </Grid>
+                    </Box>
+                    <Box sx={{ height: 4 }}>
+                      {isLoading && <LinearProgress sx={{ height: 4 }} />}
+                    </Box>
+                  </Stack>
                 )
               })}
-            </Grid>
+            </Stack>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, lg: 8, xl: 9 }}>
