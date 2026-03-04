@@ -361,51 +361,50 @@ The app layout establishes a 12-column grid at the `<Box component="main">` leve
 | Two thirds | 4 | 8 |
 | One quarter | 2 | 3 |
 
-### PageGrid and PageGridItem
+### Using Grid2
 
-`src/components/layout/PageGrid.tsx` exports two convenience components for column layouts within a page:
-
-```tsx
-import { PageGrid, PageGridItem } from '@/components/layout/PageGrid'
-
-// Two equal columns on desktop, stacked on mobile
-<PageGrid>
-  <PageGridItem xs={4} md={6}>
-    <Card>Left panel</Card>
-  </PageGridItem>
-  <PageGridItem xs={4} md={6}>
-    <Card>Right panel</Card>
-  </PageGridItem>
-</PageGrid>
-
-// Three equal columns on desktop, stacked on mobile
-<PageGrid>
-  <PageGridItem xs={4} md={4}>Column A</PageGridItem>
-  <PageGridItem xs={4} md={4}>Column B</PageGridItem>
-  <PageGridItem xs={4} md={4}>Column C</PageGridItem>
-</PageGrid>
-```
-
-`PageGrid` is a pre-configured `Grid container`. `PageGridItem` is a typed `Grid` item. `xs` defaults to `4` (full width on mobile) if not specified.
-
-You can also use MUI `Grid2` directly -- `PageGrid` and `PageGridItem` are just typed convenience wrappers:
+Use MUI `Grid2` directly for column layouts. Import it as `Grid` to keep usage concise:
 
 ```tsx
 import Grid from '@mui/material/Grid2'
 
+// Two equal columns on desktop, stacked on mobile
 <Grid container spacing={2}>
-  <Grid size={{ xs: 4, md: 6 }}>...</Grid>
-  <Grid size={{ xs: 4, md: 6 }}>...</Grid>
+  <Grid size={{ xs: 4, md: 6 }}>
+    <Card>Left panel</Card>
+  </Grid>
+  <Grid size={{ xs: 4, md: 6 }}>
+    <Card>Right panel</Card>
+  </Grid>
+</Grid>
+
+// Three equal columns on desktop
+<Grid container spacing={2}>
+  <Grid size={{ xs: 4, md: 4 }}>Column A</Grid>
+  <Grid size={{ xs: 4, md: 4 }}>Column B</Grid>
+  <Grid size={{ xs: 4, md: 4 }}>Column C</Grid>
+</Grid>
+
+// Asymmetric layout with xl breakpoint
+<Grid container spacing={3}>
+  <Grid size={{ xs: 12, md: 6, lg: 4, xl: 3 }}>Sidebar</Grid>
+  <Grid size={{ xs: 12, lg: 8, xl: 9 }}>Main content</Grid>
 </Grid>
 ```
 
-### Full-width pages (list pages, map)
+The `size` prop accepts any breakpoint key (`xs`, `sm`, `md`, `lg`, `xl`). Use the column spans from the cheat sheet above.
 
-List pages and the map do not need any changes. Non-Grid children of a Grid container render as normal block elements and take up the full available width. The Wells list, Springs list, and Map page continue to work exactly as before.
+### Full-width pages
+
+List pages and the map do not need a grid wrapper. Non-Grid children render as normal block elements and take up the full available width.
 
 ### Nested grids
 
-Pages that use `PageGrid` inside a Refine `<Show>` or `<Edit>` wrapper are nesting a Grid inside another Grid -- this is fully supported by MUI Grid2. See `src/pages/ocotillo/thing/well-show.tsx` for an existing example where Grid is used inside a `<Show>` wrapper.
+Nesting a `Grid container` inside a `Grid` item (e.g. inside a Refine `<Show>` or `<Edit>` wrapper) is fully supported by MUI Grid2. See `src/pages/ocotillo/thing/well-show.tsx` for an existing example.
+
+### When not to use Grid2
+
+Grid is for column layouts. For stacking items vertically or aligning items in a row, use `Stack` or a `Box` with `display: flex` instead -- they are simpler and don't add grid overhead.
 
 ---
 
