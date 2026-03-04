@@ -363,7 +363,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
               paddingRight: siderCollapsed ? 0 : '8px',
               variant: 'outlined',
               borderRadius: 0,
-              bgcolor: 'transparent',
+              bgcolor: 'background.default',
               borderBottom: (theme) =>
                 `1px solid ${theme.palette.action.focus}`,
             }}
