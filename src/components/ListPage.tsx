@@ -77,6 +77,10 @@ export const ListPage: React.FC<ListPageProps> = ({
           ) : undefined
         }
         breadcrumb={<Breadcrumb hideIcons={true} />}
+        wrapperProps={{
+          elevation: 0,
+          sx: { backgroundColor: 'background.wrapper', boxShadow: 'none', borderRadius: 1, padding: 0 },
+        }}
         headerProps={{ sx: { '.MuiCardHeader-action': { alignSelf: 'flex-start', mt: 0.5, mr: 0 } } }}
         contentProps={{ sx: { pt: 1 } }}
       >
@@ -90,6 +94,7 @@ export const ListPage: React.FC<ListPageProps> = ({
           loading={isLoading}
           columns={columns}
           columnPinningModel={{ right: ['actions'] }}
+          // sx={{ backgroundColor: 'background.paper' }}
         />
       </List>
     </CanAccess>
