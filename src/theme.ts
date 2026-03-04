@@ -70,7 +70,7 @@ export const getTheme = (mode: PaletteMode) =>
       fontFamily: ["'Public Sans Variable'", 'system-ui', 'sans-serif'].join(','),
       deck: {
         fontFamily: ["'Public Sans Variable'", 'system-ui', 'sans-serif'].join(','),
-        fontSize: '20px',
+        fontSize: '22px',
         lineHeight: 1.5,
         fontWeight: 400,
       },
