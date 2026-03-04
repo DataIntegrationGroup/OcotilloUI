@@ -12,6 +12,7 @@ A practical reference for working on the Ocotillo front-end. It covers the frame
 - [Refine.dev -- What It Owns](#refinedev----what-it-owns)
 - [Color System](#color-system)
 - [Typography System](#typography-system)
+- [Responsive Grid System](#responsive-grid-system)
 - [Where to Override Styles](#where-to-override-styles)
 - [How to Find Where a Style Is Coming From](#how-to-find-where-a-style-is-coming-from)
 - [Common Patterns](#common-patterns)
@@ -336,6 +337,75 @@ Fonts are loaded locally via `@fontsource-variable` packages (imported in `src/i
 <Typography variant="body1" color="text.secondary">Supporting text.</Typography>
 <Typography variant="caption">12px metadata label</Typography>
 ```
+
+---
+
+## Responsive Grid System
+
+The app layout establishes a 12-column grid at the `<Box component="main">` level in `src/components/layout/index.tsx`. On mobile (`xs`), this collapses to 4 columns. Pages that need structured column layouts place their content as Grid items within this foundation.
+
+### Column counts by breakpoint
+
+| Breakpoint | Columns | Typical use |
+|---|---|---|
+| `xs` (< 600px) | 4 | Mobile phones |
+| `md` (>= 900px) | 12 | Tablets, desktops |
+
+### Column span cheat sheet
+
+| Layout | `xs` span | `md` span |
+|---|---|---|
+| Full width | 4 | 12 |
+| Half | 2 | 6 |
+| One third | 4 | 4 |
+| Two thirds | 4 | 8 |
+| One quarter | 2 | 3 |
+
+### PageGrid and PageGridItem
+
+`src/components/layout/PageGrid.tsx` exports two convenience components for column layouts within a page:
+
+```tsx
+import { PageGrid, PageGridItem } from '@/components/layout/PageGrid'
+
+// Two equal columns on desktop, stacked on mobile
+<PageGrid>
+  <PageGridItem xs={4} md={6}>
+    <Card>Left panel</Card>
+  </PageGridItem>
+  <PageGridItem xs={4} md={6}>
+    <Card>Right panel</Card>
+  </PageGridItem>
+</PageGrid>
+
+// Three equal columns on desktop, stacked on mobile
+<PageGrid>
+  <PageGridItem xs={4} md={4}>Column A</PageGridItem>
+  <PageGridItem xs={4} md={4}>Column B</PageGridItem>
+  <PageGridItem xs={4} md={4}>Column C</PageGridItem>
+</PageGrid>
+```
+
+`PageGrid` is a pre-configured `Grid container`. `PageGridItem` is a typed `Grid` item. `xs` defaults to `4` (full width on mobile) if not specified.
+
+You can also use MUI `Grid2` directly -- `PageGrid` and `PageGridItem` are just typed convenience wrappers:
+
+```tsx
+import Grid from '@mui/material/Grid2'
+
+<Grid container spacing={2}>
+  <Grid size={{ xs: 4, md: 6 }}>...</Grid>
+  <Grid size={{ xs: 4, md: 6 }}>...</Grid>
+</Grid>
+```
+
+### Full-width pages (list pages, map)
+
+List pages and the map do not need any changes. Non-Grid children of a Grid container render as normal block elements and take up the full available width. The Wells list, Springs list, and Map page continue to work exactly as before.
+
+### Nested grids
+
+Pages that use `PageGrid` inside a Refine `<Show>` or `<Edit>` wrapper are nesting a Grid inside another Grid -- this is fully supported by MUI Grid2. See `src/pages/ocotillo/thing/well-show.tsx` for an existing example where Grid is used inside a `<Show>` wrapper.
 
 ---
 
