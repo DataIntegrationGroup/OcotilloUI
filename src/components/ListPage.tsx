@@ -81,7 +81,17 @@ export const ListPage: React.FC<ListPageProps> = ({
           elevation: 0,
           sx: { backgroundColor: 'background.wrapper', boxShadow: 'none', borderRadius: 1, padding: 0 },
         }}
-        headerProps={{ sx: { '.MuiCardHeader-action': { alignSelf: 'flex-start', mt: 0.5, mr: 0 } } }}
+        headerProps={{
+          sx: {
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: { xs: 'flex-start', md: 'center' },
+            '.MuiCardHeader-action': {
+              alignSelf: { xs: 'flex-end', md: 'flex-start' },
+              mt: { xs: 1, md: 0.5 },
+              mr: 0,
+            },
+          },
+        }}
         contentProps={{ sx: { pt: 1 } }}
       >
         {children}
