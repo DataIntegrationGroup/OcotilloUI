@@ -9,6 +9,7 @@ A practical reference for working on the Ocotillo front-end. It covers the frame
 - [Framework Stack Overview](#framework-stack-overview)
 - [How the Layers Work Together](#how-the-layers-work-together)
 - [Material UI Components](#material-ui-components)
+- [Icons](#icons)
 - [Refine.dev -- What It Owns](#refinedev----what-it-owns)
 - [Color System](#color-system)
 - [Typography System](#typography-system)
@@ -96,6 +97,59 @@ Every MUI component accepts an `sx` prop for one-off styles. It understands them
 ```
 
 Use `sx` for instance-specific overrides. Use `theme.ts` for global overrides that should apply to every instance of a component.
+
+---
+
+## Icons
+
+Icons come from **`@mui/icons-material`**, a separate package in the MUI family. It contains 2,000+ icons from Google's Material Icons set, each exported as its own React component.
+
+**Browse and search:** [mui.com/material-ui/material-icons](https://mui.com/material-ui/material-icons/) -- click any icon to copy its import path.
+
+### Importing icons
+
+Each icon name maps directly to its import path:
+
+```tsx
+import AddIcon from '@mui/icons-material/Add'
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
+import SearchIcon from '@mui/icons-material/Search'
+```
+
+Import from the specific path (e.g. `@mui/icons-material/Add`) rather than the barrel export (`@mui/icons-material`) -- it keeps bundle size small by only including what you use.
+
+### Style variants
+
+Every icon is available in five variants. Append the variant name to the icon name:
+
+| Variant | Suffix | Example import |
+|---|---|---|
+| Filled (default) | *(none)* | `@mui/icons-material/Add` |
+| Outlined | `Outlined` | `@mui/icons-material/AddOutlined` |
+| Rounded | `Rounded` | `@mui/icons-material/AddRounded` |
+| Sharp | `Sharp` | `@mui/icons-material/AddSharp` |
+| Two Tone | `TwoTone` | `@mui/icons-material/AddTwoTone` |
+
+Outlined icons are the most common choice in this app for actions and navigation.
+
+### Usage
+
+Icons render as SVGs and accept `sx`, `fontSize`, and `color` props:
+
+```tsx
+// Inside a Button (startIcon prop)
+<Button startIcon={<AddIcon />} size="small" variant="contained">
+  Create
+</Button>
+
+// Standalone with sizing
+<SearchIcon fontSize="small" />
+<SearchIcon sx={{ fontSize: 20 }} />
+
+// With color
+<WarningIcon color="warning" />
+<WarningIcon sx={{ color: 'text.secondary' }} />
+```
 
 ---
 
@@ -344,12 +398,43 @@ Fonts are loaded locally via `@fontsource-variable` packages (imported in `src/i
 
 The app layout establishes a 12-column grid at the `<Box component="main">` level in `src/components/layout/index.tsx`. On mobile (`xs`), this collapses to 4 columns. Pages that need structured column layouts place their content as Grid items within this foundation.
 
+### MUI breakpoints
+
+MUI's default breakpoints (these are the same values used in all `sx` props and `Grid2` `size` objects across the app):
+
+| Key | Min width | Typical device |
+|---|---|---|
+| `xs` | 0px | Mobile phones (portrait) |
+| `sm` | 600px | Mobile phones (landscape), small tablets |
+| `md` | 900px | Tablets, small laptops |
+| `lg` | 1200px | Desktops |
+| `xl` | 1536px | Large/wide monitors |
+
+Breakpoints are **mobile-first** -- a value set at `md` applies from 900px and up unless a larger breakpoint overrides it.
+
+### Using breakpoints in sx props
+
+Any `sx` prop that accepts a scalar also accepts a breakpoint object:
+
+```tsx
+// Stack on mobile, row on desktop
+sx={{ flexDirection: { xs: 'column', md: 'row' } }}
+
+// Different padding per breakpoint
+sx={{ p: { xs: 1, md: 2, lg: 3 } }}
+
+// Hide on mobile, show on desktop
+sx={{ display: { xs: 'none', md: 'block' } }}
+```
+
 ### Column counts by breakpoint
+
+The app targets a 4-column layout on mobile and 12-column on desktop:
 
 | Breakpoint | Columns | Typical use |
 |---|---|---|
-| `xs` (< 600px) | 4 | Mobile phones |
-| `md` (>= 900px) | 12 | Tablets, desktops |
+| `xs` (0px+) | 4 | Mobile phones |
+| `md` (900px+) | 12 | Tablets, desktops |
 
 ### Column span cheat sheet
 
