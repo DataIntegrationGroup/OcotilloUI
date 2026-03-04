@@ -1,13 +1,15 @@
 import { useMemo } from 'react'
-import { useDataGrid, ExportButton } from '@refinedev/mui'
+import { useDataGrid } from '@refinedev/mui'
 import { useExport } from '@refinedev/core'
 import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components/ListPage'
 import { ISpring, IWell } from '@/interfaces/ocotillo'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { CreateButton } from '@refinedev/mui'
 import { useNavigation } from '@refinedev/core'
 import { formatAppDateTime } from '@/utils'
+import { Button } from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
@@ -117,12 +119,23 @@ export const WellList: React.FC = () => {
   const customHeaderButtons = () => {
     return (
       <>
-        <CreateButton onClick={() => push('/ocotillo/well-inventory-form')} />
-        <ExportButton
-          variant={'contained'}
-          loading={exportIsLoading}
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => push('/ocotillo/well-inventory-form')}
+        >
+          Create
+        </Button>
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<FileDownloadOutlinedIcon />}
+          disabled={exportIsLoading}
           onClick={triggerExport}
-        />
+        >
+          Export
+        </Button>
       </>
     )
   }
