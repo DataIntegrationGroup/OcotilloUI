@@ -14,6 +14,7 @@ import {
   Workspaces,
   MoreVertOutlined,
   LibraryBooksOutlined,
+  Opacity,
 } from '@mui/icons-material'
 
 let tables: {
@@ -40,7 +41,7 @@ let tables: {
     create: '/ocotillo/well/create',
     meta: {
       label: 'Wells',
-      icon: <Construction />,
+      icon: <Opacity />,
     },
   },
   // {
@@ -54,17 +55,17 @@ let tables: {
   //     icon: <Spa />,
   //   },
   // },
-  // {
-  //   name: 'contact',
-  //   list: '/ocotillo/contact',
-  //   edit: '/ocotillo/contact/edit/:id',
-  //   show: '/ocotillo/contact/show/:id',
-  //   create: '/ocotillo/contact/create',
-  //   meta: {
-  //     icon: <Contacts />,
-  //     label: 'Contacts / Owners',
-  //   },
-  // },
+  {
+    name: 'contact',
+    list: '/ocotillo/contact',
+    edit: '/ocotillo/contact/edit/:id',
+    show: '/ocotillo/contact/show/:id',
+    create: '/ocotillo/contact/create',
+    meta: {
+      icon: <Contacts />,
+      label: 'Contacts & Owners',
+    },
+  },
   // {
   //   name: 'group',
   //   list: '/ocotillo/group',
