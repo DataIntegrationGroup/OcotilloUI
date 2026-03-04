@@ -23,7 +23,7 @@ A practical reference for working on the Ocotillo front-end. It covers the frame
 The UI is built on three layers. Understanding which layer owns which concern saves a lot of time.
 
 | Layer | Package | Owns |
-|---|---|---|
+| --- | --- | --- |
 | **MUI** | `@mui/material` | All visual components (Button, Card, Drawer, DataGrid, etc.) |
 | **Refine** | `@refinedev/core`, `@refinedev/mui` | Data, routing, auth, CRUD layout wrappers |
 | **Ocotillo** | `src/` | App-specific business logic, custom components, theme |
@@ -48,7 +48,7 @@ Refine exports MUI-wrapped components like `<List>`, `<Show>`, `<Edit>`, `<Creat
 
 Because they are wrappers, they do not always pass every MUI prop through. If you hit a wall trying to style a Refine component, the best move is to replace it with the underlying MUI primitive directly. See `src/pages/ocotillo/thing/list.tsx` for an example -- the Refine `CreateButton` and `ExportButton` were replaced with plain MUI `Button` components to get reliable `size` prop behavior.
 
-Refine does own a few things you should not fight:
+**Refine does own a few things you should not fight: &lt;--------------------------------**
 
 - **Navigation** -- sidebar items come from `src/resources/ocotillo.tsx`
 - **Document title** -- managed in `src/AppProviders.tsx` via `DocumentTitleHandler`
@@ -64,7 +64,7 @@ The full component library is at [mui.com/material-ui/all-components](https://mu
 The most commonly used in this project:
 
 | Component | Used for |
-|---|---|
+| --- | --- |
 | `Box` | Layout wrapper, replaces `div` with `sx` prop access |
 | `Stack` | One-axis flex layout (direction, gap, alignItems) |
 | `Typography` | All text. Use the `variant` prop to apply the type scale |
@@ -117,17 +117,115 @@ These are local copies of the Refine defaults, which means they can be edited fr
 
 ### CRUD page wrappers
 
-Refine's `<List>`, `<Show>`, `<Edit>`, `<Create>` components render a `Card` with a `CardHeader` (title + action buttons) and `CardContent` (the table or form). The wrappers accept these props for styling:
+Refine provides four page-level wrapper components. Each one renders an MUI `Card` with a `CardHeader` (title + action buttons) and `CardContent` (your content). They also handle breadcrumbs, page titles, and action buttons automatically based on the active resource.
+
+| Wrapper | Used for | Default action buttons |
+|---|---|---|
+| `<List>` | Table/list pages | Create |
+| `<Show>` | Detail/view pages | Edit, Delete, back arrow |
+| `<Edit>` | Edit form pages | Save, Delete, back arrow |
+| `<Create>` | Create form pages | Save, back arrow |
+
+#### Anatomy of a wrapper
+
+```
+<Card>                             ← wrapperProps targets this
+  <CardHeader>                     ← headerProps targets this
+    Breadcrumb
+    Title                          ← title prop
+    Action buttons                 ← headerButtons prop
+  </CardHeader>
+  <CardContent>                    ← contentProps targets this
+    {children}
+  </CardContent>
+</Card>
+```
+
+#### Styling the wrapper
+
+All four wrappers accept the same three style props:
 
 ```tsx
 <List
-  wrapperProps={{ elevation: 0, sx: { ... } }}   // styles the outer Card
-  headerProps={{ sx: { ... } }}                   // styles the CardHeader
-  contentProps={{ sx: { ... } }}                  // styles the CardContent
+  wrapperProps={{ elevation: 0, sx: { backgroundColor: 'transparent' } }}
+  headerProps={{ sx: { '.MuiCardHeader-action': { alignSelf: 'flex-start' } } }}
+  contentProps={{ sx: { pt: 1 } }}
 >
 ```
 
-See `src/components/ListPage.tsx` for how this is used in practice.
+The `wrapperProps` and `contentProps` are passed directly to MUI `Card` and `CardContent`. The `headerProps` are passed to `CardHeader`. This is where you use `.MuiCardHeader-action` to target the button area within the header.
+
+#### Customizing action buttons
+
+Each wrapper has a `headerButtons` prop that replaces the default buttons. It receives `{ defaultButtons }` which you can include or discard:
+
+```tsx
+<List
+  headerButtons={({ defaultButtons }) => (
+    <>
+      {defaultButtons}
+      <Button size="small" variant="outlined">Custom Action</Button>
+    </>
+  )}
+>
+```
+
+If the Refine default buttons (like `CreateButton`) do not behave correctly with MUI props, replace them entirely with plain MUI `Button` components. See `src/pages/ocotillo/thing/list.tsx` for a working example.
+
+#### Data hooks
+
+Each wrapper has a matching data hook that fetches the right data for the active resource and connects it to the UI:
+
+| Wrapper | Hook | What it provides |
+|---|---|---|
+| `<List>` | `useDataGrid()` | `dataGridProps` for a DataGrid |
+| `<Show>` | `useShow()` | `queryResult` with the record data |
+| `<Edit>` | `useForm()` from `@refinedev/react-hook-form` | `saveButtonProps`, `control`, `formState` |
+| `<Create>` | `useForm()` from `@refinedev/react-hook-form` | same as Edit |
+
+The hooks read the resource name and record ID from the URL automatically -- you do not pass them manually.
+
+#### Real examples in this project
+
+**List page** (`src/components/ListPage.tsx`) -- wraps `<List>` with a custom title block (h3 heading + description) and uses `wrapperProps` to make the Card transparent:
+
+```tsx
+<List
+  title={<Box><Typography variant="h3">{title}</Typography>...</Box>}
+  wrapperProps={{ elevation: 0, sx: { backgroundColor: 'background.wrapper' } }}
+  headerProps={{ sx: { '.MuiCardHeader-action': { alignSelf: 'flex-start' } } }}
+  contentProps={{ sx: { pt: 1 } }}
+>
+  <DataGrid {...dataGridProps} />
+</List>
+```
+
+**Show page** (`src/pages/ocotillo/thing/well-show.tsx`) -- uses `<Show>` directly from `@refinedev/mui` with `useShow()` to load the well record. The children are a custom grid of detail cards:
+
+```tsx
+const { queryResult: { data, isLoading } } = useShow<IWell>()
+
+<Show>
+  <Grid container spacing={2}>
+    <CoreWellInfoCard well={data?.data} />
+    <InteractiveSatelliteMapCard ... />
+  </Grid>
+</Show>
+```
+
+**Edit page** (`src/pages/ocotillo/thing/edit.tsx`) -- uses `<Edit>` with `useForm()` from `@refinedev/react-hook-form`. The `saveButtonProps` from the hook wires up the Save button automatically:
+
+```tsx
+const { saveButtonProps, control, formState: { errors } } = useForm<IWell>()
+
+<Edit saveButtonProps={saveButtonProps}>
+  <CreateEditWell control={control} errors={errors} />
+</Edit>
+```
+
+#### When to skip the wrapper
+
+If a page does not need the Card + header layout (e.g. a full-screen map, a dashboard, an about page), skip the wrapper entirely and compose from raw MUI components. The wrapper is a convenience, not a requirement.
 
 ---
 
@@ -152,7 +250,7 @@ The theme uses these values directly for the MUI `palette`. There is no Tailwind
 ### Palette slots
 
 | Slot | Light mode | Dark mode | Used for |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `primary` | `blue[300/700/900]` | same | Buttons, links, focus rings |
 | `secondary` | `amber[300/600/800]` | same | Secondary actions |
 | `error` | `red[300/600/800]` | same | Validation errors |
@@ -210,7 +308,7 @@ background: {
 Fonts are loaded locally via `@fontsource-variable` packages (imported in `src/index.tsx`). There are no Google Fonts CDN dependencies.
 
 | Role | Font | Variants |
-|---|---|---|
+| --- | --- | --- |
 | Headings (`h1`--`h6`) | Outfit Variable | `700` (h1, h2), `600` (h3--h6) |
 | Body, UI, labels | Public Sans Variable | `400`, `500` |
 | Wordmark | Outfit Variable | `800` |
@@ -218,7 +316,7 @@ Fonts are loaded locally via `@fontsource-variable` packages (imported in `src/i
 ### Type scale
 
 | Variant | Size | Weight | Use for |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `h1` | 48px | 700 | Page heroes, marketing |
 | `h2` | 36px | 700 | Section titles |
 | `h3` | 28px | 600 | Page titles (list pages use this) |
@@ -230,7 +328,7 @@ Fonts are loaded locally via `@fontsource-variable` packages (imported in `src/i
 | `body2` | 14px | 400 | Secondary body text |
 | `caption` | 12px | 400 | Labels, metadata |
 | `overline` | 11px | 500 | Category labels (uppercase) |
-| `button` | -- | 500 | Button labels (set by MUI) |
+| `button` | \-- | 500 | Button labels (set by MUI) |
 
 ```tsx
 <Typography variant="h3" fontWeight={700}>Page Title</Typography>
@@ -307,13 +405,14 @@ When something looks wrong and you are not sure what is controlling it, work thr
 **Step 1: Identify the MUI class name in the browser**
 
 Open DevTools, inspect the element, and note the class names. MUI generates classes like:
+
 - `MuiButton-root` -- the component + slot
 - `MuiButton-sizeSmall` -- the component + variant/state slot
 - `css-abc123-MuiButton-root` -- the generated hash, which is what actually applies the styles
 
 The human-readable class names (`MuiButton-root`) tell you the component name and slot. Use these to find the override key in `theme.ts`.
 
-**Step 2: Check `theme.ts` first**
+**Step 2: Check** `theme.ts` **first**
 
 Look in the `components` block of `src/theme.ts` for an entry matching the class name prefix. For example, `MuiButton-sizeSmall` maps to `MuiButton.styleOverrides.sizeSmall`.
 
