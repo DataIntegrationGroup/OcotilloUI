@@ -10,6 +10,9 @@ declare module '@mui/material/styles' {
   interface TypographyVariantsOptions {
     deck?: React.CSSProperties
   }
+  interface TypeBackground {
+    wrapper: string
+  }
 }
 declare module '@mui/material/Typography' {
   interface TypographyPropsVariantOverrides {
@@ -22,9 +25,9 @@ export const getTheme = (mode: PaletteMode) =>
     palette: {
       mode,
       primary: {
-        light: colors.sky[300],  // sky-300
-        main: colors.sky[700],   // sky-700
-        dark: colors.sky[900],   // sky-900
+        light: colors.blue[300],  // sky-300
+        main: colors.blue[700],   // sky-700
+        dark: colors.blue[900],   // sky-900
       },
       secondary: {
         light: colors.amber[300], // amber-300
@@ -51,9 +54,13 @@ export const getTheme = (mode: PaletteMode) =>
         main: colors.cyan[600],  // cyan-600
         dark: colors.cyan[800],  // cyan-800
       },
+      divider: mode === 'dark' ? colors.zinc[700] : colors.stone[300],
       background: {
-        default: mode === 'dark' ? colors.zinc[900] : colors.stone[200],
-        paper: mode === 'dark' ? colors.zinc[800] : colors.stone[50],
+        default: mode === 'dark' ? colors.zinc[950] : colors.stone[200],
+        // default: mode === 'dark' ? colors.zinc[700] : colors.stone[100],
+        paper: mode === 'dark' ? colors.zinc[700] : colors.white,
+        // paper: mode === 'dark' ? colors.zinc[800] : colors.white,
+        wrapper: mode === 'dark' ? colors.zinc[800] : colors.stone[100],
       },
       text: {
         primary: mode === 'dark' ? colors.slate[100] : colors.slate[900],
@@ -207,19 +214,42 @@ export const getTheme = (mode: PaletteMode) =>
       },
       MuiDrawer: {
         styleOverrides: {
-          paper: {
-            backgroundColor: mode === 'dark' ? colors.zinc[950] : colors.stone[300],
-          },
+          paper: ({ theme }) => ({
+            backgroundColor: theme.palette.background.default,
+            borderRight: 'none',
+          }),
         },
       },
+      
       MuiDataGrid: {
         styleOverrides: {
-          cell: {
+          root: ({ theme }) => ({
+            // border: 'none',
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: '5px',
+            backgroundColor: theme.palette.background.paper,
+            fontSize: '0.8125rem',
+          }),
+          columnHeader: ({ theme }) => ({
+            // border: 'none',
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            backgroundColor: theme.palette.background.paper,
             fontVariantNumeric: 'tabular-nums',
-          },
-          columnHeader: {
+          }),
+          row: ({ theme }) => ({
+            // border: 'none',
+            // backgroundColor: theme.palette.background.paper,
+            borderTop: `1px solid ${theme.palette.divider}`,
+          }),
+          cell: ({ theme }) => ({
+            // border: 'none',
+            borderBottom: `1px solid ${theme.palette.divider}`,
             fontVariantNumeric: 'tabular-nums',
-          },
+          }),
+          footerContainer: ({ theme }) => ({
+            borderTop: `1px solid ${theme.palette.background.default}`,
+            backgroundColor: theme.palette.background.paper,
+          }),
         },
       },
       MuiGrid: {
