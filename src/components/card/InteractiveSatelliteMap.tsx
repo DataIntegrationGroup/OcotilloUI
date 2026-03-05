@@ -24,8 +24,12 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
 
-  const waterWellsLayer = THING_LAYERS['water-wells']
-  const { sourceProps, layerProps } = waterWellsLayer
+  const waterWellsLayer =
+    THING_LAYERS['ogc-water-wells'] ||
+    THING_LAYERS['ogc-water-well-summary'] ||
+    THING_LAYERS['ogc-locations']
+  const sourceProps = waterWellsLayer?.sourceProps
+  const layerProps = waterWellsLayer?.layerProps
 
   const coords = well?.current_location?.geometry?.coordinates as
     | [number, number, number?]
@@ -66,14 +70,47 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
         }
       : null
 
+  const getFeatureId = (feature: any): string | undefined => {
+    const props = feature?.properties || {}
+    const candidates = [
+      props.thing_id,
+      props.well_id,
+      props.id,
+      props.fid,
+      props.feature_id,
+      feature?.id,
+    ]
+    const value = candidates.find(
+      (candidate) => candidate !== undefined && candidate !== null && candidate !== ''
+    )
+    return value === undefined ? undefined : String(value)
+  }
+
   const onMapPointClick = (_: any, points: any[]) => {
-    const selectedPoint = points[0]
-    if (selectedPoint.properties.thing_type === 'water well') {
+    const selectedPoint = points.find(
+      (point) => typeof point?.layer?.id === 'string' && point.layer.id.startsWith('location-')
+    )
+    if (!selectedPoint) return
+
+    const layerId: string = selectedPoint.layer.id
+    const thingType: string = String(selectedPoint?.properties?.thing_type || '').toLowerCase()
+    const id = getFeatureId(selectedPoint)
+    if (!id) return
+
+    const isWaterWellLayer =
+      layerId.includes('ogc-water-wells') ||
+      layerId.includes('ogc-water-well-summary') ||
+      layerId.includes('ogc-latest-depth-to-water') ||
+      layerId.includes('ogc-average-tds') ||
+      layerId.includes('ogc-latest-tds') ||
+      layerId.includes('ogc-depth-to-water-trend')
+
+    if (isWaterWellLayer || thingType === 'water well' || thingType === 'geothermal well') {
       go({
         to: {
           resource: 'ocotillo.thing-well',
           action: 'show',
-          id: selectedPoint.properties.id,
+          id,
         },
       })
     }
@@ -152,9 +189,11 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             style={{ flex: 1, width: '100%', height: '100%' }}
             containerRef={containerRef}
           >
-            <Source id="water-wells" {...sourceProps}>
-              <Layer id="location-water-wells" {...layerProps} />
-            </Source>
+            {sourceProps && layerProps && (
+              <Source id="water-wells" {...sourceProps}>
+                <Layer id="location-water-wells" {...layerProps} />
+              </Source>
+            )}
             {highlightFeature && (
               <Source
                 id="highlight-well"

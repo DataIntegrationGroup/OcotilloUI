@@ -23,6 +23,7 @@ import {
   st2DataProvider,
   geothermalDataProvider,
   geochronologyDataProvider,
+  ogcapiDataProvider,
 } from '@/providers'
 import { resources } from '@/resources'
 
@@ -52,6 +53,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
             amp: ampDataProvider,
             geochronology: geochronologyDataProvider,
             geothermal: geothermalDataProvider,
+            ogcapi: ogcapiDataProvider,
             st2: st2DataProvider,
             ocotillo: ocotilloDataProvider,
           }}
