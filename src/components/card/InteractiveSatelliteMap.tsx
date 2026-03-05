@@ -14,20 +14,20 @@ import {
 import { Directions, Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
 import { MapComponent, MapPopup } from '@/components'
-import { useThingLayers } from '@/hooks'
+import { useLayer } from '@/hooks'
 import { useGo } from '@refinedev/core'
 
 export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   const mapRef = useRef<MapRef>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const THING_LAYERS = useThingLayers()
+  const waterWellsLayer = useLayer({
+    thing_type: 'water well',
+    label: 'Water Wells',
+    color: '#2b7dc0',
+  })
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
 
-  const waterWellsLayer =
-    THING_LAYERS['ogc-water-wells'] ||
-    THING_LAYERS['ogc-water-well-summary'] ||
-    THING_LAYERS['ogc-locations']
   const sourceProps = waterWellsLayer?.sourceProps
   const layerProps = waterWellsLayer?.layerProps
 
@@ -92,20 +92,11 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
     )
     if (!selectedPoint) return
 
-    const layerId: string = selectedPoint.layer.id
     const thingType: string = String(selectedPoint?.properties?.thing_type || '').toLowerCase()
     const id = getFeatureId(selectedPoint)
     if (!id) return
 
-    const isWaterWellLayer =
-      layerId.includes('ogc-water-wells') ||
-      layerId.includes('ogc-water-well-summary') ||
-      layerId.includes('ogc-latest-depth-to-water') ||
-      layerId.includes('ogc-average-tds') ||
-      layerId.includes('ogc-latest-tds') ||
-      layerId.includes('ogc-depth-to-water-trend')
-
-    if (isWaterWellLayer || thingType === 'water well' || thingType === 'geothermal well') {
+    if (thingType === 'water well' || thingType === 'geothermal well') {
       go({
         to: {
           resource: 'ocotillo.thing-well',
