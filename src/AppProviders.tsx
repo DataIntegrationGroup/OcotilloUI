@@ -61,7 +61,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
           resources={resources}
           options={{
             disableTelemetry: true,
-            syncWithLocation: true,
+            syncWithLocation: false, // Prevents Refine from writing filter/sort/pagination state into URL query params. Navigation URLs (/well/show/123) are unaffected -- those are managed by React Router.
             warnWhenUnsavedChanges: true,
             projectId: import.meta.env.VITE_REFINE_PROJECT_ID,
             breadcrumb: <Breadcrumb hideIcons />,
