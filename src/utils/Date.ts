@@ -10,12 +10,27 @@ export const formatAppDateTime = (
   return new Intl.DateTimeFormat('en-US', {
     timeZone: APP_TIMEZONE,
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
     minute: '2-digit',
-    second: '2-digit',
     hour12: true,
-    timeZoneName: 'short',
+  }).format(d)
+}
+
+// Date only -- for fields like first_visit_date and well_completion_date
+// where the time component is not meaningful.
+export const formatAppDate = (
+  isoDate: string | null | undefined
+): string => {
+  if (!isoDate) return ''
+  const d = new Date(isoDate)
+  if (Number.isNaN(d.getTime())) return ''
+
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: APP_TIMEZONE,
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   }).format(d)
 }
