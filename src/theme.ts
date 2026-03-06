@@ -229,18 +229,17 @@ export const getTheme = (mode: PaletteMode) =>
             fontSize: '0.8125rem',
           }),
           columnHeader: ({ theme }) => ({
-            // border: 'none',
             borderBottom: `1px solid ${theme.palette.divider}`,
             backgroundColor: theme.palette.background.paper,
             fontVariantNumeric: 'tabular-nums',
           }),
-          row: ({ theme }) => ({
-            // border: 'none',
-            // backgroundColor: theme.palette.background.paper,
-            borderTop: `1px solid ${theme.palette.divider}`,
+          row: () => ({
+            // borderTop is intentionally omitted -- it adds height outside MUI's
+            // rowHeight calculation and causes the virtual scroller to overflow,
+            // producing elastic-scroll bounce on macOS trackpads.
+            // Row separation is handled by borderBottom on the cell slot instead.
           }),
           cell: ({ theme }) => ({
-            // border: 'none',
             borderBottom: `1px solid ${theme.palette.divider}`,
             fontVariantNumeric: 'tabular-nums',
           }),
