@@ -5,14 +5,14 @@ export const useOGCLayer = ({
   collection,
   label,
   color = '#9cd0ab',
-  colorExpression,
+  colorAccessor,
   legendColor,
   enabled = true,
 }: {
   collection: string
   label: string
   color?: string
-  colorExpression?: any[]
+  colorAccessor?: (feature: any) => string | undefined
   legendColor?: string
   enabled?: boolean
 }) => {
@@ -79,10 +79,30 @@ export const useOGCLayer = ({
   })
 
   // Always return valid GeoJSON
-  const safeGeoJSON =
+  const safeGeoJSONBase =
     data && data.type === 'FeatureCollection'
       ? data
       : { type: 'FeatureCollection', features: [] }
+
+  const safeGeoJSON = colorAccessor
+    ? {
+        ...safeGeoJSONBase,
+        features: (safeGeoJSONBase.features || []).map((feature: any) => {
+          const resolvedColor = colorAccessor(feature)
+          return {
+            ...feature,
+            properties: {
+              ...(feature?.properties || {}),
+              ...(resolvedColor ? { __color: resolvedColor } : {}),
+            },
+          }
+        }),
+      }
+    : safeGeoJSONBase
+
+  const circleColor = (colorAccessor
+    ? ['coalesce', ['get', '__color'], color]
+    : color) as any
 
   return {
     sourceProps: { type: 'geojson', data: safeGeoJSON },
@@ -92,7 +112,7 @@ export const useOGCLayer = ({
       type: 'circle' as const,
       paint: {
         'circle-radius': 3,
-        'circle-color': (colorExpression || color) as any,
+        'circle-color': circleColor,
         'circle-stroke-color': '#ffffff',
         'circle-stroke-width': 1,
       },

@@ -9,6 +9,155 @@ type OgcCollectionRecord = {
   title?: string
 }
 
+const parseNumeric = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value !== 'string') return undefined
+
+  const normalized = value.replace(/,/g, '').match(/-?\d+(\.\d+)?/)
+  if (!normalized) return undefined
+  const parsed = Number(normalized[0])
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
+const findNumericPropertyWithPriority = (
+  feature: any,
+  priorityPatterns: RegExp[],
+  fallbackPatterns: RegExp[],
+  excludePatterns: RegExp[] = []
+): number | undefined => {
+  const properties = feature?.properties || {}
+  const entries = Object.entries(properties) as Array<[string, unknown]>
+
+  const tryMatch = (includePatterns: RegExp[]) => {
+    for (const [key, value] of entries) {
+      const keyString = String(key)
+      if (excludePatterns.some((pattern) => pattern.test(keyString))) continue
+      if (!includePatterns.some((pattern) => pattern.test(keyString))) continue
+      const parsed = parseNumeric(value)
+      if (parsed !== undefined) return parsed
+    }
+    return undefined
+  }
+
+  return tryMatch(priorityPatterns) ?? tryMatch(fallbackPatterns)
+}
+
+const findStringProperty = (feature: any, patterns: RegExp[]): string | undefined => {
+  const properties = feature?.properties || {}
+  for (const [key, value] of Object.entries(properties)) {
+    const keyString = String(key)
+    if (!patterns.some((pattern) => pattern.test(keyString))) continue
+    if (typeof value === 'string' && value.trim().length > 0) return value
+  }
+  return undefined
+}
+
+const tdsColorFromFeature = (feature: any): string | undefined => {
+  const value = findNumericPropertyWithPriority(
+    feature,
+    [
+      /(latest|recent|most).*(tds|dissolved.*solids)/i,
+      /(tds|dissolved.*solids).*(latest|recent|most)/i,
+    ],
+    [/tds/i, /dissolved.*solids/i],
+    [
+      /count/i,
+      /num/i,
+      /code/i,
+      /id$/i,
+      /unit/i,
+      /rank/i,
+      /class/i,
+      /flag/i,
+      /avg/i,
+      /average/i,
+      /mean/i,
+      /median/i,
+      /min/i,
+      /max/i,
+    ]
+  )
+  if (value === undefined) return undefined
+  if (value < 300) return '#2b83ba'
+  if (value < 500) return '#4daf4a'
+  if (value < 1000) return '#a6d96a'
+  if (value < 2000) return '#fee08b'
+  if (value < 5000) return '#f46d43'
+  return '#d73027'
+}
+
+const averageTdsColorFromFeature = (feature: any): string | undefined => {
+  const value = findNumericPropertyWithPriority(
+    feature,
+    [/(average|avg|mean).*(tds|dissolved.*solids)/i, /(tds|dissolved.*solids).*(average|avg|mean)/i],
+    [/tds/i, /dissolved.*solids/i],
+    [/count/i, /num/i, /code/i, /id$/i, /unit/i, /rank/i, /class/i, /flag/i, /latest/i]
+  )
+  if (value === undefined) return undefined
+  if (value < 300) return '#2b83ba'
+  if (value < 500) return '#4daf4a'
+  if (value < 1000) return '#a6d96a'
+  if (value < 2000) return '#fee08b'
+  if (value < 5000) return '#f46d43'
+  return '#d73027'
+}
+
+const depthToWaterColorFromFeature = (feature: any): string | undefined => {
+  const value = findNumericPropertyWithPriority(
+    feature,
+    [
+      /(latest|recent|most).*(depth.*water|depth_to_water|water_level|depth_to_water_bgs)/i,
+      /(depth.*water|depth_to_water|water_level|depth_to_water_bgs).*(latest|recent|most)/i,
+    ],
+    [/depth.*water/i, /depth_to_water/i, /water_level/i, /depth_to_water_bgs/i],
+    [
+      /count/i,
+      /num/i,
+      /code/i,
+      /id$/i,
+      /unit/i,
+      /rank/i,
+      /class/i,
+      /flag/i,
+      /avg/i,
+      /average/i,
+      /mean/i,
+      /median/i,
+      /min/i,
+      /max/i,
+      /trend/i,
+      /slope/i,
+    ]
+  )
+  if (value === undefined) return undefined
+  if (value < 25) return '#1a9850'
+  if (value < 75) return '#66bd63'
+  if (value < 150) return '#a6d96a'
+  if (value < 250) return '#fee08b'
+  if (value < 400) return '#f46d43'
+  return '#d73027'
+}
+
+const trendColorFromFeature = (feature: any): string | undefined => {
+  const label = findStringProperty(feature, [/trend/i, /trend_class/i])?.toLowerCase()
+  if (label) {
+    if (/(declin|decreas|fall|down)/.test(label)) return '#2c7bb6'
+    if (/(stable|flat|no change|neutral)/.test(label)) return '#bdbdbd'
+    if (/(ris|increas|up)/.test(label)) return '#d73027'
+  }
+
+  const slope = findNumericPropertyWithPriority(
+    feature,
+    [/trend.*slope/i, /slope.*trend/i, /latest.*trend/i, /trend.*latest/i],
+    [/trend/i, /slope/i],
+    [/count/i, /num/i, /code/i, /id$/i, /unit/i, /rank/i, /class/i, /flag/i]
+  )
+  if (slope === undefined) return undefined
+  if (slope < -0.2) return '#2c7bb6'
+  if (slope > 0.2) return '#d73027'
+  return '#bdbdbd'
+}
+
 const normalize = (value?: string): string =>
   (value || '').toLowerCase().replace(/[^a-z0-9]+/g, '')
 
@@ -40,57 +189,6 @@ const resolveCollection = (
     exists: Boolean(match),
   }
 }
-
-const TDS_COLOR_EXPRESSION = [
-  'interpolate',
-  ['linear'],
-  ['to-number', ['coalesce', ['get', 'latest_tds'], ['get', 'tds'], 0]],
-  0,
-  '#2c7bb6',
-  500,
-  '#abd9e9',
-  1000,
-  '#ffffbf',
-  2000,
-  '#fdae61',
-  4000,
-  '#d7191c',
-]
-
-const DEPTH_TO_WATER_COLOR_EXPRESSION = [
-  'interpolate',
-  ['linear'],
-  [
-    'to-number',
-    [
-      'coalesce',
-      ['get', 'latest_depth_to_water'],
-      ['get', 'depth_to_water'],
-      ['get', 'latest_water_level'],
-      0,
-    ],
-  ],
-  0,
-  '#1a9641',
-  50,
-  '#a6d96a',
-  150,
-  '#fdae61',
-  300,
-  '#d7191c',
-]
-
-const TREND_COLOR_EXPRESSION = [
-  'interpolate',
-  ['linear'],
-  ['to-number', ['coalesce', ['get', 'trend'], ['get', 'latest_trend'], 0]],
-  -5,
-  '#2166ac',
-  0,
-  '#f7f7f7',
-  5,
-  '#b2182b',
-]
 
 export const useThingLayers = () => {
   const dataProvider = useDataProvider()
@@ -186,28 +284,33 @@ export const useThingLayers = () => {
   const latestDepthToWaterLayer = useOGCLayer({
     collection: latestDepthToWater.id,
     label: latestDepthToWater.label,
-    colorExpression: DEPTH_TO_WATER_COLOR_EXPRESSION,
     legendColor: '#fdae61',
+    color: '#9e9e9e',
+    colorAccessor: depthToWaterColorFromFeature,
     enabled: latestDepthToWater.exists,
   })
   const averageTdsLayer = useOGCLayer({
     collection: averageTds.id,
     label: averageTds.label,
-    color: '#a1887f',
+    legendColor: '#f46d43',
+    color: '#9e9e9e',
+    colorAccessor: averageTdsColorFromFeature,
     enabled: averageTds.exists,
   })
   const latestTdsLayer = useOGCLayer({
     collection: latestTds.id,
     label: latestTds.label,
-    colorExpression: TDS_COLOR_EXPRESSION,
     legendColor: '#fdae61',
+    color: '#9e9e9e',
+    colorAccessor: tdsColorFromFeature,
     enabled: latestTds.exists,
   })
   const depthToWaterTrendLayer = useOGCLayer({
     collection: depthToWaterTrend.id,
     label: depthToWaterTrend.label,
-    colorExpression: TREND_COLOR_EXPRESSION,
     legendColor: '#b2182b',
+    color: '#9e9e9e',
+    colorAccessor: trendColorFromFeature,
     enabled: depthToWaterTrend.exists,
   })
   const waterWellSummaryLayer = useOGCLayer({
@@ -283,47 +386,53 @@ export const useThingLayers = () => {
     enabled: soilGasSampleLocations.exists,
   })
 
-  return {
-    ...(locations.exists ? { 'ogc-locations': locationsLayer } : {}),
-    ...(latestDepthToWater.exists
-      ? { 'ogc-latest-depth-to-water': latestDepthToWaterLayer }
-      : {}),
-    ...(averageTds.exists ? { 'ogc-average-tds': averageTdsLayer } : {}),
-    ...(latestTds.exists ? { 'ogc-latest-tds': latestTdsLayer } : {}),
-    ...(depthToWaterTrend.exists
-      ? { 'ogc-depth-to-water-trend': depthToWaterTrendLayer }
-      : {}),
-    ...(waterWellSummary.exists
-      ? { 'ogc-water-well-summary': waterWellSummaryLayer }
-      : {}),
-    ...(waterWells.exists ? { 'ogc-water-wells': waterWellsLayer } : {}),
-    ...(springs.exists ? { 'ogc-springs': springsLayer } : {}),
-    ...(surfaceWaterDiversions.exists
-      ? { 'ogc-surface-water-diversions': surfaceWaterDiversionsLayer }
-      : {}),
-    ...(ephemeralStreams.exists
-      ? { 'ogc-ephemeral-streams': ephemeralStreamsLayer }
-      : {}),
-    ...(lakesPondsReservoirs.exists
-      ? { 'ogc-lakes-ponds-reservoirs': lakesPondsReservoirsLayer }
-      : {}),
-    ...(meteorologicalStations.exists
-      ? { 'ogc-meteorological-stations': meteorologicalStationsLayer }
-      : {}),
-    ...(otherThingTypes.exists
-      ? { 'ogc-other-thing-types': otherThingTypesLayer }
-      : {}),
-    ...(outfallsReturnFlow.exists
-      ? { 'ogc-outfalls-return-flow': outfallsReturnFlowLayer }
-      : {}),
-    ...(perennialStreams.exists
-      ? { 'ogc-perennial-streams': perennialStreamsLayer }
-      : {}),
-    ...(rockSampleLocations.exists
-      ? { 'ogc-rock-sample-locations': rockSampleLocationsLayer }
-      : {}),
-    ...(soilGasSampleLocations.exists
-      ? { 'ogc-soil-gas-sample-locations': soilGasSampleLocationsLayer }
-      : {}),
+  const layers: Record<string, any> = {}
+  const seenCollectionIds = new Set<string>()
+
+  const addLayer = (
+    layerKey: string,
+    collection: { id: string; exists: boolean },
+    layer: any
+  ) => {
+    if (!collection.exists || !collection.id) return
+    if (seenCollectionIds.has(collection.id)) return
+    seenCollectionIds.add(collection.id)
+    layers[layerKey] = layer
   }
+
+  addLayer('ogc-locations', locations, locationsLayer)
+  addLayer('ogc-latest-depth-to-water', latestDepthToWater, latestDepthToWaterLayer)
+  addLayer('ogc-average-tds', averageTds, averageTdsLayer)
+  addLayer('ogc-latest-tds', latestTds, latestTdsLayer)
+  addLayer('ogc-depth-to-water-trend', depthToWaterTrend, depthToWaterTrendLayer)
+  addLayer('ogc-water-well-summary', waterWellSummary, waterWellSummaryLayer)
+  addLayer('ogc-water-wells', waterWells, waterWellsLayer)
+  addLayer('ogc-springs', springs, springsLayer)
+  addLayer(
+    'ogc-surface-water-diversions',
+    surfaceWaterDiversions,
+    surfaceWaterDiversionsLayer
+  )
+  addLayer('ogc-ephemeral-streams', ephemeralStreams, ephemeralStreamsLayer)
+  addLayer(
+    'ogc-lakes-ponds-reservoirs',
+    lakesPondsReservoirs,
+    lakesPondsReservoirsLayer
+  )
+  addLayer(
+    'ogc-meteorological-stations',
+    meteorologicalStations,
+    meteorologicalStationsLayer
+  )
+  addLayer('ogc-other-thing-types', otherThingTypes, otherThingTypesLayer)
+  addLayer('ogc-outfalls-return-flow', outfallsReturnFlow, outfallsReturnFlowLayer)
+  addLayer('ogc-perennial-streams', perennialStreams, perennialStreamsLayer)
+  addLayer('ogc-rock-sample-locations', rockSampleLocations, rockSampleLocationsLayer)
+  addLayer(
+    'ogc-soil-gas-sample-locations',
+    soilGasSampleLocations,
+    soilGasSampleLocationsLayer
+  )
+
+  return layers
 }
