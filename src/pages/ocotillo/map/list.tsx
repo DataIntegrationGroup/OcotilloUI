@@ -15,7 +15,6 @@ import {
 } from '@mui/material'
 import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material'
 import { MapPopup } from '@/components'
-import { Breadcrumb, List } from '@refinedev/mui'
 
 export const MapView: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -108,25 +107,21 @@ export const MapView: React.FC = () => {
   }
 
   return (
-    <List
-      breadcrumb={<Breadcrumb hideIcons={true} />}
-      title="Map"
-      canCreate={false}
+    <Box
+      data-testid="ocotillo-map-container"
+      component="div"
+      ref={containerRef}
+      sx={{
+        borderRadius: 2,
+        overflow: 'hidden',
+        border: '2.5px solid',
+        borderColor: 'divider',
+        height: { xs: 'calc(100vh - 140px)', md: 'calc(100vh - 120px)' },
+        minHeight: 560,
+        width: '100%',
+        position: 'relative',
+      }}
     >
-      <Box
-        data-testid="ocotillo-map-container"
-        component="div"
-        ref={containerRef}
-        sx={{
-          borderRadius: 2,
-          overflow: 'hidden',
-          border: '2.5px solid',
-          borderColor: 'divider',
-          height: 650,
-          width: '100%',
-          position: 'relative',
-        }}
-      >
         <MapComponent
           containerRef={containerRef}
           showDrawControls={{ show: true, position: 'top-right' }}
@@ -253,7 +248,6 @@ export const MapView: React.FC = () => {
             })}
           </Collapse>
         </Paper>
-      </Box>
-    </List>
+    </Box>
   )
 }
