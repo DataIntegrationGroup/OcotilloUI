@@ -90,11 +90,13 @@ export const WellPDF = ({
   assets,
   contacts,
   observations,
+  asDocument = true,
 }: {
   well: IWell
   assets: BaseRecord[]
   contacts: IContact[]
   observations: readonly Partial<IObservation>[]
+  asDocument?: boolean
 }) => {
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
 
@@ -161,14 +163,8 @@ export const WellPDF = ({
   const { easting, northing } =
     well?.current_location?.properties?.utm_coordinates
 
-  return (
-    <Document
-      title={filename || null}
-      author="NMBGMR Ocotillo"
-      creator="NMBGMR Ocotillo System"
-      language="en-US"
-      subject="Well Field Data Report"
-    >
+  const pages = (
+    <>
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Field Compilation Notes</Text>
         <View style={styles.section}>
@@ -501,6 +497,22 @@ export const WellPDF = ({
         <Text style={styles.pageNote}>(Page intentionally left blank)</Text>
         <Footer wellId={well?.name} />
       </Page>
+    </>
+  )
+
+  if (!asDocument) {
+    return pages
+  }
+
+  return (
+    <Document
+      title={filename || null}
+      author="NMBGMR Ocotillo"
+      creator="NMBGMR Ocotillo System"
+      language="en-US"
+      subject="Well Field Data Report"
+    >
+      {pages}
     </Document>
   )
 }
