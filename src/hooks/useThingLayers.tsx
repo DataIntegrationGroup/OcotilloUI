@@ -9,6 +9,26 @@ type OgcCollectionRecord = {
   title?: string
 }
 
+const TDS_LEGEND = {
+  gradient:
+    'linear-gradient(90deg, #2b83ba 0%, #4daf4a 20%, #a6d96a 40%, #fee08b 60%, #f46d43 80%, #d73027 100%)',
+  minLabel: '<300',
+  maxLabel: '5000+ mg/L',
+}
+
+const DEPTH_LEGEND = {
+  gradient:
+    'linear-gradient(90deg, #1a9850 0%, #66bd63 25%, #a6d96a 50%, #fee08b 70%, #f46d43 85%, #d73027 100%)',
+  minLabel: 'Shallow',
+  maxLabel: 'Deep',
+}
+
+const TREND_LEGEND = {
+  gradient: 'linear-gradient(90deg, #2c7bb6 0%, #bdbdbd 50%, #d73027 100%)',
+  minLabel: 'Declining',
+  maxLabel: 'Rising',
+}
+
 const parseNumeric = (value: unknown): number | undefined => {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value !== 'string') return undefined
@@ -287,6 +307,7 @@ export const useThingLayers = () => {
     legendColor: '#fdae61',
     color: '#9e9e9e',
     colorAccessor: depthToWaterColorFromFeature,
+    legendScale: DEPTH_LEGEND,
     enabled: latestDepthToWater.exists,
   })
   const averageTdsLayer = useOGCLayer({
@@ -295,6 +316,7 @@ export const useThingLayers = () => {
     legendColor: '#f46d43',
     color: '#9e9e9e',
     colorAccessor: averageTdsColorFromFeature,
+    legendScale: TDS_LEGEND,
     enabled: averageTds.exists,
   })
   const latestTdsLayer = useOGCLayer({
@@ -303,6 +325,7 @@ export const useThingLayers = () => {
     legendColor: '#fdae61',
     color: '#9e9e9e',
     colorAccessor: tdsColorFromFeature,
+    legendScale: TDS_LEGEND,
     enabled: latestTds.exists,
   })
   const depthToWaterTrendLayer = useOGCLayer({
@@ -311,6 +334,7 @@ export const useThingLayers = () => {
     legendColor: '#b2182b',
     color: '#9e9e9e',
     colorAccessor: trendColorFromFeature,
+    legendScale: TREND_LEGEND,
     enabled: depthToWaterTrend.exists,
   })
   const waterWellSummaryLayer = useOGCLayer({

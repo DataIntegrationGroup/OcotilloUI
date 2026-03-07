@@ -1,19 +1,31 @@
 import { useDataProvider } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
 
+type LayerLegendScale = {
+  gradient: string
+  minLabel: string
+  maxLabel: string
+}
+
 export const useOGCLayer = ({
   collection,
   label,
   color = '#9cd0ab',
   colorAccessor,
+  textAccessor,
+  textColor = '#111111',
   legendColor,
+  legendScale,
   enabled = true,
 }: {
   collection: string
   label: string
   color?: string
   colorAccessor?: (feature: any) => string | undefined
+  textAccessor?: (feature: any) => string | undefined
+  textColor?: string
   legendColor?: string
+  legendScale?: LayerLegendScale
   enabled?: boolean
 }) => {
   const dataProvider = useDataProvider()
@@ -84,21 +96,21 @@ export const useOGCLayer = ({
       ? data
       : { type: 'FeatureCollection', features: [] }
 
-  const safeGeoJSON = colorAccessor
-    ? {
-        ...safeGeoJSONBase,
-        features: (safeGeoJSONBase.features || []).map((feature: any) => {
-          const resolvedColor = colorAccessor(feature)
-          return {
-            ...feature,
-            properties: {
-              ...(feature?.properties || {}),
-              ...(resolvedColor ? { __color: resolvedColor } : {}),
-            },
-          }
-        }),
+  const safeGeoJSON = {
+    ...safeGeoJSONBase,
+    features: (safeGeoJSONBase.features || []).map((feature: any) => {
+      const resolvedColor = colorAccessor?.(feature)
+      const resolvedText = textAccessor?.(feature)
+      return {
+        ...feature,
+        properties: {
+          ...(feature?.properties || {}),
+          ...(resolvedColor ? { __color: resolvedColor } : {}),
+          ...(resolvedText ? { __label: resolvedText } : {}),
+        },
       }
-    : safeGeoJSONBase
+    }),
+  }
 
   const circleColor = (colorAccessor
     ? ['coalesce', ['get', '__color'], color]
@@ -107,6 +119,7 @@ export const useOGCLayer = ({
   return {
     sourceProps: { type: 'geojson', data: safeGeoJSON },
     legendColor: legendColor || color,
+    legendScale,
     layerProps: {
       label,
       type: 'circle' as const,
@@ -117,6 +130,24 @@ export const useOGCLayer = ({
         'circle-stroke-width': 1,
       },
     },
+    textLayerProps: textAccessor
+      ? {
+          type: 'symbol' as const,
+          layout: {
+            'text-field': ['get', '__label'],
+            'text-size': 19,
+            'text-anchor': 'top-left',
+            'text-offset': [0.35, 0.35],
+            'text-allow-overlap': true,
+            'text-ignore-placement': true,
+          },
+          paint: {
+            'text-color': textColor,
+            'text-halo-color': '#ffffff',
+            'text-halo-width': 1.4,
+          },
+        }
+      : undefined,
     isLoading,
   }
 }
