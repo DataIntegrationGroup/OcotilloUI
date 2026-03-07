@@ -37,7 +37,7 @@ import { BaseRecord, useDataProvider, useNotification } from '@refinedev/core'
 import { useAll } from '@/hooks'
 import { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
 import { WellPDF } from '@/components'
-import { pdf } from '@react-pdf/renderer'
+import { Document, pdf } from '@react-pdf/renderer'
 import MapComponent from '@/components/MapComponent'
 import { Layer, Source } from 'react-map-gl'
 import type { FeatureCollection, Geometry } from 'geojson'
@@ -61,6 +61,36 @@ const parseIds = (raw: string) =>
     .map((s) => s.trim())
     .filter(Boolean)
 
+const normalizeLookupKey = (value: string) =>
+  value
+    .normalize('NFKC')
+    .trim()
+    .replace(/^['"]+|['"]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .toUpperCase()
+
+const compactLookupKey = (value: string) =>
+  normalizeLookupKey(value).replace(/[^A-Z0-9]/g, '')
+
+const buildWellLookup = (wells: IWell[]) => {
+  const lookup = new Map<string, IWell>()
+
+  wells.forEach((well) => {
+    const name = String(well.name ?? '')
+    if (!name.trim()) return
+
+    const normalizedName = normalizeLookupKey(name)
+    lookup.set(normalizedName, well)
+
+    const compactName = compactLookupKey(name)
+    if (compactName && compactName !== normalizedName) {
+      lookup.set(compactName, well)
+    }
+  })
+
+  return lookup
+}
+
 const buildBatchFilename = () => {
   const date = new Date().toISOString().slice(0, 10)
   return `FieldSheets_Batch_${date}`
@@ -74,22 +104,26 @@ const sanitizeFilenamePart = (value: string) =>
 
 const safeFilenamePrefix = (value: string) =>
   sanitizeFilenamePart(value) || 'FieldSheets_Batch'
+const isDevelopment = import.meta.env.DEV
 
 const BatchRouteMap = ({ wells }: { wells: IWell[] }) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const points = useMemo(
-    () =>
-      wells
+    () => {
+      const rawPoints = wells
         .map((well, index) => {
           const coords = well.current_location?.geometry?.coordinates
           if (!coords || coords.length < 2) return null
 
+          const baseLng = Number(coords[0])
+          const baseLat = Number(coords[1])
+          if (!Number.isFinite(baseLng) || !Number.isFinite(baseLat)) return null
+
           return {
             id: well.id,
             name: well.name,
-            lng: Number(coords[0]),
-            lat: Number(coords[1]),
-            order: index + 1,
+            lng: baseLng,
+            lat: baseLat,
           }
         })
         .filter(Boolean) as {
@@ -97,16 +131,82 @@ const BatchRouteMap = ({ wells }: { wells: IWell[] }) => {
         name: string
         lng: number
         lat: number
-        order: number
-      }[],
+      }[]
+
+      // Spread markers that share identical coordinates so they are all visible.
+      const grouped = new Map<string, typeof rawPoints>()
+      rawPoints.forEach((point) => {
+        const key = `${point.lng.toFixed(7)},${point.lat.toFixed(7)}`
+        const group = grouped.get(key) ?? []
+        group.push(point)
+        grouped.set(key, group)
+      })
+
+      const jittered: typeof rawPoints = []
+      grouped.forEach((group) => {
+        if (group.length === 1) {
+          jittered.push(group[0])
+          return
+        }
+
+        const radius = 0.00015
+        group.forEach((point, idx) => {
+          const angle = (2 * Math.PI * idx) / group.length
+          jittered.push({
+            ...point,
+            lng: point.lng + Math.cos(angle) * radius,
+            lat: point.lat + Math.sin(angle) * radius,
+          })
+        })
+      })
+
+      return jittered
+    },
     [wells]
+  )
+
+  const center = useMemo(() => {
+    if (points.length === 0) {
+      return { longitude: -106, latitude: 34.5 }
+    }
+    const lng = points.reduce((sum, p) => sum + p.lng, 0) / points.length
+    const lat = points.reduce((sum, p) => sum + p.lat, 0) / points.length
+    return { longitude: lng, latitude: lat }
+  }, [points])
+
+  const routeData = useMemo<FeatureCollection<Geometry>>(() => {
+      const pointFeatures = points.map((point) => ({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [point.lng, point.lat] as [number, number],
+        },
+        properties: {
+          id: point.id,
+          name: point.name,
+        },
+      }))
+
+    return {
+      type: 'FeatureCollection',
+      features: pointFeatures,
+    }
+  }, [points])
+
+  const initialViewState = useMemo(
+    () => ({
+      longitude: center.longitude,
+      latitude: center.latitude,
+      zoom: points.length === 1 ? 10 : 6.5,
+    }),
+    [center, points.length]
   )
 
   if (points.length === 0) {
     return (
       <Box
         sx={{
-          height: 260,
+          height: 520,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -125,60 +225,6 @@ const BatchRouteMap = ({ wells }: { wells: IWell[] }) => {
     )
   }
 
-  const center = useMemo(() => {
-    const lng = points.reduce((sum, p) => sum + p.lng, 0) / points.length
-    const lat = points.reduce((sum, p) => sum + p.lat, 0) / points.length
-    return { longitude: lng, latitude: lat }
-  }, [points])
-
-  const routeData = useMemo<FeatureCollection<Geometry>>(() => {
-    const pointFeatures = points.map((point) => ({
-      type: 'Feature' as const,
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [point.lng, point.lat] as [number, number],
-      },
-      properties: {
-        id: point.id,
-        name: point.name,
-        order: String(point.order),
-      },
-    }))
-
-    const lineFeature =
-      points.length > 1
-        ? [
-            {
-              type: 'Feature' as const,
-              geometry: {
-                type: 'LineString' as const,
-                coordinates: points.map((point) => [
-                  point.lng,
-                  point.lat,
-                ]) as [number, number][],
-              },
-              properties: {
-                type: 'route',
-              },
-            },
-          ]
-        : []
-
-    return {
-      type: 'FeatureCollection',
-      features: [...pointFeatures, ...lineFeature],
-    }
-  }, [points])
-
-  const initialViewState = useMemo(
-    () => ({
-      longitude: center.longitude,
-      latitude: center.latitude,
-      zoom: points.length === 1 ? 10 : 6.5,
-    }),
-    [center, points.length]
-  )
-
   return (
     <Box
       ref={containerRef}
@@ -187,7 +233,7 @@ const BatchRouteMap = ({ wells }: { wells: IWell[] }) => {
         overflow: 'hidden',
         border: '1px solid',
         borderColor: 'divider',
-        height: 320,
+        height: 620,
         width: '100%',
       }}
     >
@@ -199,17 +245,6 @@ const BatchRouteMap = ({ wells }: { wells: IWell[] }) => {
         showNavigation={{ show: true, position: 'top-right' }}
       >
         <Source id="batch-route-source" type="geojson" data={routeData}>
-          <Layer
-            id="batch-route-line"
-            type="line"
-            filter={['==', ['geometry-type'], 'LineString']}
-            paint={{
-              'line-color': '#1a5276',
-              'line-width': 2,
-              'line-dasharray': [2, 2],
-              'line-opacity': 0.8,
-            }}
-          />
           <Layer
             id="batch-route-points"
             type="circle"
@@ -226,12 +261,17 @@ const BatchRouteMap = ({ wells }: { wells: IWell[] }) => {
             type="symbol"
             filter={['==', ['geometry-type'], 'Point']}
             layout={{
-              'text-field': ['get', 'order'],
-              'text-size': 10,
-              'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+              'text-field': ['get', 'name'],
+              'text-size': 11,
+              'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+              'text-anchor': 'top',
+              'text-offset': [0, 1.1],
+              'text-allow-overlap': true,
             }}
             paint={{
-              'text-color': '#ffffff',
+              'text-color': '#1a5276',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 1,
             }}
           />
         </Source>
@@ -325,14 +365,14 @@ const ExportDialog = ({
           value={filename}
           onChange={(e) => setFilename(e.target.value)}
           disabled={isGenerating}
-          helperText="Each well PDF will use this prefix with an index suffix."
+          helperText="The batch will be downloaded as a single PDF using this filename."
         />
 
         {isGenerating && (
           <Box sx={{ mt: 2 }}>
             <LinearProgress variant="determinate" value={progress} />
             <Typography variant="caption" color="text.secondary">
-              Generating PDF files... {progress}%
+              Generating PDF file... {progress}%
             </Typography>
           </Box>
         )}
@@ -348,7 +388,7 @@ const ExportDialog = ({
           onClick={onGenerate}
           disabled={isGenerating || bundles.length === 0}
         >
-          {isGenerating ? 'Generating...' : 'Generate PDFs'}
+          {isGenerating ? 'Generating...' : 'Generate PDF'}
         </Button>
       </DialogActions>
     </Dialog>
@@ -371,20 +411,24 @@ export const WellBatchExport = () => {
   const [bundlesByWellId, setBundlesByWellId] = useState<
     Record<number, WellBundle>
   >({})
+  const [mapWellsById, setMapWellsById] = useState<Record<number, IWell>>({})
+  const [failedMapWellIds, setFailedMapWellIds] = useState<Set<number>>(
+    () => new Set()
+  )
+  const [failedBundleWellIds, setFailedBundleWellIds] = useState<Set<number>>(
+    () => new Set()
+  )
   const [isLoadingBundles, setIsLoadingBundles] = useState(false)
+  const [isResolvingIds, setIsResolvingIds] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [progress, setProgress] = useState(0)
   const [filename, setFilename] = useState(buildBatchFilename())
 
   const loadWells = useCallback(async () => {
-    const result = await triggerAll()
-    setAllWells(result ?? [])
+    const wellsResult = await triggerAll()
+    setAllWells(wellsResult ?? [])
   }, [triggerAll])
-
-  useEffect(() => {
-    void loadWells()
-  }, [loadWells])
 
   const wellsById = useMemo(() => {
     const byId = new Map<number, IWell>()
@@ -392,16 +436,19 @@ export const WellBatchExport = () => {
     return byId
   }, [allWells])
 
-  const wellLookup = useMemo(() => {
-    const lookup = new Map<string, IWell>()
+  const wellLookup = useMemo(() => buildWellLookup(allWells), [allWells])
 
-    allWells.forEach((well) => {
-      lookup.set(String(well.id).toUpperCase(), well)
-      lookup.set(String(well.name ?? '').toUpperCase(), well)
-    })
-
-    return lookup
-  }, [allWells])
+  const resolveWellFromToken = useCallback(
+    (token: string) => {
+      const normalizedToken = normalizeLookupKey(token)
+      const compactToken = compactLookupKey(token)
+      return (
+        wellLookup.get(normalizedToken) ||
+        (compactToken ? wellLookup.get(compactToken) : undefined)
+      )
+    },
+    [wellLookup]
+  )
 
   const resolvedIds = useMemo(
     () =>
@@ -410,6 +457,22 @@ export const WellBatchExport = () => {
         .map((chip) => chip.wellId as number),
     [chips]
   )
+
+  useEffect(() => {
+    const resolvedSet = new Set(resolvedIds)
+    setFailedBundleWellIds((prev) => {
+      let changed = false
+      const next = new Set<number>()
+      prev.forEach((id) => {
+        if (resolvedSet.has(id)) {
+          next.add(id)
+        } else {
+          changed = true
+        }
+      })
+      return changed ? next : prev
+    })
+  }, [resolvedIds])
 
   const resolvedWells = useMemo(
     () => resolvedIds.map((id) => wellsById.get(id)).filter(Boolean) as IWell[],
@@ -426,27 +489,75 @@ export const WellBatchExport = () => {
     [resolvedIds, bundlesByWellId]
   )
 
+  const exportReadyBundles = useMemo(
+    () =>
+      resolvedIds
+        .map((id) => {
+          const loadedBundle = bundlesByWellId[id]
+          if (loadedBundle) return loadedBundle
+          if (!isDevelopment) return null
+
+          const fallbackWell = mapWellsById[id] ?? wellsById.get(id)
+          if (!fallbackWell) return null
+
+          return {
+            well: fallbackWell,
+            assets: [],
+            contacts: [],
+            observations: [],
+          } as WellBundle
+        })
+        .filter(Boolean) as WellBundle[],
+    [resolvedIds, bundlesByWellId, mapWellsById, wellsById]
+  )
+
+  const mapPreviewWells = useMemo(
+    () =>
+      resolvedIds
+        .map(
+          (id) => mapWellsById[id] ?? bundlesByWellId[id]?.well ?? wellsById.get(id)
+        )
+        .filter(Boolean) as IWell[],
+    [resolvedIds, mapWellsById, bundlesByWellId, wellsById]
+  )
+
   const errorChips = chips.filter((chip) => chip.status === 'error')
   const unresolvedCount = errorChips.length
   const unresolvedLabel =
     unresolvedCount > 0 ? ` and ${unresolvedCount} unresolved` : ''
+  const skippedResolvedCount = useMemo(
+    () => resolvedIds.filter((id) => failedBundleWellIds.has(id)).length,
+    [resolvedIds, failedBundleWellIds]
+  )
 
   const fetchBundle = useCallback(
     async (wellId: number): Promise<WellBundle> => {
+      const assetsRequest = ocotilloDataProvider
+        .getList({
+          resource: 'asset',
+          meta: {
+            params: {
+              thing_id: wellId,
+            },
+          },
+        })
+        .catch((error) => {
+          if (isDevelopment) {
+            return {
+              data: [] as BaseRecord[],
+              total: 0,
+            }
+          }
+          throw error
+        })
+
       const [wellResult, assetsResult, contactsResult, observationsResult] =
         await Promise.all([
           ocotilloDataProvider.getOne({
             resource: 'thing-well',
             id: wellId,
           }),
-          ocotilloDataProvider.getList({
-            resource: 'asset',
-            meta: {
-              params: {
-                thing_id: wellId,
-              },
-            },
-          }),
+          assetsRequest,
           ocotilloDataProvider.getList({
             resource: 'contact',
             meta: {
@@ -478,7 +589,9 @@ export const WellBatchExport = () => {
   useEffect(() => {
     if (!resolvedIds.length) return
 
-    const missingIds = resolvedIds.filter((id) => !bundlesByWellId[id])
+    const missingIds = resolvedIds.filter(
+      (id) => !bundlesByWellId[id] && !failedBundleWellIds.has(id)
+    )
     if (missingIds.length === 0) return
 
     let mounted = true
@@ -486,21 +599,49 @@ export const WellBatchExport = () => {
     const loadMissing = async () => {
       setIsLoadingBundles(true)
       try {
-        const bundles = await Promise.all(missingIds.map((id) => fetchBundle(id)))
+        const results = await Promise.allSettled(
+          missingIds.map((id) => fetchBundle(id))
+        )
         if (!mounted) return
-        setBundlesByWellId((prev) => {
-          const next = { ...prev }
-          bundles.forEach((bundle) => {
-            next[bundle.well.id] = bundle
-          })
-          return next
+
+        const bundles: WellBundle[] = []
+        const failedIds: number[] = []
+
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            bundles.push(result.value)
+          } else {
+            failedIds.push(missingIds[index])
+          }
         })
+
+        if (bundles.length > 0) {
+          setBundlesByWellId((prev) => {
+            const next = { ...prev }
+            bundles.forEach((bundle) => {
+              next[bundle.well.id] = bundle
+            })
+            return next
+          })
+        }
+
+        if (failedIds.length > 0) {
+          setFailedBundleWellIds((prev) => {
+            const next = new Set(prev)
+            failedIds.forEach((id) => next.add(id))
+            return next
+          })
+          notify?.({
+            type: 'error',
+            message: 'Some wells could not be loaded',
+            description: `Skipped ${failedIds.length} well(s): ${failedIds.join(', ')}.`,
+          })
+        }
       } catch (error) {
         notify?.({
           type: 'error',
           message: 'Batch export data load failed',
-          description:
-            'At least one well could not be loaded. Please retry or reduce the selection.',
+          description: 'Unable to load selected wells. Please retry.',
         })
       } finally {
         if (mounted) setIsLoadingBundles(false)
@@ -512,42 +653,172 @@ export const WellBatchExport = () => {
     return () => {
       mounted = false
     }
-  }, [resolvedIds, bundlesByWellId, fetchBundle, notify])
+  }, [resolvedIds, bundlesByWellId, failedBundleWellIds, fetchBundle, notify])
 
-  const processPaste = () => {
-    const tokens = parseIds(pasteValue)
-    if (tokens.length === 0) return
+  useEffect(() => {
+    if (!resolvedIds.length) return
 
-    const existing = new Set(chips.map((chip) => chip.query.toUpperCase()))
-    const existingWellIds = new Set(
-      chips
-        .filter((chip) => chip.status === 'resolved' && chip.wellId !== undefined)
-        .map((chip) => chip.wellId as number)
+    const missingMapIds = resolvedIds.filter(
+      (id) => !mapWellsById[id] && !failedMapWellIds.has(id)
     )
-    const next = tokens
-      .filter((token) => !existing.has(token.toUpperCase()))
-      .map((token) => {
-        const match = wellLookup.get(token.toUpperCase())
-        if (!match) {
-          return {
-            query: token,
-            status: 'error' as const,
-          }
-        }
-        if (existingWellIds.has(match.id)) {
-          return null
-        }
+    if (missingMapIds.length === 0) return
 
+    let mounted = true
+
+    const loadMapWells = async () => {
+      const results = await Promise.allSettled(
+        missingMapIds.map((id) =>
+          ocotilloDataProvider.getOne({
+            resource: 'thing-well',
+            id,
+          })
+        )
+      )
+      if (!mounted) return
+
+      const loaded: IWell[] = []
+      const failed: number[] = []
+
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          loaded.push(result.value.data as IWell)
+        } else {
+          failed.push(missingMapIds[index])
+        }
+      })
+
+      if (loaded.length > 0) {
+        setMapWellsById((prev) => {
+          const next = { ...prev }
+          loaded.forEach((well) => {
+            next[well.id] = well
+          })
+          return next
+        })
+      }
+
+      if (failed.length > 0) {
+        setFailedMapWellIds((prev) => {
+          const next = new Set(prev)
+          failed.forEach((id) => next.add(id))
+          return next
+        })
+      }
+    }
+
+    void loadMapWells()
+
+    return () => {
+      mounted = false
+    }
+  }, [resolvedIds, mapWellsById, failedMapWellIds, ocotilloDataProvider])
+
+  useEffect(() => {
+    if (!allWells.length) return
+
+    setChips((prev) => {
+      let changed = false
+      const selectedIds = new Set(
+        prev
+          .filter((chip) => chip.status === 'resolved' && chip.wellId !== undefined)
+          .map((chip) => chip.wellId as number)
+      )
+
+      const next = prev.map((chip) => {
+        if (chip.status !== 'error') return chip
+
+        const match = resolveWellFromToken(chip.query)
+        if (!match || selectedIds.has(match.id)) return chip
+
+        selectedIds.add(match.id)
+        changed = true
         return {
-          query: token,
+          ...chip,
           status: 'resolved' as const,
           wellId: match.id,
         }
       })
-      .filter(Boolean) as WellChipState[]
 
-    setChips((prev) => [...prev, ...next])
-    setPasteValue('')
+      return changed ? next : prev
+    })
+  }, [allWells, resolveWellFromToken])
+
+  const processPaste = async () => {
+    const tokens = parseIds(pasteValue)
+    if (tokens.length === 0) return
+
+    setIsResolvingIds(true)
+    try {
+      let effectiveWells = allWells
+      if (effectiveWells.length === 0) {
+        const loadedWells = await triggerAll()
+        effectiveWells = loadedWells ?? []
+        setAllWells(effectiveWells)
+      }
+
+      const effectiveLookup = buildWellLookup(effectiveWells)
+      const resolveFromEffectiveLookup = (token: string) => {
+        const normalizedToken = normalizeLookupKey(token)
+        const compactToken = compactLookupKey(token)
+        return (
+          effectiveLookup.get(normalizedToken) ||
+          (compactToken ? effectiveLookup.get(compactToken) : undefined)
+        )
+      }
+
+      setChips((prev) => {
+        const next = [...prev]
+        const selectedWellIds = new Set(
+          next
+            .filter((chip) => chip.status === 'resolved' && chip.wellId !== undefined)
+            .map((chip) => chip.wellId as number)
+        )
+
+        for (const token of tokens) {
+          const normalizedToken = normalizeLookupKey(token)
+          const existingIndex = next.findIndex(
+            (chip) => normalizeLookupKey(chip.query) === normalizedToken
+          )
+          const match = resolveFromEffectiveLookup(token)
+
+          if (existingIndex >= 0) {
+            const existingChip = next[existingIndex]
+            if (existingChip.status === 'resolved') continue
+            if (!match || selectedWellIds.has(match.id)) continue
+
+            selectedWellIds.add(match.id)
+            next[existingIndex] = {
+              query: token,
+              status: 'resolved',
+              wellId: match.id,
+            }
+            continue
+          }
+
+          if (!match) {
+            next.push({
+              query: token,
+              status: 'error',
+            })
+            continue
+          }
+
+          if (selectedWellIds.has(match.id)) continue
+
+          selectedWellIds.add(match.id)
+          next.push({
+            query: token,
+            status: 'resolved',
+            wellId: match.id,
+          })
+        }
+
+        return next
+      })
+      setPasteValue('')
+    } finally {
+      setIsResolvingIds(false)
+    }
   }
 
   const addFromSearch = (well: IWell | null) => {
@@ -569,38 +840,46 @@ export const WellBatchExport = () => {
   }
 
   const generateBatch = async () => {
-    if (exportBundles.length === 0) return
+    if (exportReadyBundles.length === 0) return
 
     setIsGenerating(true)
     setProgress(0)
     const baseFilename = safeFilenamePrefix(filename)
 
     try {
-      for (let index = 0; index < exportBundles.length; index++) {
-        const bundle = exportBundles[index]
-        const blob = await pdf(
-          <WellPDF
-            well={bundle.well}
-            contacts={bundle.contacts}
-            assets={bundle.assets}
-            observations={bundle.observations}
-          />
-        ).toBlob()
+      const blob = await pdf(
+        <Document
+          title={baseFilename}
+          author="NMBGMR Ocotillo"
+          creator="NMBGMR Ocotillo System"
+          language="en-US"
+          subject="Batch Well Field Data Report"
+        >
+          {exportReadyBundles.map((bundle) => (
+            <WellPDF
+              key={bundle.well.id}
+              well={bundle.well}
+              contacts={bundle.contacts}
+              assets={bundle.assets}
+              observations={bundle.observations}
+              asDocument={false}
+            />
+          ))}
+        </Document>
+      ).toBlob()
 
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `${baseFilename}_${String(index + 1).padStart(3, '0')}_${sanitizeFilenamePart(bundle.well.name)}.pdf`
-        link.click()
-        URL.revokeObjectURL(url)
-
-        setProgress(Math.round(((index + 1) / exportBundles.length) * 100))
-      }
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${baseFilename}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+      setProgress(100)
 
       notify?.({
         type: 'success',
         message: 'Batch export complete',
-        description: `${exportBundles.length} PDF files were generated.`,
+        description: `Generated 1 PDF file with ${exportReadyBundles.length} field sheets.`,
       })
       setExportOpen(false)
     } catch (error) {
@@ -625,7 +904,7 @@ export const WellBatchExport = () => {
         </Typography>
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: 3 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 680px', gap: 3 }}>
         <Stack spacing={2}>
           <Paper elevation={0}>
             <Box
@@ -659,11 +938,13 @@ export const WellBatchExport = () => {
                 <Button
                   variant="contained"
                   size="small"
-                  disabled={!pasteValue.trim()}
-                  onClick={processPaste}
+                  disabled={!pasteValue.trim() || isResolvingIds}
+                  onClick={() => {
+                    void processPaste()
+                  }}
                   startIcon={<ContentPaste />}
                 >
-                  Resolve IDs
+                  {isResolvingIds ? 'Resolving...' : 'Resolve IDs'}
                 </Button>
               </Box>
             </Box>
@@ -812,8 +1093,11 @@ export const WellBatchExport = () => {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="caption" color="text.secondary" fontStyle="italic">
-                      {resolvedWells.length} ready for export
+                      <Typography variant="caption" color="text.secondary" fontStyle="italic">
+                      {exportReadyBundles.length} ready for export
+                      {skippedResolvedCount > 0
+                        ? ` (${skippedResolvedCount} skipped)`
+                        : ''}
                     </Typography>
                     <Tooltip title="Clear all">
                       <IconButton
@@ -828,10 +1112,16 @@ export const WellBatchExport = () => {
                   <Button
                     variant="contained"
                     size="small"
+                    sx={{
+                      minHeight: 28,
+                      px: 1.25,
+                      py: 0.25,
+                      fontSize: '0.75rem',
+                    }}
                     disabled={
                       resolvedWells.length === 0 ||
                       isLoadingBundles ||
-                      exportBundles.length !== resolvedWells.length
+                      exportReadyBundles.length === 0
                     }
                     onClick={() => setExportOpen(true)}
                     startIcon={<FileDownload />}
@@ -846,25 +1136,8 @@ export const WellBatchExport = () => {
 
         <Stack spacing={2}>
           <Paper elevation={0}>
-            <Box
-              sx={{
-                bgcolor: '#f0f3f7',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                px: 2,
-                py: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-              }}
-            >
-              <MapIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-              <Typography variant="overline" sx={{ color: 'primary.main' }}>
-                Route Preview
-              </Typography>
-            </Box>
             <Box sx={{ p: 2 }}>
-              <BatchRouteMap wells={exportBundles.map((bundle) => bundle.well)} />
+              <BatchRouteMap wells={mapPreviewWells} />
             </Box>
           </Paper>
         </Stack>
@@ -876,7 +1149,7 @@ export const WellBatchExport = () => {
         onGenerate={generateBatch}
         isGenerating={isGenerating}
         progress={progress}
-        bundles={exportBundles}
+        bundles={exportReadyBundles}
         filename={filename}
         setFilename={setFilename}
       />

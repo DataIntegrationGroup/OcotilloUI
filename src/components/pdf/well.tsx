@@ -22,22 +22,24 @@ import { Footer, Header, LineItem } from '@/components/pdf/layout'
 
 export const WellPDF = ({
   well,
-  sample,
+  sample = {},
   assets,
   contacts,
   observations,
   options = {},
-  sensorDeployments,
+  sensorDeployments = [],
   hydrographImage,
+  asDocument = true,
 }: {
   well: IWell
-  sample: ISample
+  sample?: Partial<ISample>
   assets: BaseRecord[]
   contacts: IContact[]
   observations: readonly Partial<IObservation>[]
-  sensorDeployments: SensorDeploymentRow[]
-  options: IPdfOptions
+  sensorDeployments?: SensorDeploymentRow[]
+  options?: IPdfOptions
   hydrographImage?: string | null
+  asDocument?: boolean
 }) => {
   const density: IPdfDensity = options.density ?? PDF_DEFAULT_VALUES.density
   const isDense = density === 'dense' || density === 'very-dense'
@@ -50,14 +52,8 @@ export const WellPDF = ({
     usePrimaryAndSecondaryContact(contacts)
   const allNotes = useAllNotes(well, options)
 
-  return (
-    <Document
-      title={filename || null}
-      author="NMBGMR Ocotillo"
-      creator="NMBGMR Ocotillo System"
-      language="en-US"
-      subject="Well Field Data Report"
-    >
+  const pages = (
+    <>
       <Page size="A4" style={styles.page}>
         <Header styles={styles} />
         <CoreInformation well={well} styles={styles} dense={isDense} />
@@ -173,6 +169,22 @@ export const WellPDF = ({
           <Footer wellId={well?.name} styles={styles} />
         </Page>
       ) : null}
+    </>
+  )
+
+  if (!asDocument) {
+    return pages
+  }
+
+  return (
+    <Document
+      title={filename || null}
+      author="NMBGMR Ocotillo"
+      creator="NMBGMR Ocotillo System"
+      language="en-US"
+      subject="Well Field Data Report"
+    >
+      {pages}
     </Document>
   )
 }
