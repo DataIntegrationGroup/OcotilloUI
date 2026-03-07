@@ -8,6 +8,8 @@ import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { CreateButton } from '@refinedev/mui'
 import { useNavigation } from '@refinedev/core'
 import { formatAppDateTime } from '@/utils'
+import { Button } from '@mui/material'
+import { PictureAsPdf } from '@mui/icons-material'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
@@ -118,6 +120,14 @@ export const WellList: React.FC = () => {
     return (
       <>
         <CreateButton onClick={() => push('/ocotillo/well-inventory-form')} />
+        <Button
+          variant="contained"
+          color="secondary"
+          startIcon={<PictureAsPdf />}
+          onClick={() => push('/ocotillo/well/batch-export')}
+        >
+          Batch Field Sheets
+        </Button>
         <ExportButton
           variant={'contained'}
           loading={exportIsLoading}
