@@ -1107,7 +1107,7 @@ export const WellBatchExport = () => {
                 Selected Wells
               </Typography>
               {chips.length > 0 && (
-                  <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
                   {resolvedIds.length} resolved{unresolvedLabel}
                 </Typography>
               )}
@@ -1142,7 +1142,7 @@ export const WellBatchExport = () => {
                       key={chip.query}
                       label={
                         chip.status === 'resolved'
-                          ? `${wellsById.get(chip.wellId as number)?.name ?? 'Well'}`
+                          ? (wellsById.get(chip.wellId as number)?.name ?? chip.query)
                           : `${chip.query} · not found`
                       }
                       onDelete={() => removeChip(chip.query)}
