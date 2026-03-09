@@ -1,214 +1,17 @@
 import { useDataProvider } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
 import { useOGCLayer } from '@/hooks/useOGCLayer'
-
-type OgcCollectionRecord = {
-  id?: string
-  collection_id?: string
-  name?: string
-  title?: string
-}
-
-const TDS_LEGEND = {
-  gradient:
-    'linear-gradient(90deg, #2b83ba 0%, #4daf4a 20%, #a6d96a 40%, #fee08b 60%, #f46d43 80%, #d73027 100%)',
-  minLabel: '<300',
-  maxLabel: '5000+ mg/L',
-}
-
-const DEPTH_LEGEND = {
-  gradient:
-    'linear-gradient(90deg, #1a9850 0%, #66bd63 25%, #a6d96a 50%, #fee08b 70%, #f46d43 85%, #d73027 100%)',
-  minLabel: 'Shallow',
-  maxLabel: 'Deep',
-}
-
-const TREND_LEGEND = {
-  gradient: 'linear-gradient(90deg, #2c7bb6 0%, #bdbdbd 50%, #d73027 100%)',
-  minLabel: 'Declining',
-  maxLabel: 'Rising',
-}
-
-const parseNumeric = (value: unknown): number | undefined => {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value !== 'string') return undefined
-
-  const normalized = value.replace(/,/g, '').match(/-?\d+(\.\d+)?/)
-  if (!normalized) return undefined
-  const parsed = Number(normalized[0])
-  return Number.isFinite(parsed) ? parsed : undefined
-}
-
-const findNumericPropertyWithPriority = (
-  feature: any,
-  priorityPatterns: RegExp[],
-  fallbackPatterns: RegExp[],
-  excludePatterns: RegExp[] = []
-): number | undefined => {
-  const properties = feature?.properties || {}
-  const entries = Object.entries(properties) as Array<[string, unknown]>
-
-  const tryMatch = (includePatterns: RegExp[]) => {
-    for (const [key, value] of entries) {
-      const keyString = String(key)
-      if (excludePatterns.some((pattern) => pattern.test(keyString))) continue
-      if (!includePatterns.some((pattern) => pattern.test(keyString))) continue
-      const parsed = parseNumeric(value)
-      if (parsed !== undefined) return parsed
-    }
-    return undefined
-  }
-
-  return tryMatch(priorityPatterns) ?? tryMatch(fallbackPatterns)
-}
-
-const findStringProperty = (feature: any, patterns: RegExp[]): string | undefined => {
-  const properties = feature?.properties || {}
-  for (const [key, value] of Object.entries(properties)) {
-    const keyString = String(key)
-    if (!patterns.some((pattern) => pattern.test(keyString))) continue
-    if (typeof value === 'string' && value.trim().length > 0) return value
-  }
-  return undefined
-}
-
-const tdsColorFromFeature = (feature: any): string | undefined => {
-  const value = findNumericPropertyWithPriority(
-    feature,
-    [
-      /(latest|recent|most).*(tds|dissolved.*solids)/i,
-      /(tds|dissolved.*solids).*(latest|recent|most)/i,
-    ],
-    [/tds/i, /dissolved.*solids/i],
-    [
-      /count/i,
-      /num/i,
-      /code/i,
-      /id$/i,
-      /unit/i,
-      /rank/i,
-      /class/i,
-      /flag/i,
-      /avg/i,
-      /average/i,
-      /mean/i,
-      /median/i,
-      /min/i,
-      /max/i,
-    ]
-  )
-  if (value === undefined) return undefined
-  if (value < 300) return '#2b83ba'
-  if (value < 500) return '#4daf4a'
-  if (value < 1000) return '#a6d96a'
-  if (value < 2000) return '#fee08b'
-  if (value < 5000) return '#f46d43'
-  return '#d73027'
-}
-
-const averageTdsColorFromFeature = (feature: any): string | undefined => {
-  const value = findNumericPropertyWithPriority(
-    feature,
-    [/(average|avg|mean).*(tds|dissolved.*solids)/i, /(tds|dissolved.*solids).*(average|avg|mean)/i],
-    [/tds/i, /dissolved.*solids/i],
-    [/count/i, /num/i, /code/i, /id$/i, /unit/i, /rank/i, /class/i, /flag/i, /latest/i]
-  )
-  if (value === undefined) return undefined
-  if (value < 300) return '#2b83ba'
-  if (value < 500) return '#4daf4a'
-  if (value < 1000) return '#a6d96a'
-  if (value < 2000) return '#fee08b'
-  if (value < 5000) return '#f46d43'
-  return '#d73027'
-}
-
-const depthToWaterColorFromFeature = (feature: any): string | undefined => {
-  const value = findNumericPropertyWithPriority(
-    feature,
-    [
-      /(latest|recent|most).*(depth.*water|depth_to_water|water_level|depth_to_water_bgs)/i,
-      /(depth.*water|depth_to_water|water_level|depth_to_water_bgs).*(latest|recent|most)/i,
-    ],
-    [/depth.*water/i, /depth_to_water/i, /water_level/i, /depth_to_water_bgs/i],
-    [
-      /count/i,
-      /num/i,
-      /code/i,
-      /id$/i,
-      /unit/i,
-      /rank/i,
-      /class/i,
-      /flag/i,
-      /avg/i,
-      /average/i,
-      /mean/i,
-      /median/i,
-      /min/i,
-      /max/i,
-      /trend/i,
-      /slope/i,
-    ]
-  )
-  if (value === undefined) return undefined
-  if (value < 25) return '#1a9850'
-  if (value < 75) return '#66bd63'
-  if (value < 150) return '#a6d96a'
-  if (value < 250) return '#fee08b'
-  if (value < 400) return '#f46d43'
-  return '#d73027'
-}
-
-const trendColorFromFeature = (feature: any): string | undefined => {
-  const label = findStringProperty(feature, [/trend/i, /trend_class/i])?.toLowerCase()
-  if (label) {
-    if (/(declin|decreas|fall|down)/.test(label)) return '#2c7bb6'
-    if (/(stable|flat|no change|neutral)/.test(label)) return '#bdbdbd'
-    if (/(ris|increas|up)/.test(label)) return '#d73027'
-  }
-
-  const slope = findNumericPropertyWithPriority(
-    feature,
-    [/trend.*slope/i, /slope.*trend/i, /latest.*trend/i, /trend.*latest/i],
-    [/trend/i, /slope/i],
-    [/count/i, /num/i, /code/i, /id$/i, /unit/i, /rank/i, /class/i, /flag/i]
-  )
-  if (slope === undefined) return undefined
-  if (slope < -0.2) return '#2c7bb6'
-  if (slope > 0.2) return '#d73027'
-  return '#bdbdbd'
-}
-
-const normalize = (value?: string): string =>
-  (value || '').toLowerCase().replace(/[^a-z0-9]+/g, '')
-
-const resolveCollection = (
-  collections: OgcCollectionRecord[],
-  candidates: string[]
-) => {
-  const normalizedCandidates = candidates.map(normalize)
-
-  const match = collections.find((collection) => {
-    const keys = [
-      normalize(collection.id),
-      normalize(collection.collection_id),
-      normalize(collection.name),
-      normalize(collection.title),
-    ]
-
-    return normalizedCandidates.some((candidate) =>
-      keys.some((key) => key === candidate || key.includes(candidate))
-    )
-  })
-
-  return {
-    id: match?.id || match?.collection_id || match?.name || '',
-    label:
-      match?.title ||
-      match?.name ||
-      candidates[0].replace(/\s*\(Water Wells\)\s*/g, ''),
-    exists: Boolean(match),
-  }
-}
+import {
+  OgcCollectionRecord,
+  resolveCollection,
+  DEPTH_LEGEND,
+  TDS_LEGEND,
+  TREND_LEGEND,
+  latestDepthToWaterColorFromFeature,
+  averageTdsColorFromFeature,
+  latestTdsColorFromFeature,
+  trendColorFromFeature,
+} from '@/utils/ogcLayerUtils'
 
 export const useThingLayers = () => {
   const dataProvider = useDataProvider()
@@ -306,7 +109,7 @@ export const useThingLayers = () => {
     label: latestDepthToWater.label,
     legendColor: '#fdae61',
     color: '#9e9e9e',
-    colorAccessor: depthToWaterColorFromFeature,
+    colorAccessor: latestDepthToWaterColorFromFeature,
     legendScale: DEPTH_LEGEND,
     enabled: latestDepthToWater.exists,
   })
@@ -324,7 +127,7 @@ export const useThingLayers = () => {
     label: latestTds.label,
     legendColor: '#fdae61',
     color: '#9e9e9e',
-    colorAccessor: tdsColorFromFeature,
+    colorAccessor: latestTdsColorFromFeature,
     legendScale: TDS_LEGEND,
     enabled: latestTds.exists,
   })
@@ -418,9 +221,9 @@ export const useThingLayers = () => {
     collection: { id: string; exists: boolean },
     layer: any
   ) => {
-    if (!collection.exists || !collection.id) return
-    if (seenCollectionIds.has(collection.id)) return
-    seenCollectionIds.add(collection.id)
+    const hasId = collection.exists && collection.id
+    if (hasId && seenCollectionIds.has(collection.id)) return
+    if (hasId) seenCollectionIds.add(collection.id)
     layers[layerKey] = layer
   }
 

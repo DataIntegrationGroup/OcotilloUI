@@ -70,20 +70,19 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
         }
       : null
 
-  const getFeatureId = (feature: any): string | undefined => {
-    const props = feature?.properties || {}
-    const candidates = [
-      props.thing_id,
-      props.well_id,
-      props.id,
-      props.fid,
-      props.feature_id,
-      feature?.id,
-    ]
-    const value = candidates.find(
-      (candidate) => candidate !== undefined && candidate !== null && candidate !== ''
-    )
-    return value === undefined ? undefined : String(value)
+  const getFeatureId = (
+    feature?: { id?: number | string; properties?: Record<string, unknown> }
+  ): string | undefined => {
+    const p = feature?.properties
+    const id =
+      p?.['thing_id'] ??
+      p?.['well_id'] ??
+      p?.['id'] ??
+      p?.['fid'] ??
+      p?.['feature_id'] ??
+      feature?.id
+
+    return id != null && id !== '' ? String(id) : undefined
   }
 
   const onMapPointClick = (_: any, points: any[]) => {
