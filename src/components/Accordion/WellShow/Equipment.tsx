@@ -17,20 +17,9 @@ import {
 import { ExpandMore, SettingsInputAntenna } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
-import { ISensor } from '@/interfaces/ocotillo/ISensor'
-
-interface MergedRow {
-  id: number | string
-  sensor_id?: number
-  sensor_name?: number | string
-  sensor_model?: string
-  serial_no?: string
-  recording_interval: string
-  recording_interval_display: string
-  installation_date?: string | null
-  removal_date?: string | null
-  isUnattached?: boolean
-}
+import { ISensor } from '@/interfaces/ocotillo'
+import { useSensorDeploymentRows } from '@/hooks'
+import { SensorDeploymentRow } from '@/utils'
 
 export const EquipmentAccordion = ({ id }: { id?: number }) => {
   const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
@@ -60,43 +49,12 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
   const deployments = deploymentsDataGridProps?.rows ?? []
   const sensors = sensorDataGridProps?.rows ?? []
 
-  const mergedRows: MergedRow[] = useMemo(() => {
-    // Collect all sensor IDs already linked in deployments
-    const deployedSensorIds = new Set(
-      deployments.map((d: { sensor: ISensor }) => d.sensor?.id).filter(Boolean)
-    )
+  const sensorDeployments: SensorDeploymentRow[] = useSensorDeploymentRows({
+    deployments,
+    sensors,
+  })
 
-    // Find sensors NOT linked to any deployment
-    const unattachedSensors = sensors
-      .filter((s: any) => !deployedSensorIds.has(s.id))
-      .map((s: any) => ({
-        // Match deployment row shape
-        id: `sensor-${s.id}`, // prefix to avoid ID collision
-        sensor: s,
-        thing_id: s.thing_id,
-        installation_date: null,
-        removal_date: null,
-        release_status: s.release_status,
-        notes: null,
-        isUnattached: true,
-      }))
-
-    return [...deployments, ...unattachedSensors].map((r) => ({
-      ...r,
-      sensor_id: r.sensor?.id ?? null,
-      sensor_name: r.sensor?.name ?? '(unattached)',
-      sensor_model: r.sensor?.model ?? '-',
-      serial_no: r.sensor?.serial_no ?? '-',
-      datetime_installed: r.installation_date ?? null,
-      datetime_removed: r.removal_date ?? null,
-      hanging_cable_length: r.hanging_cable_length ?? null,
-      recording_interval_display: r.recording_interval
-        ? `${r.recording_interval} ${r.recording_interval_units}`
-        : null,
-    }))
-  }, [deployments, sensors])
-
-  const columns = useMemo<GridColDef<MergedRow>[]>(
+  const columns = useMemo<GridColDef<SensorDeploymentRow>[]>(
     () => [
       {
         field: 'sensor_name',
@@ -215,9 +173,9 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
         </Stack>
       </AccordionSummary>
       <AccordionDetails sx={{ p: 3 }}>
-        <DataGrid<MergedRow>
+        <DataGrid<SensorDeploymentRow>
           rowHeight={settings.rowHeight}
-          rows={mergedRows ?? []}
+          rows={sensorDeployments ?? []}
           columns={columns}
           pageSizeOptions={[10, 25, 50]}
           initialState={{

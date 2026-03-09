@@ -3,18 +3,20 @@ import {
   Checkbox,
   FormHelperText,
   FormControl,
-} from "@mui/material";
-import { Controller, Control, Path } from "react-hook-form";
+} from '@mui/material'
+import { Controller, Control, Path } from 'react-hook-form'
 
 export const ControlledCheckbox = <T,>({
   control,
   name,
   label,
+  labelPlacement = 'start',
   ...checkboxProps
 }: {
-  control: Control<T>;
-  name: string;
-  label: string;
+  control: Control<T>
+  name: string
+  label: string
+  labelPlacement?: 'end' | 'start' | 'top' | 'bottom'
 } & React.ComponentProps<typeof Checkbox>) => {
   return (
     <Controller
@@ -23,7 +25,7 @@ export const ControlledCheckbox = <T,>({
       render={({ field, fieldState }) => (
         <FormControl error={!!fieldState?.error}>
           <FormControlLabel
-            labelPlacement="start"
+            labelPlacement={labelPlacement}
             control={
               <Checkbox
                 {...field}
@@ -40,5 +42,5 @@ export const ControlledCheckbox = <T,>({
         </FormControl>
       )}
     />
-  );
-};
+  )
+}

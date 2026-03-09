@@ -84,7 +84,7 @@
     "zod": "^4.1.8"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "^0.82.5",
+    "@hey-api/openapi-ts": "^0.85.2",
     "@sentry/vite-plugin": "^3.4.0",
     "@stoplight/prism-cli": "^5.14.2",
     "@testing-library/jest-dom": "^6.8.0",
