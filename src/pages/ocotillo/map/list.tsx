@@ -52,7 +52,8 @@ export const MapView: React.FC = () => {
       layerKey.includes('water-well') ||
       layerKey.includes('depth-to-water') ||
       layerKey.includes('tds') ||
-      layerKey.includes('trend')
+      layerKey.includes('trend') ||
+      layerKey.includes('water-elevation')
     ) {
       return 'groundwater'
     }
@@ -132,7 +133,10 @@ export const MapView: React.FC = () => {
 
   const onMapPointClick = (_: any, points: any[]) => {
     const selectedPoint = points.find(
-      (point) => typeof point?.layer?.id === 'string' && point.layer.id.startsWith('location-')
+      (point) =>
+        typeof point?.layer?.id === 'string' &&
+        point.layer.id.startsWith('location-') &&
+        point?.geometry?.type === 'Point'
     )
     if (!selectedPoint) return
 
@@ -159,7 +163,9 @@ export const MapView: React.FC = () => {
     }
   }
   const onMapMouseMove = (_e: any, features: any[], mapRef: any) => {
-    features = features.filter((f) => f.layer.id.startsWith('location-'))
+    features = features.filter(
+      (f) => f.layer.id.startsWith('location-') && f?.geometry?.type === 'Point'
+    )
     if (features.length > 0) {
       mapRef.current.getCanvas().style.cursor = 'pointer'
       setPopupContent({
@@ -320,7 +326,9 @@ export const MapView: React.FC = () => {
                     <Collapse in={expandedGroups[groupKey]}>
                       {layers.map(([key, layerDef]) => {
                         const { layerProps, isLoading } = layerDef
-                        const paintColor = layerProps.paint['circle-color']
+                        const paint = layerProps.paint || {}
+                        const paintColor =
+                          paint['circle-color'] || paint['line-color'] || paint['fill-color']
                         const color =
                           layerDef.legendColor ||
                           (typeof paintColor === 'string'
