@@ -40,9 +40,9 @@ export interface AuthentikIdentity {
 
 export type AuthentikPermissions = string[]
 
-export const getAccessToken = async (
-  refresh?: boolean
-): Promise<string | null> => {
+export const getAccessToken = async ({
+  refresh,
+}: { refresh?: boolean } = {}): Promise<string | null> => {
   const currentAccess = localStorage.getItem(STORAGE_KEYS.accessToken)
 
   if (!refresh) return currentAccess
@@ -153,17 +153,42 @@ export const authentikAuthProvider: AuthProvider = {
     return { success: true, redirectTo: '/login' }
   },
 
-  // Called on page load / route change
+  /**
+   * Called by Refine on route changes and page load to verify whether
+   * the current user session is still authenticated.
+   *
+   * If no access token exists, the user is redirected to the login page.
+   *
+   * If the access token exists but is expired, we attempt a silent
+   * refresh using the refresh token.
+   *
+   * If the refresh succeeds, the session continues normally.
+   * If the refresh fails, all auth state is cleared and the user
+   * must log in again.
+   */
   check: async (): Promise<CheckResponse> => {
-    const access = tokenStore.accessToken
-    if (!access) return { authenticated: false, redirectTo: '/login' }
+    if (IS_TESTING_AUTH) {
+      return { authenticated: true }
+    }
 
-    // If a JWT is present, then validate expiry.
-    if (isJwtExpired(access) && !IS_TESTING_AUTH) {
-      tokenStore.accessToken = null
-      tokenStore.idToken = null
-      tokenStore.refreshToken = null
+    let access = tokenStore.accessToken
+    if (!access) {
       return { authenticated: false, redirectTo: '/login' }
+    }
+
+    if (isJwtExpired(access)) {
+      access = await getAccessToken({ refresh: true })
+
+      if (!access) {
+        tokenStore.accessToken = null
+        tokenStore.idToken = null
+        tokenStore.refreshToken = null
+
+        transientStore.pkceVerifier = null
+        transientStore.pkceState = null
+
+        return { authenticated: false, redirectTo: '/login' }
+      }
     }
 
     return { authenticated: true }
@@ -225,6 +250,24 @@ export const authentikAuthProvider: AuthProvider = {
     const status = getStatusCode(err)
 
     if (status === HttpStatus.UNAUTHORIZED) {
+      /**
+       * If the backend returns 401 (Unauthorized), the most common cause
+       * is an expired access token. In that case we attempt a silent
+       * refresh using the refresh token.
+       *
+       * If the refresh succeeds, we allow the request flow to continue
+       * without logging the user out.
+       *
+       * If the refresh fails (refresh token expired or invalid), we clear
+       * all stored tokens and force a logout so the user must authenticate
+       * again.
+       */
+      const refreshed = await getAccessToken({ refresh: true })
+
+      if (refreshed) {
+        return {}
+      }
+
       tokenStore.accessToken = null
       tokenStore.idToken = null
       tokenStore.refreshToken = null
