@@ -137,7 +137,7 @@ export const ocotilloDataProvider: DataProvider = {
       resource === 'thing/spring'
     ) {
       let url: string = `thing/${id}`
-      const response = await fetcher(url, meta.requestConfig)
+      const response = await fetcher(url, meta?.requestConfig)
 
       if (response.status < 200 || response.status > 299) throw response
 
@@ -155,7 +155,7 @@ export const ocotilloDataProvider: DataProvider = {
     let url =
       id === undefined || id === null ? `${resource}` : `${resource}/${id}`
 
-    const response = await fetcher(url, meta.requestConfig)
+    const response = await fetcher(url, meta?.requestConfig)
 
     if (response.status < 200 || response.status > 299) throw response
 
