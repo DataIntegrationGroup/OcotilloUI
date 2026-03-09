@@ -21,7 +21,7 @@ export const CoreInformation = ({
 
   const siteName: string =
     well.alternate_ids?.find((alt_id) => (alt_id.relation = 'OSEPOD'))
-      .alternate_id ?? ''
+      ?.alternate_id ?? ''
 
   return (
     <View style={styles.section}>
