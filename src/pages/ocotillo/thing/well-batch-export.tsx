@@ -46,6 +46,9 @@ const isDevelopment = import.meta.env.DEV
 const TOKEN_RESOLVE_CONCURRENCY = 5
 const TOKEN_RESOLVE_PAGE_SIZE = 200
 const TOKEN_RESOLVE_MAX_PAGES = 20
+const BUNDLE_FETCH_CONCURRENCY = 4
+const BUNDLE_RESOURCE_PAGE_SIZE = 100
+const BUNDLE_RESOURCE_MAX_PAGES = 20
 
 export const WellBatchExport = () => {
   const { open: notify } = useNotification()
@@ -275,49 +278,51 @@ export const WellBatchExport = () => {
         id: wellId,
       })
 
-      const [assetsResult, contactsResult, observationsResult] =
-        await Promise.all([
-          ocotilloDataProvider
-            .getList({
-              resource: 'asset',
-              meta: {
-                params: {
-                  thing_id: wellId,
-                },
-              },
-            })
-            .catch((error) => {
-              if (isDevelopment) {
-                return {
-                  data: [] as BaseRecord[],
-                  total: 0,
-                }
-              }
-              throw error
-            }),
-          ocotilloDataProvider.getList({
-            resource: 'contact',
+      const fetchThingResource = async <T extends BaseRecord>(resource: string) => {
+        let page = 1
+        const rows: T[] = []
+
+        while (page <= BUNDLE_RESOURCE_MAX_PAGES) {
+          const result = await ocotilloDataProvider.getList({
+            resource,
+            pagination: {
+              current: page,
+              pageSize: BUNDLE_RESOURCE_PAGE_SIZE,
+            },
             meta: {
               params: {
                 thing_id: wellId,
               },
             },
-          }),
-          ocotilloDataProvider.getList({
-            resource: 'observation/groundwater-level',
-            meta: {
-              params: {
-                thing_id: wellId,
-              },
-            },
-          }),
-        ])
+          })
+
+          const pageRows = (result.data ?? []) as T[]
+          rows.push(...pageRows)
+
+          const reachedEnd =
+            pageRows.length < BUNDLE_RESOURCE_PAGE_SIZE ||
+            page * BUNDLE_RESOURCE_PAGE_SIZE >= (result.total ?? 0)
+          if (reachedEnd) break
+          page += 1
+        }
+
+        return rows
+      }
+
+      const [assets, contacts, observations] = await Promise.all([
+        fetchThingResource<BaseRecord>('asset').catch((error) => {
+          console.warn(`Failed to load assets for well ${wellId}`, error)
+          return [] as BaseRecord[]
+        }),
+        fetchThingResource<IContact>('contact'),
+        fetchThingResource<Partial<IObservation>>('observation/groundwater-level'),
+      ])
 
       return {
         well: wellResult.data as IWell,
-        assets: assetsResult.data ?? [],
-        contacts: (contactsResult.data ?? []) as IContact[],
-        observations: (observationsResult.data ?? []) as readonly Partial<IObservation>[],
+        assets,
+        contacts,
+        observations,
       }
     },
     [ocotilloDataProvider]
@@ -516,17 +521,33 @@ export const WellBatchExport = () => {
       const missingBundleIds = resolvedIds.filter((id) => !localBundlesByWellId[id])
 
       if (missingBundleIds.length > 0) {
-        const results = await Promise.allSettled(
-          missingBundleIds.map((id) => fetchBundle(id))
+        const results = await mapWithConcurrency(
+          missingBundleIds,
+          BUNDLE_FETCH_CONCURRENCY,
+          async (id) => {
+            try {
+              return {
+                status: 'fulfilled' as const,
+                id,
+                value: await fetchBundle(id),
+              }
+            } catch (error) {
+              return {
+                status: 'rejected' as const,
+                id,
+                reason: error,
+              }
+            }
+          }
         )
 
         const loadedBundles: WellBundle[] = []
         const failedIds: number[] = []
-        results.forEach((result, index) => {
+        results.forEach((result) => {
           if (result.status === 'fulfilled') {
             loadedBundles.push(result.value)
           } else {
-            failedIds.push(missingBundleIds[index])
+            failedIds.push(result.id)
           }
         })
 
