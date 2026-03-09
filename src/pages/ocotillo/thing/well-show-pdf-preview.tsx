@@ -39,6 +39,7 @@ import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 import { useSensorDeploymentRows } from '@/hooks'
 import { SensorDeploymentRow } from '@/utils'
+import { IHydrographDatasource } from '@/interfaces/st2'
 
 export const WellShowPdfPreview = () => {
   const { push } = useNavigation()
@@ -128,22 +129,25 @@ export const WellShowPdfPreview = () => {
   const assets = assetData?.data ?? []
   const contacts = contactData?.data ?? []
 
-  const sampleId =
-    observations
-      ?.filter((o) => o.observation_datetime) // only ones with date
-      .sort((a, b) => {
-        // Newest first
-        return (
-          new Date(b.observation_datetime!).getTime() -
-          new Date(a.observation_datetime!).getTime()
-        )
-      })[0]?.sample_id ?? null
+  const sampleId = useMemo(() => {
+    return (
+      observations
+        ?.filter((o) => o.observation_datetime)
+        .sort(
+          (a, b) =>
+            new Date(b.observation_datetime!).getTime() -
+            new Date(a.observation_datetime!).getTime()
+        )[0]?.sample_id ?? null
+    )
+  }, [observations])
+
+  const hasSampleId = sampleId != null
 
   const { data: sampleData, isLoading: isSampleLoading } = useOne<ISample>({
     resource: 'ocotillo.sample',
     id: sampleId,
     queryOptions: {
-      enabled: !!sampleId,
+      enabled: hasSampleId,
     },
   })
 
@@ -154,7 +158,7 @@ export const WellShowPdfPreview = () => {
     isAssetLoading ||
     isContactLoading ||
     isObservationsLoading ||
-    isSampleLoading
+    (hasSampleId && isSampleLoading)
 
   useEffect(() => {
     if (!isLoading) {
@@ -171,6 +175,33 @@ export const WellShowPdfPreview = () => {
       .join(' '),
     description: null as null,
   }))
+
+  const hydrographDatasource = useMemo<IHydrographDatasource[]>(() => {
+    if (!observations?.length) return []
+
+    const data = observations
+      .filter((o) => o.observation_datetime && typeof o.value === 'number')
+      .map((o) => ({
+        phenomenonTime: o.observation_datetime,
+        result: Number(o.depth_to_water_bgs),
+      }))
+      .sort(
+        (a, b) =>
+          new Date(a.phenomenonTime).getTime() -
+          new Date(b.phenomenonTime).getTime()
+      )
+
+    if (!data.length) return []
+
+    return [
+      {
+        id: Number(well?.id ?? 0),
+        name: well?.name ?? 'Depth to Water',
+        style: 'scatter',
+        data,
+      },
+    ]
+  }, [observations, well])
 
   const hydrographOption = useMemo(() => {
     if (!observations?.length) return null
@@ -224,7 +255,7 @@ export const WellShowPdfPreview = () => {
 
       yAxis: {
         type: 'value',
-        inverse: true,
+        inverse: currentOptions?.invertYAxis ?? true,
         name: yaxisTitle,
         nameLocation: 'center',
         nameGap: 50,
@@ -384,10 +415,18 @@ export const WellShowPdfPreview = () => {
               </Box>
             )}
           </Box>
-          {!isLoading && hydrographOption && (
+          {!isLoading && hydrographDatasource.length > 0 && (
             <HydrographPngExporter
-              option={hydrographOption}
-              onPngReady={(png) => setHydrographImage(png)}
+              datasource={hydrographDatasource}
+              options={{
+                ...currentOptions,
+                // Extends the x-axis range to create blank space on the right side of the chart.
+                // This does NOT change the groundwater measurements; it only shifts the
+                // plotted data left so hydrologists have room to annotate the printed hydrograph.
+                rightPaddingPercent: 30,
+              }}
+              refreshKey={`${id}-${JSON.stringify(currentOptions)}`}
+              onPngReady={setHydrographImage}
             />
           )}
         </CardContent>

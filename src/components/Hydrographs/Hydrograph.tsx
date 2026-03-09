@@ -1,4 +1,10 @@
-import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react'
+import {
+  CSSProperties,
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from 'react'
 import ReactECharts from 'echarts-for-react'
 import type {
   IHydrographDatasource,
@@ -23,14 +29,18 @@ interface HydrographProps {
   options?: IHydrographOptions
   onEvents?: any
   sx?: object
+  chartStyle?: CSSProperties
 }
 
 export type HydrographHandle = {
-  toPngDataUrl: (opts?: { pixelRatio?: number }) => string
+  toPngDataUrl: (opts?: {
+    pixelRatio?: number
+    backgroundColor?: string
+  }) => string
 }
 
 export const Hydrograph = forwardRef<HydrographHandle, HydrographProps>(
-  ({ datasource, refresh, options, onEvents, sx }, ref) => {
+  ({ datasource, refresh, options, onEvents, sx, chartStyle }, ref) => {
     const theme = useTheme()
     const chartRef = useRef<ReactECharts>(null)
 
@@ -79,7 +89,7 @@ export const Hydrograph = forwardRef<HydrographHandle, HydrographProps>(
       const seriesNames = datasource.map((d) => d.name)
 
       return { dataset, series, seriesNames }
-    }, [datasource])
+    }, [datasource, options])
 
     const yaxisTitle = useMemo(() => {
       if (options?.useNormalization)
@@ -101,6 +111,23 @@ export const Hydrograph = forwardRef<HydrographHandle, HydrographProps>(
           return { start: -1, end: 100 }
       }
     }, [options])
+
+    const xAxisMax = useMemo(() => {
+      const paddingPercent = options?.rightPaddingPercent ?? 0
+
+      if (paddingPercent <= 0) return undefined
+
+      return (value: { min: number; max: number }) => {
+        const span = value.max - value.min
+
+        if (!Number.isFinite(span) || span <= 0) {
+          // fallback: add 1 day if there is only one point
+          return value.max + 1000 * 60 * 60 * 24
+        }
+
+        return value.max + span * (paddingPercent / 100)
+      }
+    }, [options?.rightPaddingPercent])
 
     const chartOption = useMemo(
       () => ({
@@ -131,6 +158,7 @@ export const Hydrograph = forwardRef<HydrographHandle, HydrographProps>(
           type: 'time',
           splitLine: { show: true },
           axisLabel: { color: theme.palette.text.secondary },
+          max: xAxisMax,
         },
         yAxis: {
           inverse: options?.invertYAxis ?? true,
@@ -147,13 +175,13 @@ export const Hydrograph = forwardRef<HydrographHandle, HydrographProps>(
     )
 
     useImperativeHandle(ref, () => ({
-      toPngDataUrl: ({ pixelRatio = 3 } = {}) => {
+      toPngDataUrl: ({ pixelRatio = 3, backgroundColor } = {}) => {
         const inst = chartRef.current?.getEchartsInstance?.()
         if (!inst) return ''
         return inst.getDataURL({
           type: 'png',
           pixelRatio, // 2–4 is usually good for print
-          backgroundColor: theme.palette.background.paper,
+          backgroundColor: backgroundColor ?? theme.palette.background.paper,
           excludeComponents: ['toolbox'], // optional
         })
       },
@@ -165,7 +193,7 @@ export const Hydrograph = forwardRef<HydrographHandle, HydrographProps>(
           ref={chartRef}
           key={refresh}
           option={chartOption}
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: '100%', height: '100%', ...chartStyle }}
           onEvents={onEvents}
         />
       </Box>

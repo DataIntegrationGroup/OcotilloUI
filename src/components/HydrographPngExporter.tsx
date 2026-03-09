@@ -1,39 +1,39 @@
 import { useEffect, useRef } from 'react'
-import ReactECharts from 'echarts-for-react'
 import { useTheme, Box } from '@mui/material'
-
-type HydrographPngExporterProps = {
-  option: any // your echarts option object
-  refreshKey?: any // bump to force re-render/export
-  onPngReady: (pngDataUrl: string) => void
-}
+import { IHydrographDatasource, IHydrographOptions } from '@/interfaces/st2'
+import {
+  Hydrograph,
+  HydrographHandle,
+} from '@/components/Hydrographs/Hydrograph'
 
 export const HydrographPngExporter = ({
-  option,
+  datasource,
+  options,
   refreshKey,
   onPngReady,
-}: HydrographPngExporterProps) => {
+}: {
+  datasource: IHydrographDatasource[]
+  options?: IHydrographOptions
+  refreshKey?: any // bump to force re-render/export
+  onPngReady: (pngDataUrl: string) => void
+}) => {
   const theme = useTheme()
-  const chartRef = useRef<ReactECharts>(null)
+  const hydrographRef = useRef<HydrographHandle>(null)
 
   useEffect(() => {
-    // Wait a tick so ECharts has actually painted
     const t = setTimeout(() => {
-      const inst = chartRef.current?.getEchartsInstance?.()
-      if (!inst) return
-
-      const png = inst.getDataURL({
-        type: 'png',
-        pixelRatio: 3, // good for PDFs
+      const png = hydrographRef.current?.toPngDataUrl({
+        pixelRatio: 3,
         backgroundColor: theme.palette.background.paper,
-        excludeComponents: ['toolbox'],
       })
 
-      onPngReady(png)
-    }, 50)
+      if (png) {
+        onPngReady(png)
+      }
+    }, 100)
 
     return () => clearTimeout(t)
-  }, [option, refreshKey, theme, onPngReady])
+  }, [datasource, options, refreshKey, onPngReady, theme])
 
   return (
     // Off-screen render (still in DOM so canvas works)
@@ -46,16 +46,15 @@ export const HydrographPngExporter = ({
         height: 400,
         pointerEvents: 'none',
         opacity: 0,
+        overflow: 'hidden',
       }}
     >
-      <ReactECharts
-        ref={chartRef}
-        option={{
-          ...option,
-          animation: false,
-          backgroundColor: theme.palette.background.paper,
-        }}
-        style={{ width: '900px', height: '400px' }}
+      <Hydrograph
+        ref={hydrographRef}
+        datasource={datasource}
+        refresh={typeof refreshKey === 'number' ? refreshKey : 0}
+        options={options}
+        sx={{ width: 900, height: 400 }}
       />
     </Box>
   )
