@@ -28,8 +28,15 @@ const EMPTY_FEATURE_COLLECTION = {
   features: [],
 } as const
 
-export const useThingLayers = () => {
+export const useThingLayers = (activeLayerKeys?: string[]) => {
   const dataProvider = useDataProvider()
+  const hasActiveLayerFilter = Array.isArray(activeLayerKeys)
+  const activeLayerSet = useMemo(
+    () => new Set(activeLayerKeys ?? []),
+    [activeLayerKeys]
+  )
+  const isLayerActive = (layerKey: string): boolean =>
+    !hasActiveLayerFilter || activeLayerSet.has(layerKey)
 
   const { data: collectionsData } = useQuery({
     queryKey: ['ogcapi-collections-all'],
@@ -48,12 +55,7 @@ export const useThingLayers = () => {
 
   const collections = collectionsData ?? []
   const collectionSearchText = (collection: OgcCollectionRecord): string =>
-    [
-      collection.id,
-      collection.collection_id,
-      collection.name,
-      collection.title,
-    ]
+    [collection.id, collection.collection_id, collection.name, collection.title]
       .filter(Boolean)
       .join(' ')
       .toLowerCase()
@@ -128,7 +130,10 @@ export const useThingLayers = () => {
     'Water Well Summary',
     'water_well_summary',
   ])
-  const waterWells = resolveCollection(collections, ['Water Wells', 'water_wells'])
+  const waterWells = resolveCollection(collections, [
+    'Water Wells',
+    'water_wells',
+  ])
   const springs = resolveCollection(collections, ['Springs', 'springs'])
   const waterElevationContoursPrimary = resolveCollection(collections, [
     'Water Elevation Contours',
@@ -157,7 +162,9 @@ export const useThingLayers = () => {
           /isoline/i,
         ],
         includeOneOf: [/contour|isoline/i],
-        includeAll: [/potentiometric|piezometric|elevation|water[\s_-]?table|head/i],
+        includeAll: [
+          /potentiometric|piezometric|elevation|water[\s_-]?table|head/i,
+        ],
         exclude: [/depth[\s_-]?to[\s_-]?water/i, /trend/i, /tds/i],
         fallbackLabel: 'Water Elevation Contours',
       })
@@ -192,7 +199,9 @@ export const useThingLayers = () => {
           /well/i,
         ],
         includeOneOf: [/point|points|station|well/i],
-        includeAll: [/potentiometric|piezometric|elevation|water[\s_-]?table|head/i],
+        includeAll: [
+          /potentiometric|piezometric|elevation|water[\s_-]?table|head/i,
+        ],
         exclude: [/depth[\s_-]?to[\s_-]?water/i, /trend/i, /tds/i],
         fallbackLabel: 'Water Elevation Points',
       })
@@ -237,7 +246,7 @@ export const useThingLayers = () => {
     collection: locations.id,
     label: locations.label,
     color: '#607d8b',
-    enabled: locations.exists,
+    enabled: locations.exists && isLayerActive('ogc-locations'),
   })
   const latestDepthToWaterLayer = useOGCLayer({
     collection: latestDepthToWater.id,
@@ -246,7 +255,8 @@ export const useThingLayers = () => {
     color: '#9e9e9e',
     colorAccessor: latestDepthToWaterColorFromFeature,
     legendScale: DEPTH_LEGEND,
-    enabled: latestDepthToWater.exists,
+    enabled:
+      latestDepthToWater.exists && isLayerActive('ogc-latest-depth-to-water'),
   })
   const averageTdsLayer = useOGCLayer({
     collection: averageTds.id,
@@ -255,7 +265,7 @@ export const useThingLayers = () => {
     color: '#9e9e9e',
     colorAccessor: averageTdsColorFromFeature,
     legendScale: TDS_LEGEND,
-    enabled: averageTds.exists,
+    enabled: averageTds.exists && isLayerActive('ogc-average-tds'),
   })
   const latestTdsLayer = useOGCLayer({
     collection: latestTds.id,
@@ -264,7 +274,7 @@ export const useThingLayers = () => {
     color: '#9e9e9e',
     colorAccessor: latestTdsColorFromFeature,
     legendScale: TDS_LEGEND,
-    enabled: latestTds.exists,
+    enabled: latestTds.exists && isLayerActive('ogc-latest-tds'),
   })
   const depthToWaterTrendLayer = useOGCLayer({
     collection: depthToWaterTrend.id,
@@ -273,25 +283,26 @@ export const useThingLayers = () => {
     color: '#9e9e9e',
     colorAccessor: trendColorFromFeature,
     legendScale: TREND_LEGEND,
-    enabled: depthToWaterTrend.exists,
+    enabled:
+      depthToWaterTrend.exists && isLayerActive('ogc-depth-to-water-trend'),
   })
   const waterWellSummaryLayer = useOGCLayer({
     collection: waterWellSummary.id,
     label: waterWellSummary.label,
     color: '#8bc34a',
-    enabled: waterWellSummary.exists,
+    enabled: waterWellSummary.exists && isLayerActive('ogc-water-well-summary'),
   })
   const waterWellsLayer = useOGCLayer({
     collection: waterWells.id,
     label: waterWells.label,
     color: '#2b7dc0',
-    enabled: waterWells.exists,
+    enabled: waterWells.exists && isLayerActive('ogc-water-wells'),
   })
   const springsLayer = useOGCLayer({
     collection: springs.id,
     label: springs.label,
     color: '#00acc1',
-    enabled: springs.exists,
+    enabled: springs.exists && isLayerActive('ogc-springs'),
   })
   const waterElevationContoursLayer = useOGCLayer({
     collection: waterElevationContours.id,
@@ -302,7 +313,9 @@ export const useThingLayers = () => {
       'line-width': 1.2,
       'line-opacity': 0.85,
     },
-    enabled: waterElevationContours.exists,
+    enabled:
+      waterElevationContours.exists &&
+      isLayerActive('ogc-water-elevation-contours'),
   })
   function parseNumeric(value: unknown): number | undefined {
     if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -319,17 +332,26 @@ export const useThingLayers = () => {
     return meters === undefined ? undefined : meters * METERS_TO_FEET
   }
 
+  const needsDerivedContours =
+    !waterElevationContours.exists &&
+    isLayerActive('ogc-water-elevation-contours-derived')
+
   const waterElevationPointsLayer = useOGCLayer({
     collection: waterElevationPoints.id,
     label: `${waterElevationPoints.label} (ft)`,
     color: '#1976d2',
     legendScale: WATER_ELEVATION_LEGEND,
-    enabled: waterElevationPoints.exists,
+    enabled:
+      waterElevationPoints.exists &&
+      (isLayerActive('ogc-water-elevation-points') || needsDerivedContours),
   })
 
   const waterElevationPointFeatures = useMemo(() => {
-    return Array.isArray((waterElevationPointsLayer.sourceData as any)?.features)
-      ? (((waterElevationPointsLayer.sourceData as any).features as any[]) ?? [])
+    return Array.isArray(
+      (waterElevationPointsLayer.sourceData as any)?.features
+    )
+      ? (((waterElevationPointsLayer.sourceData as any).features as any[]) ??
+          [])
       : []
   }, [waterElevationPointsLayer.sourceData])
 
@@ -357,7 +379,10 @@ export const useThingLayers = () => {
   const waterElevationStats = useMemo(() => {
     const values = waterElevationPointFeatures
       .map((feature) => waterElevationValueFromFeature(feature))
-      .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+      .filter(
+        (value): value is number =>
+          typeof value === 'number' && Number.isFinite(value)
+      )
     const sortedValues = [...values].sort((a, b) => a - b)
     const minValue = sortedValues[0]
     const maxValue = sortedValues[sortedValues.length - 1]
@@ -416,9 +441,7 @@ export const useThingLayers = () => {
         ]
       : '#1976d2'
 
-  const waterElevationColorExpression: any =
-    buildWaterElevationStepExpression('__water_elevation')
-  const waterElevationContourColorExpression = useMemo(
+  const waterElevationColorExpression = useMemo(
     () => buildWaterElevationStepExpression('__water_elevation'),
     [waterElevationStats.hasSpread, waterElevationStats.breaks]
   )
@@ -433,7 +456,8 @@ export const useThingLayers = () => {
 
   const waterElevationPointsLayerStyled = useMemo(() => {
     const sourceData = waterElevationPointsLayer.sourceData as any
-    if (!sourceData || !Array.isArray(sourceData.features)) return waterElevationPointsLayer
+    if (!sourceData || !Array.isArray(sourceData.features))
+      return waterElevationPointsLayer
 
     const dataWithDerivedElevation = {
       ...sourceData,
@@ -474,7 +498,7 @@ export const useThingLayers = () => {
       waterElevationPointFeaturesSignature,
     ],
     enabled:
-      !waterElevationContours.exists &&
+      needsDerivedContours &&
       waterElevationPointFeatures.length >= 12 &&
       waterElevationStats.hasSpread,
     staleTime: 300000,
@@ -507,7 +531,8 @@ export const useThingLayers = () => {
       const sampledPoints =
         pointFeatures.length > maxSamples
           ? pointFeatures.filter(
-              (_, index) => index % Math.ceil(pointFeatures.length / maxSamples) === 0
+              (_, index) =>
+                index % Math.ceil(pointFeatures.length / maxSamples) === 0
             )
           : pointFeatures
 
@@ -526,7 +551,9 @@ export const useThingLayers = () => {
 
       const minPoint = turf.point([minX, minY])
       const maxPoint = turf.point([maxX, maxY])
-      const diagonalKm = turf.distance(minPoint, maxPoint, { units: 'kilometers' })
+      const diagonalKm = turf.distance(minPoint, maxPoint, {
+        units: 'kilometers',
+      })
       const cellSizeKm = Math.max(0.8, Math.min(4, diagonalKm / 70))
 
       const minValue = waterElevationStats.minValue
@@ -540,24 +567,33 @@ export const useThingLayers = () => {
 
       if (!breaks.length) return EMPTY_FEATURE_COLLECTION
 
-      const interpolation = (turf as any).interpolate(sampleCollection, cellSizeKm, {
-        gridType: 'point',
-        property: 'value',
-        units: 'kilometers',
-        weight: 2,
-      })
+      const interpolation = (turf as any).interpolate(
+        sampleCollection,
+        cellSizeKm,
+        {
+          gridType: 'point',
+          property: 'value',
+          units: 'kilometers',
+          weight: 2,
+        }
+      )
       const contours = (turf as any).isolines(interpolation, breaks, {
         zProperty: 'value',
       })
 
-      const contourFeatures = Array.isArray(contours?.features) ? contours.features : []
+      const contourFeatures = Array.isArray(contours?.features)
+        ? contours.features
+        : []
       const smoothLineCoords = (coordinates: number[][]): number[][] => {
         if (coordinates.length < 3) return coordinates
         try {
-          const smoothed = (turf as any).bezierSpline(turf.lineString(coordinates), {
-            resolution: 8000,
-            sharpness: 0.7,
-          })
+          const smoothed = (turf as any).bezierSpline(
+            turf.lineString(coordinates),
+            {
+              resolution: 8000,
+              sharpness: 0.7,
+            }
+          )
           const smoothedCoords = smoothed?.geometry?.coordinates
           return Array.isArray(smoothedCoords) && smoothedCoords.length >= 2
             ? smoothedCoords
@@ -577,7 +613,10 @@ export const useThingLayers = () => {
             : { __water_elevation: contourElevation }),
         }
 
-        if (geometry.type === 'LineString' && Array.isArray(geometry.coordinates)) {
+        if (
+          geometry.type === 'LineString' &&
+          Array.isArray(geometry.coordinates)
+        ) {
           return {
             ...feature,
             geometry: {
@@ -588,7 +627,10 @@ export const useThingLayers = () => {
           }
         }
 
-        if (geometry.type === 'MultiLineString' && Array.isArray(geometry.coordinates)) {
+        if (
+          geometry.type === 'MultiLineString' &&
+          Array.isArray(geometry.coordinates)
+        ) {
           return {
             ...feature,
             geometry: {
@@ -618,7 +660,8 @@ export const useThingLayers = () => {
     () => ({
       sourceProps: {
         type: 'geojson',
-        data: (waterElevationDerivedContourLayerData.data ?? EMPTY_FEATURE_COLLECTION) as any,
+        data: (waterElevationDerivedContourLayerData.data ??
+          EMPTY_FEATURE_COLLECTION) as any,
       },
       sourceData: (waterElevationDerivedContourLayerData.data ??
         EMPTY_FEATURE_COLLECTION) as any,
@@ -628,7 +671,7 @@ export const useThingLayers = () => {
         label: `${waterElevationPoints.label} Contours (derived)`,
         type: 'line' as const,
         paint: {
-          'line-color': waterElevationContourColorExpression,
+          'line-color': waterElevationColorExpression,
           'line-width': 1.2,
           'line-opacity': 0.85,
         },
@@ -640,7 +683,11 @@ export const useThingLayers = () => {
           'text-field': [
             'case',
             ['has', '__water_elevation'],
-            ['concat', ['to-string', ['round', ['get', '__water_elevation']]], ' ft'],
+            [
+              'concat',
+              ['to-string', ['round', ['get', '__water_elevation']]],
+              ' ft',
+            ],
             '',
           ],
           'text-size': ['interpolate', ['linear'], ['zoom'], 8, 10, 12, 12],
@@ -661,7 +708,7 @@ export const useThingLayers = () => {
       waterElevationDerivedContourLayerData.data,
       waterElevationDerivedContourLayerData.isLoading,
       waterElevationLegendScale,
-      waterElevationContourColorExpression,
+      waterElevationColorExpression,
       waterElevationPoints.label,
     ]
   )
@@ -670,55 +717,65 @@ export const useThingLayers = () => {
     collection: surfaceWaterDiversions.id,
     label: surfaceWaterDiversions.label,
     color: '#ef6c00',
-    enabled: surfaceWaterDiversions.exists,
+    enabled:
+      surfaceWaterDiversions.exists &&
+      isLayerActive('ogc-surface-water-diversions'),
   })
   const ephemeralStreamsLayer = useOGCLayer({
     collection: ephemeralStreams.id,
     label: ephemeralStreams.label,
     color: '#8e24aa',
-    enabled: ephemeralStreams.exists,
+    enabled: ephemeralStreams.exists && isLayerActive('ogc-ephemeral-streams'),
   })
   const lakesPondsReservoirsLayer = useOGCLayer({
     collection: lakesPondsReservoirs.id,
     label: lakesPondsReservoirs.label,
     color: '#3949ab',
-    enabled: lakesPondsReservoirs.exists,
+    enabled:
+      lakesPondsReservoirs.exists &&
+      isLayerActive('ogc-lakes-ponds-reservoirs'),
   })
   const meteorologicalStationsLayer = useOGCLayer({
     collection: meteorologicalStations.id,
     label: meteorologicalStations.label,
     color: '#546e7a',
-    enabled: meteorologicalStations.exists,
+    enabled:
+      meteorologicalStations.exists &&
+      isLayerActive('ogc-meteorological-stations'),
   })
   const otherThingTypesLayer = useOGCLayer({
     collection: otherThingTypes.id,
     label: otherThingTypes.label,
     color: '#9e9d24',
-    enabled: otherThingTypes.exists,
+    enabled: otherThingTypes.exists && isLayerActive('ogc-other-thing-types'),
   })
   const outfallsReturnFlowLayer = useOGCLayer({
     collection: outfallsReturnFlow.id,
     label: outfallsReturnFlow.label,
     color: '#5d4037',
-    enabled: outfallsReturnFlow.exists,
+    enabled:
+      outfallsReturnFlow.exists && isLayerActive('ogc-outfalls-return-flow'),
   })
   const perennialStreamsLayer = useOGCLayer({
     collection: perennialStreams.id,
     label: perennialStreams.label,
     color: '#1e88e5',
-    enabled: perennialStreams.exists,
+    enabled: perennialStreams.exists && isLayerActive('ogc-perennial-streams'),
   })
   const rockSampleLocationsLayer = useOGCLayer({
     collection: rockSampleLocations.id,
     label: rockSampleLocations.label,
     color: '#6d4c41',
-    enabled: rockSampleLocations.exists,
+    enabled:
+      rockSampleLocations.exists && isLayerActive('ogc-rock-sample-locations'),
   })
   const soilGasSampleLocationsLayer = useOGCLayer({
     collection: soilGasSampleLocations.id,
     label: soilGasSampleLocations.label,
     color: '#7cb342',
-    enabled: soilGasSampleLocations.exists,
+    enabled:
+      soilGasSampleLocations.exists &&
+      isLayerActive('ogc-soil-gas-sample-locations'),
   })
 
   const layers: Record<string, any> = {}
@@ -737,10 +794,18 @@ export const useThingLayers = () => {
   }
 
   addLayer('ogc-locations', locations, locationsLayer)
-  addLayer('ogc-latest-depth-to-water', latestDepthToWater, latestDepthToWaterLayer)
+  addLayer(
+    'ogc-latest-depth-to-water',
+    latestDepthToWater,
+    latestDepthToWaterLayer
+  )
   addLayer('ogc-average-tds', averageTds, averageTdsLayer)
   addLayer('ogc-latest-tds', latestTds, latestTdsLayer)
-  addLayer('ogc-depth-to-water-trend', depthToWaterTrend, depthToWaterTrendLayer)
+  addLayer(
+    'ogc-depth-to-water-trend',
+    depthToWaterTrend,
+    depthToWaterTrendLayer
+  )
   addLayer(
     'ogc-water-elevation-points',
     waterElevationPoints,
@@ -752,7 +817,8 @@ export const useThingLayers = () => {
     waterElevationContoursLayer
   )
   if (!waterElevationContours.exists) {
-    layers['ogc-water-elevation-contours-derived'] = waterElevationDerivedContoursLayer
+    layers['ogc-water-elevation-contours-derived'] =
+      waterElevationDerivedContoursLayer
   }
   addLayer('ogc-water-well-summary', waterWellSummary, waterWellSummaryLayer)
   addLayer('ogc-water-wells', waterWells, waterWellsLayer)
@@ -774,9 +840,17 @@ export const useThingLayers = () => {
     meteorologicalStationsLayer
   )
   addLayer('ogc-other-thing-types', otherThingTypes, otherThingTypesLayer)
-  addLayer('ogc-outfalls-return-flow', outfallsReturnFlow, outfallsReturnFlowLayer)
+  addLayer(
+    'ogc-outfalls-return-flow',
+    outfallsReturnFlow,
+    outfallsReturnFlowLayer
+  )
   addLayer('ogc-perennial-streams', perennialStreams, perennialStreamsLayer)
-  addLayer('ogc-rock-sample-locations', rockSampleLocations, rockSampleLocationsLayer)
+  addLayer(
+    'ogc-rock-sample-locations',
+    rockSampleLocations,
+    rockSampleLocationsLayer
+  )
   addLayer(
     'ogc-soil-gas-sample-locations',
     soilGasSampleLocations,

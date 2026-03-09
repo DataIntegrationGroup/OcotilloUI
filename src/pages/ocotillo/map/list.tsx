@@ -18,18 +18,20 @@ import { MapPopup } from '@/components'
 
 export const MapView: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const THING_LAYERS = useThingLayers()
   const [visibleLayers, setVisibleLayers] = React.useState<string[]>([
     'ogc-latest-depth-to-water',
   ])
+  const THING_LAYERS = useThingLayers(visibleLayers)
   const [layersCollapsed, setLayersCollapsed] = useState(false)
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    groundwater: true,
-    surfaceWater: true,
-    climate: true,
-    geoscience: true,
-    reference: true,
-  })
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    {
+      groundwater: true,
+      surfaceWater: true,
+      climate: true,
+      geoscience: true,
+      reference: true,
+    }
+  )
   const [popupContent, setPopupContent] = useState<any>(null)
 
   const onLayerChangeWrapper = (layerKey: string) => {
@@ -126,7 +128,8 @@ export const MapView: React.FC = () => {
       feature?.id,
     ]
     const value = candidates.find(
-      (candidate) => candidate !== undefined && candidate !== null && candidate !== ''
+      (candidate) =>
+        candidate !== undefined && candidate !== null && candidate !== ''
     )
     return value === undefined ? undefined : String(value)
   }
@@ -141,7 +144,9 @@ export const MapView: React.FC = () => {
     if (!selectedPoint) return
 
     const layerId: string = selectedPoint.layer.id
-    const thingType: string = String(selectedPoint?.properties?.thing_type || '').toLowerCase()
+    const thingType: string = String(
+      selectedPoint?.properties?.thing_type || ''
+    ).toLowerCase()
     const id = getFeatureId(selectedPoint)
     if (!id) return
 
@@ -153,7 +158,11 @@ export const MapView: React.FC = () => {
       layerId.includes('ogc-latest-tds') ||
       layerId.includes('ogc-depth-to-water-trend')
 
-    if (isWaterWellLayer || thingType === 'water well' || thingType === 'geothermal well') {
+    if (
+      isWaterWellLayer ||
+      thingType === 'water well' ||
+      thingType === 'geothermal well'
+    ) {
       show('ocotillo.thing-well', id)
       return
     }
@@ -195,228 +204,228 @@ export const MapView: React.FC = () => {
         position: 'relative',
       }}
     >
-        <MapComponent
-          containerRef={containerRef}
-          showDrawControls={{ show: true, position: 'top-right' }}
-          setPopupContent={setPopupContent}
-          popupContent={popupContent}
-          onPointClick={onMapPointClick}
-          onMouseMoveCallback={onMapMouseMove}
-        >
-          {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
-            if (!visibleLayers.includes(key)) return null
-            const { sourceProps, layerProps, textLayerProps } = layerDef
-            return (
-              <Source id={key} key={key} {...sourceProps}>
+      <MapComponent
+        containerRef={containerRef}
+        showDrawControls={{ show: true, position: 'top-right' }}
+        setPopupContent={setPopupContent}
+        popupContent={popupContent}
+        onPointClick={onMapPointClick}
+        onMouseMoveCallback={onMapMouseMove}
+      >
+        {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
+          if (!visibleLayers.includes(key)) return null
+          const { sourceProps, layerProps, textLayerProps } = layerDef
+          return (
+            <Source id={key} key={key} {...sourceProps}>
+              <Layer
+                id={`location-${key}`}
+                key={`layer-${key}`}
+                {...layerProps}
+              />
+              {textLayerProps && (
                 <Layer
-                  id={`location-${key}`}
-                  key={`layer-${key}`}
-                  {...layerProps}
+                  id={`location-label-${key}`}
+                  key={`layer-label-${key}`}
+                  {...textLayerProps}
                 />
-                {textLayerProps && (
-                  <Layer
-                    id={`location-label-${key}`}
-                    key={`layer-label-${key}`}
-                    {...textLayerProps}
-                  />
-                )}
-              </Source>
-            )
-          })}
-        </MapComponent>
-        <Paper
-          elevation={6}
+              )}
+            </Source>
+          )
+        })}
+      </MapComponent>
+      <Paper
+        elevation={6}
+        sx={{
+          position: 'absolute',
+          top: { xs: 58, sm: 62 },
+          left: 12,
+          width: { xs: 'calc(100% - 24px)', sm: 320 },
+          maxHeight: { xs: '68%', sm: '78%' },
+          overflowY: 'auto',
+          px: 0.8,
+          py: 0.6,
+          borderRadius: 1.25,
+          backdropFilter: 'blur(6px)',
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          border: '1px solid',
+          borderColor: 'divider',
+          zIndex: 2,
+        }}
+      >
+        <Box
           sx={{
-            position: 'absolute',
-            top: { xs: 58, sm: 62 },
-            left: 12,
-            width: { xs: 'calc(100% - 24px)', sm: 320 },
-            maxHeight: { xs: '68%', sm: '78%' },
-            overflowY: 'auto',
-            px: 0.8,
-            py: 0.6,
-            borderRadius: 1.25,
-            backdropFilter: 'blur(6px)',
-            backgroundColor: 'rgba(255,255,255,0.9)',
-            border: '1px solid',
-            borderColor: 'divider',
-            zIndex: 2,
+            px: 0.3,
+            py: 0.2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
-          <Box
+          <Typography
+            variant="overline"
             sx={{
-              px: 0.3,
-              py: 0.2,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
+              px: 0.55,
+              py: 0.25,
+              fontWeight: 700,
+              letterSpacing: 0.7,
+              fontSize: '0.68rem',
+              lineHeight: 1.2,
             }}
           >
-            <Typography
-              variant="overline"
-              sx={{
-                px: 0.55,
-                py: 0.25,
-                fontWeight: 700,
-                letterSpacing: 0.7,
-                fontSize: '0.68rem',
-                lineHeight: 1.2,
-              }}
-            >
-              Layers
-            </Typography>
-            <IconButton
-              size="small"
-              onClick={() => setLayersCollapsed((value) => !value)}
-              aria-label={layersCollapsed ? 'Expand layers' : 'Collapse layers'}
-            >
-              {layersCollapsed ? (
-                <KeyboardArrowDown fontSize="small" />
-              ) : (
-                <KeyboardArrowUp fontSize="small" />
-              )}
-            </IconButton>
-          </Box>
-          <Collapse in={!layersCollapsed}>
-            {(Object.keys(groupedLayers) as Array<keyof typeof groupedLayers>).map(
-              (groupKey) => {
-                const layers = groupedLayers[groupKey]
-                if (layers.length === 0) return null
+            Layers
+          </Typography>
+          <IconButton
+            size="small"
+            onClick={() => setLayersCollapsed((value) => !value)}
+            aria-label={layersCollapsed ? 'Expand layers' : 'Collapse layers'}
+          >
+            {layersCollapsed ? (
+              <KeyboardArrowDown fontSize="small" />
+            ) : (
+              <KeyboardArrowUp fontSize="small" />
+            )}
+          </IconButton>
+        </Box>
+        <Collapse in={!layersCollapsed}>
+          {(
+            Object.keys(groupedLayers) as Array<keyof typeof groupedLayers>
+          ).map((groupKey) => {
+            const layers = groupedLayers[groupKey]
+            if (layers.length === 0) return null
 
-                return (
-                  <Box key={groupKey} sx={{ py: 0.1 }}>
-                    <Box
-                      sx={{
-                        px: 0.25,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        borderRadius: 0.8,
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontSize: '0.64rem',
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          letterSpacing: 0.4,
-                          color: 'text.secondary',
-                        }}
-                      >
-                        {groupLabels[groupKey]}
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => onGroupToggle(groupKey)}
-                        aria-label={
-                          expandedGroups[groupKey]
-                            ? `Collapse ${groupLabels[groupKey]}`
-                            : `Expand ${groupLabels[groupKey]}`
-                        }
-                        sx={{ p: 0.2 }}
-                      >
-                        {expandedGroups[groupKey] ? (
-                          <KeyboardArrowUp sx={{ fontSize: 15 }} />
-                        ) : (
-                          <KeyboardArrowDown sx={{ fontSize: 15 }} />
-                        )}
-                      </IconButton>
-                    </Box>
-                    <Collapse in={expandedGroups[groupKey]}>
-                      {layers.map(([key, layerDef]) => {
-                        const { layerProps, isLoading } = layerDef
-                        const paint = layerProps.paint || {}
-                        const paintColor =
-                          paint['circle-color'] || paint['line-color'] || paint['fill-color']
-                        const color =
-                          layerDef.legendColor ||
-                          (typeof paintColor === 'string'
-                            ? paintColor
-                            : '#9e9e9e')
+            return (
+              <Box key={groupKey} sx={{ py: 0.1 }}>
+                <Box
+                  sx={{
+                    px: 0.25,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderRadius: 0.8,
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: '0.64rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.4,
+                      color: 'text.secondary',
+                    }}
+                  >
+                    {groupLabels[groupKey]}
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    onClick={() => onGroupToggle(groupKey)}
+                    aria-label={
+                      expandedGroups[groupKey]
+                        ? `Collapse ${groupLabels[groupKey]}`
+                        : `Expand ${groupLabels[groupKey]}`
+                    }
+                    sx={{ p: 0.2 }}
+                  >
+                    {expandedGroups[groupKey] ? (
+                      <KeyboardArrowUp sx={{ fontSize: 15 }} />
+                    ) : (
+                      <KeyboardArrowDown sx={{ fontSize: 15 }} />
+                    )}
+                  </IconButton>
+                </Box>
+                <Collapse in={expandedGroups[groupKey]}>
+                  {layers.map(([key, layerDef]) => {
+                    const { layerProps, isLoading } = layerDef
+                    const paint = layerProps.paint || {}
+                    const paintColor =
+                      paint['circle-color'] ||
+                      paint['line-color'] ||
+                      paint['fill-color']
+                    const color =
+                      layerDef.legendColor ||
+                      (typeof paintColor === 'string' ? paintColor : '#9e9e9e')
 
-                        return (
-                          <Box key={key} sx={{ px: 0.2, py: 0.05 }}>
+                    return (
+                      <Box key={key} sx={{ px: 0.2, py: 0.05 }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.35,
+                            minHeight: 24,
+                          }}
+                        >
+                          <Checkbox
+                            checked={visibleLayers.includes(key)}
+                            onChange={onLayerChangeWrapper(key)}
+                            size="small"
+                            sx={{ p: 0.2 }}
+                          />
+                          {!layerDef.legendScale && (
+                            <Box
+                              sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '2px',
+                                backgroundColor: color,
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                          <ListItemText
+                            primary={layerProps.label}
+                            primaryTypographyProps={{
+                              lineHeight: 1.15,
+                              fontSize: '0.75rem',
+                            }}
+                            sx={{ m: 0, my: -0.15 }}
+                          />
+                        </Box>
+                        {layerDef.legendScale && (
+                          <Box sx={{ pl: 3.1, pr: 0.6, pb: 0.15 }}>
+                            <Box
+                              sx={{
+                                height: 5,
+                                borderRadius: 1,
+                                border: '1px solid',
+                                borderColor: 'rgba(0,0,0,0.18)',
+                                background: layerDef.legendScale.gradient,
+                              }}
+                            />
                             <Box
                               sx={{
                                 display: 'flex',
-                                alignItems: 'center',
-                                gap: 0.35,
-                                minHeight: 24,
+                                justifyContent: 'space-between',
+                                mt: 0.1,
                               }}
                             >
-                              <Checkbox
-                                checked={visibleLayers.includes(key)}
-                                onChange={onLayerChangeWrapper(key)}
-                                size="small"
-                                sx={{ p: 0.2 }}
-                              />
-                              {!layerDef.legendScale && (
-                                <Box
-                                  sx={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: '2px',
-                                    backgroundColor: color,
-                                    flexShrink: 0,
-                                  }}
-                                />
-                              )}
-                              <ListItemText
-                                primary={layerProps.label}
-                                primaryTypographyProps={{
-                                  lineHeight: 1.15,
-                                  fontSize: '0.75rem',
-                                }}
-                                sx={{ m: 0, my: -0.15 }}
-                              />
-                            </Box>
-                            {layerDef.legendScale && (
-                              <Box sx={{ pl: 3.1, pr: 0.6, pb: 0.15 }}>
-                                <Box
-                                  sx={{
-                                    height: 5,
-                                    borderRadius: 1,
-                                    border: '1px solid',
-                                    borderColor: 'rgba(0,0,0,0.18)',
-                                    background: layerDef.legendScale.gradient,
-                                  }}
-                                />
-                                <Box
-                                  sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    mt: 0.1,
-                                  }}
-                                >
-                                  <Typography
-                                    variant="caption"
-                                    sx={{ fontSize: '0.6rem', lineHeight: 1 }}
-                                  >
-                                    {layerDef.legendScale.minLabel}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    sx={{ fontSize: '0.6rem', lineHeight: 1 }}
-                                  >
-                                    {layerDef.legendScale.maxLabel}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            )}
-                            <Box sx={{ height: 2, mt: 0 }}>
-                              {isLoading && <LinearProgress sx={{ height: 2 }} />}
+                              <Typography
+                                variant="caption"
+                                sx={{ fontSize: '0.6rem', lineHeight: 1 }}
+                              >
+                                {layerDef.legendScale.minLabel}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{ fontSize: '0.6rem', lineHeight: 1 }}
+                              >
+                                {layerDef.legendScale.maxLabel}
+                              </Typography>
                             </Box>
                           </Box>
-                        )
-                      })}
-                    </Collapse>
-                  </Box>
-                )
-              }
-            )}
-          </Collapse>
-        </Paper>
+                        )}
+                        <Box sx={{ height: 2, mt: 0 }}>
+                          {isLoading && <LinearProgress sx={{ height: 2 }} />}
+                        </Box>
+                      </Box>
+                    )
+                  })}
+                </Collapse>
+              </Box>
+            )
+          })}
+        </Collapse>
+      </Paper>
     </Box>
   )
 }
