@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { BaseRecord } from '@refinedev/core'
-import { Document, Page, Text, Image } from '@react-pdf/renderer'
+import { Page, Text, Image } from '@react-pdf/renderer'
 import { IPdfDensity, IPdfOptions } from '@/interfaces'
 import { IObservation, IContact, IWell, ISample } from '@/interfaces/ocotillo'
 import { buildPdfFilename, createPdfStyles, SensorDeploymentRow } from '@/utils'
@@ -19,6 +19,7 @@ import {
   SensorDeploymentTable,
 } from '@/components/pdf'
 import { Footer, Header, LineItem } from '@/components/pdf/layout'
+import { OcotilloDocument } from './OcotilloDocument'
 
 export const WellPDF = ({
   well,
@@ -29,7 +30,7 @@ export const WellPDF = ({
   options = {},
   sensorDeployments = [],
   hydrographImage,
-  asDocument = true,
+  standalone = true,
 }: {
   well: IWell
   sample?: Partial<ISample>
@@ -39,7 +40,7 @@ export const WellPDF = ({
   sensorDeployments?: SensorDeploymentRow[]
   options?: IPdfOptions
   hydrographImage?: string | null
-  asDocument?: boolean
+  standalone?: boolean
 }) => {
   const density: IPdfDensity = options.density ?? PDF_DEFAULT_VALUES.density
   const isDense = density === 'dense' || density === 'very-dense'
@@ -107,7 +108,7 @@ export const WellPDF = ({
                 src={hydrographImage}
                 style={{
                   width: '100%',
-                  height: 220, // tune this
+                  height: 220,
                   objectFit: 'contain',
                   marginTop: 6,
                   marginBottom: 10,
@@ -150,7 +151,7 @@ export const WellPDF = ({
               src={hydrographImage}
               style={{
                 width: '100%',
-                height: 220, // tune this
+                height: 220,
                 objectFit: 'contain',
                 marginTop: 6,
                 marginBottom: 10,
@@ -172,19 +173,13 @@ export const WellPDF = ({
     </>
   )
 
-  if (!asDocument) {
+  if (!standalone) {
     return pages
   }
 
   return (
-    <Document
-      title={filename || null}
-      author="NMBGMR Ocotillo"
-      creator="NMBGMR Ocotillo System"
-      language="en-US"
-      subject="Well Field Data Report"
-    >
+    <OcotilloDocument title={filename || null} subject="Well Field Data Report">
       {pages}
-    </Document>
+    </OcotilloDocument>
   )
 }

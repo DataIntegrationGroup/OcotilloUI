@@ -1,3 +1,4 @@
+export * from './OcotilloDocument'
 export * from './well'
 export * from './AdditionalInformation'
 export * from './CoreInformation'
