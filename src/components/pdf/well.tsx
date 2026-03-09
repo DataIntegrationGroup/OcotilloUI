@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { BaseRecord } from '@refinedev/core'
-import { Document, Page, Text, Image } from '@react-pdf/renderer'
+import { Page, Text, Image } from '@react-pdf/renderer'
 import { IPdfDensity, IPdfOptions } from '@/interfaces'
 import { IObservation, IContact, IWell, ISample } from '@/interfaces/ocotillo'
 import { buildPdfFilename, createPdfStyles, SensorDeploymentRow } from '@/utils'
@@ -19,25 +19,28 @@ import {
   SensorDeploymentTable,
 } from '@/components/pdf'
 import { Footer, Header, LineItem } from '@/components/pdf/layout'
+import { OcotilloDocument } from './OcotilloDocument'
 
 export const WellPDF = ({
   well,
-  sample,
+  sample = {},
   assets,
   contacts,
   observations,
   options = {},
-  sensorDeployments,
+  sensorDeployments = [],
   hydrographImage,
+  standalone = true,
 }: {
   well: IWell
-  sample: ISample
+  sample?: Partial<ISample>
   assets: BaseRecord[]
   contacts: IContact[]
   observations: readonly Partial<IObservation>[]
-  sensorDeployments: SensorDeploymentRow[]
-  options: IPdfOptions
+  sensorDeployments?: SensorDeploymentRow[]
+  options?: IPdfOptions
   hydrographImage?: string | null
+  standalone?: boolean
 }) => {
   const density: IPdfDensity = options.density ?? PDF_DEFAULT_VALUES.density
   const isDense = density === 'dense' || density === 'very-dense'
@@ -50,14 +53,8 @@ export const WellPDF = ({
     usePrimaryAndSecondaryContact(contacts)
   const allNotes = useAllNotes(well, options)
 
-  return (
-    <Document
-      title={filename || null}
-      author="NMBGMR Ocotillo"
-      creator="NMBGMR Ocotillo System"
-      language="en-US"
-      subject="Well Field Data Report"
-    >
+  const pages = (
+    <>
       <Page size="A4" style={styles.page}>
         <Header styles={styles} />
         <CoreInformation well={well} styles={styles} dense={isDense} />
@@ -111,7 +108,7 @@ export const WellPDF = ({
                 src={hydrographImage}
                 style={{
                   width: '100%',
-                  height: 220, // tune this
+                  height: 220,
                   objectFit: 'contain',
                   marginTop: 6,
                   marginBottom: 10,
@@ -154,7 +151,7 @@ export const WellPDF = ({
               src={hydrographImage}
               style={{
                 width: '100%',
-                height: 220, // tune this
+                height: 220,
                 objectFit: 'contain',
                 marginTop: 6,
                 marginBottom: 10,
@@ -173,6 +170,16 @@ export const WellPDF = ({
           <Footer wellId={well?.name} styles={styles} />
         </Page>
       ) : null}
-    </Document>
+    </>
+  )
+
+  if (!standalone) {
+    return pages
+  }
+
+  return (
+    <OcotilloDocument title={filename || null} subject="Well Field Data Report">
+      {pages}
+    </OcotilloDocument>
   )
 }

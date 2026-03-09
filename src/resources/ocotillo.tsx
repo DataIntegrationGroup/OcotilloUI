@@ -14,6 +14,7 @@ import {
   Workspaces,
   MoreVertOutlined,
   LibraryBooksOutlined,
+  PictureAsPdfOutlined,
 } from '@mui/icons-material'
 
 let tables: {
@@ -307,6 +308,16 @@ let ocotillo = [
     icon: <Apps />,
     meta: {
       label: 'Apps',
+    },
+  },
+  {
+    name: 'thing-well-batch-export',
+    list: '/ocotillo/well/batch-export',
+    meta: {
+      label: 'Batch Field Sheet Export',
+      parent: 'ocotillo.apps',
+      nestedLevel: 2,
+      icon: <PictureAsPdfOutlined />,
     },
   },
   {
