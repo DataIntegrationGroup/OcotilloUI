@@ -14,18 +14,22 @@ import {
 import { Directions, Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
 import { MapComponent, MapPopup } from '@/components'
-import { useThingLayers } from '@/hooks'
+import { useLayer } from '@/hooks'
 import { useGo } from '@refinedev/core'
 
 export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   const mapRef = useRef<MapRef>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const THING_LAYERS = useThingLayers()
+  const waterWellsLayer = useLayer({
+    thing_type: 'water well',
+    label: 'Water Wells',
+    color: '#2b7dc0',
+  })
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
 
-  const waterWellsLayer = THING_LAYERS['water-wells']
-  const { sourceProps, layerProps } = waterWellsLayer
+  const sourceProps = waterWellsLayer?.sourceProps
+  const layerProps = waterWellsLayer?.layerProps
 
   const coords = well?.current_location?.geometry?.coordinates as
     | [number, number, number?]
@@ -66,14 +70,37 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
         }
       : null
 
+  const getFeatureId = (
+    feature?: { id?: number | string; properties?: Record<string, unknown> }
+  ): string | undefined => {
+    const p = feature?.properties
+    const id =
+      p?.['thing_id'] ??
+      p?.['well_id'] ??
+      p?.['id'] ??
+      p?.['fid'] ??
+      p?.['feature_id'] ??
+      feature?.id
+
+    return id != null && id !== '' ? String(id) : undefined
+  }
+
   const onMapPointClick = (_: any, points: any[]) => {
-    const selectedPoint = points[0]
-    if (selectedPoint.properties.thing_type === 'water well') {
+    const selectedPoint = points.find(
+      (point) => typeof point?.layer?.id === 'string' && point.layer.id.startsWith('location-')
+    )
+    if (!selectedPoint) return
+
+    const thingType: string = String(selectedPoint?.properties?.thing_type || '').toLowerCase()
+    const id = getFeatureId(selectedPoint)
+    if (!id) return
+
+    if (thingType === 'water well' || thingType === 'geothermal well') {
       go({
         to: {
           resource: 'ocotillo.thing-well',
           action: 'show',
-          id: selectedPoint.properties.id,
+          id,
         },
       })
     }
@@ -152,9 +179,11 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             style={{ flex: 1, width: '100%', height: '100%' }}
             containerRef={containerRef}
           >
-            <Source id="water-wells" {...sourceProps}>
-              <Layer id="location-water-wells" {...layerProps} />
-            </Source>
+            {sourceProps && layerProps && (
+              <Source id="water-wells" {...sourceProps}>
+                <Layer id="location-water-wells" {...layerProps} />
+              </Source>
+            )}
             {highlightFeature && (
               <Source
                 id="highlight-well"
