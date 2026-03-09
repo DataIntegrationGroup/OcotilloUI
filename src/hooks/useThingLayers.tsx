@@ -1,5 +1,7 @@
 import { useDataProvider } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
+import * as turf from '@turf/turf'
 import { useOGCLayer } from '@/hooks/useOGCLayer'
 import {
   OgcCollectionRecord,
@@ -21,6 +23,10 @@ const WATER_ELEVATION_LEGEND = {
 }
 
 const METERS_TO_FEET = 3.28084
+const EMPTY_FEATURE_COLLECTION = {
+  type: 'FeatureCollection',
+  features: [],
+} as const
 
 export const useThingLayers = () => {
   const dataProvider = useDataProvider()
@@ -321,39 +327,63 @@ export const useThingLayers = () => {
     enabled: waterElevationPoints.exists,
   })
 
-  const waterElevationPointFeatures = Array.isArray(
-    (waterElevationPointsLayer.sourceData as any)?.features
-  )
-    ? ((waterElevationPointsLayer.sourceData as any).features as any[])
-    : []
+  const waterElevationPointFeatures = useMemo(() => {
+    return Array.isArray((waterElevationPointsLayer.sourceData as any)?.features)
+      ? (((waterElevationPointsLayer.sourceData as any).features as any[]) ?? [])
+      : []
+  }, [waterElevationPointsLayer.sourceData])
 
-  const waterElevationValues = waterElevationPointFeatures
-    .map((feature) => waterElevationValueFromFeature(feature))
-    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+  const waterElevationPointFeaturesSignature = useMemo(() => {
+    const size = waterElevationPointFeatures.length
+    if (size === 0) return '0'
 
-  const sortedWaterElevationValues = [...waterElevationValues].sort((a, b) => a - b)
-  const minWaterElevation = sortedWaterElevationValues[0]
-  const maxWaterElevation = sortedWaterElevationValues[sortedWaterElevationValues.length - 1]
-  const hasWaterElevationSpread =
-    sortedWaterElevationValues.length >= 3 &&
-    Number.isFinite(minWaterElevation) &&
-    Number.isFinite(maxWaterElevation) &&
-    minWaterElevation < maxWaterElevation
+    const stride = Math.max(1, Math.floor(size / 24))
+    const parts: string[] = [String(size)]
 
-  const quantileAt = (q: number): number => {
-    if (!sortedWaterElevationValues.length) return 0
-    const index = Math.min(
-      sortedWaterElevationValues.length - 1,
-      Math.max(0, Math.floor((sortedWaterElevationValues.length - 1) * q))
-    )
-    return sortedWaterElevationValues[index]
-  }
-
-  const waterElevationBreaks = hasWaterElevationSpread
-    ? [0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((quantile) =>
-        Number(quantileAt(quantile).toFixed(2))
+    for (let index = 0; index < size; index += stride) {
+      const feature = waterElevationPointFeatures[index]
+      const coords = feature?.geometry?.coordinates
+      const x = Array.isArray(coords) ? Number(coords[0]) : NaN
+      const y = Array.isArray(coords) ? Number(coords[1]) : NaN
+      const z = waterElevationValueFromFeature(feature)
+      parts.push(
+        `${Number.isFinite(x) ? x.toFixed(4) : 'x'}:${Number.isFinite(y) ? y.toFixed(4) : 'y'}:${typeof z === 'number' ? z.toFixed(2) : 'z'}`
       )
-    : []
+    }
+
+    return parts.join('|')
+  }, [waterElevationPointFeatures])
+
+  const waterElevationStats = useMemo(() => {
+    const values = waterElevationPointFeatures
+      .map((feature) => waterElevationValueFromFeature(feature))
+      .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+    const sortedValues = [...values].sort((a, b) => a - b)
+    const minValue = sortedValues[0]
+    const maxValue = sortedValues[sortedValues.length - 1]
+    const hasSpread =
+      sortedValues.length >= 3 &&
+      Number.isFinite(minValue) &&
+      Number.isFinite(maxValue) &&
+      minValue < maxValue
+
+    const quantileAt = (q: number): number => {
+      if (!sortedValues.length) return 0
+      const index = Math.min(
+        sortedValues.length - 1,
+        Math.max(0, Math.floor((sortedValues.length - 1) * q))
+      )
+      return sortedValues[index]
+    }
+
+    const breaks = hasSpread
+      ? [0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((quantile) =>
+          Number(quantileAt(quantile).toFixed(2))
+        )
+      : []
+
+    return { minValue, maxValue, hasSpread, breaks }
+  }, [waterElevationPointFeatures])
 
   const waterElevationColors = [
     '#2c7bb6',
@@ -365,35 +395,43 @@ export const useThingLayers = () => {
     '#d7191c',
   ]
 
-  const waterElevationColorExpression: any = hasWaterElevationSpread
-    ? [
-        'step',
-        ['coalesce', ['get', '__water_elevation'], -999999],
-        waterElevationColors[0],
-        waterElevationBreaks[0],
-        waterElevationColors[1],
-        waterElevationBreaks[1],
-        waterElevationColors[2],
-        waterElevationBreaks[2],
-        waterElevationColors[3],
-        waterElevationBreaks[3],
-        waterElevationColors[4],
-        waterElevationBreaks[4],
-        waterElevationColors[5],
-        waterElevationBreaks[5],
-        waterElevationColors[6],
-      ]
-    : '#1976d2'
+  const buildWaterElevationStepExpression = (propertyName: string): any =>
+    waterElevationStats.hasSpread
+      ? [
+          'step',
+          ['coalesce', ['get', propertyName], -999999],
+          waterElevationColors[0],
+          waterElevationStats.breaks[0],
+          waterElevationColors[1],
+          waterElevationStats.breaks[1],
+          waterElevationColors[2],
+          waterElevationStats.breaks[2],
+          waterElevationColors[3],
+          waterElevationStats.breaks[3],
+          waterElevationColors[4],
+          waterElevationStats.breaks[4],
+          waterElevationColors[5],
+          waterElevationStats.breaks[5],
+          waterElevationColors[6],
+        ]
+      : '#1976d2'
 
-  const waterElevationLegendScale = hasWaterElevationSpread
+  const waterElevationColorExpression: any =
+    buildWaterElevationStepExpression('__water_elevation')
+  const waterElevationContourColorExpression = useMemo(
+    () => buildWaterElevationStepExpression('__water_elevation'),
+    [waterElevationStats.hasSpread, waterElevationStats.breaks]
+  )
+
+  const waterElevationLegendScale = waterElevationStats.hasSpread
     ? {
         ...WATER_ELEVATION_LEGEND,
-        minLabel: `${Math.round(minWaterElevation)}`,
-        maxLabel: `${Math.round(maxWaterElevation)} ft`,
+        minLabel: `${Math.round(waterElevationStats.minValue)}`,
+        maxLabel: `${Math.round(waterElevationStats.maxValue)} ft`,
       }
     : WATER_ELEVATION_LEGEND
 
-  const waterElevationPointsLayerStyled = (() => {
+  const waterElevationPointsLayerStyled = useMemo(() => {
     const sourceData = waterElevationPointsLayer.sourceData as any
     if (!sourceData || !Array.isArray(sourceData.features)) return waterElevationPointsLayer
 
@@ -423,7 +461,210 @@ export const useThingLayers = () => {
         },
       },
     }
-  })()
+  }, [
+    waterElevationPointsLayer,
+    waterElevationColorExpression,
+    waterElevationLegendScale,
+  ])
+
+  const waterElevationDerivedContourLayerData = useQuery({
+    queryKey: [
+      'ogc-water-elevation-derived-contours',
+      waterElevationPoints.id,
+      waterElevationPointFeaturesSignature,
+    ],
+    enabled:
+      !waterElevationContours.exists &&
+      waterElevationPointFeatures.length >= 12 &&
+      waterElevationStats.hasSpread,
+    staleTime: 300000,
+    gcTime: 600000,
+    queryFn: async () => {
+      const pointFeatures = waterElevationPointFeatures
+        .map((feature) => {
+          const elevation = waterElevationValueFromFeature(feature)
+          const geometry = feature?.geometry
+          if (
+            elevation === undefined ||
+            geometry?.type !== 'Point' ||
+            !Array.isArray(geometry.coordinates) ||
+            geometry.coordinates.length < 2
+          ) {
+            return null
+          }
+
+          const [x, y] = geometry.coordinates
+          if (!Number.isFinite(x) || !Number.isFinite(y)) return null
+
+          return turf.point([x, y], { value: elevation })
+        })
+        .filter(Boolean) as any[]
+
+      if (pointFeatures.length < 12) return EMPTY_FEATURE_COLLECTION
+
+      // Keep contour generation bounded so layer toggles stay responsive.
+      const maxSamples = 1200
+      const sampledPoints =
+        pointFeatures.length > maxSamples
+          ? pointFeatures.filter(
+              (_, index) => index % Math.ceil(pointFeatures.length / maxSamples) === 0
+            )
+          : pointFeatures
+
+      const sampleCollection = turf.featureCollection(sampledPoints)
+      const [minX, minY, maxX, maxY] = turf.bbox(sampleCollection)
+      if (
+        !Number.isFinite(minX) ||
+        !Number.isFinite(minY) ||
+        !Number.isFinite(maxX) ||
+        !Number.isFinite(maxY) ||
+        minX >= maxX ||
+        minY >= maxY
+      ) {
+        return EMPTY_FEATURE_COLLECTION
+      }
+
+      const minPoint = turf.point([minX, minY])
+      const maxPoint = turf.point([maxX, maxY])
+      const diagonalKm = turf.distance(minPoint, maxPoint, { units: 'kilometers' })
+      const cellSizeKm = Math.max(0.8, Math.min(4, diagonalKm / 70))
+
+      const minValue = waterElevationStats.minValue
+      const maxValue = waterElevationStats.maxValue
+      const breaks: number[] = []
+      const steps = 24
+      const interval = (maxValue - minValue) / (steps + 1)
+      for (let i = 1; i <= steps; i += 1) {
+        breaks.push(Number((minValue + interval * i).toFixed(2)))
+      }
+
+      if (!breaks.length) return EMPTY_FEATURE_COLLECTION
+
+      const interpolation = (turf as any).interpolate(sampleCollection, cellSizeKm, {
+        gridType: 'point',
+        property: 'value',
+        units: 'kilometers',
+        weight: 2,
+      })
+      const contours = (turf as any).isolines(interpolation, breaks, {
+        zProperty: 'value',
+      })
+
+      const contourFeatures = Array.isArray(contours?.features) ? contours.features : []
+      const smoothLineCoords = (coordinates: number[][]): number[][] => {
+        if (coordinates.length < 3) return coordinates
+        try {
+          const smoothed = (turf as any).bezierSpline(turf.lineString(coordinates), {
+            resolution: 8000,
+            sharpness: 0.7,
+          })
+          const smoothedCoords = smoothed?.geometry?.coordinates
+          return Array.isArray(smoothedCoords) && smoothedCoords.length >= 2
+            ? smoothedCoords
+            : coordinates
+        } catch {
+          return coordinates
+        }
+      }
+
+      const smoothedContourFeatures = contourFeatures.map((feature: any) => {
+        const geometry = feature?.geometry || {}
+        const contourElevation = parseNumeric(feature?.properties?.value)
+        const withContourElevation = {
+          ...(feature?.properties || {}),
+          ...(contourElevation === undefined
+            ? {}
+            : { __water_elevation: contourElevation }),
+        }
+
+        if (geometry.type === 'LineString' && Array.isArray(geometry.coordinates)) {
+          return {
+            ...feature,
+            geometry: {
+              ...geometry,
+              coordinates: smoothLineCoords(geometry.coordinates),
+            },
+            properties: withContourElevation,
+          }
+        }
+
+        if (geometry.type === 'MultiLineString' && Array.isArray(geometry.coordinates)) {
+          return {
+            ...feature,
+            geometry: {
+              ...geometry,
+              coordinates: geometry.coordinates.map((lineCoords: number[][]) =>
+                smoothLineCoords(lineCoords)
+              ),
+            },
+            properties: withContourElevation,
+          }
+        }
+
+        return {
+          ...feature,
+          properties: withContourElevation,
+        }
+      })
+
+      return {
+        type: 'FeatureCollection',
+        features: smoothedContourFeatures,
+      }
+    },
+  })
+
+  const waterElevationDerivedContoursLayer = useMemo(
+    () => ({
+      sourceProps: {
+        type: 'geojson',
+        data: (waterElevationDerivedContourLayerData.data ?? EMPTY_FEATURE_COLLECTION) as any,
+      },
+      sourceData: (waterElevationDerivedContourLayerData.data ??
+        EMPTY_FEATURE_COLLECTION) as any,
+      legendScale: waterElevationLegendScale,
+      legendColor: '#0d47a1',
+      layerProps: {
+        label: `${waterElevationPoints.label} Contours (derived)`,
+        type: 'line' as const,
+        paint: {
+          'line-color': waterElevationContourColorExpression,
+          'line-width': 1.2,
+          'line-opacity': 0.85,
+        },
+      },
+      textLayerProps: {
+        type: 'symbol' as const,
+        layout: {
+          'symbol-placement': 'line' as const,
+          'text-field': [
+            'case',
+            ['has', '__water_elevation'],
+            ['concat', ['to-string', ['round', ['get', '__water_elevation']]], ' ft'],
+            '',
+          ],
+          'text-size': ['interpolate', ['linear'], ['zoom'], 8, 10, 12, 12],
+          'text-letter-spacing': 0.02,
+          'text-allow-overlap': false,
+          'symbol-spacing': 260,
+        },
+        paint: {
+          'text-color': '#1c1c1c',
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 1.2,
+          'text-opacity': 0.92,
+        },
+      },
+      isLoading: waterElevationDerivedContourLayerData.isLoading,
+    }),
+    [
+      waterElevationDerivedContourLayerData.data,
+      waterElevationDerivedContourLayerData.isLoading,
+      waterElevationLegendScale,
+      waterElevationContourColorExpression,
+      waterElevationPoints.label,
+    ]
+  )
 
   const surfaceWaterDiversionsLayer = useOGCLayer({
     collection: surfaceWaterDiversions.id,
@@ -510,6 +751,9 @@ export const useThingLayers = () => {
     waterElevationContours,
     waterElevationContoursLayer
   )
+  if (!waterElevationContours.exists) {
+    layers['ogc-water-elevation-contours-derived'] = waterElevationDerivedContoursLayer
+  }
   addLayer('ogc-water-well-summary', waterWellSummary, waterWellSummaryLayer)
   addLayer('ogc-water-wells', waterWells, waterWellsLayer)
   addLayer('ogc-springs', springs, springsLayer)
