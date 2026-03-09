@@ -19,9 +19,9 @@ import { MapPopup } from '@/components'
 export const MapView: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const THING_LAYERS = useThingLayers()
-  const [visibleLayers, setVisibleLayers] = React.useState<string[]>(
-    Object.keys(THING_LAYERS)
-  )
+  const [visibleLayers, setVisibleLayers] = React.useState<string[]>([
+    'ogc-latest-depth-to-water',
+  ])
   const [layersCollapsed, setLayersCollapsed] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     groundwater: true,
