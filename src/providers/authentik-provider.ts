@@ -30,12 +30,17 @@ const gravatarUrl = (email: string) => {
 
 interface AuthentikJwtPayload extends JwtPayload {
   email: string
+  name?: string
+  preferred_username?: string
+  given_name?: string
+  family_name?: string
 }
 
 export interface AuthentikIdentity {
   id: string
   email: string
   avatar: string
+  name: string
 }
 
 export type AuthentikPermissions = string[]
@@ -176,6 +181,7 @@ export const authentikAuthProvider: AuthProvider = {
         id: 'test',
         avatar: gravatarUrl(''),
         email: '',
+        name: 'Test User',
       }
     }
     const idToken = tokenStore.idToken
@@ -184,10 +190,16 @@ export const authentikAuthProvider: AuthProvider = {
 
     try {
       const profile = jwtDecode<AuthentikJwtPayload>(idToken)
+      const name =
+        profile.name ||
+        [profile.given_name, profile.family_name].filter(Boolean).join(' ') ||
+        profile.preferred_username ||
+        profile.email
       return {
         id: profile.sub,
         avatar: gravatarUrl(profile.email),
         email: profile.email,
+        name,
       }
     } catch {
       return null
