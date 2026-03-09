@@ -42,7 +42,6 @@ import {
 } from '@/utils'
 import { BatchRouteMap } from './components/BatchRouteMap'
 import { ExportDialog } from './components/ExportDialog'
-const isDevelopment = import.meta.env.DEV
 const TOKEN_RESOLVE_CONCURRENCY = 5
 const TOKEN_RESOLVE_PAGE_SIZE = 200
 const TOKEN_RESOLVE_MAX_PAGES = 20
@@ -314,8 +313,16 @@ export const WellBatchExport = () => {
           console.warn(`Failed to load assets for well ${wellId}`, error)
           return [] as BaseRecord[]
         }),
-        fetchThingResource<IContact>('contact'),
-        fetchThingResource<Partial<IObservation>>('observation/groundwater-level'),
+        fetchThingResource<IContact>('contact').catch((error) => {
+          console.warn(`Failed to load contacts for well ${wellId}`, error)
+          return [] as IContact[]
+        }),
+        fetchThingResource<Partial<IObservation>>('observation/groundwater-level').catch(
+          (error) => {
+            console.warn(`Failed to load observations for well ${wellId}`, error)
+            return [] as Partial<IObservation>[]
+          }
+        ),
       ])
 
       return {
@@ -518,11 +525,11 @@ export const WellBatchExport = () => {
 
     try {
       const localBundlesByWellId = { ...bundlesByWellId }
-      const missingBundleIds = resolvedIds.filter((id) => !localBundlesByWellId[id])
+      const bundleIdsToRefresh = [...resolvedIds]
 
-      if (missingBundleIds.length > 0) {
+      if (bundleIdsToRefresh.length > 0) {
         const results = await mapWithConcurrency(
-          missingBundleIds,
+          bundleIdsToRefresh,
           BUNDLE_FETCH_CONCURRENCY,
           async (id) => {
             try {
@@ -565,19 +572,25 @@ export const WellBatchExport = () => {
         }
 
         if (failedIds.length > 0) {
-          if (isDevelopment) {
-            failedIds.forEach((id) => {
-              if (localBundlesByWellId[id]) return
-              const fallbackWell = mapWellsById[id] ?? wellsById.get(id)
-              if (!fallbackWell) return
-              localBundlesByWellId[id] = {
-                well: fallbackWell,
-                assets: [],
-                contacts: [],
-                observations: [],
-              }
-            })
-          }
+          // Preserve previously loaded bundle data when refresh fails.
+          failedIds.forEach((id) => {
+            if (localBundlesByWellId[id]) return
+            const cachedBundle = bundlesByWellId[id]
+            if (!cachedBundle) return
+            localBundlesByWellId[id] = cachedBundle
+          })
+
+          failedIds.forEach((id) => {
+            if (localBundlesByWellId[id]) return
+            const fallbackWell = mapWellsById[id] ?? wellsById.get(id)
+            if (!fallbackWell) return
+            localBundlesByWellId[id] = {
+              well: fallbackWell,
+              assets: [],
+              contacts: [],
+              observations: [],
+            }
+          })
 
           const failedWellNames = failedIds
             .map((id) => {
