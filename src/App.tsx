@@ -38,7 +38,7 @@ const App: React.FC = () => (
             element={
               <AuthPage
                 title={
-                  <ThemedTitleV2 collapsed={false} text="NMBGMR Ocotillo" />
+                  <ThemedTitleV2 collapsed={false} />
                 }
                 hideForm={true}
                 type="login"
@@ -64,7 +64,7 @@ const App: React.FC = () => (
                 Header={() => <ThemedHeaderV2 sticky />}
                 Sider={ThemedSiderV2}
                 Title={({ collapsed }) => (
-                  <ThemedTitleV2 collapsed={collapsed} text="NMBGMR Ocotillo" />
+                  <ThemedTitleV2 collapsed={collapsed} />
                 )}
               >
                 <Outlet />

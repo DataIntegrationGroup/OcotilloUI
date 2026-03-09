@@ -1,20 +1,21 @@
 import {
-  Place,
+  Apps,
   Construction,
+  Contacts,
+  DynamicFormOutlined,
+  Image,
+  LibraryBooksOutlined,
+  Link,
+  Map,
+  MoreVertOutlined,
+  Opacity,
+  PictureAsPdfOutlined,
+  Place,
+  ScaleOutlined,
   ScienceOutlined,
   SettingsInputAntenna,
-  ScaleOutlined,
-  Contacts,
-  Apps,
-  DynamicFormOutlined,
-  Map,
-  Image,
-  Link,
   Spa,
   Workspaces,
-  MoreVertOutlined,
-  LibraryBooksOutlined,
-  PictureAsPdfOutlined,
 } from '@mui/icons-material'
 
 let tables: {
@@ -41,20 +42,20 @@ let tables: {
     create: '/ocotillo/well/create',
     meta: {
       label: 'Wells',
-      icon: <Construction />,
+      icon: <Opacity />,
     },
   },
-  {
-    name: 'thing-spring',
-    list: '/ocotillo/spring',
-    edit: '/ocotillo/spring/edit/:id',
-    show: '/ocotillo/spring/show/:id',
-    create: '/ocotillo/spring/create',
-    meta: {
-      label: 'Springs',
-      icon: <Spa />,
-    },
-  },
+  // {
+  //   name: 'thing-spring',
+  //   list: '/ocotillo/spring',
+  //   edit: '/ocotillo/spring/edit/:id',
+  //   show: '/ocotillo/spring/show/:id',
+  //   create: '/ocotillo/spring/create',
+  //   meta: {
+  //     label: 'Springs',
+  //     icon: <Spa />,
+  //   },
+  // },
   {
     name: 'contact',
     list: '/ocotillo/contact',
@@ -63,31 +64,31 @@ let tables: {
     create: '/ocotillo/contact/create',
     meta: {
       icon: <Contacts />,
-      label: 'Contacts / Owners',
+      label: 'Contacts & Owners',
     },
   },
-  {
-    name: 'group',
-    list: '/ocotillo/group',
-    edit: '/ocotillo/group/edit/:id',
-    show: '/ocotillo/group/show/:id',
-    create: '/ocotillo/group/create',
-    meta: {
-      label: 'Groups / Projects',
-      icon: <Workspaces />,
-    },
-  },
-  {
-    name: 'asset',
-    list: '/ocotillo/asset',
-    create: '/ocotillo/asset/create',
-    edit: '/ocotillo/asset/edit/:id',
-    show: '/ocotillo/asset/show/:id',
-    meta: {
-      label: 'Assets / Attachments',
-      icon: <Image />,
-    },
-  },
+  // {
+  //   name: 'group',
+  //   list: '/ocotillo/group',
+  //   edit: '/ocotillo/group/edit/:id',
+  //   show: '/ocotillo/group/show/:id',
+  //   create: '/ocotillo/group/create',
+  //   meta: {
+  //     label: 'Groups / Projects',
+  //     icon: <Workspaces />,
+  //   },
+  // },
+  // {
+  //   name: 'asset',
+  //   list: '/ocotillo/asset',
+  //   create: '/ocotillo/asset/create',
+  //   edit: '/ocotillo/asset/edit/:id',
+  //   show: '/ocotillo/asset/show/:id',
+  //   meta: {
+  //     label: 'Assets / Attachments',
+  //     icon: <Image />,
+  //   },
+  // },
   {
     name: 'location',
     list: '/ocotillo/location',
@@ -99,104 +100,109 @@ let tables: {
       icon: <Place />,
     },
   },
-  {
-    name: 'sensor',
-    list: '/ocotillo/sensor',
-    create: '/ocotillo/sensor/create',
-    edit: '/ocotillo/sensor/edit/:id',
-    show: '/ocotillo/sensor/show/:id',
-    meta: {
-      label: 'Sensors',
-      icon: <SettingsInputAntenna />,
-    },
-  },
-  {
-    name: 'sample',
-    list: '/ocotillo/sample',
-    show: '/ocotillo/sample/show/:id',
-    edit: '/ocotillo/sample/edit/:id',
-    create: '/ocotillo/sample/create',
-    meta: {
-      label: 'Samples',
-      icon: <ScienceOutlined />,
-    },
-  },
-  {
-    name: 'group',
-    list: '/ocotillo/group',
-    edit: '/ocotillo/group/edit/:id',
-    show: '/ocotillo/group/show/:id',
-    create: '/ocotillo/group/create',
-    meta: {
-      label: 'Groups',
-      icon: <Workspaces />,
-    },
-  },
-  {
-    name: 'thing-id-link',
-    list: '/ocotillo/thing-id-link',
-    edit: '/ocotillo/thing-id-link/edit/:id',
-    show: '/ocotillo/thing-id-link/show/:id',
-    create: '/ocotillo/thing-id-link/create',
-    meta: {
-      disabled: false,
-      label: 'Alternate ID links',
-      icon: <Link />,
-    },
-  },
-  {
-    name: 'thing/well-screen',
-    list: '/ocotillo/well-screen',
-    edit: '/ocotillo/well-screen/edit/:id',
-    show: '/ocotillo/well-screen/show/:id',
-    create: '/ocotillo/well-screen/create',
-    meta: {
-      label: 'Well Screens',
-      icon: <MoreVertOutlined />,
-    },
-  },
-  {
-    name: 'lexicon/term',
-    list: '/ocotillo/lexicon',
-    edit: '/ocotillo/lexicon/term/edit/:id',
-    show: '/ocotillo/lexicon/term/show/:id',
-    create: '/ocotillo/lexicon/term/create',
-    meta: {
-      disabled: false,
-      label: 'Lexicon / Glossary',
-      icon: <LibraryBooksOutlined />,
-    },
-  },
-  {
-    name: 'lexicon/category',
-    edit: '/ocotillo/lexicon/category/edit/:id',
-    show: '/ocotillo/lexicon/category/show/:id',
-    create: '/ocotillo/lexicon/category/create',
-    meta: {
-      disabled: false,
-      label: 'Category',
-      icon: <LibraryBooksOutlined />,
-    },
-  },
+  // {
+  //   name: 'sensor',
+  //   list: '/ocotillo/sensor',
+  //   create: '/ocotillo/sensor/create',
+  //   edit: '/ocotillo/sensor/edit/:id',
+  //   show: '/ocotillo/sensor/show/:id',
+  //   meta: {
+  //     label: 'Sensors',
+  //     icon: <SettingsInputAntenna />,
+  //   },
+  // },
+  // {
+  //   name: 'sample',
+  //   list: '/ocotillo/sample',
+  //   show: '/ocotillo/sample/show/:id',
+  //   edit: '/ocotillo/sample/edit/:id',
+  //   create: '/ocotillo/sample/create',
+  //   meta: {
+  //     label: 'Samples',
+  //     icon: <ScienceOutlined />,
+  //   },
+  // },
+  // {
+  //   name: 'group',
+  //   list: '/ocotillo/group',
+  //   edit: '/ocotillo/group/edit/:id',
+  //   show: '/ocotillo/group/show/:id',
+  //   create: '/ocotillo/group/create',
+  //   meta: {
+  //     label: 'Groups',
+  //     icon: <Workspaces />,
+  //   },
+  // },
+  // {
+  //   name: 'thing-id-link',
+  //   list: '/ocotillo/thing-id-link',
+  //   edit: '/ocotillo/thing-id-link/edit/:id',
+  //   show: '/ocotillo/thing-id-link/show/:id',
+  //   create: '/ocotillo/thing-id-link/create',
+  //   meta: {
+  //     disabled: false,
+  //     label: 'Alternate ID links',
+  //     icon: <Link />,
+  //   },
+  // },
+  // {
+  //   name: 'thing/well-screen',
+  //   list: '/ocotillo/well-screen',
+  //   edit: '/ocotillo/well-screen/edit/:id',
+  //   show: '/ocotillo/well-screen/show/:id',
+  //   create: '/ocotillo/well-screen/create',
+  //   meta: {
+  //     label: 'Well Screens',
+  //     icon: <MoreVertOutlined />,
+  //   },
+  // },
+  // {
+  //   name: 'lexicon/term',
+  //   list: '/ocotillo/lexicon',
+  //   edit: '/ocotillo/lexicon/term/edit/:id',
+  //   show: '/ocotillo/lexicon/term/show/:id',
+  //   create: '/ocotillo/lexicon/term/create',
+  //   meta: {
+  //     disabled: false,
+  //     label: 'Lexicon / Glossary',
+  //     icon: <LibraryBooksOutlined />,
+  //   },
+  // },
+  // {
+  //   name: 'lexicon/category',
+  //   edit: '/ocotillo/lexicon/category/edit/:id',
+  //   show: '/ocotillo/lexicon/category/show/:id',
+  //   create: '/ocotillo/lexicon/category/create',
+  //   meta: {
+  //     disabled: false,
+  //     label: 'Category',
+  //     icon: <LibraryBooksOutlined />,
+  //   },
+  // },
 ]
 
 tables.push({
   name: 'thing-well-pdf-preview',
-  // Use `list` to register the route path so useMenu() can match it.
-  // It's hidden, so it won't render in the menu.
   list: '/ocotillo/well/pdf-preview/:id',
   meta: {
     label: 'PDF Preview',
-    // IMPORTANT: tie it to the Wells resource in the sidebar tree
     parent: 'ocotillo.thing-well',
     nestedLevel: 3,
     hide: true,
   },
 })
 
+tables.push({
+  name: 'thing-well-batch-export',
+  list: '/ocotillo/well/batch-export',
+  meta: {
+    label: 'Field Form Batch Export',
+    icon: <PictureAsPdfOutlined />,
+  },
+})
+
 tables = tables.map((b) => {
-  let meta = b.meta || {}
-  // No parent: top-level in sidebar
+  const meta = b.meta || {}
   meta['nestedLevel'] = 0
   return {
     ...b,
@@ -239,7 +245,7 @@ let forms: {
 ]
 
 forms = forms.map((b) => {
-  let meta = b.meta || {}
+  const meta = b.meta || {}
   if (!meta['parent']) {
     meta['parent'] = 'ocotillo.forms'
   }
@@ -262,8 +268,6 @@ let observations: {
     name: 'groundwater-level-observation',
     list: '/ocotillo/groundwater-level-observation',
     create: '/ocotillo/groundwater-level-observation/create',
-    // edit: '/ocotillo/observation/edit/:id',
-    // show: '/ocotillo/observation/show/:id',
     meta: {
       label: 'Groundwater Levels',
       icon: <Construction />,
@@ -272,7 +276,7 @@ let observations: {
 ]
 
 observations = observations.map((b) => {
-  let meta = b.meta || {}
+  const meta = b.meta || {}
   if (!meta['parent']) {
     meta['parent'] = 'ocotillo.observation'
   }
@@ -283,7 +287,6 @@ observations = observations.map((b) => {
   }
 })
 
-// V1: Map first, then Wells and rest of table items
 let ocotillo = [
   {
     name: 'map',
@@ -302,59 +305,48 @@ let ocotillo = [
       label: 'Observations',
     },
   },
-  ...observations,
-  {
-    name: 'apps',
-    icon: <Apps />,
-    meta: {
-      label: 'Apps',
-    },
-  },
-  {
-    name: 'thing-well-batch-export',
-    list: '/ocotillo/well/batch-export',
-    meta: {
-      label: 'Batch Field Sheet Export',
-      parent: 'ocotillo.apps',
-      nestedLevel: 2,
-      icon: <PictureAsPdfOutlined />,
-    },
-  },
-  {
-    name: 'hydrograph-corrector',
-    list: '/ocotillo/hydrograph-corrector',
-    meta: {
-      disabled: true,
-      label: 'Hydrograph Corrector (Coming Soon)',
-      parent: 'ocotillo.apps',
-      nestedLevel: 2,
-      icon: <Construction />,
-    },
-  },
-  {
-    name: 'water-chemistry-import',
-    list: '/ocotillo/water-chemistry-import',
-    meta: {
-      disabled: true,
-      label: 'Water Chemistry Import (Coming Soon)',
-      parent: 'ocotillo.apps',
-      nestedLevel: 2,
-      icon: <ScienceOutlined />,
-    },
-  },
-  {
-    name: 'forms',
-    icon: <DynamicFormOutlined />,
-    meta: {
-      label: 'Forms',
-    },
-  },
-  ...forms,
+  // ...observations,
+  // {
+  //   name: 'apps',
+  //   icon: <Apps />,
+  //   meta: {
+  //     label: 'Apps',
+  //   },
+  // },
+  // {
+  //   name: 'hydrograph-corrector',
+  //   list: '/ocotillo/hydrograph-corrector',
+  //   meta: {
+  //     disabled: true,
+  //     label: 'Hydrograph Corrector (Coming Soon)',
+  //     parent: 'ocotillo.apps',
+  //     nestedLevel: 2,
+  //     icon: <Construction />,
+  //   },
+  // },
+  // {
+  //   name: 'water-chemistry-import',
+  //   list: '/ocotillo/water-chemistry-import',
+  //   meta: {
+  //     disabled: true,
+  //     label: 'Water Chemistry Import (Coming Soon)',
+  //     parent: 'ocotillo.apps',
+  //     nestedLevel: 2,
+  //     icon: <ScienceOutlined />,
+  //   },
+  // },
+  // {
+  //   name: 'forms',
+  //   icon: <DynamicFormOutlined />,
+  //   meta: {
+  //     label: 'Forms',
+  //   },
+  // },
+  // ...forms,
 ]
 
 export const ocotilloResources = ocotillo.map((b) => {
-  let meta = b.meta || {}
-  // No parent: items are top-level in sidebar (no NMBGMR Ocotillo accordion)
+  const meta = b.meta || {}
   meta['dataProviderName'] = 'ocotillo'
   return {
     ...b,
@@ -366,181 +358,3 @@ export const ocotilloResources = ocotillo.map((b) => {
 if (!import.meta.env.PROD) {
   console.debug({ ocotilloResources })
 }
-
-//
-// let amp = [
-//   {
-//     name: "dashboard",
-//     list: "/amp/dashboard",
-//     meta: {
-//       label: "Dashboard",
-//       icon: <DashboardOutlined />,
-//     },
-//   },
-//   {
-//     name: "hydrographcorrector",
-//     list: "/amp/hydrographcorrector",
-//     meta: {
-//       label: "Hydrograph Corrector (Coming Soon)",
-//       icon: <Construction />,
-//     },
-//   },
-//   {
-//     name: "reportbuilder",
-//     list: "/amp/reportbuilder",
-//     meta: {
-//       label: "Report Builder (Coming Soon)",
-//       icon: <Construction />,
-//     },
-//   },
-//   {
-//     name: "querybuilder",
-//     list: "/amp/querybuilder",
-//     meta: {
-//       label: "Query Builder (Beta)",
-//       icon: <Construction />,
-//     },
-//   },
-//   {
-//     name: "wellinventoryform",
-//     list: "/amp/wellinventoryform",
-//     meta: {
-//       label: "Well Inventory Form (Beta)",
-//       icon: <DynamicFormTwoTone />,
-//     },
-//   },
-//   {
-//     name: "waterlevelform",
-//     list: "/amp/waterlevelform",
-//     meta: {
-//       label: "Water Level Form (Beta)",
-//       icon: <Water />,
-//     },
-//   },
-//   {
-//     name: "projects",
-//     list: "/amp/projects",
-//     icon: <CategoryOutlined />,
-//     meta: {
-//       label: "Projects",
-//     },
-//   },
-//
-//   {
-//     name: "locations",
-//     icon: <Place />,
-//     list: "/amp/locations",
-//     edit: "/amp/locations/edit/:id",
-//     show: "/amp/locations/show/:id",
-//     create: "/amp/locations/create",
-//     meta: {
-//       label: "Locations",
-//     },
-//   },
-//   {
-//     name: "wells",
-//     icon: <Plumbing />,
-//     list: "/amp/wells",
-//     edit: "/amp/wells/edit/:id",
-//     show: "/amp/wells/show/:id",
-//     create: "/amp/wells/create",
-//     meta: {
-//       label: "Wells",
-//     },
-//   },
-//   {
-//     name: "equipment",
-//     icon: <Cable />,
-//     list: "/amp/equipment",
-//     edit: "/amp/equipment/edit/:id",
-//     create: "/amp/equipment/create",
-//     show: "/amp/equipment/show/:id",
-//     meta: {
-//       label: "Equipment",
-//     },
-//   },
-//   {
-//     name: "manual_waterlevels",
-//     list: "/amp/manualwaterlevels",
-//     edit: "/amp/manualwaterlevels/edit/:id",
-//     create: "/amp/manualwaterlevels/create",
-//     show: "/amp/manualwaterlevels/show/:id",
-//     meta: {
-//       label: "Manual Water Levels",
-//     },
-//   },
-//   {
-//     name: "batchupload",
-//     icon: <FileUploadOutlined />,
-//     meta: {
-//       label: "Batch Upload",
-//     },
-//   },
-//   {
-//     name: "chemupload",
-//     list: "/amp/chemupload",
-//     icon: <ScienceOutlined />,
-//     meta: {
-//       parent: "water.batchupload",
-//       nestedLevel: 2,
-//       label: "Chemistry Upload (Beta)",
-//     },
-//   },
-//   {
-//     name: "manualwaterlevels_batchupload",
-//     list: "/amp/manualwaterlevels/batchupload",
-//     icon: <Water />,
-//     meta: {
-//       label: "Manual Water Levels (Beta)",
-//       parent: "water.batchupload",
-//       nestedLevel: 2,
-//     },
-//   },
-//   {
-//     name: "Chemistry",
-//     icon: <ScienceOutlined />,
-//     meta: {
-//       label: "Chemistry",
-//     },
-//   },
-//   {
-//     name: "LookupTables",
-//     icon: <TableViewIcon />,
-//     meta: {
-//       label: "Lookup Tables",
-//     },
-//   },
-// ];
-//
-// export const ampResources = amp.map((b) => {
-//   let meta = b.meta || {};
-//   if (!meta["parent"]) {
-//     meta["parent"] = "water";
-//   }
-//   meta["dataProviderName"] = "amp";
-//   return {
-//     ...b,
-//     name: `water.${b.name}`,
-//     meta: meta,
-//   };
-// });
-//
-// const lookupKeys = [
-//   { key: "level_status", label: "Level Status" },
-//   { key: "measurement_method", label: "Measurement Method" },
-//   { key: "data_quality", label: "Data Quality" },
-//   { key: "measuring_agency", label: "Measuring Agency" },
-//   { key: "data_source", label: "Data Source" },
-// ];
-//
-// export const lookup = lookupKeys.map((l) => {
-//   return {
-//     name: l.key,
-//     list: `/amp/lu_${l.key}`,
-//     meta: {
-//       parent: "water.LookupTables",
-//       nestedLevel: 2,
-//       label: l.label,
-//     },
-//   };
-// });

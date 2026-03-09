@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Breadcrumb, List, useDataGrid } from '@refinedev/mui'
+import { useDataGrid } from '@refinedev/mui'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
   IAddress,
@@ -7,12 +7,15 @@ import {
   IEmail,
   IPhone,
 } from '@/interfaces/ocotillo/IContact'
-import { Card, CardHeader, SxProps, Typography } from '@mui/material'
+import { Button, Card, CardHeader, SxProps } from '@mui/material'
 import { Email, Home, Phone } from '@mui/icons-material'
+import AddIcon from '@mui/icons-material/Add'
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { useLink } from '@refinedev/core'
+import { useExport, useLink, useNavigation } from '@refinedev/core'
 import { settings } from '@/settings'
 import { formatAppDateTime } from '@/utils'
+import { ListPage } from '@/components'
 
 export const ContactList: React.FC = () => {
   const [selectedContactId, setSelectedContactId] = useState<number | null>(
@@ -20,6 +23,13 @@ export const ContactList: React.FC = () => {
   )
 
   const { dataGridProps } = useDataGrid<IContact>()
+
+  const { triggerExport, isLoading: exportIsLoading } = useExport({
+    resource: 'contact',
+    dataProviderName: 'ocotillo',
+  })
+
+  const { create } = useNavigation()
   const Link = useLink()
 
   const columns = useMemo<GridColDef<IContact>[]>(
@@ -139,32 +149,40 @@ export const ContactList: React.FC = () => {
     meta: { enabled: !!selectedContactId },
   })
 
-  return (
-    <List
-      breadcrumb={<Breadcrumb hideIcons={true} />}
-      title="Contacts / Owners"
-    >
-      <Card
-        className={'description'}
-        variant="outlined"
-        sx={{
-          marginTop: 1,
-          marginBottom: 1,
-          padding: 1,
-        }}
+  const customHeaderButtons = () => (
+    <>
+      <Button
+        size="small"
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => create('contact')}
       >
-        <Typography variant="body1">
-          {'Contacts are used to represent people or organizations.'}
-        </Typography>
-      </Card>
-      <DataGrid
-        {...dataGridProps}
-        rowHeight={settings.rowHeight}
-        disableRowSelectionOnClick={false}
+        Create
+      </Button>
+      <Button
+        size="small"
+        variant="contained"
+        startIcon={<FileDownloadOutlinedIcon />}
+        disabled={exportIsLoading}
+        onClick={triggerExport}
+      >
+        Export
+      </Button>
+    </>
+  )
+
+  return (
+    <>
+      <ListPage
+        title="Contacts & Owners"
+        description="People and organizations associated with monitoring sites. Contacts can be linked to wells and springs and may have multiple phone numbers, email addresses, and mailing addresses."
         columns={columns}
-        onRowSelectionModelChange={(params) => {
+        dataGridProps={dataGridProps}
+        getRowId={(row) => row.id}
+        headerButtons={customHeaderButtons}
+        onSelectionChange={(params) =>
           setSelectedContactId(params.length > 0 ? (params[0] as number) : null)
-        }}
+        }
       />
       {selectedContactId && (
         <>
@@ -173,7 +191,7 @@ export const ContactList: React.FC = () => {
           <AddressInfoCard dataGridProps={addressDataGridProps} />
         </>
       )}
-    </List>
+    </>
   )
 }
 

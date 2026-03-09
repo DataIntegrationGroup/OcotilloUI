@@ -1,4 +1,4 @@
-import React, { type CSSProperties, useEffect, useState } from 'react'
+import React, { type CSSProperties, useContext, useEffect, useState } from 'react'
 import {
   CanAccess,
   type ITreeMenu,
@@ -10,8 +10,10 @@ import {
 } from '@refinedev/core'
 import { ThemedTitleV2, useThemedLayoutContext } from '@refinedev/mui'
 import ChevronLeft from '@mui/icons-material/ChevronLeft'
+import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined'
 import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
+import LightModeOutlined from '@mui/icons-material/LightModeOutlined'
 import ListOutlined from '@mui/icons-material/ListOutlined'
 import {
   Box,
@@ -26,6 +28,7 @@ import {
   Paper,
 } from '@mui/material'
 import type { RefineThemedLayoutV2SiderProps } from '@refinedev/mui'
+import { ColorModeContext } from '@/contexts'
 import { Dashboard } from './dashboard'
 import { Logout } from './logout'
 
@@ -42,6 +45,8 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
     setMobileSiderOpen,
   } = useThemedLayoutContext()
 
+  const { mode, setMode } = useContext(ColorModeContext)
+
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu({ meta })
   const TitleFromContext = useTitle()
 
@@ -52,7 +57,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
   const Link = routerType === 'legacy' ? LegacyLink : NewLink
 
   const getDrawerWidth = (isSiderCollapsed: boolean): number =>
-    isSiderCollapsed ? 56 : 350
+    isSiderCollapsed ? 56 : 260
 
   const [open, setOpen] = useState<{ [key: string]: boolean }>({})
 
@@ -273,7 +278,6 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
       >
         <Dashboard collapsed={siderCollapsed} selectedKey={selectedKey} />
         {renderTreeView(menuItems, selectedKey)}
-        <Logout collapsed={siderCollapsed} />
       </List>
     )
   }
@@ -359,6 +363,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
               paddingRight: siderCollapsed ? 0 : '8px',
               variant: 'outlined',
               borderRadius: 0,
+              bgcolor: 'background.default',
               borderBottom: (theme) =>
                 `1px solid ${theme.palette.action.focus}`,
             }}
@@ -378,6 +383,28 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
             }}
           >
             <Sider />
+          </Box>
+          <Box
+            sx={{
+              borderTop: (theme) => `1px solid ${theme.palette.action.focus}`,
+              px: 0.5,
+              py: 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: siderCollapsed ? 'center' : 'space-between',
+            }}
+          >
+            <Logout collapsed={siderCollapsed} />
+            {!siderCollapsed && (
+              <Tooltip
+                title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                placement="right"
+              >
+                <IconButton onClick={setMode} size="small" sx={{ mr: 0.5, ml: 1 }}>
+                  {mode === 'dark' ? <LightModeOutlined /> : <DarkModeOutlined />}
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         </Drawer>
       </Box>

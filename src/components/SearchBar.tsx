@@ -8,6 +8,7 @@ import {
   ListItemButton,
   TextField,
   Typography,
+  useTheme,
 } from '@mui/material'
 import { Search } from 'react-flaticons'
 import { Stack, Box } from '@mui/material'
@@ -127,6 +128,7 @@ export const SearchBar = () => {
   }
 
   // Add hotkeys for navigation
+  const theme = useTheme()
   const isMac = navigator.platform.toUpperCase().includes('MAC')
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -148,10 +150,10 @@ export const SearchBar = () => {
         backgroundColor: 'background.paper',
         flexGrow: 1,
         borderRadius: '5px',
-        margin: '10px',
-        height: '40px', // enforce height to match nav bar
+        margin: '0px',
         display: 'flex',
         alignItems: 'center',
+        maxWidth: '50ch',
       }}
     >
       <Autocomplete
@@ -183,6 +185,9 @@ export const SearchBar = () => {
         sx={{
           width: '100%',
           '& .MuiOutlinedInput-root': {
+            py: '0px',
+            pl: '0.75rem',
+            pr: '0rem',
             '& fieldset': {
               border: 'none',
             },
@@ -297,11 +302,6 @@ export const SearchBar = () => {
             autoComplete="off"
             aria-label="Search"
             placeholder="Search for a well or spring by ID or site name…"
-            sx={{
-              position: 'relative',
-              borderRadius: '10px',
-              margin: '10px',
-            }}
             slotProps={{
               input: {
                 ...params.InputProps,
@@ -318,7 +318,8 @@ export const SearchBar = () => {
                         display: 'inline-block',
                         userSelect: 'none',
                         whiteSpace: 'pre',
-                        background: '#f5f5f5',
+                        background: theme.palette.action.hover,
+                        color: theme.palette.text.secondary,
                         marginRight: 8,
                         paddingLeft: 4,
                         paddingRight: 4,
@@ -329,7 +330,7 @@ export const SearchBar = () => {
                         fontWeight: 'bold',
                         fontFamily: 'monospace',
                         letterSpacing: isMac ? '1.5px' : '0.5px',
-                        border: '1px solid #ccc',
+                        // border: `1px solid ${theme.palette.divider}`,
                         borderRadius: '7px',
                       }}
                     >
