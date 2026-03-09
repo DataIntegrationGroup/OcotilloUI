@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react'
 import { Layer, Source } from 'react-map-gl'
-import { Breadcrumb, List } from '@refinedev/mui'
 import { useGo } from '@refinedev/core'
 import {
   Box,
@@ -191,138 +190,106 @@ export const MapView: React.FC = () => {
   }
 
   return (
-    <List
-      breadcrumb={<Breadcrumb hideIcons={true} />}
-      title={
-        <Box>
-          <Typography variant="h3" fontWeight={700}>
-            Map
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{ maxWidth: '85ch', mt: 0.5, color: 'text.secondary' }}
-          >
-            Explore water wells and springs across New Mexico. Click a point to
-            view site details.
-          </Typography>
-        </Box>
-      }
-      canCreate={false}
-      wrapperProps={{
-        elevation: 0,
-        sx: {
-          backgroundColor: 'background.wrapper',
-          boxShadow: 'none',
-          borderRadius: 1,
-          padding: 0,
-        },
+    <Box
+      data-testid="ocotillo-map-container"
+      component="div"
+      ref={containerRef}
+      sx={{
+        borderRadius: 2,
+        overflow: 'hidden',
+        border: '2.5px solid',
+        borderColor: 'divider',
+        height: { xs: 'calc(100vh - 140px)', md: 'calc(100vh - 120px)' },
+        minHeight: 560,
+        width: '100%',
+        position: 'relative',
       }}
-      headerProps={{
-        sx: { '.MuiCardHeader-action': { alignSelf: 'flex-start', mt: 0.5 } },
-      }}
-      contentProps={{ sx: { pt: 1 } }}
     >
-      <Box
-        data-testid="ocotillo-map-container"
-        component="div"
-        ref={containerRef}
+      <MapComponent
+        containerRef={containerRef}
+        showDrawControls={{ show: true, position: 'top-right' }}
+        setPopupContent={setPopupContent}
+        popupContent={popupContent}
+        onPointClick={onMapPointClick}
+        onMouseMoveCallback={onMapMouseMove}
+      >
+        {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
+          if (!visibleLayers.includes(key)) return null
+          const { sourceProps, layerProps, textLayerProps } = layerDef
+          return (
+            <Source id={key} key={key} {...sourceProps}>
+              <Layer
+                id={`location-${key}`}
+                key={`layer-${key}`}
+                {...layerProps}
+              />
+              {textLayerProps && (
+                <Layer
+                  id={`location-label-${key}`}
+                  key={`layer-label-${key}`}
+                  {...textLayerProps}
+                />
+              )}
+            </Source>
+          )
+        })}
+      </MapComponent>
+      <Paper
+        elevation={6}
         sx={{
-          borderRadius: 2,
-          overflow: 'hidden',
-          border: '2.5px solid',
+          position: 'absolute',
+          top: { xs: 58, sm: 62 },
+          left: 12,
+          width: { xs: 'calc(100% - 24px)', sm: 320 },
+          maxHeight: { xs: '68%', sm: '78%' },
+          overflowY: 'auto',
+          px: 0.8,
+          py: 0.6,
+          borderRadius: 1.25,
+          backdropFilter: 'blur(6px)',
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          border: '1px solid',
           borderColor: 'divider',
-          height: { xs: 'calc(100vh - 140px)', md: 'calc(100vh - 120px)' },
-          minHeight: 560,
-          width: '100%',
-          position: 'relative',
+          zIndex: 2,
         }}
       >
-        <MapComponent
-          containerRef={containerRef}
-          showDrawControls={{ show: true, position: 'top-right' }}
-          setPopupContent={setPopupContent}
-          popupContent={popupContent}
-          onPointClick={onMapPointClick}
-          onMouseMoveCallback={onMapMouseMove}
-        >
-          {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
-            if (!visibleLayers.includes(key)) return null
-            const { sourceProps, layerProps, textLayerProps } = layerDef
-            return (
-              <Source id={key} key={key} {...sourceProps}>
-                <Layer
-                  id={`location-${key}`}
-                  key={`layer-${key}`}
-                  {...layerProps}
-                />
-                {textLayerProps && (
-                  <Layer
-                    id={`location-label-${key}`}
-                    key={`layer-label-${key}`}
-                    {...textLayerProps}
-                  />
-                )}
-              </Source>
-            )
-          })}
-        </MapComponent>
-        <Paper
-          elevation={6}
+        <Box
           sx={{
-            position: 'absolute',
-            top: { xs: 58, sm: 62 },
-            left: 12,
-            width: { xs: 'calc(100% - 24px)', sm: 320 },
-            maxHeight: { xs: '68%', sm: '78%' },
-            overflowY: 'auto',
-            px: 0.8,
-            py: 0.6,
-            borderRadius: 1.25,
-            backdropFilter: 'blur(6px)',
-            backgroundColor: 'rgba(255,255,255,0.9)',
-            border: '1px solid',
-            borderColor: 'divider',
-            zIndex: 2,
+            px: 0.3,
+            py: 0.2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
-          <Box
+          <Typography
+            variant="overline"
             sx={{
-              px: 0.3,
-              py: 0.2,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
+              px: 0.55,
+              py: 0.25,
+              fontWeight: 700,
+              letterSpacing: 0.7,
+              fontSize: '0.68rem',
+              lineHeight: 1.2,
             }}
           >
-            <Typography
-              variant="overline"
-              sx={{
-                px: 0.55,
-                py: 0.25,
-                fontWeight: 700,
-                letterSpacing: 0.7,
-                fontSize: '0.68rem',
-                lineHeight: 1.2,
-              }}
-            >
-              Layers
-            </Typography>
-            <IconButton
-              size="small"
-              onClick={() => setLayersCollapsed((value) => !value)}
-              aria-label={layersCollapsed ? 'Expand layers' : 'Collapse layers'}
-            >
-              {layersCollapsed ? (
-                <KeyboardArrowDown fontSize="small" />
-              ) : (
-                <KeyboardArrowUp fontSize="small" />
-              )}
-            </IconButton>
-          </Box>
-          <Collapse in={!layersCollapsed}>
-            {(
-              Object.keys(groupedLayers) as Array<keyof typeof groupedLayers>
-            ).map((groupKey) => {
+            Layers
+          </Typography>
+          <IconButton
+            size="small"
+            onClick={() => setLayersCollapsed((value) => !value)}
+            aria-label={layersCollapsed ? 'Expand layers' : 'Collapse layers'}
+          >
+            {layersCollapsed ? (
+              <KeyboardArrowDown fontSize="small" />
+            ) : (
+              <KeyboardArrowUp fontSize="small" />
+            )}
+          </IconButton>
+        </Box>
+        <Collapse in={!layersCollapsed}>
+          {(Object.keys(groupedLayers) as Array<keyof typeof groupedLayers>).map(
+            (groupKey) => {
               const layers = groupedLayers[groupKey]
               if (layers.length === 0) return null
 
@@ -458,10 +425,10 @@ export const MapView: React.FC = () => {
                   </Collapse>
                 </Box>
               )
-            })}
-          </Collapse>
-        </Paper>
-      </Box>
-    </List>
+            }
+          )}
+        </Collapse>
+      </Paper>
+    </Box>
   )
 }

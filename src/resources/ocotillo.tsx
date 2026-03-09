@@ -196,10 +196,7 @@ tables.push({
   name: 'thing-well-batch-export',
   list: '/ocotillo/well/batch-export',
   meta: {
-    label: 'Batch Field Sheet Export',
-    parent: 'ocotillo.thing-well',
-    nestedLevel: 3,
-    hide: true,
+    label: 'Field Form Batch Export',
     icon: <PictureAsPdfOutlined />,
   },
 })
