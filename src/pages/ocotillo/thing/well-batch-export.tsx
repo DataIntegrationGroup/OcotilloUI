@@ -36,75 +36,26 @@ import {
 } from '@mui/icons-material'
 import { BaseRecord, useDataProvider, useNotification } from '@refinedev/core'
 import { useAutocomplete } from '@refinedev/mui'
-import { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
-import { WellPDF } from '@/components'
-import { Document, pdf } from '@react-pdf/renderer'
+import {
+  IContact,
+  IObservation,
+  IWell,
+  WellBundle,
+  WellChipState,
+} from '@/interfaces/ocotillo'
+import { OcotilloDocument, WellPDF } from '@/components'
+import { pdf } from '@react-pdf/renderer'
 import MapComponent from '@/components/MapComponent'
 import { Layer, Source } from 'react-map-gl'
 import type { FeatureCollection, Geometry } from 'geojson'
-
-type WellChipState = {
-  query: string
-  status: 'resolved' | 'error'
-  wellId?: number
-}
-
-type WellBundle = {
-  well: IWell
-  contacts: IContact[]
-  assets: BaseRecord[]
-  observations: readonly Partial<IObservation>[]
-}
-
-const parseIds = (raw: string) =>
-  raw
-    .split(/[,\r\n]+/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-
-const normalizeLookupKey = (value: string) =>
-  value
-    .normalize('NFKC')
-    .trim()
-    .replace(/^['"]+|['"]+$/g, '')
-    .replace(/\s+/g, ' ')
-    .toUpperCase()
-
-const compactLookupKey = (value: string) =>
-  normalizeLookupKey(value).replace(/[^A-Z0-9]/g, '')
-
-const buildWellLookup = (wells: IWell[]) => {
-  const lookup = new Map<string, IWell>()
-
-  wells.forEach((well) => {
-    const name = String(well.name ?? '')
-    if (!name.trim()) return
-
-    const normalizedName = normalizeLookupKey(name)
-    lookup.set(normalizedName, well)
-
-    const compactName = compactLookupKey(name)
-    if (compactName && compactName !== normalizedName) {
-      lookup.set(compactName, well)
-    }
-  })
-
-  return lookup
-}
-
-const buildBatchFilename = () => {
-  const date = new Date().toISOString().slice(0, 10)
-  return `FieldSheets_Batch_${date}`
-}
-
-const sanitizeFilenamePart = (value: string) =>
-  value
-    .replace(/[^a-zA-Z0-9._-]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '')
-
-const safeFilenamePrefix = (value: string) =>
-  sanitizeFilenamePart(value) || 'FieldSheets_Batch'
+import {
+  buildBatchFilename,
+  buildWellLookup,
+  compactLookupKey,
+  normalizeLookupKey,
+  parseIds,
+  safeFilenamePrefix,
+} from '@/utils'
 const isDevelopment = import.meta.env.DEV
 const TOKEN_RESOLVE_CONCURRENCY = 5
 const TOKEN_RESOLVE_PAGE_SIZE = 200
@@ -935,11 +886,8 @@ export const WellBatchExport = () => {
       }
 
       const blob = await pdf(
-        <Document
+        <OcotilloDocument
           title={baseFilename}
-          author="NMBGMR Ocotillo"
-          creator="NMBGMR Ocotillo System"
-          language="en-US"
           subject="Batch Well Field Data Report"
         >
           {bundlesForExport.map((bundle) => (
@@ -949,10 +897,10 @@ export const WellBatchExport = () => {
               contacts={bundle.contacts}
               assets={bundle.assets}
               observations={bundle.observations}
-              asDocument={false}
+              standalone={false}
             />
           ))}
-        </Document>
+        </OcotilloDocument>
       ).toBlob()
 
       const url = URL.createObjectURL(blob)

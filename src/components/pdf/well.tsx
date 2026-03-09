@@ -2,7 +2,6 @@ import { IAddress, IContact, IWell } from '@/interfaces/ocotillo'
 import { BaseRecord } from '@refinedev/core'
 import { buildPdfFilename, groupNotesByType } from '@/utils'
 import {
-  Document,
   Page,
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
 } from '@react-pdf/renderer'
 import { useMemo } from 'react'
 import { IObservation } from '@/interfaces/ocotillo/IObservation'
+import { OcotilloDocument } from './OcotilloDocument'
 
 const styles = StyleSheet.create({
   page: {
@@ -90,13 +90,13 @@ export const WellPDF = ({
   assets,
   contacts,
   observations,
-  asDocument = true,
+  standalone = true,
 }: {
   well: IWell
   assets: BaseRecord[]
   contacts: IContact[]
   observations: readonly Partial<IObservation>[]
-  asDocument?: boolean
+  standalone?: boolean
 }) => {
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
 
@@ -500,20 +500,17 @@ export const WellPDF = ({
     </>
   )
 
-  if (!asDocument) {
+  if (!standalone) {
     return pages
   }
 
   return (
-    <Document
+    <OcotilloDocument
       title={filename || null}
-      author="NMBGMR Ocotillo"
-      creator="NMBGMR Ocotillo System"
-      language="en-US"
       subject="Well Field Data Report"
     >
       {pages}
-    </Document>
+    </OcotilloDocument>
   )
 }
 
