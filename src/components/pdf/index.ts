@@ -1,1 +1,7 @@
 export * from './well'
+export * from './AdditionalInformation'
+export * from './CoreInformation'
+export * from './ContactInformation'
+export * from './ImageGallery'
+export * from './SensorDeploymentTable'
+export * from './WellInformation'
