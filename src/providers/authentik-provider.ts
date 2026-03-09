@@ -39,6 +39,79 @@ export interface AuthentikIdentity {
 }
 
 export type AuthentikPermissions = string[]
+const PKCE_LOCAL_FALLBACK_TTL_MS = 5 * 60 * 1000
+
+type PkceFallbackRecord = {
+  verifier: string
+  state: string
+  expiresAt: number
+}
+
+const getPkceFallbackKey = (state: string): string =>
+  `${STORAGE_KEYS.pkceTransactionPrefix}${state}`
+
+const isPkceFallbackRecord = (v: unknown): v is PkceFallbackRecord => {
+  if (!v || typeof v !== 'object') return false
+
+  const record = v as Partial<PkceFallbackRecord>
+  return (
+    typeof record.verifier === 'string' &&
+    typeof record.state === 'string' &&
+    typeof record.expiresAt === 'number'
+  )
+}
+
+export const persistPkceFallback = ({
+  verifier,
+  state,
+}: {
+  verifier: string
+  state: string
+}): void => {
+  const key = getPkceFallbackKey(state)
+  const payload: PkceFallbackRecord = {
+    verifier,
+    state,
+    expiresAt: Date.now() + PKCE_LOCAL_FALLBACK_TTL_MS,
+  }
+
+  localStorage.setItem(key, JSON.stringify(payload))
+}
+
+export const consumePkceFallbackByState = (
+  state: string,
+): { verifier: string; state: string } | null => {
+  const key = getPkceFallbackKey(state)
+  const raw = localStorage.getItem(key)
+  if (!raw) return null
+
+  // One-time consume: delete before parse/validate.
+  localStorage.removeItem(key)
+
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!isPkceFallbackRecord(parsed)) return null
+    if (parsed.state !== state) return null
+    if (Date.now() > parsed.expiresAt) return null
+
+    return { verifier: parsed.verifier, state: parsed.state }
+  } catch {
+    return null
+  }
+}
+
+export const clearPkceFallbacks = (): void => {
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const key = localStorage.key(i)
+    if (key?.startsWith(STORAGE_KEYS.pkceTransactionPrefix)) {
+      localStorage.removeItem(key)
+    }
+  }
+
+  // Remove legacy keys from prior implementation if present.
+  localStorage.removeItem(STORAGE_KEYS.pkceVerifier)
+  localStorage.removeItem(STORAGE_KEYS.pkceState)
+}
 
 export const getAccessToken = async ({
   refresh,
@@ -104,6 +177,8 @@ export const authentikAuthProvider: AuthProvider = {
     }
 
     try {
+      clearPkceFallbacks()
+
       const codeVerifier = generateCodeVerifier()
       const codeChallenge = await generateCodeChallenge(codeVerifier)
 
@@ -111,6 +186,7 @@ export const authentikAuthProvider: AuthProvider = {
 
       const state = generateOAuthState()
       transientStore.pkceState = state
+      persistPkceFallback({ verifier: codeVerifier, state })
 
       const RESPONSE_TYPE = 'code'
       const SCOPE = 'openid profile email offline_access permissions'
@@ -130,6 +206,7 @@ export const authentikAuthProvider: AuthProvider = {
     } catch (e) {
       transientStore.pkceVerifier = null
       transientStore.pkceState = null
+      clearPkceFallbacks()
 
       return {
         success: false,
@@ -149,6 +226,7 @@ export const authentikAuthProvider: AuthProvider = {
 
     transientStore.pkceVerifier = null
     transientStore.pkceState = null
+    clearPkceFallbacks()
 
     return { success: true, redirectTo: '/login' }
   },
@@ -186,6 +264,7 @@ export const authentikAuthProvider: AuthProvider = {
 
         transientStore.pkceVerifier = null
         transientStore.pkceState = null
+        clearPkceFallbacks()
 
         return { authenticated: false, redirectTo: '/login' }
       }
@@ -274,6 +353,7 @@ export const authentikAuthProvider: AuthProvider = {
 
       transientStore.pkceVerifier = null
       transientStore.pkceState = null
+      clearPkceFallbacks()
 
       return {
         logout: true,
