@@ -14,6 +14,9 @@ export const useOGCLayer = ({
   colorAccessor,
   textAccessor,
   textColor = '#111111',
+  layerType = 'circle',
+  paint,
+  colorExpression,
   legendColor,
   legendScale,
   enabled = true,
@@ -24,6 +27,9 @@ export const useOGCLayer = ({
   colorAccessor?: (feature: any) => string | undefined
   textAccessor?: (feature: any) => string | undefined
   textColor?: string
+  layerType?: 'circle' | 'line' | 'fill'
+  paint?: Record<string, any>
+  colorExpression?: any
   legendColor?: string
   legendScale?: LayerLegendScale
   enabled?: boolean
@@ -112,22 +118,40 @@ export const useOGCLayer = ({
     }),
   }
 
-  const circleColor = (colorAccessor
+  const resolvedColor = (colorAccessor
     ? ['coalesce', ['get', '__color'], color]
     : color) as any
+  const effectiveColor = colorExpression ?? resolvedColor
+
+  const defaultPaintByType: Record<'circle' | 'line' | 'fill', Record<string, any>> = {
+    circle: {
+      'circle-radius': 3,
+      'circle-color': effectiveColor,
+      'circle-stroke-color': '#ffffff',
+      'circle-stroke-width': 1,
+    },
+    line: {
+      'line-color': effectiveColor,
+      'line-width': 1.5,
+      'line-opacity': 0.9,
+    },
+    fill: {
+      'fill-color': effectiveColor,
+      'fill-opacity': 0.4,
+    },
+  }
 
   return {
     sourceProps: { type: 'geojson', data: safeGeoJSON },
+    sourceData: safeGeoJSON,
     legendColor: legendColor || color,
     legendScale,
     layerProps: {
       label,
-      type: 'circle' as const,
+      type: layerType,
       paint: {
-        'circle-radius': 3,
-        'circle-color': circleColor,
-        'circle-stroke-color': '#ffffff',
-        'circle-stroke-width': 1,
+        ...defaultPaintByType[layerType],
+        ...(paint || {}),
       },
     },
     textLayerProps: textAccessor
