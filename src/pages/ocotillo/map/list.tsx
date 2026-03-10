@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useContext, useMemo, useRef, useState } from 'react'
 import { Layer, Source } from 'react-map-gl'
 import { useGo } from '@refinedev/core'
 import {
@@ -9,21 +9,52 @@ import {
   LinearProgress,
   ListItemText,
   Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material'
+import BasemapSelector from '@/components/BasemapSelector'
+import MapExportControls from '@/components/MapExportControls'
 import MapComponent from '@/components/MapComponent'
 import { MapPopup } from '@/components'
-import { useThingLayers } from '@/hooks'
+import { ColorModeContext } from '@/contexts'
+import { useMeasuredHeight, useThingLayers } from '@/hooks'
+import { DEFAULT_MAPBOX_BASEMAP } from '@/constants'
+import {
+  buildLayerCsv,
+  filterLayerFeaturesBySelection,
+  sanitizeLayerExportFilename,
+} from '@/utils/layerExport'
+import {
+  buildSelectedPointPaint,
+  buildSelectedPointSourceData,
+  getSelectedPointColumnLabel,
+  formatSelectedPointCoordinates,
+  getFeatureId,
+  getSelectedPointDisplayValue,
+  getSelectedPointColumns,
+  getSelectedPointFeatures,
+  getSelectedPointIds,
+} from '@/utils/mapSelection'
 
 export const MapView: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement | null>(null)
+  const { mode } = useContext(ColorModeContext)
+  const mapViewportRef = useRef<HTMLDivElement | null>(null)
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const [visibleLayers, setVisibleLayers] = React.useState<string[]>([
     'ogc-latest-depth-to-water',
   ])
   const THING_LAYERS = useThingLayers(visibleLayers)
+  const [basemapCollapsed, setBasemapCollapsed] = useState(true)
+  const [selectedPointsCollapsed, setSelectedPointsCollapsed] = useState(false)
   const [layersCollapsed, setLayersCollapsed] = useState(false)
+  const [layersPanelPinned, setLayersPanelPinned] = useState(true)
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {
       groundwater: true,
@@ -34,6 +65,141 @@ export const MapView: React.FC = () => {
     }
   )
   const [popupContent, setPopupContent] = useState<any>(null)
+  const [exportFormat, setExportFormat] = useState<'csv' | 'geojson'>('csv')
+  const [selectionPolygons, setSelectionPolygons] = useState<
+    Record<string, any>
+  >({})
+  const [selectedBasemap, setSelectedBasemap] = useState(
+    DEFAULT_MAPBOX_BASEMAP
+  )
+  const selectedLayerKey = visibleLayers.length === 1 ? visibleLayers[0] : null
+  const areDrawToolsEnabled = visibleLayers.length === 1
+  const selectedLayer = selectedLayerKey ? THING_LAYERS[selectedLayerKey] : null
+  const activeSelectionPolygon = (
+    Object.values(selectionPolygons) as any[]
+  ).find((feature) =>
+    ['Polygon', 'MultiPolygon'].includes(feature?.geometry?.type)
+  )
+  const hasSelectionPolygon = Boolean(activeSelectionPolygon)
+
+  const downloadBlob = (content: BlobPart, contentType: string, suffix: string) => {
+    if (!selectedLayerKey || !selectedLayer) return
+
+    const blob = new Blob([content], { type: contentType })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const label = selectedLayer.layerProps?.label || selectedLayerKey
+    link.href = url
+    link.download = `${sanitizeLayerExportFilename(label)}.${suffix}`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const getSelectedLayerSourceData = () => {
+    const sourceData = selectedLayer?.sourceData as any
+    return sourceData && sourceData.type === 'FeatureCollection'
+      ? sourceData
+      : { type: 'FeatureCollection', features: [] }
+  }
+
+  const getExportFeatures = () => {
+    const sourceData = getSelectedLayerSourceData()
+    const features = Array.isArray(sourceData.features) ? sourceData.features : []
+
+    return {
+      ...sourceData,
+      features: filterLayerFeaturesBySelection(features, activeSelectionPolygon),
+    }
+  }
+
+  const selectedPointFeatures = useMemo(() => {
+    if (!selectedLayer) return []
+    return getSelectedPointFeatures(getExportFeatures(), hasSelectionPolygon)
+  }, [hasSelectionPolygon, selectedLayer, activeSelectionPolygon, visibleLayers])
+
+  const selectedPointColumns = useMemo(() => {
+    return getSelectedPointColumns(selectedPointFeatures, selectedLayerKey)
+  }, [selectedPointFeatures, selectedLayerKey])
+
+  const selectedPointIds = useMemo(
+    () => getSelectedPointIds(selectedPointFeatures),
+    [selectedPointFeatures]
+  )
+  const { ref: basemapPanelRef, height: basemapPanelHeight } =
+    useMeasuredHeight<HTMLDivElement>([basemapCollapsed, selectedBasemap], 52)
+  const { ref: selectedPointsFooterRef, height: selectedPointsFooterHeight } =
+    useMeasuredHeight<HTMLDivElement>(
+      [selectedPointsCollapsed, selectedPointFeatures.length],
+      56
+    )
+  const mapViewportHeight = {
+    xs: `calc(100vh - 140px - ${selectedPointsFooterHeight}px)`,
+    md: `calc(100vh - 120px - ${selectedPointsFooterHeight}px)`,
+  }
+  const mapContentHeight = {
+    xs: 'calc(100vh - 140px)',
+    md: 'calc(100vh - 120px)',
+  }
+
+  const downloadSelectedPoints = (format: 'csv' | 'geojson') => {
+    if (selectedPointFeatures.length === 0) return
+
+    if (format === 'geojson') {
+      downloadBlob(
+        JSON.stringify(
+          {
+            type: 'FeatureCollection',
+            features: selectedPointFeatures,
+          },
+          null,
+          2
+        ),
+        'application/geo+json;charset=utf-8;',
+        'geojson'
+      )
+      return
+    }
+
+    downloadBlob(
+      buildLayerCsv(selectedPointFeatures),
+      'text/csv;charset=utf-8;',
+      'csv'
+    )
+  }
+
+  const onExportSelectedPoints = () => {
+    downloadSelectedPoints(exportFormat)
+  }
+
+  const onExportLayerCsv = () => {
+    if (!selectedLayerKey || !selectedLayer) return
+
+    const sourceData = getExportFeatures()
+    const features = Array.isArray(sourceData.features) ? sourceData.features : []
+    const csv = buildLayerCsv(features)
+
+    downloadBlob(csv, 'text/csv;charset=utf-8;', 'csv')
+  }
+
+  const onExportLayerGeoJson = () => {
+    if (!selectedLayerKey || !selectedLayer) return
+    const sourceData = getExportFeatures()
+    downloadBlob(
+      JSON.stringify(sourceData, null, 2),
+      'application/geo+json;charset=utf-8;',
+      'geojson'
+    )
+  }
+
+  const onExportLayer = () => {
+    if (exportFormat === 'geojson') {
+      onExportLayerGeoJson()
+      return
+    }
+    onExportLayerCsv()
+  }
 
   const onLayerChangeWrapper = (layerKey: string) => {
     const fn = () => {
@@ -118,23 +284,6 @@ export const MapView: React.FC = () => {
     })
   }
 
-  const getFeatureId = (feature: any): string | undefined => {
-    const props = feature?.properties || {}
-    const candidates = [
-      props.thing_id,
-      props.well_id,
-      props.id,
-      props.fid,
-      props.feature_id,
-      feature?.id,
-    ]
-    const value = candidates.find(
-      (candidate) =>
-        candidate !== undefined && candidate !== null && candidate !== ''
-    )
-    return value === undefined ? undefined : String(value)
-  }
-
   const onMapPointClick = (_: any, points: any[]) => {
     const selectedPoint = points.find(
       (point) =>
@@ -190,62 +339,139 @@ export const MapView: React.FC = () => {
     }
   }
 
+  const onBasemapCollapseToggle = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setBasemapCollapsed((value) => !value)
+  }
+
+  const onLayersCollapseToggle = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (layersCollapsed) {
+      setLayersPanelPinned(true)
+      setLayersCollapsed(false)
+      return
+    }
+
+    setLayersCollapsed(true)
+  }
+
+  const onSelectedPointsCollapseToggle = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setSelectedPointsCollapsed((value) => !value)
+  }
+
   return (
-    <Box
-      data-testid="ocotillo-map-container"
-      component="div"
-      ref={containerRef}
-      sx={{
-        borderRadius: 2,
-        overflow: 'hidden',
-        border: '2.5px solid',
-        borderColor: 'divider',
-        height: { xs: 'calc(100vh - 140px)', md: 'calc(100vh - 120px)' },
-        minHeight: 560,
-        width: '100%',
-        position: 'relative',
-      }}
-    >
-      <MapComponent
-        containerRef={containerRef}
-        showDrawControls={{ show: false, position: 'top-right' }}
-        setPopupContent={setPopupContent}
-        popupContent={popupContent}
-        onPointClick={onMapPointClick}
-        onMouseMoveCallback={onMapMouseMove}
+    <Box sx={{ width: '100%' }}>
+      <Box
+        data-testid="ocotillo-map-container"
+        component="div"
+        ref={mapViewportRef}
+        sx={{
+          borderRadius: 2,
+          overflow: 'hidden',
+          border: '2.5px solid',
+          borderColor: 'divider',
+          height: mapViewportHeight,
+          minHeight: 360,
+          width: '100%',
+          position: 'relative',
+        }}
       >
-        {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
-          if (!visibleLayers.includes(key)) return null
-          const { sourceProps, layerProps, textLayerProps } = layerDef
-          return (
-            <Source id={key} key={key} {...sourceProps}>
-              <Layer
-                id={`location-${key}`}
-                key={`layer-${key}`}
-                {...layerProps}
-              />
-              {textLayerProps && (
-                <Layer
-                  id={`location-label-${key}`}
-                  key={`layer-label-${key}`}
-                  {...textLayerProps}
-                />
-              )}
-            </Source>
-          )
-        })}
-      </MapComponent>
-      <Paper
+        <Box
+          ref={mapContainerRef}
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            height: mapContentHeight,
+            '& .mapboxgl-ctrl-bottom-left, & .mapboxgl-ctrl-bottom-right': {
+              bottom: `calc(${selectedPointsFooterHeight}px + 6px)`,
+            },
+          }}
+        >
+          <MapComponent
+            containerRef={mapContainerRef}
+            showDrawControls={{
+              show: true,
+              position: 'top-right',
+              disabled: !areDrawToolsEnabled,
+            }}
+            setSelectionPolygons={setSelectionPolygons}
+            setPopupContent={setPopupContent}
+            popupContent={popupContent}
+            onPointClick={onMapPointClick}
+            onMouseMoveCallback={onMapMouseMove}
+            basemapUri={selectedBasemap}
+            onBasemapChange={setSelectedBasemap}
+          >
+            {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
+              if (!visibleLayers.includes(key)) return null
+              const { sourceProps, layerProps, textLayerProps } = layerDef
+              const shouldStylePointSelection =
+                key === selectedLayerKey &&
+                hasSelectionPolygon &&
+                layerProps?.type === 'circle' &&
+                selectedPointIds.size > 0
+              const sourceData = sourceProps?.data as any
+              const styledSourceData =
+                shouldStylePointSelection
+                  ? buildSelectedPointSourceData({
+                      sourceData,
+                      selectedPointIds,
+                    })
+                  : sourceData
+              const styledLayerProps = shouldStylePointSelection
+                ? {
+                    ...layerProps,
+                    paint: buildSelectedPointPaint(
+                      layerProps.paint,
+                      mode === 'dark' ? 'dark' : 'light'
+                    ),
+                  }
+                : layerProps
+              return (
+                <Source
+                  id={key}
+                  key={key}
+                  {...sourceProps}
+                  data={styledSourceData}
+                >
+                  <Layer
+                    id={`location-${key}`}
+                    key={`layer-${key}`}
+                    {...styledLayerProps}
+                  />
+                  {textLayerProps && (
+                    <Layer
+                      id={`location-label-${key}`}
+                      key={`layer-label-${key}`}
+                      {...textLayerProps}
+                    />
+                  )}
+                </Source>
+              )
+            })}
+          </MapComponent>
+        </Box>
+        <Paper
         elevation={6}
+        ref={basemapPanelRef}
         sx={(theme) => ({
           position: 'absolute',
           top: 12,
-          bottom: layersCollapsed ? 'auto' : { xs: 44, sm: 40 },
           left: 12,
           width: { xs: 'calc(100% - 24px)', sm: 320 },
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden',
+          overflow: basemapCollapsed ? 'visible' : 'hidden',
           px: 0.8,
           py: 0.6,
           borderRadius: 1.25,
@@ -254,6 +480,80 @@ export const MapView: React.FC = () => {
           border: '1px solid',
           borderColor: alpha(theme.palette.divider, 0.9),
           zIndex: 2,
+          height: basemapCollapsed ? 'auto' : undefined,
+        })}
+      >
+        <Box
+          sx={{
+            px: 0.3,
+            py: 0.2,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <Typography
+            variant="overline"
+            sx={{
+              px: 0.55,
+              py: 0.25,
+              fontWeight: 700,
+              letterSpacing: 0.7,
+              fontSize: '0.68rem',
+              lineHeight: 1.2,
+              flex: 1,
+            }}
+          >
+            Base Maps
+          </Typography>
+          <IconButton
+            size="small"
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={onBasemapCollapseToggle}
+            aria-label={basemapCollapsed ? 'Expand base maps' : 'Collapse base maps'}
+          >
+            {basemapCollapsed ? (
+              <KeyboardArrowDown fontSize="small" />
+            ) : (
+              <KeyboardArrowUp fontSize="small" />
+            )}
+          </IconButton>
+        </Box>
+        <Collapse
+          in={!basemapCollapsed}
+          unmountOnExit
+          sx={{
+            minHeight: 0,
+            overflowY: 'auto',
+          }}
+        >
+          <Box sx={{ px: 0.5, pb: 0.5 }}>
+            <BasemapSelector
+              value={selectedBasemap}
+              onChange={setSelectedBasemap}
+            />
+          </Box>
+        </Collapse>
+        </Paper>
+        <Paper
+        elevation={6}
+        sx={(theme) => ({
+          position: 'absolute',
+          top: 12 + basemapPanelHeight,
+          bottom: layersPanelPinned ? { xs: 44, sm: 40 } : 'auto',
+          left: 12,
+          width: { xs: 'calc(100% - 24px)', sm: 320 },
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: layersCollapsed ? 'visible' : 'hidden',
+          px: 0.8,
+          py: 0.6,
+          borderRadius: 1.25,
+          backdropFilter: 'blur(6px)',
+          backgroundColor: alpha(theme.palette.background.paper, 0.9),
+          border: '1px solid',
+          borderColor: alpha(theme.palette.divider, 0.9),
+          zIndex: 2,
+          height: layersCollapsed ? 'auto' : undefined,
         })}
       >
         <Box
@@ -280,7 +580,8 @@ export const MapView: React.FC = () => {
           </Typography>
           <IconButton
             size="small"
-            onClick={() => setLayersCollapsed((value) => !value)}
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={onLayersCollapseToggle}
             aria-label={layersCollapsed ? 'Expand layers' : 'Collapse layers'}
           >
             {layersCollapsed ? (
@@ -292,12 +593,31 @@ export const MapView: React.FC = () => {
         </Box>
         <Collapse
           in={!layersCollapsed}
+          unmountOnExit
+          onExited={() => setLayersPanelPinned(false)}
           sx={{
             flex: 1,
             minHeight: 0,
             overflowY: 'auto',
           }}
         >
+          <Box sx={{ px: 0.5, pb: 0.5 }}>
+            <MapExportControls
+              value={exportFormat}
+              onChange={setExportFormat}
+              onExport={onExportLayer}
+              buttonLabel={hasSelectionPolygon ? 'Export Selected' : 'Export Layer'}
+              disabled={!selectedLayerKey}
+              tooltipPlacement="right"
+              tooltip={
+                selectedLayerKey
+                  ? `Click to download ${
+                      hasSelectionPolygon ? 'the selected map area' : 'that layer'
+                    } as ${exportFormat === 'csv' ? 'CSV' : 'GeoJSON'}.`
+                  : 'Disabled unless exactly one layer is selected. Draw tools are also only enabled when exactly one layer is selected.'
+              }
+            />
+          </Box>
           {(Object.keys(groupedLayers) as Array<keyof typeof groupedLayers>).map(
             (groupKey) => {
               const layers = groupedLayers[groupKey]
@@ -437,6 +757,168 @@ export const MapView: React.FC = () => {
               )
             }
           )}
+        </Collapse>
+        </Paper>
+      </Box>
+      <Paper
+        elevation={6}
+        ref={selectedPointsFooterRef}
+        sx={(theme) => ({
+          mt: 0.5,
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: selectedPointsCollapsed ? 'visible' : 'hidden',
+          px: 0.8,
+          py: 0.6,
+          borderRadius: 1.25,
+          backgroundColor: alpha(theme.palette.background.paper, 0.96),
+          border: '1px solid',
+          borderColor: alpha(theme.palette.divider, 0.9),
+        })}
+      >
+        <Box
+          sx={{
+            px: 0.3,
+            py: 0.2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Typography
+            variant="overline"
+            sx={{
+              px: 0.55,
+              py: 0.25,
+              fontWeight: 700,
+              letterSpacing: 0.7,
+              fontSize: '0.68rem',
+              lineHeight: 1.2,
+            }}
+          >
+            Selected Points
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.secondary', flex: 1, minWidth: 0 }}
+          >
+            {selectedLayerKey && hasSelectionPolygon
+              ? `${selectedPointFeatures.length} point${selectedPointFeatures.length === 1 ? '' : 's'} in selection`
+              : 'Draw a polygon/rectangle with one layer selected'}
+          </Typography>
+          {selectedLayerKey && hasSelectionPolygon && selectedPointFeatures.length > 0 ? (
+            <Box sx={{ flex: '0 0 auto' }}>
+              <MapExportControls
+                value={exportFormat}
+                onChange={setExportFormat}
+                onExport={onExportSelectedPoints}
+                buttonLabel="Export Selected"
+                selectorWidth={142}
+                tooltip={`Click to download the selected points as ${
+                  exportFormat === 'csv' ? 'CSV' : 'GeoJSON'
+                }.`}
+              />
+            </Box>
+          ) : null}
+          <IconButton
+            size="small"
+            onClick={onSelectedPointsCollapseToggle}
+            aria-label={
+              selectedPointsCollapsed
+                ? 'Expand selected points'
+                : 'Collapse selected points'
+            }
+          >
+            {selectedPointsCollapsed ? (
+              <KeyboardArrowDown fontSize="small" />
+            ) : (
+              <KeyboardArrowUp fontSize="small" />
+            )}
+          </IconButton>
+        </Box>
+        <Collapse in={!selectedPointsCollapsed} unmountOnExit>
+          <Box sx={{ px: 0.5, pb: 0.25 }}>
+            {selectedPointFeatures.length > 0 ? (
+              <TableContainer
+                sx={{
+                  maxHeight: 180,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  backgroundColor: 'background.default',
+                }}
+              >
+                <Table stickyHeader size="small">
+                  <TableHead>
+                    <TableRow>
+                      {selectedPointColumns.map((column) => (
+                        <TableCell
+                          key={column}
+                          sx={{
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            whiteSpace: 'nowrap',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {getSelectedPointColumnLabel(column)}
+                        </TableCell>
+                      ))}
+                      <TableCell
+                        sx={{
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          whiteSpace: 'nowrap',
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        Coordinates
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {selectedPointFeatures.map((feature: any, index: number) => {
+                      const properties = feature?.properties || {}
+                      const coordinates = feature?.geometry?.coordinates || []
+                      return (
+                        <TableRow key={`${feature?.id || index}`}>
+                          {selectedPointColumns.map((column) => (
+                            <TableCell
+                              key={column}
+                              sx={{
+                                fontSize: '0.7rem',
+                                lineHeight: 1.2,
+                                verticalAlign: 'top',
+                                fontVariantNumeric: 'tabular-nums',
+                                fontFeatureSettings: '"tnum" 1',
+                              }}
+                            >
+                              {getSelectedPointDisplayValue({ column, feature })}
+                            </TableCell>
+                          ))}
+                          <TableCell
+                            sx={{
+                              fontSize: '0.7rem',
+                              lineHeight: 1.2,
+                              whiteSpace: 'nowrap',
+                              verticalAlign: 'top',
+                              fontVariantNumeric: 'tabular-nums',
+                              fontFeatureSettings: '"tnum" 1',
+                            }}
+                          >
+                            {formatSelectedPointCoordinates(coordinates)}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : null}
+          </Box>
         </Collapse>
       </Paper>
     </Box>
