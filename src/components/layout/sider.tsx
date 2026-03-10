@@ -1,4 +1,4 @@
-import React, { type CSSProperties, useContext, useEffect, useState } from 'react'
+import React, { type CSSProperties, useContext, useState } from 'react'
 import {
   CanAccess,
   type ITreeMenu,
@@ -59,25 +59,14 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
   const getDrawerWidth = (isSiderCollapsed: boolean): number =>
     isSiderCollapsed ? 56 : 260
 
-  const [open, setOpen] = useState<{ [key: string]: boolean }>({})
-
-  useEffect(() => {
-    setOpen((previous) => {
-      const previousKeys: string[] = Object.keys(previous)
-      const previousOpenKeys = previousKeys.filter((key) => previous[key])
-
-      const uniqueKeys = new Set([...previousOpenKeys, ...defaultOpenKeys])
-      const uniqueKeysRecord = Object.fromEntries(
-        Array.from(uniqueKeys.values()).map((key) => [key, true])
-      )
-      return uniqueKeysRecord
-    })
-  }, [defaultOpenKeys])
+  const [open, setOpen] = useState<{ [key: string]: boolean }>(() =>
+    Object.fromEntries(defaultOpenKeys.map((key) => [key, true]))
+  )
 
   const Title = TitleFromProps ?? TitleFromContext ?? ThemedTitleV2
 
   const handleClick = (key: string) => {
-    setOpen({ ...open, [key]: !open[key] })
+    setOpen({ [key]: !open[key] })
   }
 
   const renderTreeView = (tree: ITreeMenu[], selectedKey?: string) => {
@@ -127,7 +116,9 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
               >
                 <ListItemButton
                   disabled={disabled}
-                  // disabled={!allowedCategories.has(label)}
+                  component={route ? Link : 'div'}
+                  to={route}
+                  selected={isSelected}
                   onClick={() => {
                     if (siderCollapsed) {
                       setSiderCollapsed(false)
@@ -139,47 +130,44 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
                     }
                   }}
                   sx={{
-                    pl: isNested ? nestedLevel * 4 : 2,
+                    py: isNested ? 0 : 1,
+                    pl: isNested ? nestedLevel * 2 : 1.5,
                     justifyContent: 'center',
                     borderRadius: 0,
                     border: 0,
-                    m: 0.5,
-                    backgroundColor: 'rgba(48,114,122,0.5)',
+                    my: 0,
+                    mx: 0,
                   }}
                 >
                   <ListItemIcon
                     sx={{
                       justifyContent: 'center',
-                      minWidth: '24px',
+                      minWidth: '20px',
                       transition: 'margin-right 0.3s',
-                      marginRight: siderCollapsed ? '0px' : '12px',
+                      // marginRight: siderCollapsed ? '0px' : '12px',
+                      mr: siderCollapsed ? 0 : 1,
                       color: 'currentColor',
                     }}
                   >
                     {icon ?? <ListOutlined />}
                   </ListItemIcon>
-                  <ListItemText
-                    primary={label}
-                    slotProps={{
-                      primary: {
-                        noWrap: true,
-                        fontSize: '14px',
-                      },
-                    }}
-                  />
-                  {isOpen ? (
-                    <ExpandLess
-                      sx={{
-                        color: 'text.icon',
-                      }}
-                    />
-                  ) : (
-                    <ExpandMore
-                      sx={{
-                        color: 'text.icon',
+                  {!siderCollapsed && (
+                    <ListItemText
+                      primary={label}
+                      slotProps={{
+                        primary: {
+                          noWrap: true,
+                          fontSize: '14px',
+                          sx: { textDecoration: isSelected ? 'underline' : 'none' },
+                        },
                       }}
                     />
                   )}
+                  {!siderCollapsed && (isOpen ? (
+                    <ExpandLess sx={{ color: 'text.icon' }} />
+                  ) : (
+                    <ExpandMore sx={{ color: 'text.icon' }} />
+                  ))}
                 </ListItemButton>
               </Tooltip>
               {!siderCollapsed && (
@@ -218,38 +206,45 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
               disabled={disabled}
               component={Link}
               to={route}
-              selected={isSelected}
               style={linkStyle}
               onClick={() => {
+                if (!isNested) setOpen({})
                 setMobileSiderOpen(false)
               }}
               sx={{
-                pl: isNested ? nestedLevel * 4 : 2,
-                py: isNested ? 1.25 : 1,
+                ml: isNested ? 0.5 : 0,
+                pl: isNested ? nestedLevel * 2.5 : 1.5,
+                py: isNested ? 0 : 1,
+                minHeight: isNested ? 'unset' : undefined,
                 justifyContent: 'center',
-                color: isSelected ? 'primary.main' : 'text.primary',
+                color: isSelected ? 'primary.main' : isNested ? 'text.secondary' : 'text.primary',
               }}
             >
-              <ListItemIcon
-                sx={{
-                  justifyContent: 'center',
-                  transition: 'margin-right 0.3s',
-                  marginRight: siderCollapsed ? '0px' : '12px',
-                  minWidth: '24px',
-                  color: 'currentColor',
-                }}
-              >
-                {icon ?? <ListOutlined />}
-              </ListItemIcon>
-              <ListItemText
-                primary={label}
-                slotProps={{
-                  primary: {
-                    noWrap: true,
-                    fontSize: '14px',
-                  },
-                }}
-              />
+              {!isNested && (
+                <ListItemIcon
+                  sx={{
+                    justifyContent: 'center',
+                    transition: 'margin-right 0.3s',
+                    marginRight: siderCollapsed ? 0 : 1,
+                    minWidth: '20px',
+                    color: 'currentColor',
+                  }}
+                >
+                  {icon ?? <ListOutlined />}
+                </ListItemIcon>
+              )}
+              {!siderCollapsed && (
+                <ListItemText
+                  primary={label}
+                  slotProps={{
+                    primary: {
+                      noWrap: true,
+                      fontSize: '14px',
+                      sx: { textDecoration: isSelected ? 'underline' : 'none' },
+                    },
+                  }}
+                />
+              )}
             </ListItemButton>
           </Tooltip>
         </CanAccess>
