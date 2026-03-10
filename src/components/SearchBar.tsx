@@ -34,7 +34,7 @@ export const SearchBar = () => {
   const debounced = useDebounce(query, 500)
   const [selected, setSelected] = useState(null)
 
-  const { data, isFetching, isError } = useAbortableList({
+  const { result, query: searchQuery } = useAbortableList({
     resource: 'search',
     dataProviderName: 'ocotillo',
     pagination: {
@@ -55,8 +55,8 @@ export const SearchBar = () => {
   const results: SearchResult[] = useMemo(() => {
     if (!query.trim()) return []
 
-    if (!isFetching) {
-      if (isError) {
+    if (!searchQuery.isFetching) {
+      if (searchQuery.isError) {
         return [
           {
             group: GroupType.Messages,
@@ -66,7 +66,7 @@ export const SearchBar = () => {
         ]
       }
 
-      if (data?.data?.length === 0) {
+      if (result?.data?.length === 0) {
         return [
           {
             group: GroupType.Messages,
@@ -78,7 +78,7 @@ export const SearchBar = () => {
     }
 
     const normalized =
-      data?.data.map((r) => ({
+      result?.data.map((r) => ({
         label: r.label,
         description: r.description,
         group: r.group as GroupType,
@@ -86,7 +86,7 @@ export const SearchBar = () => {
       })) ?? []
 
     return dedupeResults(normalized)
-  }, [data, query, isFetching, isError])
+  }, [result, query, searchQuery.isFetching, searchQuery.isError])
 
   // Navigate automatically when a result is chosen
   const navigateToResult = (option: SearchResult) => {
@@ -160,7 +160,7 @@ export const SearchBar = () => {
         freeSolo
         openOnFocus
         disableClearable
-        loading={isFetching}
+        loading={searchQuery.isFetching}
         loadingText="Searching..."
         options={results}
         value={selected}

@@ -6,7 +6,7 @@ export const useLexicon = ({ category }) => {
     resource: 'lexicon/term',
     dataProviderName: 'ocotillo',
     queryOptions: {
-      cacheTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 5, // 5 minutes
       staleTime: 1000 * 60 * 2, // 2 minutes
     },
     meta: {
@@ -15,8 +15,9 @@ export const useLexicon = ({ category }) => {
   })
   return {
     ...data,
+    isLoading: data.query.isLoading,
     options:
-      data.data?.data?.map((item) => ({
+      data.result?.data?.map((item) => ({
         value: item.term,
         label: item.term,
       })) || [],

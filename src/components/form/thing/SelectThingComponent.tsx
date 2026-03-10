@@ -58,15 +58,12 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
           value,
         },
       ],
-      queryOptions: {
-        onSuccess: (data) => {
-          console.log('Autocomplete options fetched:', data)
-
-          updateMap(data?.data)
-        },
-      },
     }
   )
+
+  useEffect(() => {
+    updateMap(autocompletePropsThing.options)
+  }, [autocompletePropsThing.options])
 
   const mapRef = useRef<MapRef>(null)
   const [selectedThingFeatureCollection, setSelectedThingFeatureCollection] =
@@ -166,7 +163,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
     }
   }, [selectedThingFeatureCollection, spatialSearchWKT])
 
-  const updateMap = (newValue: IThing[] | undefined) => {
+  const updateMap = (newValue: readonly IThing[] | undefined) => {
     console.log('updateMap', newValue)
     if (!newValue) {
       setSelectedThingFeatureCollection({
@@ -214,10 +211,10 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
                     (option: any) => option.id === field.value
                   ) || null
                 }
-                onChange={(_, newValue) => {
+                onChange={(_, newValue: any) => {
                   field.onChange(newValue?.id || null)
                 }}
-                getOptionKey={(option) => option.id}
+                getOptionKey={(option: any) => option.id}
                 getOptionLabel={getOptionLabel}
                 renderInput={(params) => (
                   <TextField

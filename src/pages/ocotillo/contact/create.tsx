@@ -48,11 +48,11 @@ export const ContactCreate: React.FC = () => {
                     (option) => option.id === field.value
                   ) || null
                 }
-                onChange={(_, newValue) => {
+                onChange={(_, newValue: any) => {
                   field.onChange(newValue?.id || null)
                 }}
-                getOptionKey={(option) => option.id}
-                getOptionLabel={(option) => option.name || ''}
+                getOptionKey={(option: any) => option.id}
+                getOptionLabel={(option: any) => option.name || ''}
                 renderInput={(params) => (
                   <TextField
                     {...params}

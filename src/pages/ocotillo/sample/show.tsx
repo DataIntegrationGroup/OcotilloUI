@@ -4,9 +4,8 @@ import { ISample } from '@/interfaces/ocotillo/ISample'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 
 export const SampleShow = () => {
-  const { queryResult } = useShow({})
-  const { data, isLoading } = queryResult
-  const record = data?.data as ISample
+  const { query, result } = useShow({})
+  const record = result as ISample
 
   //custom configs for sample
   const fieldConfigs = {
@@ -19,7 +18,7 @@ export const SampleShow = () => {
 
   //use new component
   return (
-    <Show isLoading={isLoading}>
+    <Show isLoading={query.isLoading}>
       <DynamicShowDisplay<ISample>
         record={record}
         fieldConfigs={fieldConfigs}

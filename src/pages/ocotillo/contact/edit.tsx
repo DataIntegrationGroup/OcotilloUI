@@ -59,12 +59,12 @@ export const ContactEdit: React.FC = () => {
               <Autocomplete
                 {...autocompleteProps}
                 value={thingValue}
-                onChange={(_, newValue) => {
+                onChange={(_, newValue: any) => {
                   setThingValue(newValue)
                   field.onChange(newValue?.id || null)
                 }}
-                getOptionKey={(option) => option.id}
-                getOptionLabel={(option) => option.name || ''}
+                getOptionKey={(option: any) => option.id}
+                getOptionLabel={(option: any) => option.name || ''}
                 renderInput={(params) => (
                   <TextField
                     {...params}

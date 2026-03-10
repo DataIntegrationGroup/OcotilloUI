@@ -31,7 +31,7 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
       },
     },
     queryOptions: {
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
@@ -41,7 +41,7 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
     dataProviderName: 'ocotillo',
     queryOptions: {
       enabled: Boolean(id),
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })

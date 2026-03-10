@@ -183,10 +183,10 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
                 (option: any) => option.term === field.value
               ) || null
             }
-            onChange={(_, newValue) => {
+            onChange={(_, newValue: any) => {
               field.onChange(newValue?.term || null)
             }}
-            getOptionKey={(option) => option.term}
+            getOptionKey={(option: any) => option.term}
             getOptionLabel={getLexiconLabel}
             renderInput={(params) => (
               <TextField
@@ -205,7 +205,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
         render={({ field }) => (
           <Autocomplete
             {...autocompletePropsLevelStatus}
-            onChange={(_, newValue) => {
+            onChange={(_, newValue: any) => {
               field.onChange(newValue?.term || null)
             }}
             value={
@@ -213,7 +213,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
                 (option: any) => option.term === field.value
               ) || null
             }
-            getOptionKey={(option) => option.term}
+            getOptionKey={(option: any) => option.term}
             getOptionLabel={getLexiconLabel}
             renderInput={(params) => (
               <TextField

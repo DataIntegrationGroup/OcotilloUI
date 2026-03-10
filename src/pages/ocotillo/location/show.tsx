@@ -5,9 +5,8 @@ import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 import { FieldConfigs } from '@/interfaces'
 
 export const LocationShow = () => {
-  const { queryResult } = useShow<ILocation>({})
-  const { data, isLoading } = queryResult
-  const record = data?.data
+  const { query, result } = useShow<ILocation>({})
+  const record = result
 
   //custom configs for location
   const fieldConfigs: FieldConfigs<ILocation> = {
@@ -19,7 +18,7 @@ export const LocationShow = () => {
   }
 
   return (
-    <Show isLoading={isLoading}>
+    <Show isLoading={query.isLoading}>
       <DynamicShowDisplay<ILocation>
         record={record}
         fieldConfigs={fieldConfigs}

@@ -7,7 +7,7 @@ import { PictureAsPdf } from '@mui/icons-material'
 import { ListPage } from '@/components/ListPage'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { ISpring, IWell } from '@/interfaces/ocotillo'
-import { useNavigation } from '@refinedev/core'
+import { useGo } from '@refinedev/core'
 import { formatAppDateTime } from '@/utils'
 
 export const SpringList: React.FC = () => {
@@ -112,17 +112,19 @@ export const WellList: React.FC = () => {
     []
   )
 
-  const { push } = useNavigation()
+  const go = useGo()
 
   const customHeaderButtons = () => {
     return (
       <>
-        <CreateButton onClick={() => push('/ocotillo/well-inventory-form')} />
+        <CreateButton
+          onClick={() => go({ to: '/ocotillo/well-inventory-form', type: 'push' })}
+        />
         <Button
           variant="contained"
           color="secondary"
           startIcon={<PictureAsPdf />}
-          onClick={() => push('/ocotillo/well/batch-export')}
+          onClick={() => go({ to: '/ocotillo/well/batch-export', type: 'push' })}
         >
           Batch Field Sheets
         </Button>

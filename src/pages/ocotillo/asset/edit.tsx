@@ -21,17 +21,15 @@ export const AssetEdit: React.FC = () => {
     formState: { errors },
   } = useForm<IAsset, HttpError, Nullable<IAsset>>()
 
-  const { data, isLoading, isError } = useOne({
+  const { result: image } = useOne({
     resource: 'asset',
     id: queryResult?.data?.data.id,
     dataProviderName: 'ocotillo',
     queryOptions: {
-      cacheTime: 0,
+      gcTime: 0,
       staleTime: 0,
     },
   })
-
-  const image = data?.data
 
   return (
     <Edit saveButtonProps={saveButtonProps}>

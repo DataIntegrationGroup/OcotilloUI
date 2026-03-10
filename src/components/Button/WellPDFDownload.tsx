@@ -25,7 +25,7 @@ export const WellPDFDownloadButton = ({
 }) => {
   const { open: notify } = useNotification()
   const { data: permissions, isLoading: isPermissionsLoading } =
-    usePermissions<string[]>()
+    usePermissions<string[]>({})
 
   const id = well?.id
 
@@ -38,7 +38,7 @@ export const WellPDFDownloadButton = ({
       },
     },
     queryOptions: {
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
@@ -48,7 +48,7 @@ export const WellPDFDownloadButton = ({
     dataProviderName: 'ocotillo',
     queryOptions: {
       enabled: Boolean(id),
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
@@ -70,18 +70,18 @@ export const WellPDFDownloadButton = ({
       params: { thing_id: well?.id },
     },
     queryOptions: {
-      cacheTime: 10 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
       staleTime: 5 * 60 * 1000,
     },
   })
 
-  const { data: assetData } = useList({
+  const { result: assetData } = useList({
     resource: 'asset',
     dataProviderName: 'ocotillo',
     meta: { params: { thing_id: well?.id } },
   })
 
-  const { data: contactData } = useList<IContact>({
+  const { result: contactData } = useList<IContact>({
     resource: 'contact',
     dataProviderName: 'ocotillo',
     meta: { params: { thing_id: well?.id } },
@@ -101,7 +101,7 @@ export const WellPDFDownloadButton = ({
         )
       })[0]?.sample_id ?? null
 
-  const { data: sampleData, isLoading: isSampleLoading } = useOne<ISample>({
+  const { result: sampleData, query: sampleQuery } = useOne<ISample>({
     resource: 'ocotillo.sample',
     id: sampleId,
     queryOptions: {
@@ -109,7 +109,7 @@ export const WellPDFDownloadButton = ({
     },
   })
 
-  const sample = sampleData?.data
+  const sample = sampleData
 
   const isViewer = permissions?.includes('AMPViewer') ?? false
 
@@ -121,7 +121,7 @@ export const WellPDFDownloadButton = ({
     !isViewer ||
     isGenerating ||
     isObservationsLoading ||
-    isSampleLoading
+    sampleQuery.isLoading
 
   const handleDownload = async (opts: IPdfOptions) => {
     try {

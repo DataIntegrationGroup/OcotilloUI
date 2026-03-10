@@ -144,7 +144,7 @@ export const WellBatchExport = () => {
 
       const exactResult = await ocotilloDataProvider.getList({
         resource: 'thing/water-well',
-        pagination: { current: 1, pageSize: 10 },
+        pagination: { currentPage: 1, pageSize: 10 },
         filters: [
           {
             field: 'name',
@@ -167,7 +167,7 @@ export const WellBatchExport = () => {
       while (page <= TOKEN_RESOLVE_MAX_PAGES) {
         const result = await ocotilloDataProvider.getList({
           resource: 'thing/water-well',
-          pagination: { current: page, pageSize: TOKEN_RESOLVE_PAGE_SIZE },
+          pagination: { currentPage: page, pageSize: TOKEN_RESOLVE_PAGE_SIZE },
           filters: [
             {
               field: 'name',
@@ -284,8 +284,7 @@ export const WellBatchExport = () => {
         while (page <= BUNDLE_RESOURCE_MAX_PAGES) {
           const result = await ocotilloDataProvider.getList({
             resource,
-            pagination: {
-              current: page,
+            pagination: { currentPage: page,
               pageSize: BUNDLE_RESOURCE_PAGE_SIZE,
             },
             meta: {
@@ -771,10 +770,10 @@ export const WellBatchExport = () => {
                   (well) => !selectedWellIds.has(well.id)
                 )}
                 loading={Boolean(searchAutocompleteProps.loading)}
-                getOptionLabel={(well) => well.name ?? ''}
+                getOptionLabel={(well: any) => well.name ?? ''}
                 filterOptions={(options) => options}
-                onChange={(_, value) => addFromSearch(value)}
-                renderOption={(props, option) => (
+                onChange={(_, value: any) => addFromSearch(value)}
+                renderOption={(props, option: any) => (
                   <Box component="li" {...props} sx={{ gap: 1.5 }}>
                     <Typography variant="body2">
                       {option.name}

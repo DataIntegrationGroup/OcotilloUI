@@ -4,18 +4,15 @@ import { Show, TextFieldComponent as TextField } from '@refinedev/mui'
 import Box from '@mui/material/Box'
 
 export const AssetShow = () => {
-  const { queryResult } = useShow({
+  const { query, result: record } = useShow({
     queryOptions: {
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
       staleTime: 5 * 60 * 1000, // 5 minutes
     },
   })
 
-  const { data, isLoading } = queryResult
-  const record = data?.data
-
   return (
-    <Show isLoading={isLoading}>
+    <Show isLoading={query.isLoading}>
       <Stack gap={1}>
         <Typography variant="body1" fontWeight="bold">
           {'ID'}

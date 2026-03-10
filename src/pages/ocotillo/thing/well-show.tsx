@@ -24,11 +24,7 @@ import {
 } from '@/components'
 
 export const WellShow = () => {
-  const {
-    queryResult: { data, isLoading },
-  } = useShow<IWell, HttpError>()
-
-  const well = data?.data
+  const { query, result: well } = useShow<IWell, HttpError>()
 
   const [hydrographDatasource, setHydrographDatasource] = useState<
     IHydrographDatasource[]
@@ -46,7 +42,7 @@ export const WellShow = () => {
       },
     },
     queryOptions: {
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
@@ -55,7 +51,7 @@ export const WellShow = () => {
     resource: `thing/${id}/id-link`,
     dataProviderName: 'ocotillo',
     queryOptions: {
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
@@ -95,7 +91,7 @@ export const WellShow = () => {
 
   return (
     <Show
-      isLoading={isLoading}
+      isLoading={query.isLoading}
       breadcrumb={<Breadcrumb hideIcons={true} />}
       title={
         <Typography variant="h5">{`Show Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
@@ -103,8 +99,8 @@ export const WellShow = () => {
       headerButtons={({ defaultButtons }) => (
         <Box sx={{ display: 'flex', gap: 1 }}>
           {defaultButtons}
-          <WellPDFPreviewButton isLoading={isLoading} />
-          <WellPDFDownloadButton well={well} isLoading={isLoading} />
+          <WellPDFPreviewButton isLoading={query.isLoading} />
+          <WellPDFDownloadButton well={well} isLoading={query.isLoading} />
         </Box>
       )}
     >

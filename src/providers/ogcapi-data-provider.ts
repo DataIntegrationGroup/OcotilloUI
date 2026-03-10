@@ -72,7 +72,7 @@ export const ogcapiDataProvider: DataProvider = {
 
     if (pagination) {
       params.limit = pagination.pageSize
-      params.offset = (pagination.current - 1) * pagination.pageSize
+      params.offset = ((pagination.currentPage ?? 1) - 1) * pagination.pageSize
     }
 
     requestConfig.params = params
