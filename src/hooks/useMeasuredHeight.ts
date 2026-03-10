@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import type { DependencyList } from 'react'
 
 export const useMeasuredHeight = <T extends HTMLElement>(
-  dependencies: React.DependencyList,
+  dependencies: DependencyList,
   initialHeight = 0
 ) => {
   const ref = useRef<T | null>(null)

@@ -45,7 +45,6 @@ import {
 
 export const MapView: React.FC = () => {
   const { mode } = useContext(ColorModeContext)
-  const mapViewportRef = useRef<HTMLDivElement | null>(null)
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const [visibleLayers, setVisibleLayers] = React.useState<string[]>([
     'ogc-latest-depth-to-water',
@@ -81,6 +80,22 @@ export const MapView: React.FC = () => {
     ['Polygon', 'MultiPolygon'].includes(feature?.geometry?.type)
   )
   const hasSelectionPolygon = Boolean(activeSelectionPolygon)
+  const selectedLayerSourceData = useMemo(() => {
+    const sourceData = selectedLayer?.sourceData as any
+    return sourceData && sourceData.type === 'FeatureCollection'
+      ? sourceData
+      : { type: 'FeatureCollection', features: [] }
+  }, [selectedLayer])
+  const exportFeatureCollection = useMemo(() => {
+    const features = Array.isArray(selectedLayerSourceData.features)
+      ? selectedLayerSourceData.features
+      : []
+
+    return {
+      ...selectedLayerSourceData,
+      features: filterLayerFeaturesBySelection(features, activeSelectionPolygon),
+    }
+  }, [selectedLayerSourceData, activeSelectionPolygon])
 
   const downloadBlob = (content: BlobPart, contentType: string, suffix: string) => {
     if (!selectedLayerKey || !selectedLayer) return
@@ -97,27 +112,10 @@ export const MapView: React.FC = () => {
     URL.revokeObjectURL(url)
   }
 
-  const getSelectedLayerSourceData = () => {
-    const sourceData = selectedLayer?.sourceData as any
-    return sourceData && sourceData.type === 'FeatureCollection'
-      ? sourceData
-      : { type: 'FeatureCollection', features: [] }
-  }
-
-  const getExportFeatures = () => {
-    const sourceData = getSelectedLayerSourceData()
-    const features = Array.isArray(sourceData.features) ? sourceData.features : []
-
-    return {
-      ...sourceData,
-      features: filterLayerFeaturesBySelection(features, activeSelectionPolygon),
-    }
-  }
-
   const selectedPointFeatures = useMemo(() => {
     if (!selectedLayer) return []
-    return getSelectedPointFeatures(getExportFeatures(), hasSelectionPolygon)
-  }, [hasSelectionPolygon, selectedLayer, activeSelectionPolygon, visibleLayers])
+    return getSelectedPointFeatures(exportFeatureCollection, hasSelectionPolygon)
+  }, [hasSelectionPolygon, selectedLayer, exportFeatureCollection])
 
   const selectedPointColumns = useMemo(() => {
     return getSelectedPointColumns(selectedPointFeatures, selectedLayerKey)
@@ -176,8 +174,9 @@ export const MapView: React.FC = () => {
   const onExportLayerCsv = () => {
     if (!selectedLayerKey || !selectedLayer) return
 
-    const sourceData = getExportFeatures()
-    const features = Array.isArray(sourceData.features) ? sourceData.features : []
+    const features = Array.isArray(exportFeatureCollection.features)
+      ? exportFeatureCollection.features
+      : []
     const csv = buildLayerCsv(features)
 
     downloadBlob(csv, 'text/csv;charset=utf-8;', 'csv')
@@ -185,9 +184,8 @@ export const MapView: React.FC = () => {
 
   const onExportLayerGeoJson = () => {
     if (!selectedLayerKey || !selectedLayer) return
-    const sourceData = getExportFeatures()
     downloadBlob(
-      JSON.stringify(sourceData, null, 2),
+      JSON.stringify(exportFeatureCollection, null, 2),
       'application/geo+json;charset=utf-8;',
       'geojson'
     )
@@ -374,7 +372,6 @@ export const MapView: React.FC = () => {
       <Box
         data-testid="ocotillo-map-container"
         component="div"
-        ref={mapViewportRef}
         sx={{
           borderRadius: 2,
           overflow: 'hidden',

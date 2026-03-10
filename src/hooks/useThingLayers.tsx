@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import * as turf from '@turf/turf'
 import { useOGCLayer } from '@/hooks/useOGCLayer'
+import { parseNumeric } from '@/utils/parseNumeric'
 import {
   OgcCollectionRecord,
   resolveCollection,
@@ -317,19 +318,70 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
       waterElevationContours.exists &&
       isLayerActive('ogc-water-elevation-contours'),
   })
-  function parseNumeric(value: unknown): number | undefined {
-    if (typeof value === 'number' && Number.isFinite(value)) return value
-    if (typeof value !== 'string') return undefined
-    const match = value.replace(/,/g, '').match(/-?\d+(\.\d+)?/)
-    if (!match) return undefined
-    const parsed = Number(match[0])
-    return Number.isFinite(parsed) ? parsed : undefined
+  const normalizeUnitToken = (value: unknown): string => {
+    if (typeof value !== 'string') return ''
+    return value.toLowerCase().replace(/[^a-z]/g, '')
+  }
+
+  const isMeterUnit = (value: unknown): boolean => {
+    const token = normalizeUnitToken(value)
+    return (
+      token === 'm' ||
+      token === 'meter' ||
+      token === 'meters' ||
+      token === 'metre' ||
+      token === 'metres'
+    )
+  }
+
+  const isFootUnit = (value: unknown): boolean => {
+    const token = normalizeUnitToken(value)
+    return (
+      token === 'ft' ||
+      token === 'foot' ||
+      token === 'feet' ||
+      token === 'ussurveyfoot' ||
+      token === 'ussurveyfeet'
+    )
+  }
+
+  const normalizeWaterElevationValue = (
+    rawValue: unknown,
+    feature: any
+  ): number | undefined => {
+    const parsedValue = parseNumeric(rawValue)
+    if (parsedValue === undefined) return undefined
+
+    const unit = waterElevationUnitFromFeature(feature)
+    if (unit === 'feet') return parsedValue
+
+    // Until all OGC water-elevation collections emit explicit feet metadata,
+    // treat unlabeled values as meters and normalize to feet here.
+    return parsedValue * METERS_TO_FEET
+  }
+
+  function waterElevationUnitFromFeature(feature: any): 'feet' | 'meters' | null {
+    const properties = feature?.properties || {}
+    const candidates = [
+      properties.water_elevation_unit,
+      properties.elevation_unit,
+      properties.vertical_unit,
+      properties.unit,
+      properties.units,
+      properties.uom,
+    ]
+
+    for (const candidate of candidates) {
+      if (isFootUnit(candidate)) return 'feet'
+      if (isMeterUnit(candidate)) return 'meters'
+    }
+
+    return null
   }
 
   function waterElevationValueFromFeature(feature: any): number | undefined {
     const properties = feature?.properties || {}
-    const meters = parseNumeric(properties.water_elevation)
-    return meters === undefined ? undefined : meters * METERS_TO_FEET
+    return normalizeWaterElevationValue(properties.water_elevation, feature)
   }
 
   const needsDerivedContours =
@@ -461,13 +513,36 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
 
     const dataWithDerivedElevation = {
       ...sourceData,
-      features: sourceData.features.map((feature: any) => ({
-        ...feature,
-        properties: {
-          ...(feature?.properties || {}),
-          __water_elevation: waterElevationValueFromFeature(feature),
-        },
-      })),
+      features: sourceData.features.map((feature: any) => {
+        const normalizedWaterElevation = normalizeWaterElevationValue(
+          feature?.properties?.water_elevation,
+          feature
+        )
+        const normalizedElevation = normalizeWaterElevationValue(
+          feature?.properties?.elevation,
+          feature
+        )
+
+        return {
+          ...feature,
+          properties: {
+            ...(feature?.properties || {}),
+            ...(normalizedWaterElevation === undefined
+              ? {}
+              : {
+                  water_elevation: normalizedWaterElevation,
+                  water_elevation_unit: 'ft',
+                }),
+            ...(normalizedElevation === undefined
+              ? {}
+              : {
+                  elevation: normalizedElevation,
+                  elevation_unit: 'ft',
+                }),
+            __water_elevation: normalizedWaterElevation,
+          },
+        }
+      }),
     }
 
     return {
@@ -476,6 +551,7 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
         ...waterElevationPointsLayer.sourceProps,
         data: dataWithDerivedElevation,
       },
+      sourceData: dataWithDerivedElevation,
       legendScale: waterElevationLegendScale,
       layerProps: {
         ...waterElevationPointsLayer.layerProps,

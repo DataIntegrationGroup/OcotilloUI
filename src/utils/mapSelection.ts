@@ -1,3 +1,5 @@
+import { parseNumeric } from './parseNumeric'
+
 type GeoJsonFeature = any
 
 const EXCLUDED_SELECTED_POINT_COLUMNS = new Set([
@@ -9,16 +11,6 @@ const EXCLUDED_SELECTED_POINT_COLUMNS = new Set([
   'major_chemistry_id',
   '__water_elevation',
 ])
-
-const parseNumeric = (value: unknown): number | undefined => {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value !== 'string') return undefined
-
-  const normalized = value.replace(/,/g, '').match(/-?\d+(\.\d+)?/)
-  if (!normalized) return undefined
-  const parsed = Number(normalized[0])
-  return Number.isFinite(parsed) ? parsed : undefined
-}
 
 const formatNumeric = (value: number): string => value.toFixed(2)
 const formatInteger = (value: number): string => String(Math.round(value))
@@ -195,55 +187,6 @@ export const buildSelectedPointPaint = (
   ],
   'circle-radius': paint['circle-radius'] ?? 3,
 })
-
-export const getSelectedLayerValue = (
-  feature: GeoJsonFeature,
-  selectedLayerKey?: string | null
-): string => {
-  const properties = feature?.properties || {}
-
-  if (!selectedLayerKey) return ''
-
-  if (selectedLayerKey === 'ogc-water-elevation-points') {
-    const value = parseNumeric(properties.__water_elevation ?? properties.value)
-    return value === undefined ? '' : formatNumeric(value)
-  }
-
-  const numericCandidatesByLayer: Record<string, string[]> = {
-    'ogc-latest-depth-to-water': [
-      'latest_depth_to_water',
-      'depth_to_water_bgs',
-      'depth_to_water',
-      'water_level',
-    ],
-    'ogc-average-tds': ['average_tds', 'avg_tds', 'tds'],
-    'ogc-latest-tds': ['latest_tds', 'tds'],
-    'ogc-depth-to-water-trend': [
-      'trend_class',
-      'trend_slope',
-      'slope',
-    ],
-  }
-
-  const candidates = numericCandidatesByLayer[selectedLayerKey] ?? ['value']
-  for (const key of candidates) {
-    const rawValue = properties[key]
-    if (rawValue === undefined || rawValue === null || rawValue === '') continue
-
-    const numericValue = parseNumeric(rawValue)
-    if (numericValue !== undefined) return formatNumeric(numericValue)
-    return String(rawValue)
-  }
-
-  if (properties.value !== undefined && properties.value !== null) {
-    const numericValue = parseNumeric(properties.value)
-    return numericValue === undefined
-      ? String(properties.value)
-      : formatNumeric(numericValue)
-  }
-
-  return ''
-}
 
 export const formatSelectedPointCellValue = (
   column: string,
