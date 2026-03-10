@@ -141,7 +141,6 @@ export const BatchRouteMap = ({ wells }: { wells: IWell[] }) => {
         containerRef={containerRef}
         initialViewState={initialViewState}
         showDrawControls={{ show: false }}
-        showGeocoder={{ show: false }}
         showNavigation={{ show: true, position: 'top-right' }}
       >
         <Source id="batch-route-source" type="geojson" data={routeData}>

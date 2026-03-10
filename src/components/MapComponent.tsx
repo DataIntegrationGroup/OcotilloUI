@@ -6,7 +6,6 @@ import { CircularProgress } from '@mui/material'
 
 import type { MapLayerMouseEvent, MapGeoJSONFeature } from 'react-map-gl'
 
-import GeocoderControl from './GeocoderControl'
 import DrawControl from './DrawControl'
 
 import { settings } from '@/settings'
@@ -33,7 +32,6 @@ interface MapComponentProps {
   onMouseMoveCallback?: any
   showDrawControls?: { show: boolean; position?: ControlPosition }
   showNavigation?: { show: boolean; position?: ControlPosition }
-  showGeocoder?: { show: boolean; position?: ControlPosition }
   isLoading?: boolean
   mapRef?: any
 
@@ -59,16 +57,12 @@ export const MapComponent = ({
   isLoading = false,
   initialViewState,
   showDrawControls = {
-    show: true,
+    show: false,
     position: 'top-right' as ControlPosition,
   },
   showNavigation = {
     show: true,
     position: 'top-right' as ControlPosition,
-  },
-  showGeocoder = {
-    show: true,
-    position: 'top-left' as ControlPosition,
   },
   style = { width: '100%', height: '100%' },
   containerRef,
@@ -256,12 +250,6 @@ export const MapComponent = ({
       style={style}
       mapStyle={selectedBasemap}
     >
-      {showGeocoder?.show && (
-        <GeocoderControl
-          token={settings.mapboxToken}
-          position={showGeocoder?.position}
-        />
-      )}
       {showNavigation?.show && (
         <NavigationControl position={showNavigation?.position} />
       )}

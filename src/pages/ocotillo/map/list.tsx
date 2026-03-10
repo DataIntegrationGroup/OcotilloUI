@@ -208,7 +208,7 @@ export const MapView: React.FC = () => {
     >
       <MapComponent
         containerRef={containerRef}
-        showDrawControls={{ show: true, position: 'top-right' }}
+        showDrawControls={{ show: false, position: 'top-right' }}
         setPopupContent={setPopupContent}
         popupContent={popupContent}
         onPointClick={onMapPointClick}
@@ -239,11 +239,13 @@ export const MapView: React.FC = () => {
         elevation={6}
         sx={(theme) => ({
           position: 'absolute',
-          top: { xs: 58, sm: 62 },
+          top: 12,
+          bottom: layersCollapsed ? 'auto' : { xs: 44, sm: 40 },
           left: 12,
           width: { xs: 'calc(100% - 24px)', sm: 320 },
-          maxHeight: { xs: '68%', sm: '78%' },
-          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
           px: 0.8,
           py: 0.6,
           borderRadius: 1.25,
@@ -288,7 +290,14 @@ export const MapView: React.FC = () => {
             )}
           </IconButton>
         </Box>
-        <Collapse in={!layersCollapsed}>
+        <Collapse
+          in={!layersCollapsed}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+          }}
+        >
           {(Object.keys(groupedLayers) as Array<keyof typeof groupedLayers>).map(
             (groupKey) => {
               const layers = groupedLayers[groupKey]
