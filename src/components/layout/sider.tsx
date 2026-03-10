@@ -387,7 +387,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                 { to: '/about', label: 'About' },
                 { to: '/report-a-bug', label: 'Report a Bug' },
               ].map(({ to, label }) => (
-                <Link key={to} to={to} style={{ textDecoration: 'none' }}>
+                <RouterLink key={to} to={to} style={{ textDecoration: 'none' }}>
                   <Typography
                     variant="body2"
                     sx={{
@@ -398,7 +398,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                   >
                     {label}
                   </Typography>
-                </Link>
+                </RouterLink>
               ))}
             </Box>
           )}
