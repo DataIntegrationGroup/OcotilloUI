@@ -558,35 +558,64 @@ export const MapView: React.FC = () => {
             px: 0.3,
             py: 0.2,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            gap: 0.35,
           }}
         >
-          <Typography
-            variant="overline"
+          <Box
             sx={{
-              px: 0.55,
-              py: 0.25,
-              fontWeight: 700,
-              letterSpacing: 0.7,
-              fontSize: '0.68rem',
-              lineHeight: 1.2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.6,
             }}
           >
-            Layers
-          </Typography>
-          <IconButton
-            size="small"
-            onMouseDown={(event) => event.stopPropagation()}
-            onClick={onLayersCollapseToggle}
-            aria-label={layersCollapsed ? 'Expand layers' : 'Collapse layers'}
-          >
-            {layersCollapsed ? (
-              <KeyboardArrowDown fontSize="small" />
-            ) : (
-              <KeyboardArrowUp fontSize="small" />
-            )}
-          </IconButton>
+            <Typography
+              variant="overline"
+              sx={{
+                px: 0.55,
+                py: 0.25,
+                fontWeight: 700,
+                letterSpacing: 0.7,
+                fontSize: '0.68rem',
+                lineHeight: 1.2,
+              }}
+            >
+              Layers
+            </Typography>
+            <Box sx={{ flex: 1, minWidth: 0 }} />
+            <IconButton
+              size="small"
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={onLayersCollapseToggle}
+              aria-label={layersCollapsed ? 'Expand layers' : 'Collapse layers'}
+            >
+              {layersCollapsed ? (
+                <KeyboardArrowDown fontSize="small" />
+              ) : (
+                <KeyboardArrowUp fontSize="small" />
+              )}
+            </IconButton>
+          </Box>
+          {!layersCollapsed ? (
+            <Box sx={{ px: 0.25 }}>
+              <MapExportControls
+                value={exportFormat}
+                onChange={setExportFormat}
+                onExport={onExportLayer}
+                buttonLabel={hasSelectionPolygon ? 'Export Selected' : 'Export Layer'}
+                disabled={!selectedLayerKey}
+                tooltipPlacement="right"
+                tooltip={
+                  selectedLayerKey
+                    ? `Click to download ${
+                        hasSelectionPolygon ? 'the selected map area' : 'that layer'
+                      } as ${exportFormat === 'csv' ? 'CSV' : 'GeoJSON'}.`
+                    : 'Disabled unless exactly one layer is selected. Draw tools are also only enabled when exactly one layer is selected.'
+                }
+              />
+            </Box>
+          ) : null}
         </Box>
         <Collapse
           in={!layersCollapsed}
@@ -598,23 +627,6 @@ export const MapView: React.FC = () => {
             overflowY: 'auto',
           }}
         >
-          <Box sx={{ px: 0.5, pb: 0.5 }}>
-            <MapExportControls
-              value={exportFormat}
-              onChange={setExportFormat}
-              onExport={onExportLayer}
-              buttonLabel={hasSelectionPolygon ? 'Export Selected' : 'Export Layer'}
-              disabled={!selectedLayerKey}
-              tooltipPlacement="right"
-              tooltip={
-                selectedLayerKey
-                  ? `Click to download ${
-                      hasSelectionPolygon ? 'the selected map area' : 'that layer'
-                    } as ${exportFormat === 'csv' ? 'CSV' : 'GeoJSON'}.`
-                  : 'Disabled unless exactly one layer is selected. Draw tools are also only enabled when exactly one layer is selected.'
-              }
-            />
-          </Box>
           {(Object.keys(groupedLayers) as Array<keyof typeof groupedLayers>).map(
             (groupKey) => {
               const layers = groupedLayers[groupKey]
