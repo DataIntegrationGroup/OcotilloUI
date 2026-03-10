@@ -11,6 +11,7 @@ import {
   Paper,
   Typography,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material'
 import MapComponent from '@/components/MapComponent'
 import { MapPopup } from '@/components'
@@ -236,7 +237,7 @@ export const MapView: React.FC = () => {
       </MapComponent>
       <Paper
         elevation={6}
-        sx={{
+        sx={(theme) => ({
           position: 'absolute',
           top: { xs: 58, sm: 62 },
           left: 12,
@@ -247,11 +248,11 @@ export const MapView: React.FC = () => {
           py: 0.6,
           borderRadius: 1.25,
           backdropFilter: 'blur(6px)',
-          backgroundColor: 'rgba(255,255,255,0.9)',
+          backgroundColor: alpha(theme.palette.background.paper, 0.9),
           border: '1px solid',
-          borderColor: 'divider',
+          borderColor: alpha(theme.palette.divider, 0.9),
           zIndex: 2,
-        }}
+        })}
       >
         <Box
           sx={{
@@ -386,13 +387,13 @@ export const MapView: React.FC = () => {
                           {layerDef.legendScale && (
                             <Box sx={{ pl: 3.1, pr: 0.6, pb: 0.15 }}>
                               <Box
-                                sx={{
+                                sx={(theme) => ({
                                   height: 5,
                                   borderRadius: 1,
                                   border: '1px solid',
-                                  borderColor: 'rgba(0,0,0,0.18)',
+                                  borderColor: alpha(theme.palette.divider, 0.75),
                                   background: layerDef.legendScale.gradient,
-                                }}
+                                })}
                               />
                               <Box
                                 sx={{

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Map, MapRef, NavigationControl, Popup } from 'react-map-gl'
 import { MapboxStyleSwitcherControl } from 'mapbox-gl-style-switcher'
 import { ControlPosition } from 'react-map-gl'
@@ -11,7 +11,12 @@ import DrawControl from './DrawControl'
 
 import { settings } from '@/settings'
 
-import { DEFAULT_MAPBOX_BASEMAP, MAPBOX_BASEMAPS } from '@/constants'
+import { ColorModeContext } from '@/contexts'
+import {
+  DEFAULT_MAPBOX_BASEMAP,
+  MAPBOX_BASEMAPS,
+  THEMED_MAPBOX_BASEMAPS,
+} from '@/constants'
 
 import 'mapbox-gl/dist/mapbox-gl.css'
 import 'mapbox-gl-style-switcher/styles.css'
@@ -68,9 +73,29 @@ export const MapComponent = ({
   style = { width: '100%', height: '100%' },
   containerRef,
 }: MapComponentProps) => {
+  const { mode } = useContext(ColorModeContext)
   const [isDrawing, setIsDrawing] = useState(false)
   const [_viewState, setViewState] = useState(initialViewState)
+  const [selectedBasemap, setSelectedBasemap] = useState(DEFAULT_MAPBOX_BASEMAP)
   const mapRef = externalMapRef ?? useRef<MapRef>(null)
+  const previousModeRef = useRef<'light' | 'dark'>(
+    mode === 'dark' ? 'dark' : 'light'
+  )
+
+  const syncStyleSwitcherSelection = useCallback((styleUri: string) => {
+    if (!mapRef.current) return
+
+    const mapContainer = mapRef.current.getMap().getContainer()
+    const activeButtons = mapContainer.querySelectorAll(
+      '.mapboxgl-style-list button.active'
+    )
+    activeButtons.forEach((button) => button.classList.remove('active'))
+
+    const nextButton = mapContainer.querySelector(
+      `.mapboxgl-style-list button[data-uri='${JSON.stringify(styleUri)}']`
+    ) as HTMLButtonElement | null
+    nextButton?.classList.add('active')
+  }, [mapRef])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -95,10 +120,17 @@ export const MapComponent = ({
     ;(map as any)._styleSwitcherAdded = true
 
     const styleSwitcher = new MapboxStyleSwitcherControl(MAPBOX_BASEMAPS, {
-      defaultStyle: DEFAULT_MAPBOX_BASEMAP,
+      defaultStyle: THEMED_MAPBOX_BASEMAPS.light.title,
+      eventListeners: {
+        onChange: (_event: Event, nextStyle: string) => {
+          setSelectedBasemap(nextStyle)
+          return false
+        },
+      },
     })
 
     map.addControl(styleSwitcher, 'top-right')
+    syncStyleSwitcherSelection(selectedBasemap)
 
     map.on('remove', () => {
       try {
@@ -108,7 +140,28 @@ export const MapComponent = ({
         console.warn('Map style switcher already removed.')
       }
     })
-  }, [mapRef])
+  }, [mapRef, selectedBasemap, syncStyleSwitcherSelection])
+
+  useEffect(() => {
+    const previousMode = previousModeRef.current
+    const nextMode = mode === 'dark' ? 'dark' : 'light'
+
+    if (!mapRef.current || previousMode === nextMode) {
+      previousModeRef.current = nextMode
+      return
+    }
+
+    const currentThemedBasemap = THEMED_MAPBOX_BASEMAPS[previousMode].uri
+    const nextThemedBasemap = THEMED_MAPBOX_BASEMAPS[nextMode].uri
+
+    if (selectedBasemap === currentThemedBasemap) {
+      mapRef.current.getMap().setStyle(nextThemedBasemap)
+      setSelectedBasemap(nextThemedBasemap)
+      syncStyleSwitcherSelection(nextThemedBasemap)
+    }
+
+    previousModeRef.current = nextMode
+  }, [mode, selectedBasemap, mapRef, syncStyleSwitcherSelection])
 
   if (!initialViewState) {
     initialViewState = {
@@ -201,7 +254,7 @@ export const MapComponent = ({
       onMouseMove={onMouseMove}
       onLoad={handleMapLoad}
       style={style}
-      mapStyle={DEFAULT_MAPBOX_BASEMAP}
+      mapStyle={selectedBasemap}
     >
       {showGeocoder?.show && (
         <GeocoderControl
