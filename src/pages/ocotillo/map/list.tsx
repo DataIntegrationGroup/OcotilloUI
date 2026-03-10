@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useRef, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Layer, Source } from 'react-map-gl'
 import { useGo } from '@refinedev/core'
 import {
@@ -74,12 +74,21 @@ export const MapView: React.FC = () => {
   const selectedLayerKey = visibleLayers.length === 1 ? visibleLayers[0] : null
   const areDrawToolsEnabled = visibleLayers.length === 1
   const selectedLayer = selectedLayerKey ? THING_LAYERS[selectedLayerKey] : null
-  const activeSelectionPolygon = (
+  const selectionFeatures = (
     Object.values(selectionPolygons) as any[]
-  ).find((feature) =>
+  ).filter((feature) =>
     ['Polygon', 'MultiPolygon'].includes(feature?.geometry?.type)
   )
-  const hasSelectionPolygon = Boolean(activeSelectionPolygon)
+  const hasSelectionPolygon = selectionFeatures.length > 0
+
+  useEffect(() => {
+    if (hasSelectionPolygon || Object.keys(selectionPolygons).length === 0) {
+      return
+    }
+
+    setSelectionPolygons({})
+  }, [hasSelectionPolygon, selectionPolygons])
+
   const selectedLayerSourceData = useMemo(() => {
     const sourceData = selectedLayer?.sourceData as any
     return sourceData && sourceData.type === 'FeatureCollection'
@@ -93,9 +102,9 @@ export const MapView: React.FC = () => {
 
     return {
       ...selectedLayerSourceData,
-      features: filterLayerFeaturesBySelection(features, activeSelectionPolygon),
+      features: filterLayerFeaturesBySelection(features, selectionFeatures),
     }
-  }, [selectedLayerSourceData, activeSelectionPolygon])
+  }, [selectedLayerSourceData, selectionFeatures])
 
   const downloadBlob = (content: BlobPart, contentType: string, suffix: string) => {
     if (!selectedLayerKey || !selectedLayer) return
