@@ -71,7 +71,7 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 This application uses Vite environment variables. The following variables are required in `.env.development`:
 
 ```bash
-VITE_APP_TITLE="NMBGMR Ocotillo"
+VITE_APP_TITLE="Ocotillo (Dev)"
 VITE_NMBGMR_AMP_API_URL="https://your-amp-development-api-url"
 VITE_NMBGMR_GEOTHERMAL_API_URL="https://your-geothermal-development-api-url"
 VITE_OCOTILLO_API_URL="https://your-ocotillo-development-api-url"

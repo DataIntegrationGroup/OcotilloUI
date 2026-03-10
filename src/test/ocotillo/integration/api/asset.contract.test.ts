@@ -16,7 +16,7 @@ describe('Ocotillo Integration Tests: Asset', () => {
   it('should fetch assets using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'asset',
-      pagination: { current: 1, pageSize: 10 }
+      pagination: { currentPage: 1, pageSize: 10 }
     })
 
     expect(result).toHaveProperty('data')

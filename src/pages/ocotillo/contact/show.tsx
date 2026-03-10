@@ -4,9 +4,8 @@ import { IContact } from '@/interfaces/ocotillo/IContact'
 import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 
 export const ContactShow = () => {
-  const { queryResult } = useShow({})
-  const { data, isLoading } = queryResult
-  const record = data?.data as IContact
+  const { query, result } = useShow({})
+  const record = result as IContact
 
   const fieldConfigs = {
     created_at: {
@@ -17,7 +16,7 @@ export const ContactShow = () => {
   }
 
   return (
-    <Show isLoading={isLoading}>
+    <Show isLoading={query.isLoading}>
       <DynamicShowDisplay record={record} fieldConfigs={fieldConfigs} />
     </Show>
   )

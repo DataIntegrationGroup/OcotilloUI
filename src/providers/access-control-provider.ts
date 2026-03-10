@@ -67,6 +67,7 @@ const defineUserAbility = (groups: string[] | null): AppAbility => {
     viewer(can, cannot, 'ocotillo.thing-well')
     viewer(can, cannot, 'ocotillo.thing-spring')
     viewer(can, cannot, 'ocotillo.groundwater-level-observation')
+    viewer(can, cannot, 'ocotillo.thing-well-batch-export')
   }
 
   if (safeGroups.includes('AMPEditor')) {
@@ -80,6 +81,7 @@ const defineUserAbility = (groups: string[] | null): AppAbility => {
     can('list', 'ocotillo.apps')
     can('list', 'ocotillo.water-chemistry-import')
     can('list', 'ocotillo.hydrograph-corrector')
+    can('list', 'ocotillo.thing-well-batch-export')
   }
 
   if (safeGroups.includes('LexiconEditor')) {

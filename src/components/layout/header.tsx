@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   useGetIdentity,
-  useActiveAuthProvider,
   useIsExistAuthentication,
   useLogout,
   useWarnAboutChange,
@@ -9,7 +8,7 @@ import {
 } from '@refinedev/core'
 import {
   AppBar,
-  Avatar,
+  Button,
   Stack,
   Toolbar,
   ListItemIcon,
@@ -18,46 +17,15 @@ import {
   Skeleton,
 } from '@mui/material'
 import { LogoutOutlined, PersonOutline } from '@mui/icons-material'
-import type { RefineThemedLayoutV2HeaderProps } from '@refinedev/mui'
+import type { RefineThemedLayoutHeaderProps } from '@refinedev/mui'
 import { HamburgerMenu } from './hamburgerMenu'
 import SearchBar from '@/components/SearchBar'
 
-const stringAvatar = (name: string) => {
-  // Reduce the string into a numerical hash value
-  // Convert hash to a hexadecimal string
-  // Ensure at least 6 characters for valid hex color
-  const stringToColor = (name: string) =>
-    `#${[...name]
-      .reduce((hash, char) => char.charCodeAt(0) + ((hash << 5) - hash), 0)
-      .toString(16)
-      .padStart(6, '0')
-      .slice(-6)}`
-
-  name = name?.trim() || 'UU'
-  const nameParts = name?.trim().split(' ') // Split name into words
-  const initials =
-    nameParts.length > 1
-      ? `${nameParts[0][0]}${nameParts[1][0]}` // First letter of first two words
-      : `${nameParts[0][0]}${nameParts[0][1] || nameParts[0][0]}` // Handle single-word names
-
-  return {
-    sx: {
-      bgcolor: stringToColor(name),
-    },
-    children: initials.toUpperCase(),
-  }
-}
-
-export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
-  const authProvider = useActiveAuthProvider()
+export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
   const isExistAuthentication = useIsExistAuthentication()
-  const { data: user, isLoading } = useGetIdentity({
-    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
-  })
+  const { data: user, isLoading } = useGetIdentity()
   const { warnWhen, setWarnWhen } = useWarnAboutChange()
-  const { mutate: mutateLogout } = useLogout({
-    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
-  })
+  const { mutate: mutateLogout } = useLogout()
 
   const translate = useTranslate()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -120,20 +88,27 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
           >
             {isLoading ? (
               <Skeleton
-                variant="circular"
+                variant="rounded"
                 animation="pulse"
-                sx={{ bgcolor: 'rgba(255, 255, 255, 0.55)' }}
-              >
-                <Avatar />
-              </Skeleton>
-            ) : user?.avatar ? (
-              <Avatar
-                onClick={handleMenuOpen}
-                src={user?.avatar}
-                alt={user?.name}
+                width={140}
+                height={36}
+                sx={{ borderRadius: 999 }}
               />
             ) : (
-              <Avatar onClick={handleMenuOpen} {...stringAvatar(user?.name)} />
+              <Button
+                onClick={handleMenuOpen}
+                color="inherit"
+                variant="text"
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  color: 'text.primary',
+                  minWidth: 0,
+                  px: 1,
+                }}
+              >
+                {user?.name || 'User'}
+              </Button>
             )}
             <Menu
               anchorEl={anchorEl}

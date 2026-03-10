@@ -17,7 +17,7 @@ describe('Ocotillo Integration Tests: Thing Id Link', () => {
   it('should fetch thing id links using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'thing/id-link',
-      pagination: { current: 1, pageSize: 10 },
+      pagination: { currentPage: 1, pageSize: 10 },
     })
 
     expect(result).toHaveProperty('data')

@@ -16,7 +16,7 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
   it('should fetch groundwater level observations using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'observation/groundwater-level',
-      pagination: { current: 1, pageSize: 10 }
+      pagination: { currentPage: 1, pageSize: 10 }
     })
 
     expect(result).toHaveProperty('data')

@@ -1,13 +1,13 @@
 import { useMemo } from 'react'
-import { useDataGrid } from '@refinedev/mui'
-import { useExport, useNavigation } from '@refinedev/core'
+import { useExport, useGo } from '@refinedev/core'
+import { CreateButton, ExportButton, useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
+import { Button } from '@mui/material'
+import { PictureAsPdf } from '@mui/icons-material'
 import { ListPage } from '@/components/ListPage'
+import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { ISpring, IWell } from '@/interfaces/ocotillo'
 import { formatAppDate, formatAppDateTime } from '@/utils'
-import { Button } from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
@@ -46,15 +46,14 @@ export const SpringList: React.FC = () => {
     ],
     []
   )
+
   return (
     <ListPage
       title="Springs"
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}
-      description={
-        'Springs are natural water sources that flow from the ground. They can be used for various purposes, including water supply and ecological studies.'
-      }
+      description="Springs are natural water sources that flow from the ground. They can be used for various purposes, including water supply and ecological studies."
     />
   )
 }
@@ -194,28 +193,27 @@ export const WellList: React.FC = () => {
     []
   )
 
-  const { push } = useNavigation()
+  const go = useGo()
 
   const customHeaderButtons = () => {
     return (
       <>
+        <CreateButton
+          onClick={() => go({ to: '/ocotillo/well-inventory-form', type: 'push' })}
+        />
         <Button
-          size="small"
           variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => push('/ocotillo/well-inventory-form')}
+          color="secondary"
+          startIcon={<PictureAsPdf />}
+          onClick={() => go({ to: '/ocotillo/well/batch-export', type: 'push' })}
         >
-          Create
+          Batch Field Sheets
         </Button>
-        <Button
-          size="small"
+        <ExportButton
           variant="contained"
-          startIcon={<FileDownloadOutlinedIcon />}
-          disabled={exportIsLoading}
+          loading={exportIsLoading}
           onClick={triggerExport}
-        >
-          Export
-        </Button>
+        />
       </>
     )
   }

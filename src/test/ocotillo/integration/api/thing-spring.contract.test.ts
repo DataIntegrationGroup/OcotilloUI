@@ -11,7 +11,7 @@ describe('Ocotillo Integration Tests: Spring', () => {
   it('should fetch springs using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'thing/spring',
-      pagination: { current: 1, pageSize: 10 },
+      pagination: { currentPage: 1, pageSize: 10 },
     })
 
     expect(result).toHaveProperty('data')

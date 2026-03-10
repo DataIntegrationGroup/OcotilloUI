@@ -27,7 +27,7 @@ describe('Ocotillo Integration Tests: Contact', () => {
   it('should fetch contacts using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'contact',
-      pagination: { current: 1, pageSize: 10 },
+      pagination: { currentPage: 1, pageSize: 10 },
     })
 
     expect(result).toHaveProperty('data')

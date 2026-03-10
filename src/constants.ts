@@ -14,7 +14,20 @@ export const MAPBOX_BASEMAPS: MapboxStyleDefinition[] = [
   { title: 'Bright', uri: 'mapbox://styles/mapbox/bright-v9' },
 ]
 
-export const DEFAULT_MAPBOX_BASEMAP = 'mapbox://styles/mapbox/light-v11'
+export const LIGHT_MAPBOX_BASEMAP = 'mapbox://styles/mapbox/light-v11'
+export const DARK_MAPBOX_BASEMAP = 'mapbox://styles/mapbox/dark-v11'
+export const DEFAULT_MAPBOX_BASEMAP = LIGHT_MAPBOX_BASEMAP
+
+export const THEMED_MAPBOX_BASEMAPS = {
+  light: {
+    title: 'Light',
+    uri: LIGHT_MAPBOX_BASEMAP,
+  },
+  dark: {
+    title: 'Dark',
+    uri: DARK_MAPBOX_BASEMAP,
+  },
+} as const
 
 export enum GroupType {
   Wells = 'Wells',

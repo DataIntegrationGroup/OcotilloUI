@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
+  matchResourceFromRoute,
   pickDataProvider,
+  ResourceContext,
   useDataProvider,
   useMeta,
-  useResource,
   BaseRecord,
   MetaQuery,
 } from "@refinedev/core";
+import { useLocation } from "react-router";
 
 type UseAllOptionsType<
   TData extends BaseRecord = BaseRecord,
@@ -51,7 +53,15 @@ export const useAll = <
 
   const dataProvider = useDataProvider();
   const getMeta = useMeta();
-  const { resource, resources, identifier } = useResource(resourceFromProps);
+  const { resources } = useContext(ResourceContext);
+  const location = useLocation();
+  const resource = resourceFromProps
+    ? resources.find(
+        (item) =>
+          item.name === resourceFromProps || item.identifier === resourceFromProps,
+      )
+    : matchResourceFromRoute(location.pathname, resources).resource;
+  const identifier = resource?.identifier ?? resource?.name;
   const { getList } = dataProvider(
     pickDataProvider(identifier, dataProviderName, resources),
   );
@@ -78,7 +88,7 @@ export const useAll = <
         const { data, total } = await getList({
           resource: resourceTag.toString(),
           pagination: {
-            current,
+            currentPage: current,
             pageSize: pageSize,
           },
           meta: combinedMeta,

@@ -109,14 +109,14 @@ export const Querybuilder: React.FC = () => {
   const [countyFeature, setCountyFeature] = useState<any>()
   const [locationType, setLocationType] = useState<string>('')
 
-  const { data: countiesObjects } = useList<ICounty, HttpError>({
+  const { result: countiesObjects } = useList<ICounty, HttpError>({
     resource: 'counties',
   })
 
-  const { data: projects } = useList({
+  const { result: projects } = useList({
     resource: 'projects',
     dataProviderName: 'amp',
-    pagination: { current: 1, pageSize: 1000 },
+    pagination: { currentPage: 1, pageSize: 1000 },
   })
   const ps = projects?.data ?? []
   const projectNames = ps.map((p) => {

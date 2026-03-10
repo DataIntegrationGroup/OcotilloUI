@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { tokenStore, transientStore } from '@/providers/authentik-provider'
-import { useNavigate } from 'react-router-dom'
+import {
+  clearPkceFallbacks,
+  consumePkceFallbackByState,
+  tokenStore,
+  transientStore,
+} from '@/providers/authentik-provider'
+import { useNavigate } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   Alert,
@@ -13,7 +18,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { AUTHENTIK_URL, CLIENT_ID, REDIRECT_URI, STORAGE_KEYS } from '@/config'
+import { AUTHENTIK_URL, CLIENT_ID, REDIRECT_URI } from '@/config'
 
 type TokenResponse = {
   access_token: string
@@ -41,18 +46,20 @@ export const Callback = () => {
         const url = new URL(window.location.href)
         const code = url.searchParams.get('code')
         const state = url.searchParams.get('state')
+        const fallbackPkce = state ? consumePkceFallbackByState(state) : null
 
         const verifier =
           transientStore.pkceVerifier ??
-          localStorage.getItem(STORAGE_KEYS.pkceVerifier)
-        const expectedState = transientStore.pkceState
+          fallbackPkce?.verifier
+        const expectedState =
+          transientStore.pkceState ?? fallbackPkce?.state
 
         if (!code || !verifier) {
           throw new Error('Missing authorization code or PKCE verifier')
         }
 
         // If you are sending `state` in authorize request, validate it here
-        if (expectedState && (!state || state !== expectedState)) {
+        if (!state || !expectedState || state !== expectedState) {
           throw new Error('Invalid state parameter')
         }
 
@@ -86,8 +93,8 @@ export const Callback = () => {
 
         // Cleanup PKCE + flags (important to prevent future races)
         transientStore.pkceVerifier = null
-        localStorage.removeItem(STORAGE_KEYS.pkceVerifier)
         transientStore.pkceState = null
+        clearPkceFallbacks()
 
         // Re-check everything under new auth context
         await queryClient.invalidateQueries()

@@ -9,12 +9,12 @@ export const useLayer = ({
   label: string
   color: string
 }) => {
-  const { data, isLoading } = useOne({
+  const { result, query } = useOne({
     dataProviderName: 'ocotillo',
     resource: 'geospatial',
     id: null,
     queryOptions: {
-      cacheTime: 60000,
+      gcTime: 60000,
       staleTime: 30000,
     },
     meta: {
@@ -29,8 +29,8 @@ export const useLayer = ({
 
   // Always return valid GeoJSON
   const safeGeoJSON =
-    data?.data && data.data.type === 'FeatureCollection'
-      ? data.data
+    result && result.type === 'FeatureCollection'
+      ? result
       : { type: 'FeatureCollection', features: [] }
 
   return {
@@ -45,6 +45,6 @@ export const useLayer = ({
         'circle-stroke-width': 1,
       },
     },
-    isLoading,
+    isLoading: query.isLoading,
   }
 }

@@ -1,11 +1,10 @@
 import {
   CanAccess,
-  useLink,
+  ResourceContext,
   useRefineContext,
-  useRouterContext,
-  useRouterType,
   useTranslate,
 } from "@refinedev/core";
+import { useContext } from "react";
 import {
   ListItemButton,
   ListItemIcon,
@@ -14,6 +13,7 @@ import {
 } from "@mui/material";
 import { useThemedLayoutContext } from "@refinedev/mui";
 import { Dashboard as DashboardIcon } from "@mui/icons-material";
+import { Link as RouterLink } from "react-router";
 
 export const Dashboard = ({
   collapsed,
@@ -23,14 +23,10 @@ export const Dashboard = ({
   selectedKey: string;
 }) => {
   const { setMobileSiderOpen } = useThemedLayoutContext();
-  const { hasDashboard } = useRefineContext();
+  const { options } = useRefineContext();
+  const { resources } = useContext(ResourceContext);
   const translate = useTranslate();
-
-  const { Link: LegacyLink } = useRouterContext();
-  const routerType = useRouterType();
-
-  const NewLink = useLink();
-  const Link = routerType === "legacy" ? LegacyLink : NewLink;
+  const hasDashboard = resources.some((resource) => resource.name === "dashboard");
 
   return hasDashboard ? (
     <CanAccess resource="dashboard" action="list">
@@ -41,9 +37,9 @@ export const Dashboard = ({
         arrow
       >
         <ListItemButton
-          component={Link}
-          to="/"
-          selected={selectedKey === "/"}
+          component={RouterLink}
+          to="/home"
+          selected={selectedKey === "/home"}
           onClick={() => {
             setMobileSiderOpen(false);
           }}
@@ -51,7 +47,7 @@ export const Dashboard = ({
             pl: 2,
             py: 1,
             justifyContent: "center",
-            color: selectedKey === "/" ? "primary.main" : "text.primary",
+            color: selectedKey === "/home" ? "primary.main" : "text.primary",
           }}
         >
           <ListItemIcon
