@@ -22,7 +22,7 @@ import {
   Search,
 } from '@mui/icons-material'
 import { BaseRecord, useDataProvider, useNotification } from '@refinedev/core'
-import { useAutocomplete } from '@refinedev/mui'
+import { Breadcrumb, List, useAutocomplete } from '@refinedev/mui'
 import {
   IContact,
   IObservation,
@@ -667,16 +667,33 @@ export const WellBatchExport = () => {
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" sx={{ color: 'primary.main', fontWeight: 400 }}>
-          Batch Export Field Information Sheets
-        </Typography>
-        <Typography variant="body2" color="text.secondary" fontStyle="italic">
-          Paste well names, search wells, and generate field sheet PDFs in one run.
-        </Typography>
-      </Box>
-
+    <List
+      title={
+        <Box>
+          <Typography variant="h3" fontWeight={700}>
+            Field Sheets
+          </Typography>
+          <Typography variant="body1" sx={{ maxWidth: '85ch', mt: 0.5, color: 'text.secondary' }}>
+            Paste well names, search wells, and generate field sheet PDFs in one run.
+          </Typography>
+        </Box>
+      }
+      breadcrumb={<Box sx={{ '& .MuiBreadcrumbs-root': { pb: 0 } }}><Breadcrumb hideIcons={true} /></Box>}
+      headerButtons={() => <></>}
+      wrapperProps={{
+        elevation: 0,
+        sx: { backgroundColor: 'background.wrapper', boxShadow: 'none', borderRadius: 1, padding: 0 },
+      }}
+      headerProps={{
+        sx: {
+          pt:1,
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'flex-start', md: 'center' },
+          '.MuiCardHeader-action': { alignSelf: { xs: 'flex-end', md: 'flex-start' }, mt: { xs: 1, md: 0.5 }, mr: 0 },
+        },
+      }}
+      contentProps={{ sx: { pt: 1 } }}
+    >
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 680px', gap: 3 }}>
         <Stack spacing={2}>
           <Paper elevation={0}>
@@ -919,6 +936,6 @@ export const WellBatchExport = () => {
         filename={filename}
         setFilename={setFilename}
       />
-    </Box>
+    </List>
   )
 }
