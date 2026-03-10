@@ -26,7 +26,9 @@ import {
   Drawer,
   Tooltip,
   Paper,
+  Typography,
 } from '@mui/material'
+import { Link } from 'react-router-dom'
 import type { RefineThemedLayoutV2SiderProps } from '@refinedev/mui'
 import { ColorModeContext } from '@/contexts'
 import { Dashboard } from './dashboard'
@@ -384,6 +386,36 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
           >
             <Sider />
           </Box>
+          {!siderCollapsed && (
+            <Box
+              sx={{
+                borderTop: (theme) => `1px solid ${theme.palette.action.focus}`,
+                px: 2,
+                py: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.5,
+              }}
+            >
+              {[
+                { to: '/about', label: 'About' },
+                { to: '/report-a-bug', label: 'Report a Bug' },
+              ].map(({ to, label }) => (
+                <Link key={to} to={to} style={{ textDecoration: 'none' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'text.secondary',
+                      '&:hover': { color: 'text.primary' },
+                      transition: 'color 0.15s',
+                    }}
+                  >
+                    {label}
+                  </Typography>
+                </Link>
+              ))}
+            </Box>
+          )}
           <Box
             sx={{
               borderTop: (theme) => `1px solid ${theme.palette.action.focus}`,
