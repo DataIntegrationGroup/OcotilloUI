@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import { formatAppDate } from '@/utils/Date'
 
 type PopupFeature = {
   layer?: { id?: string }
@@ -35,12 +36,6 @@ type PopupFeatureView = {
 
 const numberFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
-})
-
-const dateFormatter = new Intl.DateTimeFormat('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
 })
 
 const titleCase = (value: string): string =>
@@ -73,9 +68,7 @@ const parseNumeric = (value: unknown): number | undefined => {
 
 const formatDate = (value: unknown): string | undefined => {
   if (typeof value !== 'string' || value.trim().length === 0) return undefined
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return value
-  return dateFormatter.format(parsed)
+  return formatAppDate(value) || value
 }
 
 const formatValue = (value: unknown): string => {
