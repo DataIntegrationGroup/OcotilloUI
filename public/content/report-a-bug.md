@@ -19,4 +19,4 @@ A good bug report includes:
 
 ## Contact
 
-For urgent issues or questions that don't fit a GitHub issue, reach out directly to the development team at [support@lakeraven.com](mailto:support@lakeraven.com).
+For urgent issues or questions, reach out directly to the development team at [newmexicowaterdata@nmt.edu](mailto:newmexicowaterdata@nmt.edu).

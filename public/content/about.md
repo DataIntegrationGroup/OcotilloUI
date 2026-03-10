@@ -36,4 +36,4 @@ One of the things the process revealed was that data sharing problems exist with
 
 ## Questions or feedback?
 
-Use the [Report a Bug](/report-a-bug) page to submit issues or suggestions, or reach out to the Data Services team at [support@lakeraven.com](mailto:support@lakeraven.com).
+Use the [Report a Bug](/report-a-bug) page to submit issues or suggestions, or reach out to the Data Services team at [newmexicowaterdata@nmt.edu](mailto:newmexicowaterdata@nmt.edu).
