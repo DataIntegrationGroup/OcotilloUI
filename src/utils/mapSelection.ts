@@ -9,7 +9,6 @@ const EXCLUDED_SELECTED_POINT_COLUMNS = new Set([
   'id',
   'observation_id',
   'major_chemistry_id',
-  '__water_elevation',
 ])
 
 const formatNumeric = (value: number): string => value.toFixed(2)

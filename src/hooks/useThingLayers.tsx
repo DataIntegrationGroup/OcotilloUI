@@ -5,6 +5,11 @@ import * as turf from '@turf/turf'
 import { useOGCLayer } from '@/hooks/useOGCLayer'
 import { parseNumeric } from '@/utils/parseNumeric'
 import {
+  getWaterElevationFeet,
+  getWaterElevationStats,
+  normalizeWaterElevationFeatureCollection,
+} from '@/utils/waterElevation'
+import {
   OgcCollectionRecord,
   resolveCollection,
   DEPTH_LEGEND,
@@ -23,7 +28,6 @@ const WATER_ELEVATION_LEGEND = {
   maxLabel: 'Higher (ft)',
 }
 
-const METERS_TO_FEET = 3.28084
 const EMPTY_FEATURE_COLLECTION = {
   type: 'FeatureCollection',
   features: [],
@@ -318,71 +322,6 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
       waterElevationContours.exists &&
       isLayerActive('ogc-water-elevation-contours'),
   })
-  const normalizeUnitToken = (value: unknown): string => {
-    if (typeof value !== 'string') return ''
-    return value.toLowerCase().replace(/[^a-z]/g, '')
-  }
-
-  const isMeterUnit = (value: unknown): boolean => {
-    const token = normalizeUnitToken(value)
-    return (
-      token === 'm' ||
-      token === 'meter' ||
-      token === 'meters' ||
-      token === 'metre' ||
-      token === 'metres'
-    )
-  }
-
-  const isFootUnit = (value: unknown): boolean => {
-    const token = normalizeUnitToken(value)
-    return (
-      token === 'ft' ||
-      token === 'foot' ||
-      token === 'feet' ||
-      token === 'ussurveyfoot' ||
-      token === 'ussurveyfeet'
-    )
-  }
-
-  const normalizeWaterElevationValue = (
-    rawValue: unknown,
-    feature: any
-  ): number | undefined => {
-    const parsedValue = parseNumeric(rawValue)
-    if (parsedValue === undefined) return undefined
-
-    const unit = waterElevationUnitFromFeature(feature)
-    if (unit === 'feet') return parsedValue
-
-    // Until all OGC water-elevation collections emit explicit feet metadata,
-    // treat unlabeled values as meters and normalize to feet here.
-    return parsedValue * METERS_TO_FEET
-  }
-
-  function waterElevationUnitFromFeature(feature: any): 'feet' | 'meters' | null {
-    const properties = feature?.properties || {}
-    const candidates = [
-      properties.water_elevation_unit,
-      properties.elevation_unit,
-      properties.vertical_unit,
-      properties.unit,
-      properties.units,
-      properties.uom,
-    ]
-
-    for (const candidate of candidates) {
-      if (isFootUnit(candidate)) return 'feet'
-      if (isMeterUnit(candidate)) return 'meters'
-    }
-
-    return null
-  }
-
-  function waterElevationValueFromFeature(feature: any): number | undefined {
-    const properties = feature?.properties || {}
-    return normalizeWaterElevationValue(properties.water_elevation, feature)
-  }
 
   const needsDerivedContours =
     !waterElevationContours.exists &&
@@ -393,19 +332,22 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     label: `${waterElevationPoints.label} (ft)`,
     color: '#1976d2',
     legendScale: WATER_ELEVATION_LEGEND,
-    enabled:
-      waterElevationPoints.exists &&
-      (isLayerActive('ogc-water-elevation-points') || needsDerivedContours),
+    enabled: waterElevationPoints.exists,
   })
+
+  const waterElevationPointSourceData = useMemo(() => {
+    return normalizeWaterElevationFeatureCollection(
+      waterElevationPointsLayer.sourceData as any
+    )
+  }, [waterElevationPointsLayer.sourceData])
 
   const waterElevationPointFeatures = useMemo(() => {
     return Array.isArray(
-      (waterElevationPointsLayer.sourceData as any)?.features
+      waterElevationPointSourceData?.features
     )
-      ? (((waterElevationPointsLayer.sourceData as any).features as any[]) ??
-          [])
+      ? ((waterElevationPointSourceData.features as any[]) ?? [])
       : []
-  }, [waterElevationPointsLayer.sourceData])
+  }, [waterElevationPointSourceData])
 
   const waterElevationPointFeaturesSignature = useMemo(() => {
     const size = waterElevationPointFeatures.length
@@ -419,7 +361,7 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
       const coords = feature?.geometry?.coordinates
       const x = Array.isArray(coords) ? Number(coords[0]) : NaN
       const y = Array.isArray(coords) ? Number(coords[1]) : NaN
-      const z = waterElevationValueFromFeature(feature)
+      const z = getWaterElevationFeet(feature)
       parts.push(
         `${Number.isFinite(x) ? x.toFixed(4) : 'x'}:${Number.isFinite(y) ? y.toFixed(4) : 'y'}:${typeof z === 'number' ? z.toFixed(2) : 'z'}`
       )
@@ -428,39 +370,10 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     return parts.join('|')
   }, [waterElevationPointFeatures])
 
-  const waterElevationStats = useMemo(() => {
-    const values = waterElevationPointFeatures
-      .map((feature) => waterElevationValueFromFeature(feature))
-      .filter(
-        (value): value is number =>
-          typeof value === 'number' && Number.isFinite(value)
-      )
-    const sortedValues = [...values].sort((a, b) => a - b)
-    const minValue = sortedValues[0]
-    const maxValue = sortedValues[sortedValues.length - 1]
-    const hasSpread =
-      sortedValues.length >= 3 &&
-      Number.isFinite(minValue) &&
-      Number.isFinite(maxValue) &&
-      minValue < maxValue
-
-    const quantileAt = (q: number): number => {
-      if (!sortedValues.length) return 0
-      const index = Math.min(
-        sortedValues.length - 1,
-        Math.max(0, Math.floor((sortedValues.length - 1) * q))
-      )
-      return sortedValues[index]
-    }
-
-    const breaks = hasSpread
-      ? [0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((quantile) =>
-          Number(quantileAt(quantile).toFixed(2))
-        )
-      : []
-
-    return { minValue, maxValue, hasSpread, breaks }
-  }, [waterElevationPointFeatures])
+  const waterElevationStats = useMemo(
+    () => getWaterElevationStats(waterElevationPointFeatures),
+    [waterElevationPointFeatures]
+  )
 
   const waterElevationColors = [
     '#2c7bb6',
@@ -494,64 +407,29 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
       : '#1976d2'
 
   const waterElevationColorExpression = useMemo(
-    () => buildWaterElevationStepExpression('__water_elevation'),
+    () => buildWaterElevationStepExpression('water_elevation_ft'),
     [waterElevationStats.hasSpread, waterElevationStats.breaks]
   )
 
-  const waterElevationLegendScale = waterElevationStats.hasSpread
+  const waterElevationLegendScale = waterElevationStats.hasValues
     ? {
         ...WATER_ELEVATION_LEGEND,
-        minLabel: `${Math.round(waterElevationStats.minValue)}`,
+        minLabel: `${Math.round(waterElevationStats.minValue)} ft`,
         maxLabel: `${Math.round(waterElevationStats.maxValue)} ft`,
       }
     : WATER_ELEVATION_LEGEND
 
   const waterElevationPointsLayerStyled = useMemo(() => {
-    const sourceData = waterElevationPointsLayer.sourceData as any
-    if (!sourceData || !Array.isArray(sourceData.features))
+    if (!waterElevationPointSourceData)
       return waterElevationPointsLayer
-
-    const dataWithDerivedElevation = {
-      ...sourceData,
-      features: sourceData.features.map((feature: any) => {
-        const normalizedWaterElevation = normalizeWaterElevationValue(
-          feature?.properties?.water_elevation,
-          feature
-        )
-        const normalizedElevation = normalizeWaterElevationValue(
-          feature?.properties?.elevation,
-          feature
-        )
-
-        return {
-          ...feature,
-          properties: {
-            ...(feature?.properties || {}),
-            ...(normalizedWaterElevation === undefined
-              ? {}
-              : {
-                  water_elevation: normalizedWaterElevation,
-                  water_elevation_unit: 'ft',
-                }),
-            ...(normalizedElevation === undefined
-              ? {}
-              : {
-                  elevation: normalizedElevation,
-                  elevation_unit: 'ft',
-                }),
-            __water_elevation: normalizedWaterElevation,
-          },
-        }
-      }),
-    }
 
     return {
       ...waterElevationPointsLayer,
       sourceProps: {
         ...waterElevationPointsLayer.sourceProps,
-        data: dataWithDerivedElevation,
+        data: waterElevationPointSourceData,
       },
-      sourceData: dataWithDerivedElevation,
+      sourceData: waterElevationPointSourceData,
       legendScale: waterElevationLegendScale,
       layerProps: {
         ...waterElevationPointsLayer.layerProps,
@@ -563,9 +441,18 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     }
   }, [
     waterElevationPointsLayer,
+    waterElevationPointSourceData,
     waterElevationColorExpression,
     waterElevationLegendScale,
   ])
+
+  const waterElevationContoursLayerStyled = useMemo(
+    () => ({
+      ...waterElevationContoursLayer,
+      legendScale: waterElevationLegendScale,
+    }),
+    [waterElevationContoursLayer, waterElevationLegendScale]
+  )
 
   const waterElevationDerivedContourLayerData = useQuery({
     queryKey: [
@@ -582,7 +469,7 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     queryFn: async () => {
       const pointFeatures = waterElevationPointFeatures
         .map((feature) => {
-          const elevation = waterElevationValueFromFeature(feature)
+          const elevation = getWaterElevationFeet(feature)
           const geometry = feature?.geometry
           if (
             elevation === undefined ||
@@ -686,7 +573,7 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
           ...(feature?.properties || {}),
           ...(contourElevation === undefined
             ? {}
-            : { __water_elevation: contourElevation }),
+            : { water_elevation_ft: contourElevation }),
         }
 
         if (
@@ -758,10 +645,10 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
           'symbol-placement': 'line' as const,
           'text-field': [
             'case',
-            ['has', '__water_elevation'],
+            ['has', 'water_elevation_ft'],
             [
               'concat',
-              ['to-string', ['round', ['get', '__water_elevation']]],
+              ['to-string', ['round', ['get', 'water_elevation_ft']]],
               ' ft',
             ],
             '',
@@ -890,7 +777,7 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
   addLayer(
     'ogc-water-elevation-contours',
     waterElevationContours,
-    waterElevationContoursLayer
+    waterElevationContoursLayerStyled
   )
   if (!waterElevationContours.exists) {
     layers['ogc-water-elevation-contours-derived'] =
