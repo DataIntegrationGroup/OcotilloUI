@@ -192,15 +192,6 @@ tables.push({
   },
 })
 
-tables.push({
-  name: 'thing-well-batch-export',
-  list: '/ocotillo/well/batch-export',
-  meta: {
-    label: 'Field Form Batch Export',
-    icon: <PictureAsPdfOutlined />,
-  },
-})
-
 tables = tables.map((b) => {
   const meta = b.meta || {}
   meta['nestedLevel'] = 0
@@ -208,6 +199,17 @@ tables = tables.map((b) => {
     ...b,
     meta: meta,
   }
+})
+
+tables.push({
+  name: 'thing-well-batch-export',
+  list: '/ocotillo/well/batch-export',
+  meta: {
+    label: 'Field Sheets',
+    icon: <PictureAsPdfOutlined />,
+    parent: 'ocotillo.thing-well',
+    nestedLevel: 2,
+  },
 })
 
 let forms: {
