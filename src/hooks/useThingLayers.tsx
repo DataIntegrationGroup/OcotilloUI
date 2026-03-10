@@ -125,6 +125,18 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     'latest_tds_water_wells',
     'latest_tds',
   ])
+  const majorChemistry = resolveCollection(collections, [
+    'Major Chemistry (Water Wells)',
+    'major_chemistry_results',
+    'major_chemistry_wells',
+    'major_chemistry',
+  ])
+  const minorChemistry = resolveCollection(collections, [
+    'Minor Chemistry (Water Wells)',
+    'minor_chemistry_wells',
+    'minor_chemistry_results',
+    'minor_chemistry',
+  ])
   const depthToWaterTrend = resolveCollection(collections, [
     'Depth to Water Trend (Water Wells)',
     'depth_to_water_trend_water_wells',
@@ -280,6 +292,18 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     colorAccessor: latestTdsColorFromFeature,
     legendScale: TDS_LEGEND,
     enabled: latestTds.exists && isLayerActive('ogc-latest-tds'),
+  })
+  const majorChemistryLayer = useOGCLayer({
+    collection: majorChemistry.id,
+    label: majorChemistry.label,
+    color: '#8e24aa',
+    enabled: majorChemistry.exists && isLayerActive('ogc-major-chemistry'),
+  })
+  const minorChemistryLayer = useOGCLayer({
+    collection: minorChemistry.id,
+    label: minorChemistry.label,
+    color: '#6a1b9a',
+    enabled: minorChemistry.exists && isLayerActive('ogc-minor-chemistry'),
   })
   const depthToWaterTrendLayer = useOGCLayer({
     collection: depthToWaterTrend.id,
@@ -783,6 +807,8 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     layers['ogc-water-elevation-contours-derived'] =
       waterElevationDerivedContoursLayer
   }
+  addLayer('ogc-major-chemistry', majorChemistry, majorChemistryLayer)
+  addLayer('ogc-minor-chemistry', minorChemistry, minorChemistryLayer)
   addLayer('ogc-water-well-summary', waterWellSummary, waterWellSummaryLayer)
   addLayer('ogc-water-wells', waterWells, waterWellsLayer)
   addLayer('ogc-springs', springs, springsLayer)

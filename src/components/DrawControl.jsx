@@ -343,8 +343,8 @@ function DrawControl(props) {
 
   const getButtonTitle = (label) =>
     props.disabled
-      ? `${label}. Disabled unless exactly one layer is selected.`
-      : `${label}. Enabled when exactly one layer is selected.`;
+      ? `${label}. Disabled until at least one layer is visible.`
+      : `${label}. Enabled when at least one layer is visible.`;
 
   const syncControlButtons = (map) => {
     if (!map) return;

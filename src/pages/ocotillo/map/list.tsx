@@ -72,7 +72,7 @@ export const MapView: React.FC = () => {
     DEFAULT_MAPBOX_BASEMAP
   )
   const selectedLayerKey = visibleLayers.length === 1 ? visibleLayers[0] : null
-  const areDrawToolsEnabled = visibleLayers.length === 1
+  const areDrawToolsEnabled = visibleLayers.length > 0
   const selectedLayer = selectedLayerKey ? THING_LAYERS[selectedLayerKey] : null
   const selectionFeatures = (
     Object.values(selectionPolygons) as any[]
@@ -106,93 +106,154 @@ export const MapView: React.FC = () => {
     }
   }, [selectedLayerSourceData, selectionFeatures])
 
-  const downloadBlob = (content: BlobPart, contentType: string, suffix: string) => {
-    if (!selectedLayerKey || !selectedLayer) return
+  const exportableLayers = useMemo(
+    () =>
+      visibleLayers
+        .map((layerKey) => {
+          const layerDef = THING_LAYERS[layerKey]
+          if (!layerDef) return null
 
-    const blob = new Blob([content], { type: contentType })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    const label = selectedLayer.layerProps?.label || selectedLayerKey
-    link.href = url
-    link.download = `${sanitizeLayerExportFilename(label)}.${suffix}`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }
-
-  const selectedPointFeatures = useMemo(() => {
-    if (!selectedLayer) return []
-    return getSelectedPointFeatures(exportFeatureCollection, hasSelectionPolygon)
-  }, [hasSelectionPolygon, selectedLayer, exportFeatureCollection])
-
-  const selectedPointColumns = useMemo(() => {
-    return getSelectedPointColumns(selectedPointFeatures, selectedLayerKey)
-  }, [selectedPointFeatures, selectedLayerKey])
-
-  const selectedPointIds = useMemo(
-    () => getSelectedPointIds(selectedPointFeatures),
-    [selectedPointFeatures]
+          return {
+            layerKey,
+            layerDef,
+            label: layerDef.layerProps?.label || layerKey,
+            featureCollection: {
+              ...(layerDef.sourceData?.type === 'FeatureCollection'
+                ? layerDef.sourceData
+                : { type: 'FeatureCollection', features: [] }),
+              features: filterLayerFeaturesBySelection(
+                Array.isArray(layerDef.sourceData?.features)
+                  ? layerDef.sourceData.features
+                  : [],
+                selectionFeatures
+              ),
+            },
+          }
+        })
+        .filter(Boolean),
+    [THING_LAYERS, visibleLayers, selectionFeatures]
   )
+
+  const selectedPointsByLayer = useMemo(
+    () =>
+      exportableLayers
+        .map(({ layerKey, label, featureCollection }) => {
+          const features = getSelectedPointFeatures(
+            featureCollection,
+            hasSelectionPolygon
+          )
+
+          return {
+            layerKey,
+            label,
+            features,
+            columns: getSelectedPointColumns(features, layerKey),
+          }
+        })
+        .filter(({ features }) => features.length > 0),
+    [exportableLayers, hasSelectionPolygon]
+  )
+
+  const selectedPointFeatures = useMemo(
+    () =>
+      selectedLayerKey
+        ? selectedPointsByLayer.find(({ layerKey }) => layerKey === selectedLayerKey)
+            ?.features || []
+        : [],
+    [selectedLayerKey, selectedPointsByLayer]
+  )
+
+  const totalSelectedPointCount = useMemo(
+    () =>
+      selectedPointsByLayer.reduce(
+        (sum, { features }) => sum + features.length,
+        0
+      ),
+    [selectedPointsByLayer]
+  )
+
+  const selectedPointIdsByLayer = useMemo(
+    () =>
+      Object.fromEntries(
+        selectedPointsByLayer.map(({ layerKey, features }) => [
+          layerKey,
+          getSelectedPointIds(features),
+        ])
+      ) as Record<string, Set<string>>,
+    [selectedPointsByLayer]
+  )
+  const hasExportableLayers = exportableLayers.length > 0
   const { ref: basemapPanelRef, height: basemapPanelHeight } =
     useMeasuredHeight<HTMLDivElement>([basemapCollapsed, selectedBasemap], 52)
 
-  const downloadSelectedPoints = (format: 'csv' | 'geojson') => {
-    if (selectedPointFeatures.length === 0) return
+  const downloadLayerBlob = (
+    content: BlobPart,
+    contentType: string,
+    suffix: string,
+    label: string,
+    index = 0
+  ) => {
+    window.setTimeout(() => {
+      const blob = new Blob([content], { type: contentType })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${sanitizeLayerExportFilename(label)}.${suffix}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    }, index * 150)
+  }
+
+  const exportLayerCollection = (
+    featureCollection: any,
+    label: string,
+    format: 'csv' | 'geojson',
+    index = 0
+  ) => {
+    const features = Array.isArray(featureCollection?.features)
+      ? featureCollection.features
+      : []
 
     if (format === 'geojson') {
-      downloadBlob(
-        JSON.stringify(
-          {
-            type: 'FeatureCollection',
-            features: selectedPointFeatures,
-          },
-          null,
-          2
-        ),
+      downloadLayerBlob(
+        JSON.stringify(featureCollection, null, 2),
         'application/geo+json;charset=utf-8;',
-        'geojson'
+        'geojson',
+        label,
+        index
       )
       return
     }
 
-    downloadBlob(
-      buildLayerCsv(selectedPointFeatures),
+    downloadLayerBlob(
+      buildLayerCsv(features),
       'text/csv;charset=utf-8;',
-      'csv'
+      'csv',
+      label,
+      index
     )
   }
 
   const onExportSelectedPoints = () => {
-    downloadSelectedPoints(exportFormat)
-  }
-
-  const onExportLayerCsv = () => {
-    if (!selectedLayerKey || !selectedLayer) return
-
-    const features = Array.isArray(exportFeatureCollection.features)
-      ? exportFeatureCollection.features
-      : []
-    const csv = buildLayerCsv(features)
-
-    downloadBlob(csv, 'text/csv;charset=utf-8;', 'csv')
-  }
-
-  const onExportLayerGeoJson = () => {
-    if (!selectedLayerKey || !selectedLayer) return
-    downloadBlob(
-      JSON.stringify(exportFeatureCollection, null, 2),
-      'application/geo+json;charset=utf-8;',
-      'geojson'
-    )
+    selectedPointsByLayer.forEach(({ label, features }, index) => {
+      exportLayerCollection(
+        {
+          type: 'FeatureCollection',
+          features,
+        },
+        label,
+        exportFormat,
+        index
+      )
+    })
   }
 
   const onExportLayer = () => {
-    if (exportFormat === 'geojson') {
-      onExportLayerGeoJson()
-      return
-    }
-    onExportLayerCsv()
+    exportableLayers.forEach(({ featureCollection, label }, index) => {
+      exportLayerCollection(featureCollection, label, exportFormat, index)
+    })
   }
 
   const onLayerChangeWrapper = (layerKey: string) => {
@@ -215,6 +276,7 @@ export const MapView: React.FC = () => {
       layerKey.includes('water-well') ||
       layerKey.includes('depth-to-water') ||
       layerKey.includes('tds') ||
+      layerKey.includes('chemistry') ||
       layerKey.includes('trend') ||
       layerKey.includes('water-elevation')
     ) {
@@ -423,11 +485,11 @@ export const MapView: React.FC = () => {
             {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
               if (!visibleLayers.includes(key)) return null
               const { sourceProps, layerProps, textLayerProps } = layerDef
+              const selectedPointIds = selectedPointIdsByLayer[key]
               const shouldStylePointSelection =
-                key === selectedLayerKey &&
                 hasSelectionPolygon &&
                 layerProps?.type === 'circle' &&
-                selectedPointIds.size > 0
+                selectedPointIds?.size > 0
               const sourceData = sourceProps?.data as any
               const styledSourceData =
                 shouldStylePointSelection
@@ -648,15 +710,27 @@ export const MapView: React.FC = () => {
                 value={exportFormat}
                 onChange={setExportFormat}
                 onExport={onExportLayer}
-                buttonLabel={hasSelectionPolygon ? 'Export Selected' : 'Export Layer'}
-                disabled={!selectedLayerKey}
+                buttonLabel={
+                  hasSelectionPolygon
+                    ? 'Export Selected'
+                    : visibleLayers.length > 1
+                      ? 'Export Layers'
+                      : 'Export Layer'
+                }
+                disabled={!hasExportableLayers}
                 tooltipPlacement="right"
                 tooltip={
-                  selectedLayerKey
+                  hasExportableLayers
                     ? `Click to download ${
-                        hasSelectionPolygon ? 'the selected map area' : 'that layer'
-                      } as ${exportFormat === 'csv' ? 'CSV' : 'GeoJSON'}.`
-                    : 'Disabled unless exactly one layer is selected. Draw tools are also only enabled when exactly one layer is selected.'
+                        hasSelectionPolygon
+                          ? 'the selected portion of each visible layer'
+                          : visibleLayers.length > 1
+                            ? 'each visible layer'
+                            : 'that layer'
+                      } as separate ${exportFormat === 'csv' ? 'CSV' : 'GeoJSON'} file${
+                        visibleLayers.length > 1 || hasSelectionPolygon ? 's' : ''
+                      }.`
+                    : 'Disabled until at least one layer is visible.'
                 }
               />
             </Box>
@@ -846,11 +920,11 @@ export const MapView: React.FC = () => {
             variant="caption"
             sx={{ color: 'text.secondary', flex: 1, minWidth: 0 }}
           >
-            {selectedLayerKey && hasSelectionPolygon
-              ? `${selectedPointFeatures.length} point${selectedPointFeatures.length === 1 ? '' : 's'} in selection`
-              : 'Draw a polygon/rectangle with one layer selected'}
+            {hasSelectionPolygon
+              ? `${totalSelectedPointCount} point${totalSelectedPointCount === 1 ? '' : 's'} across ${selectedPointsByLayer.length} layer${selectedPointsByLayer.length === 1 ? '' : 's'}`
+              : 'Draw a polygon/rectangle to select points from visible layers'}
           </Typography>
-          {selectedLayerKey && hasSelectionPolygon && selectedPointFeatures.length > 0 ? (
+          {hasSelectionPolygon && selectedPointsByLayer.length > 0 ? (
             <Box sx={{ flex: '0 0 auto' }}>
               <MapExportControls
                 value={exportFormat}
@@ -858,9 +932,9 @@ export const MapView: React.FC = () => {
                 onExport={onExportSelectedPoints}
                 buttonLabel="Export Selected"
                 selectorWidth={142}
-                tooltip={`Click to download the selected points as ${
+                tooltip={`Click to download the selected points for each visible layer as separate ${
                   exportFormat === 'csv' ? 'CSV' : 'GeoJSON'
-                }.`}
+                } files.`}
               />
             </Box>
           ) : null}
@@ -881,86 +955,118 @@ export const MapView: React.FC = () => {
           </IconButton>
         </Box>
         <Collapse in={!selectedPointsCollapsed} unmountOnExit>
-          <Box sx={{ px: 0.5, pb: 0.25 }}>
-            {selectedPointFeatures.length > 0 ? (
-              <TableContainer
-                sx={{
-                  maxHeight: 180,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  backgroundColor: 'background.default',
-                }}
-              >
-                <Table stickyHeader size="small">
-                  <TableHead>
-                    <TableRow>
-                      {selectedPointColumns.map((column) => (
+          <Box
+            sx={{
+              px: 0.85,
+              pb: 0.25,
+              maxHeight: 240,
+              overflowY: 'auto',
+            }}
+          >
+            {selectedPointsByLayer.map(({ layerKey, label, features, columns }) => (
+              <Box key={layerKey} sx={{ mb: 0.9, '&:last-child': { mb: 0 } }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'block',
+                    mb: 0.25,
+                    fontSize: '0.64rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.45,
+                    color: 'text.secondary',
+                  }}
+                >
+                  {label} ({features.length})
+                </Typography>
+                <TableContainer
+                  sx={{
+                    maxHeight: 132,
+                    overflowX: 'auto',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    backgroundColor: 'background.default',
+                  }}
+                >
+                  <Table stickyHeader size="small" sx={{ width: 'max-content', minWidth: '100%' }}>
+                    <TableHead>
+                      <TableRow>
+                        {columns.map((column) => (
+                          <TableCell
+                            key={column}
+                            sx={{
+                              fontSize: '0.64rem',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              whiteSpace: 'nowrap',
+                              wordBreak: 'keep-all',
+                              fontVariantNumeric: 'tabular-nums',
+                              py: 0.5,
+                            }}
+                          >
+                            {getSelectedPointColumnLabel(column)}
+                          </TableCell>
+                        ))}
                         <TableCell
-                          key={column}
                           sx={{
-                            fontSize: '0.68rem',
+                            fontSize: '0.64rem',
                             fontWeight: 700,
                             textTransform: 'uppercase',
                             whiteSpace: 'nowrap',
+                            wordBreak: 'keep-all',
                             fontVariantNumeric: 'tabular-nums',
+                            py: 0.5,
                           }}
                         >
-                          {getSelectedPointColumnLabel(column)}
+                          Coordinates
                         </TableCell>
-                      ))}
-                      <TableCell
-                        sx={{
-                          fontSize: '0.68rem',
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          whiteSpace: 'nowrap',
-                          fontVariantNumeric: 'tabular-nums',
-                        }}
-                      >
-                        Coordinates
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {selectedPointFeatures.map((feature: any, index: number) => {
-                      const properties = feature?.properties || {}
-                      const coordinates = feature?.geometry?.coordinates || []
-                      return (
-                        <TableRow key={`${feature?.id || index}`}>
-                          {selectedPointColumns.map((column) => (
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {features.map((feature: any, index: number) => {
+                        const coordinates = feature?.geometry?.coordinates || []
+                        return (
+                          <TableRow key={`${feature?.id || index}`}>
+                            {columns.map((column) => (
+                              <TableCell
+                                key={column}
+                                sx={{
+                                  fontSize: '0.66rem',
+                                  lineHeight: 1.15,
+                                  py: 0.45,
+                                  whiteSpace: 'nowrap',
+                                  wordBreak: 'keep-all',
+                                  verticalAlign: 'top',
+                                  fontVariantNumeric: 'tabular-nums',
+                                  fontFeatureSettings: '"tnum" 1',
+                                }}
+                              >
+                                {getSelectedPointDisplayValue({ column, feature })}
+                              </TableCell>
+                            ))}
                             <TableCell
-                              key={column}
                               sx={{
-                                fontSize: '0.7rem',
-                                lineHeight: 1.2,
+                                fontSize: '0.66rem',
+                                lineHeight: 1.15,
+                                py: 0.45,
+                                whiteSpace: 'nowrap',
+                                wordBreak: 'keep-all',
                                 verticalAlign: 'top',
                                 fontVariantNumeric: 'tabular-nums',
                                 fontFeatureSettings: '"tnum" 1',
                               }}
                             >
-                              {getSelectedPointDisplayValue({ column, feature })}
+                              {formatSelectedPointCoordinates(coordinates)}
                             </TableCell>
-                          ))}
-                          <TableCell
-                            sx={{
-                              fontSize: '0.7rem',
-                              lineHeight: 1.2,
-                              whiteSpace: 'nowrap',
-                              verticalAlign: 'top',
-                              fontVariantNumeric: 'tabular-nums',
-                              fontFeatureSettings: '"tnum" 1',
-                            }}
-                          >
-                            {formatSelectedPointCoordinates(coordinates)}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : null}
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            ))}
           </Box>
         </Collapse>
       </Paper>

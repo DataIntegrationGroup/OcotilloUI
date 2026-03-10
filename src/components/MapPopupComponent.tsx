@@ -123,6 +123,8 @@ const getLayerLabel = (layerKey: string): string => {
     'ogc-latest-depth-to-water': 'Latest Depth to Water',
     'ogc-average-tds': 'Average TDS',
     'ogc-latest-tds': 'Latest TDS',
+    'ogc-major-chemistry': 'Major Chemistry',
+    'ogc-minor-chemistry': 'Minor Chemistry',
     'ogc-depth-to-water-trend': 'Depth to Water Trend',
     'ogc-water-elevation-points': 'Water Elevation',
     'ogc-water-elevation-contours': 'Water Elevation Contours',
@@ -148,6 +150,8 @@ const isTypeImplicitFromLayer = (
       'ogc-latest-depth-to-water',
       'ogc-average-tds',
       'ogc-latest-tds',
+      'ogc-major-chemistry',
+      'ogc-minor-chemistry',
       'ogc-depth-to-water-trend',
       'ogc-water-elevation-points',
     ].includes(layerKey)
@@ -239,6 +243,138 @@ const buildFeatureRows = (
       makeRow(
         'Observation Date',
         formatDate(properties.latest_tds_observation_date)
+      ),
+    ],
+    'ogc-major-chemistry': [
+      makeRow(
+        'Analytes',
+        getNumber(properties, 'analyte_count')?.toString()
+      ),
+      makeRow(
+        'Latest Chemistry Date',
+        formatDate(properties.latest_chemistry_date)
+      ),
+      makeRow(
+        'TDS',
+        formatNumberWithUnit(
+          getNumber(properties, 'tds'),
+          getString(properties, 'tds_units') || 'mg/L'
+        )
+      ),
+      makeRow(
+        'Calcium',
+        formatNumberWithUnit(
+          getNumber(properties, 'calcium'),
+          getString(properties, 'calcium_units') || 'mg/L'
+        )
+      ),
+      makeRow(
+        'Magnesium',
+        formatNumberWithUnit(
+          getNumber(properties, 'magnesium'),
+          getString(properties, 'magnesium_units') || 'mg/L'
+        )
+      ),
+      makeRow(
+        'Sodium',
+        formatNumberWithUnit(
+          getNumber(properties, 'sodium'),
+          getString(properties, 'sodium_units') || 'mg/L'
+        )
+      ),
+    ],
+    'ogc-minor-chemistry': [
+      makeRow(
+        'Analytes',
+        getNumber(properties, 'analyte_count')?.toString()
+      ),
+      makeRow(
+        'Latest Chemistry Date',
+        formatDate(properties.latest_chemistry_date)
+      ),
+      makeRow(
+        'H2R',
+        formatNumberWithUnit(
+          getNumber(properties, 'h2r'),
+          getString(properties, 'h2r_units') || ''
+        )
+      ),
+      makeRow(
+        'O18R',
+        formatNumberWithUnit(
+          getNumber(properties, 'o18r'),
+          getString(properties, 'o18r_units') || ''
+        )
+      ),
+      makeRow(
+        'C13R',
+        formatNumberWithUnit(
+          getNumber(properties, 'c13r'),
+          getString(properties, 'c13r_units') || ''
+        )
+      ),
+      makeRow(
+        'C14 Years',
+        formatNumberWithUnit(
+          getNumber(properties, 'c14_years'),
+          getString(properties, 'c14_years_units') || ''
+        )
+      ),
+      makeRow(
+        'Fluoride',
+        formatNumberWithUnit(
+          getNumber(properties, 'fluoride'),
+          getString(properties, 'fluoride_units') || 'mg/L'
+        )
+      ),
+      makeRow(
+        'Bromide',
+        formatNumberWithUnit(
+          getNumber(properties, 'bromide'),
+          getString(properties, 'bromide_units') || 'mg/L'
+        )
+      ),
+      makeRow(
+        'Nitrate',
+        formatNumberWithUnit(
+          getNumber(properties, 'nitrate'),
+          getString(properties, 'nitrate_units') || 'mg/L'
+        )
+      ),
+      makeRow(
+        'Phosphate',
+        formatNumberWithUnit(
+          getNumber(properties, 'phosphate'),
+          getString(properties, 'phosphate_units') || 'mg/L'
+        )
+      ),
+      makeRow(
+        'Arsenic',
+        formatNumberWithUnit(
+          getNumber(properties, 'arsenic'),
+          getString(properties, 'arsenic_units') || 'ug/L'
+        )
+      ),
+      makeRow(
+        'Uranium',
+        formatNumberWithUnit(
+          getNumber(properties, 'uranium'),
+          getString(properties, 'uranium_units') || 'ug/L'
+        )
+      ),
+      makeRow(
+        'Iron',
+        formatNumberWithUnit(
+          getNumber(properties, 'iron'),
+          getString(properties, 'iron_units') || 'ug/L'
+        )
+      ),
+      makeRow(
+        'Manganese',
+        formatNumberWithUnit(
+          getNumber(properties, 'manganese'),
+          getString(properties, 'manganese_units') || 'ug/L'
+        )
       ),
     ],
     'ogc-depth-to-water-trend': [
@@ -342,9 +478,10 @@ const buildFeatureRows = (
   const layerSpecificRows = layerSpecificRowsByLayer[layerKey]
 
   if (layerSpecificRows) {
+    const rowLimit = layerKey === 'ogc-minor-chemistry' ? 10 : 6
     return [...layerSpecificRows, ...commonRows]
       .filter((row) => row.value !== 'Not available')
-      .slice(0, 6)
+      .slice(0, rowLimit)
   }
 
   const fallbackRows: PopupRow[] = [
