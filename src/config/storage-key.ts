@@ -5,4 +5,5 @@ export const STORAGE_KEYS = {
 
   pkceVerifier: 'pkce_code_verifier',
   pkceState: 'pkce_state',
+  pkceTransactionPrefix: 'pkce_tx_',
 }

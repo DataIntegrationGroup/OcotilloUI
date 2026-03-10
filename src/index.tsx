@@ -1,5 +1,4 @@
 import '@fontsource-variable/outfit'
-import '@fontsource-variable/inter'
 import '@fontsource-variable/public-sans'
 
 import React from 'react'

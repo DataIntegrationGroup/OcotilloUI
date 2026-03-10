@@ -5,4 +5,5 @@ export interface IHydrographOptions {
   dataZoom?: 'latest' | 'earliest' | 'full'
   showToolbox?: boolean
   invertYAxis?: boolean
+  rightPaddingPercent?: number
 }

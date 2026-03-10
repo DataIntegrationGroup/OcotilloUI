@@ -58,7 +58,7 @@ export const ThemedTitleV2: React.FC<RefineLayoutThemedTitleProps> = ({
             lineHeight: 1,
           }}
         >
-          OCOTILLO
+          Ocotillo
         </Typography>
       )}
     </MuiLink>
