@@ -107,7 +107,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
               >
                 <ListItemButton
                   disabled={disabled}
-                  component={route ? Link : 'div'}
+                  component={route ? RouterLink : 'div'}
                   to={route}
                   selected={isSelected}
                   onClick={() => {
