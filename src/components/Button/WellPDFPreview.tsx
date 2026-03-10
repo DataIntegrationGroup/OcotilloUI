@@ -1,20 +1,20 @@
-import { usePermissions, useNavigation } from '@refinedev/core'
-import { useParams } from 'react-router-dom'
+import { useGo, usePermissions } from '@refinedev/core'
+import { useParams } from 'react-router'
 import { Button } from '@mui/material'
 import { Visibility } from '@mui/icons-material'
 
 export const WellPDFPreviewButton = ({ isLoading }: { isLoading: boolean }) => {
-  const { push } = useNavigation()
+  const go = useGo()
   const { id } = useParams()
   const { data: permissions, isLoading: isPermissionsLoading } =
-    usePermissions<string[]>()
+    usePermissions<string[]>({})
 
   const isViewer = permissions?.includes('AMPViewer') ?? false
 
   const disabled = isLoading || isPermissionsLoading || !isViewer
 
   const handlePreview = () => {
-    push(`/ocotillo/well/pdf-preview/${id}`)
+    go({ to: `/ocotillo/well/pdf-preview/${id}`, type: 'push' })
   }
 
   return (

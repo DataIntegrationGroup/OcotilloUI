@@ -1,14 +1,10 @@
 import React, { type CSSProperties, useContext, useEffect, useState } from 'react'
 import {
   CanAccess,
-  type ITreeMenu,
-  useTitle,
-  useRouterContext,
-  useRouterType,
-  useLink,
   useMenu,
+  type TreeMenuItem,
 } from '@refinedev/core'
-import { ThemedTitleV2, useThemedLayoutContext } from '@refinedev/mui'
+import { ThemedTitle, useThemedLayoutContext } from '@refinedev/mui'
 import ChevronLeft from '@mui/icons-material/ChevronLeft'
 import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined'
 import ExpandLess from '@mui/icons-material/ExpandLess'
@@ -28,13 +24,13 @@ import {
   Paper,
   Typography,
 } from '@mui/material'
-import { Link } from 'react-router-dom'
-import type { RefineThemedLayoutV2SiderProps } from '@refinedev/mui'
+import type { RefineThemedLayoutSiderProps } from '@refinedev/mui'
+import { Link as RouterLink } from 'react-router'
 import { ColorModeContext } from '@/contexts'
 import { Dashboard } from './dashboard'
 import { Logout } from './logout'
 
-export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
+export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
   Title: TitleFromProps,
   render,
   meta,
@@ -50,13 +46,6 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
   const { mode, setMode } = useContext(ColorModeContext)
 
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu({ meta })
-  const TitleFromContext = useTitle()
-
-  const { Link: LegacyLink } = useRouterContext()
-  const routerType = useRouterType()
-
-  const NewLink = useLink()
-  const Link = routerType === 'legacy' ? LegacyLink : NewLink
 
   const getDrawerWidth = (isSiderCollapsed: boolean): number =>
     isSiderCollapsed ? 56 : 260
@@ -76,14 +65,14 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
     })
   }, [defaultOpenKeys])
 
-  const Title = TitleFromProps ?? TitleFromContext ?? ThemedTitleV2
+  const Title = TitleFromProps ?? ThemedTitle
 
   const handleClick = (key: string) => {
     setOpen({ ...open, [key]: !open[key] })
   }
 
-  const renderTreeView = (tree: ITreeMenu[], selectedKey?: string) => {
-    return tree.map((item: ITreeMenu) => {
+  const renderTreeView = (tree: TreeMenuItem[], selectedKey?: string) => {
+    return tree.map((item: TreeMenuItem) => {
       const {
         icon: deprecatedIcon,
         label: deprecatedLabel,
@@ -218,7 +207,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
           >
             <ListItemButton
               disabled={disabled}
-              component={Link}
+              component={RouterLink}
               to={route}
               selected={isSelected}
               style={linkStyle}
@@ -262,9 +251,6 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
   const Sider = () => {
     if (render) {
       return render({
-        dashboard: (
-          <Dashboard collapsed={siderCollapsed} selectedKey={selectedKey} />
-        ),
         logout: <Logout collapsed={siderCollapsed} />,
         items: renderTreeView(menuItems, selectedKey),
         collapsed: siderCollapsed,

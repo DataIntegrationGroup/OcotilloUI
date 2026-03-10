@@ -22,7 +22,7 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
   it('should fetch terms using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'lexicon/term',
-      pagination: { current: 1, pageSize: 10 }
+      pagination: { currentPage: 1, pageSize: 10 }
     })
 
     expect(result).toHaveProperty('data')
@@ -123,7 +123,7 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
   it('should fetch categories using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'lexicon/category',
-      pagination: { current: 1, pageSize: 10 }
+      pagination: { currentPage: 1, pageSize: 10 }
     })
 
     expect(result).toHaveProperty('data')

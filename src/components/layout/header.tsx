@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   useGetIdentity,
-  useActiveAuthProvider,
   useIsExistAuthentication,
   useLogout,
   useWarnAboutChange,
@@ -18,20 +17,15 @@ import {
   Skeleton,
 } from '@mui/material'
 import { LogoutOutlined, PersonOutline } from '@mui/icons-material'
-import type { RefineThemedLayoutV2HeaderProps } from '@refinedev/mui'
+import type { RefineThemedLayoutHeaderProps } from '@refinedev/mui'
 import { HamburgerMenu } from './hamburgerMenu'
 import SearchBar from '@/components/SearchBar'
 
-export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
-  const authProvider = useActiveAuthProvider()
+export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
   const isExistAuthentication = useIsExistAuthentication()
-  const { data: user, isLoading } = useGetIdentity({
-    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
-  })
+  const { data: user, isLoading } = useGetIdentity()
   const { warnWhen, setWarnWhen } = useWarnAboutChange()
-  const { mutate: mutateLogout } = useLogout({
-    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
-  })
+  const { mutate: mutateLogout } = useLogout()
 
   const translate = useTranslate()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)

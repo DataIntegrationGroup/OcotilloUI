@@ -15,7 +15,7 @@ describe('Ocotillo Integration Tests: Location', () => {
   it('should fetch locations using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'ocotillo.location',
-      pagination: { current: 1, pageSize: 10 },
+      pagination: { currentPage: 1, pageSize: 10 },
     })
 
     expect(result).toHaveProperty('data')

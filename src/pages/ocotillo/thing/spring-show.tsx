@@ -4,9 +4,8 @@ import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 import { ISpring } from '@/interfaces/ocotillo'
 
 export const SpringShow = () => {
-  const { queryResult } = useShow({})
-  const { data, isLoading } = queryResult
-  const record = data?.data as ISpring
+  const { query, result } = useShow({})
+  const record = result as ISpring
 
   // Custom configs for springs
   const fieldConfigs = {
@@ -18,7 +17,7 @@ export const SpringShow = () => {
   }
 
   return (
-    <Show isLoading={isLoading}>
+    <Show isLoading={query.isLoading}>
       <DynamicShowDisplay<ISpring>
         record={record}
         fieldConfigs={fieldConfigs}

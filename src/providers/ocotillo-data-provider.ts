@@ -80,7 +80,7 @@ export const ocotilloDataProvider: DataProvider = {
     }
 
     if (pagination) {
-      params.append('page', pagination.current.toString())
+      params.append('page', (pagination.currentPage ?? 1).toString())
       params.append('size', pagination.pageSize.toString())
     }
 

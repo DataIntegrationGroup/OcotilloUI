@@ -51,7 +51,7 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
       const provider = dataProvider('ogcapi')
       const result = await provider.getList({
         resource: 'ogcapi',
-        pagination: { current: 1, pageSize: 200 },
+        pagination: { currentPage: 1, pageSize: 200 },
       })
 
       return (result?.data ?? []) as OgcCollectionRecord[]

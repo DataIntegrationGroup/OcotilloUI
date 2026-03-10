@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router'
 import { ErrorComponent } from '@refinedev/mui'
 import {
   ContactEdit,

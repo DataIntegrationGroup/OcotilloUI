@@ -6,7 +6,7 @@ import {
   Outlet,
   Route,
   Routes,
-} from 'react-router-dom'
+} from 'react-router'
 import { ThemedLayoutV2 } from '@/components/layout'
 import { ThemedHeaderV2 } from '@/components/layout/header'
 import { ThemedSiderV2 } from '@/components/layout/sider'
@@ -27,7 +27,6 @@ const App: React.FC = () => (
             <Authenticated
               key={'auth-pages'}
               fallback={<Outlet />}
-              v3LegacyAuthProviderCompatible={true}
             >
               <Navigate to="/home" />
             </Authenticated>
@@ -59,7 +58,6 @@ const App: React.FC = () => (
             <Authenticated
               key="authenticated-routes"
               redirectOnFail="/login"
-              v3LegacyAuthProviderCompatible={true}
             >
               <ThemedLayoutV2
                 Header={() => <ThemedHeaderV2 sticky />}
@@ -82,10 +80,7 @@ const App: React.FC = () => (
         </Route>
         <Route
           element={
-            <Authenticated
-              v3LegacyAuthProviderCompatible={true}
-              key="catch-all"
-            >
+            <Authenticated key="catch-all">
               <ThemedLayoutV2>
                 <Outlet />
               </ThemedLayoutV2>

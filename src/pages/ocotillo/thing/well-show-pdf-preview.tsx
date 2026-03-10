@@ -18,12 +18,12 @@ import {
 import {
   HttpError,
   useList,
-  useNavigation,
+  useGo,
   useOne,
   useShow,
 } from '@refinedev/core'
 import { ListButton, Show, ShowButton, useDataGrid } from '@refinedev/mui'
-import { useParams } from 'react-router-dom'
+import { useParams } from 'react-router'
 import { ArrowBack, ExpandMore } from '@mui/icons-material'
 import { PDFViewer } from '@react-pdf/renderer'
 import {
@@ -42,13 +42,13 @@ import { SensorDeploymentRow } from '@/utils'
 import { IHydrographDatasource } from '@/interfaces/st2'
 
 export const WellShowPdfPreview = () => {
-  const { push } = useNavigation()
+  const go = useGo()
   const { id } = useParams()
   const theme = useTheme()
   const [isViewerReady, setIsViewerReady] = useState(false)
   const [hydrographImage, setHydrographImage] = useState<string | null>(null)
 
-  const handleBack = () => push(`/ocotillo/well/show/${id}`)
+  const handleBack = () => go({ to: `/ocotillo/well/show/${id}`, type: 'push' })
 
   const { control, watch, reset } = useForm<IPdfOptions>({
     defaultValues: PDF_DEFAULT_VALUES,
@@ -67,7 +67,7 @@ export const WellShowPdfPreview = () => {
       },
     },
     queryOptions: {
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
@@ -77,7 +77,7 @@ export const WellShowPdfPreview = () => {
     dataProviderName: 'ocotillo',
     queryOptions: {
       enabled: Boolean(id),
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
@@ -90,9 +90,7 @@ export const WellShowPdfPreview = () => {
     sensors,
   })
 
-  const {
-    queryResult: { data: wellData, isLoading: isWellLoading },
-  } = useShow<IWell, HttpError>({
+  const { result: well, query: wellQuery } = useShow<IWell, HttpError>({
     resource: 'thing-well',
     id,
   })
@@ -108,24 +106,23 @@ export const WellShowPdfPreview = () => {
       },
     },
     queryOptions: {
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
 
-  const { data: assetData, isLoading: isAssetLoading } = useList({
+  const { result: assetData, query: assetQuery } = useList({
     resource: 'asset',
     dataProviderName: 'ocotillo',
     meta: { params: { thing_id: id } },
   })
 
-  const { data: contactData, isLoading: isContactLoading } = useList<IContact>({
+  const { result: contactData, query: contactQuery } = useList<IContact>({
     resource: 'contact',
     dataProviderName: 'ocotillo',
     meta: { params: { thing_id: id } },
   })
 
-  const well = wellData?.data
   const assets = assetData?.data ?? []
   const contacts = contactData?.data ?? []
 
@@ -143,7 +140,7 @@ export const WellShowPdfPreview = () => {
 
   const hasSampleId = sampleId != null
 
-  const { data: sampleData, isLoading: isSampleLoading } = useOne<ISample>({
+  const { result: sampleData, query: sampleQuery } = useOne<ISample>({
     resource: 'ocotillo.sample',
     id: sampleId,
     queryOptions: {
@@ -151,14 +148,14 @@ export const WellShowPdfPreview = () => {
     },
   })
 
-  const sample = sampleData?.data
+  const sample = sampleData
 
   const isLoading =
-    isWellLoading ||
-    isAssetLoading ||
-    isContactLoading ||
+    wellQuery.isLoading ||
+    assetQuery.isLoading ||
+    contactQuery.isLoading ||
     isObservationsLoading ||
-    (hasSampleId && isSampleLoading)
+    (hasSampleId && sampleQuery.isLoading)
 
   useEffect(() => {
     if (!isLoading) {

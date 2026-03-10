@@ -16,7 +16,7 @@ import { settings } from '@/settings'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
 
 export const AttachmentsAccordion = ({ id }: { id?: number }) => {
-  const { data } = useList({
+  const { result } = useList({
     resource: 'asset',
     dataProviderName: 'ocotillo',
     meta: {
@@ -24,7 +24,7 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
     },
   })
 
-  const assets = data?.data ?? []
+  const assets = result?.data ?? []
   const columns = useMemo<GridColDef[]>(
     () => [
       { field: 'name', headerName: 'Name', minWidth: 150 },

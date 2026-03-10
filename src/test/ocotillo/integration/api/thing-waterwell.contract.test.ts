@@ -7,7 +7,7 @@ describe('Ocotillo Integration Tests: Water Well', () => {
   it('should fetch water wells using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'thing/water-well',
-      pagination: { current: 1, pageSize: 10 },
+      pagination: { currentPage: 1, pageSize: 10 },
     })
 
     expect(result).toHaveProperty('data')

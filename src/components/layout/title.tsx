@@ -1,27 +1,17 @@
-import React from "react";
-import {
-  useRouterContext,
-  useLink,
-  useRouterType,
-} from "@refinedev/core";
-import MuiLink from "@mui/material/Link";
-import Typography from "@mui/material/Typography";
-import type { RefineLayoutThemedTitleProps } from "@refinedev/mui";
+import React from 'react'
+import MuiLink from '@mui/material/Link'
+import Typography from '@mui/material/Typography'
+import type { RefineLayoutThemedTitleProps } from '@refinedev/mui'
+import { Link as RouterLink } from 'react-router'
 
 export const ThemedTitleV2: React.FC<RefineLayoutThemedTitleProps> = ({
   collapsed,
   wrapperStyles,
 }) => {
-  const routerType = useRouterType();
-  const Link = useLink();
-  const { Link: LegacyLink } = useRouterContext();
-
-  const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
-
   return (
     <MuiLink
       to="/"
-      component={ActiveLink}
+      component={RouterLink}
       underline="none"
       sx={{
         display: "flex",
@@ -62,5 +52,5 @@ export const ThemedTitleV2: React.FC<RefineLayoutThemedTitleProps> = ({
         </Typography>
       )}
     </MuiLink>
-  );
-};
+  )
+}

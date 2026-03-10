@@ -16,10 +16,10 @@ export const geochronologyDataProvider: DataProvider = {
 
     if (pagination) {
       if (meta?.pagination) {
-        params.append("page", meta.pagination.current.toString());
+        params.append("page", (meta.pagination.currentPage ?? 1).toString());
         params.append("size", meta.pagination.pageSize.toString());
       } else {
-        params.append("page", pagination.current.toString());
+        params.append("page", (pagination.currentPage ?? 1).toString());
         params.append("size", pagination.pageSize.toString());
       }
     }

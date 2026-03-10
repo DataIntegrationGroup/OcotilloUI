@@ -5,7 +5,7 @@ import {
   tokenStore,
   transientStore,
 } from '@/providers/authentik-provider'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   Alert,
