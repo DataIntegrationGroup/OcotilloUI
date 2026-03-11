@@ -9,7 +9,6 @@ import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 export const WellEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     control,
     formState: { errors },
   } = useForm<IWell, HttpError, Nullable<IWell>>()

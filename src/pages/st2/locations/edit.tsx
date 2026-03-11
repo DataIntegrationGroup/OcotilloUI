@@ -16,7 +16,6 @@ import {Nullable} from "../../../interfaces";
 export const LocationEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     register,
     control,
     formState: { errors },

@@ -9,7 +9,6 @@ import { IGroup } from '@/interfaces/ocotillo/IGroup'
 export const GroupEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     register,
     control,
     setValue,
