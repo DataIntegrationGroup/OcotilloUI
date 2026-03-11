@@ -87,6 +87,9 @@ export const MapView: React.FC = () => {
   )
   const [isPiperDrawerOpen, setIsPiperDrawerOpen] = useState(false)
   const [activePiperFeatureId, setActivePiperFeatureId] = useState<string | null>(null)
+  const SELECTED_POINTS_BOTTOM_GUTTER = 30
+  const SELECTED_POINTS_LAYER_GAP = 12
+  const SELECTED_POINTS_FALLBACK_HEIGHT = 52
   const selectedLayerKey = visibleLayers.length === 1 ? visibleLayers[0] : null
   const areDrawToolsEnabled = visibleLayers.length > 0
   const selectionFeatures = (
@@ -194,6 +197,8 @@ export const MapView: React.FC = () => {
       ),
     [selectedPointsByLayer]
   )
+  const canExpandSelectedPoints =
+    hasSelectionPolygon && selectedPointsByLayer.length > 0
 
   const selectedPointIdsByLayer = useMemo(
     () =>
@@ -208,6 +213,18 @@ export const MapView: React.FC = () => {
   const hasExportableLayers = exportableLayers.length > 0
   const { ref: basemapPanelRef, height: basemapPanelHeight } =
     useMeasuredHeight<HTMLDivElement>([basemapCollapsed, selectedBasemap], 52)
+  const {
+    ref: selectedPointsDrawerRef,
+    height: selectedPointsDrawerHeight,
+  } = useMeasuredHeight<HTMLDivElement>(
+    [selectedPointsCollapsed, selectedPointsByLayer, hasSelectionPolygon],
+    SELECTED_POINTS_FALLBACK_HEIGHT
+  )
+  const selectedPointsDrawerReservedSpace = `${
+    selectedPointsDrawerHeight +
+    SELECTED_POINTS_BOTTOM_GUTTER +
+    SELECTED_POINTS_LAYER_GAP
+  }px`
 
   const downloadLayerBlob = (
     content: BlobPart,
@@ -445,8 +462,15 @@ export const MapView: React.FC = () => {
   ) => {
     event.preventDefault()
     event.stopPropagation()
+    if (!canExpandSelectedPoints) return
     setSelectedPointsCollapsed((value) => !value)
   }
+
+  useEffect(() => {
+    if (!canExpandSelectedPoints) {
+      setSelectedPointsCollapsed(true)
+    }
+  }, [canExpandSelectedPoints])
 
   useEffect(() => {
     if (!isMajorChemistryVisible) {
@@ -688,7 +712,7 @@ export const MapView: React.FC = () => {
         sx={(theme) => ({
           position: 'absolute',
           top: 12 + basemapPanelHeight,
-          bottom: layersPanelPinned ? { xs: 44, sm: 40 } : 'auto',
+          bottom: layersPanelPinned ? selectedPointsDrawerReservedSpace : 'auto',
           left: 12,
           width: { xs: 'calc(100% - 24px)', sm: 320 },
           display: 'flex',
@@ -1076,198 +1100,233 @@ export const MapView: React.FC = () => {
             </Box>
           </Box>
         </Drawer>
-      </Box>
-      <Paper
-        elevation={6}
-        sx={(theme) => ({
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: selectedPointsCollapsed ? 'visible' : 'hidden',
-          px: 0.8,
-          py: 0.6,
-          borderRadius: 1.25,
-          backgroundColor: alpha(theme.palette.background.paper, 0.96),
-          border: '1px solid',
-          borderColor: alpha(theme.palette.divider, 0.9),
-        })}
-      >
-        <Box
+        <Drawer
+          anchor="bottom"
+          variant="persistent"
+          open
+          hideBackdrop
+          PaperProps={{
+            sx: (theme) => ({
+              position: 'absolute',
+              left: 12,
+              right: 12,
+              bottom: SELECTED_POINTS_BOTTOM_GUTTER,
+              top: 'auto',
+              width: 'auto',
+              maxHeight: 'min(42%, 320px)',
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: alpha(theme.palette.divider, 0.9),
+              backgroundColor: alpha(theme.palette.background.paper, 0.96),
+              backdropFilter: 'blur(8px)',
+              overflow: 'hidden',
+              zIndex: 2,
+            }),
+          }}
           sx={{
-            px: 0.3,
-            py: 0.2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            '& .MuiDrawer-paper': {
+              pointerEvents: 'auto',
+            },
           }}
         >
-          <Typography
-            variant="overline"
-            sx={{
-              px: 0.55,
-              py: 0.25,
-              fontWeight: 700,
-              letterSpacing: 0.7,
-              fontSize: '0.68rem',
-              lineHeight: 1.2,
-            }}
-          >
-            Selected Points
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{ color: 'text.secondary', flex: 1, minWidth: 0 }}
-          >
-            {hasSelectionPolygon
-              ? `${totalSelectedPointCount} point${totalSelectedPointCount === 1 ? '' : 's'} across ${selectedPointsByLayer.length} layer${selectedPointsByLayer.length === 1 ? '' : 's'}`
-              : 'Draw a polygon/rectangle to select points from visible layers'}
-          </Typography>
-          {hasSelectionPolygon && selectedPointsByLayer.length > 0 ? (
-            <Box sx={{ flex: '0 0 auto' }}>
-              <MapExportControls
-                value={exportFormat}
-                onChange={setExportFormat}
-                onExport={onExportSelectedPoints}
-                buttonLabel="Export Selected"
-                selectorWidth={142}
-                tooltip={`Click to download the selected points for each visible layer as separate ${
-                  exportFormat === 'csv' ? 'CSV' : 'GeoJSON'
-                } files.`}
-              />
-            </Box>
-          ) : null}
-          <IconButton
-            size="small"
-            onClick={onSelectedPointsCollapseToggle}
-            aria-label={
-              selectedPointsCollapsed
-                ? 'Expand selected points'
-                : 'Collapse selected points'
-            }
-          >
-            {selectedPointsCollapsed ? (
-              <KeyboardArrowDown fontSize="small" />
-            ) : (
-              <KeyboardArrowUp fontSize="small" />
-            )}
-          </IconButton>
-        </Box>
-        <Collapse in={!selectedPointsCollapsed} unmountOnExit>
           <Box
+            ref={selectedPointsDrawerRef}
             sx={{
-              px: 0.85,
-              pb: 0.25,
-              maxHeight: 240,
-              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
             }}
           >
-            {selectedPointsByLayer.map(({ layerKey, label, features, columns }) => (
-              <Box key={layerKey} sx={{ mb: 0.9, '&:last-child': { mb: 0 } }}>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    display: 'block',
-                    mb: 0.25,
-                    fontSize: '0.64rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.45,
-                    color: 'text.secondary',
-                  }}
-                >
-                  {label} ({features.length})
-                </Typography>
-                <TableContainer
-                  sx={{
-                    maxHeight: 132,
-                    overflowX: 'auto',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    backgroundColor: 'background.default',
-                  }}
-                >
-                  <Table stickyHeader size="small" sx={{ width: 'max-content', minWidth: '100%' }}>
-                    <TableHead>
-                      <TableRow>
-                        {columns.map((column) => (
-                          <TableCell
-                            key={column}
-                            sx={{
-                              fontSize: '0.64rem',
-                              fontWeight: 700,
-                              textTransform: 'uppercase',
-                              whiteSpace: 'nowrap',
-                              wordBreak: 'keep-all',
-                              fontVariantNumeric: 'tabular-nums',
-                              py: 0.5,
-                            }}
-                          >
-                            {getSelectedPointColumnLabel(column)}
-                          </TableCell>
-                        ))}
-                        <TableCell
-                          sx={{
-                            fontSize: '0.64rem',
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            whiteSpace: 'nowrap',
-                            wordBreak: 'keep-all',
-                            fontVariantNumeric: 'tabular-nums',
-                            py: 0.5,
-                          }}
-                        >
-                          Coordinates
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {features.map((feature: any, index: number) => {
-                        const coordinates = feature?.geometry?.coordinates || []
-                        return (
-                          <TableRow key={`${feature?.id || index}`}>
+            <Box
+              sx={{
+                px: 1,
+                py: 0.7,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 1,
+                borderBottom: selectedPointsCollapsed || !canExpandSelectedPoints
+                  ? 'none'
+                  : '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Typography
+                variant="overline"
+                sx={{
+                  px: 0.55,
+                  py: 0.25,
+                  fontWeight: 700,
+                  letterSpacing: 0.7,
+                  fontSize: '0.68rem',
+                  lineHeight: 1.2,
+                }}
+              >
+                Selected Points
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: 'text.secondary', flex: 1, minWidth: 0 }}
+              >
+                {hasSelectionPolygon
+                  ? `${totalSelectedPointCount} point${totalSelectedPointCount === 1 ? '' : 's'} across ${selectedPointsByLayer.length} layer${selectedPointsByLayer.length === 1 ? '' : 's'}`
+                  : 'Draw a polygon/rectangle to select points from visible layers'}
+              </Typography>
+              {hasSelectionPolygon && selectedPointsByLayer.length > 0 ? (
+                <Box sx={{ flex: '0 0 auto' }}>
+                  <MapExportControls
+                    value={exportFormat}
+                    onChange={setExportFormat}
+                    onExport={onExportSelectedPoints}
+                    buttonLabel="Export Selected"
+                    selectorWidth={142}
+                    tooltip={`Click to download the selected points for each visible layer as separate ${
+                      exportFormat === 'csv' ? 'CSV' : 'GeoJSON'
+                    } files.`}
+                  />
+                </Box>
+              ) : null}
+              <IconButton
+                size="small"
+                onClick={onSelectedPointsCollapseToggle}
+                disabled={!canExpandSelectedPoints}
+                aria-label={
+                  selectedPointsCollapsed
+                    ? 'Expand selected points'
+                    : 'Collapse selected points'
+                }
+              >
+                {selectedPointsCollapsed ? (
+                  <KeyboardArrowDown fontSize="small" />
+                ) : (
+                  <KeyboardArrowUp fontSize="small" />
+                )}
+              </IconButton>
+            </Box>
+            <Collapse
+              in={canExpandSelectedPoints && !selectedPointsCollapsed}
+              unmountOnExit
+            >
+              <Box
+                sx={{
+                  px: 1,
+                  pb: 0.8,
+                  maxHeight: 'min(30vh, 240px)',
+                  overflowY: 'auto',
+                }}
+              >
+                {selectedPointsByLayer.map(({ layerKey, label, features, columns }) => (
+                  <Box key={layerKey} sx={{ mb: 0.9, '&:last-child': { mb: 0 } }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: 'block',
+                        mb: 0.25,
+                        fontSize: '0.64rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.45,
+                        color: 'text.secondary',
+                      }}
+                    >
+                      {label} ({features.length})
+                    </Typography>
+                    <TableContainer
+                      sx={{
+                        maxHeight: 132,
+                        overflowX: 'auto',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        backgroundColor: 'background.default',
+                      }}
+                    >
+                      <Table stickyHeader size="small" sx={{ width: 'max-content', minWidth: '100%' }}>
+                        <TableHead>
+                          <TableRow>
                             {columns.map((column) => (
                               <TableCell
                                 key={column}
                                 sx={{
-                                  fontSize: '0.66rem',
-                                  lineHeight: 1.15,
-                                  py: 0.45,
+                                  fontSize: '0.64rem',
+                                  fontWeight: 700,
+                                  textTransform: 'uppercase',
                                   whiteSpace: 'nowrap',
                                   wordBreak: 'keep-all',
-                                  verticalAlign: 'top',
                                   fontVariantNumeric: 'tabular-nums',
-                                  fontFeatureSettings: '"tnum" 1',
+                                  py: 0.5,
                                 }}
                               >
-                                {getSelectedPointDisplayValue({ column, feature })}
+                                {getSelectedPointColumnLabel(column)}
                               </TableCell>
                             ))}
                             <TableCell
                               sx={{
-                                fontSize: '0.66rem',
-                                lineHeight: 1.15,
-                                py: 0.45,
+                                fontSize: '0.64rem',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
                                 whiteSpace: 'nowrap',
                                 wordBreak: 'keep-all',
-                                verticalAlign: 'top',
                                 fontVariantNumeric: 'tabular-nums',
-                                fontFeatureSettings: '"tnum" 1',
+                                py: 0.5,
                               }}
                             >
-                              {formatSelectedPointCoordinates(coordinates)}
+                              Coordinates
                             </TableCell>
                           </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                        </TableHead>
+                        <TableBody>
+                          {features.map((feature: any, index: number) => {
+                            const coordinates = feature?.geometry?.coordinates || []
+                            return (
+                              <TableRow key={`${feature?.id || index}`}>
+                                {columns.map((column) => (
+                                  <TableCell
+                                    key={column}
+                                    sx={{
+                                      fontSize: '0.66rem',
+                                      lineHeight: 1.15,
+                                      py: 0.45,
+                                      whiteSpace: 'nowrap',
+                                      wordBreak: 'keep-all',
+                                      verticalAlign: 'top',
+                                      fontVariantNumeric: 'tabular-nums',
+                                      fontFeatureSettings: '"tnum" 1',
+                                    }}
+                                  >
+                                    {getSelectedPointDisplayValue({ column, feature })}
+                                  </TableCell>
+                                ))}
+                                <TableCell
+                                  sx={{
+                                    fontSize: '0.66rem',
+                                    lineHeight: 1.15,
+                                    py: 0.45,
+                                    whiteSpace: 'nowrap',
+                                    wordBreak: 'keep-all',
+                                    verticalAlign: 'top',
+                                    fontVariantNumeric: 'tabular-nums',
+                                    fontFeatureSettings: '"tnum" 1',
+                                  }}
+                                >
+                                  {formatSelectedPointCoordinates(coordinates)}
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
+                ))}
               </Box>
-            ))}
+            </Collapse>
           </Box>
-        </Collapse>
-      </Paper>
+        </Drawer>
+      </Box>
     </Box>
   )
 }
