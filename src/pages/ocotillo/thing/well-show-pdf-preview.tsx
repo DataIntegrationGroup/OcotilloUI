@@ -319,8 +319,60 @@ export const WellShowPdfPreview = () => {
               variant="outlined"
               sx={{
                 p: 1,
-                bgcolor: 'grey.50',
                 borderRadius: 2,
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+                backgroundImage: 'none',
+                boxShadow: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? '0 1px 3px rgba(0,0,0,0.35)'
+                    : '0 1px 3px rgba(0,0,0,0.08)',
+
+                '&::before': {
+                  display: 'none',
+                },
+
+                '&.Mui-expanded': {
+                  mt: 0,
+                },
+
+                '& .MuiAccordionSummary-root': {
+                  borderRadius: 1.5,
+                  minHeight: 56,
+                  px: 1.5,
+                  transition: 'background-color 0.2s ease',
+                },
+
+                '& .MuiAccordionSummary-root:hover': {
+                  bgcolor: 'action.hover',
+                },
+
+                '& .MuiAccordionSummary-root.Mui-expanded': {
+                  minHeight: 56,
+                },
+
+                '& .MuiAccordionSummary-content': {
+                  my: 1,
+                },
+
+                '& .MuiAccordionSummary-expandIconWrapper': {
+                  color: 'text.secondary',
+                },
+
+                '& .MuiAccordionDetails-root': {
+                  pt: 1,
+                  px: 2,
+                  pb: 2,
+                  color: 'text.primary',
+                },
+
+                '& .MuiAccordionActions-root': {
+                  px: 2,
+                  pb: 2,
+                  pt: 0,
+                  borderTop: '1px solid',
+                  borderColor: 'divider',
+                },
               }}
             >
               <AccordionSummary
