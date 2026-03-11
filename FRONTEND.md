@@ -62,25 +62,39 @@ Because they are wrappers, they do not always pass every MUI prop through. If yo
 
 ## Material UI Components
 
-The full component library is at [mui.com/material-ui/all-components](https://mui.com/material-ui/all-components/).
+This project uses **MUI v6**. All component docs, API references, and migration guides are version-aware — make sure you are on the v6 docs.
 
-The most commonly used in this project:
+| Resource | URL |
+|---|---|
+| All components (v6) | https://mui.com/material-ui/all-components/ |
+| Component API index | https://mui.com/material-ui/api/ |
+| `sx` prop reference | https://mui.com/system/getting-started/the-sx-prop/ |
+| Theme customization | https://mui.com/material-ui/customization/theming/ |
+| MUI X DataGrid (v8) | https://mui.com/x/react-data-grid/ |
+| DataGrid API (v8) | https://mui.com/x/api/data-grid/data-grid/ |
+| Icons browser | https://mui.com/material-ui/material-icons/ |
+| v5 → v6 migration guide | https://mui.com/material-ui/migration/upgrade-to-v6/ |
 
-| Component | Used for |
-| --- | --- |
-| `Box` | Layout wrapper, replaces `div` with `sx` prop access |
-| `Stack` | One-axis flex layout (direction, gap, alignItems) |
-| `Typography` | All text. Use the `variant` prop to apply the type scale |
-| `Button` | Actions. Default size is `small` (set in theme) |
-| `Card` / `Paper` | Surface containers. Paper is a flat Card |
-| `Drawer` | The sidebar |
-| `AppBar` / `Toolbar` | The top header bar |
-| `DataGrid` | All data tables (from `@mui/x-data-grid`) |
-| `Autocomplete` | Search inputs with suggestions |
-| `TextField` | Text inputs inside forms |
-| `IconButton` | Toolbar icon actions |
-| `Tooltip` | Hover labels on icon buttons |
-| `Divider` | Horizontal rules between sections |
+The most commonly used components in this project:
+
+| Component | Docs | Used for |
+| --- | --- | --- |
+| `Box` | https://mui.com/material-ui/react-box/ | Layout wrapper, replaces `div` with `sx` prop access |
+| `Stack` | https://mui.com/material-ui/react-stack/ | One-axis flex layout (direction, gap, alignItems) |
+| `Grid2` | https://mui.com/material-ui/react-grid2/ | Two-dimensional column layouts |
+| `Typography` | https://mui.com/material-ui/react-typography/ | All text. Use the `variant` prop to apply the type scale |
+| `Button` | https://mui.com/material-ui/react-button/ | Actions. Default size is `small` (set in theme) |
+| `Card` / `Paper` | https://mui.com/material-ui/react-card/ | Surface containers. Paper is a flat Card |
+| `Drawer` | https://mui.com/material-ui/react-drawer/ | The sidebar |
+| `AppBar` / `Toolbar` | https://mui.com/material-ui/react-app-bar/ | The top header bar |
+| `DataGrid` | https://mui.com/x/react-data-grid/ | All data tables (from `@mui/x-data-grid` v8) |
+| `Autocomplete` | https://mui.com/material-ui/react-autocomplete/ | Search inputs with suggestions |
+| `TextField` | https://mui.com/material-ui/react-text-field/ | Text inputs inside forms |
+| `IconButton` | https://mui.com/material-ui/react-button/#icon-button | Toolbar icon actions |
+| `Tooltip` | https://mui.com/material-ui/react-tooltip/ | Hover labels on icon buttons |
+| `Divider` | https://mui.com/material-ui/react-divider/ | Horizontal rules between sections |
+| `Chip` | https://mui.com/material-ui/react-chip/ | Tags, filter badges |
+| `Dialog` | https://mui.com/material-ui/react-dialog/ | Modal dialogs |
 
 ### The `sx` prop
 
