@@ -12,7 +12,7 @@ import { CreateEditAsset } from '@/components/form/asset/CreateEditAsset'
 export const AssetEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
+    refineCore: { query },
     control,
     watch,
     setValue,
@@ -23,7 +23,7 @@ export const AssetEdit: React.FC = () => {
 
   const { result: image } = useOne({
     resource: 'asset',
-    id: queryResult?.data?.data.id,
+    id: query?.data?.data.id,
     dataProviderName: 'ocotillo',
     queryOptions: {
       gcTime: 0,

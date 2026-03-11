@@ -14,7 +14,7 @@ import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
 export const ContactEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
+    refineCore: { query },
     control,
     formState: { errors },
     watch,
@@ -39,13 +39,13 @@ export const ContactEdit: React.FC = () => {
    */
   useEffect(() => {
     if (
-      queryResult?.data?.data?.things &&
-      queryResult.data.data.things.length > 0
+      query?.data?.data?.things &&
+      query.data.data.things.length > 0
     ) {
-      const thing = queryResult.data.data.things[0]
+      const thing = query.data.data.things[0]
       setThingValue(thing)
     }
-  }, [queryResult?.data?.data?.things])
+  }, [query?.data?.data?.things])
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
