@@ -174,7 +174,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     }
   }, [open])
 
-  const { data, isFetching, isError } = useAbortableList({
+  const { query: searchQuery, result } = useAbortableList({
     resource: 'search',
     dataProviderName: 'ocotillo',
     pagination: { pageSize: 100 },
@@ -189,17 +189,17 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
 
   const results: SearchResult[] = useMemo(() => {
     if (!query.trim()) return []
-    if (isFetching) return []
-    if (isError) return []
+    if (searchQuery.isFetching) return []
+    if (searchQuery.isError) return []
     const normalized =
-      data?.data?.map((r: any) => ({
+      result?.data?.map((r: any) => ({
         label: r.label,
         description: r.description,
         group: r.group as GroupType,
         properties: r.properties,
       })) ?? []
     return dedupeResults(normalized)
-  }, [data, query, isFetching, isError])
+  }, [result, query, searchQuery.isFetching, searchQuery.isError])
 
   // Group results by type for section headers
   const grouped = useMemo(() => {
@@ -261,8 +261,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   }
 
   const showRecent = !query.trim() && recentSearches.length > 0
-  const showEmpty = query.trim() && !isFetching && !isError && results.length === 0
-  const showError = query.trim() && !isFetching && isError
+  const showEmpty = query.trim() && !searchQuery.isFetching && !searchQuery.isError && results.length === 0
+  const showError = query.trim() && !searchQuery.isFetching && searchQuery.isError
 
   return (
     <Dialog
@@ -316,7 +316,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       <Box sx={{ maxHeight: 480, overflowY: 'auto' }}>
 
         {/* Loading indicator */}
-        {isFetching && (
+        {searchQuery.isFetching && (
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', px: 2, py: 1.5 }}>
             Searching...
           </Typography>
@@ -377,7 +377,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         )}
 
         {/* Grouped results */}
-        {!isFetching && grouped.size > 0 && (
+        {!searchQuery.isFetching && grouped.size > 0 && (
           <Box sx={{ py: 0.5 }}>
             {Array.from(grouped.entries()).map(([group, items], groupIndex) => (
               <Box key={group}>
