@@ -59,8 +59,9 @@ import {
 export const MapView: React.FC = () => {
   const { mode } = useContext(ColorModeContext)
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const mapRef = useRef<any>(null)
   const piperDiagramRef = useRef<PiperDiagramHandle | null>(null)
-  const [visibleLayers, setVisibleLayers] = React.useState<string[]>([
+  const [visibleLayers, setVisibleLayers] = useState<string[]>([
     'ogc-latest-depth-to-water',
   ])
   const THING_LAYERS = useThingLayers(visibleLayers)
@@ -87,11 +88,12 @@ export const MapView: React.FC = () => {
     DEFAULT_MAPBOX_BASEMAP
   )
   const [isPiperDrawerOpen, setIsPiperDrawerOpen] = useState(false)
-  const [activePiperFeatureId, setActivePiperFeatureId] = useState<string | null>(null)
+  const [activePiperFeatureId, setActivePiperFeatureId] = useState<
+    string | null
+  >(null)
   const SELECTED_POINTS_BOTTOM_GUTTER = 30
   const SELECTED_POINTS_LAYER_GAP = 12
   const SELECTED_POINTS_FALLBACK_HEIGHT = 52
-  const selectedLayerKey = visibleLayers.length === 1 ? visibleLayers[0] : null
   const areDrawToolsEnabled = visibleLayers.length > 0
   const selectionFeatures = (
     Object.values(selectionPolygons) as any[]
@@ -155,14 +157,6 @@ export const MapView: React.FC = () => {
     [exportableLayers, hasSelectionPolygon]
   )
 
-  const selectedPointFeatures = useMemo(
-    () =>
-      selectedLayerKey
-        ? selectedPointsByLayer.find(({ layerKey }) => layerKey === selectedLayerKey)
-            ?.features || []
-        : [],
-    [selectedLayerKey, selectedPointsByLayer]
-  )
   const selectedMajorChemistryPoints = useMemo(
     () => {
       const selectedFeatures =
@@ -297,16 +291,14 @@ export const MapView: React.FC = () => {
     })
   }
 
-  const onLayerChangeWrapper = (layerKey: string) => {
-    const fn = () => {
+  const onLayerChangeWrapper = (layerKey: string) =>
+    (_event: React.ChangeEvent<HTMLInputElement>, _checked: boolean) => {
       setVisibleLayers((prev) =>
         prev.includes(layerKey)
           ? prev.filter((layer) => layer !== layerKey)
           : [...prev, layerKey]
       )
     }
-    return fn
-  }
 
   const onGroupToggle = (groupKey: string) => {
     setExpandedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }))
@@ -557,6 +549,7 @@ export const MapView: React.FC = () => {
           }}
         >
           <MapComponent
+            mapRef={mapRef}
             containerRef={mapContainerRef}
             showDrawControls={{
               show: true,
@@ -653,115 +646,33 @@ export const MapView: React.FC = () => {
           </MapComponent>
         </Box>
         <Paper
-        elevation={6}
-        ref={basemapPanelRef}
-        sx={(theme) => ({
-          position: 'absolute',
-          top: 12,
-          left: 12,
-          width: { xs: 'calc(100% - 24px)', sm: 320 },
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: basemapCollapsed ? 'visible' : 'hidden',
-          px: 0.8,
-          py: 0.6,
-          borderRadius: 1.25,
-          backdropFilter: 'blur(6px)',
-          backgroundColor: alpha(theme.palette.background.paper, 0.9),
-          border: '1px solid',
-          borderColor: alpha(theme.palette.divider, 0.9),
-          zIndex: 2,
-          height: basemapCollapsed ? 'auto' : undefined,
-        })}
-      >
-        <Box
-          sx={{
-            px: 0.3,
-            py: 0.2,
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <Typography
-            variant="overline"
-            sx={{
-              px: 0.55,
-              py: 0.25,
-              fontWeight: 700,
-              letterSpacing: 0.7,
-              fontSize: '0.68rem',
-              lineHeight: 1.2,
-              flex: 1,
-            }}
-          >
-            Base Maps
-          </Typography>
-          <IconButton
-            size="small"
-            onMouseDown={(event) => event.stopPropagation()}
-            onClick={onBasemapCollapseToggle}
-            aria-label={basemapCollapsed ? 'Expand base maps' : 'Collapse base maps'}
-          >
-            {basemapCollapsed ? (
-              <KeyboardArrowDown fontSize="small" />
-            ) : (
-              <KeyboardArrowUp fontSize="small" />
-            )}
-          </IconButton>
-        </Box>
-        <Collapse
-          in={!basemapCollapsed}
-          unmountOnExit
-          sx={{
-            minHeight: 0,
-            overflowY: 'auto',
-          }}
-        >
-          <Box sx={{ px: 0.5, pb: 0.5 }}>
-            <BasemapSelector
-              value={selectedBasemap}
-              onChange={setSelectedBasemap}
-            />
-          </Box>
-        </Collapse>
-        </Paper>
-        <Paper
-        elevation={6}
-        sx={(theme) => ({
-          position: 'absolute',
-          top: 12 + basemapPanelHeight,
-          bottom: layersPanelPinned ? selectedPointsDrawerReservedSpace : 'auto',
-          left: 12,
-          width: { xs: 'calc(100% - 24px)', sm: 320 },
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: layersCollapsed ? 'visible' : 'hidden',
-          px: 0.8,
-          py: 0.6,
-          borderRadius: 1.25,
-          backdropFilter: 'blur(6px)',
-          backgroundColor: alpha(theme.palette.background.paper, 0.9),
-          border: '1px solid',
-          borderColor: alpha(theme.palette.divider, 0.9),
-          zIndex: 2,
-          height: layersCollapsed ? 'auto' : undefined,
-        })}
-      >
-        <Box
-          sx={{
-            px: 0.3,
-            py: 0.2,
+          elevation={6}
+          ref={basemapPanelRef}
+          sx={(theme) => ({
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            width: { xs: 'calc(100% - 24px)', sm: 320 },
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'stretch',
-            gap: 0.35,
-          }}
+            overflow: basemapCollapsed ? 'visible' : 'hidden',
+            px: 0.8,
+            py: 0.6,
+            borderRadius: 1.25,
+            backdropFilter: 'blur(6px)',
+            backgroundColor: alpha(theme.palette.background.paper, 0.9),
+            border: '1px solid',
+            borderColor: alpha(theme.palette.divider, 0.9),
+            zIndex: 2,
+            height: basemapCollapsed ? 'auto' : undefined,
+          })}
         >
           <Box
             sx={{
+              px: 0.3,
+              py: 0.2,
               display: 'flex',
               alignItems: 'center',
-              gap: 0.6,
             }}
           >
             <Typography
@@ -773,288 +684,374 @@ export const MapView: React.FC = () => {
                 letterSpacing: 0.7,
                 fontSize: '0.68rem',
                 lineHeight: 1.2,
+                flex: 1,
               }}
             >
-              Layers
+              Base Maps
             </Typography>
-            <Box sx={{ flex: 1, minWidth: 0 }} />
             <IconButton
               size="small"
               onMouseDown={(event) => event.stopPropagation()}
-              onClick={onLayersCollapseToggle}
-              aria-label={layersCollapsed ? 'Expand layers' : 'Collapse layers'}
+              onClick={onBasemapCollapseToggle}
+              aria-label={basemapCollapsed ? 'Expand base maps' : 'Collapse base maps'}
             >
-              {layersCollapsed ? (
+              {basemapCollapsed ? (
                 <KeyboardArrowDown fontSize="small" />
               ) : (
                 <KeyboardArrowUp fontSize="small" />
               )}
             </IconButton>
           </Box>
-        </Box>
-        <Collapse
-          in={!layersCollapsed}
-          unmountOnExit
-          onExited={() => setLayersPanelPinned(false)}
-          sx={{
-            flex: 1,
-            minHeight: 0,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            '& .MuiCollapse-wrapper': {
-              display: 'flex',
-              flex: 1,
+          <Collapse
+            in={!basemapCollapsed}
+            unmountOnExit
+            sx={{
               minHeight: 0,
-            },
-            '& .MuiCollapse-wrapperInner': {
-              display: 'flex',
-              flexDirection: 'column',
-              flex: 1,
-              minHeight: 0,
-            },
-          }}
-        >
-          <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-            <Box
-              sx={(theme) => ({
-                flex: '0 0 auto',
-                px: 0.25,
-                pb: 0.35,
-                pt: 0.1,
-                backgroundColor: alpha(theme.palette.background.paper, 0.96),
-                borderBottom: '1px solid',
-                borderColor: alpha(theme.palette.divider, 0.75),
-              })}
-            >
-              <MapExportControls
-                value={exportFormat}
-                onChange={setExportFormat}
-                onExport={onExportLayer}
-                buttonLabel={
-                  hasSelectionPolygon
-                    ? 'Export Selected'
-                    : visibleLayers.length > 1
-                      ? 'Export Layers'
-                      : 'Export Layer'
-                }
-                disabled={!hasExportableLayers}
-                tooltipPlacement="right"
-                tooltip={
-                  hasExportableLayers
-                    ? `Click to download ${
-                        hasSelectionPolygon
-                          ? 'the selected portion of each visible layer'
-                          : visibleLayers.length > 1
-                            ? 'each visible layer'
-                            : 'that layer'
-                      } as separate ${exportFormat === 'csv' ? 'CSV' : 'GeoJSON'} file${
-                        visibleLayers.length > 1 || hasSelectionPolygon ? 's' : ''
-                      }.`
-                    : 'Disabled until at least one layer is visible.'
-                }
+              overflowY: 'auto',
+            }}
+          >
+            <Box sx={{ px: 0.5, pb: 0.5 }}>
+              <BasemapSelector
+                value={selectedBasemap}
+                onChange={setSelectedBasemap}
               />
             </Box>
-            <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-              {(Object.keys(groupedLayers) as Array<keyof typeof groupedLayers>).map(
-                (groupKey) => {
-                  const layers = groupedLayers[groupKey]
-                  if (layers.length === 0) return null
-
-                  return (
-                    <Box key={groupKey} sx={{ py: 0.1 }}>
-                      <Box
-                        sx={{
-                          px: 0.25,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          borderRadius: 0.8,
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontSize: '0.64rem',
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            letterSpacing: 0.4,
-                            color: 'text.secondary',
-                          }}
-                        >
-                          {groupLabels[groupKey]}
-                        </Typography>
-                        <IconButton
-                          size="small"
-                          onClick={() => onGroupToggle(groupKey)}
-                          aria-label={
-                            expandedGroups[groupKey]
-                              ? `Collapse ${groupLabels[groupKey]}`
-                              : `Expand ${groupLabels[groupKey]}`
-                          }
-                          sx={{ p: 0.2 }}
-                        >
-                          {expandedGroups[groupKey] ? (
-                            <KeyboardArrowUp sx={{ fontSize: 15 }} />
-                          ) : (
-                            <KeyboardArrowDown sx={{ fontSize: 15 }} />
-                          )}
-                        </IconButton>
-                      </Box>
-                      <Collapse in={expandedGroups[groupKey]}>
-                        {layers.map(([key, layerDef]) => {
-                          const { layerProps, isLoading } = layerDef
-                          const paint = layerProps.paint || {}
-                          const paintColor =
-                            paint['circle-color'] ||
-                            paint['line-color'] ||
-                            paint['fill-color']
-                          const color =
-                            layerDef.legendColor ||
-                            (typeof paintColor === 'string'
-                              ? paintColor
-                              : '#9e9e9e')
-
-                          return (
-                            <Box key={key} sx={{ px: 0.2, py: 0.05 }}>
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 0.35,
-                                  minHeight: 24,
-                                }}
-                              >
-                                <Checkbox
-                                  checked={visibleLayers.includes(key)}
-                                  onChange={onLayerChangeWrapper(key)}
-                                  size="small"
-                                  sx={{ p: 0.2 }}
-                                />
-                                {!layerDef.legendScale && (
-                                  <Box
-                                    sx={{
-                                      width: 8,
-                                      height: 8,
-                                      borderRadius: '2px',
-                                      backgroundColor: color,
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                )}
-                                <ListItemText
-                                  primary={layerProps.label}
-                                  primaryTypographyProps={{
-                                    lineHeight: 1.15,
-                                    fontSize: '0.75rem',
-                                  }}
-                                  sx={{ m: 0, my: -0.15 }}
-                                />
-                                {key === 'ogc-major-chemistry' ? (
-                                  <Button
-                                    size="small"
-                                    variant={
-                                      isPiperDrawerOpen ? 'contained' : 'outlined'
-                                    }
-                                    startIcon={
-                                      <ScienceOutlined sx={{ fontSize: 14 }} />
-                                    }
-                                    onClick={() =>
-                                      setIsPiperDrawerOpen((open) => !open)
-                                    }
-                                    disabled={!visibleLayers.includes(key)}
-                                    sx={{
-                                      minWidth: 0,
-                                      px: 0.7,
-                                      py: 0.2,
-                                      ml: 0.3,
-                                      flexShrink: 0,
-                                      fontSize: '0.65rem',
-                                      lineHeight: 1,
-                                      '& .MuiButton-startIcon': {
-                                        mr: 0.35,
-                                        ml: 0,
-                                      },
-                                    }}
-                                  >
-                                    Piper
-                                  </Button>
-                                ) : null}
-                              </Box>
-                              {layerDef.legendScale && (
-                                <Box sx={{ pl: 3.1, pr: 0.6, pb: 0.15 }}>
-                                  <Box
-                                    sx={(theme) => ({
-                                      height: 5,
-                                      borderRadius: 1,
-                                      border: '1px solid',
-                                      borderColor: alpha(theme.palette.divider, 0.75),
-                                      background: layerDef.legendScale.gradient,
-                                    })}
-                                  />
-                                  <Box
-                                    sx={{
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      mt: 0.1,
-                                    }}
-                                  >
-                                    <Typography
-                                      variant="caption"
-                                      sx={{ fontSize: '0.6rem', lineHeight: 1 }}
-                                    >
-                                      {layerDef.legendScale.minLabel}
-                                    </Typography>
-                                    <Typography
-                                      variant="caption"
-                                      sx={{ fontSize: '0.6rem', lineHeight: 1 }}
-                                    >
-                                      {layerDef.legendScale.maxLabel}
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              )}
-                              <Box sx={{ height: 2, mt: 0 }}>
-                                {isLoading && <LinearProgress sx={{ height: 2 }} />}
-                              </Box>
-                            </Box>
-                          )
-                        })}
-                      </Collapse>
-                    </Box>
-                  )
-                }
-              )}
+          </Collapse>
+        </Paper>
+        <Paper
+          elevation={6}
+          sx={(theme) => ({
+            position: 'absolute',
+            top: 12 + basemapPanelHeight,
+            bottom: layersPanelPinned ? selectedPointsDrawerReservedSpace : 'auto',
+            left: 12,
+            width: { xs: 'calc(100% - 24px)', sm: 320 },
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: layersCollapsed ? 'visible' : 'hidden',
+            px: 0.8,
+            py: 0.6,
+            borderRadius: 1.25,
+            backdropFilter: 'blur(6px)',
+            backgroundColor: alpha(theme.palette.background.paper, 0.9),
+            border: '1px solid',
+            borderColor: alpha(theme.palette.divider, 0.9),
+            zIndex: 2,
+            height: layersCollapsed ? 'auto' : undefined,
+          })}
+        >
+          <Box
+            sx={{
+              px: 0.3,
+              py: 0.2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'stretch',
+              gap: 0.35,
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.6,
+              }}
+            >
+              <Typography
+                variant="overline"
+                sx={{
+                  px: 0.55,
+                  py: 0.25,
+                  fontWeight: 700,
+                  letterSpacing: 0.7,
+                  fontSize: '0.68rem',
+                  lineHeight: 1.2,
+                }}
+              >
+                Layers
+              </Typography>
+              <Box sx={{ flex: 1, minWidth: 0 }} />
+              <IconButton
+                size="small"
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={onLayersCollapseToggle}
+                aria-label={layersCollapsed ? 'Expand layers' : 'Collapse layers'}
+              >
+                {layersCollapsed ? (
+                  <KeyboardArrowDown fontSize="small" />
+                ) : (
+                  <KeyboardArrowUp fontSize="small" />
+                )}
+              </IconButton>
             </Box>
           </Box>
-        </Collapse>
+          <Collapse
+            in={!layersCollapsed}
+            unmountOnExit
+            onExited={() => setLayersPanelPinned(false)}
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              '& .MuiCollapse-wrapper': {
+                display: 'flex',
+                flex: 1,
+                minHeight: 0,
+              },
+              '& .MuiCollapse-wrapperInner': {
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                minHeight: 0,
+              },
+            }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+              <Box
+                sx={(theme) => ({
+                  flex: '0 0 auto',
+                  px: 0.25,
+                  pb: 0.35,
+                  pt: 0.1,
+                  backgroundColor: alpha(theme.palette.background.paper, 0.96),
+                  borderBottom: '1px solid',
+                  borderColor: alpha(theme.palette.divider, 0.75),
+                })}
+              >
+                <MapExportControls
+                  value={exportFormat}
+                  onChange={setExportFormat}
+                  onExport={onExportLayer}
+                  buttonLabel={
+                    hasSelectionPolygon
+                      ? 'Export Selected'
+                      : visibleLayers.length > 1
+                        ? 'Export Layers'
+                        : 'Export Layer'
+                  }
+                  disabled={!hasExportableLayers}
+                  tooltipPlacement="right"
+                  tooltip={
+                    hasExportableLayers
+                      ? `Click to download ${
+                          hasSelectionPolygon
+                            ? 'the selected portion of each visible layer'
+                            : visibleLayers.length > 1
+                              ? 'each visible layer'
+                              : 'that layer'
+                        } as separate ${exportFormat === 'csv' ? 'CSV' : 'GeoJSON'} file${
+                          visibleLayers.length > 1 || hasSelectionPolygon ? 's' : ''
+                        }.`
+                      : 'Disabled until at least one layer is visible.'
+                  }
+                />
+              </Box>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+                {(Object.keys(groupedLayers) as Array<keyof typeof groupedLayers>).map(
+                  (groupKey) => {
+                    const layers = groupedLayers[groupKey]
+                    if (layers.length === 0) return null
+
+                    return (
+                      <Box key={groupKey} sx={{ py: 0.1 }}>
+                        <Box
+                          sx={{
+                            px: 0.25,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            borderRadius: 0.8,
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontSize: '0.64rem',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.4,
+                              color: 'text.secondary',
+                            }}
+                          >
+                            {groupLabels[groupKey]}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => onGroupToggle(groupKey)}
+                            aria-label={
+                              expandedGroups[groupKey]
+                                ? `Collapse ${groupLabels[groupKey]}`
+                                : `Expand ${groupLabels[groupKey]}`
+                            }
+                            sx={{ p: 0.2 }}
+                          >
+                            {expandedGroups[groupKey] ? (
+                              <KeyboardArrowUp sx={{ fontSize: 15 }} />
+                            ) : (
+                              <KeyboardArrowDown sx={{ fontSize: 15 }} />
+                            )}
+                          </IconButton>
+                        </Box>
+                        <Collapse in={expandedGroups[groupKey]}>
+                          {layers.map(([key, layerDef]) => {
+                            const { layerProps, isLoading } = layerDef
+                            const paint = layerProps.paint || {}
+                            const paintColor =
+                              paint['circle-color'] ||
+                              paint['line-color'] ||
+                              paint['fill-color']
+                            const color =
+                              layerDef.legendColor ||
+                              (typeof paintColor === 'string'
+                                ? paintColor
+                                : '#9e9e9e')
+
+                            return (
+                              <Box key={key} sx={{ px: 0.2, py: 0.05 }}>
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.35,
+                                    minHeight: 24,
+                                  }}
+                                >
+                                  <Checkbox
+                                    checked={visibleLayers.includes(key)}
+                                    onChange={onLayerChangeWrapper(key)}
+                                    size="small"
+                                    sx={{ p: 0.2 }}
+                                  />
+                                  {!layerDef.legendScale && (
+                                    <Box
+                                      sx={{
+                                        width: 8,
+                                        height: 8,
+                                        borderRadius: '2px',
+                                        backgroundColor: color,
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                  )}
+                                  <ListItemText
+                                    primary={layerProps.label}
+                                    slotProps={{
+                                      primary: {
+                                        lineHeight: 1.15,
+                                        fontSize: '0.75rem',
+                                      },
+                                    }}
+                                    sx={{ m: 0, my: -0.15 }}
+                                  />
+                                  {key === 'ogc-major-chemistry' ? (
+                                    <Button
+                                      size="small"
+                                      variant={
+                                        isPiperDrawerOpen ? 'contained' : 'outlined'
+                                      }
+                                      startIcon={
+                                        <ScienceOutlined sx={{ fontSize: 14 }} />
+                                      }
+                                      onClick={() =>
+                                        setIsPiperDrawerOpen((open) => !open)
+                                      }
+                                      disabled={!visibleLayers.includes(key)}
+                                      sx={{
+                                        minWidth: 0,
+                                        px: 0.7,
+                                        py: 0.2,
+                                        ml: 0.3,
+                                        flexShrink: 0,
+                                        fontSize: '0.65rem',
+                                        lineHeight: 1,
+                                        '& .MuiButton-startIcon': {
+                                          mr: 0.35,
+                                          ml: 0,
+                                        },
+                                      }}
+                                    >
+                                      Piper
+                                    </Button>
+                                  ) : null}
+                                </Box>
+                                {layerDef.legendScale && (
+                                  <Box sx={{ pl: 3.1, pr: 0.6, pb: 0.15 }}>
+                                    <Box
+                                      sx={(theme) => ({
+                                        height: 5,
+                                        borderRadius: 1,
+                                        border: '1px solid',
+                                        borderColor: alpha(theme.palette.divider, 0.75),
+                                        background: layerDef.legendScale.gradient,
+                                      })}
+                                    />
+                                    <Box
+                                      sx={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        mt: 0.1,
+                                      }}
+                                    >
+                                      <Typography
+                                        variant="caption"
+                                        sx={{ fontSize: '0.6rem', lineHeight: 1 }}
+                                      >
+                                        {layerDef.legendScale.minLabel}
+                                      </Typography>
+                                      <Typography
+                                        variant="caption"
+                                        sx={{ fontSize: '0.6rem', lineHeight: 1 }}
+                                      >
+                                        {layerDef.legendScale.maxLabel}
+                                      </Typography>
+                                    </Box>
+                                  </Box>
+                                )}
+                                <Box sx={{ height: 2, mt: 0 }}>
+                                  {isLoading && <LinearProgress sx={{ height: 2 }} />}
+                                </Box>
+                              </Box>
+                            )
+                          })}
+                        </Collapse>
+                      </Box>
+                    )
+                  }
+                )}
+              </Box>
+            </Box>
+          </Collapse>
         </Paper>
         <Drawer
           anchor="right"
           variant="persistent"
           open={isPiperDrawerOpen}
           hideBackdrop
-          PaperProps={{
-            sx: (theme) => ({
-              position: 'absolute',
-              top: 12,
-              right: 52,
-              bottom: 'auto',
-              height: 'calc(100% - 48px)',
-              maxHeight: 'calc(100% - 48px)',
-              width: {
-                xs: 'min(calc(100% - 24px), 360px)',
-                sm: 340,
-                md: 360,
-              },
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: alpha(theme.palette.divider, 0.9),
-              backgroundColor: alpha(theme.palette.background.paper, 0.96),
-              backdropFilter: 'blur(8px)',
-              overflow: 'hidden',
-              zIndex: 3,
-            }),
+          slotProps={{
+            paper: {
+              sx: (theme) => ({
+                position: 'absolute',
+                top: 12,
+                right: 52,
+                bottom: 'auto',
+                height: 'calc(100% - 48px)',
+                maxHeight: 'calc(100% - 48px)',
+                width: {
+                  xs: 'min(calc(100% - 24px), 360px)',
+                  sm: 340,
+                  md: 360,
+                },
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: alpha(theme.palette.divider, 0.9),
+                backgroundColor: alpha(theme.palette.background.paper, 0.96),
+                backdropFilter: 'blur(8px)',
+                overflow: 'hidden',
+                zIndex: 3,
+              }),
+            },
           }}
           sx={{
             position: 'absolute',
@@ -1123,23 +1120,25 @@ export const MapView: React.FC = () => {
           variant="persistent"
           open
           hideBackdrop
-          PaperProps={{
-            sx: (theme) => ({
-              position: 'absolute',
-              left: 12,
-              right: 12,
-              bottom: SELECTED_POINTS_BOTTOM_GUTTER,
-              top: 'auto',
-              width: 'auto',
-              maxHeight: 'min(42%, 320px)',
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: alpha(theme.palette.divider, 0.9),
-              backgroundColor: alpha(theme.palette.background.paper, 0.96),
-              backdropFilter: 'blur(8px)',
-              overflow: 'hidden',
-              zIndex: 2,
-            }),
+          slotProps={{
+            paper: {
+              sx: (theme) => ({
+                position: 'absolute',
+                left: 12,
+                right: 12,
+                bottom: SELECTED_POINTS_BOTTOM_GUTTER,
+                top: 'auto',
+                width: 'auto',
+                maxHeight: 'min(42%, 320px)',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: alpha(theme.palette.divider, 0.9),
+                backgroundColor: alpha(theme.palette.background.paper, 0.96),
+                backdropFilter: 'blur(8px)',
+                overflow: 'hidden',
+                zIndex: 2,
+              }),
+            },
           }}
           sx={{
             position: 'absolute',

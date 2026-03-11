@@ -20,6 +20,7 @@ import {
   latestTdsColorFromFeature,
   trendColorFromFeature,
 } from '@/utils/ogcLayerUtils'
+import { USGS_NWIS_DEFAULT_BBOX } from '@/providers/usgs-nwis-ogcapi-data-provider'
 
 const WATER_ELEVATION_LEGEND = {
   gradient:
@@ -40,7 +41,9 @@ const getRecentDatetimeRange = (days: number): string => {
   return `${start.toISOString()}/${end.toISOString()}`
 }
 
-export const useThingLayers = (activeLayerKeys?: string[]) => {
+export const useThingLayers = (
+  activeLayerKeys?: string[]
+) => {
   const dataProvider = useDataProvider()
   const hasActiveLayerFilter = Array.isArray(activeLayerKeys)
   const activeLayerSet = useMemo(
@@ -300,10 +303,6 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
   const usgsLatestDaily = resolveCollection(usgsCollections, [
     'latest-daily',
     'Latest Daily',
-  ])
-  const usgsContinuous = resolveCollection(usgsCollections, [
-    'continuous',
-    'Continuous',
   ])
   const usgsDaily = resolveCollection(usgsCollections, [
     'daily',
@@ -822,71 +821,47 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
       soilGasSampleLocations.exists &&
       isLayerActive('ogc-soil-gas-sample-locations'),
   })
-  const usgsMonitoringLocationsLayer = useOGCLayer({
-    collection: usgsMonitoringLocations.id,
-    label: 'USGS NWIS Monitoring Locations',
-    providerName: 'usgs-nwis-ogcapi',
-    color: '#1f78b4',
-    enabled:
-      usgsMonitoringLocations.exists &&
-      isLayerActive('usgs-nwis-monitoring-locations'),
-  })
-  const usgsTimeSeriesMetadataLayer = useOGCLayer({
-    collection: usgsTimeSeriesMetadata.id,
-    label: 'USGS NWIS Time Series Metadata',
-    providerName: 'usgs-nwis-ogcapi',
-    color: '#2a9d8f',
-    enabled:
-      usgsTimeSeriesMetadata.exists &&
-      isLayerActive('usgs-nwis-time-series-metadata'),
-  })
-  const usgsFieldMeasurementsLayer = useOGCLayer({
-    collection: usgsFieldMeasurements.id,
-    label: 'USGS NWIS Field Measurements (30d)',
-    providerName: 'usgs-nwis-ogcapi',
-    color: '#e76f51',
-    requestParams: usgsRecentObservationParams,
-    enabled:
-      usgsFieldMeasurements.exists &&
-      isLayerActive('usgs-nwis-field-measurements'),
-  })
+
+  // --- USGS NWIS layers only ---
   const usgsLatestContinuousLayer = useOGCLayer({
     collection: usgsLatestContinuous.id,
-    label: 'USGS NWIS Latest Continuous',
+    label: 'Latest Continuous',
     providerName: 'usgs-nwis-ogcapi',
     color: '#6a4c93',
+    requestParams: { bbox: USGS_NWIS_DEFAULT_BBOX },
+    pageSize: 1000,
+    maxPages: 200,
+    maxFeatures: 250000,
     enabled:
       usgsLatestContinuous.exists &&
       isLayerActive('usgs-nwis-latest-continuous'),
   })
+
   const usgsLatestDailyLayer = useOGCLayer({
     collection: usgsLatestDaily.id,
-    label: 'USGS NWIS Latest Daily',
+    label: 'Latest Daily',
     providerName: 'usgs-nwis-ogcapi',
     color: '#264653',
-    enabled:
-      usgsLatestDaily.exists &&
-      isLayerActive('usgs-nwis-latest-daily'),
+    requestParams: { bbox: USGS_NWIS_DEFAULT_BBOX },
+    pageSize: 1000,
+    maxPages: 200,
+    maxFeatures: 250000,
+    enabled: usgsLatestDaily.exists && isLayerActive('usgs-nwis-latest-daily'),
   })
-  const usgsContinuousLayer = useOGCLayer({
-    collection: usgsContinuous.id,
-    label: 'USGS NWIS Continuous (30d)',
-    providerName: 'usgs-nwis-ogcapi',
-    color: '#577590',
-    requestParams: usgsRecentObservationParams,
-    enabled:
-      usgsContinuous.exists &&
-      isLayerActive('usgs-nwis-continuous'),
-  })
+
   const usgsDailyLayer = useOGCLayer({
     collection: usgsDaily.id,
-    label: 'USGS NWIS Daily (30d)',
+    label: 'Daily (30d)',
     providerName: 'usgs-nwis-ogcapi',
     color: '#4d908e',
-    requestParams: usgsRecentObservationParams,
-    enabled:
-      usgsDaily.exists &&
-      isLayerActive('usgs-nwis-daily'),
+    requestParams: {
+      ...(usgsRecentObservationParams as any),
+      bbox: USGS_NWIS_DEFAULT_BBOX,
+    },
+    pageSize: 1000,
+    maxPages: 200,
+    maxFeatures: 250000,
+    enabled: usgsDaily.exists && isLayerActive('usgs-nwis-daily'),
   })
 
   const layers: Record<string, any> = {}
@@ -904,6 +879,7 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     layers[layerKey] = layer
   }
 
+  // --- All the original non-USGS layers ---
   addLayer('ogc-locations', locations, locationsLayer)
   addLayer(
     'ogc-latest-depth-to-water',
@@ -969,21 +945,8 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     soilGasSampleLocations,
     soilGasSampleLocationsLayer
   )
-  addLayer(
-    'usgs-nwis-monitoring-locations',
-    usgsMonitoringLocations,
-    usgsMonitoringLocationsLayer
-  )
-  addLayer(
-    'usgs-nwis-time-series-metadata',
-    usgsTimeSeriesMetadata,
-    usgsTimeSeriesMetadataLayer
-  )
-  addLayer(
-    'usgs-nwis-field-measurements',
-    usgsFieldMeasurements,
-    usgsFieldMeasurementsLayer
-  )
+
+  // --- Keep only the requested USGS NWIS layers ---
   addLayer(
     'usgs-nwis-latest-continuous',
     usgsLatestContinuous,
@@ -994,16 +957,7 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     usgsLatestDaily,
     usgsLatestDailyLayer
   )
-  addLayer(
-    'usgs-nwis-continuous',
-    usgsContinuous,
-    usgsContinuousLayer
-  )
-  addLayer(
-    'usgs-nwis-daily',
-    usgsDaily,
-    usgsDailyLayer
-  )
+  addLayer('usgs-nwis-daily', usgsDaily, usgsDailyLayer)
 
   return layers
 }
