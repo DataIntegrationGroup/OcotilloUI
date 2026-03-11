@@ -10,7 +10,6 @@ import { IWellScreen } from '@/interfaces/ocotillo/IWellScreen'
 export const WellScreenEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     control,
     setValue,
     formState: { errors },

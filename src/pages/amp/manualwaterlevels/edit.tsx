@@ -15,7 +15,6 @@ import {Nullable} from "../../../interfaces";
 export const ManualWaterLevelsEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     register,
     control,
     formState: { errors },

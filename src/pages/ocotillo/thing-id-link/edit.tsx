@@ -9,7 +9,6 @@ import { CreateEditThingIdLink } from '@/components/form/thing/CreateEditThingId
 export const ThingIdLinkEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     register,
     watch,
     control,

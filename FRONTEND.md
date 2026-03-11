@@ -24,11 +24,12 @@ A practical reference for working on the Ocotillo front-end. It covers the frame
 
 The UI is built on three layers. Understanding which layer owns which concern saves a lot of time.
 
-| Layer | Package | Owns |
-| --- | --- | --- |
-| **MUI** | `@mui/material` | All visual components (Button, Card, Drawer, DataGrid, etc.) |
-| **Refine** | `@refinedev/core`, `@refinedev/mui` | Data, routing, auth, CRUD layout wrappers |
-| **Ocotillo** | `src/` | App-specific business logic, custom components, theme |
+| Layer | Package | Version | Owns |
+| --- | --- | --- | --- |
+| **MUI** | `@mui/material` | v6 | All visual components (Button, Card, Drawer, etc.) |
+| **MUI DataGrid** | `@mui/x-data-grid` | v8 | All data tables |
+| **Refine** | `@refinedev/core`, `@refinedev/mui` | v5 / v8 | Data, routing, auth, CRUD layout wrappers |
+| **Ocotillo** | `src/` | — | App-specific business logic, custom components, theme |
 
 **The mental model:** MUI is the component library -- it provides the bricks. Refine is the application frame -- it wires up data, permissions, and navigation. Ocotillo code lives on top of both.
 
@@ -61,25 +62,39 @@ Because they are wrappers, they do not always pass every MUI prop through. If yo
 
 ## Material UI Components
 
-The full component library is at [mui.com/material-ui/all-components](https://mui.com/material-ui/all-components/).
+This project uses **MUI v6**. All component docs, API references, and migration guides are version-aware — make sure you are on the v6 docs.
 
-The most commonly used in this project:
+| Resource | URL |
+|---|---|
+| All components (v6) | https://mui.com/material-ui/all-components/ |
+| Component API index | https://mui.com/material-ui/api/ |
+| `sx` prop reference | https://mui.com/system/getting-started/the-sx-prop/ |
+| Theme customization | https://mui.com/material-ui/customization/theming/ |
+| MUI X DataGrid (v8) | https://mui.com/x/react-data-grid/ |
+| DataGrid API (v8) | https://mui.com/x/api/data-grid/data-grid/ |
+| Icons browser | https://mui.com/material-ui/material-icons/ |
+| v5 → v6 migration guide | https://mui.com/material-ui/migration/upgrade-to-v6/ |
 
-| Component | Used for |
-| --- | --- |
-| `Box` | Layout wrapper, replaces `div` with `sx` prop access |
-| `Stack` | One-axis flex layout (direction, gap, alignItems) |
-| `Typography` | All text. Use the `variant` prop to apply the type scale |
-| `Button` | Actions. Default size is `small` (set in theme) |
-| `Card` / `Paper` | Surface containers. Paper is a flat Card |
-| `Drawer` | The sidebar |
-| `AppBar` / `Toolbar` | The top header bar |
-| `DataGrid` | All data tables (from `@mui/x-data-grid`) |
-| `Autocomplete` | Search inputs with suggestions |
-| `TextField` | Text inputs inside forms |
-| `IconButton` | Toolbar icon actions |
-| `Tooltip` | Hover labels on icon buttons |
-| `Divider` | Horizontal rules between sections |
+The most commonly used components in this project:
+
+| Component | Docs | Used for |
+| --- | --- | --- |
+| `Box` | https://mui.com/material-ui/react-box/ | Layout wrapper, replaces `div` with `sx` prop access |
+| `Stack` | https://mui.com/material-ui/react-stack/ | One-axis flex layout (direction, gap, alignItems) |
+| `Grid2` | https://mui.com/material-ui/react-grid2/ | Two-dimensional column layouts |
+| `Typography` | https://mui.com/material-ui/react-typography/ | All text. Use the `variant` prop to apply the type scale |
+| `Button` | https://mui.com/material-ui/react-button/ | Actions. Default size is `small` (set in theme) |
+| `Card` / `Paper` | https://mui.com/material-ui/react-card/ | Surface containers. Paper is a flat Card |
+| `Drawer` | https://mui.com/material-ui/react-drawer/ | The sidebar |
+| `AppBar` / `Toolbar` | https://mui.com/material-ui/react-app-bar/ | The top header bar |
+| `DataGrid` | https://mui.com/x/react-data-grid/ | All data tables (from `@mui/x-data-grid` v8) |
+| `Autocomplete` | https://mui.com/material-ui/react-autocomplete/ | Search inputs with suggestions |
+| `TextField` | https://mui.com/material-ui/react-text-field/ | Text inputs inside forms |
+| `IconButton` | https://mui.com/material-ui/react-button/#icon-button | Toolbar icon actions |
+| `Tooltip` | https://mui.com/material-ui/react-tooltip/ | Hover labels on icon buttons |
+| `Divider` | https://mui.com/material-ui/react-divider/ | Horizontal rules between sections |
+| `Chip` | https://mui.com/material-ui/react-chip/ | Tags, filter badges |
+| `Dialog` | https://mui.com/material-ui/react-dialog/ | Modal dialogs |
 
 ### The `sx` prop
 
@@ -154,6 +169,45 @@ Icons render as SVGs and accept `sx`, `fontSize`, and `color` props:
 ---
 
 ## Refine.dev -- What It Owns
+
+### Refine v4 → v5 migration notes
+
+The project was upgraded to Refine v5 (with `@refinedev/core` v5 and `@refinedev/mui` v8). Key breaking changes to be aware of:
+
+| Change | v4 | v5 |
+|---|---|---|
+| Resource hook | `useResource()` | `useResourceParams()` |
+| Show data hook return | `queryResult` | `query` |
+| DataGrid slots API | `components` prop | `slots` prop (MUI v8 aligned) |
+
+**`useResourceParams`:** Use this instead of `useResource` to get the current resource name and ID from the URL. The returned shape is the same.
+
+**`useShow` / `useForm` return value:** In v5, these hooks return `{ query }` not `{ queryResult }`. Use `query` to access data and loading state:
+
+```ts
+// v4 pattern (do not use)
+const { queryResult: { data, isLoading } } = useShow()
+
+// v5 correct pattern
+const { query: { data, isLoading } } = useShow()
+```
+
+**In edit pages**, `useForm` from `@refinedev/react-hook-form` exposes the query via `refineCore.query`. If you need to read the current record's data inside an edit page (e.g. to pre-populate a secondary field), destructure it from `refineCore`:
+
+```ts
+const {
+  saveButtonProps,
+  refineCore: { query },
+  control,
+} = useForm<IWell, HttpError, Nullable<IWell>>()
+
+// Access the loaded record
+const record = query?.data?.data
+```
+
+Only destructure `query` from `refineCore` if you actually use it — omit it otherwise to keep the destructuring clean.
+
+---
 
 ### Sidebar navigation
 
@@ -258,7 +312,7 @@ The hooks read the resource name and record ID from the URL automatically -- you
 **Show page** (`src/pages/ocotillo/thing/well-show.tsx`) -- uses `<Show>` directly from `@refinedev/mui` with `useShow()` to load the well record. The children are a custom grid of detail cards:
 
 ```tsx
-const { queryResult: { data, isLoading } } = useShow<IWell>()
+const { query: { data, isLoading } } = useShow<IWell>()  // v5: query (not queryResult)
 
 <Show>
   <Grid container spacing={2}>
@@ -290,7 +344,7 @@ Colors are defined in `src/theme.ts` and sourced entirely from the [Tailwind CSS
 
 ### How it works
 
-The package `tailwindcss@3` (installed as a devDependency) exports a `colors` object with every Tailwind color as a plain hex value:
+`tailwindcss@3` is installed as a devDependency **only as a color value source** — there is no Tailwind CSS processing, no `tailwind.config.js`, no utility classes in templates. The package exports a `colors` object with every Tailwind color as a plain hex value, which is imported directly into `theme.ts`:
 
 ```ts
 import colors from 'tailwindcss/colors'
@@ -300,7 +354,7 @@ colors.stone[200]  // '#e7e5e4'
 colors.zinc[950]   // '#09090b'
 ```
 
-The theme uses these values directly for the MUI `palette`. There is no Tailwind CSS processing involved -- just the color values.
+The theme uses these values directly for the MUI `palette`. **Do not add Tailwind utility classes (`className="text-blue-700"`)** — they will not work. All styling goes through MUI's `sx` prop and `theme.ts`.
 
 ### Palette slots
 

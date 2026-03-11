@@ -9,7 +9,6 @@ import { CreateEditSample } from '@/components/form/sample/CreateEditSample'
 export const SampleEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     control,
     formState: { errors },
   } = useForm<ISample, HttpError, Nullable<ISample>>()
