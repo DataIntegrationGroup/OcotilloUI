@@ -15,51 +15,17 @@ export default defineConfig(({ mode }) => {
       sourcemap: enableSourceMap,
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
-            if (!id.includes('node_modules')) return undefined
-
-            if (
-              id.includes('mapbox-gl') ||
-              id.includes('react-map-gl') ||
-              id.includes('@mapbox')
-            ) {
-              return 'map'
-            }
-
-            if (id.includes('@react-pdf/renderer')) {
-              return 'pdf'
-            }
-
-            if (id.includes('echarts')) {
-              return 'charts'
-            }
-
-            if (id.includes('@mui/x-data-grid')) {
-              return 'data-grid'
-            }
-
-            if (
-              id.includes('/d3') ||
-              id.includes('d3-') ||
-              id.includes('@turf')
-            ) {
-              return 'geo-viz'
-            }
-
-            if (
-              id.includes('@mui') ||
-              id.includes('@emotion') ||
-              id.includes('@base-ui-components')
-            ) {
-              return 'ui'
-            }
-
-            return 'vendor'
-          },
+          // Let Rollup decide chunking. Manually forcing chunk boundaries can
+          // lead to subtle ESM execution order issues and duplicate React
+          // module graphs (which often manifests as hooks being undefined).
         },
       },
     },
     base: env.VITE_BASE_URL,
+    resolve: {
+      // Prevent duplicate copies of React sneaking in via dependency subtrees.
+      dedupe: ['react', 'react-dom', 'scheduler', 'use-sync-external-store'],
+    },
     plugins: [
       react(),
       tsconfigPaths(),
