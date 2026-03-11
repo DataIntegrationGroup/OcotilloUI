@@ -15,7 +15,7 @@ import {
 } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import React, { useMemo, useState } from 'react'
-import { CanAccess, useExport, useNavigation, useResource } from '@refinedev/core'
+import { CanAccess, useExport, useNavigation, useResourceParams } from '@refinedev/core'
 import { Box, Chip, InputBase, Stack, Tooltip, Typography } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 
@@ -117,7 +117,7 @@ export const ListPage: React.FC<ListPageProps> = ({
   const [quickFilter, setQuickFilter] = useState('')
 
   const { show } = useNavigation()
-  const { resource } = useResource()
+  const { resource } = useResourceParams()
 
   const handleSelectionChangeWrapper = (selectionModel: any) => {
     if (onSelectionChange) {
