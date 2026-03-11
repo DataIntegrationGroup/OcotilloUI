@@ -15,6 +15,7 @@ import {
   ScienceOutlined,
   SettingsInputAntenna,
   Spa,
+  Timeline,
   Workspaces,
 } from '@mui/icons-material'
 
@@ -300,6 +301,16 @@ let ocotillo = [
   },
   ...tables,
   {
+    name: 'hydrograph-correction',
+    list: '/ocotillo/hydrograph-correction',
+    meta: {
+      label: 'Hydrograph Correction',
+      parent: 'ocotillo.thing-well',
+      nestedLevel: 2,
+      icon: <Timeline />,
+    },
+  },
+  {
     name: 'observation',
     icon: <ScaleOutlined />,
     meta: {
@@ -308,24 +319,6 @@ let ocotillo = [
     },
   },
   // ...observations,
-  // {
-  //   name: 'apps',
-  //   icon: <Apps />,
-  //   meta: {
-  //     label: 'Apps',
-  //   },
-  // },
-  // {
-  //   name: 'hydrograph-corrector',
-  //   list: '/ocotillo/hydrograph-corrector',
-  //   meta: {
-  //     disabled: true,
-  //     label: 'Hydrograph Corrector (Coming Soon)',
-  //     parent: 'ocotillo.apps',
-  //     nestedLevel: 2,
-  //     icon: <Construction />,
-  //   },
-  // },
   // {
   //   name: 'water-chemistry-import',
   //   list: '/ocotillo/water-chemistry-import',
