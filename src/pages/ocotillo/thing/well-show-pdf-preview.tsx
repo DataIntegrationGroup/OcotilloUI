@@ -366,12 +366,11 @@ export const WellShowPdfPreview = () => {
                   color: 'text.primary',
                 },
 
-                '& .MuiAccordionActions-root': {
+                '& .MuiDivider-root': {
                   px: 2,
-                  pb: 2,
                   pt: 0,
                   borderTop: '1px solid',
-                  borderColor: 'divider',
+                  borderColor: 'text.secondary',
                 },
               }}
             >
