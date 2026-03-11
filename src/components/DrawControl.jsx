@@ -139,7 +139,7 @@ const DrawRectangleMode = {
     this.changeMode("simple_select", {}, { silent: true });
   },
   onTrash(state) {
-    this.deleteFeature([state.polygon.id], { silent: true });
+    this.deleteFeature([state.polygon.id]);
     this.changeMode("simple_select");
   },
   toDisplayFeatures(state, geojson, display) {
@@ -307,7 +307,7 @@ const DrawRectangleEditMode = {
     setCanvasCursor(this.map, CURSORS.default);
   },
   onTrash(state) {
-    this.deleteFeature([state.rectangle.id], { silent: true });
+    this.deleteFeature([state.rectangle.id]);
     this.changeMode("simple_select");
   },
   toDisplayFeatures(state, geojson, display) {
@@ -343,8 +343,8 @@ function DrawControl(props) {
 
   const getButtonTitle = (label) =>
     props.disabled
-      ? `${label}. Disabled unless exactly one layer is selected.`
-      : `${label}. Enabled when exactly one layer is selected.`;
+      ? `${label}. Disabled until at least one layer is visible.`
+      : `${label}. Enabled when at least one layer is visible.`;
 
   const syncControlButtons = (map) => {
     if (!map) return;

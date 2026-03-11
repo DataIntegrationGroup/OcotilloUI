@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { HttpError, useResourceParams, useShow } from '@refinedev/core'
 import { Breadcrumb, Show, useDataGrid } from '@refinedev/mui'
+import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
@@ -46,6 +47,24 @@ export const WellShow = () => {
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
+  const {
+    dataGridProps: {
+      rows: transducerObservationRows,
+      loading: transducerObservationsIsLoading,
+    },
+  } = useDataGrid<TransducerObservationWithBlockResponse>({
+    resource: 'observation/transducer-groundwater-level',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: id,
+      },
+    },
+    queryOptions: {
+      gcTime: 10 * 60 * 1000,
+      staleTime: 5 * 60 * 1000,
+    },
+  })
 
   const { dataGridProps: idLinkDataGridProps } = useDataGrid({
     resource: `thing/${id}/id-link`,
@@ -72,22 +91,39 @@ export const WellShow = () => {
   }, [idLinks, idLinksIsloading])
 
   useEffect(() => {
-    if (!observations || observations.length === 0) return
+    const manualSource =
+      observations.length > 0
+        ? {
+            id: 1,
+            name: 'Groundwater Level',
+            style: 'scatter',
+            data: observations.map((obs) => ({
+              phenomenonTime: new Date(obs.observation_datetime),
+              result: Number(obs.depth_to_water_bgs),
+            })),
+          }
+        : null
+
+    const transducerSource =
+      transducerObservationRows.length > 0
+        ? {
+            id: 2,
+            name: 'Transducer Groundwater Level',
+            style: 'line',
+            data: transducerObservationRows.map(({ observation }) => ({
+              phenomenonTime: new Date(observation.observation_datetime),
+              result: Number(observation.value),
+            })),
+          }
+        : null
 
     const source: IHydrographDatasource[] = [
-      {
-        id: 1,
-        name: 'Groundwater Level',
-        style: 'scatter',
-        data:
-          observations.map((obs) => ({
-            phenomenonTime: new Date(obs.observation_datetime),
-            result: Number(obs.depth_to_water_bgs),
-          })) || [],
-      },
+      ...(manualSource ? [manualSource] : []),
+      ...(transducerSource ? [transducerSource] : []),
     ]
+
     setHydrographDatasource(source)
-  }, [observations])
+  }, [observations, transducerObservationRows])
 
   return (
     <Show
@@ -119,9 +155,11 @@ export const WellShow = () => {
           <Grid size={{ xs: 12, md: 6 }}>
             <HydrographCard
               well={well}
-              rows={observations}
+              rows={[...observations, ...transducerObservationRows]}
               dataSource={hydrographDatasource}
-              isLoading={observationsIsloading}
+              isLoading={
+                observationsIsloading || transducerObservationsIsLoading
+              }
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>

@@ -25,14 +25,20 @@ export const sanitizeLayerExportFilename = (value: string): string =>
 
 export const filterLayerFeaturesBySelection = (
   features: any[],
-  selectionFeature?: any
+  selectionFeatures?: any[] | any
 ) => {
-  const selectionGeometry = selectionFeature?.geometry
+  const polygonGeometries = (Array.isArray(selectionFeatures)
+    ? selectionFeatures
+    : selectionFeatures
+      ? [selectionFeatures]
+      : []
+  )
+    .map((feature) => feature?.geometry)
+    .filter((geometry) =>
+      geometry && ['Polygon', 'MultiPolygon'].includes(geometry.type)
+    )
 
-  if (
-    !selectionGeometry ||
-    !['Polygon', 'MultiPolygon'].includes(selectionGeometry.type)
-  ) {
+  if (polygonGeometries.length === 0) {
     return features
   }
 
@@ -42,9 +48,11 @@ export const filterLayerFeaturesBySelection = (
 
     try {
       if (geometry.type === 'Point') {
-        return turf.booleanPointInPolygon(
-          turf.point(geometry.coordinates),
-          selectionGeometry
+        return polygonGeometries.some((selectionGeometry) =>
+          turf.booleanPointInPolygon(
+            turf.point(geometry.coordinates),
+            selectionGeometry
+          )
         )
       }
 
@@ -53,13 +61,17 @@ export const filterLayerFeaturesBySelection = (
         Array.isArray(geometry.coordinates)
       ) {
         return geometry.coordinates.some((coordinates: number[]) =>
-          turf.booleanPointInPolygon(turf.point(coordinates), selectionGeometry)
+          polygonGeometries.some((selectionGeometry) =>
+            turf.booleanPointInPolygon(turf.point(coordinates), selectionGeometry)
+          )
         )
       }
 
-      return turf.booleanIntersects(
-        turf.feature(geometry, feature?.properties || {}),
-        turf.feature(selectionGeometry)
+      return polygonGeometries.some((selectionGeometry) =>
+        turf.booleanIntersects(
+          turf.feature(geometry, feature?.properties || {}),
+          turf.feature(selectionGeometry)
+        )
       )
     } catch {
       return false
