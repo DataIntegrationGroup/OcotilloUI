@@ -1,4 +1,4 @@
-import {
+import React, {
   forwardRef,
   useEffect,
   useImperativeHandle,
@@ -31,6 +31,7 @@ import {
 } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import { parseNumeric } from '@/utils/parseNumeric'
+import { getFeatureId } from '@/utils/mapSelection'
 
 type Point = {
   x: number
@@ -162,15 +163,10 @@ const formatDate = (value: unknown): string => {
   }).format(parsed)
 }
 
-const getFeatureId = (feature: GeoJsonFeature): string => {
-  const props = feature?.properties || {}
-  return String(
-    props.thing_id ?? props.well_id ?? props.id ?? props.fid ?? feature?.id ?? ''
-  )
-}
-
 const getName = (feature: GeoJsonFeature): string =>
-  String(feature?.properties?.name ?? feature?.properties?.thing_name ?? 'Unnamed well')
+  String(
+    feature?.properties?.name ?? feature?.properties?.thing_name ?? 'Unnamed well'
+  )
 
 const ternaryToCartesian = (
   mix: TernaryMix,
