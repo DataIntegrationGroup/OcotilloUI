@@ -168,21 +168,30 @@ The project was upgraded to Refine v5 (with `@refinedev/core` v5 and `@refinedev
 
 **`useResourceParams`:** Use this instead of `useResource` to get the current resource name and ID from the URL. The returned shape is the same.
 
-**`useShow` / `useForm` return value:** In v5, these hooks return `{ query }` not `{ queryResult }`. Any show or edit page still using `queryResult` will silently receive `undefined` — the page renders but shows no data.
-
-As of the v5 upgrade, **25 files** across `src/pages/` still use `queryResult`. They are all broken until migrated.
+**`useShow` / `useForm` return value:** In v5, these hooks return `{ query }` not `{ queryResult }`. Use `query` to access data and loading state:
 
 ```ts
-// v4 (broken in v5)
+// v4 pattern (do not use)
 const { queryResult: { data, isLoading } } = useShow()
-const { queryResult } = useForm()
 
-// v5 (correct)
+// v5 correct pattern
 const { query: { data, isLoading } } = useShow()
-const { query } = useForm()
 ```
 
-To find all remaining broken files: `grep -r "queryResult" src/`
+**In edit pages**, `useForm` from `@refinedev/react-hook-form` exposes the query via `refineCore.query`. If you need to read the current record's data inside an edit page (e.g. to pre-populate a secondary field), destructure it from `refineCore`:
+
+```ts
+const {
+  saveButtonProps,
+  refineCore: { query },
+  control,
+} = useForm<IWell, HttpError, Nullable<IWell>>()
+
+// Access the loaded record
+const record = query?.data?.data
+```
+
+Only destructure `query` from `refineCore` if you actually use it — omit it otherwise to keep the destructuring clean.
 
 ---
 
