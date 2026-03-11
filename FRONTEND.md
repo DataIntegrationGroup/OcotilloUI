@@ -24,11 +24,12 @@ A practical reference for working on the Ocotillo front-end. It covers the frame
 
 The UI is built on three layers. Understanding which layer owns which concern saves a lot of time.
 
-| Layer | Package | Owns |
-| --- | --- | --- |
-| **MUI** | `@mui/material` | All visual components (Button, Card, Drawer, DataGrid, etc.) |
-| **Refine** | `@refinedev/core`, `@refinedev/mui` | Data, routing, auth, CRUD layout wrappers |
-| **Ocotillo** | `src/` | App-specific business logic, custom components, theme |
+| Layer | Package | Version | Owns |
+| --- | --- | --- | --- |
+| **MUI** | `@mui/material` | v6 | All visual components (Button, Card, Drawer, etc.) |
+| **MUI DataGrid** | `@mui/x-data-grid` | v8 | All data tables |
+| **Refine** | `@refinedev/core`, `@refinedev/mui` | v5 / v8 | Data, routing, auth, CRUD layout wrappers |
+| **Ocotillo** | `src/` | — | App-specific business logic, custom components, theme |
 
 **The mental model:** MUI is the component library -- it provides the bricks. Refine is the application frame -- it wires up data, permissions, and navigation. Ocotillo code lives on top of both.
 
@@ -155,6 +156,36 @@ Icons render as SVGs and accept `sx`, `fontSize`, and `color` props:
 
 ## Refine.dev -- What It Owns
 
+### Refine v4 → v5 migration notes
+
+The project was upgraded to Refine v5 (with `@refinedev/core` v5 and `@refinedev/mui` v8). Key breaking changes to be aware of:
+
+| Change | v4 | v5 |
+|---|---|---|
+| Resource hook | `useResource()` | `useResourceParams()` |
+| Show data hook return | `queryResult` | `query` |
+| DataGrid slots API | `components` prop | `slots` prop (MUI v8 aligned) |
+
+**`useResourceParams`:** Use this instead of `useResource` to get the current resource name and ID from the URL. The returned shape is the same.
+
+**`useShow` / `useForm` return value:** In v5, these hooks return `{ query }` not `{ queryResult }`. Any show or edit page still using `queryResult` will silently receive `undefined` — the page renders but shows no data.
+
+As of the v5 upgrade, **25 files** across `src/pages/` still use `queryResult`. They are all broken until migrated.
+
+```ts
+// v4 (broken in v5)
+const { queryResult: { data, isLoading } } = useShow()
+const { queryResult } = useForm()
+
+// v5 (correct)
+const { query: { data, isLoading } } = useShow()
+const { query } = useForm()
+```
+
+To find all remaining broken files: `grep -r "queryResult" src/`
+
+---
+
 ### Sidebar navigation
 
 Defined in `src/resources/ocotillo.tsx`. Each entry in the `ocotillo` array becomes a nav item. The `meta.icon` sets the sidebar icon. Resources without `list`, `show`, `edit`, or `create` URLs will not appear in the nav.
@@ -258,7 +289,7 @@ The hooks read the resource name and record ID from the URL automatically -- you
 **Show page** (`src/pages/ocotillo/thing/well-show.tsx`) -- uses `<Show>` directly from `@refinedev/mui` with `useShow()` to load the well record. The children are a custom grid of detail cards:
 
 ```tsx
-const { queryResult: { data, isLoading } } = useShow<IWell>()
+const { query: { data, isLoading } } = useShow<IWell>()  // v5: query (not queryResult)
 
 <Show>
   <Grid container spacing={2}>
@@ -290,7 +321,7 @@ Colors are defined in `src/theme.ts` and sourced entirely from the [Tailwind CSS
 
 ### How it works
 
-The package `tailwindcss@3` (installed as a devDependency) exports a `colors` object with every Tailwind color as a plain hex value:
+`tailwindcss@3` is installed as a devDependency **only as a color value source** — there is no Tailwind CSS processing, no `tailwind.config.js`, no utility classes in templates. The package exports a `colors` object with every Tailwind color as a plain hex value, which is imported directly into `theme.ts`:
 
 ```ts
 import colors from 'tailwindcss/colors'
@@ -300,7 +331,7 @@ colors.stone[200]  // '#e7e5e4'
 colors.zinc[950]   // '#09090b'
 ```
 
-The theme uses these values directly for the MUI `palette`. There is no Tailwind CSS processing involved -- just the color values.
+The theme uses these values directly for the MUI `palette`. **Do not add Tailwind utility classes (`className="text-blue-700"`)** — they will not work. All styling goes through MUI's `sx` prop and `theme.ts`.
 
 ### Palette slots
 
