@@ -13,6 +13,51 @@ export default defineConfig(({ mode }) => {
   return {
     build: {
       sourcemap: enableSourceMap,
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            if (!id.includes('node_modules')) return undefined
+
+            if (
+              id.includes('mapbox-gl') ||
+              id.includes('react-map-gl') ||
+              id.includes('@mapbox')
+            ) {
+              return 'map'
+            }
+
+            if (id.includes('@react-pdf/renderer')) {
+              return 'pdf'
+            }
+
+            if (id.includes('echarts')) {
+              return 'charts'
+            }
+
+            if (id.includes('@mui/x-data-grid')) {
+              return 'data-grid'
+            }
+
+            if (
+              id.includes('/d3') ||
+              id.includes('d3-') ||
+              id.includes('@turf')
+            ) {
+              return 'geo-viz'
+            }
+
+            if (
+              id.includes('@mui') ||
+              id.includes('@emotion') ||
+              id.includes('@base-ui-components')
+            ) {
+              return 'ui'
+            }
+
+            return 'vendor'
+          },
+        },
+      },
     },
     base: env.VITE_BASE_URL,
     plugins: [

@@ -1,6 +1,22 @@
 import { parseNumeric } from './parseNumeric'
 
-type GeoJsonFeature = any
+type FeatureProperties = Record<string, unknown>
+
+type GeoJsonFeature = {
+  id?: string | number
+  geometry?: {
+    type?: string
+    coordinates?: unknown
+  }
+  properties?: FeatureProperties
+}
+
+type GeoJsonFeatureCollection = {
+  type?: string
+  features?: GeoJsonFeature[]
+}
+
+type CirclePaint = Record<string, unknown>
 
 const EXCLUDED_SELECTED_POINT_COLUMNS = new Set([
   'thing_type',
@@ -187,7 +203,7 @@ export const getFeatureId = (feature: GeoJsonFeature): string | undefined => {
 }
 
 export const getSelectedPointFeatures = (
-  featureCollection: GeoJsonFeature,
+  featureCollection: GeoJsonFeatureCollection | null | undefined,
   hasSelectionPolygon: boolean
 ): GeoJsonFeature[] => {
   if (!hasSelectionPolygon) return []
@@ -274,7 +290,7 @@ export const buildSelectedPointSourceData = ({
   sourceData,
   selectedPointIds,
 }: {
-  sourceData: GeoJsonFeature
+  sourceData: GeoJsonFeatureCollection | null | undefined
   selectedPointIds: Set<string>
 }) => {
   if (
@@ -303,9 +319,9 @@ export const buildSelectedPointSourceData = ({
 }
 
 export const buildSelectedPointPaint = (
-  paint: Record<string, any> = {},
+  paint: CirclePaint = {},
   mode: 'light' | 'dark' = 'light'
-): Record<string, any> => ({
+): CirclePaint => ({
   ...paint,
   'circle-opacity': [
     'case',

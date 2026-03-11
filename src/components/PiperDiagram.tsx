@@ -13,7 +13,7 @@ import {
   Path as PdfPath,
   Svg,
   StyleSheet,
-  Text,
+  Text as PdfText,
   View,
   pdf,
 } from '@react-pdf/renderer'
@@ -464,6 +464,13 @@ const labelStyle = {
   fontWeight: 700,
 } as const
 
+type AxisLabel = {
+  text: string
+  x: number
+  y: number
+  angle?: number
+}
+
 const centroid = (vertices: Point[]) => ({
   x: d3.mean(vertices, (d) => d.x) ?? 0,
   y: d3.mean(vertices, (d) => d.y) ?? 0,
@@ -593,6 +600,55 @@ diamondLowerRightLabel.angle = renderedEdgeAngle(
   diamondVertices[1]
 )
 
+const axisLabels: AxisLabel[] = [
+  {
+    text: 'Ca',
+    x: leftBaseLabel.x,
+    y: leftBaseLabel.y,
+  },
+  {
+    text: 'Na + K',
+    x: leftRightEdgeLabel.x,
+    y: leftRightEdgeLabel.y,
+    angle: leftRightEdgeLabel.angle,
+  },
+  {
+    text: 'Mg',
+    x: leftLeftEdgeLabel.x,
+    y: leftLeftEdgeLabel.y,
+    angle: leftLeftEdgeLabel.angle,
+  },
+  {
+    text: 'Cl',
+    x: rightBaseLabel.x,
+    y: rightBaseLabel.y,
+  },
+  {
+    text: 'HCO3 + CO3',
+    x: rightLeftEdgeLabel.x,
+    y: rightLeftEdgeLabel.y,
+    angle: rightLeftEdgeLabel.angle,
+  },
+  {
+    text: 'SO4',
+    x: rightRightEdgeLabel.x,
+    y: rightRightEdgeLabel.y,
+    angle: rightRightEdgeLabel.angle,
+  },
+  {
+    text: 'SO4 + Cl',
+    x: diamondLowerLeftLabel.x,
+    y: diamondLowerLeftLabel.y,
+    angle: diamondLowerLeftLabel.angle,
+  },
+  {
+    text: 'Ca + Mg',
+    x: diamondLowerRightLabel.x,
+    y: diamondLowerRightLabel.y,
+    angle: diamondLowerRightLabel.angle,
+  },
+]
+
 const pdfStyles = StyleSheet.create({
   page: {
     padding: 24,
@@ -651,6 +707,7 @@ const isPiperPoint = (point: PiperPoint | null): point is PiperPoint => point !=
 const PDF_AXIS_COLOR = '#374151'
 const PDF_GRID_COLOR = '#d1d5db'
 const PDF_POINT_FILL = '#111827'
+const PDF_LABEL_COLOR = '#111827'
 
 const PdfPiperChart = ({ points }: { points: PiperPoint[] }) => (
   <Svg
@@ -688,6 +745,26 @@ const PdfPiperChart = ({ points }: { points: PiperPoint[] }) => (
     <PdfPath d={leftTrianglePath} fill="none" stroke={PDF_AXIS_COLOR} strokeWidth={1.5} />
     <PdfPath d={rightTrianglePath} fill="none" stroke={PDF_AXIS_COLOR} strokeWidth={1.5} />
     <PdfPath d={diamondPath} fill="none" stroke={PDF_AXIS_COLOR} strokeWidth={1.5} />
+    {axisLabels.map((label) => (
+      <PdfText
+        key={`pdf-axis-${label.text}`}
+        x={xScale(label.x)}
+        y={yScale(label.y)}
+        textAnchor="middle"
+        transform={
+          label.angle === undefined
+            ? undefined
+            : `rotate(${label.angle} ${xScale(label.x)} ${yScale(label.y)})`
+        }
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          fill: PDF_LABEL_COLOR,
+        }}
+      >
+        {label.text}
+      </PdfText>
+    ))}
     {points.flatMap((point, index) => [
       <PdfCircle
         key={`pdf-cation-${point.featureId}-${index}`}
@@ -721,10 +798,10 @@ const PiperPdfDocument = ({
 }) => (
   <Document>
     <Page size="LETTER" style={pdfStyles.page}>
-      <Text style={pdfStyles.title}>Piper Diagram</Text>
-      <Text style={pdfStyles.subtitle}>
-        Generated from the current major chemistry map selection.
-      </Text>
+      <PdfText style={pdfStyles.title}>Piper Diagram</PdfText>
+      <PdfText style={pdfStyles.subtitle}>
+        Generated from the current Piper well set.
+      </PdfText>
       <View style={pdfStyles.chartWrap}>
         <PdfPiperChart points={points} />
       </View>
@@ -740,7 +817,7 @@ const PiperPdfDocument = ({
             ['SO4', 0.9],
             ['Cl', 0.9],
           ].map(([label, flex], index) => (
-            <Text
+            <PdfText
               key={label}
               style={[
                 pdfStyles.cell,
@@ -749,7 +826,7 @@ const PiperPdfDocument = ({
               ]}
             >
               {label}
-            </Text>
+            </PdfText>
           ))}
         </View>
         {points.map((point, rowIndex) => (
@@ -766,7 +843,7 @@ const PiperPdfDocument = ({
             ].map((value, index) => {
               const flexValues = [2.2, 1.35, 0.9, 0.9, 0.9, 1.05, 0.9, 0.9]
               return (
-                <Text
+                <PdfText
                   key={`${point.featureId}-${index}`}
                   style={[
                     pdfStyles.cell,
@@ -778,7 +855,7 @@ const PiperPdfDocument = ({
                   ]}
                 >
                   {value}
-                </Text>
+                </PdfText>
               )
             })}
           </View>
@@ -925,78 +1002,22 @@ export const PiperDiagram = forwardRef<
           <path d={rightTrianglePath} fill="none" stroke={axisColor} strokeWidth="1.5" />
           <path d={diamondPath} fill="none" stroke={axisColor} strokeWidth="1.5" />
 
-          <text
-            x={xScale(leftBaseLabel.x)}
-            y={yScale(leftBaseLabel.y)}
-            textAnchor="middle"
-            style={labelStyle}
-          >
-            Ca
-          </text>
-          <text
-            x={xScale(leftRightEdgeLabel.x)}
-            y={yScale(leftRightEdgeLabel.y)}
-            textAnchor="middle"
-            transform={`rotate(${leftRightEdgeLabel.angle} ${xScale(leftRightEdgeLabel.x)} ${yScale(leftRightEdgeLabel.y)})`}
-            style={labelStyle}
-          >
-            Na + K
-          </text>
-          <text
-            x={xScale(leftLeftEdgeLabel.x)}
-            y={yScale(leftLeftEdgeLabel.y)}
-            textAnchor="middle"
-            transform={`rotate(${leftLeftEdgeLabel.angle} ${xScale(leftLeftEdgeLabel.x)} ${yScale(leftLeftEdgeLabel.y)})`}
-            style={labelStyle}
-          >
-            Mg
-          </text>
-
-          <text
-            x={xScale(rightBaseLabel.x)}
-            y={yScale(rightBaseLabel.y)}
-            textAnchor="middle"
-            style={labelStyle}
-          >
-            Cl
-          </text>
-          <text
-            x={xScale(rightLeftEdgeLabel.x)}
-            y={yScale(rightLeftEdgeLabel.y)}
-            textAnchor="middle"
-            transform={`rotate(${rightLeftEdgeLabel.angle} ${xScale(rightLeftEdgeLabel.x)} ${yScale(rightLeftEdgeLabel.y)})`}
-            style={labelStyle}
-          >
-            HCO3 + CO3
-          </text>
-          <text
-            x={xScale(rightRightEdgeLabel.x)}
-            y={yScale(rightRightEdgeLabel.y)}
-            textAnchor="middle"
-            transform={`rotate(${rightRightEdgeLabel.angle} ${xScale(rightRightEdgeLabel.x)} ${yScale(rightRightEdgeLabel.y)})`}
-            style={labelStyle}
-          >
-            SO4
-          </text>
-
-          <text
-            x={xScale(diamondLowerLeftLabel.x)}
-            y={yScale(diamondLowerLeftLabel.y)}
-            textAnchor="middle"
-            transform={`rotate(${diamondLowerLeftLabel.angle} ${xScale(diamondLowerLeftLabel.x)} ${yScale(diamondLowerLeftLabel.y)})`}
-            style={labelStyle}
-          >
-            SO4 + Cl
-          </text>
-          <text
-            x={xScale(diamondLowerRightLabel.x)}
-            y={yScale(diamondLowerRightLabel.y)}
-            textAnchor="middle"
-            transform={`rotate(${diamondLowerRightLabel.angle} ${xScale(diamondLowerRightLabel.x)} ${yScale(diamondLowerRightLabel.y)})`}
-            style={labelStyle}
-          >
-            Ca + Mg
-          </text>
+          {axisLabels.map((label) => (
+            <text
+              key={label.text}
+              x={xScale(label.x)}
+              y={yScale(label.y)}
+              textAnchor="middle"
+              transform={
+                label.angle === undefined
+                  ? undefined
+                  : `rotate(${label.angle} ${xScale(label.x)} ${yScale(label.y)})`
+              }
+              style={labelStyle}
+            >
+              {label.text}
+            </text>
+          ))}
           {orderedPoints.map((point, index) => {
             const isActive = point.featureId === activeFeatureId
 
