@@ -19,14 +19,6 @@ import { CanAccess, useExport, useNavigation, useResourceParams } from '@refined
 import { Box, Chip, InputBase, Stack, Tooltip, Typography } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 
-// Hides the text label, keeping only the icon. The built-in buttons must be used
-// (not custom icon buttons) so that the panel anchors correctly next to the button.
-const iconOnlySx = {
-  minWidth: 'auto',
-  px: 0.75,
-  fontSize: 0,
-  '& .MuiButton-startIcon': { mr: 0, ml: 0 },
-}
 
 // Shows a dismissible chip for each active column filter.
 function ActiveFilterChips() {
@@ -73,10 +65,10 @@ function ListPageToolbar() {
   return (
     <GridToolbarContainer sx={{ px: 1, py: 0.5, flexDirection: 'column', alignItems: 'stretch', gap: 0 }}>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-        <GridToolbarFilterButton sx={iconOnlySx} />
-        <GridToolbarColumnsButton sx={iconOnlySx} />
-        <GridToolbarDensitySelector sx={iconOnlySx} />
-        <GridToolbarExport sx={iconOnlySx} />
+        <GridToolbarFilterButton />
+        <GridToolbarColumnsButton />
+        <GridToolbarDensitySelector />
+        <GridToolbarExport />
       </Box>
       <ActiveFilterChips />
     </GridToolbarContainer>
