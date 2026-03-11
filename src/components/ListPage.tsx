@@ -235,6 +235,7 @@ export const ListPage: React.FC<ListPageProps> = ({
         <DataGrid
           {...restDataGridProps}
           rows={filteredRows}
+          showToolbar
           slots={{ toolbar: ListPageToolbar }}
           slotProps={{
             loadingOverlay: {
