@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router'
 import { ErrorComponent } from '@refinedev/mui'
 import {
   ContactEdit,
@@ -14,6 +14,7 @@ import {
   WellList,
   WellShow,
   WellShowPdfPreview,
+  WellBatchExport,
   SpringShow,
 } from '@/pages/ocotillo/thing'
 import { MapView } from '@/pages/ocotillo/map'
@@ -87,6 +88,7 @@ export const OcotilloRoutes = () => {
       </Route>
       <Route path="well">
         <Route index element={<WellList />} />
+        <Route path={'batch-export'} element={<WellBatchExport />} />
         <Route path={'show/:id'} element={<WellShow />} />
         <Route path={'pdf-preview/:id'} element={<WellShowPdfPreview />} />
         <Route path={'edit/:id'} element={<WellEdit />} />

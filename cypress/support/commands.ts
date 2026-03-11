@@ -23,6 +23,13 @@ Cypress.Commands.add('logout', () => {
     win.localStorage.removeItem('id_token')
     win.localStorage.removeItem('refresh_token')
     win.localStorage.removeItem('pkce_code_verifier')
+    win.localStorage.removeItem('pkce_state')
+    const toRemove: string[] = []
+    for (let i = 0; i < win.localStorage.length; i++) {
+      const key = win.localStorage.key(i)
+      if (key?.startsWith('pkce_tx_')) toRemove.push(key)
+    }
+    toRemove.forEach((key) => win.localStorage.removeItem(key))
   })
 })
 

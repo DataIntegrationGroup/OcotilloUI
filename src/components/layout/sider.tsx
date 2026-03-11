@@ -1,14 +1,10 @@
-import React, { type CSSProperties, useContext, useEffect, useState } from 'react'
+import React, { type CSSProperties, useContext, useState } from 'react'
 import {
   CanAccess,
-  type ITreeMenu,
-  useTitle,
-  useRouterContext,
-  useRouterType,
-  useLink,
   useMenu,
+  type TreeMenuItem,
 } from '@refinedev/core'
-import { ThemedTitleV2, useThemedLayoutContext } from '@refinedev/mui'
+import { ThemedTitle, useThemedLayoutContext } from '@refinedev/mui'
 import ChevronLeft from '@mui/icons-material/ChevronLeft'
 import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined'
 import ExpandLess from '@mui/icons-material/ExpandLess'
@@ -26,13 +22,15 @@ import {
   Drawer,
   Tooltip,
   Paper,
+  Typography,
 } from '@mui/material'
-import type { RefineThemedLayoutV2SiderProps } from '@refinedev/mui'
+import type { RefineThemedLayoutSiderProps } from '@refinedev/mui'
+import { Link as RouterLink } from 'react-router'
 import { ColorModeContext } from '@/contexts'
 import { Dashboard } from './dashboard'
 import { Logout } from './logout'
 
-export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
+export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
   Title: TitleFromProps,
   render,
   meta,
@@ -48,40 +46,22 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
   const { mode, setMode } = useContext(ColorModeContext)
 
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu({ meta })
-  const TitleFromContext = useTitle()
-
-  const { Link: LegacyLink } = useRouterContext()
-  const routerType = useRouterType()
-
-  const NewLink = useLink()
-  const Link = routerType === 'legacy' ? LegacyLink : NewLink
 
   const getDrawerWidth = (isSiderCollapsed: boolean): number =>
     isSiderCollapsed ? 56 : 260
 
-  const [open, setOpen] = useState<{ [key: string]: boolean }>({})
+  const [open, setOpen] = useState<{ [key: string]: boolean }>(() =>
+    Object.fromEntries(defaultOpenKeys.map((key) => [key, true]))
+  )
 
-  useEffect(() => {
-    setOpen((previous) => {
-      const previousKeys: string[] = Object.keys(previous)
-      const previousOpenKeys = previousKeys.filter((key) => previous[key])
-
-      const uniqueKeys = new Set([...previousOpenKeys, ...defaultOpenKeys])
-      const uniqueKeysRecord = Object.fromEntries(
-        Array.from(uniqueKeys.values()).map((key) => [key, true])
-      )
-      return uniqueKeysRecord
-    })
-  }, [defaultOpenKeys])
-
-  const Title = TitleFromProps ?? TitleFromContext ?? ThemedTitleV2
+  const Title = TitleFromProps ?? ThemedTitle
 
   const handleClick = (key: string) => {
-    setOpen({ ...open, [key]: !open[key] })
+    setOpen({ [key]: !open[key] })
   }
 
-  const renderTreeView = (tree: ITreeMenu[], selectedKey?: string) => {
-    return tree.map((item: ITreeMenu) => {
+  const renderTreeView = (tree: TreeMenuItem[], selectedKey?: string) => {
+    return tree.map((item: TreeMenuItem) => {
       const {
         icon: deprecatedIcon,
         label: deprecatedLabel,
@@ -127,7 +107,9 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
               >
                 <ListItemButton
                   disabled={disabled}
-                  // disabled={!allowedCategories.has(label)}
+                  component={route ? RouterLink : 'div'}
+                  to={route}
+                  selected={isSelected}
                   onClick={() => {
                     if (siderCollapsed) {
                       setSiderCollapsed(false)
@@ -139,47 +121,44 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
                     }
                   }}
                   sx={{
-                    pl: isNested ? nestedLevel * 4 : 2,
+                    py: isNested ? 0 : 1,
+                    pl: isNested ? nestedLevel * 2 : 1.5,
                     justifyContent: 'center',
                     borderRadius: 0,
                     border: 0,
-                    m: 0.5,
-                    backgroundColor: 'rgba(48,114,122,0.5)',
+                    my: 0,
+                    mx: 0,
                   }}
                 >
                   <ListItemIcon
                     sx={{
                       justifyContent: 'center',
-                      minWidth: '24px',
+                      minWidth: '20px',
                       transition: 'margin-right 0.3s',
-                      marginRight: siderCollapsed ? '0px' : '12px',
+                      // marginRight: siderCollapsed ? '0px' : '12px',
+                      mr: siderCollapsed ? 0 : 1,
                       color: 'currentColor',
                     }}
                   >
                     {icon ?? <ListOutlined />}
                   </ListItemIcon>
-                  <ListItemText
-                    primary={label}
-                    slotProps={{
-                      primary: {
-                        noWrap: true,
-                        fontSize: '14px',
-                      },
-                    }}
-                  />
-                  {isOpen ? (
-                    <ExpandLess
-                      sx={{
-                        color: 'text.icon',
-                      }}
-                    />
-                  ) : (
-                    <ExpandMore
-                      sx={{
-                        color: 'text.icon',
+                  {!siderCollapsed && (
+                    <ListItemText
+                      primary={label}
+                      slotProps={{
+                        primary: {
+                          noWrap: true,
+                          fontSize: '14px',
+                          sx: { textDecoration: isSelected ? 'underline' : 'none' },
+                        },
                       }}
                     />
                   )}
+                  {!siderCollapsed && (isOpen ? (
+                    <ExpandLess sx={{ color: 'text.icon' }} />
+                  ) : (
+                    <ExpandMore sx={{ color: 'text.icon' }} />
+                  ))}
                 </ListItemButton>
               </Tooltip>
               {!siderCollapsed && (
@@ -216,40 +195,47 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
           >
             <ListItemButton
               disabled={disabled}
-              component={Link}
+              component={RouterLink}
               to={route}
-              selected={isSelected}
               style={linkStyle}
               onClick={() => {
+                if (!isNested) setOpen({})
                 setMobileSiderOpen(false)
               }}
               sx={{
-                pl: isNested ? nestedLevel * 4 : 2,
-                py: isNested ? 1.25 : 1,
+                ml: isNested ? 0.5 : 0,
+                pl: isNested ? nestedLevel * 2.5 : 1.5,
+                py: isNested ? 0 : 1,
+                minHeight: isNested ? 'unset' : undefined,
                 justifyContent: 'center',
-                color: isSelected ? 'primary.main' : 'text.primary',
+                color: isSelected ? 'primary.main' : isNested ? 'text.secondary' : 'text.primary',
               }}
             >
-              <ListItemIcon
-                sx={{
-                  justifyContent: 'center',
-                  transition: 'margin-right 0.3s',
-                  marginRight: siderCollapsed ? '0px' : '12px',
-                  minWidth: '24px',
-                  color: 'currentColor',
-                }}
-              >
-                {icon ?? <ListOutlined />}
-              </ListItemIcon>
-              <ListItemText
-                primary={label}
-                slotProps={{
-                  primary: {
-                    noWrap: true,
-                    fontSize: '14px',
-                  },
-                }}
-              />
+              {!isNested && (
+                <ListItemIcon
+                  sx={{
+                    justifyContent: 'center',
+                    transition: 'margin-right 0.3s',
+                    marginRight: siderCollapsed ? 0 : 1,
+                    minWidth: '20px',
+                    color: 'currentColor',
+                  }}
+                >
+                  {icon ?? <ListOutlined />}
+                </ListItemIcon>
+              )}
+              {!siderCollapsed && (
+                <ListItemText
+                  primary={label}
+                  slotProps={{
+                    primary: {
+                      noWrap: true,
+                      fontSize: '14px',
+                      sx: { textDecoration: isSelected ? 'underline' : 'none' },
+                    },
+                  }}
+                />
+              )}
             </ListItemButton>
           </Tooltip>
         </CanAccess>
@@ -260,9 +246,6 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
   const Sider = () => {
     if (render) {
       return render({
-        dashboard: (
-          <Dashboard collapsed={siderCollapsed} selectedKey={selectedKey} />
-        ),
         logout: <Logout collapsed={siderCollapsed} />,
         items: renderTreeView(menuItems, selectedKey),
         collapsed: siderCollapsed,
@@ -384,6 +367,36 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
           >
             <Sider />
           </Box>
+          {!siderCollapsed && (
+            <Box
+              sx={{
+                borderTop: (theme) => `1px solid ${theme.palette.action.focus}`,
+                px: 2,
+                py: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.5,
+              }}
+            >
+              {[
+                { to: '/about', label: 'About' },
+                { to: '/report-a-bug', label: 'Report a Bug' },
+              ].map(({ to, label }) => (
+                <RouterLink key={to} to={to} style={{ textDecoration: 'none' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'text.secondary',
+                      '&:hover': { color: 'text.primary' },
+                      transition: 'color 0.15s',
+                    }}
+                  >
+                    {label}
+                  </Typography>
+                </RouterLink>
+              ))}
+            </Box>
+          )}
           <Box
             sx={{
               borderTop: (theme) => `1px solid ${theme.palette.action.focus}`,

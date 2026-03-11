@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { HttpError, useResourceParams, useShow } from '@refinedev/core'
 import { Breadcrumb, Show, useDataGrid } from '@refinedev/mui'
+import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
@@ -15,19 +16,16 @@ import {
   AlternateIdsAccordion,
   USGSInfoCard,
   OSEPODInfoCard,
-  WellPDFDownloadButton as DownloadButton,
+  WellPDFPreviewButton,
   WellScreensAccordion,
   EquipmentAccordion,
   NotesAccordion,
   AdditionalWellInformationAccordion,
+  WellPDFDownloadButton,
 } from '@/components'
 
 export const WellShow = () => {
-  const {
-    queryResult: { data, isLoading },
-  } = useShow<IWell, HttpError>()
-
-  const well = data?.data
+  const { query, result: well } = useShow<IWell, HttpError>()
 
   const [hydrographDatasource, setHydrographDatasource] = useState<
     IHydrographDatasource[]
@@ -45,8 +43,26 @@ export const WellShow = () => {
       },
     },
     queryOptions: {
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
+    },
+  })
+  const {
+    dataGridProps: {
+      rows: transducerObservationRows,
+      loading: transducerObservationsIsLoading,
+    },
+  } = useDataGrid<TransducerObservationWithBlockResponse>({
+    resource: 'observation/transducer-groundwater-level',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: id,
+      },
+    },
+    queryOptions: {
+      gcTime: 10 * 60 * 1000,
+      staleTime: 5 * 60 * 1000,
     },
   })
 
@@ -54,7 +70,7 @@ export const WellShow = () => {
     resource: `thing/${id}/id-link`,
     dataProviderName: 'ocotillo',
     queryOptions: {
-      cacheTime: 10 * 60 * 1000, // cached data for 10 minutes
+      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
@@ -75,26 +91,43 @@ export const WellShow = () => {
   }, [idLinks, idLinksIsloading])
 
   useEffect(() => {
-    if (!observations || observations.length === 0) return
+    const manualSource =
+      observations.length > 0
+        ? {
+            id: 1,
+            name: 'Groundwater Level',
+            style: 'scatter',
+            data: observations.map((obs) => ({
+              phenomenonTime: new Date(obs.observation_datetime),
+              result: Number(obs.depth_to_water_bgs),
+            })),
+          }
+        : null
+
+    const transducerSource =
+      transducerObservationRows.length > 0
+        ? {
+            id: 2,
+            name: 'Transducer Groundwater Level',
+            style: 'line',
+            data: transducerObservationRows.map(({ observation }) => ({
+              phenomenonTime: new Date(observation.observation_datetime),
+              result: Number(observation.value),
+            })),
+          }
+        : null
 
     const source: IHydrographDatasource[] = [
-      {
-        id: 1,
-        name: 'Groundwater Level',
-        style: 'scatter',
-        data:
-          observations.map((obs) => ({
-            phenomenonTime: new Date(obs.observation_datetime),
-            result: Number(obs.depth_to_water_bgs),
-          })) || [],
-      },
+      ...(manualSource ? [manualSource] : []),
+      ...(transducerSource ? [transducerSource] : []),
     ]
+
     setHydrographDatasource(source)
-  }, [observations])
+  }, [observations, transducerObservationRows])
 
   return (
     <Show
-      isLoading={isLoading}
+      isLoading={query.isLoading}
       breadcrumb={<Breadcrumb hideIcons={true} />}
       title={
         <Typography variant="h5">{`Show Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
@@ -102,7 +135,8 @@ export const WellShow = () => {
       headerButtons={({ defaultButtons }) => (
         <Box sx={{ display: 'flex', gap: 1 }}>
           {defaultButtons}
-          <DownloadButton well={well} isLoading={isLoading} />
+          <WellPDFPreviewButton isLoading={query.isLoading} />
+          <WellPDFDownloadButton well={well} isLoading={query.isLoading} />
         </Box>
       )}
     >
@@ -121,9 +155,11 @@ export const WellShow = () => {
           <Grid size={{ xs: 12, md: 6 }}>
             <HydrographCard
               well={well}
-              rows={observations}
+              rows={[...observations, ...transducerObservationRows]}
               dataSource={hydrographDatasource}
-              isLoading={observationsIsloading}
+              isLoading={
+                observationsIsloading || transducerObservationsIsLoading
+              }
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>

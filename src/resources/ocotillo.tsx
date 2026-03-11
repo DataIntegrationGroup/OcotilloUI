@@ -1,20 +1,21 @@
 import {
-  Place,
+  Apps,
   Construction,
+  Contacts,
+  DynamicFormOutlined,
+  Image,
+  LibraryBooksOutlined,
+  Link,
+  Map,
+  MoreVertOutlined,
+  Opacity,
+  PictureAsPdfOutlined,
+  Place,
+  ScaleOutlined,
   ScienceOutlined,
   SettingsInputAntenna,
-  ScaleOutlined,
-  Contacts,
-  Apps,
-  DynamicFormOutlined,
-  Map,
-  Image,
-  Link,
   Spa,
   Workspaces,
-  MoreVertOutlined,
-  LibraryBooksOutlined,
-  Opacity,
 } from '@mui/icons-material'
 
 let tables: {
@@ -182,12 +183,9 @@ let tables: {
 
 tables.push({
   name: 'thing-well-pdf-preview',
-  // Use `list` to register the route path so useMenu() can match it.
-  // It's hidden, so it won't render in the menu.
   list: '/ocotillo/well/pdf-preview/:id',
   meta: {
     label: 'PDF Preview',
-    // IMPORTANT: tie it to the Wells resource in the sidebar tree
     parent: 'ocotillo.thing-well',
     nestedLevel: 3,
     hide: true,
@@ -195,13 +193,23 @@ tables.push({
 })
 
 tables = tables.map((b) => {
-  let meta = b.meta || {}
-  // No parent: top-level in sidebar
+  const meta = b.meta || {}
   meta['nestedLevel'] = 0
   return {
     ...b,
     meta: meta,
   }
+})
+
+tables.push({
+  name: 'thing-well-batch-export',
+  list: '/ocotillo/well/batch-export',
+  meta: {
+    label: 'Field Sheets',
+    icon: <PictureAsPdfOutlined />,
+    parent: 'ocotillo.thing-well',
+    nestedLevel: 2,
+  },
 })
 
 let forms: {
@@ -239,7 +247,7 @@ let forms: {
 ]
 
 forms = forms.map((b) => {
-  let meta = b.meta || {}
+  const meta = b.meta || {}
   if (!meta['parent']) {
     meta['parent'] = 'ocotillo.forms'
   }
@@ -262,8 +270,6 @@ let observations: {
     name: 'groundwater-level-observation',
     list: '/ocotillo/groundwater-level-observation',
     create: '/ocotillo/groundwater-level-observation/create',
-    // edit: '/ocotillo/observation/edit/:id',
-    // show: '/ocotillo/observation/show/:id',
     meta: {
       label: 'Groundwater Levels',
       icon: <Construction />,
@@ -272,7 +278,7 @@ let observations: {
 ]
 
 observations = observations.map((b) => {
-  let meta = b.meta || {}
+  const meta = b.meta || {}
   if (!meta['parent']) {
     meta['parent'] = 'ocotillo.observation'
   }
@@ -283,7 +289,6 @@ observations = observations.map((b) => {
   }
 })
 
-// V1: Map first, then Wells and rest of table items
 let ocotillo = [
   {
     name: 'map',
@@ -343,8 +348,7 @@ let ocotillo = [
 ]
 
 export const ocotilloResources = ocotillo.map((b) => {
-  let meta = b.meta || {}
-  // No parent: items are top-level in sidebar (no NMBGMR Ocotillo accordion)
+  const meta = b.meta || {}
   meta['dataProviderName'] = 'ocotillo'
   return {
     ...b,
@@ -356,181 +360,3 @@ export const ocotilloResources = ocotillo.map((b) => {
 if (!import.meta.env.PROD) {
   console.debug({ ocotilloResources })
 }
-
-//
-// let amp = [
-//   {
-//     name: "dashboard",
-//     list: "/amp/dashboard",
-//     meta: {
-//       label: "Dashboard",
-//       icon: <DashboardOutlined />,
-//     },
-//   },
-//   {
-//     name: "hydrographcorrector",
-//     list: "/amp/hydrographcorrector",
-//     meta: {
-//       label: "Hydrograph Corrector (Coming Soon)",
-//       icon: <Construction />,
-//     },
-//   },
-//   {
-//     name: "reportbuilder",
-//     list: "/amp/reportbuilder",
-//     meta: {
-//       label: "Report Builder (Coming Soon)",
-//       icon: <Construction />,
-//     },
-//   },
-//   {
-//     name: "querybuilder",
-//     list: "/amp/querybuilder",
-//     meta: {
-//       label: "Query Builder (Beta)",
-//       icon: <Construction />,
-//     },
-//   },
-//   {
-//     name: "wellinventoryform",
-//     list: "/amp/wellinventoryform",
-//     meta: {
-//       label: "Well Inventory Form (Beta)",
-//       icon: <DynamicFormTwoTone />,
-//     },
-//   },
-//   {
-//     name: "waterlevelform",
-//     list: "/amp/waterlevelform",
-//     meta: {
-//       label: "Water Level Form (Beta)",
-//       icon: <Water />,
-//     },
-//   },
-//   {
-//     name: "projects",
-//     list: "/amp/projects",
-//     icon: <CategoryOutlined />,
-//     meta: {
-//       label: "Projects",
-//     },
-//   },
-//
-//   {
-//     name: "locations",
-//     icon: <Place />,
-//     list: "/amp/locations",
-//     edit: "/amp/locations/edit/:id",
-//     show: "/amp/locations/show/:id",
-//     create: "/amp/locations/create",
-//     meta: {
-//       label: "Locations",
-//     },
-//   },
-//   {
-//     name: "wells",
-//     icon: <Plumbing />,
-//     list: "/amp/wells",
-//     edit: "/amp/wells/edit/:id",
-//     show: "/amp/wells/show/:id",
-//     create: "/amp/wells/create",
-//     meta: {
-//       label: "Wells",
-//     },
-//   },
-//   {
-//     name: "equipment",
-//     icon: <Cable />,
-//     list: "/amp/equipment",
-//     edit: "/amp/equipment/edit/:id",
-//     create: "/amp/equipment/create",
-//     show: "/amp/equipment/show/:id",
-//     meta: {
-//       label: "Equipment",
-//     },
-//   },
-//   {
-//     name: "manual_waterlevels",
-//     list: "/amp/manualwaterlevels",
-//     edit: "/amp/manualwaterlevels/edit/:id",
-//     create: "/amp/manualwaterlevels/create",
-//     show: "/amp/manualwaterlevels/show/:id",
-//     meta: {
-//       label: "Manual Water Levels",
-//     },
-//   },
-//   {
-//     name: "batchupload",
-//     icon: <FileUploadOutlined />,
-//     meta: {
-//       label: "Batch Upload",
-//     },
-//   },
-//   {
-//     name: "chemupload",
-//     list: "/amp/chemupload",
-//     icon: <ScienceOutlined />,
-//     meta: {
-//       parent: "water.batchupload",
-//       nestedLevel: 2,
-//       label: "Chemistry Upload (Beta)",
-//     },
-//   },
-//   {
-//     name: "manualwaterlevels_batchupload",
-//     list: "/amp/manualwaterlevels/batchupload",
-//     icon: <Water />,
-//     meta: {
-//       label: "Manual Water Levels (Beta)",
-//       parent: "water.batchupload",
-//       nestedLevel: 2,
-//     },
-//   },
-//   {
-//     name: "Chemistry",
-//     icon: <ScienceOutlined />,
-//     meta: {
-//       label: "Chemistry",
-//     },
-//   },
-//   {
-//     name: "LookupTables",
-//     icon: <TableViewIcon />,
-//     meta: {
-//       label: "Lookup Tables",
-//     },
-//   },
-// ];
-//
-// export const ampResources = amp.map((b) => {
-//   let meta = b.meta || {};
-//   if (!meta["parent"]) {
-//     meta["parent"] = "water";
-//   }
-//   meta["dataProviderName"] = "amp";
-//   return {
-//     ...b,
-//     name: `water.${b.name}`,
-//     meta: meta,
-//   };
-// });
-//
-// const lookupKeys = [
-//   { key: "level_status", label: "Level Status" },
-//   { key: "measurement_method", label: "Measurement Method" },
-//   { key: "data_quality", label: "Data Quality" },
-//   { key: "measuring_agency", label: "Measuring Agency" },
-//   { key: "data_source", label: "Data Source" },
-// ];
-//
-// export const lookup = lookupKeys.map((l) => {
-//   return {
-//     name: l.key,
-//     list: `/amp/lu_${l.key}`,
-//     meta: {
-//       parent: "water.LookupTables",
-//       nestedLevel: 2,
-//       label: l.label,
-//     },
-//   };
-// });

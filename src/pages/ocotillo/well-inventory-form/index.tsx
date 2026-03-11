@@ -31,12 +31,12 @@ import {
   SchemaDefaults,
 } from './well_inventory.schema'
 import { CreateEditWellScreen } from '@/components/form/thing/CreateEditWellScreen'
-import { useNavigation } from '@refinedev/core'
+import { useGo } from '@refinedev/core'
 
 export const WellInventoryForm: React.FC = () => {
   const { open, close } = useNotification()
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const { push } = useNavigation()
+  const go = useGo()
 
   const { autocompleteProps: locationAutocompleteProps } =
     useAutocomplete<ILocation>({
@@ -304,7 +304,10 @@ export const WellInventoryForm: React.FC = () => {
                   variant="outlined"
                   onClick={() => {
                     if (createdWellId) {
-                      push(`/ocotillo/well/show/${createdWellId}`)
+                      go({
+                        to: `/ocotillo/well/show/${createdWellId}`,
+                        type: 'push',
+                      })
                     }
                   }}
                   disabled={!createdWellId}
@@ -313,7 +316,7 @@ export const WellInventoryForm: React.FC = () => {
                 </Button>
                 <Button
                   variant="outlined"
-                  onClick={() => push('/ocotillo/well')}
+                  onClick={() => go({ to: '/ocotillo/well', type: 'push' })}
                 >
                   View All Wells
                 </Button>
@@ -336,7 +339,7 @@ export const WellInventoryForm: React.FC = () => {
                 </Button>
                 <Button
                   variant="outlined"
-                  onClick={() => push('/ocotillo/well')}
+                  onClick={() => go({ to: '/ocotillo/well', type: 'push' })}
                 >
                   Go Back to Wells
                 </Button>

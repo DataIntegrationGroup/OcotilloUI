@@ -162,10 +162,10 @@ const About = () => (
       <Stack spacing={3}>
         <Box>
           <Typography variant="deck" sx={{ color: 'text.secondary' }}>
-            Ocotillo is a web application for accessing and working with New
-            Mexico Bureau of Geology water data. Right now it provides access to
+            Ocotillo is an application for accessing and working with New
+            Mexico Bureau of Geology water data. It provides access to
             groundwater well information from the Aquifer Mapping Program
-            (AMP)—with additional datasets from Geothermal, Oil &amp; Gas, and
+            (AMP), with additional datasets from Geothermal, Oil &amp; Gas, and
             Argon Geochronology planned for the future.
           </Typography>
         </Box>

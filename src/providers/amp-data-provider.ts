@@ -4,7 +4,7 @@ import { settings } from '@/settings'
 
 const API_URL = `${settings.nmbgmr_amp_api_url}/latest`
 
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
 import createAuthRefreshInterceptor from 'axios-auth-refresh'
 
 export const axiosInstance: AxiosInstance = axios.create()
@@ -26,8 +26,8 @@ axiosInstance.interceptors.request.use(
   }
 )
 
-const refreshAuthLogic = async (failedRequest) => {
-  const token = getAccessToken(true)
+const refreshAuthLogic = async (failedRequest: AxiosError) => {
+  const token = await getAccessToken({ refresh: true })
   failedRequest.response.config.headers['Authorization'] = 'Bearer ' + token
   return Promise.resolve()
 }
@@ -90,7 +90,7 @@ export const ampDataProvider: DataProvider = {
     }
 
     if (pagination) {
-      params.append('page', pagination.current.toString())
+      params.append('page', (pagination.currentPage ?? 1).toString())
       params.append('size', pagination.pageSize.toString())
     }
 

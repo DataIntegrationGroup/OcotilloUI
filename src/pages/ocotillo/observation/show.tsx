@@ -9,11 +9,7 @@ import {
 
 export const ContactShow = () => {
   // const isLoading = false
-  const { queryResult } = useShow({})
-
-  const { data, isLoading } = queryResult
-
-  const record = data?.data
+  const { query, result: record } = useShow({})
 
   // const { data: categoryData, isLoading: categoryIsLoading } = useOne({
   //   resource: "categories",
@@ -24,7 +20,7 @@ export const ContactShow = () => {
   // });
 
   return (
-    <Show isLoading={isLoading}>
+    <Show isLoading={query.isLoading}>
       <Stack gap={1}>
         <Typography variant="body1" fontWeight="bold">
           {'ID'}

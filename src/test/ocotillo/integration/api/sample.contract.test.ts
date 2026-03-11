@@ -15,7 +15,7 @@ describe('Ocotillo Integration Tests: Sample', () => {
   it('should fetch samples using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'sample',
-      pagination: { current: 1, pageSize: 10 },
+      pagination: { currentPage: 1, pageSize: 10 },
     })
 
     expect(result).toHaveProperty('data')

@@ -1,5 +1,4 @@
 import {
-  useActiveAuthProvider,
   useIsExistAuthentication,
   useLogout,
   useTranslate,
@@ -17,12 +16,9 @@ export const Logout = ({ collapsed }: { collapsed: boolean }) => {
   const translate = useTranslate();
 
   const isExistAuthentication = useIsExistAuthentication();
-  const activeAuthProvider = useActiveAuthProvider();
 
   const { warnWhen, setWarnWhen } = useWarnAboutChange();
-  const { mutate: logout } = useLogout({
-    v3LegacyAuthProviderCompatible: Boolean(activeAuthProvider?.isLegacy),
-  });
+  const { mutate: logout } = useLogout();
 
   const handleLogout = () => {
     if (warnWhen) {

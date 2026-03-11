@@ -30,19 +30,97 @@ const gravatarUrl = (email: string) => {
 
 interface AuthentikJwtPayload extends JwtPayload {
   email: string
+  name?: string
+  preferred_username?: string
+  given_name?: string
+  family_name?: string
 }
 
 export interface AuthentikIdentity {
   id: string
   email: string
   avatar: string
+  name: string
 }
 
 export type AuthentikPermissions = string[]
+const PKCE_LOCAL_FALLBACK_TTL_MS = 5 * 60 * 1000
 
-export const getAccessToken = async (
-  refresh?: boolean
-): Promise<string | null> => {
+type PkceFallbackRecord = {
+  verifier: string
+  state: string
+  expiresAt: number
+}
+
+const getPkceFallbackKey = (state: string): string =>
+  `${STORAGE_KEYS.pkceTransactionPrefix}${state}`
+
+const isPkceFallbackRecord = (v: unknown): v is PkceFallbackRecord => {
+  if (!v || typeof v !== 'object') return false
+
+  const record = v as Partial<PkceFallbackRecord>
+  return (
+    typeof record.verifier === 'string' &&
+    typeof record.state === 'string' &&
+    typeof record.expiresAt === 'number'
+  )
+}
+
+export const persistPkceFallback = ({
+  verifier,
+  state,
+}: {
+  verifier: string
+  state: string
+}): void => {
+  const key = getPkceFallbackKey(state)
+  const payload: PkceFallbackRecord = {
+    verifier,
+    state,
+    expiresAt: Date.now() + PKCE_LOCAL_FALLBACK_TTL_MS,
+  }
+
+  localStorage.setItem(key, JSON.stringify(payload))
+}
+
+export const consumePkceFallbackByState = (
+  state: string,
+): { verifier: string; state: string } | null => {
+  const key = getPkceFallbackKey(state)
+  const raw = localStorage.getItem(key)
+  if (!raw) return null
+
+  // One-time consume: delete before parse/validate.
+  localStorage.removeItem(key)
+
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!isPkceFallbackRecord(parsed)) return null
+    if (parsed.state !== state) return null
+    if (Date.now() > parsed.expiresAt) return null
+
+    return { verifier: parsed.verifier, state: parsed.state }
+  } catch {
+    return null
+  }
+}
+
+export const clearPkceFallbacks = (): void => {
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const key = localStorage.key(i)
+    if (key?.startsWith(STORAGE_KEYS.pkceTransactionPrefix)) {
+      localStorage.removeItem(key)
+    }
+  }
+
+  // Remove legacy keys from prior implementation if present.
+  localStorage.removeItem(STORAGE_KEYS.pkceVerifier)
+  localStorage.removeItem(STORAGE_KEYS.pkceState)
+}
+
+export const getAccessToken = async ({
+  refresh,
+}: { refresh?: boolean } = {}): Promise<string | null> => {
   const currentAccess = localStorage.getItem(STORAGE_KEYS.accessToken)
 
   if (!refresh) return currentAccess
@@ -104,6 +182,8 @@ export const authentikAuthProvider: AuthProvider = {
     }
 
     try {
+      clearPkceFallbacks()
+
       const codeVerifier = generateCodeVerifier()
       const codeChallenge = await generateCodeChallenge(codeVerifier)
 
@@ -111,6 +191,7 @@ export const authentikAuthProvider: AuthProvider = {
 
       const state = generateOAuthState()
       transientStore.pkceState = state
+      persistPkceFallback({ verifier: codeVerifier, state })
 
       const RESPONSE_TYPE = 'code'
       const SCOPE = 'openid profile email offline_access permissions'
@@ -130,6 +211,7 @@ export const authentikAuthProvider: AuthProvider = {
     } catch (e) {
       transientStore.pkceVerifier = null
       transientStore.pkceState = null
+      clearPkceFallbacks()
 
       return {
         success: false,
@@ -149,21 +231,48 @@ export const authentikAuthProvider: AuthProvider = {
 
     transientStore.pkceVerifier = null
     transientStore.pkceState = null
+    clearPkceFallbacks()
 
     return { success: true, redirectTo: '/login' }
   },
 
-  // Called on page load / route change
+  /**
+   * Called by Refine on route changes and page load to verify whether
+   * the current user session is still authenticated.
+   *
+   * If no access token exists, the user is redirected to the login page.
+   *
+   * If the access token exists but is expired, we attempt a silent
+   * refresh using the refresh token.
+   *
+   * If the refresh succeeds, the session continues normally.
+   * If the refresh fails, all auth state is cleared and the user
+   * must log in again.
+   */
   check: async (): Promise<CheckResponse> => {
-    const access = tokenStore.accessToken
-    if (!access) return { authenticated: false, redirectTo: '/login' }
+    if (IS_TESTING_AUTH) {
+      return { authenticated: true }
+    }
 
-    // If a JWT is present, then validate expiry.
-    if (isJwtExpired(access) && !IS_TESTING_AUTH) {
-      tokenStore.accessToken = null
-      tokenStore.idToken = null
-      tokenStore.refreshToken = null
+    let access = tokenStore.accessToken
+    if (!access) {
       return { authenticated: false, redirectTo: '/login' }
+    }
+
+    if (isJwtExpired(access)) {
+      access = await getAccessToken({ refresh: true })
+
+      if (!access) {
+        tokenStore.accessToken = null
+        tokenStore.idToken = null
+        tokenStore.refreshToken = null
+
+        transientStore.pkceVerifier = null
+        transientStore.pkceState = null
+        clearPkceFallbacks()
+
+        return { authenticated: false, redirectTo: '/login' }
+      }
     }
 
     return { authenticated: true }
@@ -176,6 +285,7 @@ export const authentikAuthProvider: AuthProvider = {
         id: 'test',
         avatar: gravatarUrl(''),
         email: '',
+        name: 'Test User',
       }
     }
     const idToken = tokenStore.idToken
@@ -184,10 +294,16 @@ export const authentikAuthProvider: AuthProvider = {
 
     try {
       const profile = jwtDecode<AuthentikJwtPayload>(idToken)
+      const name =
+        profile.name ||
+        [profile.given_name, profile.family_name].filter(Boolean).join(' ') ||
+        profile.preferred_username ||
+        profile.email
       return {
         id: profile.sub,
         avatar: gravatarUrl(profile.email),
         email: profile.email,
+        name,
       }
     } catch {
       return null
@@ -225,12 +341,31 @@ export const authentikAuthProvider: AuthProvider = {
     const status = getStatusCode(err)
 
     if (status === HttpStatus.UNAUTHORIZED) {
+      /**
+       * If the backend returns 401 (Unauthorized), the most common cause
+       * is an expired access token. In that case we attempt a silent
+       * refresh using the refresh token.
+       *
+       * If the refresh succeeds, we allow the request flow to continue
+       * without logging the user out.
+       *
+       * If the refresh fails (refresh token expired or invalid), we clear
+       * all stored tokens and force a logout so the user must authenticate
+       * again.
+       */
+      const refreshed = await getAccessToken({ refresh: true })
+
+      if (refreshed) {
+        return {}
+      }
+
       tokenStore.accessToken = null
       tokenStore.idToken = null
       tokenStore.refreshToken = null
 
       transientStore.pkceVerifier = null
       transientStore.pkceState = null
+      clearPkceFallbacks()
 
       return {
         logout: true,

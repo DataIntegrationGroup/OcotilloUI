@@ -3,9 +3,9 @@ import { ThemedLayoutContextProvider } from "@refinedev/mui";
 import { ThemedHeaderV2 as DefaultHeader } from "./header";
 import { ThemedSiderV2 as DefaultSider } from "./sider";
 import Box from "@mui/material/Box";
-import type { RefineThemedLayoutV2Props } from "@refinedev/mui";
+import type { RefineThemedLayoutProps } from "@refinedev/mui";
 
-export const ThemedLayoutV2: React.FC<RefineThemedLayoutV2Props> = ({
+export const ThemedLayoutV2: React.FC<RefineThemedLayoutProps> = ({
   Sider,
   Header,
   Title,
@@ -19,7 +19,7 @@ export const ThemedLayoutV2: React.FC<RefineThemedLayoutV2Props> = ({
 
   return (
     <ThemedLayoutContextProvider initialSiderCollapsed={initialSiderCollapsed}>
-      <Box display="flex" flexDirection="row">
+      <Box display="flex" flexDirection="row" sx={{ minHeight: '100dvh' }}>
         <SiderToRender Title={Title} />
         <Box
           sx={[
@@ -38,12 +38,15 @@ export const ThemedLayoutV2: React.FC<RefineThemedLayoutV2Props> = ({
             sx={{
               p: { xs: 1, md: 2, lg: 1 },
               pt: 0,
-              px:0.5,
+              px: 0.5,
               flexGrow: 1,
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
               bgcolor: (theme) => theme.palette.background.default,
             }}
           >
-              {children}
+            {children}
           </Box>
           {Footer && <Footer />}
         </Box>

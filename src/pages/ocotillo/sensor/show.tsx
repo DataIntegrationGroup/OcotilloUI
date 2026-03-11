@@ -5,9 +5,8 @@ import { Show, TextFieldComponent as TextField } from '@refinedev/mui'
 import { ISensor } from '@/interfaces/ocotillo/ISensor'
 
 export const SensorShow = () => {
-  const { queryResult } = useShow({})
-  const { data, isLoading } = queryResult
-  const record = data?.data as ISensor
+  const { query, result } = useShow({})
+  const record = result as ISensor
 
   //custom configs for sensor date fields
   const fieldConfigs = {
@@ -24,7 +23,7 @@ export const SensorShow = () => {
   }
 
   return (
-    <Show isLoading={isLoading}>
+    <Show isLoading={query.isLoading}>
       <DynamicShowDisplay<ISensor>
         record={record}
         fieldConfigs={fieldConfigs}

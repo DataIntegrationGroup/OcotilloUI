@@ -12,32 +12,32 @@ import React from "react";
 
 export const ST2Dashboard = () => {
 
-    const {data: Locations, isLoading: locationsLoading} = useList({
+    const {result: locationsResult} = useList({
         resource: 'Locations',
         dataProviderName: 'st2'
     });
 
-    const {data: Things, isLoading: thingsLoading} = useList({
+    const {result: thingsResult} = useList({
         resource: 'Things',
         dataProviderName: 'st2'
     });
 
-    const {data: Sensors, isLoading: sensorsLoading} = useList({
+    const {result: sensorsResult} = useList({
         resource: 'Sensors',
         dataProviderName: 'st2'
     });
 
-    const {data: Observations, isLoading: observationsLoading} = useList({
+    const {result: observationsResult} = useList({
         resource: 'Observations',
         dataProviderName: 'st2'
     });
 
-    const {data: Datastreams, isLoading: datastreamsLoading} = useList({
+    const {result: datastreamsResult} = useList({
         resource: 'Datastreams',
         dataProviderName: 'st2'
     });
 
-    const {data: ObservedProperties, isLoading: observedPropertiesLoading} = useList({
+    const {result: observedPropertiesResult} = useList({
         resource: 'ObservedProperties',
         dataProviderName: 'st2'
     });
@@ -76,34 +76,34 @@ export const ST2Dashboard = () => {
                 <Stack direction={'row'}>
                     <Card sx={{'p': 3}}>
                         <Typography variant={'h5'}>Locations</Typography>
-                        <Typography variant={'body1'}>{Locations?.total}</Typography>
+                        <Typography variant={'body1'}>{locationsResult?.total}</Typography>
                     </Card>
                     <Card sx={{'p': 3}}>
                         <Typography variant={'h5'}>Things</Typography>
-                        <Typography variant={'body1'}>{Things?.total}</Typography>
+                        <Typography variant={'body1'}>{thingsResult?.total}</Typography>
                     </Card>
                 </Stack>
                 <Stack direction={'row'}>
                     <Card sx={{'p': 3}}>
                         <Typography variant={'h5'}>Observations</Typography>
-                        <Typography variant={'body1'}>{Observations?.total}</Typography>
+                        <Typography variant={'body1'}>{observationsResult?.total}</Typography>
                     </Card>
 
                     <Card sx={{'p': 3}}>
                         <Typography variant={'h5'}>Datastreams</Typography>
-                        <Typography variant={'body1'}>{Datastreams?.total}</Typography>
+                        <Typography variant={'body1'}>{datastreamsResult?.total}</Typography>
                     </Card>
                 </Stack>
 
                 <Stack direction={'row'}>
                     <Card sx={{'p': 3}}>
                         <Typography variant={'h5'}>Sensors</Typography>
-                        <Typography variant={'body1'}>{Sensors?.total}</Typography>
+                        <Typography variant={'body1'}>{sensorsResult?.total}</Typography>
                     </Card>
 
                     <Card sx={{'p': 3}}>
                         <Typography variant={'h5'}>ObservedProperties</Typography>
-                        <Typography variant={'body1'}>{ObservedProperties?.total}</Typography>
+                        <Typography variant={'body1'}>{observedPropertiesResult?.total}</Typography>
                     </Card>
                 </Stack>
                 {/*<Card sx={{'p': 3}}>*/}

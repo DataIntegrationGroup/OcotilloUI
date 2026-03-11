@@ -4,15 +4,14 @@ import { Show } from '@refinedev/mui'
 import { IThingIdLink } from '@/interfaces/ocotillo'
 
 export const ThingIdLinkShow = () => {
-  const { queryResult } = useShow({})
-  const { data, isLoading } = queryResult
-  const record = data?.data as IThingIdLink
+  const { query, result } = useShow({})
+  const record = result as IThingIdLink
 
   //custom configs for sensor date fields
   const fieldConfigs = {}
 
   return (
-    <Show isLoading={isLoading}>
+    <Show isLoading={query.isLoading}>
       <DynamicShowDisplay<IThingIdLink>
         record={record}
         fieldConfigs={fieldConfigs}
