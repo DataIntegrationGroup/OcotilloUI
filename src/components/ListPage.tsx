@@ -65,10 +65,10 @@ function ListPageToolbar() {
   return (
     <GridToolbarContainer sx={{ px: 1, py: 0.5, flexDirection: 'column', alignItems: 'stretch', gap: 0 }}>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-        <GridToolbarFilterButton />
-        <GridToolbarColumnsButton />
-        <GridToolbarDensitySelector />
-        <GridToolbarExport />
+        <GridToolbarFilterButton slotProps={{ button: { 'data-testid': 'grid-toolbar-filter-button' } }} />
+        <GridToolbarColumnsButton slotProps={{ button: { 'data-testid': 'grid-toolbar-columns-button' } }} />
+        <GridToolbarDensitySelector slotProps={{ button: { 'data-testid': 'grid-toolbar-density-selector' } }} />
+        <GridToolbarExport slotProps={{ button: { 'data-testid': 'grid-toolbar-export' } }} />
       </Box>
       <ActiveFilterChips />
     </GridToolbarContainer>
