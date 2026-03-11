@@ -9,7 +9,6 @@ import { CreateEditSensor } from '@/components/form/sensor/CreateEditSensor'
 export const SensorEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     control,
     formState: { errors },
   } = useForm<ISensor, HttpError, Nullable<ISensor>>()

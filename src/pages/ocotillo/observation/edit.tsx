@@ -16,7 +16,6 @@ import { IContact } from '@/interfaces/ocotillo/IContact'
 export const ContactEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     register,
     control,
     formState: { errors },
