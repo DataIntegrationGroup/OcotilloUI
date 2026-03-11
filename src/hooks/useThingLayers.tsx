@@ -33,6 +33,13 @@ const EMPTY_FEATURE_COLLECTION = {
   features: [],
 } as const
 
+const getRecentDatetimeRange = (days: number): string => {
+  const end = new Date()
+  const start = new Date(end)
+  start.setUTCDate(start.getUTCDate() - days)
+  return `${start.toISOString()}/${end.toISOString()}`
+}
+
 export const useThingLayers = (activeLayerKeys?: string[]) => {
   const dataProvider = useDataProvider()
   const hasActiveLayerFilter = Array.isArray(activeLayerKeys)
@@ -58,7 +65,23 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     },
   })
 
+  const { data: usgsCollectionsData } = useQuery({
+    queryKey: ['usgs-nwis-ogcapi-collections-all'],
+    gcTime: 300000,
+    staleTime: 300000,
+    queryFn: async () => {
+      const provider = dataProvider('usgs-nwis-ogcapi')
+      const result = await provider.getList({
+        resource: 'usgs-nwis-ogcapi',
+        pagination: { currentPage: 1, pageSize: 200 },
+      })
+
+      return (result?.data ?? []) as OgcCollectionRecord[]
+    },
+  })
+
   const collections = collectionsData ?? []
+  const usgsCollections = usgsCollectionsData ?? []
   const collectionSearchText = (collection: OgcCollectionRecord): string =>
     [collection.id, collection.collection_id, collection.name, collection.title]
       .filter(Boolean)
@@ -258,6 +281,41 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     'Soil Gas Sample Locations',
     'soil_gas_sample_locations',
   ])
+  const usgsMonitoringLocations = resolveCollection(usgsCollections, [
+    'monitoring-locations',
+    'Monitoring Locations',
+  ])
+  const usgsTimeSeriesMetadata = resolveCollection(usgsCollections, [
+    'time-series-metadata',
+    'Time Series Metadata',
+  ])
+  const usgsFieldMeasurements = resolveCollection(usgsCollections, [
+    'field-measurements',
+    'Field Measurements',
+  ])
+  const usgsLatestContinuous = resolveCollection(usgsCollections, [
+    'latest-continuous',
+    'Latest Continuous',
+  ])
+  const usgsLatestDaily = resolveCollection(usgsCollections, [
+    'latest-daily',
+    'Latest Daily',
+  ])
+  const usgsContinuous = resolveCollection(usgsCollections, [
+    'continuous',
+    'Continuous',
+  ])
+  const usgsDaily = resolveCollection(usgsCollections, [
+    'daily',
+    'Daily',
+  ])
+
+  const usgsRecentObservationParams = useMemo(
+    () => ({
+      datetime: getRecentDatetimeRange(30),
+    }),
+    []
+  )
 
   const locationsLayer = useOGCLayer({
     collection: locations.id,
@@ -764,6 +822,72 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
       soilGasSampleLocations.exists &&
       isLayerActive('ogc-soil-gas-sample-locations'),
   })
+  const usgsMonitoringLocationsLayer = useOGCLayer({
+    collection: usgsMonitoringLocations.id,
+    label: 'USGS NWIS Monitoring Locations',
+    providerName: 'usgs-nwis-ogcapi',
+    color: '#1f78b4',
+    enabled:
+      usgsMonitoringLocations.exists &&
+      isLayerActive('usgs-nwis-monitoring-locations'),
+  })
+  const usgsTimeSeriesMetadataLayer = useOGCLayer({
+    collection: usgsTimeSeriesMetadata.id,
+    label: 'USGS NWIS Time Series Metadata',
+    providerName: 'usgs-nwis-ogcapi',
+    color: '#2a9d8f',
+    enabled:
+      usgsTimeSeriesMetadata.exists &&
+      isLayerActive('usgs-nwis-time-series-metadata'),
+  })
+  const usgsFieldMeasurementsLayer = useOGCLayer({
+    collection: usgsFieldMeasurements.id,
+    label: 'USGS NWIS Field Measurements (30d)',
+    providerName: 'usgs-nwis-ogcapi',
+    color: '#e76f51',
+    requestParams: usgsRecentObservationParams,
+    enabled:
+      usgsFieldMeasurements.exists &&
+      isLayerActive('usgs-nwis-field-measurements'),
+  })
+  const usgsLatestContinuousLayer = useOGCLayer({
+    collection: usgsLatestContinuous.id,
+    label: 'USGS NWIS Latest Continuous',
+    providerName: 'usgs-nwis-ogcapi',
+    color: '#6a4c93',
+    enabled:
+      usgsLatestContinuous.exists &&
+      isLayerActive('usgs-nwis-latest-continuous'),
+  })
+  const usgsLatestDailyLayer = useOGCLayer({
+    collection: usgsLatestDaily.id,
+    label: 'USGS NWIS Latest Daily',
+    providerName: 'usgs-nwis-ogcapi',
+    color: '#264653',
+    enabled:
+      usgsLatestDaily.exists &&
+      isLayerActive('usgs-nwis-latest-daily'),
+  })
+  const usgsContinuousLayer = useOGCLayer({
+    collection: usgsContinuous.id,
+    label: 'USGS NWIS Continuous (30d)',
+    providerName: 'usgs-nwis-ogcapi',
+    color: '#577590',
+    requestParams: usgsRecentObservationParams,
+    enabled:
+      usgsContinuous.exists &&
+      isLayerActive('usgs-nwis-continuous'),
+  })
+  const usgsDailyLayer = useOGCLayer({
+    collection: usgsDaily.id,
+    label: 'USGS NWIS Daily (30d)',
+    providerName: 'usgs-nwis-ogcapi',
+    color: '#4d908e',
+    requestParams: usgsRecentObservationParams,
+    enabled:
+      usgsDaily.exists &&
+      isLayerActive('usgs-nwis-daily'),
+  })
 
   const layers: Record<string, any> = {}
   const seenCollectionIds = new Set<string>()
@@ -844,6 +968,41 @@ export const useThingLayers = (activeLayerKeys?: string[]) => {
     'ogc-soil-gas-sample-locations',
     soilGasSampleLocations,
     soilGasSampleLocationsLayer
+  )
+  addLayer(
+    'usgs-nwis-monitoring-locations',
+    usgsMonitoringLocations,
+    usgsMonitoringLocationsLayer
+  )
+  addLayer(
+    'usgs-nwis-time-series-metadata',
+    usgsTimeSeriesMetadata,
+    usgsTimeSeriesMetadataLayer
+  )
+  addLayer(
+    'usgs-nwis-field-measurements',
+    usgsFieldMeasurements,
+    usgsFieldMeasurementsLayer
+  )
+  addLayer(
+    'usgs-nwis-latest-continuous',
+    usgsLatestContinuous,
+    usgsLatestContinuousLayer
+  )
+  addLayer(
+    'usgs-nwis-latest-daily',
+    usgsLatestDaily,
+    usgsLatestDailyLayer
+  )
+  addLayer(
+    'usgs-nwis-continuous',
+    usgsContinuous,
+    usgsContinuousLayer
+  )
+  addLayer(
+    'usgs-nwis-daily',
+    usgsDaily,
+    usgsDailyLayer
   )
 
   return layers

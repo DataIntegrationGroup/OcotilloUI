@@ -71,6 +71,7 @@ export const MapView: React.FC = () => {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {
       groundwater: true,
+      usgsNwisOgc: true,
       surfaceWater: true,
       climate: true,
       geoscience: true,
@@ -311,7 +312,22 @@ export const MapView: React.FC = () => {
     setExpandedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }))
   }
 
-  const getLayerGroupKey = (layerKey: string): keyof typeof expandedGroups => {
+  const getLayerGroupKey = (
+    layerKey: string,
+    layerDef?: { layerProps?: { label?: string } }
+  ): keyof typeof expandedGroups => {
+    const label = String(layerDef?.layerProps?.label || '').toLowerCase()
+    const normalizedKey = layerKey.toLowerCase()
+    if (
+      normalizedKey.includes('usgs') ||
+      normalizedKey.includes('nwis') ||
+      label.includes('usgs') ||
+      label.includes('nwis') ||
+      label.includes('national water information system')
+    ) {
+      return 'usgsNwisOgc'
+    }
+
     if (
       layerKey.includes('water-well') ||
       layerKey.includes('depth-to-water') ||
@@ -346,6 +362,7 @@ export const MapView: React.FC = () => {
 
   const groupLabels: Record<keyof typeof expandedGroups, string> = {
     groundwater: 'Groundwater',
+    usgsNwisOgc: 'USGS NWIS OGC',
     surfaceWater: 'Surface Water',
     climate: 'Climate',
     geoscience: 'Geoscience',
@@ -356,12 +373,13 @@ export const MapView: React.FC = () => {
     Object.entries(THING_LAYERS) as Array<[string, any]>
   ).reduce(
     (acc, entry) => {
-      const groupKey = getLayerGroupKey(entry[0])
+      const groupKey = getLayerGroupKey(entry[0], entry[1])
       acc[groupKey].push(entry)
       return acc
     },
     {
       groundwater: [] as Array<[string, any]>,
+      usgsNwisOgc: [] as Array<[string, any]>,
       surfaceWater: [] as Array<[string, any]>,
       climate: [] as Array<[string, any]>,
       geoscience: [] as Array<[string, any]>,

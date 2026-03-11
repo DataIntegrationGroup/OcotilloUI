@@ -10,6 +10,7 @@ type LayerLegendScale = {
 export const useOGCLayer = ({
   collection,
   label,
+  providerName = 'ogcapi',
   color = '#9cd0ab',
   colorAccessor,
   textAccessor,
@@ -19,10 +20,12 @@ export const useOGCLayer = ({
   colorExpression,
   legendColor,
   legendScale,
+  requestParams,
   enabled = true,
 }: {
   collection: string
   label: string
+  providerName?: string
   color?: string
   colorAccessor?: (feature: any) => string | undefined
   textAccessor?: (feature: any) => string | undefined
@@ -32,17 +35,18 @@ export const useOGCLayer = ({
   colorExpression?: any
   legendColor?: string
   legendScale?: LayerLegendScale
+  requestParams?: Record<string, string | number | boolean>
   enabled?: boolean
 }) => {
   const dataProvider = useDataProvider()
 
   const { data, isLoading } = useQuery({
-    queryKey: ['ogcapi-layer', collection],
+    queryKey: ['ogcapi-layer', providerName, collection, requestParams],
     gcTime: 60000,
     staleTime: 30000,
     enabled: enabled && collection.length > 0,
     queryFn: async () => {
-      const provider = dataProvider('ogcapi')
+      const provider = dataProvider(providerName)
       const PAGE_SIZE = 1000
       const MAX_PAGES = 1000
 
@@ -59,9 +63,10 @@ export const useOGCLayer = ({
             requestConfig: {
               params: {
                 collection,
-                format: 'geojson',
+                f: 'json',
                 limit: PAGE_SIZE,
                 offset,
+                ...(requestParams || {}),
               },
             },
           },
