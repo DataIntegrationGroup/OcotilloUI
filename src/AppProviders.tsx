@@ -24,6 +24,7 @@ import {
   geothermalDataProvider,
   geochronologyDataProvider,
   ogcapiDataProvider,
+  usgsNwisOgcapiDataProvider,
 } from '@/providers'
 import { resources } from '@/resources'
 
@@ -57,6 +58,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
             geochronology: geochronologyDataProvider,
             geothermal: geothermalDataProvider,
             ogcapi: ogcapiDataProvider,
+            'usgs-nwis-ogcapi': usgsNwisOgcapiDataProvider,
             st2: st2DataProvider,
             ocotillo: ocotilloDataProvider,
           }}

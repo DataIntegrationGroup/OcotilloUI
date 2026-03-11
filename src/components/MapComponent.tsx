@@ -52,6 +52,7 @@ export const MapComponent = ({
   onClick,
   onPointClick,
   popupContent,
+  setPopupContent,
   onMouseMoveCallback,
   setSelectionPolygons,
   isLoading = false,
@@ -78,6 +79,9 @@ export const MapComponent = ({
   )
   const isDrawInteractionActive =
     activeDrawMode === 'draw_polygon' ||
+    activeDrawMode === 'draw_rectangle' ||
+    activeDrawMode === 'draw_rectangle_edit'
+  const isRectangleDrawInteractionActive =
     activeDrawMode === 'draw_rectangle' ||
     activeDrawMode === 'draw_rectangle_edit'
 
@@ -113,6 +117,12 @@ export const MapComponent = ({
 
     previousModeRef.current = nextMode
   }, [mode, basemapUri, mapRef, onBasemapChange])
+
+  useEffect(() => {
+    if (!isRectangleDrawInteractionActive || !setPopupContent) return
+
+    setPopupContent(null)
+  }, [isRectangleDrawInteractionActive, setPopupContent])
 
   if (!initialViewState) {
     initialViewState = {

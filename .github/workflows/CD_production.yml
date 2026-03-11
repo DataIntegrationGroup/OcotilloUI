@@ -32,8 +32,7 @@ jobs:
 
         run: |
           npm ci
-          npm audit fix || true
-          npm run build
+          npm run build:ci
 
       # authenticate to Google Cloud
       - uses: google-github-actions/auth@v2
