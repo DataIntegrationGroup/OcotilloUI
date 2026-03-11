@@ -3,12 +3,15 @@ import { Layer, Source } from 'react-map-gl'
 import { useGo } from '@refinedev/core'
 import {
   Box,
+  Button,
   Checkbox,
   Collapse,
+  Drawer,
   IconButton,
   LinearProgress,
   ListItemText,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -18,10 +21,20 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material'
+import {
+  Download,
+  Close,
+  KeyboardArrowDown,
+  KeyboardArrowUp,
+  ScienceOutlined,
+} from '@mui/icons-material'
 import BasemapSelector from '@/components/BasemapSelector'
 import MapExportControls from '@/components/MapExportControls'
 import MapComponent from '@/components/MapComponent'
+import {
+  PiperDiagram,
+  type PiperDiagramHandle,
+} from '@/components/PiperDiagram'
 import { MapPopup } from '@/components'
 import { ColorModeContext } from '@/contexts'
 import { useMeasuredHeight, useThingLayers } from '@/hooks'
@@ -46,6 +59,7 @@ import {
 export const MapView: React.FC = () => {
   const { mode } = useContext(ColorModeContext)
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const piperDiagramRef = useRef<PiperDiagramHandle | null>(null)
   const [visibleLayers, setVisibleLayers] = React.useState<string[]>([
     'ogc-latest-depth-to-water',
   ])
@@ -71,9 +85,10 @@ export const MapView: React.FC = () => {
   const [selectedBasemap, setSelectedBasemap] = useState(
     DEFAULT_MAPBOX_BASEMAP
   )
+  const [isPiperDrawerOpen, setIsPiperDrawerOpen] = useState(false)
+  const [activePiperFeatureId, setActivePiperFeatureId] = useState<string | null>(null)
   const selectedLayerKey = visibleLayers.length === 1 ? visibleLayers[0] : null
   const areDrawToolsEnabled = visibleLayers.length > 0
-  const selectedLayer = selectedLayerKey ? THING_LAYERS[selectedLayerKey] : null
   const selectionFeatures = (
     Object.values(selectionPolygons) as any[]
   ).filter((feature) =>
@@ -89,31 +104,14 @@ export const MapView: React.FC = () => {
     setSelectionPolygons({})
   }, [hasSelectionPolygon, selectionPolygons])
 
-  const selectedLayerSourceData = useMemo(() => {
-    const sourceData = selectedLayer?.sourceData as any
-    return sourceData && sourceData.type === 'FeatureCollection'
-      ? sourceData
-      : { type: 'FeatureCollection', features: [] }
-  }, [selectedLayer])
-  const exportFeatureCollection = useMemo(() => {
-    const features = Array.isArray(selectedLayerSourceData.features)
-      ? selectedLayerSourceData.features
-      : []
-
-    return {
-      ...selectedLayerSourceData,
-      features: filterLayerFeaturesBySelection(features, selectionFeatures),
-    }
-  }, [selectedLayerSourceData, selectionFeatures])
-
   const exportableLayers = useMemo(
     () =>
       visibleLayers
-        .map((layerKey) => {
+        .flatMap((layerKey) => {
           const layerDef = THING_LAYERS[layerKey]
-          if (!layerDef) return null
+          if (!layerDef) return []
 
-          return {
+          return [{
             layerKey,
             layerDef,
             label: layerDef.layerProps?.label || layerKey,
@@ -126,11 +124,10 @@ export const MapView: React.FC = () => {
                   ? layerDef.sourceData.features
                   : [],
                 selectionFeatures
-              ),
+                ),
             },
-          }
-        })
-        .filter(Boolean),
+          }]
+        }),
     [THING_LAYERS, visibleLayers, selectionFeatures]
   )
 
@@ -162,6 +159,32 @@ export const MapView: React.FC = () => {
         : [],
     [selectedLayerKey, selectedPointsByLayer]
   )
+  const selectedMajorChemistryPoints = useMemo(
+    () => {
+      const selectedFeatures =
+        selectedPointsByLayer.find(
+          ({ layerKey }) => layerKey === 'ogc-major-chemistry'
+        )?.features || []
+
+      if (hasSelectionPolygon) {
+        return selectedFeatures
+      }
+
+      const allFeatures = THING_LAYERS['ogc-major-chemistry']?.sourceData?.features
+      return Array.isArray(allFeatures)
+        ? allFeatures.filter((feature) => feature?.geometry?.type === 'Point')
+        : []
+    },
+    [THING_LAYERS, hasSelectionPolygon, selectedPointsByLayer]
+  )
+  const activeMajorChemistryFeature = useMemo(
+    () =>
+      selectedMajorChemistryPoints.find(
+        (feature) => getFeatureId(feature) === activePiperFeatureId
+      ) || null,
+    [activePiperFeatureId, selectedMajorChemistryPoints]
+  )
+  const isMajorChemistryVisible = visibleLayers.includes('ogc-major-chemistry')
 
   const totalSelectedPointCount = useMemo(
     () =>
@@ -425,6 +448,30 @@ export const MapView: React.FC = () => {
     setSelectedPointsCollapsed((value) => !value)
   }
 
+  useEffect(() => {
+    if (!isMajorChemistryVisible) {
+      setIsPiperDrawerOpen(false)
+      setActivePiperFeatureId(null)
+    }
+  }, [isMajorChemistryVisible])
+
+  useEffect(() => {
+    if (!isPiperDrawerOpen) {
+      setActivePiperFeatureId(null)
+    }
+  }, [isPiperDrawerOpen])
+
+  useEffect(() => {
+    if (
+      activePiperFeatureId &&
+      !selectedMajorChemistryPoints.some(
+        (feature) => getFeatureId(feature) === activePiperFeatureId
+      )
+    ) {
+      setActivePiperFeatureId(null)
+    }
+  }, [activePiperFeatureId, selectedMajorChemistryPoints])
+
   return (
     <Box
       sx={{
@@ -529,6 +576,38 @@ export const MapView: React.FC = () => {
                 </Source>
               )
             })}
+            {activeMajorChemistryFeature ? (
+              <Source
+                id="active-major-chemistry-point"
+                type="geojson"
+                data={{
+                  type: 'FeatureCollection',
+                  features: [activeMajorChemistryFeature],
+                }}
+              >
+                <Layer
+                  id="active-major-chemistry-point-halo"
+                  type="circle"
+                  paint={{
+                    'circle-radius': 10,
+                    'circle-color': '#ffffff',
+                    'circle-opacity': 0.22,
+                    'circle-stroke-color': '#0f172a',
+                    'circle-stroke-width': 2.4,
+                  }}
+                />
+                <Layer
+                  id="active-major-chemistry-point-core"
+                  type="circle"
+                  paint={{
+                    'circle-radius': 6,
+                    'circle-color': '#2563eb',
+                    'circle-stroke-color': '#ffffff',
+                    'circle-stroke-width': 1.8,
+                  }}
+                />
+              </Source>
+            ) : null}
           </MapComponent>
         </Box>
         <Paper
@@ -829,6 +908,36 @@ export const MapView: React.FC = () => {
                                   }}
                                   sx={{ m: 0, my: -0.15 }}
                                 />
+                                {key === 'ogc-major-chemistry' ? (
+                                  <Button
+                                    size="small"
+                                    variant={
+                                      isPiperDrawerOpen ? 'contained' : 'outlined'
+                                    }
+                                    startIcon={
+                                      <ScienceOutlined sx={{ fontSize: 14 }} />
+                                    }
+                                    onClick={() =>
+                                      setIsPiperDrawerOpen((open) => !open)
+                                    }
+                                    disabled={!visibleLayers.includes(key)}
+                                    sx={{
+                                      minWidth: 0,
+                                      px: 0.7,
+                                      py: 0.2,
+                                      ml: 0.3,
+                                      flexShrink: 0,
+                                      fontSize: '0.65rem',
+                                      lineHeight: 1,
+                                      '& .MuiButton-startIcon': {
+                                        mr: 0.35,
+                                        ml: 0,
+                                      },
+                                    }}
+                                  >
+                                    Piper
+                                  </Button>
+                                ) : null}
                               </Box>
                               {layerDef.legendScale && (
                                 <Box sx={{ pl: 3.1, pr: 0.6, pb: 0.15 }}>
@@ -878,6 +987,95 @@ export const MapView: React.FC = () => {
           </Box>
         </Collapse>
         </Paper>
+        <Drawer
+          anchor="right"
+          variant="persistent"
+          open={isPiperDrawerOpen}
+          hideBackdrop
+          PaperProps={{
+            sx: (theme) => ({
+              position: 'absolute',
+              top: 12,
+              right: 52,
+              bottom: 'auto',
+              height: 'calc(100% - 48px)',
+              maxHeight: 'calc(100% - 48px)',
+              width: {
+                xs: 'min(calc(100% - 24px), 360px)',
+                sm: 340,
+                md: 360,
+              },
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: alpha(theme.palette.divider, 0.9),
+              backgroundColor: alpha(theme.palette.background.paper, 0.96),
+              backdropFilter: 'blur(8px)',
+              overflow: 'hidden',
+              zIndex: 3,
+            }),
+          }}
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            '& .MuiDrawer-paper': {
+              pointerEvents: 'auto',
+            },
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+              minHeight: 0,
+            }}
+          >
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{
+                px: 1.1,
+                py: 0.85,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  Piper Diagram
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Live major chemistry selection.
+                </Typography>
+              </Box>
+              <IconButton
+                size="small"
+                onClick={() => void piperDiagramRef.current?.exportPdf()}
+                aria-label="Export Piper diagram PDF"
+                disabled={selectedMajorChemistryPoints.length === 0}
+              >
+                <Download fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => setIsPiperDrawerOpen(false)}
+                aria-label="Close Piper diagram"
+              >
+                <Close fontSize="small" />
+              </IconButton>
+            </Stack>
+            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', p: 1 }}>
+              <PiperDiagram
+                ref={piperDiagramRef}
+                features={selectedMajorChemistryPoints}
+                activeFeatureId={activePiperFeatureId}
+                onActiveFeatureChange={setActivePiperFeatureId}
+              />
+            </Box>
+          </Box>
+        </Drawer>
       </Box>
       <Paper
         elevation={6}

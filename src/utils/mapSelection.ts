@@ -267,7 +267,7 @@ export const getSelectedPointIds = (
   new Set(
     selectedPointFeatures
       .map((feature) => getFeatureId(feature))
-      .filter(Boolean) as string[]
+      .filter((featureId): featureId is string => Boolean(featureId))
   )
 
 export const buildSelectedPointSourceData = ({
