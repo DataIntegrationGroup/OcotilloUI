@@ -22,21 +22,8 @@ export const formatAppDateTime = (
 
 // Date only -- for fields like first_visit_date and well_completion_date
 // where the time component is not meaningful.
-export const formatAppDate = (
-  isoDate: string | null | undefined
-): string => {
-  if (!isoDate) return ''
-  const d = new Date(isoDate)
-  if (Number.isNaN(d.getTime())) return ''
-
-  return new Intl.DateTimeFormat('en-US', {
-    timeZone: APP_TIMEZONE,
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(d)
-}
-
+// Handles both YYYY-MM-DD strings (parsed as UTC noon to avoid timezone shift)
+// and full ISO datetime strings.
 export const formatAppDate = (
   value: string | null | undefined
 ): string => {
