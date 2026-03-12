@@ -42,9 +42,9 @@ import { SensorDeploymentRow } from '@/utils'
 import { IHydrographDatasource } from '@/interfaces/st2'
 
 const densityIcons = {
-  comfortable: <ViewStream fontSize="small" />,
-  standard: <TableRows fontSize="small" />,
   compact: <ViewHeadline fontSize="small" />,
+  standard: <TableRows fontSize="small" />,
+  comfortable: <ViewStream fontSize="small" />,
 } as const
 
 export const WellShowPdfPreview = () => {
