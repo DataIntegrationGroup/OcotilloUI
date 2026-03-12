@@ -20,8 +20,11 @@ export const CoreInformation = ({
     well?.current_location?.properties?.utm_coordinates ?? {}
 
   const siteName: string =
-    well.alternate_ids?.find((alt_id) => (alt_id.relation = 'OSEPOD'))
-      ?.alternate_id ?? ''
+    well.alternate_ids?.find(
+      (alt) =>
+        alt.relation?.toLowerCase() === 'same_as' &&
+        alt.alternate_organization?.toLowerCase() === 'nmbgmr'
+    )?.alternate_id ?? ''
 
   return (
     <View style={styles.section}>
