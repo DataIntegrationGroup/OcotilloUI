@@ -9,9 +9,9 @@ import {
 } from '@mui/material'
 import { ExpandMore, History } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import dayjs from 'dayjs'
 import { settings } from '@/settings'
 import { ISample } from '@/interfaces/ocotillo'
+import { formatAppDateTime } from '@/utils'
 
 export const FieldEventHistoryAccordion = ({
   sample,
@@ -25,8 +25,7 @@ export const FieldEventHistoryAccordion = ({
         headerName: 'Event Date',
         minWidth: 180,
         flex: 1,
-        valueFormatter: (value) =>
-          value ? dayjs(value).format('YYYY-MM-DD h:mm A') : '',
+        valueFormatter: (value) => (value ? formatAppDateTime(value) : ''),
       },
       {
         field: 'activity_type',
@@ -112,18 +111,12 @@ export const FieldEventHistoryAccordion = ({
             rowHeight={settings.rowHeight}
             rows={rows}
             columns={columns}
-            pageSizeOptions={[10, 25, 50]}
             disableRowSelectionOnClick
-            initialState={{
-              pagination: {
-                paginationModel: { pageSize: 10, page: 0 },
-              },
-            }}
+            hideFooterPagination
             sx={{
               border: 'none',
               '& .MuiDataGrid-cell': {
-                borderBottom: '1px solid',
-                borderColor: 'divider',
+                borderBottom: '1px solid #f0f0f0',
               },
             }}
           />
