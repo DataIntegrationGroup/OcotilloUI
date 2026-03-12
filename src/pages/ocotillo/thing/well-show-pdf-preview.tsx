@@ -15,13 +15,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
-import {
-  HttpError,
-  useList,
-  useGo,
-  useOne,
-  useShow,
-} from '@refinedev/core'
+import { HttpError, useList, useGo, useOne, useShow } from '@refinedev/core'
 import { ListButton, Show, ShowButton, useDataGrid } from '@refinedev/mui'
 import { useParams } from 'react-router'
 import { ArrowBack, ExpandMore } from '@mui/icons-material'
