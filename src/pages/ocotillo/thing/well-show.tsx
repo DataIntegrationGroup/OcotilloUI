@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
-import { HttpError, useResourceParams, useShow } from '@refinedev/core'
+import { useEffect, useMemo, useState } from 'react'
+import { HttpError, useOne, useResourceParams, useShow } from '@refinedev/core'
 import { Breadcrumb, Show, useDataGrid } from '@refinedev/mui'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
-import { IWell } from '@/interfaces/ocotillo'
+import { ISample, IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import Grid from '@mui/material/Grid2'
@@ -21,6 +21,7 @@ import {
   EquipmentAccordion,
   NotesAccordion,
   AdditionalWellInformationAccordion,
+  FieldEventHistoryAccordion,
   WellPDFDownloadButton,
 } from '@/components'
 
@@ -65,6 +66,30 @@ export const WellShow = () => {
       staleTime: 5 * 60 * 1000,
     },
   })
+
+  const sampleId = useMemo(() => {
+    return (
+      observations
+        ?.filter((o) => o.observation_datetime)
+        .sort(
+          (a, b) =>
+            new Date(b.observation_datetime!).getTime() -
+            new Date(a.observation_datetime!).getTime()
+        )[0]?.sample_id ?? null
+    )
+  }, [observations])
+
+  const hasSampleId = sampleId != null
+
+  const { result: sampleData } = useOne<ISample>({
+    resource: 'ocotillo.sample',
+    id: sampleId,
+    queryOptions: {
+      enabled: hasSampleId,
+    },
+  })
+
+  const sample = sampleData
 
   const { dataGridProps: idLinkDataGridProps } = useDataGrid({
     resource: `thing/${id}/id-link`,
@@ -177,6 +202,7 @@ export const WellShow = () => {
           <EquipmentAccordion id={well?.id} />
           <WellScreensAccordion id={well?.id} />
           <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
+          <FieldEventHistoryAccordion sample={sample} />
           <AttachmentsAccordion id={well?.id} />
         </Box>
         <OSEPODInfoCard pod_id={osepod_id} />

@@ -1,5 +1,7 @@
 export * from './IAsset'
 export * from './IContact'
+export * from './IFieldActivity'
+export * from './IFieldEvent'
 export * from './IGroundwaterLevel'
 export * from './IGroup'
 export * from './ILexicon'
