@@ -1,9 +1,9 @@
 import { StyleSheet } from '@react-pdf/renderer'
 import { IPdfDensity } from '@/interfaces'
 
-export const createPdfStyles = (density: IPdfDensity = 'dense') => {
+export const createPdfStyles = (density: IPdfDensity = 'standard') => {
   const scale = (n: number, d: number, vd: number) =>
-    density === 'very-dense' ? vd : density === 'dense' ? d : n
+    density === 'compact' ? vd : density === 'standard' ? d : n
 
   return StyleSheet.create({
     page: {
@@ -26,15 +26,15 @@ export const createPdfStyles = (density: IPdfDensity = 'dense') => {
       marginBottom: scale(10, 6, 3),
     },
     cell3: {
-      width: density === 'very-dense' ? '31.5%' : '32%',
+      width: density === 'compact' ? '31.5%' : '32%',
       marginBottom: scale(2, 1.5, 1),
     },
     cell3Span2: {
-      width: density === 'very-dense' ? '65.75%' : '66%',
+      width: density === 'compact' ? '65.75%' : '66%',
       marginBottom: scale(2, 1.5, 1),
     },
     cell2: {
-      width: density === 'very-dense' ? '49%' : '48%',
+      width: density === 'compact' ? '49%' : '48%',
       marginBottom: scale(2, 1.5, 1),
     },
     label: { fontSize: scale(12, 11, 9), fontWeight: 'bold' },
