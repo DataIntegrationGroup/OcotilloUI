@@ -8,11 +8,13 @@ import {
   Box,
 } from '@mui/material'
 import { Controller, Control, Path } from 'react-hook-form'
+import { ReactNode, ComponentProps } from 'react'
 
 export interface RadioOption {
   value: string
-  label: string
+  label: ReactNode
   description?: string
+  icon?: ReactNode
 }
 
 export const ControlledRadioFormSelection = <T,>({
@@ -30,7 +32,7 @@ export const ControlledRadioFormSelection = <T,>({
   options: RadioOption[]
   onValueChange?: (value: string) => void
   showAsterisk?: boolean
-} & Omit<React.ComponentProps<typeof RadioGroup>, 'name'>) => {
+} & Omit<ComponentProps<typeof RadioGroup>, 'name'>) => {
   return (
     <Controller
       name={name}
@@ -57,21 +59,39 @@ export const ControlledRadioFormSelection = <T,>({
             }}
             {...radioProps}
           >
-            {options.map(({ value, label, description }) => (
+            {options.map(({ value, label, description, icon }) => (
               <FormControlLabel
                 key={value}
                 value={value}
                 control={<Radio />}
                 label={
-                  description ? (
+                  description || icon ? (
                     <Box>
-                      <Box sx={{ fontWeight: 'medium' }}>
-                        {label}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          fontWeight: 'medium',
+                        }}
+                      >
+                        {icon ? (
+                          <Box
+                            component="span"
+                            sx={{
+                              display: 'inline-flex',
+                              color: 'text.secondary',
+                            }}
+                          >
+                            {icon}
+                          </Box>
+                        ) : null}
+                        <Box component="span">{label}</Box>
                       </Box>
-                      <Box sx={{ 
-                        fontSize: '0.875rem', 
+                      <Box sx={{
+                        fontSize: '0.875rem',
                         color: 'text.secondary',
-                        mt: 0.5 
+                        mt: 0.5,
                       }}>
                         {description}
                       </Box>

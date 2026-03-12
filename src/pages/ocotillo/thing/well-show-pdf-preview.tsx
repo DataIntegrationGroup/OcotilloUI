@@ -18,7 +18,13 @@ import {
 import { HttpError, useList, useGo, useOne, useShow } from '@refinedev/core'
 import { ListButton, Show, ShowButton, useDataGrid } from '@refinedev/mui'
 import { useParams } from 'react-router'
-import { ArrowBack, ExpandMore } from '@mui/icons-material'
+import {
+  ArrowBack,
+  ExpandMore,
+  TableRows,
+  ViewHeadline,
+  ViewStream,
+} from '@mui/icons-material'
 import { PDFViewer } from '@react-pdf/renderer'
 import {
   ControlledCheckbox,
@@ -34,6 +40,12 @@ import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 import { useSensorDeploymentRows } from '@/hooks'
 import { SensorDeploymentRow } from '@/utils'
 import { IHydrographDatasource } from '@/interfaces/st2'
+
+const densityIcons = {
+  comfortable: <ViewStream fontSize="small" />,
+  standard: <TableRows fontSize="small" />,
+  compact: <ViewHeadline fontSize="small" />,
+} as const
 
 export const WellShowPdfPreview = () => {
   const go = useGo()
@@ -165,6 +177,7 @@ export const WellShowPdfPreview = () => {
       .map((w) => w[0].toUpperCase() + w.slice(1))
       .join(' '),
     description: null as null,
+    icon: densityIcons[value],
   }))
 
   const hydrographDatasource = useMemo<IHydrographDatasource[]>(() => {
