@@ -43,10 +43,10 @@ export const WellPDF = ({
   standalone?: boolean
 }) => {
   const density: IPdfDensity = options.density ?? PDF_DEFAULT_VALUES.density
-  const isDense = density === 'dense' || density === 'very-dense'
+  const isDense = density === 'standard' || density === 'compact'
   const styles = useMemo(() => createPdfStyles(density), [density])
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
-  const showAdditionalOnFirstPage = density === 'very-dense'
+  const showAdditionalOnFirstPage = density === 'compact'
 
   const mostRecentObservation = useMostRecentObservation(observations)
   const { primaryContact, secondaryContact } =

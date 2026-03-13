@@ -1,2 +1,7 @@
-export type IPdfDensity = 'spacious' | 'dense' | 'very-dense'
-export const PDF_DENSITIES = ['spacious', 'dense', 'very-dense'] as const
+export type IPdfDensity = 'comfortable' | 'standard' | 'compact'
+
+export const PDF_DENSITIES: IPdfDensity[] = [
+  'compact',
+  'standard',
+  'comfortable',
+] as const

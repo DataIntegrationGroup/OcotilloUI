@@ -18,7 +18,13 @@ import {
 import { HttpError, useList, useGo, useOne, useShow } from '@refinedev/core'
 import { ListButton, Show, ShowButton, useDataGrid } from '@refinedev/mui'
 import { useParams } from 'react-router'
-import { ArrowBack, ExpandMore } from '@mui/icons-material'
+import {
+  ArrowBack,
+  ExpandMore,
+  TableRows,
+  ViewHeadline,
+  ViewStream,
+} from '@mui/icons-material'
 import { PDFViewer } from '@react-pdf/renderer'
 import {
   ControlledCheckbox,
@@ -34,6 +40,12 @@ import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 import { useSensorDeploymentRows } from '@/hooks'
 import { SensorDeploymentRow } from '@/utils'
 import { IHydrographDatasource } from '@/interfaces/st2'
+
+const densityIcons = {
+  compact: <ViewHeadline fontSize="small" />,
+  standard: <TableRows fontSize="small" />,
+  comfortable: <ViewStream fontSize="small" />,
+} as const
 
 export const WellShowPdfPreview = () => {
   const go = useGo()
@@ -165,6 +177,7 @@ export const WellShowPdfPreview = () => {
       .map((w) => w[0].toUpperCase() + w.slice(1))
       .join(' '),
     description: null as null,
+    icon: densityIcons[value],
   }))
 
   const hydrographDatasource = useMemo<IHydrographDatasource[]>(() => {
@@ -319,8 +332,59 @@ export const WellShowPdfPreview = () => {
               variant="outlined"
               sx={{
                 p: 1,
-                bgcolor: 'grey.50',
                 borderRadius: 2,
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+                backgroundImage: 'none',
+                boxShadow: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? '0 1px 3px rgba(0,0,0,0.35)'
+                    : '0 1px 3px rgba(0,0,0,0.08)',
+
+                '&::before': {
+                  display: 'none',
+                },
+
+                '&.Mui-expanded': {
+                  mt: 0,
+                },
+
+                '& .MuiAccordionSummary-root': {
+                  borderRadius: 1.5,
+                  minHeight: 56,
+                  px: 1.5,
+                  transition: 'background-color 0.2s ease',
+                },
+
+                '& .MuiAccordionSummary-root:hover': {
+                  bgcolor: 'action.hover',
+                },
+
+                '& .MuiAccordionSummary-root.Mui-expanded': {
+                  minHeight: 56,
+                },
+
+                '& .MuiAccordionSummary-content': {
+                  my: 1,
+                },
+
+                '& .MuiAccordionSummary-expandIconWrapper': {
+                  color: 'text.secondary',
+                },
+
+                '& .MuiAccordionDetails-root': {
+                  pt: 1,
+                  px: 2,
+                  pb: 2,
+                  color: 'text.primary',
+                },
+
+                '& .MuiDivider-root': {
+                  px: 2,
+                  pt: 0,
+                  borderTop: '1px solid',
+                  borderColor: 'text.secondary',
+                },
               }}
             >
               <AccordionSummary
