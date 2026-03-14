@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { HttpError, useOne, useResourceParams, useShow } from '@refinedev/core'
-import { Breadcrumb, Show, useDataGrid } from '@refinedev/mui'
+import { Breadcrumb, ListButton, Show, useDataGrid } from '@refinedev/mui'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { ISample, IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
@@ -157,9 +157,9 @@ export const WellShow = () => {
       title={
         <Typography variant="h5">{`Show Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
       }
-      headerButtons={({ defaultButtons }) => (
+      headerButtons={() => (
         <Box sx={{ display: 'flex', gap: 1 }}>
-          {defaultButtons}
+          <ListButton />
           <WellPDFPreviewButton isLoading={query.isLoading} />
           <WellPDFDownloadButton well={well} isLoading={query.isLoading} />
         </Box>
