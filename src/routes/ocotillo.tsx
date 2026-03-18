@@ -18,6 +18,7 @@ import {
   SpringShow,
 } from '@/pages/ocotillo/thing'
 import { MapView } from '@/pages/ocotillo/map'
+import { HelpPage } from '@/pages/ocotillo/help'
 import {
   LocationList,
   LocationCreate,
@@ -113,6 +114,7 @@ export const OcotilloRoutes = () => {
         <Route path={'show/:id'} element={<WellScreenShow />} />
       </Route>
       <Route path="map" element={<MapView />} />
+      <Route path="help" element={<HelpPage />} />
       <Route path="location">
         <Route index element={<LocationList />} />
         <Route path={'create'} element={<LocationCreate />} />

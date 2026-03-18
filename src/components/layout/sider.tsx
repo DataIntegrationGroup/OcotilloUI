@@ -1,9 +1,5 @@
 import React, { type CSSProperties, useContext, useState } from 'react'
-import {
-  CanAccess,
-  useMenu,
-  type TreeMenuItem,
-} from '@refinedev/core'
+import { CanAccess, useMenu, type TreeMenuItem } from '@refinedev/core'
 import { ThemedTitle, useThemedLayoutContext } from '@refinedev/mui'
 import ChevronLeft from '@mui/icons-material/ChevronLeft'
 import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined'
@@ -149,16 +145,19 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                         primary: {
                           noWrap: true,
                           fontSize: '14px',
-                          sx: { textDecoration: isSelected ? 'underline' : 'none' },
+                          sx: {
+                            textDecoration: isSelected ? 'underline' : 'none',
+                          },
                         },
                       }}
                     />
                   )}
-                  {!siderCollapsed && (isOpen ? (
-                    <ExpandLess sx={{ color: 'text.icon' }} />
-                  ) : (
-                    <ExpandMore sx={{ color: 'text.icon' }} />
-                  ))}
+                  {!siderCollapsed &&
+                    (isOpen ? (
+                      <ExpandLess sx={{ color: 'text.icon' }} />
+                    ) : (
+                      <ExpandMore sx={{ color: 'text.icon' }} />
+                    ))}
                 </ListItemButton>
               </Tooltip>
               {!siderCollapsed && (
@@ -208,7 +207,11 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                 py: isNested ? 0 : 1,
                 minHeight: isNested ? 'unset' : undefined,
                 justifyContent: 'center',
-                color: isSelected ? 'primary.main' : isNested ? 'text.secondary' : 'text.primary',
+                color: isSelected
+                  ? 'primary.main'
+                  : isNested
+                    ? 'text.secondary'
+                    : 'text.primary',
               }}
             >
               {!isNested && (
@@ -380,6 +383,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
             >
               {[
                 { to: '/about', label: 'About' },
+                { to: '/ocotillo/help', label: 'Desktop GIS Help' },
                 { to: '/report-a-bug', label: 'Report a Bug' },
               ].map(({ to, label }) => (
                 <RouterLink key={to} to={to} style={{ textDecoration: 'none' }}>
@@ -410,11 +414,23 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
             <Logout collapsed={siderCollapsed} />
             {!siderCollapsed && (
               <Tooltip
-                title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={
+                  mode === 'dark'
+                    ? 'Switch to light mode'
+                    : 'Switch to dark mode'
+                }
                 placement="right"
               >
-                <IconButton onClick={setMode} size="small" sx={{ mr: 0.5, ml: 1 }}>
-                  {mode === 'dark' ? <LightModeOutlined /> : <DarkModeOutlined />}
+                <IconButton
+                  onClick={setMode}
+                  size="small"
+                  sx={{ mr: 0.5, ml: 1 }}
+                >
+                  {mode === 'dark' ? (
+                    <LightModeOutlined />
+                  ) : (
+                    <DarkModeOutlined />
+                  )}
                 </IconButton>
               </Tooltip>
             )}
