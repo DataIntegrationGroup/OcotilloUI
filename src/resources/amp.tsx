@@ -12,6 +12,12 @@ import { DynamicFormTwoTone } from "@mui/icons-material";
 
 let amp = [
   {
+    name: "Sandbox",
+    meta: {
+      label: "Sandbox",
+    },
+  },
+  {
     name: "dashboard",
     list: "/amp/dashboard",
     meta: {

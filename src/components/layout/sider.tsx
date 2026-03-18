@@ -70,7 +70,9 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
       const isOpen = open[key] || false
 
       const icon = deprecatedIcon ?? meta?.icon
-      const label = meta?.label || deprecatedLabel || name
+      const derivedLabel = meta?.label || deprecatedLabel || name
+      const label =
+        name === 'Sandbox' || name === 'sandbox' ? 'Sandbox' : derivedLabel
       const isSelected = key === selectedKey
       const isNested = meta?.parent !== undefined
       const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0
