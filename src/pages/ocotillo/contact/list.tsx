@@ -10,8 +10,7 @@ import {
 import { Button, Card, CardHeader, SxProps } from '@mui/material'
 import { Email, Home, Phone } from '@mui/icons-material'
 import AddIcon from '@mui/icons-material/Add'
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
-import { useExport, useLink, useNavigation } from '@refinedev/core'
+import { useLink, useNavigation } from '@refinedev/core'
 import { settings } from '@/settings'
 import { formatAppDateTime } from '@/utils'
 import { ListPage } from '@/components'
@@ -34,11 +33,6 @@ export const ContactList: React.FC = () => {
     () => sanitizeContacts(dataGridProps.rows, canViewConfidential),
     [canViewConfidential, dataGridProps.rows]
   )
-
-  const { triggerExport, isLoading: exportIsLoading } = useExport({
-    resource: 'contact',
-    dataProviderName: 'ocotillo',
-  })
 
   const { create } = useNavigation()
   const Link = useLink()
@@ -186,15 +180,6 @@ export const ContactList: React.FC = () => {
         onClick={() => create('contact')}
       >
         Create
-      </Button>
-      <Button
-        size="small"
-        variant="contained"
-        startIcon={<FileDownloadOutlinedIcon />}
-        disabled={exportIsLoading}
-        onClick={triggerExport}
-      >
-        Export
       </Button>
     </>
   )
