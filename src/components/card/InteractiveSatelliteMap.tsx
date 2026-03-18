@@ -132,7 +132,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <Map color="primary" />
-            <Typography variant="body1">Interactive Satellite Map</Typography>
+            <Typography variant="body1" fontWeight="bold">Interactive Satellite Map</Typography>
           </Stack>
         }
         action={
@@ -216,7 +216,7 @@ const LoadingCard = () => {
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <Map color="primary" />
-            <Typography variant="body1">Interactive Satellite Map</Typography>
+            <Typography variant="body1" fontWeight="bold">Interactive Satellite Map</Typography>
           </Stack>
         }
       />

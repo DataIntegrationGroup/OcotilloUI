@@ -33,7 +33,7 @@ export const HydrographCard = ({
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <StackedLineChart color="primary" />
-            <Typography variant="body1">Hydrograph</Typography>
+            <Typography variant="body1" fontWeight="bold">Hydrograph</Typography>
           </Stack>
         }
       />
@@ -72,7 +72,7 @@ const LoadingCard = () => {
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <StackedLineChart color="primary" />
-            <Typography variant="body1">Hydrograph</Typography>
+            <Typography variant="body1" fontWeight="bold">Hydrograph</Typography>
           </Stack>
         }
       />

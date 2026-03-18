@@ -43,7 +43,7 @@ export const ThemedLayoutV2: React.FC<RefineThemedLayoutProps> = ({
               minHeight: 0,
               display: 'flex',
               flexDirection: 'column',
-              bgcolor: (theme) => theme.palette.background.default,
+              bgcolor: (theme) => theme.palette.background.wrapper,
             }}
           >
             {children}

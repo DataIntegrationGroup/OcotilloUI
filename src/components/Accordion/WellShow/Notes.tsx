@@ -1,11 +1,5 @@
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Stack,
-  Typography,
-} from '@mui/material'
-import { ExpandMore, Notes } from '@mui/icons-material'
+import { Box, Paper, Stack, Typography } from '@mui/material'
+import { Notes } from '@mui/icons-material'
 import Grid from '@mui/material/Grid2'
 import { IWell } from '@/interfaces/ocotillo'
 import { groupNotesByType } from '@/utils'
@@ -29,36 +23,14 @@ export const NotesAccordion = ({ well }: { well?: IWell }) => {
     title.toLowerCase().endsWith('notes') ? title : `${title} Notes`
 
   return (
-    <Accordion defaultExpanded elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <AccordionSummary
-        expandIcon={<ExpandMore />}
-        // Match the visual height of summaries that contain a CreateButton
-        sx={{
-          minHeight: 36,
-          '& .MuiAccordionSummary-content': {
-            margin: 0,
-            paddingY: 2.75,
-          },
-          '&.Mui-expanded': {
-            minHeight: 36,
-          },
-        }}
-      >
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ width: '100%' }}
-        >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Notes color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Notes
-            </Typography>
-          </Stack>
-        </Stack>
-      </AccordionSummary>
-      <AccordionDetails sx={{ p: 3 }}>
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Notes color="primary" />
+        <Typography variant="body1" fontWeight="bold">
+          Notes
+        </Typography>
+      </Box>
+      <Box sx={{ p: 3 }}>
         <Grid container spacing={4}>
           {sections.map((section) => (
             <Grid key={section.title} size={{ xs: 12 }}>
@@ -71,7 +43,7 @@ export const NotesAccordion = ({ well }: { well?: IWell }) => {
             </Grid>
           ))}
         </Grid>
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Paper>
   )
 }

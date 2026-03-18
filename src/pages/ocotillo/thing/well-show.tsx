@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { HttpError, useOne, useResourceParams, useShow } from '@refinedev/core'
-import { Breadcrumb, ListButton, Show, useDataGrid } from '@refinedev/mui'
+import { ListButton, Show, useDataGrid } from '@refinedev/mui'
+import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { ISample, IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
@@ -156,10 +157,34 @@ export const WellShow = () => {
   return (
     <Show
       isLoading={query.isLoading}
-      breadcrumb={<Breadcrumb hideIcons={true} />}
+      goBack={false}
+      breadcrumb={<AppBreadcrumb />}
+      wrapperProps={{
+        elevation: 0,
+        sx: {
+          bgcolor: 'background.wrapper',
+          boxShadow: 'none',
+          borderRadius: 1,
+          padding: 0,
+        },
+      }}
       title={
-        <Typography variant="h5">{`Show Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
+        <Typography variant="h3" fontWeight={700}>
+          {`Show Well${well?.name ? `: ${well.name}` : ''}`}
+        </Typography>
       }
+      headerProps={{
+        sx: {
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'flex-start', md: 'center' },
+          '.MuiCardHeader-action': {
+            alignSelf: { xs: 'flex-end', md: 'flex-start' },
+            mt: { xs: 1, md: 0.5 },
+            mr: 0,
+          },
+        },
+      }}
+      contentProps={{ sx: { pt: 1 } }}
       headerButtons={() => (
         <Box sx={{ display: 'flex', gap: 1 }}>
           <ListButton />

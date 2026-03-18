@@ -263,5 +263,36 @@ export const getTheme = (mode: PaletteMode) =>
           },
         },
       },
+      MuiAccordionSummary: {
+        styleOverrides: {
+          root: {
+            minHeight: 40,
+            '&.Mui-expanded': {
+              minHeight: 40,
+            },
+          },
+          content: {
+            margin: 0,
+            padding: '12px 16px',
+            '&.Mui-expanded': {
+              margin: 0,
+            },
+          },
+        },
+      },
+      MuiCardHeader: {
+        styleOverrides: {
+          root: {
+            padding: '12px 16px',
+          },
+        },
+      },
+      MuiCardContent: {
+        styleOverrides: {
+          root: {
+            paddingTop: 8,
+          },
+        },
+      },
     },
   })

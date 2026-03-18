@@ -1,13 +1,6 @@
 import { useMemo } from 'react'
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Alert,
-  Stack,
-  Typography,
-} from '@mui/material'
-import { ExpandMore, History } from '@mui/icons-material'
+import { Alert, Box, Paper, Stack, Typography } from '@mui/material'
+import { History } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import { ISample } from '@/interfaces/ocotillo'
@@ -86,24 +79,14 @@ export const FieldEventHistoryAccordion = ({
   }, [sample])
 
   return (
-    <Accordion elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <AccordionSummary expandIcon={<ExpandMore />}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ width: '100%' }}
-        >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <History color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Field Event History
-            </Typography>
-          </Stack>
-        </Stack>
-      </AccordionSummary>
-
-      <AccordionDetails sx={{ p: 3 }}>
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <History color="primary" />
+        <Typography variant="body1" fontWeight="bold">
+          Field Event History
+        </Typography>
+      </Box>
+      <Box sx={{ p: 3 }}>
         {!sample ? (
           <Alert severity="info">No field event history found.</Alert>
         ) : (
@@ -121,7 +104,7 @@ export const FieldEventHistoryAccordion = ({
             }}
           />
         )}
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Paper>
   )
 }
