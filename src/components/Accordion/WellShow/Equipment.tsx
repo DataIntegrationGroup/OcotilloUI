@@ -1,12 +1,5 @@
 import { useMemo } from 'react'
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
-  Stack,
-  Typography,
-} from '@mui/material'
+import { Box, Paper, Stack, Typography } from '@mui/material'
 import {
   CreateButton,
   DeleteButton,
@@ -14,7 +7,7 @@ import {
   ShowButton,
   useDataGrid,
 } from '@refinedev/mui'
-import { ExpandMore, SettingsInputAntenna } from '@mui/icons-material'
+import { SettingsInputAntenna } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import { ISensor } from '@/interfaces/ocotillo'
@@ -155,24 +148,17 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
   )
 
   return (
-    <Accordion defaultExpanded elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <AccordionSummary expandIcon={<ExpandMore />}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ width: '100%' }}
-        >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <SettingsInputAntenna color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Equipment
-            </Typography>
-          </Stack>
-          <CreateButton resource="ocotillo.contact" />
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <SettingsInputAntenna color="primary" />
+          <Typography variant="body1" fontWeight="bold">
+            Equipment
+          </Typography>
         </Stack>
-      </AccordionSummary>
-      <AccordionDetails sx={{ p: 3 }}>
+        <CreateButton resource="ocotillo.contact" />
+      </Box>
+      <Box sx={{ p: 3 }}>
         <DataGrid<SensorDeploymentRow>
           rowHeight={settings.rowHeight}
           rows={sensorDeployments ?? []}
@@ -190,7 +176,7 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
             },
           }}
         />
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Paper>
   )
 }

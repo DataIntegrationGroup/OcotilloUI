@@ -1,4 +1,5 @@
-import { Breadcrumb, ExportButton, List } from '@refinedev/mui'
+import { ExportButton, List } from '@refinedev/mui'
+import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import {
   DataGrid,
   GridToolbarColumnsButton,
@@ -164,7 +165,7 @@ export const ListPage: React.FC<ListPageProps> = ({
             </Box>
           ) : undefined
         }
-        breadcrumb={<Breadcrumb hideIcons={true} />}
+        breadcrumb={<AppBreadcrumb />}
         wrapperProps={{
           elevation: 0,
           sx: { backgroundColor: 'background.wrapper', boxShadow: 'none', borderRadius: 1, padding: 0 },

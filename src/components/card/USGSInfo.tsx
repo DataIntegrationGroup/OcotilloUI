@@ -24,7 +24,7 @@ export const USGSInfoCard = ({ site_id }) => {
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <Public color="primary" />
-            <Typography variant="h5">USGS Information</Typography>
+            <Typography variant="body1" fontWeight="bold">USGS Information</Typography>
           </Stack>
         }
       />

@@ -24,7 +24,7 @@ export const OSEPODInfoCard = ({ pod_id }) => {
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <Engineering color="primary" />
-            <Typography variant="h5">OSEPOD Information</Typography>
+            <Typography variant="body1" fontWeight="bold">OSEPOD Information</Typography>
           </Stack>
         }
       />

@@ -4,8 +4,8 @@ import { IWell } from '@/interfaces/ocotillo'
 export const WellPhysicalPropertiesAccordion = ({ well }: { well?: IWell }) => {
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ px: 2, pt: 2, pb: 0 }}>
-        <Typography variant="h3" sx={{ fontSize: '1rem' }}>
+      <Box sx={{ px: 2, py: 1.5 }}>
+        <Typography variant="body1" fontWeight="bold">
           Physical Properties
         </Typography>
       </Box>

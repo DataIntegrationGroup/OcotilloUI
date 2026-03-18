@@ -1,10 +1,7 @@
 import { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import {
-  Breadcrumb,
-  RefineSnackbarProvider,
-  useNotificationProvider,
-} from '@refinedev/mui'
+import { RefineSnackbarProvider, useNotificationProvider } from '@refinedev/mui'
+import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { DevtoolsProvider, DevtoolsPanel } from '@refinedev/devtools'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -71,7 +68,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
             syncWithLocation: false, // Prevents Refine from writing filter/sort/pagination state into URL query params. Navigation URLs (/well/show/123) are unaffected -- those are managed by React Router.
             warnWhenUnsavedChanges: true,
             projectId: import.meta.env.VITE_REFINE_PROJECT_ID,
-            breadcrumb: <Breadcrumb hideIcons />,
+            breadcrumb: <AppBreadcrumb />,
           }}
         >
           <UnsavedChangesNotifier />
