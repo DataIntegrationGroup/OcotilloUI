@@ -1,15 +1,8 @@
 import { useMemo } from 'react'
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Stack,
-  Typography,
-} from '@mui/material'
-import { CreateButton, useDataGrid } from '@refinedev/mui'
-import { ExpandMore, MoreVertOutlined } from '@mui/icons-material'
+import { Box, Paper, Stack, Typography } from '@mui/material'
+import { useDataGrid } from '@refinedev/mui'
+import { MoreVertOutlined } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { actionColumnDef } from '@/components/CommonColumnDefs'
 import { settings } from '@/settings'
 
 export const WellScreensAccordion = ({ id }: { id?: number }) => {
@@ -38,30 +31,19 @@ export const WellScreensAccordion = ({ id }: { id?: number }) => {
         type: 'number',
         minWidth: 200,
       },
-      actionColumnDef({ resource: 'ocotillo.thing/well-screen' }),
     ],
     []
   )
 
   return (
-    <Accordion defaultExpanded elevation={2}>
-      <AccordionSummary expandIcon={<ExpandMore />}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ width: '100%' }}
-        >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <MoreVertOutlined color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Well Screens
-            </Typography>
-          </Stack>
-          <CreateButton resource="ocotillo.contact" />
-        </Stack>
-      </AccordionSummary>
-      <AccordionDetails sx={{ p: 3 }}>
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <MoreVertOutlined color="primary" />
+        <Typography variant="body1" fontWeight="bold">
+          Well Screens
+        </Typography>
+      </Box>
+      <Box sx={{ px: 2, py: 1, pb: 3 }}>
         <DataGrid
           rowHeight={settings.rowHeight}
           rows={dataGridProps.rows ?? []}
@@ -79,7 +61,7 @@ export const WellScreensAccordion = ({ id }: { id?: number }) => {
             },
           }}
         />
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Paper>
   )
 }

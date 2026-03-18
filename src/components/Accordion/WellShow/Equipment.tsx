@@ -1,25 +1,23 @@
 import { useMemo } from 'react'
+import { Box, Paper, Stack, Typography } from '@mui/material'
+import { DeleteButton, EditButton, ShowButton, useDataGrid } from '@refinedev/mui'
+import { SettingsInputAntenna } from '@mui/icons-material'
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
-  Stack,
-  Typography,
-} from '@mui/material'
-import {
-  CreateButton,
-  DeleteButton,
-  EditButton,
-  ShowButton,
-  useDataGrid,
-} from '@refinedev/mui'
-import { ExpandMore, SettingsInputAntenna } from '@mui/icons-material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
+  DataGrid,
+  GridColDef,
+  GridToolbarContainer,
+  GridToolbarDensitySelector,
+} from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import { ISensor } from '@/interfaces/ocotillo'
 import { useSensorDeploymentRows } from '@/hooks'
 import { SensorDeploymentRow } from '@/utils'
+
+const EquipmentToolbar = () => (
+  <GridToolbarContainer sx={{ justifyContent: 'flex-end', px: 1, py: 0.5 }}>
+    <GridToolbarDensitySelector />
+  </GridToolbarContainer>
+)
 
 export const EquipmentAccordion = ({ id }: { id?: number }) => {
   const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
@@ -113,70 +111,24 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
         minWidth: 150,
         flex: 2,
       },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <Box component="div" sx={{ display: 'flex', gap: '8px' }}>
-              <EditButton
-                resource="ocotillo.sensor"
-                size="small"
-                hideText
-                recordItemId={row.sensor_id}
-                variant="outlined"
-                sx={{ maxWidth: 50, maxHeight: 5, px: 1 }}
-              />
-              <ShowButton
-                resource="ocotillo.sensor"
-                size="small"
-                hideText
-                recordItemId={row.sensor_id}
-                variant="outlined"
-                sx={{ maxWidth: 50, maxHeight: 5, px: 1 }}
-              />
-              <DeleteButton
-                resource="ocotillo.sensor"
-                size="small"
-                hideText
-                recordItemId={row.sensor_id}
-                variant="outlined"
-                sx={{ maxWidth: 50, maxHeight: 5, px: 1 }}
-              />
-            </Box>
-          )
-        },
-        align: 'center',
-        headerAlign: 'center',
-        minWidth: 210,
-      },
     ],
     []
   )
 
   return (
-    <Accordion defaultExpanded elevation={2}>
-      <AccordionSummary expandIcon={<ExpandMore />}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ width: '100%' }}
-        >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <SettingsInputAntenna color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Equipment
-            </Typography>
-          </Stack>
-          <CreateButton resource="ocotillo.contact" />
-        </Stack>
-      </AccordionSummary>
-      <AccordionDetails sx={{ p: 3 }}>
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <SettingsInputAntenna color="primary" />
+        <Typography variant="body1" fontWeight="bold">
+          Equipment
+        </Typography>
+      </Box>
+      <Box sx={{ px: 2, py: 1, pb: 3 }}>
         <DataGrid<SensorDeploymentRow>
           rowHeight={settings.rowHeight}
           rows={sensorDeployments ?? []}
           columns={columns}
+          slots={{ toolbar: EquipmentToolbar }}
           pageSizeOptions={[10, 25, 50]}
           initialState={{
             pagination: {
@@ -190,7 +142,7 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
             },
           }}
         />
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Paper>
   )
 }

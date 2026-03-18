@@ -1,127 +1,69 @@
-import { useMemo } from 'react'
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Alert,
-  Stack,
-  Typography,
-} from '@mui/material'
-import { ExpandMore, History } from '@mui/icons-material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { settings } from '@/settings'
+import { Box, Paper, Typography } from '@mui/material'
+import { History } from '@mui/icons-material'
 import { ISample } from '@/interfaces/ocotillo'
 import { formatAppDateTime } from '@/utils'
+
+function buildEventContent(sample: Partial<ISample> | null | undefined): {
+  date: string | null
+  body: string
+} {
+  if (!sample) return { date: null, body: '' }
+
+  const eventDate =
+    sample.field_event?.event_date ?? sample.sample_date ?? null
+  const activityType = sample.field_activity?.activity_type ?? null
+  const contactName = sample.contact?.name ?? null
+  const contactOrg = sample.contact?.organization ?? null
+  const sampleMethod = sample.sample_method ?? null
+  const notes = sample.field_event?.notes ?? sample.notes ?? null
+
+  const date = eventDate ? formatAppDateTime(eventDate) : null
+
+  let body = ''
+  if (activityType) {
+    const article = activityType.match(/^[aeiou]/i) ? 'An' : 'A'
+    const staffPart = contactName
+      ? ` by ${contactName}${contactOrg ? ` (${contactOrg})` : ''}`
+      : ''
+    const methodPart = sampleMethod
+      ? `, using the ${sampleMethod} method`
+      : ''
+    body = `${article} ${activityType} check was performed${staffPart}${methodPart}`
+  }
+  if (body && !body.endsWith('.')) body += '.'
+  if (notes) body = body ? `${body} ${notes}` : notes
+
+  if (!date && !body) return { date: null, body: '' }
+
+  return { date, body }
+}
 
 export const FieldEventHistoryAccordion = ({
   sample,
 }: {
   sample?: Partial<ISample> | null
 }) => {
-  const columns = useMemo<GridColDef[]>(
-    () => [
-      {
-        field: 'event_date',
-        headerName: 'Event Date',
-        minWidth: 180,
-        flex: 1,
-        valueFormatter: (value) => (value ? formatAppDateTime(value) : ''),
-      },
-      {
-        field: 'activity_type',
-        headerName: 'Work Performed',
-        minWidth: 180,
-        flex: 1,
-      },
-      {
-        field: 'contact_name',
-        headerName: 'Field Staff',
-        minWidth: 180,
-        flex: 1,
-      },
-      {
-        field: 'contact_organization',
-        headerName: 'Organization',
-        minWidth: 160,
-        flex: 1,
-      },
-      {
-        field: 'contact_role',
-        headerName: 'Role',
-        minWidth: 160,
-        flex: 1,
-      },
-      {
-        field: 'sample_method',
-        headerName: 'Method',
-        minWidth: 240,
-        flex: 1.2,
-      },
-      {
-        field: 'notes',
-        headerName: 'Notes',
-        minWidth: 240,
-        flex: 1.5,
-      },
-    ],
-    []
-  )
-
-  const rows = useMemo(() => {
-    if (!sample) return []
-
-    return [
-      {
-        id: sample.id ?? 'field-event-row',
-        event_date:
-          sample.field_event?.event_date ?? sample.sample_date ?? null,
-        activity_type: sample.field_activity?.activity_type ?? null,
-        contact_name: sample.contact?.name ?? null,
-        contact_organization: sample.contact?.organization ?? null,
-        contact_role: sample.contact?.role ?? null,
-        sample_method: sample.sample_method ?? null,
-        notes: sample.field_event?.notes ?? sample.notes ?? null,
-      },
-    ]
-  }, [sample])
+  const { date, body } = buildEventContent(sample)
+  const hasData = date || body
 
   return (
-    <Accordion elevation={2}>
-      <AccordionSummary expandIcon={<ExpandMore />}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ width: '100%' }}
-        >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <History color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Field Event History
-            </Typography>
-          </Stack>
-        </Stack>
-      </AccordionSummary>
-
-      <AccordionDetails sx={{ p: 3 }}>
-        {!sample ? (
-          <Alert severity="info">No field event history found.</Alert>
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="body1" fontWeight="bold">
+          Field Event History
+        </Typography>
+      </Box>
+      <Box sx={{ px: 2, py: 1, pb: 3 }}>
+        {!hasData ? (
+          <Typography variant="body2" color="text.secondary">
+            No field event history found.
+          </Typography>
         ) : (
-          <DataGrid
-            rowHeight={settings.rowHeight}
-            rows={rows}
-            columns={columns}
-            disableRowSelectionOnClick
-            hideFooterPagination
-            sx={{
-              border: 'none',
-              '& .MuiDataGrid-cell': {
-                borderBottom: '1px solid #f0f0f0',
-              },
-            }}
-          />
+          <Typography variant="body2" component="p" sx={{ whiteSpace: 'pre-line' }}>
+            {[date, body].filter(Boolean).join('\n')}
+          </Typography>
         )}
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Paper>
   )
 }

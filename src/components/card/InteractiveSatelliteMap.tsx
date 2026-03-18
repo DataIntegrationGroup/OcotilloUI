@@ -127,12 +127,12 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
       : null
 
   return (
-    <Card elevation={2} sx={{ height: '100%' }}>
+    <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
       <CardHeader
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <Map color="primary" />
-            <Typography variant="body1">Interactive Satellite Map</Typography>
+            <Typography variant="body1" fontWeight="bold">Interactive Satellite Map</Typography>
           </Stack>
         }
         action={
@@ -160,7 +160,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             overflow: 'hidden',
             border: '2.5px solid',
             borderColor: 'divider',
-            height: 650,
+            height: 450,
             width: '100%',
             display: 'flex',
           }}
@@ -211,12 +211,12 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
 
 const LoadingCard = () => {
   return (
-    <Card elevation={2} sx={{ height: '100%' }}>
+    <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
       <CardHeader
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <Map color="primary" />
-            <Typography variant="body1">Interactive Satellite Map</Typography>
+            <Typography variant="body1" fontWeight="bold">Interactive Satellite Map</Typography>
           </Stack>
         }
       />

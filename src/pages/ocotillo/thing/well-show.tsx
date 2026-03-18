@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { HttpError, useOne, useResourceParams, useShow } from '@refinedev/core'
-import { Breadcrumb, ListButton, Show, useDataGrid } from '@refinedev/mui'
+import { ListButton, Show, useDataGrid } from '@refinedev/mui'
+import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { ISample, IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
@@ -9,6 +10,7 @@ import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
   InteractiveSatelliteMapCard,
+  WellStatusChips,
   HydrographCard,
   RecentWaterLevelObservationsCard,
   ContactsAccordion,
@@ -20,7 +22,10 @@ import {
   WellScreensAccordion,
   EquipmentAccordion,
   NotesAccordion,
-  AdditionalWellInformationAccordion,
+  ConstructionInfoAccordion,
+  GeologyInformationAccordion,
+  OwnerPermissionsAccordion,
+  WellPhysicalPropertiesAccordion,
   FieldEventHistoryAccordion,
   WellPDFDownloadButton,
 } from '@/components'
@@ -153,13 +158,39 @@ export const WellShow = () => {
   return (
     <Show
       isLoading={query.isLoading}
-      breadcrumb={<Breadcrumb hideIcons={true} />}
+      goBack={false}
+      breadcrumb={<AppBreadcrumb />}
+      wrapperProps={{
+        elevation: 0,
+        sx: {
+          bgcolor: 'background.wrapper',
+          boxShadow: 'none',
+          borderRadius: 1,
+          padding: 0,
+        },
+      }}
       title={
-        <Typography variant="h5">{`Show Well${well?.name ? `: ${well?.name}` : ''}`}</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          <Typography variant="h3" fontWeight={700}>
+            {well?.name ?? ''}
+          </Typography>
+          <WellStatusChips well={well} />
+        </Box>
       }
+      headerProps={{
+        sx: {
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'flex-start', md: 'center' },
+          '.MuiCardHeader-action': {
+            alignSelf: { xs: 'flex-end', md: 'flex-start' },
+            mt: { xs: 1, md: 0.5 },
+            mr: 0,
+          },
+        },
+      }}
+      contentProps={{ sx: { pt: 1 } }}
       headerButtons={() => (
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <ListButton />
+        <Box sx={{ display: 'flex', gap: 0 }}>
           <WellPDFPreviewButton isLoading={query.isLoading} />
           <WellPDFDownloadButton well={well} isLoading={query.isLoading} />
         </Box>
@@ -167,46 +198,54 @@ export const WellShow = () => {
     >
       <Stack spacing={2}>
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <CoreWellInfoCard
-              well={well}
-              usgs_id={usgs_id}
-              osepod_id={osepod_id}
-            />
+          
+
+          {/* Left column: 8 cols */}
+          <Grid size={{ xs: 12, md: 8, lg: 9 }}>
+            <Stack spacing={2}>
+              <CoreWellInfoCard
+                well={well}
+                usgs_id={usgs_id}
+                osepod_id={osepod_id}
+              />
+              <InteractiveSatelliteMapCard well={well} />
+              <HydrographCard
+                well={well}
+                rows={[...observations, ...transducerObservationRows]}
+                dataSource={hydrographDatasource}
+                isLoading={
+                  observationsIsloading || transducerObservationsIsLoading
+                }
+              />
+              <RecentWaterLevelObservationsCard
+                well={well}
+                rows={observations}
+                isLoading={observationsIsloading}
+              />
+              <NotesAccordion well={well} />
+              <EquipmentAccordion id={well?.id} />
+              <WellScreensAccordion id={well?.id} />
+              <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
+              <AttachmentsAccordion id={well?.id} />
+              <OSEPODInfoCard pod_id={osepod_id} />
+              <USGSInfoCard site_id={usgs_id} />
+            </Stack>
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <InteractiveSatelliteMapCard well={well} />
+
+          {/* Right column: 2 cols */}
+          <Grid size={{ xs: 12, md: 4, lg: 3 }}>
+            <Stack spacing={2}>
+              <ContactsAccordion id={well?.id} />
+              <OwnerPermissionsAccordion well={well} />
+              <ConstructionInfoAccordion well={well} />
+              <WellPhysicalPropertiesAccordion well={well} />
+              <GeologyInformationAccordion well={well} />
+              <FieldEventHistoryAccordion sample={sample} />
+            </Stack>
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <HydrographCard
-              well={well}
-              rows={[...observations, ...transducerObservationRows]}
-              dataSource={hydrographDatasource}
-              isLoading={
-                observationsIsloading || transducerObservationsIsLoading
-              }
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <RecentWaterLevelObservationsCard
-              well={well}
-              rows={observations}
-              isLoading={observationsIsloading}
-            />
-          </Grid>
+
+        
         </Grid>
-        <Box component="div">
-          <AdditionalWellInformationAccordion well={well} />
-          <NotesAccordion well={well} />
-          <ContactsAccordion id={well?.id} />
-          <EquipmentAccordion id={well?.id} />
-          <WellScreensAccordion id={well?.id} />
-          <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
-          <FieldEventHistoryAccordion sample={sample} />
-          <AttachmentsAccordion id={well?.id} />
-        </Box>
-        <OSEPODInfoCard pod_id={osepod_id} />
-        <USGSInfoCard site_id={usgs_id} />
       </Stack>
     </Show>
   )

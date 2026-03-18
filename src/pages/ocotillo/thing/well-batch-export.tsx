@@ -22,7 +22,8 @@ import {
   Search,
 } from '@mui/icons-material'
 import { BaseRecord, useDataProvider, useNotification } from '@refinedev/core'
-import { Breadcrumb, List, useAutocomplete } from '@refinedev/mui'
+import { List, useAutocomplete } from '@refinedev/mui'
+import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import {
   IContact,
   IObservation,
@@ -677,7 +678,7 @@ export const WellBatchExport = () => {
           </Typography>
         </Box>
       }
-      breadcrumb={<Box sx={{ '& .MuiBreadcrumbs-root': { pb: 0 } }}><Breadcrumb hideIcons={true} /></Box>}
+      breadcrumb={<AppBreadcrumb />}
       headerButtons={() => <></>}
       wrapperProps={{
         elevation: 0,

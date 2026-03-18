@@ -1,14 +1,7 @@
 import { useMemo } from 'react'
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Stack,
-  Typography,
-} from '@mui/material'
+import { Box, Paper, Stack, Typography } from '@mui/material'
 import type { UseDataGridReturnType } from '@refinedev/mui'
-import { CreateButton } from '@refinedev/mui'
-import { ExpandMore, MoreVertOutlined } from '@mui/icons-material'
+import { MoreVertOutlined } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 
@@ -31,25 +24,14 @@ export const AlternateIdsAccordion = ({
   )
 
   return (
-    <Accordion defaultExpanded elevation={2}>
-      <AccordionSummary expandIcon={<ExpandMore />}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ width: '100%' }}
-        >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <MoreVertOutlined color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Alternate IDs
-            </Typography>
-          </Stack>
-          {/* disabled until id-link CRUD completed */}
-          <CreateButton disabled resource="ocotillo.thing/id-link" />
-        </Stack>
-      </AccordionSummary>
-      <AccordionDetails sx={{ p: 3 }}>
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <MoreVertOutlined color="primary" />
+        <Typography variant="body1" fontWeight="bold">
+          Alternate IDs
+        </Typography>
+      </Box>
+      <Box sx={{ px: 2, py: 1, pb: 3 }}>
         <DataGrid
           {...dataGridProps}
           rowHeight={settings.rowHeight}
@@ -68,7 +50,7 @@ export const AlternateIdsAccordion = ({
             },
           }}
         />
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Paper>
   )
 }
