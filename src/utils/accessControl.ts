@@ -7,6 +7,9 @@ import type {
 
 export type AmpRole = 'AMP.Viewer' | 'AMP.Editor' | 'AMP.Admin'
 
+// Temporary compatibility shim for pre-v1 Authentik group names.
+// Remove these legacy aliases before the v1 release once all users/groups
+// have been migrated to AMP.Viewer / AMP.Editor / AMP.Admin.
 const legacyRoleMap: Record<string, AmpRole> = {
   Viewer: 'AMP.Viewer',
   Editor: 'AMP.Editor',
