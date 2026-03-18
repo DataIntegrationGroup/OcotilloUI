@@ -170,7 +170,7 @@ export const WellShow = () => {
       }}
       title={
         <Typography variant="h3" fontWeight={700}>
-          {`Show Well${well?.name ? `: ${well.name}` : ''}`}
+          {`${well?.name ? `${well.name}` : ''}`}
         </Typography>
       }
       headerProps={{
@@ -187,7 +187,6 @@ export const WellShow = () => {
       contentProps={{ sx: { pt: 1 } }}
       headerButtons={() => (
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <ListButton />
           <WellPDFPreviewButton isLoading={query.isLoading} />
           <WellPDFDownloadButton well={well} isLoading={query.isLoading} />
         </Box>
@@ -223,7 +222,6 @@ export const WellShow = () => {
               <EquipmentAccordion id={well?.id} />
               <WellScreensAccordion id={well?.id} />
               <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
-              <FieldEventHistoryAccordion sample={sample} />
               <AttachmentsAccordion id={well?.id} />
               <OSEPODInfoCard pod_id={osepod_id} />
               <USGSInfoCard site_id={usgs_id} />
@@ -238,6 +236,7 @@ export const WellShow = () => {
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
               <GeologyInformationAccordion well={well} />
+              <FieldEventHistoryAccordion sample={sample} />
             </Stack>
           </Grid>
 

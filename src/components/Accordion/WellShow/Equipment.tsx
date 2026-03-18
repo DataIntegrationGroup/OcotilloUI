@@ -2,11 +2,22 @@ import { useMemo } from 'react'
 import { Box, Paper, Stack, Typography } from '@mui/material'
 import { DeleteButton, EditButton, ShowButton, useDataGrid } from '@refinedev/mui'
 import { SettingsInputAntenna } from '@mui/icons-material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
+import {
+  DataGrid,
+  GridColDef,
+  GridToolbarContainer,
+  GridToolbarDensitySelector,
+} from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import { ISensor } from '@/interfaces/ocotillo'
 import { useSensorDeploymentRows } from '@/hooks'
 import { SensorDeploymentRow } from '@/utils'
+
+const EquipmentToolbar = () => (
+  <GridToolbarContainer sx={{ justifyContent: 'flex-end', px: 1, py: 0.5 }}>
+    <GridToolbarDensitySelector />
+  </GridToolbarContainer>
+)
 
 export const EquipmentAccordion = ({ id }: { id?: number }) => {
   const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
@@ -100,43 +111,6 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
         minWidth: 150,
         flex: 2,
       },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        renderCell: function render({ row }) {
-          return (
-            <Box component="div" sx={{ display: 'flex', gap: '8px' }}>
-              <EditButton
-                resource="ocotillo.sensor"
-                size="small"
-                hideText
-                recordItemId={row.sensor_id}
-                variant="outlined"
-                sx={{ maxWidth: 50, maxHeight: 5, px: 1 }}
-              />
-              <ShowButton
-                resource="ocotillo.sensor"
-                size="small"
-                hideText
-                recordItemId={row.sensor_id}
-                variant="outlined"
-                sx={{ maxWidth: 50, maxHeight: 5, px: 1 }}
-              />
-              <DeleteButton
-                resource="ocotillo.sensor"
-                size="small"
-                hideText
-                recordItemId={row.sensor_id}
-                variant="outlined"
-                sx={{ maxWidth: 50, maxHeight: 5, px: 1 }}
-              />
-            </Box>
-          )
-        },
-        align: 'center',
-        headerAlign: 'center',
-        minWidth: 210,
-      },
     ],
     []
   )
@@ -154,6 +128,7 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
           rowHeight={settings.rowHeight}
           rows={sensorDeployments ?? []}
           columns={columns}
+          slots={{ toolbar: EquipmentToolbar }}
           pageSizeOptions={[10, 25, 50]}
           initialState={{
             pagination: {

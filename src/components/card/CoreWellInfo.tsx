@@ -54,7 +54,6 @@ export const CoreWellInfoCard = ({
 
   return (
     <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
-      <CardHeader title={<Typography variant="h5">{well?.name}</Typography>} />
       <CardContent>
         <Grid container spacing={4}>
           <Grid size={{ xs: 12 }}>
@@ -135,17 +134,13 @@ export const CoreWellInfoCard = ({
               ))}
             </Stack>
           </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Divider />
-          </Grid>
+          
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Hole Depth:</Typography>
             <Typography variant="body1">
               {well?.hole_depth || 'N/A'}{' '}
               {well?.hole_depth ? well?.hole_depth_unit : null}
             </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Well Depth:</Typography>
             <Typography variant="body1">
               {well?.well_depth || 'N/A'}{' '}
