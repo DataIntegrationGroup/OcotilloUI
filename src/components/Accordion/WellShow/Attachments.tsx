@@ -1,13 +1,25 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useList } from '@refinedev/core'
-import { Box, Paper, Stack, Typography } from '@mui/material'
+import {
+  Box,
+  IconButton,
+  Paper,
+  Stack,
+  Typography,
+  Tooltip,
+} from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { Image } from '@mui/icons-material'
+import { ChevronLeft, ChevronRight, GridView, Image, ViewCarousel } from '@mui/icons-material'
 import { Masonry } from '@mui/lab'
 import { settings } from '@/settings'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
 
+type ImageViewMode = 'grid' | 'slideshow'
+
 export const AttachmentsAccordion = ({ id }: { id?: number }) => {
+  const [imageViewMode, setImageViewMode] = useState<ImageViewMode>('grid')
+  const [slideshowIndex, setSlideshowIndex] = useState(0)
+
   const { result } = useList({
     resource: 'asset',
     dataProviderName: 'ocotillo',
@@ -17,6 +29,11 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
   })
 
   const assets = result?.data ?? []
+  const imageAssets = useMemo(
+    () => assets.filter((a: { signed_url?: string }) => a?.signed_url),
+    [assets]
+  )
+
   const columns = useMemo<GridColDef[]>(
     () => [
       { field: 'name', headerName: 'Name', minWidth: 150 },
@@ -25,6 +42,9 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
     ],
     []
   )
+
+  const currentImage = imageAssets[slideshowIndex]
+  const hasImages = imageAssets.length > 0
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -45,6 +65,146 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
         )}
         {assets && assets.length > 0 && (
           <Stack spacing={3}>
+            {/* Images section (above table) with view toggle */}
+            {hasImages && (
+              <Box>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="flex-end"
+                  spacing={0.5}
+                  sx={{ mb: 2 }}
+                >
+                  <Tooltip title="Grid view">
+                    <IconButton
+                      size="small"
+                      color={imageViewMode === 'grid' ? 'primary' : 'default'}
+                      onClick={() => setImageViewMode('grid')}
+                      aria-pressed={imageViewMode === 'grid'}
+                    >
+                      <GridView />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Slideshow view">
+                    <IconButton
+                      size="small"
+                      color={imageViewMode === 'slideshow' ? 'primary' : 'default'}
+                      onClick={() => {
+                        setImageViewMode('slideshow')
+                        setSlideshowIndex(0)
+                      }}
+                      aria-pressed={imageViewMode === 'slideshow'}
+                    >
+                      <ViewCarousel />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+
+                {imageViewMode === 'grid' ? (
+                  <Masonry columns={3} spacing={2}>
+                    {imageAssets.map((img: { signed_url: string; name?: string }, idx: number) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          borderRadius: 2,
+                          overflow: 'hidden',
+                          boxShadow: 2,
+                        }}
+                      >
+                        <Box
+                          component="img"
+                          src={img.signed_url}
+                          alt={img.name || `Attachment ${idx + 1}`}
+                          sx={{ width: '100%', display: 'block' }}
+                        />
+                      </Box>
+                    ))}
+                  </Masonry>
+                ) : (
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      boxShadow: 2,
+                      bgcolor: 'grey.100',
+                      minHeight: 300,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={currentImage?.signed_url}
+                      alt={currentImage?.name || `Image ${slideshowIndex + 1}`}
+                      sx={{
+                        maxWidth: '100%',
+                        maxHeight: 400,
+                        objectFit: 'contain',
+                      }}
+                    />
+                    {imageAssets.length > 1 && (
+                      <>
+                        <IconButton
+                          aria-label="Previous image"
+                          onClick={() =>
+                            setSlideshowIndex((i) =>
+                              i === 0 ? imageAssets.length - 1 : i - 1
+                            )
+                          }
+                          sx={{
+                            position: 'absolute',
+                            left: 8,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            '&:hover': { bgcolor: 'rgba(255,255,255,0.95)' },
+                          }}
+                        >
+                          <ChevronLeft />
+                        </IconButton>
+                        <IconButton
+                          aria-label="Next image"
+                          onClick={() =>
+                            setSlideshowIndex((i) =>
+                              i === imageAssets.length - 1 ? 0 : i + 1
+                            )
+                          }
+                          sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            '&:hover': { bgcolor: 'rgba(255,255,255,0.95)' },
+                          }}
+                        >
+                          <ChevronRight />
+                        </IconButton>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            position: 'absolute',
+                            bottom: 8,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            bgcolor: 'rgba(0,0,0,0.5)',
+                            color: 'white',
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 1,
+                          }}
+                        >
+                          {slideshowIndex + 1} / {imageAssets.length}
+                        </Typography>
+                      </>
+                    )}
+                  </Box>
+                )}
+              </Box>
+            )}
+
             <DataGrid
               rowHeight={settings.rowHeight}
               columns={columns}
@@ -56,36 +216,6 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
                 },
               }}
             />
-            <Box>
-              <Typography variant="body1" fontWeight="bold" gutterBottom>
-                Image Gallery
-              </Typography>
-
-              <Masonry columns={3} spacing={2}>
-                {assets.map((img: any, idx: number) =>
-                  img.signed_url ? (
-                    <Box
-                      key={idx}
-                      sx={{
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                        boxShadow: 2,
-                      }}
-                    >
-                      <Box
-                        component="img"
-                        src={img.signed_url}
-                        alt={img.name || `Attachment ${idx + 1}`}
-                        sx={{
-                          width: '100%',
-                          display: 'block',
-                        }}
-                      />
-                    </Box>
-                  ) : null
-                )}
-              </Masonry>
-            </Box>
           </Stack>
         )}
       </Box>
