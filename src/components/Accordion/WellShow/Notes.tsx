@@ -29,7 +29,7 @@ export const NotesAccordion = ({ well }: { well?: IWell }) => {
     title.toLowerCase().endsWith('notes') ? title : `${title} Notes`
 
   return (
-    <Accordion defaultExpanded elevation={2}>
+    <Accordion defaultExpanded elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
       <AccordionSummary
         expandIcon={<ExpandMore />}
         // Match the visual height of summaries that contain a CreateButton
