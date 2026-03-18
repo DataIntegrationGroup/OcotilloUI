@@ -1,23 +1,74 @@
-import { useMemo } from 'react'
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
-  Stack,
-  Typography,
-} from '@mui/material'
-import { CreateButton, useDataGrid } from '@refinedev/mui'
-import { Contacts, ExpandMore } from '@mui/icons-material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { actionColumnDef } from '@/components/CommonColumnDefs'
-import { settings } from '@/settings'
-import { useAccessCapabilities } from '@/hooks'
-import { sanitizeContacts } from '@/utils'
+import { useList } from '@refinedev/core'
+import { Box, Divider, Paper, Stack, Typography } from '@mui/material'
+import { Link as RouterLink } from 'react-router'
+import type { IContact } from '@/interfaces/ocotillo'
+
+const formatPhone = (phone: string): string => {
+  const digits = phone.replace(/\D/g, '')
+  if (digits.length === 11 && digits.startsWith('1')) {
+    return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`
+  }
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+  }
+  return phone
+}
+
+const formatAddress = (addr: { address_line_1?: string; address_line_2?: string; city?: string; state?: string; postal_code?: string }) => {
+  const parts = [
+    addr.address_line_1,
+    addr.address_line_2,
+    addr.city,
+    addr.state,
+    addr.postal_code,
+  ].filter(Boolean)
+  return parts.join(', ') || 'N/A'
+}
+
+const ContactBlock = ({ contact }: { contact: IContact }) => {
+  const roleType = [contact.role, contact.contact_type].filter(Boolean).join(' / ') || null
+  const emails = contact.emails?.map((e: { email?: string }) => e.email).filter(Boolean) ?? []
+  const phones = contact.phones?.map((p: { phone_number?: string }) => p.phone_number).filter(Boolean) ?? []
+  const addresses = contact.addresses ?? []
+
+  return (
+    <Stack spacing={0.5} component="div">
+      {roleType && (
+        <Typography variant="body2" component="div">
+          {roleType}
+        </Typography>
+      )}
+      {contact.name && contact.id && (
+        <Typography variant="body2" component={RouterLink} to={`/ocotillo/contact/show/${contact.id}`} sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+          {contact.name}
+        </Typography>
+      )}
+      {contact.name && !contact.id && (
+        <Typography variant="body2" component="div">
+          {contact.name}
+        </Typography>
+      )}
+      {emails.map((email, idx) => (
+        <Typography key={idx} variant="body2" component="a" href={`mailto:${email}`} sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+          {email}
+        </Typography>
+      ))}
+      {phones.map((phone, idx) => (
+        <Typography key={idx} variant="body2" component="a" href={`tel:${phone}`} sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+          {formatPhone(phone)}
+        </Typography>
+      ))}
+      {addresses.map((addr, idx) => (
+        <Typography key={idx} variant="body2" color="text.secondary" component="div">
+          {formatAddress(addr)}
+        </Typography>
+      ))}
+    </Stack>
+  )
+}
 
 export const ContactsAccordion = ({ id }: { id?: number }) => {
-  const { canViewConfidential } = useAccessCapabilities()
-  const { dataGridProps } = useDataGrid({
+  const { result } = useList<IContact>({
     resource: 'contact',
     dataProviderName: 'ocotillo',
     meta: {
@@ -30,97 +81,31 @@ export const ContactsAccordion = ({ id }: { id?: number }) => {
     },
   })
 
-  const columns = useMemo<GridColDef[]>(
-    () => [
-      { field: 'name', headerName: 'Name', minWidth: 150, flex: 1 },
-      { field: 'role', headerName: 'Role', minWidth: 120 },
-      { field: 'contact_type', headerName: 'Contact Type', minWidth: 150 },
-      {
-        field: 'emails',
-        headerName: 'Email',
-        minWidth: 200,
-        renderCell: ({ row }: any) => {
-          const emails = row.emails?.map((e: any) => e.email).join(', ')
-          return emails || '-'
-        },
-      },
-      {
-        field: 'phones',
-        headerName: 'Phone',
-        minWidth: 150,
-        renderCell: ({ row }: any) => {
-          const phones = row.phones?.map((p: any) => p.phone_number).join(', ')
-          return phones || '-'
-        },
-      },
-      {
-        field: 'addresses',
-        headerName: 'Address',
-        minWidth: 250,
-        renderCell: (params: any) => {
-          if (!params.row.addresses || params.row.addresses.length === 0)
-            return '-'
-          return (
-            <Box component="div">
-              {params.row.addresses.map((address: any, idx: number) => (
-                <Box component="div" key={idx} style={{ marginBottom: '2px' }}>
-                  {address.address_line_1}
-                  {address.address_line_2 && `, ${address.address_line_2}`}
-                  {address.city && `, ${address.city}`}
-                  {address.state && ` ${address.state}`}
-                  {address.postal_code && ` ${address.postal_code}`}
-                </Box>
-              ))}
-            </Box>
-          )
-        },
-      },
-      actionColumnDef({ resource: 'ocotillo.contact' }) as GridColDef,
-    ],
-    []
-  )
-  const rows = useMemo(
-    () => sanitizeContacts(dataGridProps.rows, canViewConfidential),
-    [canViewConfidential, dataGridProps.rows]
-  )
+  const contacts = result?.data ?? []
 
   return (
-    <Accordion defaultExpanded elevation={2}>
-      <AccordionSummary expandIcon={<ExpandMore />}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ width: '100%' }}
-        >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Contacts color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Contacts
-            </Typography>
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ px: 2, py: 1.5 }}>
+        <Typography variant="body1" fontWeight="bold">
+          Contacts
+        </Typography>
+      </Box>
+      <Box sx={{ p: 2 }}>
+        {contacts.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            N/A
+          </Typography>
+        ) : (
+          <Stack spacing={2}>
+            {contacts.map((contact, i) => (
+              <Box key={contact.id ?? i}>
+                <ContactBlock contact={contact} />
+                {i < contacts.length - 1 && <Divider sx={{ mt: 2 }} />}
+              </Box>
+            ))}
           </Stack>
-          <CreateButton resource="ocotillo.contact" />
-        </Stack>
-      </AccordionSummary>
-      <AccordionDetails sx={{ p: 3 }}>
-        <DataGrid
-          rowHeight={settings.rowHeight}
-          rows={rows}
-          columns={columns}
-          pageSizeOptions={[10, 25, 50]}
-          initialState={{
-            pagination: {
-              paginationModel: { pageSize: 10, page: 0 },
-            },
-          }}
-          sx={{
-            border: 'none',
-            '& .MuiDataGrid-cell': {
-              borderBottom: '1px solid #f0f0f0',
-            },
-          }}
-        />
-      </AccordionDetails>
-    </Accordion>
+        )}
+      </Box>
+    </Paper>
   )
 }
