@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { Box, Paper, Stack, Typography } from '@mui/material'
 import type { UseDataGridReturnType } from '@refinedev/mui'
-import { CreateButton } from '@refinedev/mui'
 import { MoreVertOutlined } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
@@ -26,15 +25,11 @@ export const AlternateIdsAccordion = ({
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <MoreVertOutlined color="primary" />
-          <Typography variant="body1" fontWeight="bold">
-            Alternate IDs
-          </Typography>
-        </Stack>
-        {/* disabled until id-link CRUD completed */}
-        <CreateButton disabled resource="ocotillo.thing/id-link" />
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <MoreVertOutlined color="primary" />
+        <Typography variant="body1" fontWeight="bold">
+          Alternate IDs
+        </Typography>
       </Box>
       <Box sx={{ p: 3 }}>
         <DataGrid

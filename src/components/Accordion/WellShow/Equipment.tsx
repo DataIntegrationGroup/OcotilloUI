@@ -1,12 +1,6 @@
 import { useMemo } from 'react'
 import { Box, Paper, Stack, Typography } from '@mui/material'
-import {
-  CreateButton,
-  DeleteButton,
-  EditButton,
-  ShowButton,
-  useDataGrid,
-} from '@refinedev/mui'
+import { DeleteButton, EditButton, ShowButton, useDataGrid } from '@refinedev/mui'
 import { SettingsInputAntenna } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
@@ -149,14 +143,11 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <SettingsInputAntenna color="primary" />
-          <Typography variant="body1" fontWeight="bold">
-            Equipment
-          </Typography>
-        </Stack>
-        <CreateButton resource="ocotillo.contact" />
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <SettingsInputAntenna color="primary" />
+        <Typography variant="body1" fontWeight="bold">
+          Equipment
+        </Typography>
       </Box>
       <Box sx={{ p: 3 }}>
         <DataGrid<SensorDeploymentRow>

@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { useList } from '@refinedev/core'
-import { CreateButton } from '@refinedev/mui'
 import { Box, Paper, Stack, Typography } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { Image } from '@mui/icons-material'
@@ -29,14 +28,11 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Image color="primary" />
-          <Typography variant="body1" fontWeight="bold">
-            Attachments
-          </Typography>
-        </Stack>
-        <CreateButton resource="ocotillo.asset" />
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Image color="primary" />
+        <Typography variant="body1" fontWeight="bold">
+          Attachments
+        </Typography>
       </Box>
       <Box sx={{ p: 3 }}>
         {(!assets || assets.length === 0) && (
