@@ -12,6 +12,7 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
+- [Notable Well IDs](#notable-well-ids)
 - [Configuration](#configuration)
 - [Available Scripts](#available-scripts)
 - [Building for Production](#building-for-production)
@@ -65,6 +66,16 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
    npm run dev
    ```
    The app will be available at `http://localhost:5173`.
+
+## Notable Well IDs
+
+The following wells contain a full, rich set of information and are useful for testing the Well Show page and related UI:
+
+- AR-0025
+- HS-038
+- QU-050
+- QU-054
+- TB-0203
 
 ## Configuration
 
