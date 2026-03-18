@@ -20,7 +20,10 @@ import {
   WellScreensAccordion,
   EquipmentAccordion,
   NotesAccordion,
-  AdditionalWellInformationAccordion,
+  ConstructionInfoAccordion,
+  GeologyInformationAccordion,
+  OwnerPermissionsAccordion,
+  WellPhysicalPropertiesAccordion,
   FieldEventHistoryAccordion,
   WellPDFDownloadButton,
 } from '@/components'
@@ -166,47 +169,55 @@ export const WellShow = () => {
       )}
     >
       <Stack spacing={2}>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <CoreWellInfoCard
-              well={well}
-              usgs_id={usgs_id}
-              osepod_id={osepod_id}
-            />
+        <Grid container spacing={4}>
+          
+
+          {/* Left column: 8 cols */}
+          <Grid size={{ xs: 12, md: 9 }}>
+            <Stack spacing={2}>
+              <CoreWellInfoCard
+                well={well}
+                usgs_id={usgs_id}
+                osepod_id={osepod_id}
+              />
+              <InteractiveSatelliteMapCard well={well} />
+              <HydrographCard
+                well={well}
+                rows={[...observations, ...transducerObservationRows]}
+                dataSource={hydrographDatasource}
+                isLoading={
+                  observationsIsloading || transducerObservationsIsLoading
+                }
+              />
+              <RecentWaterLevelObservationsCard
+                well={well}
+                rows={observations}
+                isLoading={observationsIsloading}
+              />
+              <NotesAccordion well={well} />
+              <EquipmentAccordion id={well?.id} />
+              <WellScreensAccordion id={well?.id} />
+              <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
+              <FieldEventHistoryAccordion sample={sample} />
+              <AttachmentsAccordion id={well?.id} />
+              <OSEPODInfoCard pod_id={osepod_id} />
+              <USGSInfoCard site_id={usgs_id} />
+            </Stack>
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <InteractiveSatelliteMapCard well={well} />
+
+          {/* Right column: 2 cols */}
+          <Grid size={{ xs: 12, md: 3 }}>
+            <Stack spacing={2}>
+              <ContactsAccordion id={well?.id} />
+              <OwnerPermissionsAccordion well={well} />
+              <ConstructionInfoAccordion well={well} />
+              <WellPhysicalPropertiesAccordion well={well} />
+              <GeologyInformationAccordion well={well} />
+            </Stack>
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <HydrographCard
-              well={well}
-              rows={[...observations, ...transducerObservationRows]}
-              dataSource={hydrographDatasource}
-              isLoading={
-                observationsIsloading || transducerObservationsIsLoading
-              }
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <RecentWaterLevelObservationsCard
-              well={well}
-              rows={observations}
-              isLoading={observationsIsloading}
-            />
-          </Grid>
+
+        
         </Grid>
-        <Box component="div">
-          <AdditionalWellInformationAccordion well={well} />
-          <NotesAccordion well={well} />
-          <ContactsAccordion id={well?.id} />
-          <EquipmentAccordion id={well?.id} />
-          <WellScreensAccordion id={well?.id} />
-          <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
-          <FieldEventHistoryAccordion sample={sample} />
-          <AttachmentsAccordion id={well?.id} />
-        </Box>
-        <OSEPODInfoCard pod_id={osepod_id} />
-        <USGSInfoCard site_id={usgs_id} />
       </Stack>
     </Show>
   )
