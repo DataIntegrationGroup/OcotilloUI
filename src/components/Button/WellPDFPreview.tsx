@@ -21,7 +21,7 @@ export const WellPDFPreviewButton = ({ isLoading }: { isLoading: boolean }) => {
       disabled={disabled}
       startIcon={<Visibility />}
       onClick={handlePreview}
-      sx={{ pl: 3, pr: 2 }}
+      sx={{ pl: 1, pr: 1 }}
     >
       Preview PDF
     </Button>

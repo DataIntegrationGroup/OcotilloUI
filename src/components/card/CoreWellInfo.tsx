@@ -1,22 +1,13 @@
 import {
-  Agriculture,
-  Groups,
-  Public,
-  PublicOff,
-  WaterDrop,
-} from '@mui/icons-material'
-import {
   Card,
   CardContent,
   CardHeader,
   Divider,
   Skeleton,
-  Stack,
   Typography,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { IWell } from '@/interfaces/ocotillo'
-import { ChipWithExplain } from '@/components'
 
 export const CoreWellInfoCard = ({
   well,
@@ -40,101 +31,10 @@ export const CoreWellInfoCard = ({
   const { easting, northing } = well?.current_location?.properties
     ?.utm_coordinates ?? { easting: null, northing: null }
 
-  const hasPurposes = !!(
-    well?.well_purposes?.length && well.well_purposes.length > 0
-  )
-
-  const topChipValues = hasPurposes
-    ? well!.well_purposes
-    : [well?.thing_type || 'UNKNOWN TYPE']
-
-  const topChipIcon = hasPurposes ? <WaterDrop /> : <Agriculture />
-  const isPublic = well?.release_status?.toLocaleUpperCase() === 'PUBLIC'
-  const isPrivate = well?.release_status?.toLocaleUpperCase() === 'PRIVATE'
-
   return (
     <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
       <CardContent>
         <Grid container spacing={4}>
-          <Grid size={{ xs: 12 }}>
-            <Stack
-              direction="row"
-              spacing={2}
-              flexWrap="wrap"
-              alignItems="center"
-              justifyContent="space-around"
-              sx={{
-                gap: 2,
-                rowGap: 2,
-                columnGap: 2,
-                mt: 1,
-              }}
-            >
-              {topChipValues.map((p, i) => (
-                <ChipWithExplain
-                  key={p ?? `UNKNOWN TYPE #${i}`}
-                  label={p?.toLocaleUpperCase() || 'UNKNOWN TYPE'}
-                  icon={topChipIcon}
-                  color="info"
-                  tooltip={
-                    hasPurposes
-                      ? 'Well Purposes (click for details)'
-                      : 'Site Type (click for details)'
-                  }
-                  explain={
-                    hasPurposes
-                      ? {
-                          title: 'Well Purposes',
-                          meaning:
-                            'What the well is used for (e.g., irrigation, monitoring, municipal supply).',
-                          source: 'well_purposes',
-                        }
-                      : {
-                          title: 'Site Type',
-                          meaning:
-                            'The category of this site (e.g., water well, monitoring well, diversion, stream, reservoir).',
-                          source: 'thing_type',
-                        }
-                  }
-                  chipSx={{ fontFamily: 'monospace', px: 1 }}
-                />
-              ))}
-
-              <ChipWithExplain
-                label={
-                  well?.release_status?.toLocaleUpperCase() || 'UNKNOWN STATUS'
-                }
-                icon={isPublic ? <Public /> : isPrivate ? <PublicOff /> : null}
-                color={isPublic ? 'success' : isPrivate ? 'error' : null}
-                tooltip="Visibility (click for details)"
-                explain={{
-                  title: 'Visibility',
-                  meaning:
-                    'Who is allowed to view the data (Public: visible to anyone; Private: authorized users only).',
-                  source: 'release_status',
-                }}
-                chipSx={{ fontFamily: 'monospace', px: 1 }}
-              />
-
-              {well?.groups?.map((g, i) => (
-                <ChipWithExplain
-                  key={g?.name ?? `UNKNOWN GROUP #${i}`}
-                  icon={<Groups />}
-                  label={g?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
-                  color="primary"
-                  tooltip="Group or Project (click for details)"
-                  explain={{
-                    title: 'Group or Project',
-                    meaning:
-                      'The organization or existing project this site belongs to.',
-                    source: 'group',
-                  }}
-                  chipSx={{ fontFamily: 'monospace', px: 1 }}
-                />
-              ))}
-            </Stack>
-          </Grid>
-          
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6">Hole Depth:</Typography>
             <Typography variant="body1">
@@ -221,28 +121,6 @@ const LoadingCard = () => (
     <CardHeader title={<Skeleton variant="text" width={150} height={32} />} />
     <CardContent>
       <Grid container spacing={4}>
-        <Grid size={{ xs: 12 }}>
-          <Stack
-            direction="row"
-            spacing={2}
-            flexWrap="wrap"
-            alignItems="center"
-            justifyContent="space-around"
-          >
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton
-                key={i}
-                variant="rectangular"
-                width={150}
-                height={35}
-                sx={{ borderRadius: '2rem' }}
-              />
-            ))}
-          </Stack>
-        </Grid>
-        <Grid size={{ xs: 12 }}>
-          <Divider />
-        </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
           <Skeleton variant="text" width={60} height={24} />

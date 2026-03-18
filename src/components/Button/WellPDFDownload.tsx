@@ -167,7 +167,7 @@ export const WellPDFDownloadButton = ({
       disabled={disabled}
       startIcon={<Download />}
       onClick={() => handleDownload(PDF_SINGLE_PAGE_OPTION)}
-      sx={{ pl: 3, pr: 2 }}
+      sx={{ pl: 1, pr: 1 }}
     >
       {isGenerating ? 'Generating...' : 'Download PDF'}
     </Button>

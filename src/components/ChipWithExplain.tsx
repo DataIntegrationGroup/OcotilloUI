@@ -15,6 +15,7 @@ export function ChipWithExplain({
   tooltip,
   explain,
   chipSx,
+  size = 'medium',
 }: {
   label: string
   icon?: ReactElement | null
@@ -22,6 +23,7 @@ export function ChipWithExplain({
   tooltip: string
   explain: ChipExplain
   chipSx?: any
+  size?: 'small' | 'medium'
 }) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const open = Boolean(anchorEl)
@@ -40,6 +42,7 @@ export function ChipWithExplain({
             icon={icon ?? undefined}
             label={label}
             color={color}
+            size={size}
             sx={chipSx}
             // helpful for keyboard users
             onKeyDown={(e) => {
