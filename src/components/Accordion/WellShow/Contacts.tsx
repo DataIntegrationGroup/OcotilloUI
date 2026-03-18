@@ -12,8 +12,11 @@ import { Contacts, ExpandMore } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { actionColumnDef } from '@/components/CommonColumnDefs'
 import { settings } from '@/settings'
+import { useAccessCapabilities } from '@/hooks'
+import { sanitizeContacts } from '@/utils'
 
 export const ContactsAccordion = ({ id }: { id?: number }) => {
+  const { canViewConfidential } = useAccessCapabilities()
   const { dataGridProps } = useDataGrid({
     resource: 'contact',
     dataProviderName: 'ocotillo',
@@ -76,6 +79,10 @@ export const ContactsAccordion = ({ id }: { id?: number }) => {
     ],
     []
   )
+  const rows = useMemo(
+    () => sanitizeContacts(dataGridProps.rows, canViewConfidential),
+    [canViewConfidential, dataGridProps.rows]
+  )
 
   return (
     <Accordion defaultExpanded elevation={2}>
@@ -98,7 +105,7 @@ export const ContactsAccordion = ({ id }: { id?: number }) => {
       <AccordionDetails sx={{ p: 3 }}>
         <DataGrid
           rowHeight={settings.rowHeight}
-          rows={dataGridProps.rows ?? []}
+          rows={rows}
           columns={columns}
           pageSizeOptions={[10, 25, 50]}
           initialState={{

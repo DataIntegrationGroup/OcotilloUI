@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   useNotification,
-  usePermissions,
   useList,
   useOne,
 } from '@refinedev/core'
@@ -14,7 +13,7 @@ import { Button } from '@mui/material'
 import { Download } from '@mui/icons-material'
 import { IPdfOptions } from '@/interfaces'
 import { PDF_SINGLE_PAGE_OPTION } from '@/config'
-import { useSensorDeploymentRows } from '@/hooks'
+import { useAccessCapabilities, useSensorDeploymentRows } from '@/hooks'
 
 export const WellPDFDownloadButton = ({
   well,
@@ -24,8 +23,8 @@ export const WellPDFDownloadButton = ({
   isLoading: boolean
 }) => {
   const { open: notify } = useNotification()
-  const { data: permissions, isLoading: isPermissionsLoading } =
-    usePermissions<string[]>({})
+  const { isLoading: isPermissionsLoading, canViewAmp, canViewConfidential } =
+    useAccessCapabilities()
 
   const id = well?.id
 
@@ -111,14 +110,12 @@ export const WellPDFDownloadButton = ({
 
   const sample = sampleData
 
-  const isViewer = permissions?.includes('AMPViewer') ?? false
-
   const [isGenerating, setIsGenerating] = useState(false)
 
   const disabled =
     isLoading ||
     isPermissionsLoading ||
-    !isViewer ||
+    !canViewAmp ||
     isGenerating ||
     isObservationsLoading ||
     sampleQuery.isLoading
@@ -136,6 +133,7 @@ export const WellPDFDownloadButton = ({
           contacts={contacts}
           observations={observations}
           sensorDeployments={sensorDeployments}
+          includeConfidentialContacts={canViewConfidential}
           options={opts}
         />
       ).toBlob()

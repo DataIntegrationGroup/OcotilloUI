@@ -77,6 +77,7 @@ import {
   WellScreenList,
   WellScreenShow,
 } from '@/pages/ocotillo/well-screen'
+import { ProtectedRoute } from '@/components'
 
 export const OcotilloRoutes = () => {
   return (
@@ -89,9 +90,23 @@ export const OcotilloRoutes = () => {
       </Route>
       <Route path="well">
         <Route index element={<WellList />} />
-        <Route path={'batch-export'} element={<WellBatchExport />} />
+        <Route
+          path={'batch-export'}
+          element={
+            <ProtectedRoute resource="ocotillo.thing-well-batch-export">
+              <WellBatchExport />
+            </ProtectedRoute>
+          }
+        />
         <Route path={'show/:id'} element={<WellShow />} />
-        <Route path={'pdf-preview/:id'} element={<WellShowPdfPreview />} />
+        <Route
+          path={'pdf-preview/:id'}
+          element={
+            <ProtectedRoute resource="ocotillo.thing-well-pdf-preview">
+              <WellShowPdfPreview />
+            </ProtectedRoute>
+          }
+        />
         <Route path={'edit/:id'} element={<WellEdit />} />
         <Route path={'create'} element={<WellCreate />} />
       </Route>
@@ -155,11 +170,46 @@ export const OcotilloRoutes = () => {
         <Route path={'show/:id'} element={<AssetShow />} />
       </Route>
       <Route path="lexicon">
-        <Route index element={<LexiconList />} />
-        <Route path={'term/create'} element={<TermCreate />} />
-        <Route path={'term/edit/:id'} element={<TermEdit />} />
-        <Route path={'category/create'} element={<CategoryCreate />} />
-        <Route path={'category/edit/:id'} element={<CategoryEdit />} />
+        <Route
+          index
+          element={
+            <ProtectedRoute resource="ocotillo.lexicon">
+              <LexiconList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={'term/create'}
+          element={
+            <ProtectedRoute resource="ocotillo.lexicon" action="create">
+              <TermCreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={'term/edit/:id'}
+          element={
+            <ProtectedRoute resource="ocotillo.lexicon" action="edit">
+              <TermEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={'category/create'}
+          element={
+            <ProtectedRoute resource="ocotillo.lexicon" action="create">
+              <CategoryCreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={'category/edit/:id'}
+          element={
+            <ProtectedRoute resource="ocotillo.lexicon" action="edit">
+              <CategoryEdit />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       // Apps
       <Route path={'water-chemistry-import'}>

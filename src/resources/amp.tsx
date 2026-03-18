@@ -17,6 +17,7 @@ let amp = [
     meta: {
       label: "Dashboard (Coming Soon)",
       icon: <DashboardOutlined />,
+      wip: true,
     },
   },
   {
@@ -25,6 +26,7 @@ let amp = [
     meta: {
       label: "Hydrograph Corrector (Coming Soon)",
       icon: <Construction />,
+      wip: true,
     },
   },
   {
@@ -33,6 +35,7 @@ let amp = [
     meta: {
       label: "Report Builder (Not Available)",
       icon: <Construction />,
+      wip: true,
     },
   },
   {
@@ -41,6 +44,7 @@ let amp = [
     meta: {
       label: "Query Builder (Coming Soon)",
       icon: <Construction />,
+      wip: true,
     },
   },
   {
@@ -49,6 +53,7 @@ let amp = [
     meta: {
       label: "Well Inventory Form (Beta)",
       icon: <DynamicFormTwoTone />,
+      wip: true,
     },
   },
   {
@@ -57,6 +62,7 @@ let amp = [
     meta: {
       label: "Water Level Form (Beta)",
       icon: <Water />,
+      wip: true,
     },
   },
   {
@@ -65,6 +71,7 @@ let amp = [
     meta: {
       label: "Projects (Coming Soon)",
       icon: <CategoryOutlined />,
+      wip: true,
     },
   },
 
@@ -77,6 +84,7 @@ let amp = [
     create: "/amp/locations/create",
     meta: {
       label: "Locations (Coming Soon)",
+      wip: true,
     },
   },
   {
@@ -88,6 +96,7 @@ let amp = [
     create: "/amp/wells/create",
     meta: {
       label: "Wells (Coming Soon)",
+      wip: true,
     },
   },
   {
@@ -99,6 +108,7 @@ let amp = [
     show: "/amp/equipment/show/:id",
     meta: {
       label: "Equipment (Coming Soon)",
+      wip: true,
     },
   },
   {
@@ -109,6 +119,7 @@ let amp = [
     show: "/amp/manualwaterlevels/show/:id",
     meta: {
       label: "Manual Water Levels (Coming Soon)",
+      wip: true,
     },
   },
   {
@@ -126,6 +137,7 @@ let amp = [
       parent: "water.batchupload",
       nestedLevel: 2,
       label: "Chemistry Upload (Beta)",
+      wip: true,
     },
   },
   {
@@ -136,6 +148,7 @@ let amp = [
       label: "Manual Water Levels (Beta)",
       parent: "water.batchupload",
       nestedLevel: 2,
+      wip: true,
     },
   },
   {
@@ -157,7 +170,7 @@ let amp = [
 export const ampResources = amp.map((b) => {
   let meta = b.meta || {};
   if (!meta["parent"]) {
-    meta["parent"] = "water";
+    meta["parent"] = "Sandbox";
   }
   meta["dataProviderName"] = "amp";
   return {
@@ -175,14 +188,17 @@ const lookupKeys = [
   { key: "data_source", label: "Data Source" },
 ];
 
-export const lookup = lookupKeys.map((l) => {
+const lookupResources = lookupKeys.map((l) => {
   return {
-    name: l.key,
+    name: `water.${l.key}`,
     list: `/amp/lu_${l.key}`,
     meta: {
+      dataProviderName: 'amp',
       parent: "water.LookupTables",
       nestedLevel: 2,
       label: l.label,
     },
   };
 });
+
+export const allAmpResources = [...ampResources, ...lookupResources]

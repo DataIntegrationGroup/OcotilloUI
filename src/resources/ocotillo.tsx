@@ -100,6 +100,15 @@ let tables: {
       icon: <Place />,
     },
   },
+  {
+    name: 'lexicon',
+    list: '/ocotillo/lexicon',
+    meta: {
+      disabled: false,
+      label: 'Lexicon / Glossary',
+      icon: <LibraryBooksOutlined />,
+    },
+  },
   // {
   //   name: 'sensor',
   //   list: '/ocotillo/sensor',

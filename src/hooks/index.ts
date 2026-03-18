@@ -1,4 +1,5 @@
 export * from './useAbortableList'
+export * from './useAccessCapabilities'
 export * from './useSearchHistory'
 export * from './useAll'
 export * from './useAllNotes'

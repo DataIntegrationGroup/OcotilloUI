@@ -37,7 +37,7 @@ import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
 import { useForm } from '@refinedev/react-hook-form'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { getLabelFromOptionalPdfFieldKey } from '@/utils'
-import { useSensorDeploymentRows } from '@/hooks'
+import { useAccessCapabilities, useSensorDeploymentRows } from '@/hooks'
 import { SensorDeploymentRow } from '@/utils'
 import { IHydrographDatasource } from '@/interfaces/st2'
 
@@ -53,6 +53,7 @@ export const WellShowPdfPreview = () => {
   const theme = useTheme()
   const [isViewerReady, setIsViewerReady] = useState(false)
   const [hydrographImage, setHydrographImage] = useState<string | null>(null)
+  const { canViewConfidential } = useAccessCapabilities()
 
   const handleBack = () => go({ to: `/ocotillo/well/show/${id}`, type: 'push' })
 
@@ -465,6 +466,7 @@ export const WellShowPdfPreview = () => {
                     sensorDeployments={sensorDeployments}
                     options={currentOptions}
                     hydrographImage={hydrographImage}
+                    includeConfidentialContacts={canViewConfidential}
                   />
                 </PDFViewer>
               </Box>
