@@ -10,6 +10,7 @@ import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
   InteractiveSatelliteMapCard,
+  WellStatusChips,
   HydrographCard,
   RecentWaterLevelObservationsCard,
   ContactsAccordion,
@@ -169,9 +170,12 @@ export const WellShow = () => {
         },
       }}
       title={
-        <Typography variant="h3" fontWeight={700}>
-          {`${well?.name ? `${well.name}` : ''}`}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          <Typography variant="h3" fontWeight={700}>
+            {well?.name ?? ''}
+          </Typography>
+          <WellStatusChips well={well} />
+        </Box>
       }
       headerProps={{
         sx: {
@@ -186,7 +190,7 @@ export const WellShow = () => {
       }}
       contentProps={{ sx: { pt: 1 } }}
       headerButtons={() => (
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 0 }}>
           <WellPDFPreviewButton isLoading={query.isLoading} />
           <WellPDFDownloadButton well={well} isLoading={query.isLoading} />
         </Box>
