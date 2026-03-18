@@ -19,7 +19,7 @@ import { ExternalLink } from '@/components'
 export const OSEPODInfoCard = ({ pod_id }) => {
   const podInfoQuery = useOSEPODInfo(pod_id)
   return (
-    <Card elevation={2} sx={{ height: '100%' }}>
+    <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
       <CardHeader
         title={
           <Stack direction="row" alignItems="center" spacing={1}>

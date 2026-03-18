@@ -194,11 +194,11 @@ export const WellShow = () => {
       )}
     >
       <Stack spacing={2}>
-        <Grid container spacing={4}>
+        <Grid container spacing={2}>
           
 
           {/* Left column: 8 cols */}
-          <Grid size={{ xs: 12, md: 9 }}>
+          <Grid size={{ xs: 12, md: 8, lg: 9 }}>
             <Stack spacing={2}>
               <CoreWellInfoCard
                 well={well}
@@ -231,7 +231,7 @@ export const WellShow = () => {
           </Grid>
 
           {/* Right column: 2 cols */}
-          <Grid size={{ xs: 12, md: 3 }}>
+          <Grid size={{ xs: 12, md: 4, lg: 3 }}>
             <Stack spacing={2}>
               <ContactsAccordion id={well?.id} />
               <OwnerPermissionsAccordion well={well} />

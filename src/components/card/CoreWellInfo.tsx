@@ -53,7 +53,7 @@ export const CoreWellInfoCard = ({
   const isPrivate = well?.release_status?.toLocaleUpperCase() === 'PRIVATE'
 
   return (
-    <Card elevation={2} sx={{ height: '100%' }}>
+    <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
       <CardHeader title={<Typography variant="h5">{well?.name}</Typography>} />
       <CardContent>
         <Grid container spacing={4}>
@@ -222,7 +222,7 @@ export const CoreWellInfoCard = ({
 }
 
 const LoadingCard = () => (
-  <Card elevation={2} sx={{ height: '100%' }}>
+  <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
     <CardHeader title={<Skeleton variant="text" width={150} height={32} />} />
     <CardContent>
       <Grid container spacing={4}>
