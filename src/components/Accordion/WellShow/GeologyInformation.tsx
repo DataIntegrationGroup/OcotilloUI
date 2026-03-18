@@ -1,4 +1,4 @@
-import { Box, Chip, Paper, Stack, Typography } from '@mui/material'
+import { Box, Paper, Stack, Typography } from '@mui/material'
 import { IWell } from '@/interfaces/ocotillo'
 
 export const GeologyInformationAccordion = ({ well }: { well?: IWell }) => {
@@ -15,11 +15,9 @@ export const GeologyInformationAccordion = ({ well }: { well?: IWell }) => {
             <Typography variant="body2" component="span">
               Is open and suitable for a datalogger?
             </Typography>
-            <Chip
-              sx={{ fontFamily: 'monospace', flexShrink: 0 }}
-              label={well?.is_suitable_for_datalogger?.toString() || 'N/A'}
-              color={well?.is_suitable_for_datalogger ? 'success' : 'error'}
-            />
+            <Typography variant="body2" color="text.secondary" component="span">
+              {well?.is_suitable_for_datalogger?.toString() || 'N/A'}
+            </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
             <Typography variant="body2" component="span">
