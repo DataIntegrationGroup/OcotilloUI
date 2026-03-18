@@ -86,7 +86,7 @@ export const FieldEventHistoryAccordion = ({
           Field Event History
         </Typography>
       </Box>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 2, py: 1, pb: 3 }}>
         {!sample ? (
           <Alert severity="info">No field event history found.</Alert>
         ) : (

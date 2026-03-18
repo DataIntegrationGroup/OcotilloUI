@@ -30,14 +30,14 @@ export const NotesAccordion = ({ well }: { well?: IWell }) => {
           Notes
         </Typography>
       </Box>
-      <Box sx={{ p: 3 }}>
-        <Grid container spacing={4}>
+      <Box sx={{ px: 2, py: 1, pb: 3 }}>
+        <Grid container spacing={2}>
           {sections.map((section) => (
             <Grid key={section.title} size={{ xs: 12 }}>
-              <Typography variant="h6">
+              <Typography variant="body2" fontWeight="bold">
                 {formatSectionTitle(section.title)}:
               </Typography>
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
                 {renderNotes(section.value)}
               </Typography>
             </Grid>

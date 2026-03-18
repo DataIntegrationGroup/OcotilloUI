@@ -160,7 +160,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             overflow: 'hidden',
             border: '2.5px solid',
             borderColor: 'divider',
-            height: 650,
+            height: 450,
             width: '100%',
             display: 'flex',
           }}

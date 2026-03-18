@@ -31,7 +31,7 @@ export const AlternateIdsAccordion = ({
           Alternate IDs
         </Typography>
       </Box>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 2, py: 1, pb: 3 }}>
         <DataGrid
           {...dataGridProps}
           rowHeight={settings.rowHeight}
