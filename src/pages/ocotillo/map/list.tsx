@@ -12,6 +12,7 @@ import {
   ListItemText,
   Paper,
   Stack,
+  Tooltip,
   Table,
   TableBody,
   TableCell,
@@ -64,7 +65,10 @@ export const MapView: React.FC = () => {
   const [visibleLayers, setVisibleLayers] = useState<string[]>([
     'ogc-latest-depth-to-water',
   ])
-  const THING_LAYERS = useThingLayers(visibleLayers)
+  const [colorMappingByLayer, setColorMappingByLayer] = useState<
+    Record<string, boolean>
+  >({})
+  const THING_LAYERS = useThingLayers(visibleLayers, colorMappingByLayer)
   const [basemapCollapsed, setBasemapCollapsed] = useState(true)
   const [selectedPointsCollapsed, setSelectedPointsCollapsed] = useState(false)
   const [layersCollapsed, setLayersCollapsed] = useState(false)
@@ -72,7 +76,6 @@ export const MapView: React.FC = () => {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {
       groundwater: true,
-      usgsNwisOgc: true,
       surfaceWater: true,
       climate: true,
       geoscience: true,
@@ -300,6 +303,13 @@ export const MapView: React.FC = () => {
       )
     }
 
+  const onColorMappingToggle = (layerKey: string) => {
+    setColorMappingByLayer((prev) => ({
+      ...prev,
+      [layerKey]: !(prev[layerKey] ?? true),
+    }))
+  }
+
   const onGroupToggle = (groupKey: string) => {
     setExpandedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }))
   }
@@ -308,18 +318,6 @@ export const MapView: React.FC = () => {
     layerKey: string,
     layerDef?: { layerProps?: { label?: string } }
   ): keyof typeof expandedGroups => {
-    const label = String(layerDef?.layerProps?.label || '').toLowerCase()
-    const normalizedKey = layerKey.toLowerCase()
-    if (
-      normalizedKey.includes('usgs') ||
-      normalizedKey.includes('nwis') ||
-      label.includes('usgs') ||
-      label.includes('nwis') ||
-      label.includes('national water information system')
-    ) {
-      return 'usgsNwisOgc'
-    }
-
     if (
       layerKey.includes('water-well') ||
       layerKey.includes('depth-to-water') ||
@@ -354,7 +352,6 @@ export const MapView: React.FC = () => {
 
   const groupLabels: Record<keyof typeof expandedGroups, string> = {
     groundwater: 'Groundwater',
-    usgsNwisOgc: 'USGS NWIS OGC',
     surfaceWater: 'Surface Water',
     climate: 'Climate',
     geoscience: 'Geoscience',
@@ -371,7 +368,6 @@ export const MapView: React.FC = () => {
     },
     {
       groundwater: [] as Array<[string, any]>,
-      usgsNwisOgc: [] as Array<[string, any]>,
       surfaceWater: [] as Array<[string, any]>,
       climate: [] as Array<[string, any]>,
       geoscience: [] as Array<[string, any]>,
@@ -768,14 +764,14 @@ export const MapView: React.FC = () => {
                   lineHeight: 1.2,
                 }}
               >
-                Layers
+                Datasets
               </Typography>
               <Box sx={{ flex: 1, minWidth: 0 }} />
               <IconButton
                 size="small"
                 onMouseDown={(event) => event.stopPropagation()}
                 onClick={onLayersCollapseToggle}
-                aria-label={layersCollapsed ? 'Expand layers' : 'Collapse layers'}
+                aria-label={layersCollapsed ? 'Expand datasets' : 'Collapse datasets'}
               >
                 {layersCollapsed ? (
                   <KeyboardArrowDown fontSize="small" />
@@ -828,8 +824,8 @@ export const MapView: React.FC = () => {
                     hasSelectionPolygon
                       ? 'Export Selected'
                       : visibleLayers.length > 1
-                        ? 'Export Layers'
-                        : 'Export Layer'
+                        ? 'Export Datasets'
+                        : 'Export Dataset'
                   }
                   disabled={!hasExportableLayers}
                   tooltipPlacement="right"
@@ -837,14 +833,14 @@ export const MapView: React.FC = () => {
                     hasExportableLayers
                       ? `Click to download ${
                           hasSelectionPolygon
-                            ? 'the selected portion of each visible layer'
+                            ? 'the selected portion of each visible dataset'
                             : visibleLayers.length > 1
-                              ? 'each visible layer'
-                              : 'that layer'
+                              ? 'each visible dataset'
+                              : 'that dataset'
                         } as separate ${exportFormat === 'csv' ? 'CSV' : 'GeoJSON'} file${
                           visibleLayers.length > 1 || hasSelectionPolygon ? 's' : ''
                         }.`
-                      : 'Disabled until at least one layer is visible.'
+                      : 'Disabled until at least one dataset is visible.'
                   }
                 />
               </Box>
@@ -907,6 +903,11 @@ export const MapView: React.FC = () => {
                               (typeof paintColor === 'string'
                                 ? paintColor
                                 : '#9e9e9e')
+                            const description =
+                              typeof layerDef.description === 'string'
+                                ? layerDef.description.trim()
+                                : ''
+                            const hasDescription = description.length > 0
 
                             return (
                               <Box key={key} sx={{ px: 0.2, py: 0.05 }}>
@@ -935,16 +936,53 @@ export const MapView: React.FC = () => {
                                       }}
                                     />
                                   )}
-                                  <ListItemText
-                                    primary={layerProps.label}
-                                    slotProps={{
-                                      primary: {
-                                        lineHeight: 1.15,
-                                        fontSize: '0.75rem',
-                                      },
-                                    }}
-                                    sx={{ m: 0, my: -0.15 }}
-                                  />
+                                  <Tooltip
+                                    title={hasDescription ? description : ''}
+                                    placement="right"
+                                    disableHoverListener={!hasDescription}
+                                  >
+                                    <ListItemText
+                                      primary={layerProps.label}
+                                      slotProps={{
+                                        primary: {
+                                          lineHeight: 1.15,
+                                          fontSize: '0.75rem',
+                                        },
+                                      }}
+                                      sx={{ m: 0, my: -0.15 }}
+                                    />
+                                  </Tooltip>
+                                  {layerDef.colorMappingAvailable ? (
+                                    <Tooltip
+                                      title={
+                                        layerDef.colorMappingEnabled
+                                          ? 'Disable value-based color mapping'
+                                          : 'Enable value-based color mapping'
+                                      }
+                                      placement="top"
+                                    >
+                                      <Button
+                                        size="small"
+                                        variant={
+                                          layerDef.colorMappingEnabled
+                                            ? 'contained'
+                                            : 'outlined'
+                                        }
+                                        onClick={() => onColorMappingToggle(key)}
+                                        sx={{
+                                          minWidth: 0,
+                                          px: 0.7,
+                                          py: 0.2,
+                                          ml: 0.2,
+                                          flexShrink: 0,
+                                          fontSize: '0.65rem',
+                                          lineHeight: 1,
+                                        }}
+                                      >
+                                        Color
+                                      </Button>
+                                    </Tooltip>
+                                  ) : null}
                                   {key === 'ogc-major-chemistry' ? (
                                     <Button
                                       size="small"
@@ -1189,8 +1227,8 @@ export const MapView: React.FC = () => {
                 sx={{ color: 'text.secondary', flex: 1, minWidth: 0 }}
               >
                 {hasSelectionPolygon
-                  ? `${totalSelectedPointCount} point${totalSelectedPointCount === 1 ? '' : 's'} across ${selectedPointsByLayer.length} layer${selectedPointsByLayer.length === 1 ? '' : 's'}`
-                  : 'Draw a polygon/rectangle to select points from visible layers'}
+                  ? `${totalSelectedPointCount} point${totalSelectedPointCount === 1 ? '' : 's'} across ${selectedPointsByLayer.length} dataset${selectedPointsByLayer.length === 1 ? '' : 's'}`
+                  : 'Draw a polygon/rectangle to select points from visible datasets'}
               </Typography>
               {hasSelectionPolygon && selectedPointsByLayer.length > 0 ? (
                 <Box sx={{ flex: '0 0 auto' }}>
@@ -1200,7 +1238,7 @@ export const MapView: React.FC = () => {
                     onExport={onExportSelectedPoints}
                     buttonLabel="Export Selected"
                     selectorWidth={142}
-                    tooltip={`Click to download the selected points for each visible layer as separate ${
+                    tooltip={`Click to download the selected points for each visible dataset as separate ${
                       exportFormat === 'csv' ? 'CSV' : 'GeoJSON'
                     } files.`}
                   />

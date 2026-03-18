@@ -3,12 +3,15 @@ export type OgcCollectionRecord = {
   collection_id?: string
   name?: string
   title?: string
+  description?: string
+  abstract?: string
 }
 
 export type ResolvedCollection = {
   id: string
   label: string
   exists: boolean
+  description?: string
 }
 
 export const TDS_LEGEND = {
@@ -235,12 +238,13 @@ export const resolveCollection = (
     }
   }
 
-  return {
-    id: bestMatch?.id || bestMatch?.collection_id || bestMatch?.name || '',
-    label:
-      bestMatch?.title ||
-      bestMatch?.name ||
-      candidates[0].replace(/\s*\(Water Wells\)\s*/g, ''),
-    exists: Boolean(bestMatch),
-  }
+    return {
+      id: bestMatch?.id || bestMatch?.collection_id || bestMatch?.name || '',
+      label:
+        bestMatch?.title ||
+        bestMatch?.name ||
+        candidates[0].replace(/\s*\(Water Wells\)\s*/g, ''),
+      exists: Boolean(bestMatch),
+      description: bestMatch?.description || bestMatch?.abstract,
+    }
 }

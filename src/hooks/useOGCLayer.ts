@@ -21,6 +21,7 @@ export const useOGCLayer = ({
   colorExpression,
   legendColor,
   legendScale,
+  colorMappingEnabled = true,
   requestParams,
   enabled = true,
   pageSize = 1000,
@@ -40,6 +41,7 @@ export const useOGCLayer = ({
   colorExpression?: any
   legendColor?: string
   legendScale?: LayerLegendScale
+  colorMappingEnabled?: boolean
   requestParams?: Record<string, string | number | boolean>
   enabled?: boolean
   pageSize?: number
@@ -175,10 +177,12 @@ export const useOGCLayer = ({
     }),
   }
 
+  const hasColorMapping = Boolean(colorAccessor || colorExpression || legendScale)
   const resolvedColor = (colorAccessor
     ? ['coalesce', ['get', '__color'], color]
     : color) as any
-  const effectiveColor = colorExpression ?? resolvedColor
+  const effectiveColor =
+    hasColorMapping && colorMappingEnabled ? colorExpression ?? resolvedColor : color
 
   const defaultPaintByType: Record<
     'circle' | 'line' | 'fill',
@@ -205,7 +209,9 @@ export const useOGCLayer = ({
     sourceProps: { type: 'geojson', data: safeGeoJSON },
     sourceData: safeGeoJSON,
     legendColor: legendColor || color,
-    legendScale,
+    legendScale: hasColorMapping && colorMappingEnabled ? legendScale : undefined,
+    colorMappingAvailable: hasColorMapping,
+    colorMappingEnabled: hasColorMapping ? colorMappingEnabled : false,
     layerProps: {
       label,
       type: layerType,

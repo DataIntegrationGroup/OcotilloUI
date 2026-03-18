@@ -20,7 +20,6 @@ import {
   latestTdsColorFromFeature,
   trendColorFromFeature,
 } from '@/utils/ogcLayerUtils'
-import { USGS_NWIS_DEFAULT_BBOX } from '@/providers/usgs-nwis-ogcapi-data-provider'
 
 const WATER_ELEVATION_LEGEND = {
   gradient:
@@ -34,15 +33,9 @@ const EMPTY_FEATURE_COLLECTION = {
   features: [],
 } as const
 
-const getRecentDatetimeRange = (days: number): string => {
-  const end = new Date()
-  const start = new Date(end)
-  start.setUTCDate(start.getUTCDate() - days)
-  return `${start.toISOString()}/${end.toISOString()}`
-}
-
 export const useThingLayers = (
-  activeLayerKeys?: string[]
+  activeLayerKeys?: string[],
+  colorMappingByLayer: Record<string, boolean> = {}
 ) => {
   const dataProvider = useDataProvider()
   const hasActiveLayerFilter = Array.isArray(activeLayerKeys)
@@ -68,23 +61,7 @@ export const useThingLayers = (
     },
   })
 
-  const { data: usgsCollectionsData } = useQuery({
-    queryKey: ['usgs-nwis-ogcapi-collections-all'],
-    gcTime: 300000,
-    staleTime: 300000,
-    queryFn: async () => {
-      const provider = dataProvider('usgs-nwis-ogcapi')
-      const result = await provider.getList({
-        resource: 'usgs-nwis-ogcapi',
-        pagination: { currentPage: 1, pageSize: 200 },
-      })
-
-      return (result?.data ?? []) as OgcCollectionRecord[]
-    },
-  })
-
   const collections = collectionsData ?? []
-  const usgsCollections = usgsCollectionsData ?? []
   const collectionSearchText = (collection: OgcCollectionRecord): string =>
     [collection.id, collection.collection_id, collection.name, collection.title]
       .filter(Boolean)
@@ -132,8 +109,12 @@ export const useThingLayers = (
       id: bestMatch?.id || bestMatch?.collection_id || bestMatch?.name || '',
       label: bestMatch?.title || bestMatch?.name || fallbackLabel,
       exists,
+      description: bestMatch?.description || bestMatch?.abstract,
     }
   }
+
+  const isColorMappingEnabled = (layerKey: string): boolean =>
+    colorMappingByLayer[layerKey] ?? true
 
   const locations = resolveCollection(collections, ['Locations', 'locations'])
   const latestDepthToWater = resolveCollection(collections, [
@@ -284,38 +265,6 @@ export const useThingLayers = (
     'Soil Gas Sample Locations',
     'soil_gas_sample_locations',
   ])
-  const usgsMonitoringLocations = resolveCollection(usgsCollections, [
-    'monitoring-locations',
-    'Monitoring Locations',
-  ])
-  const usgsTimeSeriesMetadata = resolveCollection(usgsCollections, [
-    'time-series-metadata',
-    'Time Series Metadata',
-  ])
-  const usgsFieldMeasurements = resolveCollection(usgsCollections, [
-    'field-measurements',
-    'Field Measurements',
-  ])
-  const usgsLatestContinuous = resolveCollection(usgsCollections, [
-    'latest-continuous',
-    'Latest Continuous',
-  ])
-  const usgsLatestDaily = resolveCollection(usgsCollections, [
-    'latest-daily',
-    'Latest Daily',
-  ])
-  const usgsDaily = resolveCollection(usgsCollections, [
-    'daily',
-    'Daily',
-  ])
-
-  const usgsRecentObservationParams = useMemo(
-    () => ({
-      datetime: getRecentDatetimeRange(30),
-    }),
-    []
-  )
-
   const locationsLayer = useOGCLayer({
     collection: locations.id,
     label: locations.label,
@@ -329,6 +278,7 @@ export const useThingLayers = (
     color: '#9e9e9e',
     colorAccessor: latestDepthToWaterColorFromFeature,
     legendScale: DEPTH_LEGEND,
+    colorMappingEnabled: isColorMappingEnabled('ogc-latest-depth-to-water'),
     enabled:
       latestDepthToWater.exists && isLayerActive('ogc-latest-depth-to-water'),
   })
@@ -339,6 +289,7 @@ export const useThingLayers = (
     color: '#9e9e9e',
     colorAccessor: averageTdsColorFromFeature,
     legendScale: TDS_LEGEND,
+    colorMappingEnabled: isColorMappingEnabled('ogc-average-tds'),
     enabled: averageTds.exists && isLayerActive('ogc-average-tds'),
   })
   const latestTdsLayer = useOGCLayer({
@@ -348,6 +299,7 @@ export const useThingLayers = (
     color: '#9e9e9e',
     colorAccessor: latestTdsColorFromFeature,
     legendScale: TDS_LEGEND,
+    colorMappingEnabled: isColorMappingEnabled('ogc-latest-tds'),
     enabled: latestTds.exists && isLayerActive('ogc-latest-tds'),
   })
   const majorChemistryLayer = useOGCLayer({
@@ -369,6 +321,7 @@ export const useThingLayers = (
     color: '#9e9e9e',
     colorAccessor: trendColorFromFeature,
     legendScale: TREND_LEGEND,
+    colorMappingEnabled: isColorMappingEnabled('ogc-depth-to-water-trend'),
     enabled:
       depthToWaterTrend.exists && isLayerActive('ogc-depth-to-water-trend'),
   })
@@ -413,6 +366,7 @@ export const useThingLayers = (
     label: `${waterElevationPoints.label} (ft)`,
     color: '#1976d2',
     legendScale: WATER_ELEVATION_LEGEND,
+    colorMappingEnabled: isColorMappingEnabled('ogc-water-elevation-points'),
     enabled: waterElevationPoints.exists,
   })
 
@@ -500,6 +454,16 @@ export const useThingLayers = (
       }
     : WATER_ELEVATION_LEGEND
 
+  const isWaterElevationPointsColorMapped = isColorMappingEnabled(
+    'ogc-water-elevation-points'
+  )
+  const isWaterElevationContoursColorMapped = isColorMappingEnabled(
+    'ogc-water-elevation-contours'
+  )
+  const isWaterElevationDerivedContoursColorMapped = isColorMappingEnabled(
+    'ogc-water-elevation-contours-derived'
+  )
+
   const waterElevationPointsLayerStyled = useMemo(() => {
     if (!waterElevationPointSourceData)
       return waterElevationPointsLayer
@@ -511,12 +475,18 @@ export const useThingLayers = (
         data: waterElevationPointSourceData,
       },
       sourceData: waterElevationPointSourceData,
-      legendScale: waterElevationLegendScale,
+      legendScale: isWaterElevationPointsColorMapped
+        ? waterElevationLegendScale
+        : undefined,
+      colorMappingAvailable: true,
+      colorMappingEnabled: isWaterElevationPointsColorMapped,
       layerProps: {
         ...waterElevationPointsLayer.layerProps,
         paint: {
           ...(waterElevationPointsLayer.layerProps?.paint || {}),
-          'circle-color': waterElevationColorExpression,
+          'circle-color': isWaterElevationPointsColorMapped
+            ? waterElevationColorExpression
+            : '#1976d2',
         },
       },
     }
@@ -525,14 +495,33 @@ export const useThingLayers = (
     waterElevationPointSourceData,
     waterElevationColorExpression,
     waterElevationLegendScale,
+    isWaterElevationPointsColorMapped,
   ])
 
   const waterElevationContoursLayerStyled = useMemo(
     () => ({
       ...waterElevationContoursLayer,
-      legendScale: waterElevationLegendScale,
+      legendScale: isWaterElevationContoursColorMapped
+        ? waterElevationLegendScale
+        : undefined,
+      colorMappingAvailable: true,
+      colorMappingEnabled: isWaterElevationContoursColorMapped,
+      layerProps: {
+        ...waterElevationContoursLayer.layerProps,
+        paint: {
+          ...(waterElevationContoursLayer.layerProps?.paint || {}),
+          'line-color': isWaterElevationContoursColorMapped
+            ? waterElevationColorExpression
+            : '#0d47a1',
+        },
+      },
     }),
-    [waterElevationContoursLayer, waterElevationLegendScale]
+    [
+      waterElevationContoursLayer,
+      waterElevationLegendScale,
+      waterElevationColorExpression,
+      isWaterElevationContoursColorMapped,
+    ]
   )
 
   const waterElevationDerivedContourLayerData = useQuery({
@@ -709,13 +698,19 @@ export const useThingLayers = (
       },
       sourceData: (waterElevationDerivedContourLayerData.data ??
         EMPTY_FEATURE_COLLECTION) as any,
-      legendScale: waterElevationLegendScale,
+      legendScale: isWaterElevationDerivedContoursColorMapped
+        ? waterElevationLegendScale
+        : undefined,
       legendColor: '#0d47a1',
+      colorMappingAvailable: true,
+      colorMappingEnabled: isWaterElevationDerivedContoursColorMapped,
       layerProps: {
         label: `${waterElevationPoints.label} Contours (derived)`,
         type: 'line' as const,
         paint: {
-          'line-color': waterElevationColorExpression,
+          'line-color': isWaterElevationDerivedContoursColorMapped
+            ? waterElevationColorExpression
+            : '#0d47a1',
           'line-width': 1.2,
           'line-opacity': 0.85,
         },
@@ -754,6 +749,7 @@ export const useThingLayers = (
       waterElevationLegendScale,
       waterElevationColorExpression,
       waterElevationPoints.label,
+      isWaterElevationDerivedContoursColorMapped,
     ]
   )
 
@@ -822,64 +818,26 @@ export const useThingLayers = (
       isLayerActive('ogc-soil-gas-sample-locations'),
   })
 
-  // --- USGS NWIS layers only ---
-  const usgsLatestContinuousLayer = useOGCLayer({
-    collection: usgsLatestContinuous.id,
-    label: 'Latest Continuous',
-    providerName: 'usgs-nwis-ogcapi',
-    color: '#6a4c93',
-    requestParams: { bbox: USGS_NWIS_DEFAULT_BBOX },
-    pageSize: 1000,
-    maxPages: 200,
-    maxFeatures: 250000,
-    enabled:
-      usgsLatestContinuous.exists &&
-      isLayerActive('usgs-nwis-latest-continuous'),
-  })
-
-  const usgsLatestDailyLayer = useOGCLayer({
-    collection: usgsLatestDaily.id,
-    label: 'Latest Daily',
-    providerName: 'usgs-nwis-ogcapi',
-    color: '#264653',
-    requestParams: { bbox: USGS_NWIS_DEFAULT_BBOX },
-    pageSize: 1000,
-    maxPages: 200,
-    maxFeatures: 250000,
-    enabled: usgsLatestDaily.exists && isLayerActive('usgs-nwis-latest-daily'),
-  })
-
-  const usgsDailyLayer = useOGCLayer({
-    collection: usgsDaily.id,
-    label: 'Daily (30d)',
-    providerName: 'usgs-nwis-ogcapi',
-    color: '#4d908e',
-    requestParams: {
-      ...(usgsRecentObservationParams as any),
-      bbox: USGS_NWIS_DEFAULT_BBOX,
-    },
-    pageSize: 1000,
-    maxPages: 200,
-    maxFeatures: 250000,
-    enabled: usgsDaily.exists && isLayerActive('usgs-nwis-daily'),
-  })
-
   const layers: Record<string, any> = {}
   const seenCollectionIds = new Set<string>()
 
   const addLayer = (
     layerKey: string,
-    collection: { id: string; exists: boolean },
+    collection: { id: string; exists: boolean; description?: string },
     layer: any
   ) => {
     const hasId = collection.exists && collection.id
     if (!hasId) return
     if (seenCollectionIds.has(collection.id)) return
     seenCollectionIds.add(collection.id)
-    layers[layerKey] = layer
+    layers[layerKey] = {
+      ...layer,
+      description: collection.description,
+      colorMappingAvailable: layer.colorMappingAvailable ?? false,
+      colorMappingEnabled: layer.colorMappingEnabled ?? false,
+    }
   }
 
-  // --- All the original non-USGS layers ---
   addLayer('ogc-locations', locations, locationsLayer)
   addLayer(
     'ogc-latest-depth-to-water',
@@ -904,8 +862,14 @@ export const useThingLayers = (
     waterElevationContoursLayerStyled
   )
   if (!waterElevationContours.exists) {
-    layers['ogc-water-elevation-contours-derived'] =
-      waterElevationDerivedContoursLayer
+    layers['ogc-water-elevation-contours-derived'] = {
+      ...waterElevationDerivedContoursLayer,
+      description: waterElevationPoints.description,
+      colorMappingAvailable:
+        waterElevationDerivedContoursLayer.colorMappingAvailable ?? true,
+      colorMappingEnabled:
+        waterElevationDerivedContoursLayer.colorMappingEnabled ?? true,
+    }
   }
   addLayer('ogc-major-chemistry', majorChemistry, majorChemistryLayer)
   addLayer('ogc-minor-chemistry', minorChemistry, minorChemistryLayer)
@@ -945,19 +909,6 @@ export const useThingLayers = (
     soilGasSampleLocations,
     soilGasSampleLocationsLayer
   )
-
-  // --- Keep only the requested USGS NWIS layers ---
-  addLayer(
-    'usgs-nwis-latest-continuous',
-    usgsLatestContinuous,
-    usgsLatestContinuousLayer
-  )
-  addLayer(
-    'usgs-nwis-latest-daily',
-    usgsLatestDaily,
-    usgsLatestDailyLayer
-  )
-  addLayer('usgs-nwis-daily', usgsDaily, usgsDailyLayer)
 
   return layers
 }
