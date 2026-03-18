@@ -61,6 +61,10 @@ export const wipResources = new Set([
   'water.manualwaterlevels_batchupload',
 ])
 
+export const adminOnlyResources = new Set([
+  'water.locations',
+])
+
 export const normalizeAccessControlGroups = (
   groups: string[] | null | undefined
 ): AmpRole[] => {
@@ -139,6 +143,10 @@ export const canAccessResource = ({
 
   if (resource === 'Sandbox') {
     return (action === 'list' || action === 'show') && capabilities.canViewAmp
+  }
+
+  if (adminOnlyResources.has(resource)) {
+    return capabilities.canManageAmp
   }
 
   if (isWip || wipResources.has(resource)) {

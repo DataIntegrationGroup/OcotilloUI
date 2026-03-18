@@ -88,6 +88,7 @@ let amp = [
     create: "/amp/locations/create",
     meta: {
       label: "Locations",
+      adminOnly: true,
       wip: true,
     },
   },
