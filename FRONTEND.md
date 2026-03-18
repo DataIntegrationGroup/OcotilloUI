@@ -4,8 +4,21 @@ A practical reference for working on the Ocotillo front-end. It covers the frame
 
 ---
 
+## Notable Well IDs
+
+The following wells contain a full, rich set of information and are useful for testing the Well Show page and related UI:
+
+- AR-0025
+- HS-038
+- QU-050
+- QU-054
+- TB-0203
+
+---
+
 ## Table of Contents
 
+- [Notable Well IDs](#notable-well-ids)
 - [Framework Stack Overview](#framework-stack-overview)
 - [How the Layers Work Together](#how-the-layers-work-together)
 - [Material UI Components](#material-ui-components)
