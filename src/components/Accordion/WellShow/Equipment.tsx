@@ -149,7 +149,7 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
           Equipment
         </Typography>
       </Box>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 2, py: 1, pb: 3 }}>
         <DataGrid<SensorDeploymentRow>
           rowHeight={settings.rowHeight}
           rows={sensorDeployments ?? []}

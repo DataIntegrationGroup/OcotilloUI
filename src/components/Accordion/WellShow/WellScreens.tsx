@@ -3,7 +3,6 @@ import { Box, Paper, Stack, Typography } from '@mui/material'
 import { useDataGrid } from '@refinedev/mui'
 import { MoreVertOutlined } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { actionColumnDef } from '@/components/CommonColumnDefs'
 import { settings } from '@/settings'
 
 export const WellScreensAccordion = ({ id }: { id?: number }) => {
@@ -32,7 +31,6 @@ export const WellScreensAccordion = ({ id }: { id?: number }) => {
         type: 'number',
         minWidth: 200,
       },
-      actionColumnDef({ resource: 'ocotillo.thing/well-screen' }),
     ],
     []
   )
@@ -45,7 +43,7 @@ export const WellScreensAccordion = ({ id }: { id?: number }) => {
           Well Screens
         </Typography>
       </Box>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 2, py: 1, pb: 3 }}>
         <DataGrid
           rowHeight={settings.rowHeight}
           rows={dataGridProps.rows ?? []}
