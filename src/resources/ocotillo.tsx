@@ -183,7 +183,7 @@ let tables: {
 
 tables.push({
   name: 'thing-well-pdf-preview',
-  list: '/ocotillo/well/pdf-preview/:id',
+  show: '/ocotillo/well/pdf-preview/:id',
   meta: {
     label: 'PDF Preview',
     parent: 'ocotillo.thing-well',

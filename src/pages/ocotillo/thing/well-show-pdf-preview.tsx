@@ -6,8 +6,6 @@ import {
   AccordionSummary,
   Box,
   Button,
-  Card,
-  CardContent,
   Divider,
   IconButton,
   Skeleton,
@@ -16,7 +14,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { HttpError, useList, useGo, useOne, useShow } from '@refinedev/core'
-import { ListButton, Show, ShowButton, useDataGrid } from '@refinedev/mui'
+import { Show, useDataGrid } from '@refinedev/mui'
 import { useParams } from 'react-router'
 import {
   ArrowBack,
@@ -31,6 +29,8 @@ import {
   ControlledRadioFormSelection,
   HydrographPngExporter,
   WellPDF,
+  WellPDFDownloadButton,
+  WellStatusChips,
 } from '@/components'
 import { useEffect, useMemo, useState } from 'react'
 import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
@@ -40,6 +40,7 @@ import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 import { useSensorDeploymentRows } from '@/hooks'
 import { SensorDeploymentRow } from '@/utils'
 import { IHydrographDatasource } from '@/interfaces/st2'
+import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 
 const densityIcons = {
   compact: <ViewHeadline fontSize="small" />,
@@ -305,187 +306,210 @@ export const WellShowPdfPreview = () => {
       resource="thing-well"
       recordItemId={id}
       isLoading={isLoading}
+      breadcrumb={<AppBreadcrumb />}
+      wrapperProps={{
+        elevation: 0,
+        sx: {
+          bgcolor: 'background.wrapper',
+          boxShadow: 'none',
+          borderRadius: 1,
+          padding: 0,
+        },
+      }}
       goBack={
         <IconButton aria-label="return to show page" onClick={handleBack}>
           <ArrowBack />
         </IconButton>
       }
       title={
-        <Typography variant="h5">
-          {`PDF Preview Well${well?.name ? `: ${well?.name}` : ''}`}
-        </Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            flexWrap: 'wrap',
+          }}
+        >
+          <Typography variant="h3" fontWeight={700}>
+            {well?.name ?? ''}
+          </Typography>
+          <WellStatusChips well={well} />
+        </Box>
       }
-      headerButtons={({ defaultButtons }) => (
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <ShowButton resource="ocotillo.thing-well" recordItemId={id} />
-          <ListButton resource="ocotillo.thing-well" />
-          {defaultButtons}
+      headerProps={{
+        sx: {
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'flex-start', md: 'center' },
+          '.MuiCardHeader-action': {
+            alignSelf: { xs: 'flex-end', md: 'flex-start' },
+            mt: { xs: 1, md: 0.5 },
+            mr: 0,
+          },
+        },
+      }}
+      contentProps={{ sx: { pt: 1 } }}
+      headerButtons={() => (
+        <Box sx={{ display: 'flex', gap: 0 }}>
+          <WellPDFDownloadButton well={well} isLoading={isLoading} />
         </Box>
       )}
     >
-      <Card elevation={2}>
-        <CardContent>
-          <Box sx={{ mb: 2 }}>
-            <Accordion
-              defaultExpanded
-              disableGutters
-              variant="outlined"
-              sx={{
-                p: 1,
-                borderRadius: 2,
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-                backgroundImage: 'none',
-                boxShadow: (theme) =>
-                  theme.palette.mode === 'dark'
-                    ? '0 1px 3px rgba(0,0,0,0.35)'
-                    : '0 1px 3px rgba(0,0,0,0.08)',
+      <Box sx={{ mb: 2 }}>
+        <Accordion
+          defaultExpanded
+          disableGutters
+          variant="outlined"
+          sx={{
+            p: 1,
+            borderRadius: 2,
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+            backgroundImage: 'none',
+            boxShadow: (theme) =>
+              theme.palette.mode === 'dark'
+                ? '0 1px 3px rgba(0,0,0,0.35)'
+                : '0 1px 3px rgba(0,0,0,0.08)',
 
-                '&::before': {
-                  display: 'none',
-                },
+            '&::before': {
+              display: 'none',
+            },
 
-                '&.Mui-expanded': {
-                  mt: 0,
-                },
+            '&.Mui-expanded': {
+              mt: 0,
+            },
 
-                '& .MuiAccordionSummary-root': {
-                  borderRadius: 1.5,
-                  minHeight: 56,
-                  px: 1.5,
-                  transition: 'background-color 0.2s ease',
-                },
+            '& .MuiAccordionSummary-root': {
+              borderRadius: 1.5,
+              minHeight: 56,
+              px: 1.5,
+              transition: 'background-color 0.2s ease',
+            },
 
-                '& .MuiAccordionSummary-root:hover': {
-                  bgcolor: 'action.hover',
-                },
+            '& .MuiAccordionSummary-root:hover': {
+              bgcolor: 'action.hover',
+            },
 
-                '& .MuiAccordionSummary-root.Mui-expanded': {
-                  minHeight: 56,
-                },
+            '& .MuiAccordionSummary-root.Mui-expanded': {
+              minHeight: 56,
+            },
 
-                '& .MuiAccordionSummary-content': {
-                  my: 1,
-                },
+            '& .MuiAccordionSummary-content': {
+              my: 1,
+            },
 
-                '& .MuiAccordionSummary-expandIconWrapper': {
-                  color: 'text.secondary',
-                },
+            '& .MuiAccordionSummary-expandIconWrapper': {
+              color: 'text.secondary',
+            },
 
-                '& .MuiAccordionDetails-root': {
-                  pt: 1,
-                  px: 2,
-                  pb: 2,
-                  color: 'text.primary',
-                },
+            '& .MuiAccordionDetails-root': {
+              pt: 1,
+              px: 2,
+              pb: 2,
+              color: 'text.primary',
+            },
 
-                '& .MuiDivider-root': {
-                  px: 2,
-                  pt: 0,
-                  borderTop: '1px solid',
-                  borderColor: 'text.secondary',
-                },
+            '& .MuiDivider-root': {
+              px: 2,
+              pt: 0,
+              borderTop: '1px solid',
+              borderColor: 'text.secondary',
+            },
+          }}
+        >
+          <AccordionSummary
+            expandIcon={<ExpandMore />}
+            aria-controls="density-content"
+            id="density-header"
+          >
+            <Typography variant="subtitle1" fontWeight="medium">
+              PDF Export Options
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+              <ControlledRadioFormSelection
+                name="density"
+                control={control}
+                label="Density:"
+                options={densityOptions}
+              />
+              <Stack direction="column">
+                <Typography>Optional Fields:</Typography>
+                {optionalFields.map((fieldName) => (
+                  <ControlledCheckbox
+                    key={fieldName}
+                    control={control}
+                    name={fieldName}
+                    label={getLabelFromOptionalPdfFieldKey(fieldName)}
+                    labelPlacement="end"
+                  />
+                ))}
+              </Stack>
+            </Box>
+
+            <Divider sx={{ mt: 2, mb: 2.5 }} />
+
+            <Typography variant="caption" color="text.secondary">
+              Changes are applied live to the preview below.
+            </Typography>
+          </AccordionDetails>
+          <AccordionActions sx={{ mt: -6.5 }}>
+            <Button
+              variant="contained"
+              onClick={() => {
+                reset(PDF_SINGLE_PAGE_OPTION)
               }}
             >
-              <AccordionSummary
-                expandIcon={<ExpandMore />}
-                aria-controls="density-content"
-                id="density-header"
-              >
-                <Typography variant="subtitle1" fontWeight="medium">
-                  PDF Export Options
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                  <ControlledRadioFormSelection
-                    name="density"
-                    control={control}
-                    label="Density:"
-                    options={densityOptions}
-                  />
-                  <Stack direction="column">
-                    <Typography>Optional Fields:</Typography>
-                    {optionalFields.map((fieldName) => (
-                      <ControlledCheckbox
-                        key={fieldName}
-                        control={control}
-                        name={fieldName}
-                        label={getLabelFromOptionalPdfFieldKey(fieldName)}
-                        labelPlacement="end"
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-
-                <Divider sx={{ mt: 2, mb: 2.5 }} />
-
-                <Typography variant="caption" color="text.secondary">
-                  Changes are applied live to the preview below.
-                </Typography>
-              </AccordionDetails>
-              <AccordionActions sx={{ mt: -6.5 }}>
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    reset(PDF_SINGLE_PAGE_OPTION)
-                  }}
-                >
-                  Single Page Mode
-                </Button>
-                <Button
-                  variant="text"
-                  onClick={() => reset(PDF_DEFAULT_VALUES)}
-                >
-                  Reset
-                </Button>
-              </AccordionActions>
-            </Accordion>
+              Single Page Mode
+            </Button>
+            <Button variant="text" onClick={() => reset(PDF_DEFAULT_VALUES)}>
+              Reset
+            </Button>
+          </AccordionActions>
+        </Accordion>
+      </Box>
+      <Box sx={{ width: '100%', height: '90vh' }}>
+        {(!isViewerReady || isLoading) && (
+          <Skeleton variant="rectangular" height="100%" />
+        )}
+        {!isLoading && (
+          <Box
+            sx={{
+              opacity: isViewerReady ? 1 : 0,
+              transition: 'opacity 0.4s ease-in-out',
+              width: '100%',
+              height: '100%',
+            }}
+          >
+            <PDFViewer width="100%" height="100%">
+              <WellPDF
+                well={well}
+                sample={sample}
+                assets={assets}
+                contacts={contacts}
+                observations={observations}
+                sensorDeployments={sensorDeployments}
+                options={currentOptions}
+                hydrographImage={hydrographImage}
+              />
+            </PDFViewer>
           </Box>
-          <Box sx={{ width: '100%', height: '90vh' }}>
-            {(!isViewerReady || isLoading) && (
-              <Skeleton variant="rectangular" height="100%" />
-            )}
-            {!isLoading && (
-              <Box
-                sx={{
-                  opacity: isViewerReady ? 1 : 0,
-                  transition: 'opacity 0.4s ease-in-out',
-                  width: '100%',
-                  height: '100%',
-                }}
-              >
-                <PDFViewer width="100%" height="100%">
-                  <WellPDF
-                    well={well}
-                    sample={sample}
-                    assets={assets}
-                    contacts={contacts}
-                    observations={observations}
-                    sensorDeployments={sensorDeployments}
-                    options={currentOptions}
-                    hydrographImage={hydrographImage}
-                  />
-                </PDFViewer>
-              </Box>
-            )}
-          </Box>
-          {!isLoading && hydrographDatasource.length > 0 && (
-            <HydrographPngExporter
-              datasource={hydrographDatasource}
-              options={{
-                ...currentOptions,
-                // Extends the x-axis range to create blank space on the right side of the chart.
-                // This does NOT change the groundwater measurements; it only shifts the
-                // plotted data left so hydrologists have room to annotate the printed hydrograph.
-                rightPaddingPercent: 30,
-              }}
-              refreshKey={`${id}-${JSON.stringify(currentOptions)}`}
-              onPngReady={setHydrographImage}
-            />
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </Box>
+      {!isLoading && hydrographDatasource.length > 0 && (
+        <HydrographPngExporter
+          datasource={hydrographDatasource}
+          options={{
+            ...currentOptions,
+            // Extends the x-axis range to create blank space on the right side of the chart.
+            // This does NOT change the groundwater measurements; it only shifts the
+            // plotted data left so hydrologists have room to annotate the printed hydrograph.
+            rightPaddingPercent: 30,
+          }}
+          refreshKey={`${id}-${JSON.stringify(currentOptions)}`}
+          onPngReady={setHydrographImage}
+        />
+      )}
     </Show>
   )
 }

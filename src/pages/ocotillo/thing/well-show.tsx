@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { HttpError, useOne, useResourceParams, useShow } from '@refinedev/core'
-import { ListButton, Show, useDataGrid } from '@refinedev/mui'
+import { Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { ISample, IWell } from '@/interfaces/ocotillo'
@@ -170,7 +170,14 @@ export const WellShow = () => {
         },
       }}
       title={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            flexWrap: 'wrap',
+          }}
+        >
           <Typography variant="h3" fontWeight={700}>
             {well?.name ?? ''}
           </Typography>
@@ -198,8 +205,6 @@ export const WellShow = () => {
     >
       <Stack spacing={2}>
         <Grid container spacing={2}>
-          
-
           {/* Left column: 8 cols */}
           <Grid size={{ xs: 12, md: 8, lg: 9 }}>
             <Stack spacing={2}>
@@ -243,8 +248,6 @@ export const WellShow = () => {
               <FieldEventHistoryAccordion sample={sample} />
             </Stack>
           </Grid>
-
-        
         </Grid>
       </Stack>
     </Show>
