@@ -6,11 +6,16 @@ import type {
 } from '@/interfaces/ocotillo/IContact'
 
 export type AmpRole = 'AMP.Viewer' | 'AMP.Editor' | 'AMP.Admin'
+export type GeothermalRole =
+  | 'Geothermal.Viewer'
+  | 'Geothermal.Editor'
+  | 'Geothermal.Admin'
+export type PortalRole = AmpRole | GeothermalRole
 
 // Temporary compatibility shim for pre-v1 Authentik group names.
 // Remove these legacy aliases before the v1 release once all users/groups
 // have been migrated to AMP.Viewer / AMP.Editor / AMP.Admin.
-const legacyRoleMap: Record<string, AmpRole> = {
+const legacyRoleMap: Record<string, PortalRole> = {
   Viewer: 'AMP.Viewer',
   Editor: 'AMP.Editor',
   Admin: 'AMP.Admin',
@@ -20,9 +25,19 @@ const legacyRoleMap: Record<string, AmpRole> = {
   'AMP.Viewer': 'AMP.Viewer',
   'AMP.Editor': 'AMP.Editor',
   'AMP.Admin': 'AMP.Admin',
+  'Geothermal.Viewer': 'Geothermal.Viewer',
+  'Geothermal.Editor': 'Geothermal.Editor',
+  'Geothermal.Admin': 'Geothermal.Admin',
 }
 
-const roleOrder: AmpRole[] = ['AMP.Viewer', 'AMP.Editor', 'AMP.Admin']
+const roleOrder: PortalRole[] = [
+  'AMP.Viewer',
+  'AMP.Editor',
+  'AMP.Admin',
+  'Geothermal.Viewer',
+  'Geothermal.Editor',
+  'Geothermal.Admin',
+]
 
 const editableOcotilloResources = [
   'ocotillo.sensor',
@@ -64,14 +79,14 @@ export const wipResources = new Set([
   'water.manualwaterlevels_batchupload',
 ])
 
-export const adminOnlyResources = new Set([
+export const crossDomainAdminOnlyResources = new Set([
   'water.locations',
 ])
 
 export const normalizeAccessControlGroups = (
   groups: string[] | null | undefined
-): AmpRole[] => {
-  const normalized = new Set<AmpRole>()
+): PortalRole[] => {
+  const normalized = new Set<PortalRole>()
 
   for (const group of groups ?? []) {
     const mapped = legacyRoleMap[group]
@@ -80,22 +95,33 @@ export const normalizeAccessControlGroups = (
     }
   }
 
-  if (normalized.has('AMP.Admin')) {
-    return ['AMP.Viewer', 'AMP.Editor', 'AMP.Admin']
-  }
-  if (normalized.has('AMP.Editor')) {
-    return ['AMP.Viewer', 'AMP.Editor']
-  }
-  if (normalized.has('AMP.Viewer')) {
-    return ['AMP.Viewer']
+  const expandedRoles = new Set<PortalRole>()
+  const domainHierarchies: PortalRole[][] = [
+    ['AMP.Viewer', 'AMP.Editor', 'AMP.Admin'],
+    ['Geothermal.Viewer', 'Geothermal.Editor', 'Geothermal.Admin'],
+  ]
+
+  for (const hierarchy of domainHierarchies) {
+    if (normalized.has(hierarchy[2])) {
+      hierarchy.forEach((role) => expandedRoles.add(role))
+      continue
+    }
+    if (normalized.has(hierarchy[1])) {
+      expandedRoles.add(hierarchy[0])
+      expandedRoles.add(hierarchy[1])
+      continue
+    }
+    if (normalized.has(hierarchy[0])) {
+      expandedRoles.add(hierarchy[0])
+    }
   }
 
-  return []
+  return roleOrder.filter((role) => expandedRoles.has(role))
 }
 
 export const getPrimaryRole = (
   groups: string[] | null | undefined
-): AmpRole | null => {
+): PortalRole | null => {
   const normalized = normalizeAccessControlGroups(groups)
   return normalized.length > 0 ? normalized[normalized.length - 1] : null
 }
@@ -105,11 +131,21 @@ export const getAccessCapabilities = (
 ) => {
   const roles = normalizeAccessControlGroups(groups)
   const primaryRole = getPrimaryRole(groups)
-  const canViewAmp = roles.length > 0
+  const canViewAmp =
+    roles.includes('AMP.Viewer') ||
+    roles.includes('AMP.Editor') ||
+    roles.includes('AMP.Admin')
   const canEditAmp = roles.includes('AMP.Editor') || roles.includes('AMP.Admin')
   const canManageAmp = roles.includes('AMP.Admin')
-  const canViewConfidential = canEditAmp
+  const canViewConfidential = canViewAmp
   const canViewUnfinished = canManageAmp
+  const canViewGeothermal =
+    roles.includes('Geothermal.Viewer') ||
+    roles.includes('Geothermal.Editor') ||
+    roles.includes('Geothermal.Admin')
+  const canEditGeothermal =
+    roles.includes('Geothermal.Editor') || roles.includes('Geothermal.Admin')
+  const canManageGeothermal = roles.includes('Geothermal.Admin')
 
   return {
     roles,
@@ -119,6 +155,9 @@ export const getAccessCapabilities = (
     canManageAmp,
     canViewConfidential,
     canViewUnfinished,
+    canViewGeothermal,
+    canEditGeothermal,
+    canManageGeothermal,
     canViewLexicon: true,
   }
 }
@@ -145,11 +184,18 @@ export const canAccessResource = ({
   }
 
   if (resource === 'Sandbox') {
-    return (action === 'list' || action === 'show') && capabilities.canViewAmp
+    return (action === 'list' || action === 'show') && capabilities.canManageAmp
   }
 
-  if (adminOnlyResources.has(resource)) {
-    return capabilities.canManageAmp
+  if (resource === 'geothermal') {
+    return (
+      (action === 'list' || action === 'show') &&
+      capabilities.canViewGeothermal
+    )
+  }
+
+  if (crossDomainAdminOnlyResources.has(resource)) {
+    return capabilities.canManageAmp || capabilities.canManageGeothermal
   }
 
   if (isWip || wipResources.has(resource)) {
@@ -162,6 +208,18 @@ export const canAccessResource = ({
       return !wipResources.has(resource)
     }
     return capabilities.canManageAmp
+  }
+
+  if (resource.startsWith('geothermal.')) {
+    if (action === 'list' || action === 'show') {
+      return capabilities.canViewGeothermal
+    }
+    if (action === 'edit') {
+      return capabilities.canEditGeothermal
+    }
+    if (action === 'create' || action === 'delete' || action === 'manage') {
+      return capabilities.canManageGeothermal
+    }
   }
 
   if (viewableOcotilloResources.includes(resource)) {
