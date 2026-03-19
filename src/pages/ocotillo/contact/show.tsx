@@ -8,7 +8,7 @@ import {
   ContactDetailsCard,
   AssociatedSitesDetailsCard,
   AssociatedSitesMapCard,
-} from '@/components/Accordion/ContactShow'
+} from '@/components/ContactShow'
 
 export const ContactShow = () => {
   const { query, result } = useShow<IContact>()
