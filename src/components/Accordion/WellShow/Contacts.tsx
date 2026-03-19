@@ -1,5 +1,14 @@
 import { useList } from '@refinedev/core'
-import { Box, Divider, Paper, Stack, Typography } from '@mui/material'
+import {
+  Box,
+  Divider,
+  IconButton,
+  Paper,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material'
+import { Directions } from '@mui/icons-material'
 import { Link as RouterLink } from 'react-router'
 import type { IContact } from '@/interfaces/ocotillo'
 
@@ -23,6 +32,11 @@ const formatAddress = (addr: { address_line_1?: string; address_line_2?: string;
     addr.postal_code,
   ].filter(Boolean)
   return parts.join(', ') || 'N/A'
+}
+
+const getGoogleMapsAddressUrl = (address: string) => {
+  if (!address || address === 'N/A') return null
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 }
 
 const ContactBlock = ({ contact }: { contact: IContact }) => {
@@ -59,9 +73,25 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
         </Typography>
       ))}
       {addresses.map((addr, idx) => (
-        <Typography key={idx} variant="body2" color="text.secondary" component="div">
-          {formatAddress(addr)}
-        </Typography>
+        <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Typography variant="body2" color="text.secondary" component="div">
+            {formatAddress(addr)}
+          </Typography>
+          {getGoogleMapsAddressUrl(formatAddress(addr)) && (
+            <Tooltip title="Open in Google Maps">
+              <IconButton
+                size="small"
+                component="a"
+                href={getGoogleMapsAddressUrl(formatAddress(addr)) ?? undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ p: 0.25 }}
+              >
+                <Directions fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
       ))}
     </Stack>
   )

@@ -21,9 +21,9 @@ export const OwnerPermissionsAccordion = ({ well }: { well?: IWell }) => {
               <Box
                 sx={{
                   display: 'flex',
-                  flexWrap: 'wrap',
                   alignItems: 'center',
                   gap: 1,
+                  justifyContent: 'space-between',
                 }}
               >
                 <Typography variant="body2" component="span">
