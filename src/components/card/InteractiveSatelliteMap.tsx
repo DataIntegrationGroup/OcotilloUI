@@ -2,13 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { IWell } from '@/interfaces/ocotillo'
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
-  IconButton,
   Skeleton,
   Stack,
-  Tooltip,
   Typography,
 } from '@mui/material'
 import { Directions, Map } from '@mui/icons-material'
@@ -70,9 +69,10 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
         }
       : null
 
-  const getFeatureId = (
-    feature?: { id?: number | string; properties?: Record<string, unknown> }
-  ): string | undefined => {
+  const getFeatureId = (feature?: {
+    id?: number | string
+    properties?: Record<string, unknown>
+  }): string | undefined => {
     const p = feature?.properties
     const id =
       p?.['thing_id'] ??
@@ -87,11 +87,15 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
 
   const onMapPointClick = (_: any, points: any[]) => {
     const selectedPoint = points.find(
-      (point) => typeof point?.layer?.id === 'string' && point.layer.id.startsWith('location-')
+      (point) =>
+        typeof point?.layer?.id === 'string' &&
+        point.layer.id.startsWith('location-')
     )
     if (!selectedPoint) return
 
-    const thingType: string = String(selectedPoint?.properties?.thing_type || '').toLowerCase()
+    const thingType: string = String(
+      selectedPoint?.properties?.thing_type || ''
+    ).toLowerCase()
     const id = getFeatureId(selectedPoint)
     if (!id) return
 
@@ -127,26 +131,30 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
       : null
 
   return (
-    <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
+    <Card
+      elevation={2}
+      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+    >
       <CardHeader
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <Map color="primary" />
-            <Typography variant="body1" fontWeight="bold">Interactive Satellite Map</Typography>
+            <Typography variant="body1" fontWeight="bold">
+              Interactive Satellite Map
+            </Typography>
           </Stack>
         }
         action={
           googleMapsUrl && (
-            <Tooltip title="Open in Google Maps">
-              <IconButton
-                component="a"
-                href={googleMapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Directions />
-              </IconButton>
-            </Tooltip>
+            <Button
+              component="a"
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              startIcon={<Directions />}
+            >
+              Open in Google Maps
+            </Button>
           )
         }
       />
@@ -211,12 +219,17 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
 
 const LoadingCard = () => {
   return (
-    <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
+    <Card
+      elevation={2}
+      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+    >
       <CardHeader
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <Map color="primary" />
-            <Typography variant="body1" fontWeight="bold">Interactive Satellite Map</Typography>
+            <Typography variant="body1" fontWeight="bold">
+              Interactive Satellite Map
+            </Typography>
           </Stack>
         }
       />
