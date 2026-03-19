@@ -96,7 +96,7 @@ export const ContactDetailsCard = ({ contact }: ContactDetailsCardProps) => {
               <Stack spacing={0.5} sx={{ mt: 2 }}>
                 {contact?.created_at && (
                   <Typography variant="caption" color="text.secondary">
-                    Created: {formatAppDateTime(contact.created_at as string)}
+                    Created: {formatAppDateTime(contact.created_at as unknown as string)}
                   </Typography>
                 )}
                 {contact?.release_status && (

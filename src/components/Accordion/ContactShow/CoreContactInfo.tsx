@@ -16,7 +16,7 @@ export const CoreContactInfo = ({ contact }: { contact?: IContact | null }) => {
     {
       label: 'Created At',
       value: contact.created_at
-        ? formatAppDateTime(contact.created_at as string)
+        ? formatAppDateTime(contact.created_at as unknown as string)
         : null,
     },
   ]
