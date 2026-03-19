@@ -12,7 +12,6 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { ChevronLeft, ChevronRight, GridView, Image, ViewCarousel } from '@mui/icons-material'
 import { Masonry } from '@mui/lab'
 import { settings } from '@/settings'
-import { actionColumnDef } from '@/components/CommonColumnDefs'
 
 type ImageViewMode = 'grid' | 'slideshow'
 
@@ -38,7 +37,6 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
     () => [
       { field: 'name', headerName: 'Name', minWidth: 150 },
       { field: 'uri', headerName: 'URL', flex: 1 },
-      actionColumnDef({ resource: 'ocotillo.asset' }) as GridColDef,
     ],
     []
   )
