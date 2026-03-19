@@ -17,6 +17,7 @@ type GeoJsonFeatureCollection = {
 }
 
 type CirclePaint = Record<string, unknown>
+type BboxTuple = [number, number, number, number]
 
 const EXCLUDED_SELECTED_POINT_COLUMNS = new Set([
   'thing_type',
@@ -215,6 +216,51 @@ export const getSelectedPointFeatures = (
   return features.filter(
     (feature: GeoJsonFeature) => feature?.geometry?.type === 'Point'
   )
+}
+
+export const parseViewportBbox = (
+  bbox: string | null | undefined
+): BboxTuple | null => {
+  if (!bbox) return null
+
+  const values = bbox.split(',').map((value) => Number(value))
+  if (values.length !== 4 || values.some((value) => !Number.isFinite(value))) {
+    return null
+  }
+
+  return values as BboxTuple
+}
+
+export const getVisiblePointFeatures = ({
+  featureCollection,
+  bbox,
+}: {
+  featureCollection: GeoJsonFeatureCollection | null | undefined
+  bbox: BboxTuple | null
+}): GeoJsonFeature[] => {
+  if (!bbox) return []
+
+  const [west, south, east, north] = bbox
+  const features = Array.isArray(featureCollection?.features)
+    ? featureCollection.features
+    : []
+
+  return features.filter((feature: GeoJsonFeature) => {
+    if (feature?.geometry?.type !== 'Point') return false
+    if (!Array.isArray(feature.geometry.coordinates)) return false
+
+    const longitude = Number(feature.geometry.coordinates[0])
+    const latitude = Number(feature.geometry.coordinates[1])
+
+    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return false
+
+    return (
+      longitude >= west &&
+      longitude <= east &&
+      latitude >= south &&
+      latitude <= north
+    )
+  })
 }
 
 export const getSelectedPointColumns = (

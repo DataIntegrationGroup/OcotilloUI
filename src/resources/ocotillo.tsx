@@ -1,6 +1,7 @@
 import {
   Apps,
   Construction,
+  DatasetLinked,
   Contacts,
   DynamicFormOutlined,
   Image,
@@ -296,6 +297,14 @@ let ocotillo = [
     meta: {
       label: 'Map',
       icon: <Map />,
+    },
+  },
+  {
+    name: 'collections',
+    list: '/ocotillo/collections',
+    meta: {
+      label: 'Datasets',
+      icon: <DatasetLinked />,
     },
   },
   ...tables,

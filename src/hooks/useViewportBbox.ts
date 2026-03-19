@@ -24,40 +24,59 @@ export const useViewportBbox = (
   const [bbox, setBbox] = useState<string | null>(null)
 
   useEffect(() => {
-    const map = mapRef.current?.getMap()
-    if (!map) return
-
     let timer: ReturnType<typeof setTimeout> | undefined
+    let animationFrame: number | undefined
+    let detachListeners: (() => void) | undefined
+    let cancelled = false
 
-    const update = () => {
-      const bounds = map.getBounds()
-      if (!bounds) return
+    const attach = () => {
+      const map = mapRef.current?.getMap()
+      if (!map) {
+        if (!cancelled) {
+          animationFrame = window.requestAnimationFrame(attach)
+        }
+        return
+      }
 
-      const west = round(bounds.getWest(), precision)
-      const south = round(bounds.getSouth(), precision)
-      const east = round(bounds.getEast(), precision)
-      const north = round(bounds.getNorth(), precision)
+      const update = () => {
+        const bounds = map.getBounds()
+        if (!bounds) return
 
-      setBbox(`${west},${south},${east},${north}`)
+        const west = round(bounds.getWest(), precision)
+        const south = round(bounds.getSouth(), precision)
+        const east = round(bounds.getEast(), precision)
+        const north = round(bounds.getNorth(), precision)
+
+        setBbox(`${west},${south},${east},${north}`)
+      }
+
+      const schedule = () => {
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(update, debounceMs)
+      }
+
+      update()
+
+      map.on('moveend', schedule)
+      map.on('zoomend', schedule)
+      map.on('dragend', schedule)
+      map.on('load', update)
+
+      detachListeners = () => {
+        map.off('moveend', schedule)
+        map.off('zoomend', schedule)
+        map.off('dragend', schedule)
+        map.off('load', update)
+      }
     }
 
-    const schedule = () => {
-      if (timer) clearTimeout(timer)
-      timer = setTimeout(update, debounceMs)
-    }
-
-    // Set initial bbox immediately.
-    update()
-
-    map.on('moveend', schedule)
-    map.on('zoomend', schedule)
-    map.on('dragend', schedule)
+    attach()
 
     return () => {
+      cancelled = true
       if (timer) clearTimeout(timer)
-      map.off('moveend', schedule)
-      map.off('zoomend', schedule)
-      map.off('dragend', schedule)
+      if (animationFrame) window.cancelAnimationFrame(animationFrame)
+      detachListeners?.()
     }
   }, [mapRef, debounceMs, precision])
 
