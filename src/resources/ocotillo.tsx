@@ -89,17 +89,17 @@ let tables: {
   //     icon: <Image />,
   //   },
   // },
-  {
-    name: 'location',
-    list: '/ocotillo/location',
-    create: '/ocotillo/location/create',
-    edit: '/ocotillo/location/edit/:id',
-    show: '/ocotillo/location/show/:id',
-    meta: {
-      label: 'Locations',
-      icon: <Place />,
-    },
-  },
+  // {
+  //   name: 'location',
+  //   list: '/ocotillo/location',
+  //   create: '/ocotillo/location/create',
+  //   edit: '/ocotillo/location/edit/:id',
+  //   show: '/ocotillo/location/show/:id',
+  //   meta: {
+  //     label: 'Locations',
+  //     icon: <Place />,
+  //   },
+  // },
   // {
   //   name: 'sensor',
   //   list: '/ocotillo/sensor',
