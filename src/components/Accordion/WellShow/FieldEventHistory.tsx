@@ -1,4 +1,4 @@
-import { Box, Paper, Typography } from '@mui/material'
+import { Box, Paper, Stack, Typography } from '@mui/material'
 import { History } from '@mui/icons-material'
 import { ISample } from '@/interfaces/ocotillo'
 import { formatAppDateTime } from '@/utils'
@@ -49,6 +49,7 @@ export const FieldEventHistoryAccordion = ({
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
       <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <History color="primary" />
         <Typography variant="body1" fontWeight="bold">
           Field Event History
         </Typography>
@@ -59,9 +60,57 @@ export const FieldEventHistoryAccordion = ({
             No field event history found.
           </Typography>
         ) : (
-          <Typography variant="body2" component="p" sx={{ whiteSpace: 'pre-line' }}>
-            {[date, body].filter(Boolean).join('\n')}
-          </Typography>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              borderColor: 'divider',
+              bgcolor: 'background.default',
+            }}
+          >
+            <Stack spacing={1.5}>
+              {date && (
+                <Box>
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      display: 'block',
+                      color: 'text.secondary',
+                      letterSpacing: 1.1,
+                    }}
+                  >
+                    Event Date
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {date}
+                  </Typography>
+                </Box>
+              )}
+
+              {body && (
+                <Box>
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      display: 'block',
+                      color: 'text.secondary',
+                      letterSpacing: 1.1,
+                    }}
+                  >
+                    Event Summary
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    component="p"
+                    sx={{ whiteSpace: 'pre-line', lineHeight: 1.65, m: 0 }}
+                  >
+                    {body}
+                  </Typography>
+                </Box>
+              )}
+            </Stack>
+          </Paper>
         )}
       </Box>
     </Paper>

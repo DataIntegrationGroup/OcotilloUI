@@ -1,5 +1,6 @@
 import { Box, Paper, Stack, Typography } from '@mui/material'
 import { IWell } from '@/interfaces/ocotillo'
+import { formatAppDate } from '@/utils'
 
 export const ConstructionInfoAccordion = ({ well }: { well?: IWell }) => {
   return (
@@ -11,12 +12,20 @@ export const ConstructionInfoAccordion = ({ well }: { well?: IWell }) => {
       </Box>
       <Box sx={{ p: 2 }}>
       <Stack spacing={1}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline', flexWrap: 'wrap' }}>
+          <Typography variant="body2" component="span">
+            Is open and suitable for a datalogger?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" component="span">
+            {well?.is_suitable_for_datalogger?.toString() || 'N/A'}
+          </Typography>
+        </Box>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
           <Typography variant="body2" component="span">
             Completion Date:
           </Typography>
           <Typography variant="body2" color="text.secondary" component="span">
-            {well?.well_completion_date || 'N/A'}
+            {formatAppDate(well?.well_completion_date) || 'N/A'}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
