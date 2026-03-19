@@ -222,12 +222,12 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   },
   {
     layerKey: 'ogc-rock-sample-locations',
-    groupKey: 'water',
+    groupKey: 'geothermal',
     candidates: ['Rock Sample Locations', 'rock_sample_locations'],
   },
   {
     layerKey: 'ogc-soil-gas-sample-locations',
-    groupKey: 'water',
+    groupKey: 'geothermal',
     candidates: ['Soil Gas Sample Locations', 'soil_gas_sample_locations'],
   },
 ]

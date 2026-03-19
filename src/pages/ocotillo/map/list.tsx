@@ -45,7 +45,6 @@ import {
 } from '@/utils/layerExport'
 import {
   getSelectedPointColumnLabel,
-  formatSelectedPointCoordinates,
   getFeatureId,
   getSelectedPointDisplayValue,
   getSelectedPointColumns,
@@ -54,6 +53,21 @@ import {
 const DEFAULT_VISIBLE_LAYERS = ['ogc-latest-depth-to-water']
 const VISIBLE_FEATURES_DRAWER_WIDTH = 360
 const VISIBLE_FEATURES_PAGE_SIZE = 10
+type VisibleFeatureGroup = {
+  layerKey: string
+  label: string
+  features: any[]
+  columns: string[]
+}
+
+type VisibleFeaturePageItem = {
+  entryKey: string
+  layerKey: string
+  label: string
+  columns: string[]
+  feature: any
+}
+
 const DEFAULT_EXPANDED_GROUPS = {
   groundwater: true,
   surfaceWater: true,
@@ -125,6 +139,53 @@ const getRequestedLayersFromSearch = (search: string): string[] => {
   return Array.from(new Set(requestedLayers))
 }
 
+const areVisibleFeatureGroupsEqual = (
+  previous: VisibleFeatureGroup[],
+  next: VisibleFeatureGroup[]
+) => {
+  if (previous.length !== next.length) return false
+
+  for (let index = 0; index < previous.length; index += 1) {
+    const previousGroup = previous[index]
+    const nextGroup = next[index]
+
+    if (
+      previousGroup.layerKey !== nextGroup.layerKey ||
+      previousGroup.label !== nextGroup.label ||
+      previousGroup.columns.length !== nextGroup.columns.length ||
+      previousGroup.features.length !== nextGroup.features.length
+    ) {
+      return false
+    }
+
+    for (
+      let columnIndex = 0;
+      columnIndex < previousGroup.columns.length;
+      columnIndex += 1
+    ) {
+      if (
+        previousGroup.columns[columnIndex] !== nextGroup.columns[columnIndex]
+      ) {
+        return false
+      }
+    }
+
+    for (
+      let featureIndex = 0;
+      featureIndex < previousGroup.features.length;
+      featureIndex += 1
+    ) {
+      const previousFeatureId = getFeatureId(
+        previousGroup.features[featureIndex]
+      )
+      const nextFeatureId = getFeatureId(nextGroup.features[featureIndex])
+      if (previousFeatureId !== nextFeatureId) return false
+    }
+  }
+
+  return true
+}
+
 export const MapView: React.FC = () => {
   const location = useLocation()
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
@@ -132,20 +193,18 @@ export const MapView: React.FC = () => {
   const piperDiagramRef = useRef<PiperDiagramHandle | null>(null)
   const initialVisibleLayers = useMemo(() => {
     const requestedLayers = getRequestedLayersFromSearch(location.search)
-    return requestedLayers.length > 0
-      ? requestedLayers
-      : DEFAULT_VISIBLE_LAYERS
+    return requestedLayers.length > 0 ? requestedLayers : DEFAULT_VISIBLE_LAYERS
   }, [location.search])
-  const [visibleLayers, setVisibleLayers] = useState<string[]>(initialVisibleLayers)
+  const [visibleLayers, setVisibleLayers] =
+    useState<string[]>(initialVisibleLayers)
   const [colorMappingByLayer, setColorMappingByLayer] = useState<
     Record<string, boolean>
   >({})
   const THING_LAYERS = useThingLayers(visibleLayers, colorMappingByLayer)
   const [viewportBbox, setViewportBbox] = useState<string | null>(null)
   const [basemapCollapsed, setBasemapCollapsed] = useState(true)
-  const [visibleFeaturesCollapsed, setVisibleFeaturesCollapsed] = useState(
-    false
-  )
+  const [visibleFeaturesCollapsed, setVisibleFeaturesCollapsed] =
+    useState(false)
   const [layersCollapsed, setLayersCollapsed] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     getExpandedGroupsForLayers(initialVisibleLayers)
@@ -156,27 +215,16 @@ export const MapView: React.FC = () => {
     Record<string, any>
   >({})
   const [visiblePointFeaturesByLayer, setVisiblePointFeaturesByLayer] =
-    useState<
-      Array<{
-        layerKey: string
-        label: string
-        features: any[]
-        columns: string[]
-      }>
-    >([])
+    useState<VisibleFeatureGroup[]>([])
   const [visibleFeaturesPage, setVisibleFeaturesPage] = useState(1)
-  const [selectedBasemap, setSelectedBasemap] = useState(
-    DEFAULT_MAPBOX_BASEMAP
-  )
+  const [selectedBasemap, setSelectedBasemap] = useState(DEFAULT_MAPBOX_BASEMAP)
   const [isPiperDrawerOpen, setIsPiperDrawerOpen] = useState(false)
   const [activePiperFeatureId, setActivePiperFeatureId] = useState<
     string | null
   >(null)
   const areDrawToolsEnabled = visibleLayers.length > 0
-  const selectionFeatures = (
-    Object.values(selectionPolygons) as any[]
-  ).filter((feature) =>
-    ['Polygon', 'MultiPolygon'].includes(feature?.geometry?.type)
+  const selectionFeatures = (Object.values(selectionPolygons) as any[]).filter(
+    (feature) => ['Polygon', 'MultiPolygon'].includes(feature?.geometry?.type)
   )
   const hasSelectionPolygon = selectionFeatures.length > 0
 
@@ -184,9 +232,7 @@ export const MapView: React.FC = () => {
     const requestedLayers = getRequestedLayersFromSearch(location.search)
 
     setVisibleLayers(
-      requestedLayers.length > 0
-        ? requestedLayers
-        : DEFAULT_VISIBLE_LAYERS
+      requestedLayers.length > 0 ? requestedLayers : DEFAULT_VISIBLE_LAYERS
     )
     setExpandedGroups(
       requestedLayers.length > 0
@@ -205,14 +251,13 @@ export const MapView: React.FC = () => {
 
   const exportableLayers = useMemo(
     () =>
-      visibleLayers
-        .flatMap((layerKey) => {
-          const layerDef = THING_LAYERS[layerKey]
-          if (!layerDef) return []
+      visibleLayers.flatMap((layerKey) => {
+        const layerDef = THING_LAYERS[layerKey]
+        if (!layerDef) return []
 
-          return [{
+        return [
+          {
             layerKey,
-            layerDef,
             label: layerDef.layerProps?.label || layerKey,
             featureCollection: {
               ...(layerDef.sourceData?.type === 'FeatureCollection'
@@ -223,11 +268,23 @@ export const MapView: React.FC = () => {
                   ? layerDef.sourceData.features
                   : [],
                 selectionFeatures
-                ),
+              ),
             },
-          }]
-        }),
+          },
+        ]
+      }),
     [THING_LAYERS, visibleLayers, selectionFeatures]
+  )
+
+  const visibleLayerLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        visibleLayers.map((layerKey) => [
+          layerKey,
+          THING_LAYERS[layerKey]?.layerProps?.label || layerKey,
+        ])
+      ) as Record<string, string>,
+    [THING_LAYERS, visibleLayers]
   )
 
   useEffect(() => {
@@ -245,7 +302,9 @@ export const MapView: React.FC = () => {
         return
       }
 
-      const renderedLayerIds = visibleLayers.map((layerKey) => `location-${layerKey}`)
+      const renderedLayerIds = visibleLayers.map(
+        (layerKey) => `location-${layerKey}`
+      )
       if (renderedLayerIds.length === 0) {
         setVisiblePointFeaturesByLayer([])
         return
@@ -267,16 +326,13 @@ export const MapView: React.FC = () => {
         if (!renderedLayerId.startsWith('location-')) continue
 
         const layerKey = renderedLayerId.replace(/^location-/, '')
-        const layerDef = THING_LAYERS[layerKey]
-        if (!layerDef) continue
-
         const featureId =
           getFeatureId(feature as any) ||
           JSON.stringify(feature.geometry?.coordinates || [])
 
         if (!grouped.has(layerKey)) {
           grouped.set(layerKey, {
-            label: layerDef.layerProps?.label || layerKey,
+            label: visibleLayerLabels[layerKey] || layerKey,
             features: [],
             seenIds: new Set<string>(),
           })
@@ -289,15 +345,19 @@ export const MapView: React.FC = () => {
         group.features.push(feature)
       }
 
-      setVisiblePointFeaturesByLayer(
-        Array.from(grouped.entries())
-          .map(([layerKey, group]) => ({
-            layerKey,
-            label: group.label,
-            features: group.features,
-            columns: getSelectedPointColumns(group.features, layerKey),
-          }))
-          .filter(({ features }) => features.length > 0)
+      const nextVisibleFeatureGroups = Array.from(grouped.entries())
+        .map(([layerKey, group]) => ({
+          layerKey,
+          label: group.label,
+          features: group.features,
+          columns: getSelectedPointColumns(group.features, layerKey),
+        }))
+        .filter(({ features }) => features.length > 0)
+
+      setVisiblePointFeaturesByLayer((previous) =>
+        areVisibleFeatureGroupsEqual(previous, nextVisibleFeatureGroups)
+          ? previous
+          : nextVisibleFeatureGroups
       )
     }
 
@@ -306,7 +366,7 @@ export const MapView: React.FC = () => {
     return () => {
       window.cancelAnimationFrame(frame)
     }
-  }, [THING_LAYERS, viewportBbox, visibleLayers])
+  }, [viewportBbox, visibleLayerLabels, visibleLayers])
 
   const selectedMajorChemistryPoints = useMemo(
     () =>
@@ -355,7 +415,7 @@ export const MapView: React.FC = () => {
 
     const grouped = new Map<
       string,
-      { label: string; columns: string[]; items: typeof pageItems }
+      { label: string; columns: string[]; items: VisibleFeaturePageItem[] }
     >()
 
     for (const item of pageItems) {
@@ -460,7 +520,8 @@ export const MapView: React.FC = () => {
     })
   }
 
-  const onLayerChangeWrapper = (layerKey: string) =>
+  const onLayerChangeWrapper =
+    (layerKey: string) =>
     (_event: React.ChangeEvent<HTMLInputElement>, _checked: boolean) => {
       setVisibleLayers((prev) =>
         prev.includes(layerKey)
@@ -687,9 +748,10 @@ export const MapView: React.FC = () => {
               '& .mapboxgl-ctrl-bottom-left, & .mapboxgl-ctrl-bottom-right': {
                 bottom: '6px',
               },
-              '& .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl, & .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl': {
-                marginBottom: 0,
-              },
+              '& .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl, & .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl':
+                {
+                  marginBottom: 0,
+                },
             }}
           >
             <MapComponent
@@ -765,120 +827,37 @@ export const MapView: React.FC = () => {
                     }}
                   />
                 </Source>
-            ) : null}
+              ) : null}
             </MapComponent>
           </Box>
-        <Paper
-          elevation={6}
-          ref={basemapPanelRef}
-          sx={(theme) => ({
-            position: 'absolute',
-            top: 12,
-            left: 12,
-            width: { xs: 'calc(100% - 24px)', sm: 320 },
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: basemapCollapsed ? 'visible' : 'hidden',
-            px: 0.8,
-            py: 0.6,
-            borderRadius: 1.25,
-            backdropFilter: 'blur(6px)',
-            backgroundColor: alpha(theme.palette.background.paper, 0.9),
-            border: '1px solid',
-            borderColor: alpha(theme.palette.divider, 0.9),
-            zIndex: 2,
-            height: basemapCollapsed ? 'auto' : undefined,
-          })}
-        >
-          <Box
-            sx={{
-              px: 0.3,
-              py: 0.2,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Typography
-              variant="overline"
-              sx={{
-                px: 0.55,
-                py: 0.25,
-                fontWeight: 700,
-                letterSpacing: 0.7,
-                fontSize: '0.68rem',
-                lineHeight: 1.2,
-                flex: 1,
-              }}
-            >
-              Base Maps
-            </Typography>
-            <IconButton
-              size="small"
-              onMouseDown={(event) => event.stopPropagation()}
-              onClick={onBasemapCollapseToggle}
-              aria-label={basemapCollapsed ? 'Expand base maps' : 'Collapse base maps'}
-            >
-              {basemapCollapsed ? (
-                <KeyboardArrowDown fontSize="small" />
-              ) : (
-                <KeyboardArrowUp fontSize="small" />
-              )}
-            </IconButton>
-          </Box>
-          <Collapse
-            in={!basemapCollapsed}
-            unmountOnExit
-            sx={{
-              minHeight: 0,
-              overflowY: 'auto',
-            }}
-          >
-            <Box sx={{ px: 0.5, pb: 0.5 }}>
-              <BasemapSelector
-                value={selectedBasemap}
-                onChange={setSelectedBasemap}
-              />
-            </Box>
-          </Collapse>
-        </Paper>
-        <Paper
-          elevation={6}
-          sx={(theme) => ({
-            position: 'absolute',
-            top: layersPanelTop,
-            bottom: 'auto',
-            left: 12,
-            width: { xs: 'calc(100% - 24px)', sm: 320 },
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: layersCollapsed ? 'visible' : 'hidden',
-            px: 0.8,
-            py: 0.6,
-            borderRadius: 1.25,
-            backdropFilter: 'blur(6px)',
-            backgroundColor: alpha(theme.palette.background.paper, 0.9),
-            border: '1px solid',
-            borderColor: alpha(theme.palette.divider, 0.9),
-            zIndex: 2,
-            height: 'auto',
-            maxHeight: layersCollapsed ? 'none' : layersPanelMaxHeight,
-          })}
-        >
-          <Box
-            sx={{
-              px: 0.3,
-              py: 0.2,
+          <Paper
+            elevation={6}
+            ref={basemapPanelRef}
+            sx={(theme) => ({
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              width: { xs: 'calc(100% - 24px)', sm: 320 },
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'stretch',
-              gap: 0.35,
-            }}
+              overflow: basemapCollapsed ? 'visible' : 'hidden',
+              px: 0.8,
+              py: 0.6,
+              borderRadius: 1.25,
+              backdropFilter: 'blur(6px)',
+              backgroundColor: alpha(theme.palette.background.paper, 0.9),
+              border: '1px solid',
+              borderColor: alpha(theme.palette.divider, 0.9),
+              zIndex: 2,
+              height: basemapCollapsed ? 'auto' : undefined,
+            })}
           >
             <Box
               sx={{
+                px: 0.3,
+                py: 0.2,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 0.6,
               }}
             >
               <Typography
@@ -890,75 +869,172 @@ export const MapView: React.FC = () => {
                   letterSpacing: 0.7,
                   fontSize: '0.68rem',
                   lineHeight: 1.2,
+                  flex: 1,
                 }}
               >
-                Datasets
+                Base Maps
               </Typography>
-              <Box sx={{ flex: 1, minWidth: 0 }} />
               <IconButton
                 size="small"
                 onMouseDown={(event) => event.stopPropagation()}
-                onClick={onLayersCollapseToggle}
-                aria-label={layersCollapsed ? 'Expand datasets' : 'Collapse datasets'}
+                onClick={onBasemapCollapseToggle}
+                aria-label={
+                  basemapCollapsed ? 'Expand base maps' : 'Collapse base maps'
+                }
               >
-                {layersCollapsed ? (
+                {basemapCollapsed ? (
                   <KeyboardArrowDown fontSize="small" />
                 ) : (
                   <KeyboardArrowUp fontSize="small" />
                 )}
               </IconButton>
             </Box>
-          </Box>
-          <Collapse
-            in={!layersCollapsed}
-            unmountOnExit
-            sx={{
-              overflow: 'hidden',
-            }}
-          >
-            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              <Box
-                sx={(theme) => ({
-                  flex: '0 0 auto',
-                  px: 0.25,
-                  pb: 0.35,
-                  pt: 0.1,
-                  backgroundColor: alpha(theme.palette.background.paper, 0.96),
-                  borderBottom: '1px solid',
-                  borderColor: alpha(theme.palette.divider, 0.75),
-                })}
-              >
-                <MapExportControls
-                  value={exportFormat}
-                  onChange={setExportFormat}
-                  onExport={onExportLayer}
-                  buttonLabel={
-                    hasSelectionPolygon
-                      ? 'Export Selected'
-                      : visibleLayers.length > 1
-                        ? 'Export Datasets'
-                        : 'Export Dataset'
-                  }
-                  disabled={!hasExportableLayers}
-                  tooltipPlacement="right"
-                  tooltip={
-                    hasExportableLayers
-                      ? `Click to download ${
-                          hasSelectionPolygon
-                            ? 'the selected portion of each visible dataset'
-                            : visibleLayers.length > 1
-                              ? 'each visible dataset'
-                              : 'that dataset'
-                        } as separate ${exportFormat === 'csv' ? 'CSV' : 'GeoJSON'} file${
-                          visibleLayers.length > 1 || hasSelectionPolygon ? 's' : ''
-                        }.`
-                      : 'Disabled until at least one dataset is visible.'
-                  }
+            <Collapse
+              in={!basemapCollapsed}
+              unmountOnExit
+              sx={{
+                minHeight: 0,
+                overflowY: 'auto',
+              }}
+            >
+              <Box sx={{ px: 0.5, pb: 0.5 }}>
+                <BasemapSelector
+                  value={selectedBasemap}
+                  onChange={setSelectedBasemap}
                 />
               </Box>
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                {(Object.keys(groupedLayers) as Array<keyof typeof groupedLayers>).map(
-                  (groupKey) => {
+            </Collapse>
+          </Paper>
+          <Paper
+            elevation={6}
+            sx={(theme) => ({
+              position: 'absolute',
+              top: layersPanelTop,
+              bottom: 'auto',
+              left: 12,
+              width: { xs: 'calc(100% - 24px)', sm: 320 },
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: layersCollapsed ? 'visible' : 'hidden',
+              px: 0.8,
+              py: 0.6,
+              borderRadius: 1.25,
+              backdropFilter: 'blur(6px)',
+              backgroundColor: alpha(theme.palette.background.paper, 0.9),
+              border: '1px solid',
+              borderColor: alpha(theme.palette.divider, 0.9),
+              zIndex: 2,
+              height: 'auto',
+              maxHeight: layersCollapsed ? 'none' : layersPanelMaxHeight,
+            })}
+          >
+            <Box
+              sx={{
+                px: 0.3,
+                py: 0.2,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                gap: 0.35,
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.6,
+                }}
+              >
+                <Typography
+                  variant="overline"
+                  sx={{
+                    px: 0.55,
+                    py: 0.25,
+                    fontWeight: 700,
+                    letterSpacing: 0.7,
+                    fontSize: '0.68rem',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Datasets
+                </Typography>
+                <Box sx={{ flex: 1, minWidth: 0 }} />
+                <IconButton
+                  size="small"
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={onLayersCollapseToggle}
+                  aria-label={
+                    layersCollapsed ? 'Expand datasets' : 'Collapse datasets'
+                  }
+                >
+                  {layersCollapsed ? (
+                    <KeyboardArrowDown fontSize="small" />
+                  ) : (
+                    <KeyboardArrowUp fontSize="small" />
+                  )}
+                </IconButton>
+              </Box>
+            </Box>
+            <Collapse
+              in={!layersCollapsed}
+              unmountOnExit
+              sx={{
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
+              >
+                <Box
+                  sx={(theme) => ({
+                    flex: '0 0 auto',
+                    px: 0.25,
+                    pb: 0.35,
+                    pt: 0.1,
+                    backgroundColor: alpha(
+                      theme.palette.background.paper,
+                      0.96
+                    ),
+                    borderBottom: '1px solid',
+                    borderColor: alpha(theme.palette.divider, 0.75),
+                  })}
+                >
+                  <MapExportControls
+                    value={exportFormat}
+                    onChange={setExportFormat}
+                    onExport={onExportLayer}
+                    buttonLabel={
+                      hasSelectionPolygon
+                        ? 'Export Selected'
+                        : visibleLayers.length > 1
+                          ? 'Export Datasets'
+                          : 'Export Dataset'
+                    }
+                    disabled={!hasExportableLayers}
+                    tooltipPlacement="right"
+                    tooltip={
+                      hasExportableLayers
+                        ? `Click to download ${
+                            hasSelectionPolygon
+                              ? 'the selected portion of each visible dataset'
+                              : visibleLayers.length > 1
+                                ? 'each visible dataset'
+                                : 'that dataset'
+                          } as separate ${exportFormat === 'csv' ? 'CSV' : 'GeoJSON'} file${
+                            visibleLayers.length > 1 || hasSelectionPolygon
+                              ? 's'
+                              : ''
+                          }.`
+                        : 'Disabled until at least one dataset is visible.'
+                    }
+                  />
+                </Box>
+                <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+                  {(
+                    Object.keys(groupedLayers) as Array<
+                      keyof typeof groupedLayers
+                    >
+                  ).map((groupKey) => {
                     const layers = groupedLayers[groupKey]
                     if (layers.length === 0) return null
 
@@ -1080,7 +1156,9 @@ export const MapView: React.FC = () => {
                                             ? 'contained'
                                             : 'outlined'
                                         }
-                                        onClick={() => onColorMappingToggle(key)}
+                                        onClick={() =>
+                                          onColorMappingToggle(key)
+                                        }
                                         sx={{
                                           minWidth: 0,
                                           px: 0.7,
@@ -1099,10 +1177,14 @@ export const MapView: React.FC = () => {
                                     <Button
                                       size="small"
                                       variant={
-                                        isPiperDrawerOpen ? 'contained' : 'outlined'
+                                        isPiperDrawerOpen
+                                          ? 'contained'
+                                          : 'outlined'
                                       }
                                       startIcon={
-                                        <ScienceOutlined sx={{ fontSize: 14 }} />
+                                        <ScienceOutlined
+                                          sx={{ fontSize: 14 }}
+                                        />
                                       }
                                       onClick={() =>
                                         setIsPiperDrawerOpen((open) => !open)
@@ -1133,8 +1215,12 @@ export const MapView: React.FC = () => {
                                         height: 5,
                                         borderRadius: 1,
                                         border: '1px solid',
-                                        borderColor: alpha(theme.palette.divider, 0.75),
-                                        background: layerDef.legendScale.gradient,
+                                        borderColor: alpha(
+                                          theme.palette.divider,
+                                          0.75
+                                        ),
+                                        background:
+                                          layerDef.legendScale.gradient,
                                       })}
                                     />
                                     <Box
@@ -1146,13 +1232,19 @@ export const MapView: React.FC = () => {
                                     >
                                       <Typography
                                         variant="caption"
-                                        sx={{ fontSize: '0.6rem', lineHeight: 1 }}
+                                        sx={{
+                                          fontSize: '0.6rem',
+                                          lineHeight: 1,
+                                        }}
                                       >
                                         {layerDef.legendScale.minLabel}
                                       </Typography>
                                       <Typography
                                         variant="caption"
-                                        sx={{ fontSize: '0.6rem', lineHeight: 1 }}
+                                        sx={{
+                                          fontSize: '0.6rem',
+                                          lineHeight: 1,
+                                        }}
                                       >
                                         {layerDef.legendScale.maxLabel}
                                       </Typography>
@@ -1160,7 +1252,9 @@ export const MapView: React.FC = () => {
                                   </Box>
                                 )}
                                 <Box sx={{ height: 2, mt: 0 }}>
-                                  {isLoading && <LinearProgress sx={{ height: 2 }} />}
+                                  {isLoading && (
+                                    <LinearProgress sx={{ height: 2 }} />
+                                  )}
                                 </Box>
                               </Box>
                             )
@@ -1168,103 +1262,102 @@ export const MapView: React.FC = () => {
                         </Collapse>
                       </Box>
                     )
-                  }
-                )}
+                  })}
+                </Box>
               </Box>
-            </Box>
-          </Collapse>
-        </Paper>
-        <Drawer
-          anchor="right"
-          variant="persistent"
-          open={isPiperDrawerOpen}
-          hideBackdrop
-          slotProps={{
-            paper: {
-              sx: (theme) => ({
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                bottom: 'auto',
-                height: 'calc(100% - 48px)',
-                maxHeight: 'calc(100% - 48px)',
-                width: {
-                  xs: 'min(calc(100% - 24px), 360px)',
-                  sm: 340,
-                  md: 360,
-                },
-                borderRadius: 2,
-                border: '1px solid',
-                borderColor: alpha(theme.palette.divider, 0.9),
-                backgroundColor: alpha(theme.palette.background.paper, 0.96),
-                backdropFilter: 'blur(8px)',
-                overflow: 'hidden',
-                zIndex: 3,
-              }),
-            },
-          }}
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            '& .MuiDrawer-paper': {
-              pointerEvents: 'auto',
-            },
-          }}
-        >
-          <Box
+            </Collapse>
+          </Paper>
+          <Drawer
+            anchor="right"
+            variant="persistent"
+            open={isPiperDrawerOpen}
+            hideBackdrop
+            slotProps={{
+              paper: {
+                sx: (theme) => ({
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  bottom: 'auto',
+                  height: 'calc(100% - 48px)',
+                  maxHeight: 'calc(100% - 48px)',
+                  width: {
+                    xs: 'min(calc(100% - 24px), 360px)',
+                    sm: 340,
+                    md: 360,
+                  },
+                  borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: alpha(theme.palette.divider, 0.9),
+                  backgroundColor: alpha(theme.palette.background.paper, 0.96),
+                  backdropFilter: 'blur(8px)',
+                  overflow: 'hidden',
+                  zIndex: 3,
+                }),
+              },
+            }}
             sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-              minHeight: 0,
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              '& .MuiDrawer-paper': {
+                pointerEvents: 'auto',
+              },
             }}
           >
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
+            <Box
               sx={{
-                px: 1.1,
-                py: 0.85,
-                borderBottom: '1px solid',
-                borderColor: 'divider',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                minHeight: 0,
               }}
             >
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  Piper Diagram
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Live major chemistry selection.
-                </Typography>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{
+                  px: 1.1,
+                  py: 0.85,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Piper Diagram
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Live major chemistry selection.
+                  </Typography>
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() => void piperDiagramRef.current?.exportPdf()}
+                  aria-label="Export Piper diagram PDF"
+                  disabled={selectedMajorChemistryPoints.length === 0}
+                >
+                  <Download fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() => setIsPiperDrawerOpen(false)}
+                  aria-label="Close Piper diagram"
+                >
+                  <Close fontSize="small" />
+                </IconButton>
+              </Stack>
+              <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', p: 1 }}>
+                <PiperDiagram
+                  ref={piperDiagramRef}
+                  features={selectedMajorChemistryPoints}
+                  activeFeatureId={activePiperFeatureId}
+                  onActiveFeatureChange={setActivePiperFeatureId}
+                />
               </Box>
-              <IconButton
-                size="small"
-                onClick={() => void piperDiagramRef.current?.exportPdf()}
-                aria-label="Export Piper diagram PDF"
-                disabled={selectedMajorChemistryPoints.length === 0}
-              >
-                <Download fontSize="small" />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={() => setIsPiperDrawerOpen(false)}
-                aria-label="Close Piper diagram"
-              >
-                <Close fontSize="small" />
-              </IconButton>
-            </Stack>
-            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', p: 1 }}>
-              <PiperDiagram
-                ref={piperDiagramRef}
-                features={selectedMajorChemistryPoints}
-                activeFeatureId={activePiperFeatureId}
-                onActiveFeatureChange={setActivePiperFeatureId}
-              />
             </Box>
-          </Box>
-        </Drawer>
+          </Drawer>
         </Box>
         <Paper
           elevation={6}
@@ -1307,9 +1400,10 @@ export const MapView: React.FC = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 0.9,
-                borderBottom: visibleFeaturesCollapsed || !hasVisiblePointFeatures
-                  ? 'none'
-                  : '1px solid',
+                borderBottom:
+                  visibleFeaturesCollapsed || !hasVisiblePointFeatures
+                    ? 'none'
+                    : '1px solid',
                 borderColor: 'divider',
               }}
             >
@@ -1335,7 +1429,10 @@ export const MapView: React.FC = () => {
                   >
                     Visible Features
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.35 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, mt: 0.35 }}
+                  >
                     {hasVisiblePointFeatures
                       ? `${totalVisiblePointCount} point${totalVisiblePointCount === 1 ? '' : 's'} in view`
                       : 'No point features in view'}
@@ -1368,7 +1465,13 @@ export const MapView: React.FC = () => {
                 </IconButton>
               </Box>
               {hasVisiblePointFeatures ? (
-                <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  useFlexGap
+                  flexWrap="wrap"
+                >
                   <MapExportControls
                     value={exportFormat}
                     onChange={setExportFormat}
@@ -1400,36 +1503,42 @@ export const MapView: React.FC = () => {
                   overflowY: 'auto',
                 }}
               >
-                {paginatedVisibleFeatureGroups.groups.map(({ layerKey, label, items, columns }) => (
-                  <Box key={layerKey} sx={{ mb: 0.9, '&:last-child': { mb: 0 } }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: 'block',
-                        mb: 0.25,
-                        fontSize: '0.64rem',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.45,
-                        color: 'text.secondary',
-                      }}
+                {paginatedVisibleFeatureGroups.groups.map(
+                  ({ layerKey, label, items, columns }) => (
+                    <Box
+                      key={layerKey}
+                      sx={{ mb: 0.9, '&:last-child': { mb: 0 } }}
                     >
-                      {label} ({items.length})
-                    </Typography>
-                    <Stack spacing={0.55}>
-                      {items.map(({ feature, entryKey }) => (
-                        <VisibleFeatureCard
-                          key={entryKey}
-                          feature={feature}
-                          columns={columns}
-                        />
-                      ))}
-                    </Stack>
-                  </Box>
-                ))}
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: 'block',
+                          mb: 0.25,
+                          fontSize: '0.64rem',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.45,
+                          color: 'text.secondary',
+                        }}
+                      >
+                        {label} ({items.length})
+                      </Typography>
+                      <Stack spacing={0.55}>
+                        {items.map(({ feature, entryKey }) => (
+                          <VisibleFeatureCard
+                            key={entryKey}
+                            feature={feature}
+                            columns={columns}
+                          />
+                        ))}
+                      </Stack>
+                    </Box>
+                  )
+                )}
               </Box>
             </Collapse>
-            {hasVisiblePointFeatures && paginatedVisibleFeatureGroups.pageCount > 1 ? (
+            {hasVisiblePointFeatures &&
+            paginatedVisibleFeatureGroups.pageCount > 1 ? (
               <Box
                 sx={{
                   px: 1,
