@@ -44,6 +44,15 @@ export interface AuthentikIdentity {
 }
 
 export type AuthentikPermissions = string[]
+const TEST_AUTH_GROUPS: AuthentikPermissions = [
+  'Viewer',
+  'Editor',
+  'AMPViewer',
+  'AMPEditor',
+  'LexiconEditor',
+  'LexiconAdmin',
+  'OcotilloAdmin',
+]
 const PKCE_LOCAL_FALLBACK_TTL_MS = 5 * 60 * 1000
 
 type PkceFallbackRecord = {
@@ -159,7 +168,7 @@ export const getAccessToken = async ({
 
 export const getAccessControlGroups = (): string[] | null => {
   if (IS_TESTING_AUTH) {
-    return ['OcotilloAdmin']
+    return TEST_AUTH_GROUPS
   }
 
   const idToken = localStorage.getItem(STORAGE_KEYS.idToken)
@@ -311,6 +320,10 @@ export const authentikAuthProvider: AuthProvider = {
   },
 
   getPermissions: async (): Promise<AuthentikPermissions | null> => {
+    if (IS_TESTING_AUTH) {
+      return TEST_AUTH_GROUPS
+    }
+
     const idToken = tokenStore.idToken
     if (!idToken) return null
 

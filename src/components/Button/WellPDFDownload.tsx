@@ -1,20 +1,28 @@
 import { useState } from 'react'
 import {
+  useDataProvider,
   useNotification,
   usePermissions,
-  useList,
-  useOne,
 } from '@refinedev/core'
-import { useDataGrid } from '@refinedev/mui'
-import { IContact, ISample, ISensor, IWell } from '@/interfaces/ocotillo'
+import {
+  IContact,
+  IObservation,
+  ISample,
+  ISensor,
+  IWell,
+} from '@/interfaces/ocotillo'
 import { WellPDF } from '@/components'
-import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
+import {
+  buildPdfFilename,
+  buildSensorDeploymentRows,
+  SensorDeploymentRow,
+} from '@/utils'
 import { pdf } from '@react-pdf/renderer'
 import { Button } from '@mui/material'
 import { Download } from '@mui/icons-material'
 import { IPdfOptions } from '@/interfaces'
 import { PDF_SINGLE_PAGE_OPTION } from '@/config'
-import { useSensorDeploymentRows } from '@/hooks'
+import { getAccessControlGroups } from '@/providers/authentik-provider'
 
 export const WellPDFDownloadButton = ({
   well,
@@ -26,107 +34,105 @@ export const WellPDFDownloadButton = ({
   const { open: notify } = useNotification()
   const { data: permissions, isLoading: isPermissionsLoading } =
     usePermissions<string[]>({})
+  const dataProvider = useDataProvider()
+  const ocotilloDataProvider = dataProvider('ocotillo')
+  const groups = getAccessControlGroups() ?? []
 
   const id = well?.id
 
-  const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
-    resource: 'sensor',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: id,
-      },
-    },
-    queryOptions: {
-      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
-      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
-    },
-  })
-
-  const { dataGridProps: deploymentsDataGridProps } = useDataGrid({
-    resource: id ? `thing/${id}/deployment` : undefined,
-    dataProviderName: 'ocotillo',
-    queryOptions: {
-      enabled: Boolean(id),
-      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
-      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
-    },
-  })
-
-  const sensors = sensorDataGridProps?.rows ?? []
-  const deployments = deploymentsDataGridProps?.rows ?? []
-
-  const sensorDeployments: SensorDeploymentRow[] = useSensorDeploymentRows({
-    deployments,
-    sensors,
-  })
-
-  const {
-    dataGridProps: { rows: observations, loading: isObservationsLoading },
-  } = useDataGrid({
-    resource: 'observation/groundwater-level',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: { thing_id: well?.id },
-    },
-    queryOptions: {
-      gcTime: 10 * 60 * 1000,
-      staleTime: 5 * 60 * 1000,
-    },
-  })
-
-  const { result: assetData } = useList({
-    resource: 'asset',
-    dataProviderName: 'ocotillo',
-    meta: { params: { thing_id: well?.id } },
-  })
-
-  const { result: contactData } = useList<IContact>({
-    resource: 'contact',
-    dataProviderName: 'ocotillo',
-    meta: { params: { thing_id: well?.id } },
-  })
-
-  const assets = assetData?.data ?? []
-  const contacts = contactData?.data ?? []
-
-  const sampleId =
-    observations
-      ?.filter((o) => o.observation_datetime) // only ones with date
-      .sort((a, b) => {
-        // Newest first
-        return (
-          new Date(b.observation_datetime!).getTime() -
-          new Date(a.observation_datetime!).getTime()
-        )
-      })[0]?.sample_id ?? null
-
-  const { result: sampleData, query: sampleQuery } = useOne<ISample>({
-    resource: 'ocotillo.sample',
-    id: sampleId,
-    queryOptions: {
-      enabled: !!sampleId,
-    },
-  })
-
-  const sample = sampleData
-
-  const isViewer = permissions?.includes('AMPViewer') ?? false
+  const isViewer = permissions?.includes('AMPViewer') ?? groups.includes('AMPViewer')
 
   const [isGenerating, setIsGenerating] = useState(false)
 
-  const disabled =
-    isLoading ||
-    isPermissionsLoading ||
-    !isViewer ||
-    isGenerating ||
-    isObservationsLoading ||
-    sampleQuery.isLoading
+  const disabled = !id || isPermissionsLoading || !isViewer || isGenerating
+
+  const fetchAllPages = async <TRow,>(
+    resource: string,
+    params: Record<string, string | number>
+  ) => {
+    const pageSize = 1000
+    const firstPage = await ocotilloDataProvider.getList({
+      resource,
+      pagination: { currentPage: 1, pageSize },
+      meta: { params },
+    })
+
+    const totalPages = Math.max(1, Math.ceil(firstPage.total / pageSize))
+
+    if (totalPages === 1) {
+      return firstPage.data as TRow[]
+    }
+
+    const remainingPages = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, index) =>
+        ocotilloDataProvider.getList({
+          resource,
+          pagination: { currentPage: index + 2, pageSize },
+          meta: { params },
+        })
+      )
+    )
+
+    return [
+      ...(firstPage.data as TRow[]),
+      ...remainingPages.flatMap((page) => page.data as TRow[]),
+    ]
+  }
 
   const handleDownload = async (opts: IPdfOptions) => {
+    if (!id) return
+
     try {
       setIsGenerating(true)
       const filename = buildPdfFilename(well)
+      const [sensorsResult, deploymentsResult, observations, assetsResult, contactsResult] =
+        await Promise.all([
+          ocotilloDataProvider.getList({
+            resource: 'sensor',
+            pagination: { currentPage: 1, pageSize: 1000 },
+            meta: { params: { thing_id: id } },
+          }),
+          ocotilloDataProvider.getList({
+            resource: `thing/${id}/deployment`,
+            pagination: { currentPage: 1, pageSize: 1000 },
+          }),
+          fetchAllPages<IObservation>('observation/groundwater-level', {
+            thing_id: id,
+          }),
+          ocotilloDataProvider.getList({
+            resource: 'asset',
+            pagination: { currentPage: 1, pageSize: 1000 },
+            meta: { params: { thing_id: id } },
+          }),
+          ocotilloDataProvider.getList({
+            resource: 'contact',
+            pagination: { currentPage: 1, pageSize: 1000 },
+            meta: { params: { thing_id: id } },
+          }),
+        ])
+
+      const sensors = (sensorsResult.data ?? []) as ISensor[]
+      const deployments = deploymentsResult.data as SensorDeploymentRow[]
+      const sensorDeployments: SensorDeploymentRow[] = buildSensorDeploymentRows(
+        deployments,
+        sensors
+      )
+      const assets = assetsResult.data ?? []
+      const contacts = (contactsResult.data ?? []) as IContact[]
+      const sampleId =
+        observations
+          .filter((o) => o.observation_datetime)
+          .sort(
+            (a, b) =>
+              new Date(b.observation_datetime!).getTime() -
+              new Date(a.observation_datetime!).getTime()
+          )[0]?.sample_id ?? null
+      const sample = sampleId
+        ? (await ocotilloDataProvider.getOne({
+            resource: 'ocotillo.sample',
+            id: sampleId,
+          })).data as ISample
+        : undefined
 
       const blob = await pdf(
         <WellPDF

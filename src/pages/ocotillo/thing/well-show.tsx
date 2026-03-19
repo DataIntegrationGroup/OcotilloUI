@@ -1,9 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
-import { HttpError, useOne, useResourceParams, useShow } from '@refinedev/core'
+import { useEffect, useMemo } from 'react'
+import {
+  HttpError,
+  useDataProvider,
+  useOne,
+  useResourceParams,
+  useShow,
+} from '@refinedev/core'
+import { useQuery } from '@tanstack/react-query'
 import { ListButton, Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
-import { ISample, IWell } from '@/interfaces/ocotillo'
+import { IObservation, ISample, IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import Grid from '@mui/material/Grid2'
@@ -32,10 +39,8 @@ import {
 
 export const WellShow = () => {
   const { query, result: well } = useShow<IWell, HttpError>()
-
-  const [hydrographDatasource, setHydrographDatasource] = useState<
-    IHydrographDatasource[]
-  >([])
+  const dataProvider = useDataProvider()
+  const ocotilloDataProvider = useMemo(() => dataProvider('ocotillo'), [dataProvider])
   const { id } = useResourceParams()
 
   const {
@@ -120,30 +125,102 @@ export const WellShow = () => {
     if (idLinksIsloading) return
   }, [idLinks, idLinksIsloading])
 
-  useEffect(() => {
+  const hydrographQuery = useQuery({
+    queryKey: ['well-hydrograph', id],
+    enabled: Boolean(id),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      const fetchAllPages = async <TRow,>(
+        resource: string,
+        params: Record<string, string | number>,
+        pageSize = 1000
+      ) => {
+        const firstPage = await ocotilloDataProvider.getList({
+          resource,
+          pagination: { currentPage: 1, pageSize },
+          meta: { params },
+        })
+
+        const totalPages = Math.max(1, Math.ceil(firstPage.total / pageSize))
+
+        if (totalPages === 1) {
+          return firstPage.data as TRow[]
+        }
+
+        const remainingPages = await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, index) =>
+            ocotilloDataProvider.getList({
+              resource,
+              pagination: { currentPage: index + 2, pageSize },
+              meta: { params },
+            })
+          )
+        )
+
+        return [
+          ...(firstPage.data as TRow[]),
+          ...remainingPages.flatMap((page) => page.data as TRow[]),
+        ]
+      }
+
+      const [manualRows, transducerRows] = await Promise.all([
+        fetchAllPages<IObservation>('observation/groundwater-level', {
+          thing_id: id,
+        }),
+        fetchAllPages<TransducerObservationWithBlockResponse>(
+          'observation/transducer-groundwater-level',
+          {
+            thing_id: id,
+          },
+          5000
+        ),
+      ])
+
+      return {
+        manualRows,
+        transducerRows,
+      }
+    },
+  })
+
+  const manualHydrographRows = hydrographQuery.data?.manualRows ?? []
+  const transducerHydrographRows = hydrographQuery.data?.transducerRows ?? []
+
+  const hydrographDatasource = useMemo<IHydrographDatasource[]>(() => {
     const manualSource =
-      observations.length > 0
+      manualHydrographRows.length > 0
         ? {
             id: 1,
             name: 'Groundwater Level',
             style: 'scatter',
-            data: observations.map((obs) => ({
-              phenomenonTime: new Date(obs.observation_datetime),
-              result: Number(obs.depth_to_water_bgs),
-            })),
+            data: manualHydrographRows
+              .filter((obs) => obs.observation_datetime)
+              .map((obs) => ({
+                phenomenonTime: new Date(obs.observation_datetime),
+                result: Number(obs.depth_to_water_bgs),
+              }))
+              .sort(
+                (a, b) => a.phenomenonTime.getTime() - b.phenomenonTime.getTime()
+              ),
           }
         : null
 
     const transducerSource =
-      transducerObservationRows.length > 0
+      transducerHydrographRows.length > 0
         ? {
             id: 2,
             name: 'Transducer Groundwater Level',
             style: 'line',
-            data: transducerObservationRows.map(({ observation }) => ({
-              phenomenonTime: new Date(observation.observation_datetime),
-              result: Number(observation.value),
-            })),
+            data: transducerHydrographRows
+              .filter(({ observation }) => observation?.observation_datetime)
+              .map(({ observation }) => ({
+                phenomenonTime: new Date(observation.observation_datetime),
+                result: Number(observation.value),
+              }))
+              .sort(
+                (a, b) => a.phenomenonTime.getTime() - b.phenomenonTime.getTime()
+              ),
           }
         : null
 
@@ -152,8 +229,8 @@ export const WellShow = () => {
       ...(transducerSource ? [transducerSource] : []),
     ]
 
-    setHydrographDatasource(source)
-  }, [observations, transducerObservationRows])
+    return source
+  }, [manualHydrographRows, transducerHydrographRows])
 
   return (
     <Show
@@ -211,11 +288,9 @@ export const WellShow = () => {
               <InteractiveSatelliteMapCard well={well} />
               <HydrographCard
                 well={well}
-                rows={[...observations, ...transducerObservationRows]}
+                rows={[...manualHydrographRows, ...transducerHydrographRows]}
                 dataSource={hydrographDatasource}
-                isLoading={
-                  observationsIsloading || transducerObservationsIsLoading
-                }
+                isLoading={hydrographQuery.isLoading}
               />
               <RecentWaterLevelObservationsCard
                 well={well}
