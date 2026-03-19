@@ -1,4 +1,3 @@
-import { IContact, ISample, ISensor, IWell } from '@/interfaces/ocotillo'
 import {
   Accordion,
   AccordionActions,
@@ -7,17 +6,14 @@ import {
   Box,
   Button,
   Divider,
-  IconButton,
   Skeleton,
   Stack,
   Typography,
   useTheme,
 } from '@mui/material'
-import { HttpError, useList, useGo, useOne, useShow } from '@refinedev/core'
-import { Show, useDataGrid } from '@refinedev/mui'
+import { Show } from '@refinedev/mui'
 import { useParams } from 'react-router'
 import {
-  ArrowBack,
   ExpandMore,
   TableRows,
   ViewHeadline,
@@ -37,8 +33,7 @@ import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
 import { useForm } from '@refinedev/react-hook-form'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { getLabelFromOptionalPdfFieldKey } from '@/utils'
-import { useSensorDeploymentRows } from '@/hooks'
-import { SensorDeploymentRow } from '@/utils'
+import { useWellPdfData } from '@/hooks'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 
@@ -49,13 +44,10 @@ const densityIcons = {
 } as const
 
 export const WellShowPdfPreview = () => {
-  const go = useGo()
   const { id } = useParams()
   const theme = useTheme()
   const [isViewerReady, setIsViewerReady] = useState(false)
   const [hydrographImage, setHydrographImage] = useState<string | null>(null)
-
-  const handleBack = () => go({ to: `/ocotillo/well/show/${id}`, type: 'push' })
 
   const { control, watch, reset } = useForm<IPdfOptions>({
     defaultValues: PDF_DEFAULT_VALUES,
@@ -64,105 +56,17 @@ export const WellShowPdfPreview = () => {
   })
 
   const currentOptions = watch()
-
-  const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
-    resource: 'sensor',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: id,
-      },
-    },
-    queryOptions: {
-      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
-      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
-    },
-  })
-
-  const { dataGridProps: deploymentsDataGridProps } = useDataGrid({
-    resource: id ? `thing/${id}/deployment` : undefined,
-    dataProviderName: 'ocotillo',
-    queryOptions: {
-      enabled: Boolean(id),
-      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
-      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
-    },
-  })
-
-  const sensors = sensorDataGridProps?.rows ?? []
-  const deployments = deploymentsDataGridProps?.rows ?? []
-
-  const sensorDeployments: SensorDeploymentRow[] = useSensorDeploymentRows({
-    deployments,
-    sensors,
-  })
-
-  const { result: well, query: wellQuery } = useShow<IWell, HttpError>({
-    resource: 'thing-well',
-    id,
-  })
-
   const {
-    dataGridProps: { rows: observations, loading: isObservationsLoading },
-  } = useDataGrid({
-    resource: 'observation/groundwater-level',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: id,
-      },
-    },
-    queryOptions: {
-      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
-      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
-    },
+    well,
+    observations,
+    assets,
+    contacts,
+    sample,
+    sensorDeployments,
+    isLoading,
+  } = useWellPdfData({
+    thingId: id,
   })
-
-  const { result: assetData, query: assetQuery } = useList({
-    resource: 'asset',
-    dataProviderName: 'ocotillo',
-    meta: { params: { thing_id: id } },
-  })
-
-  const { result: contactData, query: contactQuery } = useList<IContact>({
-    resource: 'contact',
-    dataProviderName: 'ocotillo',
-    meta: { params: { thing_id: id } },
-  })
-
-  const assets = assetData?.data ?? []
-  const contacts = contactData?.data ?? []
-
-  const sampleId = useMemo(() => {
-    return (
-      observations
-        ?.filter((o) => o.observation_datetime)
-        .sort(
-          (a, b) =>
-            new Date(b.observation_datetime!).getTime() -
-            new Date(a.observation_datetime!).getTime()
-        )[0]?.sample_id ?? null
-    )
-  }, [observations])
-
-  const hasSampleId = sampleId != null
-
-  const { result: sampleData, query: sampleQuery } = useOne<ISample>({
-    resource: 'ocotillo.sample',
-    id: sampleId,
-    queryOptions: {
-      enabled: hasSampleId,
-    },
-  })
-
-  const sample = sampleData
-
-  const isLoading =
-    wellQuery.isLoading ||
-    assetQuery.isLoading ||
-    contactQuery.isLoading ||
-    isObservationsLoading ||
-    (hasSampleId && sampleQuery.isLoading)
 
   useEffect(() => {
     if (!isLoading) {
@@ -306,7 +210,16 @@ export const WellShowPdfPreview = () => {
       resource="thing-well"
       recordItemId={id}
       isLoading={isLoading}
-      breadcrumb={<AppBreadcrumb />}
+      goBack={false}
+      breadcrumb={
+        <AppBreadcrumb
+          items={[
+            { label: 'Wells', href: '/ocotillo/well' },
+            { label: 'Show', href: `/ocotillo/well/show/${id}` },
+            { label: 'PDF Preview' },
+          ]}
+        />
+      }
       wrapperProps={{
         elevation: 0,
         sx: {
@@ -316,11 +229,6 @@ export const WellShowPdfPreview = () => {
           padding: 0,
         },
       }}
-      goBack={
-        <IconButton aria-label="return to show page" onClick={handleBack}>
-          <ArrowBack />
-        </IconButton>
-      }
       title={
         <Box
           sx={{
@@ -350,7 +258,17 @@ export const WellShowPdfPreview = () => {
       contentProps={{ sx: { pt: 1 } }}
       headerButtons={() => (
         <Box sx={{ display: 'flex', gap: 0 }}>
-          <WellPDFDownloadButton well={well} isLoading={isLoading} />
+          <WellPDFDownloadButton
+            well={well}
+            isLoading={isLoading}
+            observations={observations}
+            assets={assets}
+            contacts={contacts}
+            sample={sample}
+            sensorDeployments={sensorDeployments}
+            options={currentOptions}
+            hydrographImage={hydrographImage}
+          />
         </Box>
       )}
     >

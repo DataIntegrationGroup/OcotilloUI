@@ -6,6 +6,7 @@ import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { ISample, IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
+import { useWellPdfData } from '@/hooks'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
@@ -32,11 +33,22 @@ import {
 
 export const WellShow = () => {
   const { query, result: well } = useShow<IWell, HttpError>()
+  const { id } = useResourceParams()
+  const {
+    observations: pdfObservations,
+    assets,
+    contacts,
+    sample,
+    sensorDeployments,
+    isLoading: isPdfDataLoading,
+  } = useWellPdfData({
+    thingId: id,
+    well,
+  })
 
   const [hydrographDatasource, setHydrographDatasource] = useState<
     IHydrographDatasource[]
   >([])
-  const { id } = useResourceParams()
 
   const {
     dataGridProps: { rows: observations, loading: observationsIsloading },
@@ -94,7 +106,7 @@ export const WellShow = () => {
     },
   })
 
-  const sample = sampleData
+  const fieldEventSample = sampleData
 
   const { dataGridProps: idLinkDataGridProps } = useDataGrid({
     resource: `thing/${id}/id-link`,
@@ -199,7 +211,15 @@ export const WellShow = () => {
       headerButtons={() => (
         <Box sx={{ display: 'flex', gap: 0 }}>
           <WellPDFPreviewButton isLoading={query.isLoading} />
-          <WellPDFDownloadButton well={well} isLoading={query.isLoading} />
+          <WellPDFDownloadButton
+            well={well}
+            isLoading={query.isLoading || isPdfDataLoading}
+            observations={pdfObservations}
+            assets={assets}
+            contacts={contacts}
+            sample={sample}
+            sensorDeployments={sensorDeployments}
+          />
         </Box>
       )}
     >
@@ -245,7 +265,7 @@ export const WellShow = () => {
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
               <GeologyInformationAccordion well={well} />
-              <FieldEventHistoryAccordion sample={sample} />
+              <FieldEventHistoryAccordion sample={fieldEventSample} />
             </Stack>
           </Grid>
         </Grid>
