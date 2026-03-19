@@ -2,28 +2,7 @@ import { useList } from '@refinedev/core'
 import { Box, Divider, Paper, Stack, Typography } from '@mui/material'
 import { Link as RouterLink } from 'react-router'
 import type { IContact } from '@/interfaces/ocotillo'
-
-const formatPhone = (phone: string): string => {
-  const digits = phone.replace(/\D/g, '')
-  if (digits.length === 11 && digits.startsWith('1')) {
-    return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`
-  }
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-  }
-  return phone
-}
-
-const formatAddress = (addr: { address_line_1?: string; address_line_2?: string; city?: string; state?: string; postal_code?: string }) => {
-  const parts = [
-    addr.address_line_1,
-    addr.address_line_2,
-    addr.city,
-    addr.state,
-    addr.postal_code,
-  ].filter(Boolean)
-  return parts.join(', ') || 'N/A'
-}
+import { formatPhone, formatContactAddress } from '@/utils'
 
 const ContactBlock = ({ contact }: { contact: IContact }) => {
   const roleType = [contact.role, contact.contact_type].filter(Boolean).join(' / ') || null
@@ -60,7 +39,7 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
       ))}
       {addresses.map((addr, idx) => (
         <Typography key={idx} variant="body2" color="text.secondary" component="div">
-          {formatAddress(addr)}
+          {formatContactAddress(addr)}
         </Typography>
       ))}
     </Stack>
