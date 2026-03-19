@@ -423,8 +423,8 @@ export const WellBatchExport = () => {
     })
   }, [allWells, resolveWellFromToken])
 
-  const processPaste = async () => {
-    const tokens = parseIds(pasteValue)
+  const processPaste = useCallback(async (rawValue = pasteValue) => {
+    const tokens = parseIds(rawValue)
     if (tokens.length === 0) return
 
     setIsResolvingIds(true)
@@ -496,7 +496,13 @@ export const WellBatchExport = () => {
     } finally {
       setIsResolvingIds(false)
     }
-  }
+  }, [
+    mapWithConcurrency,
+    pasteValue,
+    resolveTokenByApi,
+    resolveWellFromToken,
+    upsertWells,
+  ])
 
   const addFromSearch = (well: IWell | null) => {
     if (!well) return
@@ -721,6 +727,11 @@ export const WellBatchExport = () => {
                 fullWidth
                 value={pasteValue}
                 onChange={(e) => setPasteValue(e.target.value)}
+                onPaste={(e) => {
+                  const pastedText = e.clipboardData.getData('text')
+                  if (!pastedText.trim()) return
+                  void processPaste(pastedText)
+                }}
                 placeholder={'AB-0001\nAB-0002\nAB-0003'}
                 size="small"
               />
