@@ -1,5 +1,31 @@
 import { IAddress } from '@/interfaces/ocotillo'
 
+/** Single-line comma-separated address for display (e.g. contact cards) */
+export const formatContactAddress = (
+  addr:
+    | {
+        address_line_1?: string
+        address_line_2?: string
+        city?: string
+        state?: string
+        postal_code?: string
+        country?: string
+      }
+    | null
+    | undefined
+): string => {
+  if (!addr) return 'N/A'
+  const parts = [
+    addr.address_line_1,
+    addr.address_line_2,
+    addr.city,
+    addr.state,
+    addr.postal_code,
+    addr.country,
+  ].filter(Boolean)
+  return parts.join(', ') || 'N/A'
+}
+
 export const formatAddress = (a?: IAddress | null): string => {
   if (!a) return 'N/A'
 
