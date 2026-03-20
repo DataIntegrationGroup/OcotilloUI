@@ -11,28 +11,7 @@ import {
 import { Directions } from '@mui/icons-material'
 import { Link as RouterLink } from 'react-router'
 import type { IContact } from '@/interfaces/ocotillo'
-
-const formatPhone = (phone: string): string => {
-  const digits = phone.replace(/\D/g, '')
-  if (digits.length === 11 && digits.startsWith('1')) {
-    return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`
-  }
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-  }
-  return phone
-}
-
-const formatAddress = (addr: { address_line_1?: string; address_line_2?: string; city?: string; state?: string; postal_code?: string }) => {
-  const parts = [
-    addr.address_line_1,
-    addr.address_line_2,
-    addr.city,
-    addr.state,
-    addr.postal_code,
-  ].filter(Boolean)
-  return parts.join(', ') || 'N/A'
-}
+import { formatPhone, formatContactAddress, formatAddress } from '@/utils'
 
 const getGoogleMapsAddressUrl = (address: string) => {
   if (!address || address === 'N/A') return null
@@ -40,9 +19,15 @@ const getGoogleMapsAddressUrl = (address: string) => {
 }
 
 const ContactBlock = ({ contact }: { contact: IContact }) => {
-  const roleType = [contact.role, contact.contact_type].filter(Boolean).join(' / ') || null
-  const emails = contact.emails?.map((e: { email?: string }) => e.email).filter(Boolean) ?? []
-  const phones = contact.phones?.map((p: { phone_number?: string }) => p.phone_number).filter(Boolean) ?? []
+  const roleType =
+    [contact.role, contact.contact_type].filter(Boolean).join(' / ') || null
+  const emails =
+    contact.emails?.map((e: { email?: string }) => e.email).filter(Boolean) ??
+    []
+  const phones =
+    contact.phones
+      ?.map((p: { phone_number?: string }) => p.phone_number)
+      .filter(Boolean) ?? []
   const addresses = contact.addresses ?? []
 
   return (
@@ -53,7 +38,16 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
         </Typography>
       )}
       {contact.name && contact.id && (
-        <Typography variant="body2" component={RouterLink} to={`/ocotillo/contact/show/${contact.id}`} sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+        <Typography
+          variant="body2"
+          component={RouterLink}
+          to={`/ocotillo/contact/show/${contact.id}`}
+          sx={{
+            color: 'primary.main',
+            textDecoration: 'none',
+            '&:hover': { textDecoration: 'underline' },
+          }}
+        >
           {contact.name}
         </Typography>
       )}
@@ -63,19 +57,39 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
         </Typography>
       )}
       {emails.map((email, idx) => (
-        <Typography key={idx} variant="body2" component="a" href={`mailto:${email}`} sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+        <Typography
+          key={idx}
+          variant="body2"
+          component="a"
+          href={`mailto:${email}`}
+          sx={{
+            color: 'primary.main',
+            textDecoration: 'none',
+            '&:hover': { textDecoration: 'underline' },
+          }}
+        >
           {email}
         </Typography>
       ))}
       {phones.map((phone, idx) => (
-        <Typography key={idx} variant="body2" component="a" href={`tel:${phone}`} sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+        <Typography
+          key={idx}
+          variant="body2"
+          component="a"
+          href={`tel:${phone}`}
+          sx={{
+            color: 'primary.main',
+            textDecoration: 'none',
+            '&:hover': { textDecoration: 'underline' },
+          }}
+        >
           {formatPhone(phone)}
         </Typography>
       ))}
       {addresses.map((addr, idx) => (
         <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Typography variant="body2" color="text.secondary" component="div">
-            {formatAddress(addr)}
+            {formatContactAddress(addr)}
           </Typography>
           {getGoogleMapsAddressUrl(formatAddress(addr)) && (
             <Tooltip title="Open in Google Maps">

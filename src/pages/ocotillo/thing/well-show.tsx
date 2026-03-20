@@ -7,12 +7,13 @@ import {
   useShow,
 } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
-import { ListButton, Show, useDataGrid } from '@refinedev/mui'
+import { Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { IObservation, ISample, IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
+import { useWellPdfData } from '@/hooks'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
@@ -39,9 +40,25 @@ import {
 
 export const WellShow = () => {
   const { query, result: well } = useShow<IWell, HttpError>()
+
   const dataProvider = useDataProvider()
-  const ocotilloDataProvider = useMemo(() => dataProvider('ocotillo'), [dataProvider])
+  const ocotilloDataProvider = useMemo(
+    () => dataProvider('ocotillo'),
+    [dataProvider]
+  )
+
   const { id } = useResourceParams()
+  const {
+    observations: pdfObservations,
+    assets,
+    contacts,
+    sample,
+    sensorDeployments,
+    isLoading: isPdfDataLoading,
+  } = useWellPdfData({
+    thingId: id,
+    well,
+  })
 
   const {
     dataGridProps: { rows: observations, loading: observationsIsloading },
@@ -56,24 +73,6 @@ export const WellShow = () => {
     queryOptions: {
       gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
-    },
-  })
-  const {
-    dataGridProps: {
-      rows: transducerObservationRows,
-      loading: transducerObservationsIsLoading,
-    },
-  } = useDataGrid<TransducerObservationWithBlockResponse>({
-    resource: 'observation/transducer-groundwater-level',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: id,
-      },
-    },
-    queryOptions: {
-      gcTime: 10 * 60 * 1000,
-      staleTime: 5 * 60 * 1000,
     },
   })
 
@@ -99,7 +98,7 @@ export const WellShow = () => {
     },
   })
 
-  const sample = sampleData
+  const fieldEventSample = sampleData
 
   const { dataGridProps: idLinkDataGridProps } = useDataGrid({
     resource: `thing/${id}/id-link`,
@@ -201,7 +200,8 @@ export const WellShow = () => {
                 result: Number(obs.depth_to_water_bgs),
               }))
               .sort(
-                (a, b) => a.phenomenonTime.getTime() - b.phenomenonTime.getTime()
+                (a, b) =>
+                  a.phenomenonTime.getTime() - b.phenomenonTime.getTime()
               ),
           }
         : null
@@ -219,7 +219,8 @@ export const WellShow = () => {
                 result: Number(observation.value),
               }))
               .sort(
-                (a, b) => a.phenomenonTime.getTime() - b.phenomenonTime.getTime()
+                (a, b) =>
+                  a.phenomenonTime.getTime() - b.phenomenonTime.getTime()
               ),
           }
         : null
@@ -247,7 +248,14 @@ export const WellShow = () => {
         },
       }}
       title={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            flexWrap: 'wrap',
+          }}
+        >
           <Typography variant="h3" fontWeight={700}>
             {well?.name ?? ''}
           </Typography>
@@ -269,14 +277,20 @@ export const WellShow = () => {
       headerButtons={() => (
         <Box sx={{ display: 'flex', gap: 0 }}>
           <WellPDFPreviewButton isLoading={query.isLoading} />
-          <WellPDFDownloadButton well={well} isLoading={query.isLoading} />
+          <WellPDFDownloadButton
+            well={well}
+            isLoading={query.isLoading || isPdfDataLoading}
+            observations={pdfObservations}
+            assets={assets}
+            contacts={contacts}
+            sample={sample}
+            sensorDeployments={sensorDeployments}
+          />
         </Box>
       )}
     >
       <Stack spacing={2}>
         <Grid container spacing={2}>
-          
-
           {/* Left column: 8 cols */}
           <Grid size={{ xs: 12, md: 8, lg: 9 }}>
             <Stack spacing={2}>
@@ -315,11 +329,9 @@ export const WellShow = () => {
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
               <GeologyInformationAccordion well={well} />
-              <FieldEventHistoryAccordion sample={sample} />
+              <FieldEventHistoryAccordion sample={fieldEventSample} />
             </Stack>
           </Grid>
-
-        
         </Grid>
       </Stack>
     </Show>

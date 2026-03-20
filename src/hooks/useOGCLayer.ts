@@ -181,8 +181,11 @@ export const useOGCLayer = ({
   const resolvedColor = (colorAccessor
     ? ['coalesce', ['get', '__color'], color]
     : color) as any
+  const fallbackColor = legendColor || color
   const effectiveColor =
-    hasColorMapping && colorMappingEnabled ? colorExpression ?? resolvedColor : color
+    hasColorMapping && colorMappingEnabled
+      ? colorExpression ?? resolvedColor
+      : fallbackColor
 
   const defaultPaintByType: Record<
     'circle' | 'line' | 'fill',
@@ -208,7 +211,7 @@ export const useOGCLayer = ({
   return {
     sourceProps: { type: 'geojson', data: safeGeoJSON },
     sourceData: safeGeoJSON,
-    legendColor: legendColor || color,
+    legendColor: fallbackColor,
     legendScale: hasColorMapping && colorMappingEnabled ? legendScale : undefined,
     colorMappingAvailable: hasColorMapping,
     colorMappingEnabled: hasColorMapping ? colorMappingEnabled : false,

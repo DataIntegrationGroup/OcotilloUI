@@ -130,7 +130,9 @@ const getLayerLabel = (layerKey: string): string => {
     'ogc-water-elevation-contours': 'Water Elevation Contours',
     'ogc-water-well-summary': 'Water Well Summary',
     'ogc-water-wells': 'Water Wells',
+    'ogc-actively-monitored': 'Actively Monitored',
     'ogc-springs': 'Springs',
+    'ogc-project-areas': 'AMP Project Areas',
     'ogc-locations': 'Locations',
   }
 
@@ -154,6 +156,7 @@ const isTypeImplicitFromLayer = (
       'ogc-minor-chemistry',
       'ogc-depth-to-water-trend',
       'ogc-water-elevation-points',
+      'ogc-actively-monitored',
     ].includes(layerKey)
   ) {
     return normalizedType === 'water well'

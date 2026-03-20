@@ -20,6 +20,7 @@ interface MapComponentProps {
   children?: any
   onClick?: any
   onPointClick?: (e: any, features: any[]) => void
+  onBoundsChange?: (bbox: string | null) => void
   setSelectionPolygons?: any
   popupContent?: any
   setPopupContent?: any
@@ -51,6 +52,7 @@ export const MapComponent = ({
   children,
   onClick,
   onPointClick,
+  onBoundsChange,
   popupContent,
   setPopupContent,
   onMouseMoveCallback,
@@ -233,6 +235,23 @@ export const MapComponent = ({
 
   const onSelectionChange = useCallback(() => {}, [])
 
+  const emitBoundsChange = useCallback(() => {
+    const bounds = mapRef.current?.getMap?.()?.getBounds?.()
+    if (!bounds) {
+      onBoundsChange?.(null)
+      return
+    }
+
+    onBoundsChange?.(
+      [
+        bounds.getWest(),
+        bounds.getSouth(),
+        bounds.getEast(),
+        bounds.getNorth(),
+      ].join(',')
+    )
+  }, [mapRef, onBoundsChange])
+
   const handleMouseClick = useCallback(
     (e: MapLayerMouseEvent) => {
       if (onPointClick) {
@@ -256,7 +275,11 @@ export const MapComponent = ({
       initialViewState={initialViewState}
       terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
       onClick={handleMouseClick}
-      onMove={(evt) => setViewState(evt.viewState)}
+      onLoad={emitBoundsChange}
+      onMove={(evt) => {
+        setViewState(evt.viewState)
+        emitBoundsChange()
+      }}
       onMouseMove={onMouseMove}
       style={style}
       mapStyle={basemapUri}

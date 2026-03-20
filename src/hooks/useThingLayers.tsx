@@ -158,6 +158,13 @@ export const useThingLayers = (
     'Water Wells',
     'water_wells',
   ])
+  const activelyMonitored = resolveCollection(collections, [
+    'Actively Monitored (Water Wells)',
+    'Actively Monitored Water Wells',
+    'actively_monitored_water_wells',
+    'actively_monitored_wells',
+    'actively_monitored',
+  ])
   const springs = resolveCollection(collections, ['Springs', 'springs'])
   const waterElevationContoursPrimary = resolveCollection(collections, [
     'Water Elevation Contours',
@@ -249,6 +256,12 @@ export const useThingLayers = (
     'Other Thing Types',
     'other_thing_types',
   ])
+  const projectAreas = resolveCollection(collections, [
+    'Project Areas',
+    'Project Area',
+    'project_areas',
+    'project_area',
+  ])
   const outfallsReturnFlow = resolveCollection(collections, [
     'Outfalls and Return Flow',
     'outfalls_and_return_flow',
@@ -336,6 +349,13 @@ export const useThingLayers = (
     label: waterWells.label,
     color: '#2b7dc0',
     enabled: waterWells.exists && isLayerActive('ogc-water-wells'),
+  })
+  const activelyMonitoredLayer = useOGCLayer({
+    collection: activelyMonitored.id,
+    label: activelyMonitored.label,
+    color: '#2e7d32',
+    enabled:
+      activelyMonitored.exists && isLayerActive('ogc-actively-monitored'),
   })
   const springsLayer = useOGCLayer({
     collection: springs.id,
@@ -783,6 +803,17 @@ export const useThingLayers = (
       meteorologicalStations.exists &&
       isLayerActive('ogc-meteorological-stations'),
   })
+  const projectAreasLayer = useOGCLayer({
+    collection: projectAreas.id,
+    label: 'AMP Project Areas',
+    color: '#7c3aed',
+    layerType: 'fill',
+    paint: {
+      'fill-opacity': 0.16,
+      'fill-outline-color': '#5b21b6',
+    },
+    enabled: projectAreas.exists && isLayerActive('ogc-project-areas'),
+  })
   const otherThingTypesLayer = useOGCLayer({
     collection: otherThingTypes.id,
     label: otherThingTypes.label,
@@ -875,6 +906,11 @@ export const useThingLayers = (
   addLayer('ogc-minor-chemistry', minorChemistry, minorChemistryLayer)
   addLayer('ogc-water-well-summary', waterWellSummary, waterWellSummaryLayer)
   addLayer('ogc-water-wells', waterWells, waterWellsLayer)
+  addLayer(
+    'ogc-actively-monitored',
+    activelyMonitored,
+    activelyMonitoredLayer
+  )
   addLayer('ogc-springs', springs, springsLayer)
   addLayer(
     'ogc-surface-water-diversions',
@@ -892,6 +928,7 @@ export const useThingLayers = (
     meteorologicalStations,
     meteorologicalStationsLayer
   )
+  addLayer('ogc-project-areas', projectAreas, projectAreasLayer)
   addLayer('ogc-other-thing-types', otherThingTypes, otherThingTypesLayer)
   addLayer(
     'ogc-outfalls-return-flow',

@@ -1,6 +1,7 @@
 import {
   Apps,
   Construction,
+  DatasetLinked,
   Contacts,
   DynamicFormOutlined,
   Image,
@@ -89,17 +90,17 @@ let tables: {
   //     icon: <Image />,
   //   },
   // },
-  {
-    name: 'location',
-    list: '/ocotillo/location',
-    create: '/ocotillo/location/create',
-    edit: '/ocotillo/location/edit/:id',
-    show: '/ocotillo/location/show/:id',
-    meta: {
-      label: 'Locations',
-      icon: <Place />,
-    },
-  },
+  // {
+  //   name: 'location',
+  //   list: '/ocotillo/location',
+  //   create: '/ocotillo/location/create',
+  //   edit: '/ocotillo/location/edit/:id',
+  //   show: '/ocotillo/location/show/:id',
+  //   meta: {
+  //     label: 'Locations',
+  //     icon: <Place />,
+  //   },
+  // },
   // {
   //   name: 'sensor',
   //   list: '/ocotillo/sensor',
@@ -183,7 +184,7 @@ let tables: {
 
 tables.push({
   name: 'thing-well-pdf-preview',
-  list: '/ocotillo/well/pdf-preview/:id',
+  show: '/ocotillo/well/pdf-preview/:id',
   meta: {
     label: 'PDF Preview',
     parent: 'ocotillo.thing-well',
@@ -296,6 +297,14 @@ let ocotillo = [
     meta: {
       label: 'Map',
       icon: <Map />,
+    },
+  },
+  {
+    name: 'collections',
+    list: '/ocotillo/collections',
+    meta: {
+      label: 'Datasets',
+      icon: <DatasetLinked />,
     },
   },
   ...tables,

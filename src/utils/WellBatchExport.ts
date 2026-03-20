@@ -1,9 +1,17 @@
 import type { IWell } from '@/interfaces/ocotillo'
 
+const extractLeadingWellName = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+
+  const firstToken = trimmed.match(/^\S+/)?.[0] ?? ''
+  return firstToken.trim()
+}
+
 export const parseIds = (raw: string) =>
   raw
     .split(/[,\r\n]+/)
-    .map((s) => s.trim())
+    .map((s) => extractLeadingWellName(s))
     .filter(Boolean)
 
 export const normalizeLookupKey = (value: string) =>
