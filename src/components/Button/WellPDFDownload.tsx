@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { IContact, ISample } from '@/interfaces/ocotillo'
 import { BaseRecord, useNotification } from '@refinedev/core'
-import { IObservation, IWell } from '@/interfaces/ocotillo'
+import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
 import { WellPDF } from '@/components'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
 import { pdf } from '@react-pdf/renderer'
