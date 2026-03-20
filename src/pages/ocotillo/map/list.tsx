@@ -68,6 +68,40 @@ type VisibleFeaturePageItem = {
   feature: any
 }
 
+const PRINCIPAL_VISIBLE_FEATURE_DETAIL_BY_LAYER: Record<
+  string,
+  { column: string; label: string; dateColumn?: string }
+> = {
+  'ogc-latest-depth-to-water': {
+    column: 'depth_to_water_bgs',
+    label: 'Depth to water',
+    dateColumn: 'observation_datetime',
+  },
+  'ogc-average-tds': {
+    column: 'avg_tds_value',
+    label: 'Avg TDS',
+    dateColumn: 'first_tds_observation_date',
+  },
+  'ogc-latest-tds': {
+    column: 'latest_tds_value',
+    label: 'Latest TDS',
+    dateColumn: 'latest_tds_observation_date',
+  },
+  'ogc-depth-to-water-trend': {
+    column: 'trend_category',
+    label: 'Trend',
+  },
+  'ogc-water-elevation-points': {
+    column: 'water_elevation_ft',
+    label: 'Water elevation',
+    dateColumn: 'observation_datetime',
+  },
+}
+
+const EXCLUDED_VISIBLE_FEATURE_COLUMNS_BY_LAYER: Record<string, string[]> = {
+  'ogc-actively-monitored': ['elevation', 'elevation_method'],
+}
+
 const DEFAULT_EXPANDED_GROUPS = {
   groundwater: true,
   surfaceWater: true,
@@ -81,6 +115,7 @@ const getLayerGroupKey = (
 ): keyof typeof DEFAULT_EXPANDED_GROUPS => {
   if (
     layerKey.includes('water-well') ||
+    layerKey.includes('actively-monitored') ||
     layerKey.includes('depth-to-water') ||
     layerKey.includes('tds') ||
     layerKey.includes('chemistry') ||
@@ -294,9 +329,10 @@ export const MapView: React.FC = () => {
     }
 
     let frame = 0
+    let idleFrame = 0
+    const map = mapRef.current?.getMap?.()
 
     const updateVisibleRenderedFeatures = () => {
-      const map = mapRef.current?.getMap?.()
       if (!map) {
         setVisiblePointFeaturesByLayer([])
         return
@@ -320,15 +356,13 @@ export const MapView: React.FC = () => {
       >()
 
       for (const feature of renderedFeatures) {
-        if (feature?.geometry?.type !== 'Point') continue
-
         const renderedLayerId = String(feature?.layer?.id || '')
         if (!renderedLayerId.startsWith('location-')) continue
 
         const layerKey = renderedLayerId.replace(/^location-/, '')
         const featureId =
           getFeatureId(feature as any) ||
-          JSON.stringify(feature.geometry?.coordinates || [])
+          JSON.stringify(feature.geometry || feature.properties || {})
 
         if (!grouped.has(layerKey)) {
           grouped.set(layerKey, {
@@ -361,12 +395,19 @@ export const MapView: React.FC = () => {
       )
     }
 
+    const handleMapIdle = () => {
+      idleFrame = window.requestAnimationFrame(updateVisibleRenderedFeatures)
+    }
+
     frame = window.requestAnimationFrame(updateVisibleRenderedFeatures)
+    map?.once?.('idle', handleMapIdle)
 
     return () => {
       window.cancelAnimationFrame(frame)
+      window.cancelAnimationFrame(idleFrame)
+      map?.off?.('idle', handleMapIdle)
     }
-  }, [viewportBbox, visibleLayerLabels, visibleLayers])
+  }, [THING_LAYERS, viewportBbox, visibleLayerLabels, visibleLayers])
 
   const selectedMajorChemistryPoints = useMemo(
     () =>
@@ -924,7 +965,7 @@ export const MapView: React.FC = () => {
               border: '1px solid',
               borderColor: alpha(theme.palette.divider, 0.9),
               zIndex: 2,
-              height: 'auto',
+              height: layersCollapsed ? 'auto' : layersPanelMaxHeight,
               maxHeight: layersCollapsed ? 'none' : layersPanelMaxHeight,
             })}
           >
@@ -979,11 +1020,32 @@ export const MapView: React.FC = () => {
               in={!layersCollapsed}
               unmountOnExit
               sx={{
+                flex: 1,
+                minHeight: 0,
                 overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                '& .MuiCollapse-wrapper': {
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  minHeight: 0,
+                },
+                '& .MuiCollapse-wrapperInner': {
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  minHeight: 0,
+                },
               }}
             >
               <Box
-                sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  minHeight: 0,
+                }}
               >
                 <Box
                   sx={(theme) => ({
@@ -1378,7 +1440,8 @@ export const MapView: React.FC = () => {
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
-            height: { lg: '100%' },
+            height: { xs: '70dvh', lg: '100%' },
+            maxHeight: { xs: '70dvh', lg: '100%' },
             minHeight: {
               xs: 240,
               lg: 0,
@@ -1417,25 +1480,12 @@ export const MapView: React.FC = () => {
               >
                 <Box sx={{ minWidth: 0 }}>
                   <Typography
-                    variant="overline"
-                    sx={{
-                      px: 0.55,
-                      py: 0.25,
-                      fontWeight: 700,
-                      letterSpacing: 0.7,
-                      fontSize: '0.68rem',
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    Visible Features
-                  </Typography>
-                  <Typography
                     variant="body2"
-                    sx={{ fontWeight: 600, mt: 0.35 }}
+                    sx={{ fontWeight: 600 }}
                   >
                     {hasVisiblePointFeatures
-                      ? `${totalVisiblePointCount} point${totalVisiblePointCount === 1 ? '' : 's'} in view`
-                      : 'No point features in view'}
+                      ? `${totalVisiblePointCount} feature${totalVisiblePointCount === 1 ? '' : 's'} in view`
+                      : 'No features in view'}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -1443,7 +1493,7 @@ export const MapView: React.FC = () => {
                   >
                     {hasVisiblePointFeatures
                       ? `${visiblePointFeaturesByLayer.length} dataset${visiblePointFeaturesByLayer.length === 1 ? '' : 's'} currently visible in the map extent`
-                      : 'Pan or zoom the map to inspect visible point features from active datasets'}
+                      : 'Pan or zoom the map to inspect visible features from active datasets'}
                   </Typography>
                 </Box>
                 <IconButton
@@ -1478,7 +1528,7 @@ export const MapView: React.FC = () => {
                     onExport={onExportVisiblePoints}
                     buttonLabel="Export Visible"
                     selectorWidth={142}
-                    tooltip={`Click to download the visible point features for each active dataset as separate ${
+                    tooltip={`Click to download the visible features for each active dataset as separate ${
                       exportFormat === 'csv' ? 'CSV' : 'GeoJSON'
                     } files.`}
                   />
@@ -1491,7 +1541,13 @@ export const MapView: React.FC = () => {
             <Collapse
               in={hasVisiblePointFeatures && !visibleFeaturesCollapsed}
               unmountOnExit
-              sx={{ minHeight: 0, overflow: 'hidden' }}
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
             >
               <Box
                 sx={{
@@ -1527,6 +1583,7 @@ export const MapView: React.FC = () => {
                         {items.map(({ feature, entryKey }) => (
                           <VisibleFeatureCard
                             key={entryKey}
+                            layerKey={layerKey}
                             feature={feature}
                             columns={columns}
                           />
@@ -1570,11 +1627,11 @@ export const MapView: React.FC = () => {
                   }}
                 >
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    No visible point datasets
+                    No visible datasets
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Turn on a point-based dataset and move the map to an area
-                    with features to populate this panel.
+                    Turn on a dataset and move the map to an area with features
+                    to populate this panel.
                   </Typography>
                 </Paper>
               </Box>
@@ -1587,9 +1644,11 @@ export const MapView: React.FC = () => {
 }
 
 const VisibleFeatureCard = ({
+  layerKey,
   feature,
   columns,
 }: {
+  layerKey: string
   feature: any
   columns: string[]
 }) => {
@@ -1597,7 +1656,12 @@ const VisibleFeatureCard = ({
     getSelectedPointDisplayValue({ column: 'name', feature }) ||
     getFeatureId(feature) ||
     'Unnamed feature'
-  const details = columns
+  const selectedDetails = columns
+    .filter((column) => {
+      const excludedColumns =
+        EXCLUDED_VISIBLE_FEATURE_COLUMNS_BY_LAYER[layerKey] ?? []
+      return !excludedColumns.includes(column)
+    })
     .map((column) => ({
       label: getSelectedPointColumnLabel(column),
       value: getSelectedPointDisplayValue({ column, feature }),
@@ -1607,39 +1671,153 @@ const VisibleFeatureCard = ({
         value && !(label === 'name' && value === featureTitle)
     )
     .slice(0, 3)
-  const detailSummary = details
-    .map(({ label, value }) => `${label}: ${value}`)
-    .join(' | ')
-
+  const principalDetailConfig =
+    PRINCIPAL_VISIBLE_FEATURE_DETAIL_BY_LAYER[layerKey] ?? null
+  const principalDetail = principalDetailConfig
+    ? {
+        label: principalDetailConfig.label,
+        value: getSelectedPointDisplayValue({
+          column: principalDetailConfig.column,
+          feature,
+        }),
+      }
+    : null
+  const principalDateDetail =
+    principalDetailConfig?.dateColumn
+      ? {
+          label: getSelectedPointColumnLabel(principalDetailConfig.dateColumn),
+          value: getSelectedPointDisplayValue({
+            column: principalDetailConfig.dateColumn,
+            feature,
+          }),
+        }
+      : null
+  const details =
+    principalDetail && principalDetail.value
+      ? [
+          principalDetail,
+          ...(principalDateDetail?.value ? [principalDateDetail] : []),
+        ]
+      : selectedDetails
+  const titleDateDetailIndex = details.findIndex(({ label }) =>
+    /date/i.test(label)
+  )
+  const titleDateDetail =
+    titleDateDetailIndex >= 0 ? details[titleDateDetailIndex] : null
+  const cardDetails = details.filter(
+    (_detail, index) => index !== titleDateDetailIndex
+  )
   return (
     <Card
       variant="outlined"
       sx={(theme) => ({
-        borderRadius: 1,
-        backgroundColor: alpha(theme.palette.background.default, 0.66),
+        borderRadius: 1.5,
+        borderColor: alpha(theme.palette.divider, 0.85),
+        background: `linear-gradient(180deg, ${alpha(
+          theme.palette.background.paper,
+          0.98
+        )} 0%, ${alpha(theme.palette.background.default, 0.82)} 100%)`,
+        boxShadow: `0 6px 16px ${alpha(theme.palette.common.black, 0.06)}`,
       })}
     >
-      <CardContent sx={{ px: 0.75, py: 0.6, '&:last-child': { pb: 0.6 } }}>
-        <Stack spacing={0.3}>
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 700, lineHeight: 1.15, fontSize: '0.82rem' }}
+      <CardContent sx={{ px: 0.9, py: 0.75, '&:last-child': { pb: 0.75 } }}>
+        <Stack spacing={0.7}>
+          <Box
+            sx={{
+              minWidth: 0,
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 0.8,
+            }}
           >
-            {featureTitle}
-          </Typography>
-          {detailSummary ? (
             <Typography
-              variant="caption"
+              variant="body2"
               sx={{
-                display: 'block',
-                color: 'text.secondary',
-                fontSize: '0.68rem',
-                lineHeight: 1.15,
+                flex: 1,
+                minWidth: 0,
+                fontWeight: 700,
+                lineHeight: 1.2,
+                fontSize: '0.84rem',
                 overflowWrap: 'anywhere',
               }}
             >
-              {detailSummary}
+              {featureTitle}
             </Typography>
+            {titleDateDetail ? (
+              <Typography
+                variant="caption"
+                sx={{
+                  flexShrink: 0,
+                  maxWidth: '48%',
+                  pt: 0.1,
+                  color: 'text.secondary',
+                  fontSize: '0.69rem',
+                  fontWeight: 600,
+                  lineHeight: 1.2,
+                  textAlign: 'right',
+                  overflowWrap: 'anywhere',
+                }}
+              >
+                {titleDateDetail.value}
+              </Typography>
+            ) : null}
+          </Box>
+          {cardDetails.length ? (
+            <Box
+              sx={(theme) => ({
+                display: 'grid',
+                gridTemplateColumns:
+                  cardDetails.length === 1 ? '1fr' : 'repeat(2, minmax(0, 1fr))',
+                gap: 0.6,
+                ...(cardDetails.length > 1
+                  ? {
+                      '& > :only-child': {
+                        gridColumn: '1 / -1',
+                      },
+                      '& > :nth-of-type(3):last-child': {
+                        gridColumn: '1 / -1',
+                      },
+                      [theme.breakpoints.down('sm')]: {
+                        gridTemplateColumns: '1fr',
+                      },
+                    }
+                  : {}),
+              })}
+            >
+              {cardDetails.map(({ label, value }) => (
+                <Box key={`${label}-${value}`} sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: 'inline',
+                      color: 'text.secondary',
+                      fontSize: '0.64rem',
+                      fontWeight: 700,
+                      lineHeight: 1.2,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.35,
+                      mr: 0.5,
+                    }}
+                  >
+                    {label}:
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: 'inline',
+                      color: 'text.primary',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      lineHeight: 1.3,
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
+                    {value}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
           ) : null}
         </Stack>
       </CardContent>

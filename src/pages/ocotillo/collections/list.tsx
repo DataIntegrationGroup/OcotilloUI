@@ -31,7 +31,11 @@ import {
   type OgcCollectionRecord,
 } from '@/utils/ogcLayerUtils'
 
-type CollectionGroupKey = 'water' | 'geothermal'
+type CollectionGroupKey =
+  | 'groundwater'
+  | 'surfaceWater'
+  | 'geothermal'
+  | 'reference'
 
 type CollectionGroup = {
   key: CollectionGroupKey
@@ -44,11 +48,13 @@ type RegisteredMapCollection = {
   layerKey: string
   groupKey: CollectionGroupKey
   candidates: string[]
+  displayLabel?: string
 }
 
 type RegisteredCollectionMatch = {
   layerKey: string
   collection: OgcCollectionRecord
+  displayLabel?: string
 }
 
 const GROUP_STYLES: Record<
@@ -60,11 +66,17 @@ const GROUP_STYLES: Record<
     borderAccent: string
   }
 > = {
-  water: {
+  groundwater: {
     icon: Opacity,
     accent: '#0f766e',
     softAccent: '#ccfbf1',
     borderAccent: '#5eead4',
+  },
+  surfaceWater: {
+    icon: Opacity,
+    accent: '#0369a1',
+    softAccent: '#e0f2fe',
+    borderAccent: '#7dd3fc',
   },
   geothermal: {
     icon: ElectricBolt,
@@ -72,17 +84,23 @@ const GROUP_STYLES: Record<
     softAccent: '#fef3c7',
     borderAccent: '#fbbf24',
   },
+  reference: {
+    icon: ArrowOutward,
+    accent: '#475569',
+    softAccent: '#e2e8f0',
+    borderAccent: '#94a3b8',
+  },
 }
 
 const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   {
     layerKey: 'ogc-locations',
-    groupKey: 'water',
+    groupKey: 'reference',
     candidates: ['Locations', 'locations'],
   },
   {
     layerKey: 'ogc-latest-depth-to-water',
-    groupKey: 'water',
+    groupKey: 'groundwater',
     candidates: [
       'Latest Depth to Water (Water Wells)',
       'latest_depth_to_water_water_wells',
@@ -91,7 +109,7 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   },
   {
     layerKey: 'ogc-average-tds',
-    groupKey: 'water',
+    groupKey: 'groundwater',
     candidates: [
       'Average TDS (Water Wells)',
       'average_tds_water_wells',
@@ -100,7 +118,7 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   },
   {
     layerKey: 'ogc-latest-tds',
-    groupKey: 'water',
+    groupKey: 'groundwater',
     candidates: [
       'Latest TDS (Water Wells)',
       'latest_tds_water_wells',
@@ -109,7 +127,7 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   },
   {
     layerKey: 'ogc-major-chemistry',
-    groupKey: 'water',
+    groupKey: 'groundwater',
     candidates: [
       'Major Chemistry (Water Wells)',
       'major_chemistry_results',
@@ -119,7 +137,7 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   },
   {
     layerKey: 'ogc-minor-chemistry',
-    groupKey: 'water',
+    groupKey: 'groundwater',
     candidates: [
       'Minor Chemistry (Water Wells)',
       'minor_chemistry_wells',
@@ -129,7 +147,7 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   },
   {
     layerKey: 'ogc-depth-to-water-trend',
-    groupKey: 'water',
+    groupKey: 'groundwater',
     candidates: [
       'Depth to Water Trend (Water Wells)',
       'depth_to_water_trend_water_wells',
@@ -139,22 +157,33 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   },
   {
     layerKey: 'ogc-water-well-summary',
-    groupKey: 'water',
+    groupKey: 'groundwater',
     candidates: ['Water Well Summary', 'water_well_summary'],
   },
   {
     layerKey: 'ogc-water-wells',
-    groupKey: 'water',
+    groupKey: 'groundwater',
     candidates: ['Water Wells', 'water_wells'],
   },
   {
+    layerKey: 'ogc-actively-monitored',
+    groupKey: 'groundwater',
+    candidates: [
+      'Actively Monitored (Water Wells)',
+      'Actively Monitored Water Wells',
+      'actively_monitored_water_wells',
+      'actively_monitored_wells',
+      'actively_monitored',
+    ],
+  },
+  {
     layerKey: 'ogc-springs',
-    groupKey: 'water',
+    groupKey: 'surfaceWater',
     candidates: ['Springs', 'springs'],
   },
   {
     layerKey: 'ogc-water-elevation-contours',
-    groupKey: 'water',
+    groupKey: 'groundwater',
     candidates: [
       'Water Elevation Contours',
       'water_elevation_contours',
@@ -168,7 +197,7 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   },
   {
     layerKey: 'ogc-water-elevation-points',
-    groupKey: 'water',
+    groupKey: 'groundwater',
     candidates: [
       'Water Elevation Points',
       'water_elevation_points',
@@ -184,17 +213,17 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   },
   {
     layerKey: 'ogc-surface-water-diversions',
-    groupKey: 'water',
+    groupKey: 'surfaceWater',
     candidates: ['Surface Water Diversions', 'surface_water_diversions'],
   },
   {
     layerKey: 'ogc-ephemeral-streams',
-    groupKey: 'water',
+    groupKey: 'surfaceWater',
     candidates: ['Ephemeral Streams', 'ephemeral_streams'],
   },
   {
     layerKey: 'ogc-lakes-ponds-reservoirs',
-    groupKey: 'water',
+    groupKey: 'surfaceWater',
     candidates: [
       'Lakes, Ponds, and Reservoirs',
       'lakes_ponds_and_reservoirs',
@@ -202,32 +231,43 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   },
   {
     layerKey: 'ogc-meteorological-stations',
-    groupKey: 'water',
+    groupKey: 'surfaceWater',
     candidates: ['Meteorological Stations', 'meteorological_stations'],
   },
   {
+    layerKey: 'ogc-project-areas',
+    groupKey: 'reference',
+    candidates: [
+      'Project Areas',
+      'Project Area',
+      'project_areas',
+      'project_area',
+    ],
+    displayLabel: 'AMP Project Areas',
+  },
+  {
     layerKey: 'ogc-other-thing-types',
-    groupKey: 'water',
+    groupKey: 'reference',
     candidates: ['Other Thing Types', 'other_thing_types'],
   },
   {
     layerKey: 'ogc-outfalls-return-flow',
-    groupKey: 'water',
+    groupKey: 'surfaceWater',
     candidates: ['Outfalls and Return Flow', 'outfalls_and_return_flow'],
   },
   {
     layerKey: 'ogc-perennial-streams',
-    groupKey: 'water',
+    groupKey: 'surfaceWater',
     candidates: ['Perennial Streams', 'perennial_streams'],
   },
   {
     layerKey: 'ogc-rock-sample-locations',
-    groupKey: 'water',
+    groupKey: 'reference',
     candidates: ['Rock Sample Locations', 'rock_sample_locations'],
   },
   {
     layerKey: 'ogc-soil-gas-sample-locations',
-    groupKey: 'water',
+    groupKey: 'reference',
     candidates: ['Soil Gas Sample Locations', 'soil_gas_sample_locations'],
   },
 ]
@@ -247,12 +287,14 @@ const sortOgcCollections = (collections: OgcCollectionRecord[]) =>
 const sortRegisteredCollections = (collections: RegisteredCollectionMatch[]) =>
   [...collections].sort((a, b) => {
     const aLabel =
+      a.displayLabel ||
       a.collection.title ||
       a.collection.name ||
       a.collection.id ||
       a.collection.collection_id ||
       ''
     const bLabel =
+      b.displayLabel ||
       b.collection.title ||
       b.collection.name ||
       b.collection.id ||
@@ -264,8 +306,10 @@ const sortRegisteredCollections = (collections: RegisteredCollectionMatch[]) =>
 
 const groupCollections = (collections: OgcCollectionRecord[]): CollectionGroup[] => {
   const grouped = {
-    water: [] as RegisteredCollectionMatch[],
+    groundwater: [] as RegisteredCollectionMatch[],
+    surfaceWater: [] as RegisteredCollectionMatch[],
     geothermal: [] as RegisteredCollectionMatch[],
+    reference: [] as RegisteredCollectionMatch[],
   }
   const seenCollectionIds = new Set<string>()
 
@@ -290,21 +334,36 @@ const groupCollections = (collections: OgcCollectionRecord[]): CollectionGroup[]
     grouped[definition.groupKey].push({
       layerKey: definition.layerKey,
       collection: matchedCollection,
+      displayLabel: definition.displayLabel,
     })
   }
 
   return [
     {
-      key: 'water',
-      title: 'Water',
-      description: 'Groundwater, springs, water chemistry, levels, and related hydrologic collections.',
-      collections: sortRegisteredCollections(grouped.water),
+      key: 'groundwater',
+      title: 'Groundwater',
+      description:
+        'Water wells, groundwater chemistry, depth-to-water, and water-elevation collections.',
+      collections: sortRegisteredCollections(grouped.groundwater),
+    },
+    {
+      key: 'surfaceWater',
+      title: 'Surface Water',
+      description:
+        'Springs, streams, diversions, lakes, reservoirs, and related hydrologic context collections.',
+      collections: sortRegisteredCollections(grouped.surfaceWater),
     },
     {
       key: 'geothermal',
       title: 'Geothermal',
       description: 'Reserved for geothermal wells and supporting thermal, meteorological, and sample collections when they are published.',
       collections: sortRegisteredCollections(grouped.geothermal),
+    },
+    {
+      key: 'reference',
+      title: 'Reference',
+      description: 'Boundary, project, and contextual collections that support map interpretation.',
+      collections: sortRegisteredCollections(grouped.reference),
     },
   ]
 }
@@ -489,20 +548,23 @@ export const CollectionsPage = () => {
                 <CardContent sx={{ p: 2 }}>
                   <Stack spacing={1.5}>
                     {group.collections.length > 0 ? (
-                      group.collections.map(({ layerKey, collection }, index) => (
-                        <CollectionRow
-                          key={
-                            collection.id ||
-                            collection.collection_id ||
-                            collection.name ||
-                            collection.title
-                          }
-                          collection={collection}
-                          layerKey={layerKey}
-                          groupKey={group.key}
-                          index={index}
-                        />
-                      ))
+                      group.collections.map(
+                        ({ layerKey, collection, displayLabel }, index) => (
+                          <CollectionRow
+                            key={
+                              collection.id ||
+                              collection.collection_id ||
+                              collection.name ||
+                              collection.title
+                            }
+                            collection={collection}
+                            layerKey={layerKey}
+                            groupKey={group.key}
+                            displayLabel={displayLabel}
+                            index={index}
+                          />
+                        )
+                        )
                     ) : (
                       <EmptyGroupState groupKey={group.key} />
                     )}
@@ -568,15 +630,22 @@ const CollectionRow = ({
   collection,
   layerKey,
   groupKey,
+  displayLabel,
 }: {
   collection: OgcCollectionRecord
   layerKey: string
   groupKey: CollectionGroupKey
+  displayLabel?: string
   index: number
 }) => {
   const style = GROUP_STYLES[groupKey]
   const title =
-    collection.title || collection.name || collection.id || collection.collection_id || 'Untitled collection'
+    displayLabel ||
+    collection.title ||
+    collection.name ||
+    collection.id ||
+    collection.collection_id ||
+    'Untitled collection'
   const id = collection.id || collection.collection_id || collection.name
   const description = collection.description || collection.abstract
 
