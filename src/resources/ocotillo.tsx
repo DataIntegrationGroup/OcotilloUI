@@ -1,6 +1,7 @@
 import {
   Apps,
   Construction,
+  DatasetLinked,
   Contacts,
   DynamicFormOutlined,
   Image,
@@ -100,15 +101,6 @@ let tables: {
       icon: <Place />,
     },
   },
-  {
-    name: 'lexicon',
-    list: '/ocotillo/lexicon',
-    meta: {
-      disabled: false,
-      label: 'Lexicon / Glossary',
-      icon: <LibraryBooksOutlined />,
-    },
-  },
   // {
   //   name: 'sensor',
   //   list: '/ocotillo/sensor',
@@ -166,6 +158,15 @@ let tables: {
   //   },
   // },
   // {
+  {
+    name: 'lexicon',
+    list: '/ocotillo/lexicon',
+    meta: {
+      disabled: false,
+      label: 'Lexicon / Glossary',
+      icon: <LibraryBooksOutlined />,
+    },
+  },
   //   name: 'lexicon/term',
   //   list: '/ocotillo/lexicon',
   //   edit: '/ocotillo/lexicon/term/edit/:id',
@@ -192,7 +193,7 @@ let tables: {
 
 tables.push({
   name: 'thing-well-pdf-preview',
-  list: '/ocotillo/well/pdf-preview/:id',
+  show: '/ocotillo/well/pdf-preview/:id',
   meta: {
     label: 'PDF Preview',
     parent: 'ocotillo.thing-well',
@@ -305,6 +306,14 @@ let ocotillo = [
     meta: {
       label: 'Map',
       icon: <Map />,
+    },
+  },
+  {
+    name: 'collections',
+    list: '/ocotillo/collections',
+    meta: {
+      label: 'Datasets',
+      icon: <DatasetLinked />,
     },
   },
   ...tables,

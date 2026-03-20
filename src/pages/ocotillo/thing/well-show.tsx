@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { HttpError, useOne, useResourceParams, useShow } from '@refinedev/core'
-import { ListButton, Show, useDataGrid } from '@refinedev/mui'
+import { Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { ISample, IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
+import { useWellPdfData } from '@/hooks'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
@@ -32,11 +33,22 @@ import {
 
 export const WellShow = () => {
   const { query, result: well } = useShow<IWell, HttpError>()
+  const { id } = useResourceParams()
+  const {
+    observations: pdfObservations,
+    assets,
+    contacts,
+    sample,
+    sensorDeployments,
+    isLoading: isPdfDataLoading,
+  } = useWellPdfData({
+    thingId: id,
+    well,
+  })
 
   const [hydrographDatasource, setHydrographDatasource] = useState<
     IHydrographDatasource[]
   >([])
-  const { id } = useResourceParams()
 
   const {
     dataGridProps: { rows: observations, loading: observationsIsloading },
@@ -94,7 +106,7 @@ export const WellShow = () => {
     },
   })
 
-  const sample = sampleData
+  const fieldEventSample = sampleData
 
   const { dataGridProps: idLinkDataGridProps } = useDataGrid({
     resource: `thing/${id}/id-link`,
@@ -170,7 +182,14 @@ export const WellShow = () => {
         },
       }}
       title={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            flexWrap: 'wrap',
+          }}
+        >
           <Typography variant="h3" fontWeight={700}>
             {well?.name ?? ''}
           </Typography>
@@ -192,14 +211,20 @@ export const WellShow = () => {
       headerButtons={() => (
         <Box sx={{ display: 'flex', gap: 0 }}>
           <WellPDFPreviewButton isLoading={query.isLoading} />
-          <WellPDFDownloadButton well={well} isLoading={query.isLoading} />
+          <WellPDFDownloadButton
+            well={well}
+            isLoading={query.isLoading || isPdfDataLoading}
+            observations={pdfObservations}
+            assets={assets}
+            contacts={contacts}
+            sample={sample}
+            sensorDeployments={sensorDeployments}
+          />
         </Box>
       )}
     >
       <Stack spacing={2}>
         <Grid container spacing={2}>
-          
-
           {/* Left column: 8 cols */}
           <Grid size={{ xs: 12, md: 8, lg: 9 }}>
             <Stack spacing={2}>
@@ -240,11 +265,9 @@ export const WellShow = () => {
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
               <GeologyInformationAccordion well={well} />
-              <FieldEventHistoryAccordion sample={sample} />
+              <FieldEventHistoryAccordion sample={fieldEventSample} />
             </Stack>
           </Grid>
-
-        
         </Grid>
       </Stack>
     </Show>

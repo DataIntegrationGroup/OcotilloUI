@@ -12,7 +12,7 @@ import { Email, Home, Phone } from '@mui/icons-material'
 import AddIcon from '@mui/icons-material/Add'
 import { useLink, useNavigation } from '@refinedev/core'
 import { settings } from '@/settings'
-import { formatAppDateTime } from '@/utils'
+import { formatAppDateTime, formatPhone } from '@/utils'
 import { ListPage } from '@/components'
 import { useAccessCapabilities } from '@/hooks'
 import {
@@ -85,7 +85,7 @@ export const ContactList: React.FC = () => {
             (p) => p.phone_type === 'Primary'
           )
           return primary?.phone_number ? (
-            <span>{primary.phone_number}</span>
+            <span>{formatPhone(primary.phone_number)}</span>
           ) : (
             <span />
           )
@@ -124,21 +124,24 @@ export const ContactList: React.FC = () => {
         valueGetter: (_: unknown, row: IContact) =>
           row.things?.map((thing) => thing.name).join('; ') ?? '',
         renderCell: (params) => {
+          const things = params.row.things ?? []
           return (
-            <div>
-              {params.row.things?.map((thing) => (
-                <Link
-                  key={thing.id}
-                  go={{
-                    to: {
-                      resource: 'ocotillo.thing-well',
-                      action: 'show',
-                      id: thing.id,
-                    },
-                  }}
-                >
-                  {thing.name}
-                </Link>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
+              {things.map((thing, idx) => (
+                <span key={thing.id}>
+                  {idx > 0 && ', '}
+                  <Link
+                    go={{
+                      to: {
+                        resource: 'ocotillo.thing-well',
+                        action: 'show',
+                        id: thing.id,
+                      },
+                    }}
+                  >
+                    {thing.name}
+                  </Link>
+                </span>
               ))}
             </div>
           )
@@ -193,7 +196,6 @@ export const ContactList: React.FC = () => {
         dataGridProps={{ ...dataGridProps, rows: visibleContacts }}
         getRowId={(row) => row.id}
         headerButtons={customHeaderButtons}
-        disableRowClick={true}
         onSelectionChange={(params) =>
           setSelectedContactId(params.length > 0 ? (params[0] as number) : null)
         }
@@ -256,6 +258,9 @@ const PhoneInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
         headerName: 'Phone',
         type: 'string',
         width: 180,
+        renderCell: (params) => (
+          <span>{formatPhone(params.row.phone_number)}</span>
+        ),
       },
     ],
     []
