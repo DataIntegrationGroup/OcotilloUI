@@ -90,17 +90,17 @@ let tables: {
   //     icon: <Image />,
   //   },
   // },
-  // {
-  //   name: 'location',
-  //   list: '/ocotillo/location',
-  //   create: '/ocotillo/location/create',
-  //   edit: '/ocotillo/location/edit/:id',
-  //   show: '/ocotillo/location/show/:id',
-  //   meta: {
-  //     label: 'Locations',
-  //     icon: <Place />,
-  //   },
-  // },
+  {
+    name: 'location',
+    list: '/ocotillo/location',
+    create: '/ocotillo/location/create',
+    edit: '/ocotillo/location/edit/:id',
+    show: '/ocotillo/location/show/:id',
+    meta: {
+      label: 'Locations',
+      icon: <Place />,
+    },
+  },
   // {
   //   name: 'sensor',
   //   list: '/ocotillo/sensor',
@@ -158,6 +158,15 @@ let tables: {
   //   },
   // },
   // {
+  {
+    name: 'lexicon',
+    list: '/ocotillo/lexicon',
+    meta: {
+      disabled: false,
+      label: 'Lexicon / Glossary',
+      icon: <LibraryBooksOutlined />,
+    },
+  },
   //   name: 'lexicon/term',
   //   list: '/ocotillo/lexicon',
   //   edit: '/ocotillo/lexicon/term/edit/:id',

@@ -41,6 +41,7 @@ import {
   parseIds,
   safeFilenamePrefix,
 } from '@/utils'
+import { useAccessCapabilities } from '@/hooks'
 import { BatchRouteMap } from './components/BatchRouteMap'
 import { ExportDialog } from './components/ExportDialog'
 const TOKEN_RESOLVE_CONCURRENCY = 5
@@ -52,6 +53,7 @@ const BUNDLE_RESOURCE_MAX_PAGES = 20
 
 export const WellBatchExport = () => {
   const { open: notify } = useNotification()
+  const { canViewConfidential } = useAccessCapabilities()
   const dataProvider = useDataProvider()
   const ocotilloDataProvider = dataProvider('ocotillo')
   const { autocompleteProps: searchAutocompleteProps } = useAutocomplete<IWell>({
@@ -642,6 +644,7 @@ export const WellBatchExport = () => {
               assets={bundle.assets}
               observations={bundle.observations}
               standalone={false}
+              includeConfidentialContacts={canViewConfidential}
             />
           ))}
         </OcotilloDocument>

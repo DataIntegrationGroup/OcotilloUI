@@ -22,6 +22,7 @@ import {
   STORAGE_KEYS,
   IS_TESTING_AUTH,
 } from '@/config'
+import { normalizeAccessControlGroups } from '@/utils'
 
 const gravatarUrl = (email: string) => {
   let hash = email.trim().toLowerCase()
@@ -159,7 +160,7 @@ export const getAccessToken = async ({
 
 export const getAccessControlGroups = (): string[] | null => {
   if (IS_TESTING_AUTH) {
-    return ['OcotilloAdmin']
+    return ['AMP.Viewer', 'AMP.Editor', 'AMP.Admin']
   }
 
   const idToken = localStorage.getItem(STORAGE_KEYS.idToken)
@@ -167,7 +168,7 @@ export const getAccessControlGroups = (): string[] | null => {
 
   try {
     const decoded = jwtDecode<{ groups?: string[] }>(idToken)
-    return decoded.groups ?? []
+    return normalizeAccessControlGroups(decoded.groups)
   } catch {
     return null
   }
@@ -316,7 +317,7 @@ export const authentikAuthProvider: AuthProvider = {
 
     try {
       const decoded = jwtDecode<AuthentikJwtPayload>(idToken)
-      return decoded['groups'] ?? []
+      return normalizeAccessControlGroups(decoded['groups'])
     } catch {
       return null
     }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BaseRecord, useNotification, usePermissions } from '@refinedev/core'
+import { BaseRecord, useNotification } from '@refinedev/core'
 import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
 import { WellPDF } from '@/components'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
@@ -8,6 +8,7 @@ import { Button } from '@mui/material'
 import { Download } from '@mui/icons-material'
 import { IPdfOptions } from '@/interfaces'
 import { PDF_SINGLE_PAGE_OPTION } from '@/config'
+import { useAccessCapabilities } from '@/hooks'
 
 export const WellPDFDownloadButton = ({
   well,
@@ -31,16 +32,16 @@ export const WellPDFDownloadButton = ({
   hydrographImage?: string | null
 }) => {
   const { open: notify } = useNotification()
-  const { data: permissions, isLoading: isPermissionsLoading } = usePermissions<
-    string[]
-  >({})
-
-  const isViewer = permissions?.includes('AMPViewer') ?? false
+  const {
+    isLoading: isPermissionsLoading,
+    canViewAmp,
+    canViewConfidential,
+  } = useAccessCapabilities()
 
   const [isGenerating, setIsGenerating] = useState(false)
 
   const disabled =
-    isLoading || isPermissionsLoading || !isViewer || isGenerating
+    isLoading || isPermissionsLoading || !canViewAmp || isGenerating
 
   const handleDownload = async (opts: IPdfOptions) => {
     try {
@@ -55,6 +56,7 @@ export const WellPDFDownloadButton = ({
           contacts={contacts}
           observations={observations}
           sensorDeployments={sensorDeployments}
+          includeConfidentialContacts={canViewConfidential}
           options={opts}
           hydrographImage={hydrographImage}
         />

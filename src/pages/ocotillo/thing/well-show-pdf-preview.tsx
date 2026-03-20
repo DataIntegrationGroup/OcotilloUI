@@ -33,7 +33,7 @@ import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
 import { useForm } from '@refinedev/react-hook-form'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { getLabelFromOptionalPdfFieldKey } from '@/utils'
-import { useWellPdfData } from '@/hooks'
+import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 
@@ -48,6 +48,7 @@ export const WellShowPdfPreview = () => {
   const theme = useTheme()
   const [isViewerReady, setIsViewerReady] = useState(false)
   const [hydrographImage, setHydrographImage] = useState<string | null>(null)
+  const { canViewConfidential } = useAccessCapabilities()
 
   const { control, watch, reset } = useForm<IPdfOptions>({
     defaultValues: PDF_DEFAULT_VALUES,
@@ -409,6 +410,7 @@ export const WellShowPdfPreview = () => {
                 sensorDeployments={sensorDeployments}
                 options={currentOptions}
                 hydrographImage={hydrographImage}
+                includeConfidentialContacts={canViewConfidential}
               />
             </PDFViewer>
           </Box>
