@@ -319,7 +319,7 @@ export const MapView: React.FC = () => {
           THING_LAYERS[layerKey]?.layerProps?.label || layerKey,
         ])
       ) as Record<string, string>,
-    [THING_LAYERS, visibleLayers]
+    [visibleLayers]
   )
 
   useEffect(() => {
