@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
   Autocomplete,
@@ -27,14 +27,22 @@ import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import {
   IContact,
   IObservation,
+  ISample,
   IWell,
   WellBundle,
   WellChipState,
 } from '@/interfaces/ocotillo'
-import { OcotilloDocument, WellPDF } from '@/components'
+import {
+  FieldCompilationNotesPdf,
+  HydrographPngExporter,
+  OcotilloDocument,
+} from '@/components'
 import { pdf } from '@react-pdf/renderer'
 import {
+  type DeploymentLike,
+  type SensorLike,
   buildBatchFilename,
+  buildSensorDeploymentRows,
   buildWellLookup,
   compactLookupKey,
   normalizeLookupKey,
@@ -42,6 +50,7 @@ import {
   safeFilenamePrefix,
 } from '@/utils'
 import { useAccessCapabilities } from '@/hooks'
+import type { IHydrographDatasource } from '@/interfaces/st2'
 import { BatchRouteMap } from './components/BatchRouteMap'
 import { ExportDialog } from './components/ExportDialog'
 const TOKEN_RESOLVE_CONCURRENCY = 5
@@ -50,6 +59,37 @@ const TOKEN_RESOLVE_MAX_PAGES = 20
 const BUNDLE_FETCH_CONCURRENCY = 4
 const BUNDLE_RESOURCE_PAGE_SIZE = 100
 const BUNDLE_RESOURCE_MAX_PAGES = 20
+
+const buildHydrographDatasource = (
+  bundle: Pick<WellBundle, 'well' | 'observations'>
+): IHydrographDatasource[] => {
+  const data = bundle.observations
+    .filter(
+      (observation) =>
+        observation.observation_datetime &&
+        typeof observation.depth_to_water_bgs === 'number'
+    )
+    .map((observation) => ({
+      phenomenonTime: new Date(observation.observation_datetime as string),
+      result: Number(observation.depth_to_water_bgs),
+    }))
+    .sort(
+      (a, b) =>
+        new Date(a.phenomenonTime).getTime() -
+        new Date(b.phenomenonTime).getTime()
+    )
+
+  if (data.length === 0) return []
+
+  return [
+    {
+      id: Number(bundle.well.id ?? 0),
+      name: bundle.well.name ?? 'Depth to Water',
+      style: 'scatter',
+      data,
+    },
+  ]
+}
 
 export const WellBatchExport = () => {
   const { open: notify } = useNotification()
@@ -83,8 +123,13 @@ export const WellBatchExport = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [progress, setProgress] = useState(0)
   const [filename, setFilename] = useState(buildBatchFilename())
+  const [hydrographBundles, setHydrographBundles] = useState<WellBundle[]>([])
+  const [hydrographImagesByWellId, setHydrographImagesByWellId] = useState<
+    Record<number, string>
+  >({})
+  const hydrographImagesRef = useRef<Record<number, string>>({})
 
-  const upsertWells = useCallback((wells: IWell[]) => {
+  const upsertWells = useCallback((wells: readonly IWell[]) => {
     if (wells.length === 0) return
     setAllWells((prev) => {
       const nextById = new Map<number, IWell>()
@@ -113,6 +158,10 @@ export const WellBatchExport = () => {
       return changed ? Array.from(nextById.values()) : prev
     })
   }, [])
+
+  useEffect(() => {
+    hydrographImagesRef.current = hydrographImagesByWellId
+  }, [hydrographImagesByWellId])
 
   const mapWithConcurrency = useCallback(
     async <T, R>(
@@ -144,27 +193,6 @@ export const WellBatchExport = () => {
     async (token: string): Promise<IWell | undefined> => {
       const normalizedToken = normalizeLookupKey(token)
       const compactToken = compactLookupKey(token)
-
-      const exactResult = await ocotilloDataProvider.getList({
-        resource: 'thing/water-well',
-        pagination: { currentPage: 1, pageSize: 10 },
-        filters: [
-          {
-            field: 'name',
-            operator: 'eq',
-            value: token,
-          },
-        ],
-      })
-      const exactCandidates = (exactResult.data ?? []) as IWell[]
-      const exactNameMatch =
-        exactCandidates.find(
-          (well) => normalizeLookupKey(String(well.name ?? '')) === normalizedToken
-        ) ??
-        exactCandidates.find(
-          (well) => compactLookupKey(String(well.name ?? '')) === compactToken
-        )
-      if (exactNameMatch) return exactNameMatch
 
       let page = 1
       while (page <= TOKEN_RESOLVE_MAX_PAGES) {
@@ -206,7 +234,7 @@ export const WellBatchExport = () => {
   )
 
   useEffect(() => {
-    const options = (searchAutocompleteProps.options ?? []) as IWell[]
+    const options = (searchAutocompleteProps.options ?? []) as readonly IWell[]
     upsertWells(options)
   }, [searchAutocompleteProps.options, upsertWells])
 
@@ -310,7 +338,33 @@ export const WellBatchExport = () => {
         return rows
       }
 
-      const [assets, contacts, observations] = await Promise.all([
+      const fetchPagedResource = async <T extends BaseRecord>(resource: string) => {
+        let page = 1
+        const rows: T[] = []
+
+        while (page <= BUNDLE_RESOURCE_MAX_PAGES) {
+          const result = await ocotilloDataProvider.getList({
+            resource,
+            pagination: {
+              currentPage: page,
+              pageSize: BUNDLE_RESOURCE_PAGE_SIZE,
+            },
+          })
+
+          const pageRows = (result.data ?? []) as T[]
+          rows.push(...pageRows)
+
+          const reachedEnd =
+            pageRows.length < BUNDLE_RESOURCE_PAGE_SIZE ||
+            page * BUNDLE_RESOURCE_PAGE_SIZE >= (result.total ?? 0)
+          if (reachedEnd) break
+          page += 1
+        }
+
+        return rows
+      }
+
+      const [assets, contacts, observations, sensors, deployments] = await Promise.all([
         fetchThingResource<BaseRecord>('asset').catch((error) => {
           console.warn(`Failed to load assets for well ${wellId}`, error)
           return [] as BaseRecord[]
@@ -325,13 +379,65 @@ export const WellBatchExport = () => {
             return [] as Partial<IObservation>[]
           }
         ),
+        fetchThingResource<SensorLike>('sensor').catch((error) => {
+          console.warn(`Failed to load sensors for well ${wellId}`, error)
+          return [] as SensorLike[]
+        }),
+        fetchPagedResource<DeploymentLike>(`thing/${wellId}/deployment`).catch(
+          (error) => {
+            console.warn(`Failed to load deployments for well ${wellId}`, error)
+            return [] as DeploymentLike[]
+          }
+        ),
       ])
+
+      const sampleIds = Array.from(
+        new Set(
+          [...observations]
+            .filter((observation) => observation.observation_datetime)
+            .sort(
+              (a, b) =>
+                new Date(b.observation_datetime!).getTime() -
+                new Date(a.observation_datetime!).getTime()
+            )
+            .slice(0, 2)
+            .map((observation) => observation.sample_id)
+            .filter((sampleId): sampleId is number => typeof sampleId === 'number')
+        )
+      )
+
+      const sampleMethodsBySampleId =
+        sampleIds.length > 0
+          ? Object.fromEntries(
+              (
+                await Promise.allSettled(
+                  sampleIds.map((sampleId) =>
+                    ocotilloDataProvider.getOne<ISample>({
+                      resource: 'ocotillo.sample',
+                      id: sampleId,
+                    })
+                  )
+                )
+              )
+                .map((result, index) => {
+                  if (result.status !== 'fulfilled') return null
+                  const sample = result.value.data as ISample
+                  return [
+                    sampleIds[index],
+                    sample.sample_method?.trim() || '-',
+                  ] as const
+                })
+                .filter(Boolean) as Array<readonly [number, string]>
+            )
+          : {}
 
       return {
         well: wellResult.data as IWell,
         assets,
         contacts,
         observations,
+        sensorDeployments: buildSensorDeploymentRows(deployments, sensors),
+        sampleMethodsBySampleId,
       }
     },
     [ocotilloDataProvider]
@@ -436,7 +542,12 @@ export const WellBatchExport = () => {
         TOKEN_RESOLVE_CONCURRENCY,
         async (token) => {
           const fromCache = resolveWellFromToken(token)
-          const match = fromCache ?? (await resolveTokenByApi(token))
+          const match =
+            fromCache ??
+            (await resolveTokenByApi(token).catch((error) => {
+              console.warn(`Token resolution failed for "${token}"`, error)
+              return undefined
+            }))
           return { token, match }
         }
       )
@@ -495,11 +606,20 @@ export const WellBatchExport = () => {
 
         return next
       })
+    } catch (error) {
+      console.warn('Failed to resolve pasted well names', error)
+      notify?.({
+        type: 'error',
+        message: 'Well name resolution failed',
+        description:
+          'The pasted names could not be resolved. Check the network response and try again.',
+      })
     } finally {
       setIsResolvingIds(false)
     }
   }, [
     mapWithConcurrency,
+    notify,
     pasteValue,
     resolveTokenByApi,
     resolveWellFromToken,
@@ -597,6 +717,8 @@ export const WellBatchExport = () => {
               assets: [],
               contacts: [],
               observations: [],
+              sensorDeployments: [],
+              sampleMethodsBySampleId: {},
             }
           })
 
@@ -631,18 +753,66 @@ export const WellBatchExport = () => {
         return
       }
 
+      const neededHydrographs = bundlesForExport.filter(
+        (bundle) => buildHydrographDatasource(bundle).length > 0
+      )
+
+      setHydrographBundles(neededHydrographs)
+      setHydrographImagesByWellId((prev) => {
+        const next = { ...prev }
+        neededHydrographs.forEach((bundle) => {
+          delete next[bundle.well.id]
+        })
+        return next
+      })
+
+      const hydrographImages =
+        neededHydrographs.length > 0
+          ? await new Promise<Record<number, string>>((resolve) => {
+              const startedAt = Date.now()
+
+              const poll = () => {
+                const current = hydrographImagesRef.current
+                const ready = neededHydrographs.every(
+                  (bundle) =>
+                    typeof current[bundle.well.id] === 'string' &&
+                    current[bundle.well.id].length > 0
+                )
+
+                if (ready || Date.now() - startedAt > 8000) {
+                  resolve(
+                    Object.fromEntries(
+                      neededHydrographs.map((bundle) => [
+                        bundle.well.id,
+                        current[bundle.well.id] ?? '',
+                      ])
+                    )
+                  )
+                  return
+                }
+
+                window.setTimeout(poll, 100)
+              }
+
+              poll()
+            })
+          : {}
+
       const blob = await pdf(
         <OcotilloDocument
           title={baseFilename}
           subject="Batch Well Field Data Report"
         >
           {bundlesForExport.map((bundle) => (
-            <WellPDF
+            <FieldCompilationNotesPdf
               key={bundle.well.id}
               well={bundle.well}
               contacts={bundle.contacts}
               assets={bundle.assets}
               observations={bundle.observations}
+              sensorDeployments={bundle.sensorDeployments}
+              hydrographImage={hydrographImages[bundle.well.id] ?? null}
+              sampleMethodsBySampleId={bundle.sampleMethodsBySampleId}
               standalone={false}
               includeConfidentialContacts={canViewConfidential}
             />
@@ -670,6 +840,7 @@ export const WellBatchExport = () => {
         message: 'Batch PDF generation failed',
       })
     } finally {
+      setHydrographBundles([])
       setIsGenerating(false)
       setProgress(0)
     }
@@ -703,6 +874,30 @@ export const WellBatchExport = () => {
       }}
       contentProps={{ sx: { pt: 1 } }}
     >
+      {hydrographBundles.map((bundle) => {
+        const datasource = buildHydrographDatasource(bundle)
+        if (datasource.length === 0) return null
+
+        return (
+          <HydrographPngExporter
+            key={`${bundle.well.id}-${bundle.observations.length}`}
+            datasource={datasource}
+            options={{
+              rightPaddingPercent: 30,
+            }}
+            refreshKey={`${bundle.well.id}-${bundle.observations.length}-${bundle.observations[0]?.observation_datetime ?? ''}`}
+            onPngReady={(pngDataUrl) => {
+              setHydrographImagesByWellId((prev) => {
+                if (prev[bundle.well.id] === pngDataUrl) return prev
+                return {
+                  ...prev,
+                  [bundle.well.id]: pngDataUrl,
+                }
+              })
+            }}
+          />
+        )
+      })}
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 680px', gap: 3 }}>
         <Stack spacing={2}>
           <Paper elevation={0}>
@@ -781,9 +976,9 @@ export const WellBatchExport = () => {
             <Box sx={{ p: 2 }}>
               <Autocomplete
                 {...searchAutocompleteProps}
-                options={((searchAutocompleteProps.options as IWell[]) ?? []).filter(
-                  (well) => !selectedWellIds.has(well.id)
-                )}
+                options={(
+                  (searchAutocompleteProps.options ?? []) as readonly IWell[]
+                ).filter((well) => !selectedWellIds.has(well.id))}
                 loading={Boolean(searchAutocompleteProps.loading)}
                 getOptionLabel={(well: any) => well.name ?? ''}
                 filterOptions={(options) => options}
