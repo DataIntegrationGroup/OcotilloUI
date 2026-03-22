@@ -34,14 +34,14 @@ export const WellPDFDownloadButton = ({
   const { open: notify } = useNotification()
   const {
     isLoading: isPermissionsLoading,
-    canViewAmp,
+    canManageAmp,
     canViewConfidential,
   } = useAccessCapabilities()
 
   const [isGenerating, setIsGenerating] = useState(false)
 
   const disabled =
-    isLoading || isPermissionsLoading || !canViewAmp || isGenerating
+    isLoading || isPermissionsLoading || !canManageAmp || isGenerating
 
   const handleDownload = async (opts: IPdfOptions) => {
     try {

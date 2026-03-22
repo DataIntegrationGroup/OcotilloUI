@@ -48,7 +48,7 @@ export const WellShowPdfPreview = () => {
   const theme = useTheme()
   const [isViewerReady, setIsViewerReady] = useState(false)
   const [hydrographImage, setHydrographImage] = useState<string | null>(null)
-  const { canViewConfidential } = useAccessCapabilities()
+  const { canManageAmp, canViewConfidential } = useAccessCapabilities()
 
   const { control, watch, reset } = useForm<IPdfOptions>({
     defaultValues: PDF_DEFAULT_VALUES,
@@ -258,19 +258,21 @@ export const WellShowPdfPreview = () => {
       }}
       contentProps={{ sx: { pt: 1 } }}
       headerButtons={() => (
-        <Box sx={{ display: 'flex', gap: 0 }}>
-          <WellPDFDownloadButton
-            well={well}
-            isLoading={isLoading}
-            observations={observations}
-            assets={assets}
-            contacts={contacts}
-            sample={sample}
-            sensorDeployments={sensorDeployments}
-            options={currentOptions}
-            hydrographImage={hydrographImage}
-          />
-        </Box>
+        canManageAmp ? (
+          <Box sx={{ display: 'flex', gap: 0 }}>
+            <WellPDFDownloadButton
+              well={well}
+              isLoading={isLoading}
+              observations={observations}
+              assets={assets}
+              contacts={contacts}
+              sample={sample}
+              sensorDeployments={sensorDeployments}
+              options={currentOptions}
+              hydrographImage={hydrographImage}
+            />
+          </Box>
+        ) : null
       )}
     >
       <Box sx={{ mb: 2 }}>

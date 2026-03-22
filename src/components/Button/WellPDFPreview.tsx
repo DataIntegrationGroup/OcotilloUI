@@ -7,9 +7,10 @@ import { useAccessCapabilities } from '@/hooks'
 export const WellPDFPreviewButton = ({ isLoading }: { isLoading: boolean }) => {
   const go = useGo()
   const { id } = useParams()
-  const { isLoading: isPermissionsLoading, canViewAmp } = useAccessCapabilities()
+  const { isLoading: isPermissionsLoading, canManageAmp } =
+    useAccessCapabilities()
 
-  const disabled = isLoading || isPermissionsLoading || !canViewAmp
+  const disabled = isLoading || isPermissionsLoading || !canManageAmp
 
   const handlePreview = () => {
     go({ to: `/ocotillo/well/pdf-preview/${id}`, type: 'push' })

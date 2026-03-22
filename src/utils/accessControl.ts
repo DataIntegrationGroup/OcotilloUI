@@ -183,6 +183,10 @@ export const canAccessResource = ({
     return action === 'list' || action === 'show'
   }
 
+  if (resource === 'ocotillo.thing-well-pdf-preview') {
+    return (action === 'list' || action === 'show') && capabilities.canManageAmp
+  }
+
   if (resource === 'Sandbox') {
     return (action === 'list' || action === 'show') && capabilities.canManageAmp
   }

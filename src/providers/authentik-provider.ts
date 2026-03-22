@@ -160,7 +160,7 @@ export const getAccessToken = async ({
 
 export const getAccessControlGroups = (): string[] | null => {
   if (IS_TESTING_AUTH) {
-    return ['AMP.Viewer', 'AMP.Editor', 'AMP.Admin']
+    return ['AMP.Admin']
   }
 
   const idToken = localStorage.getItem(STORAGE_KEYS.idToken)
@@ -281,7 +281,7 @@ export const authentikAuthProvider: AuthProvider = {
 
   // Returns the current user's profile
   getIdentity: async (): Promise<AuthentikIdentity | null> => {
-    if (!import.meta.env.PROD && import.meta.env.VITE_TEST_AUTH) {
+    if (IS_TESTING_AUTH) {
       return {
         id: 'test',
         avatar: gravatarUrl(''),
@@ -312,6 +312,10 @@ export const authentikAuthProvider: AuthProvider = {
   },
 
   getPermissions: async (): Promise<AuthentikPermissions | null> => {
+    if (IS_TESTING_AUTH) {
+      return ['AMP.Admin']
+    }
+
     const idToken = tokenStore.idToken
     if (!idToken) return null
 
