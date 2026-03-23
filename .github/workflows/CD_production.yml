@@ -20,6 +20,28 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      # authenticate to Google Cloud
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Load PostHog env vars from Secret Manager
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          POSTHOG_KEY_SECRET_NAME: ${{ vars.GSM_VITE_POSTHOG_KEY_SECRET_NAME }}
+          POSTHOG_HOST_SECRET_NAME: ${{ vars.GSM_VITE_POSTHOG_HOST_SECRET_NAME }}
+        run: |
+          set -euo pipefail
+
+          KEY_SECRET="${POSTHOG_KEY_SECRET_NAME:-vite-posthog-key}"
+          HOST_SECRET="${POSTHOG_HOST_SECRET_NAME:-vite-posthog-host}"
+
+          VITE_POSTHOG_KEY="$(gcloud secrets versions access latest --secret="$KEY_SECRET" --project="$GCP_PROJECT_ID")"
+          VITE_POSTHOG_HOST="$(gcloud secrets versions access latest --secret="$HOST_SECRET" --project="$GCP_PROJECT_ID")"
+
+          echo "VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY" >> "$GITHUB_ENV"
+          echo "VITE_POSTHOG_HOST=$VITE_POSTHOG_HOST" >> "$GITHUB_ENV"
+
       - name: Install deps & build
         env:
           VITE_APP_TITLE: "Ocotillo"
@@ -29,15 +51,12 @@ jobs:
           VITE_AUTHENTIK_URL: ${{ vars.VITE_AUTHENTIK_URL }}
           VITE_AUTHENTIK_REDIRECT_URI: ${{ vars.VITE_AUTHENTIK_REDIRECT_URI }}
           VITE_OCOTILLO_API_URL: ${{ vars.VITE_OCOTILLO_API_URL }}
+          VITE_POSTHOG_KEY: ${{ env.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ env.VITE_POSTHOG_HOST }}
 
         run: |
           npm ci
           npm run build:ci
-
-      # authenticate to Google Cloud
-      - uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       # deploy to App Engine
       - id: deploy

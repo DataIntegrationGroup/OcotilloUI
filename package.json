@@ -74,6 +74,7 @@
     "mapbox-gl": "^3.0.0",
     "mapbox-gl-style-switcher": "^1.0.11",
     "pako": "^2.1.0",
+    "posthog-js": "^1.363.1",
     "proj4": "^2.15.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
