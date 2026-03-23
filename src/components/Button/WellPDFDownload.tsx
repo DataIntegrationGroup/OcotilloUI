@@ -40,10 +40,14 @@ export const WellPDFDownloadButton = ({
 
   const [isGenerating, setIsGenerating] = useState(false)
 
+  const id = well?.id
+
   const disabled =
     isLoading || isPermissionsLoading || !canManageAmp || isGenerating
 
   const handleDownload = async (opts: IPdfOptions) => {
+    if (!id) return
+
     try {
       setIsGenerating(true)
       const filename = buildPdfFilename(well)

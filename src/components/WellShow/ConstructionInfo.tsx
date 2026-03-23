@@ -1,5 +1,6 @@
 import { Box, Paper, Stack, Typography } from '@mui/material'
 import { IWell } from '@/interfaces/ocotillo'
+import { formatAppDate } from '@/utils'
 
 export const ConstructionInfoAccordion = ({ well }: { well?: IWell }) => {
   return (
@@ -10,49 +11,82 @@ export const ConstructionInfoAccordion = ({ well }: { well?: IWell }) => {
         </Typography>
       </Box>
       <Box sx={{ p: 2 }}>
-      <Stack spacing={1}>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
-          <Typography variant="body2" component="span">
-            Completion Date:
-          </Typography>
-          <Typography variant="body2" color="text.secondary" component="span">
-            {well?.well_completion_date || 'N/A'}
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
-          <Typography variant="body2" component="span">
-            Driller Name:
-          </Typography>
-          <Typography variant="body2" color="text.secondary" component="span">
-            {well?.well_driller_name || 'N/A'}
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
-          <Typography variant="body2" component="span">
-            Construction Method:
-          </Typography>
-          <Typography variant="body2" color="text.secondary" component="span">
-            {well?.well_construction_method || 'N/A'}
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
-          <Typography variant="body2" component="span">
-            Completion Date Source:
-          </Typography>
-          <Typography variant="body2" color="text.secondary" component="span">
-            {well?.well_completion_date_source || 'N/A'}
-          </Typography>
-        </Box>
-        <Box>
-          <Typography variant="body2" component="span">
-            Construction Method Source:
-          </Typography>
-          <Typography variant="body2" color="text.secondary" component="div" sx={{ mt: 0.5 }}>
-            {well?.well_construction_method_source || 'N/A'}
-          </Typography>
-        </Box>
-      </Stack>
+        <Stack spacing={1.5}>
+          <Section>
+            <FieldRow
+              label="Datalogger Suitability"
+              value={well?.is_suitable_for_datalogger?.toString() || 'N/A'}
+            />
+            <FieldRow
+              label="Driller Name"
+              value={well?.well_driller_name || 'N/A'}
+            />
+          </Section>
+
+          <Section>
+            <FieldGroup
+              label="Completion Date"
+              value={formatAppDate(well?.well_completion_date) || 'N/A'}
+              metaValue={well?.well_completion_date_source || 'N/A'}
+            />
+            <FieldGroup
+              label="Construction Method"
+              value={well?.well_construction_method || 'N/A'}
+              metaValue={well?.well_construction_method_source || 'N/A'}
+            />
+          </Section>
+        </Stack>
       </Box>
     </Paper>
   )
 }
+
+const Section = ({ children }: { children: React.ReactNode }) => (
+  <Box
+    sx={{
+      py: 0.25,
+    }}
+  >
+    <Stack spacing={1.25}>{children}</Stack>
+  </Box>
+)
+
+const FieldRow = ({ label, value }: { label: string; value: string }) => (
+  <Box
+    sx={{
+      display: 'grid',
+      gridTemplateColumns: { xs: '1fr', sm: '170px 1fr' },
+      gap: 0.75,
+      alignItems: 'start',
+    }}
+  >
+    <Typography variant="caption" color="text.secondary" fontWeight={700}>
+      {label}
+    </Typography>
+    <Typography variant="body2">{value}</Typography>
+  </Box>
+)
+
+const FieldGroup = ({
+  label,
+  value,
+  metaValue,
+}: {
+  label: string
+  value: string
+  metaValue: string
+}) => (
+  <Box>
+    <FieldRow label={label} value={value} />
+    <Box sx={{ pl: { xs: 0, sm: '170px' }, pt: 0.5 }}>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        component="div"
+        sx={{ fontStyle: 'italic' }}
+      >
+        {metaValue}
+      </Typography>
+    </Box>
+  </Box>
+)
