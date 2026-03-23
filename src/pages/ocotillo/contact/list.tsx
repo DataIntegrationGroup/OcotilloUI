@@ -10,13 +10,18 @@ import {
 import { Button, Card, CardHeader, SxProps } from '@mui/material'
 import { Email, Home, Phone } from '@mui/icons-material'
 import AddIcon from '@mui/icons-material/Add'
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
-import { useExport, useLink, useNavigation } from '@refinedev/core'
+import { useLink, useNavigation } from '@refinedev/core'
 import { settings } from '@/settings'
 import { formatAppDateTime, formatPhone } from '@/utils'
 import { ListPage } from '@/components'
+import { useAccessCapabilities } from '@/hooks'
+import {
+  filterConfidentialRows,
+  sanitizeContacts,
+} from '@/utils'
 
 export const ContactList: React.FC = () => {
+  const { canViewConfidential } = useAccessCapabilities()
   const [selectedContactId, setSelectedContactId] = useState<number | null>(
     null
   )
@@ -24,11 +29,10 @@ export const ContactList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IContact>({
     pagination: { pageSize: 50 },
   })
-
-  const { triggerExport, isLoading: exportIsLoading } = useExport({
-    resource: 'contact',
-    dataProviderName: 'ocotillo',
-  })
+  const visibleContacts = useMemo(
+    () => sanitizeContacts(dataGridProps.rows, canViewConfidential),
+    [canViewConfidential, dataGridProps.rows]
+  )
 
   const { create } = useNavigation()
   const Link = useLink()
@@ -75,6 +79,7 @@ export const ContactList: React.FC = () => {
           return primary?.phone_number ?? ''
         },
         renderCell: (params) => {
+          if (!canViewConfidential) return <span />
           const primary = pickPrimary(
             params.row.phones,
             (p) => p.phone_type === 'Primary'
@@ -101,6 +106,7 @@ export const ContactList: React.FC = () => {
           return primary?.email ?? ''
         },
         renderCell: (params) => {
+          if (!canViewConfidential) return <span />
           const primary = pickPrimary(
             params.row.emails,
             (e) => e.email_type === 'Primary'
@@ -148,7 +154,7 @@ export const ContactList: React.FC = () => {
         valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
     ],
-    []
+    [canViewConfidential]
   )
   const { dataGridProps: emailDataGridProps } = useDataGrid<IEmail>({
     dataProviderName: 'ocotillo',
@@ -178,15 +184,6 @@ export const ContactList: React.FC = () => {
       >
         Create
       </Button>
-      <Button
-        size="small"
-        variant="contained"
-        startIcon={<FileDownloadOutlinedIcon />}
-        disabled={exportIsLoading}
-        onClick={triggerExport}
-      >
-        Export
-      </Button>
     </>
   )
 
@@ -196,7 +193,7 @@ export const ContactList: React.FC = () => {
         title="Contacts & Owners"
         description="People and organizations associated with monitoring sites. Contacts can be linked to wells and springs and may have multiple phone numbers, email addresses, and mailing addresses."
         columns={columns}
-        dataGridProps={dataGridProps}
+        dataGridProps={{ ...dataGridProps, rows: visibleContacts }}
         getRowId={(row) => row.id}
         headerButtons={customHeaderButtons}
         onSelectionChange={(params) =>
@@ -205,9 +202,9 @@ export const ContactList: React.FC = () => {
       />
       {selectedContactId && (
         <>
-          <EmailInfoCard dataGridProps={emailDataGridProps} />
-          <PhoneInfoCard dataGridProps={phoneDataGridProps} />
-          <AddressInfoCard dataGridProps={addressDataGridProps} />
+          {canViewConfidential && <EmailInfoCard dataGridProps={emailDataGridProps} />}
+          {canViewConfidential && <PhoneInfoCard dataGridProps={phoneDataGridProps} />}
+          {canViewConfidential && <AddressInfoCard dataGridProps={addressDataGridProps} />}
         </>
       )}
     </>
@@ -238,7 +235,10 @@ const EmailInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
     <InfoCard
       title="Email"
       icon={<Email />}
-      dataGridProps={dataGridProps}
+      dataGridProps={{
+        ...dataGridProps,
+        rows: filterConfidentialRows(dataGridProps.rows, true),
+      }}
       columns={columns}
     />
   )
@@ -270,7 +270,10 @@ const PhoneInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
     <InfoCard
       title="Phone"
       icon={<Phone />}
-      dataGridProps={dataGridProps}
+      dataGridProps={{
+        ...dataGridProps,
+        rows: filterConfidentialRows(dataGridProps.rows, true),
+      }}
       columns={columns}
     />
   )
@@ -324,7 +327,10 @@ const AddressInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
     <InfoCard
       title="Address"
       icon={<Home />}
-      dataGridProps={dataGridProps}
+      dataGridProps={{
+        ...dataGridProps,
+        rows: filterConfidentialRows(dataGridProps.rows, true),
+      }}
       columns={columns}
     />
   )

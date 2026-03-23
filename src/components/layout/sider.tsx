@@ -69,10 +69,12 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
       } = item
       const isOpen = open[key] || false
 
-      const icon = deprecatedIcon ?? meta.icon
-      const label = meta?.label || deprecatedLabel || name
+      const icon = deprecatedIcon ?? meta?.icon
+      const derivedLabel = meta?.label || deprecatedLabel || name
+      const label =
+        name === 'Sandbox' || name === 'sandbox' ? 'Sandbox' : derivedLabel
       const isSelected = key === selectedKey
-      const isNested = !(meta.parent === undefined)
+      const isNested = meta?.parent !== undefined
       const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0
       const disabled = meta?.disabled || false
 
@@ -207,11 +209,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                 py: isNested ? 0 : 1,
                 minHeight: isNested ? 'unset' : undefined,
                 justifyContent: 'center',
-                color: isSelected
-                  ? 'primary.main'
-                  : isNested
-                    ? 'text.secondary'
-                    : 'text.primary',
+                color: isSelected ? 'primary.main' : 'text.primary',
               }}
             >
               {!isNested && (

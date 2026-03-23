@@ -1,19 +1,16 @@
-import { useGo, usePermissions } from '@refinedev/core'
+import { useGo } from '@refinedev/core'
 import { useParams } from 'react-router'
 import { Button } from '@mui/material'
 import { Visibility } from '@mui/icons-material'
-import { getAccessControlGroups } from '@/providers/authentik-provider'
+import { useAccessCapabilities } from '@/hooks'
 
 export const WellPDFPreviewButton = ({ isLoading }: { isLoading: boolean }) => {
   const go = useGo()
   const { id } = useParams()
-  const { data: permissions, isLoading: isPermissionsLoading } =
-    usePermissions<string[]>({})
-  const groups = getAccessControlGroups() ?? []
+  const { isLoading: isPermissionsLoading, canManageAmp } =
+    useAccessCapabilities()
 
-  const isViewer = permissions?.includes('AMPViewer') ?? groups.includes('AMPViewer')
-
-  const disabled = !id || isPermissionsLoading || !isViewer
+  const disabled = isLoading || isPermissionsLoading || !canManageAmp
 
   const handlePreview = () => {
     go({ to: `/ocotillo/well/pdf-preview/${id}`, type: 'push' })

@@ -1,11 +1,10 @@
 import { useMemo } from 'react'
 import { useExport, useGo } from '@refinedev/core'
-import { CreateButton, ExportButton, useDataGrid } from '@refinedev/mui'
+import { ExportButton, useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { Button } from '@mui/material'
 import { PictureAsPdf } from '@mui/icons-material'
 import { ListPage } from '@/components/ListPage'
-import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
 import { ISpring, IWell } from '@/interfaces/ocotillo'
 import { formatAppDate, formatAppDateTime } from '@/utils'
 
@@ -181,7 +180,9 @@ export const WellList: React.FC = () => {
         flex: 1,
         sortable: false,
         valueGetter: (_: unknown, row: IWell) =>
-          row.alternate_ids?.map((a) => `${a.alternate_organization}: ${a.alternate_id}`).join(', ') ?? '',
+          row.alternate_ids
+            ?.map((a) => `${a.alternate_organization}: ${a.alternate_id}`)
+            .join(', ') ?? '',
       },
       {
         field: 'created_at',
@@ -198,14 +199,13 @@ export const WellList: React.FC = () => {
   const customHeaderButtons = () => {
     return (
       <>
-        <CreateButton
-          onClick={() => go({ to: '/ocotillo/well-inventory-form', type: 'push' })}
-        />
         <Button
           variant="contained"
           color="secondary"
           startIcon={<PictureAsPdf />}
-          onClick={() => go({ to: '/ocotillo/well/batch-export', type: 'push' })}
+          onClick={() =>
+            go({ to: '/ocotillo/well/batch-export', type: 'push' })
+          }
         >
           Batch Field Sheets
         </Button>

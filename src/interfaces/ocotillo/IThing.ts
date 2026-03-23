@@ -17,6 +17,7 @@ export interface IThing {
   water_notes?: z.infer<typeof zNoteResponse>[]
   measuring_notes?: z.infer<typeof zNoteResponse>[]
   notes?: z.infer<typeof zNoteResponse>[]
+  site_notes?: z.infer<typeof zNoteResponse>[]
   general_notes?: z.infer<typeof zNoteResponse>[]
   sampling_procedure_notes?: z.infer<typeof zNoteResponse>[]
   construction_notes?: z.infer<typeof zNoteResponse>[]

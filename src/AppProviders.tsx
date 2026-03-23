@@ -24,6 +24,7 @@ import {
   usgsNwisOgcapiDataProvider,
 } from '@/providers'
 import { resources } from '@/resources'
+import { PostHogPageview } from '@/components/analytics/PostHogPageview'
 
 const queryClient = new QueryClient()
 const appTitle = import.meta.env.DEV
@@ -72,6 +73,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
           }}
         >
           <UnsavedChangesNotifier />
+          <PostHogPageview />
           <DocumentTitleHandler handler={customTitleHandler} />
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <QueryClientProvider client={queryClient}>

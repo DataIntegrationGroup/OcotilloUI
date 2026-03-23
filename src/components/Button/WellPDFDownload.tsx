@@ -1,6 +1,6 @@
 import { useState } from 'react'
+import { BaseRecord, useNotification } from '@refinedev/core'
 import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
-import { BaseRecord, useNotification, usePermissions } from '@refinedev/core'
 import { WellPDF } from '@/components'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
 import { pdf } from '@react-pdf/renderer'
@@ -8,7 +8,7 @@ import { Button } from '@mui/material'
 import { Download } from '@mui/icons-material'
 import { IPdfOptions } from '@/interfaces'
 import { PDF_SINGLE_PAGE_OPTION } from '@/config'
-import { getAccessControlGroups } from '@/providers/authentik-provider'
+import { useAccessCapabilities } from '@/hooks'
 
 export const WellPDFDownloadButton = ({
   well,
@@ -32,20 +32,18 @@ export const WellPDFDownloadButton = ({
   hydrographImage?: string | null
 }) => {
   const { open: notify } = useNotification()
-  const { data: permissions, isLoading: isPermissionsLoading } = usePermissions<
-    string[]
-  >({})
-  const groups = getAccessControlGroups() ?? []
-
-  const id = well?.id
-
-  const isViewer =
-    permissions?.includes('AMPViewer') ?? groups.includes('AMPViewer')
+  const {
+    isLoading: isPermissionsLoading,
+    canManageAmp,
+    canViewConfidential,
+  } = useAccessCapabilities()
 
   const [isGenerating, setIsGenerating] = useState(false)
 
+  const id = well?.id
+
   const disabled =
-    !isLoading || isPermissionsLoading || !isViewer || isGenerating
+    isLoading || isPermissionsLoading || !canManageAmp || isGenerating
 
   const handleDownload = async (opts: IPdfOptions) => {
     if (!id) return
@@ -62,6 +60,7 @@ export const WellPDFDownloadButton = ({
           contacts={contacts}
           observations={observations}
           sensorDeployments={sensorDeployments}
+          includeConfidentialContacts={canViewConfidential}
           options={opts}
           hydrographImage={hydrographImage}
         />

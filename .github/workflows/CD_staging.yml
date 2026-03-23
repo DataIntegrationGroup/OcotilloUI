@@ -20,6 +20,26 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      # authenticate to Google Cloud
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Load PostHog env vars from Secret Manager
+        env:
+          GCP_PROJECT_ID: waterdatainitiative-271000
+        run: |
+          set -euo pipefail
+
+          KEY_SECRET="VITE_PUBLIC_POSTHOG_KEY"
+          HOST_SECRET="VITE_PUBLIC_POSTHOG_HOST"
+
+          VITE_POSTHOG_KEY="$(gcloud secrets versions access latest --secret="$KEY_SECRET" --project="$GCP_PROJECT_ID")"
+          VITE_POSTHOG_HOST="$(gcloud secrets versions access latest --secret="$HOST_SECRET" --project="$GCP_PROJECT_ID")"
+
+          echo "VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY" >> "$GITHUB_ENV"
+          echo "VITE_POSTHOG_HOST=$VITE_POSTHOG_HOST" >> "$GITHUB_ENV"
+
       - name: Install deps & build
         env:
           VITE_APP_TITLE: "Ocotillo (Staging)"
@@ -29,15 +49,12 @@ jobs:
           VITE_AUTHENTIK_URL: ${{ vars.VITE_AUTHENTIK_URL }}
           VITE_AUTHENTIK_REDIRECT_URI: ${{ vars.VITE_AUTHENTIK_REDIRECT_URI }}
           VITE_OCOTILLO_API_URL: ${{ vars.VITE_OCOTILLO_API_URL }}
+          VITE_POSTHOG_KEY: ${{ env.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ env.VITE_POSTHOG_HOST }}
 
         run: |
           npm ci
           npm run build:ci
-
-      # authenticate to Google Cloud
-      - uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       # deploy to App Engine
       - id: deploy

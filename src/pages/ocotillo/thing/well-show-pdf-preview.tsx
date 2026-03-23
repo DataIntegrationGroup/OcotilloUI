@@ -33,7 +33,7 @@ import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
 import { useForm } from '@refinedev/react-hook-form'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { getLabelFromOptionalPdfFieldKey } from '@/utils'
-import { useWellPdfData } from '@/hooks'
+import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 
@@ -48,6 +48,7 @@ export const WellShowPdfPreview = () => {
   const theme = useTheme()
   const [isViewerReady, setIsViewerReady] = useState(false)
   const [hydrographImage, setHydrographImage] = useState<string | null>(null)
+  const { canManageAmp, canViewConfidential } = useAccessCapabilities()
 
   const { control, watch, reset } = useForm<IPdfOptions>({
     defaultValues: PDF_DEFAULT_VALUES,
@@ -257,19 +258,21 @@ export const WellShowPdfPreview = () => {
       }}
       contentProps={{ sx: { pt: 1 } }}
       headerButtons={() => (
-        <Box sx={{ display: 'flex', gap: 0 }}>
-          <WellPDFDownloadButton
-            well={well}
-            isLoading={isLoading}
-            observations={observations}
-            assets={assets}
-            contacts={contacts}
-            sample={sample}
-            sensorDeployments={sensorDeployments}
-            options={currentOptions}
-            hydrographImage={hydrographImage}
-          />
-        </Box>
+        canManageAmp ? (
+          <Box sx={{ display: 'flex', gap: 0 }}>
+            <WellPDFDownloadButton
+              well={well}
+              isLoading={isLoading}
+              observations={observations}
+              assets={assets}
+              contacts={contacts}
+              sample={sample}
+              sensorDeployments={sensorDeployments}
+              options={currentOptions}
+              hydrographImage={hydrographImage}
+            />
+          </Box>
+        ) : null
       )}
     >
       <Box sx={{ mb: 2 }}>
@@ -409,6 +412,7 @@ export const WellShowPdfPreview = () => {
                 sensorDeployments={sensorDeployments}
                 options={currentOptions}
                 hydrographImage={hydrographImage}
+                includeConfidentialContacts={canViewConfidential}
               />
             </PDFViewer>
           </Box>

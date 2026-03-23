@@ -3,7 +3,12 @@ import { BaseRecord } from '@refinedev/core'
 import { Page, Text, Image } from '@react-pdf/renderer'
 import { IPdfDensity, IPdfOptions } from '@/interfaces'
 import { IObservation, IContact, IWell, ISample } from '@/interfaces/ocotillo'
-import { buildPdfFilename, createPdfStyles, SensorDeploymentRow } from '@/utils'
+import {
+  buildPdfFilename,
+  createPdfStyles,
+  sanitizeContacts,
+  SensorDeploymentRow,
+} from '@/utils'
 import { PDF_DEFAULT_VALUES } from '@/config'
 import {
   useAllNotes,
@@ -31,6 +36,7 @@ export const WellPDF = ({
   sensorDeployments = [],
   hydrographImage,
   standalone = true,
+  includeConfidentialContacts = true,
 }: {
   well: IWell
   sample?: Partial<ISample>
@@ -41,16 +47,21 @@ export const WellPDF = ({
   options?: IPdfOptions
   hydrographImage?: string | null
   standalone?: boolean
+  includeConfidentialContacts?: boolean
 }) => {
   const density: IPdfDensity = options.density ?? PDF_DEFAULT_VALUES.density
   const isDense = density === 'standard' || density === 'compact'
   const styles = useMemo(() => createPdfStyles(density), [density])
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
+  const visibleContacts = useMemo(
+    () => sanitizeContacts(contacts, includeConfidentialContacts),
+    [contacts, includeConfidentialContacts]
+  )
   const showAdditionalOnFirstPage = density === 'compact'
 
   const mostRecentObservation = useMostRecentObservation(observations)
   const { primaryContact, secondaryContact } =
-    usePrimaryAndSecondaryContact(contacts)
+    usePrimaryAndSecondaryContact(visibleContacts)
   const allNotes = useAllNotes(well, options)
 
   const pages = (

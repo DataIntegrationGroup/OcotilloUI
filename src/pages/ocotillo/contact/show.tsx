@@ -1,5 +1,7 @@
 import { useShow } from '@refinedev/core'
 import { Show } from '@refinedev/mui'
+import { useAccessCapabilities } from '@/hooks'
+import { sanitizeContact } from '@/utils'
 import { Box, Chip, Stack, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { IContact } from '@/interfaces/ocotillo'
@@ -11,8 +13,15 @@ import {
 } from '@/components/ContactShow'
 
 export const ContactShow = () => {
-  const { query, result } = useShow<IContact>()
-  const contact = result as IContact
+  const { query, result } = useShow<IContact>({})
+  const { canViewConfidential } = useAccessCapabilities()
+  const rawRecord: IContact | undefined = result
+  const record =
+    rawRecord != null
+      ? sanitizeContact(rawRecord, canViewConfidential)
+      : undefined
+
+  const contact = record
 
   return (
     <Show
@@ -44,7 +53,11 @@ export const ContactShow = () => {
             <Chip label={contact.role} size="small" variant="outlined" />
           )}
           {contact?.organization && (
-            <Chip label={contact.organization} size="small" variant="outlined" />
+            <Chip
+              label={contact.organization}
+              size="small"
+              variant="outlined"
+            />
           )}
         </Box>
       }

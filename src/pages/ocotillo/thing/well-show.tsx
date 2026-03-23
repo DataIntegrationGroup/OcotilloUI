@@ -13,7 +13,7 @@ import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { IObservation, ISample, IWell } from '@/interfaces/ocotillo'
 import { Box, Stack, Typography } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
-import { useWellPdfData } from '@/hooks'
+import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
@@ -48,6 +48,7 @@ export const WellShow = () => {
   )
 
   const { id } = useResourceParams()
+  const { canManageAmp } = useAccessCapabilities()
   const {
     observations: pdfObservations,
     assets,
@@ -275,18 +276,20 @@ export const WellShow = () => {
       }}
       contentProps={{ sx: { pt: 1 } }}
       headerButtons={() => (
-        <Box sx={{ display: 'flex', gap: 0 }}>
-          <WellPDFPreviewButton isLoading={query.isLoading} />
-          <WellPDFDownloadButton
-            well={well}
-            isLoading={query.isLoading || isPdfDataLoading}
-            observations={pdfObservations}
-            assets={assets}
-            contacts={contacts}
-            sample={sample}
-            sensorDeployments={sensorDeployments}
-          />
-        </Box>
+        canManageAmp ? (
+          <Box sx={{ display: 'flex', gap: 0 }}>
+            <WellPDFPreviewButton isLoading={query.isLoading} />
+            <WellPDFDownloadButton
+              well={well}
+              isLoading={query.isLoading || isPdfDataLoading}
+              observations={pdfObservations}
+              assets={assets}
+              contacts={contacts}
+              sample={sample}
+              sensorDeployments={sensorDeployments}
+            />
+          </Box>
+        ) : null
       )}
     >
       <Stack spacing={2}>

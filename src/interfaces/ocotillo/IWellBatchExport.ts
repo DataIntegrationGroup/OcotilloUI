@@ -2,6 +2,7 @@ import { BaseRecord } from '@refinedev/core'
 import type { IContact } from './IContact'
 import type { IObservation } from './IObservation'
 import type { IWell } from './IWell'
+import type { SensorDeploymentRow } from '@/utils'
 
 export type WellChipState = {
   query: string
@@ -14,4 +15,6 @@ export type WellBundle = {
   contacts: IContact[]
   assets: BaseRecord[]
   observations: readonly Partial<IObservation>[]
+  sensorDeployments: SensorDeploymentRow[]
+  sampleMethodsBySampleId: Record<number, string>
 }

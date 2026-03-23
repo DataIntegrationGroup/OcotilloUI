@@ -7,7 +7,9 @@ process.env.NODE_ENV = 'test'
   // Mock the authentication provider (for node api contract tests)
   vi.mock('@/providers/authentik-provider', () => ({
     getAccessToken: vi.fn().mockResolvedValue('mock-token'),
-    getAccessControlGroups: vi.fn().mockReturnValue(['Admin']),
+    getAccessControlGroups: vi
+      .fn()
+      .mockReturnValue(['AMP.Viewer', 'AMP.Editor', 'AMP.Admin']),
   }))
 
 // Global test setup
@@ -30,4 +32,3 @@ beforeAll(async () => {
       console.warn('Mock server health check failed. Some integration tests may fail.')
     }
   })
-

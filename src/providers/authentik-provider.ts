@@ -22,6 +22,7 @@ import {
   STORAGE_KEYS,
   IS_TESTING_AUTH,
 } from '@/config'
+import { normalizeAccessControlGroups } from '@/utils'
 
 const gravatarUrl = (email: string) => {
   let hash = email.trim().toLowerCase()
@@ -93,7 +94,7 @@ export const persistPkceFallback = ({
 }
 
 export const consumePkceFallbackByState = (
-  state: string,
+  state: string
 ): { verifier: string; state: string } | null => {
   const key = getPkceFallbackKey(state)
   const raw = localStorage.getItem(key)
@@ -176,7 +177,7 @@ export const getAccessControlGroups = (): string[] | null => {
 
   try {
     const decoded = jwtDecode<{ groups?: string[] }>(idToken)
-    return decoded.groups ?? []
+    return normalizeAccessControlGroups(decoded.groups)
   } catch {
     return null
   }
@@ -289,7 +290,7 @@ export const authentikAuthProvider: AuthProvider = {
 
   // Returns the current user's profile
   getIdentity: async (): Promise<AuthentikIdentity | null> => {
-    if (!import.meta.env.PROD && import.meta.env.VITE_TEST_AUTH) {
+    if (IS_TESTING_AUTH) {
       return {
         id: 'test',
         avatar: gravatarUrl(''),
@@ -329,7 +330,7 @@ export const authentikAuthProvider: AuthProvider = {
 
     try {
       const decoded = jwtDecode<AuthentikJwtPayload>(idToken)
-      return decoded['groups'] ?? []
+      return normalizeAccessControlGroups(decoded['groups'])
     } catch {
       return null
     }
