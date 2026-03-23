@@ -28,13 +28,11 @@ jobs:
       - name: Load PostHog env vars from Secret Manager
         env:
           GCP_PROJECT_ID: waterdatainitiative-271000
-          POSTHOG_KEY_SECRET_NAME: ${{ vars.GSM_VITE_POSTHOG_KEY_SECRET_NAME }}
-          POSTHOG_HOST_SECRET_NAME: ${{ vars.GSM_VITE_POSTHOG_HOST_SECRET_NAME }}
         run: |
           set -euo pipefail
 
-          KEY_SECRET="${POSTHOG_KEY_SECRET_NAME:-vite-posthog-key}"
-          HOST_SECRET="${POSTHOG_HOST_SECRET_NAME:-vite-posthog-host}"
+          KEY_SECRET="VITE_PUBLIC_POSTHOG_KEY"
+          HOST_SECRET="VITE_PUBLIC_POSTHOG_HOST"
 
           VITE_POSTHOG_KEY="$(gcloud secrets versions access latest --secret="$KEY_SECRET" --project="$GCP_PROJECT_ID")"
           VITE_POSTHOG_HOST="$(gcloud secrets versions access latest --secret="$HOST_SECRET" --project="$GCP_PROJECT_ID")"
