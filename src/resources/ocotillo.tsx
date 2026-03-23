@@ -217,8 +217,6 @@ tables.push({
   meta: {
     label: 'Field Sheets',
     icon: <PictureAsPdfOutlined />,
-    parent: 'ocotillo.thing-well',
-    nestedLevel: 2,
   },
 })
 

@@ -209,11 +209,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                 py: isNested ? 0 : 1,
                 minHeight: isNested ? 'unset' : undefined,
                 justifyContent: 'center',
-                color: isSelected
-                  ? 'primary.main'
-                  : isNested
-                    ? 'text.secondary'
-                    : 'text.primary',
+                color: isSelected ? 'primary.main' : 'text.primary',
               }}
             >
               {!isNested && (
