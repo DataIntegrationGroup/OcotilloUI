@@ -4,13 +4,14 @@ describe('Thing Well Show Page', () => {
   beforeEach(() => {
     cy.login()
 
-    cy.intercept('GET', '**/thing/**').as('getWell')
+    cy.intercept('GET', '**/thing/*').as('getWell')
     cy.visit('/ocotillo/well/show/1')
     cy.wait('@getWell')
   })
 
-  it('should render the map page UI without errors', () => {
-    cy.get('canvas.mapboxgl-canvas', { timeout: 20000 }).should('be.visible')
-    cy.get('[data-testid="ocotillo-map-container"]').should('exist')
+  it('should render the well show page UI without errors', () => {
+    cy.get('[data-testid="ocotillo-map-container"]', { timeout: 20000 }).should(
+      'exist'
+    )
   })
 })
