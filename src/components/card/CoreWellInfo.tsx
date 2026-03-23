@@ -126,8 +126,11 @@ export const CoreWellInfoCard = ({
               <InfoRow
                 label="Coordinate Notes"
                 value={
-                  well?.current_location?.properties?.nma_location_notes ||
-                  'N/A'
+                  well?.current_location?.properties?.notes
+                    ?.filter((note) => note.note_type === 'Coordinate')
+                    .map((note) => note.content)
+                    .filter(Boolean)
+                    .join('\n') || 'N/A'
                 }
               />
             </Section>
@@ -235,36 +238,36 @@ const InfoRow = ({
         alignItems: 'start',
       }}
     >
-    <Typography variant="caption" color="text.secondary" fontWeight={700}>
-      {label}
-    </Typography>
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 24px',
-        gap: 0.25,
-        alignItems: 'center',
-      }}
-    >
-      <Typography variant="body2">{value}</Typography>
+      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+        {label}
+      </Typography>
       <Box
         sx={{
-          width: 24,
-          display: 'flex',
-          justifyContent: 'center',
+          display: 'grid',
+          gridTemplateColumns: '1fr 24px',
+          gap: 0.25,
+          alignItems: 'center',
         }}
       >
-        {copyValue && (
-          <Tooltip title={`Copy ${label.toLowerCase()}`}>
-            <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }}>
-              <ContentCopy fontSize="inherit" />
-            </IconButton>
-          </Tooltip>
-        )}
+        <Typography variant="body2">{value}</Typography>
+        <Box
+          sx={{
+            width: 24,
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          {copyValue && (
+            <Tooltip title={`Copy ${label.toLowerCase()}`}>
+              <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }}>
+                <ContentCopy fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
       </Box>
     </Box>
-  </Box>
-)
+  )
 }
 
 const LoadingCard = () => (
