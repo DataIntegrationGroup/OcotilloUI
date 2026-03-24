@@ -20,6 +20,7 @@ ARG MODE="development"
 
 ENV VITE_TEST_AUTH=${VITE_TEST_AUTH}
 ENV MODE=${MODE}
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 RUN npm run build:ci -- --mode ${MODE}
 

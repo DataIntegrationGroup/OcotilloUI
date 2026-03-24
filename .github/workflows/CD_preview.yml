@@ -121,6 +121,10 @@ jobs:
           GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
           set -e
+          # Delete existing service first to ensure clean deploy
+          echo "Deleting existing service..."
+          gcloud run services delete preview-${{ env.SANITIZED_BRANCH }}-ocotillo --platform managed --region us-central1 --quiet 2>/dev/null || true
+          echo "Deploying new service..."
           gcloud run deploy preview-${{ env.SANITIZED_BRANCH }}-ocotillo \
             --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG \
             --platform managed \

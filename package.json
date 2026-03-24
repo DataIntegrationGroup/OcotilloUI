@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "build:ci": "VITE_DISABLE_SOURCEMAP=true VITE_SENTRY_TELEMETRY_DISABLED=true NODE_OPTIONS='--max-old-space-size=4096' tsc && vite build",
+    "build:ci": "VITE_DISABLE_SOURCEMAP=true VITE_SENTRY_TELEMETRY_DISABLED=true NODE_OPTIONS=\"--max-old-space-size=4096\" tsc && vite build",
     "build:fast": "VITE_DISABLE_SOURCEMAP=true VITE_SENTRY_TELEMETRY_DISABLED=true vite build",
     "dev": "vite",
     "refine": "refine",
