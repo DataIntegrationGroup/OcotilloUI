@@ -32,6 +32,17 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+          # Create repository if it doesn't exist
+          gcloud artifacts repositories describe ocotillo-previews \
+            --location=us-central1 --project=$GCP_PROJECT_ID 2>/dev/null || \
+            gcloud artifacts repositories create ocotillo-previews \
+            --repository-format=docker \
+            --location=us-central1 \
+            --project=$GCP_PROJECT_ID
+
       - name: Load PostHog env vars from Secret Manager
         env:
           GCP_PROJECT_ID: waterdatainitiative-271000
@@ -84,9 +95,9 @@ jobs:
             --build-arg VITE_MAPBOX_TOKEN="${{ secrets.VITE_MAPBOX_TOKEN }}" \
             --build-arg VITE_PUBLIC_POSTHOG_KEY="${{ env.VITE_POSTHOG_KEY }}" \
             --build-arg VITE_PUBLIC_POSTHOG_HOST="${{ env.VITE_POSTHOG_HOST }}" \
-            -t gcr.io/$GCP_PROJECT_ID/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG .
+            -t us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG .
 
-          docker push gcr.io/$GCP_PROJECT_ID/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG
+          docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG
 
       - name: Deploy to Cloud Run
         env:
@@ -94,7 +105,7 @@ jobs:
           GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
           gcloud run deploy preview-${{ env.SANITIZED_BRANCH }}-ocotillo \
-            --image gcr.io/$GCP_PROJECT_ID/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG \
+            --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
@@ -131,4 +142,4 @@ jobs:
           SERVICE_NAME="preview-${{ env.SANITIZED_BRANCH }}-ocotillo"
           echo "Deleting Cloud Run service: $SERVICE_NAME"
           gcloud run services delete "$SERVICE_NAME" --platform managed --region us-central1 --quiet || true
-          gcloud container images delete gcr.io/$GCP_PROJECT_ID/"$SERVICE_NAME":${{ github.sha }} --quiet || true
+          gcloud artifacts docker images delete us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/"$SERVICE_NAME":${{ github.sha }} --quiet || true
