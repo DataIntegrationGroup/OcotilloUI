@@ -66,9 +66,11 @@ jobs:
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
+          set -e
           # Sanitize branch name for Cloud Run service name (alphanumeric and hyphens only)
           SANITIZED=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]' | cut -c1-40)
           echo "SANITIZED_BRANCH=$SANITIZED" >> "$GITHUB_ENV"
+          echo "Docker image tag: $IMAGE_TAG"
 
           export NODE_OPTIONS="--max-old-space-size=6144"
           export VITE_DISABLE_SOURCEMAP=true
@@ -87,6 +89,7 @@ jobs:
           npx tsc
           npx vite build --mode development
 
+          IMAGE_NAME="us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-$SANITIZED-ocotillo:$IMAGE_TAG"
           docker build \
             --build-arg VITE_APP_TITLE="Ocotillo Preview" \
             --build-arg VITE_BASE_URL="/" \
@@ -97,15 +100,19 @@ jobs:
             --build-arg VITE_MAPBOX_TOKEN="${{ secrets.VITE_MAPBOX_TOKEN }}" \
             --build-arg VITE_PUBLIC_POSTHOG_KEY="${{ env.VITE_POSTHOG_KEY }}" \
             --build-arg VITE_PUBLIC_POSTHOG_HOST="${{ env.VITE_POSTHOG_HOST }}" \
-            -t us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG .
+            -t "$IMAGE_NAME" .
 
-          docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG
+          echo "Pushing image: $IMAGE_NAME"
+          docker push "$IMAGE_NAME"
+          echo "Verifying image was pushed..."
+          docker manifest inspect "$IMAGE_NAME" && echo "Image verified successfully!"
 
       - name: Deploy to Cloud Run
         env:
           IMAGE_TAG: ${{ github.sha }}
           GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
+          set -e
           gcloud run deploy preview-${{ env.SANITIZED_BRANCH }}-ocotillo \
             --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG \
             --platform managed \
