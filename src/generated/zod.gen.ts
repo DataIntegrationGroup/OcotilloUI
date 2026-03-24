@@ -212,6 +212,7 @@ export const zNoteType = z.enum([
     'Historical',
     'General',
     'Water',
+    'Water Quality',
     'Sampling Procedure',
     'Coordinate',
     'OwnerComment',
@@ -382,7 +383,7 @@ export const zCreateContact = z.object({
     release_status: z.optional(zReleaseStatus),
     thing_id: z.int(),
     role: zRole,
-    contact_type: z.optional(zContactType),
+    contact_type: zContactType,
     nma_pk_owners: z.optional(z.union([
         z.string(),
         z.null()
@@ -1291,6 +1292,10 @@ export const zCreateWell = z.object({
         z.null()
     ])),
     well_status: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    monitoring_status: z.optional(z.union([
         z.string(),
         z.null()
     ])),
@@ -2396,6 +2401,21 @@ export const zOrganization = z.enum([
     'Winter Brothers',
     'Yates Petroleum Corporation',
     'Zamora Accounting Services',
+    'Agua Sana MWCD',
+    'Canada Los Alamos MDWCA',
+    'Canjilon Mutual Domestic Water System',
+    'Cebolla Mutual Domestic',
+    'Chihuahuan Desert Rangeland Research Center (CDRRC)',
+    'East Rio Arriba SWCD',
+    'El Prado Municipal Water',
+    'Hachita Mutual Domestic',
+    'Jornada Experimental Range (JER)',
+    'La Canada Way HOA',
+    'Los Ojos Mutual Domestic',
+    'The Nature Conservancy (TNC)',
+    'Smith Ranch LLC',
+    'Zia Pueblo',
+    'Our Lady of Guadalupe (OLG)',
     'PLSS'
 ]);
 
