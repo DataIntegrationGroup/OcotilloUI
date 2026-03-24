@@ -105,17 +105,14 @@ jobs:
           PREVIEW_URL: ${{ steps.preview-url.outputs.url }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          gh pr comment $PR_NUMBER --body "## Preview Deployment
-
-**Preview URL:** $PREVIEW_URL
-
-**Note:** This preview uses the staging API endpoints. Authentication is configured for testing."
+          gh pr comment $PR_NUMBER --body "## Preview Deployment" && \
+          gh pr comment $PR_NUMBER --body "**Preview URL:** $PREVIEW_URL" && \
+          gh pr comment $PR_NUMBER --body "**Note:** This preview uses the staging API endpoints."
 
       - name: Delete preview on PR close
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
         run: |
-          echo "Deleting Cloud Run service: preview-${{ env.SANITIZED_BRANCH }}-ocotillo"
-          gcloud run services delete preview-${{ env.SANITIZED_BRANCH }}-ocotillo --platform managed --region us-central1 --quiet || true
-
-          # Also delete the container image
-          gcloud container images delete gcr.io/${{ vars.GCP_PROJECT_ID }}/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:${{ github.sha }} --quiet || true
+          SERVICE_NAME="preview-${{ env.SANITIZED_BRANCH }}-ocotillo"
+          echo "Deleting Cloud Run service: $SERVICE_NAME"
+          gcloud run services delete "$SERVICE_NAME" --platform managed --region us-central1 --quiet || true
+          gcloud container images delete gcr.io/${{ vars.GCP_PROJECT_ID }}/"$SERVICE_NAME":${{ github.sha }} --quiet || true
