@@ -71,6 +71,7 @@ jobs:
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           GCP_PROJECT_ID: waterdatainitiative-271000
           SANITIZED: $(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]' | cut -c1-40)
+          NODE_OPTIONS: --max-old-space-size=6144
         run: |
           set -e
           echo "SANITIZED_BRANCH=$SANITIZED" >> $GITHUB_ENV
