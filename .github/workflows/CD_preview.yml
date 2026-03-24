@@ -91,6 +91,10 @@ jobs:
           npx vite build --mode development
 
           IMAGE_NAME="us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-$SANITIZED-ocotillo:$IMAGE_TAG"
+          echo "=== Debug: Build args being passed ==="
+          echo "VITE_TEST_AUTH=true (hardcoded in --build-arg)"
+          echo "MODE=development (hardcoded in --build-arg)"
+          echo "IMAGE_TAG: $IMAGE_TAG"
           docker build \
             --build-arg VITE_APP_TITLE="Ocotillo Preview" \
             --build-arg VITE_BASE_URL="/" \
@@ -101,8 +105,9 @@ jobs:
             --build-arg VITE_MAPBOX_TOKEN="${{ secrets.VITE_MAPBOX_TOKEN }}" \
             --build-arg VITE_PUBLIC_POSTHOG_KEY="${{ env.VITE_POSTHOG_KEY }}" \
             --build-arg VITE_PUBLIC_POSTHOG_HOST="${{ env.VITE_PUBLIC_POSTHOG_HOST }}" \
-            --build-arg VITE_TEST_AUTH=true \
-            --build-arg MODE=development \
+            --build-arg VITE_TEST_AUTH="true" \
+            --build-arg MODE="development" \
+            --no-cache \
             -t "$IMAGE_NAME" .
 
           echo "Pushing image: $IMAGE_NAME"
