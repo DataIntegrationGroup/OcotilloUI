@@ -28,8 +28,9 @@ ENV VITE_MAPBOX_TOKEN=$VITE_MAPBOX_TOKEN
 ENV VITE_PUBLIC_POSTHOG_KEY=$VITE_PUBLIC_POSTHOG_KEY
 ENV VITE_PUBLIC_POSTHOG_HOST=$VITE_PUBLIC_POSTHOG_HOST
 ENV VITE_TEST_AUTH=$VITE_TEST_AUTH
+ENV MODE=$MODE
 
-RUN npm run build:ci -- --mode $MODE
+RUN npm run build:ci -- --mode ${MODE}
 
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
