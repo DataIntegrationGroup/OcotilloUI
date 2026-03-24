@@ -57,9 +57,22 @@ jobs:
           SANITIZED=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]' | cut -c1-40)
           echo "SANITIZED_BRANCH=$SANITIZED" >> "$GITHUB_ENV"
 
+          export NODE_OPTIONS="--max-old-space-size=6144"
+          export VITE_DISABLE_SOURCEMAP=true
+          export VITE_SENTRY_TELEMETRY_DISABLED=true
+          export VITE_APP_TITLE="Ocotillo Preview"
+          export VITE_BASE_URL="/"
+          export VITE_AUTHENTIK_CLIENT_ID="${{ vars.VITE_AUTHENTIK_CLIENT_ID }}"
+          export VITE_AUTHENTIK_URL="${{ vars.VITE_AUTHENTIK_URL }}"
+          export VITE_AUTHENTIK_REDIRECT_URI="${{ vars.VITE_AUTHENTIK_REDIRECT_URI }}"
+          export VITE_OCOTILLO_API_URL="${{ vars.VITE_OCOTILLO_API_URL }}"
+          export VITE_MAPBOX_TOKEN="${{ secrets.VITE_MAPBOX_TOKEN }}"
+          export VITE_PUBLIC_POSTHOG_KEY="${{ env.VITE_POSTHOG_KEY }}"
+          export VITE_PUBLIC_POSTHOG_HOST="${{ env.VITE_POSTHOG_HOST }}"
+
           npm ci
-          VITE_DISABLE_SOURCEMAP=true VITE_SENTRY_TELEMETRY_DISABLED=true NODE_OPTIONS='--max-old-space-size=4096' npx tsc
-          VITE_APP_TITLE="Ocotillo Preview" VITE_BASE_URL="/" VITE_AUTHENTIK_CLIENT_ID="${{ vars.VITE_AUTHENTIK_CLIENT_ID }}" VITE_AUTHENTIK_URL="${{ vars.VITE_AUTHENTIK_URL }}" VITE_AUTHENTIK_REDIRECT_URI="${{ vars.VITE_AUTHENTIK_REDIRECT_URI }}" VITE_OCOTILLO_API_URL="${{ vars.VITE_OCOTILLO_API_URL }}" VITE_MAPBOX_TOKEN="${{ secrets.VITE_MAPBOX_TOKEN }}" VITE_PUBLIC_POSTHOG_KEY="${{ env.VITE_POSTHOG_KEY }}" VITE_PUBLIC_POSTHOG_HOST="${{ env.VITE_POSTHOG_HOST }}" npx vite build --mode development
+          npx tsc
+          npx vite build --mode development
 
           docker build \
             --build-arg VITE_APP_TITLE="Ocotillo Preview" \
