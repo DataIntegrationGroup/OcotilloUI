@@ -47,33 +47,15 @@ jobs:
           echo "VITE_PUBLIC_POSTHOG_KEY=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_KEY --project=$GCP_PROJECT_ID)" >> $GITHUB_ENV
           echo "VITE_PUBLIC_POSTHOG_HOST=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_HOST --project=$GCP_PROJECT_ID)" >> $GITHUB_ENV
 
-      - name: Create env file
-        run: |
-          cat > .env.preview << 'EOF'
-          NODE_OPTIONS=--max-old-space-size=6144
-          VITE_DISABLE_SOURCEMAP=true
-          VITE_SENTRY_TELEMETRY_DISABLED=true
-          VITE_TEST_AUTH=true
-          VITE_APP_TITLE=Ocotillo Preview
-          VITE_BASE_URL=/
-          VITE_AUTHENTIK_CLIENT_ID=${{ vars.VITE_AUTHENTIK_CLIENT_ID }}
-          VITE_AUTHENTIK_URL=${{ vars.VITE_AUTHENTIK_URL }}
-          VITE_AUTHENTIK_REDIRECT_URI=${{ vars.VITE_AUTHENTIK_REDIRECT_URI }}
-          VITE_OCOTILLO_API_URL=${{ vars.VITE_OCOTILLO_API_URL }}
-          VITE_MAPBOX_TOKEN=${{ secrets.VITE_MAPBOX_TOKEN }}
-          VITE_PUBLIC_POSTHOG_KEY=${{ env.VITE_PUBLIC_POSTHOG_KEY }}
-          VITE_PUBLIC_POSTHOG_HOST=${{ env.VITE_PUBLIC_POSTHOG_HOST }}
-          EOF
-
       - name: Build and push
         env:
           IMAGE_TAG: ${{ github.sha }}
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           GCP_PROJECT_ID: waterdatainitiative-271000
-          SANITIZED: $(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]' | cut -c1-40)
           NODE_OPTIONS: --max-old-space-size=6144
         run: |
           set -e
+          SANITIZED=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]' | cut -c1-40)
           echo "SANITIZED_BRANCH=$SANITIZED" >> $GITHUB_ENV
 
           npm ci
@@ -81,8 +63,16 @@ jobs:
           npx vite build --mode development
 
           docker build \
-            --env-file .env.preview \
             --build-arg MODE=development \
+            --build-arg VITE_APP_TITLE="Ocotillo Preview" \
+            --build-arg VITE_BASE_URL="/" \
+            --build-arg VITE_AUTHENTIK_CLIENT_ID=${{ vars.VITE_AUTHENTIK_CLIENT_ID }} \
+            --build-arg VITE_AUTHENTIK_URL=${{ vars.VITE_AUTHENTIK_URL }} \
+            --build-arg VITE_AUTHENTIK_REDIRECT_URI=${{ vars.VITE_AUTHENTIK_REDIRECT_URI }} \
+            --build-arg VITE_OCOTILLO_API_URL=${{ vars.VITE_OCOTILLO_API_URL }} \
+            --build-arg VITE_MAPBOX_TOKEN=${{ secrets.VITE_MAPBOX_TOKEN }} \
+            --build-arg VITE_PUBLIC_POSTHOG_KEY=${{ env.VITE_PUBLIC_POSTHOG_KEY }} \
+            --build-arg VITE_PUBLIC_POSTHOG_HOST=${{ env.VITE_PUBLIC_POSTHOG_HOST }} \
             --build-arg VITE_TEST_AUTH=true \
             -t "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-$SANITIZED-ocotillo:$IMAGE_TAG" .
 
