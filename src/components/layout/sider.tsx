@@ -381,7 +381,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
             >
               {[
                 { to: '/about', label: 'About' },
-                { to: '/ocotillo/help', label: 'Desktop GIS Help' },
+                { to: '/ocotillo/help', label: 'Connect Desktop GIS' },
                 { to: '/report-a-bug', label: 'Report a Bug' },
               ].map(({ to, label }) => (
                 <RouterLink key={to} to={to} style={{ textDecoration: 'none' }}>

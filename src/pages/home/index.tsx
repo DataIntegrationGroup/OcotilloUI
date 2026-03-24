@@ -1,28 +1,16 @@
 import { useState } from 'react'
+import { MapOutlined } from '@mui/icons-material'
 import {
-  AutoAwesome,
-  ElectricBolt,
-  Plumbing,
-  StorageOutlined,
-} from '@mui/icons-material'
-import {
-  Avatar,
   Card,
   CardContent,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemButton,
-  ListItemText,
-  ListSubheader,
   Stack,
   Typography,
-  useTheme,
   Box,
   Drawer,
   Alert,
   Divider,
   Container,
+  Link,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import ocotilloImage from '@/img/ocotillo.jpeg'
@@ -39,7 +27,6 @@ export const Home = () => {
           <Stack spacing={3}>
             <Hero />
             <About />
-            <Links />
           </Stack>
         </CardContent>
       </Card>
@@ -102,8 +89,6 @@ const HomeNotification = ({ noPermissions }) => {
 }
 
 const Hero = () => {
-  const theme = useTheme()
-
   return (
     <Box
       sx={{
@@ -128,7 +113,7 @@ const Hero = () => {
           backgroundRepeat: 'no-repeat, no-repeat',
           backgroundSize: 'cover, auto 100%', // overlay covers, image is auto x 100%
           backgroundPosition: 'center, center',
-          backgroundColor: theme.palette.grey[900],
+          backgroundColor: '#212121',
         }}
       />
       {/* Overlay for readability + polish */}
@@ -162,11 +147,11 @@ const About = () => (
       <Stack spacing={3}>
         <Box>
           <Typography variant="deck" sx={{ color: 'text.secondary' }}>
-            Ocotillo is an application for accessing and working with New
-            Mexico Bureau of Geology water data. It provides access to
-            groundwater well information from the Aquifer Mapping Program
-            (AMP), with additional datasets from Geothermal, Oil &amp; Gas, and
-            Argon Geochronology planned for the future.
+            Ocotillo is an application for accessing and working with New Mexico
+            Bureau of Geology water data. It provides access to groundwater well
+            information from the Aquifer Mapping Program (AMP), with additional
+            datasets from Geothermal, Oil &amp; Gas, and Argon Geochronology
+            planned for the future.
           </Typography>
         </Box>
 
@@ -179,7 +164,7 @@ const About = () => (
             </Typography>
             <Stack component="ul" spacing={1} sx={{ pl: 2, m: 0 }}>
               <Typography component="li" variant="body1">
-                Browse wells on the Map
+                <Link href="/ocotillo/map">Browse wells on the Map</Link>
               </Typography>
               <Typography component="li" variant="body1">
                 Search by well ID, site name, or contact/owner
@@ -189,7 +174,14 @@ const About = () => (
                 contacts/owners)
               </Typography>
               <Typography component="li" variant="body1">
-                Export a Field Compilation sheet for a single well
+                <Link href="/ocotillo/well/batch-export">
+                  Batch export Field Compilation sheets
+                </Link>
+              </Typography>
+              <Typography component="li" variant="body1">
+                <Link href="/ocotillo/help">
+                  Connect Ocotillo to ArcGIS Pro or QGIS
+                </Link>
               </Typography>
             </Stack>
           </Grid>
@@ -217,83 +209,3 @@ const About = () => (
     </Container>
   </Box>
 )
-
-const Links = () => {
-  const theme = useTheme()
-
-  return (
-    <Box sx={{ width: '100%' }}>
-      <Container maxWidth="lg">
-        <List
-          sx={{ width: '100%', maxWidth: 300 }}
-          subheader={
-            <ListSubheader component="span">
-              Use this tool to efficiently manage data from:
-            </ListSubheader>
-          }
-        >
-          <ListItem sx={{ pointerEvents: 'none' }}>
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                <StorageOutlined />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary="Aquifer Mapping Program"
-              sx={{
-                color: theme.palette.secondary.main,
-              }}
-            />
-          </ListItem>
-          <ListItemButton
-            component="a"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://github.com/NMGRL/pychron"
-          >
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                <AutoAwesome />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary="Pychron"
-              sx={{
-                color: theme.palette.secondary.main,
-              }}
-            />
-          </ListItemButton>
-          <ListItem sx={{ pointerEvents: 'none' }}>
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                <Plumbing />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary="Geothermal Program"
-              sx={{ color: theme.palette.secondary.main }}
-            />
-          </ListItem>
-          <ListItemButton
-            component="a"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://st2.newmexicowaterdata.org/FROST-Server"
-          >
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                <ElectricBolt />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary="ST2"
-              sx={{
-                color: theme.palette.secondary.main,
-              }}
-            />
-          </ListItemButton>
-        </List>
-      </Container>
-    </Box>
-  )
-}
