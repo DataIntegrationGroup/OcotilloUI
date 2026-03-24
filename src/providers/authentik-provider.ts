@@ -260,20 +260,10 @@ export const authentikAuthProvider: AuthProvider = {
    * must log in again.
    */
   check: async (): Promise<CheckResponse> => {
-    console.log(
-      '[Auth Check] IS_TESTING_AUTH:',
-      IS_TESTING_AUTH,
-      'PROD:',
-      import.meta.env.PROD,
-      'VITE_TEST_AUTH:',
-      import.meta.env.VITE_TEST_AUTH
-    )
     if (IS_TESTING_AUTH) {
-      console.log('[Auth Check] Returning authenticated: true (testing mode)')
       return { authenticated: true }
     }
 
-    console.log('[Auth Check] Testing mode disabled, checking token...')
     let access = tokenStore.accessToken
     if (!access) {
       return { authenticated: false, redirectTo: '/login' }
