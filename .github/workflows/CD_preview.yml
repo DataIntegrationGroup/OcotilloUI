@@ -33,15 +33,17 @@ jobs:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Configure Docker for Artifact Registry
+        env:
+          GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
+          gcloud config set project $GCP_PROJECT_ID
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
           # Create repository if it doesn't exist
           gcloud artifacts repositories describe ocotillo-previews \
-            --location=us-central1 --project=$GCP_PROJECT_ID 2>/dev/null || \
+            --location=us-central1 2>/dev/null || \
             gcloud artifacts repositories create ocotillo-previews \
             --repository-format=docker \
-            --location=us-central1 \
-            --project=$GCP_PROJECT_ID
+            --location=us-central1
 
       - name: Load PostHog env vars from Secret Manager
         env:
