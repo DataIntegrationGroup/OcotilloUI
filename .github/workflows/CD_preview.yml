@@ -1,0 +1,118 @@
+name: Preview deploy to Cloud Run
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  push:
+    branches-ignore:
+      - main
+      - master
+      - production
+      - staging
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/production' && github.ref != 'refs/heads/staging')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Load PostHog env vars from Secret Manager
+        run: |
+          set -euo pipefail
+
+          KEY_SECRET="VITE_PUBLIC_POSTHOG_KEY"
+          HOST_SECRET="VITE_PUBLIC_POSTHOG_HOST"
+
+          VITE_POSTHOG_KEY="$(gcloud secrets versions access latest --secret="$KEY_SECRET" --project="${{ vars.GCP_PROJECT_ID }}")"
+          VITE_POSTHOG_HOST="$(gcloud secrets versions access latest --secret="$HOST_SECRET" --project="${{ vars.GCP_PROJECT_ID }}")"
+
+          echo "VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY" >> "$GITHUB_ENV"
+          echo "VITE_POSTHOG_HOST=$VITE_POSTHOG_HOST" >> "$GITHUB_ENV"
+
+      - name: Build and push Docker image
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          SANITIZED_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          # Sanitize branch name for Cloud Run service name (alphanumeric and hyphens only)
+          SANITIZED=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]' | cut -c1-40)
+          echo "SANITIZED_BRANCH=$SANITIZED" >> "$GITHUB_ENV"
+
+          npm ci
+          VITE_DISABLE_SOURCEMAP=true VITE_SENTRY_TELEMETRY_DISABLED=true NODE_OPTIONS='--max-old-space-size=4096' npx tsc
+          VITE_APP_TITLE="Ocotillo Preview" VITE_BASE_URL="/" VITE_AUTHENTIK_CLIENT_ID="${{ vars.VITE_AUTHENTIK_CLIENT_ID }}" VITE_AUTHENTIK_URL="${{ vars.VITE_AUTHENTIK_URL }}" VITE_AUTHENTIK_REDIRECT_URI="${{ vars.VITE_AUTHENTIK_REDIRECT_URI }}" VITE_OCOTILLO_API_URL="${{ vars.VITE_OCOTILLO_API_URL }}" VITE_MAPBOX_TOKEN="${{ secrets.VITE_MAPBOX_TOKEN }}" VITE_PUBLIC_POSTHOG_KEY="${{ env.VITE_POSTHOG_KEY }}" VITE_PUBLIC_POSTHOG_HOST="${{ env.VITE_POSTHOG_HOST }}" npx vite build --mode development
+
+          docker build \
+            --build-arg VITE_APP_TITLE="Ocotillo Preview" \
+            --build-arg VITE_BASE_URL="/" \
+            --build-arg VITE_AUTHENTIK_CLIENT_ID="${{ vars.VITE_AUTHENTIK_CLIENT_ID }}" \
+            --build-arg VITE_AUTHENTIK_URL="${{ vars.VITE_AUTHENTIK_URL }}" \
+            --build-arg VITE_AUTHENTIK_REDIRECT_URI="${{ vars.VITE_AUTHENTIK_REDIRECT_URI }}" \
+            --build-arg VITE_OCOTILLO_API_URL="${{ vars.VITE_OCOTILLO_API_URL }}" \
+            --build-arg VITE_MAPBOX_TOKEN="${{ secrets.VITE_MAPBOX_TOKEN }}" \
+            --build-arg VITE_PUBLIC_POSTHOG_KEY="${{ env.VITE_POSTHOG_KEY }}" \
+            --build-arg VITE_PUBLIC_POSTHOG_HOST="${{ env.VITE_POSTHOG_HOST }}" \
+            -t gcr.io/${{ vars.GCP_PROJECT_ID }}/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG .
+
+          docker push gcr.io/${{ vars.GCP_PROJECT_ID }}/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG
+
+      - name: Deploy to Cloud Run
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          gcloud run deploy preview-${{ env.SANITIZED_BRANCH }}-ocotillo \
+            --image gcr.io/${{ vars.GCP_PROJECT_ID }}/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG \
+            --platform managed \
+            --region us-central1 \
+            --allow-unauthenticated \
+            --port 8080 \
+            --memory 512Mi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 10 \
+            --concurrency 80 \
+            --timeout 60s
+
+      - name: Get preview URL
+        id: preview-url
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "url=$(gcloud run services describe preview-${{ env.SANITIZED_BRANCH }}-ocotillo --platform managed --region ${{ vars.GCP_REGION }} --format 'value(status.url)')" >> "$GITHUB_OUTPUT"
+
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "## Preview Deployment
+
+**Preview URL:** ${{ steps.preview-url.outputs.url }}
+
+**Note:** This preview uses the staging API endpoints. Authentication is configured for testing."
+
+      - name: Delete preview on PR close
+        if: github.event_name == 'pull_request' && github.event.action == 'closed'
+        run: |
+          echo "Deleting Cloud Run service: preview-${{ env.SANITIZED_BRANCH }}-ocotillo"
+          gcloud run services delete preview-${{ env.SANITIZED_BRANCH }}-ocotillo --platform managed --region ${{ vars.GCP_REGION }} --quiet || true
+
+          # Also delete the container image
+          gcloud container images delete gcr.io/${{ vars.GCP_PROJECT_ID }}/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:${{ github.sha }} --quiet || true
