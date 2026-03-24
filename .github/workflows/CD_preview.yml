@@ -75,6 +75,7 @@ jobs:
           export NODE_OPTIONS="--max-old-space-size=6144"
           export VITE_DISABLE_SOURCEMAP=true
           export VITE_SENTRY_TELEMETRY_DISABLED=true
+          export VITE_TEST_AUTH=true
           export VITE_APP_TITLE="Ocotillo Preview"
           export VITE_BASE_URL="/"
           export VITE_AUTHENTIK_CLIENT_ID="${{ vars.VITE_AUTHENTIK_CLIENT_ID }}"

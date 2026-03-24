@@ -1,12 +1,6 @@
 import { Authenticated } from '@refinedev/core'
 import { AuthPage, ErrorComponent } from '@refinedev/mui'
-import {
-  BrowserRouter,
-  Navigate,
-  Outlet,
-  Route,
-  Routes,
-} from 'react-router'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router'
 import { ThemedLayoutV2 } from '@/components/layout'
 import { ThemedHeaderV2 } from '@/components/layout/header'
 import { ThemedSiderV2 } from '@/components/layout/sider'
@@ -24,10 +18,7 @@ const App: React.FC = () => (
       <Routes>
         <Route
           element={
-            <Authenticated
-              key={'auth-pages'}
-              fallback={<Outlet />}
-            >
+            <Authenticated key={'auth-pages'} fallback={<Outlet />}>
               <Navigate to="/home" />
             </Authenticated>
           }
@@ -37,9 +28,7 @@ const App: React.FC = () => (
             path="/login"
             element={
               <AuthPage
-                title={
-                  <ThemedTitleV2 collapsed={false} />
-                }
+                title={<ThemedTitleV2 collapsed={false} />}
                 hideForm={true}
                 type="login"
                 registerLink={false}
@@ -55,10 +44,7 @@ const App: React.FC = () => (
         </Route>
         <Route
           element={
-            <Authenticated
-              key="authenticated-routes"
-              redirectOnFail="/login"
-            >
+            <Authenticated key="authenticated-routes" redirectOnFail="/login">
               <ThemedLayoutV2
                 Header={() => <ThemedHeaderV2 sticky />}
                 Sider={ThemedSiderV2}
@@ -73,8 +59,14 @@ const App: React.FC = () => (
         >
           <Route index element={<Home />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/about" element={<ContentPage src="/content/about.md" />} />
-          <Route path="/report-a-bug" element={<ContentPage src="/content/report-a-bug.md" />} />
+          <Route
+            path="/about"
+            element={<ContentPage src="/content/about.md" />}
+          />
+          <Route
+            path="/report-a-bug"
+            element={<ContentPage src="/content/report-a-bug.md" />}
+          />
           <Route path="/amp/*" element={<AMPRoutes />} />
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
           <Route path="/st2/*" element={<ST2Routes />} />
