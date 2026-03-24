@@ -1,5 +1,11 @@
 import { useState } from 'react'
-import { MapOutlined } from '@mui/icons-material'
+import {
+  MapOutlined,
+  SearchOutlined,
+  FolderOpenOutlined,
+  FileDownloadOutlined,
+  HelpOutlineOutlined,
+} from '@mui/icons-material'
 import {
   Card,
   CardContent,
@@ -10,9 +16,10 @@ import {
   Alert,
   Divider,
   Container,
-  Link,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
+import { useSearch } from '@/providers/search-provider'
+import { useGo } from '@refinedev/core'
 import ocotilloImage from '@/img/ocotillo.jpeg'
 import { useCan } from '@refinedev/core'
 
@@ -141,71 +148,144 @@ const Hero = () => {
   )
 }
 
-const About = () => (
-  <Box sx={{ width: '100%' }}>
-    <Container maxWidth="lg">
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="deck" sx={{ color: 'text.secondary' }}>
-            Ocotillo is an application for accessing and working with New Mexico
-            Bureau of Geology water data. It provides access to groundwater well
-            information from the Aquifer Mapping Program (AMP), with additional
-            datasets from Geothermal, Oil &amp; Gas, and Argon Geochronology
-            planned for the future.
+const About = () => {
+  const { openSearch } = useSearch()
+  const go = useGo()
+  return (
+    <Box sx={{ width: '100%' }}>
+      <Container maxWidth="lg">
+        <Stack spacing={3}>
+          <Box>
+            <Typography variant="deck" sx={{ color: 'text.secondary' }}>
+              Ocotillo is an application for accessing and working with New
+              Mexico Bureau of Geology water data. It provides access to
+              groundwater well information from the Aquifer Mapping Program
+              (AMP), with additional datasets from Geothermal, Oil &amp; Gas,
+              and Argon Geochronology planned for the future.
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+            What you can do now
           </Typography>
-        </Box>
-
-        <Divider />
-
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-              What you can do now
-            </Typography>
-            <Stack component="ul" spacing={1} sx={{ pl: 2, m: 0 }}>
-              <Typography component="li" variant="body1">
-                <Link href="/ocotillo/map">Browse wells on the Map</Link>
-              </Typography>
-              <Typography component="li" variant="body1">
-                Search by well ID, site name, or contact/owner
-              </Typography>
-              <Typography component="li" variant="body1">
-                View well records (water levels, equipment, photos,
-                contacts/owners)
-              </Typography>
-              <Typography component="li" variant="body1">
-                <Link href="/ocotillo/well/batch-export">
-                  Batch export Field Compilation sheets
-                </Link>
-              </Typography>
-              <Typography component="li" variant="body1">
-                <Link href="/ocotillo/help">
-                  Connect Ocotillo to ArcGIS Pro or QGIS
-                </Link>
-              </Typography>
-            </Stack>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card
+                variant="outlined"
+                sx={{ height: '100%', cursor: 'pointer' }}
+                onClick={() => go({ to: '/ocotillo/map' })}
+              >
+                <CardContent>
+                  <MapOutlined color="primary" sx={{ fontSize: 40, mb: 1 }} />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                  >
+                    Browse wells on the Map
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Explore well locations and spatial data
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card
+                variant="outlined"
+                sx={{ height: '100%', cursor: 'pointer' }}
+                onClick={openSearch}
+              >
+                <CardContent>
+                  <SearchOutlined
+                    color="primary"
+                    sx={{ fontSize: 40, mb: 1 }}
+                  />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                  >
+                    Search records
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Find wells by ID, site name, or contact/owner
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card
+                variant="outlined"
+                sx={{ height: '100%', cursor: 'pointer' }}
+                onClick={() => go({ to: '/ocotillo/thing-well' })}
+              >
+                <CardContent>
+                  <FolderOpenOutlined
+                    color="primary"
+                    sx={{ fontSize: 40, mb: 1 }}
+                  />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                  >
+                    View well records
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Water levels, equipment, photos, contacts/owners
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card
+                variant="outlined"
+                sx={{ height: '100%', cursor: 'pointer' }}
+                onClick={() => go({ to: '/ocotillo/well/batch-export' })}
+              >
+                <CardContent>
+                  <FileDownloadOutlined
+                    color="primary"
+                    sx={{ fontSize: 40, mb: 1 }}
+                  />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                  >
+                    Batch export Field Compilations
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Generate field compilation sheets for groups of wells
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card
+                variant="outlined"
+                sx={{ height: '100%', cursor: 'pointer' }}
+                onClick={() => go({ to: '/ocotillo/help' })}
+              >
+                <CardContent>
+                  <HelpOutlineOutlined
+                    color="primary"
+                    sx={{ fontSize: 40, mb: 1 }}
+                  />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                  >
+                    Connect to GIS
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Connect Ocotillo to ArcGIS Pro or QGIS
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
-
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-              What’s coming next
-            </Typography>
-            <Stack component="ul" spacing={1} sx={{ pl: 2, m: 0 }}>
-              <Typography component="li" variant="body1">
-                Run spatial queries and batch export data for groups of wells,
-                springs, and other AMP features
-              </Typography>
-              <Typography component="li" variant="body1">
-                Batch-generate Field Compilation sheets for field campaigns
-              </Typography>
-              <Typography component="li" variant="body1">
-                Enter field-collected data such as well inventory updates, water
-                levels, and field parameters
-              </Typography>
-            </Stack>
-          </Grid>
-        </Grid>
-      </Stack>
-    </Container>
-  </Box>
-)
+        </Stack>
+      </Container>
+    </Box>
+  )
+}

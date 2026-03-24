@@ -25,6 +25,7 @@ import {
 } from '@/providers'
 import { resources } from '@/resources'
 import { PostHogPageview } from '@/components/analytics/PostHogPageview'
+import { SearchProvider } from '@/providers/search-provider'
 
 const queryClient = new QueryClient()
 const appTitle = import.meta.env.DEV
@@ -76,9 +77,11 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
           <PostHogPageview />
           <DocumentTitleHandler handler={customTitleHandler} />
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <QueryClientProvider client={queryClient}>
-              {children}
-            </QueryClientProvider>
+            <SearchProvider>
+              <QueryClientProvider client={queryClient}>
+                {children}
+              </QueryClientProvider>
+            </SearchProvider>
           </LocalizationProvider>
         </Refine>
         <DevtoolsPanel />

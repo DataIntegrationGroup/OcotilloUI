@@ -3,18 +3,11 @@ name: Preview deploy to Cloud Run
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
-  push:
-    branches-ignore:
-      - main
-      - master
-      - production
-      - staging
 
 jobs:
   deploy-preview:
     runs-on: ubuntu-latest
     environment: staging
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/production' && github.ref != 'refs/heads/staging')
 
     steps:
       - name: Checkout
