@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   Divider,
+  LinearProgress,
   Skeleton,
   Stack,
   Typography,
@@ -66,13 +67,14 @@ export const WellShowPdfPreview = () => {
     sample,
     sensorDeployments,
     isLoading,
+    progress: pdfDataProgress,
   } = useWellPdfData({
     thingId: id,
   })
 
   useEffect(() => {
     if (!isLoading) {
-      const timer = setTimeout(() => setIsViewerReady(true), 300)
+      const timer = setTimeout(() => setIsViewerReady(true), 400)
       return () => clearTimeout(timer)
     }
   }, [isLoading])
@@ -207,11 +209,33 @@ export const WellShowPdfPreview = () => {
     setHydrographImage(null)
   }, [id, hydrographOption])
 
+  const progress = useMemo(() => {
+    if (isLoading) {
+      return Math.min(pdfDataProgress, 85)
+    }
+
+    if (!isViewerReady) {
+      return 92
+    }
+
+    const needsHydrograph = hydrographDatasource.length > 0
+    if (needsHydrograph && !hydrographImage) {
+      return 97
+    }
+
+    return 100
+  }, [
+    isLoading,
+    pdfDataProgress,
+    isViewerReady,
+    hydrographDatasource.length,
+    hydrographImage,
+  ])
+
   return (
     <Show
       resource="thing-well"
       recordItemId={id}
-      isLoading={isLoading}
       goBack={false}
       breadcrumb={
         <AppBreadcrumb
@@ -376,9 +400,21 @@ export const WellShowPdfPreview = () => {
           </AccordionActions>
         </Accordion>
       </Box>
-      <Box sx={{ width: '100%', height: '90vh' }}>
-        {(!isViewerReady || isLoading) && (
-          <Skeleton variant="rectangular" height="100%" />
+      <Box sx={{ width: '100%', height: '90vh', position: 'relative' }}>
+        {(isLoading ||
+          !isViewerReady ||
+          (hydrographDatasource.length > 0 && !hydrographImage)) && (
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 2,
+              bgcolor: 'background.paper',
+            }}
+          >
+            <LinearProgress variant="determinate" value={progress} />
+            <Skeleton variant="rectangular" height="100%" />
+          </Box>
         )}
         {!isLoading && (
           <Box
