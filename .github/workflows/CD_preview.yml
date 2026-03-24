@@ -97,14 +97,17 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          echo "url=$(gcloud run services describe preview-${{ env.SANITIZED_BRANCH }}-ocotillo --platform managed --region ${{ vars.GCP_REGION }} --format 'value(status.url)')" >> "$GITHUB_OUTPUT"
+          echo "url=$(gcloud run services describe preview-${{ env.SANITIZED_BRANCH }}-ocotillo --platform managed --region us-central1 --format 'value(status.url)')" >> "$GITHUB_OUTPUT"
 
       - name: Comment PR with preview URL
         if: github.event_name == 'pull_request'
+        env:
+          PREVIEW_URL: ${{ steps.preview-url.outputs.url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body "## Preview Deployment
+          gh pr comment $PR_NUMBER --body "## Preview Deployment
 
-**Preview URL:** ${{ steps.preview-url.outputs.url }}
+**Preview URL:** $PREVIEW_URL
 
 **Note:** This preview uses the staging API endpoints. Authentication is configured for testing."
 
@@ -112,7 +115,7 @@ jobs:
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
         run: |
           echo "Deleting Cloud Run service: preview-${{ env.SANITIZED_BRANCH }}-ocotillo"
-          gcloud run services delete preview-${{ env.SANITIZED_BRANCH }}-ocotillo --platform managed --region ${{ vars.GCP_REGION }} --quiet || true
+          gcloud run services delete preview-${{ env.SANITIZED_BRANCH }}-ocotillo --platform managed --region us-central1 --quiet || true
 
           # Also delete the container image
           gcloud container images delete gcr.io/${{ vars.GCP_PROJECT_ID }}/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:${{ github.sha }} --quiet || true
