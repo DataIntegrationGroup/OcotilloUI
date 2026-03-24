@@ -31,18 +31,17 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-
       - name: Load PostHog env vars from Secret Manager
+        env:
+          GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
           set -euo pipefail
 
           KEY_SECRET="VITE_PUBLIC_POSTHOG_KEY"
           HOST_SECRET="VITE_PUBLIC_POSTHOG_HOST"
 
-          VITE_POSTHOG_KEY="$(gcloud secrets versions access latest --secret="$KEY_SECRET" --project="${{ vars.GCP_PROJECT_ID }}")"
-          VITE_POSTHOG_HOST="$(gcloud secrets versions access latest --secret="$HOST_SECRET" --project="${{ vars.GCP_PROJECT_ID }}")"
+          VITE_POSTHOG_KEY="$(gcloud secrets versions access latest --secret="$KEY_SECRET" --project="$GCP_PROJECT_ID")"
+          VITE_POSTHOG_HOST="$(gcloud secrets versions access latest --secret="$HOST_SECRET" --project="$GCP_PROJECT_ID")"
 
           echo "VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY" >> "$GITHUB_ENV"
           echo "VITE_POSTHOG_HOST=$VITE_POSTHOG_HOST" >> "$GITHUB_ENV"
@@ -51,7 +50,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-          SANITIZED_BRANCH: ${{ github.head_ref || github.ref_name }}
+          GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
           # Sanitize branch name for Cloud Run service name (alphanumeric and hyphens only)
           SANITIZED=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]' | cut -c1-40)
@@ -71,16 +70,17 @@ jobs:
             --build-arg VITE_MAPBOX_TOKEN="${{ secrets.VITE_MAPBOX_TOKEN }}" \
             --build-arg VITE_PUBLIC_POSTHOG_KEY="${{ env.VITE_POSTHOG_KEY }}" \
             --build-arg VITE_PUBLIC_POSTHOG_HOST="${{ env.VITE_POSTHOG_HOST }}" \
-            -t gcr.io/${{ vars.GCP_PROJECT_ID }}/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG .
+            -t gcr.io/$GCP_PROJECT_ID/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG .
 
-          docker push gcr.io/${{ vars.GCP_PROJECT_ID }}/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG
+          docker push gcr.io/$GCP_PROJECT_ID/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG
 
       - name: Deploy to Cloud Run
         env:
           IMAGE_TAG: ${{ github.sha }}
+          GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
           gcloud run deploy preview-${{ env.SANITIZED_BRANCH }}-ocotillo \
-            --image gcr.io/${{ vars.GCP_PROJECT_ID }}/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG \
+            --image gcr.io/$GCP_PROJECT_ID/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
@@ -111,8 +111,10 @@ jobs:
 
       - name: Delete preview on PR close
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
+        env:
+          GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
           SERVICE_NAME="preview-${{ env.SANITIZED_BRANCH }}-ocotillo"
           echo "Deleting Cloud Run service: $SERVICE_NAME"
           gcloud run services delete "$SERVICE_NAME" --platform managed --region us-central1 --quiet || true
-          gcloud container images delete gcr.io/${{ vars.GCP_PROJECT_ID }}/"$SERVICE_NAME":${{ github.sha }} --quiet || true
+          gcloud container images delete gcr.io/$GCP_PROJECT_ID/"$SERVICE_NAME":${{ github.sha }} --quiet || true
