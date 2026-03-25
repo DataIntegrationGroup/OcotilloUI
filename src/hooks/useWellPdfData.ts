@@ -121,6 +121,31 @@ export const useWellPdfData = ({
     contactQuery.isLoading ||
     (hasSampleId && sampleQuery.isLoading)
 
+  let progress: number = 0
+
+  if (thingId) {
+    const steps: { weight: number; done: boolean }[] = [
+      { weight: 15, done: initialWell ? true : !wellQuery.isLoading },
+      { weight: 30, done: !observationsIsLoading },
+      { weight: 15, done: !assetQuery.isLoading },
+      { weight: 15, done: !contactQuery.isLoading },
+      { weight: 10, done: sensors.length > 0 || !sensorDataGridProps?.loading },
+      {
+        weight: 10,
+        done: deployments.length > 0 || !deploymentsDataGridProps?.loading,
+      },
+      { weight: 5, done: !hasSampleId || !sampleQuery.isLoading },
+    ]
+
+    const totalWeight = steps.reduce((sum, step) => sum + step.weight, 0)
+    const completedWeight = steps.reduce(
+      (sum, step) => sum + (step.done ? step.weight : 0),
+      0
+    )
+
+    progress = Math.round((completedWeight / totalWeight) * 100)
+  }
+
   return {
     well,
     observations,
@@ -129,5 +154,6 @@ export const useWellPdfData = ({
     sample,
     sensorDeployments,
     isLoading,
+    progress,
   }
 }
