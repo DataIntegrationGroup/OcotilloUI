@@ -39,39 +39,13 @@ const roleOrder: PortalRole[] = [
   'Geothermal.Admin',
 ]
 
-const editableOcotilloResources = [
-  'ocotillo.sensor',
-  'ocotillo.group',
-  'ocotillo.location',
-  'ocotillo.sample',
-  'ocotillo.asset',
-  'ocotillo.contact',
-  'ocotillo.thing-well',
-  'ocotillo.thing-spring',
-  'ocotillo.groundwater-level-observation',
-]
-
-const viewableOcotilloResources = [
-  'ocotillo',
-  'ocotillo.map',
-  'ocotillo.lexicon',
-  'ocotillo.thing-well',
-  'ocotillo.thing-spring',
-  'ocotillo.thing-well-pdf-preview',
-  'ocotillo.thing-well-batch-export',
-  'ocotillo.groundwater-level-observation',
-  ...editableOcotilloResources,
-]
-
 export const wipResources = new Set([
   'water.dashboard',
   'water.hydrographcorrector',
   'water.reportbuilder',
   'water.querybuilder',
-  'water.wellinventoryform',
   'water.waterlevelform',
   'water.projects',
-  'water.locations',
   'water.wells',
   'water.equipment',
   'water.manual_waterlevels',
@@ -79,9 +53,94 @@ export const wipResources = new Set([
   'water.manualwaterlevels_batchupload',
 ])
 
-export const crossDomainAdminOnlyResources = new Set([
-  'water.locations',
-])
+type Action = 'list' | 'show' | 'create' | 'edit' | 'delete' | 'manage'
+
+type ResourcePolicy = Partial<Record<Action, PortalRole[]>>
+
+const viewerRoles: PortalRole[] = ['AMP.Viewer', 'AMP.Editor', 'AMP.Admin']
+const editorRoles: PortalRole[] = ['AMP.Editor', 'AMP.Admin']
+const adminRoles: PortalRole[] = ['AMP.Admin']
+const geothermalViewerRoles: PortalRole[] = [
+  'Geothermal.Viewer',
+  'Geothermal.Editor',
+  'Geothermal.Admin',
+]
+const geothermalEditorRoles: PortalRole[] = [
+  'Geothermal.Editor',
+  'Geothermal.Admin',
+]
+const geothermalAdminRoles: PortalRole[] = ['Geothermal.Admin']
+
+const resourcePolicies: Record<string, ResourcePolicy> = {
+  ocotillo: { list: viewerRoles, show: viewerRoles },
+  'ocotillo.map': { list: viewerRoles, show: viewerRoles },
+  'ocotillo.collections': { list: viewerRoles, show: viewerRoles },
+  'ocotillo.contact': {
+    list: viewerRoles,
+    show: viewerRoles,
+    edit: editorRoles,
+    create: adminRoles,
+    delete: adminRoles,
+    manage: adminRoles,
+  },
+  'ocotillo.location': {
+    list: editorRoles,
+    show: editorRoles,
+    edit: editorRoles,
+    create: adminRoles,
+    delete: adminRoles,
+    manage: adminRoles,
+  },
+  'ocotillo.lexicon': {
+    list: editorRoles,
+    show: editorRoles,
+    edit: editorRoles,
+    create: adminRoles,
+    delete: adminRoles,
+    manage: adminRoles,
+  },
+  'ocotillo.thing-well': {
+    list: viewerRoles,
+    show: viewerRoles,
+    edit: editorRoles,
+    create: adminRoles,
+    delete: adminRoles,
+    manage: adminRoles,
+  },
+  'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
+  'ocotillo.thing-well-batch-export': { list: editorRoles, show: editorRoles },
+  'ocotillo.groundwater-level-observation': {
+    list: viewerRoles,
+    show: viewerRoles,
+    edit: editorRoles,
+    create: adminRoles,
+    delete: adminRoles,
+    manage: adminRoles,
+  },
+  Sandbox: { list: adminRoles, show: adminRoles },
+  geothermal: { list: geothermalViewerRoles, show: geothermalViewerRoles },
+  'water.locations': {
+    list: editorRoles,
+    show: editorRoles,
+    edit: editorRoles,
+    create: editorRoles,
+    delete: editorRoles,
+    manage: editorRoles,
+  },
+  'water.wellinventoryform': {
+    list: editorRoles,
+    show: editorRoles,
+    edit: editorRoles,
+    create: editorRoles,
+    delete: editorRoles,
+    manage: editorRoles,
+  },
+}
+
+const matchesPolicy = (
+  allowedRoles: PortalRole[] | undefined,
+  roles: PortalRole[]
+): boolean => Boolean(allowedRoles?.some((role) => roles.includes(role)))
 
 export const normalizeAccessControlGroups = (
   groups: string[] | null | undefined
@@ -126,9 +185,7 @@ export const getPrimaryRole = (
   return normalized.length > 0 ? normalized[normalized.length - 1] : null
 }
 
-export const getAccessCapabilities = (
-  groups: string[] | null | undefined
-) => {
+export const getAccessCapabilities = (groups: string[] | null | undefined) => {
   const roles = normalizeAccessControlGroups(groups)
   const primaryRole = getPrimaryRole(groups)
   const canViewAmp =
@@ -137,7 +194,7 @@ export const getAccessCapabilities = (
     roles.includes('AMP.Admin')
   const canEditAmp = roles.includes('AMP.Editor') || roles.includes('AMP.Admin')
   const canManageAmp = roles.includes('AMP.Admin')
-  const canViewConfidential = canViewAmp
+  const canViewConfidential = canEditAmp
   const canViewUnfinished = canManageAmp
   const canViewGeothermal =
     roles.includes('Geothermal.Viewer') ||
@@ -158,7 +215,7 @@ export const getAccessCapabilities = (
     canViewGeothermal,
     canEditGeothermal,
     canManageGeothermal,
-    canViewLexicon: true,
+    canViewLexicon: canEditAmp,
   }
 }
 
@@ -175,70 +232,63 @@ export const canAccessResource = ({
 }): boolean => {
   const capabilities = getAccessCapabilities(groups)
 
+  if (resource === 'ocotillo.collections') {
+    const policy = resourcePolicies[resource]
+    return matchesPolicy(policy[action], capabilities.roles)
+  }
+
   if (resource === 'ocotillo.lexicon') {
-    return action === 'list' || action === 'show'
+    const policy = resourcePolicies[resource]
+    return matchesPolicy(policy[action], capabilities.roles)
   }
 
-  if (resource === 'ocotillo') {
-    return action === 'list' || action === 'show'
+  if (resource === 'ocotillo.thing-well-batch-export') {
+    const policy = resourcePolicies[resource]
+    return matchesPolicy(policy[action], capabilities.roles)
   }
 
-  if (resource === 'ocotillo.thing-well-pdf-preview') {
-    return (action === 'list' || action === 'show') && capabilities.canManageAmp
+  if (
+    resource === 'ocotillo.thing-well-pdf-preview' ||
+    resource === 'Sandbox'
+  ) {
+    const policy = resourcePolicies[resource]
+    return matchesPolicy(policy[action], capabilities.roles)
   }
 
-  if (resource === 'Sandbox') {
-    return (action === 'list' || action === 'show') && capabilities.canManageAmp
-  }
-
-  if (resource === 'geothermal') {
-    return (
-      (action === 'list' || action === 'show') &&
-      capabilities.canViewGeothermal
-    )
-  }
-
-  if (crossDomainAdminOnlyResources.has(resource)) {
-    return capabilities.canManageAmp || capabilities.canManageGeothermal
+  if (
+    resource === 'water.locations' ||
+    resource === 'water.wellinventoryform'
+  ) {
+    const policy = resourcePolicies[resource]
+    return matchesPolicy(policy[action], capabilities.roles)
   }
 
   if (isWip || wipResources.has(resource)) {
     return capabilities.canViewUnfinished
   }
 
+  if (resource in resourcePolicies) {
+    const policy = resourcePolicies[resource]
+    return matchesPolicy(policy[action], capabilities.roles)
+  }
+
   if (resource.startsWith('water.')) {
-    if (!capabilities.canViewAmp) return false
-    if (action === 'list' || action === 'show') {
-      return !wipResources.has(resource)
-    }
-    return capabilities.canManageAmp
+    return false
   }
 
   if (resource.startsWith('geothermal.')) {
     if (action === 'list' || action === 'show') {
-      return capabilities.canViewGeothermal
+      return matchesPolicy(geothermalViewerRoles, capabilities.roles)
     }
     if (action === 'edit') {
-      return capabilities.canEditGeothermal
+      return matchesPolicy(geothermalEditorRoles, capabilities.roles)
     }
     if (action === 'create' || action === 'delete' || action === 'manage') {
-      return capabilities.canManageGeothermal
+      return matchesPolicy(geothermalAdminRoles, capabilities.roles)
     }
   }
 
-  if (viewableOcotilloResources.includes(resource)) {
-    if (action === 'list' || action === 'show') {
-      return capabilities.canViewAmp
-    }
-    if (editableOcotilloResources.includes(resource) && action === 'edit') {
-      return capabilities.canEditAmp
-    }
-    if (action === 'create' || action === 'delete' || action === 'manage') {
-      return capabilities.canManageAmp
-    }
-  }
-
-  return capabilities.canManageAmp
+  return false
 }
 
 const isPrivateReleaseStatus = (releaseStatus?: string | null): boolean =>
@@ -246,7 +296,8 @@ const isPrivateReleaseStatus = (releaseStatus?: string | null): boolean =>
 
 const filterPublicOnly = <T extends { release_status?: string | null }>(
   items: T[] | undefined | null
-): T[] => (items ?? []).filter((item) => !isPrivateReleaseStatus(item.release_status))
+): T[] =>
+  (items ?? []).filter((item) => !isPrivateReleaseStatus(item.release_status))
 
 const sanitizeContactMethods = <T extends { release_status?: string | null }>(
   items: T[] | undefined | null,
@@ -271,26 +322,36 @@ export const sanitizeContact = (
     organization: contactIsPrivate ? undefined : contact.organization,
     role: contactIsPrivate ? undefined : contact.role,
     contact_type: contactIsPrivate ? undefined : contact.contact_type,
-    emails: sanitizeContactMethods(contact.emails, false) as IEmail[] | undefined,
-    phones: sanitizeContactMethods(contact.phones, false) as IPhone[] | undefined,
-    addresses: sanitizeContactMethods(
-      contact.addresses,
-      false
-    ) as IAddress[] | undefined,
+    emails: sanitizeContactMethods(contact.emails, false) as
+      | IEmail[]
+      | undefined,
+    phones: sanitizeContactMethods(contact.phones, false) as
+      | IPhone[]
+      | undefined,
+    addresses: sanitizeContactMethods(contact.addresses, false) as
+      | IAddress[]
+      | undefined,
   }
 }
 
 export const sanitizeContacts = (
   contacts: readonly IContact[] | undefined | null,
   canViewConfidential: boolean
-): IContact[] => (contacts ?? []).map((contact) => sanitizeContact(contact, canViewConfidential))
+): IContact[] =>
+  (contacts ?? []).map((contact) =>
+    sanitizeContact(contact, canViewConfidential)
+  )
 
-export const filterConfidentialRows = <T extends { release_status?: string | null }>(
+export const filterConfidentialRows = <
+  T extends { release_status?: string | null },
+>(
   rows: T[] | undefined | null,
   canViewConfidential: boolean
-): T[] => (canViewConfidential ? rows ?? [] : filterPublicOnly(rows))
+): T[] => (canViewConfidential ? (rows ?? []) : filterPublicOnly(rows))
 
-export const highestRoleLabel = (groups: string[] | null | undefined): string | null => {
+export const highestRoleLabel = (
+  groups: string[] | null | undefined
+): string | null => {
   const role = getPrimaryRole(groups)
   if (!role) return null
   return roleOrder.includes(role) ? role : null
