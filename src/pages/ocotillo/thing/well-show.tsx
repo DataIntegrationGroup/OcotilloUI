@@ -20,7 +20,7 @@ import {
   InteractiveSatelliteMapCard,
   HydrographCard,
   RecentWaterLevelObservationsCard,
-  ContactsAccordion,
+  ContactsCard,
   AttachmentsAccordion,
   AlternateIdsAccordion,
   USGSInfoCard,
@@ -31,11 +31,11 @@ import {
   NotesAccordion,
   ConstructionInfoAccordion,
   GeologyInformationAccordion,
-  OwnerPermissionsAccordion,
   WellPhysicalPropertiesAccordion,
   FieldEventHistoryAccordion,
   WellPDFDownloadButton,
   WellShowTitle,
+  OwnerPermissionsCard,
 } from '@/components'
 
 export const WellShow = () => {
@@ -308,8 +308,8 @@ export const WellShow = () => {
           {/* Right column: 2 cols */}
           <Grid size={{ xs: 12, md: 4, lg: 3 }}>
             <Stack spacing={2}>
-              <ContactsAccordion id={well?.id} />
-              <OwnerPermissionsAccordion well={well} />
+              <ContactsCard id={well?.id} />
+              <OwnerPermissionsCard well={well} isLoading={query.isLoading} />
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
               <GeologyInformationAccordion well={well} />
