@@ -59,9 +59,8 @@ export const HelpPage = () => {
         </Box>
 
         <Alert severity="warning">
-          OGC API layers are usually read-only in desktop GIS. Use them for
-          discovery, map display, querying, and export unless your deployment
-          explicitly supports editing.
+          OGC API layers are read-only in desktop GIS. Use them for discovery,
+          map display, querying, and export.
         </Alert>
 
         <Stack spacing={1}>
