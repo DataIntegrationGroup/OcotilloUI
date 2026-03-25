@@ -28,7 +28,6 @@ import {
   WellPDF,
   WellPDFDownloadButton,
   WellShowTitle,
-  WellStatusChips,
 } from '@/components'
 import { useEffect, useMemo, useState } from 'react'
 import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
@@ -209,28 +208,13 @@ export const WellShowPdfPreview = () => {
     setHydrographImage(null)
   }, [id, hydrographOption])
 
-  const progress = useMemo(() => {
-    if (isLoading) {
-      return Math.min(pdfDataProgress, 85)
-    }
-
-    if (!isViewerReady) {
-      return 92
-    }
-
-    const needsHydrograph = hydrographDatasource.length > 0
-    if (needsHydrograph && !hydrographImage) {
-      return 97
-    }
-
-    return 100
-  }, [
-    isLoading,
-    pdfDataProgress,
-    isViewerReady,
-    hydrographDatasource.length,
-    hydrographImage,
-  ])
+  const progress = isLoading
+    ? Math.min(pdfDataProgress, 75)
+    : !isViewerReady
+      ? 90
+      : hydrographDatasource.length > 0 && !hydrographImage
+        ? 95
+        : 100
 
   return (
     <Show
@@ -307,7 +291,7 @@ export const WellShowPdfPreview = () => {
             },
 
             '&.Mui-expanded': {
-              mt: 0,
+              my: 0,
             },
 
             '& .MuiAccordionSummary-root': {
@@ -326,7 +310,7 @@ export const WellShowPdfPreview = () => {
             },
 
             '& .MuiAccordionSummary-content': {
-              my: 1,
+              my: 0,
             },
 
             '& .MuiAccordionSummary-expandIconWrapper': {
