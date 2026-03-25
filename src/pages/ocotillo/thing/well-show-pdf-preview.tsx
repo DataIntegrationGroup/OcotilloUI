@@ -26,6 +26,7 @@ import {
   HydrographPngExporter,
   WellPDF,
   WellPDFDownloadButton,
+  WellShowTitle,
   WellStatusChips,
 } from '@/components'
 import { useEffect, useMemo, useState } from 'react'
@@ -230,21 +231,7 @@ export const WellShowPdfPreview = () => {
           padding: 0,
         },
       }}
-      title={
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            flexWrap: 'wrap',
-          }}
-        >
-          <Typography variant="h3" fontWeight={700}>
-            {well?.name ?? ''}
-          </Typography>
-          <WellStatusChips well={well} />
-        </Box>
-      }
+      title={<WellShowTitle well={well} isLoading={isLoading} />}
       headerProps={{
         sx: {
           flexDirection: { xs: 'column', md: 'row' },
@@ -257,7 +244,7 @@ export const WellShowPdfPreview = () => {
         },
       }}
       contentProps={{ sx: { pt: 1 } }}
-      headerButtons={() => (
+      headerButtons={() =>
         canManageAmp ? (
           <Box sx={{ display: 'flex', gap: 0 }}>
             <WellPDFDownloadButton
@@ -273,7 +260,7 @@ export const WellShowPdfPreview = () => {
             />
           </Box>
         ) : null
-      )}
+      }
     >
       <Box sx={{ mb: 2 }}>
         <Accordion

@@ -4,6 +4,7 @@ import {
   Divider,
   IconButton,
   Paper,
+  Skeleton,
   Stack,
   Tooltip,
   Typography,
@@ -111,8 +112,8 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
   )
 }
 
-export const ContactsAccordion = ({ id }: { id?: number }) => {
-  const { result } = useList<IContact>({
+export const ContactsCard = ({ id }: { id?: number }) => {
+  const { query } = useList<IContact>({
     resource: 'contact',
     dataProviderName: 'ocotillo',
     meta: {
@@ -125,7 +126,8 @@ export const ContactsAccordion = ({ id }: { id?: number }) => {
     },
   })
 
-  const contacts = result?.data ?? []
+  const isLoading: boolean = id == null || query.isLoading
+  const contacts: IContact[] = query.data?.data ?? []
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -135,13 +137,23 @@ export const ContactsAccordion = ({ id }: { id?: number }) => {
         </Typography>
       </Box>
       <Box sx={{ p: 2 }}>
-        {contacts.length === 0 ? (
+        {isLoading ? (
+          <Stack spacing={2}>
+            <Box>
+              <Skeleton variant="text" width="40%" height={28} />
+              <Skeleton variant="text" width="65%" />
+              <Skeleton variant="text" width="55%" />
+              <Skeleton variant="text" width="40%" />
+              <Skeleton variant="text" width="65%" />
+            </Box>
+          </Stack>
+        ) : contacts.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
             N/A
           </Typography>
         ) : (
           <Stack spacing={2}>
-            {contacts.map((contact, i) => (
+            {contacts.map((contact, i: number) => (
               <Box key={contact.id ?? i}>
                 <ContactBlock contact={contact} />
                 {i < contacts.length - 1 && <Divider sx={{ mt: 2 }} />}

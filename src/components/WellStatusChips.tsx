@@ -1,8 +1,41 @@
-import { Stack } from '@mui/material'
+import { Chip, Skeleton, Stack } from '@mui/material'
 import { ChipWithExplain } from '@/components/ChipWithExplain'
 import { IWell } from '@/interfaces/ocotillo'
 
-export const WellStatusChips = ({ well }: { well?: IWell | null }) => {
+const loadingChipWidths = [100, 110, 100]
+
+export const WellStatusChips = ({
+  well,
+  isLoading,
+}: {
+  well?: IWell | null
+  isLoading?: boolean
+}) => {
+  if (isLoading) {
+    return (
+      <Stack
+        direction="row"
+        spacing={1}
+        flexWrap="wrap"
+        alignItems="center"
+        useFlexGap
+        sx={{ gap: 1 }}
+      >
+        {loadingChipWidths.map((width, i) => (
+          <Skeleton
+            key={i}
+            variant="rounded"
+            width={width}
+            height={22}
+            sx={{ borderRadius: 999 }}
+          >
+            <Chip label="" size="small" />
+          </Skeleton>
+        ))}
+      </Stack>
+    )
+  }
+
   if (!well) return null
 
   const hasPurposes = !!(

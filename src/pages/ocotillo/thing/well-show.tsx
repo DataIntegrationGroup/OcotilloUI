@@ -11,17 +11,16 @@ import { Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { IObservation, ISample, IWell } from '@/interfaces/ocotillo'
-import { Box, Stack, Typography } from '@mui/material'
+import { Box, Stack } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
   InteractiveSatelliteMapCard,
-  WellStatusChips,
   HydrographCard,
   RecentWaterLevelObservationsCard,
-  ContactsAccordion,
+  ContactsCard,
   AttachmentsAccordion,
   AlternateIdsAccordion,
   USGSInfoCard,
@@ -32,10 +31,11 @@ import {
   NotesAccordion,
   ConstructionInfoAccordion,
   GeologyInformationAccordion,
-  OwnerPermissionsAccordion,
   WellPhysicalPropertiesAccordion,
   FieldEventHistoryAccordion,
   WellPDFDownloadButton,
+  WellShowTitle,
+  OwnerPermissionsCard,
 } from '@/components'
 
 export const WellShow = () => {
@@ -236,7 +236,6 @@ export const WellShow = () => {
 
   return (
     <Show
-      isLoading={query.isLoading}
       goBack={false}
       breadcrumb={<AppBreadcrumb />}
       wrapperProps={{
@@ -248,21 +247,7 @@ export const WellShow = () => {
           padding: 0,
         },
       }}
-      title={
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            flexWrap: 'wrap',
-          }}
-        >
-          <Typography variant="h3" fontWeight={700}>
-            {well?.name ?? ''}
-          </Typography>
-          <WellStatusChips well={well} />
-        </Box>
-      }
+      title={<WellShowTitle well={well} isLoading={query.isLoading} />}
       headerProps={{
         sx: {
           flexDirection: { xs: 'column', md: 'row' },
@@ -275,7 +260,7 @@ export const WellShow = () => {
         },
       }}
       contentProps={{ sx: { pt: 1 } }}
-      headerButtons={() => (
+      headerButtons={() =>
         canManageAmp ? (
           <Box sx={{ display: 'flex', gap: 0 }}>
             <WellPDFPreviewButton isLoading={query.isLoading} />
@@ -290,18 +275,14 @@ export const WellShow = () => {
             />
           </Box>
         ) : null
-      )}
+      }
     >
       <Stack spacing={2}>
         <Grid container spacing={2}>
           {/* Left column: 8 cols */}
           <Grid size={{ xs: 12, md: 8, lg: 9 }}>
             <Stack spacing={2}>
-              <CoreWellInfoCard
-                well={well}
-                usgs_id={usgs_id}
-                osepod_id={osepod_id}
-              />
+              <CoreWellInfoCard well={well} />
               <InteractiveSatelliteMapCard well={well} />
               <HydrographCard
                 well={well}
@@ -327,8 +308,8 @@ export const WellShow = () => {
           {/* Right column: 2 cols */}
           <Grid size={{ xs: 12, md: 4, lg: 3 }}>
             <Stack spacing={2}>
-              <ContactsAccordion id={well?.id} />
-              <OwnerPermissionsAccordion well={well} />
+              <ContactsCard id={well?.id} />
+              <OwnerPermissionsCard well={well} isLoading={query.isLoading} />
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
               <GeologyInformationAccordion well={well} />
