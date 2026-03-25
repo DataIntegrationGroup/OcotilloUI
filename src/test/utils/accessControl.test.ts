@@ -101,7 +101,7 @@ const expectedAccessByScenario: Scenario[] = [
   {
     name: 'Geothermal.Admin',
     groups: ['Geothermal.Admin'],
-    allowedResources: [],
+    allowedResources: ['water.locations'],
   },
   {
     name: 'AMP.Viewer + Geothermal.Editor',
@@ -178,18 +178,32 @@ const specialResourceExpectations: Array<{
     expected: true,
   },
   {
-    name: 'AMP editor can list water.locations',
+    name: 'AMP editor cannot list water.locations',
     groups: ['AMP.Editor'],
+    resource: 'water.locations',
+    action: 'list',
+    expected: false,
+  },
+  {
+    name: 'AMP admin can list water.locations',
+    groups: ['AMP.Admin'],
     resource: 'water.locations',
     action: 'list',
     expected: true,
   },
   {
-    name: 'AMP editor can create water.locations',
+    name: 'Geothermal admin can show water.locations',
+    groups: ['Geothermal.Admin'],
+    resource: 'water.locations',
+    action: 'show',
+    expected: true,
+  },
+  {
+    name: 'AMP editor cannot create water.locations',
     groups: ['AMP.Editor'],
     resource: 'water.locations',
     action: 'create',
-    expected: true,
+    expected: false,
   },
   {
     name: 'AMP editor can manage water.wellinventoryform',

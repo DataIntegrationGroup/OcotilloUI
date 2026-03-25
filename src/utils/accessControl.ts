@@ -102,12 +102,12 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
   Sandbox: { list: adminRoles, show: adminRoles },
   geothermal: { list: geothermalViewerRoles, show: geothermalViewerRoles },
   'water.locations': {
-    list: editorRoles,
-    show: editorRoles,
-    edit: editorRoles,
-    create: editorRoles,
-    delete: editorRoles,
-    manage: editorRoles,
+    list: ['AMP.Admin', 'Geothermal.Admin'],
+    show: ['AMP.Admin', 'Geothermal.Admin'],
+    edit: ['AMP.Admin', 'Geothermal.Admin'],
+    create: ['AMP.Admin', 'Geothermal.Admin'],
+    delete: ['AMP.Admin', 'Geothermal.Admin'],
+    manage: ['AMP.Admin', 'Geothermal.Admin'],
   },
   'water.wellinventoryform': {
     list: editorRoles,
