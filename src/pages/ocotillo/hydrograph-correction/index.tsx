@@ -1,0 +1,294 @@
+import { useRef, useState } from 'react'
+import { HttpError } from '@refinedev/core'
+import { Breadcrumb, useAutocomplete, useDataGrid } from '@refinedev/mui'
+import {
+  Alert,
+  Autocomplete,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Chip,
+  Skeleton,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material'
+import Grid from '@mui/material/Grid2'
+import { Publish, Timeline } from '@mui/icons-material'
+import { IWell } from '@/interfaces/ocotillo'
+import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
+import { OcotilloHydrographCorrectionWorkbench } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
+import {
+  normalizePointId,
+  parseHydrographUpload,
+  parseHydrographWorkbookUpload,
+  ParsedHydrographUpload,
+} from '@/components/Hydrographs/hydrographCorrection'
+import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
+
+export const HydrographCorrectionPage = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedWell, setSelectedWell] = useState<IWell | null>(null)
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null)
+  const [parsedUpload, setParsedUpload] = useState<ParsedHydrographUpload | null>(
+    null
+  )
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [isResolvingWell, setIsResolvingWell] = useState(false)
+
+  const { autocompleteProps } = useAutocomplete<IWell>({
+    resource: 'thing',
+    dataProviderName: 'ocotillo',
+    onSearch: (value) => [
+      {
+        field: 'name',
+        operator: 'contains',
+        value,
+      },
+    ],
+  })
+
+  const {
+    dataGridProps: { rows: manualRows, loading: manualLoading },
+  } = useDataGrid({
+    resource: 'observation/groundwater-level',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: selectedWell?.id,
+      },
+    },
+    queryOptions: {
+      enabled: Boolean(selectedWell?.id),
+      gcTime: 10 * 60 * 1000,
+      staleTime: 5 * 60 * 1000,
+    },
+  })
+
+  const {
+    dataGridProps: { rows: transducerRows, loading: transducerLoading },
+  } = useDataGrid<TransducerObservationWithBlockResponse>({
+    resource: 'observation/transducer-groundwater-level',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        thing_id: selectedWell?.id,
+      },
+    },
+    queryOptions: {
+      enabled: Boolean(selectedWell?.id),
+      gcTime: 10 * 60 * 1000,
+      staleTime: 5 * 60 * 1000,
+    },
+  })
+
+  const isLoading = manualLoading || transducerLoading
+  const normalizedParsedPointId = normalizePointId(parsedUpload?.pointId)
+  const pointIdMatchesSelectedWell =
+    !!selectedWell &&
+    !!normalizedParsedPointId &&
+    normalizedParsedPointId === normalizePointId(selectedWell.name)
+
+  const resolveWellFromUpload = async (parsed: ParsedHydrographUpload) => {
+    const extractedPointId = normalizePointId(parsed.pointId)
+    if (!extractedPointId) {
+      setSelectedWell(null)
+      return
+    }
+
+    setIsResolvingWell(true)
+    try {
+      const response = await ocotilloDataProvider.getList({
+        resource: 'thing',
+        pagination: {
+          currentPage: 1,
+          pageSize: 25,
+        },
+        filters: [
+          {
+            field: 'name',
+            operator: 'contains',
+            value: extractedPointId,
+          },
+        ],
+      })
+
+      const matchedWell =
+        (response.data as IWell[]).find(
+          (well) => normalizePointId(well.name) === extractedPointId
+        ) ?? null
+
+      setSelectedWell(matchedWell)
+      if (!matchedWell) {
+        setUploadError(
+          `Extracted thing.name "${parsed.pointId}" from the file, but no exact Ocotillo well match was found. Use the well search to continue.`
+        )
+      }
+    } catch {
+      setSelectedWell(null)
+      setUploadError(
+        'The file was parsed, but Ocotillo could not resolve the extracted thing.name automatically.'
+      )
+    } finally {
+      setIsResolvingWell(false)
+    }
+  }
+
+  const applyParsedUpload = async (
+    parsed: ParsedHydrographUpload,
+    fileName: string | null
+  ) => {
+    setParsedUpload(parsed)
+    setUploadedFileName(fileName)
+    setUploadError(null)
+    await resolveWellFromUpload(parsed)
+  }
+
+  const handleInitialUpload = async (file?: File) => {
+    if (!file) return
+
+    try {
+      const parsed = file.name.toLowerCase().endsWith('.xlsx')
+        ? parseHydrographWorkbookUpload(await file.arrayBuffer(), file.name)
+        : parseHydrographUpload(await file.text())
+      await applyParsedUpload(parsed, file.name)
+    } catch (error) {
+      setParsedUpload(null)
+      setUploadedFileName(file?.name ?? null)
+      setSelectedWell(null)
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to parse the uploaded file.'
+      )
+    }
+  }
+
+  return (
+    <Box sx={{ p: { xs: 1, md: 2 } }}>
+      <Stack spacing={2}>
+        <Breadcrumb hideIcons={true} />
+
+        <Card elevation={2}>
+          <CardHeader
+            avatar={<Timeline color="primary" />}
+            title="Hydrograph Correction"
+            subheader="Upload a transducer text file first. Ocotillo will try to extract thing.name from the file and resolve the well automatically."
+          />
+          <CardContent>
+            <Stack spacing={2}>
+              <input
+                ref={fileInputRef}
+                hidden
+                type="file"
+                accept=".txt,.csv,.dat,.xlsx"
+                onChange={(event) => handleInitialUpload(event.target.files?.[0])}
+              />
+
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={1.5}
+                alignItems={{ xs: 'stretch', md: 'center' }}
+              >
+                <Button
+                  variant="contained"
+                  startIcon={<Publish />}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Upload Transducer File
+                </Button>
+                <Typography variant="body2" color="text.secondary">
+                  If extraction fails, use the well search below.
+                </Typography>
+              </Stack>
+
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {uploadedFileName ? <Chip label={`File: ${uploadedFileName}`} /> : null}
+                {parsedUpload?.pointId ? (
+                  <Chip label={`Extracted PointID: ${parsedUpload.pointId}`} />
+                ) : null}
+                {parsedUpload ? (
+                  <Chip label={`Rows: ${parsedUpload.measurements.length}`} />
+                ) : null}
+                {selectedWell ? (
+                  <Chip
+                    color={pointIdMatchesSelectedWell ? 'success' : 'default'}
+                    label={`Selected well: ${selectedWell.name}`}
+                  />
+                ) : null}
+                {isResolvingWell ? (
+                  <Chip color="info" label="Resolving well from upload..." />
+                ) : null}
+              </Stack>
+
+              {uploadError ? <Alert severity="warning">{uploadError}</Alert> : null}
+
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 7 }}>
+                  <Autocomplete
+                    {...autocompleteProps}
+                    options={(autocompleteProps.options as IWell[]) ?? []}
+                    loading={Boolean(autocompleteProps.loading)}
+                    value={selectedWell}
+                    getOptionLabel={(option: IWell) => option?.name ?? ''}
+                    filterOptions={(options) => options}
+                    onChange={(_event, value) => setSelectedWell(value)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Well"
+                        placeholder="Search by thing name when upload extraction is missing or incorrect"
+                      />
+                    )}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 5 }}>
+                  <Stack spacing={0.5} justifyContent="center" sx={{ height: '100%' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Manual observations: {selectedWell ? manualRows.length : 0}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Stored transducer observations: {selectedWell ? transducerRows.length : 0}
+                    </Typography>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        {!parsedUpload ? (
+          <Alert severity="info">
+            Upload a transducer file to begin. If the file contains `thing.name`
+            or point id metadata, the matching well will be selected automatically.
+          </Alert>
+        ) : !selectedWell ? (
+          <Alert severity="info">
+            The file was parsed, but no well is selected yet. Use the well search
+            to continue.
+          </Alert>
+        ) : isLoading || isResolvingWell ? (
+          <Card elevation={2}>
+            <CardContent>
+              <Skeleton variant="rounded" height={520} />
+            </CardContent>
+          </Card>
+        ) : (
+          <OcotilloHydrographCorrectionWorkbench
+            thingName={selectedWell.name}
+            manualObservations={manualRows}
+            transducerObservations={transducerRows.map(({ observation }) => ({
+              observation_datetime: observation.observation_datetime,
+              value: observation.value,
+            }))}
+            initialUpload={parsedUpload}
+            initialFileName={uploadedFileName}
+            onUploadParsed={applyParsedUpload}
+          />
+        )}
+      </Stack>
+    </Box>
+  )
+}
