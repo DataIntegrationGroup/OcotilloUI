@@ -12,16 +12,16 @@ import {
 import Grid from '@mui/material/Grid2'
 import { IWell } from '@/interfaces/ocotillo'
 import { ContentCopy, Directions, Info } from '@mui/icons-material'
+import { CardHeaderTitle } from '@/components'
 
-export const CoreWellInfoCard = ({
-  well,
-  usgs_id,
-  osepod_id,
-}: {
-  well: IWell
-  usgs_id: string
-  osepod_id: string
-}) => {
+const HeaderTitle = () => (
+  <CardHeaderTitle
+    icon={<Info color="primary" />}
+    title="Core Well Information"
+  />
+)
+
+export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
   if (!well) {
     return <LoadingCard />
   }
@@ -52,16 +52,7 @@ export const CoreWellInfoCard = ({
       elevation={2}
       sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
     >
-      <CardHeader
-        title={
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Info color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Core Well Information
-            </Typography>
-          </Stack>
-        }
-      />
+      <CardHeader title={<HeaderTitle />} />
       <CardContent>
         <Grid container columnSpacing={3} rowSpacing={1.5}>
           <Grid size={{ xs: 12, md: 4 }}>
@@ -275,17 +266,23 @@ const LoadingCard = () => (
     elevation={2}
     sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
   >
-    <CardHeader title={<Skeleton variant="text" width={150} height={32} />} />
+    <CardHeader title={<HeaderTitle />} />
     <CardContent>
       <Grid container spacing={1.5}>
         <Grid size={{ xs: 12, md: 4 }}>
-          <Skeleton variant="rounded" width="100%" height={220} />
+          <Section title="Well Details">
+            <Skeleton variant="rounded" width="100%" height={100} />
+          </Section>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <Skeleton variant="rounded" width="100%" height={220} />
+          <Section title="Location Information">
+            <Skeleton variant="rounded" width="100%" height={100} />
+          </Section>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <Skeleton variant="rounded" width="100%" height={220} />
+          <Section title="Elevation Information">
+            <Skeleton variant="rounded" width="100%" height={100} />
+          </Section>
         </Grid>
       </Grid>
     </CardContent>

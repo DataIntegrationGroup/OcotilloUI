@@ -7,14 +7,21 @@ import {
   CardContent,
   CardHeader,
   Skeleton,
-  Stack,
-  Typography,
 } from '@mui/material'
 import { Directions, Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
-import { MapComponent, MapPopup } from '@/components'
+import { MapComponent, MapPopup, CardHeaderTitle } from '@/components'
 import { useLayer } from '@/hooks'
 import { useGo } from '@refinedev/core'
+
+const MAP_HEIGHT = 450
+
+const HeaderTitle = () => (
+  <CardHeaderTitle
+    icon={<Map color="primary" />}
+    title="Interactive Satellite Map"
+  />
+)
 
 export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   const mapRef = useRef<MapRef>(null)
@@ -136,14 +143,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
       sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
     >
       <CardHeader
-        title={
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Map color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Interactive Satellite Map
-            </Typography>
-          </Stack>
-        }
+        title={<HeaderTitle />}
         action={
           googleMapsUrl && (
             <Button
@@ -168,7 +168,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             overflow: 'hidden',
             border: '2.5px solid',
             borderColor: 'divider',
-            height: 450,
+            height: MAP_HEIGHT,
             width: '100%',
             display: 'flex',
           }}
@@ -223,16 +223,7 @@ const LoadingCard = () => {
       elevation={2}
       sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
     >
-      <CardHeader
-        title={
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Map color="primary" />
-            <Typography variant="body1" fontWeight="bold">
-              Interactive Satellite Map
-            </Typography>
-          </Stack>
-        }
-      />
+      <CardHeader title={<HeaderTitle />} />
       <CardContent
         sx={{
           display: 'flex',
@@ -243,7 +234,7 @@ const LoadingCard = () => {
         <Skeleton
           variant="rectangular"
           width="100%"
-          height={650}
+          height={MAP_HEIGHT}
           sx={{ borderRadius: '0.5rem' }}
         />
       </CardContent>
