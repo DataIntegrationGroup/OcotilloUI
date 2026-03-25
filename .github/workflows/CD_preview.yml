@@ -94,12 +94,13 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           PREVIEW_URL: ${{ steps.preview-url.outputs.url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr comment ${{ github.event.pull_request.number }} --body "## Preview Deployment
 
-          **Preview URL:** $PREVIEW_URL
+**Preview URL:** $PREVIEW_URL
 
-          **Note:** This preview uses the staging API endpoints and has auth disabled for testing."
+**Note:** This preview uses the staging API endpoints and has auth disabled for testing."
 
       - name: Delete preview on PR close
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
