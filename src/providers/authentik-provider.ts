@@ -46,13 +46,11 @@ export interface AuthentikIdentity {
 
 export type AuthentikPermissions = string[]
 const TEST_AUTH_GROUPS: AuthentikPermissions = [
-  'Viewer',
-  'Editor',
-  'AMPViewer',
-  'AMPEditor',
-  'LexiconEditor',
-  'LexiconAdmin',
-  'OcotilloAdmin',
+  'AMP.Viewer',
+  'AMP.Editor',
+  'AMP.Admin',
+  'Geothermal.Viewer',
+  'Geothermal.Editor',
 ]
 const PKCE_LOCAL_FALLBACK_TTL_MS = 5 * 60 * 1000
 

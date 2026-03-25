@@ -24,10 +24,15 @@ const actions: Action[] = ['list', 'show']
 const isRoutableResource = (
   resource: (typeof resources)[number]
 ): resource is ResourceWithRoutes =>
-  'list' in resource || 'show' in resource || 'edit' in resource || 'create' in resource
+  'list' in resource ||
+  'show' in resource ||
+  'edit' in resource ||
+  'create' in resource
 
 const routableResources = resources.filter(isRoutableResource)
-const routableResourceNames = routableResources.map((resource) => resource.name).sort()
+const routableResourceNames = routableResources
+  .map((resource) => resource.name)
+  .sort()
 const expectedRegisteredRoutableResources = [
   'ocotillo.collections',
   'ocotillo.contact',
@@ -219,23 +224,13 @@ const specialResourceExpectations: Array<{
 ]
 
 describe('accessControl helpers', () => {
-  it('normalizes legacy aliases and expands role hierarchies', () => {
-    expect(normalizeAccessControlGroups(['Viewer'])).toEqual(['AMP.Viewer'])
-    expect(normalizeAccessControlGroups(['Editor'])).toEqual([
+  it('normalizes canonical roles and expands hierarchies', () => {
+    expect(normalizeAccessControlGroups(['AMP.Viewer'])).toEqual(['AMP.Viewer'])
+    expect(normalizeAccessControlGroups(['AMP.Editor'])).toEqual([
       'AMP.Viewer',
       'AMP.Editor',
     ])
-    expect(normalizeAccessControlGroups(['Admin'])).toEqual([
-      'AMP.Viewer',
-      'AMP.Editor',
-      'AMP.Admin',
-    ])
-    expect(normalizeAccessControlGroups(['AMPViewer'])).toEqual(['AMP.Viewer'])
-    expect(normalizeAccessControlGroups(['AMPEditor'])).toEqual([
-      'AMP.Viewer',
-      'AMP.Editor',
-    ])
-    expect(normalizeAccessControlGroups(['OcotilloAdmin'])).toEqual([
+    expect(normalizeAccessControlGroups(['AMP.Admin'])).toEqual([
       'AMP.Viewer',
       'AMP.Editor',
       'AMP.Admin',
@@ -246,12 +241,8 @@ describe('accessControl helpers', () => {
       'Geothermal.Admin',
     ])
     expect(
-      normalizeAccessControlGroups(['Viewer', 'Geothermal.Editor'])
-    ).toEqual([
-      'AMP.Viewer',
-      'Geothermal.Viewer',
-      'Geothermal.Editor',
-    ])
+      normalizeAccessControlGroups(['AMP.Viewer', 'Geothermal.Editor'])
+    ).toEqual(['AMP.Viewer', 'Geothermal.Viewer', 'Geothermal.Editor'])
   })
 
   it('derives capability flags from normalized roles', () => {
@@ -294,22 +285,22 @@ describe('accessControl helpers', () => {
       canViewLexicon: true,
     })
 
-    expect(getAccessCapabilities(['AMP.Admin', 'Geothermal.Editor'])).toMatchObject(
-      {
-        roles: [
-          'AMP.Viewer',
-          'AMP.Editor',
-          'AMP.Admin',
-          'Geothermal.Viewer',
-          'Geothermal.Editor',
-        ],
-        primaryRole: 'Geothermal.Editor',
-        canManageAmp: true,
-        canViewUnfinished: true,
-        canEditGeothermal: true,
-        canManageGeothermal: false,
-      }
-    )
+    expect(
+      getAccessCapabilities(['AMP.Admin', 'Geothermal.Editor'])
+    ).toMatchObject({
+      roles: [
+        'AMP.Viewer',
+        'AMP.Editor',
+        'AMP.Admin',
+        'Geothermal.Viewer',
+        'Geothermal.Editor',
+      ],
+      primaryRole: 'Geothermal.Editor',
+      canManageAmp: true,
+      canViewUnfinished: true,
+      canEditGeothermal: true,
+      canManageGeothermal: false,
+    })
   })
 })
 

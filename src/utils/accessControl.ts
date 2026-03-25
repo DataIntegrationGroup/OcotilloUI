@@ -12,24 +12,6 @@ export type GeothermalRole =
   | 'Geothermal.Admin'
 export type PortalRole = AmpRole | GeothermalRole
 
-// Temporary compatibility shim for pre-v1 Authentik group names.
-// Remove these legacy aliases before the v1 release once all users/groups
-// have been migrated to AMP.Viewer / AMP.Editor / AMP.Admin.
-const legacyRoleMap: Record<string, PortalRole> = {
-  Viewer: 'AMP.Viewer',
-  Editor: 'AMP.Editor',
-  Admin: 'AMP.Admin',
-  AMPViewer: 'AMP.Viewer',
-  AMPEditor: 'AMP.Editor',
-  OcotilloAdmin: 'AMP.Admin',
-  'AMP.Viewer': 'AMP.Viewer',
-  'AMP.Editor': 'AMP.Editor',
-  'AMP.Admin': 'AMP.Admin',
-  'Geothermal.Viewer': 'Geothermal.Viewer',
-  'Geothermal.Editor': 'Geothermal.Editor',
-  'Geothermal.Admin': 'Geothermal.Admin',
-}
-
 const roleOrder: PortalRole[] = [
   'AMP.Viewer',
   'AMP.Editor',
@@ -148,9 +130,8 @@ export const normalizeAccessControlGroups = (
   const normalized = new Set<PortalRole>()
 
   for (const group of groups ?? []) {
-    const mapped = legacyRoleMap[group]
-    if (mapped) {
-      normalized.add(mapped)
+    if (roleOrder.includes(group as PortalRole)) {
+      normalized.add(group as PortalRole)
     }
   }
 
