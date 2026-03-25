@@ -1,4 +1,3 @@
-import { useList } from '@refinedev/core'
 import {
   Box,
   Divider,
@@ -112,23 +111,13 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
   )
 }
 
-export const ContactsCard = ({ id }: { id?: number }) => {
-  const { query } = useList<IContact>({
-    resource: 'contact',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: id,
-      },
-    },
-    queryOptions: {
-      enabled: id != null,
-    },
-  })
-
-  const isLoading: boolean = id == null || query.isLoading
-  const contacts: IContact[] = query.data?.data ?? []
-
+export const ContactsCard = ({
+  contacts,
+  isLoading,
+}: {
+  contacts: IContact[]
+  isLoading: boolean
+}) => {
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
       <Box sx={{ px: 2, py: 1.5 }}>

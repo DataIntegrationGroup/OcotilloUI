@@ -26,10 +26,12 @@ const HeaderTitle = () => (
 export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   const mapRef = useRef<MapRef>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const [loadNearbyWells, setLoadNearbyWells] = useState(false)
   const waterWellsLayer = useLayer({
     thing_type: 'water well',
     label: 'Water Wells',
     color: '#2b7dc0',
+    enabled: loadNearbyWells,
   })
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
@@ -42,6 +44,11 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
     | undefined
 
   const [lon, lat, _elevation] = coords ?? []
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setLoadNearbyWells(true), 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   // Automatically zoom to well coordinates when map loads or well changes
   useEffect(() => {

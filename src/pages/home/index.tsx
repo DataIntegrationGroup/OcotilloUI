@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   MapOutlined,
   SearchOutlined,
@@ -7,6 +7,7 @@ import {
   HelpOutlineOutlined,
 } from '@mui/icons-material'
 import {
+  CardActionArea,
   Card,
   CardContent,
   Stack,
@@ -19,7 +20,7 @@ import {
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { useSearch } from '@/providers/search-provider'
-import { useGo } from '@refinedev/core'
+import { useGo, useDataProvider, useNotification } from '@refinedev/core'
 import ocotilloImage from '@/img/ocotillo.jpeg'
 import { useCan } from '@refinedev/core'
 
@@ -151,6 +152,65 @@ const Hero = () => {
 const About = () => {
   const { openSearch } = useSearch()
   const go = useGo()
+  const dataProvider = useDataProvider()
+  const { open: notify } = useNotification()
+  const isFetchingRandomWellRef = useRef(false)
+  const [isFetchingRandomWell, setIsFetchingRandomWell] = useState(false)
+
+  const handleRandomWellClick = async () => {
+    if (isFetchingRandomWellRef.current) return
+
+    isFetchingRandomWellRef.current = true
+    setIsFetchingRandomWell(true)
+
+    const fallbackToList = () => {
+      go({ to: '/ocotillo/well', type: 'push' })
+    }
+
+    try {
+      const provider = dataProvider('ocotillo')
+      const firstPage = await provider.getList({
+        resource: 'thing/water-well',
+        pagination: { currentPage: 1, pageSize: 1 },
+      })
+
+      if (!firstPage.total || firstPage.total < 1) {
+        fallbackToList()
+        return
+      }
+
+      const randomPage = Math.floor(Math.random() * firstPage.total) + 1
+      const randomPageResult = await provider.getList({
+        resource: 'thing/water-well',
+        pagination: { currentPage: randomPage, pageSize: 1 },
+      })
+
+      const randomWell = randomPageResult.data?.[0]
+      if (!randomWell?.id) {
+        fallbackToList()
+        return
+      }
+
+      go({
+        to: {
+          resource: 'ocotillo.thing-well',
+          action: 'show',
+          id: randomWell.id,
+        },
+      })
+    } catch (error) {
+      notify?.({
+        type: 'error',
+        message: 'Could not load a random well',
+        description: 'Showing the wells list instead.',
+      })
+      fallbackToList()
+    } finally {
+      isFetchingRandomWellRef.current = false
+      setIsFetchingRandomWell(false)
+    }
+  }
+
   return (
     <Box sx={{ width: '100%' }}>
       <Container maxWidth="lg">
@@ -215,26 +275,31 @@ const About = () => {
               </Card>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <Card
-                variant="outlined"
-                sx={{ height: '100%', cursor: 'pointer' }}
-                onClick={() => go({ to: '/ocotillo/thing-well' })}
-              >
-                <CardContent>
-                  <FolderOpenOutlined
-                    color="primary"
-                    sx={{ fontSize: 40, mb: 1 }}
-                  />
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 600, mb: 0.5 }}
-                  >
-                    View well records
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Water levels, equipment, photos, contacts/owners
-                  </Typography>
-                </CardContent>
+              <Card variant="outlined" sx={{ height: '100%' }}>
+                <CardActionArea
+                  data-testid="random-well-card"
+                  onClick={handleRandomWellClick}
+                  disabled={isFetchingRandomWell}
+                  sx={{ height: '100%', alignItems: 'stretch' }}
+                >
+                  <CardContent>
+                    <FolderOpenOutlined
+                      color="primary"
+                      sx={{ fontSize: 40, mb: 1 }}
+                    />
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 600, mb: 0.5 }}
+                    >
+                      View well records
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {isFetchingRandomWell
+                        ? 'Choosing a random well...'
+                        : 'Water levels, equipment, photos, contacts/owners'}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
               </Card>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>

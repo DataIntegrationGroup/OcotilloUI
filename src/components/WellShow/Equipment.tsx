@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Box, Chip, Paper, Stack, Typography } from '@mui/material'
-import { useDataGrid } from '@refinedev/mui'
 import { SettingsInputAntenna } from '@mui/icons-material'
 import {
   DataGrid,
@@ -21,37 +20,17 @@ const EquipmentToolbar = () => (
   </GridToolbarContainer>
 )
 
-export const EquipmentAccordion = ({ id }: { id?: number }) => {
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState<GridRowId | null>(
-    null
-  )
-
-  const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
-    resource: 'sensor',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: id,
-      },
-    },
-    queryOptions: {
-      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
-      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
-    },
-  })
-
-  const { dataGridProps: deploymentsDataGridProps } = useDataGrid({
-    resource: id ? `thing/${id}/deployment` : undefined,
-    dataProviderName: 'ocotillo',
-    queryOptions: {
-      enabled: Boolean(id),
-      gcTime: 10 * 60 * 1000, // cached data for 10 minutes
-      staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
-    },
-  })
-
-  const deployments = deploymentsDataGridProps?.rows ?? []
-  const sensors = sensorDataGridProps?.rows ?? []
+export const EquipmentAccordion = ({
+  sensors,
+  deployments,
+  isLoading,
+}: {
+  sensors: ISensor[]
+  deployments: any[]
+  isLoading: boolean
+}) => {
+  const [selectedEquipmentId, setSelectedEquipmentId] =
+    useState<GridRowId | null>(null)
 
   const sensorDeployments: SensorDeploymentRow[] = useSensorDeploymentRows({
     deployments,
@@ -123,7 +102,9 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box
+        sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+      >
         <SettingsInputAntenna color="primary" />
         <Typography variant="body1" fontWeight="bold">
           Equipment
@@ -133,7 +114,10 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1.35fr) minmax(320px, 0.9fr)' },
+            gridTemplateColumns: {
+              xs: '1fr',
+              lg: 'minmax(0, 1.35fr) minmax(320px, 0.9fr)',
+            },
             gap: 2,
             alignItems: 'start',
           }}
@@ -151,6 +135,7 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
                   paginationModel: { pageSize: 10, page: 0 },
                 },
               }}
+              loading={isLoading}
               rowSelectionModel={
                 selectedEquipmentId != null
                   ? { type: 'include', ids: new Set([selectedEquipmentId]) }
@@ -241,18 +226,29 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
                   }}
                 >
                   <DetailSection title="Sensor Details">
-                    <DetailRow label="Model" value={selectedEquipment.sensor_model} />
-                    <DetailRow label="Serial No" value={selectedEquipment.serial_no} />
+                    <DetailRow
+                      label="Model"
+                      value={selectedEquipment.sensor_model}
+                    />
+                    <DetailRow
+                      label="Serial No"
+                      value={selectedEquipment.serial_no}
+                    />
                   </DetailSection>
 
                   <DetailSection title="Deployment">
                     <DetailRow
                       label="Install"
-                      value={formatAppDate(selectedEquipment.installation_date) || 'N/A'}
+                      value={
+                        formatAppDate(selectedEquipment.installation_date) ||
+                        'N/A'
+                      }
                     />
                     <DetailRow
                       label="Remove"
-                      value={formatAppDate(selectedEquipment.removal_date) || 'N/A'}
+                      value={
+                        formatAppDate(selectedEquipment.removal_date) || 'N/A'
+                      }
                     />
                     <DetailRow
                       label="Cable Len."
@@ -267,13 +263,16 @@ export const EquipmentAccordion = ({ id }: { id?: number }) => {
                   <DetailSection title="Recording">
                     <DetailRow
                       label="Interval"
-                      value={selectedEquipment.recording_interval_display || 'N/A'}
+                      value={
+                        selectedEquipment.recording_interval_display || 'N/A'
+                      }
                     />
                   </DetailSection>
 
                   <DetailSection title="Notes">
                     <Typography variant="body2" color="text.secondary">
-                      {selectedEquipment.notes && selectedEquipment.notes !== '-'
+                      {selectedEquipment.notes &&
+                      selectedEquipment.notes !== '-'
                         ? selectedEquipment.notes
                         : 'N/A'}
                     </Typography>

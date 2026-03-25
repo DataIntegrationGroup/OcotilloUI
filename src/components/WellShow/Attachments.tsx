@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { useList } from '@refinedev/core'
 import {
   Box,
   IconButton,
@@ -9,25 +8,29 @@ import {
   Tooltip,
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { ChevronLeft, ChevronRight, GridView, Image, ViewCarousel } from '@mui/icons-material'
+import {
+  ChevronLeft,
+  ChevronRight,
+  GridView,
+  Image,
+  ViewCarousel,
+} from '@mui/icons-material'
 import { Masonry } from '@mui/lab'
 import { settings } from '@/settings'
+import type { IAsset } from '@/interfaces/ocotillo'
 
 type ImageViewMode = 'grid' | 'slideshow'
 
-export const AttachmentsAccordion = ({ id }: { id?: number }) => {
+export const AttachmentsAccordion = ({
+  assets,
+  isLoading,
+}: {
+  assets: IAsset[]
+  isLoading: boolean
+}) => {
   const [imageViewMode, setImageViewMode] = useState<ImageViewMode>('grid')
   const [slideshowIndex, setSlideshowIndex] = useState(0)
 
-  const { result } = useList({
-    resource: 'asset',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: { thing_id: id },
-    },
-  })
-
-  const assets = result?.data ?? []
   const imageAssets = useMemo(
     () => assets.filter((a: { signed_url?: string }) => a?.signed_url),
     [assets]
@@ -46,22 +49,29 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box
+        sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+      >
         <Image color="primary" />
         <Typography variant="body1" fontWeight="bold">
           Attachments
         </Typography>
       </Box>
       <Box sx={{ p: 3 }}>
-        {(!assets || assets.length === 0) && (
+        {isLoading ? (
+          <Box textAlign="center" py={4}>
+            <Typography variant="body1" color="text.secondary">
+              Loading attachments...
+            </Typography>
+          </Box>
+        ) : assets.length === 0 ? (
           <Box textAlign="center" py={4}>
             <Image sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
             <Typography variant="body1" color="text.secondary">
               No attachments available.
             </Typography>
           </Box>
-        )}
-        {assets && assets.length > 0 && (
+        ) : (
           <Stack spacing={3}>
             {/* Images section (above table) with view toggle */}
             {hasImages && (
@@ -86,7 +96,9 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
                   <Tooltip title="Slideshow view">
                     <IconButton
                       size="small"
-                      color={imageViewMode === 'slideshow' ? 'primary' : 'default'}
+                      color={
+                        imageViewMode === 'slideshow' ? 'primary' : 'default'
+                      }
                       onClick={() => {
                         setImageViewMode('slideshow')
                         setSlideshowIndex(0)
@@ -100,23 +112,28 @@ export const AttachmentsAccordion = ({ id }: { id?: number }) => {
 
                 {imageViewMode === 'grid' ? (
                   <Masonry columns={3} spacing={2}>
-                    {imageAssets.map((img: { signed_url: string; name?: string }, idx: number) => (
-                      <Box
-                        key={idx}
-                        sx={{
-                          borderRadius: 2,
-                          overflow: 'hidden',
-                          boxShadow: 2,
-                        }}
-                      >
+                    {imageAssets.map(
+                      (
+                        img: { signed_url: string; name?: string },
+                        idx: number
+                      ) => (
                         <Box
-                          component="img"
-                          src={img.signed_url}
-                          alt={img.name || `Attachment ${idx + 1}`}
-                          sx={{ width: '100%', display: 'block' }}
-                        />
-                      </Box>
-                    ))}
+                          key={idx}
+                          sx={{
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                            boxShadow: 2,
+                          }}
+                        >
+                          <Box
+                            component="img"
+                            src={img.signed_url}
+                            alt={img.name || `Attachment ${idx + 1}`}
+                            sx={{ width: '100%', display: 'block' }}
+                          />
+                        </Box>
+                      )
+                    )}
                   </Masonry>
                 ) : (
                   <Box

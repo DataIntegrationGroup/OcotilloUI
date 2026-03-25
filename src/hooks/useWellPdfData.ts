@@ -1,7 +1,13 @@
 import { useMemo } from 'react'
 import { useList, useOne } from '@refinedev/core'
 import { useDataGrid } from '@refinedev/mui'
-import { IContact, ISample, ISensor, IWell } from '@/interfaces/ocotillo'
+import {
+  IAsset,
+  IContact,
+  ISample,
+  ISensor,
+  IWell,
+} from '@/interfaces/ocotillo'
 import { useSensorDeploymentRows } from './useSensorDeploymentRows'
 import { SensorDeploymentRow } from '@/utils'
 
@@ -10,9 +16,19 @@ type WellPdfThingId = string | number | undefined
 export const useWellPdfData = ({
   thingId,
   well: initialWell,
+  observations: initialObservations,
+  assets: initialAssets,
+  contacts: initialContacts,
+  sensorDeployments: initialSensorDeployments,
+  sample: initialSample,
 }: {
   thingId: WellPdfThingId
   well?: IWell
+  observations?: readonly any[]
+  assets?: readonly IAsset[]
+  contacts?: readonly IContact[]
+  sensorDeployments?: readonly SensorDeploymentRow[]
+  sample?: ISample
 }) => {
   const { result: fetchedWell, query: wellQuery } = useOne<IWell>({
     resource: 'thing-well',
@@ -24,6 +40,42 @@ export const useWellPdfData = ({
 
   const well = initialWell ?? fetchedWell
 
+  const { dataGridProps: observationsDataGridProps } = useDataGrid({
+    resource: 'observation/groundwater-level',
+    dataProviderName: 'ocotillo',
+    meta: {
+      params: { thing_id: thingId },
+    },
+    queryOptions: {
+      enabled: Boolean(thingId && !initialObservations),
+      gcTime: 10 * 60 * 1000,
+      staleTime: 5 * 60 * 1000,
+    },
+  })
+
+  const observations =
+    (initialObservations as any[]) ??
+    (observationsDataGridProps?.rows as any[]) ??
+    []
+
+  const { result: fetchedAssets, query: assetQuery } = useList<IAsset>({
+    resource: 'asset',
+    dataProviderName: 'ocotillo',
+    meta: { params: { thing_id: thingId } },
+    queryOptions: {
+      enabled: Boolean(thingId && !initialAssets),
+    },
+  })
+
+  const { result: fetchedContacts, query: contactQuery } = useList<IContact>({
+    resource: 'contact',
+    dataProviderName: 'ocotillo',
+    meta: { params: { thing_id: thingId } },
+    queryOptions: {
+      enabled: Boolean(thingId && !initialContacts),
+    },
+  })
+
   const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
     resource: 'sensor',
     dataProviderName: 'ocotillo',
@@ -33,7 +85,7 @@ export const useWellPdfData = ({
       },
     },
     queryOptions: {
-      enabled: Boolean(thingId),
+      enabled: Boolean(thingId && !initialSensorDeployments),
       gcTime: 10 * 60 * 1000,
       staleTime: 5 * 60 * 1000,
     },
@@ -43,44 +95,14 @@ export const useWellPdfData = ({
     resource: thingId ? `thing/${thingId}/deployment` : undefined,
     dataProviderName: 'ocotillo',
     queryOptions: {
-      enabled: Boolean(thingId),
+      enabled: Boolean(thingId && !initialSensorDeployments),
       gcTime: 10 * 60 * 1000,
       staleTime: 5 * 60 * 1000,
     },
   })
 
-  const {
-    dataGridProps: { rows: observations, loading: observationsIsLoading },
-  } = useDataGrid({
-    resource: 'observation/groundwater-level',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: { thing_id: thingId },
-    },
-    queryOptions: {
-      enabled: Boolean(thingId),
-      gcTime: 10 * 60 * 1000,
-      staleTime: 5 * 60 * 1000,
-    },
-  })
-
-  const { result: assetData, query: assetQuery } = useList({
-    resource: 'asset',
-    dataProviderName: 'ocotillo',
-    meta: { params: { thing_id: thingId } },
-    queryOptions: {
-      enabled: Boolean(thingId),
-    },
-  })
-
-  const { result: contactData, query: contactQuery } = useList<IContact>({
-    resource: 'contact',
-    dataProviderName: 'ocotillo',
-    meta: { params: { thing_id: thingId } },
-    queryOptions: {
-      enabled: Boolean(thingId),
-    },
-  })
+  const fetchedSensors = sensorDataGridProps?.rows ?? []
+  const fetchedDeployments = deploymentsDataGridProps?.rows ?? []
 
   const sampleId = useMemo(() => {
     return (
@@ -96,29 +118,36 @@ export const useWellPdfData = ({
 
   const hasSampleId = sampleId != null
 
-  const { result: sample, query: sampleQuery } = useOne<ISample>({
+  const { result: fetchedSample, query: sampleQuery } = useOne<ISample>({
     resource: 'ocotillo.sample',
     id: sampleId,
     queryOptions: {
-      enabled: hasSampleId,
+      enabled: Boolean(hasSampleId && !initialSample),
     },
   })
 
-  const sensors = sensorDataGridProps?.rows ?? []
-  const deployments = deploymentsDataGridProps?.rows ?? []
-  const assets = assetData?.data ?? []
-  const contacts = contactData?.data ?? []
+  const sample = initialSample ?? fetchedSample
 
-  const sensorDeployments: SensorDeploymentRow[] = useSensorDeploymentRows({
-    deployments,
-    sensors,
+  const fetchedSensorDeployments = useSensorDeploymentRows({
+    deployments: fetchedDeployments,
+    sensors: fetchedSensors,
   })
+
+  const sensorDeployments =
+    (initialSensorDeployments as SensorDeploymentRow[]) ??
+    fetchedSensorDeployments
+
+  const assets = (initialAssets as IAsset[]) ?? fetchedAssets?.data ?? []
+  const contacts =
+    (initialContacts as IContact[]) ?? fetchedContacts?.data ?? []
 
   const isLoading =
     wellQuery.isLoading ||
-    observationsIsLoading ||
+    observationsDataGridProps.loading ||
     assetQuery.isLoading ||
     contactQuery.isLoading ||
+    (!initialSensorDeployments &&
+      (sensorDataGridProps.loading || deploymentsDataGridProps.loading)) ||
     (hasSampleId && sampleQuery.isLoading)
 
   let progress: number = 0
@@ -126,13 +155,18 @@ export const useWellPdfData = ({
   if (thingId) {
     const steps: { weight: number; done: boolean }[] = [
       { weight: 15, done: initialWell ? true : !wellQuery.isLoading },
-      { weight: 30, done: !observationsIsLoading },
-      { weight: 15, done: !assetQuery.isLoading },
-      { weight: 15, done: !contactQuery.isLoading },
-      { weight: 10, done: sensors.length > 0 || !sensorDataGridProps?.loading },
+      { weight: 30, done: !observationsDataGridProps.loading },
+      { weight: 15, done: initialAssets ? true : !assetQuery.isLoading },
+      { weight: 15, done: initialContacts ? true : !contactQuery.isLoading },
       {
         weight: 10,
-        done: deployments.length > 0 || !deploymentsDataGridProps?.loading,
+        done: initialSensorDeployments ? true : !sensorDataGridProps.loading,
+      },
+      {
+        weight: 10,
+        done: initialSensorDeployments
+          ? true
+          : !deploymentsDataGridProps.loading,
       },
       { weight: 5, done: !hasSampleId || !sampleQuery.isLoading },
     ]

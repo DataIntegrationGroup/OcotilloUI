@@ -4,16 +4,19 @@ export const useLayer = ({
   thing_type,
   label,
   color,
+  enabled = true,
 }: {
   thing_type: string
   label: string
   color: string
+  enabled?: boolean
 }) => {
   const { result, query } = useOne({
     dataProviderName: 'ocotillo',
     resource: 'geospatial',
     id: null,
     queryOptions: {
+      enabled,
       gcTime: 60000,
       staleTime: 30000,
     },
@@ -34,7 +37,7 @@ export const useLayer = ({
       : { type: 'FeatureCollection', features: [] }
 
   return {
-    sourceProps: { type: 'geojson', data: safeGeoJSON },
+    sourceProps: enabled ? { type: 'geojson', data: safeGeoJSON } : null,
     layerProps: {
       label,
       type: 'circle' as const,

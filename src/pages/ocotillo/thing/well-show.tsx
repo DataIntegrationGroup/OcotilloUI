@@ -1,7 +1,8 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import {
   HttpError,
   useDataProvider,
+  useList,
   useOne,
   useResourceParams,
   useShow,
@@ -10,10 +11,18 @@ import { useQuery } from '@tanstack/react-query'
 import { Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
-import { IObservation, ISample, IWell } from '@/interfaces/ocotillo'
+import {
+  IAsset,
+  IContact,
+  IObservation,
+  ISample,
+  ISensor,
+  IWell,
+  IWellScreen,
+} from '@/interfaces/ocotillo'
 import { Box, Stack } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
-import { useAccessCapabilities, useWellPdfData } from '@/hooks'
+import { useAccessCapabilities, useSensorDeploymentRows } from '@/hooks'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
@@ -39,8 +48,6 @@ import {
 } from '@/components'
 
 export const WellShow = () => {
-  const { query, result: well } = useShow<IWell, HttpError>()
-
   const dataProvider = useDataProvider()
   const ocotilloDataProvider = useMemo(
     () => dataProvider('ocotillo'),
@@ -48,18 +55,12 @@ export const WellShow = () => {
   )
 
   const { id } = useResourceParams()
-  const { canManageAmp } = useAccessCapabilities()
-  const {
-    observations: pdfObservations,
-    assets,
-    contacts,
-    sample,
-    sensorDeployments,
-    isLoading: isPdfDataLoading,
-  } = useWellPdfData({
-    thingId: id,
-    well,
+  const { query, result: well } = useShow<IWell, HttpError>({
+    queryOptions: {
+      enabled: Boolean(id),
+    },
   })
+  const { canManageAmp } = useAccessCapabilities()
 
   const {
     dataGridProps: { rows: observations, loading: observationsIsloading },
@@ -72,10 +73,58 @@ export const WellShow = () => {
       },
     },
     queryOptions: {
+      enabled: Boolean(id),
       gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
+
+  const { result: assetResult, query: assetQuery } = useList<IAsset>({
+    resource: 'asset',
+    dataProviderName: 'ocotillo',
+    meta: { params: { thing_id: id } },
+    queryOptions: {
+      enabled: Boolean(id),
+    },
+  })
+
+  const { result: contactResult, query: contactQuery } = useList<IContact>({
+    resource: 'contact',
+    dataProviderName: 'ocotillo',
+    meta: { params: { thing_id: id } },
+    queryOptions: {
+      enabled: Boolean(id),
+    },
+  })
+
+  const { result: sensorResult, query: sensorQuery } = useList<ISensor>({
+    resource: 'sensor',
+    dataProviderName: 'ocotillo',
+    meta: { params: { thing_id: id } },
+    queryOptions: {
+      enabled: Boolean(id),
+    },
+  })
+
+  const { result: deploymentResult, query: deploymentQuery } = useList({
+    resource: `thing/${id}/deployment`,
+    dataProviderName: 'ocotillo',
+    queryOptions: {
+      enabled: Boolean(id),
+      gcTime: 10 * 60 * 1000,
+      staleTime: 5 * 60 * 1000,
+    },
+  })
+
+  const { result: wellScreenResult, query: wellScreenQuery } =
+    useList<IWellScreen>({
+      resource: 'thing/well-screen',
+      dataProviderName: 'ocotillo',
+      meta: { params: { thing_id: id } },
+      queryOptions: {
+        enabled: Boolean(id),
+      },
+    })
 
   const sampleId = useMemo(() => {
     return (
@@ -91,7 +140,7 @@ export const WellShow = () => {
 
   const hasSampleId = sampleId != null
 
-  const { result: sampleData } = useOne<ISample>({
+  const { result: sampleData, query: sampleQuery } = useOne<ISample>({
     resource: 'ocotillo.sample',
     id: sampleId,
     queryOptions: {
@@ -101,16 +150,35 @@ export const WellShow = () => {
 
   const fieldEventSample = sampleData
 
+  const assets = assetResult?.data ?? []
+  const contacts = contactResult?.data ?? []
+  const sensors = sensorResult?.data ?? []
+  const deployments = deploymentResult?.data ?? []
+  const wellScreens = wellScreenResult?.data ?? []
+
+  const sensorDeployments = useSensorDeploymentRows({
+    deployments,
+    sensors,
+  })
+
+  const isPdfDataLoading =
+    assetQuery.isLoading ||
+    contactQuery.isLoading ||
+    sensorQuery.isLoading ||
+    deploymentQuery.isLoading ||
+    sampleQuery.isLoading
+
   const { dataGridProps: idLinkDataGridProps } = useDataGrid({
     resource: `thing/${id}/id-link`,
     dataProviderName: 'ocotillo',
     queryOptions: {
+      enabled: Boolean(id),
       gcTime: 10 * 60 * 1000, // cached data for 10 minutes
       staleTime: 5 * 60 * 1000, // get data fresh for 5 minutes,
     },
   })
 
-  const { rows: idLinks, loading: idLinksIsloading } = idLinkDataGridProps
+  const { rows: idLinks } = idLinkDataGridProps
   const usgs_id =
     idLinks?.find((link: any) => link.alternate_organization === 'USGS')
       ?.alternate_id || 'N/A'
@@ -119,11 +187,6 @@ export const WellShow = () => {
       (link: any) =>
         link.alternate_organization === 'NMOSE' && link.relation === 'OSEPOD'
     )?.alternate_id || 'N/A'
-
-  useEffect(() => {
-    if (!idLinks || idLinks.length === 0) return
-    if (idLinksIsloading) return
-  }, [idLinks, idLinksIsloading])
 
   const hydrographQuery = useQuery({
     queryKey: ['well-hydrograph', id],
@@ -267,10 +330,10 @@ export const WellShow = () => {
             <WellPDFDownloadButton
               well={well}
               isLoading={query.isLoading || isPdfDataLoading}
-              observations={pdfObservations}
+              observations={observations}
               assets={assets}
               contacts={contacts}
-              sample={sample}
+              sample={fieldEventSample}
               sensorDeployments={sensorDeployments}
             />
           </Box>
@@ -296,10 +359,20 @@ export const WellShow = () => {
                 isLoading={observationsIsloading}
               />
               <NotesAccordion well={well} />
-              <EquipmentAccordion id={well?.id} />
-              <WellScreensAccordion id={well?.id} />
+              <EquipmentAccordion
+                sensors={sensors}
+                deployments={deployments}
+                isLoading={sensorQuery.isLoading || deploymentQuery.isLoading}
+              />
+              <WellScreensAccordion
+                rows={wellScreens}
+                isLoading={wellScreenQuery.isLoading}
+              />
               <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
-              <AttachmentsAccordion id={well?.id} />
+              <AttachmentsAccordion
+                assets={assets}
+                isLoading={assetQuery.isLoading}
+              />
               <OSEPODInfoCard pod_id={osepod_id} />
               <USGSInfoCard site_id={usgs_id} />
             </Stack>
@@ -308,7 +381,10 @@ export const WellShow = () => {
           {/* Right column: 2 cols */}
           <Grid size={{ xs: 12, md: 4, lg: 3 }}>
             <Stack spacing={2}>
-              <ContactsCard id={well?.id} />
+              <ContactsCard
+                contacts={contacts}
+                isLoading={contactQuery.isLoading}
+              />
               <OwnerPermissionsCard well={well} isLoading={query.isLoading} />
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
