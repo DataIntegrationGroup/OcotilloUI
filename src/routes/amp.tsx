@@ -3,7 +3,6 @@ import {
   ChemUpload,
   EquipmentList,
   EquipmentShow,
-  HydrographCorrector,
   WaterDashboard,
   // Removed until it is in WIP state
   // ReportBuilder,
@@ -39,14 +38,6 @@ const lookupRoutes = [
 export const AMPRoutes = () => {
   return (
     <Routes>
-      <Route
-        path="hydrographcorrector"
-        element={
-          <ProtectedRoute resource="water.hydrographcorrector">
-            <HydrographCorrector />
-          </ProtectedRoute>
-        }
-      />
       <Route
         path="dashboard"
         element={

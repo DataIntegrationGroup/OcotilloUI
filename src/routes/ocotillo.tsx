@@ -219,7 +219,14 @@ export const OcotilloRoutes = () => {
         <Route index element={<WaterChemistryApp />} />
       </Route>
       <Route path={'hydrograph-correction'}>
-        <Route index element={<HydrographCorrectionPage />} />
+        <Route
+          index
+          element={
+            <ProtectedRoute resource="ocotillo.hydrograph-correction">
+              <HydrographCorrectionPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       // Forms
       <Route path="groundwater-level-form">

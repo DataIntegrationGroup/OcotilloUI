@@ -23,7 +23,6 @@ const roleOrder: PortalRole[] = [
 
 export const wipResources = new Set([
   'water.dashboard',
-  'water.hydrographcorrector',
   'water.reportbuilder',
   'water.querybuilder',
   'water.waterlevelform',
@@ -89,6 +88,7 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     delete: adminRoles,
     manage: adminRoles,
   },
+  'ocotillo.hydrograph-correction': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-batch-export': { list: editorRoles, show: editorRoles },
   'ocotillo.groundwater-level-observation': {
@@ -229,6 +229,7 @@ export const canAccessResource = ({
   }
 
   if (
+    resource === 'ocotillo.hydrograph-correction' ||
     resource === 'ocotillo.thing-well-pdf-preview' ||
     resource === 'Sandbox'
   ) {
