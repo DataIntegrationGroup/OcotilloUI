@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { render } from '@testing-library/react'
+import { fireEvent, render } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockedUseShow = vi.fn()
@@ -11,6 +11,7 @@ const mockedUseDataProvider = vi.fn()
 const mockedUseQuery = vi.fn()
 const mockedUseResourceParams = vi.fn()
 const mockedUseAccessCapabilities = vi.fn()
+const mockedUseGo = vi.fn()
 
 vi.mock('@refinedev/core', async () => {
   const actual =
@@ -23,14 +24,24 @@ vi.mock('@refinedev/core', async () => {
     useOne: (args?: unknown) => mockedUseOne(args),
     useDataProvider: (args?: unknown) => mockedUseDataProvider(args),
     useResourceParams: (args?: unknown) => mockedUseResourceParams(args),
+    useGo: () => mockedUseGo,
   }
 })
 
 vi.mock('@refinedev/mui', async () => {
   return {
     useDataGrid: (args?: unknown) => mockedUseDataGrid(args),
-    Show: ({ children }: { children: React.ReactNode }) => (
-      <div>{children}</div>
+    Show: ({
+      children,
+      headerButtons,
+    }: {
+      children: React.ReactNode
+      headerButtons?: () => React.ReactNode
+    }) => (
+      <div>
+        {headerButtons?.()}
+        {children}
+      </div>
     ),
   }
 })
@@ -42,6 +53,10 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@/hooks', () => ({
   useAccessCapabilities: () => mockedUseAccessCapabilities(),
   useSensorDeploymentRows: () => [],
+}))
+
+vi.mock('@/components/AppBreadcrumb', () => ({
+  AppBreadcrumb: () => <div />,
 }))
 
 vi.mock('@/components', () => {
@@ -82,6 +97,7 @@ describe('WellShow data loading', () => {
     mockedUseQuery.mockClear()
     mockedUseResourceParams.mockClear()
     mockedUseAccessCapabilities.mockClear()
+    mockedUseGo.mockClear()
 
     mockedUseShow.mockReturnValue({
       query: { isLoading: false },
@@ -107,6 +123,7 @@ describe('WellShow data loading', () => {
     })
     mockedUseResourceParams.mockReturnValue({ id: '42' })
     mockedUseAccessCapabilities.mockReturnValue({ canManageAmp: false })
+    mockedUseGo.mockReturnValue(vi.fn())
   })
 
   it('enables well-scoped queries only when id is present', () => {
@@ -184,5 +201,30 @@ describe('WellShow data loading', () => {
     expect(
       dataGridCalls.every((args) => args.queryOptions?.enabled === false)
     ).toBe(true)
+  })
+
+  it('shows an edit button only to AMP admins', () => {
+    mockedUseAccessCapabilities.mockReturnValue({ canManageAmp: true })
+
+    const { getByRole, rerender, queryByRole } = render(<WellShow />)
+
+    expect(getByRole('button', { name: /edit/i })).toBeTruthy()
+
+    mockedUseAccessCapabilities.mockReturnValue({ canManageAmp: false })
+    rerender(<WellShow />)
+
+    expect(queryByRole('button', { name: /edit/i })).toBeNull()
+  })
+
+  it('navigates to the edit page when edit is clicked', () => {
+    mockedUseAccessCapabilities.mockReturnValue({ canManageAmp: true })
+
+    const { getByRole } = render(<WellShow />)
+    fireEvent.click(getByRole('button', { name: /edit/i }))
+
+    expect(mockedUseGo).toHaveBeenCalledWith({
+      to: '/ocotillo/well/edit/42',
+      type: 'push',
+    })
   })
 })

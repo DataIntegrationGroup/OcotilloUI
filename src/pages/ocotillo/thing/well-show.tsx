@@ -4,6 +4,7 @@ import {
   useDataProvider,
   useList,
   useOne,
+  useGo,
   useResourceParams,
   useShow,
 } from '@refinedev/core'
@@ -20,7 +21,8 @@ import {
   IWell,
   IWellScreen,
 } from '@/interfaces/ocotillo'
-import { Box, Stack } from '@mui/material'
+import { Box, Button, Stack } from '@mui/material'
+import EditIcon from '@mui/icons-material/Edit'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { useAccessCapabilities, useSensorDeploymentRows } from '@/hooks'
 import Grid from '@mui/material/Grid2'
@@ -53,6 +55,7 @@ export const WellShow = () => {
     () => dataProvider('ocotillo'),
     [dataProvider]
   )
+  const go = useGo()
 
   const { id } = useResourceParams()
   const { query, result: well } = useShow<IWell, HttpError>({
@@ -326,6 +329,14 @@ export const WellShow = () => {
       headerButtons={() =>
         canManageAmp ? (
           <Box sx={{ display: 'flex', gap: 0 }}>
+            <Button
+              startIcon={<EditIcon />}
+              onClick={() =>
+                go({ to: `/ocotillo/well/edit/${id}`, type: 'push' })
+              }
+            >
+              Edit
+            </Button>
             <WellPDFPreviewButton isLoading={query.isLoading} />
             <WellPDFDownloadButton
               well={well}

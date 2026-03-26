@@ -38,9 +38,10 @@ export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
   }
 
   //get release status options
-  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
-    category: 'release_status' 
-  })
+  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } =
+    useLexicon({
+      category: 'release_status',
+    })
 
   return (
     <Grid container spacing={2} alignItems="center">
@@ -49,7 +50,7 @@ export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
           Screen {screenIndex !== undefined ? screenIndex + 1 : ''}
         </Typography>
       </Grid>
-      
+
       <Grid size={{ xs: 12, md: 6 }}>
         <ControlledTextField
           label="Screen Depth Top (ft)"
@@ -59,7 +60,7 @@ export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
           fullWidth
         />
       </Grid>
-      
+
       <Grid size={{ xs: 12, md: 6 }}>
         <ControlledTextField
           label="Screen Depth Bottom (ft)"
@@ -69,7 +70,7 @@ export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
           fullWidth
         />
       </Grid>
-      
+
       <Grid size={12}>
         <ControlledTextField
           label="Screen Description"
@@ -93,11 +94,14 @@ export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
 
       {/* Add/Remove buttons for step mode */}
       {mode === 'step' && (
-        <Grid size={12} sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+        <Grid
+          size={12}
+          sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}
+        >
           {onAddScreen && (
             <Button
               variant="outlined"
-              size="small"
+              size="medium"
               onClick={onAddScreen}
               startIcon={<Add />}
             >
@@ -108,7 +112,7 @@ export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
             <Button
               variant="outlined"
               color="error"
-              size="small"
+              size="medium"
               onClick={() => onRemoveScreen(screenIndex)}
               startIcon={<Delete />}
             >

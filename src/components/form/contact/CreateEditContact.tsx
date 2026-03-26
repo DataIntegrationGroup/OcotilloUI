@@ -1,28 +1,20 @@
-import { 
-    Control, 
-    FieldErrors, 
-    UseFormWatch, 
-    UseFormSetValue,
-    useFieldArray
+import {
+  Control,
+  FieldErrors,
+  UseFormWatch,
+  UseFormSetValue,
+  useFieldArray,
 } from 'react-hook-form'
 import Grid from '@mui/material/Grid2'
-import { 
-    Button, 
-    Typography, 
-    Box,
-    Divider
-} from '@mui/material'
+import { Button, Typography, Box, Divider } from '@mui/material'
 import { Add, Delete } from '@mui/icons-material'
-import {
-  ControlledTextField,
-  ControlledSelectField,
-} from '@/components'
+import { ControlledTextField, ControlledSelectField } from '@/components'
 import { useLexicon } from '@/hooks'
 
 /**
  * CreateEditContact Component
  * A reusable form component for creating and editing contact information.
- * 
+ *
  * @param control - The control object from useForm
  * @param watch - The watch object from useForm
  * @param setValue - The setValue function from useForm
@@ -65,63 +57,91 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
   onRemoveContact,
   onAddContact,
   canRemoveContact = true,
-  totalContacts = 1
+  totalContacts = 1,
 }) => {
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
 
-  const { fields: emailFields, append: appendEmail, remove: removeEmail } = useFieldArray({
+  const {
+    fields: emailFields,
+    append: appendEmail,
+    remove: removeEmail,
+  } = useFieldArray({
     control,
     name: getFieldName('emails'),
   })
 
-  const { fields: phoneFields, append: appendPhone, remove: removePhone } = useFieldArray({
+  const {
+    fields: phoneFields,
+    append: appendPhone,
+    remove: removePhone,
+  } = useFieldArray({
     control,
     name: getFieldName('phones'),
   })
 
-  const { fields: addressFields, append: appendAddress, remove: removeAddress } = useFieldArray({
+  const {
+    fields: addressFields,
+    append: appendAddress,
+    remove: removeAddress,
+  } = useFieldArray({
     control,
     name: getFieldName('addresses'),
   })
 
   //get contact role options
-  const { options: contactRoleOptions, isLoading: contactRoleLoading } = useLexicon({ 
-    category: 'role' 
-  })
+  const { options: contactRoleOptions, isLoading: contactRoleLoading } =
+    useLexicon({
+      category: 'role',
+    })
 
   //get email type options
-  const { options: emailTypeOptions, isLoading: emailTypeLoading } = useLexicon({ 
-    category: 'email_type' 
-  })
+  const { options: emailTypeOptions, isLoading: emailTypeLoading } = useLexicon(
+    {
+      category: 'email_type',
+    }
+  )
 
   //get phone type options
-  const { options: phoneTypeOptions, isLoading: phoneTypeLoading } = useLexicon({ 
-    category: 'phone_type' 
-  })
+  const { options: phoneTypeOptions, isLoading: phoneTypeLoading } = useLexicon(
+    {
+      category: 'phone_type',
+    }
+  )
 
   //get address type options
-  const { options: addressTypeOptions, isLoading: addressTypeLoading } = useLexicon({ 
-    category: 'address_type' 
-  })
+  const { options: addressTypeOptions, isLoading: addressTypeLoading } =
+    useLexicon({
+      category: 'address_type',
+    })
 
   //get release status options
-  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
-    category: 'release_status' 
-  })
+  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } =
+    useLexicon({
+      category: 'release_status',
+    })
 
   //get contact type options
-  const { options: contactTypeOptions, isLoading: contactTypeLoading } = useLexicon({ 
-    category: 'contact_type' 
-  })
+  const { options: contactTypeOptions, isLoading: contactTypeLoading } =
+    useLexicon({
+      category: 'contact_type',
+    })
 
   return (
     <Grid container spacing={3}>
       {/* Contact Header with canRemoveContact button */}
       {contactIndex !== undefined && (
         <Grid size={12}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 2, gap: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              mb: 2,
+              gap: 2,
+            }}
+          >
             <Typography variant="h6">Contact {contactIndex + 1}</Typography>
             {onRemoveContact && canRemoveContact && (
               <Button
@@ -129,6 +149,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                 color="error"
                 onClick={() => onRemoveContact(contactIndex)}
                 startIcon={<Delete />}
+                size="medium"
               >
                 Remove Contact
               </Button>
@@ -155,7 +176,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 3 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <ControlledSelectField
           label="Contact Role"
           id="contact-role"
@@ -167,7 +188,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
           required
         />
       </Grid>
-      <Grid size={{ xs: 12, md: 3 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <ControlledSelectField
           label="Release Status"
           id="release-status"
@@ -179,7 +200,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
           required
         />
       </Grid>
-      <Grid size={{ xs: 12, md: 3 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <ControlledSelectField
           label="Contact Type"
           id="contact-type"
@@ -197,17 +218,27 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
         <>
           {/* Emails Section */}
           <Grid size={12}>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 2, gap: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                mb: 2,
+                gap: 2,
+              }}
+            >
               <Typography variant="h6">Emails</Typography>
               <Button
                 startIcon={<Add />}
-                onClick={() => appendEmail({ 
-                  email: '', 
-                  email_type: 'Primary',
-                  release_status: 'private'
-                })}
+                onClick={() =>
+                  appendEmail({
+                    email: '',
+                    email_type: 'Primary',
+                    release_status: 'private',
+                  })
+                }
                 variant="outlined"
-                size="small"
+                size="medium"
               >
                 Add Email
               </Button>
@@ -248,6 +279,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                     variant="outlined"
                     color="error"
                     fullWidth
+                    size="medium"
                   >
                     Remove
                   </Button>
@@ -258,18 +290,28 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
 
           {/* Phones Section */}
           <Grid size={12}>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 2, gap: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                mb: 2,
+                gap: 2,
+              }}
+            >
               <Typography variant="h6">Phone Numbers</Typography>
               <Button
                 startIcon={<Add />}
-                onClick={() => appendPhone({ 
-                  country_code: '+1', 
-                  phone_number: '', 
-                  phone_type: 'Primary',
-                  release_status: 'private'
-                })}
+                onClick={() =>
+                  appendPhone({
+                    country_code: '+1',
+                    phone_number: '',
+                    phone_type: 'Primary',
+                    release_status: 'private',
+                  })
+                }
                 variant="outlined"
-                size="small"
+                size="medium"
               >
                 Add Phone
               </Button>
@@ -282,9 +324,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                     fullWidth
                     control={control}
                     name={`${getFieldName('phones')}.${phoneIndex}.country_code`}
-                    options={[
-                      { value: '+1', label: 'US (+1)' },
-                    ]}
+                    options={[{ value: '+1', label: 'US (+1)' }]}
                     defaultValue="+1"
                   />
                 </Grid>
@@ -322,6 +362,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                     variant="outlined"
                     color="error"
                     fullWidth
+                    size="medium"
                   >
                     Remove
                   </Button>
@@ -332,22 +373,32 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
 
           {/* Addresses Section */}
           <Grid size={12}>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', mb: 2, gap: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                mb: 2,
+                gap: 2,
+              }}
+            >
               <Typography variant="h6">Addresses</Typography>
               <Button
                 startIcon={<Add />}
-                onClick={() => appendAddress({ 
-                  address_line_1: '', 
-                  address_line_2: '', 
-                  city: '', 
-                  state: '', 
-                  postal_code: '', 
-                  country: 'United States',
-                  address_type: 'Primary',
-                  release_status: 'private'
-                })}
+                onClick={() =>
+                  appendAddress({
+                    address_line_1: '',
+                    address_line_2: '',
+                    city: '',
+                    state: '',
+                    postal_code: '',
+                    country: 'United States',
+                    address_type: 'Primary',
+                    release_status: 'private',
+                  })
+                }
                 variant="outlined"
-                size="small"
+                size="medium"
               >
                 Add Address
               </Button>
@@ -423,6 +474,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                     variant="outlined"
                     color="error"
                     fullWidth
+                    size="medium"
                   >
                     Remove
                   </Button>
@@ -433,16 +485,11 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
           </Grid>
         </>
       )}
-      
 
       {/* Add Contact Button */}
       {onAddContact && (
         <Grid size={12}>
-          <Button
-            variant="outlined"
-            onClick={onAddContact}
-            startIcon={<Add />}
-          >
+          <Button variant="outlined" onClick={onAddContact} startIcon={<Add />}>
             Add Contact
           </Button>
         </Grid>

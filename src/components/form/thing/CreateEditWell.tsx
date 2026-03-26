@@ -1,15 +1,12 @@
 import { Control, FieldErrors } from 'react-hook-form'
 import Grid from '@mui/material/Grid2'
-import {
-  ControlledTextField,
-  ControlledSelectField,
-} from '@/components'
+import { ControlledTextField, ControlledSelectField } from '@/components'
 import { useLexicon } from '@/hooks'
 
 /**
  * CreateEditWell Component
  * A reusable form component for creating and editing well information.
- * 
+ *
  * @param control - The control object from useForm
  * @param errors - The errors object from useForm
  * @param mode - The mode of the component ('standalone' or 'step')
@@ -21,27 +18,36 @@ interface CreateEditWellProps {
   errors?: FieldErrors<any>
   mode?: 'standalone' | 'step'
   fieldPrefix?: string
+  showWellType?: boolean
+  showNotes?: boolean
+  notesFieldName?: string
+  notesLabel?: string
 }
 
 export const CreateEditWell: React.FC<CreateEditWellProps> = ({
   control,
   errors,
   mode = 'standalone',
-  fieldPrefix = ''
+  fieldPrefix = '',
+  showWellType = true,
+  showNotes = true,
+  notesFieldName = 'notes',
+  notesLabel = 'Notes',
 }) => {
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
 
   //get well type options
-  const { options: wellTypeOptions, isLoading: wellTypeLoading } = useLexicon({ 
-    category: 'well_type' 
+  const { options: wellTypeOptions, isLoading: wellTypeLoading } = useLexicon({
+    category: 'well_type',
   })
 
   //get release status options
-  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
-    category: 'release_status' 
-  })
+  const { options: releaseStatusOptions, isLoading: releaseStatusLoading } =
+    useLexicon({
+      category: 'release_status',
+    })
 
   return (
     <Grid container spacing={3}>
@@ -66,16 +72,18 @@ export const CreateEditWell: React.FC<CreateEditWellProps> = ({
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledSelectField
-          label="Well Type"
-          fullWidth
-          control={control}
-          name={getFieldName('well_type')}
-          options={wellTypeOptions}
-          required
-        />
-      </Grid>
+      {showWellType && (
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ControlledSelectField
+            label="Well Type"
+            fullWidth
+            control={control}
+            name={getFieldName('well_type')}
+            options={wellTypeOptions}
+            required
+          />
+        </Grid>
+      )}
 
       <Grid size={{ xs: 12, md: 6 }}>
         <ControlledTextField
@@ -97,15 +105,17 @@ export const CreateEditWell: React.FC<CreateEditWellProps> = ({
         />
       </Grid>
 
-      <Grid size={12}>
-        <ControlledTextField
-          label="Notes"
-          control={control}
-          name={getFieldName('notes')}
-          multiline
-          minRows={3}
-        />
-      </Grid>
+      {showNotes && (
+        <Grid size={12}>
+          <ControlledTextField
+            label={notesLabel}
+            control={control}
+            name={getFieldName(notesFieldName)}
+            multiline
+            minRows={3}
+          />
+        </Grid>
+      )}
     </Grid>
   )
 }
