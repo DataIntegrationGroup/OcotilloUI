@@ -14,10 +14,10 @@ import {
   buildPdfFilename,
   formatAddress,
   formatAppDate,
-  formatPhone,
   sanitizeContacts,
 } from '@/utils'
 import { usePrimaryAndSecondaryContact } from '@/hooks'
+import { formatContactPhones } from './fieldCompilationPhoneFormatter'
 
 const styles = StyleSheet.create({
   page: {
@@ -409,11 +409,6 @@ const locationNotesText = (well: IWell) =>
 
 const contactEmail = (contact?: IContact) => contact?.emails?.[0]?.email ?? '-'
 
-const contactPhone = (contact?: IContact) => {
-  const phone = contact?.phones?.[0]?.phone_number ?? null
-  return phone ? formatPhone(phone) : '-'
-}
-
 const contactAddress = (contact?: IContact) => {
   const address = contact?.addresses?.[0]
   return address ? formatAddress(address) : '-'
@@ -698,16 +693,31 @@ const FieldCompilationNotesPage = ({
                   </Text>
                 </View>
               </View>
-              <View style={styles.contactDetails}>
-                <Text style={styles.line}>{contactAddress(primaryContact)}</Text>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Phone: </Text>
-                  {contactPhone(primaryContact)}
-                </Text>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Email: </Text>
-                  {contactEmail(primaryContact)}
-                </Text>
+              <View style={styles.contactsRow}>
+                <View style={[styles.contactColumn, styles.contactDetails]}>
+                  <Text style={styles.line}>{contactAddress(primaryContact)}</Text>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Phone: </Text>
+                    {formatContactPhones(primaryContact)}
+                  </Text>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Email: </Text>
+                    {contactEmail(primaryContact)}
+                  </Text>
+                </View>
+                <View style={[styles.contactColumn, styles.contactDetails]}>
+                  <Text style={styles.line}>
+                    {contactAddress(secondaryContact)}
+                  </Text>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Phone: </Text>
+                    {formatContactPhones(secondaryContact)}
+                  </Text>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Email: </Text>
+                    {contactEmail(secondaryContact)}
+                  </Text>
+                </View>
               </View>
             </View>
 
