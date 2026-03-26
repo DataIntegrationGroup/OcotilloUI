@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import {
   Select,
   MenuItem,
@@ -10,7 +10,7 @@ import {
   Box,
   SelectChangeEvent,
 } from '@mui/material'
-import { Controller, Control, Path } from 'react-hook-form'
+import { Control, Path, useController } from 'react-hook-form'
 
 export const ControlledSelectWithChipsField = <T,>({
   control,
@@ -19,7 +19,7 @@ export const ControlledSelectWithChipsField = <T,>({
   options,
   required,
   multiple,
-  chipLimit = 3,
+  chipLimit = Number.POSITIVE_INFINITY,
   clearChipsSignal,
   resetClearChipsSignal,
   ...selectProps
@@ -31,78 +31,70 @@ export const ControlledSelectWithChipsField = <T,>({
   required?: boolean
   multiple?: boolean
   chipLimit?: number
-  clearChipsSignal: boolean
-  resetClearChipsSignal: () => void
+  clearChipsSignal?: boolean
+  resetClearChipsSignal?: () => void
 } & SelectProps) => {
-  const [selectedChips, setSelectedChips] = useState<string[]>([])
+  const {
+    field,
+    fieldState,
+  } = useController({
+    name: name as Path<T>,
+    control: control as unknown as Control<T>,
+  })
 
   useEffect(() => {
     if (clearChipsSignal) {
-      setSelectedChips([])
-      resetClearChipsSignal()
+      field.onChange([])
+      resetClearChipsSignal?.()
     }
-  }, [clearChipsSignal, resetClearChipsSignal])
+  }, [clearChipsSignal, field, resetClearChipsSignal])
 
   const handleSelectChange = (event: SelectChangeEvent<string[]>) => {
     const selectedValues = event.target.value as string[]
-
-    if (selectedValues.length <= chipLimit) {
-      setSelectedChips(selectedValues)
-    } else {
-      // Enforce chip limit by replacing the oldest chip with the new selection
-      const updatedChips = [...selectedValues]
-      updatedChips.shift() // Remove the oldest chip
-      setSelectedChips(updatedChips)
-    }
+    const nextValue =
+      selectedValues.length <= chipLimit
+        ? selectedValues
+        : selectedValues.slice(-chipLimit)
+    field.onChange(nextValue)
   }
 
+  const selectedValues = Array.isArray(field.value) ? field.value : []
+  const resolvedId = selectProps.id ?? String(name)
+  const resolvedLabelId = `${resolvedId}-label`
+
   return (
-    <Controller
-      name={name as Path<T>}
-      control={control as unknown as Control<T>}
-      render={({ field, fieldState }) => (
-        <FormControl fullWidth error={!!fieldState.error} required={required}>
-          <InputLabel>{label}</InputLabel>
-          <Select
-            label={label}
-            multiple={multiple}
-            {...field}
-            {...selectProps}
-            value={selectedChips}
-            onChange={(event: SelectChangeEvent<string[]>) => {
-              const { value: selectedValues } = event.target
-              if (selectedValues.length <= chipLimit) {
-                field.onChange(selectedValues)
-              } else {
-                field.onChange(selectedValues.slice(-chipLimit))
-              }
-              handleSelectChange(event)
-            }}
-            renderValue={(selected: string[]) => (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {selected?.map((value: string) => (
-                  <Chip
-                    key={value}
-                    label={
-                      options.find((option) => option.value === value)?.label
-                    }
-                    color="primary"
-                  />
-                ))}
-              </Box>
-            )}
-          >
-            {options.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
+    <FormControl fullWidth error={!!fieldState.error} required={required}>
+      <InputLabel id={resolvedLabelId}>{label}</InputLabel>
+      <Select
+        label={label}
+        id={resolvedId}
+        labelId={resolvedLabelId}
+        multiple={multiple}
+        {...field}
+        {...selectProps}
+        value={selectedValues}
+        onChange={handleSelectChange}
+        renderValue={(selected: string[]) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {selected?.map((value: string) => (
+              <Chip
+                key={value}
+                label={options.find((option) => option.value === value)?.label}
+                color="primary"
+              />
             ))}
-          </Select>
-          {fieldState?.error && (
-            <FormHelperText>{fieldState?.error?.message}</FormHelperText>
-          )}
-        </FormControl>
+          </Box>
+        )}
+      >
+        {options.map((option) => (
+          <MenuItem key={option.value} value={option.value}>
+            {option.label}
+          </MenuItem>
+        ))}
+      </Select>
+      {fieldState?.error && (
+        <FormHelperText>{fieldState?.error?.message}</FormHelperText>
       )}
-    />
+    </FormControl>
   )
 }

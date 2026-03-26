@@ -32,38 +32,44 @@ export const ControlledSelectField = <T,>({
   <Controller
     name={name as Path<T>}
     control={control as unknown as Control<T>}
-    render={({ field, fieldState }) => (
-      <FormControl fullWidth error={!!fieldState.error} required={required}>
-        <InputLabel id={labelId ? labelId : undefined}>
-          {label}
-          {showAsterisk ? (
-            <>
-              {' '}
-              <Box component="span" sx={{ color: 'error.main' }}>
-                *
-              </Box>
-            </>
-          ) : null}
-        </InputLabel>
-        <Select
-          variant="outlined"
-          label={label}
-          labelId={labelId ? labelId : undefined}
-          {...omit(field, ['required'])}
-          {...omit(selectProps, ['required'])}
-          value={field.value ?? ''}
-          onOpen={onOpen}
-        >
-          {options.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-        {fieldState?.error && (
-          <FormHelperText>{fieldState?.error?.message}</FormHelperText>
-        )}
-      </FormControl>
-    )}
+    render={({ field, fieldState }) => {
+      const resolvedId = selectProps.id ?? String(name)
+      const resolvedLabelId = labelId ?? `${resolvedId}-label`
+
+      return (
+        <FormControl fullWidth error={!!fieldState.error} required={required}>
+          <InputLabel id={resolvedLabelId}>
+            {label}
+            {showAsterisk ? (
+              <>
+                {' '}
+                <Box component="span" sx={{ color: 'error.main' }}>
+                  *
+                </Box>
+              </>
+            ) : null}
+          </InputLabel>
+          <Select
+            variant="outlined"
+            label={label}
+            id={resolvedId}
+            labelId={resolvedLabelId}
+            {...omit(field, ['required'])}
+            {...omit(selectProps, ['required'])}
+            value={field.value ?? ''}
+            onOpen={onOpen}
+          >
+            {options.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+          {fieldState?.error && (
+            <FormHelperText>{fieldState?.error?.message}</FormHelperText>
+          )}
+        </FormControl>
+      )
+    }}
   />
 )

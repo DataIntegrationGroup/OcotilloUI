@@ -30,26 +30,19 @@ import { useGo, useResourceParams } from '@refinedev/core'
 import { MapComponent } from '@/components'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { ControlledNumberField } from '@/components/Controlled/ControlledNumberField'
+import { ControlledSelectField } from '@/components/Controlled/ControlledSelectField'
+import { ControlledSelectWithChipsField } from '@/components/Controlled/ControlledSelectWithChipsField'
 import { ControlledTextField } from '@/components/Controlled/ControlledTextField'
 import { CreateEditContact } from '@/components/form/contact/CreateEditContact'
 import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
 import { CreateEditWellScreen } from '@/components/form/thing/CreateEditWellScreen'
-import { useAccessCapabilities } from '@/hooks'
+import { useAccessCapabilities, useLexicon } from '@/hooks'
 import type { IWellEditForm } from '@/interfaces/ocotillo'
 import {
   createEmptyWellEditForm,
   loadWellEditForm,
   submitWellEditForm,
 } from './well-edit.service'
-
-const commaToArray = (value: string) =>
-  value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-
-const arrayToComma = (value?: string[] | null) =>
-  value?.length ? value.join(', ') : ''
 
 const SectionCard = ({
   title,
@@ -72,33 +65,6 @@ const SectionCard = ({
     />
     <CardContent sx={{ pt: 2 }}>{children}</CardContent>
   </Card>
-)
-
-const CommaSeparatedField = ({
-  control,
-  name,
-  label,
-  helperText,
-}: {
-  control: any
-  name: Path<IWellEditForm>
-  label: string
-  helperText?: string
-}) => (
-  <Controller
-    control={control}
-    name={name}
-    render={({ field, fieldState }) => (
-      <TextField
-        fullWidth
-        label={label}
-        value={arrayToComma(field.value)}
-        onChange={(event) => field.onChange(commaToArray(event.target.value))}
-        error={!!fieldState.error}
-        helperText={fieldState.error?.message || helperText}
-      />
-    )}
-  />
 )
 
 const BooleanSelectField = ({
@@ -140,6 +106,28 @@ export const WellEdit: React.FC = () => {
   const { id } = useResourceParams()
   const thingId = Number(id)
   const { canManageAmp } = useAccessCapabilities()
+  const { options: wellPumpTypeOptions } = useLexicon({
+    category: 'well_pump_type',
+  })
+  const { options: wellConstructionMethodOptions } = useLexicon({
+    category: 'well_construction_method',
+  })
+  const { options: wellPurposeOptions } = useLexicon({
+    category: 'well_purpose',
+  })
+  const { options: coordinateMethodOptions } = useLexicon({
+    category: 'coordinate_method',
+  })
+  const { options: elevationMethodOptions } = useLexicon({
+    category: 'elevation_method',
+  })
+  const { options: wellStatusOptions } = useLexicon({
+    category: 'status',
+  })
+  const { options: casingMaterialOptions } = useLexicon({
+    category: 'casing_material',
+  })
+  const emptyOption = { value: '', label: 'None' }
 
   const form = useForm<IWellEditForm>({
     defaultValues: createEmptyWellEditForm(
@@ -379,10 +367,11 @@ export const WellEdit: React.FC = () => {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <ControlledTextField
+              <ControlledSelectField
                 control={control}
                 name="well.well_construction_method"
                 label="Construction Method"
+                options={[emptyOption, ...wellConstructionMethodOptions]}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -393,10 +382,11 @@ export const WellEdit: React.FC = () => {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <ControlledTextField
+              <ControlledSelectField
                 control={control}
                 name="well.well_pump_type"
                 label="Pump Type"
+                options={[emptyOption, ...wellPumpTypeOptions]}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -414,10 +404,11 @@ export const WellEdit: React.FC = () => {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <ControlledTextField
+              <ControlledSelectField
                 control={control}
                 name="well.well_status"
                 label="Well Status"
+                options={[emptyOption, ...wellStatusOptions]}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -435,19 +426,21 @@ export const WellEdit: React.FC = () => {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommaSeparatedField
+              <ControlledSelectWithChipsField
                 control={control}
                 name="well.well_casing_materials"
                 label="Casing Materials"
-                helperText="Comma-separated"
+                options={casingMaterialOptions}
+                multiple
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommaSeparatedField
+              <ControlledSelectWithChipsField
                 control={control}
                 name="well.well_purposes"
                 label="Well Purposes"
-                helperText="Comma-separated"
+                options={wellPurposeOptions}
+                multiple
               />
             </Grid>
           </Grid>
@@ -491,10 +484,11 @@ export const WellEdit: React.FC = () => {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <ControlledTextField
+              <ControlledSelectField
                 control={control}
                 name="location.coordinate_method"
                 label="Coordinate Method"
+                options={[emptyOption, ...coordinateMethodOptions]}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -512,10 +506,11 @@ export const WellEdit: React.FC = () => {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <ControlledTextField
+              <ControlledSelectField
                 control={control}
                 name="location.elevation_method"
                 label="Elevation Method"
+                options={[emptyOption, ...elevationMethodOptions]}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 12 }}>
