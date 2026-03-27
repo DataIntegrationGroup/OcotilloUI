@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   canAccessResource,
   getAccessCapabilities,
+  isResourceListAdminOnly,
   normalizeAccessControlGroups,
 } from '@/utils/accessControl'
 import { resources } from '@/resources'
@@ -401,4 +402,19 @@ describe('accessControl special resources and write gates', () => {
       ).toBe(testCase.expected)
     })
   }
+})
+
+describe('isResourceListAdminOnly', () => {
+  it('returns true for list resources restricted to admin roles', () => {
+    expect(isResourceListAdminOnly('ocotillo.location')).toBe(true)
+    expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(true)
+    expect(isResourceListAdminOnly('Sandbox')).toBe(true)
+    expect(isResourceListAdminOnly('water.locations')).toBe(true)
+  })
+
+  it('returns false for non-admin list resources and unknown resources', () => {
+    expect(isResourceListAdminOnly('ocotillo.thing-well')).toBe(false)
+    expect(isResourceListAdminOnly('ocotillo.lexicon')).toBe(false)
+    expect(isResourceListAdminOnly('unknown.resource')).toBe(false)
+  })
 })

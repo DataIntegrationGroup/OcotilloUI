@@ -51,6 +51,10 @@ const geothermalEditorRoles: PortalRole[] = [
   'Geothermal.Admin',
 ]
 const geothermalAdminRoles: PortalRole[] = ['Geothermal.Admin']
+const adminOnlyRoles = new Set<PortalRole>([
+  'AMP.Admin',
+  'Geothermal.Admin',
+])
 
 const resourcePolicies: Record<string, ResourcePolicy> = {
   ocotillo: { list: viewerRoles, show: viewerRoles },
@@ -123,6 +127,13 @@ const matchesPolicy = (
   allowedRoles: PortalRole[] | undefined,
   roles: PortalRole[]
 ): boolean => Boolean(allowedRoles?.some((role) => roles.includes(role)))
+
+export const isResourceListAdminOnly = (resource: string): boolean => {
+  const listPolicy = resourcePolicies[resource]?.list
+  if (!listPolicy || listPolicy.length === 0) return false
+
+  return listPolicy.every((role) => adminOnlyRoles.has(role))
+}
 
 export const normalizeAccessControlGroups = (
   groups: string[] | null | undefined

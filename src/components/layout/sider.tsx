@@ -7,6 +7,7 @@ import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 import LightModeOutlined from '@mui/icons-material/LightModeOutlined'
 import ListOutlined from '@mui/icons-material/ListOutlined'
+import LockOutlined from '@mui/icons-material/LockOutlined'
 import {
   Box,
   Collapse,
@@ -23,6 +24,7 @@ import {
 import type { RefineThemedLayoutSiderProps } from '@refinedev/mui'
 import { Link as RouterLink } from 'react-router'
 import { ColorModeContext } from '@/contexts'
+import { isResourceListAdminOnly } from '@/utils/accessControl'
 import { Dashboard } from './dashboard'
 import { Logout } from './logout'
 
@@ -77,6 +79,11 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
       const isNested = meta?.parent !== undefined
       const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0
       const disabled = meta?.disabled || false
+      const isAdminOnly = isResourceListAdminOnly(name)
+      const tooltipTitle =
+        siderCollapsed && isAdminOnly
+          ? `${label ?? name} (Admin only)`
+          : (label ?? name)
 
       // const allowedCategories = new Set([
       //   'Water',
@@ -98,7 +105,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
           >
             <div key={key}>
               <Tooltip
-                title={label ?? name}
+                title={tooltipTitle}
                 placement="right"
                 disableHoverListener={!siderCollapsed}
                 arrow
@@ -142,7 +149,24 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                   </ListItemIcon>
                   {!siderCollapsed && (
                     <ListItemText
-                      primary={label}
+                      primary={
+                        <Box
+                          component="span"
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                          }}
+                        >
+                          <Box component="span">{label}</Box>
+                          {isAdminOnly ? (
+                            <LockOutlined
+                              fontSize="inherit"
+                              sx={{ fontSize: 14, color: 'text.secondary' }}
+                            />
+                          ) : null}
+                        </Box>
+                      }
                       slotProps={{
                         primary: {
                           noWrap: true,
@@ -189,7 +213,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
           params={{ resource: item }}
         >
           <Tooltip
-            title={label ?? name}
+            title={tooltipTitle}
             placement="right"
             disableHoverListener={!siderCollapsed}
             arrow
@@ -227,7 +251,24 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
               )}
               {!siderCollapsed && (
                 <ListItemText
-                  primary={label}
+                  primary={
+                    <Box
+                      component="span"
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                      }}
+                    >
+                      <Box component="span">{label}</Box>
+                      {isAdminOnly ? (
+                        <LockOutlined
+                          fontSize="inherit"
+                          sx={{ fontSize: 14, color: 'text.secondary' }}
+                        />
+                      ) : null}
+                    </Box>
+                  }
                   slotProps={{
                     primary: {
                       noWrap: true,
