@@ -116,6 +116,7 @@ describe('well edit service', () => {
     expect(form.well.id).toBe(7)
     expect(form.location.longitude).toBe(-106.9)
     expect(form.location.latitude).toBe(34.1)
+    expect(form.location.release_status).toBe(form.well.release_status)
     expect(form.contacts[0].emails[0].id).toBe(11)
     expect(form.wellScreens[0].id).toBe(2)
     expect(form.notes?.construction_notes).toBe('Construction note')
@@ -131,6 +132,7 @@ describe('well edit service', () => {
         well_purposes: ['monitoring'],
       },
       location: {
+        release_status: 'private',
         point: null,
         latitude: 34.1,
         longitude: -106.9,
@@ -141,6 +143,7 @@ describe('well edit service', () => {
 
     expect(payload.well.well_casing_materials).toBeNull()
     expect(payload.well.well_purposes).toEqual(['monitoring'])
+    expect(payload.location.release_status).toBe('public')
     expect(payload.location.point).toBe('POINT(-106.9 34.1)')
   })
 

@@ -449,20 +449,6 @@ export const WellEdit: React.FC = () => {
         <SectionCard title="Location">
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <ControlledTextField
-                control={control}
-                name="location.name"
-                label="Location Name"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ControlledTextField
-                control={control}
-                name="location.release_status"
-                label="Release Status"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
               <ControlledNumberField
                 control={control}
                 name="location.latitude"
@@ -495,7 +481,7 @@ export const WellEdit: React.FC = () => {
               <ControlledNumberField
                 control={control}
                 name="location.elevation"
-                label="Elevation"
+                label="Elevation (ft)"
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>

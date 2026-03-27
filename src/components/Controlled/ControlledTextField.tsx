@@ -21,6 +21,14 @@ export const ControlledTextField = <T,>({
   showAsterisk?: boolean
   warning?: boolean
 } & TextFieldProps) => {
+  const inputLabelProps =
+    type === 'date'
+      ? {
+          ...(textFieldProps.InputLabelProps ?? {}),
+          shrink: textFieldProps.InputLabelProps?.shrink ?? true,
+        }
+      : textFieldProps.InputLabelProps
+
   return (
     <Controller
       name={name as Path<T>}
@@ -46,6 +54,7 @@ export const ControlledTextField = <T,>({
           error={!!fieldState?.error}
           helperText={fieldState?.error?.message || ''}
           type={type}
+          InputLabelProps={inputLabelProps}
           fullWidth
           multiline={multiline}
           minRows={multiline ? minRows : undefined}

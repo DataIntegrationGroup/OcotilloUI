@@ -38,7 +38,9 @@ vi.mock('@/components', () => ({
 }))
 
 vi.mock('react-map-gl', () => ({
-  Source: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Source: ({ children }: { children?: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   Layer: () => <div />,
 }))
 
@@ -100,6 +102,8 @@ describe('WellEdit lexicon-backed fields', () => {
           id: 7,
           name: 'Test Well',
           release_status: 'public',
+          first_visit_date: null,
+          well_completion_date: null,
           well_construction_method: 'drilled',
           well_pump_type: 'submersible',
           well_status: 'active',
@@ -121,19 +125,16 @@ describe('WellEdit lexicon-backed fields', () => {
     })
     mockedUseLexicon.mockImplementation(
       ({ category }: { category: string }) => ({
-        options: {
-          well_pump_type: [
-            { value: 'submersible', label: 'submersible' },
-          ],
-          well_construction_method: [
-            { value: 'drilled', label: 'drilled' },
-          ],
-          well_purpose: [{ value: 'monitoring', label: 'monitoring' }],
-          coordinate_method: [{ value: 'GPS', label: 'GPS' }],
-          elevation_method: [{ value: 'DEM', label: 'DEM' }],
-          status: [{ value: 'active', label: 'active' }],
-          casing_material: [{ value: 'steel', label: 'steel' }],
-        }[category] ?? [],
+        options:
+          {
+            well_pump_type: [{ value: 'submersible', label: 'submersible' }],
+            well_construction_method: [{ value: 'drilled', label: 'drilled' }],
+            well_purpose: [{ value: 'monitoring', label: 'monitoring' }],
+            coordinate_method: [{ value: 'GPS', label: 'GPS' }],
+            elevation_method: [{ value: 'DEM', label: 'DEM' }],
+            status: [{ value: 'active', label: 'active' }],
+            casing_material: [{ value: 'steel', label: 'steel' }],
+          }[category] ?? [],
       })
     )
   })
@@ -141,15 +142,11 @@ describe('WellEdit lexicon-backed fields', () => {
   it('renders the targeted fields as lexicon-backed selects and hydrates multi-select values', async () => {
     render(<WellEdit />)
 
-    expect(
-      screen.getByRole('combobox', { name: /pump type/i })
-    ).toBeTruthy()
+    expect(screen.getByRole('combobox', { name: /pump type/i })).toBeTruthy()
     expect(
       screen.getByRole('combobox', { name: /construction method/i })
     ).toBeTruthy()
-    expect(
-      screen.getByRole('combobox', { name: /well status/i })
-    ).toBeTruthy()
+    expect(screen.getByRole('combobox', { name: /well status/i })).toBeTruthy()
     expect(
       screen.getByRole('combobox', { name: /coordinate method/i })
     ).toBeTruthy()
@@ -166,14 +163,26 @@ describe('WellEdit lexicon-backed fields', () => {
     expect(
       screen.queryByRole('textbox', { name: /^construction method$/i })
     ).toBeNull()
-    expect(
-      screen.queryByRole('textbox', { name: /^well status$/i })
-    ).toBeNull()
+    expect(screen.queryByRole('textbox', { name: /^well status$/i })).toBeNull()
     expect(
       screen.queryByRole('textbox', { name: /^coordinate method$/i })
     ).toBeNull()
     expect(
       screen.queryByRole('textbox', { name: /^elevation method$/i })
     ).toBeNull()
+    expect(
+      screen.queryByRole('textbox', { name: /release status/i })
+    ).toBeNull()
+
+    const firstVisitInput = screen.getByLabelText('First Visit Date')
+    const wellCompletionInput = screen.getByLabelText('Well Completion Date')
+    const firstVisitLabel = document.querySelector(
+      `label[for="${firstVisitInput.id}"]`
+    )
+    const wellCompletionLabel = document.querySelector(
+      `label[for="${wellCompletionInput.id}"]`
+    )
+    expect(firstVisitLabel?.getAttribute('data-shrink')).toBe('true')
+    expect(wellCompletionLabel?.getAttribute('data-shrink')).toBe('true')
   })
 })

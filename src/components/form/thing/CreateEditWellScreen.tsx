@@ -82,15 +82,17 @@ export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ControlledSelectField
-          label="Release Status"
-          fullWidth
-          control={control}
-          name={getFieldName('release_status')}
-          options={releaseStatusOptions}
-        />
-      </Grid>
+      {/*disable release status for now*/}
+      {/*reenable when a proper publication process is in place*/}
+      {/*<Grid size={{ xs: 12, md: 6 }}>*/}
+      {/*  <ControlledSelectField*/}
+      {/*    label="Release Status"*/}
+      {/*    fullWidth*/}
+      {/*    control={control}*/}
+      {/*    name={getFieldName('release_status')}*/}
+      {/*    options={releaseStatusOptions}*/}
+      {/*  />*/}
+      {/*</Grid>*/}
 
       {/* Add/Remove buttons for step mode */}
       {mode === 'step' && (

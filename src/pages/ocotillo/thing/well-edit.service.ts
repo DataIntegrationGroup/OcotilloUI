@@ -1,5 +1,6 @@
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import type { IContact, IWell, IWellScreen } from '@/interfaces/ocotillo'
+import { normalizeElevationFeet } from '@/utils/waterElevation'
 
 export interface IWellEditForm {
   well: {
@@ -36,6 +37,7 @@ export interface IWellEditForm {
     notes?: string | null
     release_status?: string | null
     elevation?: number | null
+    elevation_unit?: string | null
     elevation_accuracy?: number | null
     elevation_method?: string | null
     coordinate_accuracy?: number | null
@@ -248,8 +250,9 @@ export const mapWellEditAggregateToForm = (
       latitude: hasCoordinates ? latitude : null,
       longitude: hasCoordinates ? longitude : null,
       notes: joinNotes(currentLocation?.properties?.notes),
-      release_status: currentLocation?.properties?.release_status ?? null,
-      elevation: elevation ?? null,
+      release_status: aggregate.well.release_status,
+      elevation: normalizeElevationFeet(currentLocation) ?? elevation ?? null,
+      elevation_unit: 'ft',
       elevation_accuracy:
         currentLocation?.properties?.elevation_accuracy ?? null,
       elevation_method: currentLocation?.properties?.elevation_method ?? null,
@@ -324,6 +327,8 @@ export const mapWellEditFormToPayload = (
   },
   location: {
     ...form.location,
+    release_status: form.well.release_status,
+    elevation_unit: 'ft',
     point:
       form.location.point ??
       (form.location.longitude != null && form.location.latitude != null
