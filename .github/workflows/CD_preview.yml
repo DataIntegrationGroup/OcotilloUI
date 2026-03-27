@@ -93,13 +93,12 @@ jobs:
       - name: Comment PR with preview URL
         if: github.event_name == 'pull_request'
         env:
-          PREVIEW_URL: ${{ steps.preview-url.outputs.url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body "$(cat <<'EOF'
+          gh pr comment ${{ github.event.pull_request.number }} --body "$(cat <<EOF
           ## Preview Deployment
 
-          **Preview URL:** $PREVIEW_URL
+          **Preview URL:** ${{ steps.preview-url.outputs.url }}
 
           **Note:** This preview uses the staging API endpoints and has auth disabled for testing.
           EOF
