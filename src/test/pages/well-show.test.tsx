@@ -3,9 +3,7 @@ import React from 'react'
 import { render } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const mockedUseShow = vi.fn()
 const mockedUseList = vi.fn()
-const mockedUseOne = vi.fn()
 const mockedUseDataGrid = vi.fn()
 const mockedUseDataProvider = vi.fn()
 const mockedUseQuery = vi.fn()
@@ -18,9 +16,7 @@ vi.mock('@refinedev/core', async () => {
 
   return {
     ...actual,
-    useShow: (args?: unknown) => mockedUseShow(args),
     useList: (args?: unknown) => mockedUseList(args),
-    useOne: (args?: unknown) => mockedUseOne(args),
     useDataProvider: (args?: unknown) => mockedUseDataProvider(args),
     useResourceParams: (args?: unknown) => mockedUseResourceParams(args),
   }
@@ -36,7 +32,7 @@ vi.mock('@refinedev/mui', async () => {
 })
 
 vi.mock('@tanstack/react-query', () => ({
-  useQuery: () => mockedUseQuery(),
+  useQuery: (args?: unknown) => mockedUseQuery(args),
 }))
 
 vi.mock('@/hooks', () => ({
@@ -74,25 +70,15 @@ import { WellShow } from '@/pages/ocotillo/thing/well-show'
 
 describe('WellShow data loading', () => {
   beforeEach(() => {
-    mockedUseShow.mockClear()
     mockedUseList.mockClear()
-    mockedUseOne.mockClear()
     mockedUseDataGrid.mockClear()
     mockedUseDataProvider.mockClear()
     mockedUseQuery.mockClear()
     mockedUseResourceParams.mockClear()
     mockedUseAccessCapabilities.mockClear()
 
-    mockedUseShow.mockReturnValue({
-      query: { isLoading: false },
-      result: { id: 42, name: 'Test Well' },
-    })
     mockedUseList.mockImplementation((args: any) => ({
       result: { data: [] },
-      query: { isLoading: false, args },
-    }))
-    mockedUseOne.mockImplementation((args: any) => ({
-      result: null,
       query: { isLoading: false, args },
     }))
     mockedUseDataGrid.mockImplementation((args: any) => ({
@@ -100,10 +86,28 @@ describe('WellShow data loading', () => {
     }))
     mockedUseDataProvider.mockReturnValue(() => ({
       getList: vi.fn(),
+      custom: vi.fn(),
     }))
-    mockedUseQuery.mockReturnValue({
-      data: { manualRows: [], transducerRows: [] },
-      isLoading: false,
+    mockedUseQuery.mockImplementation((args: any) => {
+      if (args?.queryKey?.[0] === 'well-details') {
+        return {
+          data: {
+            well: { id: 42, name: 'Test Well' },
+            contacts: [],
+            sensors: [],
+            deployments: [],
+            well_screens: [],
+            recent_groundwater_level_observations: [],
+            latest_field_event_sample: null,
+          },
+          isLoading: false,
+        }
+      }
+
+      return {
+        data: { manualRows: [], transducerRows: [] },
+        isLoading: false,
+      }
     })
     mockedUseResourceParams.mockReturnValue({ id: '42' })
     mockedUseAccessCapabilities.mockReturnValue({ canManageAmp: false })
@@ -113,38 +117,16 @@ describe('WellShow data loading', () => {
     render(<WellShow />)
 
     const listCalls = mockedUseList.mock.calls.map(([args]) => args)
-    expect(listCalls).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          resource: 'asset',
-          queryOptions: expect.objectContaining({ enabled: true }),
-        }),
-        expect.objectContaining({
-          resource: 'contact',
-          queryOptions: expect.objectContaining({ enabled: true }),
-        }),
-        expect.objectContaining({
-          resource: 'sensor',
-          queryOptions: expect.objectContaining({ enabled: true }),
-        }),
-        expect.objectContaining({
-          resource: 'thing/42/deployment',
-          queryOptions: expect.objectContaining({ enabled: true }),
-        }),
-        expect.objectContaining({
-          resource: 'thing/well-screen',
-          queryOptions: expect.objectContaining({ enabled: true }),
-        }),
-      ])
-    )
+    expect(listCalls).toEqual([
+      expect.objectContaining({
+        resource: 'asset',
+        queryOptions: expect.objectContaining({ enabled: true }),
+      }),
+    ])
 
     const dataGridCalls = mockedUseDataGrid.mock.calls.map(([args]) => args)
     expect(dataGridCalls).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          resource: 'observation/groundwater-level',
-          queryOptions: expect.objectContaining({ enabled: true }),
-        }),
         expect.objectContaining({
           resource: 'thing/42/id-link',
           queryOptions: expect.objectContaining({ enabled: true }),
@@ -152,10 +134,10 @@ describe('WellShow data loading', () => {
       ])
     )
 
-    expect(mockedUseOne).toHaveBeenCalledWith(
+    expect(mockedUseQuery).toHaveBeenCalledWith(
       expect.objectContaining({
-        resource: 'ocotillo.sample',
-        queryOptions: expect.objectContaining({ enabled: false }),
+        queryKey: ['well-details', '42'],
+        enabled: true,
       })
     )
   })
@@ -164,12 +146,6 @@ describe('WellShow data loading', () => {
     mockedUseResourceParams.mockReturnValue({ id: undefined })
 
     render(<WellShow />)
-
-    expect(mockedUseShow).toHaveBeenCalledWith(
-      expect.objectContaining({
-        queryOptions: expect.objectContaining({ enabled: false }),
-      })
-    )
 
     const listCalls = mockedUseList.mock.calls
       .map(([args]) => args as any)
@@ -184,5 +160,12 @@ describe('WellShow data loading', () => {
     expect(
       dataGridCalls.every((args) => args.queryOptions?.enabled === false)
     ).toBe(true)
+
+    expect(mockedUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: ['well-details', undefined],
+        enabled: false,
+      })
+    )
   })
 })
