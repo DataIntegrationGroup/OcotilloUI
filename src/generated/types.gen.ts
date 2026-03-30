@@ -128,7 +128,7 @@ export type BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUpload
     /**
      * File
      */
-    file: Blob | File;
+    file: string;
 };
 
 /**
@@ -138,7 +138,7 @@ export type BodyUploadAssetAssetUploadPost = {
     /**
      * File
      */
-    file: Blob | File;
+    file: string;
 };
 
 /**
@@ -3241,6 +3241,53 @@ export type WaterLevelBulkUploadSummary = {
      * Validation Errors Or Warnings
      */
     validation_errors_or_warnings: number;
+};
+
+/**
+ * WellDetailsResponse
+ */
+export type WellDetailsResponse = {
+    well: WellResponse;
+    /**
+     * Contacts
+     */
+    contacts?: Array<ContactResponse>;
+    /**
+     * Sensors
+     */
+    sensors?: Array<SensorResponse>;
+    /**
+     * Deployments
+     */
+    deployments?: Array<DeploymentResponse>;
+    /**
+     * Well Screens
+     */
+    well_screens?: Array<WellScreenResponse>;
+    /**
+     * Recent Groundwater Level Observations
+     */
+    recent_groundwater_level_observations?: Array<GroundwaterLevelObservationResponse>;
+    latest_field_event_sample?: SampleResponse | null;
+};
+
+/**
+ * WellExportResponse
+ */
+export type WellExportResponse = {
+    well: WellResponse;
+    /**
+     * Contacts
+     */
+    contacts?: Array<ContactResponse>;
+    /**
+     * Sensors
+     */
+    sensors?: Array<SensorResponse>;
+    /**
+     * Deployments
+     */
+    deployments?: Array<DeploymentResponse>;
 };
 
 /**
@@ -6609,6 +6656,66 @@ export type UpdateWaterWellThingWaterWellThingIdPatchResponses = {
 };
 
 export type UpdateWaterWellThingWaterWellThingIdPatchResponse = UpdateWaterWellThingWaterWellThingIdPatchResponses[keyof UpdateWaterWellThingWaterWellThingIdPatchResponses];
+
+export type GetWellDetailsThingWaterWellThingIdDetailsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: never;
+    url: '/thing/water-well/{thing_id}/details';
+};
+
+export type GetWellDetailsThingWaterWellThingIdDetailsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWellDetailsThingWaterWellThingIdDetailsGetError = GetWellDetailsThingWaterWellThingIdDetailsGetErrors[keyof GetWellDetailsThingWaterWellThingIdDetailsGetErrors];
+
+export type GetWellDetailsThingWaterWellThingIdDetailsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: WellDetailsResponse;
+};
+
+export type GetWellDetailsThingWaterWellThingIdDetailsGetResponse = GetWellDetailsThingWaterWellThingIdDetailsGetResponses[keyof GetWellDetailsThingWaterWellThingIdDetailsGetResponses];
+
+export type GetWellExportThingWaterWellThingIdExportGetData = {
+    body?: never;
+    path: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: never;
+    url: '/thing/water-well/{thing_id}/export';
+};
+
+export type GetWellExportThingWaterWellThingIdExportGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWellExportThingWaterWellThingIdExportGetError = GetWellExportThingWaterWellThingIdExportGetErrors[keyof GetWellExportThingWaterWellThingIdExportGetErrors];
+
+export type GetWellExportThingWaterWellThingIdExportGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: WellExportResponse;
+};
+
+export type GetWellExportThingWaterWellThingIdExportGetResponse = GetWellExportThingWaterWellThingIdExportGetResponses[keyof GetWellExportThingWaterWellThingIdExportGetResponses];
 
 export type GetWellScreensByWellIdThingWaterWellThingIdWellScreenGetData = {
     body?: never;

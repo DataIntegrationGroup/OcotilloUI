@@ -3662,6 +3662,32 @@ export const zWaterLevelBulkUploadResponse = z.object({
     validation_errors: z.array(z.string())
 });
 
+/**
+ * WellDetailsResponse
+ */
+export const zWellDetailsResponse = z.object({
+    well: zWellResponse,
+    contacts: z.optional(z.array(zContactResponse)),
+    sensors: z.optional(z.array(zSensorResponse)),
+    deployments: z.optional(z.array(zDeploymentResponse)),
+    well_screens: z.optional(z.array(zWellScreenResponse)),
+    recent_groundwater_level_observations: z.optional(z.array(zGroundwaterLevelObservationResponse)),
+    latest_field_event_sample: z.optional(z.union([
+        zSampleResponse,
+        z.null()
+    ]))
+});
+
+/**
+ * WellExportResponse
+ */
+export const zWellExportResponse = z.object({
+    well: zWellResponse,
+    contacts: z.optional(z.array(zContactResponse)),
+    sensors: z.optional(z.array(zSensorResponse)),
+    deployments: z.optional(z.array(zDeploymentResponse))
+});
+
 export const zUploadAssetAssetUploadPostData = z.object({
     body: zBodyUploadAssetAssetUploadPost,
     path: z.optional(z.never()),
@@ -4934,6 +4960,32 @@ export const zUpdateWaterWellThingWaterWellThingIdPatchData = z.object({
  * Successful Response
  */
 export const zUpdateWaterWellThingWaterWellThingIdPatchResponse = zWellResponse;
+
+export const zGetWellDetailsThingWaterWellThingIdDetailsGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        thing_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zGetWellDetailsThingWaterWellThingIdDetailsGetResponse = zWellDetailsResponse;
+
+export const zGetWellExportThingWaterWellThingIdExportGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        thing_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zGetWellExportThingWaterWellThingIdExportGetResponse = zWellExportResponse;
 
 export const zGetWellScreensByWellIdThingWaterWellThingIdWellScreenGetData = z.object({
     body: z.optional(z.never()),

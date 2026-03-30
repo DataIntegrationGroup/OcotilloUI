@@ -226,31 +226,31 @@ export const EquipmentAccordion = ({
                   }}
                 >
                   <DetailSection title="Sensor Details">
-                    <DetailRow
+                    <DetailField
                       label="Model"
                       value={selectedEquipment.sensor_model}
                     />
-                    <DetailRow
+                    <DetailField
                       label="Serial No"
                       value={selectedEquipment.serial_no}
                     />
                   </DetailSection>
 
                   <DetailSection title="Deployment">
-                    <DetailRow
+                    <DetailField
                       label="Install"
                       value={
                         formatAppDate(selectedEquipment.installation_date) ||
                         'N/A'
                       }
                     />
-                    <DetailRow
+                    <DetailField
                       label="Remove"
                       value={
                         formatAppDate(selectedEquipment.removal_date) || 'N/A'
                       }
                     />
-                    <DetailRow
+                    <DetailField
                       label="Cable Len."
                       value={
                         selectedEquipment.hanging_cable_length != null
@@ -261,7 +261,7 @@ export const EquipmentAccordion = ({
                   </DetailSection>
 
                   <DetailSection title="Recording">
-                    <DetailRow
+                    <DetailField
                       label="Interval"
                       value={
                         selectedEquipment.recording_interval_display || 'N/A'
@@ -270,12 +270,15 @@ export const EquipmentAccordion = ({
                   </DetailSection>
 
                   <DetailSection title="Notes">
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedEquipment.notes &&
-                      selectedEquipment.notes !== '-'
-                        ? selectedEquipment.notes
-                        : 'N/A'}
-                    </Typography>
+                    <DetailField
+                      label="Notes"
+                      value={
+                        selectedEquipment.notes &&
+                        selectedEquipment.notes !== '-'
+                          ? selectedEquipment.notes
+                          : 'N/A'
+                      }
+                    />
                   </DetailSection>
                 </Box>
               </Stack>
@@ -306,25 +309,41 @@ const DetailSection = ({
   </Box>
 )
 
-const DetailRow = ({ label, value }: { label: string; value: string }) => (
+const DetailField = ({ label, value }: { label: string; value: string }) => (
   <Box
     sx={{
-      display: 'grid',
-      gridTemplateColumns: { xs: '1fr', sm: '110px minmax(0, 1fr)' },
-      gap: 0.75,
-      alignItems: 'start',
+      position: 'relative',
+      border: 1,
+      borderColor: 'divider',
+      borderRadius: 1.5,
+      px: 1.5,
+      pt: 1.75,
+      pb: 1.25,
+      backgroundColor: 'background.paper',
       minWidth: 0,
     }}
   >
-    <Typography variant="caption" color="text.secondary" fontWeight={700}>
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      fontWeight={700}
+      sx={{
+        position: 'absolute',
+        top: 0,
+        left: 10,
+        px: 0.5,
+        transform: 'translateY(-50%)',
+        backgroundColor: 'background.paper',
+        lineHeight: 1,
+      }}
+    >
       {label}
     </Typography>
     <Typography
       variant="body2"
       sx={{
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
+        whiteSpace: 'pre-line',
+        minHeight: '1.25rem',
         minWidth: 0,
       }}
     >
