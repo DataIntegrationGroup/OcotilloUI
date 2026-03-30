@@ -7,6 +7,7 @@ import {
   CardContent,
   CardHeader,
   Skeleton,
+  Typography,
 } from '@mui/material'
 import { Directions, Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
@@ -144,6 +145,10 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
       ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`
       : null
 
+  const locationNote = well.current_location?.properties?.notes
+    ?.filter((note) => note.note_type === 'General')
+    .shift()
+
   return (
     <Card
       elevation={2}
@@ -219,6 +224,21 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             )}
           </MapComponent>
         </Box>
+        {locationNote && (
+          <>
+            <Typography variant="h6" component="div" sx={{ pt: 1 }}>
+              Directions to the site
+            </Typography>
+            <Typography
+              variant="body2"
+              component="div"
+              color="textSecondary"
+              sx={{ pt: 1 }}
+            >
+              {locationNote?.content}
+            </Typography>
+          </>
+        )}
       </CardContent>
     </Card>
   )
@@ -234,14 +254,31 @@ const LoadingCard = () => {
       <CardContent
         sx={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: 1,
         }}
       >
         <Skeleton
           variant="rectangular"
           width="100%"
           height={MAP_HEIGHT}
+          sx={{ borderRadius: '0.5rem' }}
+        />
+        <Skeleton
+          variant="rectangular"
+          width={200}
+          height={28}
+          sx={{
+            borderRadius: '0.5rem',
+            alignSelf: 'flex-start',
+          }}
+        />
+        <Skeleton
+          variant="rectangular"
+          width="100%"
+          height={64}
           sx={{ borderRadius: '0.5rem' }}
         />
       </CardContent>
