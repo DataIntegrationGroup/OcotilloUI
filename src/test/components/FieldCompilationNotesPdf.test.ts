@@ -1,5 +1,8 @@
+import { createElement } from 'react'
+import { renderToString } from '@react-pdf/renderer'
 import { describe, expect, it } from 'vitest'
-import type { IContact } from '@/interfaces/ocotillo'
+import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
+import type { IContact, IWell } from '@/interfaces/ocotillo'
 import { formatContactPhones } from '@/components/pdf/fieldCompilationPhoneFormatter'
 
 const makeContact = (
@@ -10,8 +13,42 @@ const makeContact = (
     name: 'Test Contact',
     created_at: new Date('2026-01-01T00:00:00Z'),
     release_status: 'public',
+    role: 'Primary',
     phones,
   }) as IContact
+
+const makeWell = (): IWell =>
+  ({
+    id: 1,
+    name: 'Well-1',
+    thing_type: 'water-well',
+    location_id: 1,
+    created_at: '2026-01-01T00:00:00Z',
+    release_status: 'public',
+    alternate_ids: [
+      {
+        id: 10,
+        created_at: '2026-01-01T00:00:00Z',
+        release_status: 'public',
+        alternate_id: 'SITE-1',
+        alternate_organization: 'NMBGMR',
+        relation: 'same_as',
+      },
+    ],
+    current_location: {
+      properties: {
+        utm_coordinates: {
+          easting: 123456,
+          northing: 654321,
+        },
+        notes: [],
+      },
+    },
+    site_notes: [],
+    notes: [],
+    measuring_notes: [],
+    measuring_point_description: 'Top of casing',
+  }) as IWell
 
 describe('formatContactPhones', () => {
   it('formats a single phone number with its type', () => {
@@ -83,5 +120,31 @@ describe('formatContactPhones', () => {
 
     expect(formatContactPhones(contact)).toBe('-')
     expect(formatContactPhones(undefined)).toBe('-')
+  })
+})
+
+describe('FieldCompilationNotesPdf', () => {
+  it('appends a final blank page with the requested text', async () => {
+    const pdfText = await renderToString(
+      createElement(FieldCompilationNotesPdf, {
+        well: makeWell(),
+        contacts: [],
+        assets: [],
+        observations: [],
+        sensorDeployments: [],
+        hydrographImage: null,
+      }) as any
+    )
+
+    const pageMatches = pdfText.match(/\/Type \/Page\b/g) ?? []
+
+    expect(pageMatches).toHaveLength(4)
+    expect(pdfText).toContain('Hydrograph and Manual Measurements: Well-1')
+    expect(pdfText).toContain('This page is intentionally left blank')
+    expect(
+      pdfText.indexOf('This page is intentionally left blank')
+    ).toBeGreaterThan(
+      pdfText.indexOf('Hydrograph and Manual Measurements: Well-1')
+    )
   })
 })

@@ -298,6 +298,16 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e5e7eb',
     height: 20,
   },
+  blankPageBody: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  blankPageText: {
+    fontSize: 12,
+    color: '#111827',
+    textAlign: 'center',
+  },
 })
 
 const lastMeasurementsColumns = [
@@ -909,6 +919,15 @@ const FieldCompilationNotesPage = ({
           columns={manualMeasurementColumns}
           rows={manualMeasurements}
         />
+      </Page>
+
+      <Page size="LETTER" style={styles.page}>
+        <Text style={styles.pageDate}>{exportDate}</Text>
+        <View style={styles.blankPageBody}>
+          <Text style={styles.blankPageText}>
+            This page is intentionally left blank
+          </Text>
+        </View>
       </Page>
     </>
   )

@@ -25,10 +25,10 @@ import { BaseRecord, useDataProvider, useNotification } from '@refinedev/core'
 import { List, useAutocomplete } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import {
-  IContact,
   IObservation,
   ISample,
   IWell,
+  IWellDetails,
   WellBundle,
   WellChipState,
 } from '@/interfaces/ocotillo'
@@ -303,10 +303,11 @@ export const WellBatchExport = () => {
 
   const fetchBundle = useCallback(
     async (wellId: number): Promise<WellBundle> => {
-      const wellResult = await ocotilloDataProvider.getOne({
-        resource: 'thing-well',
-        id: wellId,
+      const detailsResult = await ocotilloDataProvider.custom<IWellDetails>({
+        url: `thing/water-well/${wellId}/details`,
+        method: 'get',
       })
+      const wellDetails = detailsResult.data
 
       const fetchThingResource = async <T extends BaseRecord>(resource: string) => {
         let page = 1
@@ -315,7 +316,8 @@ export const WellBatchExport = () => {
         while (page <= BUNDLE_RESOURCE_MAX_PAGES) {
           const result = await ocotilloDataProvider.getList({
             resource,
-            pagination: { currentPage: page,
+            pagination: {
+              currentPage: page,
               pageSize: BUNDLE_RESOURCE_PAGE_SIZE,
             },
             meta: {
@@ -338,55 +340,15 @@ export const WellBatchExport = () => {
         return rows
       }
 
-      const fetchPagedResource = async <T extends BaseRecord>(resource: string) => {
-        let page = 1
-        const rows: T[] = []
-
-        while (page <= BUNDLE_RESOURCE_MAX_PAGES) {
-          const result = await ocotilloDataProvider.getList({
-            resource,
-            pagination: {
-              currentPage: page,
-              pageSize: BUNDLE_RESOURCE_PAGE_SIZE,
-            },
-          })
-
-          const pageRows = (result.data ?? []) as T[]
-          rows.push(...pageRows)
-
-          const reachedEnd =
-            pageRows.length < BUNDLE_RESOURCE_PAGE_SIZE ||
-            page * BUNDLE_RESOURCE_PAGE_SIZE >= (result.total ?? 0)
-          if (reachedEnd) break
-          page += 1
-        }
-
-        return rows
-      }
-
-      const [assets, contacts, observations, sensors, deployments] = await Promise.all([
+      const [assets, observations] = await Promise.all([
         fetchThingResource<BaseRecord>('asset').catch((error) => {
           console.warn(`Failed to load assets for well ${wellId}`, error)
           return [] as BaseRecord[]
-        }),
-        fetchThingResource<IContact>('contact').catch((error) => {
-          console.warn(`Failed to load contacts for well ${wellId}`, error)
-          return [] as IContact[]
         }),
         fetchThingResource<Partial<IObservation>>('observation/groundwater-level').catch(
           (error) => {
             console.warn(`Failed to load observations for well ${wellId}`, error)
             return [] as Partial<IObservation>[]
-          }
-        ),
-        fetchThingResource<SensorLike>('sensor').catch((error) => {
-          console.warn(`Failed to load sensors for well ${wellId}`, error)
-          return [] as SensorLike[]
-        }),
-        fetchPagedResource<DeploymentLike>(`thing/${wellId}/deployment`).catch(
-          (error) => {
-            console.warn(`Failed to load deployments for well ${wellId}`, error)
-            return [] as DeploymentLike[]
           }
         ),
       ])
@@ -432,11 +394,14 @@ export const WellBatchExport = () => {
           : {}
 
       return {
-        well: wellResult.data as IWell,
+        well: wellDetails.well,
         assets,
-        contacts,
+        contacts: wellDetails.contacts ?? [],
         observations,
-        sensorDeployments: buildSensorDeploymentRows(deployments, sensors),
+        sensorDeployments: buildSensorDeploymentRows(
+          (wellDetails.deployments ?? []) as DeploymentLike[],
+          (wellDetails.sensors ?? []) as SensorLike[]
+        ),
         sampleMethodsBySampleId,
       }
     },

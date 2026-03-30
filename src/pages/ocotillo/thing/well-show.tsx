@@ -11,6 +11,7 @@ import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
   IAsset,
   IContact,
+  IWellDetails,
   IObservation,
   ISample,
   ISensor,
@@ -44,16 +45,6 @@ import {
   OwnerPermissionsCard,
 } from '@/components'
 
-type WellDetailsResponse = {
-  well: IWell
-  contacts: IContact[]
-  sensors: ISensor[]
-  deployments: any[]
-  well_screens: IWellScreen[]
-  recent_groundwater_level_observations: IObservation[]
-  latest_field_event_sample: ISample | null
-}
-
 export const WellShow = () => {
   const dataProvider = useDataProvider()
   const ocotilloDataProvider = useMemo(
@@ -73,7 +64,7 @@ export const WellShow = () => {
         method: 'get',
       })
 
-      return response.data as WellDetailsResponse
+      return response.data as IWellDetails
     },
   })
   const { canManageAmp } = useAccessCapabilities()
