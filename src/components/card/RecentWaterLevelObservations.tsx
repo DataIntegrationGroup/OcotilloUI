@@ -41,13 +41,15 @@ export const RecentWaterLevelObservationsCard = ({
         type: 'number',
         minWidth: 150,
       },
-      { field: 'release_status', headerName: 'Release Status', minWidth: 150 },
       { field: 'level_status', headerName: 'Level Status', minWidth: 150 },
     ]
   }, [])
 
   return (
-    <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
+    <Card
+      elevation={2}
+      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+    >
       <CardHeader
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
@@ -103,7 +105,10 @@ export const RecentWaterLevelObservationsCard = ({
 
 const LoadingCard = () => {
   return (
-    <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
+    <Card
+      elevation={2}
+      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+    >
       <CardHeader
         title={
           <Stack direction="row" alignItems="center" spacing={1}>

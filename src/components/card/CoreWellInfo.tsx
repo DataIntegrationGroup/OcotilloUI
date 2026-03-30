@@ -107,12 +107,10 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
               <InfoRow
                 label="Latitude / Longitude"
                 value={latLonValue}
-                copyValue={latLonValue !== 'N/A' ? latLonValue : undefined}
               />
               <InfoRow
                 label="Easting / Northing"
                 value={utmValue}
-                copyValue={utmValue !== 'N/A' ? utmValue : undefined}
               />
               <InfoRow
                 label="Coordinate Notes"
@@ -223,13 +221,30 @@ const InfoRow = ({
   return (
     <Box
       sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: '132px 1fr' },
-        gap: 0.75,
-        alignItems: 'start',
+        position: 'relative',
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 1.5,
+        px: 1.5,
+        pt: 1.75,
+        pb: 1.25,
+        backgroundColor: 'background.paper',
       }}
     >
-      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        fontWeight={700}
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 10,
+          px: 0.5,
+          transform: 'translateY(-50%)',
+          backgroundColor: 'background.paper',
+          lineHeight: 1,
+        }}
+      >
         {label}
       </Typography>
       <Box
@@ -240,7 +255,15 @@ const InfoRow = ({
           alignItems: 'center',
         }}
       >
-        <Typography variant="body2">{value}</Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            whiteSpace: 'pre-line',
+            minHeight: '1.25rem',
+          }}
+        >
+          {value}
+        </Typography>
         <Box
           sx={{
             width: 24,
