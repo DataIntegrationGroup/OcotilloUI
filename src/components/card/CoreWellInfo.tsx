@@ -104,14 +104,8 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
                 ) : null
               }
             >
-              <InfoRow
-                label="Latitude / Longitude"
-                value={latLonValue}
-              />
-              <InfoRow
-                label="Easting / Northing"
-                value={utmValue}
-              />
+              <InfoRow label="Latitude / Longitude" value={latLonValue} />
+              <InfoRow label="Easting / Northing" value={utmValue} />
               <InfoRow
                 label="Coordinate Notes"
                 value={
