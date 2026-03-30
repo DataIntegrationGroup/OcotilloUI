@@ -1,7 +1,7 @@
 import {
   Apps,
   Construction,
-  DatasetLinked,
+  DatasetOutlined,
   Contacts,
   DynamicFormOutlined,
   Image,
@@ -312,7 +312,7 @@ let ocotillo = [
     list: '/ocotillo/collections',
     meta: {
       label: 'Datasets',
-      icon: <DatasetLinked />,
+      icon: <DatasetOutlined />,
     },
   },
   ...tables,
