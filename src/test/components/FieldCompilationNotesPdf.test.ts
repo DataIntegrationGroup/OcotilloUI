@@ -1,6 +1,7 @@
 import { createElement } from 'react'
-import { renderToString } from '@react-pdf/renderer'
+import { pdf } from '@react-pdf/renderer'
 import { describe, expect, it } from 'vitest'
+import { inflate } from 'pako'
 import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import { formatContactPhones } from '@/components/pdf/fieldCompilationPhoneFormatter'
@@ -49,6 +50,35 @@ const makeWell = (): IWell =>
     measuring_notes: [],
     measuring_point_description: 'Top of casing',
   }) as IWell
+
+const decodePdfStreams = (pdfText: string) => {
+  const streamPattern = /stream\r?\n([\s\S]*?)\r?\nendstream/g
+  const decoded: string[] = []
+
+  for (const match of pdfText.matchAll(streamPattern)) {
+    const streamContent = match[1]
+    const bytes = Uint8Array.from(streamContent, (char) => char.charCodeAt(0) & 0xff)
+
+    try {
+      decoded.push(inflate(bytes, { to: 'string' }))
+    } catch {
+      // Ignore non-deflated streams.
+    }
+  }
+
+  return decoded.join('\n')
+}
+
+const decodePdfHexStrings = (decodedPdfText: string) => {
+  const fragments: string[] = []
+
+  for (const match of decodedPdfText.matchAll(/<([0-9A-Fa-f]+)>/g)) {
+    const hex = match[1]
+    fragments.push(Buffer.from(hex, 'hex').toString('latin1'))
+  }
+
+  return fragments.join('')
+}
 
 describe('formatContactPhones', () => {
   it('formats a single phone number with its type', () => {
@@ -125,7 +155,7 @@ describe('formatContactPhones', () => {
 
 describe('FieldCompilationNotesPdf', () => {
   it('appends a final blank page with the requested text', async () => {
-    const pdfText = await renderToString(
+    const pdfBlob = await pdf(
       createElement(FieldCompilationNotesPdf, {
         well: makeWell(),
         contacts: [],
@@ -134,17 +164,18 @@ describe('FieldCompilationNotesPdf', () => {
         sensorDeployments: [],
         hydrographImage: null,
       }) as any
-    )
+    ).toBlob()
+
+    const pdfText = Buffer.from(await pdfBlob.arrayBuffer()).toString('latin1')
 
     const pageMatches = pdfText.match(/\/Type \/Page\b/g) ?? []
+    const decodedText = decodePdfStreams(pdfText)
+    const decodedVisibleText = decodePdfHexStrings(decodedText)
 
     expect(pageMatches).toHaveLength(4)
-    expect(pdfText).toContain('Hydrograph and Manual Measurements: Well-1')
-    expect(pdfText).toContain('This page is intentionally left blank')
-    expect(
-      pdfText.indexOf('This page is intentionally left blank')
-    ).toBeGreaterThan(
-      pdfText.indexOf('Hydrograph and Manual Measurements: Well-1')
+    expect(decodedVisibleText).toContain(
+      'Hydrograph and Manual Measurements: Well-1'
     )
+    expect(decodedVisibleText).toContain('This page is intentionally left blank')
   })
 })

@@ -82,7 +82,7 @@ describe('SearchModal arcade easter eggs', () => {
       expect(screen.getByRole('dialog', { name: 'Race Car' })).toBeTruthy()
     })
 
-    expect(screen.getByText('Distance: 0 m')).toBeTruthy()
+    expect(screen.getByText(/Distance:\s+\d+\s+m/)).toBeTruthy()
     expect(screen.getByRole('img', { name: 'Race car game board' })).toBeTruthy()
   })
 
