@@ -23,11 +23,13 @@ import { useDebounce, useAbortableList, useSearchHistory } from '@/hooks'
 import { GroupType } from '@/constants'
 import { SearchResult, WellResult, ContactResult } from '@/interfaces/ocotillo'
 import { highlight } from '@/utils'
-import { SnakeGameModal } from '@/components/SnakeGameModal'
-import { AsteroidsGameModal } from '@/components/AsteroidsGameModal'
-import { RaceCarGameModal } from '@/components/RaceCarGameModal'
-import { TetrisGameModal } from '@/components/TetrisGameModal'
-import { MinesweeperGameModal } from '@/components/MinesweeperGameModal'
+import {
+  SnakeGameModal,
+  AsteroidsGameModal,
+  RaceCarGameModal,
+  TetrisGameModal,
+  MinesweeperGameModal,
+} from '@/components/Search/EasterEggsGames'
 
 type ArcadeGame = 'snake' | 'asteroids' | 'racecar' | 'tetris' | 'minesweeper'
 
