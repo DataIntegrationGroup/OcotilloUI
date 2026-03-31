@@ -1,9 +1,5 @@
 import { useMemo } from 'react'
-import {
-  useDataProvider,
-  useList,
-  useResourceParams,
-} from '@refinedev/core'
+import { useDataProvider, useList, useResourceParams } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
 import { Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
@@ -308,10 +304,7 @@ export const WellShow = () => {
           {/* Right column: 2 cols */}
           <Grid size={{ xs: 12, md: 4, lg: 3 }}>
             <Stack spacing={2}>
-              <ContactsCard
-                contacts={contacts}
-                isLoading={isDetailsLoading}
-              />
+              <ContactsCard contacts={contacts} isLoading={isDetailsLoading} />
               <OwnerPermissionsCard well={well} isLoading={isDetailsLoading} />
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
