@@ -16,7 +16,7 @@ import {
   formatAppDate,
   sanitizeContacts,
 } from '@/utils'
-import { usePrimaryAndSecondaryContact } from '@/hooks'
+import { usePrimaryAndSecondaryContact } from '@/hooks/usePrimaryAndSecondaryContact'
 import { formatContactPhones } from './fieldCompilationPhoneFormatter'
 
 const styles = StyleSheet.create({
