@@ -22,13 +22,17 @@ vi.mock('@refinedev/core', async () => {
   }
 })
 
-vi.mock('@/hooks', () => {
-  return {
-    useDebounce: (value: string) => value,
-    useAbortableList: (...args: unknown[]) => useAbortableListMock(...args),
-    useSearchHistory: () => useSearchHistoryMock(),
-  }
-})
+vi.mock('@/hooks/useDebounce', () => ({
+  useDebounce: (value: string) => value,
+}))
+
+vi.mock('@/hooks/useAbortableList', () => ({
+  useAbortableList: (...args: unknown[]) => useAbortableListMock(...args),
+}))
+
+vi.mock('@/hooks/useSearchHistory', () => ({
+  useSearchHistory: () => useSearchHistoryMock(),
+}))
 
 vi.mock('@/utils/docsSearch', () => {
   return {
