@@ -23,6 +23,12 @@ import { useDebounce, useAbortableList, useSearchHistory } from '@/hooks'
 import { GroupType } from '@/constants'
 import { SearchResult, WellResult, ContactResult } from '@/interfaces/ocotillo'
 import { highlight } from '@/utils'
+import { SnakeGameModal } from '@/components/SnakeGameModal'
+import { AsteroidsGameModal } from '@/components/AsteroidsGameModal'
+import { RaceCarGameModal } from '@/components/RaceCarGameModal'
+import { TetrisGameModal } from '@/components/TetrisGameModal'
+
+type ArcadeGame = 'snake' | 'asteroids' | 'racecar' | 'tetris'
 
 // ---- type icon mapping ------------------------------------------------
 
@@ -162,24 +168,61 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
 
   const [query, setQuery] = useState('')
   const [recentSearches, setRecentSearches] = useState<string[]>([])
+  const [activeGame, setActiveGame] = useState<ArcadeGame | null>(null)
+  const [dismissedGame, setDismissedGame] = useState<ArcadeGame | null>(null)
   const debounced = useDebounce(query, 400)
+  const normalizedQuery = query.trim().toLowerCase()
+  const normalizedDebounced = debounced.trim().toLowerCase()
+  const requestedGame =
+    normalizedQuery === 'snake'
+      ? 'snake'
+      : normalizedQuery === 'asteroids'
+        ? 'asteroids'
+        : normalizedQuery === 'racecar'
+          ? 'racecar'
+          : normalizedQuery === 'tetris'
+            ? 'tetris'
+          : null
 
   // Reload history each time modal opens
   useEffect(() => {
     if (open) {
       setQuery('')
       setRecentSearches(history.get())
-      // Small delay so Dialog is mounted before we focus
-      setTimeout(() => inputRef.current?.focus(), 50)
+      setDismissedGame(null)
+      setActiveGame(null)
     }
   }, [open])
+
+  useEffect(() => {
+    if (open) {
+      inputRef.current?.focus()
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!requestedGame) {
+      setDismissedGame(null)
+      return
+    }
+
+    if (open && activeGame !== requestedGame && dismissedGame !== requestedGame) {
+      setActiveGame(requestedGame)
+    }
+  }, [activeGame, dismissedGame, open, requestedGame])
 
   const { query: searchQuery, result } = useAbortableList({
     resource: 'search',
     dataProviderName: 'ocotillo',
     pagination: { pageSize: 100 },
     queryOptions: {
-      enabled: open && debounced.length >= 1,
+      enabled:
+        open &&
+        normalizedDebounced.length >= 1 &&
+        normalizedDebounced !== 'snake' &&
+        normalizedDebounced !== 'asteroids' &&
+        normalizedDebounced !== 'racecar' &&
+        normalizedDebounced !== 'tetris',
       staleTime: 120_000,
       refetchOnReconnect: false,
       refetchOnWindowFocus: false,
@@ -257,146 +300,170 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const handleClose = () => {
     if (query.trim()) history.add(query)
     setQuery('')
+    setActiveGame(null)
+    setDismissedGame(null)
     onClose()
   }
 
+  const handleGameClose = () => {
+    setDismissedGame(activeGame)
+    setActiveGame(null)
+  }
+
   const showRecent = !query.trim() && recentSearches.length > 0
-  const showEmpty = query.trim() && !searchQuery.isFetching && !searchQuery.isError && results.length === 0
-  const showError = query.trim() && !searchQuery.isFetching && searchQuery.isError
+  const showEmpty =
+    query.trim() &&
+    !requestedGame &&
+    !searchQuery.isFetching &&
+    !searchQuery.isError &&
+    results.length === 0
+  const showError = query.trim() && !requestedGame && !searchQuery.isFetching && searchQuery.isError
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      fullWidth
-      maxWidth="sm"
-      sx={{
-        '& .MuiDialog-container': { alignItems: 'flex-start', pt: 2 },
-        '& .MuiDialog-paper': { borderRadius: 2, overflow: 'hidden', mx: { xs: 0.5, sm: 'auto' } },
-      }}
-      slotProps={{
-        backdrop: { sx: { backdropFilter: 'blur(2px)', bgcolor: 'rgba(0,0,0,0.8)' } },
-      }}
-    >
-      {/* Search input row */}
-      <Box
+    <>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="sm"
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          px: 1.5,
-          py: 1,
-          gap: 0.5,
-          borderBottom: 1,
-          borderColor: 'divider',
+          '& .MuiDialog-container': { alignItems: 'flex-start', pt: 2 },
+          '& .MuiDialog-paper': { borderRadius: 2, overflow: 'hidden', mx: { xs: 0.5, sm: 'auto' } },
+        }}
+        slotProps={{
+          backdrop: { sx: { backdropFilter: 'blur(2px)', bgcolor: 'rgba(0,0,0,0.8)' } },
         }}
       >
-        <Search sx={{ color: 'text.primary', fontSize: 28, flexShrink: 0 }} />
-        <InputBase
-          inputRef={inputRef}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Escape') handleClose() }}
-          placeholder="Search"
-          fullWidth
-          sx={{ fontSize: 15 }}
-          inputProps={{ 'aria-label': 'Search' }}
-          endAdornment={
-            query ? (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setQuery('')} edge="end">
-                  <Clear sx={{ fontSize: 22 }} />
-                </IconButton>
-              </InputAdornment>
-            ) : null
-          }
-        />
-      </Box>
+        {/* Search input row */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            px: 1.5,
+            py: 1,
+            gap: 0.5,
+            borderBottom: 1,
+            borderColor: 'divider',
+          }}
+        >
+          <Search sx={{ color: 'text.primary', fontSize: 28, flexShrink: 0 }} />
+          <InputBase
+            inputRef={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') handleClose() }}
+            placeholder="Search"
+            fullWidth
+            sx={{ fontSize: 15 }}
+            inputProps={{ 'aria-label': 'Search' }}
+            endAdornment={
+              query ? (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setQuery('')} edge="end">
+                    <Clear sx={{ fontSize: 22 }} />
+                  </IconButton>
+                </InputAdornment>
+              ) : null
+            }
+          />
+        </Box>
 
-      {/* Results area */}
-      <Box sx={{ maxHeight: 480, overflowY: 'auto' }}>
+        {/* Results area */}
+        <Box sx={{ maxHeight: 480, overflowY: 'auto' }}>
 
-        {/* Loading indicator */}
-        {searchQuery.isFetching && (
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', px: 2, py: 1.5 }}>
-            Searching...
-          </Typography>
-        )}
+          {/* Loading indicator */}
+          {searchQuery.isFetching && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', px: 2, py: 1.5 }}>
+              Searching...
+            </Typography>
+          )}
 
-        {/* Recent searches */}
-        {showRecent && (
-          <Box sx={{ py: 1 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 1.5, pb: 0.5 }}>
-              <Typography variant="overline" sx={{ color: 'text.disabled', fontSize: 10, letterSpacing: 1 }}>
-                Recent searches
-              </Typography>
-              <Typography
-                variant="caption"
-                color="primary"
-                sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
-                onClick={handleClearHistory}
-              >
-                Clear history
-              </Typography>
-            </Stack>
-            {recentSearches.map((q) => (
-              <Box
-                key={q}
-                onClick={() => handleRecentClick(q)}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  px: 1.5,
-                  py: 0.75,
-                  cursor: 'pointer',
-                  borderRadius: 1,
-                  '&:hover': { bgcolor: 'action.hover' },
-                }}
-              >
-                <AccessTime sx={{ fontSize: 16, color: 'text.disabled', flexShrink: 0 }} />
-                <Typography variant="body2" color="text.secondary">
-                  {q}
+          {requestedGame && (
+            <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 2, textAlign: 'center' }}>
+              Opening {requestedGame === 'snake' ? 'Snake' : requestedGame === 'asteroids' ? 'Asteroids' : requestedGame === 'racecar' ? 'Race Car' : 'Tetris'}...
+            </Typography>
+          )}
+
+          {/* Recent searches */}
+          {showRecent && (
+            <Box sx={{ py: 1 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 1.5, pb: 0.5 }}>
+                <Typography variant="overline" sx={{ color: 'text.disabled', fontSize: 10, letterSpacing: 1 }}>
+                  Recent searches
                 </Typography>
-              </Box>
-            ))}
-          </Box>
-        )}
+                <Typography
+                  variant="caption"
+                  color="primary"
+                  sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                  onClick={handleClearHistory}
+                >
+                  Clear history
+                </Typography>
+              </Stack>
+              {recentSearches.map((q) => (
+                <Box
+                  key={q}
+                  onClick={() => handleRecentClick(q)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    px: 1.5,
+                    py: 0.75,
+                    cursor: 'pointer',
+                    borderRadius: 1,
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
+                >
+                  <AccessTime sx={{ fontSize: 16, color: 'text.disabled', flexShrink: 0 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {q}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
 
-        {/* Empty state */}
-        {showEmpty && (
-          <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 2, textAlign: 'center' }}>
-            No results for "{query}". Try a well ID, site name, or contact name.
-          </Typography>
-        )}
+          {/* Empty state */}
+          {showEmpty && (
+            <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 2, textAlign: 'center' }}>
+              No results for "{query}". Try a well ID, site name, or contact name.
+            </Typography>
+          )}
 
-        {/* Error state */}
-        {showError && (
-          <Typography variant="body2" color="error" sx={{ px: 2, py: 2, textAlign: 'center' }}>
-            Search failed. Please try again.
-          </Typography>
-        )}
+          {/* Error state */}
+          {showError && (
+            <Typography variant="body2" color="error" sx={{ px: 2, py: 2, textAlign: 'center' }}>
+              Search failed. Please try again.
+            </Typography>
+          )}
 
-        {/* Grouped results */}
-        {!searchQuery.isFetching && grouped.size > 0 && (
-          <Box sx={{ py: 0.5 }}>
-            {Array.from(grouped.entries()).map(([group, items], groupIndex) => (
-              <Box key={group}>
-                {groupIndex > 0 && <Divider sx={{ my: 0.5 }} />}
-                {items.map((option, i) => (
-                  <ResultRow
-                    key={`${option.group}-${(option as any).properties?.id ?? i}`}
-                    option={option}
-                    query={query}
-                    onClick={() => handleSelect(option)}
-                  />
-                ))}
-              </Box>
-            ))}
-          </Box>
-        )}
+          {/* Grouped results */}
+          {!searchQuery.isFetching && !requestedGame && grouped.size > 0 && (
+            <Box sx={{ py: 0.5 }}>
+              {Array.from(grouped.entries()).map(([group, items], groupIndex) => (
+                <Box key={group}>
+                  {groupIndex > 0 && <Divider sx={{ my: 0.5 }} />}
+                  {items.map((option, i) => (
+                    <ResultRow
+                      key={`${option.group}-${(option as any).properties?.id ?? i}`}
+                      option={option}
+                      query={query}
+                      onClick={() => handleSelect(option)}
+                    />
+                  ))}
+                </Box>
+              ))}
+            </Box>
+          )}
 
-      </Box>
-    </Dialog>
+        </Box>
+      </Dialog>
+      <SnakeGameModal open={activeGame === 'snake'} onClose={handleGameClose} />
+      <AsteroidsGameModal open={activeGame === 'asteroids'} onClose={handleGameClose} />
+      <RaceCarGameModal open={activeGame === 'racecar'} onClose={handleGameClose} />
+      <TetrisGameModal open={activeGame === 'tetris'} onClose={handleGameClose} />
+    </>
   )
 }
 
