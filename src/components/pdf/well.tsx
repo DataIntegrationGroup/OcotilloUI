@@ -10,11 +10,9 @@ import {
   SensorDeploymentRow,
 } from '@/utils'
 import { PDF_DEFAULT_VALUES } from '@/config'
-import {
-  useAllNotes,
-  useMostRecentObservation,
-  usePrimaryAndSecondaryContact,
-} from '@/hooks'
+import { useAllNotes } from '@/hooks/useAllNotes'
+import { useMostRecentObservation } from '@/hooks/useMostRecentObservation'
+import { usePrimaryAndSecondaryContact } from '@/hooks/usePrimaryAndSecondaryContact'
 import {
   AdditionalInformation,
   CoreInformation,
