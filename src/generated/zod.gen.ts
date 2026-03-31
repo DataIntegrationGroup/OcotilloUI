@@ -3649,8 +3649,14 @@ export const zWaterLevelBulkUploadRow = z.object({
     sample_id: z.int(),
     observation_id: z.int(),
     measurement_date_time: z.string(),
-    level_status: z.string(),
-    data_quality: z.string()
+    level_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    data_quality: z.union([
+        z.string(),
+        z.null()
+    ])
 });
 
 /**

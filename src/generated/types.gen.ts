@@ -3218,11 +3218,11 @@ export type WaterLevelBulkUploadRow = {
     /**
      * Level Status
      */
-    level_status: string;
+    level_status: string | null;
     /**
      * Data Quality
      */
-    data_quality: string;
+    data_quality: string | null;
 };
 
 /**

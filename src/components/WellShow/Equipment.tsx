@@ -114,10 +114,7 @@ export const EquipmentAccordion = ({
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              lg: 'minmax(0, 1.35fr) minmax(320px, 0.9fr)',
-            },
+            gridTemplateColumns: '1fr',
             gap: 2,
             alignItems: 'start',
           }}

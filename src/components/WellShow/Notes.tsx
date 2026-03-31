@@ -1,16 +1,24 @@
-import { Box, Paper, Stack, Typography } from '@mui/material'
+import { Box, Paper, Typography } from '@mui/material'
 import { Notes } from '@mui/icons-material'
 import Grid from '@mui/material/Grid2'
 import { IWell } from '@/interfaces/ocotillo'
 import { groupNotesByType } from '@/utils'
 
 export const NotesAccordion = ({ well }: { well?: IWell }) => {
+  const locationNote = well?.current_location?.properties?.notes
+    ?.filter((note) => note.note_type === 'General')
+    .shift()
+
   const allNotes = [
     ...(well?.water_notes ?? []),
     ...(well?.measuring_notes ?? []),
     ...(well?.construction_notes ?? []),
     ...(well?.general_notes ?? []),
-    ...(well?.current_location?.properties?.notes ?? []),
+    // Exclude the specific location "General" note used in the map ("Directions to the site").
+    // This prevents duplicate content between the map and Notes section.
+    ...(well?.current_location?.properties?.notes ?? []).filter(
+      (note) => note.id !== locationNote?.id
+    ),
     ...(well?.sampling_procedure_notes ?? []),
   ]
 
@@ -24,7 +32,9 @@ export const NotesAccordion = ({ well }: { well?: IWell }) => {
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box
+        sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+      >
         <Notes color="primary" />
         <Typography variant="body1" fontWeight="bold">
           Notes

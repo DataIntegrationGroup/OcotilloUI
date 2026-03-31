@@ -45,6 +45,8 @@ export const RecentWaterLevelObservationsCard = ({
     ]
   }, [])
 
+  const measuringNote = well?.measuring_notes?.shift()
+
   return (
     <Card
       elevation={2}
@@ -97,6 +99,21 @@ export const RecentWaterLevelObservationsCard = ({
               },
             }}
           />
+        )}
+        {measuringNote && (
+          <>
+            <Typography variant="h6" component="div" sx={{ pt: 1 }}>
+              Measurement Note
+            </Typography>
+            <Typography
+              variant="body2"
+              component="div"
+              color="textSecondary"
+              sx={{ pt: 1 }}
+            >
+              {measuringNote?.content}
+            </Typography>
+          </>
         )}
       </CardContent>
     </Card>
