@@ -46,9 +46,7 @@ export const RecentWaterLevelObservationsCard = ({
     ]
   }, [])
 
-  const measuringNote = well.general_notes
-    .filter((note) => note.note_type === 'General')
-    .shift()
+  const measuringNote = well?.measuring_notes?.shift()
 
   return (
     <Card
