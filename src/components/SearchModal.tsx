@@ -33,6 +33,41 @@ import {
 
 type ArcadeGame = 'snake' | 'asteroids' | 'racecar' | 'tetris' | 'minesweeper'
 
+type SearchMode =
+  | 'default'
+  | 'command-root'
+  | 'games'
+  | 'docs'
+  | 'unknown-command'
+
+type ParsedSearch =
+  | { mode: 'default'; term: string }
+  | { mode: 'command-root'; term: string }
+  | { mode: 'games'; term: string }
+  | { mode: 'docs'; term: string }
+  | { mode: 'unknown-command'; command: string; term: string }
+
+const COMMANDS = [
+  {
+    key: 'games',
+    label: '!games',
+    description: 'Browse and launch games',
+  },
+  {
+    key: 'docs',
+    label: '!docs',
+    description: 'Search docs by title or content',
+  },
+] as const
+
+const GAMES: { key: ArcadeGame; label: string; description: string }[] = [
+  { key: 'snake', label: 'Snake', description: 'Classic snake game' },
+  { key: 'asteroids', label: 'Asteroids', description: 'Arcade space shooter' },
+  { key: 'racecar', label: 'Race Car', description: 'Driving game' },
+  { key: 'tetris', label: 'Tetris', description: 'Block puzzle game' },
+  { key: 'minesweeper', label: 'Minesweeper', description: 'Find all mines' },
+]
+
 // ---- type icon mapping ------------------------------------------------
 
 const TypeIcon = ({ group }: { group: GroupType }) => {
@@ -100,7 +135,12 @@ const RelatedThings = ({
         />
       ))}
       {things.length > 4 && (
-        <Chip size="small" label={`+${things.length - 4} more`} variant="outlined" sx={{ fontSize: 11 }} />
+        <Chip
+          size="small"
+          label={`+${things.length - 4} more`}
+          variant="outlined"
+          sx={{ fontSize: 11 }}
+        />
       )}
     </Box>
   )
@@ -145,7 +185,11 @@ const ResultRow = ({
           {highlight(option.label, query)}
         </Typography>
         {subtitle && (
-          <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4, display: 'block' }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ lineHeight: 1.4, display: 'block' }}
+          >
             {subtitle}
           </Typography>
         )}
@@ -174,20 +218,50 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const [activeGame, setActiveGame] = useState<ArcadeGame | null>(null)
   const [dismissedGame, setDismissedGame] = useState<ArcadeGame | null>(null)
   const debounced = useDebounce(query, 400)
+
   const normalizedQuery = query.trim().toLowerCase()
   const normalizedDebounced = debounced.trim().toLowerCase()
-  const requestedGame =
-    normalizedQuery === 'snake'
-      ? 'snake'
-      : normalizedQuery === 'asteroids'
-        ? 'asteroids'
-        : normalizedQuery === 'racecar'
-          ? 'racecar'
-          : normalizedQuery === 'tetris'
-            ? 'tetris'
-            : normalizedQuery === 'minesweeper'
-              ? 'minesweeper'
-          : null
+
+  const parsed: ParsedSearch = useMemo(() => {
+    const trimmed = query.trim()
+
+    if (!trimmed.startsWith('!')) {
+      return { mode: 'default', term: trimmed }
+    }
+
+    const withoutBang = trimmed.slice(1).trim()
+
+    if (!withoutBang) {
+      return { mode: 'command-root', term: '' }
+    }
+
+    const [command, ...rest] = withoutBang.split(/\s+/)
+    const commandTerm = rest.join(' ').trim()
+
+    if (command.toLowerCase() === 'games') {
+      return { mode: 'games', term: commandTerm }
+    }
+
+    if (command.toLowerCase() === 'docs') {
+      return { mode: 'docs', term: commandTerm }
+    }
+
+    return {
+      mode: 'unknown-command',
+      command,
+      term: commandTerm,
+    }
+  }, [query])
+
+  const requestedGame: ArcadeGame | null = useMemo(() => {
+    if (parsed.mode !== 'games') return null
+
+    const normalizedTerm = parsed.term.trim().toLowerCase()
+    if (!normalizedTerm) return null
+
+    const exactMatch = GAMES.find((game) => game.key === normalizedTerm)
+    return exactMatch?.key ?? null
+  }, [parsed])
 
   // Reload history each time modal opens
   useEffect(() => {
@@ -211,7 +285,11 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       return
     }
 
-    if (open && activeGame !== requestedGame && dismissedGame !== requestedGame) {
+    if (
+      open &&
+      activeGame !== requestedGame &&
+      dismissedGame !== requestedGame
+    ) {
       setActiveGame(requestedGame)
     }
   }, [activeGame, dismissedGame, open, requestedGame])
@@ -223,12 +301,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     queryOptions: {
       enabled:
         open &&
-        normalizedDebounced.length >= 1 &&
-        normalizedDebounced !== 'snake' &&
-        normalizedDebounced !== 'asteroids' &&
-        normalizedDebounced !== 'racecar' &&
-        normalizedDebounced !== 'tetris' &&
-        normalizedDebounced !== 'minesweeper',
+        ((parsed.mode === 'default' && normalizedDebounced.length >= 1) ||
+          (parsed.mode === 'docs' && debounced.trim().length > 0)),
       staleTime: 120_000,
       refetchOnReconnect: false,
       refetchOnWindowFocus: false,
@@ -237,9 +311,11 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   })
 
   const results: SearchResult[] = useMemo(() => {
+    if (parsed.mode !== 'default') return []
     if (!query.trim()) return []
     if (searchQuery.isFetching) return []
     if (searchQuery.isError) return []
+
     const normalized =
       result?.data?.map((r: any) => ({
         label: r.label,
@@ -247,8 +323,9 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         group: r.group as GroupType,
         properties: r.properties,
       })) ?? []
+
     return dedupeResults(normalized)
-  }, [result, query, searchQuery.isFetching, searchQuery.isError])
+  }, [parsed.mode, result, query, searchQuery.isFetching, searchQuery.isError])
 
   // Group results by type for section headers
   const grouped = useMemo(() => {
@@ -260,6 +337,24 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     return map
   }, [results])
 
+  const filteredCommands = useMemo(() => {
+    if (parsed.mode !== 'command-root') return []
+
+    return COMMANDS
+  }, [parsed.mode])
+
+  const filteredGames = useMemo(() => {
+    if (parsed.mode !== 'games') return []
+
+    const term = parsed.term.trim().toLowerCase()
+    if (!term) return GAMES
+
+    return GAMES.filter(
+      (game) =>
+        game.key.includes(term) || game.label.toLowerCase().includes(term)
+    )
+  }, [parsed])
+
   const navigateToResult = (option: SearchResult) => {
     switch (option.group) {
       case GroupType.Wells:
@@ -268,7 +363,9 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         const isWaterWell = p.thing_type === 'water well'
         go({
           to: {
-            resource: isWaterWell ? 'ocotillo.thing-well' : 'ocotillo.thing-spring',
+            resource: isWaterWell
+              ? 'ocotillo.thing-well'
+              : 'ocotillo.thing-spring',
             action: 'show',
             id: p.id,
           },
@@ -277,15 +374,32 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       }
       case GroupType.Contacts:
         go({
-          to: { resource: 'ocotillo.contact', action: 'show', id: (option as ContactResult).properties.id },
+          to: {
+            resource: 'ocotillo.contact',
+            action: 'show',
+            id: (option as ContactResult).properties.id,
+          },
         })
         break
       case GroupType.Assets:
         go({
-          to: { resource: 'ocotillo.asset', action: 'show', id: (option as any).properties.id },
+          to: {
+            resource: 'ocotillo.asset',
+            action: 'show',
+            id: (option as any).properties.id,
+          },
         })
         break
     }
+  }
+
+  const handleCommandClick = (command: 'games' | 'docs') => {
+    setQuery(`!${command} `)
+    inputRef.current?.focus()
+  }
+
+  const handleGameSelect = (game: ArcadeGame) => {
+    setActiveGame(game)
   }
 
   const handleSelect = (option: SearchResult) => {
@@ -317,13 +431,25 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   }
 
   const showRecent = !query.trim() && recentSearches.length > 0
-  const showEmpty =
+
+  const showDefaultEmpty =
+    parsed.mode === 'default' &&
     query.trim() &&
-    !requestedGame &&
     !searchQuery.isFetching &&
     !searchQuery.isError &&
     results.length === 0
-  const showError = query.trim() && !requestedGame && !searchQuery.isFetching && searchQuery.isError
+
+  const showDocsEmpty =
+    parsed.mode === 'docs' &&
+    parsed.term.trim() &&
+    !searchQuery.isFetching &&
+    !searchQuery.isError
+
+  const showError =
+    (parsed.mode === 'default' || parsed.mode === 'docs') &&
+    query.trim() &&
+    !searchQuery.isFetching &&
+    searchQuery.isError
 
   return (
     <>
@@ -334,10 +460,16 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         maxWidth="sm"
         sx={{
           '& .MuiDialog-container': { alignItems: 'flex-start', pt: 2 },
-          '& .MuiDialog-paper': { borderRadius: 2, overflow: 'hidden', mx: { xs: 0.5, sm: 'auto' } },
+          '& .MuiDialog-paper': {
+            borderRadius: 2,
+            overflow: 'hidden',
+            mx: { xs: 0.5, sm: 'auto' },
+          },
         }}
         slotProps={{
-          backdrop: { sx: { backdropFilter: 'blur(2px)', bgcolor: 'rgba(0,0,0,0.8)' } },
+          backdrop: {
+            sx: { backdropFilter: 'blur(2px)', bgcolor: 'rgba(0,0,0,0.8)' },
+          },
         }}
       >
         {/* Search input row */}
@@ -357,15 +489,45 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
             inputRef={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Escape') handleClose() }}
-            placeholder="Search"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                handleClose()
+                return
+              }
+
+              if (e.key === 'Enter') {
+                if (parsed.mode === 'command-root') {
+                  handleCommandClick('games')
+                  return
+                }
+
+                if (parsed.mode === 'games' && filteredGames.length > 0) {
+                  handleGameSelect(filteredGames[0].key)
+                  return
+                }
+
+                // if (parsed.mode === 'docs' && docsResults.length > 0) {
+                //   handleSelect(docsResults[0])
+                //   return
+                // }
+
+                if (parsed.mode === 'default' && results.length > 0) {
+                  handleSelect(results[0])
+                }
+              }
+            }}
+            placeholder='Search or type "!" for commands'
             fullWidth
             sx={{ fontSize: 15 }}
             inputProps={{ 'aria-label': 'Search' }}
             endAdornment={
               query ? (
                 <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setQuery('')} edge="end">
+                  <IconButton
+                    size="small"
+                    onClick={() => setQuery('')}
+                    edge="end"
+                  >
                     <Clear sx={{ fontSize: 22 }} />
                   </IconButton>
                 </InputAdornment>
@@ -375,32 +537,158 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         </Box>
 
         {/* Results area */}
-        <Box sx={{ maxHeight: 480, overflowY: 'auto' }}>
+        {parsed.mode === 'command-root' && (
+          <Box sx={{ py: 1 }}>
+            <Stack sx={{ px: 1.5, pb: 0.5 }}>
+              <Typography
+                variant="overline"
+                sx={{ color: 'text.disabled', fontSize: 10, letterSpacing: 1 }}
+              >
+                Commands
+              </Typography>
+            </Stack>
 
+            {filteredCommands.map((command: any) => (
+              <Box
+                key={command.key}
+                onClick={() => handleCommandClick(command.key)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 1.5,
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 1,
+                  cursor: 'pointer',
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
+              >
+                <Description
+                  sx={{
+                    fontSize: 18,
+                    color: 'text.secondary',
+                    flexShrink: 0,
+                    mt: '2px',
+                  }}
+                />
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography variant="body2" fontWeight={600}>
+                    {command.label}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {command.description}
+                  </Typography>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        )}
+
+        {parsed.mode === 'games' && !requestedGame && (
+          <Box sx={{ py: 1 }}>
+            <Stack sx={{ px: 1.5, pb: 0.5 }}>
+              <Typography
+                variant="overline"
+                sx={{ color: 'text.disabled', fontSize: 10, letterSpacing: 1 }}
+              >
+                Games
+              </Typography>
+            </Stack>
+
+            {filteredGames.map((game) => (
+              <Box
+                key={game.key}
+                onClick={() => handleGameSelect(game.key)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 1.5,
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 1,
+                  cursor: 'pointer',
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
+              >
+                <Typography variant="body2" sx={{ minWidth: 0, flex: 1 }}>
+                  <Box component="span" fontWeight={600}>
+                    {game.label}
+                  </Box>
+                  <Typography
+                    component="span"
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ ml: 1 }}
+                  >
+                    {game.description}
+                  </Typography>
+                </Typography>
+              </Box>
+            ))}
+
+            {filteredGames.length === 0 && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ px: 2, py: 2, textAlign: 'center' }}
+              >
+                No games found for "{parsed.term}".
+              </Typography>
+            )}
+          </Box>
+        )}
+
+        <Box sx={{ maxHeight: 480, overflowY: 'auto' }}>
           {/* Loading indicator */}
           {searchQuery.isFetching && (
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', px: 2, py: 1.5 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'block', px: 2, py: 1.5 }}
+            >
               Searching...
             </Typography>
           )}
 
           {requestedGame && (
-            <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 2, textAlign: 'center' }}>
-              Opening {requestedGame === 'snake' ? 'Snake' : requestedGame === 'asteroids' ? 'Asteroids' : requestedGame === 'racecar' ? 'Race Car' : requestedGame === 'tetris' ? 'Tetris' : 'Minesweeper'}...
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ px: 2, py: 2, textAlign: 'center' }}
+            >
+              Press Enter to open{' '}
+              {GAMES.find((g) => g.key === requestedGame)?.label ??
+                requestedGame}
+              .
             </Typography>
           )}
 
           {/* Recent searches */}
           {showRecent && (
             <Box sx={{ py: 1 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 1.5, pb: 0.5 }}>
-                <Typography variant="overline" sx={{ color: 'text.disabled', fontSize: 10, letterSpacing: 1 }}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ px: 1.5, pb: 0.5 }}
+              >
+                <Typography
+                  variant="overline"
+                  sx={{
+                    color: 'text.disabled',
+                    fontSize: 10,
+                    letterSpacing: 1,
+                  }}
+                >
                   Recent searches
                 </Typography>
                 <Typography
                   variant="caption"
                   color="primary"
-                  sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': { textDecoration: 'underline' },
+                  }}
                   onClick={handleClearHistory}
                 >
                   Clear history
@@ -421,7 +709,9 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
                     '&:hover': { bgcolor: 'action.hover' },
                   }}
                 >
-                  <AccessTime sx={{ fontSize: 16, color: 'text.disabled', flexShrink: 0 }} />
+                  <AccessTime
+                    sx={{ fontSize: 16, color: 'text.disabled', flexShrink: 0 }}
+                  />
                   <Typography variant="body2" color="text.secondary">
                     {q}
                   </Typography>
@@ -431,45 +721,87 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
           )}
 
           {/* Empty state */}
-          {showEmpty && (
-            <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 2, textAlign: 'center' }}>
-              No results for "{query}". Try a well ID, site name, or contact name.
+          {showDefaultEmpty && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ px: 2, py: 2, textAlign: 'center' }}
+            >
+              No results for "{query}". Try a well ID, site name, or contact
+              name.
+            </Typography>
+          )}
+
+          {showDocsEmpty && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ px: 2, py: 2, textAlign: 'center' }}
+            >
+              No docs found for "{parsed.term}".
             </Typography>
           )}
 
           {/* Error state */}
           {showError && (
-            <Typography variant="body2" color="error" sx={{ px: 2, py: 2, textAlign: 'center' }}>
+            <Typography
+              variant="body2"
+              color="error"
+              sx={{ px: 2, py: 2, textAlign: 'center' }}
+            >
               Search failed. Please try again.
+            </Typography>
+          )}
+
+          {parsed.mode === 'unknown-command' && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ px: 2, py: 2, textAlign: 'center' }}
+            >
+              Unknown command "!{parsed.command}". Try !games or !docs.
             </Typography>
           )}
 
           {/* Grouped results */}
           {!searchQuery.isFetching && !requestedGame && grouped.size > 0 && (
             <Box sx={{ py: 0.5 }}>
-              {Array.from(grouped.entries()).map(([group, items], groupIndex) => (
-                <Box key={group}>
-                  {groupIndex > 0 && <Divider sx={{ my: 0.5 }} />}
-                  {items.map((option, i) => (
-                    <ResultRow
-                      key={`${option.group}-${(option as any).properties?.id ?? i}`}
-                      option={option}
-                      query={query}
-                      onClick={() => handleSelect(option)}
-                    />
-                  ))}
-                </Box>
-              ))}
+              {Array.from(grouped.entries()).map(
+                ([group, items], groupIndex) => (
+                  <Box key={group}>
+                    {groupIndex > 0 && <Divider sx={{ my: 0.5 }} />}
+                    {items.map((option, i) => (
+                      <ResultRow
+                        key={`${option.group}-${(option as any).properties?.id ?? i}`}
+                        option={option}
+                        query={query}
+                        onClick={() => handleSelect(option)}
+                      />
+                    ))}
+                  </Box>
+                )
+              )}
             </Box>
           )}
-
         </Box>
       </Dialog>
       <SnakeGameModal open={activeGame === 'snake'} onClose={handleGameClose} />
-      <AsteroidsGameModal open={activeGame === 'asteroids'} onClose={handleGameClose} />
-      <RaceCarGameModal open={activeGame === 'racecar'} onClose={handleGameClose} />
-      <TetrisGameModal open={activeGame === 'tetris'} onClose={handleGameClose} />
-      <MinesweeperGameModal open={activeGame === 'minesweeper'} onClose={handleGameClose} />
+      <AsteroidsGameModal
+        open={activeGame === 'asteroids'}
+        onClose={handleGameClose}
+      />
+      <RaceCarGameModal
+        open={activeGame === 'racecar'}
+        onClose={handleGameClose}
+      />
+      <TetrisGameModal
+        open={activeGame === 'tetris'}
+        onClose={handleGameClose}
+      />
+      <MinesweeperGameModal
+        open={activeGame === 'minesweeper'}
+        onClose={handleGameClose}
+      />
     </>
   )
 }
