@@ -101,4 +101,19 @@ describe('SearchModal arcade easter eggs', () => {
     expect(screen.getByText('Lines: 0')).toBeTruthy()
     expect(screen.getByRole('grid', { name: 'Tetris game board' })).toBeTruthy()
   })
+
+  it('opens the Minesweeper game when the query is minesweeper', async () => {
+    const user = userEvent.setup()
+
+    render(<SearchModal open={true} onClose={vi.fn()} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Search' }), 'minesweeper')
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Minesweeper' })).toBeTruthy()
+    })
+
+    expect(screen.getByText('Mines left: 10')).toBeTruthy()
+    expect(screen.getByRole('grid', { name: 'Minesweeper game board' })).toBeTruthy()
+  })
 })

@@ -39,8 +39,8 @@ type AsteroidsGameModalProps = {
   onClose: () => void
 }
 
-const ARENA_WIDTH = 640
-const ARENA_HEIGHT = 420
+const ARENA_WIDTH = 520
+const ARENA_HEIGHT = 320
 const SHIP_RADIUS = 12
 const SHOT_SPEED = 6
 const TURN_SPEED = 0.09
@@ -242,9 +242,20 @@ export const AsteroidsGameModal = ({ open, onClose }: AsteroidsGameModalProps) =
   }, [ship.angle, ship.x, ship.y])
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" aria-labelledby="asteroids-game-title">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="md"
+      aria-labelledby="asteroids-game-title"
+      sx={{
+        '& .MuiDialog-paper': {
+          maxHeight: 'calc(100vh - 32px)',
+        },
+      }}
+    >
       <DialogTitle id="asteroids-game-title">Asteroids</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogContent sx={{ pt: 1, overflow: 'hidden' }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="body2" color="text.secondary">

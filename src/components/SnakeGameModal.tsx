@@ -171,9 +171,14 @@ export const SnakeGameModal = ({ open, onClose }: SnakeGameModalProps) => {
       fullWidth
       maxWidth="sm"
       aria-labelledby="snake-game-title"
+      sx={{
+        '& .MuiDialog-paper': {
+          maxHeight: 'calc(100vh - 32px)',
+        },
+      }}
     >
       <DialogTitle id="snake-game-title">Snake</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogContent sx={{ pt: 1, overflow: 'hidden' }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="body2" color="text.secondary">
@@ -193,7 +198,7 @@ export const SnakeGameModal = ({ open, onClose }: SnakeGameModalProps) => {
               gap: 0.5,
               p: 1,
               width: '100%',
-              maxWidth: 560,
+              maxWidth: 420,
               mx: 'auto',
               borderRadius: 2,
               bgcolor: '#0f172a',

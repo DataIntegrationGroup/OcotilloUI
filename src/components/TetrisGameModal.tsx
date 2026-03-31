@@ -427,9 +427,20 @@ export const TetrisGameModal = ({ open, onClose }: TetrisGameModalProps) => {
   }, [activePiece, board])
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" aria-labelledby="tetris-game-title">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      aria-labelledby="tetris-game-title"
+      sx={{
+        '& .MuiDialog-paper': {
+          maxHeight: 'calc(100vh - 32px)',
+        },
+      }}
+    >
       <DialogTitle id="tetris-game-title">Tetris</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogContent sx={{ pt: 1, overflow: 'hidden' }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="body2" color="text.secondary">

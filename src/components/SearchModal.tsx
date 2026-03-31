@@ -27,8 +27,9 @@ import { SnakeGameModal } from '@/components/SnakeGameModal'
 import { AsteroidsGameModal } from '@/components/AsteroidsGameModal'
 import { RaceCarGameModal } from '@/components/RaceCarGameModal'
 import { TetrisGameModal } from '@/components/TetrisGameModal'
+import { MinesweeperGameModal } from '@/components/MinesweeperGameModal'
 
-type ArcadeGame = 'snake' | 'asteroids' | 'racecar' | 'tetris'
+type ArcadeGame = 'snake' | 'asteroids' | 'racecar' | 'tetris' | 'minesweeper'
 
 // ---- type icon mapping ------------------------------------------------
 
@@ -182,6 +183,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
           ? 'racecar'
           : normalizedQuery === 'tetris'
             ? 'tetris'
+            : normalizedQuery === 'minesweeper'
+              ? 'minesweeper'
           : null
 
   // Reload history each time modal opens
@@ -222,7 +225,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
         normalizedDebounced !== 'snake' &&
         normalizedDebounced !== 'asteroids' &&
         normalizedDebounced !== 'racecar' &&
-        normalizedDebounced !== 'tetris',
+        normalizedDebounced !== 'tetris' &&
+        normalizedDebounced !== 'minesweeper',
       staleTime: 120_000,
       refetchOnReconnect: false,
       refetchOnWindowFocus: false,
@@ -380,7 +384,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
 
           {requestedGame && (
             <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 2, textAlign: 'center' }}>
-              Opening {requestedGame === 'snake' ? 'Snake' : requestedGame === 'asteroids' ? 'Asteroids' : requestedGame === 'racecar' ? 'Race Car' : 'Tetris'}...
+              Opening {requestedGame === 'snake' ? 'Snake' : requestedGame === 'asteroids' ? 'Asteroids' : requestedGame === 'racecar' ? 'Race Car' : requestedGame === 'tetris' ? 'Tetris' : 'Minesweeper'}...
             </Typography>
           )}
 
@@ -463,6 +467,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       <AsteroidsGameModal open={activeGame === 'asteroids'} onClose={handleGameClose} />
       <RaceCarGameModal open={activeGame === 'racecar'} onClose={handleGameClose} />
       <TetrisGameModal open={activeGame === 'tetris'} onClose={handleGameClose} />
+      <MinesweeperGameModal open={activeGame === 'minesweeper'} onClose={handleGameClose} />
     </>
   )
 }

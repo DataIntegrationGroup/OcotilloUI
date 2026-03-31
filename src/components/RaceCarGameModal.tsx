@@ -35,7 +35,7 @@ type RaceCarGameModalProps = {
 }
 
 const VIEW_WIDTH = 420
-const VIEW_HEIGHT = 560
+const VIEW_HEIGHT = 430
 const SEGMENT_HEIGHT = 28
 const SEGMENT_COUNT = Math.ceil(VIEW_HEIGHT / SEGMENT_HEIGHT) + 3
 const BASE_ROAD_WIDTH = 350
@@ -336,9 +336,20 @@ export const RaceCarGameModal = ({ open, onClose }: RaceCarGameModalProps) => {
   )
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" aria-labelledby="racecar-game-title">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      aria-labelledby="racecar-game-title"
+      sx={{
+        '& .MuiDialog-paper': {
+          maxHeight: 'calc(100vh - 32px)',
+        },
+      }}
+    >
       <DialogTitle id="racecar-game-title">Race Car</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogContent sx={{ pt: 1, overflow: 'hidden' }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="body2" color="text.secondary">
