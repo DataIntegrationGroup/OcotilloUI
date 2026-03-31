@@ -80,7 +80,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
                 state.handleEnter()
               }
             }}
-            placeholder='Search or type "!" for commands'
+            placeholder="Search"
             fullWidth
             sx={{ fontSize: 15 }}
             inputProps={{ 'aria-label': 'Search' }}
