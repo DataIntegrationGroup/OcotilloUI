@@ -60,6 +60,10 @@ vi.mock('@/components', () => {
     GeologyInformationAccordion: () => <Stub name="geology" />,
     WellPhysicalPropertiesAccordion: () => <Stub name="physical" />,
     FieldEventHistoryAccordion: () => <Stub name="field-event" />,
+    MajorChemistryAccordion: () => <Stub name="major-chemistry" />,
+    normalizeMajorChemistrySummary: () => null,
+    MinorChemistryAccordion: () => <Stub name="minor-chemistry" />,
+    normalizeMinorChemistrySummary: () => null,
     WellPDFDownloadButton: () => <Stub name="download" />,
     WellShowTitle: () => <Stub name="title" />,
     OwnerPermissionsCard: () => <Stub name="owner" />,
@@ -104,6 +108,20 @@ describe('WellShow data loading', () => {
         }
       }
 
+      if (args?.queryKey?.[0] === 'well-major-chemistry') {
+        return {
+          data: null,
+          isLoading: false,
+        }
+      }
+
+      if (args?.queryKey?.[0] === 'well-minor-chemistry') {
+        return {
+          data: [],
+          isLoading: false,
+        }
+      }
+
       return {
         data: { manualRows: [], transducerRows: [] },
         isLoading: false,
@@ -140,6 +158,26 @@ describe('WellShow data loading', () => {
         enabled: true,
       })
     )
+
+    expect(mockedUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: ['well-major-chemistry', '42', 'Test Well'],
+        enabled: true,
+      })
+    )
+
+    expect(mockedUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: ['well-minor-chemistry', '42', 'Test Well'],
+        enabled: true,
+      })
+    )
+
+    expect(document.body.textContent).toContain('major-chemistry')
+    expect(document.body.textContent).toContain('minor-chemistry')
+    expect(document.body.textContent?.indexOf('major-chemistry')).toBeLessThan(
+      document.body.textContent?.indexOf('minor-chemistry') ?? Infinity
+    )
   })
 
   it('keeps well-scoped queries disabled until an id exists', () => {
@@ -164,6 +202,70 @@ describe('WellShow data loading', () => {
     expect(mockedUseQuery).toHaveBeenCalledWith(
       expect.objectContaining({
         queryKey: ['well-details', undefined],
+        enabled: false,
+      })
+    )
+
+    expect(mockedUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: ['well-major-chemistry', undefined, 'Test Well'],
+        enabled: false,
+      })
+    )
+
+    expect(mockedUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: ['well-minor-chemistry', undefined, 'Test Well'],
+        enabled: false,
+      })
+    )
+  })
+
+  it('keeps the major chemistry query disabled until the well name exists', () => {
+    mockedUseQuery.mockImplementation((args: any) => {
+      if (args?.queryKey?.[0] === 'well-details') {
+        return {
+          data: {
+            well: { id: 42, name: undefined },
+            contacts: [],
+            sensors: [],
+            deployments: [],
+            well_screens: [],
+            recent_groundwater_level_observations: [],
+            latest_field_event_sample: null,
+          },
+          isLoading: false,
+        }
+      }
+
+      if (
+        args?.queryKey?.[0] === 'well-major-chemistry' ||
+        args?.queryKey?.[0] === 'well-minor-chemistry'
+      ) {
+        return {
+          data: [],
+          isLoading: false,
+        }
+      }
+
+      return {
+        data: { manualRows: [], transducerRows: [] },
+        isLoading: false,
+      }
+    })
+
+    render(<WellShow />)
+
+    expect(mockedUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: ['well-major-chemistry', '42', null],
+        enabled: false,
+      })
+    )
+
+    expect(mockedUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: ['well-minor-chemistry', '42', null],
         enabled: false,
       })
     )

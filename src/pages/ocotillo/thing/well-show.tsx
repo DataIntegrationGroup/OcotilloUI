@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
+import { OgcCollectionRecord, resolveCollection } from '@/utils/ogcLayerUtils'
 import {
   IAsset,
   IContact,
@@ -36,15 +37,41 @@ import {
   GeologyInformationAccordion,
   WellPhysicalPropertiesAccordion,
   FieldEventHistoryAccordion,
+  MajorChemistryAccordion,
+  normalizeMajorChemistrySummary,
+  MinorChemistryAccordion,
+  normalizeMinorChemistrySummary,
   WellPDFDownloadButton,
   WellShowTitle,
   OwnerPermissionsCard,
 } from '@/components'
+import type { MajorChemistryFeature } from '@/components/WellShow/MajorChemistry'
+import type { MinorChemistryFeature } from '@/components/WellShow/MinorChemistry'
+
+const MAJOR_CHEMISTRY_COLLECTION_CANDIDATES = [
+  'Major Chemistry (Water Wells)',
+  'major_chemistry_results',
+  'major_chemistry_wells',
+  'major_chemistry',
+]
+
+const MINOR_CHEMISTRY_COLLECTION_CANDIDATES = [
+  'Minor Chemistry (Water Wells)',
+  'minor_chemistry_wells',
+  'minor_chemistry_results',
+  'minor_chemistry',
+]
+
+const MAJOR_CHEMISTRY_PAGE_SIZE = 50
 
 export const WellShow = () => {
   const dataProvider = useDataProvider()
   const ocotilloDataProvider = useMemo(
     () => dataProvider('ocotillo'),
+    [dataProvider]
+  )
+  const ogcapiDataProvider = useMemo(
+    () => dataProvider('ogcapi'),
     [dataProvider]
   )
 
@@ -74,6 +101,7 @@ export const WellShow = () => {
     },
   })
   const well = detailsQuery.data?.well
+  const wellName = well?.name ?? null
   const observations =
     detailsQuery.data?.recent_groundwater_level_observations ?? []
   const assets = assetResult?.data ?? []
@@ -172,6 +200,114 @@ export const WellShow = () => {
 
   const manualHydrographRows = hydrographQuery.data?.manualRows ?? []
   const transducerHydrographRows = hydrographQuery.data?.transducerRows ?? []
+
+  const majorChemistryQuery = useQuery({
+    queryKey: ['well-major-chemistry', id, wellName],
+    enabled: Boolean(id && wellName),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      const collectionsResult = await ogcapiDataProvider.getList({
+        resource: 'ogcapi',
+        pagination: { currentPage: 1, pageSize: 200 },
+      })
+
+      const resolvedCollection = resolveCollection(
+        (collectionsResult?.data ?? []) as OgcCollectionRecord[],
+        MAJOR_CHEMISTRY_COLLECTION_CANDIDATES
+      )
+
+      if (!resolvedCollection.exists || !resolvedCollection.id) {
+        return null
+      }
+
+      const collection = resolvedCollection.id
+
+      const getFeatures = async (params: Record<string, string | number>) => {
+        const page = await ogcapiDataProvider.getList({
+          resource: 'ogcapi',
+          pagination: {
+            currentPage: 1,
+            pageSize: MAJOR_CHEMISTRY_PAGE_SIZE,
+          },
+          meta: {
+            requestConfig: {
+              params: {
+                collection,
+                f: 'json',
+                ...params,
+              },
+            },
+          },
+        })
+
+        return (page?.data ?? []) as MajorChemistryFeature[]
+      }
+
+      const serverSideNameRows = await getFeatures({ name: wellName as string })
+      if (serverSideNameRows.length > 0) return serverSideNameRows[0]
+
+      return null
+    },
+  })
+
+  const majorChemistrySummary = useMemo(
+    () =>
+      normalizeMajorChemistrySummary({
+        feature: (majorChemistryQuery.data as MajorChemistryFeature | null) ?? null,
+      }),
+    [majorChemistryQuery.data]
+  )
+
+  const minorChemistryQuery = useQuery({
+    queryKey: ['well-minor-chemistry', id, wellName],
+    enabled: Boolean(id && wellName),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      const collectionsResult = await ogcapiDataProvider.getList({
+        resource: 'ogcapi',
+        pagination: { currentPage: 1, pageSize: 200 },
+      })
+
+      const resolvedCollection = resolveCollection(
+        (collectionsResult?.data ?? []) as OgcCollectionRecord[],
+        MINOR_CHEMISTRY_COLLECTION_CANDIDATES
+      )
+
+      if (!resolvedCollection.exists || !resolvedCollection.id) {
+        return null
+      }
+
+      const page = await ogcapiDataProvider.getList({
+        resource: 'ogcapi',
+        pagination: {
+          currentPage: 1,
+          pageSize: MAJOR_CHEMISTRY_PAGE_SIZE,
+        },
+        meta: {
+          requestConfig: {
+            params: {
+              collection: resolvedCollection.id,
+              f: 'json',
+              name: wellName as string,
+            },
+          },
+        },
+      })
+
+      const rows = (page?.data ?? []) as MinorChemistryFeature[]
+      return rows.length > 0 ? rows[0] : null
+    },
+  })
+
+  const minorChemistrySummary = useMemo(
+    () =>
+      normalizeMinorChemistrySummary({
+        feature: (minorChemistryQuery.data as MinorChemistryFeature | null) ?? null,
+      }),
+    [minorChemistryQuery.data]
+  )
 
   const hydrographDatasource = useMemo<IHydrographDatasource[]>(() => {
     const manualSource =
@@ -310,6 +446,14 @@ export const WellShow = () => {
               <WellPhysicalPropertiesAccordion well={well} />
               <GeologyInformationAccordion well={well} />
               <FieldEventHistoryAccordion sample={fieldEventSample} />
+              <MajorChemistryAccordion
+                summary={majorChemistrySummary}
+                isLoading={majorChemistryQuery.isLoading}
+              />
+              <MinorChemistryAccordion
+                summary={minorChemistrySummary}
+                isLoading={minorChemistryQuery.isLoading}
+              />
             </Stack>
           </Grid>
         </Grid>
