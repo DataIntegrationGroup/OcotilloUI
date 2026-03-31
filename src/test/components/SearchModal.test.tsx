@@ -4,14 +4,21 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SearchModal } from '@/components/SearchModal'
 
-const { useAbortableListMock, useSearchHistoryMock } = vi.hoisted(() => ({
+const {
+  goMock,
+  searchDocsMock,
+  useAbortableListMock,
+  useSearchHistoryMock,
+} = vi.hoisted(() => ({
+  goMock: vi.fn(),
+  searchDocsMock: vi.fn(),
   useAbortableListMock: vi.fn(),
   useSearchHistoryMock: vi.fn(),
 }))
 
 vi.mock('@refinedev/core', async () => {
   return {
-    useGo: () => vi.fn(),
+    useGo: () => goMock,
   }
 })
 
@@ -23,8 +30,16 @@ vi.mock('@/hooks', () => {
   }
 })
 
+vi.mock('@/utils/docsSearch', () => {
+  return {
+    searchDocs: (...args: unknown[]) => searchDocsMock(...args),
+  }
+})
+
 describe('SearchModal arcade easter eggs', () => {
   beforeEach(() => {
+    goMock.mockReset()
+    searchDocsMock.mockReset()
     useAbortableListMock.mockReset()
     useSearchHistoryMock.mockReset()
     useSearchHistoryMock.mockReturnValue({
@@ -32,6 +47,7 @@ describe('SearchModal arcade easter eggs', () => {
       add: vi.fn(),
       clear: vi.fn(),
     })
+    searchDocsMock.mockReturnValue([])
     useAbortableListMock.mockReturnValue({
       query: {
         isFetching: false,
@@ -115,5 +131,52 @@ describe('SearchModal arcade easter eggs', () => {
 
     expect(screen.getByText('Mines left: 10')).toBeTruthy()
     expect(screen.getByRole('grid', { name: 'Minesweeper game board' })).toBeTruthy()
+  })
+
+  it('filters the command list as partial shebang commands are typed', async () => {
+    const user = userEvent.setup()
+
+    render(<SearchModal open={true} onClose={vi.fn()} />)
+
+    const input = screen.getByRole('textbox', { name: 'Search' })
+
+    await user.type(input, '!')
+    expect(screen.getByText('!games')).toBeTruthy()
+    expect(screen.getByText('!docs')).toBeTruthy()
+
+    await user.type(input, 'd')
+    expect(screen.queryByText('!games')).toBeNull()
+    expect(screen.getByText('!docs')).toBeTruthy()
+  })
+
+  it('searches local docs results for !docs queries and navigates to the selected page', async () => {
+    const user = userEvent.setup()
+
+    searchDocsMock.mockReturnValue([
+      {
+        id: 'about',
+        title: 'About Ocotillo',
+        path: 'about.md',
+        slug: 'about',
+        route: '/about',
+        content: 'A data management portal',
+      },
+    ])
+
+    render(<SearchModal open={true} onClose={vi.fn()} />)
+
+    const input = screen.getByRole('textbox', { name: 'Search' })
+    await user.type(input, '!docs content')
+
+    expect(searchDocsMock).toHaveBeenLastCalledWith('content')
+    expect(screen.getByText('About Ocotillo')).toBeTruthy()
+    expect(screen.getByText(/about\.md/i)).toBeTruthy()
+
+    const lastCall = useAbortableListMock.mock.calls.at(-1)?.[0]
+    expect(lastCall?.queryOptions?.enabled).toBe(false)
+
+    await user.keyboard('{Enter}')
+
+    expect(goMock).toHaveBeenCalledWith({ to: '/about', type: 'push' })
   })
 })

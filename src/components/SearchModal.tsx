@@ -22,6 +22,7 @@ import { useGo } from '@refinedev/core'
 import { useDebounce, useAbortableList, useSearchHistory } from '@/hooks'
 import { GroupType } from '@/constants'
 import { SearchResult, WellResult, ContactResult } from '@/interfaces/ocotillo'
+import { DocEntry, searchDocs } from '@/utils/docsSearch'
 import { highlight } from '@/utils'
 import {
   SnakeGameModal,
@@ -67,6 +68,21 @@ const GAMES: { key: ArcadeGame; label: string; description: string }[] = [
   { key: 'tetris', label: 'Tetris', description: 'Block puzzle game' },
   { key: 'minesweeper', label: 'Minesweeper', description: 'Find all mines' },
 ]
+
+const buildDocExcerpt = (doc: DocEntry, query: string) => {
+  const trimmedQuery = query.trim().toLowerCase()
+  if (!trimmedQuery) return doc.path
+
+  const normalizedContent = doc.content.toLowerCase()
+  const matchIndex = normalizedContent.indexOf(trimmedQuery)
+  if (matchIndex === -1) return doc.path
+
+  const start = Math.max(0, matchIndex - 40)
+  const end = Math.min(doc.content.length, matchIndex + trimmedQuery.length + 80)
+  const excerpt = doc.content.slice(start, end).replace(/\s+/g, ' ').trim()
+
+  return `${doc.path}  ·  ${excerpt}${end < doc.content.length ? '...' : ''}`
+}
 
 // ---- type icon mapping ------------------------------------------------
 
@@ -201,6 +217,46 @@ const ResultRow = ({
   )
 }
 
+const DocResultRow = ({
+  option,
+  query,
+  onClick,
+}: {
+  option: DocEntry
+  query: string
+  onClick: () => void
+}) => (
+  <Box
+    onClick={onClick}
+    sx={{
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: 1.5,
+      px: 1.5,
+      py: 1,
+      borderRadius: 1,
+      cursor: 'pointer',
+      '&:hover': { bgcolor: 'action.hover' },
+    }}
+  >
+    <Description
+      sx={{ fontSize: 18, color: 'text.secondary', flexShrink: 0, mt: '2px' }}
+    />
+    <Box sx={{ minWidth: 0, flex: 1 }}>
+      <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.4 }}>
+        {highlight(option.title, query)}
+      </Typography>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ lineHeight: 1.4, display: 'block' }}
+      >
+        {highlight(buildDocExcerpt(option, query), query)}
+      </Typography>
+    </Box>
+  </Box>
+)
+
 // ---- main modal -------------------------------------------------------
 
 type SearchModalProps = {
@@ -229,21 +285,30 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       return { mode: 'default', term: trimmed }
     }
 
-    const withoutBang = trimmed.slice(1).trim()
+    const withoutBang = trimmed.slice(1).trimStart()
 
-    if (!withoutBang) {
+    if (!withoutBang.trim()) {
       return { mode: 'command-root', term: '' }
     }
 
     const [command, ...rest] = withoutBang.split(/\s+/)
     const commandTerm = rest.join(' ').trim()
+    const normalizedCommand = command.toLowerCase()
 
-    if (command.toLowerCase() === 'games') {
+    if (normalizedCommand === 'games') {
       return { mode: 'games', term: commandTerm }
     }
 
-    if (command.toLowerCase() === 'docs') {
+    if (normalizedCommand === 'docs') {
       return { mode: 'docs', term: commandTerm }
+    }
+
+    const partialMatches = COMMANDS.filter((item) =>
+      item.key.startsWith(normalizedCommand)
+    )
+
+    if (partialMatches.length > 0 && !commandTerm) {
+      return { mode: 'command-root', term: normalizedCommand }
     }
 
     return {
@@ -254,14 +319,16 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   }, [query])
 
   const requestedGame: ArcadeGame | null = useMemo(() => {
-    if (parsed.mode !== 'games') return null
+    const normalizedTerm =
+      parsed.mode === 'games'
+        ? parsed.term.trim().toLowerCase()
+        : normalizedQuery
 
-    const normalizedTerm = parsed.term.trim().toLowerCase()
     if (!normalizedTerm) return null
 
     const exactMatch = GAMES.find((game) => game.key === normalizedTerm)
     return exactMatch?.key ?? null
-  }, [parsed])
+  }, [normalizedQuery, parsed])
 
   // Reload history each time modal opens
   useEffect(() => {
@@ -300,9 +367,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     pagination: { pageSize: 100 },
     queryOptions: {
       enabled:
-        open &&
-        ((parsed.mode === 'default' && normalizedDebounced.length >= 1) ||
-          (parsed.mode === 'docs' && debounced.trim().length > 0)),
+        open && parsed.mode === 'default' && normalizedDebounced.length >= 1,
       staleTime: 120_000,
       refetchOnReconnect: false,
       refetchOnWindowFocus: false,
@@ -340,8 +405,11 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
   const filteredCommands = useMemo(() => {
     if (parsed.mode !== 'command-root') return []
 
-    return COMMANDS
-  }, [parsed.mode])
+    const term = parsed.term.trim().toLowerCase()
+    if (!term) return COMMANDS
+
+    return COMMANDS.filter((command) => command.key.startsWith(term))
+  }, [parsed])
 
   const filteredGames = useMemo(() => {
     if (parsed.mode !== 'games') return []
@@ -353,6 +421,12 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       (game) =>
         game.key.includes(term) || game.label.toLowerCase().includes(term)
     )
+  }, [parsed])
+
+  const docsResults = useMemo(() => {
+    if (parsed.mode !== 'docs') return []
+
+    return searchDocs(parsed.term)
   }, [parsed])
 
   const navigateToResult = (option: SearchResult) => {
@@ -398,6 +472,11 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     inputRef.current?.focus()
   }
 
+  const handleDocSelect = (doc: DocEntry) => {
+    go({ to: doc.route, type: 'push' })
+    handleClose()
+  }
+
   const handleGameSelect = (game: ArcadeGame) => {
     setActiveGame(game)
   }
@@ -440,13 +519,10 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
     results.length === 0
 
   const showDocsEmpty =
-    parsed.mode === 'docs' &&
-    parsed.term.trim() &&
-    !searchQuery.isFetching &&
-    !searchQuery.isError
+    parsed.mode === 'docs' && docsResults.length === 0
 
   const showError =
-    (parsed.mode === 'default' || parsed.mode === 'docs') &&
+    parsed.mode === 'default' &&
     query.trim() &&
     !searchQuery.isFetching &&
     searchQuery.isError
@@ -496,8 +572,8 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
               }
 
               if (e.key === 'Enter') {
-                if (parsed.mode === 'command-root') {
-                  handleCommandClick('games')
+                if (parsed.mode === 'command-root' && filteredCommands.length > 0) {
+                  handleCommandClick(filteredCommands[0].key)
                   return
                 }
 
@@ -506,10 +582,10 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
                   return
                 }
 
-                // if (parsed.mode === 'docs' && docsResults.length > 0) {
-                //   handleSelect(docsResults[0])
-                //   return
-                // }
+                if (parsed.mode === 'docs' && docsResults.length > 0) {
+                  handleDocSelect(docsResults[0])
+                  return
+                }
 
                 if (parsed.mode === 'default' && results.length > 0) {
                   handleSelect(results[0])
@@ -763,8 +839,24 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
             </Typography>
           )}
 
+          {parsed.mode === 'docs' && docsResults.length > 0 && (
+            <Box sx={{ py: 0.5 }}>
+              {docsResults.map((doc) => (
+                <DocResultRow
+                  key={doc.id}
+                  option={doc}
+                  query={parsed.term}
+                  onClick={() => handleDocSelect(doc)}
+                />
+              ))}
+            </Box>
+          )}
+
           {/* Grouped results */}
-          {!searchQuery.isFetching && !requestedGame && grouped.size > 0 && (
+          {!searchQuery.isFetching &&
+            !requestedGame &&
+            parsed.mode === 'default' &&
+            grouped.size > 0 && (
             <Box sx={{ py: 0.5 }}>
               {Array.from(grouped.entries()).map(
                 ([group, items], groupIndex) => (

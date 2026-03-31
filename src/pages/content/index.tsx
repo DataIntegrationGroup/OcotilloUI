@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import { Box, CircularProgress, Divider, Typography } from '@mui/material'
 import { Components } from 'react-markdown'
 
-type FrontMatter = {
+export type FrontMatter = {
   title?: string
   deck?: string
   date?: string
@@ -13,7 +13,10 @@ type ContentPageProps = {
   src: string
 }
 
-function parseFrontmatter(text: string): { data: FrontMatter; content: string } {
+export function parseFrontmatter(text: string): {
+  data: FrontMatter
+  content: string
+} {
   const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/)
   if (!match) return { data: {}, content: text }
 
@@ -34,7 +37,7 @@ function parseFrontmatter(text: string): { data: FrontMatter; content: string } 
   return { data, content }
 }
 
-const markdownComponents: Components = {
+export const markdownComponents: Components = {
   h2: ({ children }) => (
     <Typography variant="h5" fontWeight={700} sx={{ mt: 4, mb: 1 }}>
       {children}
@@ -81,6 +84,66 @@ const markdownComponents: Components = {
   hr: () => <Divider sx={{ my: 3 }} />,
 }
 
+type MarkdownPageProps = {
+  frontmatter: FrontMatter
+  body: string
+}
+
+export const MarkdownPage: React.FC<MarkdownPageProps> = ({
+  frontmatter,
+  body,
+}) => {
+  return (
+    <Box
+      sx={{
+        minHeight: '100%',
+        bgcolor: 'background.wrapper',
+        borderRadius: 1,
+        py: 4,
+      }}
+    >
+      <Box sx={{ maxWidth: '96ch', px: { xs: 2, md: 4 } }}>
+        {frontmatter.title && (
+          <Typography
+            variant="h1"
+            fontFamily="Outfit Variable"
+            fontWeight={700}
+            sx={{ mb: 1, fontSize: '2.2rem' }}
+          >
+            {frontmatter.title}
+          </Typography>
+        )}
+        {frontmatter.deck && (
+          <Typography
+            fontFamily="Outfit Variable"
+            fontWeight={200}
+            variant="deck"
+            sx={{
+              display: 'block',
+              mb: frontmatter.date ? 1 : 3,
+              color: 'text.secondary',
+            }}
+          >
+            {frontmatter.deck}
+          </Typography>
+        )}
+        {frontmatter.date && (
+          <Typography variant="caption" sx={{ display: 'block', mb: 3, color: 'text.disabled' }}>
+            {new Date(frontmatter.date).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </Typography>
+        )}
+      </Box>
+      <Box sx={{ maxWidth: '80ch', px: { xs: 2, md: 4 }, py: 0 }}>
+        <ReactMarkdown components={markdownComponents}>{body}</ReactMarkdown>
+      </Box>
+    </Box>
+  )
+}
+
 export const ContentPage: React.FC<ContentPageProps> = ({ src }) => {
   const [frontmatter, setFrontmatter] = useState<FrontMatter>({})
   const [body, setBody] = useState<string>('')
@@ -106,7 +169,16 @@ export const ContentPage: React.FC<ContentPageProps> = ({ src }) => {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100%', bgcolor: 'background.wrapper', display: 'flex', justifyContent: 'center', pt: 8, borderRadius: 1 }}>
+      <Box
+        sx={{
+          minHeight: '100%',
+          bgcolor: 'background.wrapper',
+          display: 'flex',
+          justifyContent: 'center',
+          pt: 8,
+          borderRadius: 1,
+        }}
+      >
         <CircularProgress />
       </Box>
     )
@@ -120,32 +192,5 @@ export const ContentPage: React.FC<ContentPageProps> = ({ src }) => {
     )
   }
 
-  return (
-    <Box sx={{ minHeight: '100%', bgcolor: 'background.wrapper', borderRadius: 1, py: 4 }}>
-      <Box sx={{ maxWidth: '96ch', px: { xs: 2, md: 4 } }}>
-        {frontmatter.title && (
-          <Typography variant="h1" fontFamily="Outfit Variable" fontWeight={700} sx={{ mb: 1, fontSize: '2.2rem' }}>
-            {frontmatter.title}
-          </Typography>
-        )}
-        {frontmatter.deck && (
-          <Typography fontFamily="Outfit Variable" fontWeight={200} variant="deck" sx={{ display: 'block', mb: frontmatter.date ? 1 : 3, color: 'text.secondary' }}>
-            {frontmatter.deck}
-          </Typography>
-        )}
-        {frontmatter.date && (
-          <Typography variant="caption" sx={{ display: 'block', mb: 3, color: 'text.disabled' }}>
-            {new Date(frontmatter.date).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </Typography>
-        )}
-      </Box>
-      <Box sx={{ maxWidth: '80ch', px: { xs: 2, md: 4 }, py: 0 }}>
-        <ReactMarkdown components={markdownComponents}>{body}</ReactMarkdown>
-      </Box>
-    </Box>
-  )
+  return <MarkdownPage frontmatter={frontmatter} body={body} />
 }
