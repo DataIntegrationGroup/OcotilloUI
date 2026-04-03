@@ -66,7 +66,6 @@ jobs:
             --build-arg VITE_MAPBOX_TOKEN=${{ secrets.VITE_MAPBOX_TOKEN }} \
             --build-arg VITE_PUBLIC_POSTHOG_KEY=${{ env.VITE_PUBLIC_POSTHOG_KEY }} \
             --build-arg VITE_PUBLIC_POSTHOG_HOST=${{ env.VITE_PUBLIC_POSTHOG_HOST }} \
-            --build-arg VITE_TEST_AUTH=true \
             -t "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-$SANITIZED-ocotillo:$IMAGE_TAG" .
 
           docker push "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-$SANITIZED-ocotillo:$IMAGE_TAG"
