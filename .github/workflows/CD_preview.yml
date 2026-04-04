@@ -65,17 +65,17 @@ jobs:
             --build-arg VITE_MAPBOX_TOKEN=${{ secrets.VITE_MAPBOX_TOKEN }} \
             --build-arg VITE_PUBLIC_POSTHOG_KEY=${{ env.VITE_PUBLIC_POSTHOG_KEY }} \
             --build-arg VITE_PUBLIC_POSTHOG_HOST=${{ env.VITE_PUBLIC_POSTHOG_HOST }} \
-            -t "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-$SANITIZED-ocotillo:$IMAGE_TAG" .
+            -t "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-$SANITIZED:$IMAGE_TAG" .
 
-          docker push "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-$SANITIZED-ocotillo:$IMAGE_TAG"
+          docker push "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-$SANITIZED:$IMAGE_TAG"
 
       - name: Deploy to Cloud Run
         env:
           IMAGE_TAG: ${{ github.sha }}
           GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
-          gcloud run deploy preview-${{ env.SANITIZED_BRANCH }}-ocotillo \
-            --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-${{ env.SANITIZED_BRANCH }}-ocotillo:$IMAGE_TAG \
+          gcloud run deploy preview-${{ env.SANITIZED_BRANCH }} \
+            --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/preview-${{ env.SANITIZED_BRANCH }}:$IMAGE_TAG \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
@@ -83,10 +83,10 @@ jobs:
             --memory 512Mi \
             --cpu 1
 
-      - name: Get preview URL
+      - name: Set preview URL
         id: preview-url
         run: |
-          echo "url=$(gcloud run services describe preview-${{ env.SANITIZED_BRANCH }}-ocotillo --platform managed --region us-central1 --format 'value(status.url)')" >> $GITHUB_OUTPUT
+          echo "url=https://preview-${{ env.SANITIZED_BRANCH }}.previews.newmexicowaterdata.org" >> $GITHUB_OUTPUT
 
       - name: Comment PR with preview URL
         if: github.event_name == 'pull_request'
@@ -108,4 +108,4 @@ jobs:
         env:
           GCP_PROJECT_ID: waterdatainitiative-271000
         run: |
-          gcloud run services delete preview-${{ env.SANITIZED_BRANCH }}-ocotillo --platform managed --region us-central1 --quiet || true
+          gcloud run services delete preview-${{ env.SANITIZED_BRANCH }} --platform managed --region us-central1 --quiet || true
