@@ -83,7 +83,12 @@ jobs:
             --memory 512Mi \
             --cpu 1
 
-      - name: Set preview URL
+      - name: Get Cloud Run default URL
+        id: cloudrun-url
+        run: |
+          echo "url=$(gcloud run services describe preview-${{ env.SANITIZED_BRANCH }} --platform managed --region us-central1 --format 'value(status.url)')" >> $GITHUB_OUTPUT
+
+      - name: Set custom preview URL
         id: preview-url
         run: |
           echo "url=https://preview-${{ env.SANITIZED_BRANCH }}.previews.newmexicowaterdata.org" >> $GITHUB_OUTPUT
@@ -99,7 +104,7 @@ jobs:
 
           **Preview URL:** $PREVIEW_URL
 
-          **Note:** This preview uses the staging API endpoints and has auth disabled for testing.
+          **Note:** This preview uses the staging API endpoints.
           EOF
           )"
 
