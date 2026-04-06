@@ -118,6 +118,7 @@ jobs:
             --format 'value(status.url)')
 
           echo "Cloud Run URL: $URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
 
       - name: Add exact preview origin to authentik provider
         if: github.event.action != 'closed'
