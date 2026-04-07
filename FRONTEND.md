@@ -24,6 +24,7 @@ The following wells contain a full, rich set of information and are useful for t
 - [Material UI Components](#material-ui-components)
 - [Icons](#icons)
 - [Refine.dev -- What It Owns](#refinedev----what-it-owns)
+- [Page Titles](#page-titles)
 - [Color System](#color-system)
 - [Typography System](#typography-system)
 - [Responsive Grid System](#responsive-grid-system)
@@ -348,6 +349,45 @@ const { saveButtonProps, control, formState: { errors } } = useForm<IWell>()
 #### When to skip the wrapper
 
 If a page does not need the Card + header layout (e.g. a full-screen map, a dashboard, an about page), skip the wrapper entirely and compose from raw MUI components. The wrapper is a convenience, not a requirement.
+
+---
+
+### Page Titles
+
+Page titles are managed in two places depending on whether the page has loaded its data yet.
+
+#### Default titles (Refine handler)
+
+`customTitleHandler` in `src/AppProviders.tsx` sets the browser tab title for every Refine-managed route based on the resource label and action:
+
+| Action | Format | Example |
+|---|---|---|
+| `list` | `Ocotillo \| {Resource}` | `Ocotillo \| Wells` |
+| `show` | `Ocotillo \| {Resource} \| Detail` | `Ocotillo \| Wells \| Detail` |
+| `create` | `Ocotillo \| {Resource} \| New` | `Ocotillo \| Contacts \| New` |
+| `edit` | `Ocotillo \| {Resource} \| Edit` | `Ocotillo \| Contacts \| Edit` |
+
+The resource label comes from `resource.meta.label` in the resource definition. If a resource has no label, the title falls back to `Ocotillo`.
+
+#### Data-driven titles (well detail pages)
+
+For pages where the title should reflect the actual record name (not just the resource type), use a `useEffect` to update `document.title` once the data loads. Always restore the previous title on unmount.
+
+```tsx
+useEffect(() => {
+  if (!well?.name) return
+  const appTitle = import.meta.env.VITE_APP_TITLE || 'Ocotillo'
+  const prev = document.title
+  document.title = `${well.name} | ${appTitle}`
+  return () => {
+    document.title = prev
+  }
+}, [well?.name])
+```
+
+This pattern is used in `src/pages/ocotillo/thing/well-show.tsx`. The Refine handler sets the initial `Ocotillo | Wells | Detail` title, then this effect replaces it with the actual well name (e.g. `BERNCO-0001 | Ocotillo`) once the API response arrives.
+
+Apply the same pattern to any other detail page where the record name adds meaningful context.
 
 ---
 

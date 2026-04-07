@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useExport, useGo } from '@refinedev/core'
 import { ExportButton, useDataGrid } from '@refinedev/mui'
-import { GridColDef } from '@mui/x-data-grid'
+import { GridColDef, GridFilterModel } from '@mui/x-data-grid'
+import { captureEvent } from '@/analytics/posthog'
 import { Button } from '@mui/material'
 import { PictureAsPdf } from '@mui/icons-material'
 import { ListPage } from '@/components/ListPage'
@@ -58,11 +59,27 @@ export const SpringList: React.FC = () => {
 }
 
 export const WellList: React.FC = () => {
+  useEffect(() => {
+    captureEvent('feature_used', { feature: 'wells_list' })
+  }, [])
+
   const { dataGridProps } = useDataGrid<IWell>({
     resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
     pagination: { pageSize: 50 },
   })
+
+  const handleFilterModelChange = (model: GridFilterModel) => {
+    const activeFilters = model.items.filter((f) => f.value !== undefined)
+    if (activeFilters.length > 0) {
+      captureEvent('feature_used', {
+        feature: 'wells_filter',
+        filter_count: activeFilters.length,
+        filter_fields: activeFilters.map((f) => f.field),
+      })
+    }
+    dataGridProps.onFilterModelChange?.(model)
+  }
 
   const { triggerExport, isLoading: exportIsLoading } = useExport({
     resource: 'thing',
@@ -227,7 +244,7 @@ export const WellList: React.FC = () => {
         ' construction depending on the local geology and intended use.'
       }
       columns={columns}
-      dataGridProps={dataGridProps}
+      dataGridProps={{ ...dataGridProps, onFilterModelChange: handleFilterModelChange }}
       getRowId={(row) => row.id}
       headerButtons={customHeaderButtons}
     />
