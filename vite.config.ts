@@ -79,7 +79,8 @@ export default defineConfig(({ mode }) => {
       },
       server: {
         deps: {
-          inline: ['@mui/material', '@refinedev/mui'],
+          inline: ['@mui/material', '@refinedev/mui', '@mui/x-data-grid'],
+          fallbackCJS: true,
         },
       },
     },
