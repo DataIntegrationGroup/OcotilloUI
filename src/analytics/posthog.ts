@@ -3,8 +3,11 @@ import posthog from 'posthog-js'
 const posthogKey = import.meta.env.VITE_POSTHOG_KEY
 const posthogHost =
   import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com'
-const isEnabled =
-  Boolean(posthogKey) && import.meta.env.VITE_POSTHOG_ENABLED === 'true'
+const appEnv = import.meta.env.VITE_APP_ENV || 'production'
+
+// PostHog runs on any deployment that has a key (staging + production).
+// Local dev has no key, so it is never enabled.
+const isEnabled = Boolean(posthogKey)
 
 let initialized = false
 
@@ -17,6 +20,10 @@ export const initPostHog = () => {
     capture_pageleave: true,
     capture_exceptions: true,
   })
+
+  // Tag every event with the environment so staging visits are
+  // distinguishable from production in the PostHog dashboard.
+  posthog.register({ environment: appEnv })
 
   initialized = true
 }
