@@ -6,9 +6,7 @@ import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotes
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import { formatContactPhones } from '@/components/pdf/fieldCompilationPhoneFormatter'
 
-const makeContact = (
-  phones: NonNullable<IContact['phones']>
-): IContact =>
+const makeContact = (phones: NonNullable<IContact['phones']>): IContact =>
   ({
     id: 1,
     name: 'Test Contact',
@@ -57,7 +55,10 @@ const decodePdfStreams = (pdfText: string) => {
 
   for (const match of pdfText.matchAll(streamPattern)) {
     const streamContent = match[1]
-    const bytes = Uint8Array.from(streamContent, (char) => char.charCodeAt(0) & 0xff)
+    const bytes = Uint8Array.from(
+      streamContent,
+      (char) => char.charCodeAt(0) & 0xff
+    )
 
     try {
       decoded.push(inflate(bytes, { to: 'string' }))
@@ -154,7 +155,7 @@ describe('formatContactPhones', () => {
 })
 
 describe('FieldCompilationNotesPdf', () => {
-  it('appends a final blank page with the requested text', async () => {
+  it('appends a final blank page with the requested text when no hydrograph image is provided', async () => {
     const pdfBlob = await pdf(
       createElement(FieldCompilationNotesPdf, {
         well: makeWell(),
@@ -174,8 +175,9 @@ describe('FieldCompilationNotesPdf', () => {
 
     expect(pageMatches).toHaveLength(4)
     expect(decodedVisibleText).toContain(
-      'Hydrograph and Manual Measurements: Well-1'
+      'This page is intentionally left blank'
     )
-    expect(decodedVisibleText).toContain('This page is intentionally left blank')
+    expect(decodedVisibleText).toContain('Field Compilation Notes')
+    expect(decodedVisibleText).toContain('General Field Notes: Well-1')
   })
 })
