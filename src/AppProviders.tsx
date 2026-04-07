@@ -35,7 +35,6 @@ const appTitle = import.meta.env.DEV
   : import.meta.env.VITE_APP_TITLE || 'Ocotillo'
 
 const ACTION_LABELS: Partial<Record<Action, string>> = {
-  show: 'Detail',
   create: 'New',
   edit: 'Edit',
   clone: 'Clone',
@@ -54,9 +53,11 @@ const customTitleHandler = ({
   if (!resource?.meta?.label) return appTitle
   const resourceLabel = resource.meta.label
   const actionLabel = action ? ACTION_LABELS[action] : undefined
+  // specificity-first: "New - Wells | Ocotillo"
+  // show pages get their title replaced by the record name once data loads
   return actionLabel
-    ? `${appTitle} | ${resourceLabel} | ${actionLabel}`
-    : `${appTitle} | ${resourceLabel}`
+    ? `${actionLabel} - ${resourceLabel} | ${appTitle}`
+    : `${resourceLabel} | ${appTitle}`
 }
 
 export const AppProviders = ({ children }: { children: ReactNode }) => (

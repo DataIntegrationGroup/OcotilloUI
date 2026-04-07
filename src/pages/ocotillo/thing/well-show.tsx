@@ -86,7 +86,7 @@ export const WellShow = () => {
     if (!well?.name) return
     const appTitle = import.meta.env.VITE_APP_TITLE || 'Ocotillo'
     const prev = document.title
-    document.title = `${well.name} | ${appTitle}`
+    document.title = `${well.name} - Wells | ${appTitle}`
     return () => {
       document.title = prev
     }
