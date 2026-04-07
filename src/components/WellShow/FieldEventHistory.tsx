@@ -60,57 +60,47 @@ export const FieldEventHistoryAccordion = ({
             No field event history found.
           </Typography>
         ) : (
-          <Paper
-            variant="outlined"
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              borderColor: 'divider',
-              bgcolor: 'background.default',
-            }}
-          >
-            <Stack spacing={1.5}>
-              {date && (
-                <Box>
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      display: 'block',
-                      color: 'text.secondary',
-                      letterSpacing: 1.1,
-                    }}
-                  >
-                    Event Date
-                  </Typography>
-                  <Typography variant="body1" fontWeight={600}>
-                    {date}
-                  </Typography>
-                </Box>
-              )}
+          <Stack spacing={1.5}>
+            {date && (
+              <Box>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    display: 'block',
+                    color: 'text.secondary',
+                    letterSpacing: 1.1,
+                  }}
+                >
+                  Event Date
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {date}
+                </Typography>
+              </Box>
+            )}
 
-              {body && (
-                <Box>
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      display: 'block',
-                      color: 'text.secondary',
-                      letterSpacing: 1.1,
-                    }}
-                  >
-                    Event Summary
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    component="p"
-                    sx={{ whiteSpace: 'pre-line', lineHeight: 1.65, m: 0 }}
-                  >
-                    {body}
-                  </Typography>
-                </Box>
-              )}
-            </Stack>
-          </Paper>
+            {body && (
+              <Box>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    display: 'block',
+                    color: 'text.secondary',
+                    letterSpacing: 1.1,
+                  }}
+                >
+                  Event Summary
+                </Typography>
+                <Typography
+                  variant="body2"
+                  component="p"
+                  sx={{ whiteSpace: 'pre-line', lineHeight: 1.65, m: 0 }}
+                >
+                  {body}
+                </Typography>
+              </Box>
+            )}
+          </Stack>
         )}
       </Box>
     </Paper>
