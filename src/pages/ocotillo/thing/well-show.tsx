@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useDataProvider, useList, useResourceParams } from '@refinedev/core'
+import { captureEvent } from '@/analytics/posthog'
 import { useQuery } from '@tanstack/react-query'
 import { Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
@@ -49,6 +50,12 @@ export const WellShow = () => {
   )
 
   const { id } = useResourceParams()
+
+  useEffect(() => {
+    if (id) captureEvent('feature_used', { feature: 'well_detail', well_id: id })
+  }, [id])
+
+
   const detailsQuery = useQuery({
     queryKey: ['well-details', id],
     enabled: Boolean(id),
@@ -74,6 +81,16 @@ export const WellShow = () => {
     },
   })
   const well = detailsQuery.data?.well
+
+  useEffect(() => {
+    if (!well?.name) return
+    const appTitle = import.meta.env.VITE_APP_TITLE || 'Ocotillo'
+    const prev = document.title
+    document.title = `${well.name} - Wells | ${appTitle}`
+    return () => {
+      document.title = prev
+    }
+  }, [well?.name])
   const observations =
     detailsQuery.data?.recent_groundwater_level_observations ?? []
   const assets = assetResult?.data ?? []
