@@ -15,17 +15,28 @@ import {
   Menu,
   MenuItem,
   Skeleton,
+  Divider,
+  Box,
+  Typography,
+  Avatar,
 } from '@mui/material'
-import { LogoutOutlined, PersonOutline } from '@mui/icons-material'
+import {
+  AccountCircle,
+  LogoutOutlined,
+  PersonOutline,
+} from '@mui/icons-material'
 import type { RefineThemedLayoutHeaderProps } from '@refinedev/mui'
 import { HamburgerMenu } from './hamburgerMenu'
 import SearchBar from '@/components/SearchBar'
+import { Underline } from 'react-flaticons'
 
 export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
   const isExistAuthentication = useIsExistAuthentication()
   const { data: user, isLoading } = useGetIdentity()
   const { warnWhen, setWarnWhen } = useWarnAboutChange()
   const { mutate: mutateLogout } = useLogout()
+
+  console.debug({ user })
 
   const translate = useTranslate()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -69,7 +80,12 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
   }
 
   return (
-    <AppBar position="sticky" color="transparent" elevation={0} sx={{ bgcolor: 'background.default' }}>
+    <AppBar
+      position="sticky"
+      color="transparent"
+      elevation={0}
+      sx={{ bgcolor: 'background.default' }}
+    >
       <Toolbar disableGutters sx={{ px: 1 }}>
         <HamburgerMenu />
         <Stack
@@ -122,8 +138,75 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
                 vertical: 'top',
                 horizontal: 'right',
               }}
+              slotProps={{
+                paper: {
+                  sx: {
+                    mt: 1,
+                    minWidth: { xs: null, md: 200, lg: 250 },
+                    borderRadius: 3,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    boxShadow: '0 18px 44px rgba(15, 23, 42, 0.14)',
+                  },
+                },
+              }}
+              MenuListProps={{
+                dense: true,
+                sx: {
+                  py: 0,
+                },
+              }}
             >
-              {user?.name && <MenuItem disabled>{user?.name}</MenuItem>}
+              <Box
+                sx={{
+                  px: 1.5,
+                  py: 1.25,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 1.25,
+                }}
+              >
+                <Avatar
+                  src={user?.avatar || undefined}
+                  sx={{
+                    flexShrink: 0,
+                    width: 42,
+                    height: 42,
+                  }}
+                >
+                  <AccountCircle sx={{ fontSize: 42 }} />
+                </Avatar>
+                <Box
+                  sx={{
+                    minWidth: 0,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.96rem',
+                      lineHeight: 1.2,
+                    }}
+                    noWrap
+                  >
+                    {user?.name || 'User'}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      display: 'block',
+                      mt: 0.25,
+                      fontSize: '0.75rem',
+                    }}
+                    noWrap
+                  >
+                    {user?.email || ''}
+                  </Typography>
+                </Box>
+              </Box>
+              <Divider />
               <MenuItem onClick={handleProfile}>
                 <ListItemIcon>
                   <PersonOutline />
