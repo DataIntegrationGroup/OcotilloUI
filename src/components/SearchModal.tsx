@@ -38,6 +38,7 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
       <Dialog
         open={open}
         onClose={state.handleClose}
+        TransitionProps={{ onEntered: () => state.inputRef.current?.focus() }}
         fullWidth
         maxWidth="sm"
         sx={{

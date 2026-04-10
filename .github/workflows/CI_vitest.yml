@@ -14,7 +14,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '22.x'
+        node-version: '20.x'
         cache: 'npm'
 
     - name: Install dependencies
@@ -45,8 +45,20 @@ jobs:
         # Start mock server in background
         npm run mock:server:vitest &
         
-        # Wait for server to start
-        sleep 5
+        # Wait for server to be ready (up to 30 seconds)
+        # Use curl without -f: Prism returns 404 for GET / (no path matched), which
+        # is still a valid response confirming the server is up and accepting connections.
+        for i in $(seq 1 30); do
+          if curl -s --max-time 1 http://127.0.0.1:4010 > /dev/null 2>&1; then
+            echo "Mock server is up after ${i}s"
+            break
+          fi
+          if [ "$i" -eq 30 ]; then
+            echo "Mock server did not start in time"
+            exit 1
+          fi
+          sleep 1
+        done
         
         # Run tests
         npm run test:run

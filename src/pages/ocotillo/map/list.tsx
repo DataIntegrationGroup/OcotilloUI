@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { captureEvent } from '@/analytics/posthog'
 import { Layer, Source } from 'react-map-gl'
 import { useGo } from '@refinedev/core'
 import { useLocation } from 'react-router'
@@ -222,6 +223,10 @@ const areVisibleFeatureGroupsEqual = (
 }
 
 export const MapView: React.FC = () => {
+  useEffect(() => {
+    captureEvent('feature_used', { feature: 'map' })
+  }, [])
+
   const location = useLocation()
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<any>(null)
