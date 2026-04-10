@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useExport, useGo } from '@refinedev/core'
+import { useExport, useGo, useLink, useNavigation } from '@refinedev/core'
 import { ExportButton, useDataGrid } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
 import { Button } from '@mui/material'
@@ -80,6 +80,9 @@ export const WellList: React.FC = () => {
     },
   })
 
+  const { create } = useNavigation()
+  const Link = useLink()
+
   const columns = useMemo<GridColDef<IWell>[]>(
     () => [
       {
@@ -157,6 +160,36 @@ export const WellList: React.FC = () => {
         sortable: false,
         valueGetter: (_: unknown, row: IWell) =>
           row.contacts?.map((c) => c.name ?? '').join(', ') ?? '',
+        renderCell: (params) => {
+          const contacts = params.row.contacts ?? []
+          return (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+              }}
+            >
+              {contacts.map((contact, idx) => (
+                <span key={contact?.id}>
+                  {idx > 0 && ', '}
+                  <Link
+                    go={{
+                      to: {
+                        resource: 'ocotillo.contact',
+                        action: 'show',
+                        id: contact.id,
+                      },
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {contact.name}
+                  </Link>
+                </span>
+              ))}
+            </div>
+          )
+        },
       },
       {
         field: 'well_completion_date',
