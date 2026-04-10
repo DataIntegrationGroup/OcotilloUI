@@ -21,7 +21,7 @@ export const SpringList: React.FC = () => {
         field: 'name',
         headerName: 'Name',
         type: 'string',
-        minWidth: 180,
+        minWidth: 100,
         flex: 1,
       },
       {
@@ -61,6 +61,11 @@ export const WellList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IWell>({
     resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        include_contacts: true,
+      },
+    },
     pagination: { pageSize: 50 },
   })
 
@@ -70,6 +75,7 @@ export const WellList: React.FC = () => {
     meta: {
       params: {
         thing_type: ['water well', 'geothermal well'],
+        include_contacts: true,
       },
     },
   })
@@ -80,7 +86,7 @@ export const WellList: React.FC = () => {
         field: 'name',
         headerName: 'Name',
         type: 'string',
-        minWidth: 160,
+        minWidth: 100,
         flex: 1,
       },
       {
@@ -108,7 +114,12 @@ export const WellList: React.FC = () => {
         flex: 1,
         sortable: false,
         valueGetter: (_: unknown, row: IWell) =>
-          row.aquifers?.map((a) => a.aquifer_system).join(', ') ?? '',
+          row.aquifers
+            ?.map(
+              (a: { aquifer_system: string; aquifer_types: string[] }) =>
+                a.aquifer_system
+            )
+            .join(', ') ?? '',
       },
       {
         field: 'release_status',
@@ -137,6 +148,15 @@ export const WellList: React.FC = () => {
         headerName: 'First Visit',
         width: 130,
         valueGetter: (v: string) => formatAppDate(v),
+      },
+      {
+        field: 'contacts',
+        headerName: 'Contacts',
+        minWidth: 180,
+        flex: 1,
+        sortable: false,
+        valueGetter: (_: unknown, row: IWell) =>
+          row.contacts?.map((c) => c.name ?? '').join(', ') ?? '',
       },
       {
         field: 'well_completion_date',
