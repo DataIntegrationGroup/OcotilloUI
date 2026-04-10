@@ -270,8 +270,8 @@ export const ListPage: React.FC<ListPageProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            px: 0.5,
-            pb: 0.5,
+            px: 0,
+            pb: 1.5,
           }}
         >
           <Box
@@ -284,7 +284,7 @@ export const ListPage: React.FC<ListPageProps> = ({
               borderRadius: 1,
               px: 1,
               py: 0.25,
-              width: 260,
+              width: 400,
               bgcolor: 'background.paper',
             }}
           >
