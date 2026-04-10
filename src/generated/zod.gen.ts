@@ -1542,6 +1542,18 @@ export const zGeoJsonProperties = z.object({
         zElevationMethod,
         z.null()
     ]),
+    county: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    state: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    quad_name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     utm_coordinates: z.optional(zGeoJsonutmCoordinates),
     notes: z.optional(z.array(zNoteResponse)).default([]),
     nma_location_notes: z.optional(z.union([
@@ -2433,6 +2445,25 @@ export const zThingIdLinkResponse = z.object({
 });
 
 /**
+ * WellContactSummaryResponse
+ */
+export const zWellContactSummaryResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    organization: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    role: zRole,
+    contact_type: zContactType
+});
+
+/**
  * permission_type
  */
 export const zPermissionType = z.enum([
@@ -2571,6 +2602,7 @@ export const zThingResponse = z.object({
     aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
     water_notes: z.optional(z.array(zNoteResponse)).default([]),
     construction_notes: z.optional(z.array(zNoteResponse)).default([]),
+    contacts: z.optional(z.array(zWellContactSummaryResponse)).default([]),
     permissions: z.array(zPermissionHistoryResponse),
     formation_completion_code: z.union([
         zFormationCode,
@@ -2909,6 +2941,7 @@ export const zWellResponse = z.object({
     aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
     water_notes: z.optional(z.array(zNoteResponse)).default([]),
     construction_notes: z.optional(z.array(zNoteResponse)).default([]),
+    contacts: z.optional(z.array(zWellContactSummaryResponse)).default([]),
     permissions: z.array(zPermissionHistoryResponse),
     formation_completion_code: z.union([
         zFormationCode,

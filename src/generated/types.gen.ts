@@ -1046,6 +1046,18 @@ export type GeoJsonProperties = {
      */
     vertical_datum?: string;
     elevation_method: ElevationMethod | null;
+    /**
+     * County
+     */
+    county?: string | null;
+    /**
+     * State
+     */
+    state?: string | null;
+    /**
+     * Quad Name
+     */
+    quad_name?: string | null;
     utm_coordinates?: GeoJsonutmCoordinates;
     /**
      * Notes
@@ -2514,6 +2526,10 @@ export type ThingResponse = {
      */
     construction_notes?: Array<NoteResponse>;
     /**
+     * Contacts
+     */
+    contacts?: Array<WellContactSummaryResponse>;
+    /**
      * Permissions
      */
     permissions: Array<PermissionHistoryResponse>;
@@ -3244,6 +3260,31 @@ export type WaterLevelBulkUploadSummary = {
 };
 
 /**
+ * WellContactSummaryResponse
+ */
+export type WellContactSummaryResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Organization
+     */
+    organization?: string | null;
+    role: Role;
+    contact_type: ContactType;
+};
+
+/**
  * WellDetailsResponse
  */
 export type WellDetailsResponse = {
@@ -3454,6 +3495,10 @@ export type WellResponse = {
      * Construction Notes
      */
     construction_notes?: Array<NoteResponse>;
+    /**
+     * Contacts
+     */
+    contacts?: Array<WellContactSummaryResponse>;
     /**
      * Permissions
      */
