@@ -55,12 +55,6 @@ export const useSearchModalState = ({
   }, [open])
 
   useEffect(() => {
-    if (open) {
-      inputRef.current?.focus()
-    }
-  }, [open])
-
-  useEffect(() => {
     if (!requestedGame) {
       setDismissedGame(null)
       return
