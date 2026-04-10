@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import { useExport, useGo } from '@refinedev/core'
+import { useExport, useGo, useLink } from '@refinedev/core'
 import { ExportButton, useDataGrid } from '@refinedev/mui'
 import { GridColDef, GridFilterModel } from '@mui/x-data-grid'
 import { captureEvent } from '@/analytics/posthog'
@@ -97,7 +97,6 @@ export const WellList: React.FC = () => {
     },
   })
 
-  const { create } = useNavigation()
   const Link = useLink()
 
   const columns = useMemo<GridColDef<IWell>[]>(
@@ -297,7 +296,10 @@ export const WellList: React.FC = () => {
         ' construction depending on the local geology and intended use.'
       }
       columns={columns}
-      dataGridProps={{ ...dataGridProps, onFilterModelChange: handleFilterModelChange }}
+      dataGridProps={{
+        ...dataGridProps,
+        onFilterModelChange: handleFilterModelChange,
+      }}
       getRowId={(row) => row.id}
       headerButtons={customHeaderButtons}
     />
