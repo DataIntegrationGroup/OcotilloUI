@@ -13,13 +13,18 @@ import {
   GridFilterItem,
   useGridApiContext,
   useGridSelector,
+  GridColDef,
 } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import React, { useMemo, useState } from 'react'
-import { CanAccess, useExport, useNavigation, useResourceParams } from '@refinedev/core'
-import { Box, Chip, InputBase, Stack, Tooltip, Typography } from '@mui/material'
+import {
+  CanAccess,
+  useExport,
+  useNavigation,
+  useResourceParams,
+} from '@refinedev/core'
+import { Box, Chip, InputBase, Stack, Typography } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
-
 
 // Shows a dismissible chip for each active column filter.
 function ActiveFilterChips() {
@@ -38,11 +43,23 @@ function ActiveFilterChips() {
   }
 
   return (
-    <Stack direction="row" sx={{ gap: 0.5, flexWrap: 'wrap', alignItems: 'center', pt: 0.5, pb: 0.25 }}>
+    <Stack
+      direction="row"
+      sx={{
+        gap: 0.5,
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        pt: 0.5,
+        pb: 0.25,
+      }}
+    >
       {activeFilters.map((filter) => {
         const column = columns[filter.field]
         const fieldLabel = column?.headerName ?? filter.field
-        const value = filter.value != null && filter.value !== '' ? ` ${filter.operator} "${filter.value}"` : ` ${filter.operator}`
+        const value =
+          filter.value != null && filter.value !== ''
+            ? ` ${filter.operator} "${filter.value}"`
+            : ` ${filter.operator}`
         return (
           <Chip
             key={filter.id}
@@ -64,12 +81,34 @@ function ActiveFilterChips() {
 // Built-in toolbar buttons are used (not custom icon buttons) so panels anchor correctly.
 function ListPageToolbar() {
   return (
-    <GridToolbarContainer sx={{ px: 1, py: 0.5, flexDirection: 'column', alignItems: 'stretch', gap: 0 }}>
+    <GridToolbarContainer
+      sx={{
+        px: 1,
+        py: 0.5,
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        gap: 0,
+      }}
+    >
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-        <GridToolbarFilterButton slotProps={{ button: { 'data-testid': 'grid-toolbar-filter-button' } }} />
-        <GridToolbarColumnsButton slotProps={{ button: { 'data-testid': 'grid-toolbar-columns-button' } }} />
-        <GridToolbarDensitySelector slotProps={{ button: { 'data-testid': 'grid-toolbar-density-selector' } }} />
-        <GridToolbarExport slotProps={{ button: { 'data-testid': 'grid-toolbar-export' } }} />
+        <GridToolbarFilterButton
+          slotProps={{
+            button: { 'data-testid': 'grid-toolbar-filter-button' },
+          }}
+        />
+        <GridToolbarColumnsButton
+          slotProps={{
+            button: { 'data-testid': 'grid-toolbar-columns-button' },
+          }}
+        />
+        <GridToolbarDensitySelector
+          slotProps={{
+            button: { 'data-testid': 'grid-toolbar-density-selector' },
+          }}
+        />
+        <GridToolbarExport
+          slotProps={{ button: { 'data-testid': 'grid-toolbar-export' } }}
+        />
       </Box>
       <ActiveFilterChips />
     </GridToolbarContainer>
@@ -77,17 +116,22 @@ function ListPageToolbar() {
 }
 
 type ListPageProps = {
-  title?: string | null
-  description?: string | null
-  columns: any
+  title?: string
+  description?: string
+  columns: GridColDef[]
   dataGridProps: any
+  getRowId?: (row: any) => string | number
   exportProps?: any
-  children?: any
+  children?: React.ReactNode
   onSelectionChange?: (selectionModel: any) => void
-  getRowId?: (row: any) => number
-  isLoading?: any
+  isLoading?: boolean
   headerButtons?: any
   disableRowClick?: boolean
+
+  searchMode?: 'client' | 'server'
+  searchValue?: string
+  onSearchChange?: (value: string) => void
+  searchPlaceholder?: string
 }
 
 export const ListPage: React.FC<ListPageProps> = ({
@@ -102,12 +146,18 @@ export const ListPage: React.FC<ListPageProps> = ({
   isLoading,
   headerButtons,
   disableRowClick = false,
+  searchMode = 'client',
+  searchValue,
+  onSearchChange,
+  searchPlaceholder,
 }) => {
   if (!exportProps) {
     exportProps = { pageSize: 1000 }
   }
 
-  const [quickFilter, setQuickFilter] = useState('')
+  const [localQuickFilter, setLocalQuickFilter] = useState('')
+  const quickFilter =
+    searchMode === 'server' ? (searchValue ?? '') : localQuickFilter
 
   const { show } = useNavigation()
   const { resource } = useResourceParams()
@@ -133,16 +183,40 @@ export const ListPage: React.FC<ListPageProps> = ({
   }
 
   const rowCount = dataGridProps.rowCount as number | undefined
-
   const { rows: allRows, ...restDataGridProps } = dataGridProps
 
+  const getSearchableCellValue = (row: any, col: GridColDef<any>) => {
+    const raw = row[col.field]
+
+    if (raw == null) return ''
+    if (Array.isArray(raw)) return raw.map((v) => String(v)).join(', ')
+    if (typeof raw === 'object') return JSON.stringify(raw)
+    return String(raw)
+  }
+
   const filteredRows = useMemo(() => {
+    if (searchMode === 'server') {
+      return allRows ?? []
+    }
+
     if (!quickFilter || !allRows) return allRows ?? []
-    const lower = quickFilter.toLowerCase()
+
+    const needle = quickFilter.toLowerCase().trim()
+
     return allRows.filter((row: any) =>
-      Object.values(row).some((val) => String(val ?? '').toLowerCase().includes(lower))
+      columns.some((col) =>
+        getSearchableCellValue(row, col).toLowerCase().includes(needle)
+      )
     )
-  }, [allRows, quickFilter])
+  }, [allRows, quickFilter, columns, searchMode])
+
+  const handleSearchChange = (value: string) => {
+    if (searchMode === 'server') {
+      onSearchChange?.(value)
+    } else {
+      setLocalQuickFilter(value)
+    }
+  }
 
   return (
     <CanAccess>
@@ -168,7 +242,12 @@ export const ListPage: React.FC<ListPageProps> = ({
         breadcrumb={<AppBreadcrumb />}
         wrapperProps={{
           elevation: 0,
-          sx: { backgroundColor: 'background.wrapper', boxShadow: 'none', borderRadius: 1, padding: 0 },
+          sx: {
+            backgroundColor: 'background.wrapper',
+            boxShadow: 'none',
+            borderRadius: 1,
+            padding: 0,
+          },
         }}
         headerProps={{
           sx: {
@@ -209,13 +288,25 @@ export const ListPage: React.FC<ListPageProps> = ({
               bgcolor: 'background.paper',
             }}
           >
-            <SearchIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
+            <SearchIcon
+              sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }}
+            />
             <InputBase
               value={quickFilter}
-              onChange={(e) => setQuickFilter(e.target.value)}
-              placeholder="Filter this page..."
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder={
+                searchPlaceholder ??
+                (searchMode === 'server'
+                  ? 'Search all records...'
+                  : 'Filter this page...')
+              }
               sx={{ fontSize: 14, flex: 1 }}
-              inputProps={{ 'aria-label': 'Filter rows on this page' }}
+              inputProps={{
+                'aria-label':
+                  searchMode === 'server'
+                    ? 'Search all records'
+                    : 'Filter rows on this page',
+              }}
             />
           </Box>
           {rowCount !== undefined && rowCount > 0 && (
@@ -245,7 +336,9 @@ export const ListPage: React.FC<ListPageProps> = ({
               ? (params) => show(resource.name, params.id as string | number)
               : undefined
           }
-          loading={isLoading !== undefined ? isLoading : restDataGridProps.loading}
+          loading={
+            isLoading !== undefined ? isLoading : restDataGridProps.loading
+          }
           columns={columns}
           sx={{ cursor: disableRowClick ? 'default' : 'pointer' }}
         />

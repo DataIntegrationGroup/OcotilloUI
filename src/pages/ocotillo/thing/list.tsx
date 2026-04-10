@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useExport, useGo, useLink } from '@refinedev/core'
 import { ExportButton, useDataGrid } from '@refinedev/mui'
 import { GridColDef, GridFilterModel } from '@mui/x-data-grid'
@@ -63,12 +63,24 @@ export const WellList: React.FC = () => {
     captureEvent('feature_used', { feature: 'wells_list' })
   }, [])
 
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput.trim())
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
   const { dataGridProps } = useDataGrid<IWell>({
     resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
     meta: {
       params: {
         include_contacts: true,
+        ...(search ? { query: search } : {}),
       },
     },
     pagination: { pageSize: 50 },
@@ -302,6 +314,9 @@ export const WellList: React.FC = () => {
       }}
       getRowId={(row) => row.id}
       headerButtons={customHeaderButtons}
+      searchMode="server"
+      searchValue={searchInput}
+      onSearchChange={setSearchInput}
     />
   )
 }
