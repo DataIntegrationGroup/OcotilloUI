@@ -25,24 +25,24 @@ export const LocationShow = () => {
     const location = locationData?.data;
     console.log('show location', location);
 
-    const {data: wellData, isLoading: isLoadingWells, isError} = useOne<IWell, HttpError>({
+    const {result: wellData, query: wellsQuery} = useOne<IWell, HttpError>({
         resource: "wells",
         id: location?.PointID,
         dataProviderName: "amp"
     });
 
     // console.log('show well', wellData);
-    const well = wellData?.data;
+    const well = wellData;
     console.log('show well', well);
 
 
-    const {data: photosData, isLoading: isLoadingPhotos, isError: isErrorPhotos} = useOne({
+    const {result: photosData} = useOne({
         resource: "photos",
         id: location?.PointID,
         dataProviderName: "amp"
     });
 
-    const photos = photosData?.data || [];
+    const photos = photosData || [];
     // const location = {}
     // const {queryResult} = useShow({});
     //
@@ -94,8 +94,7 @@ export const LocationShow = () => {
                     startIcon={<SummarizeOutlinedIcon/>}>Report</Button>
             </>
             }
-
-            isLoading={isFetchingLocation && isLoadingWells}>
+            isLoading={isFetchingLocation && wellsQuery.isLoading}>
             <Card sx={{margin: 1, padding: 1}}>
                 <Stack direction={'row'} gap={3}>
                     <Stack>

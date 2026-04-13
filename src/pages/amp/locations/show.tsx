@@ -21,7 +21,7 @@ export const LocationShow = () => {
 
   const location = locationData?.data;
 
-  const { data: wellData, isLoading: isLoadingWells } = useOne<
+  const { result: wellData, query: wellsQuery } = useOne<
     IWell,
     HttpError
   >({
@@ -30,15 +30,15 @@ export const LocationShow = () => {
     dataProviderName: "amp",
   });
 
-  const well = wellData?.data;
+  const well = wellData;
 
-  const { data: photosData } = useOne({
+  const { result: photosData } = useOne({
     resource: "photos",
     id: location?.PointID,
     dataProviderName: "amp",
   });
 
-  const photos = photosData?.data || [];
+  const photos = photosData || [];
 
   const locationGeometry = {
     type: "FeatureCollection",
@@ -81,7 +81,7 @@ export const LocationShow = () => {
           </Button>
         </>
       }
-      isLoading={isFetchingLocation && isLoadingWells}
+      isLoading={isFetchingLocation && wellsQuery.isLoading}
     >
       <Card sx={{ margin: 1, padding: 1 }}>
         <Stack direction={"row"} gap={3}>

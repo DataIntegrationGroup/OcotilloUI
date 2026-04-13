@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Breadcrumb, List, useDataGrid } from '@refinedev/mui'
+import { useDataGrid } from '@refinedev/mui'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
   IAddress,
@@ -7,71 +7,71 @@ import {
   IEmail,
   IPhone,
 } from '@/interfaces/ocotillo/IContact'
-import { Card, CardHeader, SxProps, Typography } from '@mui/material'
+import { Button, Card, CardHeader, SxProps } from '@mui/material'
 import { Email, Home, Phone } from '@mui/icons-material'
-import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { useLink } from '@refinedev/core'
+import AddIcon from '@mui/icons-material/Add'
+import { useLink, useNavigation } from '@refinedev/core'
 import { settings } from '@/settings'
-import { formatAppDateTime } from '@/utils'
+import { formatAppDateTime, formatPhone } from '@/utils'
+import { ListPage } from '@/components'
+import { useAccessCapabilities } from '@/hooks'
+import {
+  filterConfidentialRows,
+  sanitizeContacts,
+} from '@/utils'
 
 export const ContactList: React.FC = () => {
+  const { canViewConfidential } = useAccessCapabilities()
   const [selectedContactId, setSelectedContactId] = useState<number | null>(
     null
   )
 
-  const { dataGridProps } = useDataGrid<IContact>()
+  const { dataGridProps } = useDataGrid<IContact>({
+    pagination: { pageSize: 50 },
+  })
+  const visibleContacts = useMemo(
+    () => sanitizeContacts(dataGridProps.rows, canViewConfidential),
+    [canViewConfidential, dataGridProps.rows]
+  )
+
+  const { create } = useNavigation()
   const Link = useLink()
 
   const columns = useMemo<GridColDef<IContact>[]>(
     () => [
-      idColumnDef(),
-      {
-        field: 'things',
-        headerName: 'Things',
-        type: 'string',
-        minWidth: 150,
-        valueGetter: (_, row) =>
-          row.things.map((thing) => thing.name).join('; '),
-        renderCell: (params) => {
-          return (
-            <div>
-              {params.row.things.map((thing) => (
-                <Link
-                  go={{
-                    to: {
-                      resource: 'ocotillo.thing-well',
-                      action: 'show',
-                      id: thing.id,
-                    },
-                  }}
-                >
-                  {thing.name}
-                </Link>
-              ))}
-            </div>
-          )
-        },
-      },
       {
         field: 'name',
         headerName: 'Name',
         type: 'string',
-        minWidth: 150,
+        minWidth: 160,
+        flex: 1,
+      },
+      {
+        field: 'organization',
+        headerName: 'Organization',
+        type: 'string',
+        minWidth: 180,
+        flex: 1,
+        valueGetter: (_: unknown, row: IContact) => row.organization ?? '',
       },
       {
         field: 'role',
         headerName: 'Role',
         type: 'string',
-        minWidth: 150,
+        width: 140,
       },
-      { field: 'contact_type', headerName: 'Contact Type', minWidth: 150 },
+      {
+        field: 'contact_type',
+        headerName: 'Contact Type',
+        width: 140,
+      },
       {
         field: 'primary_phone',
         headerName: 'Primary Phone',
         type: 'string',
-        minWidth: 170,
+        width: 160,
         sortable: false,
-        valueGetter: (_, row) => {
+        valueGetter: (_: unknown, row: IContact) => {
           const primary = pickPrimary(
             row.phones,
             (p) => p.phone_type === 'Primary'
@@ -79,12 +79,13 @@ export const ContactList: React.FC = () => {
           return primary?.phone_number ?? ''
         },
         renderCell: (params) => {
+          if (!canViewConfidential) return <span />
           const primary = pickPrimary(
             params.row.phones,
             (p) => p.phone_type === 'Primary'
           )
           return primary?.phone_number ? (
-            <span>{primary.phone_number}</span>
+            <span>{formatPhone(primary.phone_number)}</span>
           ) : (
             <span />
           )
@@ -94,9 +95,10 @@ export const ContactList: React.FC = () => {
         field: 'primary_email',
         headerName: 'Primary Email',
         type: 'string',
-        minWidth: 220,
+        minWidth: 200,
+        flex: 1,
         sortable: false,
-        valueGetter: (_, row) => {
+        valueGetter: (_: unknown, row: IContact) => {
           const primary = pickPrimary(
             row.emails,
             (e) => e.email_type === 'Primary'
@@ -104,6 +106,7 @@ export const ContactList: React.FC = () => {
           return primary?.email ?? ''
         },
         renderCell: (params) => {
+          if (!canViewConfidential) return <span />
           const primary = pickPrimary(
             params.row.emails,
             (e) => e.email_type === 'Primary'
@@ -112,14 +115,46 @@ export const ContactList: React.FC = () => {
         },
       },
       {
+        field: 'things',
+        headerName: 'Associated Sites',
+        type: 'string',
+        minWidth: 180,
+        flex: 1,
+        sortable: false,
+        valueGetter: (_: unknown, row: IContact) =>
+          row.things?.map((thing) => thing.name).join('; ') ?? '',
+        renderCell: (params) => {
+          const things = params.row.things ?? []
+          return (
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
+              {things.map((thing, idx) => (
+                <span key={thing.id}>
+                  {idx > 0 && ', '}
+                  <Link
+                    go={{
+                      to: {
+                        resource: 'ocotillo.thing-well',
+                        action: 'show',
+                        id: thing.id,
+                      },
+                    }}
+                  >
+                    {thing.name}
+                  </Link>
+                </span>
+              ))}
+            </div>
+          )
+        },
+      },
+      {
         field: 'created_at',
         headerName: 'Created At',
-        minWidth: 200,
+        width: 180,
         valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
-      actionColumnDef(),
     ],
-    []
+    [canViewConfidential]
   )
   const { dataGridProps: emailDataGridProps } = useDataGrid<IEmail>({
     dataProviderName: 'ocotillo',
@@ -139,59 +174,58 @@ export const ContactList: React.FC = () => {
     meta: { enabled: !!selectedContactId },
   })
 
-  return (
-    <List
-      breadcrumb={<Breadcrumb hideIcons={true} />}
-      title="Contacts / Owners"
-    >
-      <Card
-        className={'description'}
-        variant="outlined"
-        sx={{
-          marginTop: 1,
-          marginBottom: 1,
-          padding: 1,
-        }}
+  const customHeaderButtons = () => (
+    <>
+      <Button
+        size="small"
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => create('contact')}
       >
-        <Typography variant="body1">
-          {'Contacts are used to represent people or organizations.'}
-        </Typography>
-      </Card>
-      <DataGrid
-        {...dataGridProps}
-        rowHeight={settings.rowHeight}
-        disableRowSelectionOnClick={false}
+        Create
+      </Button>
+    </>
+  )
+
+  return (
+    <>
+      <ListPage
+        title="Contacts & Owners"
+        description="People and organizations associated with monitoring sites. Contacts can be linked to wells and springs and may have multiple phone numbers, email addresses, and mailing addresses."
         columns={columns}
-        onRowSelectionModelChange={(params) => {
+        dataGridProps={{ ...dataGridProps, rows: visibleContacts }}
+        getRowId={(row) => row.id}
+        headerButtons={customHeaderButtons}
+        onSelectionChange={(params) =>
           setSelectedContactId(params.length > 0 ? (params[0] as number) : null)
-        }}
+        }
       />
       {selectedContactId && (
         <>
-          <EmailInfoCard dataGridProps={emailDataGridProps} />
-          <PhoneInfoCard dataGridProps={phoneDataGridProps} />
-          <AddressInfoCard dataGridProps={addressDataGridProps} />
+          {canViewConfidential && <EmailInfoCard dataGridProps={emailDataGridProps} />}
+          {canViewConfidential && <PhoneInfoCard dataGridProps={phoneDataGridProps} />}
+          {canViewConfidential && <AddressInfoCard dataGridProps={addressDataGridProps} />}
         </>
       )}
-    </List>
+    </>
   )
 }
 
 const EmailInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
   const columns = useMemo<GridColDef<IEmail>[]>(
     () => [
-      idColumnDef(),
       {
         field: 'email_type',
         headerName: 'Type',
         type: 'string',
-        minWidth: 150,
+        width: 140,
       },
       {
         field: 'email',
         headerName: 'Email',
         type: 'string',
         minWidth: 200,
+        flex: 1,
       },
     ],
     []
@@ -201,7 +235,10 @@ const EmailInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
     <InfoCard
       title="Email"
       icon={<Email />}
-      dataGridProps={dataGridProps}
+      dataGridProps={{
+        ...dataGridProps,
+        rows: filterConfidentialRows(dataGridProps.rows, true),
+      }}
       columns={columns}
     />
   )
@@ -210,18 +247,20 @@ const EmailInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
 const PhoneInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
   const columns = useMemo<GridColDef<IPhone>[]>(
     () => [
-      idColumnDef(),
       {
         field: 'phone_type',
         headerName: 'Type',
         type: 'string',
-        minWidth: 150,
+        width: 140,
       },
       {
         field: 'phone_number',
         headerName: 'Phone',
         type: 'string',
-        minWidth: 200,
+        width: 180,
+        renderCell: (params) => (
+          <span>{formatPhone(params.row.phone_number)}</span>
+        ),
       },
     ],
     []
@@ -231,7 +270,10 @@ const PhoneInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
     <InfoCard
       title="Phone"
       icon={<Phone />}
-      dataGridProps={dataGridProps}
+      dataGridProps={{
+        ...dataGridProps,
+        rows: filterConfidentialRows(dataGridProps.rows, true),
+      }}
       columns={columns}
     />
   )
@@ -240,42 +282,42 @@ const PhoneInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
 const AddressInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
   const columns = useMemo<GridColDef<IAddress>[]>(
     () => [
-      idColumnDef(),
       {
         field: 'address_type',
         headerName: 'Type',
         type: 'string',
-        minWidth: 150,
+        width: 120,
       },
       {
         field: 'address_line_1',
-        headerName: 'Address Line 1',
+        headerName: 'Address',
         type: 'string',
         minWidth: 200,
+        flex: 1,
       },
       {
         field: 'address_line_2',
-        headerName: 'Address Line 2',
+        headerName: 'Line 2',
         type: 'string',
-        minWidth: 200,
+        width: 160,
       },
       {
         field: 'city',
         headerName: 'City',
         type: 'string',
-        minWidth: 150,
+        width: 140,
       },
       {
         field: 'state',
         headerName: 'State',
         type: 'string',
-        minWidth: 150,
+        width: 80,
       },
       {
         field: 'postal_code',
         headerName: 'Postal Code',
         type: 'string',
-        minWidth: 150,
+        width: 110,
       },
     ],
     []
@@ -285,7 +327,10 @@ const AddressInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
     <InfoCard
       title="Address"
       icon={<Home />}
-      dataGridProps={dataGridProps}
+      dataGridProps={{
+        ...dataGridProps,
+        rows: filterConfidentialRows(dataGridProps.rows, true),
+      }}
       columns={columns}
     />
   )
@@ -304,7 +349,7 @@ const InfoCard = ({
 }) => (
   <Card sx={{ mt: 2 }}>
     <IconCardHeader text={title} icon={icon} />
-    <DataGrid {...dataGridProps} columns={columns} />
+    <DataGrid {...dataGridProps} columns={columns} rowHeight={settings.rowHeight} />
   </Card>
 )
 

@@ -1,23 +1,17 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
-  AutoAwesome,
-  ElectricBolt,
-  Plumbing,
-  StorageOutlined,
+  MapOutlined,
+  SearchOutlined,
+  FolderOpenOutlined,
+  FileDownloadOutlined,
+  HelpOutlineOutlined,
 } from '@mui/icons-material'
 import {
-  Avatar,
+  CardActionArea,
   Card,
   CardContent,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemButton,
-  ListItemText,
-  ListSubheader,
   Stack,
   Typography,
-  useTheme,
   Box,
   Drawer,
   Alert,
@@ -25,6 +19,8 @@ import {
   Container,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
+import { useSearch } from '@/providers/search-provider'
+import { useGo, useDataProvider, useNotification } from '@refinedev/core'
 import ocotilloImage from '@/img/ocotillo.jpeg'
 import { useCan } from '@refinedev/core'
 
@@ -39,7 +35,6 @@ export const Home = () => {
           <Stack spacing={3}>
             <Hero />
             <About />
-            <Links />
           </Stack>
         </CardContent>
       </Card>
@@ -102,8 +97,6 @@ const HomeNotification = ({ noPermissions }) => {
 }
 
 const Hero = () => {
-  const theme = useTheme()
-
   return (
     <Box
       sx={{
@@ -128,7 +121,7 @@ const Hero = () => {
           backgroundRepeat: 'no-repeat, no-repeat',
           backgroundSize: 'cover, auto 100%', // overlay covers, image is auto x 100%
           backgroundPosition: 'center, center',
-          backgroundColor: theme.palette.grey[900],
+          backgroundColor: '#212121',
         }}
       />
       {/* Overlay for readability + polish */}
@@ -149,159 +142,214 @@ const Hero = () => {
         }}
       >
         <Typography variant="h1" sx={{ fontSize: { xs: 40, sm: 56, md: 72 } }}>
-          Welcome to Ocotillo.
-        </Typography>
-        <Typography
-          variant="h2"
-          sx={{ fontSize: { xs: 20, sm: 28, md: 34 }, mt: 1 }}
-        >
-          NMBGMR&apos;s Data Management Portal
+          Welcome to Ocotillo
         </Typography>
       </Box>
     </Box>
   )
 }
 
-const About = () => (
-  <Box sx={{ width: '100%' }}>
-    <Container maxWidth="lg">
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-            About Ocotillo
-          </Typography>
-          <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-            Ocotillo is a web application for accessing and working with New
-            Mexico Bureau of Geology water data. Right now it provides access to
-            groundwater well information from the Aquifer Mapping Program
-            (AMP)—with additional datasets from Geothermal, Oil &amp; Gas, and
-            Argon Geochronology planned for the future.
-          </Typography>
-        </Box>
+const About = () => {
+  const { openSearch } = useSearch()
+  const go = useGo()
+  const dataProvider = useDataProvider()
+  const { open: notify } = useNotification()
+  const isFetchingRandomWellRef = useRef(false)
+  const [isFetchingRandomWell, setIsFetchingRandomWell] = useState(false)
 
-        <Divider />
+  const handleRandomWellClick = async () => {
+    if (isFetchingRandomWellRef.current) return
 
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-              What you can do now
-            </Typography>
-            <Stack component="ul" spacing={1} sx={{ pl: 2, m: 0 }}>
-              <Typography component="li" variant="body1">
-                Browse wells on the Map
-              </Typography>
-              <Typography component="li" variant="body1">
-                Search by well ID, site name, or contact/owner
-              </Typography>
-              <Typography component="li" variant="body1">
-                View well records (water levels, equipment, photos,
-                contacts/owners)
-              </Typography>
-              <Typography component="li" variant="body1">
-                Export a Field Compilation sheet for a single well
-              </Typography>
-            </Stack>
-          </Grid>
+    isFetchingRandomWellRef.current = true
+    setIsFetchingRandomWell(true)
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-              What’s coming next
-            </Typography>
-            <Stack component="ul" spacing={1} sx={{ pl: 2, m: 0 }}>
-              <Typography component="li" variant="body1">
-                Run spatial queries and batch export data for groups of wells,
-                springs, and other AMP features
-              </Typography>
-              <Typography component="li" variant="body1">
-                Batch-generate Field Compilation sheets for field campaigns
-              </Typography>
-              <Typography component="li" variant="body1">
-                Enter field-collected data such as well inventory updates, water
-                levels, and field parameters
-              </Typography>
-            </Stack>
-          </Grid>
-        </Grid>
-      </Stack>
-    </Container>
-  </Box>
-)
+    const fallbackToList = () => {
+      go({ to: '/ocotillo/well', type: 'push' })
+    }
 
-const Links = () => {
-  const theme = useTheme()
+    try {
+      const provider = dataProvider('ocotillo')
+      const firstPage = await provider.getList({
+        resource: 'thing/water-well',
+        pagination: { currentPage: 1, pageSize: 1 },
+      })
+
+      if (!firstPage.total || firstPage.total < 1) {
+        fallbackToList()
+        return
+      }
+
+      const randomPage = Math.floor(Math.random() * firstPage.total) + 1
+      const randomPageResult = await provider.getList({
+        resource: 'thing/water-well',
+        pagination: { currentPage: randomPage, pageSize: 1 },
+      })
+
+      const randomWell = randomPageResult.data?.[0]
+      if (!randomWell?.id) {
+        fallbackToList()
+        return
+      }
+
+      go({
+        to: {
+          resource: 'ocotillo.thing-well',
+          action: 'show',
+          id: randomWell.id,
+        },
+      })
+    } catch (error) {
+      notify?.({
+        type: 'error',
+        message: 'Could not load a random well',
+        description: 'Showing the wells list instead.',
+      })
+      fallbackToList()
+    } finally {
+      isFetchingRandomWellRef.current = false
+      setIsFetchingRandomWell(false)
+    }
+  }
 
   return (
     <Box sx={{ width: '100%' }}>
       <Container maxWidth="lg">
-        <List
-          sx={{ width: '100%', maxWidth: 300 }}
-          subheader={
-            <ListSubheader component="span">
-              Use this tool to efficiently manage data from:
-            </ListSubheader>
-          }
-        >
-          <ListItem sx={{ pointerEvents: 'none' }}>
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                <StorageOutlined />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary="Aquifer Mapping Program"
-              sx={{
-                color: theme.palette.secondary.main,
-              }}
-            />
-          </ListItem>
-          <ListItemButton
-            component="a"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://github.com/NMGRL/pychron"
-          >
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                <AutoAwesome />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary="Pychron"
-              sx={{
-                color: theme.palette.secondary.main,
-              }}
-            />
-          </ListItemButton>
-          <ListItem sx={{ pointerEvents: 'none' }}>
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                <Plumbing />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary="Geothermal Program"
-              sx={{ color: theme.palette.secondary.main }}
-            />
-          </ListItem>
-          <ListItemButton
-            component="a"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://st2.newmexicowaterdata.org/FROST-Server"
-          >
-            <ListItemAvatar>
-              <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                <ElectricBolt />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary="ST2"
-              sx={{
-                color: theme.palette.secondary.main,
-              }}
-            />
-          </ListItemButton>
-        </List>
+        <Stack spacing={3}>
+          <Box>
+            <Typography variant="deck" sx={{ color: 'text.secondary' }}>
+              Ocotillo is an application for accessing and working with New
+              Mexico Bureau of Geology water data. It provides access to
+              groundwater well information from the Aquifer Mapping Program
+              (AMP), with additional datasets from Geothermal, Oil &amp; Gas,
+              and Argon Geochronology planned for the future.
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+            What you can do now
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card
+                variant="outlined"
+                sx={{ height: '100%', cursor: 'pointer' }}
+                onClick={() => go({ to: '/ocotillo/map' })}
+              >
+                <CardContent>
+                  <MapOutlined color="primary" sx={{ fontSize: 40, mb: 1 }} />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                  >
+                    Browse wells on the Map
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Explore well locations and spatial data
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card
+                variant="outlined"
+                sx={{ height: '100%', cursor: 'pointer' }}
+                onClick={openSearch}
+              >
+                <CardContent>
+                  <SearchOutlined
+                    color="primary"
+                    sx={{ fontSize: 40, mb: 1 }}
+                  />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                  >
+                    Search records
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Find wells by ID, site name, or contact/owner
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card variant="outlined" sx={{ height: '100%' }}>
+                <CardActionArea
+                  data-testid="random-well-card"
+                  onClick={handleRandomWellClick}
+                  disabled={isFetchingRandomWell}
+                  sx={{ height: '100%', alignItems: 'stretch' }}
+                >
+                  <CardContent>
+                    <FolderOpenOutlined
+                      color="primary"
+                      sx={{ fontSize: 40, mb: 1 }}
+                    />
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 600, mb: 0.5 }}
+                    >
+                      View well records
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {isFetchingRandomWell
+                        ? 'Choosing a random well...'
+                        : 'Water levels, equipment, photos, contacts/owners'}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card
+                variant="outlined"
+                sx={{ height: '100%', cursor: 'pointer' }}
+                onClick={() => go({ to: '/ocotillo/well/batch-export' })}
+              >
+                <CardContent>
+                  <FileDownloadOutlined
+                    color="primary"
+                    sx={{ fontSize: 40, mb: 1 }}
+                  />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                  >
+                    Batch export Field Compilations
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Generate field compilation sheets for groups of wells
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card
+                variant="outlined"
+                sx={{ height: '100%', cursor: 'pointer' }}
+                onClick={() => go({ to: '/ocotillo/help' })}
+              >
+                <CardContent>
+                  <HelpOutlineOutlined
+                    color="primary"
+                    sx={{ fontSize: 40, mb: 1 }}
+                  />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                  >
+                    Connect to GIS
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Connect Ocotillo to ArcGIS Pro or QGIS
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Stack>
       </Container>
     </Box>
   )

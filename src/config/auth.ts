@@ -3,9 +3,16 @@ export const AUTHENTIK_URL =
 
 export const CLIENT_ID = import.meta.env.VITE_AUTHENTIK_CLIENT_ID || 'authentik'
 
-export const REDIRECT_URI =
-  import.meta.env.VITE_AUTHENTIK_REDIRECT_URI ||
-  'http://localhost:3000/callback'
+const envRedirect = import.meta.env.VITE_AUTHENTIK_REDIRECT_URI
 
-export const IS_TESTING_AUTH =
-  !import.meta.env.PROD && import.meta.env.VITE_TEST_AUTH
+export const REDIRECT_URI =
+  envRedirect ||
+  (typeof window !== 'undefined' && window.location?.origin
+    ? `${window.location.origin}/callback`
+    : 'http://localhost:3000/callback')
+
+const isTruthyEnvValue = (value: unknown): boolean =>
+  typeof value === 'string' &&
+  ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase())
+
+export const IS_TESTING_AUTH = isTruthyEnvValue(import.meta.env.VITE_TEST_AUTH)

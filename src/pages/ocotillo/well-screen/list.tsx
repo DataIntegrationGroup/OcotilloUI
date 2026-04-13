@@ -11,12 +11,12 @@ export const WellScreenList: React.FC = () => {
     resource: 'thing/well-screen',
     dataProviderName: 'ocotillo',
 
-    // it would be great to use staleTime and cacheTime here, but it seems
+    // it would be great to use staleTime and gcTime here, but it seems
     // that when staleTime is set, the data is not refetched when the component is remounted
     // after editing a record.
 
     // queryOptions: {
-    //   cacheTime: 60000, // Cache for 1 minute
+    //   gcTime: 60000, // Cache for 1 minute
     // staleTime: 30000, // Consider data fresh for 30 seconds
     // },
   })

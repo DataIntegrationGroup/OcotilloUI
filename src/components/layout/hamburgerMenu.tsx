@@ -23,7 +23,8 @@ export const HamburgerMenu: React.FC = () => {
       <HamburgerIcon
         onClick={() => setSiderCollapsed(!siderCollapsed)}
         sx={{
-          mr: 2,
+          ml: 0,
+          mr: 0.5,
           display: { xs: "none", md: "flex" },
           ...(!siderCollapsed && { display: "none" }),
         }}
@@ -31,7 +32,8 @@ export const HamburgerMenu: React.FC = () => {
       <HamburgerIcon
         onClick={() => setMobileSiderOpen(!mobileSiderOpen)}
         sx={{
-          mr: 2,
+          ml: 0,
+          mr: 0.5,
           display: { xs: "flex", md: "none" },
           ...(mobileSiderOpen && { display: "none" }),
         }}

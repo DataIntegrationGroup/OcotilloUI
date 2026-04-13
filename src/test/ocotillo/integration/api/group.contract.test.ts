@@ -16,7 +16,7 @@ describe('Ocotillo Integration Tests: Group', () => {
   it('should fetch groups using data provider', async () => {
     const result = await ocotilloDataProvider.getList({
       resource: 'group',
-      pagination: { current: 1, pageSize: 10 }
+      pagination: { currentPage: 1, pageSize: 10 }
     })
 
   expect(result).toHaveProperty('data')

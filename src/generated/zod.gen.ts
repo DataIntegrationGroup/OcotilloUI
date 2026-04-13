@@ -28,6 +28,7 @@ export const zAddressType = z.enum([
 
 /**
  * AddressResponse
+ *
  * Response schema for address details.
  */
 export const zAddressResponse = z.object({
@@ -40,9 +41,18 @@ export const zAddressResponse = z.object({
         z.string(),
         z.null()
     ])),
-    city: z.string(),
-    state: z.string(),
-    postal_code: z.string(),
+    city: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    state: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    postal_code: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     country: z.string(),
     address_type: zAddressType
 });
@@ -72,6 +82,7 @@ export const zAssetResponse = z.object({
 
 /**
  * AuthorResponse
+ *
  * Schema for the response of an author.
  */
 export const zAuthorResponse = z.object({
@@ -99,13 +110,6 @@ export const zBodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUplo
  */
 export const zBodyUploadAssetAssetUploadPost = z.object({
     file: z.string()
-});
-
-/**
- * Conformance
- */
-export const zConformance = z.object({
-    conformsTo: z.optional(z.array(z.string()))
 });
 
 /**
@@ -154,6 +158,7 @@ export const zEmailType = z.enum([
 
 /**
  * EmailResponse
+ *
  * Response schema for email details.
  */
 export const zEmailResponse = z.object({
@@ -167,6 +172,7 @@ export const zEmailResponse = z.object({
 
 /**
  * PhoneResponse
+ *
  * Response schema for phone details.
  */
 export const zPhoneResponse = z.object({
@@ -183,6 +189,7 @@ export const zPhoneResponse = z.object({
 
 /**
  * ThingResponseForContact
+ *
  * Response schema for thing details related to a contact. All that is needed
  * are the id and name
  */
@@ -205,13 +212,16 @@ export const zNoteType = z.enum([
     'Historical',
     'General',
     'Water',
+    'Water Quality',
     'Sampling Procedure',
     'Coordinate',
-    'OwnerComment'
+    'OwnerComment',
+    'Site Notes (legacy)'
 ]);
 
 /**
  * NoteResponse
+ *
  * Response schema for Note details.
  */
 export const zNoteResponse = z.object({
@@ -226,6 +236,7 @@ export const zNoteResponse = z.object({
 
 /**
  * ContactResponse
+ *
  * Response schema for contact details.
  */
 export const zContactResponse = z.object({
@@ -253,6 +264,7 @@ export const zContactResponse = z.object({
 
 /**
  * CreateAddress
+ *
  * Schema for creating an address.
  */
 export const zCreateAddress = z.object({
@@ -266,9 +278,18 @@ export const zCreateAddress = z.object({
         z.string(),
         z.null()
     ])),
-    city: z.string(),
-    state: z.optional(z.string()).default('NM'),
-    postal_code: z.string(),
+    city: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    state: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    postal_code: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     country: z.optional(z.string()).default('United States'),
     address_type: z.optional(zAddressType)
 });
@@ -295,6 +316,7 @@ export const zCreateAsset = z.object({
 
 /**
  * CreateEmail
+ *
  * Schema for creating an email.
  */
 export const zCreateEmail = z.object({
@@ -319,6 +341,7 @@ export const zPhoneType = z.enum([
 
 /**
  * CreatePhone
+ *
  * Schema for creating a phone number.
  */
 export const zCreatePhone = z.object({
@@ -333,6 +356,7 @@ export const zCreatePhone = z.object({
 
 /**
  * CreateNote
+ *
  * Schema for creating a new Note. The parent object's ID and type will be
  * taken from the URL path, not the request body.
  */
@@ -344,6 +368,7 @@ export const zCreateNote = z.object({
 
 /**
  * CreateContact
+ *
  * Schema for creating a contact.
  */
 export const zCreateContact = z.object({
@@ -358,7 +383,7 @@ export const zCreateContact = z.object({
     release_status: z.optional(zReleaseStatus),
     thing_id: z.int(),
     role: zRole,
-    contact_type: z.optional(zContactType),
+    contact_type: zContactType,
     nma_pk_owners: z.optional(z.union([
         z.string(),
         z.null()
@@ -428,6 +453,7 @@ export const zCreateGroundwaterLevelObservation = z.object({
 
 /**
  * CreateGroup
+ *
  * Schema for creating a group.
  */
 export const zCreateGroup = z.object({
@@ -449,6 +475,7 @@ export const zCreateGroup = z.object({
 
 /**
  * CreateLexiconCategory
+ *
  * Pydantic model for creating a lexicon category.
  * This model can be extended to include additional fields as needed.
  */
@@ -462,6 +489,7 @@ export const zCreateLexiconCategory = z.object({
 
 /**
  * CreateLexiconTerm
+ *
  * Pydantic model for creating a lexicon term.
  * This model can be extended to include additional fields as needed.
  */
@@ -473,6 +501,7 @@ export const zCreateLexiconTerm = z.object({
 
 /**
  * CreateLexiconTriple
+ *
  * Pydantic model for creating a triple.
  * This model can be extended to include additional fields as needed.
  */
@@ -484,6 +513,7 @@ export const zCreateLexiconTriple = z.object({
 
 /**
  * CreateLocation
+ *
  * Schema for creating a sample location.
  */
 export const zCreateLocation = z.object({
@@ -537,6 +567,7 @@ export const zPublicationType = z.enum([
 
 /**
  * CreatePublication
+ *
  * Schema for creating a new publication.
  */
 export const zCreatePublication = z.object({
@@ -628,7 +659,10 @@ export const zCreateSample = z.object({
     ])),
     release_status: z.optional(zReleaseStatus),
     field_activity_id: z.int(),
-    field_event_participant_id: z.int(),
+    field_event_participant_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
     sample_name: z.string(),
     sample_matrix: zSampleMatrix,
     sample_method: zSampleMethod,
@@ -661,6 +695,7 @@ export const zSensorType = z.enum([
 
 /**
  * CreateSensor
+ *
  * Schema for creating a new sensor.
  */
 export const zCreateSensor = z.object({
@@ -695,6 +730,7 @@ export const zCreateSensor = z.object({
 
 /**
  * CreateThingIdLink
+ *
  * Schema for creating a link between a thing and its ID.
  */
 export const zCreateThingIdLink = z.object({
@@ -717,6 +753,7 @@ export const zSpringType = z.enum([
 
 /**
  * CreateSpring
+ *
  * Schema for creating a spring.
  */
 export const zCreateSpring = z.object({
@@ -827,6 +864,7 @@ export const zCasingMaterial = z.enum([
  * well_construction_method
  */
 export const zWellConstructionMethod = z.enum([
+    'Unknown',
     'Air-Rotary',
     'Bored or augered',
     'Cable-tool',
@@ -844,7 +882,8 @@ export const zWellPumpType = z.enum([
     'Submersible',
     'Jet',
     'Line Shaft',
-    'Hand'
+    'Hand',
+    'Windmill'
 ]);
 
 /**
@@ -1150,6 +1189,7 @@ export const zFormationCode = z.enum([
 
 /**
  * CreateWell
+ *
  * Schema for creating a well.
  */
 export const zCreateWell = z.object({
@@ -1165,7 +1205,10 @@ export const zCreateWell = z.object({
         z.number().gt(0),
         z.null()
     ])),
-    measuring_point_height: z.number(),
+    measuring_point_height: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
     well_pump_depth: z.optional(z.union([
         z.number(),
         z.null()
@@ -1252,6 +1295,10 @@ export const zCreateWell = z.object({
         z.string(),
         z.null()
     ])),
+    monitoring_status: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     formation_completion_code: z.optional(z.union([
         zFormationCode,
         z.null()
@@ -1273,6 +1320,7 @@ export const zScreenType = z.enum([
 
 /**
  * CreateWellScreen
+ *
  * Schema for creating a well screen.
  */
 export const zCreateWellScreen = z.object({
@@ -1286,8 +1334,14 @@ export const zCreateWellScreen = z.object({
         z.int(),
         z.null()
     ])),
-    screen_depth_bottom: z.number().gt(0),
-    screen_depth_top: z.number().gt(0),
+    screen_depth_bottom: z.optional(z.union([
+        z.number().gte(0),
+        z.null()
+    ])),
+    screen_depth_top: z.optional(z.union([
+        z.number().gte(0),
+        z.null()
+    ])),
     screen_type: z.optional(z.union([
         zScreenType,
         z.null()
@@ -1342,7 +1396,10 @@ export const zDeploymentResponse = z.object({
     release_status: zReleaseStatus,
     thing_id: z.int(),
     sensor: zSensorResponse,
-    installation_date: z.iso.date(),
+    installation_date: z.union([
+        z.iso.date(),
+        z.null()
+    ]),
     removal_date: z.union([
         z.iso.date(),
         z.null()
@@ -1375,6 +1432,7 @@ export const zDeploymentResponse = z.object({
 
 /**
  * GeoJSONGeometry
+ *
  * Geometry schema for GeoJSON response.
  */
 export const zSchemasThingGeoJsonGeometry = z.object({
@@ -1389,6 +1447,7 @@ export const zSchemasThingGeoJsonGeometry = z.object({
 
 /**
  * Feature
+ *
  * Feature schema for GeoJSON response.
  */
 export const zFeature = z.object({
@@ -1399,6 +1458,7 @@ export const zFeature = z.object({
 
 /**
  * FeatureCollectionResponse
+ *
  * Response schema for GeoJSON FeatureCollection.
  */
 export const zFeatureCollectionResponse = z.object({
@@ -1482,6 +1542,18 @@ export const zGeoJsonProperties = z.object({
         zElevationMethod,
         z.null()
     ]),
+    county: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    state: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    quad_name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     utm_coordinates: z.optional(zGeoJsonutmCoordinates),
     notes: z.optional(z.array(zNoteResponse)).default([]),
     nma_location_notes: z.optional(z.union([
@@ -1639,6 +1711,7 @@ export const zParameterType = z.enum([
 
 /**
  * ParameterResponse
+ *
  * Pydantic model for the response of a parameter.
  * This model can be extended to include additional fields as needed.
  */
@@ -1710,6 +1783,7 @@ export const zGroupType = z.enum([
 
 /**
  * GroupResponse
+ *
  * Pydantic model for the response of a group.
  * This model can be extended to include additional fields as needed.
  */
@@ -1758,32 +1832,8 @@ export const zHttpValidationError = z.object({
 });
 
 /**
- * Link
- */
-export const zLink = z.object({
-    href: z.string(),
-    rel: z.string(),
-    type: z.optional(z.union([
-        z.string(),
-        z.null()
-    ])),
-    title: z.optional(z.union([
-        z.string(),
-        z.null()
-    ]))
-});
-
-/**
- * LandingPage
- */
-export const zLandingPage = z.object({
-    title: z.string(),
-    description: z.string(),
-    links: z.array(zLink)
-});
-
-/**
  * LexiconCategoryResponse
+ *
  * Pydantic model for the response of a lexicon category.
  * This model can be extended to include additional fields as needed.
  */
@@ -1799,6 +1849,7 @@ export const zLexiconCategoryResponse = z.object({
 
 /**
  * LexiconTermResponse
+ *
  * Pydantic model for the response of a lexicon term.
  * This model can be extended to include additional fields as needed.
  */
@@ -1844,6 +1895,7 @@ export const zLocationGeoJsonResponse = z.object({
 
 /**
  * LocationResponse
+ *
  * Response schema for sample location details.
  */
 export const zLocationResponse = z.object({
@@ -1906,6 +1958,7 @@ export const zMonitoringFrequencyResponse = z.object({
 
 /**
  * ObservationResponse
+ *
  * Response model for observations.
  * Combines groundwater level and geothermal observation responses.
  */
@@ -2253,6 +2306,7 @@ export const zOrganization = z.enum([
     'City of Portales, Public Works Dept.',
     'City of Socorro',
     'Commonwealth Conservancy',
+    'Costilla MDWCA',
     'Country Club Garden Mobile Home Park',
     'Crossroads Cattle Co., Ltd',
     'Double H Ranch',
@@ -2359,6 +2413,21 @@ export const zOrganization = z.enum([
     'Winter Brothers',
     'Yates Petroleum Corporation',
     'Zamora Accounting Services',
+    'Agua Sana MWCD',
+    'Canada Los Alamos MDWCA',
+    'Canjilon Mutual Domestic Water System',
+    'Cebolla Mutual Domestic',
+    'Chihuahuan Desert Rangeland Research Center (CDRRC)',
+    'East Rio Arriba SWCD',
+    'El Prado Municipal Water',
+    'Hachita Mutual Domestic',
+    'Jornada Experimental Range (JER)',
+    'La Canada Way HOA',
+    'Los Ojos Mutual Domestic',
+    'The Nature Conservancy (TNC)',
+    'Smith Ranch LLC',
+    'Zia Pueblo',
+    'Our Lady of Guadalupe (OLG)',
     'PLSS'
 ]);
 
@@ -2376,6 +2445,25 @@ export const zThingIdLinkResponse = z.object({
 });
 
 /**
+ * WellContactSummaryResponse
+ */
+export const zWellContactSummaryResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    organization: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    role: zRole,
+    contact_type: zContactType
+});
+
+/**
  * permission_type
  */
 export const zPermissionType = z.enum([
@@ -2386,6 +2474,7 @@ export const zPermissionType = z.enum([
 
 /**
  * PermissionHistoryResponse
+ *
  * Even though permission_allowed and start_date are not-nullable in the
  * database, they are nullable here to accommodate cases where no permission
  * record exists for a given permission type.
@@ -2429,6 +2518,7 @@ export const zThingResponse = z.object({
     monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
     general_notes: z.optional(z.array(zNoteResponse)).default([]),
     sampling_procedure_notes: z.optional(z.array(zNoteResponse)).default([]),
+    site_notes: z.optional(z.array(zNoteResponse)).default([]),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -2512,6 +2602,7 @@ export const zThingResponse = z.object({
     aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
     water_notes: z.optional(z.array(zNoteResponse)).default([]),
     construction_notes: z.optional(z.array(zNoteResponse)).default([]),
+    contacts: z.optional(z.array(zWellContactSummaryResponse)).default([]),
     permissions: z.array(zPermissionHistoryResponse),
     formation_completion_code: z.union([
         zFormationCode,
@@ -2525,6 +2616,7 @@ export const zThingResponse = z.object({
 
 /**
  * SampleResponse
+ *
  * Developer's note
  *
  * The frontend uses multiple fields for a thing, field_even, and field_activity,
@@ -2539,7 +2631,10 @@ export const zSampleResponse = z.object({
     thing: zThingResponse,
     field_event: zFieldEventResponse,
     field_activity: zFieldActivityResponse,
-    contact: zContactResponse,
+    contact: z.union([
+        zContactResponse,
+        z.null()
+    ]),
     sample_date: z.string(),
     sample_name: z.string(),
     sample_matrix: zSampleMatrix,
@@ -2583,6 +2678,7 @@ export const zPageSensorResponse = z.object({
 
 /**
  * SpringResponse
+ *
  * Response schema for spring details.
  */
 export const zSpringResponse = z.object({
@@ -2605,6 +2701,7 @@ export const zSpringResponse = z.object({
     monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
     general_notes: z.optional(z.array(zNoteResponse)).default([]),
     sampling_procedure_notes: z.optional(z.array(zNoteResponse)).default([]),
+    site_notes: z.optional(z.array(zNoteResponse)).default([]),
     spring_type: z.optional(z.union([
         z.string(),
         z.null()
@@ -2741,6 +2838,7 @@ export const zPageWaterChemistryObservationResponse = z.object({
 
 /**
  * WellResponse
+ *
  * Response schema for well details.
  */
 export const zWellResponse = z.object({
@@ -2763,6 +2861,7 @@ export const zWellResponse = z.object({
     monitoring_frequencies: z.optional(z.array(zMonitoringFrequencyResponse)).default([]),
     general_notes: z.optional(z.array(zNoteResponse)).default([]),
     sampling_procedure_notes: z.optional(z.array(zNoteResponse)).default([]),
+    site_notes: z.optional(z.array(zNoteResponse)).default([]),
     well_purposes: z.optional(z.array(zWellPurpose)).default([]),
     well_depth: z.optional(z.union([
         z.number(),
@@ -2830,7 +2929,10 @@ export const zWellResponse = z.object({
         z.string(),
         z.null()
     ]),
-    measuring_point_height: z.number(),
+    measuring_point_height: z.union([
+        z.number(),
+        z.null()
+    ]),
     measuring_point_height_unit: z.optional(z.string()).default('ft'),
     measuring_point_description: z.union([
         z.string(),
@@ -2839,6 +2941,7 @@ export const zWellResponse = z.object({
     aquifers: z.optional(z.array(z.record(z.string(), z.unknown()))).default([]),
     water_notes: z.optional(z.array(zNoteResponse)).default([]),
     construction_notes: z.optional(z.array(zNoteResponse)).default([]),
+    contacts: z.optional(z.array(zWellContactSummaryResponse)).default([]),
     permissions: z.array(zPermissionHistoryResponse),
     formation_completion_code: z.union([
         zFormationCode,
@@ -2863,6 +2966,7 @@ export const zPageWellResponse = z.object({
 
 /**
  * WellScreenResponse
+ *
  * Response schema for well screen details.
  */
 export const zWellScreenResponse = z.object({
@@ -2891,9 +2995,15 @@ export const zWellScreenResponse = z.object({
         z.string(),
         z.null()
     ])),
-    screen_depth_bottom: z.number(),
+    screen_depth_bottom: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
     screen_depth_bottom_unit: z.optional(z.string()).default('ft'),
-    screen_depth_top: z.number(),
+    screen_depth_top: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
     screen_depth_top_unit: z.optional(z.string()).default('ft'),
     screen_type: z.optional(z.union([
         z.string(),
@@ -2929,6 +3039,7 @@ export const zPageDict = z.object({
 
 /**
  * PublicationResponse
+ *
  * Schema for the response of a publication.
  */
 export const zPublicationResponse = z.object({
@@ -2956,6 +3067,7 @@ export const zResourceNotFoundResponse = z.object({
 
 /**
  * UpdateAddress
+ *
  * Schema for updating address information.
  */
 export const zUpdateAddress = z.object({
@@ -3017,6 +3129,7 @@ export const zUpdateAsset = z.object({
 
 /**
  * UpdateContact
+ *
  * Schema for updating contact information.
  */
 export const zUpdateContact = z.object({
@@ -3048,6 +3161,7 @@ export const zUpdateContact = z.object({
 
 /**
  * UpdateEmail
+ *
  * Schema for updating email information.
  */
 export const zUpdateEmail = z.object({
@@ -3115,6 +3229,7 @@ export const zUpdateGroundwaterLevelObservation = z.object({
 
 /**
  * UpdateGroup
+ *
  * Pydantic model for updating a group.
  * This model can be extended to include additional fields as needed.
  */
@@ -3189,6 +3304,7 @@ export const zUpdateLexiconTriple = z.object({
 
 /**
  * UpdateNote
+ *
  * Schema for updating an existing Note. All fields are optional
  */
 export const zUpdateNote = z.object({
@@ -3222,6 +3338,7 @@ export const zCoordinateMethod = z.enum([
 
 /**
  * UpdateLocation
+ *
  * Schema for updating a location. Notes are managed via the polymorphic Notes table.
  */
 export const zUpdateLocation = z.object({
@@ -3258,6 +3375,7 @@ export const zUpdateLocation = z.object({
 
 /**
  * UpdatePhone
+ *
  * Schema for updating phone information.
  */
 export const zUpdatePhone = z.object({
@@ -3564,8 +3682,14 @@ export const zWaterLevelBulkUploadRow = z.object({
     sample_id: z.int(),
     observation_id: z.int(),
     measurement_date_time: z.string(),
-    level_status: z.string(),
-    data_quality: z.string()
+    level_status: z.union([
+        z.string(),
+        z.null()
+    ]),
+    data_quality: z.union([
+        z.string(),
+        z.null()
+    ])
 });
 
 /**
@@ -3577,17 +3701,41 @@ export const zWaterLevelBulkUploadResponse = z.object({
     validation_errors: z.array(z.string())
 });
 
+/**
+ * WellDetailsResponse
+ */
+export const zWellDetailsResponse = z.object({
+    well: zWellResponse,
+    contacts: z.optional(z.array(zContactResponse)),
+    sensors: z.optional(z.array(zSensorResponse)),
+    deployments: z.optional(z.array(zDeploymentResponse)),
+    well_screens: z.optional(z.array(zWellScreenResponse)),
+    recent_groundwater_level_observations: z.optional(z.array(zGroundwaterLevelObservationResponse)),
+    latest_field_event_sample: z.optional(z.union([
+        zSampleResponse,
+        z.null()
+    ]))
+});
+
+/**
+ * WellExportResponse
+ */
+export const zWellExportResponse = z.object({
+    well: zWellResponse,
+    contacts: z.optional(z.array(zContactResponse)),
+    sensors: z.optional(z.array(zSensorResponse)),
+    deployments: z.optional(z.array(zDeploymentResponse))
+});
+
 export const zUploadAssetAssetUploadPostData = z.object({
     body: zBodyUploadAssetAssetUploadPost,
     path: z.optional(z.never()),
-    query: z.optional(z.object({
-        client: z.optional(z.unknown()),
-        bucket: z.optional(z.string())
-    }))
+    query: z.optional(z.never())
 });
 
 /**
  * Response Upload Asset Asset Upload Post
+ *
  * Successful Response
  */
 export const zUploadAssetAssetUploadPostResponse = z.record(z.string(), z.unknown());
@@ -3636,10 +3784,7 @@ export const zGetAssetAssetAssetIdGetData = z.object({
     path: z.object({
         asset_id: z.int()
     }),
-    query: z.optional(z.object({
-        client: z.optional(z.unknown()),
-        bucket: z.optional(z.string())
-    }))
+    query: z.optional(z.never())
 });
 
 /**
@@ -3660,10 +3805,7 @@ export const zRemoveAssetAssetAssetIdRemoveDeleteData = z.object({
     path: z.object({
         asset_id: z.int()
     }),
-    query: z.optional(z.object({
-        client: z.optional(z.unknown()),
-        bucket: z.optional(z.string())
-    }))
+    query: z.optional(z.never())
 });
 
 /**
@@ -3681,6 +3823,7 @@ export const zGetAuthorPublicationsAuthorAuthorIdPublicationsGetData = z.object(
 
 /**
  * Response Get Author Publications Author  Author Id  Publications Get
+ *
  * Successful Response
  */
 export const zGetAuthorPublicationsAuthorAuthorIdPublicationsGetResponse = z.array(zPublicationResponse);
@@ -4066,82 +4209,6 @@ export const zUpdateGroupGroupGroupIdPatchData = z.object({
  * Successful Response
  */
 export const zUpdateGroupGroupGroupIdPatchResponse = zGroupResponse;
-
-export const zLandingPageOgcGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.optional(z.never()),
-    query: z.optional(z.never())
-});
-
-/**
- * Successful Response
- */
-export const zLandingPageOgcGetResponse = zLandingPage;
-
-export const zConformanceOgcConformanceGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.optional(z.never()),
-    query: z.optional(z.never())
-});
-
-/**
- * Successful Response
- */
-export const zConformanceOgcConformanceGetResponse = zConformance;
-
-export const zCollectionsOgcCollectionsGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.optional(z.never()),
-    query: z.optional(z.never())
-});
-
-export const zCollectionOgcCollectionsCollectionIdGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.object({
-        collection_id: z.string()
-    }),
-    query: z.optional(z.never())
-});
-
-export const zItemsOgcCollectionsCollectionIdItemsGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.object({
-        collection_id: z.string()
-    }),
-    query: z.optional(z.object({
-        bbox: z.optional(z.union([
-            z.string(),
-            z.null()
-        ])),
-        datetime: z.optional(z.union([
-            z.string(),
-            z.null()
-        ])),
-        limit: z.optional(z.int().gte(1).lte(1000)).default(100),
-        offset: z.optional(z.int().gte(0)).default(0),
-        properties: z.optional(z.union([
-            z.string(),
-            z.null()
-        ])),
-        filter: z.optional(z.union([
-            z.string(),
-            z.null()
-        ])),
-        'filter-lang': z.optional(z.union([
-            z.string(),
-            z.null()
-        ]))
-    }))
-});
-
-export const zItemOgcCollectionsCollectionIdItemsFidGetData = z.object({
-    body: z.optional(z.never()),
-    path: z.object({
-        collection_id: z.string(),
-        fid: z.int()
-    }),
-    query: z.optional(z.never())
-});
 
 export const zGetLexiconCategoriesLexiconCategoryGetData = z.object({
     body: z.optional(z.never()),
@@ -4765,6 +4832,7 @@ export const zGetSampleByIdSampleSampleIdGetData = z.object({
 
 /**
  * Response Get Sample By Id Sample  Sample Id  Get
+ *
  * Successful Response
  */
 export const zGetSampleByIdSampleSampleIdGetResponse = z.union([
@@ -4782,6 +4850,7 @@ export const zUpdateSampleSampleSampleIdPatchData = z.object({
 
 /**
  * Response Update Sample Sample  Sample Id  Patch
+ *
  * Successful Response
  */
 export const zUpdateSampleSampleSampleIdPatchResponse = z.union([
@@ -4930,6 +4999,32 @@ export const zUpdateWaterWellThingWaterWellThingIdPatchData = z.object({
  * Successful Response
  */
 export const zUpdateWaterWellThingWaterWellThingIdPatchResponse = zWellResponse;
+
+export const zGetWellDetailsThingWaterWellThingIdDetailsGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        thing_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zGetWellDetailsThingWaterWellThingIdDetailsGetResponse = zWellDetailsResponse;
+
+export const zGetWellExportThingWaterWellThingIdExportGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        thing_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zGetWellExportThingWaterWellThingIdExportGetResponse = zWellExportResponse;
 
 export const zGetWellScreensByWellIdThingWaterWellThingIdWellScreenGetData = z.object({
     body: z.optional(z.never()),

@@ -13,8 +13,19 @@ export default defineConfig(({ mode }) => {
   return {
     build: {
       sourcemap: enableSourceMap,
+      rollupOptions: {
+        output: {
+          // Let Rollup decide chunking. Manually forcing chunk boundaries can
+          // lead to subtle ESM execution order issues and duplicate React
+          // module graphs (which often manifests as hooks being undefined).
+        },
+      },
     },
     base: env.VITE_BASE_URL,
+    resolve: {
+      // Prevent duplicate copies of React sneaking in via dependency subtrees.
+      dedupe: ['react', 'react-dom', 'scheduler', 'use-sync-external-store'],
+    },
     plugins: [
       react(),
       tsconfigPaths(),
@@ -68,7 +79,8 @@ export default defineConfig(({ mode }) => {
       },
       server: {
         deps: {
-          inline: ['@mui/material', '@refinedev/mui'],
+          inline: ['@mui/material', '@refinedev/mui', '@mui/x-data-grid'],
+          fallbackCJS: true,
         },
       },
     },

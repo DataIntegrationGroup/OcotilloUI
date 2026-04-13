@@ -35,8 +35,7 @@ export const SampleCreate: React.FC = () => {
     const materialAutocompleteProps = useAutocomplete<IMaterial>({
         resource: "materials",
         meta: {
-            pagination: {
-                current: 1,
+            pagination: { currentPage: 1,
                 pageSize: 500,
             },
         }

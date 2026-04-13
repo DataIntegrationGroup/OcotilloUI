@@ -1,69 +1,85 @@
-import { useMemo } from 'react'
-import { useDataGrid, ExportButton } from '@refinedev/mui'
-import { useExport } from '@refinedev/core'
-import { GridColDef } from '@mui/x-data-grid'
+import { useEffect, useMemo } from 'react'
+import { useExport, useGo } from '@refinedev/core'
+import { ExportButton, useDataGrid } from '@refinedev/mui'
+import { GridColDef, GridFilterModel } from '@mui/x-data-grid'
+import { captureEvent } from '@/analytics/posthog'
+import { Button } from '@mui/material'
+import { PictureAsPdf } from '@mui/icons-material'
 import { ListPage } from '@/components/ListPage'
 import { ISpring, IWell } from '@/interfaces/ocotillo'
-import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { CreateButton } from '@refinedev/mui'
-import { useNavigation } from '@refinedev/core'
-import { formatAppDateTime } from '@/utils'
+import { formatAppDate, formatAppDateTime } from '@/utils'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
     resource: 'thing/spring',
     dataProviderName: 'ocotillo',
+    pagination: { pageSize: 50 },
   })
 
   const columns = useMemo<GridColDef<ISpring>[]>(
     () => [
-      idColumnDef(),
       {
         field: 'name',
         headerName: 'Name',
         type: 'string',
-        minWidth: 150,
+        minWidth: 180,
+        flex: 1,
       },
       {
         field: 'release_status',
         headerName: 'Release Status',
         type: 'string',
-        minWidth: 150,
+        width: 140,
       },
       {
         field: 'spring_type',
         headerName: 'Spring Type',
         type: 'string',
-        minWidth: 150,
+        width: 140,
       },
       {
         field: 'created_at',
         headerName: 'Created At',
-        minWidth: 200,
+        width: 180,
         valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
-      actionColumnDef(),
     ],
     []
   )
+
   return (
     <ListPage
       title="Springs"
       columns={columns}
       dataGridProps={dataGridProps}
       getRowId={(row) => row.id}
-      description={
-        'Springs are natural water sources that flow from the ground. They can be used for various purposes, including water supply and ecological studies.'
-      }
+      description="Springs are natural water sources that flow from the ground. They can be used for various purposes, including water supply and ecological studies."
     />
   )
 }
 
 export const WellList: React.FC = () => {
+  useEffect(() => {
+    captureEvent('feature_used', { feature: 'wells_list' })
+  }, [])
+
   const { dataGridProps } = useDataGrid<IWell>({
     resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
+    pagination: { pageSize: 50 },
   })
+
+  const handleFilterModelChange = (model: GridFilterModel) => {
+    const activeFilters = model.items.filter((f) => f.value !== undefined)
+    if (activeFilters.length > 0) {
+      captureEvent('feature_used', {
+        feature: 'wells_filter',
+        filter_count: activeFilters.length,
+        filter_fields: activeFilters.map((f) => f.field),
+      })
+    }
+    dataGridProps.onFilterModelChange?.(model)
+  }
 
   const { triggerExport, isLoading: exportIsLoading } = useExport({
     resource: 'thing',
@@ -77,49 +93,141 @@ export const WellList: React.FC = () => {
 
   const columns = useMemo<GridColDef<IWell>[]>(
     () => [
-      idColumnDef(),
       {
         field: 'name',
         headerName: 'Name',
         type: 'string',
-        minWidth: 150,
+        minWidth: 160,
+        flex: 1,
+      },
+      {
+        field: 'well_status',
+        headerName: 'Well Status',
+        type: 'string',
+        width: 150,
+      },
+      {
+        field: 'monitoring_status',
+        headerName: 'Monitoring',
+        type: 'string',
+        width: 160,
+      },
+      {
+        field: 'thing_type',
+        headerName: 'Type',
+        type: 'string',
+        width: 130,
+      },
+      {
+        field: 'aquifers',
+        headerName: 'Aquifers',
+        minWidth: 180,
+        flex: 1,
+        sortable: false,
+        valueGetter: (_: unknown, row: IWell) =>
+          row.aquifers?.map((a) => a.aquifer_system).join(', ') ?? '',
       },
       {
         field: 'release_status',
         headerName: 'Release Status',
         type: 'string',
-        minWidth: 150,
+        width: 130,
       },
       {
         field: 'well_depth',
         headerName: 'Well Depth (ft)',
-        type: 'string',
-        minWidth: 150,
+        type: 'number',
+        width: 130,
+        align: 'right',
+        headerAlign: 'right',
       },
       {
         field: 'hole_depth',
         headerName: 'Hole Depth (ft)',
+        type: 'number',
+        width: 130,
+        align: 'right',
+        headerAlign: 'right',
+      },
+      {
+        field: 'first_visit_date',
+        headerName: 'First Visit',
+        width: 130,
+        valueGetter: (v: string) => formatAppDate(v),
+      },
+      {
+        field: 'well_completion_date',
+        headerName: 'Completed',
+        width: 130,
+        valueGetter: (v: string) => formatAppDate(v),
+      },
+      {
+        field: 'well_driller_name',
+        headerName: 'Driller',
         type: 'string',
+        minWidth: 150,
+        flex: 1,
+      },
+      {
+        field: 'latitude',
+        headerName: 'Latitude',
+        type: 'number',
+        width: 110,
+        sortable: false,
+        align: 'right',
+        headerAlign: 'right',
+        valueGetter: (_: unknown, row: IWell) =>
+          row.current_location?.geometry?.coordinates[1] ?? null,
+      },
+      {
+        field: 'longitude',
+        headerName: 'Longitude',
+        type: 'number',
+        width: 110,
+        sortable: false,
+        align: 'right',
+        headerAlign: 'right',
+        valueGetter: (_: unknown, row: IWell) =>
+          row.current_location?.geometry?.coordinates[0] ?? null,
+      },
+      {
+        field: 'alternate_ids',
+        headerName: 'Alternate IDs',
+        minWidth: 160,
+        flex: 1,
+        sortable: false,
+        valueGetter: (_: unknown, row: IWell) =>
+          row.alternate_ids
+            ?.map((a) => `${a.alternate_organization}: ${a.alternate_id}`)
+            .join(', ') ?? '',
       },
       {
         field: 'created_at',
         headerName: 'Created At',
-        minWidth: 200,
-        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
+        width: 180,
+        valueGetter: (v: string) => formatAppDateTime(v),
       },
-      actionColumnDef(),
     ],
     []
   )
 
-  const { push } = useNavigation()
+  const go = useGo()
 
   const customHeaderButtons = () => {
     return (
       <>
-        <CreateButton onClick={() => push('/ocotillo/well-inventory-form')} />
+        <Button
+          variant="contained"
+          color="secondary"
+          startIcon={<PictureAsPdf />}
+          onClick={() =>
+            go({ to: '/ocotillo/well/batch-export', type: 'push' })
+          }
+        >
+          Batch Field Sheets
+        </Button>
         <ExportButton
-          variant={'contained'}
+          variant="contained"
           loading={exportIsLoading}
           onClick={triggerExport}
         />
@@ -136,7 +244,7 @@ export const WellList: React.FC = () => {
         ' construction depending on the local geology and intended use.'
       }
       columns={columns}
-      dataGridProps={dataGridProps}
+      dataGridProps={{ ...dataGridProps, onFilterModelChange: handleFilterModelChange }}
       getRowId={(row) => row.id}
       headerButtons={customHeaderButtons}
     />

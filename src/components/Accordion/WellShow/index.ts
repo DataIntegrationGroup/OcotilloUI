@@ -1,7 +1,0 @@
-export * from './AdditionalWellInformation'
-export * from './Attachments'
-export * from './AlternateIds'
-export * from './Contacts'
-export * from './Equipment'
-export * from './Notes'
-export * from './WellScreens'

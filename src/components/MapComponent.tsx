@@ -1,20 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Map, MapRef, NavigationControl, Popup } from 'react-map-gl'
-import { MapboxStyleSwitcherControl } from 'mapbox-gl-style-switcher'
 import { ControlPosition } from 'react-map-gl'
 import { CircularProgress } from '@mui/material'
 
 import type { MapLayerMouseEvent, MapGeoJSONFeature } from 'react-map-gl'
 
-import GeocoderControl from './GeocoderControl'
 import DrawControl from './DrawControl'
 
 import { settings } from '@/settings'
 
-import { DEFAULT_MAPBOX_BASEMAP, MAPBOX_BASEMAPS } from '@/constants'
+import { ColorModeContext } from '@/contexts'
+import { DEFAULT_MAPBOX_BASEMAP, THEMED_MAPBOX_BASEMAPS } from '@/constants'
 
 import 'mapbox-gl/dist/mapbox-gl.css'
-import 'mapbox-gl-style-switcher/styles.css'
 
 type SelectionPolygons = Record<string, any>
 
@@ -22,15 +20,21 @@ interface MapComponentProps {
   children?: any
   onClick?: any
   onPointClick?: (e: any, features: any[]) => void
+  onBoundsChange?: (bbox: string | null) => void
   setSelectionPolygons?: any
   popupContent?: any
   setPopupContent?: any
   onMouseMoveCallback?: any
-  showDrawControls?: { show: boolean; position?: ControlPosition }
+  showDrawControls?: {
+    show: boolean
+    position?: ControlPosition
+    disabled?: boolean
+  }
   showNavigation?: { show: boolean; position?: ControlPosition }
-  showGeocoder?: { show: boolean; position?: ControlPosition }
   isLoading?: boolean
   mapRef?: any
+  basemapUri?: string
+  onBasemapChange?: (nextBasemap: string) => void
 
   initialViewState?: {
     longitude: number
@@ -48,29 +52,40 @@ export const MapComponent = ({
   children,
   onClick,
   onPointClick,
+  onBoundsChange,
   popupContent,
+  setPopupContent,
   onMouseMoveCallback,
   setSelectionPolygons,
   isLoading = false,
   initialViewState,
   showDrawControls = {
-    show: true,
+    show: false,
     position: 'top-right' as ControlPosition,
   },
   showNavigation = {
     show: true,
     position: 'top-right' as ControlPosition,
   },
-  showGeocoder = {
-    show: true,
-    position: 'top-left' as ControlPosition,
-  },
+  basemapUri = DEFAULT_MAPBOX_BASEMAP,
+  onBasemapChange,
   style = { width: '100%', height: '100%' },
   containerRef,
 }: MapComponentProps) => {
-  const [isDrawing, setIsDrawing] = useState(false)
+  const { mode } = useContext(ColorModeContext)
+  const [activeDrawMode, setActiveDrawMode] = useState<string | null>(null)
   const [_viewState, setViewState] = useState(initialViewState)
   const mapRef = externalMapRef ?? useRef<MapRef>(null)
+  const previousModeRef = useRef<'light' | 'dark'>(
+    mode === 'dark' ? 'dark' : 'light'
+  )
+  const isDrawInteractionActive =
+    activeDrawMode === 'draw_polygon' ||
+    activeDrawMode === 'draw_rectangle' ||
+    activeDrawMode === 'draw_rectangle_edit'
+  const isRectangleDrawInteractionActive =
+    activeDrawMode === 'draw_rectangle' ||
+    activeDrawMode === 'draw_rectangle_edit'
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -86,29 +101,30 @@ export const MapComponent = ({
     return () => observer.disconnect()
   }, [mapRef])
 
-  const handleMapLoad = useCallback(() => {
-    if (!mapRef.current) return
-    const map = mapRef.current.getMap()
+  useEffect(() => {
+    const previousMode = previousModeRef.current
+    const nextMode = mode === 'dark' ? 'dark' : 'light'
 
-    // Prevent duplicates if map reloads or component re-renders
-    if ((map as any)._styleSwitcherAdded) return
-    ;(map as any)._styleSwitcherAdded = true
+    if (!mapRef.current || previousMode === nextMode) {
+      previousModeRef.current = nextMode
+      return
+    }
 
-    const styleSwitcher = new MapboxStyleSwitcherControl(MAPBOX_BASEMAPS, {
-      defaultStyle: DEFAULT_MAPBOX_BASEMAP,
-    })
+    const currentThemedBasemap = THEMED_MAPBOX_BASEMAPS[previousMode].uri
+    const nextThemedBasemap = THEMED_MAPBOX_BASEMAPS[nextMode].uri
 
-    map.addControl(styleSwitcher, 'top-right')
+    if (basemapUri === currentThemedBasemap) {
+      onBasemapChange?.(nextThemedBasemap)
+    }
 
-    map.on('remove', () => {
-      try {
-        map.removeControl(styleSwitcher)
-        ;(map as any)._styleSwitcherAdded = false
-      } catch (err) {
-        console.warn('Map style switcher already removed.')
-      }
-    })
-  }, [mapRef])
+    previousModeRef.current = nextMode
+  }, [mode, basemapUri, mapRef, onBasemapChange])
+
+  useEffect(() => {
+    if (!isRectangleDrawInteractionActive || !setPopupContent) return
+
+    setPopupContent(null)
+  }, [isRectangleDrawInteractionActive, setPopupContent])
 
   if (!initialViewState) {
     initialViewState = {
@@ -158,7 +174,7 @@ export const MapComponent = ({
   )
 
   const onMouseMove = (e: MapLayerMouseEvent) => {
-    if (!mapRef?.current || isDrawing) return
+    if (!mapRef?.current || isDrawInteractionActive) return
 
     const features: MapGeoJSONFeature[] = getCurrentPoints(e)
     if (onMouseMoveCallback) {
@@ -166,13 +182,75 @@ export const MapComponent = ({
     }
   }
 
+  useEffect(() => {
+    const mapInstance = mapRef.current?.getMap()
+    if (!mapInstance) return
+
+    if (
+      activeDrawMode === 'draw_polygon' ||
+      activeDrawMode === 'draw_rectangle' ||
+      activeDrawMode === 'draw_rectangle_edit'
+    ) {
+      return
+    }
+
+    const canvas = mapInstance.getCanvas()
+    const canvasContainer = mapInstance.getCanvasContainer()
+    const setGrabCursor = () => {
+      canvas.style.cursor = 'grab'
+      canvasContainer.style.cursor = 'grab'
+    }
+    const setGrabbingCursor = (event?: PointerEvent) => {
+      if (event && event.button !== 0) return
+      canvas.style.cursor = 'grabbing'
+      canvasContainer.style.cursor = 'grabbing'
+    }
+
+    const resetCursor = () => {
+      canvas.style.cursor = 'grab'
+      canvasContainer.style.cursor = 'grab'
+    }
+
+    setGrabCursor()
+    canvasContainer.addEventListener('pointerdown', setGrabbingCursor)
+    window.addEventListener('pointerup', resetCursor)
+    window.addEventListener('pointercancel', resetCursor)
+    canvasContainer.addEventListener('pointerleave', resetCursor)
+
+    return () => {
+      canvasContainer.removeEventListener('pointerdown', setGrabbingCursor)
+      window.removeEventListener('pointerup', resetCursor)
+      window.removeEventListener('pointercancel', resetCursor)
+      canvasContainer.removeEventListener('pointerleave', resetCursor)
+      if (!isDrawInteractionActive) {
+        canvas.style.cursor = 'grab'
+        canvasContainer.style.cursor = 'grab'
+      }
+    }
+  }, [activeDrawMode, isDrawInteractionActive, mapRef])
+
   const onModeChange = useCallback((e: any) => {
-    setIsDrawing(e.mode === 'draw_polygon')
+    setActiveDrawMode(e.mode ?? null)
   }, [])
 
-  const onSelectionChange = useCallback((e: any) => {
-    setIsDrawing(e.features.length > 0)
-  }, [])
+  const onSelectionChange = useCallback(() => {}, [])
+
+  const emitBoundsChange = useCallback(() => {
+    const bounds = mapRef.current?.getMap?.()?.getBounds?.()
+    if (!bounds) {
+      onBoundsChange?.(null)
+      return
+    }
+
+    onBoundsChange?.(
+      [
+        bounds.getWest(),
+        bounds.getSouth(),
+        bounds.getEast(),
+        bounds.getNorth(),
+      ].join(',')
+    )
+  }, [mapRef, onBoundsChange])
 
   const handleMouseClick = useCallback(
     (e: MapLayerMouseEvent) => {
@@ -197,18 +275,15 @@ export const MapComponent = ({
       initialViewState={initialViewState}
       terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
       onClick={handleMouseClick}
-      onMove={(evt) => setViewState(evt.viewState)}
+      onLoad={emitBoundsChange}
+      onMove={(evt) => {
+        setViewState(evt.viewState)
+        emitBoundsChange()
+      }}
       onMouseMove={onMouseMove}
-      onLoad={handleMapLoad}
       style={style}
-      mapStyle={DEFAULT_MAPBOX_BASEMAP}
+      mapStyle={basemapUri}
     >
-      {showGeocoder?.show && (
-        <GeocoderControl
-          token={settings.mapboxToken}
-          position={showGeocoder?.position}
-        />
-      )}
       {showNavigation?.show && (
         <NavigationControl position={showNavigation?.position} />
       )}
@@ -218,14 +293,13 @@ export const MapComponent = ({
           controls={{
             polygon: true,
             trash: true,
-            combine_features: true,
-            uncombine_features: true,
           }}
           onCreate={onUpdate}
           onUpdate={onUpdate}
           onDelete={onDelete}
           onModeChange={onModeChange}
           onSelectionChange={onSelectionChange}
+          disabled={showDrawControls?.disabled}
           position={showDrawControls?.position}
         />
       )}

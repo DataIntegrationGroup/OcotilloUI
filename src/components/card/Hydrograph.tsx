@@ -28,12 +28,12 @@ export const HydrographCard = ({
   }
 
   return (
-    <Card elevation={2} sx={{ height: '100%' }}>
+    <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
       <CardHeader
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <StackedLineChart color="primary" />
-            <Typography variant="body1">Hydrograph</Typography>
+            <Typography variant="body1" fontWeight="bold">Hydrograph</Typography>
           </Stack>
         }
       />
@@ -67,12 +67,12 @@ export const HydrographCard = ({
 
 const LoadingCard = () => {
   return (
-    <Card elevation={2} sx={{ height: '100%' }}>
+    <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
       <CardHeader
         title={
           <Stack direction="row" alignItems="center" spacing={1}>
             <StackedLineChart color="primary" />
-            <Typography variant="body1">Hydrograph</Typography>
+            <Typography variant="body1" fontWeight="bold">Hydrograph</Typography>
           </Stack>
         }
       />

@@ -15,17 +15,13 @@ import type {IWell, IWellRecord} from "@/interfaces/geothermal";
 export const GeoThermalWellShow = () => {
     const {id} = useParsed();
 
-    const {queryResult} = useShow({
+    const {query, result: record} = useShow({
         resource: "wells",
         id: id,
         dataProviderName: "geothermal",
     });
 
-    const {data, isLoading} = queryResult;
-
-    const record = data?.data;
-
-    const {data: boreData, isLoading: boreIsLoading} = useOne({
+    const {result: boreData, query: boreQuery} = useOne({
         resource: "wells",
         id: `${id}/bore`,
         dataProviderName: "geothermal",
@@ -97,7 +93,7 @@ export const GeoThermalWellShow = () => {
     // });
 
     return (
-        <Show isLoading={isLoading}>
+        <Show isLoading={query.isLoading}>
             <Stack gap={1}>
 
 
@@ -142,7 +138,7 @@ export const GeoThermalWellShow = () => {
                     columns={columns}
                     autoHeight
                     // onRowSelectionModelChange={handleSelectionChangeWrapper}
-                    loading={isLoading}
+                    loading={query.isLoading || boreQuery.isLoading}
                 />
             </Stack>
 

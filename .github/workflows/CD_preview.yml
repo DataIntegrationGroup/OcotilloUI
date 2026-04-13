@@ -1,0 +1,208 @@
+name: Preview deploy to Cloud Run
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    env:
+      GCP_PROJECT_ID: waterdatainitiative-271000
+      GCP_REGION: us-central1
+      AUTHENTIK_BASE_URL: https://authentik.newmexicowaterdata.org
+      AUTHENTIK_PROVIDER_ID: ${{ secrets.AUTHENTIK_PROVIDER_ID }}
+      AUTHENTIK_API_TOKEN: ${{ secrets.AUTHENTIK_API_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compute preview service name
+        env:
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          SANITIZED=$(echo "$BRANCH_NAME" \
+            | sed 's/[^a-zA-Z0-9-]/-/g' \
+            | tr '[:upper:]' '[:lower:]' \
+            | cut -c1-40)
+
+          SERVICE_NAME="preview-$SANITIZED"
+
+          echo "SANITIZED_BRANCH=$SANITIZED" >> "$GITHUB_ENV"
+          echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_ENV"
+
+          echo "Computed service: $SERVICE_NAME"
+
+      - name: Setup Node
+        if: github.event.action != 'closed'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker for Artifact Registry
+        if: github.event.action != 'closed'
+        run: |
+          gcloud config set project "$GCP_PROJECT_ID"
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Load secrets
+        if: github.event.action != 'closed'
+        run: |
+          set -euo pipefail
+          echo "VITE_PUBLIC_POSTHOG_KEY=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_KEY --project=$GCP_PROJECT_ID)" >> $GITHUB_ENV
+          echo "VITE_PUBLIC_POSTHOG_HOST=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_HOST --project=$GCP_PROJECT_ID)" >> $GITHUB_ENV
+
+      - name: Build and push
+        if: github.event.action != 'closed'
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          set -euo pipefail
+
+          npm ci
+          npx tsc
+          npx vite build --mode development
+
+          docker build \
+            --build-arg MODE=development \
+            --build-arg VITE_APP_TITLE="Ocotillo Preview" \
+            --build-arg VITE_BASE_URL="/" \
+            --build-arg VITE_AUTHENTIK_CLIENT_ID=${{ vars.VITE_AUTHENTIK_CLIENT_ID }} \
+            --build-arg VITE_AUTHENTIK_URL=${{ vars.VITE_AUTHENTIK_URL }} \
+            --build-arg VITE_OCOTILLO_API_URL=${{ vars.VITE_OCOTILLO_API_URL }} \
+            --build-arg VITE_MAPBOX_TOKEN=${{ secrets.VITE_MAPBOX_TOKEN }} \
+            --build-arg VITE_PUBLIC_POSTHOG_KEY=${{ env.VITE_PUBLIC_POSTHOG_KEY }} \
+            --build-arg VITE_PUBLIC_POSTHOG_HOST=${{ env.VITE_PUBLIC_POSTHOG_HOST }} \
+            -t "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/${SERVICE_NAME}:$IMAGE_TAG" .
+
+          docker push "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/${SERVICE_NAME}:$IMAGE_TAG"
+
+      - name: Deploy to Cloud Run
+        if: github.event.action != 'closed'
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          gcloud run deploy "${SERVICE_NAME}" \
+            --image "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/${SERVICE_NAME}:$IMAGE_TAG" \
+            --platform managed \
+            --region "$GCP_REGION" \
+            --allow-unauthenticated \
+            --port 8080 \
+            --memory 512Mi \
+            --cpu 1
+
+      - name: Get Cloud Run URL
+        if: github.event.action != 'closed'
+        id: cloudrun-url
+        run: |
+          set -euo pipefail
+
+          URL=$(gcloud run services describe "${SERVICE_NAME}" \
+            --platform managed \
+            --region "$GCP_REGION" \
+            --format 'value(status.url)')
+
+          echo "Cloud Run URL: $URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Add exact preview origin to authentik provider
+        if: github.event.action != 'closed'
+        env:
+          PREVIEW_ORIGIN: ${{ steps.cloudrun-url.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          echo "Ensuring authentik redirect/origin exists for: $PREVIEW_ORIGIN"
+
+          tmp="$(mktemp)"
+          payload="$(mktemp)"
+
+          curl -fsS \
+            -H "Authorization: Bearer ${AUTHENTIK_API_TOKEN}" \
+            "${AUTHENTIK_BASE_URL}/api/v3/providers/oauth2/${AUTHENTIK_PROVIDER_ID}/" \
+            > "$tmp"
+
+          jq --arg origin "$PREVIEW_ORIGIN" '
+            .redirect_uris |= (
+              . + [{"matching_mode":"strict","url":$origin}]
+              | unique_by(.matching_mode + "|" + .url)
+            )
+            | {redirect_uris: .redirect_uris}
+          ' "$tmp" > "$payload"
+
+          curl -fsS -X PATCH \
+            -H "Authorization: Bearer ${AUTHENTIK_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data @"$payload" \
+            "${AUTHENTIK_BASE_URL}/api/v3/providers/oauth2/${AUTHENTIK_PROVIDER_ID}/"
+
+          echo "Added/verified strict preview origin in authentik."
+
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
+        env:
+          PREVIEW_URL: ${{ steps.cloudrun-url.outputs.url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "$(cat <<EOF
+          ## Preview Deployment
+
+          **Preview URL:** $PREVIEW_URL
+
+          **Note:** This preview uses the staging API endpoints.
+          EOF
+          )"
+
+      - name: Remove exact preview origin from authentik provider
+        if: github.event_name == 'pull_request' && github.event.action == 'closed'
+        env:
+          PREVIEW_ORIGIN: ${{ steps.cloudrun-url.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          echo "Removing authentik redirect/origin: $PREVIEW_ORIGIN"
+
+          tmp="$(mktemp)"
+          payload="$(mktemp)"
+
+          curl -fsS \
+            -H "Authorization: Bearer ${AUTHENTIK_API_TOKEN}" \
+            "${AUTHENTIK_BASE_URL}/api/v3/providers/oauth2/${AUTHENTIK_PROVIDER_ID}/" \
+            > "$tmp"
+
+          jq --arg origin "$PREVIEW_ORIGIN" '
+            .redirect_uris |= map(select(.url != $origin))
+            | {redirect_uris: .redirect_uris}
+          ' "$tmp" > "$payload"
+
+          curl -fsS -X PATCH \
+            -H "Authorization: Bearer ${AUTHENTIK_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data @"$payload" \
+            "${AUTHENTIK_BASE_URL}/api/v3/providers/oauth2/${AUTHENTIK_PROVIDER_ID}/"
+
+          echo "Removed strict preview origin from authentik."
+
+      - name: Delete preview on PR close
+        if: github.event_name == 'pull_request' && github.event.action == 'closed'
+        run: |
+          gcloud run services delete "${SERVICE_NAME}" \
+            --platform managed \
+            --region "$GCP_REGION" \
+            --quiet || true
+

@@ -27,6 +27,9 @@ export const settings = {
       : isCypress
         ? 'http://localhost:8000' // real CI local FastAPI backend for Cypress
         : import.meta.env.VITE_OCOTILLO_API_URL || 'http://localhost:8000',
+  usgs_nwis_ogc_api_url:
+    import.meta.env.VITE_USGS_NWIS_OGC_API_URL ||
+    'https://api.waterdata.usgs.gov/ogcapi/v0',
 
   st2_url: 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
   nmbgmr_geothermal_api_url:

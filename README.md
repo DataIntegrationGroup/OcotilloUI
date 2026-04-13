@@ -12,6 +12,7 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
+- [Notable Well IDs](#notable-well-ids)
 - [Configuration](#configuration)
 - [Available Scripts](#available-scripts)
 - [Building for Production](#building-for-production)
@@ -66,17 +67,29 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
    ```
    The app will be available at `http://localhost:5173`.
 
+## Notable Well IDs
+
+The following wells contain a full, rich set of information and are useful for testing the Well Show page and related UI:
+
+- AR-0025
+- HS-038
+- QU-050
+- QU-054
+- TB-0203
+
 ## Configuration
 
 This application uses Vite environment variables. The following variables are required in `.env.development`:
 
 ```bash
-VITE_APP_TITLE="NMBGMR Ocotillo"
+VITE_APP_TITLE="Ocotillo (Dev)"
 VITE_NMBGMR_AMP_API_URL="https://your-amp-development-api-url"
 VITE_NMBGMR_GEOTHERMAL_API_URL="https://your-geothermal-development-api-url"
 VITE_OCOTILLO_API_URL="https://your-ocotillo-development-api-url"
 VITE_REFINE_PROJECT_ID="your-refine-project-id"
 VITE_MAPBOX_TOKEN="your-mapbox-token"
+VITE_POSTHOG_KEY="your-posthog-project-api-key"
+VITE_POSTHOG_HOST="https://us.i.posthog.com"
 VITE_AUTHENTIK_CLIENT_ID="your-authentik-client-id"
 VITE_AUTHENTIK_URL="https://your-authentik-domain"
 VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"

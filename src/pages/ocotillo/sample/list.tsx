@@ -12,7 +12,7 @@ export const SampleList: React.FC = () => {
     resource: 'sample',
     dataProviderName: 'ocotillo',
     queryOptions: {
-      cacheTime: 60000,
+      gcTime: 60000,
       staleTime: 30000,
     },
   })

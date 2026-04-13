@@ -43,6 +43,12 @@ export type WellResult = BaseResult & {
     well_purposes?: string[]
     well_depth?: number
     hole_depth?: number
+    // Fields below require backend additions to the /search endpoint:
+    owner_name?: string
+    county?: string
+    site_name?: string
+    alternate_ids?: string[]
+    owner_phone?: string[]
   }
 }
 

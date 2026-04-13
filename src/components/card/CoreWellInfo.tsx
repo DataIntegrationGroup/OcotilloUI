@@ -1,32 +1,27 @@
 import {
-  Agriculture,
-  Groups,
-  Public,
-  PublicOff,
-  WaterDrop,
-} from '@mui/icons-material'
-import {
+  Box,
   Card,
   CardContent,
   CardHeader,
-  Divider,
+  IconButton,
   Skeleton,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { IWell } from '@/interfaces/ocotillo'
-import { ChipWithExplain } from '@/components'
+import { ContentCopy, Directions, Info } from '@mui/icons-material'
+import { CardHeaderTitle } from '@/components'
 
-export const CoreWellInfoCard = ({
-  well,
-  usgs_id,
-  osepod_id,
-}: {
-  well: IWell
-  usgs_id: string
-  osepod_id: string
-}) => {
+const HeaderTitle = () => (
+  <CardHeaderTitle
+    icon={<Info color="primary" />}
+    title="Core Well Information"
+  />
+)
+
+export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
   if (!well) {
     return <LoadingCard />
   }
@@ -39,181 +34,124 @@ export const CoreWellInfoCard = ({
 
   const { easting, northing } = well?.current_location?.properties
     ?.utm_coordinates ?? { easting: null, northing: null }
-
-  const hasPurposes = !!(
-    well?.well_purposes?.length && well.well_purposes.length > 0
-  )
-
-  const topChipValues = hasPurposes
-    ? well!.well_purposes
-    : [well?.thing_type || 'UNKNOWN TYPE']
-
-  const topChipIcon = hasPurposes ? <WaterDrop /> : <Agriculture />
-  const isPublic = well?.release_status?.toLocaleUpperCase() === 'PUBLIC'
-  const isPrivate = well?.release_status?.toLocaleUpperCase() === 'PRIVATE'
+  const latLonValue =
+    well?.current_location?.geometry && lat != null && lon != null
+      ? `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+      : 'N/A'
+  const utmValue =
+    easting != null && northing != null
+      ? `${easting.toFixed(0)}, ${northing.toFixed(0)}`
+      : 'N/A'
+  const googleMapsUrl =
+    lat != null && lon != null
+      ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`
+      : null
 
   return (
-    <Card elevation={2} sx={{ height: '100%' }}>
-      <CardHeader title={<Typography variant="h5">{well?.name}</Typography>} />
+    <Card
+      elevation={2}
+      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+    >
+      <CardHeader title={<HeaderTitle />} />
       <CardContent>
-        <Grid container spacing={4}>
-          <Grid size={{ xs: 12 }}>
-            <Stack
-              direction="row"
-              spacing={2}
-              flexWrap="wrap"
-              alignItems="center"
-              justifyContent="space-around"
-              sx={{
-                gap: 2,
-                rowGap: 2,
-                columnGap: 2,
-                mt: 1,
-              }}
-            >
-              {topChipValues.map((p, i) => (
-                <ChipWithExplain
-                  key={p ?? `UNKNOWN TYPE #${i}`}
-                  label={p?.toLocaleUpperCase() || 'UNKNOWN TYPE'}
-                  icon={topChipIcon}
-                  color="info"
-                  tooltip={
-                    hasPurposes
-                      ? 'Well Purposes (click for details)'
-                      : 'Site Type (click for details)'
-                  }
-                  explain={
-                    hasPurposes
-                      ? {
-                          title: 'Well Purposes',
-                          meaning:
-                            'What the well is used for (e.g., irrigation, monitoring, municipal supply).',
-                          source: 'well_purposes',
-                        }
-                      : {
-                          title: 'Site Type',
-                          meaning:
-                            'The category of this site (e.g., water well, monitoring well, diversion, stream, reservoir).',
-                          source: 'thing_type',
-                        }
-                  }
-                  chipSx={{ fontFamily: 'monospace', px: 1 }}
-                />
-              ))}
-
-              <ChipWithExplain
-                label={
-                  well?.release_status?.toLocaleUpperCase() || 'UNKNOWN STATUS'
-                }
-                icon={isPublic ? <Public /> : isPrivate ? <PublicOff /> : null}
-                color={isPublic ? 'success' : isPrivate ? 'error' : null}
-                tooltip="Visibility (click for details)"
-                explain={{
-                  title: 'Visibility',
-                  meaning:
-                    'Who is allowed to view the data (Public: visible to anyone; Private: authorized users only).',
-                  source: 'release_status',
-                }}
-                chipSx={{ fontFamily: 'monospace', px: 1 }}
+        <Grid container columnSpacing={3} rowSpacing={1.5}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Section title="Well Details">
+              <InfoRow
+                label="Hole Depth"
+                value={`${well?.hole_depth || 'N/A'}${
+                  well?.hole_depth ? ` ${well?.hole_depth_unit}` : ''
+                }`}
               />
-
-              {well?.groups?.map((g, i) => (
-                <ChipWithExplain
-                  key={g?.name ?? `UNKNOWN GROUP #${i}`}
-                  icon={<Groups />}
-                  label={g?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
-                  color="primary"
-                  tooltip="Group or Project (click for details)"
-                  explain={{
-                    title: 'Group or Project',
-                    meaning:
-                      'The organization or existing project this site belongs to.',
-                    source: 'group',
-                  }}
-                  chipSx={{ fontFamily: 'monospace', px: 1 }}
-                />
-              ))}
-            </Stack>
+              <InfoRow
+                label="Well Depth"
+                value={`${well?.well_depth || 'N/A'}${
+                  well?.well_depth ? ` ${well?.well_depth_unit}` : ''
+                }`}
+              />
+              <InfoRow
+                label="Measuring Point"
+                value={
+                  [
+                    well?.measuring_point_description || null,
+                    well?.measuring_point_height
+                      ? `${well.measuring_point_height} ${well?.measuring_point_height_unit ?? ''}`.trim()
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' | ') || 'N/A'
+                }
+              />
+            </Section>
           </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Divider />
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Section
+              title="Location Information"
+              action={
+                googleMapsUrl ? (
+                  <Tooltip title="Open in Google Maps">
+                    <IconButton
+                      size="small"
+                      component="a"
+                      href={googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ p: 0.25 }}
+                    >
+                      <Directions fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                ) : null
+              }
+            >
+              <InfoRow
+                label="Latitude / Longitude"
+                value={latLonValue}
+                copyValue={latLonValue !== 'N/A' ? latLonValue : undefined}
+              />
+              <InfoRow
+                label="Easting / Northing"
+                value={utmValue}
+                copyValue={utmValue !== 'N/A' ? utmValue : undefined}
+              />
+              <InfoRow
+                label="Coordinate Notes"
+                value={
+                  well?.current_location?.properties?.notes
+                    ?.filter((note) => note.note_type === 'Coordinate')
+                    .map((note) => note.content)
+                    .filter(Boolean)
+                    .join('\n') || 'N/A'
+                }
+              />
+            </Section>
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Hole Depth:</Typography>
-            <Typography variant="body1">
-              {well?.hole_depth || 'N/A'}{' '}
-              {well?.hole_depth ? well?.hole_depth_unit : null}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Well Depth:</Typography>
-            <Typography variant="body1">
-              {well?.well_depth || 'N/A'}{' '}
-              {well?.well_depth ? well?.well_depth_unit : null}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Measuring Point Height:</Typography>
-            <Typography variant="body1">
-              {well?.measuring_point_height || 'N/A'}{' '}
-              {well?.measuring_point_height
-                ? well?.measuring_point_height_unit
-                : null}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Measuring Point Description:</Typography>
-            <Typography variant="body1">
-              {well?.measuring_point_description || 'N/A'}{' '}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Easting, Northing:</Typography>
-            <Typography variant="body1">
-              {`${easting?.toFixed(0) || 'N/A'}, ${northing?.toFixed(0) || 'N/A'}`}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Vertical Datum:</Typography>
-            <Typography variant="body1">
-              {well?.current_location?.properties?.vertical_datum || 'N/A'}{' '}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="h6">Latitude/Longitude:</Typography>
-            <Typography variant="body1">
-              {well?.current_location?.geometry
-                ? `${lat?.toFixed(6)}, ${lon?.toFixed(6)}`
-                : 'N/A'}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Elevation:</Typography>
-            <Typography variant="body1">
-              {well?.current_location?.properties?.elevation?.toFixed(2) ||
-                'N/A'}
-              {well?.current_location?.properties?.elevation_unit
-                ? ` ${well?.current_location?.properties?.elevation_unit}`
-                : null}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">Elevation Method:</Typography>
-            <Typography variant="body1">
-              {well?.current_location?.properties?.elevation_method || 'N/A'}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="h4">Alternate IDs</Typography>
-            <Divider />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">OSE:</Typography>
-            <Typography variant="body1">{osepod_id}</Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h6">USGS:</Typography>
-            <Typography variant="body1">{usgs_id}</Typography>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Section title="Elevation Information">
+              <InfoRow
+                label="Elevation"
+                value={`${
+                  well?.current_location?.properties?.elevation?.toFixed(2) ||
+                  'N/A'
+                }${
+                  well?.current_location?.properties?.elevation_unit
+                    ? ` ${well?.current_location?.properties?.elevation_unit}`
+                    : ''
+                }`}
+              />
+              <InfoRow
+                label="Elevation Method"
+                value={
+                  well?.current_location?.properties?.elevation_method || 'N/A'
+                }
+              />
+              <InfoRow
+                label="Vertical Datum"
+                value={
+                  well?.current_location?.properties?.vertical_datum || 'N/A'
+                }
+              />
+            </Section>
           </Grid>
         </Grid>
       </CardContent>
@@ -221,76 +159,130 @@ export const CoreWellInfoCard = ({
   )
 }
 
+const Section = ({
+  title,
+  children,
+  action,
+}: {
+  title: string
+  children: React.ReactNode
+  action?: React.ReactNode
+}) => (
+  <Box
+    sx={{
+      py: 0.25,
+    }}
+  >
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 1,
+        mb: 1,
+      }}
+    >
+      <Typography
+        variant="overline"
+        sx={{
+          display: 'block',
+          color: 'text.secondary',
+          letterSpacing: 1,
+          lineHeight: 1.2,
+        }}
+      >
+        {title}
+      </Typography>
+      <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
+        {action}
+      </Box>
+    </Box>
+    <Stack spacing={0.75}>{children}</Stack>
+  </Box>
+)
+
+const InfoRow = ({
+  label,
+  value,
+  copyValue,
+}: {
+  label: string
+  value: string
+  copyValue?: string
+}) => {
+  const handleCopy = async () => {
+    if (!copyValue) return
+
+    try {
+      await navigator.clipboard.writeText(copyValue)
+    } catch (error) {
+      console.error(`Failed to copy ${label}`, error)
+    }
+  }
+
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: '132px 1fr' },
+        gap: 0.75,
+        alignItems: 'start',
+      }}
+    >
+      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+        {label}
+      </Typography>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 24px',
+          gap: 0.25,
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="body2">{value}</Typography>
+        <Box
+          sx={{
+            width: 24,
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          {copyValue && (
+            <Tooltip title={`Copy ${label.toLowerCase()}`}>
+              <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }}>
+                <ContentCopy fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+      </Box>
+    </Box>
+  )
+}
+
 const LoadingCard = () => (
-  <Card elevation={2} sx={{ height: '100%' }}>
-    <CardHeader title={<Skeleton variant="text" width={150} height={32} />} />
+  <Card
+    elevation={2}
+    sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+  >
+    <CardHeader title={<HeaderTitle />} />
     <CardContent>
-      <Grid container spacing={4}>
-        <Grid size={{ xs: 12 }}>
-          <Stack
-            direction="row"
-            spacing={2}
-            flexWrap="wrap"
-            alignItems="center"
-            justifyContent="space-around"
-          >
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton
-                key={i}
-                variant="rectangular"
-                width={150}
-                height={35}
-                sx={{ borderRadius: '2rem' }}
-              />
-            ))}
-          </Stack>
+      <Grid container spacing={1.5}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Section title="Well Details">
+            <Skeleton variant="rounded" width="100%" height={100} />
+          </Section>
         </Grid>
-        <Grid size={{ xs: 12 }}>
-          <Divider />
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Section title="Location Information">
+            <Skeleton variant="rounded" width="100%" height={100} />
+          </Section>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={60} height={24} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={60} height={24} />
-        </Grid>
-        <Grid size={{ xs: 12 }}>
-          <Skeleton variant="text" width={220} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={60} height={24} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={180} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={160} height={24} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={90} height={24} />
-        </Grid>
-        <Grid size={{ xs: 12 }}>
-          <Skeleton variant="text" width={200} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={240} height={24} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={90} height={24} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={140} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={90} height={24} />
-        </Grid>
-        <Grid size={{ xs: 12 }}>
-          <Typography variant="h4">Alternate IDs</Typography>
-          <Divider />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={80} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={60} height={24} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="text" width={80} height={28} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width={60} height={24} />
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Section title="Elevation Information">
+            <Skeleton variant="rounded" width="100%" height={100} />
+          </Section>
         </Grid>
       </Grid>
     </CardContent>

@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router'
 import { ErrorComponent } from '@refinedev/mui'
 import {
   ContactEdit,
@@ -14,9 +14,12 @@ import {
   WellList,
   WellShow,
   WellShowPdfPreview,
+  WellBatchExport,
   SpringShow,
 } from '@/pages/ocotillo/thing'
 import { MapView } from '@/pages/ocotillo/map'
+import { HelpPage } from '@/pages/ocotillo/help'
+import { CollectionsPage } from '@/pages/ocotillo/collections'
 import {
   LocationList,
   LocationCreate,
@@ -69,12 +72,14 @@ import { GroundwaterLevelForm } from '@/pages/ocotillo/groundwater-level-form/st
 import { WellInventoryForm } from '@/pages/ocotillo/well-inventory-form'
 import { LexiconList } from '@/pages/ocotillo/lexicon'
 import { WaterChemistryApp } from '@/pages/ocotillo/water-chemistry-app'
+import { HydrographCorrectionPage } from '@/pages/ocotillo/hydrograph-correction'
 import {
   WellScreenCreate,
   WellScreenEdit,
   WellScreenList,
   WellScreenShow,
 } from '@/pages/ocotillo/well-screen'
+import { ProtectedRoute } from '@/components'
 
 export const OcotilloRoutes = () => {
   return (
@@ -87,8 +92,23 @@ export const OcotilloRoutes = () => {
       </Route>
       <Route path="well">
         <Route index element={<WellList />} />
+        <Route
+          path={'batch-export'}
+          element={
+            <ProtectedRoute resource="ocotillo.thing-well-batch-export">
+              <WellBatchExport />
+            </ProtectedRoute>
+          }
+        />
         <Route path={'show/:id'} element={<WellShow />} />
-        <Route path={'pdf-preview/:id'} element={<WellShowPdfPreview />} />
+        <Route
+          path={'pdf-preview/:id'}
+          element={
+            <ProtectedRoute resource="ocotillo.thing-well-pdf-preview">
+              <WellShowPdfPreview />
+            </ProtectedRoute>
+          }
+        />
         <Route path={'edit/:id'} element={<WellEdit />} />
         <Route path={'create'} element={<WellCreate />} />
       </Route>
@@ -111,6 +131,8 @@ export const OcotilloRoutes = () => {
         <Route path={'show/:id'} element={<WellScreenShow />} />
       </Route>
       <Route path="map" element={<MapView />} />
+      <Route path="collections" element={<CollectionsPage />} />
+      <Route path="help" element={<HelpPage />} />
       <Route path="location">
         <Route index element={<LocationList />} />
         <Route path={'create'} element={<LocationCreate />} />
@@ -151,15 +173,60 @@ export const OcotilloRoutes = () => {
         <Route path={'show/:id'} element={<AssetShow />} />
       </Route>
       <Route path="lexicon">
-        <Route index element={<LexiconList />} />
-        <Route path={'term/create'} element={<TermCreate />} />
-        <Route path={'term/edit/:id'} element={<TermEdit />} />
-        <Route path={'category/create'} element={<CategoryCreate />} />
-        <Route path={'category/edit/:id'} element={<CategoryEdit />} />
+        <Route
+          index
+          element={
+            <ProtectedRoute resource="ocotillo.lexicon">
+              <LexiconList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={'term/create'}
+          element={
+            <ProtectedRoute resource="ocotillo.lexicon" action="create">
+              <TermCreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={'term/edit/:id'}
+          element={
+            <ProtectedRoute resource="ocotillo.lexicon" action="edit">
+              <TermEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={'category/create'}
+          element={
+            <ProtectedRoute resource="ocotillo.lexicon" action="create">
+              <CategoryCreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={'category/edit/:id'}
+          element={
+            <ProtectedRoute resource="ocotillo.lexicon" action="edit">
+              <CategoryEdit />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       // Apps
       <Route path={'water-chemistry-import'}>
         <Route index element={<WaterChemistryApp />} />
+      </Route>
+      <Route path={'hydrograph-correction'}>
+        <Route
+          index
+          element={
+            <ProtectedRoute resource="ocotillo.hydrograph-correction">
+              <HydrographCorrectionPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       // Forms
       <Route path="groundwater-level-form">

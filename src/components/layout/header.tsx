@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   useGetIdentity,
-  useActiveAuthProvider,
   useIsExistAuthentication,
   useLogout,
   useWarnAboutChange,
@@ -9,55 +8,35 @@ import {
 } from '@refinedev/core'
 import {
   AppBar,
-  Avatar,
+  Button,
   Stack,
   Toolbar,
   ListItemIcon,
   Menu,
   MenuItem,
   Skeleton,
+  Divider,
+  Box,
+  Typography,
+  Avatar,
 } from '@mui/material'
-import { LogoutOutlined, PersonOutline } from '@mui/icons-material'
-import type { RefineThemedLayoutV2HeaderProps } from '@refinedev/mui'
+import {
+  AccountCircle,
+  LogoutOutlined,
+  PersonOutline,
+} from '@mui/icons-material'
+import type { RefineThemedLayoutHeaderProps } from '@refinedev/mui'
 import { HamburgerMenu } from './hamburgerMenu'
 import SearchBar from '@/components/SearchBar'
+import { Underline } from 'react-flaticons'
 
-const stringAvatar = (name: string) => {
-  // Reduce the string into a numerical hash value
-  // Convert hash to a hexadecimal string
-  // Ensure at least 6 characters for valid hex color
-  const stringToColor = (name: string) =>
-    `#${[...name]
-      .reduce((hash, char) => char.charCodeAt(0) + ((hash << 5) - hash), 0)
-      .toString(16)
-      .padStart(6, '0')
-      .slice(-6)}`
-
-  name = name?.trim() || 'UU'
-  const nameParts = name?.trim().split(' ') // Split name into words
-  const initials =
-    nameParts.length > 1
-      ? `${nameParts[0][0]}${nameParts[1][0]}` // First letter of first two words
-      : `${nameParts[0][0]}${nameParts[0][1] || nameParts[0][0]}` // Handle single-word names
-
-  return {
-    sx: {
-      bgcolor: stringToColor(name),
-    },
-    children: initials.toUpperCase(),
-  }
-}
-
-export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
-  const authProvider = useActiveAuthProvider()
+export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
   const isExistAuthentication = useIsExistAuthentication()
-  const { data: user, isLoading } = useGetIdentity({
-    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
-  })
+  const { data: user, isLoading } = useGetIdentity()
   const { warnWhen, setWarnWhen } = useWarnAboutChange()
-  const { mutate: mutateLogout } = useLogout({
-    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
-  })
+  const { mutate: mutateLogout } = useLogout()
+
+  console.debug({ user })
 
   const translate = useTranslate()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -101,13 +80,18 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
   }
 
   return (
-    <AppBar position="sticky">
-      <Toolbar>
+    <AppBar
+      position="sticky"
+      color="transparent"
+      elevation={0}
+      sx={{ bgcolor: 'background.default' }}
+    >
+      <Toolbar disableGutters sx={{ px: 1 }}>
         <HamburgerMenu />
         <Stack
           direction="row"
           width="100%"
-          justifyContent="flex-end"
+          justifyContent="space-between"
           alignItems="center"
           gap="12px"
         >
@@ -120,20 +104,27 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
           >
             {isLoading ? (
               <Skeleton
-                variant="circular"
+                variant="rounded"
                 animation="pulse"
-                sx={{ bgcolor: 'rgba(255, 255, 255, 0.55)' }}
-              >
-                <Avatar />
-              </Skeleton>
-            ) : user?.avatar ? (
-              <Avatar
-                onClick={handleMenuOpen}
-                src={user?.avatar}
-                alt={user?.name}
+                width={140}
+                height={36}
+                sx={{ borderRadius: 999 }}
               />
             ) : (
-              <Avatar onClick={handleMenuOpen} {...stringAvatar(user?.name)} />
+              <Button
+                onClick={handleMenuOpen}
+                color="inherit"
+                variant="text"
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  color: 'text.primary',
+                  minWidth: 0,
+                  px: 1,
+                }}
+              >
+                {user?.name || 'User'}
+              </Button>
             )}
             <Menu
               anchorEl={anchorEl}
@@ -147,8 +138,75 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
                 vertical: 'top',
                 horizontal: 'right',
               }}
+              slotProps={{
+                paper: {
+                  sx: {
+                    mt: 1,
+                    minWidth: { xs: null, md: 200, lg: 250 },
+                    borderRadius: 3,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    boxShadow: '0 18px 44px rgba(15, 23, 42, 0.14)',
+                  },
+                },
+              }}
+              MenuListProps={{
+                dense: true,
+                sx: {
+                  py: 0,
+                },
+              }}
             >
-              {user?.name && <MenuItem disabled>{user?.name}</MenuItem>}
+              <Box
+                sx={{
+                  px: 1.5,
+                  py: 1.25,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 1.25,
+                }}
+              >
+                <Avatar
+                  src={user?.avatar || undefined}
+                  sx={{
+                    flexShrink: 0,
+                    width: 42,
+                    height: 42,
+                  }}
+                >
+                  <AccountCircle sx={{ fontSize: 42 }} />
+                </Avatar>
+                <Box
+                  sx={{
+                    minWidth: 0,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.96rem',
+                      lineHeight: 1.2,
+                    }}
+                    noWrap
+                  >
+                    {user?.name || 'User'}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      display: 'block',
+                      mt: 0.25,
+                      fontSize: '0.75rem',
+                    }}
+                    noWrap
+                  >
+                    {user?.email || ''}
+                  </Typography>
+                </Box>
+              </Box>
+              <Divider />
               <MenuItem onClick={handleProfile}>
                 <ListItemIcon>
                   <PersonOutline />

@@ -15,7 +15,6 @@ import {Switch} from "@mui/material";
 export const WellEdit: React.FC = () => {
   const {
     saveButtonProps,
-    refineCore: { query: queryResult },
     register,
     control,
     formState: { errors },

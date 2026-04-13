@@ -2,36 +2,54 @@ import { useEffect, useRef, useState } from 'react'
 import { IWell } from '@/interfaces/ocotillo'
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
-  IconButton,
   Skeleton,
-  Stack,
-  Tooltip,
   Typography,
 } from '@mui/material'
 import { Directions, Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
-import { MapComponent, MapPopup } from '@/components'
-import { useThingLayers } from '@/hooks'
+import { MapComponent, MapPopup, CardHeaderTitle } from '@/components'
+import { useLayer } from '@/hooks'
 import { useGo } from '@refinedev/core'
+
+const MAP_HEIGHT = 450
+
+const HeaderTitle = () => (
+  <CardHeaderTitle
+    icon={<Map color="primary" />}
+    title="Interactive Satellite Map"
+  />
+)
 
 export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   const mapRef = useRef<MapRef>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const THING_LAYERS = useThingLayers()
+  const [loadNearbyWells, setLoadNearbyWells] = useState(false)
+  const waterWellsLayer = useLayer({
+    thing_type: 'water well',
+    label: 'Water Wells',
+    color: '#2b7dc0',
+    enabled: loadNearbyWells,
+  })
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
 
-  const waterWellsLayer = THING_LAYERS['water-wells']
-  const { sourceProps, layerProps } = waterWellsLayer
+  const sourceProps = waterWellsLayer?.sourceProps
+  const layerProps = waterWellsLayer?.layerProps
 
   const coords = well?.current_location?.geometry?.coordinates as
     | [number, number, number?]
     | undefined
 
   const [lon, lat, _elevation] = coords ?? []
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setLoadNearbyWells(true), 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   // Automatically zoom to well coordinates when map loads or well changes
   useEffect(() => {
@@ -66,14 +84,42 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
         }
       : null
 
+  const getFeatureId = (feature?: {
+    id?: number | string
+    properties?: Record<string, unknown>
+  }): string | undefined => {
+    const p = feature?.properties
+    const id =
+      p?.['thing_id'] ??
+      p?.['well_id'] ??
+      p?.['id'] ??
+      p?.['fid'] ??
+      p?.['feature_id'] ??
+      feature?.id
+
+    return id != null && id !== '' ? String(id) : undefined
+  }
+
   const onMapPointClick = (_: any, points: any[]) => {
-    const selectedPoint = points[0]
-    if (selectedPoint.properties.thing_type === 'water well') {
+    const selectedPoint = points.find(
+      (point) =>
+        typeof point?.layer?.id === 'string' &&
+        point.layer.id.startsWith('location-')
+    )
+    if (!selectedPoint) return
+
+    const thingType: string = String(
+      selectedPoint?.properties?.thing_type || ''
+    ).toLowerCase()
+    const id = getFeatureId(selectedPoint)
+    if (!id) return
+
+    if (thingType === 'water well' || thingType === 'geothermal well') {
       go({
         to: {
           resource: 'ocotillo.thing-well',
           action: 'show',
-          id: selectedPoint.properties.id,
+          id,
         },
       })
     }
@@ -99,27 +145,28 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
       ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`
       : null
 
+  const locationNote = well.current_location?.properties?.notes
+    ?.filter((note) => note.note_type === 'General')
+    .shift()
+
   return (
-    <Card elevation={2} sx={{ height: '100%' }}>
+    <Card
+      elevation={2}
+      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+    >
       <CardHeader
-        title={
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Map color="primary" />
-            <Typography variant="body1">Interactive Satellite Map</Typography>
-          </Stack>
-        }
+        title={<HeaderTitle />}
         action={
           googleMapsUrl && (
-            <Tooltip title="Open in Google Maps">
-              <IconButton
-                component="a"
-                href={googleMapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Directions />
-              </IconButton>
-            </Tooltip>
+            <Button
+              component="a"
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              startIcon={<Directions />}
+            >
+              Open in Google Maps
+            </Button>
           )
         }
       />
@@ -133,7 +180,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             overflow: 'hidden',
             border: '2.5px solid',
             borderColor: 'divider',
-            height: 650,
+            height: MAP_HEIGHT,
             width: '100%',
             display: 'flex',
           }}
@@ -152,9 +199,11 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             style={{ flex: 1, width: '100%', height: '100%' }}
             containerRef={containerRef}
           >
-            <Source id="water-wells" {...sourceProps}>
-              <Layer id="location-water-wells" {...layerProps} />
-            </Source>
+            {sourceProps && layerProps && (
+              <Source id="water-wells" {...sourceProps}>
+                <Layer id="location-water-wells" {...layerProps} />
+              </Source>
+            )}
             {highlightFeature && (
               <Source
                 id="highlight-well"
@@ -175,6 +224,21 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             )}
           </MapComponent>
         </Box>
+        {locationNote && (
+          <>
+            <Typography variant="h6" component="div" sx={{ pt: 1 }}>
+              Directions to the site
+            </Typography>
+            <Typography
+              variant="body2"
+              component="div"
+              color="textSecondary"
+              sx={{ pt: 1 }}
+            >
+              {locationNote?.content}
+            </Typography>
+          </>
+        )}
       </CardContent>
     </Card>
   )
@@ -182,26 +246,39 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
 
 const LoadingCard = () => {
   return (
-    <Card elevation={2} sx={{ height: '100%' }}>
-      <CardHeader
-        title={
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Map color="primary" />
-            <Typography variant="body1">Interactive Satellite Map</Typography>
-          </Stack>
-        }
-      />
+    <Card
+      elevation={2}
+      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+    >
+      <CardHeader title={<HeaderTitle />} />
       <CardContent
         sx={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: 1,
         }}
       >
         <Skeleton
           variant="rectangular"
           width="100%"
-          height={650}
+          height={MAP_HEIGHT}
+          sx={{ borderRadius: '0.5rem' }}
+        />
+        <Skeleton
+          variant="rectangular"
+          width={200}
+          height={28}
+          sx={{
+            borderRadius: '0.5rem',
+            alignSelf: 'flex-start',
+          }}
+        />
+        <Skeleton
+          variant="rectangular"
+          width="100%"
+          height={64}
           sx={{ borderRadius: '0.5rem' }}
         />
       </CardContent>
