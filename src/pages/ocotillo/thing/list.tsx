@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react'
-import { useExport, useGo } from '@refinedev/core'
+import { useEffect, useMemo, useState } from 'react'
+import { useExport, useGo, useLink } from '@refinedev/core'
 import { ExportButton, useDataGrid } from '@refinedev/mui'
 import { GridColDef, GridFilterModel } from '@mui/x-data-grid'
 import { captureEvent } from '@/analytics/posthog'
@@ -22,7 +22,7 @@ export const SpringList: React.FC = () => {
         field: 'name',
         headerName: 'Name',
         type: 'string',
-        minWidth: 180,
+        minWidth: 100,
         flex: 1,
       },
       {
@@ -63,9 +63,26 @@ export const WellList: React.FC = () => {
     captureEvent('feature_used', { feature: 'wells_list' })
   }, [])
 
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput.trim())
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
   const { dataGridProps } = useDataGrid<IWell>({
     resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
+    meta: {
+      params: {
+        include_contacts: true,
+        ...(search ? { query: search } : {}),
+      },
+    },
     pagination: { pageSize: 50 },
   })
 
@@ -87,9 +104,12 @@ export const WellList: React.FC = () => {
     meta: {
       params: {
         thing_type: ['water well', 'geothermal well'],
+        include_contacts: true,
       },
     },
   })
+
+  const Link = useLink()
 
   const columns = useMemo<GridColDef<IWell>[]>(
     () => [
@@ -97,7 +117,7 @@ export const WellList: React.FC = () => {
         field: 'name',
         headerName: 'Name',
         type: 'string',
-        minWidth: 160,
+        minWidth: 100,
         flex: 1,
       },
       {
@@ -125,7 +145,12 @@ export const WellList: React.FC = () => {
         flex: 1,
         sortable: false,
         valueGetter: (_: unknown, row: IWell) =>
-          row.aquifers?.map((a) => a.aquifer_system).join(', ') ?? '',
+          row.aquifers
+            ?.map(
+              (a: { aquifer_system: string; aquifer_types: string[] }) =>
+                a.aquifer_system
+            )
+            .join(', ') ?? '',
       },
       {
         field: 'release_status',
@@ -154,6 +179,45 @@ export const WellList: React.FC = () => {
         headerName: 'First Visit',
         width: 130,
         valueGetter: (v: string) => formatAppDate(v),
+      },
+      {
+        field: 'contacts',
+        headerName: 'Contacts',
+        minWidth: 180,
+        flex: 1,
+        sortable: false,
+        valueGetter: (_: unknown, row: IWell) =>
+          row.contacts?.map((c) => c.name ?? '').join(', ') ?? '',
+        renderCell: (params) => {
+          const contacts = params.row.contacts ?? []
+          return (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+              }}
+            >
+              {contacts.map((contact, idx) => (
+                <span key={contact?.id}>
+                  {idx > 0 && ', '}
+                  <Link
+                    go={{
+                      to: {
+                        resource: 'ocotillo.contact',
+                        action: 'show',
+                        id: contact.id,
+                      },
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {contact.name}
+                  </Link>
+                </span>
+              ))}
+            </div>
+          )
+        },
       },
       {
         field: 'well_completion_date',
@@ -244,9 +308,15 @@ export const WellList: React.FC = () => {
         ' construction depending on the local geology and intended use.'
       }
       columns={columns}
-      dataGridProps={{ ...dataGridProps, onFilterModelChange: handleFilterModelChange }}
+      dataGridProps={{
+        ...dataGridProps,
+        onFilterModelChange: handleFilterModelChange,
+      }}
       getRowId={(row) => row.id}
       headerButtons={customHeaderButtons}
+      searchMode="server"
+      searchValue={searchInput}
+      onSearchChange={setSearchInput}
     />
   )
 }

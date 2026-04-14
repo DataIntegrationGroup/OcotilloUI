@@ -15,10 +15,7 @@ import { settings } from '@/settings'
 import { formatAppDateTime, formatPhone } from '@/utils'
 import { ListPage } from '@/components'
 import { useAccessCapabilities } from '@/hooks'
-import {
-  filterConfidentialRows,
-  sanitizeContacts,
-} from '@/utils'
+import { filterConfidentialRows, sanitizeContacts } from '@/utils'
 
 export const ContactList: React.FC = () => {
   const { canViewConfidential } = useAccessCapabilities()
@@ -126,7 +123,13 @@ export const ContactList: React.FC = () => {
         renderCell: (params) => {
           const things = params.row.things ?? []
           return (
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+              }}
+            >
               {things.map((thing, idx) => (
                 <span key={thing.id}>
                   {idx > 0 && ', '}
@@ -138,6 +141,7 @@ export const ContactList: React.FC = () => {
                         id: thing.id,
                       },
                     }}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {thing.name}
                   </Link>
@@ -202,9 +206,15 @@ export const ContactList: React.FC = () => {
       />
       {selectedContactId && (
         <>
-          {canViewConfidential && <EmailInfoCard dataGridProps={emailDataGridProps} />}
-          {canViewConfidential && <PhoneInfoCard dataGridProps={phoneDataGridProps} />}
-          {canViewConfidential && <AddressInfoCard dataGridProps={addressDataGridProps} />}
+          {canViewConfidential && (
+            <EmailInfoCard dataGridProps={emailDataGridProps} />
+          )}
+          {canViewConfidential && (
+            <PhoneInfoCard dataGridProps={phoneDataGridProps} />
+          )}
+          {canViewConfidential && (
+            <AddressInfoCard dataGridProps={addressDataGridProps} />
+          )}
         </>
       )}
     </>
@@ -349,7 +359,11 @@ const InfoCard = ({
 }) => (
   <Card sx={{ mt: 2 }}>
     <IconCardHeader text={title} icon={icon} />
-    <DataGrid {...dataGridProps} columns={columns} rowHeight={settings.rowHeight} />
+    <DataGrid
+      {...dataGridProps}
+      columns={columns}
+      rowHeight={settings.rowHeight}
+    />
   </Card>
 )
 

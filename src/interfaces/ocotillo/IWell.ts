@@ -1,4 +1,4 @@
-import type { IThing } from '@/interfaces/ocotillo'
+import type { IContact, IThing } from '@/interfaces/ocotillo'
 import { z } from 'zod'
 import { zWellPurpose } from '@/generated/zod.gen'
 
@@ -59,4 +59,6 @@ export interface IWell extends IThing {
     start_date: string | null
     end_date: string | null
   }[]
+
+  contacts?: Partial<IContact>[] | null
 }
