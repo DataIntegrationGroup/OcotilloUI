@@ -17,6 +17,7 @@ export const formatAppDateTime = (
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
+    timeZoneName: 'short',
   }).format(d)
 }
 
@@ -24,9 +25,7 @@ export const formatAppDateTime = (
 // where the time component is not meaningful.
 // Handles both YYYY-MM-DD strings (parsed as UTC noon to avoid timezone shift)
 // and full ISO datetime strings.
-export const formatAppDate = (
-  value: string | null | undefined
-): string => {
+export const formatAppDate = (value: string | null | undefined): string => {
   if (!value) return ''
 
   const dateOnlyMatch = value.match(DATE_ONLY_PATTERN)
