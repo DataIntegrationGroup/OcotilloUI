@@ -28,26 +28,24 @@ export const WellPhysicalPropertiesAccordion = ({ well }: { well?: IWell }) => {
             label="Casing Materials"
             value={well?.well_casing_materials?.join(', ') || 'N/A'}
           />
-          <InlineRow
-            label="Pump Type"
-            value={well?.well_pump_type || 'N/A'}
-          />
+          <InlineRow label="Pump Type" value={well?.well_pump_type || 'N/A'} />
           <InlineRow
             label="Pump Depth"
             value={`${well?.well_pump_depth?.toFixed(2) || 'N/A'}${well?.well_pump_depth ? ` ${well.well_pump_depth_unit}` : ''}`}
           />
           <InlineRow
             label="Elevation"
-            value={elevation != null ? `${elevation.toFixed(2)}${elevationUnit ? ` ${elevationUnit}` : ''}` : 'N/A'}
+            value={
+              elevation != null
+                ? `${elevation.toFixed(2)}${elevationUnit ? ` ${elevationUnit}` : ''}`
+                : 'N/A'
+            }
           />
           <InlineRow
             label="Elevation Method"
             value={elevationMethod || 'N/A'}
           />
-          <InlineRow
-            label="Vertical Datum"
-            value={verticalDatum || 'N/A'}
-          />
+          <InlineRow label="Vertical Datum" value={verticalDatum || 'N/A'} />
         </Stack>
       </Box>
     </Paper>
