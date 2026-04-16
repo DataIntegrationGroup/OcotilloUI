@@ -1003,6 +1003,34 @@ export type FieldActivityResponse = {
 };
 
 /**
+ * FieldEventParticipantResponse
+ */
+export type FieldEventParticipantResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Field Event Id
+     */
+    field_event_id: number;
+    /**
+     * Contact Id
+     */
+    contact_id: number;
+    /**
+     * Participant Role
+     */
+    participant_role: string;
+    participant: ContactResponse;
+};
+
+/**
  * FieldEventResponse
  */
 export type FieldEventResponse = {
@@ -1285,6 +1313,7 @@ export type LocationGeoJsonResponse = {
      * Type
      */
     type?: string;
+    release_status: ReleaseStatus;
     geometry: SchemasLocationGeoJsonGeometry;
     properties: GeoJsonProperties;
 };
@@ -2289,6 +2318,10 @@ export type SpringResponse = {
      */
     name: string;
     /**
+     * Site Name
+     */
+    site_name?: string | null;
+    /**
      * Thing Type
      */
     thing_type: string;
@@ -2377,6 +2410,10 @@ export type ThingResponse = {
      */
     name: string;
     /**
+     * Site Name
+     */
+    site_name?: string | null;
+    /**
      * Thing Type
      */
     thing_type: string;
@@ -2433,6 +2470,10 @@ export type ThingResponse = {
      * Well Depth Source
      */
     well_depth_source: string | null;
+    /**
+     * Historic Depth To Water
+     */
+    historic_depth_to_water?: Array<string>;
     /**
      * Hole Depth
      */
@@ -2494,7 +2535,7 @@ export type ThingResponse = {
     /**
      * Open Status
      */
-    open_status: string | null;
+    open_status: boolean | null;
     /**
      * Datalogger Suitability Status
      */
@@ -2538,6 +2579,10 @@ export type ThingResponse = {
      * Nma Formation Zone
      */
     nma_formation_zone: string | null;
+    /**
+     * Well Location Note
+     */
+    well_location_note?: Array<string>;
 };
 
 /**
@@ -3310,6 +3355,10 @@ export type WellDetailsResponse = {
      */
     recent_groundwater_level_observations?: Array<GroundwaterLevelObservationResponse>;
     latest_field_event_sample?: SampleResponse | null;
+    /**
+     * Field Event Participants
+     */
+    field_event_participants?: Array<FieldEventParticipantResponse>;
 };
 
 /**
@@ -3350,6 +3399,10 @@ export type WellResponse = {
      * Name
      */
     name: string;
+    /**
+     * Site Name
+     */
+    site_name?: string | null;
     /**
      * Thing Type
      */
@@ -3403,6 +3456,10 @@ export type WellResponse = {
      * Well Depth Source
      */
     well_depth_source: string | null;
+    /**
+     * Historic Depth To Water
+     */
+    historic_depth_to_water?: Array<string>;
     /**
      * Hole Depth
      */
@@ -3464,7 +3521,7 @@ export type WellResponse = {
     /**
      * Open Status
      */
-    open_status: string | null;
+    open_status: boolean | null;
     /**
      * Datalogger Suitability Status
      */
@@ -3508,6 +3565,10 @@ export type WellResponse = {
      * Nma Formation Zone
      */
     nma_formation_zone: string | null;
+    /**
+     * Well Location Note
+     */
+    well_location_note?: Array<string>;
 };
 
 /**
@@ -6568,11 +6629,11 @@ export type GetWaterWellsThingWaterWellGetData = {
         /**
          * Sort
          */
-        sort?: string;
+        sort?: string | null;
         /**
          * Order
          */
-        order?: string;
+        order?: string | null;
         /**
          * Filter
          */
@@ -6580,11 +6641,15 @@ export type GetWaterWellsThingWaterWellGetData = {
         /**
          * Query
          */
-        query?: string;
+        query?: string | null;
         /**
          * Name
          */
-        name?: string;
+        name?: string | null;
+        /**
+         * Include Contacts
+         */
+        include_contacts?: boolean;
         /**
          * Page
          *
@@ -7205,19 +7270,23 @@ export type GetThingsThingGetData = {
         /**
          * Within
          */
-        within?: string;
+        within?: string | null;
         /**
          * Query
          */
-        query?: string;
+        query?: string | null;
         /**
          * Sort
          */
-        sort?: string;
+        sort?: string | null;
         /**
          * Order
          */
-        order?: string;
+        order?: string | null;
+        /**
+         * Include Contacts
+         */
+        include_contacts?: boolean;
         /**
          * Filter
          */
