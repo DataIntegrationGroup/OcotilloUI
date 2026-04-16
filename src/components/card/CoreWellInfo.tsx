@@ -1,258 +1,89 @@
-import {
-  Box,
-  Card,
-  CardContent,
-  CardHeader,
-  IconButton,
-  Skeleton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material'
-import Grid from '@mui/material/Grid2'
+import { Box, Paper, Skeleton, Typography } from '@mui/material'
 import { IWell } from '@/interfaces/ocotillo'
-import { ContentCopy, Directions, Info } from '@mui/icons-material'
-import { CardHeaderTitle } from '@/components'
 
-const HeaderTitle = () => (
-  <CardHeaderTitle
-    icon={<Info color="primary" />}
-    title="Core Well Information"
-  />
-)
-
-export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
+export const CoreWellInfoCard = ({ well }: { well?: IWell }) => {
   if (!well) {
-    return <LoadingCard />
+    return <LoadingBar />
   }
 
-  const coords = well?.current_location?.geometry?.coordinates as
-    | [number, number, number?]
-    | undefined
-
-  const [lon, lat] = coords ?? []
-
-  const { easting, northing } = well?.current_location?.properties
-    ?.utm_coordinates ?? { easting: null, northing: null }
-  const latLonValue =
-    well?.current_location?.geometry && lat != null && lon != null
-      ? `${lat.toFixed(6)}, ${lon.toFixed(6)}`
-      : 'N/A'
-  const utmValue =
-    easting != null && northing != null
-      ? `${easting.toFixed(0)}, ${northing.toFixed(0)}`
-      : 'N/A'
-  const googleMapsUrl =
-    lat != null && lon != null
-      ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`
-      : null
+  const stats: { label: string; value: string }[] = [
+    {
+      label: 'Hole Depth',
+      value: well?.hole_depth
+        ? `${well.hole_depth} ${well.hole_depth_unit ?? ''}`.trim()
+        : 'N/A',
+    },
+    {
+      label: 'Well Depth',
+      value: well?.well_depth
+        ? `${well.well_depth} ${well.well_depth_unit ?? ''}`.trim()
+        : 'N/A',
+    },
+    {
+      label: 'Measuring Point',
+      value:
+        [
+          well?.measuring_point_description || null,
+          well?.measuring_point_height
+            ? `${well.measuring_point_height} ${well.measuring_point_height_unit ?? ''}`.trim()
+            : null,
+        ]
+          .filter(Boolean)
+          .join(' | ') || 'N/A',
+    },
+  ]
 
   return (
-    <Card
-      elevation={2}
-      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
-    >
-      <CardHeader title={<HeaderTitle />} />
-      <CardContent>
-        <Grid container columnSpacing={3} rowSpacing={1.5}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Section title="Well Details">
-              <InfoRow
-                label="Hole Depth"
-                value={`${well?.hole_depth || 'N/A'}${
-                  well?.hole_depth ? ` ${well?.hole_depth_unit}` : ''
-                }`}
-              />
-              <InfoRow
-                label="Well Depth"
-                value={`${well?.well_depth || 'N/A'}${
-                  well?.well_depth ? ` ${well?.well_depth_unit}` : ''
-                }`}
-              />
-              <InfoRow
-                label="Measuring Point"
-                value={
-                  [
-                    well?.measuring_point_description || null,
-                    well?.measuring_point_height
-                      ? `${well.measuring_point_height} ${well?.measuring_point_height_unit ?? ''}`.trim()
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' | ') || 'N/A'
-                }
-              />
-            </Section>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Section
-              title="Location Information"
-              action={
-                googleMapsUrl ? (
-                  <Tooltip title="Open in Google Maps">
-                    <IconButton
-                      size="small"
-                      component="a"
-                      href={googleMapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{ p: 0.25 }}
-                    >
-                      <Directions fontSize="inherit" />
-                    </IconButton>
-                  </Tooltip>
-                ) : null
-              }
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        {stats.map((stat, i) => (
+          <Box
+            key={stat.label}
+            sx={{
+              px: 2,
+              py: 1.5,
+              borderLeft: i > 0 ? '1px solid' : 'none',
+              borderColor: 'divider',
+            }}
+          >
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'block', fontWeight: 600, letterSpacing: 0.3 }}
             >
-              <InfoRow
-                label="Latitude / Longitude"
-                value={latLonValue}
-                copyValue={latLonValue !== 'N/A' ? latLonValue : undefined}
-              />
-              <InfoRow
-                label="Easting / Northing"
-                value={utmValue}
-                copyValue={utmValue !== 'N/A' ? utmValue : undefined}
-              />
-              <InfoRow
-                label="Coordinate Notes"
-                value={
-                  well?.current_location?.properties?.notes
-                    ?.filter((note) => note.note_type === 'Coordinate')
-                    .map((note) => note.content)
-                    .filter(Boolean)
-                    .join('\n') || 'N/A'
-                }
-              />
-            </Section>
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
+              {stat.label}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ mt: 0.25, fontWeight: 500 }}
+              title={stat.value}
+            >
+              {stat.value}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Paper>
   )
 }
 
-const Section = ({
-  title,
-  children,
-  action,
-}: {
-  title: string
-  children: React.ReactNode
-  action?: React.ReactNode
-}) => (
-  <Box
-    sx={{
-      py: 0.25,
-    }}
-  >
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 1,
-        mb: 1,
-      }}
-    >
-      <Typography
-        variant="overline"
-        sx={{
-          display: 'block',
-          color: 'text.secondary',
-          letterSpacing: 1,
-          lineHeight: 1.2,
-        }}
-      >
-        {title}
-      </Typography>
-      <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
-        {action}
-      </Box>
-    </Box>
-    <Stack spacing={0.75}>{children}</Stack>
-  </Box>
-)
-
-const InfoRow = ({
-  label,
-  value,
-  copyValue,
-}: {
-  label: string
-  value: string
-  copyValue?: string
-}) => {
-  const handleCopy = async () => {
-    if (!copyValue) return
-
-    try {
-      await navigator.clipboard.writeText(copyValue)
-    } catch (error) {
-      console.error(`Failed to copy ${label}`, error)
-    }
-  }
-
-  return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: '132px 1fr' },
-        gap: 0.75,
-        alignItems: 'start',
-      }}
-    >
-      <Typography variant="caption" color="text.secondary" fontWeight={700}>
-        {label}
-      </Typography>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 24px',
-          gap: 0.25,
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant="body2">{value}</Typography>
+const LoadingBar = () => (
+  <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      {Array.from({ length: 3 }).map((_, i) => (
         <Box
+          key={i}
           sx={{
-            width: 24,
-            display: 'flex',
-            justifyContent: 'center',
+            px: 2,
+            py: 1.5,
+            borderLeft: i > 0 ? '1px solid' : 'none',
+            borderColor: 'divider',
           }}
         >
-          {copyValue && (
-            <Tooltip title={`Copy ${label.toLowerCase()}`}>
-              <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }}>
-                <ContentCopy fontSize="inherit" />
-              </IconButton>
-            </Tooltip>
-          )}
+          <Skeleton width="60%" height={14} sx={{ mb: 0.5 }} />
+          <Skeleton width="80%" height={18} />
         </Box>
-      </Box>
+      ))}
     </Box>
-  )
-}
-
-const LoadingCard = () => (
-  <Card
-    elevation={2}
-    sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
-  >
-    <CardHeader title={<HeaderTitle />} />
-    <CardContent>
-      <Grid container spacing={1.5}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Section title="Well Details">
-            <Skeleton variant="rounded" width="100%" height={100} />
-          </Section>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Section title="Location Information">
-            <Skeleton variant="rounded" width="100%" height={100} />
-          </Section>
-        </Grid>
-      </Grid>
-    </CardContent>
-  </Card>
+  </Paper>
 )

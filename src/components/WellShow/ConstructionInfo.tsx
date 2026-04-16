@@ -11,82 +11,56 @@ export const ConstructionInfoAccordion = ({ well }: { well?: IWell }) => {
         </Typography>
       </Box>
       <Box sx={{ p: 2 }}>
-        <Stack spacing={1.5}>
-          <Section>
-            <FieldRow
-              label="Datalogger Suitability"
-              value={well?.is_suitable_for_datalogger?.toString() || 'N/A'}
-            />
-            <FieldRow
-              label="Driller Name"
-              value={well?.well_driller_name || 'N/A'}
-            />
-          </Section>
-
-          <Section>
-            <FieldGroup
+        <Stack spacing={1}>
+          <InlineRow
+            label="Datalogger Suitability"
+            value={well?.is_suitable_for_datalogger?.toString() || 'N/A'}
+          />
+          <InlineRow
+            label="Driller Name"
+            value={well?.well_driller_name || 'N/A'}
+          />
+          <Box>
+            <InlineRow
               label="Completion Date"
               value={formatAppDate(well?.well_completion_date) || 'N/A'}
-              metaValue={well?.well_completion_date_source || 'N/A'}
             />
-            <FieldGroup
+            {well?.well_completion_date_source && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontStyle: 'italic' }}
+              >
+                {well.well_completion_date_source}
+              </Typography>
+            )}
+          </Box>
+          <Box>
+            <InlineRow
               label="Construction Method"
               value={well?.well_construction_method || 'N/A'}
-              metaValue={well?.well_construction_method_source || 'N/A'}
             />
-          </Section>
+            {well?.well_construction_method_source && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontStyle: 'italic' }}
+              >
+                {well.well_construction_method_source}
+              </Typography>
+            )}
+          </Box>
         </Stack>
       </Box>
     </Paper>
   )
 }
 
-const Section = ({ children }: { children: React.ReactNode }) => (
-  <Box
-    sx={{
-      py: 0.25,
-    }}
-  >
-    <Stack spacing={1.25}>{children}</Stack>
-  </Box>
-)
-
-const FieldRow = ({ label, value }: { label: string; value: string }) => (
-  <Box
-    sx={{
-      display: 'grid',
-      gridTemplateColumns: { xs: '1fr', sm: '170px 1fr' },
-      gap: 0.75,
-      alignItems: 'start',
-    }}
-  >
-    <Typography variant="caption" color="text.secondary" fontWeight={700}>
-      {label}
+const InlineRow = ({ label, value }: { label: string; value: string }) => (
+  <Typography variant="body2">
+    {label}:{' '}
+    <Typography variant="body2" color="text.secondary" component="span">
+      {value}
     </Typography>
-    <Typography variant="body2">{value}</Typography>
-  </Box>
-)
-
-const FieldGroup = ({
-  label,
-  value,
-  metaValue,
-}: {
-  label: string
-  value: string
-  metaValue: string
-}) => (
-  <Box>
-    <FieldRow label={label} value={value} />
-    <Box sx={{ pl: { xs: 0, sm: '170px' }, pt: 0.5 }}>
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        component="div"
-        sx={{ fontStyle: 'italic' }}
-      >
-        {metaValue}
-      </Typography>
-    </Box>
-  </Box>
+  </Typography>
 )
