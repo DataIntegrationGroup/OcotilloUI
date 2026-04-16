@@ -36,7 +36,6 @@ import {
   ConstructionInfoAccordion,
   GeologyInformationAccordion,
   WellPhysicalPropertiesAccordion,
-  FieldEventHistoryAccordion,
   WellPDFDownloadButton,
   WellShowTitle,
   OwnerPermissionsCard,
@@ -326,7 +325,6 @@ export const WellShow = () => {
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
               <GeologyInformationAccordion well={well} />
-              <FieldEventHistoryAccordion sample={fieldEventSample} />
             </Stack>
           </Grid>
         </Grid>
