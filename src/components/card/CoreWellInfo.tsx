@@ -55,7 +55,7 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
       <CardHeader title={<HeaderTitle />} />
       <CardContent>
         <Grid container columnSpacing={3} rowSpacing={1.5}>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Section title="Well Details">
               <InfoRow
                 label="Hole Depth"
@@ -84,7 +84,7 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
               />
             </Section>
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Section
               title="Location Information"
               action={
@@ -122,33 +122,6 @@ export const CoreWellInfoCard = ({ well }: { well: IWell }) => {
                     .map((note) => note.content)
                     .filter(Boolean)
                     .join('\n') || 'N/A'
-                }
-              />
-            </Section>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Section title="Elevation Information">
-              <InfoRow
-                label="Elevation"
-                value={`${
-                  well?.current_location?.properties?.elevation?.toFixed(2) ||
-                  'N/A'
-                }${
-                  well?.current_location?.properties?.elevation_unit
-                    ? ` ${well?.current_location?.properties?.elevation_unit}`
-                    : ''
-                }`}
-              />
-              <InfoRow
-                label="Elevation Method"
-                value={
-                  well?.current_location?.properties?.elevation_method || 'N/A'
-                }
-              />
-              <InfoRow
-                label="Vertical Datum"
-                value={
-                  well?.current_location?.properties?.vertical_datum || 'N/A'
                 }
               />
             </Section>
@@ -269,18 +242,13 @@ const LoadingCard = () => (
     <CardHeader title={<HeaderTitle />} />
     <CardContent>
       <Grid container spacing={1.5}>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Section title="Well Details">
             <Skeleton variant="rounded" width="100%" height={100} />
           </Section>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Section title="Location Information">
-            <Skeleton variant="rounded" width="100%" height={100} />
-          </Section>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Section title="Elevation Information">
             <Skeleton variant="rounded" width="100%" height={100} />
           </Section>
         </Grid>
