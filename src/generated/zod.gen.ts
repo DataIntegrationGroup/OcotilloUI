@@ -1487,6 +1487,19 @@ export const zFieldActivityResponse = z.object({
 });
 
 /**
+ * FieldEventParticipantResponse
+ */
+export const zFieldEventParticipantResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    field_event_id: z.int(),
+    contact_id: z.int(),
+    participant_role: z.string(),
+    participant: zContactResponse
+});
+
+/**
  * FieldEventResponse
  */
 export const zFieldEventResponse = z.object({
@@ -1889,6 +1902,7 @@ export const zSchemasLocationGeoJsonGeometry = z.object({
  */
 export const zLocationGeoJsonResponse = z.object({
     type: z.optional(z.string()).default('Feature'),
+    release_status: zReleaseStatus,
     geometry: zSchemasLocationGeoJsonGeometry,
     properties: zGeoJsonProperties
 });
@@ -2503,6 +2517,10 @@ export const zThingResponse = z.object({
     created_at: z.string(),
     release_status: zReleaseStatus,
     name: z.string(),
+    site_name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     thing_type: z.string(),
     current_location: zLocationGeoJsonResponse,
     first_visit_date: z.union([
@@ -2533,6 +2551,7 @@ export const zThingResponse = z.object({
         z.string(),
         z.null()
     ]),
+    historic_depth_to_water: z.optional(z.array(z.string())).default([]),
     hole_depth: z.optional(z.union([
         z.number(),
         z.null()
@@ -2583,7 +2602,7 @@ export const zThingResponse = z.object({
         z.null()
     ]),
     open_status: z.union([
-        z.string(),
+        z.boolean(),
         z.null()
     ]),
     datalogger_suitability_status: z.union([
@@ -2611,7 +2630,8 @@ export const zThingResponse = z.object({
     nma_formation_zone: z.union([
         z.string(),
         z.null()
-    ])
+    ]),
+    well_location_note: z.optional(z.array(z.string())).default([])
 });
 
 /**
@@ -2686,6 +2706,10 @@ export const zSpringResponse = z.object({
     created_at: z.string(),
     release_status: zReleaseStatus,
     name: z.string(),
+    site_name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     thing_type: z.string(),
     current_location: zLocationGeoJsonResponse,
     first_visit_date: z.union([
@@ -2846,6 +2870,10 @@ export const zWellResponse = z.object({
     created_at: z.string(),
     release_status: zReleaseStatus,
     name: z.string(),
+    site_name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
     thing_type: z.string(),
     current_location: zLocationGeoJsonResponse,
     first_visit_date: z.union([
@@ -2872,6 +2900,7 @@ export const zWellResponse = z.object({
         z.string(),
         z.null()
     ]),
+    historic_depth_to_water: z.optional(z.array(z.string())).default([]),
     hole_depth: z.optional(z.union([
         z.number(),
         z.null()
@@ -2922,7 +2951,7 @@ export const zWellResponse = z.object({
         z.null()
     ]),
     open_status: z.union([
-        z.string(),
+        z.boolean(),
         z.null()
     ]),
     datalogger_suitability_status: z.union([
@@ -2950,7 +2979,8 @@ export const zWellResponse = z.object({
     nma_formation_zone: z.union([
         z.string(),
         z.null()
-    ])
+    ]),
+    well_location_note: z.optional(z.array(z.string())).default([])
 });
 
 /**
@@ -3714,7 +3744,8 @@ export const zWellDetailsResponse = z.object({
     latest_field_event_sample: z.optional(z.union([
         zSampleResponse,
         z.null()
-    ]))
+    ])),
+    field_event_participants: z.optional(z.array(zFieldEventParticipantResponse))
 });
 
 /**
@@ -4948,11 +4979,24 @@ export const zGetWaterWellsThingWaterWellGetData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
     query: z.optional(z.object({
-        sort: z.optional(z.string()),
-        order: z.optional(z.string()),
+        sort: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        order: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
         filter: z.optional(z.string()),
-        query: z.optional(z.string()),
-        name: z.optional(z.string()),
+        query: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        name: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        include_contacts: z.optional(z.boolean()).default(false),
         page: z.optional(z.int().gte(1)).default(1),
         size: z.optional(z.int().gte(1).lte(10000)).default(25)
     }))
@@ -5207,10 +5251,23 @@ export const zGetThingsThingGetData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
     query: z.optional(z.object({
-        within: z.optional(z.string()),
-        query: z.optional(z.string()),
-        sort: z.optional(z.string()),
-        order: z.optional(z.string()),
+        within: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        query: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        sort: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        order: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        include_contacts: z.optional(z.boolean()).default(false),
         filter: z.optional(z.string()),
         page: z.optional(z.int().gte(1)).default(1),
         size: z.optional(z.int().gte(1).lte(10000)).default(25)

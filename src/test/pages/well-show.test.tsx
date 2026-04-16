@@ -59,7 +59,6 @@ vi.mock('@/components', () => {
     ConstructionInfoAccordion: () => <Stub name="construction" />,
     GeologyInformationAccordion: () => <Stub name="geology" />,
     WellPhysicalPropertiesAccordion: () => <Stub name="physical" />,
-    FieldEventHistoryAccordion: () => <Stub name="field-event" />,
     WellPDFDownloadButton: () => <Stub name="download" />,
     WellShowTitle: () => <Stub name="title" />,
     OwnerPermissionsCard: () => <Stub name="owner" />,
