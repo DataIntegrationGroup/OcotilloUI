@@ -61,4 +61,6 @@ export interface IWell extends IThing {
   }[]
 
   contacts?: Partial<IContact>[] | null
+
+  site_name?: string | null
 }

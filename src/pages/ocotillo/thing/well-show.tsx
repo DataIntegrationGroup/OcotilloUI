@@ -320,7 +320,7 @@ export const WellShow = () => {
           {/* Right column: 2 cols */}
           <Grid size={{ xs: 12, md: 4, lg: 3 }}>
             <Stack spacing={2}>
-              <ContactsCard contacts={contacts} isLoading={isDetailsLoading} />
+              <ContactsCard contacts={contacts} isLoading={isDetailsLoading} siteName={well?.site_name} />
               <OwnerPermissionsCard well={well} isLoading={isDetailsLoading} />
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />

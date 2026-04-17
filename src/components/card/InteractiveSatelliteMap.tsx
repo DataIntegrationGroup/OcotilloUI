@@ -6,10 +6,13 @@ import {
   Card,
   CardContent,
   CardHeader,
+  IconButton,
   Skeleton,
+  Stack,
+  Tooltip,
   Typography,
 } from '@mui/material'
-import { Directions, Map } from '@mui/icons-material'
+import { ContentCopy, Directions, Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
 import { MapComponent, MapPopup, CardHeaderTitle } from '@/components'
 import { useLayer } from '@/hooks'
@@ -20,7 +23,7 @@ const MAP_HEIGHT = 450
 const HeaderTitle = () => (
   <CardHeaderTitle
     icon={<Map color="primary" />}
-    title="Interactive Satellite Map"
+    title="Location"
   />
 )
 
@@ -45,6 +48,23 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
     | undefined
 
   const [lon, lat, _elevation] = coords ?? []
+
+  const { easting, northing } = well?.current_location?.properties
+    ?.utm_coordinates ?? { easting: null, northing: null }
+  const latLonValue =
+    lat != null && lon != null
+      ? `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+      : 'N/A'
+  const utmValue =
+    easting != null && northing != null
+      ? `${easting.toFixed(0)}, ${northing.toFixed(0)}`
+      : 'N/A'
+  const coordinateNotes =
+    well?.current_location?.properties?.notes
+      ?.filter((note) => note.note_type === 'Coordinate')
+      .map((note) => note.content)
+      .filter(Boolean)
+      .join('\n') || null
 
   useEffect(() => {
     const timer = window.setTimeout(() => setLoadNearbyWells(true), 0)
@@ -239,8 +259,60 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             </Typography>
           </>
         )}
+        <Stack spacing={0.75} sx={{ pt: 1.5 }}>
+          <CoordRow
+            label="Latitude / Longitude"
+            value={latLonValue}
+            copyValue={latLonValue !== 'N/A' ? latLonValue : undefined}
+          />
+          <CoordRow
+            label="Easting / Northing"
+            value={utmValue}
+            copyValue={utmValue !== 'N/A' ? utmValue : undefined}
+          />
+          {coordinateNotes && (
+            <CoordRow label="Coordinate Notes" value={coordinateNotes} />
+          )}
+        </Stack>
       </CardContent>
     </Card>
+  )
+}
+
+const CoordRow = ({
+  label,
+  value,
+  copyValue,
+}: {
+  label: string
+  value: string
+  copyValue?: string
+}) => {
+  const handleCopy = async () => {
+    if (!copyValue) return
+    try {
+      await navigator.clipboard.writeText(copyValue)
+    } catch (error) {
+      console.error(`Failed to copy ${label}`, error)
+    }
+  }
+
+  return (
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
+      <Typography variant="body2" component="span">
+        {label}:
+      </Typography>
+      <Typography variant="body2" color="text.secondary" component="span">
+        {value}
+      </Typography>
+      {copyValue && (
+        <Tooltip title={`Copy ${label.toLowerCase()}`}>
+          <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }}>
+            <ContentCopy fontSize="inherit" />
+          </IconButton>
+        </Tooltip>
+      )}
+    </Box>
   )
 }
 

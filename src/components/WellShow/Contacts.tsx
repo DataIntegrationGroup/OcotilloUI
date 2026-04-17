@@ -114,15 +114,17 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
 export const ContactsCard = ({
   contacts,
   isLoading,
+  siteName,
 }: {
   contacts: IContact[]
   isLoading: boolean
+  siteName?: string | null
 }) => {
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
       <Box sx={{ px: 2, py: 1.5 }}>
         <Typography variant="body1" fontWeight="bold">
-          Contacts
+          {siteName || 'Contacts'}
         </Typography>
       </Box>
       <Box sx={{ p: 2 }}>
