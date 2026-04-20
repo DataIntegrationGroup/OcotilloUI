@@ -10,7 +10,6 @@ import {
   IContact,
   IWellDetails,
   IObservation,
-  ISample,
   ISensor,
   IWell,
   IWellScreen,
@@ -39,6 +38,7 @@ import {
   WellPDFDownloadButton,
   WellShowTitle,
   OwnerPermissionsCard,
+  MonitoringInfoCard,
 } from '@/components'
 
 export const WellShow = () => {
@@ -90,14 +90,17 @@ export const WellShow = () => {
       document.title = prev
     }
   }, [well?.name])
-  const observations =
-    detailsQuery.data?.recent_groundwater_level_observations ?? []
   const assets = assetResult?.data ?? []
   const contacts = detailsQuery.data?.contacts ?? []
   const sensors = detailsQuery.data?.sensors ?? []
   const deployments = detailsQuery.data?.deployments ?? []
   const wellScreens = detailsQuery.data?.well_screens ?? []
-  const fieldEventSample = detailsQuery.data?.latest_field_event_sample ?? null
+  const fieldEvents = detailsQuery.data?.field_events ?? []
+  // field_events are sorted newest-first; last entry is the earliest visit
+  const firstVisitParticipants =
+    fieldEvents.length > 0
+      ? (fieldEvents[fieldEvents.length - 1].field_event_participants ?? [])
+      : []
 
   const sensorDeployments = useSensorDeploymentRows({
     deployments,
@@ -269,10 +272,10 @@ export const WellShow = () => {
             <WellPDFDownloadButton
               well={well}
               isLoading={isPdfDataLoading}
-              observations={observations}
+              observations={[]}
               assets={assets}
               contacts={contacts}
-              sample={fieldEventSample}
+              sample={null}
               sensorDeployments={sensorDeployments}
             />
           </Box>
@@ -294,7 +297,7 @@ export const WellShow = () => {
               />
               <RecentWaterLevelObservationsCard
                 well={well}
-                rows={observations}
+                rows={[]}
                 isLoading={isDetailsLoading}
               />
               <NotesAccordion well={well} />
@@ -321,6 +324,11 @@ export const WellShow = () => {
           <Grid size={{ xs: 12, md: 4, lg: 3 }}>
             <Stack spacing={2}>
               <ContactsCard contacts={contacts} isLoading={isDetailsLoading} siteName={well?.site_name} />
+              <MonitoringInfoCard
+                well={well}
+                firstVisitParticipants={firstVisitParticipants}
+                isLoading={isDetailsLoading}
+              />
               <OwnerPermissionsCard well={well} isLoading={isDetailsLoading} />
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
