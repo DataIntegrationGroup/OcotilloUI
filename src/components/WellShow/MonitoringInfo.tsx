@@ -6,6 +6,7 @@ import { formatAppDate } from '@/utils'
 function getMeasuringDuration(firstVisitDate: string | null | undefined): string {
   if (!firstVisitDate) return 'N/A'
   const start = new Date(firstVisitDate)
+  if (Number.isNaN(start.getTime())) return 'N/A'
   const now = new Date()
   const totalMonths =
     (now.getFullYear() - start.getFullYear()) * 12 +
