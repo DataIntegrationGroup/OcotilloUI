@@ -16,6 +16,8 @@ export interface IFieldEventParticipant {
   participant?: IFieldEventParticipantContact
 }
 
+import type { IFieldActivity } from './IFieldActivity'
+
 export interface IFieldEvent {
   id: number
   created_at?: string
@@ -24,4 +26,5 @@ export interface IFieldEvent {
   event_date?: string
   notes?: string | null
   field_event_participants?: IFieldEventParticipant[]
+  field_activities?: IFieldActivity[]
 }

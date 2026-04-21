@@ -10,6 +10,7 @@ import {
   IContact,
   IWellDetails,
   IObservation,
+  ISample,
   ISensor,
   IWell,
   IWellScreen,
@@ -101,6 +102,26 @@ export const WellShow = () => {
     fieldEvents.length > 0
       ? (fieldEvents[fieldEvents.length - 1].field_event_participants ?? [])
       : []
+
+  const recentObservations = useMemo(() => {
+    return fieldEvents
+      .flatMap((event) => event.field_activities ?? [])
+      .flatMap((activity) => activity.samples ?? [])
+      .flatMap((sample) => sample.observations ?? [])
+      .filter((obs) => obs.observation_datetime != null)
+      .sort((a, b) => {
+        const dateA = new Date(a.observation_datetime!).getTime()
+        const dateB = new Date(b.observation_datetime!).getTime()
+        return dateB - dateA
+      })
+  }, [fieldEvents])
+
+  const latestSample = useMemo(() => {
+    const newestEvent = fieldEvents[0]
+    if (!newestEvent) return undefined
+    const firstActivity = newestEvent.field_activities?.[0]
+    return firstActivity?.samples?.[0] ?? undefined
+  }, [fieldEvents])
 
   const sensorDeployments = useSensorDeploymentRows({
     deployments,
@@ -272,10 +293,10 @@ export const WellShow = () => {
             <WellPDFDownloadButton
               well={well}
               isLoading={isPdfDataLoading}
-              observations={[]}
+              observations={recentObservations as unknown as Partial<IObservation>[]}
               assets={assets}
               contacts={contacts}
-              sample={null}
+              sample={latestSample as Partial<ISample> | undefined}
               sensorDeployments={sensorDeployments}
             />
           </Box>
@@ -297,7 +318,7 @@ export const WellShow = () => {
               />
               <RecentWaterLevelObservationsCard
                 well={well}
-                rows={[]}
+                rows={recentObservations as unknown as IObservation[]}
                 isLoading={isDetailsLoading}
               />
               <NotesAccordion well={well} />
