@@ -1,4 +1,5 @@
 export * from './ConstructionInfo'
+export * from './MonitoringInfo'
 export * from './GeologyInformation'
 export * from './OwnerPermissions'
 export * from './WellPhysicalProperties'
