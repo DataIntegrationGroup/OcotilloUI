@@ -83,40 +83,56 @@ const InlineRowWithUnitConversion = ({
   unit,
 }: {
   label: string
-  value: number
-  unit: SupportedUnits | string
+  value: number | null | undefined
+  unit: SupportedUnits | string | null | undefined
 }) => {
   const normalizedUnit: SupportedUnits | null =
     unit === 'in' || unit === 'ft' ? unit : null
 
+  const hasNumericValue = typeof value === 'number' && !Number.isNaN(value)
+
   const defaultDisplayUnit: SupportedUnits =
-    normalizedUnit === 'in' ? (value >= INCHES_IN_A_FOOT ? 'ft' : 'in') : 'ft'
+    normalizedUnit === 'in' && hasNumericValue
+      ? value >= INCHES_IN_A_FOOT
+        ? 'ft'
+        : 'in'
+      : normalizedUnit === 'ft'
+        ? 'ft'
+        : 'ft'
 
   const [displayUnit, setDisplayUnit] =
     useState<SupportedUnits>(defaultDisplayUnit)
 
   useEffect(() => {
     const nextDefault: SupportedUnits =
-      normalizedUnit === 'in' ? (value >= INCHES_IN_A_FOOT ? 'ft' : 'in') : 'ft'
+      normalizedUnit === 'in' && hasNumericValue
+        ? value >= INCHES_IN_A_FOOT
+          ? 'ft'
+          : 'in'
+        : normalizedUnit === 'ft'
+          ? 'ft'
+          : 'ft'
 
     setDisplayUnit(nextDefault)
-  }, [value, normalizedUnit])
+  }, [value, normalizedUnit, hasNumericValue])
 
   const displayValue = useMemo(() => {
+    if (!hasNumericValue) return null
+
     if (normalizedUnit === 'in') {
       return displayUnit === 'ft'
         ? convertInchesToFeet(value, { precision: 2 })
-        : value?.toFixed(2)
+        : value
     }
 
     if (normalizedUnit === 'ft') {
       return displayUnit === 'in'
         ? convertFeetToInches(value, { precision: 2 })
-        : value?.toFixed(2)
+        : value
     }
 
-    return value.toFixed(2)
-  }, [displayUnit, normalizedUnit, value])
+    return value
+  }, [displayUnit, normalizedUnit, value, hasNumericValue])
 
   const handleUnitChange = (
     _event: React.MouseEvent<HTMLElement>,
@@ -127,16 +143,27 @@ const InlineRowWithUnitConversion = ({
     }
   }
 
+  if (!hasNumericValue) {
+    return <InlineRow label={label} value="N/A" />
+  }
+
+  const shouldShowToggle = normalizedUnit === 'in' || normalizedUnit === 'ft'
+
   return (
     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
       <Typography variant="body2">
         {label}:{' '}
         <Typography variant="body2" color="text.secondary" component="span">
-          {formatNumber(displayValue, { precision: 2 })} {displayUnit}
+          {formatNumber(displayValue, { precision: 2 })}
+          {shouldShowToggle
+            ? ` ${displayUnit}`
+            : normalizedUnit
+              ? ` ${normalizedUnit}`
+              : ''}
         </Typography>
       </Typography>
 
-      {normalizedUnit && (
+      {shouldShowToggle && (
         <ToggleButtonGroup
           size="small"
           exclusive
