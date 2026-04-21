@@ -97,11 +97,10 @@ export const WellShow = () => {
   const deployments = detailsQuery.data?.deployments ?? []
   const wellScreens = detailsQuery.data?.well_screens ?? []
   const fieldEvents = detailsQuery.data?.field_events ?? []
-  // field_events are sorted newest-first; last entry is the earliest visit
+  // first_field_event is the oldest field event, returned separately by the API
+  // to avoid being cut off by the field_events page limit
   const firstVisitParticipants =
-    fieldEvents.length > 0
-      ? (fieldEvents[fieldEvents.length - 1].field_event_participants ?? [])
-      : []
+    detailsQuery.data?.first_field_event?.field_event_participants ?? []
 
   const recentObservations = useMemo(() => {
     return fieldEvents

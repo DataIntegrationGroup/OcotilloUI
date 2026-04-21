@@ -11,4 +11,5 @@ export type IWellDetails = {
   deployments: any[]
   well_screens: IWellScreen[]
   field_events: IFieldEvent[]
+  first_field_event?: IFieldEvent | null
 }

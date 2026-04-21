@@ -114,7 +114,7 @@ export const MonitoringInfoCard = ({
               <Stack spacing={0.5} sx={{ pl: 1 }}>
                 {firstVisitParticipants!.map((p) => (
                   <Typography key={p.id} variant="body2">
-                    {p.participant?.contact_name || 'Unknown'}
+                    {p.participant?.name || 'Unknown'}
                     {p.participant_role && (
                       <Typography variant="body2" color="text.secondary" component="span">
                         {' '}({p.participant_role})

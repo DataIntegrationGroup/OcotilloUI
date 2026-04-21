@@ -2,8 +2,8 @@ export interface IFieldEventParticipantContact {
   id: number
   created_at?: string
   release_status?: string
-  contact_name?: string | null
-  contact_organization?: string | null
+  name?: string | null
+  organization?: string | null
 }
 
 export interface IFieldEventParticipant {
