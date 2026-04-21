@@ -3330,6 +3330,112 @@ export type WellContactSummaryResponse = {
 };
 
 /**
+ * WellDetailsFieldActivityResponse
+ */
+export type WellDetailsFieldActivityResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Field Event Id
+     */
+    field_event_id: number;
+    activity_type: ActivityType;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Samples
+     */
+    samples?: Array<WellDetailsFieldEventSampleResponse>;
+};
+
+/**
+ * WellDetailsFieldEventResponse
+ */
+export type WellDetailsFieldEventResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    /**
+     * Event Date
+     */
+    event_date: string;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Field Event Participants
+     */
+    field_event_participants?: Array<FieldEventParticipantResponse>;
+    /**
+     * Field Activities
+     */
+    field_activities?: Array<WellDetailsFieldActivityResponse>;
+};
+
+/**
+ * WellDetailsFieldEventSampleResponse
+ */
+export type WellDetailsFieldEventSampleResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    contact?: ContactResponse | null;
+    /**
+     * Sample Date
+     */
+    sample_date: string;
+    /**
+     * Sample Name
+     */
+    sample_name: string;
+    sample_matrix: SampleMatrix;
+    sample_method: SampleMethod;
+    qc_type: QcType;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Depth Top
+     */
+    depth_top?: number | null;
+    /**
+     * Depth Bottom
+     */
+    depth_bottom?: number | null;
+    /**
+     * Observations
+     */
+    observations?: Array<ObservationResponse>;
+};
+
+/**
  * WellDetailsResponse
  */
 export type WellDetailsResponse = {
@@ -3349,16 +3455,12 @@ export type WellDetailsResponse = {
     /**
      * Well Screens
      */
-    well_screens?: Array<WellScreenResponse>;
+    well_screens?: Array<WellScreenBaseResponse>;
     /**
-     * Recent Groundwater Level Observations
+     * Field Events
      */
-    recent_groundwater_level_observations?: Array<GroundwaterLevelObservationResponse>;
-    latest_field_event_sample?: SampleResponse | null;
-    /**
-     * Field Event Participants
-     */
-    field_event_participants?: Array<FieldEventParticipantResponse>;
+    field_events?: Array<WellDetailsFieldEventResponse>;
+    first_field_event?: WellDetailsFieldEventResponse | null;
 };
 
 /**
@@ -3572,11 +3674,9 @@ export type WellResponse = {
 };
 
 /**
- * WellScreenResponse
- *
- * Response schema for well screen details.
+ * WellScreenBaseResponse
  */
-export type WellScreenResponse = {
+export type WellScreenBaseResponse = {
     /**
      * Id
      */
@@ -3590,7 +3690,6 @@ export type WellScreenResponse = {
      * Thing Id
      */
     thing_id: number;
-    thing: WellResponse;
     /**
      * Aquifer System Id
      */
@@ -3635,6 +3734,72 @@ export type WellScreenResponse = {
      * Screen Description
      */
     screen_description?: string | null;
+};
+
+/**
+ * WellScreenResponse
+ *
+ * Response schema for well screen details.
+ */
+export type WellScreenResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    /**
+     * Aquifer System Id
+     */
+    aquifer_system_id?: number | null;
+    /**
+     * Aquifer System
+     */
+    aquifer_system?: string | null;
+    /**
+     * Aquifer Type
+     */
+    aquifer_type?: string | null;
+    /**
+     * Geologic Formation Id
+     */
+    geologic_formation_id?: number | null;
+    /**
+     * Geologic Formation
+     */
+    geologic_formation?: string | null;
+    /**
+     * Screen Depth Bottom
+     */
+    screen_depth_bottom?: number | null;
+    /**
+     * Screen Depth Bottom Unit
+     */
+    screen_depth_bottom_unit?: string;
+    /**
+     * Screen Depth Top
+     */
+    screen_depth_top?: number | null;
+    /**
+     * Screen Depth Top Unit
+     */
+    screen_depth_top_unit?: string;
+    /**
+     * Screen Type
+     */
+    screen_type?: string | null;
+    /**
+     * Screen Description
+     */
+    screen_description?: string | null;
+    thing: WellResponse;
 };
 
 /**
@@ -6775,7 +6940,12 @@ export type GetWellDetailsThingWaterWellThingIdDetailsGetData = {
          */
         thing_id: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * Field Event Limit
+         */
+        field_event_limit?: number;
+    };
     url: '/thing/water-well/{thing_id}/details';
 };
 
