@@ -8,6 +8,13 @@ import {
 } from '@mui/material'
 import { IWell } from '@/interfaces/ocotillo'
 import { useEffect, useMemo, useState } from 'react'
+import { INCHES_IN_A_FOOT } from '@/constants'
+import { SupportedUnits } from '@/config'
+import {
+  convertFeetToInches,
+  convertInchesToFeet,
+  formatNumber,
+} from '@/utils/Unit'
 
 export const WellPhysicalPropertiesAccordion = ({ well }: { well?: IWell }) => {
   const elevation = well?.current_location?.properties?.elevation
@@ -26,8 +33,8 @@ export const WellPhysicalPropertiesAccordion = ({ well }: { well?: IWell }) => {
         <Stack spacing={1}>
           <InlineRowWithUnitConversion
             label="Casing Diameter"
-            value={well?.well_casing_diameter}
-            unit={well.well_casing_diameter_unit}
+            value={well?.well_casing_diameter ?? null}
+            unit={well?.well_casing_diameter_unit ?? null}
           />
           <InlineRow
             label="Casing Depth"
@@ -70,26 +77,6 @@ const InlineRow = ({ label, value }: { label: string; value: string }) => (
   </Typography>
 )
 
-const INCHES_IN_A_FOOT = 12
-
-const roundToTwo = (num: number): number => {
-  return Math.round(num * 100) / 100
-}
-
-const convertInchesToFeet = (value: number): number => {
-  return roundToTwo(value / INCHES_IN_A_FOOT)
-}
-
-const convertFeetToInches = (value: number): number => {
-  return roundToTwo(value * INCHES_IN_A_FOOT)
-}
-
-const formatNumber = (num: number): string => {
-  return num.toFixed(2)
-}
-
-type SupportedUnit = 'in' | 'ft'
-
 const InlineRowWithUnitConversion = ({
   label,
   value,
@@ -97,19 +84,19 @@ const InlineRowWithUnitConversion = ({
 }: {
   label: string
   value: number
-  unit: SupportedUnit | string
+  unit: SupportedUnits | string
 }) => {
-  const normalizedUnit: SupportedUnit | null =
+  const normalizedUnit: SupportedUnits | null =
     unit === 'in' || unit === 'ft' ? unit : null
 
-  const defaultDisplayUnit: SupportedUnit =
+  const defaultDisplayUnit: SupportedUnits =
     normalizedUnit === 'in' ? (value >= INCHES_IN_A_FOOT ? 'ft' : 'in') : 'ft'
 
   const [displayUnit, setDisplayUnit] =
-    useState<SupportedUnit>(defaultDisplayUnit)
+    useState<SupportedUnits>(defaultDisplayUnit)
 
   useEffect(() => {
-    const nextDefault: SupportedUnit =
+    const nextDefault: SupportedUnits =
       normalizedUnit === 'in' ? (value >= INCHES_IN_A_FOOT ? 'ft' : 'in') : 'ft'
 
     setDisplayUnit(nextDefault)
@@ -118,22 +105,22 @@ const InlineRowWithUnitConversion = ({
   const displayValue = useMemo(() => {
     if (normalizedUnit === 'in') {
       return displayUnit === 'ft'
-        ? convertInchesToFeet(value)
-        : roundToTwo(value)
+        ? convertInchesToFeet(value, { precision: 2 })
+        : value?.toFixed(2)
     }
 
     if (normalizedUnit === 'ft') {
       return displayUnit === 'in'
-        ? convertFeetToInches(value)
-        : roundToTwo(value)
+        ? convertFeetToInches(value, { precision: 2 })
+        : value?.toFixed(2)
     }
 
-    return roundToTwo(value)
+    return value.toFixed(2)
   }, [displayUnit, normalizedUnit, value])
 
   const handleUnitChange = (
     _event: React.MouseEvent<HTMLElement>,
-    nextUnit: SupportedUnit | null
+    nextUnit: SupportedUnits | null
   ) => {
     if (nextUnit) {
       setDisplayUnit(nextUnit)
@@ -145,7 +132,7 @@ const InlineRowWithUnitConversion = ({
       <Typography variant="body2">
         {label}:{' '}
         <Typography variant="body2" color="text.secondary" component="span">
-          {formatNumber(displayValue)} {displayUnit}
+          {formatNumber(displayValue, { precision: 2 })} {displayUnit}
         </Typography>
       </Typography>
 
