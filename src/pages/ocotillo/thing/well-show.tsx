@@ -347,6 +347,7 @@ export const WellShow = () => {
               <MonitoringInfoCard
                 well={well}
                 firstVisitParticipants={firstVisitParticipants}
+                lastVisitDate={fieldEvents[0]?.event_date}
                 isLoading={isDetailsLoading}
               />
               <OwnerPermissionsCard well={well} isLoading={isDetailsLoading} />

@@ -21,10 +21,12 @@ function getMeasuringDuration(firstVisitDate: string | null | undefined): string
 export const MonitoringInfoCard = ({
   well,
   firstVisitParticipants,
+  lastVisitDate,
   isLoading,
 }: {
   well?: IWell
   firstVisitParticipants?: IFieldEventParticipant[]
+  lastVisitDate?: string | null
   isLoading?: boolean
 }) => {
   if (isLoading) {
@@ -49,6 +51,7 @@ export const MonitoringInfoCard = ({
   const firstVisitDate = well?.first_visit_date
   const duration = getMeasuringDuration(firstVisitDate)
 
+
   const hasParticipants = firstVisitParticipants && firstVisitParticipants.length > 0
 
   const monitoringFrequencies = well?.monitoring_frequencies ?? []
@@ -64,14 +67,6 @@ export const MonitoringInfoCard = ({
       </Box>
       <Box sx={{ p: 2 }}>
         <Stack spacing={1.25}>
-          <FieldRow
-            label="First Visit"
-            value={formatAppDate(firstVisitDate) || 'N/A'}
-          />
-          <FieldRow label="Measuring For" value={duration} />
-
-          <Divider />
-
           <FieldRow label="Well Status" value={well?.well_status || 'N/A'} />
           <FieldRow
             label="Monitoring Status"
@@ -101,8 +96,18 @@ export const MonitoringInfoCard = ({
 
           <Divider />
 
+          <FieldRow label="Measured For" value={duration} />
+          <FieldRow
+            label="Last Visit Date"
+            value={formatAppDate(lastVisitDate) || 'N/A'}
+          />
+          <FieldRow
+            label="First Visit Date"
+            value={formatAppDate(firstVisitDate) || 'N/A'}
+          />
+
           <Box>
-            <Typography variant="body2" sx={{ mb: hasParticipants ? 0.75 : 0 }}>
+            <Typography variant="body2" sx={{ mb: hasParticipants ? 0.5 : 0 }}>
               First Visit Staff:{' '}
               {!hasParticipants && (
                 <Typography variant="body2" color="text.secondary" component="span">
@@ -111,10 +116,10 @@ export const MonitoringInfoCard = ({
               )}
             </Typography>
             {hasParticipants && (
-              <Stack spacing={0.5} sx={{ pl: 1 }}>
+              <Stack spacing={0.25}>
                 {firstVisitParticipants!.map((p) => (
-                  <Typography key={p.id} variant="body2">
-                    {p.participant?.name || 'Unknown'}
+                  <Typography key={p.id} variant="body2" color="text.secondary">
+                    &bull;{' '}{p.participant?.name || 'Unknown'}
                     {p.participant_role && (
                       <Typography variant="body2" color="text.secondary" component="span">
                         {' '}({p.participant_role})
