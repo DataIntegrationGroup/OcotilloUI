@@ -10,11 +10,7 @@ import { IWell } from '@/interfaces/ocotillo'
 import { useEffect, useMemo, useState } from 'react'
 import { INCHES_IN_A_FOOT } from '@/constants'
 import { SupportedUnits } from '@/config'
-import {
-  convertFeetToInches,
-  convertInchesToFeet,
-  formatNumber,
-} from '@/utils/Unit'
+import { convertFeetToInches, convertInchesToFeet, formatNumber } from '@/utils'
 
 export const WellPhysicalPropertiesAccordion = ({ well }: { well?: IWell }) => {
   const elevation = well?.current_location?.properties?.elevation
