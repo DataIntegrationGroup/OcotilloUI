@@ -1,5 +1,13 @@
-import { Paper, Box, Stack, Typography } from '@mui/material'
+import {
+  Paper,
+  Box,
+  Stack,
+  Typography,
+  ToggleButtonGroup,
+  ToggleButton,
+} from '@mui/material'
 import { IWell } from '@/interfaces/ocotillo'
+import { useEffect, useMemo, useState } from 'react'
 
 export const WellPhysicalPropertiesAccordion = ({ well }: { well?: IWell }) => {
   const elevation = well?.current_location?.properties?.elevation
@@ -16,9 +24,10 @@ export const WellPhysicalPropertiesAccordion = ({ well }: { well?: IWell }) => {
       </Box>
       <Box sx={{ p: 2 }}>
         <Stack spacing={1}>
-          <InlineRow
+          <InlineRowWithUnitConversion
             label="Casing Diameter"
-            value={`${well?.well_casing_diameter?.toFixed(2) || 'N/A'}${well?.well_casing_diameter ? ` ${well.well_casing_diameter_unit}` : ''}`}
+            value={well?.well_casing_diameter}
+            unit={well.well_casing_diameter_unit}
           />
           <InlineRow
             label="Casing Depth"
@@ -60,3 +69,102 @@ const InlineRow = ({ label, value }: { label: string; value: string }) => (
     </Typography>
   </Typography>
 )
+
+const INCHES_IN_A_FOOT = 12
+
+const roundToTwo = (num: number): number => {
+  return Math.round(num * 100) / 100
+}
+
+const convertInchesToFeet = (value: number): number => {
+  return roundToTwo(value / INCHES_IN_A_FOOT)
+}
+
+const convertFeetToInches = (value: number): number => {
+  return roundToTwo(value * INCHES_IN_A_FOOT)
+}
+
+const formatNumber = (num: number): string => {
+  return num.toFixed(2)
+}
+
+type SupportedUnit = 'in' | 'ft'
+
+const InlineRowWithUnitConversion = ({
+  label,
+  value,
+  unit,
+}: {
+  label: string
+  value: number
+  unit: SupportedUnit | string
+}) => {
+  const normalizedUnit: SupportedUnit | null =
+    unit === 'in' || unit === 'ft' ? unit : null
+
+  const defaultDisplayUnit: SupportedUnit =
+    normalizedUnit === 'in' ? (value >= INCHES_IN_A_FOOT ? 'ft' : 'in') : 'ft'
+
+  const [displayUnit, setDisplayUnit] =
+    useState<SupportedUnit>(defaultDisplayUnit)
+
+  useEffect(() => {
+    const nextDefault: SupportedUnit =
+      normalizedUnit === 'in' ? (value >= INCHES_IN_A_FOOT ? 'ft' : 'in') : 'ft'
+
+    setDisplayUnit(nextDefault)
+  }, [value, normalizedUnit])
+
+  const displayValue = useMemo(() => {
+    if (normalizedUnit === 'in') {
+      return displayUnit === 'ft'
+        ? convertInchesToFeet(value)
+        : roundToTwo(value)
+    }
+
+    if (normalizedUnit === 'ft') {
+      return displayUnit === 'in'
+        ? convertFeetToInches(value)
+        : roundToTwo(value)
+    }
+
+    return roundToTwo(value)
+  }, [displayUnit, normalizedUnit, value])
+
+  const handleUnitChange = (
+    _event: React.MouseEvent<HTMLElement>,
+    nextUnit: SupportedUnit | null
+  ) => {
+    if (nextUnit) {
+      setDisplayUnit(nextUnit)
+    }
+  }
+
+  return (
+    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+      <Typography variant="body2">
+        {label}:{' '}
+        <Typography variant="body2" color="text.secondary" component="span">
+          {formatNumber(displayValue)} {displayUnit}
+        </Typography>
+      </Typography>
+
+      {normalizedUnit && (
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          value={displayUnit}
+          onChange={handleUnitChange}
+          aria-label={`${label} unit toggle`}
+        >
+          <ToggleButton value="in" aria-label="inches">
+            in
+          </ToggleButton>
+          <ToggleButton value="ft" aria-label="feet">
+            ft
+          </ToggleButton>
+        </ToggleButtonGroup>
+      )}
+    </Stack>
+  )
+}
