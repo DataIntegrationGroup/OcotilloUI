@@ -166,11 +166,27 @@ const InlineRowWithUnitConversion = ({
           value={displayUnit}
           onChange={handleUnitChange}
           aria-label={`${label} unit toggle`}
+          sx={(theme) => ({
+            '& .MuiToggleButton-root': {
+              color: 'text.secondary',
+              border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.3)' : theme.palette.divider}`,
+            },
+            '& .MuiToggleButton-root + .MuiToggleButton-root': {
+              borderLeft: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.3)' : theme.palette.divider}`,
+              marginLeft: 0,
+            },
+            '& .MuiToggleButton-root.Mui-selected': {
+              bgcolor: 'primary.main',
+              color: 'primary.contrastText',
+              border: `1px solid ${theme.palette.primary.main} !important`,
+              '&:hover': { bgcolor: 'primary.dark' },
+            },
+          })}
         >
-          <ToggleButton value="in" aria-label="inches">
+          <ToggleButton value="in" aria-label="inches" sx={{ py: 0, fontSize: '0.7rem' }}>
             in
           </ToggleButton>
-          <ToggleButton value="ft" aria-label="feet">
+          <ToggleButton value="ft" aria-label="feet" sx={{ py: 0, fontSize: '0.7rem' }}>
             ft
           </ToggleButton>
         </ToggleButtonGroup>
