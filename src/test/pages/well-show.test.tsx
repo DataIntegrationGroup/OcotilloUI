@@ -62,6 +62,7 @@ vi.mock('@/components', () => {
     WellPDFDownloadButton: () => <Stub name="download" />,
     WellShowTitle: () => <Stub name="title" />,
     OwnerPermissionsCard: () => <Stub name="owner" />,
+    MonitoringInfoCard: () => <Stub name="monitoring" />,
   }
 })
 
@@ -96,8 +97,8 @@ describe('WellShow data loading', () => {
             sensors: [],
             deployments: [],
             well_screens: [],
-            recent_groundwater_level_observations: [],
-            latest_field_event_sample: null,
+            field_events: [],
+            first_field_event: null,
           },
           isLoading: false,
         }
