@@ -14,6 +14,8 @@ import { convertFeetToInches, convertInchesToFeet, formatNumber } from '@/utils'
 
 export const WellPhysicalPropertiesAccordion = ({ well }: { well?: IWell }) => {
   const elevation = well?.current_location?.properties?.elevation
+  const normalizedElevation =
+    elevation != null && elevation !== 0 ? elevation : null
   const elevationUnit = well?.current_location?.properties?.elevation_unit
   const elevationMethod = well?.current_location?.properties?.elevation_method
   const verticalDatum = well?.current_location?.properties?.vertical_datum
@@ -48,8 +50,8 @@ export const WellPhysicalPropertiesAccordion = ({ well }: { well?: IWell }) => {
           <InlineRow
             label="Elevation"
             value={
-              elevation != null
-                ? `${elevation.toFixed(2)}${elevationUnit ? ` ${elevationUnit}` : ''}`
+              normalizedElevation != null
+                ? `${normalizedElevation.toFixed(2)}${elevationUnit ? ` ${elevationUnit}` : ''}`
                 : 'N/A'
             }
           />
