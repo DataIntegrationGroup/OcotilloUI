@@ -5,16 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
-import {
-  IAsset,
-  IContact,
-  IWellDetails,
-  IObservation,
-  ISample,
-  ISensor,
-  IWell,
-  IWellScreen,
-} from '@/interfaces/ocotillo'
+import { IAsset, IWellDetails, IObservation, ISample } from '@/interfaces/ocotillo'
 import { Box, Stack } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { useAccessCapabilities, useSensorDeploymentRows } from '@/hooks'
@@ -52,9 +43,9 @@ export const WellShow = () => {
   const { id } = useResourceParams()
 
   useEffect(() => {
-    if (id) captureEvent('feature_used', { feature: 'well_detail', well_id: id })
+    if (id)
+      captureEvent('feature_used', { feature: 'well_detail', well_id: id })
   }, [id])
-
 
   const detailsQuery = useQuery({
     queryKey: ['well-details', id],
