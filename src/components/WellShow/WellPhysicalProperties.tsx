@@ -87,30 +87,13 @@ const InlineRowWithUnitConversion = ({
 
   const hasNumericValue = typeof value === 'number' && !Number.isNaN(value)
 
-  const defaultDisplayUnit: SupportedUnits =
-    normalizedUnit === 'in' && hasNumericValue
-      ? value >= INCHES_IN_A_FOOT
-        ? 'ft'
-        : 'in'
-      : normalizedUnit === 'ft'
-        ? 'ft'
-        : 'ft'
-
-  const [displayUnit, setDisplayUnit] =
-    useState<SupportedUnits>(defaultDisplayUnit)
+  const [displayUnit, setDisplayUnit] = useState<SupportedUnits>(() =>
+    getDefaultDisplayUnit(value, normalizedUnit)
+  )
 
   useEffect(() => {
-    const nextDefault: SupportedUnits =
-      normalizedUnit === 'in' && hasNumericValue
-        ? value >= INCHES_IN_A_FOOT
-          ? 'ft'
-          : 'in'
-        : normalizedUnit === 'ft'
-          ? 'ft'
-          : 'ft'
-
-    setDisplayUnit(nextDefault)
-  }, [value, normalizedUnit, hasNumericValue])
+    setDisplayUnit(getDefaultDisplayUnit(value, normalizedUnit))
+  }, [value, normalizedUnit])
 
   const displayValue = useMemo(() => {
     if (!hasNumericValue) return null
@@ -183,14 +166,35 @@ const InlineRowWithUnitConversion = ({
             },
           })}
         >
-          <ToggleButton value="in" aria-label="inches" sx={{ py: 0, fontSize: '0.7rem' }}>
+          <ToggleButton
+            value="in"
+            aria-label="inches"
+            sx={{ py: 0, fontSize: '0.7rem' }}
+          >
             in
           </ToggleButton>
-          <ToggleButton value="ft" aria-label="feet" sx={{ py: 0, fontSize: '0.7rem' }}>
+          <ToggleButton
+            value="ft"
+            aria-label="feet"
+            sx={{ py: 0, fontSize: '0.7rem' }}
+          >
             ft
           </ToggleButton>
         </ToggleButtonGroup>
       )}
     </Stack>
   )
+}
+
+const getDefaultDisplayUnit = (
+  value: number | null | undefined,
+  normalizedUnit: SupportedUnits | null
+): SupportedUnits => {
+  const hasNumericValue = typeof value === 'number' && !Number.isNaN(value)
+
+  if (normalizedUnit === 'in' && hasNumericValue) {
+    return value >= INCHES_IN_A_FOOT ? 'ft' : 'in'
+  }
+
+  return 'ft'
 }
