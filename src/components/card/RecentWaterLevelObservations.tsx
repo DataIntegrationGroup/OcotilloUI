@@ -34,15 +34,31 @@ export const RecentWaterLevelObservationsCard = ({
         headerName: 'Date/Time',
         valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
         minWidth: 200,
+        headerAlign: 'left',
+        align: 'left',
       },
       {
         field: 'depth_to_water_bgs',
         headerName: 'Depth To Water (ft bgs)',
         type: 'number',
-        minWidth: 150,
+        minWidth: 175,
+        headerAlign: 'left',
+        align: 'left',
       },
-      { field: 'release_status', headerName: 'Release Status', minWidth: 150 },
-      { field: 'level_status', headerName: 'Level Status', minWidth: 150 },
+      {
+        field: 'release_status',
+        headerName: 'Release Status',
+        minWidth: 150,
+        headerAlign: 'left',
+        align: 'left',
+      },
+      {
+        field: 'level_status',
+        headerName: 'Level Status',
+        minWidth: 150,
+        headerAlign: 'left',
+        align: 'left',
+      },
     ]
   }, [])
 
@@ -87,6 +103,7 @@ export const RecentWaterLevelObservationsCard = ({
             getRowId={(row) => row.id}
             rowHeight={settings.rowHeight}
             columns={cols}
+            disableRowSelectionOnClick
             pageSizeOptions={[10, 25, 50]}
             initialState={{
               pagination: {
