@@ -42,8 +42,16 @@ export const Home = () => {
   )
 }
 
+const appEnv = import.meta.env.VITE_APP_ENV || 'production'
+const showTestSiteBanner =
+  import.meta.env.DEV || appEnv !== 'production'
+
 const HomeNotification = ({ noPermissions }) => {
   const [notificationOpen, setNotificationOpen] = useState(true)
+
+  if (!noPermissions && !showTestSiteBanner) {
+    return null
+  }
 
   return (
     <Drawer
@@ -71,7 +79,7 @@ const HomeNotification = ({ noPermissions }) => {
           </Alert>
         </Box>
       )}
-      {!noPermissions && (
+      {!noPermissions && showTestSiteBanner && (
         <Box
           sx={{
             display: 'flex',
