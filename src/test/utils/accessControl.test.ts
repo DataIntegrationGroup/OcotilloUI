@@ -68,6 +68,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.collections',
       'ocotillo.map',
       'ocotillo.thing-well',
+      'ocotillo.thing-well-batch-export',
     ],
   },
   {
@@ -110,6 +111,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.collections',
       'ocotillo.map',
       'ocotillo.thing-well',
+      'ocotillo.thing-well-batch-export',
     ],
   },
 ]
