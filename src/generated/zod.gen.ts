@@ -3004,7 +3004,6 @@ export const zWellScreenResponse = z.object({
     created_at: z.string(),
     release_status: zReleaseStatus,
     thing_id: z.int(),
-    thing: zWellResponse,
     aquifer_system_id: z.optional(z.union([
         z.int(),
         z.null()
@@ -3042,7 +3041,8 @@ export const zWellScreenResponse = z.object({
     screen_description: z.optional(z.union([
         z.string(),
         z.null()
-    ]))
+    ])),
+    thing: zWellResponse
 });
 
 /**
@@ -3732,6 +3732,118 @@ export const zWaterLevelBulkUploadResponse = z.object({
 });
 
 /**
+ * WellDetailsFieldEventSampleResponse
+ */
+export const zWellDetailsFieldEventSampleResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    contact: z.optional(z.union([
+        zContactResponse,
+        z.null()
+    ])),
+    sample_date: z.string(),
+    sample_name: z.string(),
+    sample_matrix: zSampleMatrix,
+    sample_method: zSampleMethod,
+    qc_type: zQcType,
+    notes: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    depth_top: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    depth_bottom: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    observations: z.optional(z.array(zObservationResponse))
+});
+
+/**
+ * WellDetailsFieldActivityResponse
+ */
+export const zWellDetailsFieldActivityResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    field_event_id: z.int(),
+    activity_type: zActivityType,
+    notes: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    samples: z.optional(z.array(zWellDetailsFieldEventSampleResponse))
+});
+
+/**
+ * WellDetailsFieldEventResponse
+ */
+export const zWellDetailsFieldEventResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    thing_id: z.int(),
+    event_date: z.string(),
+    notes: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    field_event_participants: z.optional(z.array(zFieldEventParticipantResponse)),
+    field_activities: z.optional(z.array(zWellDetailsFieldActivityResponse))
+});
+
+/**
+ * WellScreenBaseResponse
+ */
+export const zWellScreenBaseResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    thing_id: z.int(),
+    aquifer_system_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    aquifer_system: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    aquifer_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    geologic_formation_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    geologic_formation: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    screen_depth_bottom: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    screen_depth_bottom_unit: z.optional(z.string()).default('ft'),
+    screen_depth_top: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    screen_depth_top_unit: z.optional(z.string()).default('ft'),
+    screen_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    screen_description: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
+});
+
+/**
  * WellDetailsResponse
  */
 export const zWellDetailsResponse = z.object({
@@ -3739,13 +3851,12 @@ export const zWellDetailsResponse = z.object({
     contacts: z.optional(z.array(zContactResponse)),
     sensors: z.optional(z.array(zSensorResponse)),
     deployments: z.optional(z.array(zDeploymentResponse)),
-    well_screens: z.optional(z.array(zWellScreenResponse)),
-    recent_groundwater_level_observations: z.optional(z.array(zGroundwaterLevelObservationResponse)),
-    latest_field_event_sample: z.optional(z.union([
-        zSampleResponse,
+    well_screens: z.optional(z.array(zWellScreenBaseResponse)),
+    field_events: z.optional(z.array(zWellDetailsFieldEventResponse)),
+    first_field_event: z.optional(z.union([
+        zWellDetailsFieldEventResponse,
         z.null()
-    ])),
-    field_event_participants: z.optional(z.array(zFieldEventParticipantResponse))
+    ]))
 });
 
 /**
@@ -5049,7 +5160,9 @@ export const zGetWellDetailsThingWaterWellThingIdDetailsGetData = z.object({
     path: z.object({
         thing_id: z.int()
     }),
-    query: z.optional(z.never())
+    query: z.optional(z.object({
+        field_event_limit: z.optional(z.int().gte(1).lte(100)).default(25)
+    }))
 });
 
 /**

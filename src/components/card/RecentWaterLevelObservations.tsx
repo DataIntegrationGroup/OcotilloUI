@@ -14,35 +14,88 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import { formatAppDateTime } from '@/utils'
 
+export type WaterLevelObservationRow = Omit<IObservation, 'created_at'> & {
+  created_at?: string | null
+  water_level_method?: string | null
+  water_level_status?: string | null
+  water_level_measuring_staff?: string | null
+  water_level_notes?: string | null
+  water_level_data_quality?: string | null
+}
+
 export const RecentWaterLevelObservationsCard = ({
   well,
   rows,
   isLoading = false,
 }: {
   well: IWell
-  rows: readonly IObservation[]
+  rows: readonly Partial<WaterLevelObservationRow>[]
   isLoading: boolean
 }) => {
   if (!well || isLoading) {
     return <LoadingCard />
   }
 
-  const cols: GridColDef<IObservation>[] = useMemo(() => {
+  const cols: GridColDef<WaterLevelObservationRow>[] = useMemo(() => {
     return [
       {
         field: 'observation_datetime',
         headerName: 'Date/Time',
         valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
         minWidth: 200,
+        headerAlign: 'left',
+        align: 'left',
       },
       {
         field: 'depth_to_water_bgs',
         headerName: 'Depth To Water (ft bgs)',
         type: 'number',
-        minWidth: 150,
+        minWidth: 175,
+        headerAlign: 'left',
+        align: 'left',
       },
-      { field: 'release_status', headerName: 'Release Status', minWidth: 150 },
-      { field: 'level_status', headerName: 'Level Status', minWidth: 150 },
+      {
+        field: 'release_status',
+        headerName: 'Release Status',
+        minWidth: 150,
+        headerAlign: 'left',
+        align: 'left',
+      },
+      {
+        field: 'water_level_method',
+        headerName: 'Method',
+        minWidth: 250,
+        headerAlign: 'left',
+        align: 'left',
+      },
+      {
+        field: 'water_level_status',
+        headerName: 'Level Status',
+        minWidth: 150,
+        headerAlign: 'left',
+        align: 'left',
+      },
+      {
+        field: 'water_level_measuring_staff',
+        headerName: 'Measuring Staff',
+        minWidth: 150,
+        headerAlign: 'left',
+        align: 'left',
+      },
+      {
+        field: 'water_level_notes',
+        headerName: 'Notes',
+        minWidth: 375,
+        headerAlign: 'left',
+        align: 'left',
+      },
+      {
+        field: 'water_level_data_quality',
+        headerName: 'Data Quality',
+        minWidth: 375,
+        headerAlign: 'left',
+        align: 'left',
+      },
     ]
   }, [])
 
@@ -87,6 +140,7 @@ export const RecentWaterLevelObservationsCard = ({
             getRowId={(row) => row.id}
             rowHeight={settings.rowHeight}
             columns={cols}
+            disableRowSelectionOnClick
             pageSizeOptions={[10, 25, 50]}
             initialState={{
               pagination: {
