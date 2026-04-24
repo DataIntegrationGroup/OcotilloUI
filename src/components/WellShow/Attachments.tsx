@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import {
   Box,
+  ButtonBase,
   IconButton,
+  Link,
   Paper,
   Stack,
   Typography,
@@ -36,10 +38,42 @@ export const AttachmentsAccordion = ({
     [assets]
   )
 
-  const columns = useMemo<GridColDef[]>(
+  const columns = useMemo<GridColDef<IAsset>[]>(
     () => [
       { field: 'name', headerName: 'Name', minWidth: 150 },
-      { field: 'uri', headerName: 'URL', flex: 1 },
+      {
+        field: 'uri',
+        headerName: 'URL',
+        flex: 1,
+        minWidth: 200,
+        renderCell: ({ value }) => {
+          const href = typeof value === 'string' ? value : ''
+          if (!href) {
+            return (
+              <Typography variant="body2" color="text.secondary">
+                N/A
+              </Typography>
+            )
+          }
+          return (
+            <Link
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="body2"
+              sx={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+                maxWidth: '100%',
+              }}
+            >
+              {href}
+            </Link>
+          )
+        },
+      },
     ],
     []
   )
@@ -112,28 +146,36 @@ export const AttachmentsAccordion = ({
 
                 {imageViewMode === 'grid' ? (
                   <Masonry columns={3} spacing={2}>
-                    {imageAssets.map(
-                      (
-                        img: { signed_url: string; name?: string },
-                        idx: number
-                      ) => (
+                    {imageAssets.map((img, idx) => (
+                      <ButtonBase
+                        key={img.id ?? idx}
+                        focusRipple
+                        aria-label={`Open ${img.name || `attachment ${idx + 1}`} in slideshow`}
+                        onClick={() => {
+                          setSlideshowIndex(idx)
+                          setImageViewMode('slideshow')
+                        }}
+                        sx={{
+                          display: 'block',
+                          width: '100%',
+                          borderRadius: 2,
+                          overflow: 'hidden',
+                          boxShadow: 2,
+                          textAlign: 'left',
+                        }}
+                      >
                         <Box
-                          key={idx}
+                          component="img"
+                          src={img.signed_url}
+                          alt={img.name || `Attachment ${idx + 1}`}
                           sx={{
-                            borderRadius: 2,
-                            overflow: 'hidden',
-                            boxShadow: 2,
+                            width: '100%',
+                            display: 'block',
+                            verticalAlign: 'bottom',
                           }}
-                        >
-                          <Box
-                            component="img"
-                            src={img.signed_url}
-                            alt={img.name || `Attachment ${idx + 1}`}
-                            sx={{ width: '100%', display: 'block' }}
-                          />
-                        </Box>
-                      )
-                    )}
+                        />
+                      </ButtonBase>
+                    ))}
                   </Masonry>
                 ) : (
                   <Box
