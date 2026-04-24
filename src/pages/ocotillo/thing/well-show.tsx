@@ -5,7 +5,12 @@ import { useQuery } from '@tanstack/react-query'
 import { Show, useDataGrid } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
-import { IAsset, IWellDetails, IObservation, ISample } from '@/interfaces/ocotillo'
+import {
+  IAsset,
+  IWellDetails,
+  IObservation,
+  ISample,
+} from '@/interfaces/ocotillo'
 import { Box, Stack } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { useAccessCapabilities, useSensorDeploymentRows } from '@/hooks'
@@ -211,7 +216,12 @@ export const WellShow = () => {
             name: 'Groundwater Level',
             style: 'scatter',
             data: manualHydrographRows
-              .filter((obs) => obs.observation_datetime)
+              .filter(
+                (obs) =>
+                  obs.observation_datetime != null &&
+                  obs.depth_to_water_bgs != null &&
+                  !Number.isNaN(Number(obs.depth_to_water_bgs))
+              )
               .map((obs) => ({
                 phenomenonTime: new Date(obs.observation_datetime),
                 result: Number(obs.depth_to_water_bgs),
@@ -230,7 +240,11 @@ export const WellShow = () => {
             name: 'Transducer Groundwater Level',
             style: 'line',
             data: transducerHydrographRows
-              .filter(({ observation }) => observation?.observation_datetime)
+              .filter(
+                ({ observation }) =>
+                  observation?.observation_datetime != null &&
+                  observation?.value != null
+              )
               .map(({ observation }) => ({
                 phenomenonTime: new Date(observation.observation_datetime),
                 result: Number(observation.value),
@@ -283,7 +297,9 @@ export const WellShow = () => {
             <WellPDFDownloadButton
               well={well}
               isLoading={isPdfDataLoading}
-              observations={recentObservations as unknown as Partial<IObservation>[]}
+              observations={
+                recentObservations as unknown as Partial<IObservation>[]
+              }
               assets={assets}
               contacts={contacts}
               sample={latestSample as Partial<ISample> | undefined}
@@ -334,7 +350,11 @@ export const WellShow = () => {
           {/* Right column: 2 cols */}
           <Grid size={{ xs: 12, md: 4, lg: 3 }}>
             <Stack spacing={2}>
-              <ContactsCard contacts={contacts} isLoading={isDetailsLoading} siteName={well?.site_name} />
+              <ContactsCard
+                contacts={contacts}
+                isLoading={isDetailsLoading}
+                siteName={well?.site_name}
+              />
               <MonitoringInfoCard
                 well={well}
                 firstVisitParticipants={firstVisitParticipants}
