@@ -79,7 +79,6 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.collections',
       'ocotillo.map',
       'ocotillo.thing-well',
-      'ocotillo.lexicon',
       'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
       'water.wellinventoryform',
@@ -412,13 +411,13 @@ describe('isResourceListAdminOnly', () => {
   it('returns true for list resources restricted to admin roles', () => {
     expect(isResourceListAdminOnly('ocotillo.location')).toBe(true)
     expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(true)
+    expect(isResourceListAdminOnly('ocotillo.lexicon')).toBe(true)
     expect(isResourceListAdminOnly('Sandbox')).toBe(true)
     expect(isResourceListAdminOnly('water.locations')).toBe(true)
   })
 
   it('returns false for non-admin list resources and unknown resources', () => {
     expect(isResourceListAdminOnly('ocotillo.thing-well')).toBe(false)
-    expect(isResourceListAdminOnly('ocotillo.lexicon')).toBe(false)
     expect(isResourceListAdminOnly('unknown.resource')).toBe(false)
   })
 })

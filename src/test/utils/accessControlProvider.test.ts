@@ -15,7 +15,7 @@ describe('accessControlProvider', () => {
     await expect(
       accessControlProvider.can({
         resource: 'ocotillo.lexicon',
-        action: 'show',
+        action: 'edit',
       })
     ).resolves.toEqual({ can: true })
 
