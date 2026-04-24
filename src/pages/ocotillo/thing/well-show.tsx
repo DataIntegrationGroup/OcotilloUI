@@ -7,9 +7,14 @@ import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
   IAsset,
+  IContact,
+  IFieldEvent,
+  IFieldEventParticipant,
   IWellDetails,
   IObservation,
   ISample,
+  ISensor,
+  IWellScreen,
 } from '@/interfaces/ocotillo'
 import { Box, Stack } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
@@ -38,6 +43,17 @@ import {
   MonitoringInfoCard,
   WaterLevelObservationRow,
 } from '@/components'
+
+const EMPTY_ASSETS: IAsset[] = []
+const EMPTY_CONTACTS: IContact[] = []
+const EMPTY_SENSORS: ISensor[] = []
+const EMPTY_DEPLOYMENTS: IWellDetails['deployments'] = []
+const EMPTY_WELL_SCREENS: IWellScreen[] = []
+const EMPTY_FIELD_EVENTS: IFieldEvent[] = []
+const EMPTY_PARTICIPANTS: IFieldEventParticipant[] = []
+const EMPTY_MANUAL_HYDRO_ROWS: IObservation[] = []
+const EMPTY_TRANSDUCER_HYDRO_ROWS: TransducerObservationWithBlockResponse[] =
+  []
 
 export const WellShow = () => {
   const dataProvider = useDataProvider()
@@ -88,16 +104,17 @@ export const WellShow = () => {
       document.title = prev
     }
   }, [well?.name])
-  const assets = assetResult?.data ?? []
-  const contacts = detailsQuery.data?.contacts ?? []
-  const sensors = detailsQuery.data?.sensors ?? []
-  const deployments = detailsQuery.data?.deployments ?? []
-  const wellScreens = detailsQuery.data?.well_screens ?? []
-  const fieldEvents = detailsQuery.data?.field_events ?? []
+  const assets = assetResult?.data ?? EMPTY_ASSETS
+  const contacts = detailsQuery.data?.contacts ?? EMPTY_CONTACTS
+  const sensors = detailsQuery.data?.sensors ?? EMPTY_SENSORS
+  const deployments = detailsQuery.data?.deployments ?? EMPTY_DEPLOYMENTS
+  const wellScreens = detailsQuery.data?.well_screens ?? EMPTY_WELL_SCREENS
+  const fieldEvents = detailsQuery.data?.field_events ?? EMPTY_FIELD_EVENTS
   // first_field_event is the oldest field event, returned separately by the API
   // to avoid being cut off by the field_events page limit
   const firstVisitParticipants =
-    detailsQuery.data?.first_field_event?.field_event_participants ?? []
+    detailsQuery.data?.first_field_event?.field_event_participants ??
+    EMPTY_PARTICIPANTS
 
   const recentObservations = useMemo<
     Partial<WaterLevelObservationRow>[]
@@ -220,8 +237,10 @@ export const WellShow = () => {
     },
   })
 
-  const manualHydrographRows = hydrographQuery.data?.manualRows ?? []
-  const transducerHydrographRows = hydrographQuery.data?.transducerRows ?? []
+  const manualHydrographRows =
+    hydrographQuery.data?.manualRows ?? EMPTY_MANUAL_HYDRO_ROWS
+  const transducerHydrographRows =
+    hydrographQuery.data?.transducerRows ?? EMPTY_TRANSDUCER_HYDRO_ROWS
 
   const hydrographDatasource = useMemo<IHydrographDatasource[]>(() => {
     const manualSource =
