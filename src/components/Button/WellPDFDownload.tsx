@@ -23,7 +23,7 @@ export const WellPDFDownloadButton = ({
 }: {
   well: IWell
   isLoading: boolean
-  observations: readonly Partial<IObservation>[]
+  observations: readonly Partial<Omit<IObservation, 'created_at'>>[]
   assets: BaseRecord[]
   contacts: IContact[]
   sample?: Partial<ISample>
