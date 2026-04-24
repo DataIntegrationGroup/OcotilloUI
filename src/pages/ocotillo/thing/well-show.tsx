@@ -363,7 +363,7 @@ export const WellShow = () => {
               <EquipmentAccordion
                 sensors={sensors}
                 deployments={deployments}
-                isLoading={isDetailsLoading}
+                isDetailsPending={Boolean(id) && detailsQuery.isPending}
               />
               <WellScreensAccordion
                 rows={wellScreens}
