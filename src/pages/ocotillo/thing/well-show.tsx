@@ -312,9 +312,7 @@ export const WellShow = () => {
             <WellPDFDownloadButton
               well={well}
               isLoading={isPdfDataLoading}
-              observations={
-                recentObservations as unknown as Partial<IObservation>[]
-              }
+              observations={recentObservations}
               assets={assets}
               contacts={contacts}
               sample={latestSample as Partial<ISample> | undefined}
@@ -339,7 +337,7 @@ export const WellShow = () => {
               />
               <RecentWaterLevelObservationsCard
                 well={well}
-                rows={recentObservations as unknown as IObservation[]}
+                rows={recentObservations}
                 isLoading={isDetailsLoading}
               />
               <NotesAccordion well={well} />
