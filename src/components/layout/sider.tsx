@@ -71,7 +71,12 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
         name,
         route,
       } = item
-      const isOpen = open[key] || false
+
+      const itemKey = key ?? name ?? route ?? ''
+      const resourceName = name ?? key ?? ''
+      const isOpen = open[itemKey] ?? false
+      const hasChildren = (children?.length ?? 0) > 0
+      const isAdminOnly = isResourceListAdminOnly(resourceName)
 
       const icon = deprecatedIcon ?? meta?.icon
       const derivedLabel = meta?.label || deprecatedLabel || name
@@ -81,31 +86,23 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
       const isNested = meta?.parent !== undefined
       const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0
       const disabled = meta?.disabled || false
-      const isAdminOnly = isResourceListAdminOnly(name)
+
       const tooltipTitle =
         siderCollapsed && isAdminOnly
           ? `${label ?? name} (Admin only)`
           : (label ?? name)
 
-      // const allowedCategories = new Set([
-      //   'Water',
-      //   'Batch Upload',
-      //   'Lookup Tables',
-      //   'DataForge: Coming Soon',
-      //   'Observations',
-      // ])
-
-      if (children.length > 0) {
+      if (hasChildren) {
         return (
           <CanAccess
-            key={item.key}
-            resource={name}
+            key={itemKey}
+            resource={resourceName}
             action="list"
             params={{
               resource: item,
             }}
           >
-            <div key={key}>
+            <div>
               <Tooltip
                 title={tooltipTitle}
                 placement="right"
@@ -121,10 +118,10 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                     if (siderCollapsed) {
                       setSiderCollapsed(false)
                       if (!isOpen) {
-                        handleClick(key || '')
+                        handleClick(itemKey)
                       }
                     } else {
-                      handleClick(key || '')
+                      handleClick(itemKey)
                     }
                   }}
                   sx={{
@@ -142,7 +139,6 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                       justifyContent: 'center',
                       minWidth: '20px',
                       transition: 'margin-right 0.3s',
-                      // marginRight: siderCollapsed ? '0px' : '12px',
                       mr: siderCollapsed ? 0 : 1,
                       color: 'currentColor',
                     }}
@@ -189,11 +185,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                 </ListItemButton>
               </Tooltip>
               {!siderCollapsed && (
-                <Collapse
-                  in={open[item.key || '']}
-                  timeout="auto"
-                  unmountOnExit
-                >
+                <Collapse in={open[itemKey]} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {renderTreeView(children, selectedKey)}
                   </List>
@@ -209,8 +201,8 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
 
       return (
         <CanAccess
-          key={item.key}
-          resource={name}
+          key={itemKey}
+          resource={resourceName}
           action="list"
           params={{ resource: item }}
         >
