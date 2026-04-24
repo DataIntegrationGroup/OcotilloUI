@@ -74,8 +74,8 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     manage: ['AMP.Admin', 'Geothermal.Admin'],
   },
   'ocotillo.lexicon': {
-    list: editorRoles,
-    show: editorRoles,
+    list: adminRoles,
+    show: adminRoles,
     edit: editorRoles,
     create: adminRoles,
     delete: adminRoles,
