@@ -1,13 +1,15 @@
 import React, { type CSSProperties, useContext, useState } from 'react'
 import { CanAccess, useMenu, type TreeMenuItem } from '@refinedev/core'
 import { ThemedTitle, useThemedLayoutContext } from '@refinedev/mui'
-import ChevronLeft from '@mui/icons-material/ChevronLeft'
-import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined'
-import ExpandLess from '@mui/icons-material/ExpandLess'
-import ExpandMore from '@mui/icons-material/ExpandMore'
-import LightModeOutlined from '@mui/icons-material/LightModeOutlined'
-import ListOutlined from '@mui/icons-material/ListOutlined'
-import LockOutlined from '@mui/icons-material/LockOutlined'
+import {
+  ChevronLeft,
+  DarkModeOutlined,
+  ExpandLess,
+  ExpandMore,
+  LightModeOutlined,
+  ListOutlined,
+  LockOutlined,
+} from '@mui/icons-material'
 import {
   Box,
   Collapse,
