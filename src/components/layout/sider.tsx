@@ -185,7 +185,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                 </ListItemButton>
               </Tooltip>
               {!siderCollapsed && (
-                <Collapse in={open[itemKey]} timeout="auto" unmountOnExit>
+                <Collapse in={isOpen} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {renderTreeView(children, selectedKey)}
                   </List>
