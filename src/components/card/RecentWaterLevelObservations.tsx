@@ -14,20 +14,29 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import { formatAppDateTime } from '@/utils'
 
+export type WaterLevelObservationRow = Omit<IObservation, 'created_at'> & {
+  created_at?: string | null
+  water_level_method?: string | null
+  water_level_status?: string | null
+  water_level_measuring_staff?: string | null
+  water_level_notes?: string | null
+  water_level_data_quality?: string | null
+}
+
 export const RecentWaterLevelObservationsCard = ({
   well,
   rows,
   isLoading = false,
 }: {
   well: IWell
-  rows: readonly IObservation[]
+  rows: readonly WaterLevelObservationRow[]
   isLoading: boolean
 }) => {
   if (!well || isLoading) {
     return <LoadingCard />
   }
 
-  const cols: GridColDef<IObservation>[] = useMemo(() => {
+  const cols: GridColDef<WaterLevelObservationRow>[] = useMemo(() => {
     return [
       {
         field: 'observation_datetime',
@@ -53,9 +62,37 @@ export const RecentWaterLevelObservationsCard = ({
         align: 'left',
       },
       {
-        field: 'level_status',
+        field: 'water_level_method',
+        headerName: 'Method',
+        minWidth: 250,
+        headerAlign: 'left',
+        align: 'left',
+      },
+      {
+        field: 'water_level_status',
         headerName: 'Level Status',
         minWidth: 150,
+        headerAlign: 'left',
+        align: 'left',
+      },
+      {
+        field: 'water_level_measuring_staff',
+        headerName: 'Measuring Staff',
+        minWidth: 150,
+        headerAlign: 'left',
+        align: 'left',
+      },
+      {
+        field: 'water_level_notes',
+        headerName: 'Notes',
+        minWidth: 375,
+        headerAlign: 'left',
+        align: 'left',
+      },
+      {
+        field: 'water_level_data_quality',
+        headerName: 'Data Quality',
+        minWidth: 375,
         headerAlign: 'left',
         align: 'left',
       },

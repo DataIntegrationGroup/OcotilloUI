@@ -36,6 +36,7 @@ import {
   WellShowTitle,
   OwnerPermissionsCard,
   MonitoringInfoCard,
+  WaterLevelObservationRow,
 } from '@/components'
 
 export const WellShow = () => {
@@ -98,11 +99,25 @@ export const WellShow = () => {
   const firstVisitParticipants =
     detailsQuery.data?.first_field_event?.field_event_participants ?? []
 
-  const recentObservations = useMemo(() => {
+  const recentObservations = useMemo<
+    Partial<WaterLevelObservationRow>[]
+  >(() => {
     return fieldEvents
-      .flatMap((event) => event.field_activities ?? [])
-      .flatMap((activity) => activity.samples ?? [])
-      .flatMap((sample) => sample.observations ?? [])
+      .flatMap((event) =>
+        (event.field_activities ?? []).flatMap((activity) =>
+          (activity.samples ?? []).flatMap((sample) =>
+            (sample.observations ?? []).map((observation) => ({
+              ...observation,
+              water_level_method: sample.sample_method,
+              water_level_status: observation.groundwater_level_reason,
+              water_level_measuring_staff: sample.contact?.name,
+              water_level_notes:
+                sample.notes ?? activity.notes ?? event.notes ?? null,
+              water_level_data_quality: observation.nma_data_quality,
+            }))
+          )
+        )
+      )
       .filter((obs) => obs.observation_datetime != null)
       .sort((a, b) => {
         const dateA = new Date(a.observation_datetime!).getTime()

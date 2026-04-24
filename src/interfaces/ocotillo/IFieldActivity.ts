@@ -29,6 +29,9 @@ export interface IFieldActivitySample {
   depth_top?: number | null
   depth_bottom?: number | null
   observations?: IFieldActivitySampleObservation[]
+  contact?: {
+    name?: string | null
+  } | null
 }
 
 export interface IFieldActivity {
