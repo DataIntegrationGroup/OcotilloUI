@@ -51,10 +51,7 @@ const geothermalEditorRoles: PortalRole[] = [
   'Geothermal.Admin',
 ]
 const geothermalAdminRoles: PortalRole[] = ['Geothermal.Admin']
-const adminOnlyRoles = new Set<PortalRole>([
-  'AMP.Admin',
-  'Geothermal.Admin',
-])
+const adminOnlyRoles = new Set<PortalRole>(['AMP.Admin', 'Geothermal.Admin'])
 
 const resourcePolicies: Record<string, ResourcePolicy> = {
   ocotillo: { list: viewerRoles, show: viewerRoles },
@@ -94,7 +91,7 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
   },
   'ocotillo.hydrograph-correction': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
-  'ocotillo.thing-well-batch-export': { list: editorRoles, show: editorRoles },
+  'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
   'ocotillo.groundwater-level-observation': {
     list: viewerRoles,
     show: viewerRoles,
