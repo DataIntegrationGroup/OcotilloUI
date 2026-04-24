@@ -58,8 +58,8 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
   'ocotillo.map': { list: viewerRoles, show: viewerRoles },
   'ocotillo.collections': { list: viewerRoles, show: viewerRoles },
   'ocotillo.contact': {
-    list: editorRoles,
-    show: editorRoles,
+    list: viewerRoles,
+    show: viewerRoles,
     edit: editorRoles,
     create: editorRoles,
     delete: editorRoles,

@@ -67,6 +67,7 @@ const expectedAccessByScenario: Scenario[] = [
     allowedResources: [
       'ocotillo.collections',
       'ocotillo.map',
+      'ocotillo.contact',
       'ocotillo.thing-well',
       'ocotillo.thing-well-batch-export',
     ],
@@ -111,6 +112,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.collections',
       'ocotillo.map',
       'ocotillo.thing-well',
+      'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
     ],
   },
@@ -138,11 +140,11 @@ const specialResourceExpectations: Array<{
     expected: true,
   },
   {
-    name: 'AMP viewer cannot see contacts',
+    name: 'AMP viewer can see contacts',
     groups: ['AMP.Viewer'],
     resource: 'ocotillo.contact',
     action: 'list',
-    expected: false,
+    expected: true,
   },
   {
     name: 'AMP editor cannot see ocotillo.location',
