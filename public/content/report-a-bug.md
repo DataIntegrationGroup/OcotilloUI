@@ -19,4 +19,4 @@ A good bug report includes:
 
 ## Contact
 
-For urgent issues or questions, reach out directly to the development team at [newmexicowaterdata@nmt.edu](mailto:ocotillo-nmbg@nmt.edu).
+For urgent issues or questions, reach out directly to the development team at [ocotillo-nmbg@nmt.edu](mailto:ocotillo-nmbg@nmt.edu).
