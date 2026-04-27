@@ -16,9 +16,9 @@ import {
   ISensor,
   IWellScreen,
 } from '@/interfaces/ocotillo'
-import { Box, Stack } from '@mui/material'
+import { Box, Skeleton, Stack } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
-import { useAccessCapabilities, useSensorDeploymentRows } from '@/hooks'
+import { useAccessCapabilities, useSensorDeploymentRows, useIdleOrInView } from '@/hooks'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
@@ -63,6 +63,8 @@ export const WellShow = () => {
   )
 
   const { id } = useResourceParams()
+
+  const { setSentinelRef, ready: heavyContentReady } = useIdleOrInView()
 
   useEffect(() => {
     if (id)
@@ -180,7 +182,7 @@ export const WellShow = () => {
 
   const hydrographQuery = useQuery({
     queryKey: ['well-hydrograph', id],
-    enabled: Boolean(id),
+    enabled: Boolean(id) && heavyContentReady,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     queryFn: async () => {
@@ -347,13 +349,31 @@ export const WellShow = () => {
           <Grid size={{ xs: 12, md: 8, lg: 9 }}>
             <Stack spacing={2}>
               <CoreWellInfoCard well={well} />
-              <InteractiveSatelliteMapCard well={well} />
-              <HydrographCard
-                well={well}
-                rows={[...manualHydrographRows, ...transducerHydrographRows]}
-                dataSource={hydrographDatasource}
-                isLoading={hydrographQuery.isLoading}
-              />
+              <div ref={setSentinelRef} style={{ height: 1, overflow: 'hidden' }} aria-hidden />
+              {!heavyContentReady || !well ? (
+                <Stack spacing={2} sx={{ width: '100%' }}>
+                  <Skeleton
+                    variant="rounded"
+                    height={450}
+                    sx={{ borderRadius: 2 }}
+                  />
+                  <Skeleton
+                    variant="rounded"
+                    height={280}
+                    sx={{ borderRadius: 2 }}
+                  />
+                </Stack>
+              ) : (
+                <>
+                  <InteractiveSatelliteMapCard well={well} />
+                  <HydrographCard
+                    well={well}
+                    rows={[...manualHydrographRows, ...transducerHydrographRows]}
+                    dataSource={hydrographDatasource}
+                    isLoading={hydrographQuery.isLoading}
+                  />
+                </>
+              )}
               <RecentWaterLevelObservationsCard
                 well={well}
                 rows={recentObservations}
