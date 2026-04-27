@@ -105,8 +105,8 @@ VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"
 
 ## Scripts/Commands - Mock Servers, Testing, Type/Zod Generation
 
-- `npm run mock:server:vitest`: Runs a Prism mock server to run the vitest test suite.
-- `npm run mock:server:cypress`: Runs a Prism mock server to run the cypress test suite.
+- `npm run mock:server:vitest`: Runs a Prism mock server to run the vitest test suite. Uses the committed `openapi-auth.json` in the repo root (no network fetch for startup).
+- `npm run mock:server:cypress`: Runs a Prism mock server to run the cypress test suite. Same spec file as vitest.
 - `npm run test:run`: Runs the Vitest test suite a single time.
 - `npx cypress open`: Opens the Cypress browser to run and interact with Cypress tests.
 - `npx cypress run`: Runs the Cypress test suite in headless mode a single time.
