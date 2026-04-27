@@ -129,7 +129,14 @@ export const AttachmentsAccordion = ({
                             component="img"
                             src={img.signed_url}
                             alt={img.name || `Attachment ${idx + 1}`}
-                            sx={{ width: '100%', display: 'block' }}
+                            width={381}
+                            height={286}
+                            sx={{
+                              width: '100%',
+                              height: 'auto',
+                              display: 'block',
+                              aspectRatio: '381 / 286',
+                            }}
                           />
                         </Box>
                       )
@@ -153,9 +160,13 @@ export const AttachmentsAccordion = ({
                       component="img"
                       src={currentImage?.signed_url}
                       alt={currentImage?.name || `Image ${slideshowIndex + 1}`}
+                      width={381}
+                      height={286}
                       sx={{
                         maxWidth: '100%',
                         maxHeight: 400,
+                        width: 'auto',
+                        height: 'auto',
                         objectFit: 'contain',
                       }}
                     />
