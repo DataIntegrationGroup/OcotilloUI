@@ -144,9 +144,9 @@ export const WellList: React.FC = () => {
         field: 'created_at',
         headerName: 'Created At',
         description:
-          'Date and time this well record was first created in Ocotillo.',
-        width: 180,
-        valueGetter: (v: string) => formatAppDateTime(v),
+          'Calendar date when this well record was first added to Ocotillo.',
+        width: 130,
+        valueGetter: (v: string) => formatAppDate(v),
       },
       {
         field: 'well_status',
