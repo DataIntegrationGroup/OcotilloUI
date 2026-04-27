@@ -3,6 +3,9 @@
 .idea
 .env
 
+# Cursor IDE (plans, local agent metadata)
+.cursor/
+
 # dependencies
 /node_modules
 /.pnp
