@@ -7,7 +7,21 @@ export const PostHogPageview = () => {
   const lastPathRef = useRef<string | null>(null)
 
   useEffect(() => {
-    initPostHog()
+    let idleHandle: number | ReturnType<typeof setTimeout>
+    if (typeof requestIdleCallback !== 'undefined') {
+      idleHandle = requestIdleCallback(() => initPostHog(), {
+        timeout: 1500,
+      })
+    } else {
+      idleHandle = setTimeout(() => initPostHog(), 0)
+    }
+    return () => {
+      if (typeof requestIdleCallback !== 'undefined') {
+        cancelIdleCallback(idleHandle as number)
+      } else {
+        clearTimeout(idleHandle as ReturnType<typeof setTimeout>)
+      }
+    }
   }, [])
 
   useEffect(() => {
