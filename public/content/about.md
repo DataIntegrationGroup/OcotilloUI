@@ -36,4 +36,4 @@ One of the things the process revealed was that data sharing problems exist with
 
 ## Questions or feedback?
 
-Use the [Report a Bug](/report-a-bug) page to submit issues or suggestions, or reach out to the Data Services team at [newmexicowaterdata@nmt.edu](mailto:newmexicowaterdata@nmt.edu).
+Use the [Report a Bug](/report-a-bug) page to submit issues or suggestions, or reach out to the Data Services team at [ocotillo-nmbg@nmt.edu](mailto:ocotillo-nmbg@nmt.edu).
