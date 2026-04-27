@@ -418,7 +418,7 @@ export const MapView: React.FC = () => {
       window.cancelAnimationFrame(idleFrame)
       map?.off?.('idle', handleMapIdle)
     }
-  }, [THING_LAYERS, viewportBbox, visibleLayerLabels, visibleLayers, selectionFeatures])
+  }, [THING_LAYERS, viewportBbox, visibleLayerLabels, visibleLayers, selectionPolygons])
 
   const selectedMajorChemistryPoints = useMemo(
     () =>
@@ -725,7 +725,7 @@ export const MapView: React.FC = () => {
 
   useEffect(() => {
     setVisibleFeaturesPage(1)
-  }, [viewportBbox, visibleLayers, selectionFeatures])
+  }, [viewportBbox, visibleLayers, selectionPolygons])
 
   useEffect(() => {
     if (!isMajorChemistryVisible) {
