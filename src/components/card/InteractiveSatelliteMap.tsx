@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { IWell } from '@/interfaces/ocotillo'
+import { captureEvent } from '@/analytics/posthog'
 import {
   Box,
   Button,
   Card,
   CardContent,
   CardHeader,
+  Checkbox,
+  FormControlLabel,
   IconButton,
   Skeleton,
   Stack,
@@ -27,7 +30,7 @@ const HeaderTitle = () => (
   />
 )
 
-export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
+export const InteractiveSatelliteMapCard = ({ well }: { well?: IWell }) => {
   const mapRef = useRef<MapRef>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [loadNearbyWells, setLoadNearbyWells] = useState(false)
@@ -39,6 +42,22 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
   })
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
+
+  const onNearbyWellsChange = (_: unknown, checked: boolean) => {
+    if (well == null) return
+    if (checked) {
+      captureEvent('nearby_wells_enabled', {
+        well_id: well.id,
+        thing_type: 'water well',
+      })
+    } else {
+      captureEvent('nearby_wells_disabled', {
+        well_id: well.id,
+        thing_type: 'water well',
+      })
+    }
+    setLoadNearbyWells(checked)
+  }
 
   const sourceProps = waterWellsLayer?.sourceProps
   const layerProps = waterWellsLayer?.layerProps
@@ -65,11 +84,6 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
       .map((note) => note.content)
       .filter(Boolean)
       .join('\n') || null
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setLoadNearbyWells(true), 0)
-    return () => window.clearTimeout(timer)
-  }, [])
 
   // Automatically zoom to well coordinates when map loads or well changes
   useEffect(() => {
@@ -243,6 +257,37 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
               </Source>
             )}
           </MapComponent>
+        </Box>
+        <Box
+          sx={{
+            float: 'right',
+            p: 0,
+          }}
+        >
+          <FormControlLabel
+          sx={{
+            p: 0,
+            pt: 0.5,
+            m: 0,
+            '& .MuiFormControlLabel-label': {
+              fontSize: '0.875rem',
+              fontWeight: 400,
+              color: 'text.secondary',
+            },
+          }}
+            control={
+              <Checkbox
+                size="small"
+                checked={loadNearbyWells}
+                onChange={onNearbyWellsChange}
+                sx={{
+                  p: 0,
+                  pr: 0.5
+                }}
+              />
+            }
+            label="Show nearby wells"
+          />
         </Box>
         {locationNote && (
           <>
