@@ -19,6 +19,9 @@ export const initPostHog = () => {
     capture_pageview: false,
     capture_pageleave: true,
     capture_exceptions: true,
+    // Runtime accepts false to skip survey UI and extra scripts; generated types model `surveys` as SurveyConfig only.
+    // @ts-expect-error Survey toggle still supported at runtime
+    surveys: false,
   })
 
   // Tag every event with the environment so staging visits are
@@ -29,6 +32,7 @@ export const initPostHog = () => {
 }
 
 export const capturePostHogPageview = (path: string) => {
+  initPostHog()
   if (!isEnabled || !initialized) return
 
   posthog.capture('$pageview', {
@@ -41,6 +45,7 @@ export const identifyUser = (
   userId: string,
   properties: { name?: string; email?: string }
 ) => {
+  initPostHog()
   if (!isEnabled || !initialized) return
   posthog.identify(userId, properties)
 }
@@ -49,11 +54,13 @@ export const captureEvent = (
   event: string,
   properties?: Record<string, unknown>
 ) => {
+  initPostHog()
   if (!isEnabled || !initialized) return
   posthog.capture(event, properties)
 }
 
 export const resetUser = () => {
+  initPostHog()
   if (!isEnabled || !initialized) return
   posthog.reset()
 }
