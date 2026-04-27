@@ -355,12 +355,18 @@ export const MapView: React.FC = () => {
         layers: renderedLayerIds,
       })
 
+      // Filter by selection polygons if they exist
+      const filteredFeatures = filterLayerFeaturesBySelection(
+        renderedFeatures,
+        selectionFeatures
+      )
+
       const grouped = new Map<
         string,
         { label: string; features: any[]; seenIds: Set<string> }
       >()
 
-      for (const feature of renderedFeatures) {
+      for (const feature of filteredFeatures) {
         const renderedLayerId = String(feature?.layer?.id || '')
         if (!renderedLayerId.startsWith('location-')) continue
 
@@ -412,7 +418,7 @@ export const MapView: React.FC = () => {
       window.cancelAnimationFrame(idleFrame)
       map?.off?.('idle', handleMapIdle)
     }
-  }, [THING_LAYERS, viewportBbox, visibleLayerLabels, visibleLayers])
+  }, [THING_LAYERS, viewportBbox, visibleLayerLabels, visibleLayers, selectionFeatures])
 
   const selectedMajorChemistryPoints = useMemo(
     () =>
@@ -719,7 +725,7 @@ export const MapView: React.FC = () => {
 
   useEffect(() => {
     setVisibleFeaturesPage(1)
-  }, [viewportBbox, visibleLayers])
+  }, [viewportBbox, visibleLayers, selectionFeatures])
 
   useEffect(() => {
     if (!isMajorChemistryVisible) {
