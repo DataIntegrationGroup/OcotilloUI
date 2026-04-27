@@ -38,6 +38,10 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@/hooks', () => ({
   useAccessCapabilities: () => mockedUseAccessCapabilities(),
   useSensorDeploymentRows: () => [],
+  useIdleOrInView: () => ({
+    setSentinelRef: vi.fn(),
+    ready: true,
+  }),
 }))
 
 vi.mock('@/components', () => {
