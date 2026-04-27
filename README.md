@@ -110,7 +110,18 @@ VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"
 - `npm run test:run`: Runs the Vitest test suite a single time.
 - `npx cypress open`: Opens the Cypress browser to run and interact with Cypress tests.
 - `npx cypress run`: Runs the Cypress test suite in headless mode a single time.
-- `npm run openapi:generate`: Runs hey-api typescript generation for types and zod schemas in `/generated`
+- `npm run openapi:generate`: Runs hey-api TypeScript and Zod generation using `./openapi-auth.json` into `src/generated`.
+
+## Refreshing the OpenAPI spec
+
+Prism mocks and codegen both use **`openapi-auth.json`** at the repo root. When the staging API adds or changes schemas, refresh the file from staging and regenerate so contract tests and `zWellResponse` validation stay aligned:
+
+```bash
+curl -fsSL "https://ocotillo-api-staging.newmexicowaterdata.org/openapi-auth.json" -o openapi-auth.json
+npm run openapi:generate
+```
+
+Then run tests and commit `openapi-auth.json` plus `src/generated/` updates as needed.
 
 ## Running the Vitest Test Suite
 
@@ -150,14 +161,15 @@ npx cypress run
 
 ## Tests in CI and Openapi-TS Generation
 
-Both the Vitest and Cypress test suites run via a Github action on PR. The Vitest contract tests may fail because of changes to the Ocotillo API if you have not recently run the test suite locally.
-In the case of failing contract tests, you'll have to make sure your types and zod schemas are up to date with the openapi.json spec by:
+Both the Vitest and Cypress test suites run via a Github action on PR. The Vitest contract tests may fail when the committed **`openapi-auth.json`** is older than the API schemas your Zod types expect.
 
-- Running the opnenapi-ts generation from the Ocotillo Staging API `openapi.json` spec:
+When the API changes, refresh **`openapi-auth.json`** from staging (see **Refreshing the OpenAPI spec** above), run:
+
 ```bash
 npm run openapi:generate
 ```
-- Fixing any failing tests and related code
+
+Fix any failing tests and related code, then commit `openapi-auth.json` and `src/generated/` together with your changes.
 
 ## Building and Serving Production Build
 
