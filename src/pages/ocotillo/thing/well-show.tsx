@@ -181,11 +181,24 @@ export const WellShow = () => {
     )?.alternate_id || 'N/A'
 
   const hydrographQuery = useQuery({
-    queryKey: ['well-hydrograph', id],
+    queryKey: ['well-hydrograph', id ?? ''],
     enabled: Boolean(id) && heavyContentReady,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    queryFn: async () => {
+    queryFn: async ({ queryKey, signal }) => {
+      const thingId = queryKey[1]
+      if (thingId === '' || thingId == null) {
+        return {
+          manualRows: [] as IObservation[],
+          transducerRows: [] as TransducerObservationWithBlockResponse[],
+        }
+      }
+
+      const listMeta = (params: Record<string, string | number>) => ({
+        params,
+        ...(signal ? { signal } : {}),
+      })
+
       const fetchAllPages = async <TRow,>(
         resource: string,
         params: Record<string, string | number>,
@@ -194,7 +207,7 @@ export const WellShow = () => {
         const firstPage = await ocotilloDataProvider.getList({
           resource,
           pagination: { currentPage: 1, pageSize },
-          meta: { params },
+          meta: listMeta(params),
         })
 
         const totalPages = Math.max(1, Math.ceil(firstPage.total / pageSize))
@@ -208,7 +221,7 @@ export const WellShow = () => {
             ocotilloDataProvider.getList({
               resource,
               pagination: { currentPage: index + 2, pageSize },
-              meta: { params },
+              meta: listMeta(params),
             })
           )
         )
@@ -221,12 +234,12 @@ export const WellShow = () => {
 
       const [manualRows, transducerRows] = await Promise.all([
         fetchAllPages<IObservation>('observation/groundwater-level', {
-          thing_id: id,
+          thing_id: thingId as string | number,
         }),
         fetchAllPages<TransducerObservationWithBlockResponse>(
           'observation/transducer-groundwater-level',
           {
-            thing_id: id,
+            thing_id: thingId as string | number,
           },
           5000
         ),
@@ -370,7 +383,7 @@ export const WellShow = () => {
                     well={well}
                     rows={[...manualHydrographRows, ...transducerHydrographRows]}
                     dataSource={hydrographDatasource}
-                    isLoading={hydrographQuery.isLoading}
+                    isLoading={hydrographQuery.isPending}
                   />
                 </>
               )}
