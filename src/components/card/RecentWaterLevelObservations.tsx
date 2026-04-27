@@ -99,7 +99,7 @@ export const RecentWaterLevelObservationsCard = ({
     ]
   }, [])
 
-  const measuringNote = well?.measuring_notes?.shift()
+  const measuringNote = well.measuring_notes?.[0]
 
   return (
     <Card
