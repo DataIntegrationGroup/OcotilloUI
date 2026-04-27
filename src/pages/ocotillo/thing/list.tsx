@@ -7,7 +7,7 @@ import { Button } from '@mui/material'
 import { PictureAsPdf } from '@mui/icons-material'
 import { ListPage } from '@/components/ListPage'
 import { ISpring, IWell } from '@/interfaces/ocotillo'
-import { formatAppDate, formatAppDateTime } from '@/utils'
+import { displayWellSiteName, formatAppDate, formatAppDateTime } from '@/utils'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
@@ -130,7 +130,7 @@ export const WellList: React.FC = () => {
         type: 'string',
         minWidth: 140,
         flex: 0.9,
-        valueGetter: (_: unknown, row: IWell) => row.site_name ?? '',
+        valueGetter: (_: unknown, row: IWell) => displayWellSiteName(row),
       },
       {
         field: 'monitoring_status',

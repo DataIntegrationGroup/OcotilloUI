@@ -43,6 +43,7 @@ import {
   MonitoringInfoCard,
   WaterLevelObservationRow,
 } from '@/components'
+import { displayWellSiteName } from '@/utils'
 
 const EMPTY_ASSETS: IAsset[] = []
 const EMPTY_CONTACTS: IContact[] = []
@@ -385,7 +386,7 @@ export const WellShow = () => {
               <ContactsCard
                 contacts={contacts}
                 isLoading={isDetailsLoading}
-                siteName={well?.site_name}
+                siteName={well ? displayWellSiteName(well) : undefined}
               />
               <MonitoringInfoCard
                 well={well}
