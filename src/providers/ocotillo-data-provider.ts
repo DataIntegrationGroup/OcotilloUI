@@ -102,6 +102,12 @@ export const ocotilloDataProvider: DataProvider = {
       headers: {
         'Content-Type': 'application/json',
       },
+      ...(meta &&
+      typeof meta === 'object' &&
+      'signal' in meta &&
+      meta.signal != null
+        ? { signal: meta.signal as AbortSignal }
+        : {}),
     })
     if (response.status < 200 || response.status > 299) throw response
 
