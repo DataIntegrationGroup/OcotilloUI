@@ -2,7 +2,6 @@ import { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RefineSnackbarProvider, useNotificationProvider } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
-import { DevtoolsProvider, DevtoolsPanel } from '@refinedev/devtools'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { CssBaseline, GlobalStyles } from '@mui/material'
@@ -65,8 +64,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
     <CssBaseline />
     <GlobalStyles styles={{ html: { WebkitFontSmoothing: 'auto' } }} />
     <RefineSnackbarProvider>
-      <DevtoolsProvider>
-        <Refine
+      <Refine
           authProvider={authentikAuthProvider}
           dataProvider={{
             default: ocotilloDataProvider,
@@ -103,9 +101,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
               </QueryClientProvider>
             </SearchProvider>
           </LocalizationProvider>
-        </Refine>
-        <DevtoolsPanel />
-      </DevtoolsProvider>
+      </Refine>
     </RefineSnackbarProvider>
   </ColorModeContextProvider>
 )
