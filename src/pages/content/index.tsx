@@ -9,6 +9,8 @@ import {
   Typography,
   IconButton,
   Tooltip,
+  Stack,
+  Chip,
 } from '@mui/material'
 import { ContentCopy } from '@mui/icons-material'
 import { Components } from 'react-markdown'
@@ -72,11 +74,56 @@ export const markdownComponents: Components = {
       {children}
     </Link>
   ),
-  blockquote: ({ children }) => (
-    <Alert severity="warning" sx={{ my: 3 }}>
-      {children}
-    </Alert>
-  ),
+  blockquote: ({ children }) => {
+    const text = React.Children.toArray(children)
+      .map((child) => {
+        if (React.isValidElement(child)) {
+          return React.Children.toArray(child.props.children).join('')
+        }
+
+        return String(child)
+      })
+      .join('')
+      .trim()
+
+    const alertMatch = text.match(
+      /^\[!(WARNING|INFO|ERROR|SUCCESS)\]\s*([\s\S]*)$/i
+    )
+
+    if (alertMatch) {
+      const severityMap = {
+        WARNING: 'warning',
+        INFO: 'info',
+        ERROR: 'error',
+        SUCCESS: 'success',
+      } as const
+
+      const alertType = alertMatch[1].toUpperCase() as keyof typeof severityMap
+      const alertBody = alertMatch[2].trim()
+
+      return (
+        <Alert severity={severityMap[alertType]} sx={{ my: 3 }}>
+          {alertBody}
+        </Alert>
+      )
+    }
+
+    return (
+      <Box
+        component="blockquote"
+        sx={{
+          borderLeft: 4,
+          borderColor: 'divider',
+          pl: 2,
+          my: 3,
+          color: 'text.secondary',
+          fontStyle: 'italic',
+        }}
+      >
+        {children}
+      </Box>
+    )
+  },
   code: ({ children, className }) => {
     const value = String(children).replace(/\n$/, '')
 
@@ -90,11 +137,53 @@ export const markdownComponents: Components = {
       </Typography>
     )
   },
-  ul: ({ children }) => (
-    <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-      {children}
-    </Box>
-  ),
+  ul: ({ children, node }) => {
+    const getListItemText = (listItem: any): string => {
+      return (
+        listItem?.children
+          ?.map((child: any) => child.value ?? '')
+          ?.join('')
+          ?.trim() ?? ''
+      )
+    }
+
+    const listItems =
+      node?.children?.filter(
+        (child: any) => child.type === 'element' && child.tagName === 'li'
+      ) ?? []
+    const firstItemText = getListItemText(listItems[0])
+
+    if (firstItemText === '[!CHIPS]') {
+      return (
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          flexWrap="wrap"
+          sx={{ mb: 2 }}
+        >
+          {listItems.slice(1).map((item: any, index: number) => {
+            const label = getListItemText(item)
+
+            return (
+              <Chip
+                key={`${label}-${index}`}
+                label={label}
+                variant="outlined"
+                color="default"
+              />
+            )
+          })}
+        </Stack>
+      )
+    }
+
+    return (
+      <Box component="ul" sx={{ pl: 3, mb: 2 }}>
+        {children}
+      </Box>
+    )
+  },
   ol: ({ children }) => (
     <Box component="ol" sx={{ pl: 3, mb: 2 }}>
       {children}
