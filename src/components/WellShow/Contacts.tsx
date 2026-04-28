@@ -47,6 +47,15 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
           {roleType}
         </Typography>
       )}
+      {contact.name && (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 600, display: 'block', letterSpacing: 0.3 }}
+        >
+          Contact name
+        </Typography>
+      )}
       {contact.name && contact.id && (
         <Typography
           variant="body2"
@@ -69,6 +78,15 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
       <Typography variant="body2" color="text.secondary" component="div">
         {contact.organization || 'No organization listed'}
       </Typography>
+      {emails.length > 0 && (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 600, display: 'block', letterSpacing: 0.3, mt: 0.25 }}
+        >
+          Email
+        </Typography>
+      )}
       {emails.map((email, idx) => (
         <Typography
           key={idx}
@@ -84,6 +102,15 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
           {email}
         </Typography>
       ))}
+      {phones.length > 0 && (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 600, display: 'block', letterSpacing: 0.3, mt: 0.25 }}
+        >
+          Phone
+        </Typography>
+      )}
       {phones.map((phone, idx) => (
         <Box key={idx} sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75 }}>
           <Typography
