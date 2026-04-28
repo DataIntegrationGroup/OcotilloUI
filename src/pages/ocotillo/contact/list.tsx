@@ -114,10 +114,11 @@ export const ContactList: React.FC = () => {
       {
         field: 'things',
         headerName: 'Associated Sites',
+        description:
+          'Monitoring sites linked to this contact. Sort uses the alphabetically first linked site name.',
         type: 'string',
         minWidth: 180,
         flex: 1,
-        sortable: false,
         valueGetter: (_: unknown, row: IContact) =>
           row.things?.map((thing) => thing.name).join('; ') ?? '',
         renderCell: (params) => {

@@ -126,7 +126,7 @@ export const WellList: React.FC = () => {
         field: 'site_name',
         headerName: 'Site name',
         description:
-          'Name of the monitoring site or facility associated with this well when one is recorded.',
+          'Name of the monitoring site or facility associated with this well when one is recorded (NMBGMR alternate ID when present).',
         type: 'string',
         minWidth: 140,
         flex: 0.9,
@@ -167,10 +167,9 @@ export const WellList: React.FC = () => {
         field: 'aquifers',
         headerName: 'Aquifers',
         description:
-          'Aquifer systems linked to this well, summarized from association data.',
+          'Aquifer systems linked to this well, summarized from association data. Sort uses the first aquifer name alphabetically among linked systems.',
         minWidth: 180,
         flex: 1,
-        sortable: false,
         valueGetter: (_: unknown, row: IWell) =>
           row.aquifers
             ?.map(
@@ -219,10 +218,9 @@ export const WellList: React.FC = () => {
         field: 'contacts',
         headerName: 'Contacts',
         description:
-          'People or organizations linked to this well; open a contact from the link.',
+          'People or organizations linked to this well; open a contact from the link. Sort uses the alphabetically first linked contact name.',
         minWidth: 180,
         flex: 1,
-        sortable: false,
         valueGetter: (_: unknown, row: IWell) =>
           row.contacts?.map((c) => c.name ?? '').join(', ') ?? '',
         renderCell: (params) => {
