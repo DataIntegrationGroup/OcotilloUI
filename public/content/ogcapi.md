@@ -14,12 +14,14 @@ deck: Use the Ocotillo OGC API Features endpoint to browse collections in ArcGIS
 
 ## ArcGIS Pro / Desktop
 
-1. Open the **Catalog pane** and create a new OGC API Server connection.
-2. Paste the Ocotillo landing page URL.
-3. Expand the server connection, choose the collection you want, and add it to the current map.
-4. If ArcGIS prompts for layer options, use extent or maximum-feature limits for large collections.
+1. On the **Insert** tab, in the **Project** group, click **Connections > Server > New OGC API Server**. The **Add OGC API Server Connection** dialog box appears.
+2. Enter this URL ([{{ ocotillo_api_url }}/ogcapi]({{ ocotillo_api_url }}/ogcapi)) in the **Server URL** text box.
+3. Leave the rest of the options as-is and click OK.
+4. In the Catalog pane, expand the “Servers” folder. You should see the Ocotillo OGC API connection. Expand the connection, then expand “Features”. Drag the datasets you want into your map area.
+5. When adding a layer, a dialog box will appear with spatial extent options. Click OK to add the entire contents. You can also check the “Use Spatial Extent” box and spatially filter via options in the “Get extent from:” box - e.g. spatially filter by existing layers, selected polygon extents, visible extent, etc.
 
 **Official documentation:**  
+[How to add OGC API datasets to ArcGIS Pro](https://pro.arcgis.com/en/pro-app/latest/help/data/services/add-ogc-api-services.htm)  
 [https://pro.arcgis.com/en/pro-app/latest/help/data/services/use-ogc-api-services.htm](https://pro.arcgis.com/en/pro-app/latest/help/data/services/use-ogc-api-services.htm)
 
 ---
