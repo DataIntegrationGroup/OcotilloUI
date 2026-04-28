@@ -10,10 +10,9 @@ import {
   generateCodeChallenge,
   generateCodeVerifier,
   generateOAuthState,
-  getStatusCode,
-  hasError,
-  isJwtExpired,
-} from '@/utils'
+} from '@/utils/Auth'
+import { getStatusCode, hasError } from '@/utils/Http'
+import { isJwtExpired } from '@/utils/Jwt'
 import { HttpStatus } from '@/enums'
 import {
   AUTHENTIK_URL,
@@ -22,7 +21,7 @@ import {
   STORAGE_KEYS,
   IS_TESTING_AUTH,
 } from '@/config'
-import { normalizeAccessControlGroups } from '@/utils'
+import { normalizeAccessControlGroups } from '@/utils/accessControl'
 
 const gravatarUrl = (email: string) => {
   let hash = email.trim().toLowerCase()

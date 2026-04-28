@@ -1,7 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { Box, CircularProgress, Divider, Typography } from '@mui/material'
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Divider,
+  Link,
+  Typography,
+  IconButton,
+  Tooltip,
+  Stack,
+  Chip,
+} from '@mui/material'
+import { ContentCopy } from '@mui/icons-material'
 import { Components } from 'react-markdown'
+import { settings } from '@/settings'
 
 export type FrontMatter = {
   title?: string
@@ -28,7 +41,10 @@ export function parseFrontmatter(text: string): {
     const colonIdx = line.indexOf(':')
     if (colonIdx === -1) continue
     const key = line.slice(0, colonIdx).trim()
-    const value = line.slice(colonIdx + 1).trim().replace(/^["']|["']$/g, '')
+    const value = line
+      .slice(colonIdx + 1)
+      .trim()
+      .replace(/^["']|["']$/g, '')
     if (key === 'title' || key === 'deck' || key === 'date') {
       data[key] = value
     }
@@ -54,22 +70,131 @@ export const markdownComponents: Components = {
     </Typography>
   ),
   a: ({ href, children }) => (
-    <a href={href} style={{ color: 'inherit' }}>
+    <Link href={href} target="_blank" rel="noreferrer">
       {children}
-    </a>
+    </Link>
   ),
-  ul: ({ children }) => (
-    <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-      {children}
-    </Box>
-  ),
+  blockquote: ({ children }) => {
+    const text = React.Children.toArray(children)
+      .map((child) => {
+        if (React.isValidElement(child)) {
+          return React.Children.toArray(child.props.children).join('')
+        }
+
+        return String(child)
+      })
+      .join('')
+      .trim()
+
+    const alertMatch = text.match(
+      /^\[!(WARNING|INFO|ERROR|SUCCESS)\]\s*([\s\S]*)$/i
+    )
+
+    if (alertMatch) {
+      const severityMap = {
+        WARNING: 'warning',
+        INFO: 'info',
+        ERROR: 'error',
+        SUCCESS: 'success',
+      } as const
+
+      const alertType = alertMatch[1].toUpperCase() as keyof typeof severityMap
+      const alertBody = alertMatch[2].trim()
+
+      return (
+        <Alert severity={severityMap[alertType]} sx={{ my: 3 }}>
+          {alertBody}
+        </Alert>
+      )
+    }
+
+    return (
+      <Box
+        component="blockquote"
+        sx={{
+          borderLeft: 4,
+          borderColor: 'divider',
+          pl: 2,
+          my: 3,
+          color: 'text.secondary',
+          fontStyle: 'italic',
+        }}
+      >
+        {children}
+      </Box>
+    )
+  },
+  code: ({ children, className }) => {
+    const value = String(children).replace(/\n$/, '')
+
+    if (className) {
+      return <CopyCodeBlock value={value} />
+    }
+
+    return (
+      <Typography component="code" sx={{ bgcolor: 'action.hover', px: 0.5 }}>
+        {children}
+      </Typography>
+    )
+  },
+  ul: ({ children, node }) => {
+    const getListItemText = (listItem: any): string => {
+      return (
+        listItem?.children
+          ?.map((child: any) => child.value ?? '')
+          ?.join('')
+          ?.trim() ?? ''
+      )
+    }
+
+    const listItems =
+      node?.children?.filter(
+        (child: any) => child.type === 'element' && child.tagName === 'li'
+      ) ?? []
+    const firstItemText = getListItemText(listItems[0])
+
+    if (firstItemText === '[!CHIPS]') {
+      return (
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          flexWrap="wrap"
+          sx={{ mb: 2 }}
+        >
+          {listItems.slice(1).map((item: any, index: number) => {
+            const label = getListItemText(item)
+
+            return (
+              <Chip
+                key={`${label}-${index}`}
+                label={label}
+                variant="outlined"
+                color="default"
+              />
+            )
+          })}
+        </Stack>
+      )
+    }
+
+    return (
+      <Box component="ul" sx={{ pl: 3, mb: 2 }}>
+        {children}
+      </Box>
+    )
+  },
   ol: ({ children }) => (
     <Box component="ol" sx={{ pl: 3, mb: 2 }}>
       {children}
     </Box>
   ),
   li: ({ children }) => (
-    <Typography component="li" variant="body1" sx={{ mb: 0.5, color: 'text.secondary' }}>
+    <Typography
+      component="li"
+      variant="body1"
+      sx={{ mb: 0.75, color: 'text.secondary' }}
+    >
       {children}
     </Typography>
   ),
@@ -128,7 +253,10 @@ export const MarkdownPage: React.FC<MarkdownPageProps> = ({
           </Typography>
         )}
         {frontmatter.date && (
-          <Typography variant="caption" sx={{ display: 'block', mb: 3, color: 'text.disabled' }}>
+          <Typography
+            variant="caption"
+            sx={{ display: 'block', mb: 3, color: 'text.disabled' }}
+          >
             {new Date(frontmatter.date).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
@@ -159,7 +287,28 @@ export const ContentPage: React.FC<ContentPageProps> = ({ src }) => {
         return res.text()
       })
       .then((text) => {
-        const parsed = parseFrontmatter(text)
+        // Replace template placeholders like {{ key }} in the markdown text
+        // with corresponding values from the `settings` object.
+        //
+        // Example:
+        //   "https://{{ ocotillo_api_url }}/ogcapi"
+        //   → "https://actual-value/ogcapi"
+        //
+        const hydratedText = text.replace(
+          /{{\s*([\w]+)\s*}}/g,
+          (_, key: string) => {
+            const value = (settings as Record<string, any>)[key]
+
+            if (typeof value === 'string') {
+              return value.replace(/\/+$/, '')
+            }
+
+            // if key not found or not string → reinsert key name
+            return `{{ ${key} }}`
+          }
+        )
+
+        const parsed = parseFrontmatter(hydratedText)
         setFrontmatter(parsed.data)
         setBody(parsed.content)
       })
@@ -193,4 +342,46 @@ export const ContentPage: React.FC<ContentPageProps> = ({ src }) => {
   }
 
   return <MarkdownPage frontmatter={frontmatter} body={body} />
+}
+
+const CopyCodeBlock = ({ value }: { value: string }) => {
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(value)
+  }
+
+  return (
+    <Box sx={{ position: 'relative', mb: 2 }}>
+      <Typography
+        component="code"
+        variant="body2"
+        sx={{
+          px: 1.25,
+          py: 1.25,
+          pr: 6,
+          borderRadius: 1,
+          bgcolor: 'action.hover',
+          overflowWrap: 'anywhere',
+          display: 'block',
+          color: 'text.primary',
+        }}
+      >
+        {value}
+      </Typography>
+
+      <Tooltip title="Copy">
+        <IconButton
+          size="small"
+          onClick={handleCopy}
+          sx={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+          }}
+          aria-label="Copy code block"
+        >
+          <ContentCopy fontSize="inherit" />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  )
 }
