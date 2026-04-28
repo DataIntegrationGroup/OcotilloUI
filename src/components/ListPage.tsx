@@ -326,7 +326,7 @@ export const ListPage: React.FC<ListPageProps> = ({
           rows={filteredRows}
           filterDebounceMs={
             restDataGridProps.filterMode === 'server'
-              ? 350
+              ? 700
               : restDataGridProps.filterDebounceMs
           }
           showToolbar
