@@ -23,7 +23,7 @@ import type { IAsset } from '@/interfaces/ocotillo'
 
 type ImageViewMode = 'grid' | 'slideshow'
 
-export const AttachmentsAccordion = ({
+export const AttachmentsCard = ({
   assets,
   isLoading,
 }: {

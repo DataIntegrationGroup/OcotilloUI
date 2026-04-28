@@ -26,17 +26,16 @@ import {
   HydrographCard,
   RecentWaterLevelObservationsCard,
   ContactsCard,
-  AttachmentsAccordion,
-  AlternateIdsAccordion,
+  AttachmentsCard,
+  AlternateIdsCard,
   USGSInfoCard,
   OSEPODInfoCard,
   WellPDFPreviewButton,
-  WellScreensAccordion,
-  EquipmentAccordion,
+  WellScreensCard,
+  EquipmentCard,
   NotesAccordion,
-  ConstructionInfoAccordion,
-  GeologyInformationAccordion,
-  WellPhysicalPropertiesAccordion,
+  ConstructionInfoCard,
+  GeologyInformationCard,
   WellPDFDownloadButton,
   WellShowTitle,
   OwnerPermissionsCard,
@@ -52,8 +51,7 @@ const EMPTY_WELL_SCREENS: IWellScreen[] = []
 const EMPTY_FIELD_EVENTS: IFieldEvent[] = []
 const EMPTY_PARTICIPANTS: IFieldEventParticipant[] = []
 const EMPTY_MANUAL_HYDRO_ROWS: IObservation[] = []
-const EMPTY_TRANSDUCER_HYDRO_ROWS: TransducerObservationWithBlockResponse[] =
-  []
+const EMPTY_TRANSDUCER_HYDRO_ROWS: TransducerObservationWithBlockResponse[] = []
 
 export const WellShow = () => {
   const dataProvider = useDataProvider()
@@ -373,17 +371,17 @@ export const WellShow = () => {
                 isLoading={isDetailsLoading}
               />
               <NotesAccordion well={well} />
-              <EquipmentAccordion
+              <EquipmentCard
                 sensors={sensors}
                 deployments={deployments}
                 isDetailsPending={Boolean(id) && detailsQuery.isPending}
               />
-              <WellScreensAccordion
+              <WellScreensCard
                 rows={wellScreens}
                 isLoading={isDetailsLoading}
               />
-              <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
-              <AttachmentsAccordion
+              <AlternateIdsCard dataGridProps={idLinkDataGridProps} />
+              <AttachmentsCard
                 assets={assets}
                 isLoading={assetQuery.isLoading}
               />
@@ -407,9 +405,8 @@ export const WellShow = () => {
                 isLoading={isDetailsLoading}
               />
               <OwnerPermissionsCard well={well} isLoading={isDetailsLoading} />
-              <ConstructionInfoAccordion well={well} />
-              <WellPhysicalPropertiesAccordion well={well} />
-              <GeologyInformationAccordion well={well} />
+              <ConstructionInfoCard well={well} />
+              <GeologyInformationCard well={well} />
             </Stack>
           </Grid>
         </Grid>

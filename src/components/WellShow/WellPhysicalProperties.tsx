@@ -12,7 +12,7 @@ import { INCHES_IN_A_FOOT } from '@/constants'
 import { SupportedUnits } from '@/config'
 import { convertFeetToInches, convertInchesToFeet, formatNumber } from '@/utils'
 
-export const WellPhysicalPropertiesAccordion = ({ well }: { well?: IWell }) => {
+export const WellPhysicalPropertiesCard = ({ well }: { well?: IWell }) => {
   const elevation = well?.current_location?.properties?.elevation
   const normalizedElevation =
     elevation != null && elevation !== 0 ? elevation : null
