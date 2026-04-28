@@ -79,8 +79,19 @@ export const filterLayerFeaturesBySelection = (
   })
 }
 
-export const buildLayerCsv = (features: any[]): string => {
-  const propertyKeys = [
+export type BuildLayerCsvOptions = {
+  /**
+   * Property keys to emit first when present; remaining keys are sorted alphabetically.
+   * Used so map exports match the preferred Wells list / map CSV column order.
+   */
+  preferredPropertyColumnOrder?: string[]
+}
+
+export const buildLayerCsv = (
+  features: any[],
+  options?: BuildLayerCsvOptions
+): string => {
+  const allPropertyKeys = [
     ...new Set<string>(
       features.flatMap((feature: any) =>
         (Object.keys(feature?.properties || {}) as string[]).filter(
@@ -88,7 +99,17 @@ export const buildLayerCsv = (features: any[]): string => {
         )
       )
     ),
-  ].sort()
+  ]
+
+  const preferred = (options?.preferredPropertyColumnOrder ?? []).filter((key) =>
+    allPropertyKeys.includes(key)
+  )
+  const preferredSet = new Set(preferred)
+  const rest = allPropertyKeys
+    .filter((key) => !preferredSet.has(key))
+    .sort()
+
+  const propertyKeys = [...preferred, ...rest]
 
   const headers: string[] = [
     ...propertyKeys,

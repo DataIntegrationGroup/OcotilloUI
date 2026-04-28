@@ -8,6 +8,7 @@ import { PictureAsPdf } from '@mui/icons-material'
 import { ListPage } from '@/components/ListPage'
 import { ISpring, IWell } from '@/interfaces/ocotillo'
 import { displayWellSiteName, formatAppDate, formatAppDateTime } from '@/utils'
+import { WellListColumnLabels } from '@/well-list/wellListColumnLabels'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
@@ -115,7 +116,7 @@ export const WellList: React.FC = () => {
     () => [
       {
         field: 'name',
-        headerName: 'Name',
+        headerName: WellListColumnLabels.name,
         description:
           'Official well identifier used in bureau records (for example county prefix and local ID).',
         type: 'string',
@@ -124,7 +125,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'site_name',
-        headerName: 'Site name',
+        headerName: WellListColumnLabels.siteName,
         description:
           'Name of the monitoring site or facility associated with this well when one is recorded (NMBGMR alternate ID when present).',
         type: 'string',
@@ -134,7 +135,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'monitoring_status',
-        headerName: 'Monitoring',
+        headerName: WellListColumnLabels.monitoring,
         description:
           'Whether the well is actively monitored or how monitoring is categorized in the current record.',
         type: 'string',
@@ -142,7 +143,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'created_at',
-        headerName: 'Created At',
+        headerName: WellListColumnLabels.createdAt,
         description:
           'Calendar date when this well record was first added to Ocotillo.',
         width: 130,
@@ -150,14 +151,14 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'well_status',
-        headerName: 'Well Status',
+        headerName: WellListColumnLabels.wellStatus,
         description: 'Operational or administrative status of the well.',
         type: 'string',
         width: 150,
       },
       {
         field: 'thing_type',
-        headerName: 'Type',
+        headerName: WellListColumnLabels.type,
         description:
           'Infrastructure type from the controlled vocabulary (for example water well or geothermal well).',
         type: 'string',
@@ -165,7 +166,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'aquifers',
-        headerName: 'Aquifers',
+        headerName: WellListColumnLabels.aquifers,
         description:
           'Aquifer systems linked to this well, summarized from association data. Sort uses the first aquifer name alphabetically among linked systems.',
         minWidth: 180,
@@ -180,7 +181,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'release_status',
-        headerName: 'Release Status',
+        headerName: WellListColumnLabels.releaseStatus,
         description:
           'Whether the record is released for public viewing under data release rules.',
         type: 'string',
@@ -188,7 +189,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'well_depth',
-        headerName: 'Well Depth (ft)',
+        headerName: WellListColumnLabels.wellDepthFt,
         description:
           'Completed well depth from ground surface to bottom of the well in feet.',
         type: 'number',
@@ -198,7 +199,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'hole_depth',
-        headerName: 'Hole Depth (ft)',
+        headerName: WellListColumnLabels.holeDepthFt,
         description:
           'Total drilled hole depth from ground surface to bottom of the borehole in feet.',
         type: 'number',
@@ -208,7 +209,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'first_visit_date',
-        headerName: 'First Visit',
+        headerName: WellListColumnLabels.firstVisit,
         description:
           'Date of the bureau first recorded visit to this well when available.',
         width: 130,
@@ -216,7 +217,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'contacts',
-        headerName: 'Contacts',
+        headerName: WellListColumnLabels.contacts,
         description:
           'People or organizations linked to this well; open a contact from the link. Sort uses the alphabetically first linked contact name.',
         minWidth: 180,
@@ -256,14 +257,14 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'well_completion_date',
-        headerName: 'Completed',
+        headerName: WellListColumnLabels.completed,
         description: 'Reported date the well construction was completed.',
         width: 130,
         valueGetter: (v: string) => formatAppDate(v),
       },
       {
         field: 'well_driller_name',
-        headerName: 'Driller',
+        headerName: WellListColumnLabels.driller,
         description: 'Drilling company name when it was recorded for this well.',
         type: 'string',
         minWidth: 150,
@@ -271,7 +272,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'latitude',
-        headerName: 'Latitude',
+        headerName: WellListColumnLabels.latitude,
         description:
           'Latitude of the current mapped location in decimal degrees (WGS84).',
         type: 'number',
@@ -284,7 +285,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'longitude',
-        headerName: 'Longitude',
+        headerName: WellListColumnLabels.longitude,
         description:
           'Longitude of the current mapped location in decimal degrees (WGS84).',
         type: 'number',
@@ -297,7 +298,7 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'alternate_ids',
-        headerName: 'Alternate IDs',
+        headerName: WellListColumnLabels.alternateIds,
         description:
           'Identifiers from other agencies or programs that cross reference this well.',
         minWidth: 160,
