@@ -26,23 +26,23 @@ import {
   HydrographCard,
   RecentWaterLevelObservationsCard,
   ContactsCard,
-  AttachmentsAccordion,
-  AlternateIdsAccordion,
+  AttachmentsCard,
+  AlternateIdsCard,
   USGSInfoCard,
   OSEPODInfoCard,
   WellPDFPreviewButton,
-  WellScreensAccordion,
-  EquipmentAccordion,
+  WellScreensCard,
+  EquipmentCard,
   NotesAccordion,
-  ConstructionInfoAccordion,
-  GeologyInformationAccordion,
-  WellPhysicalPropertiesAccordion,
+  ConstructionInfoCard,
+  GeologyInformationCard,
   WellPDFDownloadButton,
   WellShowTitle,
   OwnerPermissionsCard,
   MonitoringInfoCard,
   WaterLevelObservationRow,
 } from '@/components'
+import { displayWellSiteName } from '@/utils'
 
 const EMPTY_ASSETS: IAsset[] = []
 const EMPTY_CONTACTS: IContact[] = []
@@ -52,8 +52,7 @@ const EMPTY_WELL_SCREENS: IWellScreen[] = []
 const EMPTY_FIELD_EVENTS: IFieldEvent[] = []
 const EMPTY_PARTICIPANTS: IFieldEventParticipant[] = []
 const EMPTY_MANUAL_HYDRO_ROWS: IObservation[] = []
-const EMPTY_TRANSDUCER_HYDRO_ROWS: TransducerObservationWithBlockResponse[] =
-  []
+const EMPTY_TRANSDUCER_HYDRO_ROWS: TransducerObservationWithBlockResponse[] = []
 
 export const WellShow = () => {
   const dataProvider = useDataProvider()
@@ -80,7 +79,22 @@ export const WellShow = () => {
         method: 'get',
       })
 
-      return response.data as IWellDetails
+      const data = response.data as IWellDetails
+      // Log full details payload in every environment (dev, staging, prod) for
+      // debugging. Visible only in the browser console when it is open.
+      const label = `[ocotillo] GET thing/water-well/${id}/details`
+      try {
+        const plain = JSON.parse(
+          JSON.stringify(data)
+        ) as IWellDetails
+        console.log(label, plain)
+      } catch {
+        console.log(label, data)
+      }
+      console.log(
+        `${label} (full JSON, scroll or copy this if the object above will not expand)\n${JSON.stringify(data, null, 2)}`
+      )
+      return data
     },
   })
   const { canManageAmp } = useAccessCapabilities()
@@ -373,17 +387,17 @@ export const WellShow = () => {
                 isLoading={isDetailsLoading}
               />
               <NotesAccordion well={well} />
-              <EquipmentAccordion
+              <EquipmentCard
                 sensors={sensors}
                 deployments={deployments}
                 isDetailsPending={Boolean(id) && detailsQuery.isPending}
               />
-              <WellScreensAccordion
+              <WellScreensCard
                 rows={wellScreens}
                 isLoading={isDetailsLoading}
               />
-              <AlternateIdsAccordion dataGridProps={idLinkDataGridProps} />
-              <AttachmentsAccordion
+              <AlternateIdsCard dataGridProps={idLinkDataGridProps} />
+              <AttachmentsCard
                 assets={assets}
                 isLoading={assetQuery.isLoading}
               />
@@ -398,7 +412,7 @@ export const WellShow = () => {
               <ContactsCard
                 contacts={contacts}
                 isLoading={isDetailsLoading}
-                siteName={well?.site_name}
+                siteName={well ? displayWellSiteName(well) : undefined}
               />
               <MonitoringInfoCard
                 well={well}
@@ -407,9 +421,8 @@ export const WellShow = () => {
                 isLoading={isDetailsLoading}
               />
               <OwnerPermissionsCard well={well} isLoading={isDetailsLoading} />
-              <ConstructionInfoAccordion well={well} />
-              <WellPhysicalPropertiesAccordion well={well} />
-              <GeologyInformationAccordion well={well} />
+              <ConstructionInfoCard well={well} />
+              <GeologyInformationCard well={well} />
             </Stack>
           </Grid>
         </Grid>

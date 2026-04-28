@@ -180,8 +180,7 @@ npm run start
 
 ## Deployment
 
-Deploy the contents of the `dist/` folder to any static hosting provider (e.g., Netlify, Vercel, AWS S3, GitHub Pages,
-GCP). Ensure environment variables are configured on the hosting platform.
+Deploy the contents of the `dist/` folder to any static hosting provider (e.g. GCP). Ensure environment variables are configured on the hosting platform.
 
 ## License
 

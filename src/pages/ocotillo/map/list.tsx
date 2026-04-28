@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { captureEvent } from '@/analytics/posthog'
 import { Layer, Source } from 'react-map-gl'
-import { useGo } from '@refinedev/core'
+import { useDataProvider, useGo } from '@refinedev/core'
+import type { CustomParams } from '@refinedev/core'
 import { useLocation } from 'react-router'
 import {
   Box,
@@ -44,12 +45,19 @@ import {
   filterLayerFeaturesBySelection,
   sanitizeLayerExportFilename,
 } from '@/utils/layerExport'
+import { enrichMapFeaturesWithWellDetails } from '@/utils/wellMapExport'
+import { buildMapExportPreferredColumnOrder } from '@/well-export/wellMapCsvExport'
 import {
   getSelectedPointColumnLabel,
   getFeatureId,
   getSelectedPointDisplayValue,
   getSelectedPointColumns,
 } from '@/utils/mapSelection'
+
+function localDateStampForExport(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 const DEFAULT_VISIBLE_LAYERS = ['ogc-latest-depth-to-water']
 const VISIBLE_FEATURES_DRAWER_WIDTH = 360
@@ -226,6 +234,9 @@ export const MapView: React.FC = () => {
   useEffect(() => {
     captureEvent('feature_used', { feature: 'map' })
   }, [])
+
+  const dataProvider = useDataProvider()
+  const [exportVisibleBusy, setExportVisibleBusy] = useState(false)
 
   const location = useLocation()
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
@@ -514,7 +525,11 @@ export const MapView: React.FC = () => {
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${sanitizeLayerExportFilename(label)}.${suffix}`
+      const base = sanitizeLayerExportFilename(label)
+      link.download =
+        suffix === 'csv'
+          ? `${base}-${localDateStampForExport()}.csv`
+          : `${base}.${suffix}`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -544,7 +559,9 @@ export const MapView: React.FC = () => {
     }
 
     downloadLayerBlob(
-      buildLayerCsv(features),
+      buildLayerCsv(features, {
+        preferredPropertyColumnOrder: buildMapExportPreferredColumnOrder(),
+      }),
       'text/csv;charset=utf-8;',
       'csv',
       label,
@@ -552,18 +569,31 @@ export const MapView: React.FC = () => {
     )
   }
 
-  const onExportVisiblePoints = () => {
-    visiblePointFeaturesByLayer.forEach(({ label, features }, index) => {
-      exportLayerCollection(
-        {
-          type: 'FeatureCollection',
+  const onExportVisiblePoints = async () => {
+    setExportVisibleBusy(true)
+    try {
+      const ocotillo = dataProvider('ocotillo')
+      const customRequest = (args: CustomParams) => ocotillo.custom(args)
+
+      for (let index = 0; index < visiblePointFeaturesByLayer.length; index++) {
+        const { label, features } = visiblePointFeaturesByLayer[index]
+        const enriched = await enrichMapFeaturesWithWellDetails(
           features,
-        },
-        label,
-        exportFormat,
-        index
-      )
-    })
+          customRequest
+        )
+        exportLayerCollection(
+          {
+            type: 'FeatureCollection',
+            features: enriched,
+          },
+          label,
+          exportFormat,
+          index
+        )
+      }
+    } finally {
+      setExportVisibleBusy(false)
+    }
   }
 
   const onExportLayer = () => {
@@ -1536,12 +1566,13 @@ export const MapView: React.FC = () => {
                   <MapExportControls
                     value={exportFormat}
                     onChange={setExportFormat}
-                    onExport={onExportVisiblePoints}
+                    onExport={() => {
+                      void onExportVisiblePoints()
+                    }}
                     buttonLabel="Export Visible"
                     selectorWidth={142}
-                    tooltip={`Click to download the visible features for each active dataset as separate ${
-                      exportFormat === 'csv' ? 'CSV' : 'GeoJSON'
-                    } files.`}
+                    disabled={exportVisibleBusy}
+                    tooltip="Downloads one file per visible dataset. CSV and GeoJSON merge OGC properties with Ocotillo well details (full well JSON, contacts, location, and a public well detail link). Fetches the details API for each visible well id (batched)."
                   />
                   <Typography variant="caption" color="text.secondary">
                     {`${paginatedVisibleFeatureGroups.start + 1}-${paginatedVisibleFeatureGroups.end} of ${paginatedVisibleFeatureGroups.total}`}

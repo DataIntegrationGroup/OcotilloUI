@@ -320,9 +320,15 @@ export const ListPage: React.FC<ListPageProps> = ({
           )}
         </Box>
 
+        {/* Refine sets filterDebounceMs to 0 for server-side grids; restore MUI debounce so toolbar column filters keep input focus while typing. */}
         <DataGrid
           {...restDataGridProps}
           rows={filteredRows}
+          filterDebounceMs={
+            restDataGridProps.filterMode === 'server'
+              ? 700
+              : restDataGridProps.filterDebounceMs
+          }
           showToolbar
           slots={{ toolbar: ListPageToolbar }}
           slotProps={{

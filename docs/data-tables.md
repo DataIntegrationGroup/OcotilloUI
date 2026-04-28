@@ -31,9 +31,11 @@ Limitation: it does not search your entire database. If the record you are looki
 
 ### Column filters (server-side filters)
 
-The **Filters** button opens a panel where you can add one or more conditions to narrow down results across the entire dataset. This sends a request to the server and returns only the matching records.
+The **Filters** button opens a panel where you set conditions that narrow results across the **entire** dataset. Each change sends a request to the server.
 
-Currently supported filter operators:
+**Important:** The app uses **MUI X Data Grid (Community)**. In this edition, the filter panel only supports **one active column filter at a time**. If you add a filter on a second column, it **replaces** the previous one rather than stacking. The Ocotillo API and Refine can in principle accept **multiple** filter parameters in one request, but the current grid UI does not let you combine several column filters without upgrading to a commercial Data Grid tier or building a custom filter UI.
+
+Currently supported filter operators (when the API implements them for that column):
 
 - **contains** -- finds records where the field includes the search text
 - **equals** -- finds records where the field exactly matches
@@ -45,9 +47,11 @@ Other operators shown in the dropdown (such as "does not contain" or "does not e
 
 ### Sorting
 
-Clicking any column header sorts the table by that column. Clicking again reverses the sort order. Sorting is applied server-side, so it sorts across all records, not just the current page.
+Clicking any column header sorts the table by that column when the column is sortable. Clicking again reverses the sort order. Sorting is applied server-side, so it sorts across all records, not just the current page.
 
-Columns marked as not sortable (such as Aquifers and Associated Sites) cannot be sorted because they contain computed or multi-value data that doesn't translate well to a single sort order.
+For columns that aggregate multiple links (for example **Aquifers**, **Contacts** on wells, or **Associated Sites** on contacts), the server uses a fixed rule such as ordering by the alphabetically first linked value. That order may not match how labels are joined with commas in the cell.
+
+Some columns stay non-sortable by design (for example **Primary Phone** and **Primary Email** on Contacts), usually because sorting would require extra API work or privacy rules.
 
 ### Column visibility
 
@@ -79,6 +83,7 @@ The following improvements would require changes to the OcotilloAPI server in ad
 - **Additional filter operators** -- "does not contain," "does not equal," and "is any of" would need to be implemented in the API filter logic.
 - **Additional columns** -- several useful fields (owner name, county, latitude/longitude, site name) exist in the database but are not currently returned by the API in the list endpoints. Adding them requires API and potentially database changes.
 - **Saved views or presets** -- letting users save a filter configuration and return to it later would need storage on the server or in user preferences.
+- **Multiple column filters visible at once in the filter panel** -- the Ocotillo API can accept more than one `filter` query parameter, but **MUI X Data Grid (Community)** only allows **one** active column filter in the built-in panel. Offering several simultaneous column filters in that panel would need a **custom filter UI** (or a different table stack), not only an API change.
 
 ## Column reference by page
 
@@ -89,7 +94,7 @@ The following improvements would require changes to the OcotilloAPI server in ad
 | Name | Well identifier (e.g. WELL-0001) | Yes |
 | Well Status | Current operational status | Yes |
 | Monitoring | Whether the well is actively monitored | Yes |
-| Aquifers | Aquifer systems the well is associated with | No |
+| Aquifers | Aquifer systems the well is associated with | Yes (first aquifer name alphabetically) |
 | Release Status | Whether the record is public | Yes |
 | Well Depth (ft) | Total depth of the well casing | Yes |
 | Hole Depth (ft) | Total drilled depth | Yes |
@@ -124,5 +129,5 @@ The following improvements would require changes to the OcotilloAPI server in ad
 | Contact Type | Classification of the contact | Yes |
 | Primary Phone | First phone number on file | No |
 | Primary Email | First email address on file | No |
-| Associated Sites | Wells or springs linked to this contact | No |
+| Associated Sites | Wells or springs linked to this contact | Yes (first site name alphabetically) |
 | Created At | When the record was added to the system | Yes |

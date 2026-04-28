@@ -50,9 +50,8 @@ describe('authentik provider access-control normalization', () => {
   })
 
   it('normalizes token groups from the ID token when testing auth is disabled', async () => {
-    vi.doMock('@/config', async () => {
-      const actual =
-        await vi.importActual<typeof import('@/config')>('@/config')
+    vi.doMock('@/config', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('@/config')>()
       return { ...actual, IS_TESTING_AUTH: false }
     })
     vi.doMock('jwt-decode', () => ({
@@ -79,9 +78,8 @@ describe('authentik provider access-control normalization', () => {
   })
 
   it('returns null when there is no ID token', async () => {
-    vi.doMock('@/config', async () => {
-      const actual =
-        await vi.importActual<typeof import('@/config')>('@/config')
+    vi.doMock('@/config', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('@/config')>()
       return { ...actual, IS_TESTING_AUTH: false }
     })
     vi.doMock('jwt-decode', () => ({
