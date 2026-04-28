@@ -67,6 +67,10 @@ const App: React.FC = () => (
             path="/report-a-bug"
             element={<ContentPage src="/content/report-a-bug.md" />}
           />
+          <Route
+            path="/ogcapi"
+            element={<ContentPage src="/content/ogcapi.md" />}
+          />
           <Route path="/amp/*" element={<AMPRoutes />} />
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
           <Route path="/st2/*" element={<ST2Routes />} />
