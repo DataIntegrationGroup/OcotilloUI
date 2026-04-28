@@ -53,6 +53,11 @@ import {
   getSelectedPointColumns,
 } from '@/utils/mapSelection'
 
+function localDateStampForExport(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 const DEFAULT_VISIBLE_LAYERS = ['ogc-latest-depth-to-water']
 const VISIBLE_FEATURES_DRAWER_WIDTH = 360
 const VISIBLE_FEATURES_PAGE_SIZE = 10
@@ -519,7 +524,11 @@ export const MapView: React.FC = () => {
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${sanitizeLayerExportFilename(label)}.${suffix}`
+      const base = sanitizeLayerExportFilename(label)
+      link.download =
+        suffix === 'csv'
+          ? `${base}-${localDateStampForExport()}.csv`
+          : `${base}.${suffix}`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
