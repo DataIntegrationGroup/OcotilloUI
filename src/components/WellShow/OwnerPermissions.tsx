@@ -9,6 +9,10 @@ import {
 } from '@mui/material'
 import { IWell } from '@/interfaces/ocotillo'
 import { formatAppDate } from '@/utils'
+import { z } from 'zod'
+import { zReleaseStatus } from '@/generated/zod.gen'
+
+type ReleaseStatus = z.infer<typeof zReleaseStatus>
 
 export const OwnerPermissionsCard = ({
   well,
@@ -17,6 +21,14 @@ export const OwnerPermissionsCard = ({
   well?: IWell
   isLoading?: boolean
 }) => {
+  const releaseStatus: ReleaseStatus =
+    well?.current_location?.release_status ?? 'draft'
+
+  const ownerPublicDataAcknowledgement =
+    getPublicDataAcknowledgementStatus(releaseStatus)
+
+  const permissions = well?.permissions ?? []
+
   if (isLoading) {
     return (
       <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -53,6 +65,7 @@ export const OwnerPermissionsCard = ({
             </Box>
           </Stack>
           <Skeleton variant="text" width="40%" height={28} />
+          <Skeleton variant="text" width="40%" height={28} />
         </Box>
       </Paper>
     )
@@ -65,15 +78,33 @@ export const OwnerPermissionsCard = ({
           Owner Permissions
         </Typography>
       </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          p: 2,
+          bgcolor: 'action.hover',
+        }}
+      >
+        <Typography variant="body2" fontWeight={600}>
+          Owner acknowledged public data release
+        </Typography>
+        <BooleanStatusChip
+          value={ownerPublicDataAcknowledgement}
+          variant="yesno"
+        />
+      </Box>
       <Box sx={{ p: 2 }}>
-        {!well?.permissions || well.permissions.length === 0 ? (
+        {permissions.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
-            N/A
+            No permissions available
           </Typography>
         ) : (
           <Stack spacing={2}>
-            {well.permissions.map((p, i) => (
-              <Box key={i}>
+            {permissions.map((permission, index) => (
+              <Box key={index}>
                 <Stack spacing={0.75}>
                   <Box
                     sx={{
@@ -84,28 +115,11 @@ export const OwnerPermissionsCard = ({
                     }}
                   >
                     <Typography variant="body2" component="span">
-                      {p.permission_type}:
+                      {permission.permission_type}:
                     </Typography>
-                    <Chip
-                      size="small"
-                      label={
-                        p.permission_allowed === true
-                          ? 'Allowed'
-                          : p.permission_allowed === false
-                            ? 'Not Allowed'
-                            : 'Unknown'
-                      }
-                      color={
-                        p.permission_allowed === true
-                          ? 'success'
-                          : p.permission_allowed === false
-                            ? 'error'
-                            : 'default'
-                      }
-                      sx={{ fontFamily: 'monospace', flexShrink: 0 }}
-                    />
+                    <BooleanStatusChip value={permission.permission_allowed} />
                   </Box>
-                  {(p.start_date || p.end_date) && (
+                  {(permission.start_date || permission.end_date) && (
                     <Box
                       sx={{
                         display: 'grid',
@@ -116,16 +130,18 @@ export const OwnerPermissionsCard = ({
                     >
                       <DateMeta
                         label="Start"
-                        value={formatAppDate(p.start_date) || '---'}
+                        value={formatAppDate(permission.start_date) || '---'}
                       />
                       <DateMeta
                         label="End"
-                        value={formatAppDate(p.end_date) || '---'}
+                        value={formatAppDate(permission.end_date) || '---'}
                       />
                     </Box>
                   )}
                 </Stack>
-                {i < well.permissions.length - 1 && <Divider sx={{ mt: 2 }} />}
+                {index < well.permissions.length - 1 && (
+                  <Divider sx={{ mt: 2 }} />
+                )}
               </Box>
             ))}
           </Stack>
@@ -154,4 +170,46 @@ const DateMeta = ({ label, value }: { label: string; value: string }) => (
       {value}
     </Typography>
   </Box>
+)
+
+const getPublicDataAcknowledgementStatus = (
+  releaseStatus: ReleaseStatus
+): boolean | null => {
+  if (releaseStatus === 'public') return true
+  if (releaseStatus === 'private') return false
+  return null
+}
+
+const getBooleanStatusLabel = (
+  value: boolean | null,
+  variant: 'permission' | 'yesno' = 'permission'
+) => {
+  if (variant === 'yesno') {
+    return value === true ? 'Yes' : value === false ? 'No' : 'Unknown'
+  }
+
+  return value === true
+    ? 'Allowed'
+    : value === false
+      ? 'Not Allowed'
+      : 'Unknown'
+}
+
+const getBooleanStatusColor = (value: boolean | null) => {
+  return value === true ? 'success' : value === false ? 'error' : 'default'
+}
+
+const BooleanStatusChip = ({
+  value,
+  variant = 'permission',
+}: {
+  value: boolean | null
+  variant?: 'permission' | 'yesno'
+}) => (
+  <Chip
+    size="small"
+    label={getBooleanStatusLabel(value, variant)}
+    color={getBooleanStatusColor(value)}
+    sx={{ fontFamily: 'monospace', flexShrink: 0 }}
+  />
 )
