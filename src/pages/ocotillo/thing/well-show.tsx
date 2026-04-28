@@ -43,6 +43,7 @@ import {
   MonitoringInfoCard,
   WaterLevelObservationRow,
 } from '@/components'
+import { displayWellSiteName } from '@/utils'
 
 const EMPTY_ASSETS: IAsset[] = []
 const EMPTY_CONTACTS: IContact[] = []
@@ -80,7 +81,22 @@ export const WellShow = () => {
         method: 'get',
       })
 
-      return response.data as IWellDetails
+      const data = response.data as IWellDetails
+      // Log full details payload in every environment (dev, staging, prod) for
+      // debugging. Visible only in the browser console when it is open.
+      const label = `[ocotillo] GET thing/water-well/${id}/details`
+      try {
+        const plain = JSON.parse(
+          JSON.stringify(data)
+        ) as IWellDetails
+        console.log(label, plain)
+      } catch {
+        console.log(label, data)
+      }
+      console.log(
+        `${label} (full JSON, scroll or copy this if the object above will not expand)\n${JSON.stringify(data, null, 2)}`
+      )
+      return data
     },
   })
   const { canManageAmp } = useAccessCapabilities()
@@ -398,7 +414,7 @@ export const WellShow = () => {
               <ContactsCard
                 contacts={contacts}
                 isLoading={isDetailsLoading}
-                siteName={well?.site_name}
+                siteName={well ? displayWellSiteName(well) : undefined}
               />
               <MonitoringInfoCard
                 well={well}
