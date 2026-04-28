@@ -8,11 +8,12 @@ import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
   IAsset,
   IContact,
+  IFieldEvent,
+  IFieldEventParticipant,
   IWellDetails,
   IObservation,
   ISample,
   ISensor,
-  IWell,
   IWellScreen,
 } from '@/interfaces/ocotillo'
 import { Box, Stack } from '@mui/material'
@@ -36,11 +37,23 @@ import {
   ConstructionInfoAccordion,
   GeologyInformationAccordion,
   WellPhysicalPropertiesAccordion,
-  FieldEventHistoryAccordion,
   WellPDFDownloadButton,
   WellShowTitle,
   OwnerPermissionsCard,
+  MonitoringInfoCard,
+  WaterLevelObservationRow,
 } from '@/components'
+
+const EMPTY_ASSETS: IAsset[] = []
+const EMPTY_CONTACTS: IContact[] = []
+const EMPTY_SENSORS: ISensor[] = []
+const EMPTY_DEPLOYMENTS: IWellDetails['deployments'] = []
+const EMPTY_WELL_SCREENS: IWellScreen[] = []
+const EMPTY_FIELD_EVENTS: IFieldEvent[] = []
+const EMPTY_PARTICIPANTS: IFieldEventParticipant[] = []
+const EMPTY_MANUAL_HYDRO_ROWS: IObservation[] = []
+const EMPTY_TRANSDUCER_HYDRO_ROWS: TransducerObservationWithBlockResponse[] =
+  []
 
 export const WellShow = () => {
   const dataProvider = useDataProvider()
@@ -52,9 +65,9 @@ export const WellShow = () => {
   const { id } = useResourceParams()
 
   useEffect(() => {
-    if (id) captureEvent('feature_used', { feature: 'well_detail', well_id: id })
+    if (id)
+      captureEvent('feature_used', { feature: 'well_detail', well_id: id })
   }, [id])
-
 
   const detailsQuery = useQuery({
     queryKey: ['well-details', id],
@@ -91,14 +104,51 @@ export const WellShow = () => {
       document.title = prev
     }
   }, [well?.name])
-  const observations =
-    detailsQuery.data?.recent_groundwater_level_observations ?? []
-  const assets = assetResult?.data ?? []
-  const contacts = detailsQuery.data?.contacts ?? []
-  const sensors = detailsQuery.data?.sensors ?? []
-  const deployments = detailsQuery.data?.deployments ?? []
-  const wellScreens = detailsQuery.data?.well_screens ?? []
-  const fieldEventSample = detailsQuery.data?.latest_field_event_sample ?? null
+  const assets = assetResult?.data ?? EMPTY_ASSETS
+  const contacts = detailsQuery.data?.contacts ?? EMPTY_CONTACTS
+  const sensors = detailsQuery.data?.sensors ?? EMPTY_SENSORS
+  const deployments = detailsQuery.data?.deployments ?? EMPTY_DEPLOYMENTS
+  const wellScreens = detailsQuery.data?.well_screens ?? EMPTY_WELL_SCREENS
+  const fieldEvents = detailsQuery.data?.field_events ?? EMPTY_FIELD_EVENTS
+  // first_field_event is the oldest field event, returned separately by the API
+  // to avoid being cut off by the field_events page limit
+  const firstVisitParticipants =
+    detailsQuery.data?.first_field_event?.field_event_participants ??
+    EMPTY_PARTICIPANTS
+
+  const recentObservations = useMemo<
+    Partial<WaterLevelObservationRow>[]
+  >(() => {
+    return fieldEvents
+      .flatMap((event) =>
+        (event.field_activities ?? []).flatMap((activity) =>
+          (activity.samples ?? []).flatMap((sample) =>
+            (sample.observations ?? []).map((observation) => ({
+              ...observation,
+              water_level_method: sample.sample_method,
+              water_level_status: observation.groundwater_level_reason,
+              water_level_measuring_staff: sample.contact?.name,
+              water_level_notes:
+                sample.notes ?? activity.notes ?? event.notes ?? null,
+              water_level_data_quality: observation.nma_data_quality,
+            }))
+          )
+        )
+      )
+      .filter((obs) => obs.observation_datetime != null)
+      .sort((a, b) => {
+        const dateA = new Date(a.observation_datetime!).getTime()
+        const dateB = new Date(b.observation_datetime!).getTime()
+        return dateB - dateA
+      })
+  }, [fieldEvents])
+
+  const latestSample = useMemo(() => {
+    const newestEvent = fieldEvents[0]
+    if (!newestEvent) return undefined
+    const firstActivity = newestEvent.field_activities?.[0]
+    return firstActivity?.samples?.[0] ?? undefined
+  }, [fieldEvents])
 
   const sensorDeployments = useSensorDeploymentRows({
     deployments,
@@ -129,11 +179,24 @@ export const WellShow = () => {
     )?.alternate_id || 'N/A'
 
   const hydrographQuery = useQuery({
-    queryKey: ['well-hydrograph', id],
+    queryKey: ['well-hydrograph', id ?? ''],
     enabled: Boolean(id),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    queryFn: async () => {
+    queryFn: async ({ queryKey, signal }) => {
+      const thingId = queryKey[1]
+      if (thingId === '' || thingId == null) {
+        return {
+          manualRows: [] as IObservation[],
+          transducerRows: [] as TransducerObservationWithBlockResponse[],
+        }
+      }
+
+      const listMeta = (params: Record<string, string | number>) => ({
+        params,
+        ...(signal ? { signal } : {}),
+      })
+
       const fetchAllPages = async <TRow,>(
         resource: string,
         params: Record<string, string | number>,
@@ -142,7 +205,7 @@ export const WellShow = () => {
         const firstPage = await ocotilloDataProvider.getList({
           resource,
           pagination: { currentPage: 1, pageSize },
-          meta: { params },
+          meta: listMeta(params),
         })
 
         const totalPages = Math.max(1, Math.ceil(firstPage.total / pageSize))
@@ -156,7 +219,7 @@ export const WellShow = () => {
             ocotilloDataProvider.getList({
               resource,
               pagination: { currentPage: index + 2, pageSize },
-              meta: { params },
+              meta: listMeta(params),
             })
           )
         )
@@ -169,12 +232,12 @@ export const WellShow = () => {
 
       const [manualRows, transducerRows] = await Promise.all([
         fetchAllPages<IObservation>('observation/groundwater-level', {
-          thing_id: id,
+          thing_id: thingId as string | number,
         }),
         fetchAllPages<TransducerObservationWithBlockResponse>(
           'observation/transducer-groundwater-level',
           {
-            thing_id: id,
+            thing_id: thingId as string | number,
           },
           5000
         ),
@@ -187,8 +250,10 @@ export const WellShow = () => {
     },
   })
 
-  const manualHydrographRows = hydrographQuery.data?.manualRows ?? []
-  const transducerHydrographRows = hydrographQuery.data?.transducerRows ?? []
+  const manualHydrographRows =
+    hydrographQuery.data?.manualRows ?? EMPTY_MANUAL_HYDRO_ROWS
+  const transducerHydrographRows =
+    hydrographQuery.data?.transducerRows ?? EMPTY_TRANSDUCER_HYDRO_ROWS
 
   const hydrographDatasource = useMemo<IHydrographDatasource[]>(() => {
     const manualSource =
@@ -198,7 +263,12 @@ export const WellShow = () => {
             name: 'Groundwater Level',
             style: 'scatter',
             data: manualHydrographRows
-              .filter((obs) => obs.observation_datetime)
+              .filter(
+                (obs) =>
+                  obs.observation_datetime != null &&
+                  obs.depth_to_water_bgs != null &&
+                  !Number.isNaN(Number(obs.depth_to_water_bgs))
+              )
               .map((obs) => ({
                 phenomenonTime: new Date(obs.observation_datetime),
                 result: Number(obs.depth_to_water_bgs),
@@ -217,7 +287,11 @@ export const WellShow = () => {
             name: 'Transducer Groundwater Level',
             style: 'line',
             data: transducerHydrographRows
-              .filter(({ observation }) => observation?.observation_datetime)
+              .filter(
+                ({ observation }) =>
+                  observation?.observation_datetime != null &&
+                  observation?.value != null
+              )
               .map(({ observation }) => ({
                 phenomenonTime: new Date(observation.observation_datetime),
                 result: Number(observation.value),
@@ -270,10 +344,10 @@ export const WellShow = () => {
             <WellPDFDownloadButton
               well={well}
               isLoading={isPdfDataLoading}
-              observations={observations}
+              observations={recentObservations}
               assets={assets}
               contacts={contacts}
-              sample={fieldEventSample}
+              sample={latestSample as Partial<ISample> | undefined}
               sensorDeployments={sensorDeployments}
             />
           </Box>
@@ -291,18 +365,18 @@ export const WellShow = () => {
                 well={well}
                 rows={[...manualHydrographRows, ...transducerHydrographRows]}
                 dataSource={hydrographDatasource}
-                isLoading={hydrographQuery.isLoading}
+                isLoading={hydrographQuery.isPending}
               />
               <RecentWaterLevelObservationsCard
                 well={well}
-                rows={observations}
+                rows={recentObservations}
                 isLoading={isDetailsLoading}
               />
               <NotesAccordion well={well} />
               <EquipmentAccordion
                 sensors={sensors}
                 deployments={deployments}
-                isLoading={isDetailsLoading}
+                isDetailsPending={Boolean(id) && detailsQuery.isPending}
               />
               <WellScreensAccordion
                 rows={wellScreens}
@@ -321,12 +395,21 @@ export const WellShow = () => {
           {/* Right column: 2 cols */}
           <Grid size={{ xs: 12, md: 4, lg: 3 }}>
             <Stack spacing={2}>
-              <ContactsCard contacts={contacts} isLoading={isDetailsLoading} />
+              <ContactsCard
+                contacts={contacts}
+                isLoading={isDetailsLoading}
+                siteName={well?.site_name}
+              />
+              <MonitoringInfoCard
+                well={well}
+                firstVisitParticipants={firstVisitParticipants}
+                lastVisitDate={fieldEvents[0]?.event_date}
+                isLoading={isDetailsLoading}
+              />
               <OwnerPermissionsCard well={well} isLoading={isDetailsLoading} />
               <ConstructionInfoAccordion well={well} />
               <WellPhysicalPropertiesAccordion well={well} />
               <GeologyInformationAccordion well={well} />
-              <FieldEventHistoryAccordion sample={fieldEventSample} />
             </Stack>
           </Grid>
         </Grid>

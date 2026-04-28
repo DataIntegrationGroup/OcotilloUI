@@ -51,18 +51,15 @@ const geothermalEditorRoles: PortalRole[] = [
   'Geothermal.Admin',
 ]
 const geothermalAdminRoles: PortalRole[] = ['Geothermal.Admin']
-const adminOnlyRoles = new Set<PortalRole>([
-  'AMP.Admin',
-  'Geothermal.Admin',
-])
+const adminOnlyRoles = new Set<PortalRole>(['AMP.Admin', 'Geothermal.Admin'])
 
 const resourcePolicies: Record<string, ResourcePolicy> = {
   ocotillo: { list: viewerRoles, show: viewerRoles },
   'ocotillo.map': { list: viewerRoles, show: viewerRoles },
   'ocotillo.collections': { list: viewerRoles, show: viewerRoles },
   'ocotillo.contact': {
-    list: editorRoles,
-    show: editorRoles,
+    list: viewerRoles,
+    show: viewerRoles,
     edit: editorRoles,
     create: editorRoles,
     delete: editorRoles,
@@ -77,8 +74,8 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     manage: ['AMP.Admin', 'Geothermal.Admin'],
   },
   'ocotillo.lexicon': {
-    list: editorRoles,
-    show: editorRoles,
+    list: adminRoles,
+    show: adminRoles,
     edit: editorRoles,
     create: adminRoles,
     delete: adminRoles,
@@ -94,7 +91,7 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
   },
   'ocotillo.hydrograph-correction': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
-  'ocotillo.thing-well-batch-export': { list: editorRoles, show: editorRoles },
+  'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
   'ocotillo.groundwater-level-observation': {
     list: viewerRoles,
     show: viewerRoles,
@@ -128,8 +125,13 @@ const matchesPolicy = (
   roles: PortalRole[]
 ): boolean => Boolean(allowedRoles?.some((role) => roles.includes(role)))
 
-export const isResourceListAdminOnly = (resource: string): boolean => {
-  const listPolicy = resourcePolicies[resource]?.list
+export const isResourceListAdminOnly = (resource?: string): boolean => {
+  if (!resource) return false
+
+  const listPolicy =
+    resourcePolicies[resource]?.list ??
+    resourcePolicies[resource.toLowerCase()]?.list
+
   if (!listPolicy || listPolicy.length === 0) return false
 
   return listPolicy.every((role) => adminOnlyRoles.has(role))

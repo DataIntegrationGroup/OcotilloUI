@@ -56,6 +56,7 @@ export const HydrographCard = ({
           </Box>
         ) : (
           <Hydrograph
+            key={well.id}
             datasource={dataSource}
             options={{ showToolbox: true, invertYAxis: true }}
           />

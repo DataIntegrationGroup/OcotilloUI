@@ -28,6 +28,7 @@ import {
 import type { RefineThemedLayoutHeaderProps } from '@refinedev/mui'
 import { HamburgerMenu } from './hamburgerMenu'
 import SearchBar from '@/components/SearchBar'
+import { ReportBugButton } from '@/components/Button'
 import { Underline } from 'react-flaticons'
 
 export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
@@ -102,6 +103,7 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
             alignItems="center"
             justifyContent="center"
           >
+            <ReportBugButton user={user} />
             {isLoading ? (
               <Skeleton
                 variant="rounded"

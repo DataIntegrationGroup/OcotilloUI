@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Box, Chip, Paper, Stack, Typography } from '@mui/material'
 import { SettingsInputAntenna } from '@mui/icons-material'
 import {
@@ -23,11 +23,12 @@ const EquipmentToolbar = () => (
 export const EquipmentAccordion = ({
   sensors,
   deployments,
-  isLoading,
+  isDetailsPending,
 }: {
   sensors: ISensor[]
   deployments: any[]
-  isLoading: boolean
+  /** True only until the first well-details result exists. Avoids refetch flicker on the DataGrid loading overlay. */
+  isDetailsPending: boolean
 }) => {
   const [selectedEquipmentId, setSelectedEquipmentId] =
     useState<GridRowId | null>(null)
@@ -37,17 +38,40 @@ export const EquipmentAccordion = ({
     sensors,
   })
 
+  const deploymentSelectionKey = useMemo(
+    () =>
+      sensorDeployments.length === 0
+        ? ''
+        : sensorDeployments.map((row) => String(row.id)).join('|'),
+    [sensorDeployments]
+  )
+
+  const sensorDeploymentsRef = useRef(sensorDeployments)
+  sensorDeploymentsRef.current = sensorDeployments
+
   useEffect(() => {
-    if (!sensorDeployments.length) {
+    const rows = sensorDeploymentsRef.current
+    if (!rows.length) {
       setSelectedEquipmentId(null)
       return
     }
 
     setSelectedEquipmentId((current) => {
-      const stillExists = sensorDeployments.some((row) => row.id === current)
-      return stillExists ? current : sensorDeployments[0].id
+      const stillExists = rows.some((row) => row.id === current)
+      return stillExists ? current : rows[0].id
     })
-  }, [sensorDeployments])
+  }, [deploymentSelectionKey])
+
+  const rowSelectionModel = useMemo(
+    () =>
+      selectedEquipmentId != null
+        ? { type: 'include' as const, ids: new Set<GridRowId>([selectedEquipmentId]) }
+        : { type: 'include' as const, ids: new Set<GridRowId>() },
+    [selectedEquipmentId]
+  )
+
+  const showGridLoadingOverlay =
+    Boolean(isDetailsPending) && sensorDeployments.length === 0
 
   const selectedEquipment =
     sensorDeployments.find((row) => row.id === selectedEquipmentId) ?? null
@@ -122,7 +146,7 @@ export const EquipmentAccordion = ({
           <Box sx={{ minWidth: 0 }}>
             <DataGrid<SensorDeploymentRow>
               rowHeight={28}
-              rows={sensorDeployments ?? []}
+              rows={sensorDeployments}
               columns={columns}
               slots={{ toolbar: EquipmentToolbar }}
               pageSizeOptions={[10, 25, 50]}
@@ -132,12 +156,8 @@ export const EquipmentAccordion = ({
                   paginationModel: { pageSize: 10, page: 0 },
                 },
               }}
-              loading={isLoading}
-              rowSelectionModel={
-                selectedEquipmentId != null
-                  ? { type: 'include', ids: new Set([selectedEquipmentId]) }
-                  : { type: 'include', ids: new Set() }
-              }
+              loading={showGridLoadingOverlay}
+              rowSelectionModel={rowSelectionModel}
               onRowClick={(params) => setSelectedEquipmentId(params.id)}
               sx={{
                 border: 'none',

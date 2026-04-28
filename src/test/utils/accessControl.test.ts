@@ -67,7 +67,9 @@ const expectedAccessByScenario: Scenario[] = [
     allowedResources: [
       'ocotillo.collections',
       'ocotillo.map',
+      'ocotillo.contact',
       'ocotillo.thing-well',
+      'ocotillo.thing-well-batch-export',
     ],
   },
   {
@@ -77,7 +79,6 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.collections',
       'ocotillo.map',
       'ocotillo.thing-well',
-      'ocotillo.lexicon',
       'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
       'water.wellinventoryform',
@@ -110,6 +111,8 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.collections',
       'ocotillo.map',
       'ocotillo.thing-well',
+      'ocotillo.contact',
+      'ocotillo.thing-well-batch-export',
     ],
   },
 ]
@@ -136,11 +139,11 @@ const specialResourceExpectations: Array<{
     expected: true,
   },
   {
-    name: 'AMP viewer cannot see contacts',
+    name: 'AMP viewer can see contacts',
     groups: ['AMP.Viewer'],
     resource: 'ocotillo.contact',
     action: 'list',
-    expected: false,
+    expected: true,
   },
   {
     name: 'AMP editor cannot see ocotillo.location',
@@ -408,13 +411,13 @@ describe('isResourceListAdminOnly', () => {
   it('returns true for list resources restricted to admin roles', () => {
     expect(isResourceListAdminOnly('ocotillo.location')).toBe(true)
     expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(true)
+    expect(isResourceListAdminOnly('ocotillo.lexicon')).toBe(true)
     expect(isResourceListAdminOnly('Sandbox')).toBe(true)
     expect(isResourceListAdminOnly('water.locations')).toBe(true)
   })
 
   it('returns false for non-admin list resources and unknown resources', () => {
     expect(isResourceListAdminOnly('ocotillo.thing-well')).toBe(false)
-    expect(isResourceListAdminOnly('ocotillo.lexicon')).toBe(false)
     expect(isResourceListAdminOnly('unknown.resource')).toBe(false)
   })
 })

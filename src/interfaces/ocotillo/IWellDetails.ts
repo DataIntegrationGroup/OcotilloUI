@@ -1,6 +1,5 @@
 import type { IContact } from './IContact'
-import type { IObservation } from './IObservation'
-import type { ISample } from './ISample'
+import type { IFieldEvent } from './IFieldEvent'
 import type { ISensor } from './ISensor'
 import type { IWell } from './IWell'
 import type { IWellScreen } from './IWellScreen'
@@ -11,6 +10,6 @@ export type IWellDetails = {
   sensors: ISensor[]
   deployments: any[]
   well_screens: IWellScreen[]
-  recent_groundwater_level_observations: IObservation[]
-  latest_field_event_sample: ISample | null
+  field_events: IFieldEvent[]
+  first_field_event?: IFieldEvent | null
 }

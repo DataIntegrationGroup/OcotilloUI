@@ -18,16 +18,26 @@ const getGoogleMapsAddressUrl = (address: string) => {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 }
 
+const formatAddressType = (type: string): string => {
+  const lower = type.toLowerCase()
+  if (lower.includes('physical') && lower.includes('mail')) return 'Physical & Mailing'
+  if (lower.includes('physical')) return 'Physical'
+  if (lower.includes('mail')) return 'Mailing'
+  return type
+}
+
+const formatPhoneType = (type: string): string => {
+  if (!type) return ''
+  return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+}
+
 const ContactBlock = ({ contact }: { contact: IContact }) => {
   const roleType =
     [contact.role, contact.contact_type].filter(Boolean).join(' / ') || null
   const emails =
     contact.emails?.map((e: { email?: string }) => e.email).filter(Boolean) ??
     []
-  const phones =
-    contact.phones
-      ?.map((p: { phone_number?: string }) => p.phone_number)
-      .filter(Boolean) ?? []
+  const phones = contact.phones ?? []
   const addresses = contact.addresses ?? []
 
   return (
@@ -56,6 +66,9 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
           {contact.name}
         </Typography>
       )}
+      <Typography variant="body2" color="text.secondary" component="div">
+        {contact.organization || 'No organization listed'}
+      </Typography>
       {emails.map((email, idx) => (
         <Typography
           key={idx}
@@ -72,39 +85,52 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
         </Typography>
       ))}
       {phones.map((phone, idx) => (
-        <Typography
-          key={idx}
-          variant="body2"
-          component="a"
-          href={`tel:${phone}`}
-          sx={{
-            color: 'primary.main',
-            textDecoration: 'none',
-            '&:hover': { textDecoration: 'underline' },
-          }}
-        >
-          {formatPhone(phone)}
-        </Typography>
+        <Box key={idx} sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75 }}>
+          <Typography
+            variant="body2"
+            component="a"
+            href={`tel:${phone.phone_number}`}
+            sx={{
+              color: 'primary.main',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' },
+            }}
+          >
+            {formatPhone(phone.phone_number ?? '')}
+          </Typography>
+          {phone.phone_type && (
+            <Typography variant="caption" color="text.secondary" component="span">
+              {formatPhoneType(phone.phone_type)}
+            </Typography>
+          )}
+        </Box>
       ))}
       {addresses.map((addr, idx) => (
-        <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Typography variant="body2" color="text.secondary" component="div">
-            {formatContactAddress(addr)}
-          </Typography>
-          {getGoogleMapsAddressUrl(formatAddress(addr)) && (
-            <Tooltip title="Open in Google Maps">
-              <IconButton
-                size="small"
-                component="a"
-                href={getGoogleMapsAddressUrl(formatAddress(addr)) ?? undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ p: 0.25 }}
-              >
-                <Directions fontSize="inherit" />
-              </IconButton>
-            </Tooltip>
+        <Box key={idx}>
+          {addr.address_type && (
+            <Typography variant="caption" color="text.secondary" component="div">
+              {formatAddressType(addr.address_type)}
+            </Typography>
           )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography variant="body2" color="text.secondary" component="div">
+              {formatContactAddress(addr)}
+            </Typography>
+            {getGoogleMapsAddressUrl(formatAddress(addr)) && (
+              <Tooltip title="Open in Google Maps">
+                <IconButton
+                  size="small"
+                  component="a"
+                  href={getGoogleMapsAddressUrl(formatAddress(addr)) ?? undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{ p: 0.25 }}
+                >
+                  <Directions fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         </Box>
       ))}
     </Stack>
@@ -114,15 +140,17 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
 export const ContactsCard = ({
   contacts,
   isLoading,
+  siteName,
 }: {
   contacts: IContact[]
   isLoading: boolean
+  siteName?: string | null
 }) => {
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
       <Box sx={{ px: 2, py: 1.5 }}>
         <Typography variant="body1" fontWeight="bold">
-          Contacts
+          {siteName || 'Contacts'}
         </Typography>
       </Box>
       <Box sx={{ p: 2 }}>

@@ -36,3 +36,5 @@ export enum GroupType {
   Messages = 'Messages',
   Assets = 'Assets',
 }
+
+export const INCHES_IN_A_FOOT = 12

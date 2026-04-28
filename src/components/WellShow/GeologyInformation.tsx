@@ -1,4 +1,4 @@
-import { Box, Paper, Stack, Typography } from '@mui/material'
+import { Paper, Box, Stack, Typography } from '@mui/material'
 import { IWell } from '@/interfaces/ocotillo'
 
 export const GeologyInformationAccordion = ({ well }: { well?: IWell }) => {
@@ -10,40 +10,39 @@ export const GeologyInformationAccordion = ({ well }: { well?: IWell }) => {
         </Typography>
       </Box>
       <Box sx={{ p: 2 }}>
-        <Stack spacing={2}>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
-            <Typography variant="body2" component="span">
-              Formation Completion Code:
-            </Typography>
-            <Typography variant="body2" color="text.secondary" component="span">
-              {well?.formation_completion_code || 'N/A'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline', flexWrap: 'wrap' }}>
-            <Typography variant="body2" component="span">
-              Aquifer Systems:
-            </Typography>
-            <Typography variant="body2" color="text.secondary" component="span">
-              {(well?.aquifers ?? [])
-                ?.map((a) => a?.aquifer_system)
-                ?.filter(Boolean)
-                ?.join(', ') || 'N/A'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline', flexWrap: 'wrap' }}>
-            <Typography variant="body2" component="span">
-              Aquifer Types:
-            </Typography>
-            <Typography variant="body2" color="text.secondary" component="span">
-              {well?.aquifers && well.aquifers.length > 0
-                ? [
-                    ...new Set(well.aquifers.flatMap((a) => a.aquifer_types)),
-                  ].join(', ')
-                : 'N/A'}
-            </Typography>
-          </Box>
+        <Stack spacing={1}>
+          <InlineRow
+            label="Formation Completion Code"
+            value={well?.formation_completion_code || 'N/A'}
+          />
+          <InlineRow
+            label="Aquifer Systems"
+            value={
+              (well?.aquifers ?? [])
+                .map((a) => a?.aquifer_system)
+                .filter(Boolean)
+                .join(', ') || 'N/A'
+            }
+          />
+          <InlineRow
+            label="Aquifer Types"
+            value={
+              well?.aquifers && well.aquifers.length > 0
+                ? [...new Set(well.aquifers.flatMap((a) => a.aquifer_types))].join(', ')
+                : 'N/A'
+            }
+          />
         </Stack>
       </Box>
     </Paper>
   )
 }
+
+const InlineRow = ({ label, value }: { label: string; value: string }) => (
+  <Typography variant="body2">
+    {label}:{' '}
+    <Typography variant="body2" color="text.secondary" component="span">
+      {value}
+    </Typography>
+  </Typography>
+)
