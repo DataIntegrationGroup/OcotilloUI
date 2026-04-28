@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
-import { Box, Paper, Stack, Typography } from '@mui/material'
+import { Box, Paper, Typography } from '@mui/material'
 import type { UseDataGridReturnType } from '@refinedev/mui'
 import { MoreVertOutlined } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 
-export const AlternateIdsAccordion = ({
+export const AlternateIdsCard = ({
   dataGridProps,
 }: {
   dataGridProps: UseDataGridReturnType['dataGridProps']
@@ -25,7 +25,9 @@ export const AlternateIdsAccordion = ({
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box
+        sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+      >
         <MoreVertOutlined color="primary" />
         <Typography variant="body1" fontWeight="bold">
           Alternate IDs

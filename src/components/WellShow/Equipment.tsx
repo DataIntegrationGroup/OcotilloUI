@@ -8,7 +8,6 @@ import {
   GridToolbarContainer,
   GridToolbarDensitySelector,
 } from '@mui/x-data-grid'
-import { settings } from '@/settings'
 import { ISensor } from '@/interfaces/ocotillo'
 import { useSensorDeploymentRows } from '@/hooks'
 import { SensorDeploymentRow } from '@/utils'
@@ -20,7 +19,7 @@ const EquipmentToolbar = () => (
   </GridToolbarContainer>
 )
 
-export const EquipmentAccordion = ({
+export const EquipmentCard = ({
   sensors,
   deployments,
   isDetailsPending,
@@ -65,7 +64,10 @@ export const EquipmentAccordion = ({
   const rowSelectionModel = useMemo(
     () =>
       selectedEquipmentId != null
-        ? { type: 'include' as const, ids: new Set<GridRowId>([selectedEquipmentId]) }
+        ? {
+            type: 'include' as const,
+            ids: new Set<GridRowId>([selectedEquipmentId]),
+          }
         : { type: 'include' as const, ids: new Set<GridRowId>() },
     [selectedEquipmentId]
   )

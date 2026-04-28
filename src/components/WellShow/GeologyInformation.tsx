@@ -1,7 +1,7 @@
 import { Paper, Box, Stack, Typography } from '@mui/material'
 import { IWell } from '@/interfaces/ocotillo'
 
-export const GeologyInformationAccordion = ({ well }: { well?: IWell }) => {
+export const GeologyInformationCard = ({ well }: { well?: IWell }) => {
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
       <Box sx={{ px: 2, py: 1.5 }}>
@@ -28,7 +28,9 @@ export const GeologyInformationAccordion = ({ well }: { well?: IWell }) => {
             label="Aquifer Types"
             value={
               well?.aquifers && well.aquifers.length > 0
-                ? [...new Set(well.aquifers.flatMap((a) => a.aquifer_types))].join(', ')
+                ? [
+                    ...new Set(well.aquifers.flatMap((a) => a.aquifer_types)),
+                  ].join(', ')
                 : 'N/A'
             }
           />

@@ -63,4 +63,6 @@ export interface IWell extends IThing {
   contacts?: Partial<IContact>[] | null
 
   site_name?: string | null
+
+  historic_depth_to_water?: string[] | null
 }

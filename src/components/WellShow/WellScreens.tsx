@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
-import { Box, Paper, Stack, Typography } from '@mui/material'
+import { Box, Paper, Typography } from '@mui/material'
 import { MoreVertOutlined } from '@mui/icons-material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import type { IWellScreen } from '@/interfaces/ocotillo'
 
-export const WellScreensAccordion = ({
+export const WellScreensCard = ({
   rows,
   isLoading,
 }: {
