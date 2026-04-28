@@ -125,8 +125,13 @@ const matchesPolicy = (
   roles: PortalRole[]
 ): boolean => Boolean(allowedRoles?.some((role) => roles.includes(role)))
 
-export const isResourceListAdminOnly = (resource: string): boolean => {
-  const listPolicy = resourcePolicies[resource]?.list
+export const isResourceListAdminOnly = (resource?: string): boolean => {
+  if (!resource) return false
+
+  const listPolicy =
+    resourcePolicies[resource]?.list ??
+    resourcePolicies[resource.toLowerCase()]?.list
+
   if (!listPolicy || listPolicy.length === 0) return false
 
   return listPolicy.every((role) => adminOnlyRoles.has(role))

@@ -15,8 +15,8 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc",
-    "mock:server:vitest": "prism mock https://ocotillo-api-staging.newmexicowaterdata.org/openapi-auth.json --dynamic=false --port 4010",
-    "mock:server:cypress": "prism mock https://ocotillo-api-staging.newmexicowaterdata.org/openapi-auth.json --dynamic=true --port 4010 --seed 12345",
+    "mock:server:vitest": "prism mock openapi-auth.json --dynamic=false --port 4010",
+    "mock:server:cypress": "prism mock openapi-auth.json --dynamic=true --port 4010 --seed 12345",
     "openapi:generate": "npx @hey-api/openapi-ts"
   },
   "browserslist": {

@@ -80,7 +80,7 @@ export const WellList: React.FC = () => {
     meta: {
       params: {
         include_contacts: true,
-        ...(search ? { query: search } : {}),
+        ...(search ? { name_contains: search } : {}),
       },
     },
     pagination: { pageSize: 50 },
@@ -356,6 +356,8 @@ export const WellList: React.FC = () => {
       searchMode="server"
       searchValue={searchInput}
       onSearchChange={setSearchInput}
+      searchPlaceholder="Search by well name"
+      searchAriaLabel="Search wells by well name"
     />
   )
 }

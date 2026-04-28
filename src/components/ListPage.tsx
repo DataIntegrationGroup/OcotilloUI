@@ -132,6 +132,8 @@ type ListPageProps = {
   searchValue?: string
   onSearchChange?: (value: string) => void
   searchPlaceholder?: string
+  /** Overrides default aria-label on the search input when server search is customized */
+  searchAriaLabel?: string
 }
 
 export const ListPage: React.FC<ListPageProps> = ({
@@ -150,6 +152,7 @@ export const ListPage: React.FC<ListPageProps> = ({
   searchValue,
   onSearchChange,
   searchPlaceholder,
+  searchAriaLabel,
 }) => {
   if (!exportProps) {
     exportProps = { pageSize: 1000 }
@@ -303,9 +306,10 @@ export const ListPage: React.FC<ListPageProps> = ({
               sx={{ fontSize: 14, flex: 1 }}
               inputProps={{
                 'aria-label':
-                  searchMode === 'server'
+                  searchAriaLabel ??
+                  (searchMode === 'server'
                     ? 'Search all records'
-                    : 'Filter rows on this page',
+                    : 'Filter rows on this page'),
               }}
             />
           </Box>
