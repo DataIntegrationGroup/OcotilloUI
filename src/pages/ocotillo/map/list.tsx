@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { captureEvent } from '@/analytics/posthog'
 import { Layer, Source } from 'react-map-gl'
 import { useDataProvider, useGo } from '@refinedev/core'
+import type { CustomParams } from '@refinedev/core'
 import { useLocation } from 'react-router'
 import {
   Box,
@@ -572,8 +573,7 @@ export const MapView: React.FC = () => {
     setExportVisibleBusy(true)
     try {
       const ocotillo = dataProvider('ocotillo')
-      const customRequest = (args: { url: string; method: string }) =>
-        ocotillo.custom(args)
+      const customRequest = (args: CustomParams) => ocotillo.custom(args)
 
       for (let index = 0; index < visiblePointFeaturesByLayer.length; index++) {
         const { label, features } = visiblePointFeaturesByLayer[index]

@@ -1,3 +1,4 @@
+import type { CustomParams } from '@refinedev/core'
 import type { IWellDetails } from '@/interfaces/ocotillo'
 import { getFeatureId } from '@/utils/mapSelection'
 import {
@@ -9,10 +10,16 @@ import {
 
 export { buildWellShowAbsoluteUrl, getOcotilloPublicAppOrigin } from '@/utils/wellPublicUrls'
 
-type CustomGetter = (args: {
-  url: string
-  method: string
-}) => Promise<{ data: unknown }>
+type CustomGetter = (params: CustomParams) => Promise<{ data: unknown }>
+
+function ogcSiteNameFromProperties(
+  cleaned: Record<string, unknown>
+): string | number | undefined {
+  const v = cleaned.site_name
+  if (v === null || v === undefined) return undefined
+  if (typeof v === 'string' || typeof v === 'number') return v
+  return undefined
+}
 
 /**
  * @deprecated use buildWellMapCsvValues from @/well-export/wellMapCsvExport
@@ -63,7 +70,7 @@ export async function enrichMapFeaturesWithWellDetails(
     const id = getFeatureId(feature)
     const raw = (feature.properties || {}) as Record<string, unknown>
     const cleaned = stripLegacyDetailPrefixedKeys(raw)
-    const ogcSiteName = cleaned.site_name
+    const ogcSiteName = ogcSiteNameFromProperties(cleaned)
     const { site_name: _dropOgcSite, ...restNoOgcSite } = cleaned
     const baseProps = dropMapCsvExcludedFeatureKeys(restNoOgcSite)
 
