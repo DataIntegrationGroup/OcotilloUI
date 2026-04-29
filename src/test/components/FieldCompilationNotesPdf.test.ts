@@ -5,6 +5,7 @@ import { inflate } from 'pako'
 import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import { formatContactPhones } from '@/components/pdf/fieldCompilationPhoneFormatter'
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
 
 const makeContact = (phones: NonNullable<IContact['phones']>): IContact =>
   ({
@@ -70,15 +71,27 @@ const decodePdfStreams = (pdfText: string) => {
   return decoded.join('\n')
 }
 
-const decodePdfHexStrings = (decodedPdfText: string) => {
-  const fragments: string[] = []
+const extractPdfText = async (pdfBlob: Blob) => {
+  const data = new Uint8Array(await pdfBlob.arrayBuffer())
 
-  for (const match of decodedPdfText.matchAll(/<([0-9A-Fa-f]+)>/g)) {
-    const hex = match[1]
-    fragments.push(Buffer.from(hex, 'hex').toString('latin1'))
+  const document = await pdfjsLib.getDocument({
+    data,
+  }).promise
+
+  const pages: string[] = []
+
+  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber++) {
+    const page = await document.getPage(pageNumber)
+    const textContent = await page.getTextContent()
+
+    pages.push(textContent.items.map((item: any) => item.str).join(''))
   }
 
-  return fragments.join('')
+  return {
+    pageCount: document.numPages,
+    text: pages.join('\n'),
+    pages,
+  }
 }
 
 describe('formatContactPhones', () => {
@@ -155,7 +168,7 @@ describe('formatContactPhones', () => {
 })
 
 describe('FieldCompilationNotesPdf', () => {
-  it('appends a final blank page with the requested text when no hydrograph image is provided', async () => {
+  it('renders all expected pages and content when no hydrograph image is provided', async () => {
     const pdfBlob = await pdf(
       createElement(FieldCompilationNotesPdf, {
         well: makeWell(),
@@ -167,17 +180,13 @@ describe('FieldCompilationNotesPdf', () => {
       }) as any
     ).toBlob()
 
-    const pdfText = Buffer.from(await pdfBlob.arrayBuffer()).toString('latin1')
+    const { pageCount, pages } = await extractPdfText(pdfBlob)
 
-    const pageMatches = pdfText.match(/\/Type \/Page\b/g) ?? []
-    const decodedText = decodePdfStreams(pdfText)
-    const decodedVisibleText = decodePdfHexStrings(decodedText)
+    expect(pageCount).toBe(4)
 
-    expect(pageMatches).toHaveLength(4)
-    expect(decodedVisibleText).toContain(
-      'This page is intentionally left blank'
-    )
-    expect(decodedVisibleText).toContain('Field Compilation Notes')
-    expect(decodedVisibleText).toContain('General Field Notes: Well-1')
+    expect(pages[0]).toContain('Field Compilation Notes')
+    expect(pages[1]).toContain('General Field Notes: Well-1')
+    expect(pages[2]).toContain('Hydrograph unavailable for this well')
+    expect(pages[3]).toContain('This page is intentionally left blank')
   })
 })
