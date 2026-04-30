@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGo } from '@refinedev/core'
+import { captureEvent } from '@/analytics/posthog'
 import { GroupType } from '@/constants'
 import { useAbortableList } from './useAbortableList'
 import { useDebounce } from './useDebounce'
@@ -108,6 +109,68 @@ export const useSearchModalState = ({
 
     return searchDocs(parsed.term)
   }, [parsed])
+
+  /** Avoid duplicate PostHog emissions when the debounced query or outcome repeats. */
+  const defaultSearchEmittedKey = useRef<string | null>(null)
+  useEffect(() => {
+    defaultSearchEmittedKey.current = null
+  }, [debounced])
+
+  /**
+   * PostHog: command palette API search (wells, contacts, assets).
+   * One event per completed search for a given debounced query string.
+   */
+  useEffect(() => {
+    if (!open || parsed.mode !== 'default') return
+    const q = debounced.trim()
+    if (!q) return
+    if (searchQuery.isFetching) return
+
+    const key = `${q}|${searchQuery.isError ? 1 : 0}|${results.length}`
+    if (defaultSearchEmittedKey.current === key) return
+    defaultSearchEmittedKey.current = key
+
+    captureEvent('global_search', {
+      search_mode: 'default',
+      query: q,
+      result_count: results.length,
+      has_results: results.length > 0,
+      had_error: searchQuery.isError,
+    })
+  }, [
+    debounced,
+    open,
+    parsed.mode,
+    results.length,
+    searchQuery.isError,
+    searchQuery.isFetching,
+  ])
+
+  const docsSearchEmittedKey = useRef<string | null>(null)
+  useEffect(() => {
+    docsSearchEmittedKey.current = null
+  }, [parsed.term])
+
+  /**
+   * PostHog: local docs search (!docs …).
+   */
+  useEffect(() => {
+    if (!open || parsed.mode !== 'docs') return
+    const term = parsed.term.trim()
+    if (!term) return
+
+    const key = `${term}|${docsResults.length}`
+    if (docsSearchEmittedKey.current === key) return
+    docsSearchEmittedKey.current = key
+
+    captureEvent('global_search', {
+      search_mode: 'docs',
+      query: term,
+      result_count: docsResults.length,
+      has_results: docsResults.length > 0,
+      had_error: false,
+    })
+  }, [docsResults.length, open, parsed.mode, parsed.term])
 
   const navigateToResult = (option: SearchResult) => {
     switch (option.group) {
