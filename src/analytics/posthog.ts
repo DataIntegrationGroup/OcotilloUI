@@ -19,6 +19,21 @@ export const initPostHog = () => {
     capture_pageview: false,
     capture_pageleave: true,
     capture_exceptions: true,
+    session_recording: {
+      maskInputFn: (text, element) => {
+        const el = element as HTMLInputElement | undefined
+        if (el?.type === 'password') {
+          return '*'.repeat(text.length)
+        }
+        if (
+          el?.hasAttribute?.('data-posthog-unmask-search') ||
+          el?.closest?.('[data-posthog-unmask-search]')
+        ) {
+          return text
+        }
+        return '*'.repeat(text.length)
+      },
+    },
   })
 
   // Tag every event with the environment so staging visits are

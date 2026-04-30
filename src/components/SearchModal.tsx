@@ -84,7 +84,10 @@ export const SearchModal = ({ open, onClose }: SearchModalProps) => {
             placeholder="Search"
             fullWidth
             sx={{ fontSize: 15 }}
-            inputProps={{ 'aria-label': 'Search' }}
+            inputProps={{
+              'aria-label': 'Search',
+              'data-posthog-unmask-search': true,
+            }}
             endAdornment={
               state.query ? (
                 <InputAdornment position="end">
