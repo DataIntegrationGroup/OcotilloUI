@@ -81,7 +81,7 @@ export const WellList: React.FC = () => {
     meta: {
       params: {
         include_contacts: true,
-        ...(search ? { name_contains: search } : {}),
+        ...(search ? { query: search } : {}),
       },
     },
     pagination: { pageSize: 50 },
@@ -265,7 +265,8 @@ export const WellList: React.FC = () => {
       {
         field: 'well_driller_name',
         headerName: WellListColumnLabels.driller,
-        description: 'Drilling company name when it was recorded for this well.',
+        description:
+          'Drilling company name when it was recorded for this well.',
         type: 'string',
         minWidth: 150,
         flex: 1,
