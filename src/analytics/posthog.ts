@@ -28,12 +28,48 @@ export const initPostHog = () => {
   initialized = true
 }
 
-export const capturePostHogPageview = (path: string) => {
+/**
+ * Optional properties for well detail pages so `well_id` is on `$pageview`
+ * (and shows up in PostHog when breaking down or filtering).
+ */
+export const wellDetailPageviewProps = (
+  pathname: string
+):
+  | {
+      well_id: string
+      page_template: 'well_detail'
+      well_detail_area: 'ocotillo' | 'amp'
+    }
+  | undefined => {
+  const ocotillo = pathname.match(/^\/ocotillo\/well\/show\/([^/]+)\/?$/)
+  if (ocotillo) {
+    return {
+      well_id: ocotillo[1],
+      page_template: 'well_detail',
+      well_detail_area: 'ocotillo',
+    }
+  }
+  const amp = pathname.match(/^\/amp\/wells\/show\/([^/]+)\/?$/)
+  if (amp) {
+    return {
+      well_id: amp[1],
+      page_template: 'well_detail',
+      well_detail_area: 'amp',
+    }
+  }
+  return undefined
+}
+
+export const capturePostHogPageview = (
+  path: string,
+  extras?: Record<string, unknown>
+) => {
   if (!isEnabled || !initialized) return
 
   posthog.capture('$pageview', {
     $current_url: window.location.href,
     path,
+    ...(extras ?? {}),
   })
 }
 

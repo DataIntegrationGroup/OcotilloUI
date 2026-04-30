@@ -65,7 +65,11 @@ export const WellShow = () => {
 
   useEffect(() => {
     if (id)
-      captureEvent('feature_used', { feature: 'well_detail', well_id: id })
+      captureEvent('feature_used', {
+        feature: 'well_detail',
+        well_id: id,
+        well_detail_area: 'ocotillo',
+      })
   }, [id])
 
   const detailsQuery = useQuery({
