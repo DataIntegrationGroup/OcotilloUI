@@ -2,6 +2,7 @@ import { useShow } from '@refinedev/core'
 import { Show } from '@refinedev/mui'
 import { useAccessCapabilities } from '@/hooks'
 import { sanitizeContact } from '@/utils'
+import { getContactDisplayName } from '@/utils/contactDisplayName'
 import { Box, Chip, Stack, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { IContact } from '@/interfaces/ocotillo'
@@ -47,7 +48,7 @@ export const ContactShow = () => {
           }}
         >
           <Typography variant="h3" fontWeight={700}>
-            {contact?.name ?? ''}
+            {getContactDisplayName(contact ?? {})}
           </Typography>
           {contact?.role && (
             <Chip label={contact.role} size="small" variant="outlined" />

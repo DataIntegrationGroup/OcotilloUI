@@ -13,6 +13,7 @@ import AddIcon from '@mui/icons-material/Add'
 import { useLink, useNavigation } from '@refinedev/core'
 import { settings } from '@/settings'
 import { formatAppDateTime, formatPhone } from '@/utils'
+import { getContactDisplayName } from '@/utils/contactDisplayName'
 import { ListPage } from '@/components'
 import { useAccessCapabilities } from '@/hooks'
 import { filterConfidentialRows, sanitizeContacts } from '@/utils'
@@ -42,6 +43,7 @@ export const ContactList: React.FC = () => {
         type: 'string',
         minWidth: 160,
         flex: 1,
+        valueGetter: (_: unknown, row: IContact) => getContactDisplayName(row),
       },
       {
         field: 'organization',

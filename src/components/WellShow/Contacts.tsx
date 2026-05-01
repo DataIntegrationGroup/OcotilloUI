@@ -12,6 +12,7 @@ import { Directions } from '@mui/icons-material'
 import { Link as RouterLink } from 'react-router'
 import type { IContact } from '@/interfaces/ocotillo'
 import { formatPhone, formatContactAddress, formatAddress } from '@/utils'
+import { getContactDisplayName } from '@/utils/contactDisplayName'
 
 const getGoogleMapsAddressUrl = (address: string) => {
   if (!address || address === 'N/A') return null
@@ -40,6 +41,13 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
   const phones = contact.phones ?? []
   const addresses = contact.addresses ?? []
 
+  const displayName = getContactDisplayName(contact)
+  // When the contact has no personal name and the org is used as the display
+  // name, suppress the org line below to avoid showing it twice.
+  const isOrgOnlyContact =
+    !contact.name?.trim() && !!contact.organization?.trim()
+  const nameLabel = isOrgOnlyContact ? 'Organization' : 'Contact name'
+
   return (
     <Stack spacing={0.5} component="div">
       {roleType && (
@@ -47,16 +55,16 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
           {roleType}
         </Typography>
       )}
-      {contact.name && (
+      {displayName && (
         <Typography
           variant="caption"
           color="text.secondary"
           sx={{ fontWeight: 600, display: 'block', letterSpacing: 0.3 }}
         >
-          Contact name
+          {nameLabel}
         </Typography>
       )}
-      {contact.name && contact.id && (
+      {displayName && contact.id && (
         <Typography
           variant="body2"
           component={RouterLink}
@@ -67,17 +75,19 @@ const ContactBlock = ({ contact }: { contact: IContact }) => {
             '&:hover': { textDecoration: 'underline' },
           }}
         >
-          {contact.name}
+          {displayName}
         </Typography>
       )}
-      {contact.name && !contact.id && (
+      {displayName && !contact.id && (
         <Typography variant="body2" component="div">
-          {contact.name}
+          {displayName}
         </Typography>
       )}
-      <Typography variant="body2" color="text.secondary" component="div">
-        {contact.organization || 'No organization listed'}
-      </Typography>
+      {!isOrgOnlyContact && (
+        <Typography variant="body2" color="text.secondary" component="div">
+          {contact.organization || 'No organization listed'}
+        </Typography>
+      )}
       {emails.length > 0 && (
         <Typography
           variant="caption"
