@@ -245,7 +245,9 @@ export const WellList: React.FC = () => {
                         id: contact.id,
                       },
                     }}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) =>
+                      e.stopPropagation()
+                    }
                   >
                     {contact.name}
                   </Link>
@@ -265,7 +267,8 @@ export const WellList: React.FC = () => {
       {
         field: 'well_driller_name',
         headerName: WellListColumnLabels.driller,
-        description: 'Drilling company name when it was recorded for this well.',
+        description:
+          'Drilling company name when it was recorded for this well.',
         type: 'string',
         minWidth: 150,
         flex: 1,

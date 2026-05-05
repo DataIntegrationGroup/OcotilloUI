@@ -106,9 +106,6 @@ function ListPageToolbar() {
             button: { 'data-testid': 'grid-toolbar-density-selector' },
           }}
         />
-        <GridToolbarExport
-          slotProps={{ button: { 'data-testid': 'grid-toolbar-export' } }}
-        />
       </Box>
       <ActiveFilterChips />
     </GridToolbarContainer>
