@@ -43,8 +43,7 @@ export const Home = () => {
 }
 
 const appEnv = import.meta.env.VITE_APP_ENV || 'production'
-const showTestSiteBanner =
-  import.meta.env.DEV || appEnv !== 'production'
+const showTestSiteBanner = import.meta.env.DEV || appEnv !== 'production'
 
 const HomeNotification = ({ noPermissions }) => {
   const [notificationOpen, setNotificationOpen] = useState(true)
@@ -337,7 +336,7 @@ const About = () => {
               <Card
                 variant="outlined"
                 sx={{ height: '100%', cursor: 'pointer' }}
-                onClick={() => go({ to: '/ocotillo/help' })}
+                onClick={() => go({ to: '/ogcapi' })}
               >
                 <CardContent>
                   <HelpOutlineOutlined
