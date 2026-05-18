@@ -8,6 +8,7 @@ import { PictureAsPdf } from '@mui/icons-material'
 import { ListPage } from '@/components/ListPage'
 import { ISpring, IWell } from '@/interfaces/ocotillo'
 import { displayWellSiteName, formatAppDate, formatAppDateTime } from '@/utils'
+import { getContactDisplayName } from '@/utils/contactDisplayName'
 import { WellListColumnLabels } from '@/well-list/wellListColumnLabels'
 
 export const SpringList: React.FC = () => {
@@ -223,7 +224,7 @@ export const WellList: React.FC = () => {
         minWidth: 180,
         flex: 1,
         valueGetter: (_: unknown, row: IWell) =>
-          row.contacts?.map((c) => c.name ?? '').join(', ') ?? '',
+          row.contacts?.map((c) => getContactDisplayName(c)).join(', ') ?? '',
         renderCell: (params) => {
           const contacts = params.row.contacts ?? []
           return (
@@ -249,7 +250,7 @@ export const WellList: React.FC = () => {
                       e.stopPropagation()
                     }
                   >
-                    {contact.name}
+                    {getContactDisplayName(contact)}
                   </Link>
                 </span>
               ))}
