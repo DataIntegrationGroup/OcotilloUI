@@ -107,6 +107,7 @@ export const WellList: React.FC = () => {
       params: {
         thing_type: ['water well', 'geothermal well'],
         include_contacts: true,
+        ...(search ? { name_contains: search } : {}),
       },
     },
   })
