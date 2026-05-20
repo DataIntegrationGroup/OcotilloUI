@@ -103,10 +103,12 @@ export const WellList: React.FC = () => {
   const { triggerExport, isLoading: exportIsLoading } = useExport({
     resource: 'thing',
     dataProviderName: 'ocotillo',
+    pageSize: 500,
     meta: {
       params: {
         thing_type: ['water well', 'geothermal well'],
         include_contacts: true,
+        ...(search ? { name_contains: search } : {}),
       },
     },
   })
