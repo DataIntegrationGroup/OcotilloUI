@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useExport, useGo, useLink } from '@refinedev/core'
 import { ExportButton, useDataGrid } from '@refinedev/mui'
 import {
+  GridCallbackDetails,
   GridColDef,
   GridColumnVisibilityModel,
   GridFilterModel,
@@ -99,7 +100,10 @@ export const WellList: React.FC = () => {
     pagination: { pageSize: 50 },
   })
 
-  const handleFilterModelChange = (model: GridFilterModel) => {
+  const handleFilterModelChange = (
+    model: GridFilterModel,
+    details: GridCallbackDetails
+  ) => {
     const activeFilters = model.items.filter((f) => f.value !== undefined)
     if (activeFilters.length > 0) {
       captureEvent('wells_filter_applied', {
@@ -108,7 +112,7 @@ export const WellList: React.FC = () => {
         filter_operators: activeFilters.map((f) => f.operator),
       })
     }
-    dataGridProps.onFilterModelChange?.(model)
+    dataGridProps.onFilterModelChange?.(model, details)
   }
 
   const handleColumnVisibilityModelChange = (
@@ -127,14 +131,17 @@ export const WellList: React.FC = () => {
     captureEvent('wells_density_changed', { density })
   }
 
-  const handleSortModelChange = (model: GridSortModel) => {
+  const handleSortModelChange = (
+    model: GridSortModel,
+    details: GridCallbackDetails
+  ) => {
     if (model.length > 0) {
       captureEvent('wells_sorted', {
         field: model[0].field,
         direction: model[0].sort,
       })
     }
-    dataGridProps.onSortModelChange?.(model)
+    dataGridProps.onSortModelChange?.(model, details)
   }
 
   const { triggerExport, isLoading: exportIsLoading } = useExport({
