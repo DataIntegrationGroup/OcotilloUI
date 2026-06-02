@@ -18,6 +18,7 @@ import {
   ListItemText,
   Pagination,
   Paper,
+  Skeleton,
   Stack,
   Tooltip,
   Typography,
@@ -38,7 +39,7 @@ import {
   type PiperDiagramHandle,
 } from '@/components/PiperDiagram'
 import { MapPopup } from '@/components'
-import { useMeasuredHeight, useThingLayers } from '@/hooks'
+import { useMeasuredHeight, useThingLayers, useViewportBbox } from '@/hooks'
 import { DEFAULT_MAPBOX_BASEMAP } from '@/constants'
 import {
   buildLayerCsv,
@@ -252,7 +253,7 @@ export const MapView: React.FC = () => {
     Record<string, boolean>
   >({})
   const THING_LAYERS = useThingLayers(visibleLayers, colorMappingByLayer)
-  const [viewportBbox, setViewportBbox] = useState<string | null>(null)
+  const viewportBbox = useViewportBbox(mapRef)
   const [basemapCollapsed, setBasemapCollapsed] = useState(true)
   const [visibleFeaturesCollapsed, setVisibleFeaturesCollapsed] =
     useState(false)
@@ -267,6 +268,7 @@ export const MapView: React.FC = () => {
   >({})
   const [visiblePointFeaturesByLayer, setVisiblePointFeaturesByLayer] =
     useState<VisibleFeatureGroup[]>([])
+  const [featuresLoading, setFeaturesLoading] = useState(false)
   const [visibleFeaturesPage, setVisibleFeaturesPage] = useState(1)
   const [selectedBasemap, setSelectedBasemap] = useState(DEFAULT_MAPBOX_BASEMAP)
   const [isPiperDrawerOpen, setIsPiperDrawerOpen] = useState(false)
@@ -341,8 +343,11 @@ export const MapView: React.FC = () => {
   useEffect(() => {
     if (!viewportBbox) {
       setVisiblePointFeaturesByLayer([])
+      setFeaturesLoading(false)
       return
     }
+
+    setFeaturesLoading(true)
 
     let frame = 0
     let idleFrame = 0
@@ -351,6 +356,7 @@ export const MapView: React.FC = () => {
     const updateVisibleRenderedFeatures = () => {
       if (!map) {
         setVisiblePointFeaturesByLayer([])
+        setFeaturesLoading(false)
         return
       }
 
@@ -359,6 +365,7 @@ export const MapView: React.FC = () => {
       )
       if (renderedLayerIds.length === 0) {
         setVisiblePointFeaturesByLayer([])
+        setFeaturesLoading(false)
         return
       }
 
@@ -415,6 +422,7 @@ export const MapView: React.FC = () => {
           ? previous
           : nextVisibleFeatureGroups
       )
+      setFeaturesLoading(false)
     }
 
     const handleMapIdle = () => {
@@ -790,8 +798,6 @@ export const MapView: React.FC = () => {
         minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: 1,
-        mt: -1,
         pb: 0,
       }}
     >
@@ -848,7 +854,6 @@ export const MapView: React.FC = () => {
               setPopupContent={setPopupContent}
               popupContent={popupContent}
               onPointClick={onMapPointClick}
-              onBoundsChange={setViewportBbox}
               onMouseMoveCallback={onMapMouseMove}
               basemapUri={selectedBasemap}
               onBasemapChange={setSelectedBasemap}
@@ -1524,7 +1529,9 @@ export const MapView: React.FC = () => {
                     variant="body2"
                     sx={{ fontWeight: 600 }}
                   >
-                    {hasVisiblePointFeatures
+                    {featuresLoading && !hasVisiblePointFeatures ? (
+                      <Skeleton variant="text" width={160} />
+                    ) : hasVisiblePointFeatures
                       ? `${totalVisiblePointCount} feature${totalVisiblePointCount === 1 ? '' : 's'} in view`
                       : 'No features in view'}
                   </Typography>
@@ -1532,7 +1539,9 @@ export const MapView: React.FC = () => {
                     variant="caption"
                     sx={{ color: 'text.secondary', display: 'block', mt: 0.15 }}
                   >
-                    {hasVisiblePointFeatures
+                    {featuresLoading && !hasVisiblePointFeatures ? (
+                      <Skeleton variant="text" width={220} />
+                    ) : hasVisiblePointFeatures
                       ? `${visiblePointFeaturesByLayer.length} dataset${visiblePointFeaturesByLayer.length === 1 ? '' : 's'} currently visible in the map extent`
                       : 'Pan or zoom the map to inspect visible features from active datasets'}
                   </Typography>
