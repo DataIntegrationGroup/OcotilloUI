@@ -18,7 +18,6 @@ import {
   ListItemText,
   Pagination,
   Paper,
-  Skeleton,
   Stack,
   Tooltip,
   Typography,
@@ -268,7 +267,6 @@ export const MapView: React.FC = () => {
   >({})
   const [visiblePointFeaturesByLayer, setVisiblePointFeaturesByLayer] =
     useState<VisibleFeatureGroup[]>([])
-  const [featuresLoading, setFeaturesLoading] = useState(false)
   const [visibleFeaturesPage, setVisibleFeaturesPage] = useState(1)
   const [selectedBasemap, setSelectedBasemap] = useState(DEFAULT_MAPBOX_BASEMAP)
   const [isPiperDrawerOpen, setIsPiperDrawerOpen] = useState(false)
@@ -343,11 +341,8 @@ export const MapView: React.FC = () => {
   useEffect(() => {
     if (!viewportBbox) {
       setVisiblePointFeaturesByLayer([])
-      setFeaturesLoading(false)
       return
     }
-
-    setFeaturesLoading(true)
 
     let frame = 0
     let idleFrame = 0
@@ -356,7 +351,6 @@ export const MapView: React.FC = () => {
     const updateVisibleRenderedFeatures = () => {
       if (!map) {
         setVisiblePointFeaturesByLayer([])
-        setFeaturesLoading(false)
         return
       }
 
@@ -365,7 +359,6 @@ export const MapView: React.FC = () => {
       )
       if (renderedLayerIds.length === 0) {
         setVisiblePointFeaturesByLayer([])
-        setFeaturesLoading(false)
         return
       }
 
@@ -422,7 +415,6 @@ export const MapView: React.FC = () => {
           ? previous
           : nextVisibleFeatureGroups
       )
-      setFeaturesLoading(false)
     }
 
     const handleMapIdle = () => {
@@ -1529,9 +1521,7 @@ export const MapView: React.FC = () => {
                     variant="body2"
                     sx={{ fontWeight: 600 }}
                   >
-                    {featuresLoading && !hasVisiblePointFeatures ? (
-                      <Skeleton variant="text" width={160} />
-                    ) : hasVisiblePointFeatures
+                    {hasVisiblePointFeatures
                       ? `${totalVisiblePointCount} feature${totalVisiblePointCount === 1 ? '' : 's'} in view`
                       : 'No features in view'}
                   </Typography>
@@ -1539,9 +1529,7 @@ export const MapView: React.FC = () => {
                     variant="caption"
                     sx={{ color: 'text.secondary', display: 'block', mt: 0.15 }}
                   >
-                    {featuresLoading && !hasVisiblePointFeatures ? (
-                      <Skeleton variant="text" width={220} />
-                    ) : hasVisiblePointFeatures
+                    {hasVisiblePointFeatures
                       ? `${visiblePointFeaturesByLayer.length} dataset${visiblePointFeaturesByLayer.length === 1 ? '' : 's'} currently visible in the map extent`
                       : 'Pan or zoom the map to inspect visible features from active datasets'}
                   </Typography>
