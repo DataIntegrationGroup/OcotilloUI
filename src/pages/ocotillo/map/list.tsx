@@ -300,6 +300,14 @@ export const MapView: React.FC = () => {
     setSelectionPolygons({})
   }, [hasSelectionPolygon, selectionPolygons])
 
+  useEffect(() => {
+    if (selectionFeatures.length > 0) {
+      captureEvent('map_selection_drawn', {
+        polygon_count: selectionFeatures.length,
+      })
+    }
+  }, [selectionFeatures.length])
+
   const exportableLayers = useMemo(
     () =>
       visibleLayers.flatMap((layerKey) => {
@@ -571,6 +579,10 @@ export const MapView: React.FC = () => {
 
   const onExportVisiblePoints = async () => {
     setExportVisibleBusy(true)
+    const totalFeatureCount = visiblePointFeaturesByLayer.reduce(
+      (sum, { features }) => sum + features.length,
+      0
+    )
     try {
       const ocotillo = dataProvider('ocotillo')
       const customRequest = (args: CustomParams) => ocotillo.custom(args)
@@ -591,36 +603,86 @@ export const MapView: React.FC = () => {
           index
         )
       }
+      captureEvent('map_export', {
+        format: exportFormat,
+        scope: 'visible',
+        layer_count: visiblePointFeaturesByLayer.length,
+        feature_count: totalFeatureCount,
+        has_selection: hasSelectionPolygon,
+      })
+    } catch (error) {
+      captureEvent('map_export_error', {
+        format: exportFormat,
+        scope: 'visible',
+        layer_count: visiblePointFeaturesByLayer.length,
+        feature_count: totalFeatureCount,
+        error: error instanceof Error ? error.message : String(error),
+      })
     } finally {
       setExportVisibleBusy(false)
     }
   }
 
   const onExportLayer = () => {
+    const totalFeatureCount = exportableLayers.reduce(
+      (sum, { featureCollection }) =>
+        sum +
+        (Array.isArray(featureCollection?.features)
+          ? featureCollection.features.length
+          : 0),
+      0
+    )
     exportableLayers.forEach(({ featureCollection, label }, index) => {
       exportLayerCollection(featureCollection, label, exportFormat, index)
+    })
+    captureEvent('map_export', {
+      format: exportFormat,
+      scope: 'layer',
+      layer_count: exportableLayers.length,
+      feature_count: totalFeatureCount,
+      has_selection: hasSelectionPolygon,
     })
   }
 
   const onLayerChangeWrapper =
     (layerKey: string) =>
     (_event: React.ChangeEvent<HTMLInputElement>, _checked: boolean) => {
-      setVisibleLayers((prev) =>
-        prev.includes(layerKey)
+      setVisibleLayers((prev) => {
+        const wasEnabled = prev.includes(layerKey)
+        const next = wasEnabled
           ? prev.filter((layer) => layer !== layerKey)
           : [...prev, layerKey]
-      )
+        captureEvent('map_layer_toggled', {
+          layer_key: layerKey,
+          layer_label: THING_LAYERS[layerKey]?.layerProps?.label ?? layerKey,
+          enabled: !wasEnabled,
+          total_active_layers: next.length,
+        })
+        return next
+      })
     }
 
   const onColorMappingToggle = (layerKey: string) => {
-    setColorMappingByLayer((prev) => ({
-      ...prev,
-      [layerKey]: !(prev[layerKey] ?? true),
-    }))
+    setColorMappingByLayer((prev) => {
+      const wasEnabled = prev[layerKey] ?? true
+      captureEvent('map_color_mapping_toggled', {
+        layer_key: layerKey,
+        layer_label: THING_LAYERS[layerKey]?.layerProps?.label ?? layerKey,
+        enabled: !wasEnabled,
+      })
+      return { ...prev, [layerKey]: !wasEnabled }
+    })
   }
 
   const onGroupToggle = (groupKey: string) => {
-    setExpandedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }))
+    setExpandedGroups((prev) => {
+      const wasExpanded = prev[groupKey]
+      captureEvent('map_layer_group_toggled', {
+        group: groupKey,
+        expanded: !wasExpanded,
+      })
+      return { ...prev, [groupKey]: !wasExpanded }
+    })
   }
 
   const groupLabels: Record<keyof typeof expandedGroups, string> = {
@@ -674,6 +736,13 @@ export const MapView: React.FC = () => {
     ).toLowerCase()
     const id = getFeatureId(selectedPoint)
     if (!id) return
+
+    const layerKey = layerId.replace(/^location-/, '')
+    captureEvent('map_point_clicked', {
+      layer_key: layerKey,
+      thing_type: thingType || 'unknown',
+      thing_id: id,
+    })
 
     const isWaterWellLayer =
       layerId.includes('ogc-water-wells') ||
@@ -982,7 +1051,10 @@ export const MapView: React.FC = () => {
               <Box sx={{ px: 0.5, pb: 0.5 }}>
                 <BasemapSelector
                   value={selectedBasemap}
-                  onChange={setSelectedBasemap}
+                  onChange={(uri) => {
+                    setSelectedBasemap(uri)
+                    captureEvent('map_basemap_changed', { basemap: uri })
+                  }}
                 />
               </Box>
             </Collapse>
@@ -1290,7 +1362,18 @@ export const MapView: React.FC = () => {
                                         />
                                       }
                                       onClick={() =>
-                                        setIsPiperDrawerOpen((open) => !open)
+                                        setIsPiperDrawerOpen((open) => {
+                                          if (!open) {
+                                            captureEvent(
+                                              'map_piper_diagram_opened',
+                                              {
+                                                feature_count:
+                                                  selectedMajorChemistryPoints.length,
+                                              }
+                                            )
+                                          }
+                                          return !open
+                                        })
                                       }
                                       disabled={!visibleLayers.includes(key)}
                                       sx={{
