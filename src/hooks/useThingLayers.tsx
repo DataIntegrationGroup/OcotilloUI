@@ -849,103 +849,131 @@ export const useThingLayers = (
       isLayerActive('ogc-soil-gas-sample-locations'),
   })
 
-  const layers: Record<string, any> = {}
-  const seenCollectionIds = new Set<string>()
+  return useMemo(() => {
+    const result: Record<string, any> = {}
+    const seenCollectionIds = new Set<string>()
 
-  const addLayer = (
-    layerKey: string,
-    collection: { id: string; exists: boolean; description?: string },
-    layer: any
-  ) => {
-    const hasId = collection.exists && collection.id
-    if (!hasId) return
-    if (seenCollectionIds.has(collection.id)) return
-    seenCollectionIds.add(collection.id)
-    layers[layerKey] = {
-      ...layer,
-      description: collection.description,
-      colorMappingAvailable: layer.colorMappingAvailable ?? false,
-      colorMappingEnabled: layer.colorMappingEnabled ?? false,
+    const addLayer = (
+      layerKey: string,
+      collection: { id: string; exists: boolean; description?: string },
+      layer: any
+    ) => {
+      const hasId = collection.exists && collection.id
+      if (!hasId) return
+      if (seenCollectionIds.has(collection.id)) return
+      seenCollectionIds.add(collection.id)
+      result[layerKey] = {
+        ...layer,
+        description: collection.description,
+        colorMappingAvailable: layer.colorMappingAvailable ?? false,
+        colorMappingEnabled: layer.colorMappingEnabled ?? false,
+      }
     }
-  }
 
-  addLayer('ogc-locations', locations, locationsLayer)
-  addLayer(
-    'ogc-latest-depth-to-water',
-    latestDepthToWater,
-    latestDepthToWaterLayer
-  )
-  addLayer('ogc-average-tds', averageTds, averageTdsLayer)
-  addLayer('ogc-latest-tds', latestTds, latestTdsLayer)
-  addLayer(
-    'ogc-depth-to-water-trend',
-    depthToWaterTrend,
-    depthToWaterTrendLayer
-  )
-  addLayer(
-    'ogc-water-elevation-points',
-    waterElevationPoints,
-    waterElevationPointsLayerStyled
-  )
-  addLayer(
-    'ogc-water-elevation-contours',
-    waterElevationContours,
-    waterElevationContoursLayerStyled
-  )
-  if (!waterElevationContours.exists) {
-    layers['ogc-water-elevation-contours-derived'] = {
-      ...waterElevationDerivedContoursLayer,
-      description: waterElevationPoints.description,
-      colorMappingAvailable:
-        waterElevationDerivedContoursLayer.colorMappingAvailable ?? true,
-      colorMappingEnabled:
-        waterElevationDerivedContoursLayer.colorMappingEnabled ?? true,
+    addLayer('ogc-locations', locations, locationsLayer)
+    addLayer(
+      'ogc-latest-depth-to-water',
+      latestDepthToWater,
+      latestDepthToWaterLayer
+    )
+    addLayer('ogc-average-tds', averageTds, averageTdsLayer)
+    addLayer('ogc-latest-tds', latestTds, latestTdsLayer)
+    addLayer(
+      'ogc-depth-to-water-trend',
+      depthToWaterTrend,
+      depthToWaterTrendLayer
+    )
+    addLayer(
+      'ogc-water-elevation-points',
+      waterElevationPoints,
+      waterElevationPointsLayerStyled
+    )
+    addLayer(
+      'ogc-water-elevation-contours',
+      waterElevationContours,
+      waterElevationContoursLayerStyled
+    )
+    if (!waterElevationContours.exists) {
+      result['ogc-water-elevation-contours-derived'] = {
+        ...waterElevationDerivedContoursLayer,
+        description: waterElevationPoints.description,
+        colorMappingAvailable:
+          waterElevationDerivedContoursLayer.colorMappingAvailable ?? true,
+        colorMappingEnabled:
+          waterElevationDerivedContoursLayer.colorMappingEnabled ?? true,
+      }
     }
-  }
-  addLayer('ogc-major-chemistry', majorChemistry, majorChemistryLayer)
-  addLayer('ogc-minor-chemistry', minorChemistry, minorChemistryLayer)
-  addLayer('ogc-water-well-summary', waterWellSummary, waterWellSummaryLayer)
-  addLayer('ogc-water-wells', waterWells, waterWellsLayer)
-  addLayer(
-    'ogc-actively-monitored',
-    activelyMonitored,
-    activelyMonitoredLayer
-  )
-  addLayer('ogc-springs', springs, springsLayer)
-  addLayer(
-    'ogc-surface-water-diversions',
-    surfaceWaterDiversions,
-    surfaceWaterDiversionsLayer
-  )
-  addLayer('ogc-ephemeral-streams', ephemeralStreams, ephemeralStreamsLayer)
-  addLayer(
-    'ogc-lakes-ponds-reservoirs',
-    lakesPondsReservoirs,
-    lakesPondsReservoirsLayer
-  )
-  addLayer(
-    'ogc-meteorological-stations',
-    meteorologicalStations,
-    meteorologicalStationsLayer
-  )
-  addLayer('ogc-project-areas', projectAreas, projectAreasLayer)
-  addLayer('ogc-other-thing-types', otherThingTypes, otherThingTypesLayer)
-  addLayer(
-    'ogc-outfalls-return-flow',
-    outfallsReturnFlow,
-    outfallsReturnFlowLayer
-  )
-  addLayer('ogc-perennial-streams', perennialStreams, perennialStreamsLayer)
-  addLayer(
-    'ogc-rock-sample-locations',
-    rockSampleLocations,
-    rockSampleLocationsLayer
-  )
-  addLayer(
-    'ogc-soil-gas-sample-locations',
-    soilGasSampleLocations,
-    soilGasSampleLocationsLayer
-  )
+    addLayer('ogc-major-chemistry', majorChemistry, majorChemistryLayer)
+    addLayer('ogc-minor-chemistry', minorChemistry, minorChemistryLayer)
+    addLayer('ogc-water-well-summary', waterWellSummary, waterWellSummaryLayer)
+    addLayer('ogc-water-wells', waterWells, waterWellsLayer)
+    addLayer(
+      'ogc-actively-monitored',
+      activelyMonitored,
+      activelyMonitoredLayer
+    )
+    addLayer('ogc-springs', springs, springsLayer)
+    addLayer(
+      'ogc-surface-water-diversions',
+      surfaceWaterDiversions,
+      surfaceWaterDiversionsLayer
+    )
+    addLayer('ogc-ephemeral-streams', ephemeralStreams, ephemeralStreamsLayer)
+    addLayer(
+      'ogc-lakes-ponds-reservoirs',
+      lakesPondsReservoirs,
+      lakesPondsReservoirsLayer
+    )
+    addLayer(
+      'ogc-meteorological-stations',
+      meteorologicalStations,
+      meteorologicalStationsLayer
+    )
+    addLayer('ogc-project-areas', projectAreas, projectAreasLayer)
+    addLayer('ogc-other-thing-types', otherThingTypes, otherThingTypesLayer)
+    addLayer(
+      'ogc-outfalls-return-flow',
+      outfallsReturnFlow,
+      outfallsReturnFlowLayer
+    )
+    addLayer('ogc-perennial-streams', perennialStreams, perennialStreamsLayer)
+    addLayer(
+      'ogc-rock-sample-locations',
+      rockSampleLocations,
+      rockSampleLocationsLayer
+    )
+    addLayer(
+      'ogc-soil-gas-sample-locations',
+      soilGasSampleLocations,
+      soilGasSampleLocationsLayer
+    )
 
-  return layers
+    return result
+  }, [
+    collectionsData,
+    locationsLayer,
+    latestDepthToWaterLayer,
+    averageTdsLayer,
+    latestTdsLayer,
+    majorChemistryLayer,
+    minorChemistryLayer,
+    depthToWaterTrendLayer,
+    waterWellSummaryLayer,
+    waterWellsLayer,
+    activelyMonitoredLayer,
+    springsLayer,
+    waterElevationContoursLayerStyled,
+    waterElevationPointsLayerStyled,
+    waterElevationDerivedContoursLayer,
+    surfaceWaterDiversionsLayer,
+    ephemeralStreamsLayer,
+    lakesPondsReservoirsLayer,
+    meteorologicalStationsLayer,
+    projectAreasLayer,
+    otherThingTypesLayer,
+    outfallsReturnFlowLayer,
+    perennialStreamsLayer,
+    rockSampleLocationsLayer,
+    soilGasSampleLocationsLayer,
+  ])
 }

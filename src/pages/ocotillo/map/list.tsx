@@ -38,7 +38,7 @@ import {
   type PiperDiagramHandle,
 } from '@/components/PiperDiagram'
 import { MapPopup } from '@/components'
-import { useMeasuredHeight, useThingLayers } from '@/hooks'
+import { useMeasuredHeight, useThingLayers, useViewportBbox } from '@/hooks'
 import { DEFAULT_MAPBOX_BASEMAP } from '@/constants'
 import {
   buildLayerCsv,
@@ -252,7 +252,7 @@ export const MapView: React.FC = () => {
     Record<string, boolean>
   >({})
   const THING_LAYERS = useThingLayers(visibleLayers, colorMappingByLayer)
-  const [viewportBbox, setViewportBbox] = useState<string | null>(null)
+  const viewportBbox = useViewportBbox(mapRef)
   const [basemapCollapsed, setBasemapCollapsed] = useState(true)
   const [visibleFeaturesCollapsed, setVisibleFeaturesCollapsed] =
     useState(false)
@@ -790,8 +790,6 @@ export const MapView: React.FC = () => {
         minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: 1,
-        mt: -1,
         pb: 0,
       }}
     >
@@ -848,7 +846,6 @@ export const MapView: React.FC = () => {
               setPopupContent={setPopupContent}
               popupContent={popupContent}
               onPointClick={onMapPointClick}
-              onBoundsChange={setViewportBbox}
               onMouseMoveCallback={onMapMouseMove}
               basemapUri={selectedBasemap}
               onBasemapChange={setSelectedBasemap}
