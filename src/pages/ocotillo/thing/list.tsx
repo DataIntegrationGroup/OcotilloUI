@@ -112,7 +112,7 @@ export const WellList: React.FC = () => {
         filter_operators: activeFilters.map((f) => f.operator),
       })
     }
-    dataGridProps.onFilterModelChange?.(model, details)
+    dataGridProps.onFilterModelChange?.(model)
   }
 
   const handleColumnVisibilityModelChange = (
@@ -141,7 +141,7 @@ export const WellList: React.FC = () => {
         direction: model[0].sort,
       })
     }
-    dataGridProps.onSortModelChange?.(model, details)
+    dataGridProps.onSortModelChange?.(model)
   }
 
   const { triggerExport, isLoading: exportIsLoading } = useExport({
