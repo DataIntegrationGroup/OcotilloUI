@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useExport, useGo, useLink } from '@refinedev/core'
 import { ExportButton, useDataGrid } from '@refinedev/mui'
-import { GridColDef, GridFilterModel } from '@mui/x-data-grid'
+import {
+  GridColDef,
+  GridColumnVisibilityModel,
+  GridFilterModel,
+  GridSortModel,
+} from '@mui/x-data-grid'
 import { captureEvent } from '@/analytics/posthog'
 import { Button } from '@mui/material'
 import { PictureAsPdf } from '@mui/icons-material'
@@ -76,6 +81,12 @@ export const WellList: React.FC = () => {
     return () => clearTimeout(timer)
   }, [searchInput])
 
+  useEffect(() => {
+    if (search) {
+      captureEvent('wells_searched', { query_length: search.length })
+    }
+  }, [search])
+
   const { dataGridProps } = useDataGrid<IWell>({
     resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
@@ -91,13 +102,39 @@ export const WellList: React.FC = () => {
   const handleFilterModelChange = (model: GridFilterModel) => {
     const activeFilters = model.items.filter((f) => f.value !== undefined)
     if (activeFilters.length > 0) {
-      captureEvent('feature_used', {
-        feature: 'wells_filter',
+      captureEvent('wells_filter_applied', {
         filter_count: activeFilters.length,
         filter_fields: activeFilters.map((f) => f.field),
+        filter_operators: activeFilters.map((f) => f.operator),
       })
     }
     dataGridProps.onFilterModelChange?.(model)
+  }
+
+  const handleColumnVisibilityModelChange = (
+    model: GridColumnVisibilityModel
+  ) => {
+    const hiddenColumns = Object.entries(model)
+      .filter(([, visible]) => !visible)
+      .map(([field]) => field)
+    captureEvent('wells_column_visibility_changed', {
+      hidden_count: hiddenColumns.length,
+      hidden_columns: hiddenColumns,
+    })
+  }
+
+  const handleDensityChange = (density: string) => {
+    captureEvent('wells_density_changed', { density })
+  }
+
+  const handleSortModelChange = (model: GridSortModel) => {
+    if (model.length > 0) {
+      captureEvent('wells_sorted', {
+        field: model[0].field,
+        direction: model[0].sort,
+      })
+    }
+    dataGridProps.onSortModelChange?.(model)
   }
 
   const { triggerExport, isLoading: exportIsLoading } = useExport({
@@ -328,16 +365,20 @@ export const WellList: React.FC = () => {
           variant="contained"
           color="secondary"
           startIcon={<PictureAsPdf />}
-          onClick={() =>
+          onClick={() => {
+            captureEvent('wells_batch_field_sheets')
             go({ to: '/ocotillo/well/batch-export', type: 'push' })
-          }
+          }}
         >
           Batch Field Sheets
         </Button>
         <ExportButton
           variant="contained"
           loading={exportIsLoading}
-          onClick={triggerExport}
+          onClick={() => {
+            captureEvent('wells_exported', { search_active: Boolean(search) })
+            triggerExport()
+          }}
         />
       </>
     )
@@ -355,6 +396,9 @@ export const WellList: React.FC = () => {
       dataGridProps={{
         ...dataGridProps,
         onFilterModelChange: handleFilterModelChange,
+        onColumnVisibilityModelChange: handleColumnVisibilityModelChange,
+        onDensityChange: handleDensityChange,
+        onSortModelChange: handleSortModelChange,
       }}
       getRowId={(row) => row.id}
       headerButtons={customHeaderButtons}
@@ -363,6 +407,9 @@ export const WellList: React.FC = () => {
       onSearchChange={setSearchInput}
       searchPlaceholder="Search by well name"
       searchAriaLabel="Search wells by well name"
+      onRowClick={(params) =>
+        captureEvent('wells_row_clicked', { well_id: params.id })
+      }
     />
   )
 }
