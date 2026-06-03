@@ -29,7 +29,13 @@ import { PostHogIdentify } from '@/components/analytics/PostHogIdentify'
 import { ErrorBoundary } from '@/components/analytics/ErrorBoundary'
 import { SearchProvider } from '@/providers/search-provider'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 const appTitle = import.meta.env.DEV
   ? 'Ocotillo (Dev)'
   : import.meta.env.VITE_APP_TITLE || 'Ocotillo'
