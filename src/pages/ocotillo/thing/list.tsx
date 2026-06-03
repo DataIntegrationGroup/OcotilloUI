@@ -141,7 +141,7 @@ export const WellList: React.FC = () => {
         direction: model[0].sort,
       })
     }
-    dataGridProps.onSortModelChange?.(model)
+    dataGridProps.onSortModelChange?.(model, details)
   }
 
   const { triggerExport, isLoading: exportIsLoading } = useExport({
