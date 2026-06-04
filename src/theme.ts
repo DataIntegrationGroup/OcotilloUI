@@ -1,7 +1,26 @@
 import { PaletteMode } from '@mui/material'
 import { createTheme } from '@mui/material/styles'
 import type {} from '@mui/x-data-grid/themeAugmentation'
-import colors from 'tailwindcss/colors'
+
+/*
+ * Hex color values used by the MUI theme.
+ * Previously imported from tailwindcss/colors, but Tailwind v4 changed that
+ * module to return oklch strings, which MUI's palette system cannot parse.
+ * These hex values are the Tailwind v3 equivalents and match the CSS tokens
+ * defined in src/index.css exactly.
+ */
+const colors = {
+  blue:    { 300: '#93c5fd', 700: '#1d4ed8', 900: '#1e3a8a' },
+  amber:   { 300: '#fcd34d', 600: '#d97706', 800: '#92400e' },
+  red:     { 300: '#fca5a5', 600: '#dc2626', 800: '#991b1b' },
+  orange:  { 300: '#fdba74', 500: '#f97316', 700: '#c2410c' },
+  emerald: { 300: '#6ee7b7', 700: '#047857', 900: '#064e3b' },
+  cyan:    { 300: '#67e8f9', 600: '#0891b2', 800: '#155e75' },
+  zinc:    { 700: '#3f3f46', 800: '#27272a', 900: '#18181b' },
+  stone:   { 100: '#f5f5f4', 200: '#e7e5e4', 300: '#d6d3d1' },
+  slate:   { 100: '#f1f5f9', 400: '#94a3b8', 500: '#64748b', 900: '#0f172a' },
+  white: '#ffffff',
+}
 
 declare module '@mui/material/styles' {
   interface TypographyVariants {
