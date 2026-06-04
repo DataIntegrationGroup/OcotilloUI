@@ -455,7 +455,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
                 placement="right"
               >
                 <IconButton
-                  onClick={setMode}
+                  onClick={() => setMode()}
                   size="small"
                   sx={{ mr: 0.5, ml: 1 }}
                 >
