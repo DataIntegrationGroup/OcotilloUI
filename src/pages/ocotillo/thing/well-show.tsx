@@ -330,7 +330,7 @@ export const WellShow = () => {
   return (
     <Show
       goBack={false}
-      breadcrumb={<AppBreadcrumb />}
+      breadcrumb={false}
       wrapperProps={{
         elevation: 0,
         sx: {
