@@ -1,89 +1,185 @@
+@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
+/*
+ * Dark mode: apply .dark class to <html> to activate dark tokens.
+ * This matches how MUI's ColorModeContextProvider will wire it up in Phase 3.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Ocotillo design tokens
+ *
+ * These CSS variables are the single source of truth for color and typography
+ * in shadcn/ui components and Tailwind utility classes. MUI components still
+ * read from src/theme.ts during the migration — do not remove theme.ts until
+ * all MUI components have been replaced.
+ *
+ * Color notation: oklch(lightness chroma hue)
+ * Tailwind color references used:
+ *   primary   → blue-700 (light) / blue-300 (dark)
+ *   secondary → amber-600 (light) / amber-300 (dark)
+ *   Colors match the values in src/theme.ts exactly.
+ */
 @layer base {
-  .theme {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif
-  }
   :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    /* Backgrounds */
+    --background: oklch(0.922 0.003 106.399);      /* stone-200 */
+    --foreground: oklch(0.195 0.026 264.182);      /* slate-900 */
+
+    /* Card / Paper (MUI background.paper equivalent) */
+    --card: oklch(1 0 0);                          /* white */
+    --card-foreground: oklch(0.195 0.026 264.182); /* slate-900 */
+    --paper: oklch(1 0 0);                         /* white — matches MUI background.paper */
+    --wrapper: oklch(0.97 0.001 106.424);          /* stone-100 — matches MUI background.wrapper */
+
+    /* Popover */
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    --popover-foreground: oklch(0.195 0.026 264.182);
+
+    /* Primary — blue */
+    --primary: oklch(0.488 0.243 264.376);         /* blue-700 */
+    --primary-foreground: oklch(1 0 0);            /* white */
+    --primary-light: oklch(0.809 0.105 251.813);   /* blue-300 */
+    --primary-dark: oklch(0.379 0.146 265.522);    /* blue-900 */
+
+    /* Secondary — amber */
+    --secondary: oklch(0.666 0.171 60.454);        /* amber-600 */
+    --secondary-foreground: oklch(1 0 0);          /* white */
+    --secondary-light: oklch(0.883 0.156 99.265);  /* amber-300 */
+    --secondary-dark: oklch(0.479 0.133 46.201);   /* amber-800 */
+
+    /* Muted */
+    --muted: oklch(0.97 0.001 106.424);            /* stone-100 */
+    --muted-foreground: oklch(0.579 0.022 264.376);/* slate-500 */
+
+    /* Accent */
+    --accent: oklch(0.97 0.001 106.424);           /* stone-100 */
+    --accent-foreground: oklch(0.195 0.026 264.182);
+
+    /* Semantic status colors */
+    --destructive: oklch(0.577 0.245 27.325);      /* red-600 */
+    --success: oklch(0.508 0.118 165.612);         /* emerald-700 */
+    --success-foreground: oklch(1 0 0);
+    --warning: oklch(0.702 0.191 47.604);          /* orange-500 */
+    --warning-foreground: oklch(1 0 0);
+    --info: oklch(0.566 0.128 233.997);            /* cyan-600 */
+    --info-foreground: oklch(1 0 0);
+
+    /* Borders and inputs */
+    --border: oklch(0.856 0.005 56.366);           /* stone-300 / matches MUI divider */
+    --input: oklch(0.856 0.005 56.366);            /* stone-300 */
+    --ring: oklch(0.488 0.243 264.376);            /* blue-700 */
+
+    /* Radius */
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0)
+
+    /* Sidebar */
+    --sidebar: oklch(0.97 0.001 106.424);          /* stone-100 */
+    --sidebar-foreground: oklch(0.195 0.026 264.182);
+    --sidebar-primary: oklch(0.488 0.243 264.376); /* blue-700 */
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.922 0.003 106.399);  /* stone-200 */
+    --sidebar-accent-foreground: oklch(0.195 0.026 264.182);
+    --sidebar-border: oklch(0.856 0.005 56.366);   /* stone-300 */
+    --sidebar-ring: oklch(0.488 0.243 264.376);    /* blue-700 */
   }
+
   .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0)
+    /* Backgrounds */
+    --background: oklch(0.21 0 0);                 /* zinc-900 */
+    --foreground: oklch(0.966 0.007 247.858);      /* slate-100 */
+
+    /* Card / Paper */
+    --card: oklch(0.372 0 0);                      /* zinc-700 */
+    --card-foreground: oklch(0.966 0.007 247.858);
+    --paper: oklch(0.372 0 0);                     /* zinc-700 — matches MUI background.paper */
+    --wrapper: oklch(0.274 0 0);                   /* zinc-800 — matches MUI background.wrapper */
+
+    /* Popover */
+    --popover: oklch(0.372 0 0);                   /* zinc-700 */
+    --popover-foreground: oklch(0.966 0.007 247.858);
+
+    /* Primary — blue (inverted for dark mode) */
+    --primary: oklch(0.809 0.105 251.813);         /* blue-300 */
+    --primary-foreground: oklch(0.21 0 0);         /* zinc-900 */
+    --primary-light: oklch(0.809 0.105 251.813);   /* blue-300 */
+    --primary-dark: oklch(0.379 0.146 265.522);    /* blue-900 */
+
+    /* Secondary — amber (inverted for dark mode) */
+    --secondary: oklch(0.883 0.156 99.265);        /* amber-300 */
+    --secondary-foreground: oklch(0.21 0 0);       /* zinc-900 */
+    --secondary-light: oklch(0.883 0.156 99.265);  /* amber-300 */
+    --secondary-dark: oklch(0.479 0.133 46.201);   /* amber-800 */
+
+    /* Muted */
+    --muted: oklch(0.274 0 0);                     /* zinc-800 */
+    --muted-foreground: oklch(0.706 0.022 253.916);/* slate-400 */
+
+    /* Accent */
+    --accent: oklch(0.274 0 0);                    /* zinc-800 */
+    --accent-foreground: oklch(0.966 0.007 247.858);
+
+    /* Semantic status colors */
+    --destructive: oklch(0.704 0.191 22.216);      /* red-400 */
+    --success: oklch(0.845 0.143 164.978);         /* emerald-300 */
+    --success-foreground: oklch(0.21 0 0);
+    --warning: oklch(0.837 0.128 66.29);           /* orange-300 */
+    --warning-foreground: oklch(0.21 0 0);
+    --info: oklch(0.865 0.127 207.078);            /* cyan-300 */
+    --info-foreground: oklch(0.21 0 0);
+
+    /* Borders and inputs */
+    --border: oklch(0.372 0 0);                    /* zinc-700 / matches MUI divider */
+    --input: oklch(0.274 0 0);                     /* zinc-800 */
+    --ring: oklch(0.809 0.105 251.813);            /* blue-300 */
+
+    /* Sidebar */
+    --sidebar: oklch(0.274 0 0);                   /* zinc-800 */
+    --sidebar-foreground: oklch(0.966 0.007 247.858);
+    --sidebar-primary: oklch(0.809 0.105 251.813); /* blue-300 */
+    --sidebar-primary-foreground: oklch(0.21 0 0);
+    --sidebar-accent: oklch(0.372 0 0);            /* zinc-700 */
+    --sidebar-accent-foreground: oklch(0.966 0.007 247.858);
+    --sidebar-border: oklch(0.372 0 0);            /* zinc-700 */
+    --sidebar-ring: oklch(0.809 0.105 251.813);    /* blue-300 */
   }
+
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    outline-color: color-mix(in oklch, var(--ring) 50%, transparent);
   }
+
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
   }
+
   html {
-    @apply font-sans;
+    font-family: var(--font-sans, 'Public Sans Variable', system-ui, sans-serif);
   }
+}
+
+/*
+ * Extend the Tailwind theme with Ocotillo-specific tokens.
+ * Standard shadcn tokens (--primary, --secondary, etc.) are registered
+ * automatically by @import "shadcn/tailwind.css" above.
+ */
+@theme inline {
+  --font-sans: 'Public Sans Variable', system-ui, sans-serif;
+  --font-heading: 'Outfit Variable', system-ui, sans-serif;
+
+  --color-paper: var(--paper);
+  --color-wrapper: var(--wrapper);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary-light: var(--secondary-light);
+  --color-secondary-dark: var(--secondary-dark);
 }
