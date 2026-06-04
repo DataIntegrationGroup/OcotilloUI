@@ -9,7 +9,7 @@ import { getTheme } from '@/theme'
 
 type ColorModeContextType = {
   mode: string
-  setMode: () => void
+  setMode: (mode?: string) => void
 }
 
 export const ColorModeContext = createContext<ColorModeContextType>(
@@ -25,19 +25,24 @@ export const ColorModeContextProvider: React.FC<PropsWithChildren> = ({
   ).matches
 
   const systemPreference = isSystemPreferenceDark ? 'dark' : 'light'
-  const [mode, setMode] = useState(
-    colorModeFromLocalStorage || systemPreference
-  )
+  const initialMode = colorModeFromLocalStorage || systemPreference
+
+  // Apply class immediately so shadcn/Tailwind dark styles don't flash on load
+  document.documentElement.classList.toggle('dark', initialMode === 'dark')
+
+  const [mode, setMode] = useState(initialMode)
 
   useEffect(() => {
     window.localStorage.setItem('colorMode', mode)
+    // Sync the .dark class on <html> so Tailwind/shadcn dark variants activate
+    document.documentElement.classList.toggle('dark', mode === 'dark')
   }, [mode])
 
-  const setColorMode = () => {
-    if (mode === 'light') {
-      setMode('dark')
+  const setColorMode = (next?: string) => {
+    if (next === 'light' || next === 'dark') {
+      setMode(next)
     } else {
-      setMode('light')
+      setMode(mode === 'light' ? 'dark' : 'light')
     }
   }
 
