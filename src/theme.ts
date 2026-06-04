@@ -46,7 +46,7 @@ const colors = {
     950: '#030712',
   },
   zinc: {
-    50:  '#fafafa',
+    50:  '#fafafa', // ← background.default light, background.wrapper light
     100: '#f4f4f5',
     200: '#e4e4e7',
     300: '#d4d4d8',
@@ -73,8 +73,8 @@ const colors = {
   },
   stone: {
     50:  '#fafaf9',
-    100: '#f5f5f4', // ← background.wrapper light
-    200: '#e7e5e4', // ← background.default light
+    100: '#f5f5f4',
+    200: '#e7e5e4',
     300: '#d6d3d1', // ← divider light
     400: '#a8a29e',
     500: '#78716c',
@@ -364,9 +364,9 @@ export const getTheme = (mode: PaletteMode) =>
       },
       divider: mode === 'dark' ? colors.zinc[700] : colors.stone[300],
       background: {
-        default: mode === 'dark' ? colors.zinc[900] : colors.stone[200],
+        default: mode === 'dark' ? colors.zinc[900] : colors.zinc[50],
         paper: mode === 'dark' ? colors.zinc[700] : colors.white,
-        wrapper: mode === 'dark' ? colors.zinc[800] : colors.stone[100],
+        wrapper: mode === 'dark' ? colors.zinc[800] : colors.zinc[50],
       },
       text: {
         primary: mode === 'dark' ? colors.slate[100] : colors.slate[900],
