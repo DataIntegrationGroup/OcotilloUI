@@ -67,6 +67,7 @@ let tables: {
     meta: {
       icon: <Contacts />,
       label: 'Contacts & Owners',
+      hide: true,
     },
   },
   // {
@@ -100,6 +101,7 @@ let tables: {
     meta: {
       label: 'Locations',
       icon: <Place />,
+      hide: true,
     },
   },
   // {
@@ -166,6 +168,7 @@ let tables: {
       disabled: false,
       label: 'Lexicon / Glossary',
       icon: <LibraryBooksOutlined />,
+      hide: true,
     },
   },
   //   name: 'lexicon/term',
@@ -218,6 +221,7 @@ tables.push({
   meta: {
     label: 'Field Sheets',
     icon: <PictureAsPdfOutlined />,
+    hide: true,
   },
 })
 
@@ -321,9 +325,9 @@ let ocotillo = [
     list: '/ocotillo/hydrograph-correction',
     meta: {
       label: 'Hydrograph Correction',
-      parent: 'Sandbox',
       nestedLevel: 1,
       icon: <Timeline />,
+      hide: true,
     },
   },
   {

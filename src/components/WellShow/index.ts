@@ -1,6 +1,7 @@
 export * from './ConstructionInfo'
 export * from './MonitoringInfo'
 export * from './GeologyInformation'
+export * from './GeothermalInformation'
 export * from './OwnerPermissions'
 export * from './Attachments'
 export * from './AlternateIds'

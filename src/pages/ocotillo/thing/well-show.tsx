@@ -25,6 +25,7 @@ import {
   InteractiveSatelliteMapCard,
   HydrographCard,
   RecentWaterLevelObservationsCard,
+  GeothermalDataCard,
   ContactsCard,
   AttachmentsCard,
   AlternateIdsCard,
@@ -36,6 +37,7 @@ import {
   NotesAccordion,
   ConstructionInfoCard,
   GeologyInformationCard,
+  GeothermalInformationAccordion,
   WellPDFDownloadButton,
   WellShowTitle,
   OwnerPermissionsCard,
@@ -388,6 +390,7 @@ export const WellShow = () => {
                 rows={recentObservations}
                 isLoading={isDetailsLoading}
               />
+              <GeothermalDataCard />
               <NotesAccordion well={well} />
               <EquipmentCard
                 sensors={sensors}
@@ -425,6 +428,7 @@ export const WellShow = () => {
               <OwnerPermissionsCard well={well} isLoading={isDetailsLoading} />
               <ConstructionInfoCard well={well} />
               <GeologyInformationCard well={well} />
+              <GeothermalInformationAccordion />
             </Stack>
           </Grid>
         </Grid>

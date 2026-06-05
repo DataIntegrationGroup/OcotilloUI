@@ -9,12 +9,6 @@ import { DynamicFormTwoTone } from '@mui/icons-material'
 
 let amp = [
   {
-    name: 'Sandbox',
-    meta: {
-      label: 'Sandbox',
-    },
-  },
-  {
     name: 'dashboard',
     list: '/amp/dashboard',
     meta: {
@@ -116,7 +110,7 @@ let amp = [
 export const ampResources = amp.map((b) => {
   let meta = b.meta || {}
   if (!meta['parent']) {
-    meta['parent'] = 'Sandbox'
+    meta['parent'] = 'amp.sandbox'
   }
   meta['dataProviderName'] = 'amp'
   return {

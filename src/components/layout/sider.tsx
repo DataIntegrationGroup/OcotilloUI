@@ -61,7 +61,9 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
   }
 
   const renderTreeView = (tree: TreeMenuItem[], selectedKey?: string) => {
-    return tree.map((item: TreeMenuItem) => {
+    return tree.flatMap((item: TreeMenuItem) => {
+      if (item.meta?.hide || item.meta?.wip) return []
+
       const {
         icon: deprecatedIcon,
         label: deprecatedLabel,
