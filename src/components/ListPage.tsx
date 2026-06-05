@@ -153,6 +153,8 @@ type ListPageProps = {
   isLoading?: boolean
   headerButtons?: any
   disableRowClick?: boolean
+  /** Called before navigation when a row is clicked. Use for analytics. */
+  onRowClick?: (params: any) => void
 
   toolbarOptions?: ListPageToolbarProps
   searchMode?: 'client' | 'server'
@@ -175,6 +177,7 @@ export const ListPage: React.FC<ListPageProps> = ({
   isLoading,
   headerButtons,
   disableRowClick = false,
+  onRowClick,
 
   toolbarOptions,
   searchMode = 'client',
@@ -382,7 +385,10 @@ export const ListPage: React.FC<ListPageProps> = ({
           onRowSelectionModelChange={handleSelectionChangeWrapper}
           onRowClick={
             !disableRowClick && resource
-              ? (params) => show(resource.name, params.id as string | number)
+              ? (params) => {
+                  onRowClick?.(params)
+                  show(resource.name, params.id as string | number)
+                }
               : undefined
           }
           loading={
