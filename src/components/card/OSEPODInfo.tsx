@@ -12,18 +12,19 @@ type InfoRow = {
   value: unknown
 }
 
-const isHttpUrl = (
+// Detects https values so they render as ExternalLink instead of raw text.
+const isHttpsUrl = (
   value: unknown
-): value is `https://${string}` | `http://${string}` =>
-  typeof value === 'string' &&
-  (value.startsWith('https://') || value.startsWith('http://'))
+): value is `https://${string}` =>
+  typeof value === 'string' && value.startsWith('https://')
 
 export const OSEPODInfoCard = ({ pod_id }) => {
   const podInfoQuery = useOSEPODInfo(pod_id)
   const rows = useMemo(() => {
+    // Pin URL rows to the top so the useful links are easy to find for users.
     return [...(podInfoQuery.data ?? [])].sort((a, b) => {
-      const aIsUrl = isHttpUrl(a.value)
-      const bIsUrl = isHttpUrl(b.value)
+      const aIsUrl = isHttpsUrl(a.value)
+      const bIsUrl = isHttpsUrl(b.value)
 
       if (aIsUrl === bIsUrl) return 0
       return aIsUrl ? -1 : 1
@@ -48,7 +49,7 @@ export const OSEPODInfoCard = ({ pod_id }) => {
         headerAlign: 'left',
         align: 'left',
         renderCell: ({ row, value }) => {
-          if (isHttpUrl(value)) {
+          if (isHttpsUrl(value)) {
             return <ExternalLink href={value}>NMWRRS Website Link</ExternalLink>
           }
 

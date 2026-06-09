@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
+// Fetches expanded USGS site metadata for a given site number and exposes it as key/value rows.
+
 type USGSSiteRecord = Record<string, string>
 
 type USGSSiteInfoRow = {
@@ -8,6 +10,8 @@ type USGSSiteInfoRow = {
   value: string
 }
 
+// Parses USGS RDB (tab-delimited) site response text into record objects.
+// Adapted by AI from Jacob's Data Integration Engine code.
 const makeRecords = (text: string, url: string): USGSSiteRecord[] => {
   let header: string[] = []
   const records: USGSSiteRecord[] = []
@@ -41,6 +45,7 @@ const makeRecords = (text: string, url: string): USGSSiteRecord[] => {
   return records
 }
 
+// Flattens a site record into DataGrid-friendly { name, value } rows.
 const toKeyValueRows = (record: USGSSiteRecord): USGSSiteInfoRow[] => {
   return Object.entries(record).map(([name, value], index) => ({
     id: index,
@@ -49,6 +54,7 @@ const toKeyValueRows = (record: USGSSiteRecord): USGSSiteInfoRow[] => {
   }))
 }
 
+// Calls the USGS NWIS site service and returns parsed site fields for one site.
 const fetchSiteInfo = async (site_no: string): Promise<USGSSiteInfoRow[]> => {
   const url = new URL('https://waterservices.usgs.gov/nwis/site/')
   url.search = new URLSearchParams({
@@ -70,6 +76,7 @@ const fetchSiteInfo = async (site_no: string): Promise<USGSSiteInfoRow[]> => {
 }
 
 
+// React Query hook used by USGSInfoCard; skips fetch when site_no is missing or "N/A".
 export const useUSGSSiteInfo = (site_no: string) => {
   const normalizedSiteNo = site_no?.trim()
   const hasValidSiteNo = Boolean(normalizedSiteNo) && normalizedSiteNo !== 'N/A'
