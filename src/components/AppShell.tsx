@@ -346,6 +346,14 @@ function ExampleNavItem() {
                 <Link to="/example/typography">Typography</Link>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname === '/example/data-grid'}
+              >
+                <Link to="/example/data-grid">Data Grid</Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
           </SidebarMenuSub>
         </CollapsibleContent>
       </SidebarMenuItem>
