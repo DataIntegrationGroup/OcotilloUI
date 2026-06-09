@@ -150,6 +150,20 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + '/')
 }
 
+/**
+ * Returns the href of the most specific nav item that matches the current
+ * pathname. Prevents a shallow route (e.g. /ocotillo/well) from staying
+ * active when a deeper route (e.g. /ocotillo/well/batch-export) is open.
+ */
+function activeHref(pathname: string): string | null {
+  const allHrefs = [...PRIMARY_NAV, ...RESOURCE_NAV]
+    .map((item) => item.href)
+    .filter(Boolean) as string[]
+  const matches = allHrefs.filter((h) => isActive(pathname, h))
+  if (matches.length === 0) return null
+  return matches.reduce((a, b) => (a.length >= b.length ? a : b))
+}
+
 function SidebarBrand() {
   const { state } = useSidebar()
   const collapsed = state === 'collapsed'
@@ -236,7 +250,7 @@ function AppSidebar() {
                 ) : (
                   <SidebarMenuButton
                     asChild
-                    isActive={isActive(location.pathname, href!)}
+                    isActive={activeHref(location.pathname) === href}
                     tooltip={label}
                   >
                     <Link to={href!}>
@@ -273,7 +287,7 @@ function AppSidebar() {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
-                      isActive={isActive(location.pathname, href!)}
+                      isActive={activeHref(location.pathname) === href}
                       tooltip={label}
                     >
                       <Link to={href!}>
