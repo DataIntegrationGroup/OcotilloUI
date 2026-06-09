@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { cn } from '@/lib/utils'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router'
 import {
+  CanAccess,
   useGetIdentity,
   useIsExistAuthentication,
   useLogout,
@@ -42,26 +43,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  Contact,
   Check,
   ChevronDown,
   ChevronRight,
-  Droplets,
   FlaskConical,
-  Home,
   LifeBuoy,
+  Lock,
   LogOut,
-  Map,
   Moon,
-  Search,
   Sun,
-  Upload,
   User,
   X,
 } from 'lucide-react'
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
+import { PRIMARY_NAV, RESOURCE_NAV } from '@/config/navigation'
+import { useSearch } from '@/providers/search-provider'
 
 // Support panel state shared between the sidebar footer button and the panel itself
 const SupportPanelContext = createContext<{
@@ -141,20 +139,6 @@ function ExpandButton() {
   )
 }
 
-// Primary navigation: tools and views
-// disabled: true = placeholder, not yet implemented
-const PRIMARY_NAV = [
-  { label: 'Home', href: '/home', icon: Home, disabled: false },
-  { label: 'Search', href: null, icon: Search, disabled: true },
-  { label: 'Map', href: '/ocotillo/map', icon: Map, disabled: false },
-  { label: 'Import Log', href: null, icon: Upload, disabled: true },
-]
-
-// Data resources: record management
-const RESOURCE_NAV = [
-  { label: 'Wells', href: '/ocotillo/well', icon: Droplets },
-  { label: 'Contacts', href: '/ocotillo/contact', icon: Contact },
-] as const
 
 const FOOTER_LINKS = [
   { label: 'About', href: '/about' },
@@ -193,6 +177,7 @@ function AppSidebar() {
   const { mutate: logout } = useLogout()
   const translate = useTranslate()
   const { state } = useSidebar()
+  const { openSearch } = useSearch()
   const collapsed = state === 'collapsed'
 
   const handleLogout = () => {
@@ -234,30 +219,45 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {PRIMARY_NAV.map(({ label, href, icon: Icon, disabled }) => (
-                <SidebarMenuItem key={`primary-${label}`}>
-                  {disabled ? (
-                    <SidebarMenuButton
-                      tooltip={`${label} (coming soon)`}
-                      className="cursor-not-allowed disabled:opacity-100 disabled:pointer-events-none"
-                    >
+              {PRIMARY_NAV.map(({ id, label, href, icon: Icon, disabled, resource }) => {
+                const button = id === 'search' ? (
+                  <SidebarMenuButton onClick={openSearch} tooltip={label}>
+                    <Icon />
+                    <span>{label}</span>
+                  </SidebarMenuButton>
+                ) : disabled ? (
+                  <SidebarMenuButton
+                    tooltip={`${label} (coming soon)`}
+                    className="cursor-not-allowed disabled:opacity-100 disabled:pointer-events-none"
+                  >
+                    <Icon />
+                    <span>{label}</span>
+                  </SidebarMenuButton>
+                ) : (
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(location.pathname, href!)}
+                    tooltip={label}
+                  >
+                    <Link to={href!}>
                       <Icon />
                       <span>{label}</span>
-                    </SidebarMenuButton>
-                  ) : (
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(location.pathname, href!)}
-                      tooltip={label}
-                    >
-                      <Link to={href!}>
-                        <Icon />
-                        <span>{label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  )}
-                </SidebarMenuItem>
-              ))}
+                    </Link>
+                  </SidebarMenuButton>
+                )
+
+                const item = (
+                  <SidebarMenuItem key={`primary-${label}`}>
+                    {button}
+                  </SidebarMenuItem>
+                )
+
+                return resource ? (
+                  <CanAccess key={`primary-${label}`} resource={resource} action="list">
+                    {item}
+                  </CanAccess>
+                ) : item
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -268,19 +268,27 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {RESOURCE_NAV.map(({ label, href, icon: Icon }) => (
-                <SidebarMenuItem key={`resource-${href}-${label}`}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(location.pathname, href)}
-                    tooltip={label}
-                  >
-                    <Link to={href}>
-                      <Icon />
-                      <span>{label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              {RESOURCE_NAV.map(({ label, href, icon: Icon, resource, adminOnly }) => (
+                <CanAccess key={`resource-${href}`} resource={resource!} action="list">
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(location.pathname, href!)}
+                      tooltip={label}
+                    >
+                      <Link to={href!}>
+                        <Icon />
+                        <span>{label}</span>
+                        {adminOnly && (
+                          <Lock
+                            className="ml-auto text-muted-foreground/70 shrink-0"
+                            style={{ width: 11, height: 11 }}
+                          />
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </CanAccess>
               ))}
               {/* ── TEMPORARY: Example section — hidden until editing-tools is ready ── */}
               {/* <ExampleNavItem /> */}
