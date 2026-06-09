@@ -305,7 +305,7 @@ function AppSidebar() {
                 </CanAccess>
               ))}
               {/* ── TEMPORARY: Example section — hidden until editing-tools is ready ── */}
-              {/* <ExampleNavItem /> */}
+              <ExampleNavItem />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -328,7 +328,7 @@ function AppSidebar() {
         )}
 
         {/* Help & Support button — hidden until panel content is defined */}
-        {/* <SupportPanelTrigger collapsed={collapsed} /> */}
+        <SupportPanelTrigger collapsed={collapsed} />
       </SidebarFooter>
     </Sidebar>
   )
