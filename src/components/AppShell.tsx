@@ -282,8 +282,8 @@ function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {/* ── TEMPORARY: Example section ── */}
-              <ExampleNavItem />
+              {/* ── TEMPORARY: Example section — hidden until editing-tools is ready ── */}
+              {/* <ExampleNavItem /> */}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -305,8 +305,8 @@ function AppSidebar() {
           </div>
         )}
 
-        {/* Help & Support button */}
-        <SupportPanelTrigger collapsed={collapsed} />
+        {/* Help & Support button — hidden until panel content is defined */}
+        {/* <SupportPanelTrigger collapsed={collapsed} /> */}
       </SidebarFooter>
     </Sidebar>
   )
