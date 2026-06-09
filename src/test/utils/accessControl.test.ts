@@ -44,15 +44,6 @@ const expectedRegisteredRoutableResources = [
   'ocotillo.thing-well',
   'ocotillo.thing-well-batch-export',
   'ocotillo.thing-well-pdf-preview',
-  'water.dashboard',
-  'water.equipment',
-  'water.manual_waterlevels',
-  'water.projects',
-  'water.querybuilder',
-  'water.reportbuilder',
-  'water.waterlevelform',
-  'water.wellinventoryform',
-  'water.wells',
 ].sort()
 
 const expectedAccessByScenario: Scenario[] = [
@@ -81,7 +72,6 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.thing-well',
       'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
-      'water.wellinventoryform',
     ],
   },
   {

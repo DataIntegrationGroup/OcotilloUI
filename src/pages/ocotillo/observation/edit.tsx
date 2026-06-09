@@ -8,7 +8,6 @@ import { useForm } from '@refinedev/react-hook-form'
 import { Controller } from 'react-hook-form'
 
 import type { Nullable } from '@/interfaces'
-import type { IWell } from '@/interfaces/amp'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import { Switch } from '@mui/material'
 import { IContact } from '@/interfaces/ocotillo/IContact'
