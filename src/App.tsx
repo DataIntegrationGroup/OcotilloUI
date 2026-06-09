@@ -7,7 +7,7 @@ import { Callback } from '@/components/Auth'
 import { Home } from '@/pages/home'
 import { TypographyPage } from '@/pages/example/TypographyPage'
 import { ContentPage } from '@/pages/content'
-import { AMPRoutes, OcotilloRoutes, ST2Routes } from '@/routes'
+import { OcotilloRoutes, ST2Routes } from '@/routes'
 import { settings } from '@/settings'
 import { AppProviders } from '@/AppProviders'
 
@@ -64,7 +64,6 @@ const App: React.FC = () => (
           />
           {/* TEMPORARY: typography specimen */}
           <Route path="/example/typography" element={<TypographyPage />} />
-          <Route path="/amp/*" element={<AMPRoutes />} />
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
           <Route path="/st2/*" element={<ST2Routes />} />
         </Route>
