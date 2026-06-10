@@ -32,10 +32,6 @@ export const RecentWaterLevelObservationsCard = ({
   rows: readonly Partial<WaterLevelObservationRow>[]
   isLoading: boolean
 }) => {
-  if (!well || isLoading) {
-    return <LoadingCard />
-  }
-
   const cols: GridColDef<WaterLevelObservationRow>[] = useMemo(() => {
     return [
       {
@@ -98,6 +94,10 @@ export const RecentWaterLevelObservationsCard = ({
       },
     ]
   }, [])
+
+  if (!well || isLoading) {
+    return <LoadingCard />
+  }
 
   const measuringNote = well.measuring_notes?.[0]
 

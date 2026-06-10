@@ -212,7 +212,7 @@ export const OcotilloRoutes = () => {
           }
         />
       </Route>
-      // Apps
+      {/* Apps */}
       <Route path={'water-chemistry-import'}>
         <Route index element={<WaterChemistryApp />} />
       </Route>
@@ -226,7 +226,7 @@ export const OcotilloRoutes = () => {
           }
         />
       </Route>
-      // Forms
+      {/* Forms */}
       <Route path="groundwater-level-form">
         <Route index element={<GroundwaterLevelForm />} />
       </Route>

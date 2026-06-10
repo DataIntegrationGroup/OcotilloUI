@@ -54,6 +54,22 @@ export default tseslint.config(
       'react/prop-types': 'off',
       'react/display-name': 'off',
 
+      // React Compiler rules — demote from error to warn until violations are
+      // fixed and the compiler is actually enabled.
+      // See docs/product/decisions/react-compiler.md in the-brain repo.
+      'react-hooks/static-components': 'warn',
+      'react-hooks/use-memo': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
+      'react-hooks/immutability': 'warn',
+      'react-hooks/globals': 'warn',
+      'react-hooks/refs': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/error-boundaries': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/set-state-in-render': 'warn',
+      'react-hooks/config': 'warn',
+      'react-hooks/gating': 'warn',
+
       // TypeScript — warn rather than error for a realistic first-run baseline
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [

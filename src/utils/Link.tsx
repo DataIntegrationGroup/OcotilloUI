@@ -1,7 +1,8 @@
 import { useLink } from '@refinedev/core'
+import type { ComponentType, ReactNode } from 'react'
 
-export const extractThingTypeResource = (getThingType: Function) => {
-  return (params) => {
+export const extractThingTypeResource = (getThingType: (params: unknown) => string) => {
+  return (params: unknown) => {
     const thingType = getThingType(params)
     switch (thingType) {
       case 'water well':
@@ -14,12 +15,15 @@ export const extractThingTypeResource = (getThingType: Function) => {
   }
 }
 
+export { useLink }
+
 export const linkColumn = (
-  resource: string | Function,
+  link: ComponentType<{ go: { to: { resource: string; action: string; id: unknown } }; children: ReactNode }>,
+  resource: string | ((params: unknown) => string),
   options: { field: string; [key: string]: any },
-  renderLabel?: Function
+  renderLabel?: (params: unknown) => ReactNode
 ) => {
-  const Link = useLink()
+  const Link = link
   return {
     ...options,
     renderCell: (params) => {
