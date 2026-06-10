@@ -17,14 +17,14 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
-  SidebarInset,
+  AppContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarProvider,
+  AppLayout,
   SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar'
@@ -679,12 +679,12 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
     <SupportPanelContext.Provider value={{ isOpen: panelOpen, open: openPanel, close: closePanel }}>
       <SidebarAutoCollapse />
       <AppSidebar />
-      <SidebarInset className="min-w-0 overflow-y-auto">
+      <AppContent className="min-w-0">
         <ShellHeader />
-        <main className="flex flex-col flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {children ?? <Outlet />}
-        </main>
-      </SidebarInset>
+        </div>
+      </AppContent>
       <SupportPanel />
     </SupportPanelContext.Provider>
   )
@@ -693,10 +693,10 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
 export const AppShell = ({ children }: { children?: React.ReactNode }) => {
   return (
     // h-svh + overflow-hidden pins the shell to exactly the viewport so no page
-    // can cause a body-level scroll. SidebarInset gets overflow-y-auto so regular
+    // can cause a body-level scroll. AppContent gets overflow-y-auto so regular
     // pages still scroll within the frame.
-    <SidebarProvider className="h-svh overflow-hidden">
+    <AppLayout className="h-svh overflow-hidden">
       <AppShellInner>{children}</AppShellInner>
-    </SidebarProvider>
+    </AppLayout>
   )
 }

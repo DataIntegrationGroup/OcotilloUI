@@ -46,13 +46,13 @@ const SidebarContext = React.createContext<SidebarContextProps | null>(null)
 function useSidebar() {
   const context = React.useContext(SidebarContext)
   if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider.")
+    throw new Error("useSidebar must be used within an AppLayout.")
   }
 
   return context
 }
 
-function SidebarProvider({
+function AppLayout({
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
@@ -301,10 +301,10 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   )
 }
 
-function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
+function AppContent({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
-      data-slot="sidebar-inset"
+      data-slot="app-content"
       className={cn(
         "relative flex w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
         className
@@ -684,7 +684,7 @@ export {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarInput,
-  SidebarInset,
+  AppContent,
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuBadge,
@@ -694,7 +694,7 @@ export {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarProvider,
+  AppLayout,
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
