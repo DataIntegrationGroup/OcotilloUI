@@ -60,7 +60,8 @@ import {
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
-import { PRIMARY_NAV, RESOURCE_NAV } from '@/config/navigation'
+import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
+import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 
 // Support panel state shared between the sidebar footer button and the panel itself
@@ -203,7 +204,13 @@ function AppSidebar() {
   const translate = useTranslate()
   const { state } = useSidebar()
   const { openSearch } = useSearch()
+  const { roles: userRoles } = useAccessCapabilities()
   const collapsed = state === 'collapsed'
+
+  const canSeeNavItem = (itemRoles: NavItem['roles']) => {
+    if (!itemRoles) return true
+    return itemRoles.some((r) => userRoles.includes(r))
+  }
 
   const handleLogout = () => {
     if (warnWhen) {
@@ -244,7 +251,9 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {PRIMARY_NAV.map(({ id, label, href, icon: Icon, disabled, resource }) => {
+              {PRIMARY_NAV.map(({ id, label, href, icon: Icon, disabled, resource, roles }) => {
+                if (!canSeeNavItem(roles)) return null
+
                 const button = id === 'search' ? (
                   <SidebarMenuButton onClick={openSearch} tooltip={label}>
                     <Icon />
@@ -293,28 +302,32 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {RESOURCE_NAV.map(({ label, href, icon: Icon, resource, adminOnly }) => (
-                <CanAccess key={`resource-${href}`} resource={resource!} action="list">
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={activeHref(location.pathname) === href}
-                      tooltip={label}
-                    >
-                      <Link to={href!}>
-                        <Icon />
-                        <span>{label}</span>
-                        {adminOnly && (
-                          <Lock
-                            className="ml-auto text-muted-foreground/70 shrink-0"
-                            style={{ width: 11, height: 11 }}
-                          />
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </CanAccess>
-              ))}
+              {RESOURCE_NAV.map(({ label, href, icon: Icon, resource, roles }) => {
+                if (!canSeeNavItem(roles)) return null
+
+                return (
+                  <CanAccess key={`resource-${href}`} resource={resource!} action="list">
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={activeHref(location.pathname) === href}
+                        tooltip={label}
+                      >
+                        <Link to={href!}>
+                          <Icon />
+                          <span>{label}</span>
+                          {roles && !roles.includes(AmpRole.Viewer) && (
+                            <Lock
+                              className="ml-auto text-muted-foreground/70 shrink-0"
+                              style={{ width: 11, height: 11 }}
+                            />
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </CanAccess>
+                )
+              })}
               {/* ── TEMPORARY: Example section — hidden until editing-tools is ready ── */}
               {/* <ExampleNavItem /> */}
             </SidebarMenu>
