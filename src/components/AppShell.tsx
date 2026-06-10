@@ -50,7 +50,9 @@ import {
   LifeBuoy,
   Lock,
   LogOut,
+  Menu,
   Moon,
+  Search,
   Sun,
   User,
   X,
@@ -62,7 +64,7 @@ import { PRIMARY_NAV, RESOURCE_NAV } from '@/config/navigation'
 import { useSearch } from '@/providers/search-provider'
 
 // Support panel state shared between the sidebar footer button and the panel itself
-const SupportPanelContext = createContext<{
+export const SupportPanelContext = createContext<{
   isOpen: boolean
   open: () => void
   close: () => void
@@ -124,17 +126,18 @@ function CollapseButton() {
   )
 }
 
-// Expand button — lives in the main header bar, only visible when sidebar is collapsed
+// Expand button — hamburger on mobile, expand icon on desktop when sidebar is collapsed
 function ExpandButton() {
-  const { state, toggleSidebar } = useSidebar()
-  if (state !== 'collapsed') return null
+  const { state, isMobile, toggleSidebar } = useSidebar()
+  if (!isMobile && state !== 'collapsed') return null
   return (
     <button
       onClick={toggleSidebar}
-      title="Open sidebar"
+      title={isMobile ? 'Open navigation' : 'Open sidebar'}
+      aria-label={isMobile ? 'Open navigation' : 'Open sidebar'}
       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
     >
-      <IconExpand />
+      {isMobile ? <Menu className="size-5" /> : <IconExpand />}
     </button>
   )
 }
@@ -543,6 +546,7 @@ function ShellHeader() {
   const { mutate: logout } = useLogout()
   const translate = useTranslate()
   const { mode, setMode } = useContext(ColorModeContext)
+  const { openSearch } = useSearch()
 
   const initials = user?.name
     ? user.name
@@ -571,18 +575,33 @@ function ShellHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-3 border-b bg-background px-3">
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3">
       <ExpandButton />
-      <HeaderBreadcrumb />
-      <div className="shrink-0 max-w-sm w-full ml-4">
+      <div className="min-w-0 shrink overflow-hidden">
+        <HeaderBreadcrumb />
+      </div>
+      {/* Search bar — hidden on mobile, visible sm+ */}
+      <div className="hidden sm:block shrink-0 max-w-sm w-full ml-4">
         <SearchBar />
       </div>
-      <div className="ml-auto flex items-center gap-2 shrink-0">
-        <ReportBugButton user={user} />
+      <div className="ml-auto flex items-center gap-1 shrink-0">
+        {/* Mobile search icon */}
+        <button
+          className="sm:hidden flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          onClick={openSearch}
+          aria-label="Search"
+        >
+          <Search className="size-4" />
+        </button>
+        <ReportBugButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 px-2.5 gap-1.5 font-semibold">
-              {user?.name || 'User'}
+            <Button variant="ghost" className="h-8 px-2 sm:px-2.5 gap-1.5 font-semibold">
+              {/* Avatar on mobile, full name on sm+ */}
+              <span className="flex sm:hidden size-7 rounded bg-primary items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+                {initials}
+              </span>
+              <span className="hidden sm:inline">{user?.name || 'User'}</span>
               <ChevronDown className="size-3.5 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
