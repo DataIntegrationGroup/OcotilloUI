@@ -2,7 +2,6 @@ import { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RefineSnackbarProvider, useNotificationProvider } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
-import { DevtoolsProvider, DevtoolsPanel } from '@refinedev/devtools'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { CssBaseline, GlobalStyles } from '@mui/material'
@@ -12,6 +11,7 @@ import routerProvider, {
   UnsavedChangesNotifier,
 } from '@refinedev/react-router'
 import { ColorModeContextProvider } from '@/contexts'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import {
   ampDataProvider,
   authentikAuthProvider,
@@ -68,10 +68,10 @@ const customTitleHandler = ({
 
 export const AppProviders = ({ children }: { children: ReactNode }) => (
   <ColorModeContextProvider>
+    <TooltipProvider>
     <CssBaseline />
     <GlobalStyles styles={{ html: { WebkitFontSmoothing: 'auto' } }} />
     <RefineSnackbarProvider>
-      <DevtoolsProvider>
         <Refine
           authProvider={authentikAuthProvider}
           dataProvider={{
@@ -110,8 +110,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
             </SearchProvider>
           </LocalizationProvider>
         </Refine>
-        <DevtoolsPanel />
-      </DevtoolsProvider>
     </RefineSnackbarProvider>
+    </TooltipProvider>
   </ColorModeContextProvider>
 )

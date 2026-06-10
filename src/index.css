@@ -1,0 +1,217 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
+
+/*
+ * Dark mode: apply .dark class to <html> to activate dark tokens.
+ * This matches how MUI's ColorModeContextProvider will wire it up in Phase 3.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Ocotillo design tokens
+ *
+ * These CSS variables are the single source of truth for color and typography
+ * in shadcn/ui components and Tailwind utility classes. MUI components still
+ * read from src/theme.ts during the migration — do not remove theme.ts until
+ * all MUI components have been replaced.
+ *
+ * Color notation: oklch(lightness chroma hue)
+ * Tailwind color references used:
+ *   primary   → blue-700 (light) / blue-300 (dark)
+ *   secondary → amber-600 (light) / amber-300 (dark)
+ *   Colors match the values in src/theme.ts exactly.
+ */
+@layer base {
+  :root {
+    /* Backgrounds — clean neutral near-white, no warm tint */
+    --background: oklch(0.985 0 0);                /* neutral-50 ~#fafafa */
+    --foreground: oklch(0.195 0.026 264.182);      /* slate-900 */
+
+    /* Card / Paper (MUI background.paper equivalent) */
+    --card: oklch(1 0 0);                          /* white */
+    --card-foreground: oklch(0.195 0.026 264.182); /* slate-900 */
+    --paper: oklch(1 0 0);                         /* white — matches MUI background.paper */
+    --wrapper: oklch(0.985 0 0);                   /* neutral-50 — matches MUI background.wrapper */
+
+    /* Popover */
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.195 0.026 264.182);
+
+    /* Primary — blue */
+    --primary: oklch(0.488 0.243 264.376);         /* blue-700 */
+    --primary-foreground: oklch(1 0 0);            /* white */
+    --primary-light: oklch(0.809 0.105 251.813);   /* blue-300 */
+    --primary-dark: oklch(0.379 0.146 265.522);    /* blue-900 */
+
+    /* Secondary — amber */
+    --secondary: oklch(0.666 0.171 60.454);        /* amber-600 */
+    --secondary-foreground: oklch(1 0 0);          /* white */
+    --secondary-light: oklch(0.883 0.156 99.265);  /* amber-300 */
+    --secondary-dark: oklch(0.479 0.133 46.201);   /* amber-800 */
+
+    /* Muted */
+    --muted: oklch(0.961 0 0);                     /* neutral-100 */
+    --muted-foreground: oklch(0.556 0 0);          /* neutral-500 */
+
+    /* Accent — used for hover/active backgrounds */
+    --accent: oklch(0.94 0 0);                     /* neutral-150 */
+    --accent-foreground: oklch(0.195 0.026 264.182);
+
+    /* Semantic status colors */
+    --destructive: oklch(0.577 0.245 27.325);      /* red-600 */
+    --success: oklch(0.508 0.118 165.612);         /* emerald-700 */
+    --success-foreground: oklch(1 0 0);
+    --warning: oklch(0.702 0.191 47.604);          /* orange-500 */
+    --warning-foreground: oklch(1 0 0);
+    --info: oklch(0.566 0.128 233.997);            /* cyan-600 */
+    --info-foreground: oklch(1 0 0);
+
+    /* Borders and inputs */
+    --border: oklch(0.9 0 0);                      /* neutral-200 */
+    --input: oklch(0.9 0 0);                       /* neutral-200 */
+    --ring: oklch(0.488 0.243 264.376);            /* blue-700 */
+
+    /* Radius */
+    --radius: 0.625rem;
+
+    /* Sidebar — same background as app, slightly different accent for hovers */
+    --sidebar: oklch(0.985 0 0);                   /* neutral-50, matches --background */
+    --sidebar-foreground: oklch(0.195 0.026 264.182);
+    --sidebar-primary: oklch(0.488 0.243 264.376); /* blue-700 */
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.94 0 0);             /* neutral-150 for hover */
+    --sidebar-accent-foreground: oklch(0.195 0.026 264.182);
+    --sidebar-border: oklch(0.9 0 0);              /* neutral-200 */
+    --sidebar-ring: oklch(0.488 0.243 264.376);    /* blue-700 */
+  }
+
+  .dark {
+    /* Backgrounds */
+    --background: oklch(0.21 0 0);                 /* zinc-900 */
+    --foreground: oklch(0.966 0.007 247.858);      /* slate-100 */
+
+    /* Card / Paper */
+    --card: oklch(0.372 0 0);                      /* zinc-700 */
+    --card-foreground: oklch(0.966 0.007 247.858);
+    --paper: oklch(0.372 0 0);                     /* zinc-700 — matches MUI background.paper */
+    --wrapper: oklch(0.274 0 0);                   /* zinc-800 — matches MUI background.wrapper */
+
+    /* Popover */
+    --popover: oklch(0.372 0 0);                   /* zinc-700 */
+    --popover-foreground: oklch(0.966 0.007 247.858);
+
+    /* Primary — blue (inverted for dark mode) */
+    --primary: oklch(0.809 0.105 251.813);         /* blue-300 */
+    --primary-foreground: oklch(0.21 0 0);         /* zinc-900 */
+    --primary-light: oklch(0.809 0.105 251.813);   /* blue-300 */
+    --primary-dark: oklch(0.379 0.146 265.522);    /* blue-900 */
+
+    /* Secondary — amber (inverted for dark mode) */
+    --secondary: oklch(0.883 0.156 99.265);        /* amber-300 */
+    --secondary-foreground: oklch(0.21 0 0);       /* zinc-900 */
+    --secondary-light: oklch(0.883 0.156 99.265);  /* amber-300 */
+    --secondary-dark: oklch(0.479 0.133 46.201);   /* amber-800 */
+
+    /* Muted */
+    --muted: oklch(0.274 0 0);                     /* zinc-800 */
+    --muted-foreground: oklch(0.706 0.022 253.916);/* slate-400 */
+
+    /* Accent */
+    --accent: oklch(0.274 0 0);                    /* zinc-800 */
+    --accent-foreground: oklch(0.966 0.007 247.858);
+
+    /* Semantic status colors */
+    --destructive: oklch(0.704 0.191 22.216);      /* red-400 */
+    --success: oklch(0.845 0.143 164.978);         /* emerald-300 */
+    --success-foreground: oklch(0.21 0 0);
+    --warning: oklch(0.837 0.128 66.29);           /* orange-300 */
+    --warning-foreground: oklch(0.21 0 0);
+    --info: oklch(0.865 0.127 207.078);            /* cyan-300 */
+    --info-foreground: oklch(0.21 0 0);
+
+    /* Borders and inputs */
+    --border: oklch(0.372 0 0);                    /* zinc-700 / matches MUI divider */
+    --input: oklch(0.274 0 0);                     /* zinc-800 */
+    --ring: oklch(0.809 0.105 251.813);            /* blue-300 */
+
+    /* Sidebar */
+    --sidebar: oklch(0.274 0 0);                   /* zinc-800 */
+    --sidebar-foreground: oklch(0.966 0.007 247.858);
+    --sidebar-primary: oklch(0.809 0.105 251.813); /* blue-300 */
+    --sidebar-primary-foreground: oklch(0.21 0 0);
+    --sidebar-accent: oklch(0.372 0 0);            /* zinc-700 */
+    --sidebar-accent-foreground: oklch(0.966 0.007 247.858);
+    --sidebar-border: oklch(0.372 0 0);            /* zinc-700 */
+    --sidebar-ring: oklch(0.809 0.105 251.813);    /* blue-300 */
+  }
+
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in oklch, var(--ring) 50%, transparent);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  html {
+    font-family: var(--font-sans, 'Public Sans Variable', system-ui, sans-serif);
+  }
+}
+
+/*
+ * Extend the Tailwind theme with Ocotillo-specific tokens.
+ * Standard shadcn tokens (--primary, --secondary, etc.) are registered
+ * automatically by @import "shadcn/tailwind.css" above.
+ */
+@theme inline {
+  --font-sans: 'Public Sans Variable', system-ui, sans-serif;
+  --font-heading: 'Outfit Variable', system-ui, sans-serif;
+
+  /* Standard shadcn semantic tokens — required for bg-*, text-*, border-* utilities */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Sidebar tokens */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Ocotillo custom tokens */
+  --color-paper: var(--paper);
+  --color-wrapper: var(--wrapper);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary-light: var(--secondary-light);
+  --color-secondary-dark: var(--secondary-dark);
+}
