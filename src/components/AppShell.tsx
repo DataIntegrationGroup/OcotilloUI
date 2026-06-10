@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router'
 import {
@@ -26,13 +26,13 @@ import {
   SidebarMenuSubItem,
   AppLayout,
   SidebarSeparator,
-  useSidebar,
 } from '@/components/ui/sidebar'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { useSidebar } from '@/components/ui/use-sidebar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -54,7 +54,6 @@ import {
   Moon,
   Search,
   Sun,
-  User,
   X,
 } from 'lucide-react'
 import { ColorModeContext } from '@/contexts'
@@ -63,13 +62,9 @@ import { ReportBugButton } from '@/components/Button'
 import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
 import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
+import { SupportPanelContext } from '@/components/SupportPanelContext'
 
-// Support panel state shared between the sidebar footer button and the panel itself
-export const SupportPanelContext = createContext<{
-  isOpen: boolean
-  open: () => void
-  close: () => void
-}>({ isOpen: false, open: () => {}, close: () => {} })
+export { SupportPanelContext }
 
 // Collapse icon — shown in header when sidebar is expanded
 function IconCollapse() {
@@ -197,11 +192,6 @@ function SidebarBrand() {
 
 function AppSidebar() {
   const location = useLocation()
-  const { mode, setMode } = useContext(ColorModeContext)
-  const isExistAuthentication = useIsExistAuthentication()
-  const { warnWhen, setWarnWhen } = useWarnAboutChange()
-  const { mutate: logout } = useLogout()
-  const translate = useTranslate()
   const { state } = useSidebar()
   const { openSearch } = useSearch()
   const { roles: userRoles } = useAccessCapabilities()
@@ -210,23 +200,6 @@ function AppSidebar() {
   const canSeeNavItem = (itemRoles: NavItem['roles']) => {
     if (!itemRoles) return true
     return itemRoles.some((r) => userRoles.includes(r))
-  }
-
-  const handleLogout = () => {
-    if (warnWhen) {
-      const confirmed = window.confirm(
-        translate(
-          'warnWhenUnsavedChanges',
-          'Are you sure you want to leave? You have unsaved changes.'
-        )
-      )
-      if (confirmed) {
-        setWarnWhen(false)
-        logout()
-      }
-    } else {
-      logout()
-    }
   }
 
   return (
