@@ -8,7 +8,6 @@ import {
 } from '@refinedev/core'
 import {
   AppBar,
-  Button,
   Stack,
   Toolbar,
   ListItemIcon,
@@ -20,6 +19,7 @@ import {
   Typography,
   Avatar,
 } from '@mui/material'
+import { Button } from '@/components/ui/button'
 import {
   AccountCircle,
   LogoutOutlined,
@@ -29,8 +29,6 @@ import type { RefineThemedLayoutHeaderProps } from '@refinedev/mui'
 import { HamburgerMenu } from './hamburgerMenu'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
-import { Underline } from 'react-flaticons'
-
 export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
   const isExistAuthentication = useIsExistAuthentication()
   const { data: user, isLoading } = useGetIdentity()
@@ -103,7 +101,7 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
             alignItems="center"
             justifyContent="center"
           >
-            <ReportBugButton user={user} />
+            <ReportBugButton />
             {isLoading ? (
               <Skeleton
                 variant="rounded"
@@ -115,15 +113,8 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
             ) : (
               <Button
                 onClick={handleMenuOpen}
-                color="inherit"
-                variant="text"
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  color: 'text.primary',
-                  minWidth: 0,
-                  px: 1,
-                }}
+                variant="ghost"
+                className="font-semibold"
               >
                 {user?.name || 'User'}
               </Button>

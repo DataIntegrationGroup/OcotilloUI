@@ -1,14 +1,13 @@
 import { Authenticated } from '@refinedev/core'
 import { AuthPage, ErrorComponent } from '@refinedev/mui'
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router'
-import { ThemedLayoutV2 } from '@/components/layout'
-import { ThemedHeaderV2 } from '@/components/layout/header'
-import { ThemedSiderV2 } from '@/components/layout/sider'
+import { AppShell } from '@/components/AppShell'
 import { ThemedTitleV2 } from '@/components/layout/title'
 import { Callback } from '@/components/Auth'
 import { Home } from '@/pages/home'
+// import { TypographyPage } from '@/pages/example/TypographyPage'
 import { ContentPage } from '@/pages/content'
-import { AMPRoutes, OcotilloRoutes, ST2Routes } from '@/routes'
+import { OcotilloRoutes, ST2Routes } from '@/routes'
 import { settings } from '@/settings'
 import { AppProviders } from '@/AppProviders'
 
@@ -45,15 +44,7 @@ const App: React.FC = () => (
         <Route
           element={
             <Authenticated key="authenticated-routes" redirectOnFail="/login">
-              <ThemedLayoutV2
-                Header={() => <ThemedHeaderV2 sticky />}
-                Sider={ThemedSiderV2}
-                Title={({ collapsed }) => (
-                  <ThemedTitleV2 collapsed={collapsed} />
-                )}
-              >
-                <Outlet />
-              </ThemedLayoutV2>
+              <AppShell />
             </Authenticated>
           }
         >
@@ -71,16 +62,15 @@ const App: React.FC = () => (
             path="/ogcapi"
             element={<ContentPage src="/content/ogcapi.md" />}
           />
-          <Route path="/amp/*" element={<AMPRoutes />} />
+          {/* TEMPORARY: example pages — hidden until editing-tools is merged */}
+          {/* <Route path="/example/typography" element={<TypographyPage />} /> */}
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
           <Route path="/st2/*" element={<ST2Routes />} />
         </Route>
         <Route
           element={
             <Authenticated key="catch-all">
-              <ThemedLayoutV2>
-                <Outlet />
-              </ThemedLayoutV2>
+              <AppShell />
             </Authenticated>
           }
         >

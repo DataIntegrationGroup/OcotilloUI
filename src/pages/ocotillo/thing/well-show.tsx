@@ -65,7 +65,11 @@ export const WellShow = () => {
 
   useEffect(() => {
     if (id)
-      captureEvent('feature_used', { feature: 'well_detail', well_id: id })
+      captureEvent('feature_used', {
+        feature: 'well_detail',
+        well_id: id,
+        well_detail_area: 'ocotillo',
+      })
   }, [id])
 
   const detailsQuery = useQuery({
@@ -84,9 +88,7 @@ export const WellShow = () => {
       // debugging. Visible only in the browser console when it is open.
       const label = `[ocotillo] GET thing/water-well/${id}/details`
       try {
-        const plain = JSON.parse(
-          JSON.stringify(data)
-        ) as IWellDetails
+        const plain = JSON.parse(JSON.stringify(data)) as IWellDetails
         console.log(label, plain)
       } catch {
         console.log(label, data)
@@ -97,7 +99,7 @@ export const WellShow = () => {
       return data
     },
   })
-  const { canManageAmp } = useAccessCapabilities()
+  const { canViewAmp } = useAccessCapabilities()
 
   const { result: assetResult, query: assetQuery } = useList<IAsset>({
     resource: 'asset',
@@ -328,7 +330,7 @@ export const WellShow = () => {
   return (
     <Show
       goBack={false}
-      breadcrumb={<AppBreadcrumb />}
+      breadcrumb={false}
       wrapperProps={{
         elevation: 0,
         sx: {
@@ -352,7 +354,7 @@ export const WellShow = () => {
       }}
       contentProps={{ sx: { pt: 1 } }}
       headerButtons={() =>
-        canManageAmp ? (
+        canViewAmp ? (
           <Box sx={{ display: 'flex', gap: 0 }}>
             <WellPDFPreviewButton isLoading={isDetailsLoading} />
             <WellPDFDownloadButton

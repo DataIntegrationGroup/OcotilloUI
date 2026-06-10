@@ -74,12 +74,24 @@ function ActiveFilterChips() {
   )
 }
 
+type ListPageToolbarProps = {
+  hideFilter?: boolean
+  hideColumns?: boolean
+  hideDensity?: boolean
+  hideExport?: boolean
+}
+
 // Toolbar inside the DataGrid:
 // - Row 1 (right-aligned): filter, columns, density, export buttons
 // - Row 2 (only when filters are active): dismissible filter chips
 // The search input lives OUTSIDE the DataGrid to avoid focus-loss on re-render.
 // Built-in toolbar buttons are used (not custom icon buttons) so panels anchor correctly.
-function ListPageToolbar() {
+function ListPageToolbar({
+  hideFilter = false,
+  hideColumns = false,
+  hideDensity = false,
+  hideExport = false,
+}: ListPageToolbarProps) {
   return (
     <GridToolbarContainer
       sx={{
@@ -91,25 +103,39 @@ function ListPageToolbar() {
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-        <GridToolbarFilterButton
-          slotProps={{
-            button: { 'data-testid': 'grid-toolbar-filter-button' },
-          }}
-        />
-        <GridToolbarColumnsButton
-          slotProps={{
-            button: { 'data-testid': 'grid-toolbar-columns-button' },
-          }}
-        />
-        <GridToolbarDensitySelector
-          slotProps={{
-            button: { 'data-testid': 'grid-toolbar-density-selector' },
-          }}
-        />
-        <GridToolbarExport
-          slotProps={{ button: { 'data-testid': 'grid-toolbar-export' } }}
-        />
+        {!hideFilter && (
+          <GridToolbarFilterButton
+            slotProps={{
+              button: { 'data-testid': 'grid-toolbar-filter-button' },
+            }}
+          />
+        )}
+
+        {!hideColumns && (
+          <GridToolbarColumnsButton
+            slotProps={{
+              button: { 'data-testid': 'grid-toolbar-columns-button' },
+            }}
+          />
+        )}
+
+        {!hideDensity && (
+          <GridToolbarDensitySelector
+            slotProps={{
+              button: { 'data-testid': 'grid-toolbar-density-selector' },
+            }}
+          />
+        )}
+
+        {!hideExport && (
+          <GridToolbarExport
+            slotProps={{
+              button: { 'data-testid': 'grid-toolbar-export' },
+            }}
+          />
+        )}
       </Box>
+
       <ActiveFilterChips />
     </GridToolbarContainer>
   )
@@ -127,7 +153,10 @@ type ListPageProps = {
   isLoading?: boolean
   headerButtons?: any
   disableRowClick?: boolean
+  /** Called before navigation when a row is clicked. Use for analytics. */
+  onRowClick?: (params: any) => void
 
+  toolbarOptions?: ListPageToolbarProps
   searchMode?: 'client' | 'server'
   searchValue?: string
   onSearchChange?: (value: string) => void
@@ -148,6 +177,9 @@ export const ListPage: React.FC<ListPageProps> = ({
   isLoading,
   headerButtons,
   disableRowClick = false,
+  onRowClick,
+
+  toolbarOptions,
   searchMode = 'client',
   searchValue,
   onSearchChange,
@@ -219,6 +251,10 @@ export const ListPage: React.FC<ListPageProps> = ({
     } else {
       setLocalQuickFilter(value)
     }
+  }
+
+  const toolbarConfig = {
+    hideExport: restDataGridProps.paginationMode === 'server',
   }
 
   return (
@@ -332,6 +368,12 @@ export const ListPage: React.FC<ListPageProps> = ({
           showToolbar
           slots={{ toolbar: ListPageToolbar }}
           slotProps={{
+            toolbar: {
+              ...toolbarOptions,
+              hideExport:
+                toolbarOptions?.hideExport ??
+                restDataGridProps.paginationMode === 'server',
+            },
             loadingOverlay: {
               variant: 'linear-progress',
               noRowsVariant: 'skeleton',
@@ -343,7 +385,10 @@ export const ListPage: React.FC<ListPageProps> = ({
           onRowSelectionModelChange={handleSelectionChangeWrapper}
           onRowClick={
             !disableRowClick && resource
-              ? (params) => show(resource.name, params.id as string | number)
+              ? (params) => {
+                  onRowClick?.(params)
+                  show(resource.name, params.id as string | number)
+                }
               : undefined
           }
           loading={
