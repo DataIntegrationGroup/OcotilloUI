@@ -585,34 +585,38 @@ function SupportPanel() {
           {/* Home view */}
           {view === 'home' && (
             <div className="flex flex-col gap-3 p-4">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Found something broken or have a suggestion? Let us know.
               </p>
-              <button
-                onClick={() => setView('bug')}
-                className="flex items-start gap-3 rounded-lg border p-4 text-left hover:bg-accent transition-colors"
-              >
-                <Bug className="size-5 shrink-0 mt-0.5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-sm">Report a Bug</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Something is broken or not working as expected.
-                  </p>
-                </div>
-              </button>
-              <button
-                onClick={() => setView('feature')}
-                className="flex items-start gap-3 rounded-lg border p-4 text-left hover:bg-accent transition-colors"
-              >
-                <User className="size-5 shrink-0 mt-0.5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-sm">Request a Feature</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Describe something you need that Ocotillo doesn't do yet.
-                  </p>
-                </div>
-              </button>
-              <p className="mt-2 text-xs text-muted-foreground px-1">
+              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6, #06b6d4)' }}>
+                <button
+                  onClick={() => setView('bug')}
+                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors"
+                >
+                  <Bug className="size-5 shrink-0 mt-0.5 text-emerald-500" />
+                  <div>
+                    <p className="font-medium text-sm">Report a Bug</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Something is broken or not working as expected.
+                    </p>
+                  </div>
+                </button>
+              </div>
+              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #38bdf8, #0ea5e9, #6366f1)' }}>
+                <button
+                  onClick={() => setView('feature')}
+                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors"
+                >
+                  <User className="size-5 shrink-0 mt-0.5 text-sky-500" />
+                  <div>
+                    <p className="font-medium text-sm">Request a Feature</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Describe something you need that Ocotillo doesn't do yet.
+                    </p>
+                  </div>
+                </button>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground px-1">
                 For urgent issues, email{' '}
                 <a
                   href="mailto:ocotillo-nmbg@nmt.edu"
@@ -630,18 +634,18 @@ function SupportPanel() {
               {/* Auto-captured context */}
               <div className="rounded-md bg-orange-100 dark:bg-orange-950/40 p-3 flex flex-col gap-1.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Captured automatically</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">Page:</span> {pageUrl}
                 </p>
                 {user?.name && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     <span className="font-medium text-foreground">Reported by:</span> {user.name}
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">Browser:</span> {getBrowser()}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">Date & time:</span>{' '}
                   {new Date().toLocaleString(undefined, {
                     dateStyle: 'medium',
@@ -692,7 +696,7 @@ function SupportPanel() {
                     />
                     <div>
                       <p className="text-sm font-medium leading-tight">{label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
                     </div>
                   </label>
                 ))}
