@@ -112,33 +112,41 @@ function IconExpand() {
   )
 }
 
-// Collapse button — lives in the sidebar header, only visible when sidebar is open
+// Collapse button — lives in the sidebar header, only visible when sidebar is open.
+// Uses Button primitive rather than SidebarTrigger because SidebarTrigger is
+// hardcoded to PanelLeftIcon and doesn't allow swapping icons based on state.
 function CollapseButton() {
   const { toggleSidebar } = useSidebar()
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={toggleSidebar}
       title="Collapse sidebar"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      aria-label="Collapse sidebar"
+      className="shrink-0 text-muted-foreground hover:text-foreground"
     >
       <IconCollapse />
-    </button>
+    </Button>
   )
 }
 
-// Expand button — hamburger on mobile, expand icon on desktop when sidebar is collapsed
+// Expand button — hamburger on mobile, expand icon on desktop when sidebar is collapsed.
+// Same reasoning as CollapseButton for using Button over SidebarTrigger.
 function ExpandButton() {
   const { state, isMobile, toggleSidebar } = useSidebar()
   if (!isMobile && state !== 'collapsed') return null
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={toggleSidebar}
       title={isMobile ? 'Open navigation' : 'Open sidebar'}
       aria-label={isMobile ? 'Open navigation' : 'Open sidebar'}
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      className="shrink-0 text-muted-foreground hover:text-foreground"
     >
       {isMobile ? <Menu className="size-5" /> : <IconExpand />}
-    </button>
+    </Button>
   )
 }
 
@@ -581,7 +589,7 @@ function ShellHeader() {
         <HeaderBreadcrumb />
       </div>
       {/* Search bar — hidden on mobile, visible sm+ */}
-      <div className="hidden sm:block shrink-0 max-w-sm w-full ml-4">
+      <div className="hidden sm:block shrink-0 max-w-sm w-full ml-0">
         <SearchBar />
       </div>
       <div className="ml-auto flex items-center gap-1 shrink-0">
