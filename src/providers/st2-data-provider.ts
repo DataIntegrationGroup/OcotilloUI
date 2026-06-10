@@ -34,8 +34,8 @@ export const st2DataProvider: DataProvider = {
     if (response.status < 200 || response.status > 299) throw response;
     const resp = await response.json();
 
-    let data = resp.value;
-    let total = resp["@iot.count"];
+    const data = resp.value;
+    const total = resp["@iot.count"];
 
     return {
       data,

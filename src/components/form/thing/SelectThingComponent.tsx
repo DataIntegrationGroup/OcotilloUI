@@ -102,7 +102,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
       )
     }
 
-    let rows = [
+    const rows = [
       { name: 'Name', value: thing?.name || '' },
       { name: 'ID', value: thing?.id || '' },
       { name: 'Release Status', value: thing?.release_status || '' },
