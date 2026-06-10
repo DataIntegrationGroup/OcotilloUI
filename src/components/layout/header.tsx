@@ -101,7 +101,7 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutHeaderProps> = () => {
             alignItems="center"
             justifyContent="center"
           >
-            <ReportBugButton />
+            <ReportBugButton user={user} />
             {isLoading ? (
               <Skeleton
                 variant="rounded"
