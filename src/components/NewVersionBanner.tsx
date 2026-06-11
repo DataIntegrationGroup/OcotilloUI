@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useNewVersion } from '@/hooks/useNewVersion'
 
 export const NewVersionBanner = () => {
@@ -10,12 +11,14 @@ export const NewVersionBanner = () => {
       <span className="font-medium">
         We just made Ocotillo 5% better. Refresh to get the good stuff!
       </span>
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() => window.location.reload()}
-        className="shrink-0 px-3 py-1 rounded border border-white/60 bg-white/10 hover:bg-white/20 font-medium transition-colors cursor-pointer"
+        className="border-white/60 bg-white/10 text-white hover:bg-white/20 hover:text-white"
       >
         Refresh Now
-      </button>
+      </Button>
     </div>
   )
 }
