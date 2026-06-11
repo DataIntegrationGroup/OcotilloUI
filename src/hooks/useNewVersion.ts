@@ -26,7 +26,6 @@ export const useNewVersion = () => {
     'preview-refresh-banner'
   )
   const [isNewVersionAvailable, setIsNewVersionAvailable] = useState(forceShow)
-  const [dismissed, setDismissed] = useState(false)
   const initialBuildTime = useRef<string | null>(null)
 
   useEffect(() => {
@@ -56,8 +55,5 @@ export const useNewVersion = () => {
     }
   }, [])
 
-  return {
-    isNewVersionAvailable: isNewVersionAvailable && !dismissed,
-    dismiss: () => setDismissed(true),
-  }
+  return { isNewVersionAvailable }
 }

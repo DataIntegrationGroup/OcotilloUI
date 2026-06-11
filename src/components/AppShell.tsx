@@ -721,6 +721,7 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
       <SidebarAutoCollapse />
       <AppSidebar />
       <AppContent className="min-w-0">
+        <NewVersionBanner />
         <ShellHeader />
         <div className="flex-1 min-h-0 overflow-y-auto">
           {children ?? <Outlet />}
@@ -733,13 +734,8 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
 
 export const AppShell = ({ children }: { children?: React.ReactNode }) => {
   return (
-    // flex-col wrapper so NewVersionBanner can sit above the shell without
-    // breaking the h-svh constraint — AppLayout takes the remaining height.
-    <div className="flex flex-col h-svh overflow-hidden">
-      <NewVersionBanner />
-      <AppLayout className="flex-1 min-h-0 overflow-hidden">
-        <AppShellInner>{children}</AppShellInner>
-      </AppLayout>
-    </div>
+    <AppLayout className="h-svh overflow-hidden">
+      <AppShellInner>{children}</AppShellInner>
+    </AppLayout>
   )
 }
