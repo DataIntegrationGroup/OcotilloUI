@@ -22,7 +22,7 @@ import { Masonry } from '@mui/lab'
 import { settings } from '@/settings'
 import type { IAsset } from '@/interfaces/ocotillo'
 
-type ImageViewMode = 'grid' | 'slideshow'
+type PreviewViewMode = 'grid' | 'slideshow'
 
 const isImage = (asset: IAsset) => asset.mime_type?.startsWith('image/')
 
@@ -40,7 +40,8 @@ export const AttachmentsCard = ({
   assets: IAsset[]
   isLoading: boolean
 }) => {
-  const [imageViewMode, setImageViewMode] = useState<ImageViewMode>('grid')
+  const [previewViewMode, setPreviewViewMode] =
+    useState<PreviewViewMode>('grid')
   const [slideshowIndex, setSlideshowIndex] = useState(0)
 
   const previewAssets = useMemo(() => assets.filter(canPreview), [assets])
@@ -159,9 +160,9 @@ export const AttachmentsCard = ({
                   <Tooltip title="Grid view">
                     <IconButton
                       size="small"
-                      color={imageViewMode === 'grid' ? 'primary' : 'default'}
-                      onClick={() => setImageViewMode('grid')}
-                      aria-pressed={imageViewMode === 'grid'}
+                      color={previewViewMode === 'grid' ? 'primary' : 'default'}
+                      onClick={() => setPreviewViewMode('grid')}
+                      aria-pressed={previewViewMode === 'grid'}
                     >
                       <GridView />
                     </IconButton>
@@ -170,29 +171,29 @@ export const AttachmentsCard = ({
                     <IconButton
                       size="small"
                       color={
-                        imageViewMode === 'slideshow' ? 'primary' : 'default'
+                        previewViewMode === 'slideshow' ? 'primary' : 'default'
                       }
                       onClick={() => {
-                        setImageViewMode('slideshow')
+                        setPreviewViewMode('slideshow')
                         setSlideshowIndex(0)
                       }}
-                      aria-pressed={imageViewMode === 'slideshow'}
+                      aria-pressed={previewViewMode === 'slideshow'}
                     >
                       <ViewCarousel />
                     </IconButton>
                   </Tooltip>
                 </Stack>
 
-                {imageViewMode === 'grid' ? (
+                {previewViewMode === 'grid' ? (
                   <Masonry columns={3} spacing={2}>
-                    {previewAssets.map((img, idx) => (
+                    {previewAssets.map((asset, idx) => (
                       <ButtonBase
-                        key={img.id ?? idx}
+                        key={asset.id ?? idx}
                         focusRipple
-                        aria-label={`Open ${img.name || `attachment ${idx + 1}`} in slideshow`}
+                        aria-label={`Open ${asset.name || `attachment ${idx + 1}`} in slideshow`}
                         onClick={() => {
                           setSlideshowIndex(idx)
-                          setImageViewMode('slideshow')
+                          setPreviewViewMode('slideshow')
                         }}
                         sx={{
                           display: 'block',
@@ -203,17 +204,7 @@ export const AttachmentsCard = ({
                           textAlign: 'left',
                         }}
                       >
-                        <AssetPreview asset={currentAsset} />
-                        <Box
-                          component="img"
-                          src={img.signed_url}
-                          alt={img.name || `Attachment ${idx + 1}`}
-                          sx={{
-                            width: '100%',
-                            display: 'block',
-                            verticalAlign: 'bottom',
-                          }}
-                        />
+                        <AssetPreview asset={asset} variant="grid" />
                       </ButtonBase>
                     ))}
                   </Masonry>
@@ -231,17 +222,9 @@ export const AttachmentsCard = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <AssetPreview asset={currentAsset} />
-                    <Box
-                      component="img"
-                      src={currentAsset?.signed_url}
-                      alt={currentAsset?.name || `Image ${slideshowIndex + 1}`}
-                      sx={{
-                        maxWidth: '100%',
-                        maxHeight: 400,
-                        objectFit: 'contain',
-                      }}
-                    />
+                    {currentAsset && (
+                      <AssetPreview asset={currentAsset} variant="slideshow" />
+                    )}
                     {previewAssets.length > 1 && (
                       <>
                         <IconButton
@@ -321,7 +304,15 @@ export const AttachmentsCard = ({
   )
 }
 
-const AssetPreview = ({ asset }: { asset: IAsset }) => {
+const AssetPreview = ({
+  asset,
+  variant,
+}: {
+  asset: IAsset
+  variant: 'grid' | 'slideshow'
+}) => {
+  const height = variant === 'grid' ? 220 : 500
+
   if (isImage(asset)) {
     return (
       <Box
@@ -330,15 +321,16 @@ const AssetPreview = ({ asset }: { asset: IAsset }) => {
         alt={asset.name}
         sx={{
           width: '100%',
-          maxHeight: 400,
+          maxHeight: height,
           objectFit: 'contain',
           display: 'block',
+          bgcolor: 'grey.100',
         }}
       />
     )
   }
 
-  if (isPdf(asset)) {
+  if (isPdf(asset) || isText(asset)) {
     return (
       <Box
         component="iframe"
@@ -346,22 +338,7 @@ const AssetPreview = ({ asset }: { asset: IAsset }) => {
         title={asset.name}
         sx={{
           width: '100%',
-          height: 500,
-          border: 0,
-        }}
-      />
-    )
-  }
-
-  if (isText(asset)) {
-    return (
-      <Box
-        component="iframe"
-        src={asset.signed_url}
-        title={asset.name}
-        sx={{
-          width: '100%',
-          height: 300,
+          height,
           border: 0,
           bgcolor: 'background.paper',
         }}
@@ -369,5 +346,9 @@ const AssetPreview = ({ asset }: { asset: IAsset }) => {
     )
   }
 
-  return <Typography color="text.secondary">Preview not available.</Typography>
+  return (
+    <Box sx={{ p: 2 }}>
+      <Typography color="text.secondary">Preview not available.</Typography>
+    </Box>
+  )
 }
