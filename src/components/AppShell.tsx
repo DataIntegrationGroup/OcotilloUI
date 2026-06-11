@@ -966,7 +966,7 @@ function ShellHeader() {
         <ReportBugButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 px-2 sm:px-2.5 gap-1.5 font-semibold">
+            <Button variant="ghost" className="h-8 px-2 sm:px-2.5 gap-1.5 font-semibold cursor-pointer">
               {/* Avatar on mobile, full name on sm+ */}
               <span className="flex sm:hidden size-7 rounded bg-primary items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
                 {initials}
