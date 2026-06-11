@@ -408,7 +408,7 @@ function SupportPanelTrigger({ collapsed }: { collapsed: boolean }) {
         onClick={isOpen ? close : open}
         title="Report a bug or request a feature"
         className={cn(
-          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent',
+          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent cursor-pointer',
           collapsed && 'justify-center',
           isOpen ? 'text-foreground bg-accent' : 'text-muted-foreground hover:text-foreground'
         )}
