@@ -1669,6 +1669,18 @@ export const MapView: React.FC = () => {
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
+                '& .MuiCollapse-wrapper': {
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  minHeight: 0,
+                },
+                '& .MuiCollapse-wrapperInner': {
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  minHeight: 0,
+                },
               }}
             >
               <Box

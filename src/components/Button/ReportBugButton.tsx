@@ -12,10 +12,10 @@ export const ReportBugButton = () => {
       size="sm"
       onClick={open}
       aria-label="Get help / report a bug"
-      className="h-8 px-2.5 gap-1.5 text-muted-foreground hover:text-foreground"
+      className="h-8 px-2 sm:px-2.5 gap-1.5 text-muted-foreground hover:text-foreground"
     >
-      <Bug className="size-4" />
-      <span className="text-sm font-normal">Get Help</span>
+      <Bug className="size-4 shrink-0" />
+      <span className="hidden sm:inline text-sm font-normal">Get Help</span>
     </Button>
   )
 }

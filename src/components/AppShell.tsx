@@ -17,14 +17,14 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
-  SidebarInset,
+  AppContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarProvider,
+  AppLayout,
   SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar'
@@ -50,7 +50,9 @@ import {
   FlaskConical,
   Lock,
   LogOut,
+  Menu,
   Moon,
+  Search,
   Sun,
   User,
   X,
@@ -58,7 +60,8 @@ import {
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
-import { PRIMARY_NAV, RESOURCE_NAV } from '@/config/navigation'
+import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
+import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -112,32 +115,41 @@ function IconExpand() {
   )
 }
 
-// Collapse button — lives in the sidebar header, only visible when sidebar is open
+// Collapse button — lives in the sidebar header, only visible when sidebar is open.
+// Uses Button primitive rather than SidebarTrigger because SidebarTrigger is
+// hardcoded to PanelLeftIcon and doesn't allow swapping icons based on state.
 function CollapseButton() {
   const { toggleSidebar } = useSidebar()
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={toggleSidebar}
       title="Collapse sidebar"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      aria-label="Collapse sidebar"
+      className="shrink-0 text-muted-foreground hover:text-foreground"
     >
       <IconCollapse />
-    </button>
+    </Button>
   )
 }
 
-// Expand button — lives in the main header bar, only visible when sidebar is collapsed
+// Expand button — hamburger on mobile, expand icon on desktop when sidebar is collapsed.
+// Same reasoning as CollapseButton for using Button over SidebarTrigger.
 function ExpandButton() {
-  const { state, toggleSidebar } = useSidebar()
-  if (state !== 'collapsed') return null
+  const { state, isMobile, toggleSidebar } = useSidebar()
+  if (!isMobile && state !== 'collapsed') return null
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={toggleSidebar}
-      title="Open sidebar"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      title={isMobile ? 'Open navigation' : 'Open sidebar'}
+      aria-label={isMobile ? 'Open navigation' : 'Open sidebar'}
+      className="shrink-0 text-muted-foreground hover:text-foreground"
     >
-      <IconExpand />
-    </button>
+      {isMobile ? <Menu className="size-5" /> : <IconExpand />}
+    </Button>
   )
 }
 
@@ -194,7 +206,13 @@ function AppSidebar() {
   const translate = useTranslate()
   const { state } = useSidebar()
   const { openSearch } = useSearch()
+  const { roles: userRoles } = useAccessCapabilities()
   const collapsed = state === 'collapsed'
+
+  const canSeeNavItem = (itemRoles: NavItem['roles']) => {
+    if (!itemRoles) return true
+    return itemRoles.some((r) => userRoles.includes(r))
+  }
 
   const handleLogout = () => {
     if (warnWhen) {
@@ -235,7 +253,9 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {PRIMARY_NAV.map(({ id, label, href, icon: Icon, disabled, resource }) => {
+              {PRIMARY_NAV.map(({ id, label, href, icon: Icon, disabled, resource, roles }) => {
+                if (!canSeeNavItem(roles)) return null
+
                 const button = id === 'search' ? (
                   <SidebarMenuButton onClick={openSearch} tooltip={label}>
                     <Icon />
@@ -284,28 +304,32 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {RESOURCE_NAV.map(({ label, href, icon: Icon, resource, adminOnly }) => (
-                <CanAccess key={`resource-${href}`} resource={resource!} action="list">
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={activeHref(location.pathname) === href}
-                      tooltip={label}
-                    >
-                      <Link to={href!}>
-                        <Icon />
-                        <span>{label}</span>
-                        {adminOnly && (
-                          <Lock
-                            className="ml-auto text-muted-foreground/70 shrink-0"
-                            style={{ width: 11, height: 11 }}
-                          />
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </CanAccess>
-              ))}
+              {RESOURCE_NAV.map(({ label, href, icon: Icon, resource, roles }) => {
+                if (!canSeeNavItem(roles)) return null
+
+                return (
+                  <CanAccess key={`resource-${href}`} resource={resource!} action="list">
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={activeHref(location.pathname) === href}
+                        tooltip={label}
+                      >
+                        <Link to={href!}>
+                          <Icon />
+                          <span>{label}</span>
+                          {roles && !roles.includes(AmpRole.Viewer) && (
+                            <Lock
+                              className="ml-auto text-muted-foreground/70 shrink-0"
+                              style={{ width: 11, height: 11 }}
+                            />
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </CanAccess>
+                )
+              })}
               {/* ── TEMPORARY: Example section — hidden until editing-tools is ready ── */}
               {/* <ExampleNavItem /> */}
             </SidebarMenu>
@@ -892,6 +916,7 @@ function ShellHeader() {
   const { mutate: logout } = useLogout()
   const translate = useTranslate()
   const { mode, setMode } = useContext(ColorModeContext)
+  const { openSearch } = useSearch()
 
   const initials = user?.name
     ? user.name
@@ -920,18 +945,33 @@ function ShellHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-3 border-b bg-background px-3">
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3">
       <ExpandButton />
-      <HeaderBreadcrumb />
-      <div className="shrink-0 max-w-sm w-full ml-4">
+      <div className="min-w-0 shrink overflow-hidden">
+        <HeaderBreadcrumb />
+      </div>
+      {/* Search bar — hidden on mobile, visible sm+ */}
+      <div className="hidden sm:block shrink-0 max-w-sm w-full ml-0">
         <SearchBar />
       </div>
-      <div className="ml-auto flex items-center gap-2 shrink-0">
+      <div className="ml-auto flex items-center gap-1 shrink-0">
+        {/* Mobile search icon */}
+        <button
+          className="sm:hidden flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          onClick={openSearch}
+          aria-label="Search"
+        >
+          <Search className="size-4" />
+        </button>
         <ReportBugButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 px-2.5 gap-1.5 font-semibold">
-              {user?.name || 'User'}
+            <Button variant="ghost" className="h-8 px-2 sm:px-2.5 gap-1.5 font-semibold">
+              {/* Avatar on mobile, full name on sm+ */}
+              <span className="flex sm:hidden size-7 rounded bg-primary items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+                {initials}
+              </span>
+              <span className="hidden sm:inline">{user?.name || 'User'}</span>
               <ChevronDown className="size-3.5 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
@@ -1028,12 +1068,12 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
     <SupportPanelContext.Provider value={{ isOpen: panelOpen, open: openPanel, close: closePanel }}>
       <SidebarAutoCollapse />
       <AppSidebar />
-      <SidebarInset className="min-w-0 overflow-y-auto">
+      <AppContent className="min-w-0">
         <ShellHeader />
-        <main className="flex flex-col flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {children ?? <Outlet />}
-        </main>
-      </SidebarInset>
+        </div>
+      </AppContent>
       <SupportPanel />
     </SupportPanelContext.Provider>
   )
@@ -1042,10 +1082,10 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
 export const AppShell = ({ children }: { children?: React.ReactNode }) => {
   return (
     // h-svh + overflow-hidden pins the shell to exactly the viewport so no page
-    // can cause a body-level scroll. SidebarInset gets overflow-y-auto so regular
+    // can cause a body-level scroll. AppContent gets overflow-y-auto so regular
     // pages still scroll within the frame.
-    <SidebarProvider className="h-svh overflow-hidden">
+    <AppLayout className="h-svh overflow-hidden">
       <AppShellInner>{children}</AppShellInner>
-    </SidebarProvider>
+    </AppLayout>
   )
 }
