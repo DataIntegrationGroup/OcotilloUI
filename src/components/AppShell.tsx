@@ -615,7 +615,7 @@ function SupportPanel() {
               <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6, #06b6d4)' }}>
                 <button
                   onClick={() => setView('bug')}
-                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors"
+                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
                 >
                   <Bug className="size-5 shrink-0 mt-0.5 text-emerald-500" />
                   <div>
@@ -629,7 +629,7 @@ function SupportPanel() {
               <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #38bdf8, #0ea5e9, #6366f1)' }}>
                 <button
                   onClick={() => setView('feature')}
-                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors"
+                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
                 >
                   <User className="size-5 shrink-0 mt-0.5 text-sky-500" />
                   <div>
