@@ -8,6 +8,7 @@ import {
   Stack,
   Typography,
   Tooltip,
+  Button,
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
@@ -23,6 +24,15 @@ import type { IAsset } from '@/interfaces/ocotillo'
 
 type ImageViewMode = 'grid' | 'slideshow'
 
+const isImage = (asset: IAsset) => asset.mime_type?.startsWith('image/')
+
+const isPdf = (asset: IAsset) => asset.mime_type === 'application/pdf'
+
+const isText = (asset: IAsset) => asset.mime_type === 'text/plain'
+
+const canPreview = (asset: IAsset) =>
+  Boolean(asset.signed_url) && (isImage(asset) || isPdf(asset) || isText(asset))
+
 export const AttachmentsCard = ({
   assets,
   isLoading,
@@ -33,10 +43,7 @@ export const AttachmentsCard = ({
   const [imageViewMode, setImageViewMode] = useState<ImageViewMode>('grid')
   const [slideshowIndex, setSlideshowIndex] = useState(0)
 
-  const imageAssets = useMemo(
-    () => assets.filter((a: { signed_url?: string }) => a?.signed_url),
-    [assets]
-  )
+  const previewAssets = useMemo(() => assets.filter(canPreview), [assets])
 
   const columns = useMemo<GridColDef<IAsset>[]>(
     () => [
@@ -74,12 +81,44 @@ export const AttachmentsCard = ({
           )
         },
       },
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        width: 180,
+        sortable: false,
+        renderCell: ({ row }) => (
+          <Stack direction="row" spacing={1}>
+            {row.signed_url && (
+              <Button
+                size="small"
+                component="a"
+                href={row.signed_url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open
+              </Button>
+            )}
+
+            {row.signed_url && (
+              <Button
+                size="small"
+                component="a"
+                href={row.signed_url}
+                download={row.name}
+              >
+                Download
+              </Button>
+            )}
+          </Stack>
+        ),
+      },
     ],
     []
   )
 
-  const currentImage = imageAssets[slideshowIndex]
-  const hasImages = imageAssets.length > 0
+  const currentAsset = previewAssets[slideshowIndex]
+  const hasAssets = previewAssets.length > 0
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -108,7 +147,7 @@ export const AttachmentsCard = ({
         ) : (
           <Stack spacing={3}>
             {/* Images section (above table) with view toggle */}
-            {hasImages && (
+            {hasAssets && (
               <Box>
                 <Stack
                   direction="row"
@@ -146,7 +185,7 @@ export const AttachmentsCard = ({
 
                 {imageViewMode === 'grid' ? (
                   <Masonry columns={3} spacing={2}>
-                    {imageAssets.map((img, idx) => (
+                    {previewAssets.map((img, idx) => (
                       <ButtonBase
                         key={img.id ?? idx}
                         focusRipple
@@ -164,6 +203,7 @@ export const AttachmentsCard = ({
                           textAlign: 'left',
                         }}
                       >
+                        <AssetPreview asset={currentAsset} />
                         <Box
                           component="img"
                           src={img.signed_url}
@@ -191,23 +231,24 @@ export const AttachmentsCard = ({
                       justifyContent: 'center',
                     }}
                   >
+                    <AssetPreview asset={currentAsset} />
                     <Box
                       component="img"
-                      src={currentImage?.signed_url}
-                      alt={currentImage?.name || `Image ${slideshowIndex + 1}`}
+                      src={currentAsset?.signed_url}
+                      alt={currentAsset?.name || `Image ${slideshowIndex + 1}`}
                       sx={{
                         maxWidth: '100%',
                         maxHeight: 400,
                         objectFit: 'contain',
                       }}
                     />
-                    {imageAssets.length > 1 && (
+                    {previewAssets.length > 1 && (
                       <>
                         <IconButton
                           aria-label="Previous image"
                           onClick={() =>
                             setSlideshowIndex((i) =>
-                              i === 0 ? imageAssets.length - 1 : i - 1
+                              i === 0 ? previewAssets.length - 1 : i - 1
                             )
                           }
                           sx={{
@@ -225,7 +266,7 @@ export const AttachmentsCard = ({
                           aria-label="Next image"
                           onClick={() =>
                             setSlideshowIndex((i) =>
-                              i === imageAssets.length - 1 ? 0 : i + 1
+                              i === previewAssets.length - 1 ? 0 : i + 1
                             )
                           }
                           sx={{
@@ -253,7 +294,7 @@ export const AttachmentsCard = ({
                             borderRadius: 1,
                           }}
                         >
-                          {slideshowIndex + 1} / {imageAssets.length}
+                          {slideshowIndex + 1} / {previewAssets.length}
                         </Typography>
                       </>
                     )}
@@ -278,4 +319,55 @@ export const AttachmentsCard = ({
       </Box>
     </Paper>
   )
+}
+
+const AssetPreview = ({ asset }: { asset: IAsset }) => {
+  if (isImage(asset)) {
+    return (
+      <Box
+        component="img"
+        src={asset.signed_url}
+        alt={asset.name}
+        sx={{
+          width: '100%',
+          maxHeight: 400,
+          objectFit: 'contain',
+          display: 'block',
+        }}
+      />
+    )
+  }
+
+  if (isPdf(asset)) {
+    return (
+      <Box
+        component="iframe"
+        src={asset.signed_url}
+        title={asset.name}
+        sx={{
+          width: '100%',
+          height: 500,
+          border: 0,
+        }}
+      />
+    )
+  }
+
+  if (isText(asset)) {
+    return (
+      <Box
+        component="iframe"
+        src={asset.signed_url}
+        title={asset.name}
+        sx={{
+          width: '100%',
+          height: 300,
+          border: 0,
+          bgcolor: 'background.paper',
+        }}
+      />
+    )
+  }
+
+  return <Typography color="text.secondary">Preview not available.</Typography>
 }
