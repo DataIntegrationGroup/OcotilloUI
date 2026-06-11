@@ -33,6 +33,12 @@ const EMPTY_FEATURE_COLLECTION = {
   features: [],
 } as const
 
+const HIGH_COUNT_LAYER_LIMITS = {
+pageSize: 2000,
+maxPages: 8,
+maxFeatures: 15000,
+}
+
 export const useThingLayers = (
   activeLayerKeys?: string[],
   colorMappingByLayer: Record<string, boolean> = {}
@@ -283,6 +289,7 @@ export const useThingLayers = (
     label: locations.label,
     color: '#607d8b',
     enabled: locations.exists && isLayerActive('ogc-locations'),
+    ...HIGH_COUNT_LAYER_LIMITS,
   })
   const latestDepthToWaterLayer = useOGCLayer({
     collection: latestDepthToWater.id,
@@ -349,6 +356,7 @@ export const useThingLayers = (
     label: waterWells.label,
     color: '#2b7dc0',
     enabled: waterWells.exists && isLayerActive('ogc-water-wells'),
+    ...HIGH_COUNT_LAYER_LIMITS,
   })
   const activelyMonitoredLayer = useOGCLayer({
     collection: activelyMonitored.id,
