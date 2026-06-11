@@ -12,7 +12,7 @@ export const NewVersionBanner = () => {
       </span>
       <button
         onClick={() => window.location.reload()}
-        className="shrink-0 px-3 py-1 rounded border border-white/60 bg-white/10 hover:bg-white/20 font-medium transition-colors"
+        className="shrink-0 px-3 py-1 rounded border border-white/60 bg-white/10 hover:bg-white/20 font-medium transition-colors cursor-pointer"
       >
         Refresh Now
       </button>
