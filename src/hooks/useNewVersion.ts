@@ -17,9 +17,15 @@ async function fetchBuildTime(): Promise<string | null> {
  * Polls /version.json every 5 minutes. Returns true once the server's
  * buildTime differs from the value captured when the app first loaded,
  * indicating that a new version has been deployed.
+ *
+ * Append ?preview-refresh-banner to any URL to force the banner visible for
+ * design review or screenshots.
  */
 export const useNewVersion = () => {
-  const [isNewVersionAvailable, setIsNewVersionAvailable] = useState(false)
+  const forceShow = new URLSearchParams(window.location.search).has(
+    'preview-refresh-banner'
+  )
+  const [isNewVersionAvailable, setIsNewVersionAvailable] = useState(forceShow)
   const [dismissed, setDismissed] = useState(false)
   const initialBuildTime = useRef<string | null>(null)
 
