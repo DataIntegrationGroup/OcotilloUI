@@ -64,6 +64,7 @@ import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navig
 import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { NewVersionBanner } from '@/components/NewVersionBanner'
+import pkg from '../../package.json'
 
 // Support panel state shared between the sidebar footer button and the panel itself
 export const SupportPanelContext = createContext<{
@@ -354,6 +355,14 @@ function AppSidebar() {
 
         {/* Help & Support button — hidden until panel content is defined */}
         {/* <SupportPanelTrigger collapsed={collapsed} /> */}
+
+        {!collapsed && (
+          <div className="px-3 pb-2">
+            <span className="text-xs text-muted-foreground/60">
+              v{pkg.version}
+            </span>
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   )
