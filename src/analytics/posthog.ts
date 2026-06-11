@@ -25,9 +25,11 @@ export const initPostHog = () => {
         if (el?.type === 'password') {
           return '*'.repeat(text.length)
         }
+        // ph-no-mask is PostHog's standard class for opting inputs out of masking.
+        // Check the element and its ancestors so the class can be set on a wrapper.
         if (
-          el?.hasAttribute?.('data-posthog-unmask-search') ||
-          el?.closest?.('[data-posthog-unmask-search]')
+          el?.classList?.contains('ph-no-mask') ||
+          el?.closest?.('.ph-no-mask')
         ) {
           return text
         }
@@ -107,5 +109,28 @@ export const captureEvent = (
 export const resetUser = () => {
   if (!isEnabled || !initialized) return
   posthog.reset()
+}
+
+export const setPersonProperties = (
+  properties: Record<string, unknown>
+) => {
+  if (!isEnabled || !initialized) return
+  posthog.setPersonProperties(properties)
+}
+
+/**
+ * Reads browser-level accessibility and display preferences once per
+ * session and returns them as PostHog person properties. Called after
+ * the user is identified so the values are attached to the person record.
+ */
+export const getAccessibilityProps = (): Record<string, unknown> => {
+  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize)
+  return {
+    browser_font_size_px: rootFontSize,
+    font_size_increased: rootFontSize > 16,
+    device_pixel_ratio: window.devicePixelRatio ?? 1,
+    prefers_reduced_motion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    prefers_high_contrast: window.matchMedia('(prefers-contrast: more)').matches,
+  }
 }
 
