@@ -3,7 +3,6 @@ import { useDataProvider, useList, useResourceParams } from '@refinedev/core'
 import { captureEvent } from '@/analytics/posthog'
 import { useQuery } from '@tanstack/react-query'
 import { Show, useDataGrid } from '@refinedev/mui'
-import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
   IAsset,
