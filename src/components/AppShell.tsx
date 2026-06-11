@@ -63,6 +63,7 @@ import { ReportBugButton } from '@/components/Button'
 import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
 import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
+import { NewVersionBanner } from '@/components/NewVersionBanner'
 
 // Support panel state shared between the sidebar footer button and the panel itself
 export const SupportPanelContext = createContext<{
@@ -732,11 +733,13 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
 
 export const AppShell = ({ children }: { children?: React.ReactNode }) => {
   return (
-    // h-svh + overflow-hidden pins the shell to exactly the viewport so no page
-    // can cause a body-level scroll. AppContent gets overflow-y-auto so regular
-    // pages still scroll within the frame.
-    <AppLayout className="h-svh overflow-hidden">
-      <AppShellInner>{children}</AppShellInner>
-    </AppLayout>
+    // flex-col wrapper so NewVersionBanner can sit above the shell without
+    // breaking the h-svh constraint — AppLayout takes the remaining height.
+    <div className="flex flex-col h-svh overflow-hidden">
+      <NewVersionBanner />
+      <AppLayout className="flex-1 min-h-0 overflow-hidden">
+        <AppShellInner>{children}</AppShellInner>
+      </AppLayout>
+    </div>
   )
 }
