@@ -33,54 +33,17 @@ const canPreview = (asset: IAsset) =>
 export const AttachmentsCard = ({
   assets,
   isLoading,
+  refetchAssets,
 }: {
   assets: IAsset[]
   isLoading: boolean
+  refetchAssets: () => Promise<unknown>
 }) => {
   const [previewViewMode, setPreviewViewMode] =
     useState<PreviewViewMode>('grid')
   const [slideshowIndex, setSlideshowIndex] = useState(0)
 
   const previewAssets = useMemo(() => assets.filter(canPreview), [assets])
-
-  // const columns = useMemo<GridColDef<IAsset>[]>(
-  //   () => [
-  //     { field: 'name', headerName: 'Name', minWidth: 150 },
-  //     {
-  //       field: 'actions',
-  //       headerName: 'Actions',
-  //       width: 140,
-  //       sortable: false,
-  //       headerAlign: 'right',
-  //       align: 'right',
-  //       renderCell: ({ row }) => {
-  //         if (!row.signed_url) {
-  //           return (
-  //             <Typography variant="body2" color="text.secondary">
-  //               N/A
-  //             </Typography>
-  //           )
-  //         }
-
-  //         // Use the signed URL as a download action.
-  //         // Files are currently served with a generic binary content type
-  //         // (application/octet-stream), which browsers typically handle as
-  //         // downloadable content
-  //         return (
-  //           <Button
-  //             size="small"
-  //             component="a"
-  //             href={row.signed_url}
-  //             download={row.name}
-  //           >
-  //             Download
-  //           </Button>
-  //         )
-  //       },
-  //     },
-  //   ],
-  //   []
-  // )
 
   const currentAsset = previewAssets[slideshowIndex]
   const hasAssets = previewAssets.length > 0
@@ -168,7 +131,11 @@ export const AttachmentsCard = ({
                           textAlign: 'left',
                         }}
                       >
-                        <AssetPreviewWithOverlay asset={asset} variant="grid" />
+                        <AssetPreviewWithOverlay
+                          asset={asset}
+                          variant="grid"
+                          refetchAssets={refetchAssets}
+                        />
                       </ButtonBase>
                     ))}
                   </Masonry>
@@ -190,6 +157,7 @@ export const AttachmentsCard = ({
                       <AssetPreviewWithOverlay
                         asset={currentAsset}
                         variant="slideshow"
+                        refetchAssets={refetchAssets}
                       />
                     )}
                     {previewAssets.length > 1 && (
@@ -329,11 +297,44 @@ const AssetPreview = ({
 const AssetPreviewWithOverlay = ({
   asset,
   variant,
+  refetchAssets,
 }: {
   asset: IAsset
   variant: 'grid' | 'slideshow'
+  refetchAssets: () => Promise<unknown>
 }) => {
   const isSlideshow = variant === 'slideshow'
+
+  const downloadAsset = async (
+    asset: IAsset,
+    refetchAssets: () => Promise<unknown>
+  ) => {
+    let response = await fetch(asset.signed_url)
+
+    if (response.status === 403) {
+      await refetchAssets()
+
+      // This refetch updates React state, but this local asset still has
+      // the old signed URL. User can click again after URLs refresh.
+      return
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to download asset')
+    }
+
+    const blob = await response.blob()
+    const objectUrl = URL.createObjectURL(blob)
+
+    const link = document.createElement('a')
+    link.href = objectUrl
+    link.download = asset.name || 'download'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+
+    URL.revokeObjectURL(objectUrl)
+  }
 
   return (
     <Box
@@ -387,8 +388,10 @@ const AssetPreviewWithOverlay = ({
           size="small"
           component="a"
           href={asset.signed_url}
-          download={asset.name}
-          onClick={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation()
+            downloadAsset(asset, refetchAssets)
+          }}
           sx={{
             position: 'absolute',
             right: 8,
