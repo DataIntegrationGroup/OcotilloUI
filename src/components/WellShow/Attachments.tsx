@@ -9,7 +9,6 @@ import {
   Tooltip,
   Button,
 } from '@mui/material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
   ChevronLeft,
   ChevronRight,
@@ -18,7 +17,6 @@ import {
   ViewCarousel,
 } from '@mui/icons-material'
 import { Masonry } from '@mui/lab'
-import { settings } from '@/settings'
 import type { IAsset } from '@/interfaces/ocotillo'
 
 type PreviewViewMode = 'grid' | 'slideshow'
@@ -45,75 +43,44 @@ export const AttachmentsCard = ({
 
   const previewAssets = useMemo(() => assets.filter(canPreview), [assets])
 
-  const columns = useMemo<GridColDef<IAsset>[]>(
-    () => [
-      { field: 'name', headerName: 'Name', minWidth: 150 },
-      {
-        field: 'uri',
-        headerName: 'URL',
-        flex: 1,
-        minWidth: 200,
-        renderCell: ({ value }) => {
-          const uri = typeof value === 'string' ? value : ''
+  // const columns = useMemo<GridColDef<IAsset>[]>(
+  //   () => [
+  //     { field: 'name', headerName: 'Name', minWidth: 150 },
+  //     {
+  //       field: 'actions',
+  //       headerName: 'Actions',
+  //       width: 140,
+  //       sortable: false,
+  //       headerAlign: 'right',
+  //       align: 'right',
+  //       renderCell: ({ row }) => {
+  //         if (!row.signed_url) {
+  //           return (
+  //             <Typography variant="body2" color="text.secondary">
+  //               N/A
+  //             </Typography>
+  //           )
+  //         }
 
-          if (!uri) {
-            return (
-              <Typography variant="body2" color="text.secondary">
-                N/A
-              </Typography>
-            )
-          }
-
-          return (
-            <Typography
-              variant="body2"
-              color={uri ? 'text.primary' : 'text.secondary'}
-              sx={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                display: 'block',
-                maxWidth: '100%',
-              }}
-            >
-              {uri || 'N/A'}
-            </Typography>
-          )
-        },
-      },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        width: 140,
-        sortable: false,
-        renderCell: ({ row }) => {
-          if (!row.signed_url) {
-            return (
-              <Typography variant="body2" color="text.secondary">
-                N/A
-              </Typography>
-            )
-          }
-
-          // Use the signed URL as a download action.
-          // Files are currently served with a generic binary content type
-          // (application/octet-stream), which browsers typically handle as
-          // downloadable content
-          return (
-            <Button
-              size="small"
-              component="a"
-              href={row.signed_url}
-              download={row.name}
-            >
-              Download
-            </Button>
-          )
-        },
-      },
-    ],
-    []
-  )
+  //         // Use the signed URL as a download action.
+  //         // Files are currently served with a generic binary content type
+  //         // (application/octet-stream), which browsers typically handle as
+  //         // downloadable content
+  //         return (
+  //           <Button
+  //             size="small"
+  //             component="a"
+  //             href={row.signed_url}
+  //             download={row.name}
+  //           >
+  //             Download
+  //           </Button>
+  //         )
+  //       },
+  //     },
+  //   ],
+  //   []
+  // )
 
   const currentAsset = previewAssets[slideshowIndex]
   const hasAssets = previewAssets.length > 0
@@ -201,7 +168,7 @@ export const AttachmentsCard = ({
                           textAlign: 'left',
                         }}
                       >
-                        <AssetPreview asset={asset} variant="grid" />
+                        <AssetPreviewWithOverlay asset={asset} variant="grid" />
                       </ButtonBase>
                     ))}
                   </Masonry>
@@ -220,7 +187,10 @@ export const AttachmentsCard = ({
                     }}
                   >
                     {currentAsset && (
-                      <AssetPreview asset={currentAsset} variant="slideshow" />
+                      <AssetPreviewWithOverlay
+                        asset={currentAsset}
+                        variant="slideshow"
+                      />
                     )}
                     {previewAssets.length > 1 && (
                       <>
@@ -282,18 +252,6 @@ export const AttachmentsCard = ({
                 )}
               </Box>
             )}
-
-            <DataGrid
-              rowHeight={settings.rowHeight}
-              columns={columns}
-              rows={assets}
-              pageSizeOptions={[10, 25, 50]}
-              initialState={{
-                pagination: {
-                  paginationModel: { pageSize: 10, page: 0 },
-                },
-              }}
-            />
           </Stack>
         )}
       </Box>
@@ -364,6 +322,89 @@ const AssetPreview = ({
   return (
     <Box sx={{ p: 2 }}>
       <Typography color="text.secondary">Preview not available.</Typography>
+    </Box>
+  )
+}
+
+const AssetPreviewWithOverlay = ({
+  asset,
+  variant,
+}: {
+  asset: IAsset
+  variant: 'grid' | 'slideshow'
+}) => {
+  const isSlideshow = variant === 'slideshow'
+
+  return (
+    <Box
+      sx={{
+        position: 'relative',
+        width: '100%',
+        '&:hover .asset-overlay': {
+          opacity: 1,
+        },
+      }}
+    >
+      <AssetPreview asset={asset} variant={variant} />
+
+      <Box
+        className="asset-overlay"
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          opacity: isSlideshow ? 1 : 0,
+          transition: 'opacity 0.2s ease-in-out',
+          background: isSlideshow
+            ? undefined
+            : 'linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.05))',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <Typography
+        className="asset-overlay"
+        variant="caption"
+        sx={{
+          position: 'absolute',
+          left: 8,
+          bottom: 8,
+          opacity: isSlideshow ? 1 : 0,
+          transition: 'opacity 0.2s ease-in-out',
+          color: isSlideshow ? 'black' : 'white',
+          maxWidth: '70%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {asset.name}
+      </Typography>
+
+      {asset.signed_url && (
+        <Button
+          variant="outlined"
+          className="asset-overlay"
+          size="small"
+          component="a"
+          href={asset.signed_url}
+          download={asset.name}
+          onClick={(event) => event.stopPropagation()}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            bottom: 8,
+            opacity: isSlideshow ? 1 : 0,
+            transition: 'opacity 0.2s ease-in-out',
+            pointerEvents: 'auto',
+            bgcolor: 'background.paper',
+            '&:hover': {
+              bgcolor: 'background.paper',
+            },
+          }}
+        >
+          Download
+        </Button>
+      )}
     </Box>
   )
 }
