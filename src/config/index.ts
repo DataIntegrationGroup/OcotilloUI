@@ -1,5 +1,4 @@
 export * from './auth'
-export * from './bug-report'
 export * from './storage-key'
 export * from './pdf'
 export * from './time'
