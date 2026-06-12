@@ -309,31 +309,47 @@ const AssetPreviewWithOverlay = ({
     asset: IAsset,
     refetchAssets: () => Promise<unknown>
   ) => {
-    let response = await fetch(asset.signed_url)
+    const downloadFromUrl = async (url: string, fileName: string) => {
+      const response = await fetch(url)
 
-    if (response.status === 403) {
-      await refetchAssets()
+      if (!response.ok) {
+        throw response
+      }
 
-      // This refetch updates React state, but this local asset still has
-      // the old signed URL. User can click again after URLs refresh.
-      return
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = fileName || 'download'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+
+      URL.revokeObjectURL(objectUrl)
     }
 
-    if (!response.ok) {
-      throw new Error('Failed to download asset')
+    try {
+      await downloadFromUrl(asset.signed_url, asset.name)
+    } catch (error) {
+      if (!(error instanceof Response) || error.status !== 403) {
+        throw error
+      }
+
+      const refetchResult = await refetchAssets()
+      const refreshedAssets =
+        refetchResult.data?.data ?? refetchResult.data ?? []
+
+      const refreshedAsset = refreshedAssets.find(
+        (item: IAsset) => item.id === asset.id
+      )
+
+      if (!refreshedAsset?.signed_url) {
+        throw new Error('Could not refresh signed URL')
+      }
+
+      await downloadFromUrl(refreshedAsset.signed_url, refreshedAsset.name)
     }
-
-    const blob = await response.blob()
-    const objectUrl = URL.createObjectURL(blob)
-
-    const link = document.createElement('a')
-    link.href = objectUrl
-    link.download = asset.name || 'download'
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-
-    URL.revokeObjectURL(objectUrl)
   }
 
   return (
