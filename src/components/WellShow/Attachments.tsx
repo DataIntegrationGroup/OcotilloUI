@@ -18,6 +18,8 @@ import {
 } from '@mui/icons-material'
 import { Masonry } from '@mui/lab'
 import type { IAsset } from '@/interfaces/ocotillo'
+import { QueryObserverResult } from '@tanstack/react-query'
+import { GetListResponse, HttpError } from '@refinedev/core'
 
 type PreviewViewMode = 'grid' | 'slideshow'
 
@@ -37,7 +39,9 @@ export const AttachmentsCard = ({
 }: {
   assets: IAsset[]
   isLoading: boolean
-  refetchAssets: () => Promise<unknown>
+  refetchAssets: () => Promise<
+    QueryObserverResult<GetListResponse<IAsset>, HttpError>
+  >
 }) => {
   const [previewViewMode, setPreviewViewMode] =
     useState<PreviewViewMode>('grid')
@@ -301,13 +305,17 @@ const AssetPreviewWithOverlay = ({
 }: {
   asset: IAsset
   variant: 'grid' | 'slideshow'
-  refetchAssets: () => Promise<unknown>
+  refetchAssets: () => Promise<
+    QueryObserverResult<GetListResponse<IAsset>, HttpError>
+  >
 }) => {
   const isSlideshow = variant === 'slideshow'
 
   const downloadAsset = async (
     asset: IAsset,
-    refetchAssets: () => Promise<unknown>
+    refetchAssets: () => Promise<
+      QueryObserverResult<GetListResponse<IAsset>, HttpError>
+    >
   ) => {
     const downloadFromUrl = async (url: string, fileName: string) => {
       const response = await fetch(url)
@@ -402,8 +410,6 @@ const AssetPreviewWithOverlay = ({
           variant="outlined"
           className="asset-overlay"
           size="small"
-          component="a"
-          href={asset.signed_url}
           onClick={(event) => {
             event.stopPropagation()
             downloadAsset(asset, refetchAssets)
