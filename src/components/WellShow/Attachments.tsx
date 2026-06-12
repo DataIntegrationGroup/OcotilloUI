@@ -8,7 +8,6 @@ import {
   Stack,
   Typography,
   Tooltip,
-  Button,
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
@@ -54,18 +53,40 @@ export const AttachmentsCard = ({
         headerName: 'URL',
         flex: 1,
         minWidth: 200,
-        renderCell: ({ value }) => {
-          const href = typeof value === 'string' ? value : ''
-          if (!href) {
+        renderCell: ({ row, value }) => {
+          const uri = typeof value === 'string' ? value : ''
+          const signedUrl = row.signed_url
+
+          if (!uri) {
             return (
               <Typography variant="body2" color="text.secondary">
                 N/A
               </Typography>
             )
           }
+
+          // Show the URI as plain text when there is no signed URL.
+          // Use the signed URL as the actual href when it is available,
+          if (!signedUrl) {
+            return (
+              <Typography
+                variant="body2"
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                  maxWidth: '100%',
+                }}
+              >
+                {uri}
+              </Typography>
+            )
+          }
+
           return (
             <Link
-              href={href}
+              href={signedUrl}
               target="_blank"
               rel="noopener noreferrer"
               variant="body2"
@@ -77,42 +98,10 @@ export const AttachmentsCard = ({
                 maxWidth: '100%',
               }}
             >
-              {href}
+              {uri}
             </Link>
           )
         },
-      },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        width: 180,
-        sortable: false,
-        renderCell: ({ row }) => (
-          <Stack direction="row" spacing={1}>
-            {row.signed_url && (
-              <Button
-                size="small"
-                component="a"
-                href={row.signed_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open
-              </Button>
-            )}
-
-            {row.signed_url && (
-              <Button
-                size="small"
-                component="a"
-                href={row.signed_url}
-                download={row.name}
-              >
-                Download
-              </Button>
-            )}
-          </Stack>
-        ),
       },
     ],
     []
@@ -304,6 +293,37 @@ export const AttachmentsCard = ({
   )
 }
 
+const previewStyles = {
+  grid: {
+    image: {
+      width: '100%',
+      display: 'block',
+      verticalAlign: 'bottom',
+    },
+    frame: {
+      width: '100%',
+      height: 220,
+      border: 0,
+      bgcolor: 'background.paper',
+    },
+  },
+  slideshow: {
+    image: {
+      width: '100%',
+      maxWidth: '100%',
+      maxHeight: 400,
+      objectFit: 'contain',
+      display: 'block',
+    },
+    frame: {
+      width: '100%',
+      height: 400,
+      border: 0,
+      bgcolor: 'background.paper',
+    },
+  },
+} as const
+
 const AssetPreview = ({
   asset,
   variant,
@@ -311,21 +331,13 @@ const AssetPreview = ({
   asset: IAsset
   variant: 'grid' | 'slideshow'
 }) => {
-  const height = variant === 'grid' ? 220 : 500
-
   if (isImage(asset)) {
     return (
       <Box
         component="img"
         src={asset.signed_url}
         alt={asset.name}
-        sx={{
-          width: '100%',
-          maxHeight: height,
-          objectFit: 'contain',
-          display: 'block',
-          bgcolor: 'grey.100',
-        }}
+        sx={previewStyles[variant].image}
       />
     )
   }
@@ -336,12 +348,7 @@ const AssetPreview = ({
         component="iframe"
         src={asset.signed_url}
         title={asset.name}
-        sx={{
-          width: '100%',
-          height,
-          border: 0,
-          bgcolor: 'background.paper',
-        }}
+        sx={previewStyles[variant].frame}
       />
     )
   }
