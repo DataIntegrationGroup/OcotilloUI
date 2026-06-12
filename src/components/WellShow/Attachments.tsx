@@ -3,11 +3,11 @@ import {
   Box,
   ButtonBase,
   IconButton,
-  Link,
   Paper,
   Stack,
   Typography,
   Tooltip,
+  Button,
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
@@ -53,9 +53,8 @@ export const AttachmentsCard = ({
         headerName: 'URL',
         flex: 1,
         minWidth: 200,
-        renderCell: ({ row, value }) => {
+        renderCell: ({ value }) => {
           const uri = typeof value === 'string' ? value : ''
-          const signedUrl = row.signed_url
 
           if (!uri) {
             return (
@@ -65,31 +64,10 @@ export const AttachmentsCard = ({
             )
           }
 
-          // Show the URI as plain text when there is no signed URL.
-          // Use the signed URL as the actual href when it is available,
-          if (!signedUrl) {
-            return (
-              <Typography
-                variant="body2"
-                sx={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  display: 'block',
-                  maxWidth: '100%',
-                }}
-              >
-                {uri}
-              </Typography>
-            )
-          }
-
           return (
-            <Link
-              href={signedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Typography
               variant="body2"
+              color={uri ? 'text.primary' : 'text.secondary'}
               sx={{
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -98,8 +76,38 @@ export const AttachmentsCard = ({
                 maxWidth: '100%',
               }}
             >
-              {uri}
-            </Link>
+              {uri || 'N/A'}
+            </Typography>
+          )
+        },
+      },
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        width: 140,
+        sortable: false,
+        renderCell: ({ row }) => {
+          if (!row.signed_url) {
+            return (
+              <Typography variant="body2" color="text.secondary">
+                N/A
+              </Typography>
+            )
+          }
+
+          // Use the signed URL as a download action.
+          // Files are currently served with a generic binary content type
+          // (application/octet-stream), which browsers typically handle as
+          // downloadable content
+          return (
+            <Button
+              size="small"
+              component="a"
+              href={row.signed_url}
+              download={row.name}
+            >
+              Download
+            </Button>
           )
         },
       },
