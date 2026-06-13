@@ -30,13 +30,14 @@ export default defineConfig(({ mode }) => {
       dedupe: ['react', 'react-dom', 'scheduler', 'use-sync-external-store'],
     },
     plugins: [
-      // Write public/version.json on every build so polling clients can detect
-      // that a new version has been deployed and prompt users to reload.
+      // Write dist/version.json at the end of each build so polling clients can
+      // detect that a new version has been deployed. We write to dist/ only so
+      // public/version.json (the dev placeholder) is never modified locally.
       {
         name: 'write-version-json',
-        buildStart() {
+        closeBundle() {
           writeFileSync(
-            resolve(__dirname, 'public/version.json'),
+            resolve(__dirname, 'dist/version.json'),
             JSON.stringify({ buildTime: new Date().toISOString() })
           )
         },
