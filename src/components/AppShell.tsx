@@ -3,12 +3,14 @@ import { cn } from '@/lib/utils'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router'
 import {
   CanAccess,
+  useCustomMutation,
   useGetIdentity,
   useIsExistAuthentication,
   useLogout,
   useTranslate,
   useWarnAboutChange,
   useOne,
+  type HttpError,
 } from '@refinedev/core'
 import {
   Sidebar,
@@ -424,7 +426,32 @@ const PANEL_MIN_WIDTH = 320
 const PANEL_DEFAULT_WIDTH = 360
 
 type PanelView = 'home' | 'bug' | 'feature'
-type SubmitState = 'idle' | 'loading' | 'success' | 'error'
+
+interface FeedbackResponse {
+  jira_key: string
+  jira_url: string
+}
+
+interface FeedbackPayload {
+  type: 'bug' | 'feature'
+  page_url: string
+  reporter_name?: string
+  reporter_email?: string
+  browser: string
+  what_happened?: string
+  severity?: string
+  problem?: string
+  who_would_use?: string
+  what_it_should_do?: string
+}
+
+function getFeedbackErrorMessage(error: HttpError): string {
+  const detail = error.response?.data?.detail
+  if (Array.isArray(detail) && detail[0]?.msg) {
+    return detail[0].msg
+  }
+  return error.message || 'Something went wrong. Please try again.'
+}
 
 interface BugFormData {
   whatHappened: string
@@ -452,10 +479,22 @@ function SupportPanel() {
   const location = useLocation()
 
   const [view, setView] = useState<PanelView>('home')
-  const [submitState, setSubmitState] = useState<SubmitState>('idle')
+  const { mutate, mutation } = useCustomMutation<FeedbackResponse>()
+  const { isPending, reset } = mutation
   const [ticketKey, setTicketKey] = useState<string>('')
   const [ticketUrl, setTicketUrl] = useState<string>('')
   const [errorMsg, setErrorMsg] = useState<string>('')
+
+  const showSuccess = Boolean(ticketKey)
+  const showError = Boolean(errorMsg)
+  const formLocked = isPending || showSuccess
+
+  const clearSubmitFeedback = () => {
+    setErrorMsg('')
+    setTicketKey('')
+    setTicketUrl('')
+    reset()
+  }
 
   const [bugForm, setBugForm] = useState<BugFormData>({ whatHappened: '', severity: 'Low' })
   const [featureForm, setFeatureForm] = useState<FeatureFormData>({
@@ -474,7 +513,7 @@ function SupportPanel() {
     if (!isOpen) {
       setTimeout(() => {
         setView('home')
-        setSubmitState('idle')
+        clearSubmitFeedback()
         setBugForm({ whatHappened: '', severity: 'Low' })
         setFeatureForm({ problem: '', whoWouldUse: '', whatItShouldDo: '' })
       }, 300)
@@ -517,10 +556,12 @@ function SupportPanel() {
     }
   }, [])
 
-  const handleSubmit = async (type: 'bug' | 'feature') => {
-    setSubmitState('loading')
+  const handleSubmit = (type: 'bug' | 'feature') => {
     setErrorMsg('')
-    const payload = {
+    setTicketKey('')
+    setTicketUrl('')
+
+    const payload: FeedbackPayload = {
       type,
       page_url: window.location.href,
       reporter_name: user?.name,
@@ -534,27 +575,30 @@ function SupportPanel() {
             what_it_should_do: featureForm.whatItShouldDo,
           }),
     }
-    try {
-      const res = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!res.ok) throw new Error(`Server error ${res.status}`)
-      const data = await res.json()
-      setTicketKey(data.jira_key)
-      setTicketUrl(data.jira_url)
-      setSubmitState('success')
-      setTimeout(() => {
-        setView('home')
-        setSubmitState('idle')
-        setBugForm({ whatHappened: '', severity: 'Low' })
-        setFeatureForm({ problem: '', whoWouldUse: '', whatItShouldDo: '' })
-      }, 3000)
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
-      setSubmitState('error')
-    }
+
+    mutate(
+      {
+        url: 'feedback',
+        method: 'post',
+        values: payload,
+        dataProviderName: 'ocotillo',
+      },
+      {
+        onSuccess: ({ data }) => {
+          setTicketKey(data.jira_key)
+          setTicketUrl(data.jira_url)
+          setTimeout(() => {
+            setView('home')
+            clearSubmitFeedback()
+            setBugForm({ whatHappened: '', severity: 'Low' })
+            setFeatureForm({ problem: '', whoWouldUse: '', whatItShouldDo: '' })
+          }, 3000)
+        },
+        onError: (error) => {
+          setErrorMsg(getFeedbackErrorMessage(error))
+        },
+      }
+    )
   }
 
   const pageUrl = location.pathname
@@ -581,7 +625,7 @@ function SupportPanel() {
           <div className="flex items-center gap-2">
             {view !== 'home' && (
               <button
-                onClick={() => { setView('home'); setSubmitState('idle') }}
+                onClick={() => { setView('home'); clearSubmitFeedback() }}
                 className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                 aria-label="Back"
               >
@@ -688,7 +732,7 @@ function SupportPanel() {
                   rows={7}
                   value={bugForm.whatHappened}
                   onChange={(e) => setBugForm((f) => ({ ...f, whatHappened: e.target.value }))}
-                  disabled={submitState === 'loading' || submitState === 'success'}
+                  disabled={formLocked}
                 />
               </div>
 
@@ -706,7 +750,7 @@ function SupportPanel() {
                       bugForm.severity === value
                         ? 'border-primary bg-primary/5'
                         : 'hover:bg-accent',
-                      (submitState === 'loading' || submitState === 'success') && 'pointer-events-none opacity-50'
+                      (formLocked) && 'pointer-events-none opacity-50'
                     )}
                   >
                     <input
@@ -715,7 +759,7 @@ function SupportPanel() {
                       value={value}
                       checked={bugForm.severity === value}
                       onChange={() => setBugForm((f) => ({ ...f, severity: value }))}
-                      disabled={submitState === 'loading' || submitState === 'success'}
+                      disabled={formLocked}
                       className="mt-0.5 accent-primary"
                     />
                     <div>
@@ -726,7 +770,7 @@ function SupportPanel() {
                 ))}
               </div>
 
-              {submitState === 'success' && (
+              {showSuccess && (
                 <div className="rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 text-sm text-green-800 dark:text-green-300">
                   Bug filed —{' '}
                   <a href={ticketUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
@@ -736,7 +780,7 @@ function SupportPanel() {
                 </div>
               )}
 
-              {submitState === 'error' && (
+              {showError && (
                 <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
                   {errorMsg}
                 </div>
@@ -746,8 +790,8 @@ function SupportPanel() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => { setView('home'); setSubmitState('idle') }}
-                  disabled={submitState === 'loading'}
+                  onClick={() => { setView('home'); clearSubmitFeedback() }}
+                  disabled={isPending}
                   className="flex-1"
                 >
                   Back
@@ -755,10 +799,10 @@ function SupportPanel() {
                 <Button
                   size="sm"
                   onClick={() => handleSubmit('bug')}
-                  disabled={!bugForm.whatHappened.trim() || submitState === 'loading' || submitState === 'success'}
+                  disabled={!bugForm.whatHappened.trim() || formLocked}
                   className="flex-1"
                 >
-                  {submitState === 'loading' ? 'Submitting…' : 'Submit Bug'}
+                  {isPending ? 'Submitting…' : 'Submit Bug'}
                 </Button>
               </div>
             </div>
@@ -777,7 +821,7 @@ function SupportPanel() {
                   rows={4}
                   value={featureForm.problem}
                   onChange={(e) => setFeatureForm((f) => ({ ...f, problem: e.target.value }))}
-                  disabled={submitState === 'loading' || submitState === 'success'}
+                  disabled={formLocked}
                 />
               </div>
 
@@ -792,7 +836,7 @@ function SupportPanel() {
                   placeholder="e.g. field staff, all users, data managers"
                   value={featureForm.whoWouldUse}
                   onChange={(e) => setFeatureForm((f) => ({ ...f, whoWouldUse: e.target.value }))}
-                  disabled={submitState === 'loading' || submitState === 'success'}
+                  disabled={formLocked}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
                 />
               </div>
@@ -807,11 +851,11 @@ function SupportPanel() {
                   rows={4}
                   value={featureForm.whatItShouldDo}
                   onChange={(e) => setFeatureForm((f) => ({ ...f, whatItShouldDo: e.target.value }))}
-                  disabled={submitState === 'loading' || submitState === 'success'}
+                  disabled={formLocked}
                 />
               </div>
 
-              {submitState === 'success' && (
+              {showSuccess && (
                 <div className="rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 text-sm text-green-800 dark:text-green-300">
                   Request filed —{' '}
                   <a href={ticketUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
@@ -821,7 +865,7 @@ function SupportPanel() {
                 </div>
               )}
 
-              {submitState === 'error' && (
+              {showError && (
                 <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
                   {errorMsg}
                 </div>
@@ -831,8 +875,8 @@ function SupportPanel() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => { setView('home'); setSubmitState('idle') }}
-                  disabled={submitState === 'loading'}
+                  onClick={() => { setView('home'); clearSubmitFeedback() }}
+                  disabled={isPending}
                   className="flex-1"
                 >
                   Back
@@ -843,12 +887,11 @@ function SupportPanel() {
                   disabled={
                     !featureForm.problem.trim() ||
                     !featureForm.whatItShouldDo.trim() ||
-                    submitState === 'loading' ||
-                    submitState === 'success'
+                    formLocked
                   }
                   className="flex-1"
                 >
-                  {submitState === 'loading' ? 'Submitting…' : 'Submit Request'}
+                  {isPending ? 'Submitting…' : 'Submit Request'}
                 </Button>
               </div>
             </div>
