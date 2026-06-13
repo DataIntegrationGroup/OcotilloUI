@@ -63,7 +63,7 @@ export const ST2DatastreamList = () => {
   })
 
   const getObservationFilter = () => {
-    let fs = []
+    const fs = []
     if (minDate) {
       fs.push(`phenomenonTime gt ${minDate.toISOString()}`)
     }
@@ -83,7 +83,7 @@ export const ST2DatastreamList = () => {
   })
 
   const getFilter = () => {
-    let fs = [
+    const fs = [
       `name ne 'OSERealTime Discharge'`,
       `name ne 'OSERealTime Gage Height'`,
     ]

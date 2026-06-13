@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { Bug } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { SupportPanelContext } from '@/components/AppShell'
+import { SupportPanelContext } from '@/components/SupportPanelContext'
 
 export const ReportBugButton = () => {
   const { open } = useContext(SupportPanelContext)

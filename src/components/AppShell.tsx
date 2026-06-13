@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router'
 import {
@@ -28,13 +28,13 @@ import {
   SidebarMenuSubItem,
   AppLayout,
   SidebarSeparator,
-  useSidebar,
 } from '@/components/ui/sidebar'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { useSidebar } from '@/components/ui/use-sidebar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -65,15 +65,13 @@ import { ReportBugButton } from '@/components/Button'
 import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
 import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
+import { SupportPanelContext } from '@/components/SupportPanelContext'
+import { NewVersionBanner } from '@/components/NewVersionBanner'
+import pkg from '../../package.json'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 
-// Support panel state shared between the sidebar footer button and the panel itself
-export const SupportPanelContext = createContext<{
-  isOpen: boolean
-  open: () => void
-  close: () => void
-}>({ isOpen: false, open: () => {}, close: () => {} })
+export { SupportPanelContext }
 
 // Collapse icon — shown in header when sidebar is expanded
 function IconCollapse() {
@@ -201,11 +199,6 @@ function SidebarBrand() {
 
 function AppSidebar() {
   const location = useLocation()
-  const { mode, setMode } = useContext(ColorModeContext)
-  const isExistAuthentication = useIsExistAuthentication()
-  const { warnWhen, setWarnWhen } = useWarnAboutChange()
-  const { mutate: logout } = useLogout()
-  const translate = useTranslate()
   const { state } = useSidebar()
   const { openSearch } = useSearch()
   const { roles: userRoles } = useAccessCapabilities()
@@ -214,23 +207,6 @@ function AppSidebar() {
   const canSeeNavItem = (itemRoles: NavItem['roles']) => {
     if (!itemRoles) return true
     return itemRoles.some((r) => userRoles.includes(r))
-  }
-
-  const handleLogout = () => {
-    if (warnWhen) {
-      const confirmed = window.confirm(
-        translate(
-          'warnWhenUnsavedChanges',
-          'Are you sure you want to leave? You have unsaved changes.'
-        )
-      )
-      if (confirmed) {
-        setWarnWhen(false)
-        logout()
-      }
-    } else {
-      logout()
-    }
   }
 
   return (
@@ -356,6 +332,14 @@ function AppSidebar() {
         )}
 
         <SupportPanelTrigger collapsed={collapsed} />
+
+        {!collapsed && (
+          <div className="px-3 pb-2">
+            <span className="text-xs text-muted-foreground/60">
+              v{pkg.version}
+            </span>
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   )
@@ -679,7 +663,7 @@ function SupportPanel() {
                   <div>
                     <p className="font-medium text-sm">Request a Feature</p>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      Describe something you need that Ocotillo doesn't do yet.
+                      Describe something you need that Ocotillo doesn&apos;t do yet.
                     </p>
                   </div>
                 </button>
@@ -1112,6 +1096,7 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
       <SidebarAutoCollapse />
       <AppSidebar />
       <AppContent className="min-w-0">
+        <NewVersionBanner />
         <ShellHeader />
         <div className="flex-1 min-h-0 overflow-y-auto">
           {children ?? <Outlet />}
@@ -1124,9 +1109,6 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
 
 export const AppShell = ({ children }: { children?: React.ReactNode }) => {
   return (
-    // h-svh + overflow-hidden pins the shell to exactly the viewport so no page
-    // can cause a body-level scroll. AppContent gets overflow-y-auto so regular
-    // pages still scroll within the frame.
     <AppLayout className="h-svh overflow-hidden">
       <AppShellInner>{children}</AppShellInner>
     </AppLayout>

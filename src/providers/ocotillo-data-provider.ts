@@ -95,7 +95,7 @@ export const ocotilloDataProvider: DataProvider = {
       })
     }
 
-    let url: string = resource
+    const url: string = resource
 
     const response = await axiosCall(url, {
       params: params,
@@ -111,7 +111,7 @@ export const ocotilloDataProvider: DataProvider = {
     })
     if (response.status < 200 || response.status > 299) throw response
 
-    let data = await response.data
+    const data = await response.data
 
     return {
       data: data.items,
@@ -142,7 +142,7 @@ export const ocotilloDataProvider: DataProvider = {
       resource === 'thing/well' ||
       resource === 'thing/spring'
     ) {
-      let url: string = `thing/${id}`
+      const url: string = `thing/${id}`
       const response = await fetcher(url, meta?.requestConfig)
 
       if (response.status < 200 || response.status > 299) throw response
@@ -158,7 +158,7 @@ export const ocotilloDataProvider: DataProvider = {
      * for other resources, use path parameter structure /location/123
      */
 
-    let url =
+    const url =
       id === undefined || id === null ? `${resource}` : `${resource}/${id}`
 
     const response = await fetcher(url, meta?.requestConfig)
@@ -251,7 +251,7 @@ export const ocotilloDataProvider: DataProvider = {
        */
       // for water wells:
       if (resource === 'thing/well') {
-        let endpoint = `thing/water-well/${id}`
+        const endpoint = `thing/water-well/${id}`
 
         const response = await axiosCall(endpoint, {
           method: 'PATCH',

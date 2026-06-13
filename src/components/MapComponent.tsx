@@ -75,7 +75,8 @@ export const MapComponent = ({
   const { mode } = useContext(ColorModeContext)
   const [activeDrawMode, setActiveDrawMode] = useState<string | null>(null)
   const [_viewState, setViewState] = useState(initialViewState)
-  const mapRef = externalMapRef ?? useRef<MapRef>(null)
+  const internalMapRef = useRef<MapRef>(null)
+  const mapRef = externalMapRef ?? internalMapRef
   const previousModeRef = useRef<'light' | 'dark'>(
     mode === 'dark' ? 'dark' : 'light'
   )

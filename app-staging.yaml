@@ -1,6 +1,13 @@
 runtime: python313
 service: ocotillo-staging
 handlers:
+  # version.json must never be cached so the new-version polling is reliable
+  - url: /version.json
+    static_files: dist/version.json
+    upload: dist/version.json
+    secure: always
+    http_headers:
+      Cache-Control: no-store
   # Serve all static files with url ending with a file extension
   - url: /(.*\..+)$
     static_files: dist/\1

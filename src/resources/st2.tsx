@@ -5,7 +5,7 @@ import { WaterOutlined } from "@mui/icons-material";
 import SensorsOutlinedIcon from "@mui/icons-material/SensorsOutlined";
 import BiotechOutlinedIcon from "@mui/icons-material/BiotechOutlined";
 
-let st2 = [
+const st2 = [
   {
     name: "dashboard",
     list: "/st2/dashboard",
@@ -54,7 +54,7 @@ let st2 = [
 ];
 
 export const st2Resources = st2.map((b) => {
-  let meta = b.meta || {};
+  const meta = b.meta || {};
   if (!meta["parent"]) {
     meta["parent"] = "st2";
   }

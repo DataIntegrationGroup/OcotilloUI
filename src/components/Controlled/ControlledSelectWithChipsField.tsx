@@ -71,11 +71,11 @@ export const ControlledSelectWithChipsField = <T,>({
             value={selectedChips}
             onChange={(event: SelectChangeEvent<string[]>) => {
               const { value: selectedValues } = event.target
-              if (selectedValues.length <= chipLimit) {
-                field.onChange(selectedValues)
-              } else {
-                field.onChange(selectedValues.slice(-chipLimit))
-              }
+              if (selectedValues.length <= chipLimit) {
+                field.onChange(selectedValues)
+              } else {
+                field.onChange(selectedValues.slice(-chipLimit))
+              }
               handleSelectChange(event)
             }}
             renderValue={(selected: string[]) => (

@@ -38,10 +38,8 @@ export const geothermalDataProvider: DataProvider = {
     if (response.status < 200 || response.status > 299) throw response;
     const resp = await response.json();
 
-    let data;
-    let total;
-    data = resp;
-    total = data.length;
+    const data = resp;
+    const total = data.length;
 
     return {
       data,
