@@ -5,6 +5,7 @@ import { captureEvent } from '@/analytics/posthog'
  * Attaches document-level listeners for copy, cut, and paste events and
  * fires PostHog events for each. The actual copied or pasted text is never
  * captured — only the page path and, for copy/cut, the selection length.
+ * Cut is tracked as text_cut, separate from text_copied.
  */
 export const useCopyPasteTracking = () => {
   useEffect(() => {
@@ -16,7 +17,7 @@ export const useCopyPasteTracking = () => {
     }
 
     const handleCut = () => {
-      captureEvent('text_copied', {
+      captureEvent('text_cut', {
         path: window.location.pathname,
         selection_length: window.getSelection()?.toString().length ?? 0,
       })
