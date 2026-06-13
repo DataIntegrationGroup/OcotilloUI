@@ -3,13 +3,12 @@ import {
   Box,
   ButtonBase,
   IconButton,
-  Link,
   Paper,
   Stack,
   Typography,
   Tooltip,
+  Button,
 } from '@mui/material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import {
   ChevronLeft,
   ChevronRight,
@@ -18,68 +17,40 @@ import {
   ViewCarousel,
 } from '@mui/icons-material'
 import { Masonry } from '@mui/lab'
-import { settings } from '@/settings'
 import type { IAsset } from '@/interfaces/ocotillo'
+import { QueryObserverResult } from '@tanstack/react-query'
+import { GetListResponse, HttpError } from '@refinedev/core'
 
-type ImageViewMode = 'grid' | 'slideshow'
+type PreviewViewMode = 'grid' | 'slideshow'
+
+const isImage = (asset: IAsset) => asset.mime_type?.startsWith('image/')
+
+const isPdf = (asset: IAsset) => asset.mime_type === 'application/pdf'
+
+const isText = (asset: IAsset) => asset.mime_type === 'text/plain'
+
+const canPreview = (asset: IAsset) =>
+  Boolean(asset.signed_url) && (isImage(asset) || isPdf(asset) || isText(asset))
 
 export const AttachmentsCard = ({
   assets,
   isLoading,
+  refetchAssets,
 }: {
   assets: IAsset[]
   isLoading: boolean
+  refetchAssets: () => Promise<
+    QueryObserverResult<GetListResponse<IAsset>, HttpError>
+  >
 }) => {
-  const [imageViewMode, setImageViewMode] = useState<ImageViewMode>('grid')
+  const [previewViewMode, setPreviewViewMode] =
+    useState<PreviewViewMode>('grid')
   const [slideshowIndex, setSlideshowIndex] = useState(0)
 
-  const imageAssets = useMemo(
-    () => assets.filter((a: { signed_url?: string }) => a?.signed_url),
-    [assets]
-  )
+  const previewAssets = useMemo(() => assets.filter(canPreview), [assets])
 
-  const columns = useMemo<GridColDef<IAsset>[]>(
-    () => [
-      { field: 'name', headerName: 'Name', minWidth: 150 },
-      {
-        field: 'uri',
-        headerName: 'URL',
-        flex: 1,
-        minWidth: 200,
-        renderCell: ({ value }) => {
-          const href = typeof value === 'string' ? value : ''
-          if (!href) {
-            return (
-              <Typography variant="body2" color="text.secondary">
-                N/A
-              </Typography>
-            )
-          }
-          return (
-            <Link
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="body2"
-              sx={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                display: 'block',
-                maxWidth: '100%',
-              }}
-            >
-              {href}
-            </Link>
-          )
-        },
-      },
-    ],
-    []
-  )
-
-  const currentImage = imageAssets[slideshowIndex]
-  const hasImages = imageAssets.length > 0
+  const currentAsset = previewAssets[slideshowIndex]
+  const hasAssets = previewAssets.length > 0
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -108,7 +79,7 @@ export const AttachmentsCard = ({
         ) : (
           <Stack spacing={3}>
             {/* Images section (above table) with view toggle */}
-            {hasImages && (
+            {hasAssets && (
               <Box>
                 <Stack
                   direction="row"
@@ -120,9 +91,9 @@ export const AttachmentsCard = ({
                   <Tooltip title="Grid view">
                     <IconButton
                       size="small"
-                      color={imageViewMode === 'grid' ? 'primary' : 'default'}
-                      onClick={() => setImageViewMode('grid')}
-                      aria-pressed={imageViewMode === 'grid'}
+                      color={previewViewMode === 'grid' ? 'primary' : 'default'}
+                      onClick={() => setPreviewViewMode('grid')}
+                      aria-pressed={previewViewMode === 'grid'}
                     >
                       <GridView />
                     </IconButton>
@@ -131,29 +102,29 @@ export const AttachmentsCard = ({
                     <IconButton
                       size="small"
                       color={
-                        imageViewMode === 'slideshow' ? 'primary' : 'default'
+                        previewViewMode === 'slideshow' ? 'primary' : 'default'
                       }
                       onClick={() => {
-                        setImageViewMode('slideshow')
+                        setPreviewViewMode('slideshow')
                         setSlideshowIndex(0)
                       }}
-                      aria-pressed={imageViewMode === 'slideshow'}
+                      aria-pressed={previewViewMode === 'slideshow'}
                     >
                       <ViewCarousel />
                     </IconButton>
                   </Tooltip>
                 </Stack>
 
-                {imageViewMode === 'grid' ? (
+                {previewViewMode === 'grid' ? (
                   <Masonry columns={3} spacing={2}>
-                    {imageAssets.map((img, idx) => (
+                    {previewAssets.map((asset, idx) => (
                       <ButtonBase
-                        key={img.id ?? idx}
+                        key={asset.id ?? idx}
                         focusRipple
-                        aria-label={`Open ${img.name || `attachment ${idx + 1}`} in slideshow`}
+                        aria-label={`Open ${asset.name || `attachment ${idx + 1}`} in slideshow`}
                         onClick={() => {
                           setSlideshowIndex(idx)
-                          setImageViewMode('slideshow')
+                          setPreviewViewMode('slideshow')
                         }}
                         sx={{
                           display: 'block',
@@ -164,15 +135,10 @@ export const AttachmentsCard = ({
                           textAlign: 'left',
                         }}
                       >
-                        <Box
-                          component="img"
-                          src={img.signed_url}
-                          alt={img.name || `Attachment ${idx + 1}`}
-                          sx={{
-                            width: '100%',
-                            display: 'block',
-                            verticalAlign: 'bottom',
-                          }}
+                        <AssetPreviewWithOverlay
+                          asset={asset}
+                          variant="grid"
+                          refetchAssets={refetchAssets}
                         />
                       </ButtonBase>
                     ))}
@@ -191,23 +157,20 @@ export const AttachmentsCard = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Box
-                      component="img"
-                      src={currentImage?.signed_url}
-                      alt={currentImage?.name || `Image ${slideshowIndex + 1}`}
-                      sx={{
-                        maxWidth: '100%',
-                        maxHeight: 400,
-                        objectFit: 'contain',
-                      }}
-                    />
-                    {imageAssets.length > 1 && (
+                    {currentAsset && (
+                      <AssetPreviewWithOverlay
+                        asset={currentAsset}
+                        variant="slideshow"
+                        refetchAssets={refetchAssets}
+                      />
+                    )}
+                    {previewAssets.length > 1 && (
                       <>
                         <IconButton
                           aria-label="Previous image"
                           onClick={() =>
                             setSlideshowIndex((i) =>
-                              i === 0 ? imageAssets.length - 1 : i - 1
+                              i === 0 ? previewAssets.length - 1 : i - 1
                             )
                           }
                           sx={{
@@ -225,7 +188,7 @@ export const AttachmentsCard = ({
                           aria-label="Next image"
                           onClick={() =>
                             setSlideshowIndex((i) =>
-                              i === imageAssets.length - 1 ? 0 : i + 1
+                              i === previewAssets.length - 1 ? 0 : i + 1
                             )
                           }
                           sx={{
@@ -253,7 +216,7 @@ export const AttachmentsCard = ({
                             borderRadius: 1,
                           }}
                         >
-                          {slideshowIndex + 1} / {imageAssets.length}
+                          {slideshowIndex + 1} / {previewAssets.length}
                         </Typography>
                       </>
                     )}
@@ -261,21 +224,212 @@ export const AttachmentsCard = ({
                 )}
               </Box>
             )}
-
-            <DataGrid
-              rowHeight={settings.rowHeight}
-              columns={columns}
-              rows={assets}
-              pageSizeOptions={[10, 25, 50]}
-              initialState={{
-                pagination: {
-                  paginationModel: { pageSize: 10, page: 0 },
-                },
-              }}
-            />
           </Stack>
         )}
       </Box>
     </Paper>
+  )
+}
+
+const previewStyles = {
+  grid: {
+    image: {
+      width: '100%',
+      display: 'block',
+      verticalAlign: 'bottom',
+    },
+    frame: {
+      width: '100%',
+      height: 220,
+      border: 0,
+      bgcolor: 'background.paper',
+    },
+  },
+  slideshow: {
+    image: {
+      width: '100%',
+      maxWidth: '100%',
+      maxHeight: 400,
+      objectFit: 'contain',
+      display: 'block',
+    },
+    frame: {
+      width: '100%',
+      height: 400,
+      border: 0,
+      bgcolor: 'background.paper',
+    },
+  },
+} as const
+
+const AssetPreview = ({
+  asset,
+  variant,
+}: {
+  asset: IAsset
+  variant: 'grid' | 'slideshow'
+}) => {
+  if (isImage(asset)) {
+    return (
+      <Box
+        component="img"
+        src={asset.signed_url}
+        alt={asset.name}
+        sx={previewStyles[variant].image}
+      />
+    )
+  }
+
+  if (isPdf(asset) || isText(asset)) {
+    return (
+      <Box
+        component="iframe"
+        src={asset.signed_url}
+        title={asset.name}
+        sx={previewStyles[variant].frame}
+      />
+    )
+  }
+
+  return (
+    <Box sx={{ p: 2 }}>
+      <Typography color="text.secondary">Preview not available.</Typography>
+    </Box>
+  )
+}
+
+const AssetPreviewWithOverlay = ({
+  asset,
+  variant,
+  refetchAssets,
+}: {
+  asset: IAsset
+  variant: 'grid' | 'slideshow'
+  refetchAssets: () => Promise<
+    QueryObserverResult<GetListResponse<IAsset>, HttpError>
+  >
+}) => {
+  const isSlideshow = variant === 'slideshow'
+
+  const downloadAsset = async (
+    asset: IAsset,
+    refetchAssets: () => Promise<
+      QueryObserverResult<GetListResponse<IAsset>, HttpError>
+    >
+  ) => {
+    const downloadFromUrl = async (url: string, fileName: string) => {
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        throw response
+      }
+
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = fileName || 'download'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+
+      URL.revokeObjectURL(objectUrl)
+    }
+
+    try {
+      await downloadFromUrl(asset.signed_url, asset.name)
+    } catch (error) {
+      if (!(error instanceof Response) || error.status !== 403) {
+        throw error
+      }
+
+      const refetchResult = await refetchAssets()
+      const refreshedAssets =
+        refetchResult.data?.data ?? refetchResult.data ?? []
+
+      const refreshedAsset = refreshedAssets.find(
+        (item: IAsset) => item.id === asset.id
+      )
+
+      if (!refreshedAsset?.signed_url) {
+        throw new Error('Could not refresh signed URL')
+      }
+
+      await downloadFromUrl(refreshedAsset.signed_url, refreshedAsset.name)
+    }
+  }
+
+  return (
+    <Box
+      sx={{
+        position: 'relative',
+        width: '100%',
+        '&:hover .asset-overlay': {
+          opacity: 1,
+        },
+      }}
+    >
+      <AssetPreview asset={asset} variant={variant} />
+
+      <Box
+        className="asset-overlay"
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          opacity: isSlideshow ? 1 : 0,
+          transition: 'opacity 0.2s ease-in-out',
+          background: isSlideshow
+            ? undefined
+            : 'linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.05))',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <Typography
+        className="asset-overlay"
+        variant="caption"
+        sx={{
+          position: 'absolute',
+          left: 8,
+          bottom: 8,
+          opacity: isSlideshow ? 1 : 0,
+          transition: 'opacity 0.2s ease-in-out',
+          color: isSlideshow ? 'black' : 'white',
+          maxWidth: '70%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {asset.name}
+      </Typography>
+
+      {asset.signed_url && (
+        <Button
+          variant="outlined"
+          className="asset-overlay"
+          size="small"
+          onClick={(event) => {
+            event.stopPropagation()
+            downloadAsset(asset, refetchAssets)
+          }}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            bottom: 8,
+            opacity: isSlideshow ? 1 : 0,
+            transition: 'opacity 0.2s ease-in-out',
+            pointerEvents: 'auto',
+            bgcolor: 'background.paper',
+            '&:hover': {
+              bgcolor: 'background.paper',
+            },
+          }}
+        >
+          Download
+        </Button>
+      )}
+    </Box>
   )
 }

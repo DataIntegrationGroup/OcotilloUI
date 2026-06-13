@@ -43,11 +43,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  Bug,
   Check,
   ChevronDown,
   ChevronRight,
   FlaskConical,
-  LifeBuoy,
   Lock,
   LogOut,
   Menu,
@@ -65,6 +65,8 @@ import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { NewVersionBanner } from '@/components/NewVersionBanner'
 import pkg from '../../package.json'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 
 // Support panel state shared between the sidebar footer button and the panel itself
 export const SupportPanelContext = createContext<{
@@ -353,8 +355,7 @@ function AppSidebar() {
           </div>
         )}
 
-        {/* Help & Support button — hidden until panel content is defined */}
-        {/* <SupportPanelTrigger collapsed={collapsed} /> */}
+        <SupportPanelTrigger collapsed={collapsed} />
 
         {!collapsed && (
           <div className="px-3 pb-2">
@@ -415,34 +416,84 @@ function SupportPanelTrigger({ collapsed }: { collapsed: boolean }) {
     <div className="border-t px-2 py-2">
       <button
         onClick={isOpen ? close : open}
-        title="Help &amp; Support"
+        title="Report a bug or request a feature"
         className={cn(
-          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent',
+          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent cursor-pointer',
           collapsed && 'justify-center',
           isOpen ? 'text-foreground bg-accent' : 'text-muted-foreground hover:text-foreground'
         )}
       >
-        <LifeBuoy className="size-4 shrink-0" />
-        {!collapsed && <span>Help &amp; Support</span>}
+        <Bug className="size-4 shrink-0" />
+        {!collapsed && <span>Get Help</span>}
       </button>
     </div>
   )
 }
 
 const PANEL_MIN_WIDTH = 320
-const PANEL_DEFAULT_WIDTH = 320
+const PANEL_DEFAULT_WIDTH = 360
+
+type PanelView = 'home' | 'bug' | 'feature'
+type SubmitState = 'idle' | 'loading' | 'success' | 'error'
+
+interface BugFormData {
+  whatHappened: string
+  severity: string
+}
+
+interface FeatureFormData {
+  problem: string
+  whoWouldUse: string
+  whatItShouldDo: string
+}
+
+function getBrowser(): string {
+  const ua = navigator.userAgent
+  if (ua.includes('Chrome') && !ua.includes('Edg')) return 'Chrome'
+  if (ua.includes('Firefox')) return 'Firefox'
+  if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari'
+  if (ua.includes('Edg')) return 'Edge'
+  return 'Unknown'
+}
 
 function SupportPanel() {
   const { isOpen, close } = useContext(SupportPanelContext)
+  const { data: user } = useGetIdentity<{ name: string; email: string }>()
+  const location = useLocation()
+
+  const [view, setView] = useState<PanelView>('home')
+  const [submitState, setSubmitState] = useState<SubmitState>('idle')
+  const [ticketKey, setTicketKey] = useState<string>('')
+  const [ticketUrl, setTicketUrl] = useState<string>('')
+  const [errorMsg, setErrorMsg] = useState<string>('')
+
+  const [bugForm, setBugForm] = useState<BugFormData>({ whatHappened: '', severity: 'Low' })
+  const [featureForm, setFeatureForm] = useState<FeatureFormData>({
+    problem: '',
+    whoWouldUse: '',
+    whatItShouldDo: '',
+  })
+
   const [width, setWidth] = useState(PANEL_DEFAULT_WIDTH)
   const outerRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
   const dragState = useRef<{ startX: number; startWidth: number } | null>(null)
 
+  // Reset to home view when panel closes
+  useEffect(() => {
+    if (!isOpen) {
+      setTimeout(() => {
+        setView('home')
+        setSubmitState('idle')
+        setBugForm({ whatHappened: '', severity: 'Low' })
+        setFeatureForm({ problem: '', whoWouldUse: '', whatItShouldDo: '' })
+      }, 300)
+    }
+  }, [isOpen])
+
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     dragState.current = { startX: e.clientX, startWidth: width }
-    // Disable the CSS transition for the duration of the drag
     if (outerRef.current) outerRef.current.style.transition = 'none'
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
@@ -454,13 +505,11 @@ function SupportPanel() {
       const maxWidth = Math.floor(window.innerWidth / 2)
       const delta = dragState.current.startX - e.clientX
       const next = Math.min(maxWidth, Math.max(PANEL_MIN_WIDTH, dragState.current.startWidth + delta))
-      // Write directly to DOM — no React re-render per frame
       if (outerRef.current) outerRef.current.style.width = `${next}px`
       if (innerRef.current) innerRef.current.style.width = `${next}px`
     }
     const onMouseUp = () => {
       if (!dragState.current) return
-      // Commit final width to React state and restore transition
       const finalWidth = outerRef.current
         ? parseInt(outerRef.current.style.width, 10) || PANEL_DEFAULT_WIDTH
         : PANEL_DEFAULT_WIDTH
@@ -478,6 +527,48 @@ function SupportPanel() {
     }
   }, [])
 
+  const handleSubmit = async (type: 'bug' | 'feature') => {
+    setSubmitState('loading')
+    setErrorMsg('')
+    const payload = {
+      type,
+      page_url: window.location.href,
+      reporter_name: user?.name,
+      reporter_email: user?.email,
+      browser: getBrowser(),
+      ...(type === 'bug'
+        ? { what_happened: bugForm.whatHappened, severity: bugForm.severity }
+        : {
+            problem: featureForm.problem,
+            who_would_use: featureForm.whoWouldUse,
+            what_it_should_do: featureForm.whatItShouldDo,
+          }),
+    }
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) throw new Error(`Server error ${res.status}`)
+      const data = await res.json()
+      setTicketKey(data.jira_key)
+      setTicketUrl(data.jira_url)
+      setSubmitState('success')
+      setTimeout(() => {
+        setView('home')
+        setSubmitState('idle')
+        setBugForm({ whatHappened: '', severity: 'Low' })
+        setFeatureForm({ problem: '', whoWouldUse: '', whatItShouldDo: '' })
+      }, 3000)
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setSubmitState('error')
+    }
+  }
+
+  const pageUrl = location.pathname
+
   return (
     <div
       ref={outerRef}
@@ -488,7 +579,7 @@ function SupportPanel() {
       style={isOpen ? { width } : undefined}
       aria-hidden={!isOpen}
     >
-      {/* Drag handle — updates DOM directly, no React state during drag */}
+      {/* Drag handle */}
       <div
         onMouseDown={onMouseDown}
         className="absolute left-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-primary/20 transition-colors z-10"
@@ -497,23 +588,281 @@ function SupportPanel() {
       <div ref={innerRef} className="flex h-full flex-col" style={{ width }}>
         {/* Panel header */}
         <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
-          <span className="font-semibold text-sm">Ocotillo Support</span>
+          <div className="flex items-center gap-2">
+            {view !== 'home' && (
+              <button
+                onClick={() => { setView('home'); setSubmitState('idle') }}
+                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                aria-label="Back"
+              >
+                <ChevronRight className="size-4 rotate-180" />
+              </button>
+            )}
+            <span className="font-semibold text-sm">
+              {view === 'home' && 'Get Help'}
+              {view === 'bug' && 'Report a Bug'}
+              {view === 'feature' && 'Request a Feature'}
+            </span>
+          </div>
           <button
             onClick={close}
             className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            aria-label="Close support panel"
+            aria-label="Close panel"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        {/* Panel body — placeholder until content is defined */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-          <LifeBuoy className="size-10 text-muted-foreground/40" />
-          <p className="text-sm font-medium">Support coming soon</p>
-          <p className="text-xs text-muted-foreground">
-            This panel will contain help articles, contact options, and other support resources.
-          </p>
+        {/* Panel body */}
+        <div className="flex flex-1 flex-col overflow-y-auto">
+
+          {/* Home view */}
+          {view === 'home' && (
+            <div className="flex flex-col gap-3 p-4">
+              <p className="text-sm text-muted-foreground">
+                Found something broken or have a suggestion? Let us know.
+              </p>
+              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6, #06b6d4)' }}>
+                <button
+                  onClick={() => setView('bug')}
+                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
+                >
+                  <Bug className="size-5 shrink-0 mt-0.5 text-emerald-500" />
+                  <div>
+                    <p className="font-medium text-sm">Report a Bug</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Something is broken or not working as expected.
+                    </p>
+                  </div>
+                </button>
+              </div>
+              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #38bdf8, #0ea5e9, #6366f1)' }}>
+                <button
+                  onClick={() => setView('feature')}
+                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
+                >
+                  <User className="size-5 shrink-0 mt-0.5 text-sky-500" />
+                  <div>
+                    <p className="font-medium text-sm">Request a Feature</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Describe something you need that Ocotillo doesn't do yet.
+                    </p>
+                  </div>
+                </button>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground px-1">
+                For urgent issues, email{' '}
+                <a
+                  href="mailto:ocotillo-nmbg@nmt.edu"
+                  className="underline hover:text-foreground"
+                >
+                  ocotillo-nmbg@nmt.edu
+                </a>
+              </p>
+            </div>
+          )}
+
+          {/* Bug form */}
+          {view === 'bug' && (
+            <div className="flex flex-col gap-4 p-4">
+              {/* Auto-captured context */}
+              <div className="rounded-md bg-orange-100 dark:bg-orange-950/40 p-3 flex flex-col gap-1.5">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Captured automatically</p>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Page:</span> {pageUrl}
+                </p>
+                {user?.name && (
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Reported by:</span> {user.name}
+                  </p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Browser:</span> {getBrowser()}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Date & time:</span>{' '}
+                  {new Date().toLocaleString(undefined, {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="bug-what-happened" className="text-sm">
+                  What happened? <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="bug-what-happened"
+                  placeholder={"Describe what went wrong.\n\nInclude:\n• What you expected to happen\n• What actually happened\n• Steps to reproduce"}
+                  rows={7}
+                  value={bugForm.whatHappened}
+                  onChange={(e) => setBugForm((f) => ({ ...f, whatHappened: e.target.value }))}
+                  disabled={submitState === 'loading' || submitState === 'success'}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label className="text-sm">Severity</Label>
+                {[
+                  { value: 'Low', label: 'Low', description: 'Minor annoyance, workaround exists' },
+                  { value: 'Medium', label: 'Medium', description: 'Impacts my workflow' },
+                  { value: 'High', label: 'High', description: 'Blocking, data loss, or completely broken' },
+                ].map(({ value, label, description }) => (
+                  <label
+                    key={value}
+                    className={cn(
+                      'flex items-start gap-3 rounded-md border p-3 cursor-pointer transition-colors',
+                      bugForm.severity === value
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:bg-accent',
+                      (submitState === 'loading' || submitState === 'success') && 'pointer-events-none opacity-50'
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="severity"
+                      value={value}
+                      checked={bugForm.severity === value}
+                      onChange={() => setBugForm((f) => ({ ...f, severity: value }))}
+                      disabled={submitState === 'loading' || submitState === 'success'}
+                      className="mt-0.5 accent-primary"
+                    />
+                    <div>
+                      <p className="text-sm font-medium leading-tight">{label}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {submitState === 'success' && (
+                <div className="rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 text-sm text-green-800 dark:text-green-300">
+                  Bug filed —{' '}
+                  <a href={ticketUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
+                    {ticketKey}
+                  </a>
+                  . Thanks!
+                </div>
+              )}
+
+              {submitState === 'error' && (
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                  {errorMsg}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setView('home'); setSubmitState('idle') }}
+                  disabled={submitState === 'loading'}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handleSubmit('bug')}
+                  disabled={!bugForm.whatHappened.trim() || submitState === 'loading' || submitState === 'success'}
+                  className="flex-1"
+                >
+                  {submitState === 'loading' ? 'Submitting…' : 'Submit Bug'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Feature request form */}
+          {view === 'feature' && (
+            <div className="flex flex-col gap-4 p-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="feat-problem" className="text-sm">
+                  What problem does this solve? <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="feat-problem"
+                  placeholder="Describe the pain point or gap in the current workflow."
+                  rows={4}
+                  value={featureForm.problem}
+                  onChange={(e) => setFeatureForm((f) => ({ ...f, problem: e.target.value }))}
+                  disabled={submitState === 'loading' || submitState === 'success'}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="feat-who" className="text-sm">
+                  Who would use this?{' '}
+                  <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <input
+                  id="feat-who"
+                  type="text"
+                  placeholder="e.g. field staff, all users, data managers"
+                  value={featureForm.whoWouldUse}
+                  onChange={(e) => setFeatureForm((f) => ({ ...f, whoWouldUse: e.target.value }))}
+                  disabled={submitState === 'loading' || submitState === 'success'}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="feat-what" className="text-sm">
+                  What should it do? <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="feat-what"
+                  placeholder="Describe the feature and how it should work."
+                  rows={4}
+                  value={featureForm.whatItShouldDo}
+                  onChange={(e) => setFeatureForm((f) => ({ ...f, whatItShouldDo: e.target.value }))}
+                  disabled={submitState === 'loading' || submitState === 'success'}
+                />
+              </div>
+
+              {submitState === 'success' && (
+                <div className="rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 text-sm text-green-800 dark:text-green-300">
+                  Request filed —{' '}
+                  <a href={ticketUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
+                    {ticketKey}
+                  </a>
+                  . Thanks!
+                </div>
+              )}
+
+              {submitState === 'error' && (
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                  {errorMsg}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setView('home'); setSubmitState('idle') }}
+                  disabled={submitState === 'loading'}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handleSubmit('feature')}
+                  disabled={
+                    !featureForm.problem.trim() ||
+                    !featureForm.whatItShouldDo.trim() ||
+                    submitState === 'loading' ||
+                    submitState === 'success'
+                  }
+                  className="flex-1"
+                >
+                  {submitState === 'loading' ? 'Submitting…' : 'Submit Request'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -627,7 +976,7 @@ function ShellHeader() {
         <ReportBugButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 px-2 sm:px-2.5 gap-1.5 font-semibold">
+            <Button variant="ghost" className="h-8 px-2 sm:px-2.5 gap-1.5 font-semibold cursor-pointer">
               {/* Avatar on mobile, full name on sm+ */}
               <span className="flex sm:hidden size-7 rounded bg-primary items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
                 {initials}
