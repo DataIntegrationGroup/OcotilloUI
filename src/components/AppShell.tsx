@@ -220,8 +220,6 @@ function ResourceNavItem({
   canSeeNavItem: (itemRoles: NavItem['roles']) => boolean
 }) {
   const { label, href, icon: Icon, resource, roles, children } = item
-  if (!canSeeNavItem(roles)) return null
-
   const visibleChildren =
     children?.filter((child) => canSeeNavItem(child.roles)) ?? []
   const hasChildren = visibleChildren.length > 0
@@ -234,6 +232,8 @@ function ResourceNavItem({
   useEffect(() => {
     setOpen(sectionActive)
   }, [sectionActive])
+
+  if (!canSeeNavItem(roles)) return null
 
   const handleOpenChange = (next: boolean) => {
     if (!sectionActive) setOpen(next)
@@ -1004,10 +1004,6 @@ function HeaderBreadcrumb() {
   const location = useLocation()
 
   const nestedList = NESTED_LIST_BREADCRUMBS[location.pathname]
-  if (nestedList) {
-    return <NestedListBreadcrumb {...nestedList} />
-  }
-
   const routeMatch = location.pathname.match(DETAIL_PATTERN)
   const slug = routeMatch?.[1] ?? ''
   const id = routeMatch?.[3] ?? ''
@@ -1016,11 +1012,15 @@ function HeaderBreadcrumb() {
   const { query } = useOne({
     resource: resourceInfo?.resource ?? '',
     id,
-    queryOptions: { enabled: !!id && !!resourceInfo },
+    queryOptions: { enabled: !nestedList && !!id && !!resourceInfo },
   })
   const recordName = (query?.data?.data as Record<string, unknown> | undefined)?.name as
     | string
     | undefined
+
+  if (nestedList) {
+    return <NestedListBreadcrumb {...nestedList} />
+  }
 
   if (!routeMatch || !resourceInfo) return null
 
