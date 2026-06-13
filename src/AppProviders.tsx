@@ -26,6 +26,7 @@ import {
 import { resources } from '@/resources'
 import { PostHogPageview } from '@/components/analytics/PostHogPageview'
 import { PostHogIdentify } from '@/components/analytics/PostHogIdentify'
+import { CopyPasteTracking } from '@/components/analytics/CopyPasteTracking'
 import { ErrorBoundary } from '@/components/analytics/ErrorBoundary'
 import { SearchProvider } from '@/providers/search-provider'
 
@@ -99,6 +100,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
           <UnsavedChangesNotifier />
           <PostHogPageview />
           <PostHogIdentify />
+          <CopyPasteTracking />
           <DocumentTitleHandler handler={customTitleHandler} />
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <SearchProvider>
