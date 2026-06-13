@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
+import { writeFileSync } from 'fs'
+import { resolve } from 'path'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
@@ -28,6 +30,18 @@ export default defineConfig(({ mode }) => {
       dedupe: ['react', 'react-dom', 'scheduler', 'use-sync-external-store'],
     },
     plugins: [
+      // Write dist/version.json at the end of each build so polling clients can
+      // detect that a new version has been deployed. We write to dist/ only so
+      // public/version.json (the dev placeholder) is never modified locally.
+      {
+        name: 'write-version-json',
+        closeBundle() {
+          writeFileSync(
+            resolve(__dirname, 'dist/version.json'),
+            JSON.stringify({ buildTime: new Date().toISOString() })
+          )
+        },
+      },
       tailwindcss(),
       react(),
       tsconfigPaths(),
