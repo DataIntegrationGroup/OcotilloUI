@@ -14,9 +14,11 @@ import {
   useGridApiContext,
   useGridSelector,
   GridColDef,
+  GridRowParams,
 } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import React, { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router'
 import {
   CanAccess,
   useExport,
@@ -25,6 +27,13 @@ import {
 } from '@refinedev/core'
 import { Box, Chip, InputBase, Stack, Typography } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
+
+/**
+ * Standard layout for Ocotillo list pages: title, optional description, search
+ * bar, record count, and MUI DataGrid with shared toolbar. Wells and Projects
+ * both use this component; page files supply columns, dataGridProps, and any
+ * page-specific header buttons or row navigation.
+ */
 
 // Shows a dismissible chip for each active column filter.
 function ActiveFilterChips() {
@@ -154,7 +163,9 @@ type ListPageProps = {
   headerButtons?: any
   disableRowClick?: boolean
   /** Called before navigation when a row is clicked. Use for analytics. */
-  onRowClick?: (params: any) => void
+  onRowClick?: (params: GridRowParams) => void
+  /** Navigate to this href on row click instead of the resource show page. */
+  getRowHref?: (params: GridRowParams) => string
 
   toolbarOptions?: ListPageToolbarProps
   searchMode?: 'client' | 'server'
@@ -163,6 +174,10 @@ type ListPageProps = {
   searchPlaceholder?: string
   /** Overrides default aria-label on the search input when server search is customized */
   searchAriaLabel?: string
+  /** Hide Refine list breadcrumb (use header bar breadcrumbs instead) */
+  hideBreadcrumb?: boolean
+  /** Hide create/edit header buttons and default export */
+  hideHeaderButtons?: boolean
 }
 
 export const ListPage: React.FC<ListPageProps> = ({
@@ -185,11 +200,15 @@ export const ListPage: React.FC<ListPageProps> = ({
   onSearchChange,
   searchPlaceholder,
   searchAriaLabel,
+  hideBreadcrumb = false,
+  hideHeaderButtons = false,
+  getRowHref,
 }) => {
   if (!exportProps) {
     exportProps = { pageSize: 1000 }
   }
 
+  const navigate = useNavigate()
   const [localQuickFilter, setLocalQuickFilter] = useState('')
   const quickFilter =
     searchMode === 'server' ? (searchValue ?? '') : localQuickFilter
@@ -257,10 +276,31 @@ export const ListPage: React.FC<ListPageProps> = ({
     hideExport: restDataGridProps.paginationMode === 'server',
   }
 
+  const handleRowClick = getRowHref
+    ? (params: GridRowParams) => {
+        onRowClick?.(params)
+        navigate(getRowHref(params))
+      }
+    : disableRowClick
+      ? onRowClick
+        ? (params: GridRowParams) => onRowClick(params)
+        : undefined
+      : resource
+        ? (params: GridRowParams) => {
+            onRowClick?.(params)
+            show(resource.name, params.id as string | number)
+          }
+        : undefined
+
+  const rowCursor =
+    getRowHref || (!disableRowClick && resource) ? 'pointer' : 'default'
+
   return (
     <CanAccess>
       <List
-        headerButtons={headerButtons || defaultHeaderButtons}
+        headerButtons={
+          hideHeaderButtons ? () => null : headerButtons || defaultHeaderButtons
+        }
         title={
           title ? (
             <Box>
@@ -278,7 +318,7 @@ export const ListPage: React.FC<ListPageProps> = ({
             </Box>
           ) : undefined
         }
-        breadcrumb={<AppBreadcrumb />}
+        breadcrumb={hideBreadcrumb ? false : <AppBreadcrumb />}
         wrapperProps={{
           elevation: 0,
           sx: {
@@ -383,19 +423,12 @@ export const ListPage: React.FC<ListPageProps> = ({
           rowHeight={settings.rowHeight}
           getRowId={getRowId ? getRowId : (row) => row.PointID}
           onRowSelectionModelChange={handleSelectionChangeWrapper}
-          onRowClick={
-            !disableRowClick && resource
-              ? (params) => {
-                  onRowClick?.(params)
-                  show(resource.name, params.id as string | number)
-                }
-              : undefined
-          }
+          onRowClick={handleRowClick}
           loading={
             isLoading !== undefined ? isLoading : restDataGridProps.loading
           }
           columns={columns}
-          sx={{ cursor: disableRowClick ? 'default' : 'pointer' }}
+          sx={{ cursor: rowCursor }}
         />
       </List>
     </CanAccess>

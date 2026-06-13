@@ -3,6 +3,7 @@ import {
   Database,
   Droplets,
   FileText,
+  FolderKanban,
   Home,
   LineChart,
   Map as MapIcon,
@@ -47,6 +48,10 @@ export type NavItem = {
    * Renders as non-interactive. Use for features not yet implemented.
    */
   disabled?: boolean
+  /**
+   * Nested items shown under this entry in the sidebar (e.g. Projects under Wells).
+   */
+  children?: NavItem[]
 }
 
 /**
@@ -88,6 +93,15 @@ export const RESOURCE_NAV: NavItem[] = [
     icon: Droplets,
     resource: 'ocotillo.thing-well',
     roles: viewerAndAbove,
+    children: [
+      {
+        label: 'Projects',
+        href: '/ocotillo/well/projects',
+        icon: FolderKanban,
+        resource: 'ocotillo.thing-well-projects',
+        roles: viewerAndAbove,
+      },
+    ],
   },
   {
     label: 'Field Sheets',

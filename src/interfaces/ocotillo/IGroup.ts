@@ -13,4 +13,5 @@ export interface IGroup {
   parent_group?: IGroup | null
   monitoring_frequency?: string | null
   group_type?: string | null
+  well_count?: number
 }

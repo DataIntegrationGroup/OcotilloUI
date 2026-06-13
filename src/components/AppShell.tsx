@@ -162,15 +162,26 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + '/')
 }
 
+function collectNavHrefs(items: NavItem[]): string[] {
+  return items.flatMap((item) => {
+    const hrefs = item.href ? [item.href] : []
+    if (item.children?.length) {
+      hrefs.push(...collectNavHrefs(item.children))
+    }
+    return hrefs
+  })
+}
+
 /**
  * Returns the href of the most specific nav item that matches the current
  * pathname. Prevents a shallow route (e.g. /ocotillo/well) from staying
  * active when a deeper route (e.g. /ocotillo/well/batch-export) is open.
  */
 function activeHref(pathname: string): string | null {
-  const allHrefs = [...PRIMARY_NAV, ...RESOURCE_NAV]
-    .map((item) => item.href)
-    .filter(Boolean) as string[]
+  const allHrefs = [
+    ...collectNavHrefs(PRIMARY_NAV),
+    ...collectNavHrefs(RESOURCE_NAV),
+  ]
   const matches = allHrefs.filter((h) => isActive(pathname, h))
   if (matches.length === 0) return null
   return matches.reduce((a, b) => (a.length >= b.length ? a : b))
@@ -192,6 +203,120 @@ function SidebarBrand() {
         {collapsed ? 'O' : 'Ocotillo'}
       </span>
     </Link>
+  )
+}
+
+function isNavSectionActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
+function ResourceNavItem({
+  item,
+  pathname,
+  canSeeNavItem,
+}: {
+  item: NavItem
+  pathname: string
+  canSeeNavItem: (itemRoles: NavItem['roles']) => boolean
+}) {
+  const { label, href, icon: Icon, resource, roles, children } = item
+  if (!canSeeNavItem(roles)) return null
+
+  const visibleChildren =
+    children?.filter((child) => canSeeNavItem(child.roles)) ?? []
+  const hasChildren = visibleChildren.length > 0
+  const currentActiveHref = activeHref(pathname)
+  const sectionActive =
+    hasChildren && href != null && isNavSectionActive(pathname, href)
+  const [open, setOpen] = useState(sectionActive)
+  const isOpen = sectionActive || open
+
+  useEffect(() => {
+    setOpen(sectionActive)
+  }, [sectionActive])
+
+  const handleOpenChange = (next: boolean) => {
+    if (!sectionActive) setOpen(next)
+  }
+
+  if (!hasChildren) {
+    return (
+      <CanAccess resource={resource!} action="list">
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            asChild
+            isActive={currentActiveHref === href}
+            tooltip={label}
+          >
+            <Link to={href!}>
+              <Icon />
+              <span>{label}</span>
+              {roles && !roles.includes(AmpRole.Viewer) && (
+                <Lock
+                  className="ml-auto text-muted-foreground/70 shrink-0"
+                  style={{ width: 11, height: 11 }}
+                />
+              )}
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </CanAccess>
+    )
+  }
+
+  const groupClass = `group/nav-${resource?.replace(/\./g, '-') ?? label}`
+
+  return (
+    <CanAccess resource={resource!} action="list">
+      <Collapsible open={isOpen} onOpenChange={handleOpenChange} className={groupClass}>
+        <SidebarMenuItem>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton
+              asChild
+              isActive={currentActiveHref === href}
+              tooltip={label}
+            >
+              <Link to={href!}>
+                <Icon />
+                <span>{label}</span>
+                <ChevronRight
+                  className={cn(
+                    'ml-auto size-3.5 transition-transform duration-100',
+                    isOpen && 'rotate-90'
+                  )}
+                />
+              </Link>
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              {visibleChildren.map((child) => {
+                const ChildIcon = child.icon
+                return (
+                  <CanAccess
+                    key={child.href}
+                    resource={child.resource!}
+                    action="list"
+                  >
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={currentActiveHref === child.href}
+                      >
+                        <Link to={child.href!}>
+                          <ChildIcon />
+                          <span>{child.label}</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </CanAccess>
+                )
+              })}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </SidebarMenuItem>
+      </Collapsible>
+    </CanAccess>
   )
 }
 
@@ -280,32 +405,14 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {RESOURCE_NAV.map(({ label, href, icon: Icon, resource, roles }) => {
-                if (!canSeeNavItem(roles)) return null
-
-                return (
-                  <CanAccess key={`resource-${href}`} resource={resource!} action="list">
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={activeHref(location.pathname) === href}
-                        tooltip={label}
-                      >
-                        <Link to={href!}>
-                          <Icon />
-                          <span>{label}</span>
-                          {roles && !roles.includes(AmpRole.Viewer) && (
-                            <Lock
-                              className="ml-auto text-muted-foreground/70 shrink-0"
-                              style={{ width: 11, height: 11 }}
-                            />
-                          )}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </CanAccess>
-                )
-              })}
+              {RESOURCE_NAV.map((item) => (
+                <ResourceNavItem
+                  key={item.href ?? item.label}
+                  item={item}
+                  pathname={location.pathname}
+                  canSeeNavItem={canSeeNavItem}
+                />
+              ))}
               {/* ── TEMPORARY: Example section — hidden until editing-tools is ready ── */}
               {/* <ExampleNavItem /> */}
             </SidebarMenu>
@@ -855,11 +962,51 @@ const BREADCRUMB_RESOURCES: Record<
   sample: { label: 'Samples', listHref: '/ocotillo/sample', resource: 'sample' },
 }
 
+// Nested list pages shown as Parent > Current in the header bar
+const NESTED_LIST_BREADCRUMBS: Record<
+  string,
+  { parentLabel: string; parentHref: string; label: string }
+> = {
+  '/ocotillo/well/projects': {
+    parentLabel: 'Wells',
+    parentHref: '/ocotillo/well',
+    label: 'Projects',
+  },
+}
+
 // Pattern: /<prefix>/<slug>/show/<id>  or  /<prefix>/<slug>/edit/<id>
 const DETAIL_PATTERN = /\/([a-z0-9-]+)\/(show|edit)\/([^/]+)$/
 
+function NestedListBreadcrumb({
+  parentLabel,
+  parentHref,
+  label,
+}: {
+  parentLabel: string
+  parentHref: string
+  label: string
+}) {
+  return (
+    <nav aria-label="breadcrumb" className="flex items-center gap-1 text-sm shrink-0">
+      <Link
+        to={parentHref}
+        className="text-muted-foreground hover:text-foreground transition-colors no-underline"
+      >
+        {parentLabel}
+      </Link>
+      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" aria-hidden="true" />
+      <span className="text-foreground font-medium">{label}</span>
+    </nav>
+  )
+}
+
 function HeaderBreadcrumb() {
   const location = useLocation()
+
+  const nestedList = NESTED_LIST_BREADCRUMBS[location.pathname]
+  if (nestedList) {
+    return <NestedListBreadcrumb {...nestedList} />
+  }
 
   const routeMatch = location.pathname.match(DETAIL_PATTERN)
   const slug = routeMatch?.[1] ?? ''
@@ -880,7 +1027,7 @@ function HeaderBreadcrumb() {
   const recordLabel = recordName ?? `#${id}`
 
   return (
-    <nav aria-label="breadcrumb" className="flex items-center gap-1.5 text-sm shrink-0">
+    <nav aria-label="breadcrumb" className="flex items-center gap-1 text-sm shrink-0">
       <Link
         to={resourceInfo.listHref}
         className="text-muted-foreground hover:text-foreground transition-colors no-underline"
@@ -935,7 +1082,7 @@ function ShellHeader() {
         <HeaderBreadcrumb />
       </div>
       {/* Search bar — hidden on mobile, visible sm+ */}
-      <div className="hidden sm:block shrink-0 max-w-sm w-full ml-0">
+      <div className="hidden sm:block shrink-0 max-w-sm w-full sm:ml-3">
         <SearchBar />
       </div>
       <div className="ml-auto flex items-center gap-1 shrink-0">
