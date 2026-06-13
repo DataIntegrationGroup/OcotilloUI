@@ -55,7 +55,7 @@ export const GameResults = ({ games, term, onSelect }: GameResultsProps) => (
         color="text.secondary"
         sx={{ px: 2, py: 2, textAlign: 'center' }}
       >
-        No games found for "{term}".
+        No games found for &quot;{term}&quot;.
       </Typography>
     )}
   </Box>

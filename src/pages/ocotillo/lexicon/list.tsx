@@ -7,42 +7,43 @@ import Grid from '@mui/material/Grid2'
 import { useExport } from '@refinedev/core'
 import { settings } from '@/settings'
 
-export const LexiconList = () => {
-  const headerButtons = () => {
-    const { triggerExport: triggerTermExport, isLoading: exportTermIsLoading } =
-      useExport({
-        pageSize: 1000,
-        resource: 'lexicon/term',
-        dataProviderName: 'ocotillo',
-      })
-    const {
-      triggerExport: triggerCategoryExport,
-      isLoading: exportCategoryIsLoading,
-    } = useExport({
+const LexiconHeaderButtons = () => {
+  const { triggerExport: triggerTermExport, isLoading: exportTermIsLoading } =
+    useExport({
       pageSize: 1000,
-      resource: 'lexicon/category',
+      resource: 'lexicon/term',
       dataProviderName: 'ocotillo',
     })
+  const {
+    triggerExport: triggerCategoryExport,
+    isLoading: exportCategoryIsLoading,
+  } = useExport({
+    pageSize: 1000,
+    resource: 'lexicon/category',
+    dataProviderName: 'ocotillo',
+  })
 
-    return (
-      <>
-        <ExportButton
-          variant="contained"
-          loading={exportCategoryIsLoading}
-          onClick={triggerCategoryExport}
-        >
-          Export Categories
-        </ExportButton>
-        <ExportButton
-          variant="contained"
-          loading={exportTermIsLoading}
-          onClick={triggerTermExport}
-        >
-          Export Terms
-        </ExportButton>
-      </>
-    )
-  }
+  return (
+    <>
+      <ExportButton
+        variant="contained"
+        loading={exportCategoryIsLoading}
+        onClick={triggerCategoryExport}
+      >
+        Export Categories
+      </ExportButton>
+      <ExportButton
+        variant="contained"
+        loading={exportTermIsLoading}
+        onClick={triggerTermExport}
+      >
+        Export Terms
+      </ExportButton>
+    </>
+  )
+}
+
+export const LexiconList = () => {
   const [selectedCategory, setSelectedCategory] = useState(null)
   const handleRowClick = useCallback((params?: any) => {
     setSelectedCategory((prev?: any) =>
@@ -98,7 +99,7 @@ export const LexiconList = () => {
   ]
 
   return (
-    <List headerButtons={headerButtons} title="Lexicon / Glossary">
+    <List headerButtons={<LexiconHeaderButtons />} title="Lexicon / Glossary">
       <Grid container spacing={2}>
         <Grid size={{ xs: 12 }}>
           <Card

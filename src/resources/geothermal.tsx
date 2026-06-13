@@ -1,6 +1,6 @@
 import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
 
-let geothermal = [
+const geothermal = [
     {
         name: "dashboard",
         list: "/geothermal/dashboard",
@@ -21,7 +21,7 @@ let geothermal = [
 ];
 
 export const geothermalResources = geothermal.map((g) => {
-    let meta = g.meta || {};
+    const meta = g.meta || {};
     meta["parent"] = "geothermal";
     meta["dataProviderName"] = "geothermal";
 

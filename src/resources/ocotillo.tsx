@@ -298,7 +298,7 @@ observations = observations.map((b) => {
   }
 })
 
-let ocotillo = [
+const ocotillo = [
   {
     name: 'map',
     list: '/ocotillo/map',

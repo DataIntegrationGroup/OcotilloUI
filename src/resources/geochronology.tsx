@@ -50,7 +50,7 @@ const geochronology = [
 ];
 
 export const geochronologyResources = geochronology.map((g) => {
-  let meta = g.meta || {};
+  const meta = g.meta || {};
   meta["parent"] = "geochronology";
   meta["dataProviderName"] = "geochronology";
 

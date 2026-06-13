@@ -9,7 +9,7 @@ import App from './App'
 
 import * as Sentry from '@sentry/react'
 
-let dsn = import.meta.env.VITE_SENTRY_DSN
+const dsn = import.meta.env.VITE_SENTRY_DSN
 
 if (dsn !== undefined && dsn !== '' && dsn !== null) {
   Sentry.init({
@@ -21,7 +21,7 @@ if (dsn !== undefined && dsn !== '' && dsn !== null) {
 }
 
 const container = document.getElementById('root')
-// eslint-disable-next-line
+ 
 const root = createRoot(container!)
 root.render(
   <React.StrictMode>
