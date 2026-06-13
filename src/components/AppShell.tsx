@@ -619,7 +619,7 @@ function SupportPanel() {
                   <div>
                     <p className="font-medium text-sm">Request a Feature</p>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      Describe something you need that Ocotillo doesn't do yet.
+                      Describe something you need that Ocotillo doesn&apos;t do yet.
                     </p>
                   </div>
                 </button>
