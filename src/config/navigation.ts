@@ -93,15 +93,13 @@ export const RESOURCE_NAV: NavItem[] = [
     icon: Droplets,
     resource: 'ocotillo.thing-well',
     roles: viewerAndAbove,
-    children: [
-      {
-        label: 'Projects',
-        href: '/ocotillo/well/projects',
-        icon: FolderKanban,
-        resource: 'ocotillo.thing-well-projects',
-        roles: viewerAndAbove,
-      },
-    ],
+  },
+  {
+    label: 'Projects',
+    href: '/ocotillo/well/projects',
+    icon: FolderKanban,
+    resource: 'ocotillo.thing-well-projects',
+    roles: viewerAndAbove,
   },
   {
     label: 'Field Sheets',

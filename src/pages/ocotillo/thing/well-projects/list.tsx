@@ -96,11 +96,24 @@ export const WellProjectList: React.FC = () => {
     []
   )
 
+  const projectsDataGridProps = {
+    ...dataGridPropsWithAnalytics,
+    initialState: {
+      columns: {
+        columnVisibilityModel: {
+          well_count: false,
+          parent_group_id: false,
+          project_area: false,
+        },
+      },
+    },
+  }
+
   return (
     <ListPage
       title="Projects"
       columns={columns}
-      dataGridProps={dataGridPropsWithAnalytics}
+      dataGridProps={projectsDataGridProps}
       getRowId={(row) => row.id}
       hideBreadcrumb
       hideHeaderButtons
