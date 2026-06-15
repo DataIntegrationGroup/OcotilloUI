@@ -27,6 +27,11 @@ export const releaseStatusColumnDef = <
         label={params.value}
         size="small"
         color={RELEASE_STATUS_COLOR[params.value] ?? 'default'}
+        sx={{
+          height: 20,
+          fontSize: 11,
+          '& .MuiChip-label': { px: 1, lineHeight: 1 },
+        }}
       />
     ) : null,
   ...overrides,
