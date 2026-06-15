@@ -23,16 +23,14 @@ export const releaseStatusColumnDef = <
   width: 145,
   renderCell: (params) =>
     params.value ? (
-      <Chip
-        label={params.value}
-        size="small"
-        color={RELEASE_STATUS_COLOR[params.value] ?? 'default'}
-        sx={{
-          height: 20,
-          fontSize: 11,
-          '& .MuiChip-label': { px: 1, lineHeight: 1 },
-        }}
-      />
+      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+        <Chip
+          label={params.value}
+          size="small"
+          color={RELEASE_STATUS_COLOR[params.value] ?? 'default'}
+          sx={{ height: 22, '& .MuiChip-label': { px: 1 } }}
+        />
+      </Box>
     ) : null,
   ...overrides,
 })
