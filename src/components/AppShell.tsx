@@ -1029,13 +1029,7 @@ const BREADCRUMB_RESOURCES: Record<
 const NESTED_LIST_BREADCRUMBS: Record<
   string,
   { parentLabel: string; parentHref: string; label: string }
-> = {
-  '/ocotillo/well/projects': {
-    parentLabel: 'Wells',
-    parentHref: '/ocotillo/well',
-    label: 'Projects',
-  },
-}
+> = {}
 
 // Pattern: /<prefix>/<slug>/show/<id>  or  /<prefix>/<slug>/edit/<id>
 const DETAIL_PATTERN = /\/([a-z0-9-]+)\/(show|edit)\/([^/]+)$/
