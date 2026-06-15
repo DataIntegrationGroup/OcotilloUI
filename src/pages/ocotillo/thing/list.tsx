@@ -5,7 +5,7 @@ import { useDataGrid } from '@refinedev/mui'
 import {
   GridColDef,
 } from '@mui/x-data-grid'
-import { captureEvent } from '@/analytics/posthog'
+import { captureEvent, consumeWellsProjectFilterSource, setWellsProjectFilterSource } from '@/analytics/posthog'
 import { Download, FileText, Loader2, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -68,13 +68,16 @@ export const SpringList: React.FC = () => {
 
 /** Standard ListPage template for Ocotillo resource lists. Copy for new list pages. */
 export const WellList: React.FC = () => {
-  useEffect(() => {
-    captureEvent('feature_used', { feature: 'wells_list' })
-  }, [])
-
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const projectId = searchParams.get('projectId')
+
+  useEffect(() => {
+    captureEvent('feature_used', {
+      feature: projectId ? 'wells_list_project_filtered' : 'wells_list',
+      ...(projectId ? { project_id: projectId } : {}),
+    })
+  }, [projectId])
 
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
@@ -94,6 +97,16 @@ export const WellList: React.FC = () => {
     queryOptions: { enabled: Boolean(projectId) },
   })
   const projectName = (projectQuery?.data?.data as IGroup | undefined)?.name
+
+  useEffect(() => {
+    if (!projectId) return
+
+    const source = consumeWellsProjectFilterSource()
+    captureEvent('wells_project_filter_applied', {
+      project_id: projectId,
+      source,
+    })
+  }, [projectId])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -256,9 +269,14 @@ export const WellList: React.FC = () => {
                   {idx > 0 && ', '}
                   <RouterLink
                     to={`/ocotillo/well?projectId=${group.id}`}
-                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) =>
+                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                       e.stopPropagation()
-                    }
+                      setWellsProjectFilterSource('wells_column')
+                      captureEvent('wells_project_link_clicked', {
+                        project_id: group.id,
+                        project_name: group.name,
+                      })
+                    }}
                     className="text-primary hover:underline no-underline"
                   >
                     {group.name}
@@ -470,7 +488,13 @@ export const WellList: React.FC = () => {
                 size="icon-xs"
                 className="size-5 rounded-full text-primary/70 hover:bg-primary/10 hover:text-primary"
                 aria-label="Clear project filter"
-                onClick={() => navigate('/ocotillo/well')}
+                onClick={() => {
+                  captureEvent('wells_project_filter_cleared', {
+                    project_id: projectId,
+                    project_name: projectName,
+                  })
+                  navigate('/ocotillo/well')
+                }}
               >
                 <X />
               </Button>

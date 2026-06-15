@@ -65,6 +65,7 @@ import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { SupportPanelContext } from '@/components/SupportPanelContext'
 import { NewVersionBanner } from '@/components/NewVersionBanner'
+import { trackNavItemClicked } from '@/analytics/posthog'
 import pkg from '../../package.json'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -239,6 +240,16 @@ function ResourceNavItem({
     if (!sectionActive) setOpen(next)
   }
 
+  const trackNavClick = (target: NavItem, parentLabel?: string) => {
+    if (!target.href) return
+    trackNavItemClicked({
+      label: target.label,
+      href: target.href,
+      resource: target.resource,
+      ...(parentLabel ? { parent_label: parentLabel } : {}),
+    })
+  }
+
   if (!hasChildren) {
     return (
       <CanAccess resource={resource!} action="list">
@@ -248,7 +259,10 @@ function ResourceNavItem({
             isActive={currentActiveHref === href}
             tooltip={label}
           >
-            <Link to={href!}>
+            <Link
+              to={href!}
+              onClick={() => trackNavClick({ label, href, icon: Icon, resource, roles })}
+            >
               <Icon />
               <span>{label}</span>
               {roles && !roles.includes(AmpRole.Viewer) && (
@@ -276,7 +290,10 @@ function ResourceNavItem({
               isActive={currentActiveHref === href}
               tooltip={label}
             >
-              <Link to={href!}>
+              <Link
+                to={href!}
+                onClick={() => trackNavClick({ label, href, icon: Icon, resource, roles })}
+              >
                 <Icon />
                 <span>{label}</span>
                 <ChevronRight
@@ -303,7 +320,10 @@ function ResourceNavItem({
                         asChild
                         isActive={currentActiveHref === child.href}
                       >
-                        <Link to={child.href!}>
+                        <Link
+                          to={child.href!}
+                          onClick={() => trackNavClick(child, label)}
+                        >
                           <ChildIcon />
                           <span>{child.label}</span>
                         </Link>

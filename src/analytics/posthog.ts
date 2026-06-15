@@ -45,6 +45,30 @@ export const initPostHog = () => {
   initialized = true
 }
 
+export const WELLS_PROJECT_FILTER_SOURCE_KEY = 'wells_project_filter_source'
+
+export type WellsProjectFilterSource = 'projects_list' | 'wells_column' | 'direct'
+
+export const setWellsProjectFilterSource = (source: WellsProjectFilterSource) => {
+  sessionStorage.setItem(WELLS_PROJECT_FILTER_SOURCE_KEY, source)
+}
+
+export const consumeWellsProjectFilterSource = (): WellsProjectFilterSource => {
+  const value = sessionStorage.getItem(WELLS_PROJECT_FILTER_SOURCE_KEY)
+  sessionStorage.removeItem(WELLS_PROJECT_FILTER_SOURCE_KEY)
+  if (value === 'projects_list' || value === 'wells_column') return value
+  return 'direct'
+}
+
+export const trackNavItemClicked = (props: {
+  label: string
+  href: string
+  resource?: string
+  parent_label?: string
+}) => {
+  captureEvent('nav_item_clicked', props)
+}
+
 /**
  * Optional properties for well detail pages so `well_id` is on `$pageview`
  * (and shows up in PostHog when breaking down or filtering).
@@ -76,6 +100,44 @@ export const wellDetailPageviewProps = (
   }
   return undefined
 }
+
+/**
+ * Extra `$pageview` properties for list pages (Projects, filtered Wells, etc.).
+ */
+export const listPageviewProps = (
+  pathname: string,
+  search: string
+): Record<string, unknown> | undefined => {
+  if (pathname === '/ocotillo/well/projects') {
+    return { page_template: 'projects_list' }
+  }
+
+  if (pathname === '/ocotillo/well') {
+    const projectId = new URLSearchParams(
+      search.startsWith('?') ? search.slice(1) : search
+    ).get('projectId')
+    if (projectId) {
+      return {
+        page_template: 'wells_list',
+        wells_view: 'project_filtered',
+        project_id: projectId,
+      }
+    }
+    return { page_template: 'wells_list' }
+  }
+
+  if (pathname === '/ocotillo/contact') {
+    return { page_template: 'contacts_list' }
+  }
+
+  return undefined
+}
+
+export const pageviewExtras = (
+  pathname: string,
+  search: string
+): Record<string, unknown> | undefined =>
+  wellDetailPageviewProps(pathname) ?? listPageviewProps(pathname, search)
 
 export const capturePostHogPageview = (
   path: string,
