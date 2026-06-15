@@ -1,10 +1,9 @@
 import { useMemo } from 'react'
 import { useDataGrid } from '@refinedev/mui'
 import { GridCheckCircleIcon, GridColDef } from '@mui/x-data-grid'
-import { Chip } from '@mui/material'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { ListPage } from '@/components'
-import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
+import { actionColumnDef, idColumnDef, releaseStatusColumnDef } from '@/components/CommonColumnDefs'
 import { formatAppDateTime } from '@/utils'
 
 export const GroupList: React.FC = () => {
@@ -36,16 +35,7 @@ export const GroupList: React.FC = () => {
         type: 'string',
         width: 140,
       },
-      {
-        field: 'release_status',
-        headerName: 'Release Status',
-        type: 'string',
-        width: 140,
-        renderCell: (params) =>
-          params.value ? (
-            <Chip label={params.value} size="small" variant="outlined" />
-          ) : null,
-      },
+      releaseStatusColumnDef<IGroup>(),
       {
         field: 'well_count',
         headerName: 'Wells',

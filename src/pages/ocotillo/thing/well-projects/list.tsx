@@ -6,9 +6,9 @@ import { useEffect, useMemo } from 'react'
 import { type CrudFilter } from '@refinedev/core'
 import { useDataGrid } from '@refinedev/mui'
 import { GridCheckCircleIcon, GridColDef } from '@mui/x-data-grid'
-import { Chip } from '@mui/material'
 import { captureEvent, setWellsProjectFilterSource } from '@/analytics/posthog'
 import { ListPage } from '@/components/ListPage'
+import { releaseStatusColumnDef } from '@/components/CommonColumnDefs'
 import { useListPageDataGridAnalytics } from '@/hooks'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { formatAppDateTime } from '@/utils'
@@ -69,16 +69,7 @@ export const WellProjectList: React.FC = () => {
         type: 'string',
         width: 140,
       },
-      {
-        field: 'release_status',
-        headerName: 'Release Status',
-        type: 'string',
-        width: 140,
-        renderCell: (params) =>
-          params.value ? (
-            <Chip label={params.value} size="small" variant="outlined" />
-          ) : null,
-      },
+      releaseStatusColumnDef<IGroup>(),
       {
         field: 'parent_group_id',
         headerName: 'Parent Group',
