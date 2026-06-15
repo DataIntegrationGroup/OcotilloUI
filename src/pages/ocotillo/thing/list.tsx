@@ -282,22 +282,26 @@ export const WellList: React.FC = () => {
               }}
             >
               {contacts.map((contact, idx) => (
-                <span key={contact?.id}>
+                <span key={contact?.id ?? idx}>
                   {idx > 0 && ', '}
-                  <Link
-                    go={{
-                      to: {
-                        resource: 'ocotillo.contact',
-                        action: 'show',
-                        id: contact.id,
-                      },
-                    }}
-                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) =>
-                      e.stopPropagation()
-                    }
-                  >
-                    {getContactDisplayName(contact)}
-                  </Link>
+                  {contact?.id != null ? (
+                    <Link
+                      go={{
+                        to: {
+                          resource: 'ocotillo.contact',
+                          action: 'show',
+                          id: contact.id,
+                        },
+                      }}
+                      onClick={(e: React.MouseEvent<HTMLAnchorElement>) =>
+                        e.stopPropagation()
+                      }
+                    >
+                      {getContactDisplayName(contact)}
+                    </Link>
+                  ) : (
+                    getContactDisplayName(contact)
+                  )}
                 </span>
               ))}
             </div>

@@ -15,6 +15,12 @@ import {publicReleaseChip} from "@/components/util";
 import SummarizeIcon from '@mui/icons-material/Summarize';
 import SummarizeOutlinedIcon from '@mui/icons-material/SummarizeOutlined';
 
+interface LocationPhoto {
+    key?: string
+    src?: string
+    caption?: string
+    img?: string
+}
 
 export const LocationShow = () => {
     // const isLoading = false;
@@ -42,7 +48,9 @@ export const LocationShow = () => {
         dataProviderName: "amp"
     });
 
-    const photos = photosData || [];
+    const photos: LocationPhoto[] = Array.isArray(photosData)
+        ? photosData
+        : [];
     // const location = {}
     // const {queryResult} = useShow({});
     //
@@ -66,14 +74,14 @@ export const LocationShow = () => {
             },
         ]}
 
-    const labeledValue = (label: string, value: string) => {
+    const labeledValue = (label: string, value: string | null | undefined) => {
         return (
             <Stack direction={'row'} gap={1}>
                 <Typography variant="body1" fontWeight="bold">
                     {label}:
                 </Typography>
                 <Typography variant="body1">
-                    {value}
+                    {value ?? ''}
                 </Typography>
             </Stack>
         )
@@ -102,7 +110,8 @@ export const LocationShow = () => {
                         {labeledValue('Location Name', location?.SiteID)}
                         <Typography variant="body1" fontWeight="bold">
                             {"Public Release"}:
-                            {publicReleaseChip({row: location})}</Typography>
+                        </Typography>
+                        {location && publicReleaseChip({ row: location })}
                     </Stack>
                     <Stack>
                         {labeledValue('Measuring Point', well?.measuring_point)}
@@ -174,7 +183,7 @@ export const LocationShow = () => {
             </Card>
             <Card>
                 <ImageList sx={{ width: 500, height: 450 }}>
-                    {photos.map((item) => {
+                    {photos.map((item: LocationPhoto) => {
                         console.log('item', item);
                         if (item ==undefined || item.key == undefined) {
                             return null;

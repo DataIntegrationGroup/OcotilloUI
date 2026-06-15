@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useStepsForm } from '@refinedev/react-hook-form'
 import { IGroundwaterLevelForm } from '@/interfaces/ocotillo/IGroundwaterLevel'
 import { HttpError, useNotification } from '@refinedev/core'
@@ -25,6 +26,7 @@ export const GroundwaterLevelForm: React.FC = () => {
   // ---------------------------------------------------------------------------
   const { open, close } = useNotification()
   const steps = ['Well', 'Sample', 'Observation', 'Review & Submit']
+  const currentStepRef = useRef(0)
 
   const {
     control,
@@ -41,9 +43,15 @@ export const GroundwaterLevelForm: React.FC = () => {
     Nullable<IGroundwaterLevelForm>
   >({
     resolver: (data, ctx, opts) =>
-      yupResolver(groundwaterLevelStepSchemas[currentStep])(data, ctx, opts),
+      yupResolver(groundwaterLevelStepSchemas[currentStepRef.current])(
+        data,
+        ctx,
+        opts
+      ),
     defaultValues: SchemaDefaults,
   })
+
+  currentStepRef.current = currentStep
 
   // ------------------------------------------------------------
   // Form Submission Mutation
@@ -133,7 +141,9 @@ export const GroundwaterLevelForm: React.FC = () => {
       currentStep={currentStep}
       onNext={handleNext}
       onBack={handleBack}
-      onSubmit={handleSubmit(handleFormSubmit)}
+      onSubmit={handleSubmit((data) =>
+        handleFormSubmit(data as IGroundwaterLevelForm)
+      )}
       onReset={handleReset}
       isSubmitting={isPending}
     >

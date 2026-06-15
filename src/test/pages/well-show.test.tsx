@@ -37,7 +37,7 @@ vi.mock('@tanstack/react-query', () => ({
 
 vi.mock('@/hooks', () => ({
   useAccessCapabilities: () => mockedUseAccessCapabilities(),
-  useSensorDeploymentRows: () => [],
+  useSensorDeploymentRows: (): import('@/utils/SensorDeploymentRows').SensorDeploymentRow[] => [],
 }))
 
 vi.mock('@/components', () => {

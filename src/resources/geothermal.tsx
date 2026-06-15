@@ -1,6 +1,13 @@
 import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
+import type { ResourceMeta } from "./types";
 
-const geothermal = [
+const geothermal: {
+    name: string;
+    list?: string;
+    show?: string;
+    icon?: JSX.Element;
+    meta?: ResourceMeta;
+}[] = [
     {
         name: "dashboard",
         list: "/geothermal/dashboard",
@@ -21,13 +28,13 @@ const geothermal = [
 ];
 
 export const geothermalResources = geothermal.map((g) => {
-    const meta = g.meta || {};
-    meta["parent"] = "geothermal";
-    meta["dataProviderName"] = "geothermal";
+    const meta: ResourceMeta = { ...g.meta };
+    meta.parent = "geothermal";
+    meta.dataProviderName = "geothermal";
 
     return {
         ...g,
         name: `geothermal.${g.name}`,
-        meta: meta,
+        meta,
     };
 });

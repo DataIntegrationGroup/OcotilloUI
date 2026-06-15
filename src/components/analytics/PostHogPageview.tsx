@@ -6,7 +6,7 @@ import {
   wellDetailPageviewProps,
 } from '@/analytics/posthog'
 
-export const PostHogPageview = () => {
+export const PostHogPageview = (): null => {
   const location = useLocation()
   const lastPathRef = useRef<string | null>(null)
 

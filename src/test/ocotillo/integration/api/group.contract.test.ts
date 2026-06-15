@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zGroupResponse,
@@ -32,9 +33,9 @@ describe('Ocotillo Integration Tests: Group', () => {
     const validatedGroup = zGroupResponse.parse(group)
     expect(validatedGroup).toBeDefined()
   } catch (error) {
-    console.error('Schema validation failed:', error.message)
+    console.error('Schema validation failed:', getErrorMessage(error))
     console.error('Group data:', JSON.stringify(group, null, 2))
-    throw new Error(`API response doesn't match IGroup interface: ${error.message}`)
+    throw new Error(`API response doesn't match IGroup interface: ${getErrorMessage(error)}`)
   }
 }
 })
@@ -55,9 +56,9 @@ describe('Ocotillo Integration Tests: Group', () => {
     const validatedGroup = zGroupResponse.parse(group)
     expect(validatedGroup).toBeDefined()
   } catch (error) {
-    console.error('Schema validation failed:', error.message)
+    console.error('Schema validation failed:', getErrorMessage(error))
     console.error('Group data:', JSON.stringify(group, null, 2))
-    throw new Error(`API response doesn't match IGroup interface: ${error.message}`)
+    throw new Error(`API response doesn't match IGroup interface: ${getErrorMessage(error)}`)
   }
   })
 
@@ -84,9 +85,9 @@ describe('Ocotillo Integration Tests: Group', () => {
       const validatedGroup = zGroupResponse.parse(createdGroup)
       expect(validatedGroup).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Group data:', JSON.stringify(createdGroup, null, 2))
-      throw new Error(`API response doesn't match IGroup interface: ${error.message}`)
+      throw new Error(`API response doesn't match IGroup interface: ${getErrorMessage(error)}`)
     }
   })
 
@@ -114,9 +115,9 @@ describe('Ocotillo Integration Tests: Group', () => {
     const validatedGroup = zGroupResponse.parse(updatedGroup)
     expect(validatedGroup).toBeDefined()
   } catch (error) {
-    console.error('Schema validation failed:', error.message)
+    console.error('Schema validation failed:', getErrorMessage(error))
     console.error('Group data:', JSON.stringify(updatedGroup, null, 2))
-    throw new Error(`API response doesn't match IGroup interface: ${error.message}`)
+    throw new Error(`API response doesn't match IGroup interface: ${getErrorMessage(error)}`)
   }
   })
 })

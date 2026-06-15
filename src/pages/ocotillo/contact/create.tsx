@@ -2,6 +2,7 @@ import type { HttpError } from '@refinedev/core'
 import { Create, useAutocomplete } from '@refinedev/mui'
 import { useForm } from '@refinedev/react-hook-form'
 import { Controller } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
 import { Autocomplete, TextField } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { Nullable } from '../../../interfaces'
@@ -17,7 +18,11 @@ export const ContactCreate: React.FC = () => {
     control,
     formState: { errors },
   } = useForm<CreateContact, HttpError, Nullable<CreateContact>>({
-    resolver: zodResolver(zCreateContact),
+    resolver: zodResolver(zCreateContact) as Resolver<
+      Nullable<CreateContact>,
+      {},
+      Nullable<CreateContact>
+    >,
     mode: "onSubmit",
   })
 

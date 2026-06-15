@@ -61,7 +61,7 @@ export const LocationEdit: React.FC = () => {
             control={control}
             render={({field: {onChange, value}})=>{
             return <FormControlLabel
-                control={<Switch checked={value} onChange={onChange}/>}
+                control={<Switch checked={value ?? false} onChange={onChange}/>}
                 label="PublicRelease" />
         }}
 

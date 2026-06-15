@@ -34,6 +34,7 @@ interface AuthentikJwtPayload extends JwtPayload {
   preferred_username?: string
   given_name?: string
   family_name?: string
+  groups?: string[]
 }
 
 export interface AuthentikIdentity {
@@ -307,10 +308,10 @@ export const authentikAuthProvider: AuthProvider = {
         profile.preferred_username ||
         profile.email
       return {
-        id: profile.sub,
+        id: profile.sub ?? '',
         avatar: gravatarUrl(profile.email),
-        email: profile.email,
-        name,
+        email: profile.email ?? '',
+        name: name ?? '',
       }
     } catch {
       return null
@@ -327,7 +328,7 @@ export const authentikAuthProvider: AuthProvider = {
 
     try {
       const decoded = jwtDecode<AuthentikJwtPayload>(idToken)
-      return normalizeAccessControlGroups(decoded['groups'])
+      return normalizeAccessControlGroups(decoded.groups)
     } catch {
       return null
     }

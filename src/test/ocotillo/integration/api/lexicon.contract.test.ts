@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zLexiconTermResponse,
@@ -37,9 +38,9 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
         const validatedTerm = zLexiconTermResponse.parse(term)
         expect(validatedTerm).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('Term data:', JSON.stringify(term, null, 2))
-        throw new Error(`API response doesn't match ITerm interface: ${error.message}`)
+        throw new Error(`API response doesn't match ITerm interface: ${getErrorMessage(error)}`)
       }
     }
   })
@@ -60,9 +61,9 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
       const validatedTerm = zLexiconTermResponse.parse(term)
       expect(validatedTerm).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Term data:', JSON.stringify(term, null, 2))
-      throw new Error(`API response doesn't match ITerm interface: ${error.message}`)
+      throw new Error(`API response doesn't match ITerm interface: ${getErrorMessage(error)}`)
     }
   })
 
@@ -87,9 +88,9 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
       const validatedTerm = zLexiconTermResponse.parse(createdTerm)
       expect(validatedTerm).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Term data:', JSON.stringify(createdTerm, null, 2))
-      throw new Error(`API response doesn't match ITerm interface: ${error.message}`)
+      throw new Error(`API response doesn't match ITerm interface: ${getErrorMessage(error)}`)
     }
   })
 
@@ -114,9 +115,9 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
       const validatedTerm = zLexiconTermResponse.parse(updatedTerm)
       expect(validatedTerm).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Term data:', JSON.stringify(updatedTerm, null, 2))
-      throw new Error(`API response doesn't match ITerm interface: ${error.message}`)
+      throw new Error(`API response doesn't match ITerm interface: ${getErrorMessage(error)}`)
     }
   })
 
@@ -138,9 +139,9 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
         const validatedCategory = zLexiconCategoryResponse.parse(category)
         expect(validatedCategory).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('Category data:', JSON.stringify(category, null, 2))
-        throw new Error(`API response doesn't match ICategory interface: ${error.message}`)
+        throw new Error(`API response doesn't match ICategory interface: ${getErrorMessage(error)}`)
       }
     }
   })
@@ -161,9 +162,9 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
       const validatedCategory = zLexiconCategoryResponse.parse(category)
       expect(validatedCategory).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Category data:', JSON.stringify(category, null, 2))
-      throw new Error(`API response doesn't match ICategory interface: ${error.message}`)
+      throw new Error(`API response doesn't match ICategory interface: ${getErrorMessage(error)}`)
     }
   })
 
@@ -186,9 +187,9 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
       const validatedCategory = zLexiconCategoryResponse.parse(createdCategory)
       expect(validatedCategory).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Category data:', JSON.stringify(createdCategory, null, 2))
-      throw new Error(`API response doesn't match ICategory interface: ${error.message}`)
+      throw new Error(`API response doesn't match ICategory interface: ${getErrorMessage(error)}`)
     }
   })
 
@@ -212,9 +213,9 @@ describe('Ocotillo Integration Tests: Lexicon', () => {
       const validatedCategory = zLexiconCategoryResponse.parse(updatedCategory)
       expect(validatedCategory).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Category data:', JSON.stringify(updatedCategory, null, 2))
-      throw new Error(`API response doesn't match ICategory interface: ${error.message}`)
+      throw new Error(`API response doesn't match ICategory interface: ${getErrorMessage(error)}`)
     }
   })
 })

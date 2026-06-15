@@ -5,6 +5,7 @@ import { useForm } from '@refinedev/react-hook-form'
 import type { Nullable } from '@/interfaces'
 import { CreateEditLocation } from '@/components/form/location/CreateEditLocation'
 import { zodResolver } from '@hookform/resolvers/zod'
+import type { Resolver } from 'react-hook-form'
 import { zUpdateLocation } from '@/generated/zod.gen'
 import { UpdateLocation } from '@/generated/types.gen'  
 
@@ -16,7 +17,11 @@ export const LocationEdit: React.FC = () => {
     setValue,
     formState: { errors },
   } = useForm<UpdateLocation, HttpError, Nullable<UpdateLocation>>({
-    resolver: zodResolver(zUpdateLocation),
+    resolver: zodResolver(zUpdateLocation) as Resolver<
+      Nullable<UpdateLocation>,
+      {},
+      Nullable<UpdateLocation>
+    >,
     mode: "onSubmit",
   })
 

@@ -21,7 +21,10 @@ export const GroupShow = () => {
 
   try {
     if (record?.project_area) {
-      project_area = wellknown.parse(record.project_area)
+      project_area =
+        typeof record.project_area === 'string'
+          ? wellknown.parse(record.project_area)
+          : record.project_area
     }
   } catch (e) {
     console.error('Invalid WKT provided:', record.project_area, e)

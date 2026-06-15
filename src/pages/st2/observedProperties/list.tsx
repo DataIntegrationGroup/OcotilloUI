@@ -1,7 +1,7 @@
 import {ShowButton, EditButton, List, useDataGrid} from "@refinedev/mui";
 import React from "react";
 
-import {type GridColDef} from "@mui/x-data-grid";
+import {type GridColDef, type GridRowHeightParams} from "@mui/x-data-grid";
 
 import type {IObservedProperty} from "@/interfaces/st2";
 import {ListPage} from "@/components/ListPage";
@@ -63,7 +63,7 @@ export const ST2ObservedPropertiesList: React.FC = () => {
         // [categoriesData, isLoading],
     );
 
-    const getRowHeight = (params) => {
+    const getRowHeight = (params: GridRowHeightParams) => {
         if (params.model.description.length > 50) {
             return 60; // Set a taller height for rows with long descriptions
         }

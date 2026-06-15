@@ -35,6 +35,7 @@ import { useForm } from '@refinedev/react-hook-form'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
+import { IWell } from '@/interfaces/ocotillo'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 
@@ -70,6 +71,7 @@ export const WellShowPdfPreview = () => {
   } = useWellPdfData({
     thingId: id,
   })
+  const viewWell = well as IWell
 
   useEffect(() => {
     if (!isLoading) {
@@ -84,7 +86,6 @@ export const WellShowPdfPreview = () => {
       .split('-')
       .map((w) => w[0].toUpperCase() + w.slice(1))
       .join(' '),
-    description: null as null,
     icon: densityIcons[value],
   }))
 
@@ -239,7 +240,7 @@ export const WellShowPdfPreview = () => {
           padding: 0,
         },
       }}
-      title={<WellShowTitle well={well} isLoading={isLoading} />}
+      title={<WellShowTitle well={viewWell} isLoading={isLoading} />}
       headerProps={{
         sx: {
           flexDirection: { xs: 'column', md: 'row' },
@@ -256,7 +257,7 @@ export const WellShowPdfPreview = () => {
         canManageAmp ? (
           <Box sx={{ display: 'flex', gap: 0 }}>
             <WellPDFDownloadButton
-              well={well}
+              well={viewWell}
               isLoading={isLoading}
               observations={observations}
               assets={assets}
@@ -400,7 +401,7 @@ export const WellShowPdfPreview = () => {
             <Skeleton variant="rectangular" height="100%" />
           </Box>
         )}
-        {!isLoading && (
+        {!isLoading && well && (
           <Box
             sx={{
               opacity: isViewerReady ? 1 : 0,

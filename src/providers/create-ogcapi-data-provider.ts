@@ -100,8 +100,8 @@ export const createOgcapiDataProvider = ({
     }
 
     if (pagination) {
-      params.limit = pagination.pageSize
-      params.offset = ((pagination.currentPage ?? 1) - 1) * pagination.pageSize
+      params.limit = pagination.pageSize ?? 10
+      params.offset = ((pagination.currentPage ?? 1) - 1) * (pagination.pageSize ?? 10)
     }
 
     if (collection && defaultCollectionParams) {

@@ -585,7 +585,12 @@ export const MapView: React.FC = () => {
     )
     try {
       const ocotillo = dataProvider('ocotillo')
-      const customRequest = (args: CustomParams) => ocotillo.custom(args)
+      const customRequest = (args: CustomParams) => {
+        if (!ocotillo.custom) {
+          throw new Error('Ocotillo data provider custom method is not available')
+        }
+        return ocotillo.custom(args)
+      }
 
       for (let index = 0; index < visiblePointFeaturesByLayer.length; index++) {
         const { label, features } = visiblePointFeaturesByLayer[index]

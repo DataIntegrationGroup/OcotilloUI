@@ -20,7 +20,7 @@ export const initPostHog = () => {
     capture_pageleave: true,
     capture_exceptions: true,
     session_recording: {
-      maskInputFn: (text, element) => {
+      maskInputFn: (text: string, element?: Element | null) => {
         const el = element as HTMLInputElement | undefined
         if (el?.type === 'password') {
           return '*'.repeat(text.length)
@@ -133,4 +133,3 @@ export const getAccessibilityProps = (): Record<string, unknown> => {
     prefers_high_contrast: window.matchMedia('(prefers-contrast: more)').matches,
   }
 }
-

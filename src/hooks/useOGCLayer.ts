@@ -83,7 +83,7 @@ export const useOGCLayer = ({
             async () =>
               provider.getOne({
                 resource: providerName,
-                id: null,
+                id: '',
                 meta: {
                   requestConfig: {
                     params: {

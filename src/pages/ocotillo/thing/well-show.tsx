@@ -9,6 +9,7 @@ import {
   IContact,
   IFieldEvent,
   IFieldEventParticipant,
+  IWell,
   IWellDetails,
   IObservation,
   ISample,
@@ -77,6 +78,10 @@ export const WellShow = () => {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     queryFn: async () => {
+      if (!ocotilloDataProvider?.custom) {
+        throw new Error('Ocotillo data provider is unavailable')
+      }
+
       const response = await ocotilloDataProvider.custom({
         url: `thing/water-well/${id}/details`,
         method: 'get',
@@ -109,6 +114,7 @@ export const WellShow = () => {
     },
   })
   const well = detailsQuery.data?.well
+  const viewWell = well as IWell
 
   useEffect(() => {
     if (!well?.name) return
@@ -138,15 +144,22 @@ export const WellShow = () => {
       .flatMap((event) =>
         (event.field_activities ?? []).flatMap((activity) =>
           (activity.samples ?? []).flatMap((sample) =>
-            (sample.observations ?? []).map((observation) => ({
-              ...observation,
-              water_level_method: sample.sample_method,
-              water_level_status: observation.groundwater_level_reason,
-              water_level_measuring_staff: sample.contact?.name,
-              water_level_notes:
-                sample.notes ?? activity.notes ?? event.notes ?? null,
-              water_level_data_quality: observation.nma_data_quality,
-            }))
+            (sample.observations ?? []).map(
+              (observation): Partial<WaterLevelObservationRow> => ({
+                ...observation,
+                depth_to_water_bgs: observation.depth_to_water_bgs ?? undefined,
+                measuring_point_height:
+                  observation.measuring_point_height ?? undefined,
+                value: observation.value ?? undefined,
+                water_level_method: sample.sample_method ?? undefined,
+                water_level_status: observation.groundwater_level_reason ?? undefined,
+                water_level_measuring_staff: sample.contact?.name ?? undefined,
+                water_level_notes:
+                  sample.notes ?? activity.notes ?? event.notes ?? undefined,
+                water_level_data_quality:
+                  observation.nma_data_quality ?? undefined,
+              })
+            )
           )
         )
       )
@@ -339,7 +352,7 @@ export const WellShow = () => {
           padding: 0,
         },
       }}
-      title={<WellShowTitle well={well} isLoading={isDetailsLoading} />}
+      title={<WellShowTitle well={viewWell} isLoading={isDetailsLoading} />}
       headerProps={{
         sx: {
           flexDirection: { xs: 'column', md: 'row' },
@@ -357,7 +370,7 @@ export const WellShow = () => {
           <Box sx={{ display: 'flex', gap: 0 }}>
             <WellPDFPreviewButton isLoading={isDetailsLoading} />
             <WellPDFDownloadButton
-              well={well}
+              well={viewWell}
               isLoading={isPdfDataLoading}
               observations={recentObservations}
               assets={assets}
@@ -375,15 +388,15 @@ export const WellShow = () => {
           <Grid size={{ xs: 12, md: 8, lg: 9 }}>
             <Stack spacing={2}>
               <CoreWellInfoCard well={well} />
-              <InteractiveSatelliteMapCard well={well} />
+              <InteractiveSatelliteMapCard well={viewWell} />
               <HydrographCard
-                well={well}
+                well={viewWell}
                 rows={[...manualHydrographRows, ...transducerHydrographRows]}
                 dataSource={hydrographDatasource}
                 isLoading={hydrographQuery.isPending}
               />
               <RecentWaterLevelObservationsCard
-                well={well}
+                well={viewWell}
                 rows={recentObservations}
                 isLoading={isDetailsLoading}
               />

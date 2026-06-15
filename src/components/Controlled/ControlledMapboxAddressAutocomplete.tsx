@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Controller, Control, Path } from "react-hook-form";
+import { Controller, Control, FieldValues, Path } from "react-hook-form";
 import {
   TextField,
   TextFieldProps,
@@ -32,7 +32,7 @@ const fetchAddresses = async (query: string) => {
   return response.data.features;
 };
 
-export const ControlledMapboxAddressAutocomplete = <T,>({
+export const ControlledMapboxAddressAutocomplete = <T extends FieldValues>({
   control,
   name,
   label,

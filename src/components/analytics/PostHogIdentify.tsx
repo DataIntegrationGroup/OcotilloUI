@@ -3,7 +3,7 @@ import { useGetIdentity } from '@refinedev/core'
 import { AuthentikIdentity } from '@/providers/authentik-provider'
 import { identifyUser, resetUser, getAccessibilityProps, setPersonProperties } from '@/analytics/posthog'
 
-export const PostHogIdentify = () => {
+export const PostHogIdentify = (): null => {
   const { data: identity } = useGetIdentity<AuthentikIdentity>()
 
   useEffect(() => {

@@ -77,7 +77,7 @@ export const ConstructionInfoCard = ({ well }: { well?: IWell }) => {
             label="Historic Depth to Water"
             value={
               (well?.historic_depth_to_water?.length ?? 0) > 0
-                ? well.historic_depth_to_water.join(', ')
+                ? (well?.historic_depth_to_water ?? []).join(', ')
                 : 'No original depth to water available'
             }
           />
@@ -201,6 +201,10 @@ const InlineRowWithUnitConversion = ({
   }
 
   if (!hasNumericValue) {
+    return <InlineRow label={label} value="N/A" />
+  }
+
+  if (displayValue == null) {
     return <InlineRow label={label} value="N/A" />
   }
 

@@ -2,7 +2,7 @@ import { Box, Button, Card, Input, useTheme } from '@mui/material'
 import { useNotification } from '@refinedev/core'
 import { useState } from 'react'
 import FileUploadIcon from '@mui/icons-material/FileUpload'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
+import { DataGrid, GridColDef, GridRowClassNameParams } from '@mui/x-data-grid'
 import {
   IObservationUploadSchema,
   ISampleUploadSchema,
@@ -14,6 +14,22 @@ import {
 } from '@/pages/ocotillo/water-chemistry-app/column-schema'
 import { useImportWaterChemistrySamples } from '@/pages/ocotillo/water-chemistry-app/hook'
 import { idColumnDef } from '@/components/CommonColumnDefs'
+import type {
+  ImportErrorResult,
+  ImportSuccessResult,
+} from '@refinedev/core'
+import type { BaseRecord } from '@refinedev/core'
+
+type ImportRequestValues = {
+  row_idx?: number
+  idx?: number
+  observed_property?: string
+}
+
+type ImportResults = {
+  succeeded: ImportSuccessResult<unknown, BaseRecord>[]
+  errored: ImportErrorResult<unknown>[]
+}
 
 interface EntryProps {}
 
@@ -27,7 +43,7 @@ export const WaterChemistryApp: React.FC<EntryProps> = () => {
   const [inputObservation, setInputObservation] = useState<
     IObservationUploadSchema[]
   >([])
-  const [results, setResults] = useState({
+  const [results, setResults] = useState<ImportResults>({
     succeeded: [],
     errored: [],
   })
@@ -41,9 +57,9 @@ export const WaterChemistryApp: React.FC<EntryProps> = () => {
       samples: inputSamples,
       observations: inputObservation,
       batchSize: 1, // Set to 1 for single row processing
-      onFinish: (values) => {
+      onFinish: (values: ImportResults) => {
         // use a notification to show summary of results
-        openNotification({
+        openNotification?.({
           message: 'Import Results',
           description: `${values.succeeded.length} rows succeeded, ${values.errored.length} rows failed.`,
           type: 'success',
@@ -51,7 +67,10 @@ export const WaterChemistryApp: React.FC<EntryProps> = () => {
 
         setResults(values)
       },
-      onProgress: (progress) => {
+      onProgress: (progress: {
+        totalAmount: number
+        processedAmount: number
+      }) => {
         setImportProgress({
           processed: progress.processedAmount,
           total: progress.totalAmount,
@@ -90,10 +109,11 @@ export const WaterChemistryApp: React.FC<EntryProps> = () => {
       const sampleGroups = Object.groupBy(nrows, (row) => row.sampleId)
       const sampleRows = Object.entries(sampleGroups).map(
         ([sampleId, values], index) => {
+          const firstRow = values?.[0]
           return {
             idx: index,
             sampleId: sampleId,
-            sampleDate: values[0].sampleDate,
+            sampleDate: firstRow?.sampleDate ?? '',
           } as ISampleUploadSchema
         }
       )
@@ -121,19 +141,18 @@ export const WaterChemistryApp: React.FC<EntryProps> = () => {
   }
 
   const theme = useTheme()
-  const stylizeSampleRow = (params) => {
+  const stylizeSampleRow = (params: GridRowClassNameParams<ISampleUploadSchema>) => {
     const { row } = params
 
     const success = results.succeeded.find(
       (result) =>
-        result.request[0].row_idx === row.idx &&
-        !result.request[0].observed_property
+        (result.request[0] as ImportRequestValues).row_idx === row.idx &&
+        !(result.request[0] as ImportRequestValues).observed_property
     )
-    // console.log(results.errored)
     const error = results.errored.find(
       (result) =>
-        result.request[0].idx === row.idx &&
-        !result.request[0].observed_property
+        (result.request[0] as ImportRequestValues).idx === row.idx &&
+        !(result.request[0] as ImportRequestValues).observed_property
     )
     if (success) {
       return 'success-result-row'
@@ -143,17 +162,20 @@ export const WaterChemistryApp: React.FC<EntryProps> = () => {
 
     return 'no-result-row'
   }
-  const stylizeObservationRow = (params) => {
+  const stylizeObservationRow = (
+    params: GridRowClassNameParams<IObservationUploadSchema>
+  ) => {
     const { row } = params
 
     const success = results.succeeded.find(
       (result) =>
-        result.request[0].row_idx === row.idx &&
-        result.request[0].observed_property
+        (result.request[0] as ImportRequestValues).row_idx === row.idx &&
+        (result.request[0] as ImportRequestValues).observed_property
     )
     const error = results.errored.find(
       (result) =>
-        result.request[0].idx === row.idx && result.request[0].observed_property
+        (result.request[0] as ImportRequestValues).idx === row.idx &&
+        (result.request[0] as ImportRequestValues).observed_property
     )
     if (success) {
       return 'success-result-row'
