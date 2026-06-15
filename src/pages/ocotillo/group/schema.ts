@@ -8,4 +8,6 @@ export const GroupSchema = yup.object({
   parent_group_id: yup.number().nullable().optional(),
   project_area: yup.string().nullable().optional(),
   description: yup.string().nullable().optional(),
+  group_type: yup.string().nullable().optional(),
+  well_count: yup.number().optional(),
 }).noUnknown(true)

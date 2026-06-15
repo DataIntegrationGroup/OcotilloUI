@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useDataGrid } from '@refinedev/mui'
 import { GridCheckCircleIcon, GridColDef } from '@mui/x-data-grid'
+import { Chip } from '@mui/material'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { ListPage } from '@/components'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
@@ -19,27 +20,60 @@ export const GroupList: React.FC = () => {
         field: 'name',
         headerName: 'Name',
         type: 'string',
-        minWidth: 150,
+        minWidth: 200,
+        flex: 1,
+      },
+      {
+        field: 'description',
+        headerName: 'Description',
+        type: 'string',
+        minWidth: 250,
+        flex: 2,
+      },
+      {
+        field: 'group_type',
+        headerName: 'Type',
+        type: 'string',
+        width: 140,
+      },
+      {
+        field: 'release_status',
+        headerName: 'Release Status',
+        type: 'string',
+        width: 140,
+        renderCell: (params) =>
+          params.value ? (
+            <Chip label={params.value} size="small" variant="outlined" />
+          ) : null,
+      },
+      {
+        field: 'well_count',
+        headerName: 'Wells',
+        type: 'number',
+        width: 80,
+        align: 'right',
+        headerAlign: 'right',
       },
       {
         field: 'parent_group_id',
-        headerName: 'Parent Group ID',
+        headerName: 'Parent Group',
         type: 'string',
-        minWidth: 175,
+        width: 130,
       },
       {
         field: 'project_area',
-        headerName: 'Project Area',
+        headerName: 'Has Boundary',
         type: 'string',
-        minWidth: 150,
-        renderCell: (params) => {
-          return params.value ? <GridCheckCircleIcon color="primary" /> : null
-        },
+        width: 120,
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params) =>
+          params.value ? <GridCheckCircleIcon color="primary" /> : null,
       },
       {
         field: 'created_at',
         headerName: 'Created At',
-        minWidth: 200,
+        width: 180,
         valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
       },
       actionColumnDef(),
