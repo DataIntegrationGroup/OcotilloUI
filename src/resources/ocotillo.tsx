@@ -17,7 +17,7 @@ import {
   // SettingsInputAntenna,
   // Spa,
   Timeline,
-  // Workspaces,
+  Workspaces,
 } from '@mui/icons-material'
 
 let tables: {
@@ -218,6 +218,17 @@ tables.push({
   meta: {
     label: 'Field Sheets',
     icon: <PictureAsPdfOutlined />,
+  },
+})
+
+tables.push({
+  name: 'thing-well-projects',
+  list: '/ocotillo/well/projects',
+  meta: {
+    label: 'Projects',
+    icon: <Workspaces />,
+    parent: 'ocotillo.thing-well',
+    nestedLevel: 1,
   },
 })
 

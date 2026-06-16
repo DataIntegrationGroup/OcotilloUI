@@ -7,7 +7,7 @@ export const NewVersionBanner = () => {
   if (!isNewVersionAvailable) return null
 
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-2.5 bg-indigo-500 text-white text-sm shrink-0">
+    <div className="flex items-center justify-between gap-4 px-4 py-2.5 bg-primary text-primary-foreground text-sm shrink-0">
       <span className="font-medium">
         We just made Ocotillo 5% better. Refresh to get the good stuff!
       </span>

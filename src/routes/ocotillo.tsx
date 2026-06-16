@@ -15,6 +15,7 @@ import {
   WellShow,
   WellShowPdfPreview,
   WellBatchExport,
+  WellProjectList,
   SpringShow,
 } from '@/pages/ocotillo/thing'
 import { MapView } from '@/pages/ocotillo/map'
@@ -96,6 +97,14 @@ export const OcotilloRoutes = () => {
           element={
             <ProtectedRoute resource="ocotillo.thing-well-batch-export">
               <WellBatchExport />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={'projects'}
+          element={
+            <ProtectedRoute resource="ocotillo.thing-well-projects">
+              <WellProjectList />
             </ProtectedRoute>
           }
         />

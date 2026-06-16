@@ -92,6 +92,7 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
   'ocotillo.hydrograph-correction': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
+  'ocotillo.thing-well-projects': { list: viewerRoles, show: viewerRoles },
   'ocotillo.groundwater-level-observation': {
     list: viewerRoles,
     show: viewerRoles,
@@ -237,6 +238,11 @@ export const canAccessResource = ({
   }
 
   if (resource === 'ocotillo.thing-well-batch-export') {
+    const policy = resourcePolicies[resource]
+    return matchesPolicy(policy[action], capabilities.roles)
+  }
+
+  if (resource === 'ocotillo.thing-well-projects') {
     const policy = resourcePolicies[resource]
     return matchesPolicy(policy[action], capabilities.roles)
   }

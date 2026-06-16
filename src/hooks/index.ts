@@ -1,3 +1,4 @@
+export * from './useListPageDataGridAnalytics'
 export * from './useAbortableList'
 export * from './useAccessCapabilities'
 export * from './useSearchHistory'

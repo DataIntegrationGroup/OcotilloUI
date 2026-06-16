@@ -221,24 +221,24 @@ const colors = {
     50:  '#eff6ff',
     100: '#dbeafe',
     200: '#bfdbfe',
-    300: '#93c5fd', // ← primary.light
+    300: '#93c5fd',
     400: '#60a5fa',
     500: '#3b82f6',
     600: '#2563eb',
-    700: '#1d4ed8', // ← primary.main
+    700: '#1d4ed8',
     800: '#1e40af',
-    900: '#1e3a8a', // ← primary.dark
+    900: '#1e3a8a',
     950: '#172554',
   },
   indigo: {
     50:  '#eef2ff',
     100: '#e0e7ff',
     200: '#c7d2fe',
-    300: '#a5b4fc',
+    300: '#a5b4fc', // ← primary.light
     400: '#818cf8',
-    500: '#6366f1',
+    500: '#6366f1', // ← primary.main
     600: '#4f46e5',
-    700: '#4338ca',
+    700: '#4338ca', // ← primary.dark
     800: '#3730a3',
     900: '#312e81',
     950: '#1e1b4b',
@@ -333,9 +333,9 @@ export const getTheme = (mode: PaletteMode) =>
     palette: {
       mode,
       primary: {
-        light: colors.blue[300],  // sky-300
-        main: colors.blue[700],   // sky-700
-        dark: colors.blue[900],   // sky-900
+        light: colors.indigo[300],
+        main: colors.indigo[500],
+        dark: colors.indigo[700],
       },
       secondary: {
         light: colors.amber[300], // amber-300
