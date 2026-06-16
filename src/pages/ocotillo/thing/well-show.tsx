@@ -402,6 +402,7 @@ export const WellShow = () => {
                 assets={assets}
                 isLoading={assetQuery.isLoading}
                 refetchAssets={assetQuery.refetch}
+                thingId={well?.id ?? (id ? Number(id) : null)}
               />
               <OSEPODInfoCard pod_id={osepod_id} />
               <USGSInfoCard site_id={usgs_id} />
