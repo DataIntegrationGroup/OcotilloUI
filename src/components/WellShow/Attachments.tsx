@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardHeader,
+  CardContent,
 } from '@mui/material'
 import {
   ChevronLeft,
@@ -68,7 +69,7 @@ export const AttachmentsCard = ({
         title={<HeaderTitle />}
         action={<Button startIcon={<FileUpload />}>File Upload</Button>}
       />
-      <Box sx={{ p: 3 }}>
+      <CardContent>
         {isLoading ? (
           <Box textAlign="center" py={4}>
             <Typography variant="body1" color="text.secondary">
@@ -232,7 +233,7 @@ export const AttachmentsCard = ({
             )}
           </Stack>
         )}
-      </Box>
+      </CardContent>
     </Card>
   )
 }
