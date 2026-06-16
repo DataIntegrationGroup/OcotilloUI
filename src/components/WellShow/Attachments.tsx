@@ -22,13 +22,8 @@ import {
 } from '@mui/icons-material'
 import { Masonry } from '@mui/lab'
 import type { IAsset } from '@/interfaces/ocotillo'
-import { QueryObserverResult } from '@tanstack/react-query'
-import {
-  GetListResponse,
-  HttpError,
-  useDataProvider,
-  useNotification,
-} from '@refinedev/core'
+import { QueryObserverResult, useMutation } from '@tanstack/react-query'
+import { GetListResponse, HttpError, useNotification } from '@refinedev/core'
 import { CardHeaderTitle } from '../card'
 import {
   Dialog,
@@ -41,6 +36,7 @@ import {
 import { Button as UiButton } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { HttpStatus } from '@/enums'
 
 const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
@@ -140,7 +136,7 @@ const buildUploadPreview = async (file: File): Promise<UploadPreview> => {
     file.type === 'text/plain' ? (await file.text()).slice(0, 5000) : null
 
   return {
-    id: `${file.name}-${file.lastModified}-${file.size}`,
+    id: crypto.randomUUID(),
     file,
     previewUrl,
     textPreview,
@@ -165,8 +161,6 @@ export const AttachmentsCard = ({
   >
   thingId?: number | null
 }) => {
-  const dataProvider = useDataProvider()
-  const provider = useMemo(() => dataProvider('ocotillo'), [dataProvider])
   const { open: notify } = useNotification()
   const [previewViewMode, setPreviewViewMode] =
     useState<PreviewViewMode>('grid')
@@ -174,7 +168,6 @@ export const AttachmentsCard = ({
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
   const [uploadPreviews, setUploadPreviews] = useState<UploadPreview[]>([])
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
 
   const previewAssets = useMemo(() => assets.filter(canPreview), [assets])
 
@@ -190,7 +183,7 @@ export const AttachmentsCard = ({
   }
 
   const handleDialogOpenChange = (open: boolean) => {
-    if (!open && isUploading) {
+    if (!open && uploadAssetMutation.isPending) {
       return
     }
 
@@ -198,7 +191,6 @@ export const AttachmentsCard = ({
 
     if (!open) {
       clearUploadState()
-      setIsUploading(false)
     }
   }
 
@@ -237,6 +229,38 @@ export const AttachmentsCard = ({
     })
   }
 
+  const uploadAssetMutation = useMutation({
+    mutationFn: async (preview: UploadPreview) => {
+      if (!thingId) {
+        throw new Error('A well id is required before files can be uploaded.')
+      }
+
+      const formData = new FormData()
+      formData.append('file', preview.file)
+      formData.append('thing_id', String(thingId))
+      formData.append('label', preview.file.name)
+      formData.append('name', preview.file.name)
+
+      const response = await fetch(`/api/asset/upload-and-record`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => null)
+
+        throw new Error(
+          errorBody?.detail?.[0]?.msg ??
+            errorBody?.detail ??
+            response.statusText ??
+            'Upload failed'
+        )
+      }
+
+      return response.json()
+    },
+  })
+
   const handleUploadSubmit = async () => {
     if (!thingId) {
       setUploadError('A well id is required before files can be uploaded.')
@@ -253,7 +277,6 @@ export const AttachmentsCard = ({
       return
     }
 
-    setIsUploading(true)
     setUploadError(null)
 
     const failedPreviewIds = new Set<string>()
@@ -261,22 +284,13 @@ export const AttachmentsCard = ({
 
     for (const preview of uploadPreviews) {
       try {
-        const formData = new FormData()
-        formData.append('file', preview.file)
-        formData.append('thing_id', String(thingId))
-        formData.append('label', preview.file.name)
-        formData.append('name', preview.file.name)
-
-        await provider.custom({
-          url: 'asset/upload-and-record',
-          method: 'post',
-          payload: formData,
-        })
+        await uploadAssetMutation.mutateAsync(preview)
 
         revokePreviewUrl(preview)
         uploadedCount += 1
       } catch (error) {
         console.error(error)
+
         failedPreviewIds.add(preview.id)
         const message = getUploadErrorMessage(error)
         setUploadPreviews((currentPreviews) =>
@@ -321,7 +335,6 @@ export const AttachmentsCard = ({
         message: 'Attachment upload failed',
         description: 'Review the files in the dialog and try again.',
       })
-      setIsUploading(false)
       return
     }
 
@@ -521,8 +534,8 @@ export const AttachmentsCard = ({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <Box className="space-y-4">
+            <Box className="space-y-2">
               <Label htmlFor="well-attachment-upload">Files</Label>
               <Input
                 id="well-attachment-upload"
@@ -532,53 +545,54 @@ export const AttachmentsCard = ({
                 onChange={handleFileSelection}
                 className="h-auto cursor-pointer py-2"
               />
-              <p className="text-muted-foreground text-sm">
+              <Typography className="text-muted-foreground text-sm">
                 Allowed types: JPG, PNG, GIF, WEBP, TIFF, PDF, TXT. Maximum file
                 size: 250 MB.
-              </p>
+              </Typography>
               {uploadError ? (
                 <p className="text-sm text-red-600">{uploadError}</p>
               ) : null}
-            </div>
+            </Box>
 
             {uploadPreviews.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
+              <Box className="grid gap-4 md:grid-cols-2">
                 {uploadPreviews.map((preview) => (
-                  <div
+                  <Box
                     key={preview.id}
                     className="bg-background rounded-lg border p-4"
                   >
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
+                    <Box className="mb-3 flex items-start justify-between gap-3">
+                      <Box className="min-w-0">
+                        <Typography className="truncate text-sm font-medium">
                           {preview.file.name}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
+                        </Typography>
+                        <Typography className="text-muted-foreground text-xs">
                           {preview.file.type || 'Unknown file type'} ·{' '}
                           {formatFileSize(preview.file.size)}
-                        </p>
-                      </div>
+                        </Typography>
+                      </Box>
                       <UiButton
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => handleRemoveUpload(preview.id)}
-                        disabled={isUploading}
+                        disabled={uploadAssetMutation.isPending}
                       >
                         Remove
                       </UiButton>
-                    </div>
+                    </Box>
 
                     {preview.error ? (
-                      <p className="mb-3 text-sm text-red-600">
+                      <Typography className="mb-3 text-sm text-red-600">
                         {preview.error}
-                      </p>
+                      </Typography>
                     ) : null}
 
-                    <div className="bg-muted flex min-h-40 items-center justify-center overflow-hidden rounded-md border">
+                    <Box className="bg-muted flex min-h-40 items-center justify-center overflow-hidden rounded-md border">
                       {preview.file.type.startsWith('image/') &&
                       preview.previewUrl ? (
-                        <img
+                        <Box
+                          component="img"
                           src={preview.previewUrl}
                           alt={preview.file.name}
                           className="max-h-64 w-full object-contain"
@@ -595,45 +609,47 @@ export const AttachmentsCard = ({
                           {preview.textPreview}
                         </pre>
                       ) : (
-                        <p className="text-muted-foreground p-3 text-sm text-center">
+                        <Typography className="text-muted-foreground p-3 text-sm text-center">
                           Preview not available for this file.
-                        </p>
+                        </Typography>
                       )}
-                    </div>
+                    </Box>
 
-                    <div className="mt-3">
+                    <Box className="mt-3">
                       <Chip
                         label={preview.error ? 'Invalid' : 'Ready to upload'}
                         color={preview.error ? 'error' : 'success'}
                         size="small"
                         variant="outlined"
                       />
-                    </div>
-                  </div>
+                    </Box>
+                  </Box>
                 ))}
-              </div>
+              </Box>
             ) : (
-              <div className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
+              <Typography className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
                 No files selected yet.
-              </div>
+              </Typography>
             )}
-          </div>
+          </Box>
 
           <DialogFooter>
             <UiButton
               type="button"
               variant="outline"
               onClick={() => handleDialogOpenChange(false)}
-              disabled={isUploading}
+              disabled={uploadAssetMutation.isPending}
             >
               Cancel
             </UiButton>
             <UiButton
               type="button"
               onClick={handleUploadSubmit}
-              disabled={isUploading || uploadPreviews.length === 0}
+              disabled={
+                uploadAssetMutation.isPending || uploadPreviews.length === 0
+              }
             >
-              {isUploading ? 'Uploading...' : 'Upload files'}
+              {uploadAssetMutation.isPending ? 'Uploading...' : 'Upload files'}
             </UiButton>
           </DialogFooter>
         </DialogContent>
@@ -722,9 +738,29 @@ const AssetPreviewWithOverlay = ({
 }) => {
   const isSlideshow = variant === 'slideshow'
 
+  const getRefreshedAsset = async (
+    assetId: IAsset['id'],
+    refetchAssetsQuery: () => Promise<
+      QueryObserverResult<GetListResponse<IAsset>, HttpError>
+    >
+  ) => {
+    const refetchResult = await refetchAssetsQuery()
+    const refreshedAssets = refetchResult.data?.data ?? []
+
+    const refreshedAsset = refreshedAssets.find(
+      (item: IAsset) => item.id === assetId
+    )
+
+    if (!refreshedAsset?.signed_url) {
+      throw new Error('Could not refresh signed URL')
+    }
+
+    return refreshedAsset
+  }
+
   const downloadAsset = async (
     asset: IAsset,
-    refetchAssets: () => Promise<
+    refetchAssetsQuery: () => Promise<
       QueryObserverResult<GetListResponse<IAsset>, HttpError>
     >
   ) => {
@@ -751,22 +787,17 @@ const AssetPreviewWithOverlay = ({
     try {
       await downloadFromUrl(asset.signed_url, asset.name)
     } catch (error) {
-      if (!(error instanceof Response) || error.status !== 403) {
+      if (
+        !(error instanceof Response) ||
+        error.status !== HttpStatus.FORBIDDEN
+      ) {
         throw error
       }
 
-      const refetchResult = await refetchAssets()
-      const refreshedAssets =
-        refetchResult.data?.data ?? refetchResult.data ?? []
-
-      const refreshedAsset = refreshedAssets.find(
-        (item: IAsset) => item.id === asset.id
+      const refreshedAsset = await getRefreshedAsset(
+        asset.id,
+        refetchAssetsQuery
       )
-
-      if (!refreshedAsset?.signed_url) {
-        throw new Error('Could not refresh signed URL')
-      }
-
       await downloadFromUrl(refreshedAsset.signed_url, refreshedAsset.name)
     }
   }
@@ -823,7 +854,9 @@ const AssetPreviewWithOverlay = ({
           size="small"
           onClick={(event) => {
             event.stopPropagation()
-            downloadAsset(asset, refetchAssets)
+
+            if (!asset?.signed_url) return
+            void downloadAsset(asset, refetchAssets).catch(console.error)
           }}
           sx={{
             position: 'absolute',
