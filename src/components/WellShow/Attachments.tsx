@@ -3,15 +3,17 @@ import {
   Box,
   ButtonBase,
   IconButton,
-  Paper,
   Stack,
   Typography,
   Tooltip,
   Button,
+  Card,
+  CardHeader,
 } from '@mui/material'
 import {
   ChevronLeft,
   ChevronRight,
+  FileUpload,
   GridView,
   Image,
   ViewCarousel,
@@ -20,6 +22,7 @@ import { Masonry } from '@mui/lab'
 import type { IAsset } from '@/interfaces/ocotillo'
 import { QueryObserverResult } from '@tanstack/react-query'
 import { GetListResponse, HttpError } from '@refinedev/core'
+import { CardHeaderTitle } from '../card'
 
 type PreviewViewMode = 'grid' | 'slideshow'
 
@@ -31,6 +34,10 @@ const isText = (asset: IAsset) => asset.mime_type === 'text/plain'
 
 const canPreview = (asset: IAsset) =>
   Boolean(asset.signed_url) && (isImage(asset) || isPdf(asset) || isText(asset))
+
+const HeaderTitle = () => (
+  <CardHeaderTitle icon={<Image color="primary" />} title="Attachments" />
+)
 
 export const AttachmentsCard = ({
   assets,
@@ -53,15 +60,14 @@ export const AttachmentsCard = ({
   const hasAssets = previewAssets.length > 0
 
   return (
-    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box
-        sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
-      >
-        <Image color="primary" />
-        <Typography variant="body1" fontWeight="bold">
-          Attachments
-        </Typography>
-      </Box>
+    <Card
+      elevation={2}
+      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+    >
+      <CardHeader
+        title={<HeaderTitle />}
+        action={<Button startIcon={<FileUpload />}>File Upload</Button>}
+      />
       <Box sx={{ p: 3 }}>
         {isLoading ? (
           <Box textAlign="center" py={4}>
@@ -227,7 +233,7 @@ export const AttachmentsCard = ({
           </Stack>
         )}
       </Box>
-    </Paper>
+    </Card>
   )
 }
 
