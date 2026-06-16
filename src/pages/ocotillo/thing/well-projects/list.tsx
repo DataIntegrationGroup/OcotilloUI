@@ -63,13 +63,13 @@ export const WellProjectList: React.FC = () => {
         flex: 1.5,
         valueGetter: (_: unknown, row: IGroup) => row.description?.trim() || '—',
       },
+      releaseStatusColumnDef<IGroup>(),
       {
         field: 'group_type',
         headerName: 'Type',
         type: 'string',
         width: 140,
       },
-      releaseStatusColumnDef<IGroup>(),
       {
         field: 'parent_group_id',
         headerName: 'Parent Group',
