@@ -1,14 +1,16 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router'
 import {
   CanAccess,
+  useCustomMutation,
   useGetIdentity,
   useIsExistAuthentication,
   useLogout,
   useTranslate,
   useWarnAboutChange,
   useOne,
+  type HttpError,
 } from '@refinedev/core'
 import {
   Sidebar,
@@ -17,22 +19,22 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
-  SidebarInset,
+  AppContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarProvider,
+  AppLayout,
   SidebarSeparator,
-  useSidebar,
 } from '@/components/ui/sidebar'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { useSidebar } from '@/components/ui/use-sidebar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -43,14 +45,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  Bug,
   Check,
   ChevronDown,
   ChevronRight,
   FlaskConical,
-  LifeBuoy,
   Lock,
   LogOut,
+  Menu,
   Moon,
+  Search,
   Sun,
   User,
   X,
@@ -58,15 +62,16 @@ import {
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
-import { PRIMARY_NAV, RESOURCE_NAV } from '@/config/navigation'
+import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
+import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
+import { SupportPanelContext } from '@/components/SupportPanelContext'
+import { NewVersionBanner } from '@/components/NewVersionBanner'
+import pkg from '../../package.json'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 
-// Support panel state shared between the sidebar footer button and the panel itself
-const SupportPanelContext = createContext<{
-  isOpen: boolean
-  open: () => void
-  close: () => void
-}>({ isOpen: false, open: () => {}, close: () => {} })
+export { SupportPanelContext }
 
 // Collapse icon — shown in header when sidebar is expanded
 function IconCollapse() {
@@ -110,32 +115,41 @@ function IconExpand() {
   )
 }
 
-// Collapse button — lives in the sidebar header, only visible when sidebar is open
+// Collapse button — lives in the sidebar header, only visible when sidebar is open.
+// Uses Button primitive rather than SidebarTrigger because SidebarTrigger is
+// hardcoded to PanelLeftIcon and doesn't allow swapping icons based on state.
 function CollapseButton() {
   const { toggleSidebar } = useSidebar()
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={toggleSidebar}
       title="Collapse sidebar"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      aria-label="Collapse sidebar"
+      className="shrink-0 text-muted-foreground hover:text-foreground"
     >
       <IconCollapse />
-    </button>
+    </Button>
   )
 }
 
-// Expand button — lives in the main header bar, only visible when sidebar is collapsed
+// Expand button — hamburger on mobile, expand icon on desktop when sidebar is collapsed.
+// Same reasoning as CollapseButton for using Button over SidebarTrigger.
 function ExpandButton() {
-  const { state, toggleSidebar } = useSidebar()
-  if (state !== 'collapsed') return null
+  const { state, isMobile, toggleSidebar } = useSidebar()
+  if (!isMobile && state !== 'collapsed') return null
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={toggleSidebar}
-      title="Open sidebar"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      title={isMobile ? 'Open navigation' : 'Open sidebar'}
+      aria-label={isMobile ? 'Open navigation' : 'Open sidebar'}
+      className="shrink-0 text-muted-foreground hover:text-foreground"
     >
-      <IconExpand />
-    </button>
+      {isMobile ? <Menu className="size-5" /> : <IconExpand />}
+    </Button>
   )
 }
 
@@ -185,30 +199,14 @@ function SidebarBrand() {
 
 function AppSidebar() {
   const location = useLocation()
-  const { mode, setMode } = useContext(ColorModeContext)
-  const isExistAuthentication = useIsExistAuthentication()
-  const { warnWhen, setWarnWhen } = useWarnAboutChange()
-  const { mutate: logout } = useLogout()
-  const translate = useTranslate()
   const { state } = useSidebar()
   const { openSearch } = useSearch()
+  const { roles: userRoles } = useAccessCapabilities()
   const collapsed = state === 'collapsed'
 
-  const handleLogout = () => {
-    if (warnWhen) {
-      const confirmed = window.confirm(
-        translate(
-          'warnWhenUnsavedChanges',
-          'Are you sure you want to leave? You have unsaved changes.'
-        )
-      )
-      if (confirmed) {
-        setWarnWhen(false)
-        logout()
-      }
-    } else {
-      logout()
-    }
+  const canSeeNavItem = (itemRoles: NavItem['roles']) => {
+    if (!itemRoles) return true
+    return itemRoles.some((r) => userRoles.includes(r))
   }
 
   return (
@@ -233,7 +231,9 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {PRIMARY_NAV.map(({ id, label, href, icon: Icon, disabled, resource }) => {
+              {PRIMARY_NAV.map(({ id, label, href, icon: Icon, disabled, resource, roles }) => {
+                if (!canSeeNavItem(roles)) return null
+
                 const button = id === 'search' ? (
                   <SidebarMenuButton onClick={openSearch} tooltip={label}>
                     <Icon />
@@ -282,28 +282,32 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {RESOURCE_NAV.map(({ label, href, icon: Icon, resource, adminOnly }) => (
-                <CanAccess key={`resource-${href}`} resource={resource!} action="list">
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={activeHref(location.pathname) === href}
-                      tooltip={label}
-                    >
-                      <Link to={href!}>
-                        <Icon />
-                        <span>{label}</span>
-                        {adminOnly && (
-                          <Lock
-                            className="ml-auto text-muted-foreground/70 shrink-0"
-                            style={{ width: 11, height: 11 }}
-                          />
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </CanAccess>
-              ))}
+              {RESOURCE_NAV.map(({ label, href, icon: Icon, resource, roles }) => {
+                if (!canSeeNavItem(roles)) return null
+
+                return (
+                  <CanAccess key={`resource-${href}`} resource={resource!} action="list">
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={activeHref(location.pathname) === href}
+                        tooltip={label}
+                      >
+                        <Link to={href!}>
+                          <Icon />
+                          <span>{label}</span>
+                          {roles && !roles.includes(AmpRole.Viewer) && (
+                            <Lock
+                              className="ml-auto text-muted-foreground/70 shrink-0"
+                              style={{ width: 11, height: 11 }}
+                            />
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </CanAccess>
+                )
+              })}
               {/* ── TEMPORARY: Example section — hidden until editing-tools is ready ── */}
               <ExampleNavItem />
             </SidebarMenu>
@@ -327,8 +331,15 @@ function AppSidebar() {
           </div>
         )}
 
-        {/* Help & Support button — hidden until panel content is defined */}
         <SupportPanelTrigger collapsed={collapsed} />
+
+        {!collapsed && (
+          <div className="px-3 pb-2">
+            <span className="text-xs text-muted-foreground/60">
+              v{pkg.version}
+            </span>
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   )
@@ -389,34 +400,121 @@ function SupportPanelTrigger({ collapsed }: { collapsed: boolean }) {
     <div className="border-t px-2 py-2">
       <button
         onClick={isOpen ? close : open}
-        title="Help &amp; Support"
+        title="Report a bug or request a feature"
         className={cn(
-          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent',
+          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent cursor-pointer',
           collapsed && 'justify-center',
           isOpen ? 'text-foreground bg-accent' : 'text-muted-foreground hover:text-foreground'
         )}
       >
-        <LifeBuoy className="size-4 shrink-0" />
-        {!collapsed && <span>Help &amp; Support</span>}
+        <Bug className="size-4 shrink-0" />
+        {!collapsed && <span>Get Help</span>}
       </button>
     </div>
   )
 }
 
 const PANEL_MIN_WIDTH = 320
-const PANEL_DEFAULT_WIDTH = 320
+const PANEL_DEFAULT_WIDTH = 360
+
+type PanelView = 'home' | 'bug' | 'feature'
+
+interface FeedbackResponse {
+  jira_key: string
+  jira_url: string
+}
+
+interface FeedbackPayload {
+  type: 'bug' | 'feature'
+  page_url: string
+  reporter_name?: string
+  reporter_email?: string
+  browser: string
+  what_happened?: string
+  severity?: string
+  problem?: string
+  who_would_use?: string
+  what_it_should_do?: string
+}
+
+function getFeedbackErrorMessage(error: HttpError): string {
+  const detail = error.response?.data?.detail
+  if (Array.isArray(detail) && detail[0]?.msg) {
+    return detail[0].msg
+  }
+  return error.message || 'Something went wrong. Please try again.'
+}
+
+interface BugFormData {
+  whatHappened: string
+  severity: string
+}
+
+interface FeatureFormData {
+  problem: string
+  whoWouldUse: string
+  whatItShouldDo: string
+}
+
+function getBrowser(): string {
+  const ua = navigator.userAgent
+  if (ua.includes('Chrome') && !ua.includes('Edg')) return 'Chrome'
+  if (ua.includes('Firefox')) return 'Firefox'
+  if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari'
+  if (ua.includes('Edg')) return 'Edge'
+  return 'Unknown'
+}
 
 function SupportPanel() {
   const { isOpen, close } = useContext(SupportPanelContext)
+  const { data: user } = useGetIdentity<{ name: string; email: string }>()
+  const location = useLocation()
+
+  const [view, setView] = useState<PanelView>('home')
+  const { mutate, mutation } = useCustomMutation<FeedbackResponse>()
+  const { isPending, reset } = mutation
+  const [ticketKey, setTicketKey] = useState<string>('')
+  const [ticketUrl, setTicketUrl] = useState<string>('')
+  const [errorMsg, setErrorMsg] = useState<string>('')
+
+  const showSuccess = Boolean(ticketKey)
+  const showError = Boolean(errorMsg)
+  const formLocked = isPending || showSuccess
+
+  const clearSubmitFeedback = () => {
+    setErrorMsg('')
+    setTicketKey('')
+    setTicketUrl('')
+    reset()
+  }
+
+  const [bugForm, setBugForm] = useState<BugFormData>({ whatHappened: '', severity: 'Low' })
+  const [featureForm, setFeatureForm] = useState<FeatureFormData>({
+    problem: '',
+    whoWouldUse: '',
+    whatItShouldDo: '',
+  })
+
   const [width, setWidth] = useState(PANEL_DEFAULT_WIDTH)
   const outerRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
   const dragState = useRef<{ startX: number; startWidth: number } | null>(null)
 
+  // Reset to home view when panel closes
+  useEffect(() => {
+    if (!isOpen) {
+      setTimeout(() => {
+        setView('home')
+        clearSubmitFeedback()
+        setBugForm({ whatHappened: '', severity: 'Low' })
+        setFeatureForm({ problem: '', whoWouldUse: '', whatItShouldDo: '' })
+      }, 300)
+    }
+  }, [isOpen])
+
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     dragState.current = { startX: e.clientX, startWidth: width }
-    // Disable the CSS transition for the duration of the drag
     if (outerRef.current) outerRef.current.style.transition = 'none'
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
@@ -428,13 +526,11 @@ function SupportPanel() {
       const maxWidth = Math.floor(window.innerWidth / 2)
       const delta = dragState.current.startX - e.clientX
       const next = Math.min(maxWidth, Math.max(PANEL_MIN_WIDTH, dragState.current.startWidth + delta))
-      // Write directly to DOM — no React re-render per frame
       if (outerRef.current) outerRef.current.style.width = `${next}px`
       if (innerRef.current) innerRef.current.style.width = `${next}px`
     }
     const onMouseUp = () => {
       if (!dragState.current) return
-      // Commit final width to React state and restore transition
       const finalWidth = outerRef.current
         ? parseInt(outerRef.current.style.width, 10) || PANEL_DEFAULT_WIDTH
         : PANEL_DEFAULT_WIDTH
@@ -452,6 +548,53 @@ function SupportPanel() {
     }
   }, [])
 
+  const handleSubmit = (type: 'bug' | 'feature') => {
+    setErrorMsg('')
+    setTicketKey('')
+    setTicketUrl('')
+
+    const payload: FeedbackPayload = {
+      type,
+      page_url: window.location.href,
+      reporter_name: user?.name,
+      reporter_email: user?.email,
+      browser: getBrowser(),
+      ...(type === 'bug'
+        ? { what_happened: bugForm.whatHappened, severity: bugForm.severity }
+        : {
+            problem: featureForm.problem,
+            who_would_use: featureForm.whoWouldUse,
+            what_it_should_do: featureForm.whatItShouldDo,
+          }),
+    }
+
+    mutate(
+      {
+        url: 'feedback',
+        method: 'post',
+        values: payload,
+        dataProviderName: 'ocotillo',
+      },
+      {
+        onSuccess: ({ data }) => {
+          setTicketKey(data.jira_key)
+          setTicketUrl(data.jira_url)
+          setTimeout(() => {
+            setView('home')
+            clearSubmitFeedback()
+            setBugForm({ whatHappened: '', severity: 'Low' })
+            setFeatureForm({ problem: '', whoWouldUse: '', whatItShouldDo: '' })
+          }, 3000)
+        },
+        onError: (error) => {
+          setErrorMsg(getFeedbackErrorMessage(error))
+        },
+      }
+    )
+  }
+
+  const pageUrl = location.pathname
+
   return (
     <div
       ref={outerRef}
@@ -462,7 +605,7 @@ function SupportPanel() {
       style={isOpen ? { width } : undefined}
       aria-hidden={!isOpen}
     >
-      {/* Drag handle — updates DOM directly, no React state during drag */}
+      {/* Drag handle */}
       <div
         onMouseDown={onMouseDown}
         className="absolute left-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-primary/20 transition-colors z-10"
@@ -471,23 +614,280 @@ function SupportPanel() {
       <div ref={innerRef} className="flex h-full flex-col" style={{ width }}>
         {/* Panel header */}
         <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
-          <span className="font-semibold text-sm">Ocotillo Support</span>
+          <div className="flex items-center gap-2">
+            {view !== 'home' && (
+              <button
+                onClick={() => { setView('home'); clearSubmitFeedback() }}
+                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                aria-label="Back"
+              >
+                <ChevronRight className="size-4 rotate-180" />
+              </button>
+            )}
+            <span className="font-semibold text-sm">
+              {view === 'home' && 'Get Help'}
+              {view === 'bug' && 'Report a Bug'}
+              {view === 'feature' && 'Request a Feature'}
+            </span>
+          </div>
           <button
             onClick={close}
             className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            aria-label="Close support panel"
+            aria-label="Close panel"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        {/* Panel body — placeholder until content is defined */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-          <LifeBuoy className="size-10 text-muted-foreground/40" />
-          <p className="text-sm font-medium">Support coming soon</p>
-          <p className="text-xs text-muted-foreground">
-            This panel will contain help articles, contact options, and other support resources.
-          </p>
+        {/* Panel body */}
+        <div className="flex flex-1 flex-col overflow-y-auto">
+
+          {/* Home view */}
+          {view === 'home' && (
+            <div className="flex flex-col gap-3 p-4">
+              <p className="text-sm text-muted-foreground">
+                Found something broken or have a suggestion? Let us know.
+              </p>
+              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6, #06b6d4)' }}>
+                <button
+                  onClick={() => setView('bug')}
+                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
+                >
+                  <Bug className="size-5 shrink-0 mt-0.5 text-emerald-500" />
+                  <div>
+                    <p className="font-medium text-sm">Report a Bug</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Something is broken or not working as expected.
+                    </p>
+                  </div>
+                </button>
+              </div>
+              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #38bdf8, #0ea5e9, #6366f1)' }}>
+                <button
+                  onClick={() => setView('feature')}
+                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
+                >
+                  <User className="size-5 shrink-0 mt-0.5 text-sky-500" />
+                  <div>
+                    <p className="font-medium text-sm">Request a Feature</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Describe something you need that Ocotillo doesn&apos;t do yet.
+                    </p>
+                  </div>
+                </button>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground px-1">
+                For urgent issues, email{' '}
+                <a
+                  href="mailto:ocotillo-nmbg@nmt.edu"
+                  className="underline hover:text-foreground"
+                >
+                  ocotillo-nmbg@nmt.edu
+                </a>
+              </p>
+            </div>
+          )}
+
+          {/* Bug form */}
+          {view === 'bug' && (
+            <div className="flex flex-col gap-4 p-4">
+              {/* Auto-captured context */}
+              <div className="rounded-md bg-orange-100 dark:bg-orange-950/40 p-3 flex flex-col gap-1.5">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Captured automatically</p>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Page:</span> {pageUrl}
+                </p>
+                {user?.name && (
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Reported by:</span> {user.name}
+                  </p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Browser:</span> {getBrowser()}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Date & time:</span>{' '}
+                  {new Date().toLocaleString(undefined, {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="bug-what-happened" className="text-sm">
+                  What happened? <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="bug-what-happened"
+                  placeholder={"Describe what went wrong.\n\nInclude:\n• What you expected to happen\n• What actually happened\n• Steps to reproduce"}
+                  rows={7}
+                  value={bugForm.whatHappened}
+                  onChange={(e) => setBugForm((f) => ({ ...f, whatHappened: e.target.value }))}
+                  disabled={formLocked}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label className="text-sm">Severity</Label>
+                {[
+                  { value: 'Low', label: 'Low', description: 'Minor annoyance, workaround exists' },
+                  { value: 'Medium', label: 'Medium', description: 'Impacts my workflow' },
+                  { value: 'High', label: 'High', description: 'Blocking, data loss, or completely broken' },
+                ].map(({ value, label, description }) => (
+                  <label
+                    key={value}
+                    className={cn(
+                      'flex items-start gap-3 rounded-md border p-3 cursor-pointer transition-colors',
+                      bugForm.severity === value
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:bg-accent',
+                      (formLocked) && 'pointer-events-none opacity-50'
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="severity"
+                      value={value}
+                      checked={bugForm.severity === value}
+                      onChange={() => setBugForm((f) => ({ ...f, severity: value }))}
+                      disabled={formLocked}
+                      className="mt-0.5 accent-primary"
+                    />
+                    <div>
+                      <p className="text-sm font-medium leading-tight">{label}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {showSuccess && (
+                <div className="rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 text-sm text-green-800 dark:text-green-300">
+                  Bug filed —{' '}
+                  <a href={ticketUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
+                    {ticketKey}
+                  </a>
+                  . Thanks!
+                </div>
+              )}
+
+              {showError && (
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                  {errorMsg}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setView('home'); clearSubmitFeedback() }}
+                  disabled={isPending}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handleSubmit('bug')}
+                  disabled={!bugForm.whatHappened.trim() || formLocked}
+                  className="flex-1"
+                >
+                  {isPending ? 'Submitting…' : 'Submit Bug'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Feature request form */}
+          {view === 'feature' && (
+            <div className="flex flex-col gap-4 p-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="feat-problem" className="text-sm">
+                  What problem does this solve? <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="feat-problem"
+                  placeholder="Describe the pain point or gap in the current workflow."
+                  rows={4}
+                  value={featureForm.problem}
+                  onChange={(e) => setFeatureForm((f) => ({ ...f, problem: e.target.value }))}
+                  disabled={formLocked}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="feat-who" className="text-sm">
+                  Who would use this?{' '}
+                  <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <input
+                  id="feat-who"
+                  type="text"
+                  placeholder="e.g. field staff, all users, data managers"
+                  value={featureForm.whoWouldUse}
+                  onChange={(e) => setFeatureForm((f) => ({ ...f, whoWouldUse: e.target.value }))}
+                  disabled={formLocked}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="feat-what" className="text-sm">
+                  What should it do? <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="feat-what"
+                  placeholder="Describe the feature and how it should work."
+                  rows={4}
+                  value={featureForm.whatItShouldDo}
+                  onChange={(e) => setFeatureForm((f) => ({ ...f, whatItShouldDo: e.target.value }))}
+                  disabled={formLocked}
+                />
+              </div>
+
+              {showSuccess && (
+                <div className="rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 text-sm text-green-800 dark:text-green-300">
+                  Request filed —{' '}
+                  <a href={ticketUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
+                    {ticketKey}
+                  </a>
+                  . Thanks!
+                </div>
+              )}
+
+              {showError && (
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                  {errorMsg}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setView('home'); clearSubmitFeedback() }}
+                  disabled={isPending}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handleSubmit('feature')}
+                  disabled={
+                    !featureForm.problem.trim() ||
+                    !featureForm.whatItShouldDo.trim() ||
+                    formLocked
+                  }
+                  className="flex-1"
+                >
+                  {isPending ? 'Submitting…' : 'Submit Request'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -551,6 +951,7 @@ function ShellHeader() {
   const { mutate: logout } = useLogout()
   const translate = useTranslate()
   const { mode, setMode } = useContext(ColorModeContext)
+  const { openSearch } = useSearch()
 
   const initials = user?.name
     ? user.name
@@ -579,18 +980,33 @@ function ShellHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-3 border-b bg-background px-3">
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3">
       <ExpandButton />
-      <HeaderBreadcrumb />
-      <div className="shrink-0 max-w-sm w-full ml-4">
+      <div className="min-w-0 shrink overflow-hidden">
+        <HeaderBreadcrumb />
+      </div>
+      {/* Search bar — hidden on mobile, visible sm+ */}
+      <div className="hidden sm:block shrink-0 max-w-sm w-full ml-0">
         <SearchBar />
       </div>
-      <div className="ml-auto flex items-center gap-2 shrink-0">
-        <ReportBugButton user={user} />
+      <div className="ml-auto flex items-center gap-1 shrink-0">
+        {/* Mobile search icon */}
+        <button
+          className="sm:hidden flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          onClick={openSearch}
+          aria-label="Search"
+        >
+          <Search className="size-4" />
+        </button>
+        <ReportBugButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 px-2.5 gap-1.5 font-semibold">
-              {user?.name || 'User'}
+            <Button variant="ghost" className="h-8 px-2 sm:px-2.5 gap-1.5 font-semibold cursor-pointer">
+              {/* Avatar on mobile, full name on sm+ */}
+              <span className="flex sm:hidden size-7 rounded bg-primary items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+                {initials}
+              </span>
+              <span className="hidden sm:inline">{user?.name || 'User'}</span>
               <ChevronDown className="size-3.5 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
@@ -687,12 +1103,13 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
     <SupportPanelContext.Provider value={{ isOpen: panelOpen, open: openPanel, close: closePanel }}>
       <SidebarAutoCollapse />
       <AppSidebar />
-      <SidebarInset className="min-w-0">
+      <AppContent className="min-w-0">
+        <NewVersionBanner />
         <ShellHeader />
-        <main className="flex flex-col flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {children ?? <Outlet />}
-        </main>
-      </SidebarInset>
+        </div>
+      </AppContent>
       <SupportPanel />
     </SupportPanelContext.Provider>
   )
@@ -700,10 +1117,8 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
 
 export const AppShell = ({ children }: { children?: React.ReactNode }) => {
   return (
-    // overflow-x-clip on the provider prevents wide page content (DataGrid etc.)
-    // from creating a body-level horizontal scrollbar that slides under the sidebar
-    <SidebarProvider className="overflow-x-clip">
+    <AppLayout className="h-svh overflow-hidden">
       <AppShellInner>{children}</AppShellInner>
-    </SidebarProvider>
+    </AppLayout>
   )
 }

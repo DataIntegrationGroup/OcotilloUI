@@ -1,6 +1,6 @@
 import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
 
-let criticalminerals = [
+const criticalminerals = [
   {
     name: "dashboard",
     list: "/criticalminerals/dashboard",
@@ -12,7 +12,7 @@ let criticalminerals = [
 ];
 
 export const criticalMineralResources = criticalminerals.map((g) => {
-  let meta = g.meta || {};
+  const meta = g.meta || {};
   meta["parent"] = "criticalminerals";
   meta["dataProviderName"] = "criticalminerals";
 

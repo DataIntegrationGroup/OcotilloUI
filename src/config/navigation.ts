@@ -11,6 +11,18 @@ import {
   Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import type { PortalRole } from '@/utils/accessControl'
+
+/**
+ * Convenience references to AMP role strings.
+ * Uses a const object rather than an enum so the values are assignable to
+ * the existing PortalRole string union type without casting.
+ */
+export const AmpRole = {
+  Viewer: 'AMP.Viewer',
+  Editor: 'AMP.Editor',
+  Admin:  'AMP.Admin',
+} as const satisfies Record<string, PortalRole>
 
 export type NavItem = {
   label: string
@@ -26,20 +38,20 @@ export type NavItem = {
    */
   resource?: string
   /**
+   * Which portal roles can see this item. Omit to make it visible to all
+   * authenticated users. AppShell uses this to filter nav items before
+   * rendering; CanAccess provides a second layer of enforcement at runtime.
+   */
+  roles?: PortalRole[]
+  /**
    * Renders as non-interactive. Use for features not yet implemented.
    */
   disabled?: boolean
-  /**
-   * Shows a lock badge next to the label. Set on items only AMP.Admin can see.
-   * Non-admins never see these items (CanAccess hides them); the badge is for
-   * admins who need to understand why an item is restricted.
-   */
-  adminOnly?: boolean
 }
 
 /**
  * Top bar: views and tools.
- * Items without a `resource` are visible to every authenticated user.
+ * Items without `roles` are visible to every authenticated user.
  */
 export const PRIMARY_NAV: NavItem[] = [
   {
@@ -52,67 +64,71 @@ export const PRIMARY_NAV: NavItem[] = [
     label: 'Search',
     href: null,
     icon: Search,
-    // AppShell wires onClick={openSearch} for this id
   },
   {
     label: 'Map',
     href: '/ocotillo/map',
     icon: MapIcon,
-    resource: 'ocotillo.map', // AMP.Viewer+
+    resource: 'ocotillo.map',
   },
 ]
 
+const viewerAndAbove: PortalRole[] = [AmpRole.Viewer, AmpRole.Editor, AmpRole.Admin]
+const adminOnly: PortalRole[] = [AmpRole.Admin]
+
 /**
  * Data section: record management and tools.
- * Each item is gated by CanAccess(resource, action="list").
- *
- * AMP.Viewer+  — Wells, Field Sheets, Contacts, Datasets
- * AMP.Admin    — Locations, Lexicon, Hydrograph Correction
+ * Each item is gated by its `roles` array in AppShell, with CanAccess as a
+ * second enforcement layer.
  */
 export const RESOURCE_NAV: NavItem[] = [
   {
     label: 'Wells',
     href: '/ocotillo/well',
     icon: Droplets,
-    resource: 'ocotillo.thing-well', // AMP.Viewer+
+    resource: 'ocotillo.thing-well',
+    roles: viewerAndAbove,
   },
   {
     label: 'Field Sheets',
     href: '/ocotillo/well/batch-export',
     icon: FileText,
-    resource: 'ocotillo.thing-well-batch-export', // AMP.Viewer+
+    resource: 'ocotillo.thing-well-batch-export',
+    roles: viewerAndAbove,
   },
   {
     label: 'Contacts',
     href: '/ocotillo/contact',
     icon: Users,
-    resource: 'ocotillo.contact', // AMP.Viewer+
+    resource: 'ocotillo.contact',
+    roles: viewerAndAbove,
   },
   {
     label: 'Datasets',
     href: '/ocotillo/collections',
     icon: Database,
-    resource: 'ocotillo.collections', // AMP.Viewer+
+    resource: 'ocotillo.collections',
+    roles: viewerAndAbove,
   },
   {
     label: 'Locations',
     href: '/ocotillo/location',
     icon: MapPin,
-    resource: 'ocotillo.location', // AMP.Admin only
-    adminOnly: true,
+    resource: 'ocotillo.location',
+    roles: adminOnly,
   },
   {
     label: 'Lexicon',
     href: '/ocotillo/lexicon',
     icon: BookOpen,
-    resource: 'ocotillo.lexicon', // AMP.Admin only
-    adminOnly: true,
+    resource: 'ocotillo.lexicon',
+    roles: adminOnly,
   },
   {
     label: 'Hydrograph Correction',
     href: '/ocotillo/hydrograph-correction',
     icon: LineChart,
-    resource: 'ocotillo.hydrograph-correction', // AMP.Admin only
-    adminOnly: true,
+    resource: 'ocotillo.hydrograph-correction',
+    roles: adminOnly,
   },
 ]

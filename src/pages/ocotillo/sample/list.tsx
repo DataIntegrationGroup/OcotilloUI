@@ -4,10 +4,11 @@ import { GridColDef } from '@mui/x-data-grid'
 import { ListPage } from '@/components'
 import { ISample } from '@/interfaces/ocotillo/ISample'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { extractThingTypeResource, linkColumn } from '@/utils'
+import { extractThingTypeResource, linkColumn, useLink } from '@/utils'
 import { formatAppDateTime } from '@/utils'
 
 export const SampleList: React.FC = () => {
+  const Link = useLink()
   const { dataGridProps } = useDataGrid<ISample>({
     resource: 'sample',
     dataProviderName: 'ocotillo',
@@ -67,6 +68,7 @@ export const SampleList: React.FC = () => {
       // TODO: this is an issue because thing_id may not link to a Well. It may link to some other type of thing,
       //  e.g. a Spring.
       linkColumn(
+        Link,
         extractThingTypeResource((params) => params.row.thing?.thing_type),
         {
           field: 'thing.id',

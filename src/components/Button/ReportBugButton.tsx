@@ -1,43 +1,21 @@
-import { Button } from '@mui/material'
-import { BugReportOutlined } from '@mui/icons-material'
-import { buildBugReportUrl } from '@/utils'
+import { useContext } from 'react'
+import { Bug } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { SupportPanelContext } from '@/components/SupportPanelContext'
 
-interface ReportBugButtonProps {
-  user?: {
-    name?: string
-    email?: string
-  }
-}
-
-export const ReportBugButton = ({ user }: ReportBugButtonProps) => {
-  const handleClick = () => {
-    const url = buildBugReportUrl({
-      userName: user?.name,
-      userEmail: user?.email,
-    })
-    window.open(url, '_blank', 'noopener,noreferrer')
-  }
+export const ReportBugButton = () => {
+  const { open } = useContext(SupportPanelContext)
 
   return (
     <Button
-      onClick={handleClick}
-      size="small"
-      variant="text"
-      startIcon={<BugReportOutlined sx={{ fontSize: '0.9rem !important', mr: -0.5 }} />}
+      variant="ghost"
+      size="sm"
+      onClick={open}
       aria-label="Get help / report a bug"
-      sx={{
-        textTransform: 'none',
-        color: 'text.secondary',
-        fontSize: '0.8rem',
-        fontWeight: 400,
-        minWidth: 0,
-        px: 1.5,
-        borderRadius: 999,
-        whiteSpace: 'nowrap',
-        '&:hover': { color: 'text.primary', bgcolor: 'action.hover' },
-      }}
+      className="h-8 px-2 sm:px-2.5 gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer"
     >
-      Get Help
+      <Bug className="size-4 shrink-0" />
+      <span className="hidden sm:inline text-sm font-normal">Get Help</span>
     </Button>
   )
 }

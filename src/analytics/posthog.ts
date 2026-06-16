@@ -5,11 +5,42 @@ const posthogHost =
   import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com'
 const appEnv = import.meta.env.VITE_APP_ENV || 'production'
 
+/** Canonical production app host (matches GAE production deploy). */
+export const PRODUCTION_HOSTNAME = 'ocotillo.newmexicowaterdata.org'
+
 // PostHog runs on any deployment that has a key (staging + production).
 // Local dev has no key, so it is never enabled.
 const isEnabled = Boolean(posthogKey)
 
 let initialized = false
+
+/** True on the live production site only (not staging, previews, or local). */
+export const isProductionDeployment = (): boolean => {
+  if (appEnv !== 'production') return false
+  if (typeof window === 'undefined') return false
+  return window.location.hostname === PRODUCTION_HOSTNAME
+}
+
+/** Session replay is production-only and starts after the user is identified. */
+export const shouldRecordSessions = (): boolean => isProductionDeployment()
+
+const sessionRecordingConfig = {
+  maskInputFn: (text: string, element?: Element | null) => {
+    const el = element as HTMLInputElement | undefined
+    if (el?.type === 'password') {
+      return '*'.repeat(text.length)
+    }
+    // ph-no-mask is PostHog's standard class for opting inputs out of masking.
+    // Check the element and its ancestors so the class can be set on a wrapper.
+    if (
+      el?.classList?.contains('ph-no-mask') ||
+      el?.closest?.('.ph-no-mask')
+    ) {
+      return text
+    }
+    return '*'.repeat(text.length)
+  },
+}
 
 export const initPostHog = () => {
   if (!isEnabled || initialized) return
@@ -19,21 +50,10 @@ export const initPostHog = () => {
     capture_pageview: false,
     capture_pageleave: true,
     capture_exceptions: true,
-    session_recording: {
-      maskInputFn: (text, element) => {
-        const el = element as HTMLInputElement | undefined
-        if (el?.type === 'password') {
-          return '*'.repeat(text.length)
-        }
-        if (
-          el?.hasAttribute?.('data-posthog-unmask-search') ||
-          el?.closest?.('[data-posthog-unmask-search]')
-        ) {
-          return text
-        }
-        return '*'.repeat(text.length)
-      },
-    },
+    // Disabled at init; started manually after identify so recordings are
+    // always tied to an authenticated person, and only on production.
+    disable_session_recording: true,
+    ...(shouldRecordSessions() ? { session_recording: sessionRecordingConfig } : {}),
   })
 
   // Tag every event with the environment so staging visits are
@@ -93,7 +113,23 @@ export const identifyUser = (
   properties: { name?: string; email?: string }
 ) => {
   if (!isEnabled || !initialized) return
-  posthog.identify(userId, properties)
+
+  const personProps: Record<string, string | undefined> = {
+    name: properties.name,
+    email: properties.email,
+  }
+  // $email is the PostHog reserved property that surfaces in the person list.
+  if (properties.email) {
+    personProps.$email = properties.email
+  }
+
+  posthog.identify(userId, personProps)
+}
+
+/** Call after identify on production so replay is tied to the authenticated person. */
+export const startSessionRecordingIfEligible = () => {
+  if (!isEnabled || !initialized || !shouldRecordSessions()) return
+  posthog.startSessionRecording()
 }
 
 export const captureEvent = (
@@ -109,3 +145,25 @@ export const resetUser = () => {
   posthog.reset()
 }
 
+export const setPersonProperties = (
+  properties: Record<string, unknown>
+) => {
+  if (!isEnabled || !initialized) return
+  posthog.setPersonProperties(properties)
+}
+
+/**
+ * Reads browser-level accessibility and display preferences once per
+ * session and returns them as PostHog person properties. Called after
+ * the user is identified so the values are attached to the person record.
+ */
+export const getAccessibilityProps = (): Record<string, unknown> => {
+  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize)
+  return {
+    browser_font_size_px: rootFontSize,
+    font_size_increased: rootFontSize > 16,
+    device_pixel_ratio: window.devicePixelRatio ?? 1,
+    prefers_reduced_motion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    prefers_high_contrast: window.matchMedia('(prefers-contrast: more)').matches,
+  }
+}

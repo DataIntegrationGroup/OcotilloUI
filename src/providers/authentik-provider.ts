@@ -24,7 +24,7 @@ import {
 import { normalizeAccessControlGroups } from '@/utils/accessControl'
 
 const gravatarUrl = (email: string) => {
-  let hash = email.trim().toLowerCase()
+  const hash = email.trim().toLowerCase()
   return `https://www.gravatar.com/avatar/${sha256(hash)}`
 }
 

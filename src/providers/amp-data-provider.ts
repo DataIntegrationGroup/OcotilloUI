@@ -51,7 +51,7 @@ const getPhotos = async (id) => {
 
   const data = await response.data
 
-  let photos = await Promise.all(
+  const photos = await Promise.all(
     data.map(async (photo) => {
       try {
         const resp = await fetcher(`wells/photo/${photo.OLEPath}`)
