@@ -3,21 +3,31 @@ import { useDataProvider, useList, useResourceParams } from '@refinedev/core'
 import { captureEvent } from '@/analytics/posthog'
 import { useQuery } from '@tanstack/react-query'
 import { Show, useDataGrid } from '@refinedev/mui'
+import { PencilIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { EditPanelLayout } from '@/components/editing'
+import { WellEditPanel } from '@/components/WellEdit/WellEditPanel'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
   IAsset,
   IContact,
   IFieldEvent,
   IFieldEventParticipant,
+  IGroup,
   IWellDetails,
   IObservation,
   ISample,
   ISensor,
   IWellScreen,
 } from '@/interfaces/ocotillo'
-import { Box, Stack } from '@mui/material'
+import { Stack } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
-import { useAccessCapabilities, useSensorDeploymentRows } from '@/hooks'
+import {
+  useAccessCapabilities,
+  useSensorDeploymentRows,
+  useSidebarPanelSync,
+  useWellDetails,
+} from '@/hooks'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
@@ -29,13 +39,12 @@ import {
   AlternateIdsCard,
   USGSInfoCard,
   OSEPODInfoCard,
-  WellPDFPreviewButton,
+  WellPDFActionsButton,
   WellScreensCard,
   EquipmentCard,
   NotesAccordion,
   ConstructionInfoCard,
   GeologyInformationCard,
-  WellPDFDownloadButton,
   WellShowTitle,
   OwnerPermissionsCard,
   MonitoringInfoCard,
@@ -52,6 +61,7 @@ const EMPTY_FIELD_EVENTS: IFieldEvent[] = []
 const EMPTY_PARTICIPANTS: IFieldEventParticipant[] = []
 const EMPTY_MANUAL_HYDRO_ROWS: IObservation[] = []
 const EMPTY_TRANSDUCER_HYDRO_ROWS: TransducerObservationWithBlockResponse[] = []
+const EMPTY_GROUPS: IGroup[] = []
 
 export const WellShow = () => {
   const dataProvider = useDataProvider()
@@ -59,6 +69,12 @@ export const WellShow = () => {
     () => dataProvider('ocotillo'),
     [dataProvider]
   )
+
+  const {
+    isPanelOpen: isEditPanelOpen,
+    closePanel: closeEditPanel,
+    togglePanel: toggleEditPanel,
+  } = useSidebarPanelSync()
 
   const { id } = useResourceParams()
 
@@ -71,34 +87,9 @@ export const WellShow = () => {
       })
   }, [id])
 
-  const detailsQuery = useQuery({
-    queryKey: ['well-details', id],
-    enabled: Boolean(id),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    queryFn: async () => {
-      const response = await ocotilloDataProvider.custom({
-        url: `thing/water-well/${id}/details`,
-        method: 'get',
-      })
-
-      const data = response.data as IWellDetails
-      // Log full details payload in every environment (dev, staging, prod) for
-      // debugging. Visible only in the browser console when it is open.
-      const label = `[ocotillo] GET thing/water-well/${id}/details`
-      try {
-        const plain = JSON.parse(JSON.stringify(data)) as IWellDetails
-        console.log(label, plain)
-      } catch {
-        console.log(label, data)
-      }
-      console.log(
-        `${label} (full JSON, scroll or copy this if the object above will not expand)\n${JSON.stringify(data, null, 2)}`
-      )
-      return data
-    },
-  })
-  const { canViewAmp } = useAccessCapabilities()
+  const { query: detailsQuery, well, isLoading: isDetailsLoading } =
+    useWellDetails(id)
+  const { canViewAmp, canEditWell } = useAccessCapabilities()
 
   const { result: assetResult, query: assetQuery } = useList<IAsset>({
     resource: 'asset',
@@ -108,8 +99,6 @@ export const WellShow = () => {
       enabled: Boolean(id),
     },
   })
-  const well = detailsQuery.data?.well
-
   useEffect(() => {
     if (!well?.name) return
     const appTitle = import.meta.env.VITE_APP_TITLE || 'Ocotillo'
@@ -170,7 +159,6 @@ export const WellShow = () => {
     sensors,
   })
 
-  const isDetailsLoading = detailsQuery.isLoading
   const isPdfDataLoading = isDetailsLoading || assetQuery.isLoading
 
   const { dataGridProps: idLinkDataGridProps } = useDataGrid({
@@ -327,48 +315,76 @@ export const WellShow = () => {
   }, [manualHydrographRows, transducerHydrographRows])
 
   return (
-    <Show
-      goBack={false}
-      breadcrumb={false}
-      wrapperProps={{
-        elevation: 0,
-        sx: {
-          bgcolor: 'background.wrapper',
-          boxShadow: 'none',
-          borderRadius: 1,
-          padding: 0,
-        },
-      }}
-      title={<WellShowTitle well={well} isLoading={isDetailsLoading} />}
-      headerProps={{
-        sx: {
-          flexDirection: { xs: 'column', md: 'row' },
-          alignItems: { xs: 'flex-start', md: 'center' },
-          '.MuiCardHeader-action': {
-            alignSelf: { xs: 'flex-end', md: 'flex-start' },
-            mt: { xs: 1, md: 0.5 },
-            mr: 0,
-          },
-        },
-      }}
-      contentProps={{ sx: { pt: 1 } }}
-      headerButtons={() =>
-        canViewAmp ? (
-          <Box sx={{ display: 'flex', gap: 0 }}>
-            <WellPDFPreviewButton isLoading={isDetailsLoading} />
-            <WellPDFDownloadButton
-              well={well}
-              isLoading={isPdfDataLoading}
-              observations={recentObservations}
-              assets={assets}
-              contacts={contacts}
-              sample={latestSample as Partial<ISample> | undefined}
-              sensorDeployments={sensorDeployments}
-            />
-          </Box>
+    <EditPanelLayout
+      open={isEditPanelOpen && Boolean(id)}
+      className="min-h-[calc(100svh-3.5rem)]"
+      panel={
+        id ? (
+          <WellEditPanel
+            wellId={id}
+            wellName={well?.name}
+            assignedGroups={well?.groups ?? EMPTY_GROUPS}
+            isAssignedGroupsLoading={detailsQuery.isLoading && !detailsQuery.data}
+            onClose={closeEditPanel}
+          />
         ) : null
       }
     >
+      <Show
+        goBack={false}
+        breadcrumb={false}
+        wrapperProps={{
+          elevation: 0,
+          sx: {
+            bgcolor: 'background.wrapper',
+            boxShadow: 'none',
+            borderRadius: 1,
+            padding: 0,
+          },
+        }}
+        title={<WellShowTitle well={well} isLoading={isDetailsLoading} />}
+        headerProps={{
+          sx: {
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: { xs: 'flex-start', md: 'center' },
+            '.MuiCardHeader-content': {
+              alignSelf: 'center',
+            },
+            '.MuiCardHeader-action': {
+              alignSelf: { xs: 'flex-end', md: 'center' },
+              mt: { xs: 1, md: 0 },
+              mr: 0,
+            },
+          },
+        }}
+        contentProps={{ sx: { pt: 1 } }}
+        headerButtons={() => (
+          <div className="flex items-center gap-1.5">
+            {canViewAmp ? (
+              <WellPDFActionsButton
+                isPreviewLoading={isDetailsLoading}
+                isDownloadLoading={isPdfDataLoading}
+                well={well}
+                observations={recentObservations}
+                assets={assets}
+                contacts={contacts}
+                sample={latestSample as Partial<ISample> | undefined}
+                sensorDeployments={sensorDeployments}
+              />
+            ) : null}
+            {canEditWell ? (
+              <Button
+                variant={isEditPanelOpen ? 'default' : 'outline'}
+                size="sm"
+                onClick={toggleEditPanel}
+              >
+                <PencilIcon />
+                Edit
+              </Button>
+            ) : null}
+          </div>
+        )}
+      >
       <Stack spacing={2}>
         <Grid container spacing={2}>
           {/* Left column: 8 cols */}
@@ -430,5 +446,6 @@ export const WellShow = () => {
         </Grid>
       </Stack>
     </Show>
+    </EditPanelLayout>
   )
 }
