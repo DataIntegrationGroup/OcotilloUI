@@ -18,7 +18,7 @@ export const WellShowTitle = ({
 }) => {
   return (
     <Box sx={BoxSx}>
-      <Typography variant="h3" fontWeight={700}>
+      <Typography variant="h3" fontWeight={700} sx={{ lineHeight: 1.1 }}>
         {isLoading ? (
           <Skeleton variant="text" width={120} sx={{ fontSize: 'inherit' }} />
         ) : (
