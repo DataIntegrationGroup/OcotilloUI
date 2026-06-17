@@ -1,7 +1,7 @@
 import { useGo } from '@refinedev/core'
 import { useParams } from 'react-router'
-import { Button } from '@mui/material'
-import { Visibility } from '@mui/icons-material'
+import { EyeIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useAccessCapabilities } from '@/hooks'
 
 export const WellPDFPreviewButton = ({ isLoading }: { isLoading: boolean }) => {
@@ -18,12 +18,12 @@ export const WellPDFPreviewButton = ({ isLoading }: { isLoading: boolean }) => {
 
   return (
     <Button
-      color="primary"
+      variant="outline"
+      size="sm"
       disabled={disabled}
-      startIcon={<Visibility />}
       onClick={handlePreview}
-      sx={{ pl: 1, pr: 1 }}
     >
+      <EyeIcon />
       Preview PDF
     </Button>
   )
