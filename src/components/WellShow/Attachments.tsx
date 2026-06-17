@@ -48,6 +48,7 @@ import {
   MAX_UPLOAD_SIZE_IN_MB,
 } from '@/constants'
 import { formatFileSize, isImage, isPdf, isText } from '@/utils'
+import { useAccessCapabilities } from '@/hooks'
 
 const ACCEPTED_FILE_TYPES = Array.from(ALLOWED_MIME_TYPES).join(',')
 const ALLOWED_FILE_TYPES_LABEL = ALLOWED_FILE_EXTENSIONS.map((ext) =>
@@ -162,6 +163,8 @@ export const AttachmentsCard = ({
 
   const currentAsset = previewAssets[slideshowIndex]
   const hasAssets = previewAssets.length > 0
+
+  const { canManageAmp } = useAccessCapabilities()
 
   const clearUploadState = () => {
     setUploadPreviews((currentPreviews) => {
@@ -327,18 +330,21 @@ export const AttachmentsCard = ({
     >
       <CardHeader
         title={<HeaderTitle />}
+        sx={{ pb: 0.5 }}
         action={
-          <MuiButton
-            onClick={() => setIsUploadDialogOpen(true)}
-            startIcon={<FileUpload />}
-            size="small"
-            variant="text"
-          >
-            Upload File
-          </MuiButton>
+          canManageAmp && (
+            <MuiButton
+              onClick={() => setIsUploadDialogOpen(true)}
+              startIcon={<FileUpload />}
+              size="small"
+              variant="text"
+            >
+              Upload File
+            </MuiButton>
+          )
         }
       />
-      <CardContent>
+      <CardContent sx={{ pb: 0 }}>
         {isLoading ? (
           <Box textAlign="center" py={4}>
             <Typography variant="body1" color="text.secondary">
