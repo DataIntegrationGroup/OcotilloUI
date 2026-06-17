@@ -50,6 +50,10 @@ import {
   MonitoringInfoCard,
   WaterLevelObservationRow,
 } from '@/components'
+import {
+  ocotilloCardHeaderProps,
+  OcotilloHeaderButtons,
+} from '@/components/OcotilloPageHeader'
 import { displayWellSiteName } from '@/utils'
 
 const EMPTY_ASSETS: IAsset[] = []
@@ -87,8 +91,11 @@ export const WellShow = () => {
       })
   }, [id])
 
-  const { query: detailsQuery, well, isLoading: isDetailsLoading } =
-    useWellDetails(id)
+  const {
+    query: detailsQuery,
+    well,
+    isLoading: isDetailsLoading,
+  } = useWellDetails(id)
   const { canViewAmp, canEditWell } = useAccessCapabilities()
 
   const { result: assetResult, query: assetQuery } = useList<IAsset>({
@@ -317,14 +324,16 @@ export const WellShow = () => {
   return (
     <EditPanelLayout
       open={isEditPanelOpen && Boolean(id)}
-      className="min-h-[calc(100svh-3.5rem)]"
+      className="h-[calc(100svh-3.5rem)] overflow-hidden"
       panel={
         id ? (
           <WellEditPanel
             wellId={id}
             wellName={well?.name}
             assignedGroups={well?.groups ?? EMPTY_GROUPS}
-            isAssignedGroupsLoading={detailsQuery.isLoading && !detailsQuery.data}
+            isAssignedGroupsLoading={
+              detailsQuery.isLoading && !detailsQuery.data
+            }
             onClose={closeEditPanel}
           />
         ) : null
@@ -343,23 +352,10 @@ export const WellShow = () => {
           },
         }}
         title={<WellShowTitle well={well} isLoading={isDetailsLoading} />}
-        headerProps={{
-          sx: {
-            flexDirection: { xs: 'column', md: 'row' },
-            alignItems: { xs: 'flex-start', md: 'center' },
-            '.MuiCardHeader-content': {
-              alignSelf: 'center',
-            },
-            '.MuiCardHeader-action': {
-              alignSelf: { xs: 'flex-end', md: 'center' },
-              mt: { xs: 1, md: 0 },
-              mr: 0,
-            },
-          },
-        }}
+        headerProps={ocotilloCardHeaderProps}
         contentProps={{ sx: { pt: 1 } }}
         headerButtons={() => (
-          <div className="flex items-center gap-1.5">
+          <OcotilloHeaderButtons>
             {canViewAmp ? (
               <WellPDFActionsButton
                 isPreviewLoading={isDetailsLoading}
@@ -382,70 +378,73 @@ export const WellShow = () => {
                 Edit
               </Button>
             ) : null}
-          </div>
+          </OcotilloHeaderButtons>
         )}
       >
-      <Stack spacing={2}>
-        <Grid container spacing={2}>
-          {/* Left column: 8 cols */}
-          <Grid size={{ xs: 12, md: 8, lg: 9 }}>
-            <Stack spacing={2}>
-              <CoreWellInfoCard well={well} />
-              <InteractiveSatelliteMapCard well={well} />
-              <HydrographCard
-                well={well}
-                rows={[...manualHydrographRows, ...transducerHydrographRows]}
-                dataSource={hydrographDatasource}
-                isLoading={hydrographQuery.isPending}
-              />
-              <RecentWaterLevelObservationsCard
-                well={well}
-                rows={recentObservations}
-                isLoading={isDetailsLoading}
-              />
-              <NotesAccordion well={well} />
-              <EquipmentCard
-                sensors={sensors}
-                deployments={deployments}
-                isDetailsPending={Boolean(id) && detailsQuery.isPending}
-              />
-              <WellScreensCard
-                rows={wellScreens}
-                isLoading={isDetailsLoading}
-              />
-              <AlternateIdsCard dataGridProps={idLinkDataGridProps} />
-              <AttachmentsCard
-                assets={assets}
-                isLoading={assetQuery.isLoading}
-                refetchAssets={assetQuery.refetch}
-              />
-              <OSEPODInfoCard pod_id={osepod_id} />
-              <USGSInfoCard site_id={usgs_id} />
-            </Stack>
-          </Grid>
+        <Stack spacing={2}>
+          <Grid container spacing={2}>
+            {/* Left column: 8 cols */}
+            <Grid size={{ xs: 12, md: 8, lg: 9 }}>
+              <Stack spacing={2}>
+                <CoreWellInfoCard well={well} />
+                <InteractiveSatelliteMapCard well={well} />
+                <HydrographCard
+                  well={well}
+                  rows={[...manualHydrographRows, ...transducerHydrographRows]}
+                  dataSource={hydrographDatasource}
+                  isLoading={hydrographQuery.isPending}
+                />
+                <RecentWaterLevelObservationsCard
+                  well={well}
+                  rows={recentObservations}
+                  isLoading={isDetailsLoading}
+                />
+                <NotesAccordion well={well} />
+                <EquipmentCard
+                  sensors={sensors}
+                  deployments={deployments}
+                  isDetailsPending={Boolean(id) && detailsQuery.isPending}
+                />
+                <WellScreensCard
+                  rows={wellScreens}
+                  isLoading={isDetailsLoading}
+                />
+                <AlternateIdsCard dataGridProps={idLinkDataGridProps} />
+                <AttachmentsCard
+                  assets={assets}
+                  isLoading={assetQuery.isLoading}
+                  refetchAssets={assetQuery.refetch}
+                />
+                <OSEPODInfoCard pod_id={osepod_id} />
+                <USGSInfoCard site_id={usgs_id} />
+              </Stack>
+            </Grid>
 
-          {/* Right column: 2 cols */}
-          <Grid size={{ xs: 12, md: 4, lg: 3 }}>
-            <Stack spacing={2}>
-              <ContactsCard
-                contacts={contacts}
-                isLoading={isDetailsLoading}
-                siteName={well ? displayWellSiteName(well) : undefined}
-              />
-              <MonitoringInfoCard
-                well={well}
-                firstVisitParticipants={firstVisitParticipants}
-                lastVisitDate={fieldEvents[0]?.event_date}
-                isLoading={isDetailsLoading}
-              />
-              <OwnerPermissionsCard well={well} isLoading={isDetailsLoading} />
-              <ConstructionInfoCard well={well} />
-              <GeologyInformationCard well={well} />
-            </Stack>
+            {/* Right column: 2 cols */}
+            <Grid size={{ xs: 12, md: 4, lg: 3 }}>
+              <Stack spacing={2}>
+                <ContactsCard
+                  contacts={contacts}
+                  isLoading={isDetailsLoading}
+                  siteName={well ? displayWellSiteName(well) : undefined}
+                />
+                <MonitoringInfoCard
+                  well={well}
+                  firstVisitParticipants={firstVisitParticipants}
+                  lastVisitDate={fieldEvents[0]?.event_date}
+                  isLoading={isDetailsLoading}
+                />
+                <OwnerPermissionsCard
+                  well={well}
+                  isLoading={isDetailsLoading}
+                />
+                <ConstructionInfoCard well={well} />
+                <GeologyInformationCard well={well} />
+              </Stack>
+            </Grid>
           </Grid>
-        </Grid>
-      </Stack>
-    </Show>
+        </Stack>
+      </Show>
     </EditPanelLayout>
   )
 }

@@ -3,7 +3,7 @@ import { Show } from '@refinedev/mui'
 import { useAccessCapabilities } from '@/hooks'
 import { sanitizeContact } from '@/utils'
 import { getContactDisplayName } from '@/utils/contactDisplayName'
-import { Box, Chip, Stack, Typography } from '@mui/material'
+import { Chip, Stack } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { IContact } from '@/interfaces/ocotillo'
 import {
@@ -11,6 +11,10 @@ import {
   AssociatedSitesDetailsCard,
   AssociatedSitesMapCard,
 } from '@/components/ContactShow'
+import {
+  ocotilloCardHeaderProps,
+  OcotilloPageTitle,
+} from '@/components/OcotilloPageHeader'
 
 export const ContactShow = () => {
   const { query, result } = useShow<IContact>({})
@@ -38,40 +42,20 @@ export const ContactShow = () => {
         },
       }}
       title={
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            flexWrap: 'wrap',
-          }}
-        >
-          <Typography variant="h3" fontWeight={700}>
-            {getContactDisplayName(contact ?? {})}
-          </Typography>
-          {contact?.role && (
+        <OcotilloPageTitle title={getContactDisplayName(contact ?? {})}>
+          {contact?.role ? (
             <Chip label={contact.role} size="small" variant="outlined" />
-          )}
-          {contact?.organization && (
+          ) : null}
+          {contact?.organization ? (
             <Chip
               label={contact.organization}
               size="small"
               variant="outlined"
             />
-          )}
-        </Box>
+          ) : null}
+        </OcotilloPageTitle>
       }
-      headerProps={{
-        sx: {
-          flexDirection: { xs: 'column', md: 'row' },
-          alignItems: { xs: 'flex-start', md: 'center' },
-          '.MuiCardHeader-action': {
-            alignSelf: { xs: 'flex-end', md: 'flex-start' },
-            mt: { xs: 1, md: 0.5 },
-            mr: 0,
-          },
-        },
-      }}
+      headerProps={ocotilloCardHeaderProps}
       contentProps={{ sx: { pt: 1 } }}
       headerButtons={() => null}
     >

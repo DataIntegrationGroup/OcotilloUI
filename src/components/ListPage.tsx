@@ -27,6 +27,10 @@ import {
 } from '@refinedev/core'
 import { Box, Chip, InputBase, Stack, Typography } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
+import {
+  ocotilloCardHeaderProps,
+  ocotilloPageTitleTypographySx,
+} from '@/components/OcotilloPageHeader'
 
 /**
  * Standard layout for Ocotillo list pages: title, optional description, search
@@ -304,7 +308,11 @@ export const ListPage: React.FC<ListPageProps> = ({
         title={
           title ? (
             <Box>
-              <Typography variant="h3" fontWeight={700}>
+              <Typography
+                variant="h3"
+                fontWeight={700}
+                sx={ocotilloPageTitleTypographySx}
+              >
                 {title}
               </Typography>
               {description && (
@@ -328,17 +336,7 @@ export const ListPage: React.FC<ListPageProps> = ({
             padding: 0,
           },
         }}
-        headerProps={{
-          sx: {
-            flexDirection: { xs: 'column', md: 'row' },
-            alignItems: { xs: 'flex-start', md: 'center' },
-            '.MuiCardHeader-action': {
-              alignSelf: { xs: 'flex-end', md: 'flex-start' },
-              mt: { xs: 1, md: 0.5 },
-              mr: 0,
-            },
-          },
-        }}
+        headerProps={ocotilloCardHeaderProps}
         contentProps={{ sx: { pt: 1 } }}
       >
         {children}

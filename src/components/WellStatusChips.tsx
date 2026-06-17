@@ -30,11 +30,10 @@ export const WellStatusChips = ({
     return (
       <Stack
         direction="row"
-        spacing={1}
         flexWrap="wrap"
         alignItems="center"
         useFlexGap
-        sx={{ gap: 1 }}
+        sx={{ columnGap: 1, rowGap: 0 }}
       >
         {loadingChipWidths.map((width, i) => (
           <Skeleton
@@ -66,11 +65,10 @@ export const WellStatusChips = ({
   return (
     <Stack
       direction="row"
-      spacing={1}
       flexWrap="wrap"
       alignItems="center"
       useFlexGap
-      sx={{ gap: 1 }}
+      sx={{ columnGap: 1, rowGap: 0 }}
     >
       {topChipValues.map((p, i) => (
         <ChipWithExplain

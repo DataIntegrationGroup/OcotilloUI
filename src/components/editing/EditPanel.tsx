@@ -7,7 +7,7 @@ export function EditPanel({
   onClose,
   children,
   footer,
-  widthClassName = 'w-[400px]',
+  widthClassName = 'w-full',
 }: {
   title: string
   onClose: () => void
@@ -18,21 +18,23 @@ export function EditPanel({
   return (
     <div
       className={cn(
-        'flex h-full flex-col bg-background border-l shrink-0',
+        'flex h-full min-h-0 w-full flex-col bg-background border-l',
         widthClassName
       )}
     >
-      <div className="flex h-11 shrink-0 items-center justify-between border-b px-4">
+      <div className="sticky top-0 z-10 flex h-11 shrink-0 items-center justify-between border-b bg-background px-4">
         <span className="text-sm font-semibold">{title}</span>
         <Button variant="ghost" size="icon" className="size-7" onClick={onClose}>
           <X className="size-4" />
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-2 text-sm">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2 text-sm">
+        {children}
+      </div>
 
       {footer ? (
-        <div className="shrink-0 border-t px-4 py-3 flex justify-end gap-2">
+        <div className="sticky bottom-0 z-10 flex shrink-0 justify-end gap-2 border-t bg-background px-4 py-3">
           {footer}
         </div>
       ) : null}

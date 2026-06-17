@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useCustomMutation, useList } from '@refinedev/core'
 import { useQueryClient } from '@tanstack/react-query'
 import { XIcon } from 'lucide-react'
@@ -36,7 +36,7 @@ function ProjectChip({
   isRemoving: boolean
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 pr-0.75 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
       {name}
       <button
         onClick={onRemove}
@@ -75,11 +75,16 @@ export function WellEditPanel({
     ],
   })
   const isGroupsLoading = groupsQuery.isLoading
-  const allGroups = allGroupsResult?.data ?? []
 
-  const currentGroupIds = new Set(currentGroups.map((g) => g.id))
-
-  const availableGroups = allGroups.filter((g) => !currentGroupIds.has(g.id))
+  const availableGroups = useMemo(() => {
+    const groups = allGroupsResult?.data ?? []
+    const assignedIds = new Set(currentGroups.map((g) => g.id))
+    return groups
+      .filter((g) => !assignedIds.has(g.id))
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      )
+  }, [allGroupsResult?.data, currentGroups])
 
   const { mutate } = useCustomMutation()
 
@@ -157,7 +162,9 @@ export function WellEditPanel({
             <EditPanelField label="Add to project" span="full">
               <Select
                 key={selectKey}
-                disabled={addingGroupId !== null || availableGroups.length === 0}
+                disabled={
+                  addingGroupId !== null || availableGroups.length === 0
+                }
                 onValueChange={(value) => {
                   const group = availableGroups.find(
                     (item) => String(item.id) === value
@@ -174,7 +181,7 @@ export function WellEditPanel({
                     }
                   />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="max-h-60">
                   {availableGroups.map((group) => (
                     <SelectItem key={group.id} value={String(group.id)}>
                       {group.group_type

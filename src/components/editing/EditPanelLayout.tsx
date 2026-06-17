@@ -14,16 +14,18 @@ export function EditPanelLayout({
   className?: string
 }) {
   return (
-    <div className={cn('flex flex-1 min-h-0 overflow-hidden', className)}>
-      <div className="flex flex-col flex-1 min-w-0">{children}</div>
+    <div className={cn('flex min-h-0 h-full overflow-hidden', className)}>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+        {children}
+      </div>
 
       <div
         className={cn(
-          'overflow-hidden transition-[width] duration-200 ease-in-out shrink-0',
+          'flex h-full min-h-0 shrink-0 flex-col overflow-hidden transition-[width] duration-200 ease-in-out',
           open ? panelWidthClassName : 'w-0'
         )}
       >
-        {open ? panel : null}
+        {open ? <div className="h-full min-h-0 w-full">{panel}</div> : null}
       </div>
     </div>
   )
