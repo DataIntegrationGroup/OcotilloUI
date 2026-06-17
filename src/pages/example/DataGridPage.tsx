@@ -16,7 +16,6 @@ import { displayWellSiteName, formatAppDate } from '@/utils'
 import { getContactDisplayName } from '@/utils/contactDisplayName'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import {
   Select,
@@ -28,10 +27,11 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+  EditPanel,
+  EditPanelField,
+  EditPanelLayout,
+  EditPanelSection,
+} from '@/components/editing'
 import {
   Dialog,
   DialogContent,
@@ -44,16 +44,13 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
-  ChevronRight,
   Download,
   ExternalLink,
   Filter,
-  Plus,
   Rows3,
   Upload,
   X,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 const COLUMNS: GridColumn[] = [
   { title: 'Well ID',          id: 'name',              width: 140 },
@@ -86,245 +83,189 @@ function getCellValue(well: IWell, colId: string): string {
   }
 }
 
-// A collapsible section used inside the Create Well panel
-function FormSection({
-  title,
-  defaultOpen = true,
-  children,
-}: {
-  title: string
-  defaultOpen?: boolean
-  children: React.ReactNode
-}) {
-  const [open, setOpen] = useState(defaultOpen)
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className="flex w-full items-center gap-1.5 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors">
-        <ChevronRight
-          className={cn(
-            'size-3.5 transition-transform duration-100',
-            open && 'rotate-90'
-          )}
-        />
-        {title}
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4 pb-4">
-          {children}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  )
-}
-
-// A single labeled field cell inside a FormSection
-function Field({
-  label,
-  required,
-  span,
-  children,
-}: {
-  label: string
-  required?: boolean
-  span?: 'full'
-  children: React.ReactNode
-}) {
-  return (
-    <div className={cn('flex flex-col gap-1.5', span === 'full' && 'col-span-2')}>
-      <Label className="text-xs text-muted-foreground">
-        {label}
-        {required && <span className="ml-0.5 text-destructive">*</span>}
-      </Label>
-      {children}
-    </div>
-  )
-}
-
 function CreateWellPanel({ onClose }: { onClose: () => void }) {
   return (
-    <div className="flex h-full flex-col bg-background border-l w-[400px] shrink-0">
-      {/* Panel header */}
-      <div className="flex h-11 shrink-0 items-center justify-between border-b px-4">
-        <span className="text-sm font-semibold">Create Well</span>
-        <Button variant="ghost" size="icon" className="size-7" onClick={onClose}>
-          <X className="size-4" />
-        </Button>
-      </div>
+    <EditPanel
+      title="Create Well"
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="outline" size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm">Create Well</Button>
+        </>
+      }
+    >
+      <EditPanelSection title="Identity">
+        <EditPanelField label="Well ID" required span="full">
+          <Input placeholder="e.g. AB-0001" />
+        </EditPanelField>
+        <EditPanelField label="Site Name" span="full">
+          <Input placeholder="Monitoring site or alternate name" />
+        </EditPanelField>
+        <EditPanelField label="Type" required>
+          <Select>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="water well">Water Well</SelectItem>
+              <SelectItem value="geothermal well">Geothermal Well</SelectItem>
+            </SelectContent>
+          </Select>
+        </EditPanelField>
+        <EditPanelField label="Release Status" required>
+          <Select>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="released">Released</SelectItem>
+              <SelectItem value="unreleased">Unreleased</SelectItem>
+              <SelectItem value="embargoed">Embargoed</SelectItem>
+            </SelectContent>
+          </Select>
+        </EditPanelField>
+      </EditPanelSection>
 
-      {/* Scrollable form body */}
-      <div className="flex-1 overflow-y-auto px-4 py-2 text-sm">
+      <Separator />
 
-        <FormSection title="Identity">
-          <Field label="Well ID" required span="full">
-            <Input placeholder="e.g. AB-0001" />
-          </Field>
-          <Field label="Site Name" span="full">
-            <Input placeholder="Monitoring site or alternate name" />
-          </Field>
-          <Field label="Type" required>
-            <Select>
-              <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="water well">Water Well</SelectItem>
-                <SelectItem value="geothermal well">Geothermal Well</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label="Release Status" required>
-            <Select>
-              <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="released">Released</SelectItem>
-                <SelectItem value="unreleased">Unreleased</SelectItem>
-                <SelectItem value="embargoed">Embargoed</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-        </FormSection>
+      <EditPanelSection title="Status">
+        <EditPanelField label="Well Status">
+          <Select>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="destroyed">Destroyed</SelectItem>
+              <SelectItem value="unknown">Unknown</SelectItem>
+            </SelectContent>
+          </Select>
+        </EditPanelField>
+        <EditPanelField label="Monitoring Status">
+          <Select>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="proposed">Proposed</SelectItem>
+            </SelectContent>
+          </Select>
+        </EditPanelField>
+        <EditPanelField label="First Visit Date">
+          <Input type="date" className="h-8 text-sm" />
+        </EditPanelField>
+        <EditPanelField label="Suitable for Datalogger" span="full">
+          <div className="flex items-center gap-2 pt-1">
+            <Checkbox id="datalogger" />
+            <label htmlFor="datalogger" className="text-sm cursor-pointer">
+              Yes, this well can accept a datalogger
+            </label>
+          </div>
+        </EditPanelField>
+      </EditPanelSection>
 
-        <Separator />
+      <Separator />
 
-        <FormSection title="Status">
-          <Field label="Well Status">
-            <Select>
-              <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="destroyed">Destroyed</SelectItem>
-                <SelectItem value="unknown">Unknown</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label="Monitoring Status">
-            <Select>
-              <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="proposed">Proposed</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label="First Visit Date">
-            <Input type="date" className="h-8 text-sm" />
-          </Field>
-          <Field label="Suitable for Datalogger" span="full">
-            <div className="flex items-center gap-2 pt-1">
-              <Checkbox id="datalogger" />
-              <label htmlFor="datalogger" className="text-sm cursor-pointer">
-                Yes, this well can accept a datalogger
-              </label>
-            </div>
-          </Field>
-        </FormSection>
+      <EditPanelSection title="Physical Dimensions">
+        <EditPanelField label="Well Depth (ft)">
+          <Input type="number" placeholder="0" className="h-8 text-sm" />
+        </EditPanelField>
+        <EditPanelField label="Hole Depth (ft)">
+          <Input type="number" placeholder="0" className="h-8 text-sm" />
+        </EditPanelField>
+        <EditPanelField label="Casing Diameter (in)">
+          <Input type="number" placeholder="0" className="h-8 text-sm" />
+        </EditPanelField>
+        <EditPanelField label="Casing Depth (ft)">
+          <Input type="number" placeholder="0" className="h-8 text-sm" />
+        </EditPanelField>
+        <EditPanelField label="Casing Materials" span="full">
+          <Input placeholder="e.g. steel, PVC" className="h-8 text-sm" />
+        </EditPanelField>
+      </EditPanelSection>
 
-        <Separator />
+      <Separator />
 
-        <FormSection title="Physical Dimensions">
-          <Field label="Well Depth (ft)">
-            <Input type="number" placeholder="0" className="h-8 text-sm" />
-          </Field>
-          <Field label="Hole Depth (ft)">
-            <Input type="number" placeholder="0" className="h-8 text-sm" />
-          </Field>
-          <Field label="Casing Diameter (in)">
-            <Input type="number" placeholder="0" className="h-8 text-sm" />
-          </Field>
-          <Field label="Casing Depth (ft)">
-            <Input type="number" placeholder="0" className="h-8 text-sm" />
-          </Field>
-          <Field label="Casing Materials" span="full">
-            <Input placeholder="e.g. steel, PVC" className="h-8 text-sm" />
-          </Field>
-        </FormSection>
+      <EditPanelSection title="Drilling">
+        <EditPanelField label="Completion Date" span="full">
+          <Input type="date" className="h-8 text-sm" />
+        </EditPanelField>
+        <EditPanelField label="Driller Name" span="full">
+          <Input placeholder="Drilling company" className="h-8 text-sm" />
+        </EditPanelField>
+        <EditPanelField label="Construction Method">
+          <Input placeholder="e.g. rotary" className="h-8 text-sm" />
+        </EditPanelField>
+        <EditPanelField label="Formation Code">
+          <Input placeholder="Code" className="h-8 text-sm" />
+        </EditPanelField>
+      </EditPanelSection>
 
-        <Separator />
+      <Separator />
 
-        <FormSection title="Drilling">
-          <Field label="Completion Date" span="full">
-            <Input type="date" className="h-8 text-sm" />
-          </Field>
-          <Field label="Driller Name" span="full">
-            <Input placeholder="Drilling company" className="h-8 text-sm" />
-          </Field>
-          <Field label="Construction Method">
-            <Input placeholder="e.g. rotary" className="h-8 text-sm" />
-          </Field>
-          <Field label="Formation Code">
-            <Input placeholder="Code" className="h-8 text-sm" />
-          </Field>
-        </FormSection>
+      <EditPanelSection title="Pump">
+        <EditPanelField label="Pump Type">
+          <Input placeholder="e.g. submersible" className="h-8 text-sm" />
+        </EditPanelField>
+        <EditPanelField label="Pump Depth (ft)">
+          <Input type="number" placeholder="0" className="h-8 text-sm" />
+        </EditPanelField>
+      </EditPanelSection>
 
-        <Separator />
+      <Separator />
 
-        <FormSection title="Pump">
-          <Field label="Pump Type">
-            <Input placeholder="e.g. submersible" className="h-8 text-sm" />
-          </Field>
-          <Field label="Pump Depth (ft)">
-            <Input type="number" placeholder="0" className="h-8 text-sm" />
-          </Field>
-        </FormSection>
+      <EditPanelSection title="Measuring Point">
+        <EditPanelField label="Height (ft)">
+          <Input type="number" placeholder="0" className="h-8 text-sm" />
+        </EditPanelField>
+        <EditPanelField label="Description" span="full">
+          <Textarea
+            placeholder="Describe the measuring point…"
+            className="text-sm resize-none"
+            rows={2}
+          />
+        </EditPanelField>
+      </EditPanelSection>
 
-        <Separator />
+      <Separator />
 
-        <FormSection title="Measuring Point">
-          <Field label="Height (ft)">
-            <Input type="number" placeholder="0" className="h-8 text-sm" />
-          </Field>
-          <Field label="Description" span="full">
-            <Textarea
-              placeholder="Describe the measuring point…"
-              className="text-sm resize-none"
-              rows={2}
-            />
-          </Field>
-        </FormSection>
+      <EditPanelSection title="Location" defaultOpen={false}>
+        <EditPanelField label="Latitude">
+          <Input
+            type="number"
+            step="0.000001"
+            placeholder="e.g. 35.682"
+            className="h-8 text-sm"
+          />
+        </EditPanelField>
+        <EditPanelField label="Longitude">
+          <Input
+            type="number"
+            step="0.000001"
+            placeholder="e.g. -106.044"
+            className="h-8 text-sm"
+          />
+        </EditPanelField>
+      </EditPanelSection>
 
-        <Separator />
+      <Separator />
 
-        <FormSection title="Location" defaultOpen={false}>
-          <Field label="Latitude">
-            <Input type="number" step="0.000001" placeholder="e.g. 35.682" className="h-8 text-sm" />
-          </Field>
-          <Field label="Longitude">
-            <Input type="number" step="0.000001" placeholder="e.g. -106.044" className="h-8 text-sm" />
-          </Field>
-        </FormSection>
-
-        <Separator />
-
-        <FormSection title="Notes" defaultOpen={false}>
-          <Field label="General Notes" span="full">
-            <Textarea
-              placeholder="Any general notes about this well…"
-              className="text-sm resize-none"
-              rows={3}
-            />
-          </Field>
-        </FormSection>
-
-      </div>
-
-      {/* Panel footer */}
-      <div className="shrink-0 border-t px-4 py-3 flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button size="sm">
-          Create Well
-        </Button>
-      </div>
-    </div>
+      <EditPanelSection title="Notes" defaultOpen={false}>
+        <EditPanelField label="General Notes" span="full">
+          <Textarea
+            placeholder="Any general notes about this well…"
+            className="text-sm resize-none"
+            rows={3}
+          />
+        </EditPanelField>
+      </EditPanelSection>
+    </EditPanel>
   )
 }
 
@@ -744,8 +685,10 @@ export function DataGridPage() {
       </div>
 
       {/* Grid + create panel row */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Grid — no overflow-hidden here; the editing overlay is absolutely positioned inside and needs to be visible */}
+      <EditPanelLayout
+        open={panelOpen}
+        panel={<CreateWellPanel onClose={() => setPanelOpen(false)} />}
+      >
         <div ref={containerRef} className="flex flex-col flex-1 min-w-0">
           {isLoading || size.width === 0 ? (
             <div className="flex items-center justify-center flex-1 text-sm text-muted-foreground">
@@ -770,19 +713,7 @@ export function DataGridPage() {
             />
           )}
         </div>
-
-        {/* Create panel — slides in from the right, pushes grid */}
-        <div
-          className={cn(
-            'overflow-hidden transition-[width] duration-200 ease-in-out shrink-0',
-            panelOpen ? 'w-[400px]' : 'w-0'
-          )}
-        >
-          {panelOpen && (
-            <CreateWellPanel onClose={() => setPanelOpen(false)} />
-          )}
-        </div>
-      </div>
+      </EditPanelLayout>
 
       <BulkAddModal open={bulkOpen} onClose={() => setBulkOpen(false)} />
     </div>
