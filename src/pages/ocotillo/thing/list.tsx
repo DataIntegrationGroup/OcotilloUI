@@ -1,18 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useExport, useGo, useLink } from '@refinedev/core'
-import { ExportButton, useDataGrid } from '@refinedev/mui'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router'
+import { useExport, useGo, useLink, useOne, type CrudFilter } from '@refinedev/core'
+import { useDataGrid } from '@refinedev/mui'
 import {
-  GridCallbackDetails,
   GridColDef,
-  GridColumnVisibilityModel,
-  GridFilterModel,
-  GridSortModel,
 } from '@mui/x-data-grid'
-import { captureEvent } from '@/analytics/posthog'
-import { Button } from '@mui/material'
-import { PictureAsPdf } from '@mui/icons-material'
+import { captureEvent, consumeWellsProjectFilterSource, setWellsProjectFilterSource } from '@/analytics/posthog'
+import { Download, FileText, Loader2, X } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { ListPage } from '@/components/ListPage'
+import { useListPageDataGridAnalytics } from '@/hooks'
 import { ISpring, IWell } from '@/interfaces/ocotillo'
+import { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { displayWellSiteName, formatAppDate, formatAppDateTime } from '@/utils'
 import { getContactDisplayName } from '@/utils/contactDisplayName'
 import { WellListColumnLabels } from '@/well-list/wellListColumnLabels'
@@ -66,13 +66,47 @@ export const SpringList: React.FC = () => {
   )
 }
 
+/** Standard ListPage template for Ocotillo resource lists. Copy for new list pages. */
 export const WellList: React.FC = () => {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const projectId = searchParams.get('projectId')
+
   useEffect(() => {
-    captureEvent('feature_used', { feature: 'wells_list' })
-  }, [])
+    captureEvent('feature_used', {
+      feature: projectId ? 'wells_list_project_filtered' : 'wells_list',
+      ...(projectId ? { project_id: projectId } : {}),
+    })
+  }, [projectId])
 
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
+
+  const projectFilters = useMemo<CrudFilter[]>(
+    () =>
+      projectId
+        ? [{ field: 'groups', operator: 'eq', value: projectId }]
+        : [],
+    [projectId]
+  )
+
+  const { query: projectQuery } = useOne({
+    resource: 'group',
+    id: projectId ?? '',
+    dataProviderName: 'ocotillo',
+    queryOptions: { enabled: Boolean(projectId) },
+  })
+  const projectName = (projectQuery?.data?.data as IGroup | undefined)?.name
+
+  useEffect(() => {
+    if (!projectId) return
+
+    const source = consumeWellsProjectFilterSource()
+    captureEvent('wells_project_filter_applied', {
+      project_id: projectId,
+      source,
+    })
+  }, [projectId])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -88,9 +122,12 @@ export const WellList: React.FC = () => {
     }
   }, [search])
 
-  const { dataGridProps } = useDataGrid<IWell>({
+  const { dataGridProps, setFilters } = useDataGrid<IWell>({
     resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
+    filters: {
+      permanent: projectFilters,
+    },
     meta: {
       params: {
         include_contacts: true,
@@ -100,49 +137,30 @@ export const WellList: React.FC = () => {
     pagination: { pageSize: 50 },
   })
 
-  const handleFilterModelChange = (
-    model: GridFilterModel,
-    details: GridCallbackDetails
-  ) => {
-    const activeFilters = model.items.filter((f) => f.value !== undefined)
-    if (activeFilters.length > 0) {
-      captureEvent('wells_filter_applied', {
-        filter_count: activeFilters.length,
-        filter_fields: activeFilters.map((f) => f.field),
-        filter_operators: activeFilters.map((f) => f.operator),
-      })
+  const onFilterModelChangeRef = useRef<
+    typeof dataGridProps.onFilterModelChange | undefined
+  >(undefined)
+  const prevProjectIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    onFilterModelChangeRef.current = dataGridProps.onFilterModelChange
+  }, [dataGridProps.onFilterModelChange])
+
+  // Refine hides permanent filters from the DataGrid filterModel. When the URL
+  // project filter is removed, stale groups filters remain in muiCrudFilters
+  // and surface as a grid chip unless we reset both Refine and grid state.
+  useEffect(() => {
+    if (prevProjectIdRef.current && !projectId) {
+      setFilters([], 'replace')
+      onFilterModelChangeRef.current?.({ items: [] })
     }
-    dataGridProps.onFilterModelChange?.(model)
-  }
+    prevProjectIdRef.current = projectId
+  }, [projectId, setFilters])
 
-  const handleColumnVisibilityModelChange = (
-    model: GridColumnVisibilityModel
-  ) => {
-    const hiddenColumns = Object.entries(model)
-      .filter(([, visible]) => !visible)
-      .map(([field]) => field)
-    captureEvent('wells_column_visibility_changed', {
-      hidden_count: hiddenColumns.length,
-      hidden_columns: hiddenColumns,
-    })
-  }
-
-  const handleDensityChange = (density: string) => {
-    captureEvent('wells_density_changed', { density })
-  }
-
-  const handleSortModelChange = (
-    model: GridSortModel,
-    details: GridCallbackDetails
-  ) => {
-    if (model.length > 0) {
-      captureEvent('wells_sorted', {
-        field: model[0].field,
-        direction: model[0].sort,
-      })
-    }
-    dataGridProps.onSortModelChange?.(model, details)
-  }
+  const dataGridPropsWithAnalytics = useListPageDataGridAnalytics(
+    dataGridProps,
+    'wells'
+  )
 
   const { triggerExport, isLoading: exportIsLoading } = useExport({
     resource: 'thing',
@@ -225,6 +243,49 @@ export const WellList: React.FC = () => {
                 a.aquifer_system
             )
             .join(', ') ?? '',
+      },
+      {
+        field: 'groups',
+        headerName: WellListColumnLabels.projects,
+        description:
+          'Projects linked to this well. A well may belong to more than one. Filter matches any linked project name. Sort uses the alphabetically first project name.',
+        type: 'string',
+        minWidth: 180,
+        flex: 1,
+        valueGetter: (_: unknown, row: IWell) =>
+          row.groups?.map((group) => group.name).join(', ') ?? '',
+        renderCell: (params) => {
+          const groups = params.row.groups ?? []
+          return (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+              }}
+            >
+              {groups.map((group, idx) => (
+                <span key={group.id}>
+                  {idx > 0 && ', '}
+                  <RouterLink
+                    to={`/ocotillo/well?projectId=${group.id}`}
+                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                      e.stopPropagation()
+                      setWellsProjectFilterSource('wells_column')
+                      captureEvent('wells_project_link_clicked', {
+                        project_id: group.id,
+                        project_name: group.name,
+                      })
+                    }}
+                    className="text-primary hover:underline no-underline"
+                  >
+                    {group.name}
+                  </RouterLink>
+                </span>
+              ))}
+            </div>
+          )
+        },
       },
       {
         field: 'release_status',
@@ -373,24 +434,30 @@ export const WellList: React.FC = () => {
     return (
       <>
         <Button
-          variant="contained"
-          color="secondary"
-          startIcon={<PictureAsPdf />}
+          variant="outline"
+          className="border-primary bg-background text-primary hover:bg-primary/5 hover:text-primary"
           onClick={() => {
             captureEvent('wells_batch_field_sheets')
             go({ to: '/ocotillo/well/batch-export', type: 'push' })
           }}
         >
+          <FileText />
           Batch Field Sheets
         </Button>
-        <ExportButton
-          variant="contained"
-          loading={exportIsLoading}
+        <Button
+          disabled={exportIsLoading}
           onClick={() => {
             captureEvent('wells_exported', { search_active: Boolean(search) })
             triggerExport()
           }}
-        />
+        >
+          {exportIsLoading ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <Download />
+          )}
+          Export
+        </Button>
       </>
     )
   }
@@ -398,19 +465,8 @@ export const WellList: React.FC = () => {
   return (
     <ListPage
       title="Wells"
-      description={
-        'A water well is a man-made structure created to access groundwater from underground aquifers. Wells are' +
-        ' commonly used for drinking water, irrigation, and industrial purposes, and can vary in depth and' +
-        ' construction depending on the local geology and intended use.'
-      }
       columns={columns}
-      dataGridProps={{
-        ...dataGridProps,
-        onFilterModelChange: handleFilterModelChange,
-        onColumnVisibilityModelChange: handleColumnVisibilityModelChange,
-        onDensityChange: handleDensityChange,
-        onSortModelChange: handleSortModelChange,
-      }}
+      dataGridProps={dataGridPropsWithAnalytics}
       getRowId={(row) => row.id}
       headerButtons={customHeaderButtons}
       searchMode="server"
@@ -421,6 +477,35 @@ export const WellList: React.FC = () => {
       onRowClick={(params) =>
         captureEvent('wells_row_clicked', { well_id: params.id })
       }
-    />
+    >
+      {projectId ? (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Badge variant="filter" className="h-7 gap-1 py-0 pl-2.5 pr-1" asChild>
+            <div
+              role="status"
+              className="inline-flex items-center"
+            >
+              <span>Project: {projectName ?? projectId}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                className="size-5 rounded-full text-primary/70 hover:bg-primary/10 hover:text-primary"
+                aria-label="Clear project filter"
+                onClick={() => {
+                  captureEvent('wells_project_filter_cleared', {
+                    project_id: projectId,
+                    project_name: projectName,
+                  })
+                  navigate('/ocotillo/well')
+                }}
+              >
+                <X />
+              </Button>
+            </div>
+          </Badge>
+        </div>
+      ) : null}
+    </ListPage>
   )
 }

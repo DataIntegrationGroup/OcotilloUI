@@ -3,7 +3,7 @@ import { useLocation } from 'react-router'
 import {
   capturePostHogPageview,
   initPostHog,
-  wellDetailPageviewProps,
+  pageviewExtras,
 } from '@/analytics/posthog'
 
 export const PostHogPageview = (): null => {
@@ -19,8 +19,8 @@ export const PostHogPageview = (): null => {
 
     if (lastPathRef.current === path) return
 
-    const wellDetail = wellDetailPageviewProps(location.pathname)
-    capturePostHogPageview(path, wellDetail)
+    const extras = pageviewExtras(location.pathname, location.search)
+    capturePostHogPageview(path, extras)
     lastPathRef.current = path
   }, [location.hash, location.pathname, location.search])
 

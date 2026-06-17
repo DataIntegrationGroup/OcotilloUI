@@ -6,7 +6,6 @@ import { getContactDisplayName } from '@/utils/contactDisplayName'
 import { Box, Chip, Stack, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { IContact } from '@/interfaces/ocotillo'
-import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import {
   ContactDetailsCard,
   AssociatedSitesDetailsCard,
@@ -28,7 +27,7 @@ export const ContactShow = () => {
     <Show
       isLoading={query.isLoading}
       goBack={false}
-      breadcrumb={<AppBreadcrumb />}
+      breadcrumb={false}
       wrapperProps={{
         elevation: 0,
         sx: {

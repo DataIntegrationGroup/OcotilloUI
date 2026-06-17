@@ -5,11 +5,42 @@ const posthogHost =
   import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com'
 const appEnv = import.meta.env.VITE_APP_ENV || 'production'
 
+/** Canonical production app host (matches GAE production deploy). */
+export const PRODUCTION_HOSTNAME = 'ocotillo.newmexicowaterdata.org'
+
 // PostHog runs on any deployment that has a key (staging + production).
 // Local dev has no key, so it is never enabled.
 const isEnabled = Boolean(posthogKey)
 
 let initialized = false
+
+/** True on the live production site only (not staging, previews, or local). */
+export const isProductionDeployment = (): boolean => {
+  if (appEnv !== 'production') return false
+  if (typeof window === 'undefined') return false
+  return window.location.hostname === PRODUCTION_HOSTNAME
+}
+
+/** Session replay is production-only and starts after the user is identified. */
+export const shouldRecordSessions = (): boolean => isProductionDeployment()
+
+const sessionRecordingConfig = {
+  maskInputFn: (text: string, element?: Element | null) => {
+    const el = element as HTMLInputElement | undefined
+    if (el?.type === 'password') {
+      return '*'.repeat(text.length)
+    }
+    // ph-no-mask is PostHog's standard class for opting inputs out of masking.
+    // Check the element and its ancestors so the class can be set on a wrapper.
+    if (
+      el?.classList?.contains('ph-no-mask') ||
+      el?.closest?.('.ph-no-mask')
+    ) {
+      return text
+    }
+    return '*'.repeat(text.length)
+  },
+}
 
 export const initPostHog = () => {
   if (!isEnabled || initialized) return
@@ -19,23 +50,10 @@ export const initPostHog = () => {
     capture_pageview: false,
     capture_pageleave: true,
     capture_exceptions: true,
-    session_recording: {
-      maskInputFn: (text: string, element?: Element | null) => {
-        const el = element as HTMLInputElement | undefined
-        if (el?.type === 'password') {
-          return '*'.repeat(text.length)
-        }
-        // ph-no-mask is PostHog's standard class for opting inputs out of masking.
-        // Check the element and its ancestors so the class can be set on a wrapper.
-        if (
-          el?.classList?.contains('ph-no-mask') ||
-          el?.closest?.('.ph-no-mask')
-        ) {
-          return text
-        }
-        return '*'.repeat(text.length)
-      },
-    },
+    // Disabled at init; started manually after identify so recordings are
+    // always tied to an authenticated person, and only on production.
+    disable_session_recording: true,
+    ...(shouldRecordSessions() ? { session_recording: sessionRecordingConfig } : {}),
   })
 
   // Tag every event with the environment so staging visits are
@@ -43,6 +61,30 @@ export const initPostHog = () => {
   posthog.register({ environment: appEnv })
 
   initialized = true
+}
+
+export const WELLS_PROJECT_FILTER_SOURCE_KEY = 'wells_project_filter_source'
+
+export type WellsProjectFilterSource = 'projects_list' | 'wells_column' | 'direct'
+
+export const setWellsProjectFilterSource = (source: WellsProjectFilterSource) => {
+  sessionStorage.setItem(WELLS_PROJECT_FILTER_SOURCE_KEY, source)
+}
+
+export const consumeWellsProjectFilterSource = (): WellsProjectFilterSource => {
+  const value = sessionStorage.getItem(WELLS_PROJECT_FILTER_SOURCE_KEY)
+  sessionStorage.removeItem(WELLS_PROJECT_FILTER_SOURCE_KEY)
+  if (value === 'projects_list' || value === 'wells_column') return value
+  return 'direct'
+}
+
+export const trackNavItemClicked = (props: {
+  label: string
+  href: string
+  resource?: string
+  parent_label?: string
+}) => {
+  captureEvent('nav_item_clicked', props)
 }
 
 /**
@@ -77,6 +119,44 @@ export const wellDetailPageviewProps = (
   return undefined
 }
 
+/**
+ * Extra `$pageview` properties for list pages (Projects, filtered Wells, etc.).
+ */
+export const listPageviewProps = (
+  pathname: string,
+  search: string
+): Record<string, unknown> | undefined => {
+  if (pathname === '/ocotillo/well/projects') {
+    return { page_template: 'projects_list' }
+  }
+
+  if (pathname === '/ocotillo/well') {
+    const projectId = new URLSearchParams(
+      search.startsWith('?') ? search.slice(1) : search
+    ).get('projectId')
+    if (projectId) {
+      return {
+        page_template: 'wells_list',
+        wells_view: 'project_filtered',
+        project_id: projectId,
+      }
+    }
+    return { page_template: 'wells_list' }
+  }
+
+  if (pathname === '/ocotillo/contact') {
+    return { page_template: 'contacts_list' }
+  }
+
+  return undefined
+}
+
+export const pageviewExtras = (
+  pathname: string,
+  search: string
+): Record<string, unknown> | undefined =>
+  wellDetailPageviewProps(pathname) ?? listPageviewProps(pathname, search)
+
 export const capturePostHogPageview = (
   path: string,
   extras?: Record<string, unknown>
@@ -95,7 +175,23 @@ export const identifyUser = (
   properties: { name?: string; email?: string }
 ) => {
   if (!isEnabled || !initialized) return
-  posthog.identify(userId, properties)
+
+  const personProps: Record<string, string | undefined> = {
+    name: properties.name,
+    email: properties.email,
+  }
+  // $email is the PostHog reserved property that surfaces in the person list.
+  if (properties.email) {
+    personProps.$email = properties.email
+  }
+
+  posthog.identify(userId, personProps)
+}
+
+/** Call after identify on production so replay is tied to the authenticated person. */
+export const startSessionRecordingIfEligible = () => {
+  if (!isEnabled || !initialized || !shouldRecordSessions()) return
+  posthog.startSessionRecording()
 }
 
 export const captureEvent = (

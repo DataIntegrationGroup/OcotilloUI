@@ -1,6 +1,39 @@
-import { Box } from '@mui/material'
+import { Box, Chip } from '@mui/material'
 import { DeleteButton, EditButton, ShowButton } from '@refinedev/mui'
 import { GridColDef } from '@mui/x-data-grid'
+
+type ChipColor = 'default' | 'success' | 'warning' | 'error' | 'info'
+
+const RELEASE_STATUS_COLOR: Record<string, ChipColor> = {
+  draft:       'default',
+  provisional: 'info',
+  final:       'success',
+  published:   'success',
+  public:      'success',
+  archived:    'warning',
+  private:     'error',
+}
+
+export const releaseStatusColumnDef = <
+  T extends object,
+>(overrides: Partial<GridColDef<T>> = {}): GridColDef<T> => ({
+  field: 'release_status',
+  headerName: 'Release Status',
+  type: 'string',
+  width: 145,
+  renderCell: (params) =>
+    params.value ? (
+      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+        <Chip
+          label={params.value}
+          size="small"
+          color={RELEASE_STATUS_COLOR[params.value] ?? 'default'}
+          sx={{ height: 22, '& .MuiChip-label': { px: 1 } }}
+        />
+      </Box>
+    ) : null,
+  ...overrides,
+})
 
 export const idColumnDef = <
   T extends { id: string | number },
