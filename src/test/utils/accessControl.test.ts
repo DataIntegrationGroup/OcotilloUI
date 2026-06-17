@@ -44,6 +44,7 @@ const expectedRegisteredRoutableResources = [
   'ocotillo.thing-well',
   'ocotillo.thing-well-batch-export',
   'ocotillo.thing-well-pdf-preview',
+  'ocotillo.thing-well-projects',
 ].sort()
 
 const expectedAccessByScenario: Scenario[] = [
@@ -61,6 +62,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.contact',
       'ocotillo.thing-well',
       'ocotillo.thing-well-batch-export',
+      'ocotillo.thing-well-projects',
     ],
   },
   {
@@ -72,6 +74,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.thing-well',
       'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
+      'ocotillo.thing-well-projects',
     ],
   },
   {
@@ -103,6 +106,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.thing-well',
       'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
+      'ocotillo.thing-well-projects',
     ],
   },
 ]
