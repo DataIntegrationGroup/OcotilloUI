@@ -21,8 +21,13 @@ import {
 } from '@mui/icons-material'
 import { Masonry } from '@mui/lab'
 import type { IAsset } from '@/interfaces/ocotillo'
-import { QueryObserverResult, useMutation } from '@tanstack/react-query'
-import { GetListResponse, HttpError, useNotification } from '@refinedev/core'
+import { QueryObserverResult } from '@tanstack/react-query'
+import {
+  GetListResponse,
+  HttpError,
+  useNotification,
+  useCustomMutation,
+} from '@refinedev/core'
 import { CardHeaderTitle } from '../card'
 import {
   Dialog,
@@ -213,37 +218,27 @@ export const AttachmentsCard = ({
     })
   }
 
-  const uploadAssetMutation = useMutation({
-    mutationFn: async (preview: UploadPreview) => {
-      if (!thingId) {
-        throw new Error('A well id is required before files can be uploaded.')
-      }
+  const uploadAssetPreview = async (preview: UploadPreview) => {
+    if (!thingId) {
+      throw new Error('A well id is required before files can be uploaded.')
+    }
 
-      const formData = new FormData()
-      formData.append('file', preview.file)
-      formData.append('thing_id', String(thingId))
-      formData.append('label', preview.file.name)
-      formData.append('name', preview.file.name)
+    const formData = new FormData()
+    formData.append('file', preview.file)
+    formData.append('thing_id', String(thingId))
+    formData.append('label', preview.file.name)
+    formData.append('name', preview.file.name)
 
-      const response = await fetch(`/api/asset/upload-and-record`, {
-        method: 'POST',
-        body: formData,
-      })
+    return uploadAsset({
+      url: 'asset/upload-and-record',
+      method: 'post',
+      values: formData,
+      dataProviderName: 'ocotillo',
+    })
+  }
 
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => null)
-
-        throw new Error(
-          errorBody?.detail?.[0]?.msg ??
-            errorBody?.detail ??
-            response.statusText ??
-            'Upload failed'
-        )
-      }
-
-      return response.json()
-    },
-  })
+  const { mutateAsync: uploadAsset, mutation: uploadAssetMutation } =
+    useCustomMutation()
 
   const handleUploadSubmit = async () => {
     if (!thingId) {
@@ -268,7 +263,7 @@ export const AttachmentsCard = ({
 
     for (const preview of uploadPreviews) {
       try {
-        await uploadAssetMutation.mutateAsync(preview)
+        await uploadAssetPreview(preview)
 
         revokePreviewUrl(preview)
         uploadedCount += 1
