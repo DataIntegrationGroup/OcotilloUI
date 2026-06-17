@@ -37,19 +37,18 @@ import { Button as UiButton } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { HttpStatus } from '@/enums'
+import {
+  ALLOWED_FILE_EXTENSIONS,
+  ALLOWED_MIME_TYPES,
+  MAX_UPLOAD_SIZE_IN_BYTES,
+  MAX_UPLOAD_SIZE_IN_MB,
+} from '@/constants'
+import { formatFileSize, isImage, isPdf, isText } from '@/utils'
 
-const ALLOWED_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/tiff',
-  'application/pdf',
-  'text/plain',
-])
-
-const MAX_UPLOAD_SIZE_BYTES = 250 * 1024 * 1024
 const ACCEPTED_FILE_TYPES = Array.from(ALLOWED_MIME_TYPES).join(',')
+const ALLOWED_FILE_TYPES_LABEL = ALLOWED_FILE_EXTENSIONS.map((ext) =>
+  ext.toUpperCase()
+).join(', ')
 
 type PreviewViewMode = 'grid' | 'slideshow'
 type UploadPreview = {
@@ -60,12 +59,6 @@ type UploadPreview = {
   error?: string
 }
 
-const isImage = (asset: IAsset) => asset.mime_type?.startsWith('image/')
-
-const isPdf = (asset: IAsset) => asset.mime_type === 'application/pdf'
-
-const isText = (asset: IAsset) => asset.mime_type === 'text/plain'
-
 const canPreview = (asset: IAsset) =>
   Boolean(asset.signed_url) && (isImage(asset) || isPdf(asset) || isText(asset))
 
@@ -74,21 +67,13 @@ const canPreviewFile = (file: File) =>
   file.type === 'application/pdf' ||
   file.type === 'text/plain'
 
-const formatFileSize = (size: number) => {
-  if (size < 1024 * 1024) {
-    return `${(size / 1024).toFixed(1)} KB`
-  }
-
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`
-}
-
 const getUploadValidationError = (file: File) => {
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     return 'File type is not supported.'
   }
 
-  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
-    return 'File exceeds the 250 MB size limit.'
+  if (file.size > MAX_UPLOAD_SIZE_IN_BYTES) {
+    return `File exceeds the ${MAX_UPLOAD_SIZE_IN_MB} MB size limit.`
   }
 
   return null
@@ -546,8 +531,8 @@ export const AttachmentsCard = ({
                 className="h-auto cursor-pointer py-2"
               />
               <Typography className="text-muted-foreground text-sm">
-                Allowed types: JPG, PNG, GIF, WEBP, TIFF, PDF, TXT. Maximum file
-                size: 250 MB.
+                Allowed types: {ALLOWED_FILE_TYPES_LABEL}. Maximum file size:{' '}
+                {MAX_UPLOAD_SIZE_IN_MB} MB.
               </Typography>
               {uploadError ? (
                 <p className="text-sm text-red-600">{uploadError}</p>
