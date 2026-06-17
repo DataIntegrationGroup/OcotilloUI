@@ -221,11 +221,13 @@ export const ocotilloDataProvider: DataProvider = {
     }
   },
   custom: async ({ url, method, payload, headers }) => {
+    const isFormData = payload instanceof FormData
+
     const config: AxiosRequestConfig = {
       url: `${API_URL}/${url}`,
       method: method || 'GET',
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...headers,
       },
     }
