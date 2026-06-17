@@ -211,6 +211,8 @@ export const getAccessCapabilities = (groups: string[] | null | undefined) => {
     canEditGeothermal,
     canManageGeothermal,
     canViewLexicon: canEditAmp,
+    // Change canManageAmp → canEditAmp here when editors should get well editing access.
+    canEditWell: canManageAmp,
   }
 }
 
