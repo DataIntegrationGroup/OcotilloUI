@@ -567,12 +567,6 @@ export const AttachmentsCard = ({
                       </UiButton>
                     </Box>
 
-                    {preview.error ? (
-                      <Typography className="mb-3 text-sm text-red-600">
-                        {preview.error}
-                      </Typography>
-                    ) : null}
-
                     <Box className="bg-muted flex min-h-40 items-center justify-center overflow-hidden rounded-md border">
                       {preview.file.type.startsWith('image/') &&
                       preview.previewUrl ? (
@@ -584,15 +578,16 @@ export const AttachmentsCard = ({
                         />
                       ) : preview.file.type === 'application/pdf' &&
                         preview.previewUrl ? (
-                        <iframe
+                        <Box
+                          component="iframe"
                           src={preview.previewUrl}
                           title={preview.file.name}
                           className="h-64 w-full border-0"
                         />
                       ) : preview.file.type === 'text/plain' ? (
-                        <pre className="max-h-64 w-full overflow-auto p-3 text-xs whitespace-pre-wrap">
+                        <Typography className="max-h-64 w-full overflow-auto p-3 text-xs whitespace-pre-wrap">
                           {preview.textPreview}
-                        </pre>
+                        </Typography>
                       ) : (
                         <Typography className="text-muted-foreground p-3 text-sm text-center">
                           Preview not available for this file.
@@ -600,14 +595,13 @@ export const AttachmentsCard = ({
                       )}
                     </Box>
 
-                    <Box className="mt-3">
-                      <Chip
-                        label={preview.error ? 'Invalid' : 'Ready to upload'}
-                        color={preview.error ? 'error' : 'success'}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </Box>
+                    {preview.error && (
+                      <Box className="mt-3">
+                        <Typography className="mb-3 text-sm text-red-600">
+                          {preview.error}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 ))}
               </Box>
