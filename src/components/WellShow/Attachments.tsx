@@ -10,7 +10,6 @@ import {
   Card,
   CardHeader,
   CardContent,
-  Chip,
 } from '@mui/material'
 import {
   ChevronLeft,
@@ -649,6 +648,7 @@ const previewStyles = {
       height: 220,
       border: 0,
       bgcolor: 'background.paper',
+      pointerEvents: 'none',
     },
   },
   slideshow: {
@@ -664,6 +664,7 @@ const previewStyles = {
       height: 400,
       border: 0,
       bgcolor: 'background.paper',
+      pointerEvents: 'auto',
     },
   },
 } as const
