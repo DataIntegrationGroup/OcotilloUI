@@ -54,6 +54,9 @@ export type NavItem = {
   children?: NavItem[]
 }
 
+/** Toggle Example nav (typography, data grid demos). Set true to restore. */
+export const SHOW_EXAMPLE_NAV = false
+
 /**
  * Top bar: views and tools.
  * Items without `roles` are visible to every authenticated user.
