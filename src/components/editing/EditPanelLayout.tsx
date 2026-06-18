@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useEditPanelWidth } from './useEditPanelWidth'
 
 /** Height of the main content area below the app shell header (h-14). */
@@ -49,40 +50,57 @@ export function EditPanelLayout({
   pinPanel?: 'sticky' | 'split'
   resizable?: boolean
 }) {
-  const { panelWidth, isResizing, handleResizeStart } = useEditPanelWidth(
-    open && resizable && pinPanel === 'sticky'
-  )
+  const isMobile = useIsMobile()
+  const resizeEnabled =
+    open && resizable && pinPanel === 'sticky' && !isMobile
+  const { panelWidth, isResizing, handleResizeStart } =
+    useEditPanelWidth(resizeEnabled)
 
   if (pinPanel === 'sticky') {
     return (
       <div className={cn('flex', className)}>
-        <div className="min-w-0 flex-1">{children}</div>
+        <div className={cn('min-w-0 flex-1', isMobile && open && 'hidden')}>
+          {children}
+        </div>
 
-        <div
-          className={cn(
-            'relative shrink-0',
-            !isResizing && 'transition-[width] duration-200 ease-in-out',
-            !open && 'w-0 overflow-hidden'
-          )}
-          style={open ? { width: panelWidth } : undefined}
-        >
-          {open ? (
+        {isMobile ? (
+          open ? (
             <div
               className={cn(
-                'relative sticky top-0 w-full',
+                'fixed inset-x-0 top-14 z-30 w-full bg-background',
                 PANEL_VIEWPORT_HEIGHT
               )}
             >
-              {resizable ? (
-                <EditPanelResizeHandle
-                  panelWidth={panelWidth}
-                  onResizeStart={handleResizeStart}
-                />
-              ) : null}
               {panel}
             </div>
-          ) : null}
-        </div>
+          ) : null
+        ) : (
+          <div
+            className={cn(
+              'relative shrink-0',
+              !isResizing && 'transition-[width] duration-200 ease-in-out',
+              !open && 'w-0 overflow-hidden'
+            )}
+            style={open ? { width: panelWidth } : undefined}
+          >
+            {open ? (
+              <div
+                className={cn(
+                  'relative sticky top-0 w-full',
+                  PANEL_VIEWPORT_HEIGHT
+                )}
+              >
+                {resizeEnabled ? (
+                  <EditPanelResizeHandle
+                    panelWidth={panelWidth}
+                    onResizeStart={handleResizeStart}
+                  />
+                ) : null}
+                {panel}
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     )
   }
