@@ -324,7 +324,7 @@ export const WellShow = () => {
   return (
     <EditPanelLayout
       open={isEditPanelOpen && Boolean(id)}
-      className="h-[calc(100svh-3.5rem)] overflow-hidden"
+      pinPanel="sticky"
       panel={
         id ? (
           <WellEditPanel
