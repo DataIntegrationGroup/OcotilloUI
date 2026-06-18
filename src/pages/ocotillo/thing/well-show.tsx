@@ -111,6 +111,17 @@ export const WellShow = () => {
     meta: { params: { thing_id: id } },
     queryOptions: {
       enabled: Boolean(id),
+      // Signed URLs expire after 15 minutes. Refresh the asset list every
+      // 10 minutes so preview and download links remain valid while the
+      // user is viewing the page.
+      refetchInterval: 10 * 60 * 1000,
+
+      // Only refresh while the page is active to avoid unnecessary requests.
+      refetchIntervalInBackground: false,
+
+      // Treat asset data as fresh for 9 minutes. The periodic refetch updates
+      // the signed URLs before they expire.
+      staleTime: 9 * 60 * 1000,
     },
   })
   const well = detailsQuery.data?.well
@@ -415,6 +426,7 @@ export const WellShow = () => {
                 assets={assets}
                 isLoading={assetQuery.isLoading}
                 refetchAssets={assetQuery.refetch}
+                thingId={well?.id ?? (id ? Number(id) : null)}
               />
               <OSEPODInfoCard pod_id={osepod_id} />
               <USGSInfoCard site_id={usgs_id} />
