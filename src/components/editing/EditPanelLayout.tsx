@@ -24,13 +24,13 @@ export function EditPanelLayout({
 }) {
   if (pinPanel === 'sticky') {
     return (
-      <div className={cn('flex items-start', className)}>
+      <div className={cn('flex', className)}>
         <div className="min-w-0 flex-1">{children}</div>
 
         <div
           className={cn(
-            'shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out',
-            open ? panelWidthClassName : 'w-0'
+            'shrink-0 transition-[width] duration-200 ease-in-out',
+            open ? panelWidthClassName : 'w-0 overflow-hidden'
           )}
         >
           {open ? (
