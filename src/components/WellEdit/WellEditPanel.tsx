@@ -1,8 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useCustomMutation, useList } from '@refinedev/core'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDataProvider, useList, useNotification } from '@refinedev/core'
 import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, XIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -15,10 +23,10 @@ import {
   EditPanelField,
   EditPanelSection,
 } from '@/components/editing'
-import { invalidateWellDetails } from '@/hooks'
+import { invalidateWellDetails, wellDetailsQueryKey } from '@/hooks'
+import type { IWellDetails } from '@/interfaces/ocotillo'
 import type { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
 
 interface WellEditPanelProps {
   wellId: string | number
@@ -31,34 +39,23 @@ interface WellEditPanelProps {
 function ProjectChip({
   name,
   onRemove,
-  isRemoving,
-  isBusy,
+  disabled,
 }: {
   name: string
   onRemove: () => void
-  isRemoving: boolean
-  isBusy: boolean
+  disabled?: boolean
 }) {
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 pr-0.75 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20',
-        isRemoving && 'opacity-70'
-      )}
-      aria-busy={isRemoving}
-    >
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 pr-0.75 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
       {name}
       <button
+        type="button"
         onClick={onRemove}
-        disabled={isBusy}
+        disabled={disabled}
         className="rounded-full p-0.5 hover:bg-primary/20 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        aria-label={isRemoving ? `Removing ${name}` : `Remove ${name}`}
+        aria-label={`Remove ${name}`}
       >
-        {isRemoving ? (
-          <Loader2 className="size-3 animate-spin" aria-hidden />
-        ) : (
-          <XIcon className="size-3" />
-        )}
+        <XIcon className="size-3" />
       </button>
     </span>
   )
@@ -95,6 +92,16 @@ function groupsHaveSameIds(a: IGroup[], b: IGroup[]) {
   return b.every((group) => ids.has(group.id))
 }
 
+function syncDraftFromQueryCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  wellId: string | number
+) {
+  const data = queryClient.getQueryData<IWellDetails>(
+    wellDetailsQueryKey(wellId)
+  )
+  return sortGroupsByName(data?.well?.groups ?? [])
+}
+
 export function WellEditPanel({
   wellId,
   wellName,
@@ -103,28 +110,21 @@ export function WellEditPanel({
   onClose,
 }: WellEditPanelProps) {
   const queryClient = useQueryClient()
+  const dataProvider = useDataProvider()
+  const ocotilloDataProvider = useMemo(
+    () => dataProvider('ocotillo'),
+    [dataProvider]
+  )
+  const { open: notify } = useNotification()
+
   const [selectKey, setSelectKey] = useState(0)
-  const [removingGroupId, setRemovingGroupId] = useState<number | null>(null)
-  const [addingGroupId, setAddingGroupId] = useState<number | null>(null)
-  const [optimisticGroups, setOptimisticGroups] = useState<IGroup[] | null>(
-    null
-  )
+  const [draftGroups, setDraftGroups] = useState<IGroup[]>([])
+  const [initialGroups, setInitialGroups] = useState<IGroup[]>([])
+  const [isSaving, setIsSaving] = useState(false)
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false)
+  const wasLoadingRef = useRef(true)
 
-  const currentGroups = useMemo(
-    () => sortGroupsByName(optimisticGroups ?? assignedGroups),
-    [assignedGroups, optimisticGroups]
-  )
   const panelTitle = wellName ? `Edit: ${wellName}` : 'Edit'
-
-  useEffect(() => {
-    if (optimisticGroups === null) {
-      return
-    }
-
-    if (groupsHaveSameIds(optimisticGroups, assignedGroups)) {
-      setOptimisticGroups(null)
-    }
-  }, [assignedGroups, optimisticGroups])
 
   const { result: allGroupsResult, query: groupsQuery } = useList<IGroup>({
     resource: 'group',
@@ -136,148 +136,187 @@ export function WellEditPanel({
     ],
   })
   const isGroupsLoading = groupsQuery.isLoading
+  const isLoading = isAssignedGroupsLoading || isGroupsLoading
+
+  useEffect(() => {
+    wasLoadingRef.current = true
+  }, [wellId])
+
+  useEffect(() => {
+    if (isLoading) {
+      wasLoadingRef.current = true
+      return
+    }
+
+    if (!wasLoadingRef.current) {
+      return
+    }
+
+    const sorted = sortGroupsByName(assignedGroups)
+    setDraftGroups(sorted)
+    setInitialGroups(sorted)
+    wasLoadingRef.current = false
+  }, [assignedGroups, isLoading, wellId])
+
+  const isDirty = useMemo(
+    () => !groupsHaveSameIds(draftGroups, initialGroups),
+    [draftGroups, initialGroups]
+  )
 
   const availableGroups = useMemo(() => {
     const groups = allGroupsResult?.data ?? []
-    const assignedIds = new Set(currentGroups.map((g) => g.id))
+    const assignedIds = new Set(draftGroups.map((group) => group.id))
     return groups
-      .filter((g) => !assignedIds.has(g.id))
+      .filter((group) => !assignedIds.has(group.id))
       .sort((a, b) =>
         a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
       )
-  }, [allGroupsResult?.data, currentGroups])
-
-  const { mutate } = useCustomMutation()
-  const isProjectMutationPending =
-    addingGroupId !== null || removingGroupId !== null
+  }, [allGroupsResult?.data, draftGroups])
 
   const handleAddProject = (group: IGroup) => {
-    setAddingGroupId(group.id)
-    mutate(
-      {
-        url: `group/${group.id}/things/${wellId}`,
-        method: 'post',
-        values: {},
-        dataProviderName: 'ocotillo',
-      },
-      {
-        onSuccess: () => {
-          setSelectKey((key) => key + 1)
-          setOptimisticGroups((previous) => {
-            const base = previous ?? assignedGroups
-            if (base.some((item) => item.id === group.id)) {
-              return base
-            }
-            return sortGroupsByName([...base, group])
-          })
-          setAddingGroupId(null)
-          void invalidateWellDetails(queryClient, wellId)
-        },
-        onError: () => {
-          setAddingGroupId(null)
-          setOptimisticGroups(null)
-        },
-      }
-    )
+    setDraftGroups((previous) => sortGroupsByName([...previous, group]))
+    setSelectKey((key) => key + 1)
   }
 
   const handleRemoveProject = (group: IGroup) => {
-    setRemovingGroupId(group.id)
-    mutate(
-      {
-        url: `group/${group.id}/things/${wellId}`,
-        method: 'delete',
-        values: {},
-        dataProviderName: 'ocotillo',
-      },
-      {
-        onSuccess: () => {
-          setOptimisticGroups((previous) => {
-            const base = previous ?? assignedGroups
-            return base.filter((item) => item.id !== group.id)
-          })
-          setRemovingGroupId(null)
-          void invalidateWellDetails(queryClient, wellId)
-        },
-        onError: () => {
-          setRemovingGroupId(null)
-          setOptimisticGroups(null)
-        },
-      }
+    setDraftGroups((previous) =>
+      previous.filter((item) => item.id !== group.id)
     )
   }
 
-  return (
-    <EditPanel
-      title={panelTitle}
-      onClose={onClose}
-      footer={
-        <Button variant="outline" size="sm" onClick={onClose}>
-          Close
-        </Button>
-      }
-    >
-      <EditPanelSection title="Projects">
-        {isAssignedGroupsLoading || isGroupsLoading ? (
-          <ProjectsSectionSkeleton />
-        ) : (
-          <>
-            <div className="col-span-2">
-              {isProjectMutationPending && (
-                <p className="sr-only" aria-live="polite">
-                  Updating projects…
-                </p>
-              )}
-              {currentGroups.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {currentGroups.map((group) => (
-                    <ProjectChip
-                      key={group.id}
-                      name={group.name}
-                      onRemove={() => handleRemoveProject(group)}
-                      isRemoving={removingGroupId === group.id}
-                      isBusy={isProjectMutationPending}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground italic">
-                  No projects assigned yet.
-                </p>
-              )}
-            </div>
+  const resyncDraftFromServer = async () => {
+    await invalidateWellDetails(queryClient, wellId)
+    const sorted = syncDraftFromQueryCache(queryClient, wellId)
+    setDraftGroups(sorted)
+    setInitialGroups(sorted)
+  }
 
-            <EditPanelField label="Add to project" span="full">
-              <Select
-                key={selectKey}
-                disabled={
-                  isProjectMutationPending || availableGroups.length === 0
-                }
-                onValueChange={(value) => {
-                  const group = availableGroups.find(
-                    (item) => String(item.id) === value
-                  )
-                  if (group) handleAddProject(group)
-                }}
-              >
-                <SelectTrigger
-                  className={cn(
-                    'h-8 w-full text-sm',
-                    isProjectMutationPending && 'text-muted-foreground'
-                  )}
-                  aria-busy={isProjectMutationPending}
+  const handleSave = async () => {
+    if (!isDirty || isSaving) {
+      return
+    }
+
+    const initialIds = new Set(initialGroups.map((group) => group.id))
+    const draftIds = new Set(draftGroups.map((group) => group.id))
+    const toAdd = draftGroups.filter((group) => !initialIds.has(group.id))
+    const toRemove = initialGroups.filter((group) => !draftIds.has(group.id))
+
+    setIsSaving(true)
+
+    try {
+      await Promise.all([
+        ...toRemove.map((group) =>
+          ocotilloDataProvider.custom!({
+            url: `group/${group.id}/things/${wellId}`,
+            method: 'delete',
+          })
+        ),
+        ...toAdd.map((group) =>
+          ocotilloDataProvider.custom!({
+            url: `group/${group.id}/things/${wellId}`,
+            method: 'post',
+            payload: {},
+          })
+        ),
+      ])
+
+      await invalidateWellDetails(queryClient, wellId)
+      onClose()
+    } catch {
+      notify?.({
+        type: 'error',
+        message: 'Could not save project changes. Please try again.',
+      })
+      await resyncDraftFromServer()
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleRequestClose = () => {
+    if (isSaving) {
+      return
+    }
+
+    if (isDirty) {
+      setDiscardDialogOpen(true)
+      return
+    }
+
+    onClose()
+  }
+
+  const handleDiscardChanges = () => {
+    setDiscardDialogOpen(false)
+    onClose()
+  }
+
+  return (
+    <>
+      <EditPanel
+        title={panelTitle}
+        onClose={handleRequestClose}
+        footer={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRequestClose}
+              disabled={isSaving}
+            >
+              Close
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={!isDirty || isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="animate-spin" aria-hidden />
+                  Saving…
+                </>
+              ) : (
+                'Save'
+              )}
+            </Button>
+          </>
+        }
+      >
+        <EditPanelSection title="Projects">
+          {isLoading ? (
+            <ProjectsSectionSkeleton />
+          ) : (
+            <>
+              <div className="col-span-2">
+                {draftGroups.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {draftGroups.map((group) => (
+                      <ProjectChip
+                        key={group.id}
+                        name={group.name}
+                        onRemove={() => handleRemoveProject(group)}
+                        disabled={isSaving}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic">
+                    No projects assigned yet.
+                  </p>
+                )}
+              </div>
+
+              <EditPanelField label="Add to project" span="full">
+                <Select
+                  key={selectKey}
+                  disabled={isSaving || availableGroups.length === 0}
+                  onValueChange={(value) => {
+                    const group = availableGroups.find(
+                      (item) => String(item.id) === value
+                    )
+                    if (group) {
+                      handleAddProject(group)
+                    }
+                  }}
                 >
-                  {addingGroupId !== null ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                      Adding project…
-                    </span>
-                  ) : removingGroupId !== null ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                      Removing project…
-                    </span>
-                  ) : (
+                  <SelectTrigger className="h-8 w-full text-sm">
                     <SelectValue
                       placeholder={
                         availableGroups.length === 0
@@ -285,22 +324,44 @@ export function WellEditPanel({
                           : 'Select project…'
                       }
                     />
-                  )}
-                </SelectTrigger>
-                <SelectContent position="popper" className="max-h-60">
-                  {availableGroups.map((group) => (
-                    <SelectItem key={group.id} value={String(group.id)}>
-                      {group.group_type
-                        ? `${group.name} (${group.group_type})`
-                        : group.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </EditPanelField>
-          </>
-        )}
-      </EditPanelSection>
-    </EditPanel>
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="max-h-60">
+                    {availableGroups.map((group) => (
+                      <SelectItem key={group.id} value={String(group.id)}>
+                        {group.group_type
+                          ? `${group.name} (${group.group_type})`
+                          : group.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </EditPanelField>
+            </>
+          )}
+        </EditPanelSection>
+      </EditPanel>
+
+      <Dialog open={discardDialogOpen} onOpenChange={setDiscardDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Discard unsaved changes?</DialogTitle>
+            <DialogDescription>
+              Project changes you have not saved will be lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDiscardDialogOpen(false)}
+            >
+              Keep editing
+            </Button>
+            <Button variant="destructive" onClick={handleDiscardChanges}>
+              Discard
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
