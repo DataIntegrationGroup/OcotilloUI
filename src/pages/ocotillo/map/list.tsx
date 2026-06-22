@@ -53,6 +53,10 @@ import {
   getSelectedPointDisplayValue,
   getSelectedPointColumns,
 } from '@/utils/mapSelection'
+import {
+  getDistinctMapPoints,
+  getMapPointBounds,
+} from '@/utils/mapPointInteraction'
 
 function localDateStampForExport(): string {
   const d = new Date()
@@ -721,13 +725,32 @@ export const MapView: React.FC = () => {
     })
   }
 
-  const onMapPointClick = (_: any, points: any[]) => {
-    const selectedPoint = points.find(
-      (point) =>
-        typeof point?.layer?.id === 'string' &&
-        point.layer.id.startsWith('location-') &&
-        point?.geometry?.type === 'Point'
-    )
+  const onMapPointClick = (event: any, points: any[]) => {
+    const distinctPoints = getDistinctMapPoints(points)
+    if (distinctPoints.length > 1) {
+      const map = mapRef.current?.getMap?.()
+      const bounds = getMapPointBounds(distinctPoints)
+      if (!map || !bounds) return
+
+      setPopupContent(null)
+      const [[west, south], [east, north]] = bounds
+      if (west === east && south === north) {
+        map.easeTo({
+          center: event.lngLat,
+          zoom: Math.min(map.getZoom() + 2, 18),
+          duration: 500,
+        })
+      } else {
+        map.fitBounds(bounds, {
+          padding: 80,
+          maxZoom: 18,
+          duration: 500,
+        })
+      }
+      return
+    }
+
+    const selectedPoint = distinctPoints[0]
     if (!selectedPoint) return
 
     const layerId: string = selectedPoint.layer.id
