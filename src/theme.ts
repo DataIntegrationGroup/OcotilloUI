@@ -1,6 +1,7 @@
 import { PaletteMode } from '@mui/material'
 import { createTheme } from '@mui/material/styles'
 import type {} from '@mui/x-data-grid/themeAugmentation'
+import { MUI_BREAKPOINT_VALUES } from '@/constants/breakpoints'
 
 /*
  * Full Tailwind v3 color palette as hex values.
@@ -330,6 +331,9 @@ declare module '@mui/material/Typography' {
 
 export const getTheme = (mode: PaletteMode) =>
   createTheme({
+    breakpoints: {
+      values: MUI_BREAKPOINT_VALUES,
+    },
     palette: {
       mode,
       primary: {

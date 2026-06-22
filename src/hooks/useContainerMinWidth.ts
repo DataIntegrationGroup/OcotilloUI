@@ -1,8 +1,5 @@
 import * as React from 'react'
 
-/** Content-area width at which WellShow switches to a two-column layout. */
-export const WELL_SHOW_TWO_COLUMN_MIN_PX = 880
-
 /**
  * Returns true when the observed element's content width is at least minWidth.
  * Uses ResizeObserver so layout responds to available space (e.g. when side panels open).

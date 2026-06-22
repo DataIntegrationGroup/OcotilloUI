@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router'
 import {
   CanAccess,
@@ -594,6 +595,7 @@ function getBrowser(): string {
 
 function SupportPanel() {
   const { isOpen, close } = useContext(SupportPanelContext)
+  const isMobile = useIsMobile()
   const { data: user } = useGetIdentity<{ name: string; email: string }>()
   const location = useLocation()
 
@@ -722,23 +724,12 @@ function SupportPanel() {
 
   const pageUrl = location.pathname
 
-  return (
+  const panelBody = (
     <div
-      ref={outerRef}
-      className={cn(
-        'relative shrink-0 sticky top-0 h-svh overflow-hidden border-l bg-background transition-[width] duration-200 ease-in-out',
-        !isOpen && 'w-0 border-l-0'
-      )}
-      style={isOpen ? { width } : undefined}
-      aria-hidden={!isOpen}
+      ref={innerRef}
+      className="flex h-full w-full flex-col"
+      style={isMobile ? undefined : { width }}
     >
-      {/* Drag handle */}
-      <div
-        onMouseDown={onMouseDown}
-        className="absolute left-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-primary/20 transition-colors z-10"
-      />
-
-      <div ref={innerRef} className="flex h-full flex-col" style={{ width }}>
         {/* Panel header */}
         <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
           <div className="flex items-center gap-2">
@@ -1017,6 +1008,36 @@ function SupportPanel() {
           )}
         </div>
       </div>
+  )
+
+  if (isMobile) {
+    if (!isOpen) return null
+
+    return (
+      <div
+        className="fixed inset-x-0 top-14 z-40 h-[calc(100svh-3.5rem)] border-l bg-background"
+        aria-hidden={!isOpen}
+      >
+        {panelBody}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      ref={outerRef}
+      className={cn(
+        'relative shrink-0 sticky top-0 h-svh overflow-hidden border-l bg-background transition-[width] duration-200 ease-in-out',
+        !isOpen && 'w-0 border-l-0'
+      )}
+      style={isOpen ? { width } : undefined}
+      aria-hidden={!isOpen}
+    >
+      <div
+        onMouseDown={onMouseDown}
+        className="absolute left-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-primary/20 transition-colors z-10"
+      />
+      {panelBody}
     </div>
   )
 }
@@ -1146,14 +1167,14 @@ function ShellHeader() {
       <div className="min-w-0 shrink overflow-hidden">
         <HeaderBreadcrumb />
       </div>
-      {/* Search bar — hidden on mobile, visible sm+ */}
-      <div className="hidden sm:block shrink-0 max-w-sm w-full sm:ml-3">
+      {/* Search bar — hidden on mobile, visible tablet+ */}
+      <div className="hidden tablet:block shrink-0 max-w-sm w-full tablet:ml-3">
         <SearchBar />
       </div>
       <div className="ml-auto flex items-center gap-1 shrink-0">
         {/* Mobile search icon */}
         <button
-          className="sm:hidden flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          className="tablet:hidden flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
           onClick={openSearch}
           aria-label="Search"
         >
@@ -1162,12 +1183,11 @@ function ShellHeader() {
         <ReportBugButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 px-2 sm:px-2.5 gap-1.5 font-semibold cursor-pointer">
-              {/* Avatar on mobile, full name on sm+ */}
-              <span className="flex sm:hidden size-7 rounded bg-primary items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+            <Button variant="ghost" className="h-9 px-2 mobile-lg:px-2.5 gap-1.5 font-semibold cursor-pointer">
+              <span className="flex mobile-lg:hidden size-7 rounded bg-primary items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
                 {initials}
               </span>
-              <span className="hidden sm:inline">{user?.name || 'User'}</span>
+              <span className="hidden mobile-lg:inline">{user?.name || 'User'}</span>
               <ChevronDown className="size-3.5 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
@@ -1246,10 +1266,18 @@ function SidebarAutoCollapse() {
 function AppShellInner({ children }: { children?: React.ReactNode }) {
   const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar()
   const [panelOpen, setPanelOpen] = useState(false)
-  // Remember whether the sidebar was open when the panel was triggered
   const sidebarWasOpen = useRef(false)
+  const secondaryPanelCloseRef = useRef<(() => void) | null>(null)
+
+  const registerSecondaryPanelClose = useCallback(
+    (close: (() => void) | null) => {
+      secondaryPanelCloseRef.current = close
+    },
+    []
+  )
 
   const openPanel = () => {
+    secondaryPanelCloseRef.current?.()
     sidebarWasOpen.current = sidebarOpen
     setSidebarOpen(false)
     setPanelOpen(true)
@@ -1261,7 +1289,14 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
   }
 
   return (
-    <SupportPanelContext.Provider value={{ isOpen: panelOpen, open: openPanel, close: closePanel }}>
+    <SupportPanelContext.Provider
+      value={{
+        isOpen: panelOpen,
+        open: openPanel,
+        close: closePanel,
+        registerSecondaryPanelClose,
+      }}
+    >
       <SidebarAutoCollapse />
       <AppSidebar />
       <AppContent className="min-w-0">

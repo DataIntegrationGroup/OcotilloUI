@@ -233,4 +233,15 @@
   --color-primary-dark: var(--primary-dark);
   --color-secondary-light: var(--secondary-light);
   --color-secondary-dark: var(--secondary-dark);
+
+  /* Canonical responsive breakpoints (see src/constants/breakpoints.ts) */
+  --breakpoint-card: 160px;
+  --breakpoint-card-lg: 240px;
+  --breakpoint-mobile: 320px;
+  --breakpoint-mobile-lg: 480px;
+  --breakpoint-tablet: 640px;
+  --breakpoint-tablet-lg: 880px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-desktop-lg: 1256px;
+  --breakpoint-widescreen: 1400px;
 }

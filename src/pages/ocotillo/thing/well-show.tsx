@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useContext } from 'react'
 import { useDataProvider, useList, useResourceParams } from '@refinedev/core'
 import { captureEvent } from '@/analytics/posthog'
 import { useQuery } from '@tanstack/react-query'
@@ -27,9 +27,9 @@ import {
   useContainerMinWidth,
   useSensorDeploymentRows,
   useSidebarPanelSync,
-  WELL_SHOW_TWO_COLUMN_MIN_PX,
   useWellDetails,
 } from '@/hooks'
+import { WELL_SHOW_TWO_COLUMN_MIN_PX } from '@/constants/breakpoints'
 import {
   CoreWellInfoCard,
   InteractiveSatelliteMapCard,
@@ -56,6 +56,7 @@ import {
   OcotilloHeaderButtons,
 } from '@/components/OcotilloPageHeader'
 import { displayWellSiteName } from '@/utils'
+import { SupportPanelContext } from '@/components/SupportPanelContext'
 
 const EMPTY_ASSETS: IAsset[] = []
 const EMPTY_CONTACTS: IContact[] = []
@@ -80,6 +81,20 @@ export const WellShow = () => {
     closePanel: closeEditPanel,
     togglePanel: toggleEditPanel,
   } = useSidebarPanelSync()
+  const { close: closeSupportPanel, registerSecondaryPanelClose } =
+    useContext(SupportPanelContext)
+
+  useEffect(() => {
+    registerSecondaryPanelClose(closeEditPanel)
+    return () => registerSecondaryPanelClose(null)
+  }, [closeEditPanel, registerSecondaryPanelClose])
+
+  const handleToggleEditPanel = () => {
+    if (!isEditPanelOpen) {
+      closeSupportPanel()
+    }
+    toggleEditPanel()
+  }
 
   const { id } = useResourceParams()
 
@@ -498,10 +513,10 @@ export const WellShow = () => {
               <Button
                 variant={isEditPanelOpen ? 'default' : 'outline'}
                 size="sm"
-                onClick={toggleEditPanel}
+                onClick={handleToggleEditPanel}
               >
                 <PencilIcon />
-                Edit
+                <span className="hidden mobile-lg:inline">Edit</span>
               </Button>
             ) : null}
           </OcotilloHeaderButtons>

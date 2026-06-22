@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Box, Skeleton, SxProps, Theme, Typography } from '@mui/material'
+import { cn } from '@/lib/utils'
 
 /** Shared CardHeader layout for Ocotillo list and show pages. */
 export const ocotilloCardHeaderProps: { sx: SxProps<Theme> } = {
@@ -9,11 +10,13 @@ export const ocotilloCardHeaderProps: { sx: SxProps<Theme> } = {
     gap: { xs: 1.5, md: 3 },
     '.MuiCardHeader-content': {
       alignSelf: 'flex-start',
+      minWidth: 0,
     },
     '.MuiCardHeader-action': {
       alignSelf: { xs: 'flex-end', md: 'flex-start' },
       mr: 0,
       pt: { xs: 0.5, md: 1 },
+      maxWidth: '100%',
     },
   },
 }
@@ -69,6 +72,14 @@ export function OcotilloHeaderButtons({
   className?: string
 }) {
   return (
-    <div className={className ?? 'flex items-center gap-1.5'}>{children}</div>
+    <div
+      className={cn(
+        'flex max-w-full flex-wrap items-center justify-end gap-1.5',
+        '[&_button]:min-h-9 [&_button]:shrink-0',
+        className
+      )}
+    >
+      {children}
+    </div>
   )
 }

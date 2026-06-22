@@ -1,7 +1,6 @@
 import { Box, Paper, Skeleton, Typography } from '@mui/material'
+import { CORE_WELL_INFO_STATS_MIN_PX } from '@/constants/breakpoints'
 import { IWell } from '@/interfaces/ocotillo'
-
-const STATS_WIDE_MIN_PX = 480
 
 const statCellSx = (index: number) => ({
   px: 2,
@@ -9,7 +8,7 @@ const statCellSx = (index: number) => ({
   borderColor: 'divider',
   borderTop: index > 0 ? '1px solid' : 'none',
   borderLeft: 'none',
-  [`@container (min-width: ${STATS_WIDE_MIN_PX}px)`]: {
+  [`@container (min-width: ${CORE_WELL_INFO_STATS_MIN_PX}px)`]: {
     borderTop: 'none',
     borderLeft: index > 0 ? '1px solid' : 'none',
   },
@@ -18,7 +17,7 @@ const statCellSx = (index: number) => ({
 const statsGridSx = {
   display: 'grid',
   gridTemplateColumns: '1fr',
-  [`@container (min-width: ${STATS_WIDE_MIN_PX}px)`]: {
+  [`@container (min-width: ${CORE_WELL_INFO_STATS_MIN_PX}px)`]: {
     gridTemplateColumns: 'repeat(3, 1fr)',
   },
 } as const
