@@ -17,6 +17,7 @@ import {
 } from '@/components/editing'
 import { invalidateWellDetails } from '@/hooks'
 import type { IGroup } from '@/interfaces/ocotillo/IGroup'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface WellEditPanelProps {
   wellId: string | number
@@ -47,6 +48,22 @@ function ProjectChip({
         <XIcon className="size-3" />
       </button>
     </span>
+  )
+}
+
+function ProjectsSectionSkeleton() {
+  return (
+    <>
+      <div className="col-span-2 flex flex-wrap gap-1.5">
+        <Skeleton className="h-6 w-28 rounded-full" />
+        <Skeleton className="h-6 w-36 rounded-full" />
+        <Skeleton className="h-6 w-24 rounded-full" />
+      </div>
+      <div className="col-span-2 flex flex-col gap-1.5">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-8 w-full rounded-md" />
+      </div>
+    </>
   )
 }
 
@@ -135,9 +152,7 @@ export function WellEditPanel({
     >
       <EditPanelSection title="Projects">
         {isAssignedGroupsLoading || isGroupsLoading ? (
-          <div className="col-span-2">
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          </div>
+          <ProjectsSectionSkeleton />
         ) : (
           <>
             <div className="col-span-2">
