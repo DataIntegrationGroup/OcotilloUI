@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useCustomMutation, useList } from '@refinedev/core'
 import { useQueryClient } from '@tanstack/react-query'
-import { XIcon } from 'lucide-react'
+import { Loader2, XIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -18,6 +18,7 @@ import {
 import { invalidateWellDetails } from '@/hooks'
 import type { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 
 interface WellEditPanelProps {
   wellId: string | number
@@ -31,21 +32,33 @@ function ProjectChip({
   name,
   onRemove,
   isRemoving,
+  isBusy,
 }: {
   name: string
   onRemove: () => void
   isRemoving: boolean
+  isBusy: boolean
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 pr-0.75 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 pr-0.75 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20',
+        isRemoving && 'opacity-70'
+      )}
+      aria-busy={isRemoving}
+    >
       {name}
       <button
         onClick={onRemove}
-        disabled={isRemoving}
+        disabled={isBusy}
         className="rounded-full p-0.5 hover:bg-primary/20 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        aria-label={`Remove ${name}`}
+        aria-label={isRemoving ? `Removing ${name}` : `Remove ${name}`}
       >
-        <XIcon className="size-3" />
+        {isRemoving ? (
+          <Loader2 className="size-3 animate-spin" aria-hidden />
+        ) : (
+          <XIcon className="size-3" />
+        )}
       </button>
     </span>
   )
@@ -104,6 +117,8 @@ export function WellEditPanel({
   }, [allGroupsResult?.data, currentGroups])
 
   const { mutate } = useCustomMutation()
+  const isProjectMutationPending =
+    addingGroupId !== null || removingGroupId !== null
 
   const handleAddProject = (group: IGroup) => {
     setAddingGroupId(group.id)
@@ -156,6 +171,11 @@ export function WellEditPanel({
         ) : (
           <>
             <div className="col-span-2">
+              {isProjectMutationPending && (
+                <p className="sr-only" aria-live="polite">
+                  Updating projects…
+                </p>
+              )}
               {currentGroups.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
                   {currentGroups.map((group) => (
@@ -164,6 +184,7 @@ export function WellEditPanel({
                       name={group.name}
                       onRemove={() => handleRemoveProject(group)}
                       isRemoving={removingGroupId === group.id}
+                      isBusy={isProjectMutationPending}
                     />
                   ))}
                 </div>
@@ -178,7 +199,7 @@ export function WellEditPanel({
               <Select
                 key={selectKey}
                 disabled={
-                  addingGroupId !== null || availableGroups.length === 0
+                  isProjectMutationPending || availableGroups.length === 0
                 }
                 onValueChange={(value) => {
                   const group = availableGroups.find(
@@ -187,14 +208,32 @@ export function WellEditPanel({
                   if (group) handleAddProject(group)
                 }}
               >
-                <SelectTrigger className="h-8 w-full text-sm">
-                  <SelectValue
-                    placeholder={
-                      availableGroups.length === 0
-                        ? 'No projects available'
-                        : 'Select project…'
-                    }
-                  />
+                <SelectTrigger
+                  className={cn(
+                    'h-8 w-full text-sm',
+                    isProjectMutationPending && 'text-muted-foreground'
+                  )}
+                  aria-busy={isProjectMutationPending}
+                >
+                  {addingGroupId !== null ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                      Adding project…
+                    </span>
+                  ) : removingGroupId !== null ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                      Removing project…
+                    </span>
+                  ) : (
+                    <SelectValue
+                      placeholder={
+                        availableGroups.length === 0
+                          ? 'No projects available'
+                          : 'Select project…'
+                      }
+                    />
+                  )}
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-60">
                   {availableGroups.map((group) => (
