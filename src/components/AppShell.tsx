@@ -1267,17 +1267,8 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
   const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar()
   const [panelOpen, setPanelOpen] = useState(false)
   const sidebarWasOpen = useRef(false)
-  const secondaryPanelCloseRef = useRef<(() => void) | null>(null)
-
-  const registerSecondaryPanelClose = useCallback(
-    (close: (() => void) | null) => {
-      secondaryPanelCloseRef.current = close
-    },
-    []
-  )
 
   const openPanel = () => {
-    secondaryPanelCloseRef.current?.()
     sidebarWasOpen.current = sidebarOpen
     setSidebarOpen(false)
     setPanelOpen(true)
@@ -1290,12 +1281,7 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
 
   return (
     <SupportPanelContext.Provider
-      value={{
-        isOpen: panelOpen,
-        open: openPanel,
-        close: closePanel,
-        registerSecondaryPanelClose,
-      }}
+      value={{ isOpen: panelOpen, open: openPanel, close: closePanel }}
     >
       <SidebarAutoCollapse />
       <AppSidebar />

@@ -75,7 +75,7 @@ export function OcotilloHeaderButtons({
     <div
       className={cn(
         'flex max-w-full flex-wrap items-center justify-end gap-1.5',
-        '[&_button]:min-h-9 [&_button]:shrink-0',
+        '[&_button]:shrink-0',
         className
       )}
     >
