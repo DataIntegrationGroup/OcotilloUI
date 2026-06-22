@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useCustomMutation, useList } from '@refinedev/core'
 import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, XIcon } from 'lucide-react'
@@ -80,6 +80,21 @@ function ProjectsSectionSkeleton() {
   )
 }
 
+function sortGroupsByName(groups: IGroup[]) {
+  return [...groups].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  )
+}
+
+function groupsHaveSameIds(a: IGroup[], b: IGroup[]) {
+  if (a.length !== b.length) {
+    return false
+  }
+
+  const ids = new Set(a.map((group) => group.id))
+  return b.every((group) => ids.has(group.id))
+}
+
 export function WellEditPanel({
   wellId,
   wellName,
@@ -95,8 +110,21 @@ export function WellEditPanel({
     null
   )
 
-  const currentGroups = optimisticGroups ?? assignedGroups
+  const currentGroups = useMemo(
+    () => sortGroupsByName(optimisticGroups ?? assignedGroups),
+    [assignedGroups, optimisticGroups]
+  )
   const panelTitle = wellName ? `Edit: ${wellName}` : 'Edit'
+
+  useEffect(() => {
+    if (optimisticGroups === null) {
+      return
+    }
+
+    if (groupsHaveSameIds(optimisticGroups, assignedGroups)) {
+      setOptimisticGroups(null)
+    }
+  }, [assignedGroups, optimisticGroups])
 
   const { result: allGroupsResult, query: groupsQuery } = useList<IGroup>({
     resource: 'group',
@@ -140,14 +168,10 @@ export function WellEditPanel({
             if (base.some((item) => item.id === group.id)) {
               return base
             }
-            return [...base, group].sort((a, b) =>
-              a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-            )
+            return sortGroupsByName([...base, group])
           })
-          void invalidateWellDetails(queryClient, wellId).finally(() => {
-            setAddingGroupId(null)
-            setOptimisticGroups(null)
-          })
+          setAddingGroupId(null)
+          void invalidateWellDetails(queryClient, wellId)
         },
         onError: () => {
           setAddingGroupId(null)
@@ -172,10 +196,8 @@ export function WellEditPanel({
             const base = previous ?? assignedGroups
             return base.filter((item) => item.id !== group.id)
           })
-          void invalidateWellDetails(queryClient, wellId).finally(() => {
-            setRemovingGroupId(null)
-            setOptimisticGroups(null)
-          })
+          setRemovingGroupId(null)
+          void invalidateWellDetails(queryClient, wellId)
         },
         onError: () => {
           setRemovingGroupId(null)
