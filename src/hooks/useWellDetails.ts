@@ -29,7 +29,7 @@ export function invalidateWellDetails(
     return Promise.resolve()
   }
 
-  return queryClient.invalidateQueries({
+  return queryClient.refetchQueries({
     queryKey: wellDetailsQueryKey(id),
   })
 }

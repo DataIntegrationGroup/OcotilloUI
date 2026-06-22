@@ -91,8 +91,11 @@ export function WellEditPanel({
   const [selectKey, setSelectKey] = useState(0)
   const [removingGroupId, setRemovingGroupId] = useState<number | null>(null)
   const [addingGroupId, setAddingGroupId] = useState<number | null>(null)
+  const [optimisticGroups, setOptimisticGroups] = useState<IGroup[] | null>(
+    null
+  )
 
-  const currentGroups = assignedGroups
+  const currentGroups = optimisticGroups ?? assignedGroups
   const panelTitle = wellName ? `Edit: ${wellName}` : 'Edit'
 
   const { result: allGroupsResult, query: groupsQuery } = useList<IGroup>({
@@ -132,9 +135,24 @@ export function WellEditPanel({
       {
         onSuccess: () => {
           setSelectKey((key) => key + 1)
-          void invalidateWellDetails(queryClient, wellId)
+          setOptimisticGroups((previous) => {
+            const base = previous ?? assignedGroups
+            if (base.some((item) => item.id === group.id)) {
+              return base
+            }
+            return [...base, group].sort((a, b) =>
+              a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+            )
+          })
+          void invalidateWellDetails(queryClient, wellId).finally(() => {
+            setAddingGroupId(null)
+            setOptimisticGroups(null)
+          })
         },
-        onSettled: () => setAddingGroupId(null),
+        onError: () => {
+          setAddingGroupId(null)
+          setOptimisticGroups(null)
+        },
       }
     )
   }
@@ -149,8 +167,20 @@ export function WellEditPanel({
         dataProviderName: 'ocotillo',
       },
       {
-        onSuccess: () => void invalidateWellDetails(queryClient, wellId),
-        onSettled: () => setRemovingGroupId(null),
+        onSuccess: () => {
+          setOptimisticGroups((previous) => {
+            const base = previous ?? assignedGroups
+            return base.filter((item) => item.id !== group.id)
+          })
+          void invalidateWellDetails(queryClient, wellId).finally(() => {
+            setRemovingGroupId(null)
+            setOptimisticGroups(null)
+          })
+        },
+        onError: () => {
+          setRemovingGroupId(null)
+          setOptimisticGroups(null)
+        },
       }
     )
   }
