@@ -48,4 +48,19 @@ describe('map point interaction', () => {
 
     expect(getDistinctMapPoints(features)).toEqual([])
   })
+
+  it('returns same coordinate bounds for overlapping distinct wells', () => {
+    const features = [
+      point(42, [-106.1, 35.1], 'location-ogc-water-wells'),
+      point(43, [-106.1, 35.1], 'location-ogc-water-wells'),
+    ]
+
+    const distinctPoints = getDistinctMapPoints(features)
+
+    expect(distinctPoints).toHaveLength(2)
+    expect(getMapPointBounds(distinctPoints)).toEqual([
+      [-106.1, 35.1],
+      [-106.1, 35.1],
+    ])
+  })
 })

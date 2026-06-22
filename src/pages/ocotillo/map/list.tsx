@@ -441,7 +441,13 @@ export const MapView: React.FC = () => {
       window.cancelAnimationFrame(idleFrame)
       map?.off?.('idle', handleMapIdle)
     }
-  }, [THING_LAYERS, viewportBbox, visibleLayerLabels, visibleLayers, selectionPolygons])
+  }, [
+    THING_LAYERS,
+    viewportBbox,
+    visibleLayerLabels,
+    visibleLayers,
+    selectionPolygons,
+  ])
 
   const selectedMajorChemistryPoints = useMemo(
     () =>
@@ -725,7 +731,7 @@ export const MapView: React.FC = () => {
     })
   }
 
-  const onMapPointClick = (event: any, points: any[]) => {
+  const onMapPointClick = (_: any, points: any[]) => {
     const distinctPoints = getDistinctMapPoints(points)
     if (distinctPoints.length > 1) {
       const map = mapRef.current?.getMap?.()
@@ -734,13 +740,17 @@ export const MapView: React.FC = () => {
 
       setPopupContent(null)
       const [[west, south], [east, north]] = bounds
+
+      // If all wells share the exact same coordinates, fitBounds cannot zoom in.
+      // Perform a simple zoom centered on the shared location instead.
       if (west === east && south === north) {
         map.easeTo({
-          center: event.lngLat,
+          center: [west, south],
           zoom: Math.min(map.getZoom() + 2, 18),
           duration: 500,
         })
       } else {
+        // Zoom to include all distinct wells while preventing excessive zoom.
         map.fitBounds(bounds, {
           padding: 80,
           maxZoom: 18,
@@ -1623,10 +1633,7 @@ export const MapView: React.FC = () => {
                 }}
               >
                 <Box sx={{ minWidth: 0 }}>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 600 }}
-                  >
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
                     {hasVisiblePointFeatures
                       ? `${totalVisiblePointCount} feature${totalVisiblePointCount === 1 ? '' : 's'} in view`
                       : 'No features in view'}
@@ -1839,16 +1846,15 @@ const VisibleFeatureCard = ({
         }),
       }
     : null
-  const principalDateDetail =
-    principalDetailConfig?.dateColumn
-      ? {
-          label: getSelectedPointColumnLabel(principalDetailConfig.dateColumn),
-          value: getSelectedPointDisplayValue({
-            column: principalDetailConfig.dateColumn,
-            feature,
-          }),
-        }
-      : null
+  const principalDateDetail = principalDetailConfig?.dateColumn
+    ? {
+        label: getSelectedPointColumnLabel(principalDetailConfig.dateColumn),
+        value: getSelectedPointDisplayValue({
+          column: principalDetailConfig.dateColumn,
+          feature,
+        }),
+      }
+    : null
   const details =
     principalDetail && principalDetail.value
       ? [
@@ -1925,7 +1931,9 @@ const VisibleFeatureCard = ({
               sx={(theme) => ({
                 display: 'grid',
                 gridTemplateColumns:
-                  cardDetails.length === 1 ? '1fr' : 'repeat(2, minmax(0, 1fr))',
+                  cardDetails.length === 1
+                    ? '1fr'
+                    : 'repeat(2, minmax(0, 1fr))',
                 gap: 0.6,
                 ...(cardDetails.length > 1
                   ? {
