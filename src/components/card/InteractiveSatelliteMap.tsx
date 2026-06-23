@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import wellknown from 'wellknown'
 import { IWell } from '@/interfaces/ocotillo'
+import type { IGroup } from '@/interfaces/ocotillo/IGroup'
 import {
   Box,
   Button,
@@ -20,14 +22,284 @@ import { useGo } from '@refinedev/core'
 
 const MAP_HEIGHT = 450
 
-const HeaderTitle = () => (
-  <CardHeaderTitle
-    icon={<Map color="primary" />}
-    title="Location"
-  />
+const MapCardHeader = ({ title }: { title: string }) => (
+  <CardHeaderTitle icon={<Map color="primary" />} title={title} />
 )
 
-export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
+type WellMapProps = {
+  well: IWell
+  wells?: never
+  projectArea?: never
+  mapTitle?: never
+  isLoading?: never
+}
+
+type ProjectMapProps = {
+  well?: never
+  wells: IWell[]
+  projectArea?: IGroup['project_area']
+  mapTitle?: string
+  isLoading?: boolean
+}
+
+export type InteractiveSatelliteMapCardProps = WellMapProps | ProjectMapProps
+
+export const InteractiveSatelliteMapCard = (
+  props: InteractiveSatelliteMapCardProps
+) => {
+  if ('wells' in props) {
+    return (
+      <ProjectMapView
+        wells={props.wells}
+        projectArea={props.projectArea}
+        mapTitle={props.mapTitle}
+        isLoading={props.isLoading}
+      />
+    )
+  }
+  return <WellMapView well={props.well} />
+}
+
+const parseProjectArea = (projectArea: IGroup['project_area']) => {
+  if (!projectArea) return null
+  try {
+    if (typeof projectArea === 'string') {
+      return wellknown.parse(projectArea)
+    }
+    return projectArea
+  } catch (error) {
+    console.error('Invalid project area geometry:', projectArea, error)
+    return null
+  }
+}
+
+const wellsToFeatureCollection = (wells: IWell[]) => {
+  const features = wells
+    .filter((well) => {
+      const coords = well.current_location?.geometry?.coordinates
+      return coords && coords.length >= 2
+    })
+    .map((well) => {
+      const coords = well.current_location!.geometry!
+        .coordinates as [number, number, number?]
+      return {
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [coords[0], coords[1]],
+        },
+        properties: {
+          name: well.name,
+          thing_id: well.id,
+          thing_type: 'water well',
+        },
+      }
+    })
+
+  return features.length > 0
+    ? { type: 'FeatureCollection' as const, features }
+    : null
+}
+
+const ProjectMapView = ({
+  wells,
+  projectArea,
+  mapTitle = 'Project Map',
+  isLoading = false,
+}: ProjectMapProps) => {
+  const mapRef = useRef<MapRef>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [popupContent, setPopupContent] = useState<any>(null)
+  const go = useGo()
+
+  const boundary = useMemo(() => parseProjectArea(projectArea), [projectArea])
+  const wellsFeatureCollection = useMemo(
+    () => wellsToFeatureCollection(wells),
+    [wells]
+  )
+  const mapPoints = wellsFeatureCollection?.features ?? []
+
+  const centerLon =
+    mapPoints.length > 0
+      ? mapPoints.reduce(
+          (sum, feature) => sum + (feature.geometry.coordinates[0] ?? 0),
+          0
+        ) / mapPoints.length
+      : -106.4
+  const centerLat =
+    mapPoints.length > 0
+      ? mapPoints.reduce(
+          (sum, feature) => sum + (feature.geometry.coordinates[1] ?? 0),
+          0
+        ) / mapPoints.length
+      : 34.5
+
+  useEffect(() => {
+    if (!mapRef.current || mapPoints.length === 0) return
+
+    const map = mapRef.current.getMap()
+
+    if (mapPoints.length === 1) {
+      const [lon, lat] = mapPoints[0].geometry.coordinates
+      map.flyTo({ center: [lon, lat], zoom: 12, essential: true })
+      return
+    }
+
+    const lons = mapPoints.map((feature) => feature.geometry.coordinates[0] ?? 0)
+    const lats = mapPoints.map((feature) => feature.geometry.coordinates[1] ?? 0)
+    map.fitBounds(
+      [
+        [Math.min(...lons), Math.min(...lats)],
+        [Math.max(...lons), Math.max(...lats)],
+      ],
+      { padding: 48, maxZoom: 12, duration: 0 }
+    )
+  }, [mapPoints])
+
+  const getFeatureId = (feature?: {
+    id?: number | string
+    properties?: Record<string, unknown>
+  }): string | undefined => {
+    const p = feature?.properties
+    const featureId =
+      p?.['thing_id'] ??
+      p?.['well_id'] ??
+      p?.['id'] ??
+      p?.['fid'] ??
+      p?.['feature_id'] ??
+      feature?.id
+
+    return featureId != null && featureId !== '' ? String(featureId) : undefined
+  }
+
+  const onMapPointClick = (_: unknown, points: any[]) => {
+    const selectedPoint = points.find(
+      (point) =>
+        typeof point?.layer?.id === 'string' &&
+        point.layer.id.startsWith('location-')
+    )
+    if (!selectedPoint) return
+
+    const id = getFeatureId(selectedPoint)
+    if (!id) return
+
+    go({
+      to: {
+        resource: 'ocotillo.thing-well',
+        action: 'show',
+        id,
+      },
+    })
+  }
+
+  const onMapMouseMove = (_e: unknown, features: any[], mapRefObj: any) => {
+    const locationFeatures = features.filter((feature) =>
+      feature.layer?.id?.startsWith('location-')
+    )
+    if (locationFeatures.length > 0 && mapRefObj?.current) {
+      mapRefObj.current.getCanvas().style.cursor = 'pointer'
+      setPopupContent({
+        coordinates: locationFeatures[0].geometry.coordinates,
+        children: <MapPopup features={locationFeatures} />,
+        maxWidth: '800px',
+      })
+    } else if (mapRefObj?.current) {
+      mapRefObj.current.getCanvas().style.cursor = 'grab'
+      setPopupContent(null)
+    }
+  }
+
+  if (isLoading) {
+    return <LoadingCard title={mapTitle} showCoordSkeleton={false} />
+  }
+
+  return (
+    <Card
+      elevation={2}
+      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+    >
+      <CardHeader title={<MapCardHeader title={mapTitle} />} />
+      <CardContent>
+        {!boundary && mapPoints.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            No project boundary or well locations to display.
+          </Typography>
+        ) : (
+          <Box
+            data-testid="ocotillo-map-container"
+            ref={containerRef}
+            sx={{
+              position: 'relative',
+              borderRadius: 2,
+              overflow: 'hidden',
+              border: '2.5px solid',
+              borderColor: 'divider',
+              height: MAP_HEIGHT,
+              width: '100%',
+              display: 'flex',
+            }}
+          >
+            <MapComponent
+              mapRef={mapRef}
+              initialViewState={{
+                longitude: centerLon,
+                latitude: centerLat,
+                zoom: mapPoints.length > 0 ? 8 : 6,
+              }}
+              onPointClick={onMapPointClick}
+              onMouseMoveCallback={onMapMouseMove}
+              setPopupContent={setPopupContent}
+              popupContent={popupContent}
+              style={{ flex: 1, width: '100%', height: '100%' }}
+              containerRef={containerRef}
+            >
+              {boundary ? (
+                <Source id="project-area" type="geojson" data={boundary}>
+                  <Layer
+                    type="fill"
+                    id="project-area-fill"
+                    paint={{
+                      'fill-color': '#007bff',
+                      'fill-opacity': 0.2,
+                    }}
+                  />
+                  <Layer
+                    type="line"
+                    id="project-area-outline"
+                    paint={{
+                      'line-color': '#007bff',
+                      'line-width': 2,
+                    }}
+                  />
+                </Source>
+              ) : null}
+              {wellsFeatureCollection ? (
+                <Source
+                  id="project-wells"
+                  type="geojson"
+                  data={wellsFeatureCollection}
+                >
+                  <Layer
+                    id="location-project-wells"
+                    type="circle"
+                    paint={{
+                      'circle-radius': 6,
+                      'circle-color': '#2b7dc0',
+                      'circle-stroke-color': '#ffffff',
+                      'circle-stroke-width': 2,
+                    }}
+                  />
+                </Source>
+              ) : null}
+            </MapComponent>
+          </Box>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+const WellMapView = ({ well }: { well: IWell }) => {
   const mapRef = useRef<MapRef>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [loadNearbyWells, setLoadNearbyWells] = useState(false)
@@ -47,7 +319,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
     | [number, number, number?]
     | undefined
 
-  const [lon, lat, _elevation] = coords ?? []
+  const [lon, lat] = coords ?? []
 
   const { easting, northing } = well?.current_location?.properties
     ?.utm_coordinates ?? { easting: null, northing: null }
@@ -71,7 +343,6 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
     return () => window.clearTimeout(timer)
   }, [])
 
-  // Automatically zoom to well coordinates when map loads or well changes
   useEffect(() => {
     if (!lon || !lat || !mapRef.current) return
 
@@ -79,23 +350,23 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
     map.flyTo({
       center: [lon, lat],
       zoom: 14,
-      essential: true, // for accessibility
+      essential: true,
     })
-  }, [well?.id])
+  }, [well?.id, lon, lat])
 
   if (!well) {
-    return <LoadingCard />
+    return <LoadingCard title="Location" />
   }
 
   const highlightFeature =
     lon && lat
       ? {
-          type: 'FeatureCollection',
+          type: 'FeatureCollection' as const,
           features: [
             {
-              type: 'Feature',
+              type: 'Feature' as const,
               geometry: {
-                type: 'Point',
+                type: 'Point' as const,
                 coordinates: [lon, lat],
               },
               properties: { name: well.name },
@@ -109,7 +380,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
     properties?: Record<string, unknown>
   }): string | undefined => {
     const p = feature?.properties
-    const id =
+    const featureId =
       p?.['thing_id'] ??
       p?.['well_id'] ??
       p?.['id'] ??
@@ -117,10 +388,10 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
       p?.['feature_id'] ??
       feature?.id
 
-    return id != null && id !== '' ? String(id) : undefined
+    return featureId != null && featureId !== '' ? String(featureId) : undefined
   }
 
-  const onMapPointClick = (_: any, points: any[]) => {
+  const onMapPointClick = (_: unknown, points: any[]) => {
     const selectedPoint = points.find(
       (point) =>
         typeof point?.layer?.id === 'string' &&
@@ -131,31 +402,33 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
     const thingType: string = String(
       selectedPoint?.properties?.thing_type || ''
     ).toLowerCase()
-    const id = getFeatureId(selectedPoint)
-    if (!id) return
+    const featureId = getFeatureId(selectedPoint)
+    if (!featureId) return
 
     if (thingType === 'water well' || thingType === 'geothermal well') {
       go({
         to: {
           resource: 'ocotillo.thing-well',
           action: 'show',
-          id,
+          id: featureId,
         },
       })
     }
   }
 
-  const onMapMouseMove = (_e: any, features: any[], mapRef: any) => {
-    features = features.filter((f) => f.layer.id.startsWith('location-'))
-    if (features.length > 0) {
-      mapRef.current.getCanvas().style.cursor = 'pointer'
+  const onMapMouseMove = (_e: unknown, features: any[], mapRefObj: any) => {
+    const locationFeatures = features.filter((feature) =>
+      feature.layer?.id?.startsWith('location-')
+    )
+    if (locationFeatures.length > 0 && mapRefObj?.current) {
+      mapRefObj.current.getCanvas().style.cursor = 'pointer'
       setPopupContent({
-        coordinates: features[0].geometry.coordinates,
-        children: <MapPopup features={features} />,
+        coordinates: locationFeatures[0].geometry.coordinates,
+        children: <MapPopup features={locationFeatures} />,
         maxWidth: '800px',
       })
-    } else {
-      mapRef.current.getCanvas().style.cursor = 'grab'
+    } else if (mapRefObj?.current) {
+      mapRefObj.current.getCanvas().style.cursor = 'grab'
       setPopupContent(null)
     }
   }
@@ -175,9 +448,9 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
       sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
     >
       <CardHeader
-        title={<HeaderTitle />}
+        title={<MapCardHeader title="Location" />}
         action={
-          googleMapsUrl && (
+          googleMapsUrl ? (
             <Button
               component="a"
               href={googleMapsUrl}
@@ -187,7 +460,7 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             >
               Open in Google Maps
             </Button>
-          )
+          ) : null
         }
       />
       <CardContent>
@@ -219,32 +492,28 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             style={{ flex: 1, width: '100%', height: '100%' }}
             containerRef={containerRef}
           >
-            {sourceProps && layerProps && (
+            {sourceProps && layerProps ? (
               <Source id="water-wells" {...sourceProps}>
                 <Layer id="location-water-wells" {...layerProps} />
               </Source>
-            )}
-            {highlightFeature && (
-              <Source
-                id="highlight-well"
-                type="geojson"
-                data={highlightFeature}
-              >
+            ) : null}
+            {highlightFeature ? (
+              <Source id="highlight-well" type="geojson" data={highlightFeature}>
                 <Layer
                   id="highlight-layer"
                   type="circle"
                   paint={{
                     'circle-radius': 6,
-                    'circle-color': '#ff4d4d', // bright red highlight
+                    'circle-color': '#ff4d4d',
                     'circle-stroke-color': '#ffffff',
                     'circle-stroke-width': 2,
                   }}
                 />
               </Source>
-            )}
+            ) : null}
           </MapComponent>
         </Box>
-        {locationNote && (
+        {locationNote ? (
           <>
             <Typography variant="h6" component="div" sx={{ pt: 1 }}>
               Directions to the site
@@ -255,10 +524,10 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
               color="textSecondary"
               sx={{ pt: 1 }}
             >
-              {locationNote?.content}
+              {locationNote.content}
             </Typography>
           </>
-        )}
+        ) : null}
         <Stack spacing={0.75} sx={{ pt: 1.5 }}>
           <CoordRow
             label="Latitude / Longitude"
@@ -270,9 +539,9 @@ export const InteractiveSatelliteMapCard = ({ well }: { well: IWell }) => {
             value={utmValue}
             copyValue={utmValue !== 'N/A' ? utmValue : undefined}
           />
-          {coordinateNotes && (
+          {coordinateNotes ? (
             <CoordRow label="Coordinate Notes" value={coordinateNotes} />
-          )}
+          ) : null}
         </Stack>
       </CardContent>
     </Card>
@@ -305,55 +574,57 @@ const CoordRow = ({
       <Typography variant="body2" color="text.secondary" component="span">
         {value}
       </Typography>
-      {copyValue && (
+      {copyValue ? (
         <Tooltip title={`Copy ${label.toLowerCase()}`}>
           <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }}>
             <ContentCopy fontSize="inherit" />
           </IconButton>
         </Tooltip>
-      )}
+      ) : null}
     </Box>
   )
 }
 
-const LoadingCard = () => {
-  return (
-    <Card
-      elevation={2}
-      sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}
+const LoadingCard = ({
+  title,
+  showCoordSkeleton = true,
+}: {
+  title: string
+  showCoordSkeleton?: boolean
+}) => (
+  <Card elevation={2} sx={{ height: '100%', borderRadius: 2, overflow: 'hidden' }}>
+    <CardHeader title={<MapCardHeader title={title} />} />
+    <CardContent
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 1,
+      }}
     >
-      <CardHeader title={<HeaderTitle />} />
-      <CardContent
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 1,
-        }}
-      >
-        <Skeleton
-          variant="rectangular"
-          width="100%"
-          height={MAP_HEIGHT}
-          sx={{ borderRadius: '0.5rem' }}
-        />
-        <Skeleton
-          variant="rectangular"
-          width={200}
-          height={28}
-          sx={{
-            borderRadius: '0.5rem',
-            alignSelf: 'flex-start',
-          }}
-        />
-        <Skeleton
-          variant="rectangular"
-          width="100%"
-          height={64}
-          sx={{ borderRadius: '0.5rem' }}
-        />
-      </CardContent>
-    </Card>
-  )
-}
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height={MAP_HEIGHT}
+        sx={{ borderRadius: '0.5rem' }}
+      />
+      {showCoordSkeleton ? (
+        <>
+          <Skeleton
+            variant="rectangular"
+            width={200}
+            height={28}
+            sx={{ borderRadius: '0.5rem', alignSelf: 'flex-start' }}
+          />
+          <Skeleton
+            variant="rectangular"
+            width="100%"
+            height={64}
+            sx={{ borderRadius: '0.5rem' }}
+          />
+        </>
+      ) : null}
+    </CardContent>
+  </Card>
+)
