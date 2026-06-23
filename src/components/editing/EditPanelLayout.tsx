@@ -57,50 +57,51 @@ export function EditPanelLayout({
     useEditPanelWidth(resizeEnabled)
 
   if (pinPanel === 'sticky') {
+    const showPanelShell = open || !isMobile
+
     return (
       <div className={cn('flex', className)}>
         <div className={cn('min-w-0 flex-1', isMobile && open && 'hidden')}>
           {children}
         </div>
 
-        {isMobile ? (
-          open ? (
-            <div
-              className={cn(
-                'fixed inset-x-0 top-14 z-30 w-full bg-background',
-                PANEL_VIEWPORT_HEIGHT
-              )}
-            >
-              {panel}
-            </div>
-          ) : null
-        ) : (
+        {showPanelShell ? (
           <div
             className={cn(
-              'relative shrink-0',
-              !isResizing && 'transition-[width] duration-200 ease-in-out',
-              !open && 'w-0 overflow-hidden'
+              isMobile
+                ? cn(
+                    'fixed inset-x-0 top-14 z-30 w-full bg-background',
+                    PANEL_VIEWPORT_HEIGHT
+                  )
+                : cn(
+                    'relative shrink-0',
+                    !isResizing &&
+                      'transition-[width] duration-200 ease-in-out',
+                    !open && 'w-0 overflow-hidden'
+                  )
             )}
-            style={open ? { width: panelWidth } : undefined}
+            style={!isMobile && open ? { width: panelWidth } : undefined}
+            aria-hidden={!open}
           >
+            {!isMobile && open && resizeEnabled ? (
+              <EditPanelResizeHandle
+                panelWidth={panelWidth}
+                onResizeStart={handleResizeStart}
+              />
+            ) : null}
             {open ? (
               <div
                 className={cn(
-                  'relative sticky top-0 w-full',
+                  'relative w-full',
+                  !isMobile && 'sticky top-0',
                   PANEL_VIEWPORT_HEIGHT
                 )}
               >
-                {resizeEnabled ? (
-                  <EditPanelResizeHandle
-                    panelWidth={panelWidth}
-                    onResizeStart={handleResizeStart}
-                  />
-                ) : null}
                 {panel}
               </div>
             ) : null}
           </div>
-        )}
+        ) : null}
       </div>
     )
   }

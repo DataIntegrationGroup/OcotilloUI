@@ -1,13 +1,12 @@
 import * as React from 'react'
-
-const MOBILE_BREAKPOINT = 768
+import { MOBILE_VIEWPORT_MAX_PX } from '@/constants/breakpoints'
 
 function readIsMobileViewport() {
   if (typeof window === 'undefined') {
     return false
   }
 
-  return window.innerWidth < MOBILE_BREAKPOINT
+  return window.innerWidth < MOBILE_VIEWPORT_MAX_PX
 }
 
 export function useIsMobile() {
@@ -25,7 +24,9 @@ export function useIsMobile() {
       return () => window.removeEventListener('resize', update)
     }
 
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const mql = window.matchMedia(
+      `(max-width: ${MOBILE_VIEWPORT_MAX_PX - 1}px)`
+    )
     mql.addEventListener('change', update)
     return () => mql.removeEventListener('change', update)
   }, [])

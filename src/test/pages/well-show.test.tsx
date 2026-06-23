@@ -46,6 +46,7 @@ vi.mock('@/hooks', () => ({
     closePanel: vi.fn(),
     togglePanel: vi.fn(),
   }),
+  useContainerMinWidth: () => false,
   useWellDetails: (id: unknown) => {
     mockedUseWellDetails(id)
     return {

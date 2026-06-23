@@ -53,18 +53,7 @@ export function useWellDetails(id: WellDetailsId) {
         method: 'get',
       })
 
-      const data = response.data as IWellDetails
-      const label = `[ocotillo] GET thing/water-well/${id}/details`
-      try {
-        const plain = JSON.parse(JSON.stringify(data)) as IWellDetails
-        console.log(label, plain)
-      } catch {
-        console.log(label, data)
-      }
-      console.log(
-        `${label} (full JSON, scroll or copy this if the object above will not expand)\n${JSON.stringify(data, null, 2)}`
-      )
-      return data
+      return response.data as IWellDetails
     },
   })
 
