@@ -1,4 +1,6 @@
-import { Chip, Skeleton, Stack } from '@mui/material'
+import { Link as RouterLink } from 'react-router'
+import { Chip, Skeleton, Stack, Tooltip } from '@mui/material'
+import { captureEvent, setWellsProjectFilterSource } from '@/analytics/posthog'
 import { ChipWithExplain } from '@/components/ChipWithExplain'
 import { IWell } from '@/interfaces/ocotillo'
 
@@ -56,7 +58,7 @@ export const WellStatusChips = ({
     well?.well_purposes?.length && well.well_purposes.length > 0
   )
   const topChipValues = hasPurposes
-    ? well.well_purposes
+    ? (well.well_purposes ?? [])
     : [well?.thing_type || 'UNKNOWN TYPE']
 
   const isPublic = well?.release_status?.toLocaleUpperCase() === 'PUBLIC'
@@ -116,22 +118,36 @@ export const WellStatusChips = ({
         }}
       />
 
-      {well?.groups?.map((g, i) => (
-        <ChipWithExplain
-          key={g?.name ?? `UNKNOWN GROUP #${i}`}
-          icon={null}
-          label={g?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
-          color="primary"
-          size="small"
-          chipSx={statusChipSx}
-          tooltip="Group or Project (click for details)"
-          explain={{
-            title: 'Group or Project',
-            meaning:
-              'The organization or existing project this site belongs to.',
-            source: 'group',
-          }}
-        />
+      {well?.groups?.map((group, i) => (
+        <Tooltip
+          key={group?.id ?? group?.name ?? `UNKNOWN GROUP #${i}`}
+          title="View wells in this project"
+          arrow
+          placement="top"
+        >
+          <span>
+            <Chip
+              component={RouterLink}
+              clickable
+              to={`/ocotillo/well?projectId=${group.id}`}
+              onClick={() => {
+                setWellsProjectFilterSource('well_detail')
+                captureEvent('wells_project_link_clicked', {
+                  project_id: group.id,
+                  project_name: group.name,
+                  source: 'well_detail',
+                })
+              }}
+              label={group?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
+              color="primary"
+              size="small"
+              sx={{
+                ...statusChipSx,
+                textDecoration: 'none',
+              }}
+            />
+          </span>
+        </Tooltip>
       ))}
     </Stack>
   )
