@@ -444,7 +444,7 @@ function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        {/* Footer links — hidden when collapsed */}
+        {/* Footer links + version — hidden when collapsed */}
         {!collapsed && (
           <div className="border-t px-3 pt-3 pb-1 flex flex-col gap-0.5">
             {FOOTER_LINKS.map(({ label, href }) => (
@@ -456,18 +456,13 @@ function AppSidebar() {
                 {label}
               </Link>
             ))}
-          </div>
-        )}
-
-        <SupportPanelTrigger collapsed={collapsed} />
-
-        {!collapsed && (
-          <div className="px-3 pb-2">
-            <span className="text-xs text-muted-foreground/60">
+            <span className="text-xs text-muted-foreground/60 pt-1">
               v{pkg.version}
             </span>
           </div>
         )}
+
+        <SupportPanelTrigger collapsed={collapsed} />
       </SidebarFooter>
     </Sidebar>
   )
