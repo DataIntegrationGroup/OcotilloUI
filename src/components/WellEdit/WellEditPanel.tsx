@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useDataProvider, useList, useNotification } from '@refinedev/core'
+import { useCustomMutation, useList, useNotification } from '@refinedev/core'
 import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, XIcon } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -112,17 +112,14 @@ export function WellEditPanel({
   onClose,
 }: WellEditPanelProps) {
   const queryClient = useQueryClient()
-  const dataProvider = useDataProvider()
-  const ocotilloDataProvider = useMemo(
-    () => dataProvider('ocotillo'),
-    [dataProvider]
-  )
   const { open: notify } = useNotification()
+  const { mutateAsync: mutateGroupThing, mutation } = useCustomMutation()
+
+  const isSaving = mutation.isPending
 
   const [selectKey, setSelectKey] = useState(0)
   const [draftGroups, setDraftGroups] = useState<IGroup[]>([])
   const [initialGroups, setInitialGroups] = useState<IGroup[]>([])
-  const [isSaving, setIsSaving] = useState(false)
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false)
   const wasLoadingRef = useRef(true)
 
@@ -203,21 +200,22 @@ export function WellEditPanel({
     const toAdd = draftGroups.filter((group) => !initialIds.has(group.id))
     const toRemove = initialGroups.filter((group) => !draftIds.has(group.id))
 
-    setIsSaving(true)
-
     try {
       await Promise.all([
         ...toRemove.map((group) =>
-          ocotilloDataProvider.custom!({
+          mutateGroupThing({
             url: `group/${group.id}/things/${wellId}`,
             method: 'delete',
+            values: {},
+            dataProviderName: 'ocotillo',
           })
         ),
         ...toAdd.map((group) =>
-          ocotilloDataProvider.custom!({
+          mutateGroupThing({
             url: `group/${group.id}/things/${wellId}`,
             method: 'post',
-            payload: {},
+            values: {},
+            dataProviderName: 'ocotillo',
           })
         ),
       ])
@@ -230,8 +228,6 @@ export function WellEditPanel({
         message: 'Could not save project changes. Please try again.',
       })
       await resyncDraftFromServer()
-    } finally {
-      setIsSaving(false)
     }
   }
 
