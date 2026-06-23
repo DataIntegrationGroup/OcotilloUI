@@ -14,6 +14,7 @@ import {
   IFieldEvent,
   IFieldEventParticipant,
   IGroup,
+  IWell,
   IWellDetails,
   IObservation,
   ISample,
@@ -96,6 +97,7 @@ export const WellShow = () => {
     well,
     isLoading: isDetailsLoading,
   } = useWellDetails(id)
+  const viewWell = well as IWell
   const { canViewAmp, canEditWell } = useAccessCapabilities()
 
   const { result: assetResult, query: assetQuery } = useList<IAsset>({
@@ -145,15 +147,23 @@ export const WellShow = () => {
       .flatMap((event) =>
         (event.field_activities ?? []).flatMap((activity) =>
           (activity.samples ?? []).flatMap((sample) =>
-            (sample.observations ?? []).map((observation) => ({
-              ...observation,
-              water_level_method: sample.sample_method,
-              water_level_status: observation.groundwater_level_reason,
-              water_level_measuring_staff: sample.contact?.name,
-              water_level_notes:
-                sample.notes ?? activity.notes ?? event.notes ?? null,
-              water_level_data_quality: observation.nma_data_quality,
-            }))
+            (sample.observations ?? []).map(
+              (observation): Partial<WaterLevelObservationRow> => ({
+                ...observation,
+                depth_to_water_bgs: observation.depth_to_water_bgs ?? undefined,
+                measuring_point_height:
+                  observation.measuring_point_height ?? undefined,
+                value: observation.value ?? undefined,
+                water_level_method: sample.sample_method ?? undefined,
+                water_level_status:
+                  observation.groundwater_level_reason ?? undefined,
+                water_level_measuring_staff: sample.contact?.name ?? undefined,
+                water_level_notes:
+                  sample.notes ?? activity.notes ?? event.notes ?? undefined,
+                water_level_data_quality:
+                  observation.nma_data_quality ?? undefined,
+              })
+            )
           )
         )
       )
@@ -362,7 +372,7 @@ export const WellShow = () => {
             padding: 0,
           },
         }}
-        title={<WellShowTitle well={well} isLoading={isDetailsLoading} />}
+        title={<WellShowTitle well={viewWell} isLoading={isDetailsLoading} />}
         headerProps={ocotilloCardHeaderProps}
         contentProps={{ sx: { pt: 1 } }}
         headerButtons={() => (
@@ -371,7 +381,7 @@ export const WellShow = () => {
               <WellPDFActionsButton
                 isPreviewLoading={isDetailsLoading}
                 isDownloadLoading={isPdfDataLoading}
-                well={well}
+                well={viewWell}
                 observations={recentObservations}
                 assets={assets}
                 contacts={contacts}
@@ -398,15 +408,15 @@ export const WellShow = () => {
             <Grid size={{ xs: 12, md: 8, lg: 9 }}>
               <Stack spacing={2}>
                 <CoreWellInfoCard well={well} />
-                <InteractiveSatelliteMapCard well={well} />
+                <InteractiveSatelliteMapCard well={viewWell} />
                 <HydrographCard
-                  well={well}
+                  well={viewWell}
                   rows={[...manualHydrographRows, ...transducerHydrographRows]}
                   dataSource={hydrographDatasource}
                   isLoading={hydrographQuery.isPending}
                 />
                 <RecentWaterLevelObservationsCard
-                  well={well}
+                  well={viewWell}
                   rows={recentObservations}
                   isLoading={isDetailsLoading}
                 />
@@ -441,13 +451,13 @@ export const WellShow = () => {
                   siteName={well ? displayWellSiteName(well) : undefined}
                 />
                 <MonitoringInfoCard
-                  well={well}
+                  well={viewWell}
                   firstVisitParticipants={firstVisitParticipants}
                   lastVisitDate={fieldEvents[0]?.event_date}
                   isLoading={isDetailsLoading}
                 />
                 <OwnerPermissionsCard
-                  well={well}
+                  well={viewWell}
                   isLoading={isDetailsLoading}
                 />
                 <ConstructionInfoCard well={well} />

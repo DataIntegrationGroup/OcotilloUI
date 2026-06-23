@@ -768,7 +768,8 @@ export const MapView: React.FC = () => {
     const selectedPoint = distinctPoints[0]
     if (!selectedPoint) return
 
-    const layerId: string = selectedPoint.layer.id
+    const layerId = selectedPoint.layer?.id
+    if (!layerId) return
     const thingType: string = String(
       selectedPoint?.properties?.thing_type || ''
     ).toLowerCase()
