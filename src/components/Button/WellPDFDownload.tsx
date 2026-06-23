@@ -4,8 +4,8 @@ import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
 import { WellPDF } from '@/components'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
 import { pdf } from '@react-pdf/renderer'
-import { Button } from '@mui/material'
-import { Download } from '@mui/icons-material'
+import { DownloadIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { IPdfOptions } from '@/interfaces'
 import { PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { useAccessCapabilities } from '@/hooks'
@@ -91,13 +91,13 @@ export const WellPDFDownloadButton = ({
 
   return (
     <Button
-      color="secondary"
+      variant="outline"
+      size="sm"
       disabled={disabled}
-      startIcon={<Download />}
       onClick={() => handleDownload(options ?? PDF_SINGLE_PAGE_OPTION)}
-      sx={{ pl: 1, pr: 1 }}
     >
-      {isGenerating ? 'Generating...' : 'Download PDF'}
+      <DownloadIcon />
+      {isGenerating ? 'Generating…' : 'Download PDF'}
     </Button>
   )
 }

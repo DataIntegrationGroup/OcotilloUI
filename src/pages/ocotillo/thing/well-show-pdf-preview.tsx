@@ -37,6 +37,10 @@ import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
+import {
+  ocotilloCardHeaderProps,
+  OcotilloHeaderButtons,
+} from '@/components/OcotilloPageHeader'
 
 const densityIcons = {
   compact: <ViewHeadline fontSize="small" />,
@@ -240,21 +244,11 @@ export const WellShowPdfPreview = () => {
         },
       }}
       title={<WellShowTitle well={well} isLoading={isLoading} />}
-      headerProps={{
-        sx: {
-          flexDirection: { xs: 'column', md: 'row' },
-          alignItems: { xs: 'flex-start', md: 'center' },
-          '.MuiCardHeader-action': {
-            alignSelf: { xs: 'flex-end', md: 'flex-start' },
-            mt: { xs: 1, md: 0.5 },
-            mr: 0,
-          },
-        },
-      }}
+      headerProps={ocotilloCardHeaderProps}
       contentProps={{ sx: { pt: 1 } }}
       headerButtons={() =>
         canManageAmp ? (
-          <Box sx={{ display: 'flex', gap: 0 }}>
+          <OcotilloHeaderButtons className="flex items-center gap-0">
             <WellPDFDownloadButton
               well={well}
               isLoading={isLoading}
@@ -266,7 +260,7 @@ export const WellShowPdfPreview = () => {
               options={currentOptions}
               hydrographImage={hydrographImage}
             />
-          </Box>
+          </OcotilloHeaderButtons>
         ) : null
       }
     >

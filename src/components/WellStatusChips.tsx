@@ -4,6 +4,21 @@ import { IWell } from '@/interfaces/ocotillo'
 
 const loadingChipWidths = [100, 110, 100]
 
+const statusChipSx = {
+  fontFamily: 'monospace',
+  fontWeight: 300,
+  lineHeight: 1,
+  fontSize: '0.75rem',
+  height: 22,
+  '& .MuiChip-label': {
+    px: 1.5,
+    py: 0,
+    lineHeight: 1,
+    display: 'flex',
+    alignItems: 'center',
+  },
+}
+
 export const WellStatusChips = ({
   well,
   isLoading,
@@ -15,11 +30,10 @@ export const WellStatusChips = ({
     return (
       <Stack
         direction="row"
-        spacing={1}
         flexWrap="wrap"
         alignItems="center"
         useFlexGap
-        sx={{ gap: 1 }}
+        sx={{ columnGap: 1, rowGap: 0 }}
       >
         {loadingChipWidths.map((width, i) => (
           <Skeleton
@@ -51,11 +65,10 @@ export const WellStatusChips = ({
   return (
     <Stack
       direction="row"
-      spacing={1}
       flexWrap="wrap"
       alignItems="center"
       useFlexGap
-      sx={{ gap: 1 }}
+      sx={{ columnGap: 1, rowGap: 0 }}
     >
       {topChipValues.map((p, i) => (
         <ChipWithExplain
@@ -64,7 +77,7 @@ export const WellStatusChips = ({
           icon={null}
           color="info"
           size="small"
-          chipSx={{ fontFamily: 'monospace', px: 1 }}
+          chipSx={statusChipSx}
           tooltip={
             hasPurposes
               ? 'Well Purposes (click for details)'
@@ -93,7 +106,7 @@ export const WellStatusChips = ({
         icon={null}
         color={isPublic ? 'success' : isPrivate ? 'error' : undefined}
         size="small"
-        chipSx={{ fontFamily: 'monospace', px: 1 }}
+        chipSx={statusChipSx}
         tooltip="Visibility (click for details)"
         explain={{
           title: 'Visibility',
@@ -110,7 +123,7 @@ export const WellStatusChips = ({
           label={g?.name?.toLocaleUpperCase() || 'UNKNOWN GROUP'}
           color="primary"
           size="small"
-          chipSx={{ fontFamily: 'monospace', px: 1 }}
+          chipSx={statusChipSx}
           tooltip="Group or Project (click for details)"
           explain={{
             title: 'Group or Project',

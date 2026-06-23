@@ -3,21 +3,31 @@ import { useDataProvider, useList, useResourceParams } from '@refinedev/core'
 import { captureEvent } from '@/analytics/posthog'
 import { useQuery } from '@tanstack/react-query'
 import { Show, useDataGrid } from '@refinedev/mui'
+import { PencilIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { EditPanelLayout } from '@/components/editing'
+import { WellEditPanel } from '@/components/WellEdit/WellEditPanel'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
   IAsset,
   IContact,
   IFieldEvent,
   IFieldEventParticipant,
+  IGroup,
   IWellDetails,
   IObservation,
   ISample,
   ISensor,
   IWellScreen,
 } from '@/interfaces/ocotillo'
-import { Box, Stack } from '@mui/material'
+import { Stack } from '@mui/material'
 import { IHydrographDatasource } from '@/interfaces/st2'
-import { useAccessCapabilities, useSensorDeploymentRows } from '@/hooks'
+import {
+  useAccessCapabilities,
+  useSensorDeploymentRows,
+  useSidebarPanelSync,
+  useWellDetails,
+} from '@/hooks'
 import Grid from '@mui/material/Grid2'
 import {
   CoreWellInfoCard,
@@ -29,18 +39,21 @@ import {
   AlternateIdsCard,
   USGSInfoCard,
   OSEPODInfoCard,
-  WellPDFPreviewButton,
+  WellPDFActionsButton,
   WellScreensCard,
   EquipmentCard,
   NotesAccordion,
   ConstructionInfoCard,
   GeologyInformationCard,
-  WellPDFDownloadButton,
   WellShowTitle,
   OwnerPermissionsCard,
   MonitoringInfoCard,
   WaterLevelObservationRow,
 } from '@/components'
+import {
+  ocotilloCardHeaderProps,
+  OcotilloHeaderButtons,
+} from '@/components/OcotilloPageHeader'
 import { displayWellSiteName } from '@/utils'
 
 const EMPTY_ASSETS: IAsset[] = []
@@ -52,6 +65,7 @@ const EMPTY_FIELD_EVENTS: IFieldEvent[] = []
 const EMPTY_PARTICIPANTS: IFieldEventParticipant[] = []
 const EMPTY_MANUAL_HYDRO_ROWS: IObservation[] = []
 const EMPTY_TRANSDUCER_HYDRO_ROWS: TransducerObservationWithBlockResponse[] = []
+const EMPTY_GROUPS: IGroup[] = []
 
 export const WellShow = () => {
   const dataProvider = useDataProvider()
@@ -59,6 +73,12 @@ export const WellShow = () => {
     () => dataProvider('ocotillo'),
     [dataProvider]
   )
+
+  const {
+    isPanelOpen: isEditPanelOpen,
+    closePanel: closeEditPanel,
+    togglePanel: toggleEditPanel,
+  } = useSidebarPanelSync()
 
   const { id } = useResourceParams()
 
@@ -71,34 +91,12 @@ export const WellShow = () => {
       })
   }, [id])
 
-  const detailsQuery = useQuery({
-    queryKey: ['well-details', id],
-    enabled: Boolean(id),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    queryFn: async () => {
-      const response = await ocotilloDataProvider.custom({
-        url: `thing/water-well/${id}/details`,
-        method: 'get',
-      })
-
-      const data = response.data as IWellDetails
-      // Log full details payload in every environment (dev, staging, prod) for
-      // debugging. Visible only in the browser console when it is open.
-      const label = `[ocotillo] GET thing/water-well/${id}/details`
-      try {
-        const plain = JSON.parse(JSON.stringify(data)) as IWellDetails
-        console.log(label, plain)
-      } catch {
-        console.log(label, data)
-      }
-      console.log(
-        `${label} (full JSON, scroll or copy this if the object above will not expand)\n${JSON.stringify(data, null, 2)}`
-      )
-      return data
-    },
-  })
-  const { canViewAmp } = useAccessCapabilities()
+  const {
+    query: detailsQuery,
+    well,
+    isLoading: isDetailsLoading,
+  } = useWellDetails(id)
+  const { canViewAmp, canEditWell } = useAccessCapabilities()
 
   const { result: assetResult, query: assetQuery } = useList<IAsset>({
     resource: 'asset',
@@ -119,8 +117,6 @@ export const WellShow = () => {
       staleTime: 9 * 60 * 1000,
     },
   })
-  const well = detailsQuery.data?.well
-
   useEffect(() => {
     if (!well?.name) return
     const appTitle = import.meta.env.VITE_APP_TITLE || 'Ocotillo'
@@ -181,7 +177,6 @@ export const WellShow = () => {
     sensors,
   })
 
-  const isDetailsLoading = detailsQuery.isLoading
   const isPdfDataLoading = isDetailsLoading || assetQuery.isLoading
 
   const { dataGridProps: idLinkDataGridProps } = useDataGrid({
@@ -338,109 +333,130 @@ export const WellShow = () => {
   }, [manualHydrographRows, transducerHydrographRows])
 
   return (
-    <Show
-      goBack={false}
-      breadcrumb={false}
-      wrapperProps={{
-        elevation: 0,
-        sx: {
-          bgcolor: 'background.wrapper',
-          boxShadow: 'none',
-          borderRadius: 1,
-          padding: 0,
-        },
-      }}
-      title={<WellShowTitle well={well} isLoading={isDetailsLoading} />}
-      headerProps={{
-        sx: {
-          flexDirection: { xs: 'column', md: 'row' },
-          alignItems: { xs: 'flex-start', md: 'center' },
-          '.MuiCardHeader-action': {
-            alignSelf: { xs: 'flex-end', md: 'flex-start' },
-            mt: { xs: 1, md: 0.5 },
-            mr: 0,
-          },
-        },
-      }}
-      contentProps={{ sx: { pt: 1 } }}
-      headerButtons={() =>
-        canViewAmp ? (
-          <Box sx={{ display: 'flex', gap: 0 }}>
-            <WellPDFPreviewButton isLoading={isDetailsLoading} />
-            <WellPDFDownloadButton
-              well={well}
-              isLoading={isPdfDataLoading}
-              observations={recentObservations}
-              assets={assets}
-              contacts={contacts}
-              sample={latestSample as Partial<ISample> | undefined}
-              sensorDeployments={sensorDeployments}
-            />
-          </Box>
+    <EditPanelLayout
+      open={isEditPanelOpen && Boolean(id)}
+      pinPanel="sticky"
+      panel={
+        id ? (
+          <WellEditPanel
+            wellId={id}
+            wellName={well?.name}
+            assignedGroups={well?.groups ?? EMPTY_GROUPS}
+            isAssignedGroupsLoading={
+              detailsQuery.isLoading && !detailsQuery.data
+            }
+            onClose={closeEditPanel}
+          />
         ) : null
       }
     >
-      <Stack spacing={2}>
-        <Grid container spacing={2}>
-          {/* Left column: 8 cols */}
-          <Grid size={{ xs: 12, md: 8, lg: 9 }}>
-            <Stack spacing={2}>
-              <CoreWellInfoCard well={well} />
-              <InteractiveSatelliteMapCard well={well} />
-              <HydrographCard
+      <Show
+        goBack={false}
+        breadcrumb={false}
+        wrapperProps={{
+          elevation: 0,
+          sx: {
+            bgcolor: 'background.wrapper',
+            boxShadow: 'none',
+            borderRadius: 1,
+            padding: 0,
+          },
+        }}
+        title={<WellShowTitle well={well} isLoading={isDetailsLoading} />}
+        headerProps={ocotilloCardHeaderProps}
+        contentProps={{ sx: { pt: 1 } }}
+        headerButtons={() => (
+          <OcotilloHeaderButtons>
+            {canViewAmp ? (
+              <WellPDFActionsButton
+                isPreviewLoading={isDetailsLoading}
+                isDownloadLoading={isPdfDataLoading}
                 well={well}
-                rows={[...manualHydrographRows, ...transducerHydrographRows]}
-                dataSource={hydrographDatasource}
-                isLoading={hydrographQuery.isPending}
-              />
-              <RecentWaterLevelObservationsCard
-                well={well}
-                rows={recentObservations}
-                isLoading={isDetailsLoading}
-              />
-              <NotesAccordion well={well} />
-              <EquipmentCard
-                sensors={sensors}
-                deployments={deployments}
-                isDetailsPending={Boolean(id) && detailsQuery.isPending}
-              />
-              <WellScreensCard
-                rows={wellScreens}
-                isLoading={isDetailsLoading}
-              />
-              <AlternateIdsCard dataGridProps={idLinkDataGridProps} />
-              <AttachmentsCard
+                observations={recentObservations}
                 assets={assets}
-                isLoading={assetQuery.isLoading}
-                refetchAssets={assetQuery.refetch}
-                thingId={well?.id ?? (id ? Number(id) : null)}
-              />
-              <OSEPODInfoCard pod_id={osepod_id} />
-              <USGSInfoCard site_id={usgs_id} />
-            </Stack>
-          </Grid>
-
-          {/* Right column: 2 cols */}
-          <Grid size={{ xs: 12, md: 4, lg: 3 }}>
-            <Stack spacing={2}>
-              <ContactsCard
                 contacts={contacts}
-                isLoading={isDetailsLoading}
-                siteName={well ? displayWellSiteName(well) : undefined}
+                sample={latestSample as Partial<ISample> | undefined}
+                sensorDeployments={sensorDeployments}
               />
-              <MonitoringInfoCard
-                well={well}
-                firstVisitParticipants={firstVisitParticipants}
-                lastVisitDate={fieldEvents[0]?.event_date}
-                isLoading={isDetailsLoading}
-              />
-              <OwnerPermissionsCard well={well} isLoading={isDetailsLoading} />
-              <ConstructionInfoCard well={well} />
-              <GeologyInformationCard well={well} />
-            </Stack>
+            ) : null}
+            {canEditWell ? (
+              <Button
+                variant={isEditPanelOpen ? 'default' : 'outline'}
+                size="sm"
+                onClick={toggleEditPanel}
+              >
+                <PencilIcon />
+                Edit
+              </Button>
+            ) : null}
+          </OcotilloHeaderButtons>
+        )}
+      >
+        <Stack spacing={2}>
+          <Grid container spacing={2}>
+            {/* Left column: 8 cols */}
+            <Grid size={{ xs: 12, md: 8, lg: 9 }}>
+              <Stack spacing={2}>
+                <CoreWellInfoCard well={well} />
+                <InteractiveSatelliteMapCard well={well} />
+                <HydrographCard
+                  well={well}
+                  rows={[...manualHydrographRows, ...transducerHydrographRows]}
+                  dataSource={hydrographDatasource}
+                  isLoading={hydrographQuery.isPending}
+                />
+                <RecentWaterLevelObservationsCard
+                  well={well}
+                  rows={recentObservations}
+                  isLoading={isDetailsLoading}
+                />
+                <NotesAccordion well={well} />
+                <EquipmentCard
+                  sensors={sensors}
+                  deployments={deployments}
+                  isDetailsPending={Boolean(id) && detailsQuery.isPending}
+                />
+                <WellScreensCard
+                  rows={wellScreens}
+                  isLoading={isDetailsLoading}
+                />
+                <AlternateIdsCard dataGridProps={idLinkDataGridProps} />
+                <AttachmentsCard
+                  assets={assets}
+                  isLoading={assetQuery.isLoading}
+                  refetchAssets={assetQuery.refetch}
+                  thingId={well?.id ?? (id ? Number(id) : null)}
+                />
+                <OSEPODInfoCard pod_id={osepod_id} />
+                <USGSInfoCard site_id={usgs_id} />
+              </Stack>
+            </Grid>
+
+            {/* Right column: 2 cols */}
+            <Grid size={{ xs: 12, md: 4, lg: 3 }}>
+              <Stack spacing={2}>
+                <ContactsCard
+                  contacts={contacts}
+                  isLoading={isDetailsLoading}
+                  siteName={well ? displayWellSiteName(well) : undefined}
+                />
+                <MonitoringInfoCard
+                  well={well}
+                  firstVisitParticipants={firstVisitParticipants}
+                  lastVisitDate={fieldEvents[0]?.event_date}
+                  isLoading={isDetailsLoading}
+                />
+                <OwnerPermissionsCard
+                  well={well}
+                  isLoading={isDetailsLoading}
+                />
+                <ConstructionInfoCard well={well} />
+                <GeologyInformationCard well={well} />
+              </Stack>
+            </Grid>
           </Grid>
-        </Grid>
-      </Stack>
-    </Show>
+        </Stack>
+      </Show>
+    </EditPanelLayout>
   )
 }
