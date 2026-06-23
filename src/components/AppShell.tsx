@@ -62,7 +62,7 @@ import {
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
-import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
+import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, SHOW_EXAMPLE_NAV, type NavItem } from '@/config/navigation'
 import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { SupportPanelContext } from '@/components/SupportPanelContext'
@@ -435,8 +435,8 @@ function AppSidebar() {
                   canSeeNavItem={canSeeNavItem}
                 />
               ))}
-              {/* ── TEMPORARY: Example section — hidden until editing-tools is ready ── */}
-              {/* <ExampleNavItem /> */}
+              {/* Example demos — toggle SHOW_EXAMPLE_NAV in config/navigation.ts */}
+              {SHOW_EXAMPLE_NAV ? <ExampleNavItem /> : null}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -504,6 +504,14 @@ function ExampleNavItem() {
                 isActive={location.pathname === '/example/typography'}
               >
                 <Link to="/example/typography">Typography</Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname === '/example/data-grid'}
+              >
+                <Link to="/example/data-grid">Data Grid</Link>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
           </SidebarMenuSub>

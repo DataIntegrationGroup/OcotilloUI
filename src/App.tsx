@@ -5,7 +5,8 @@ import { AppShell } from '@/components/AppShell'
 import { ThemedTitleV2 } from '@/components/layout/title'
 import { Callback } from '@/components/Auth'
 import { Home } from '@/pages/home'
-// import { TypographyPage } from '@/pages/example/TypographyPage'
+import { TypographyPage } from '@/pages/example/TypographyPage'
+import { DataGridPage } from '@/pages/example/DataGridPage'
 import { ContentPage } from '@/pages/content'
 import { OcotilloRoutes, ST2Routes } from '@/routes'
 import { settings } from '@/settings'
@@ -62,8 +63,9 @@ const App: React.FC = () => (
             path="/ogcapi"
             element={<ContentPage src="/content/ogcapi.md" />}
           />
-          {/* TEMPORARY: example pages — hidden until editing-tools is merged */}
-          {/* <Route path="/example/typography" element={<TypographyPage />} /> */}
+          {/* TEMPORARY: example specimen pages */}
+          <Route path="/example/typography" element={<TypographyPage />} />
+          <Route path="/example/data-grid" element={<DataGridPage />} />
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
           <Route path="/st2/*" element={<ST2Routes />} />
         </Route>
