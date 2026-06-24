@@ -27,15 +27,12 @@ const MapCardHeader = ({ title }: { title: string }) => (
 )
 
 type WellMapProps = {
+  variant: 'well'
   well: IWell
-  wells?: never
-  projectArea?: never
-  mapTitle?: never
-  isLoading?: never
 }
 
 type ProjectMapProps = {
-  well?: never
+  variant: 'project'
   wells: IWell[]
   projectArea?: IGroup['project_area']
   mapTitle?: string
@@ -47,7 +44,7 @@ export type InteractiveSatelliteMapCardProps = WellMapProps | ProjectMapProps
 export const InteractiveSatelliteMapCard = (
   props: InteractiveSatelliteMapCardProps
 ) => {
-  if ('wells' in props) {
+  if (props.variant === 'project') {
     return (
       <ProjectMapView
         wells={props.wells}
@@ -106,7 +103,7 @@ const ProjectMapView = ({
   projectArea,
   mapTitle = 'Project Map',
   isLoading = false,
-}: ProjectMapProps) => {
+}: Omit<ProjectMapProps, 'variant'>) => {
   const mapRef = useRef<MapRef>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [popupContent, setPopupContent] = useState<any>(null)

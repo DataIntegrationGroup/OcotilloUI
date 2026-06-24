@@ -101,6 +101,7 @@ export const WellProjectShow = () => {
           <Grid size={{ xs: 12, md: 8, lg: 9 }}>
             <Stack spacing={2}>
               <InteractiveSatelliteMapCard
+                variant="project"
                 wells={wells}
                 projectArea={project?.project_area}
                 mapTitle="Project Map"
