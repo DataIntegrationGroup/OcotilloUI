@@ -65,7 +65,12 @@ export const initPostHog = () => {
 
 export const WELLS_PROJECT_FILTER_SOURCE_KEY = 'wells_project_filter_source'
 
-export type WellsProjectFilterSource = 'projects_list' | 'wells_column' | 'direct'
+export type WellsProjectFilterSource =
+  | 'projects_list'
+  | 'wells_column'
+  | 'project_show'
+  | 'well_detail'
+  | 'direct'
 
 export const setWellsProjectFilterSource = (source: WellsProjectFilterSource) => {
   sessionStorage.setItem(WELLS_PROJECT_FILTER_SOURCE_KEY, source)
@@ -74,7 +79,14 @@ export const setWellsProjectFilterSource = (source: WellsProjectFilterSource) =>
 export const consumeWellsProjectFilterSource = (): WellsProjectFilterSource => {
   const value = sessionStorage.getItem(WELLS_PROJECT_FILTER_SOURCE_KEY)
   sessionStorage.removeItem(WELLS_PROJECT_FILTER_SOURCE_KEY)
-  if (value === 'projects_list' || value === 'wells_column') return value
+  if (
+    value === 'projects_list' ||
+    value === 'wells_column' ||
+    value === 'project_show' ||
+    value === 'well_detail'
+  ) {
+    return value
+  }
   return 'direct'
 }
 

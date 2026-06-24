@@ -6,7 +6,7 @@ import { useEffect, useMemo } from 'react'
 import { type CrudFilter } from '@refinedev/core'
 import { useDataGrid } from '@refinedev/mui'
 import { GridCheckCircleIcon, GridColDef } from '@mui/x-data-grid'
-import { captureEvent, setWellsProjectFilterSource } from '@/analytics/posthog'
+import { captureEvent } from '@/analytics/posthog'
 import { ListPage } from '@/components/ListPage'
 import { releaseStatusColumnDef } from '@/components/CommonColumnDefs'
 import { useListPageDataGridAnalytics } from '@/hooks'
@@ -117,9 +117,8 @@ export const WellProjectList: React.FC = () => {
       getRowId={(row) => row.id}
       hideBreadcrumb
       hideHeaderButtons
-      getRowHref={(params) => `/ocotillo/well?projectId=${params.id}`}
+      getRowHref={(params) => `/ocotillo/well/projects/show/${params.id}`}
       onRowClick={(params) => {
-        setWellsProjectFilterSource('projects_list')
         captureEvent('projects_row_clicked', {
           project_id: params.id,
           project_name: params.row.name,

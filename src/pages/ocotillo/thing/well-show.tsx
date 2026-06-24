@@ -352,7 +352,7 @@ export const WellShow = () => {
   const wellShowCards = useMemo(() => {
     const mainCards = [
       <CoreWellInfoCard key="core" well={well} />,
-      <InteractiveSatelliteMapCard key="map" well={viewWell} />,
+      <InteractiveSatelliteMapCard key="map" variant="well" well={viewWell} />,
       <HydrographCard
         key="hydrograph"
         well={viewWell}

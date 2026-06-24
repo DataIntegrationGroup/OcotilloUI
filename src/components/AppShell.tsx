@@ -1047,6 +1047,11 @@ const BREADCRUMB_RESOURCES: Record<
   location: { label: 'Locations', listHref: '/ocotillo/location', resource: 'location' },
   sensor: { label: 'Sensors', listHref: '/ocotillo/sensor', resource: 'sensor' },
   sample: { label: 'Samples', listHref: '/ocotillo/sample', resource: 'sample' },
+  projects: {
+    label: 'Projects',
+    listHref: '/ocotillo/well/projects',
+    resource: 'group',
+  },
 }
 
 // Nested list pages shown as Parent > Current in the header bar

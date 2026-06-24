@@ -217,6 +217,7 @@ tables.push({
 tables.push({
   name: 'thing-well-projects',
   list: '/ocotillo/well/projects',
+  show: '/ocotillo/well/projects/show/:id',
   meta: {
     label: 'Projects',
     icon: <Workspaces />,
