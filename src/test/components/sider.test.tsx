@@ -41,8 +41,8 @@ vi.mock('@refinedev/core', () => ({
   },
   useMenu: () => ({
     menuItems: mockMenuItems,
-    selectedKey: undefined,
-    defaultOpenKeys: [],
+    selectedKey: undefined as string | undefined,
+    defaultOpenKeys: [] as string[],
   }),
 }))
 

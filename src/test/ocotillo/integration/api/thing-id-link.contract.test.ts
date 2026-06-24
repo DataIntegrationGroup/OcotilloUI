@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import { z } from 'zod'
 import {
@@ -36,10 +37,10 @@ describe('Ocotillo Integration Tests: Thing Id Link', () => {
         const validatedIdLink = relaxedSchema.parse(idLink)
         expect(validatedIdLink).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('IdLink data:', JSON.stringify(idLink, null, 2))
         throw new Error(
-          `API response doesn't match IThingIdLink interface: ${error.message}`
+          `API response doesn't match IThingIdLink interface: ${getErrorMessage(error)}`
         )
       }
     }
@@ -86,10 +87,10 @@ describe('Ocotillo Integration Tests: Thing Id Link', () => {
       const validatedIdLink = relaxedSchema.parse(idLink)
       expect(validatedIdLink).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('IdLink data:', JSON.stringify(idLink, null, 2))
       throw new Error(
-        `API response doesn't match IThingIdLink interface: ${error.message}`
+        `API response doesn't match IThingIdLink interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -127,10 +128,10 @@ describe('Ocotillo Integration Tests: Thing Id Link', () => {
       const validatedIdLink = relaxedSchema.parse(idLink)
       expect(validatedIdLink).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('IdLink data:', JSON.stringify(idLink, null, 2))
       throw new Error(
-        `API response doesn't match IThingIdLink interface: ${error.message}`
+        `API response doesn't match IThingIdLink interface: ${getErrorMessage(error)}`
       )
     }
   })

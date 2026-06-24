@@ -303,6 +303,10 @@ export const WellBatchExport = () => {
 
   const fetchBundle = useCallback(
     async (wellId: number): Promise<WellBundle> => {
+      if (!ocotilloDataProvider.custom) {
+        throw new Error('Ocotillo data provider custom method is not available')
+      }
+
       const detailsResult = await ocotilloDataProvider.custom<IWellDetails>({
         url: `thing/water-well/${wellId}/details`,
         method: 'get',
@@ -509,7 +513,7 @@ export const WellBatchExport = () => {
           const fromCache = resolveWellFromToken(token)
           const match =
             fromCache ??
-            (await resolveTokenByApi(token).catch((error) => {
+            (await resolveTokenByApi(token).catch((error): IWell | undefined => {
               console.warn(`Token resolution failed for "${token}"`, error)
               return undefined
             }))

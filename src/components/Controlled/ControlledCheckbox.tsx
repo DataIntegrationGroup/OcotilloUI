@@ -4,9 +4,9 @@ import {
   FormHelperText,
   FormControl,
 } from '@mui/material'
-import { Controller, Control, Path } from 'react-hook-form'
+import { Controller, Control, FieldValues, Path } from 'react-hook-form'
 
-export const ControlledCheckbox = <T,>({
+export const ControlledCheckbox = <T extends FieldValues>({
   control,
   name,
   label,
@@ -21,7 +21,7 @@ export const ControlledCheckbox = <T,>({
   return (
     <Controller
       name={name as Path<T>}
-      control={control as unknown as Control<T>}
+      control={control}
       render={({ field, fieldState }) => (
         <FormControl error={!!fieldState?.error}>
           <FormControlLabel

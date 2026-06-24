@@ -18,7 +18,11 @@ const isHttpsUrl = (
 ): value is `https://${string}` =>
   typeof value === 'string' && value.startsWith('https://')
 
-export const USGSInfoCard = ({ site_id }) => {
+type USGSInfoCardProps = {
+  site_id: string
+}
+
+export const USGSInfoCard = ({ site_id }: USGSInfoCardProps) => {
   const query = useUSGSSiteInfo(site_id)
   const rows = useMemo(() => {
     // Pin URL rows to the top so the useful links are easy to find.

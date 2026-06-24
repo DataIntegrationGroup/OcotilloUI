@@ -1,6 +1,6 @@
 import { Box } from '@mui/system'
 import { useAutocomplete } from '@refinedev/mui'
-import { IThing } from '@/interfaces/ocotillo/IThing'
+import { IWell } from '@/interfaces/ocotillo/IWell'
 import { Controller } from 'react-hook-form'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
@@ -18,6 +18,11 @@ import Grid from '@mui/material/Grid2'
 import wellknown from 'wellknown'
 import bbox from '@turf/bbox'
 import { SpatialSearchComponent } from '@/components/SpatialSearchComponent'
+
+interface TableRowData {
+  name: string
+  value: string | number | undefined
+}
 
 interface EntryProps {
   control: any
@@ -38,10 +43,10 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
     return `${option.name}: (${option.id})`
   }
 
-  const [spatialSearchWKT, setSpatialSearchWKT] = useState(null)
+  const [spatialSearchWKT, setSpatialSearchWKT] = useState<string | null>(null)
   const theme = useTheme()
 
-  const { autocompleteProps: autocompletePropsThing } = useAutocomplete<IThing>(
+  const { autocompleteProps: autocompletePropsThing } = useAutocomplete<IWell>(
     {
       resource: 'thing',
       dataProviderName: 'ocotillo',
@@ -67,8 +72,8 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
 
   const mapRef = useRef<MapRef>(null)
   const [selectedThingFeatureCollection, setSelectedThingFeatureCollection] =
-    useState(null)
-  const [tableRows, setTableRows] = useState([])
+    useState<GeoJSON.FeatureCollection | null>(null)
+  const [tableRows, setTableRows] = useState<TableRowData[]>([])
   const [initialViewState, setInitialViewState] = useState({
     longitude: -106.4,
     latitude: 34.5,
@@ -83,8 +88,10 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
       'selectedThingFeatureCollection',
       selectedThingFeatureCollection
     )
+    const firstFeature = selectedThingFeatureCollection?.features[0]
+    const geometry = firstFeature?.geometry
     const coords =
-      selectedThingFeatureCollection?.features[0]?.geometry.coordinates
+      geometry?.type === 'Point' ? geometry.coordinates : undefined
     const initialViewState = {
       longitude: coords ? coords[0] : -106.4,
       latitude: coords ? coords[1] : 34.5,
@@ -95,32 +102,37 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
 
   const thing_id = watch('thing_id')
   useEffect(() => {
-    let thing = null
+    let thing: IWell | undefined = undefined
     if (thing_id) {
       thing = autocompletePropsThing.options.find(
-        (option: any) => option.id === thing_id
+        (option) => option.id === thing_id
       )
     }
 
+    const activeLocation = thing?.current_location
     const rows = [
       { name: 'Name', value: thing?.name || '' },
       { name: 'ID', value: thing?.id || '' },
       { name: 'Release Status', value: thing?.release_status || '' },
       { name: 'Thing Type', value: thing?.thing_type || '' },
-      { name: 'Well Type', value: thing?.well_type || '' },
       { name: 'Well Depth (ft)', value: thing?.well_depth || '' },
       { name: 'Hole Depth (ft)', value: thing?.hole_depth || '' },
-      { name: 'Location Name', value: thing?.active_location.name || '' },
+      {
+        name: 'Location Name',
+        value:
+          (activeLocation?.properties as { name?: string } | undefined)?.name ||
+          '',
+      },
       {
         name: 'Location Release Status',
-        value: thing?.active_location.release_status || '',
+        value: activeLocation?.release_status || '',
       },
       { name: 'Created At', value: thing?.created_at },
-      { name: 'Geometry Type', value: thing?.geometry?.type || '' },
       {
         name: 'Coordinates',
-        value:
-          JSON.stringify(thing?.active_location.geometry?.coordinates) || '',
+        value: activeLocation?.geometry
+          ? JSON.stringify(activeLocation.geometry.coordinates)
+          : '',
       },
     ]
 
@@ -134,12 +146,14 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
       selectedThingFeatureCollection &&
       selectedThingFeatureCollection.features?.length > 0
     ) {
+      const firstFeature = selectedThingFeatureCollection.features[0]
+      const geometry = firstFeature.geometry
       const coords =
-        selectedThingFeatureCollection.features[0].geometry.coordinates
+        geometry.type === 'Point' ? geometry.coordinates : undefined
 
       if (coords && mapRef.current) {
         mapRef.current.flyTo({
-          center: coords,
+          center: [coords[0], coords[1]],
           zoom: 13, // adjust zoom as needed
           essential: true,
           animate: false,
@@ -163,7 +177,7 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
     }
   }, [selectedThingFeatureCollection, spatialSearchWKT])
 
-  const updateMap = (newValue: readonly IThing[] | undefined) => {
+  const updateMap = (newValue: readonly IWell[] | undefined) => {
     console.log('updateMap', newValue)
     if (!newValue) {
       setSelectedThingFeatureCollection({
@@ -178,16 +192,24 @@ export const SelectThingComponent: React.FC<EntryProps> = ({
     } else {
       setSelectedThingFeatureCollection({
         type: 'FeatureCollection',
-        features: newValue.map((item) => ({
-          type: 'Feature',
-          id: item.id,
-          geometry: item.current_location.geometry,
-          properties: {
-            name: item.name,
-            id: item.id,
-            thing_type: item.thing_type,
-          },
-        })),
+        features: newValue.flatMap((item) => {
+          const location = item.current_location
+          if (!location) {
+            return []
+          }
+          return [
+            {
+              type: 'Feature' as const,
+              id: item.id,
+              geometry: location.geometry as GeoJSON.Geometry,
+              properties: {
+                name: item.name,
+                id: item.id,
+                thing_type: item.thing_type,
+              },
+            },
+          ]
+        }),
       })
     }
   }

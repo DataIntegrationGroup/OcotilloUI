@@ -48,7 +48,7 @@ const makeWell = (): IWell =>
     notes: [],
     measuring_notes: [],
     measuring_point_description: 'Top of casing',
-  }) as IWell
+  }) as unknown as IWell
 
 const decodePdfStreams = (pdfText: string) => {
   const streamPattern = /stream\r?\n([\s\S]*?)\r?\nendstream/g

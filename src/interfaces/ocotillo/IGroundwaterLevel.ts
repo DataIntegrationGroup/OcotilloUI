@@ -9,8 +9,8 @@ export interface IGroundwaterLevelForm {
     sample_date: Date
     sample_type: string
     qc_sample: string
-    sample_top: number
-    sample_bottom: number
+    sample_top?: number
+    sample_bottom?: number
     duplicate_sample_number: number
     sensor_id: number
     notes: string

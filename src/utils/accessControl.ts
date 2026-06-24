@@ -323,7 +323,7 @@ export const sanitizeContact = (
     ...contact,
     name: contactIsPrivate ? 'Confidential Contact' : contact.name,
     organization: contactIsPrivate ? undefined : contact.organization,
-    role: contactIsPrivate ? undefined : contact.role,
+    role: contactIsPrivate ? '' : (contact.role ?? ''),
     contact_type: contactIsPrivate ? undefined : contact.contact_type,
     emails: sanitizeContactMethods(contact.emails, false) as
       | IEmail[]

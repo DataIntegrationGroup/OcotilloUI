@@ -1,4 +1,4 @@
-import { Control, FieldErrors } from 'react-hook-form'
+import { Control, FieldErrors, FieldValues } from 'react-hook-form'
 import {
   ControlledTextField,
   ControlledSelectField,
@@ -17,19 +17,19 @@ import { useLexicon, useSensor } from '@/hooks'
  * @param fieldPrefix - The prefix for the field names
  */
 
-interface CreateEditSampleProps {
-  control: Control<any>
-  errors?: FieldErrors<any>
+interface CreateEditSampleProps<T extends FieldValues = FieldValues> {
+  control: Control<T>
+  errors?: FieldErrors<T>
   mode?: 'standalone' | 'step'
   fieldPrefix?: string
 }
 
-export const CreateEditSample: React.FC<CreateEditSampleProps> = ({
+export const CreateEditSample = <T extends FieldValues>({
   control,
   errors,
   mode = 'standalone',
   fieldPrefix = '',
-}) => {
+}: CreateEditSampleProps<T>) => {
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }

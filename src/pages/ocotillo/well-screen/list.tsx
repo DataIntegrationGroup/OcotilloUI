@@ -37,7 +37,7 @@ export const WellScreenList: React.FC = () => {
         (params) => {
           return params.row.thing.name
         }
-      ),
+      ) as GridColDef<IWellScreen>,
       {
         field: 'screen_type',
         headerName: 'Type',

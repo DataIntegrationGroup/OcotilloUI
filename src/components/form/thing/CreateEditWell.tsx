@@ -1,4 +1,4 @@
-import { Control, FieldErrors } from 'react-hook-form'
+import { Control, FieldErrors, FieldValues } from 'react-hook-form'
 import Grid from '@mui/material/Grid2'
 import {
   ControlledTextField,
@@ -16,19 +16,19 @@ import { useLexicon } from '@/hooks'
  * @param fieldPrefix - The prefix for the field names
  */
 
-interface CreateEditWellProps {
-  control: Control<any>
-  errors?: FieldErrors<any>
+interface CreateEditWellProps<T extends FieldValues = FieldValues> {
+  control: Control<T>
+  errors?: FieldErrors<T>
   mode?: 'standalone' | 'step'
   fieldPrefix?: string
 }
 
-export const CreateEditWell: React.FC<CreateEditWellProps> = ({
+export const CreateEditWell = <T extends FieldValues>({
   control,
   errors,
   mode = 'standalone',
   fieldPrefix = ''
-}) => {
+}: CreateEditWellProps<T>) => {
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }

@@ -10,13 +10,13 @@ import { captureEvent } from '@/analytics/posthog'
 type DataGridHandlerProps = {
   onFilterModelChange?: (
     model: GridFilterModel,
-    details?: GridCallbackDetails
+    details: GridCallbackDetails
   ) => void
   onColumnVisibilityModelChange?: (model: GridColumnVisibilityModel) => void
   onDensityChange?: (density: string) => void
   onSortModelChange?: (
     model: GridSortModel,
-    details?: GridCallbackDetails
+    details: GridCallbackDetails
   ) => void
 }
 
@@ -32,7 +32,7 @@ export function useListPageDataGridAnalytics<T extends DataGridHandlerProps>(
   return useMemo(() => {
     const handleFilterModelChange = (
       model: GridFilterModel,
-      details?: GridCallbackDetails
+      details: GridCallbackDetails
     ) => {
       const activeFilters = model.items.filter((f) => f.value !== undefined)
       if (activeFilters.length > 0) {
@@ -65,7 +65,7 @@ export function useListPageDataGridAnalytics<T extends DataGridHandlerProps>(
 
     const handleSortModelChange = (
       model: GridSortModel,
-      details?: GridCallbackDetails
+      details: GridCallbackDetails
     ) => {
       if (model.length > 0) {
         captureEvent(`${eventPrefix}_sorted`, {

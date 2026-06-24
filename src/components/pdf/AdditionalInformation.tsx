@@ -21,7 +21,7 @@ export const AdditionalInformation = ({
         <View style={styles.cell2}>
           <LineItem
             title="Construction Method"
-            value={well?.well_construction_method}
+            value={well?.well_construction_method ?? undefined}
             styles={styles}
             dense={dense}
           />
@@ -29,7 +29,7 @@ export const AdditionalInformation = ({
         <View style={styles.cell2}>
           <LineItem
             title="Construction Method Source"
-            value={well?.well_construction_method_source}
+            value={well?.well_construction_method_source ?? undefined}
             styles={styles}
             dense={dense}
           />
@@ -39,7 +39,7 @@ export const AdditionalInformation = ({
         <View style={styles.cell3}>
           <LineItem
             title="Pump Type"
-            value={well?.well_pump_type}
+            value={well?.well_pump_type ?? undefined}
             styles={styles}
             dense={dense}
           />
@@ -50,7 +50,7 @@ export const AdditionalInformation = ({
             value={
               well?.well_pump_depth
                 ? `${well?.well_pump_depth?.toFixed(2)} ${well?.well_pump_depth_unit}`
-                : null
+                : undefined
             }
             styles={styles}
             dense={dense}
@@ -63,7 +63,7 @@ export const AdditionalInformation = ({
               value={
                 well?.well_casing_diameter
                   ? `${well?.well_casing_diameter?.toFixed(2)} ${well?.well_casing_diameter_unit}`
-                  : null
+                  : undefined
               }
               styles={styles}
               dense={dense}
@@ -80,7 +80,7 @@ export const AdditionalInformation = ({
             <View style={styles.cell2}>
               <LineItem
                 title="Formation Completion Code"
-                value={well?.formation_completion_code}
+                value={well?.formation_completion_code ?? undefined}
                 styles={styles}
                 dense={dense}
               />
@@ -130,7 +130,7 @@ export const AdditionalInformation = ({
                           well.aquifers.flatMap((a) => a.aquifer_types)
                         ),
                       ].join(', ')
-                    : null
+                    : undefined
                 }
                 styles={styles}
                 dense={dense}

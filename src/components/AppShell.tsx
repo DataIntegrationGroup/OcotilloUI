@@ -1238,7 +1238,7 @@ function ShellHeader() {
 // Pages where the sidebar should always collapse on arrival to maximise workspace
 const AUTO_COLLAPSE_PATHS = ['/ocotillo/map']
 
-function SidebarAutoCollapse() {
+function SidebarAutoCollapse(): null {
   const location = useLocation()
   const { setOpen } = useSidebar()
   // Track whether the sidebar was collapsed by this component (not by the user)

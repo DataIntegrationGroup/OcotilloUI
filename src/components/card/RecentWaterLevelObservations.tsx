@@ -32,7 +32,7 @@ export const RecentWaterLevelObservationsCard = ({
   rows: readonly Partial<WaterLevelObservationRow>[]
   isLoading: boolean
 }) => {
-  const cols: GridColDef<WaterLevelObservationRow>[] = useMemo(() => {
+  const cols: GridColDef<Partial<WaterLevelObservationRow>>[] = useMemo(() => {
     return [
       {
         field: 'observation_datetime',
@@ -137,7 +137,7 @@ export const RecentWaterLevelObservationsCard = ({
           <DataGrid
             rows={rows}
             loading={isLoading}
-            getRowId={(row) => row.id}
+            getRowId={(row) => row.id ?? `obs-${row.observation_datetime}`}
             rowHeight={settings.rowHeight}
             columns={cols}
             disableRowSelectionOnClick
