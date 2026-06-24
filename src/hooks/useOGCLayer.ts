@@ -1,4 +1,4 @@
-import { useDataProvider } from '@refinedev/core'
+import { useDataProvider, type BaseKey } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
 import { withRetry } from '@/utils/httpRetry'
 
@@ -302,7 +302,8 @@ export const useOGCLayer = ({
           () =>
             provider.getOne({
               resource: providerName,
-              id: '',
+              // Collection list fetch — no feature id; OGC path is .../items?f=json
+              id: null as unknown as BaseKey,
               meta: {
                 requestConfig: {
                   params: {
