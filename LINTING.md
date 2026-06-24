@@ -40,9 +40,9 @@ The config lives in `eslint.config.ts` at the repo root. It applies to all `*.ts
 
 ## CI enforcement
 
-`CI_vitest.yml` runs `npm run lint` on every pull request. The build fails on any ESLint **error**. Warnings are reported but do not block merge.
+[`CI_lint.yml`](.github/workflows/CI_lint.yml) runs `npm run lint` and `npm run typecheck` on every pull request. The build fails on any ESLint **error**. Warnings are reported but do not block merge.
 
-The goal is to graduate all current warnings to errors once the codebase is clean. See [Epic 1, Ticket 1.2](../nm-water-data/tickets/epics/epic-01-code-health.md) for the full plan.
+The goal is to graduate all current warnings to errors once the codebase is clean. See [Epic 1, Ticket 1.2](../nm-water-data/tickets/epics/epic-01-code-health.md) for the full plan. Epic 1 status and strict-mode progress are tracked in [code health and quality](https://github.com/DataIntegrationGroup/the-brain/blob/main/docs/process/code-health-and-quality.md) in the-brain repo.
 
 ## Prettier config
 

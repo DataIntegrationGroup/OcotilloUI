@@ -209,7 +209,7 @@ describe('fetchOGCFeaturePages', () => {
         makeFeature(1),
         makeFeatureNoGeometry(2),
         makeFeature(3),
-        { type: 'Feature', geometry: { type: 'Point', coordinates: 'bad' as unknown as unknown[] }, properties: { id: 4 } },
+        { type: 'Feature', geometry: { type: 'Point', coordinates: 'bad' as unknown as number[] }, properties: { id: 4 } },
       ])
     )
 

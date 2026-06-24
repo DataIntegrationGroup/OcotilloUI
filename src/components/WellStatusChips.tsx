@@ -56,7 +56,7 @@ export const WellStatusChips = ({
     well?.well_purposes?.length && well.well_purposes.length > 0
   )
   const topChipValues = hasPurposes
-    ? well.well_purposes
+    ? (well.well_purposes ?? [])
     : [well?.thing_type || 'UNKNOWN TYPE']
 
   const isPublic = well?.release_status?.toLocaleUpperCase() === 'PUBLIC'

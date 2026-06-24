@@ -45,7 +45,11 @@ export const Home = () => {
 const appEnv = import.meta.env.VITE_APP_ENV || 'production'
 const showTestSiteBanner = import.meta.env.DEV || appEnv !== 'production'
 
-const HomeNotification = ({ noPermissions }) => {
+type HomeNotificationProps = {
+  noPermissions: boolean
+}
+
+const HomeNotification = ({ noPermissions }: HomeNotificationProps) => {
   const [notificationOpen, setNotificationOpen] = useState(true)
 
   if (!noPermissions && !showTestSiteBanner) {

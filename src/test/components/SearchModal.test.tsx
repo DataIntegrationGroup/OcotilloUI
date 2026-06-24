@@ -47,7 +47,7 @@ describe('SearchModal arcade easter eggs', () => {
     useAbortableListMock.mockReset()
     useSearchHistoryMock.mockReset()
     useSearchHistoryMock.mockReturnValue({
-      get: () => [],
+      get: (): string[] => [],
       add: vi.fn(),
       clear: vi.fn(),
     })

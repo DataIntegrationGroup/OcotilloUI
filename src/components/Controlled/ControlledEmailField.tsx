@@ -1,5 +1,5 @@
 import { TextField, Autocomplete } from "@mui/material";
-import { Controller, Control, Path } from "react-hook-form";
+import { Controller, Control, FieldValues, Path } from "react-hook-form";
 import { useState } from "react";
 
 const emailDomains = [
@@ -10,7 +10,7 @@ const emailDomains = [
   "@icloud.com",
 ];
 
-export const ControlledEmailField = <T,>({
+export const ControlledEmailField = <T extends FieldValues>({
   control,
   name,
   label,

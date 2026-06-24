@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Control,
+  FieldValues,
   UseFormWatch,
   UseFormSetValue,
   FieldErrors,
   useWatch,
+  type Path,
+  type PathValue,
 } from 'react-hook-form'
 import Grid from '@mui/material/Grid2'
 import {
@@ -40,24 +43,27 @@ import { useElevation } from '@/hooks'
  * @param fieldPrefix - The prefix for the field names
  */
 
-interface CreateEditLocationProps {
-  control: Control<any>
-  watch?: UseFormWatch<any>
-  setValue?: UseFormSetValue<any>
-  errors?: FieldErrors<any>
+interface CreateEditLocationProps<T extends FieldValues = FieldValues> {
+  control: Control<T>
+  watch?: UseFormWatch<T>
+  setValue?: UseFormSetValue<T>
+  errors?: FieldErrors<T>
   mode?: 'standalone' | 'step'
   fieldPrefix?: string
 }
 
-export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
+export const CreateEditLocation = <T extends FieldValues>({
   control,
   setValue,
   mode = 'standalone',
   fieldPrefix = '',
-}) => {
+}: CreateEditLocationProps<T>) => {
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
+
+  const fieldPath = (fieldName: string) =>
+    getFieldName(fieldName) as Path<T>
 
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -75,7 +81,7 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   const [autoGenerateElevation, setAutoGenerateElevation] = useState(true)
 
   // Only watch the actual form fields
-  const point = useWatch({ control, name: getFieldName('point') })
+  const point = useWatch({ control, name: fieldPath('point') })
 
   const mapRef = useRef<MapRef>(null)
   const [viewState, setViewState] = useState<ViewState>({
@@ -111,9 +117,13 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   useEffect(() => {
     if (setValue && point) {
       try {
-        const geometry = wellknown.parse(point)
-        if (geometry.type === 'Point' && geometry.coordinates) {
-          const [lng, lat] = geometry.coordinates
+        const geometry = wellknown.parse(point as string)
+        if (
+          geometry &&
+          geometry.type === 'Point' &&
+          'coordinates' in geometry
+        ) {
+          const [lng, lat] = geometry.coordinates as [number, number]
           setLongitude(lng.toString())
           setLatitude(lat.toString())
           setViewState((prev) => ({ ...prev, longitude: lng, latitude: lat }))
@@ -207,8 +217,14 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
       const elevationInFeet = elevationQuery.data.value.toFixed(2)
 
       if (setValue) {
-        setValue(getFieldName('elevation'), Number(elevationInFeet))
-        setValue(getFieldName('elevation_accuracy'), Number(1.74))
+        setValue(
+          fieldPath('elevation'),
+          Number(elevationInFeet) as PathValue<T, Path<T>>
+        )
+        setValue(
+          fieldPath('elevation_accuracy'),
+          Number(1.74) as PathValue<T, Path<T>>
+        )
       }
     }
   }, [
@@ -222,15 +238,24 @@ export const CreateEditLocation: React.FC<CreateEditLocationProps> = ({
   const handleElevationToggle = (checked: boolean) => {
     setAutoGenerateElevation(checked)
     if (!checked && setValue) {
-      setValue(getFieldName('elevation'), undefined)
-      setValue(getFieldName('elevation_accuracy'), undefined)
+      setValue(
+        fieldPath('elevation'),
+        undefined as PathValue<T, Path<T>>
+      )
+      setValue(
+        fieldPath('elevation_accuracy'),
+        undefined as PathValue<T, Path<T>>
+      )
     }
   }
 
   //auto-generate WKT point from latitude and longitude
   useEffect(() => {
     if (setValue && latitude && longitude) {
-      setValue(getFieldName('point'), `POINT(${longitude} ${latitude})`)
+      setValue(
+        fieldPath('point'),
+        `POINT(${longitude} ${latitude})` as PathValue<T, Path<T>>
+      )
     }
   }, [setValue, latitude, longitude])
 

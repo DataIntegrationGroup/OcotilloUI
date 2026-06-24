@@ -28,7 +28,7 @@ export const WellInformation = ({
             value={
               well?.well_depth
                 ? `${well?.well_depth} ${well.well_depth_unit}`
-                : null
+                : undefined
             }
             styles={styles}
             dense={dense}
@@ -40,7 +40,7 @@ export const WellInformation = ({
             value={
               well?.measuring_point_height
                 ? `${well?.measuring_point_height} ${well?.measuring_point_height_unit}`
-                : null
+                : undefined
             }
             styles={styles}
             dense={dense}
@@ -53,7 +53,7 @@ export const WellInformation = ({
               value={
                 well?.hole_depth
                   ? `${well?.hole_depth} ${well?.hole_depth_unit}`
-                  : null
+                  : undefined
               }
               styles={styles}
               dense={dense}
@@ -67,7 +67,7 @@ export const WellInformation = ({
         <View style={styles.cell3}>
           <LineItem
             title="WL Method"
-            value={sample?.sample_method}
+            value={sample?.sample_method ?? undefined}
             styles={styles}
             dense={dense}
           />
@@ -75,7 +75,7 @@ export const WellInformation = ({
         <View style={styles.cell3Span2}>
           <LineItem
             title="Measuring Point"
-            value={well?.measuring_point_description}
+            value={well?.measuring_point_description ?? undefined}
             styles={styles}
             dense={dense}
           />
@@ -90,7 +90,7 @@ export const WellInformation = ({
                 ? new Date(mostRecent.observation_datetime)
                     .toISOString()
                     .slice(0, 10)
-                : null
+                : undefined
             }
             styles={styles}
             dense={dense}
@@ -102,7 +102,7 @@ export const WellInformation = ({
             value={
               mostRecent?.depth_to_water_bgs != null
                 ? `${mostRecent.depth_to_water_bgs.toFixed(2)} ${mostRecent.unit}`
-                : null
+                : undefined
             }
             styles={styles}
             dense={dense}
@@ -111,7 +111,7 @@ export const WellInformation = ({
         <View style={styles.cell3}>
           <LineItem
             title="Level Status"
-            value={mostRecent?.groundwater_level_reason}
+            value={mostRecent?.groundwater_level_reason ?? undefined}
             styles={styles}
             dense={dense}
           />

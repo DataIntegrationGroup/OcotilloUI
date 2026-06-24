@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zSampleResponse,
@@ -30,10 +31,10 @@ describe('Ocotillo Integration Tests: Sample', () => {
         const validatedSample = zSampleResponse.parse(sample)
         expect(validatedSample).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('Sample data:', JSON.stringify(sample, null, 2))
         throw new Error(
-          `API response doesn't match ISample interface: ${error.message}`
+          `API response doesn't match ISample interface: ${getErrorMessage(error)}`
         )
       }
     }
@@ -55,10 +56,10 @@ describe('Ocotillo Integration Tests: Sample', () => {
       const validatedSample = zSampleResponse.parse(sample)
       expect(validatedSample).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Sample data:', JSON.stringify(sample, null, 2))
       throw new Error(
-        `API response doesn't match ISample interface: ${error.message}`
+        `API response doesn't match ISample interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -90,10 +91,10 @@ describe('Ocotillo Integration Tests: Sample', () => {
       const validatedSample = zSampleResponse.parse(sample)
       expect(validatedSample).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Sample data:', JSON.stringify(sample, null, 2))
       throw new Error(
-        `API response doesn't match ISample interface: ${error.message}`
+        `API response doesn't match ISample interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -126,10 +127,10 @@ describe('Ocotillo Integration Tests: Sample', () => {
       const validatedSample = zSampleResponse.parse(sample)
       expect(validatedSample).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Sample data:', JSON.stringify(sample, null, 2))
       throw new Error(
-        `API response doesn't match ISample interface: ${error.message}`
+        `API response doesn't match ISample interface: ${getErrorMessage(error)}`
       )
     }
   })

@@ -47,7 +47,8 @@ export const WellPDF = ({
   standalone?: boolean
   includeConfidentialContacts?: boolean
 }) => {
-  const density: IPdfDensity = options.density ?? PDF_DEFAULT_VALUES.density
+  const density: IPdfDensity =
+    options.density ?? PDF_DEFAULT_VALUES.density ?? 'standard'
   const isDense = density === 'standard' || density === 'compact'
   const styles = useMemo(() => createPdfStyles(density), [density])
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
@@ -58,6 +59,7 @@ export const WellPDF = ({
   const showAdditionalOnFirstPage = density === 'compact'
 
   const mostRecentObservation = useMostRecentObservation(observations)
+  const mostRecent = mostRecentObservation ?? {}
   const { primaryContact, secondaryContact } =
     usePrimaryAndSecondaryContact(visibleContacts)
   const allNotes = useAllNotes(well, options)
@@ -75,7 +77,7 @@ export const WellPDF = ({
         />
         <WellInformation
           well={well}
-          mostRecent={mostRecentObservation}
+          mostRecent={mostRecent}
           sample={sample}
           styles={styles}
           dense={isDense}

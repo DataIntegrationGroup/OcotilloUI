@@ -156,7 +156,7 @@ export const ContactList: React.FC = () => {
                         id: thing.id,
                       },
                     }}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   >
                     {thing.name}
                   </Link>

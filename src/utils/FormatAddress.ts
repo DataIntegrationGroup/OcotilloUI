@@ -5,7 +5,7 @@ export const formatContactAddress = (
   addr:
     | {
         address_line_1?: string
-        address_line_2?: string
+        address_line_2?: string | null
         city?: string
         state?: string
         postal_code?: string

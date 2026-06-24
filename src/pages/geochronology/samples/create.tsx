@@ -166,7 +166,7 @@ export const SampleCreate: React.FC = () => {
                 </Stack>
 
                 <MapComponent
-                onClick={(evt) => {
+                onClick={(evt: { lngLat: { lat: number; lng: number } }) => {
                     const {lat, lng} = evt.lngLat;
                     setValue("latitude", lat);
                     setValue("longitude", lng);

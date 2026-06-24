@@ -28,7 +28,9 @@ axiosInstance.interceptors.request.use(
 
 const refreshAuthLogic = async (failedRequest: AxiosError) => {
   const token = await getAccessToken({ refresh: true })
-  failedRequest.response.config.headers['Authorization'] = 'Bearer ' + token
+  if (failedRequest.response) {
+    failedRequest.response.config.headers['Authorization'] = 'Bearer ' + token
+  }
   return Promise.resolve()
 }
 
@@ -45,14 +47,18 @@ export const axiosCall = async (url: string, options: AxiosRequestConfig) => {
   return axiosInstance(config)
 }
 
-const getPhotos = async (id) => {
+type AmpPhotoRecord = {
+  OLEPath: string
+}
+
+const getPhotos = async (id: string | number) => {
   const response = await fetcher(`wells/photos?pointid=${id}`)
   if (response.status < 200 || response.status > 299) throw response
 
-  const data = await response.data
+  const data = (await response.data) as AmpPhotoRecord[]
 
   const photos = await Promise.all(
-    data.map(async (photo) => {
+    data.map(async (photo: AmpPhotoRecord) => {
       try {
         const resp = await fetcher(`wells/photo/${photo.OLEPath}`)
 
@@ -91,7 +97,7 @@ export const ampDataProvider: DataProvider = {
 
     if (pagination) {
       params.append('page', (pagination.currentPage ?? 1).toString())
-      params.append('size', pagination.pageSize.toString())
+      params.append('size', (pagination.pageSize ?? 10).toString())
     }
 
     if (sorters && sorters.length > 0) {

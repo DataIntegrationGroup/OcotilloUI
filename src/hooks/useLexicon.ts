@@ -1,7 +1,11 @@
 import { useList } from '@refinedev/core'
 import { ITerm } from '@/interfaces/ocotillo/ILexicon'
 
-export const useLexicon = ({ category }) => {
+type UseLexiconProps = {
+  category: string
+}
+
+export const useLexicon = ({ category }: UseLexiconProps) => {
   const data = useList<ITerm>({
     resource: 'lexicon/term',
     dataProviderName: 'ocotillo',

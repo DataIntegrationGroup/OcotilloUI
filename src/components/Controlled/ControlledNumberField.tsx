@@ -1,7 +1,7 @@
 import { Box, TextField, TextFieldProps } from '@mui/material'
-import { Controller, Control, Path } from 'react-hook-form'
+import { Controller, Control, FieldValues, Path } from 'react-hook-form'
 
-export const ControlledNumberField = <T,>({
+export const ControlledNumberField = <T extends FieldValues>({
   control,
   name,
   label,

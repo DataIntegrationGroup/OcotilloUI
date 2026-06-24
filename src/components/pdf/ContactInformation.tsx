@@ -9,8 +9,8 @@ export const ContactInformation = ({
   styles,
   dense = false,
 }: {
-  primaryContact: IContact
-  secondaryContact: IContact
+  primaryContact?: IContact
+  secondaryContact?: IContact
   styles: ReturnType<typeof createPdfStyles>
   dense?: boolean
 }) => {
@@ -66,7 +66,8 @@ export const ContactInformation = ({
             title="Phone"
             value={
               primaryContact?.phones?.[0]?.phone_number ??
-              primaryContact?.phones?.[0]?.nma_phone_number
+              primaryContact?.phones?.[0]?.nma_phone_number ??
+              undefined
             }
             styles={styles}
             dense={dense}
@@ -77,7 +78,8 @@ export const ContactInformation = ({
             title="Phone"
             value={
               secondaryContact?.phones?.[0]?.phone_number ??
-              secondaryContact?.phones?.[0]?.nma_phone_number
+              secondaryContact?.phones?.[0]?.nma_phone_number ??
+              undefined
             }
             styles={styles}
             dense={dense}

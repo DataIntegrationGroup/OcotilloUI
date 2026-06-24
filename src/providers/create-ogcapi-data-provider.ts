@@ -63,7 +63,7 @@ const getOgcPath = ({
 
   if (!collection) return basePath
   const encodedCollection = encodeURIComponent(collection)
-  if (fid === undefined || fid === null) {
+  if (fid === undefined || fid === null || fid === '') {
     return `${basePath}/${encodedCollection}/items`
   }
 
@@ -100,8 +100,8 @@ export const createOgcapiDataProvider = ({
     }
 
     if (pagination) {
-      params.limit = pagination.pageSize
-      params.offset = ((pagination.currentPage ?? 1) - 1) * pagination.pageSize
+      params.limit = pagination.pageSize ?? 10
+      params.offset = ((pagination.currentPage ?? 1) - 1) * (pagination.pageSize ?? 10)
     }
 
     if (collection && defaultCollectionParams) {
@@ -143,7 +143,7 @@ export const createOgcapiDataProvider = ({
     const response = await request(
       getOgcPath({
         collection,
-        fid: id === null ? undefined : id,
+        fid: id === null || id === '' ? undefined : id,
         collectionsPathPrefix,
       }),
       requestConfig

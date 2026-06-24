@@ -139,7 +139,7 @@ export const OwnerPermissionsCard = ({
                     </Box>
                   )}
                 </Stack>
-                {index < well.permissions.length - 1 && (
+                {index < permissions.length - 1 && (
                   <Divider sx={{ mt: 2 }} />
                 )}
               </Box>

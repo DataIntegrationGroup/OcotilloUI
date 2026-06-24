@@ -1,4 +1,10 @@
-import { Control, FieldErrors } from 'react-hook-form'
+import {
+  Control,
+  FieldErrors,
+  FieldValues,
+  UseFormSetValue,
+  UseFormWatch,
+} from 'react-hook-form'
 import Grid from '@mui/material/Grid2'
 import { ControlledTextField } from '@/components'
 import { Button, Typography } from '@mui/material'
@@ -6,11 +12,11 @@ import { Add, Delete } from '@mui/icons-material'
 import { ControlledSelectField } from '@/components/Controlled/ControlledSelectField'
 import { useLexicon } from '@/hooks'
 
-interface CreateEditWellScreenProps {
-  control: Control<any>
-  watch?: any
-  setValue?: any
-  errors?: FieldErrors<any>
+interface CreateEditWellScreenProps<T extends FieldValues = FieldValues> {
+  control: Control<T>
+  watch?: UseFormWatch<T>
+  setValue?: UseFormSetValue<T>
+  errors?: FieldErrors<T>
   mode?: 'standalone' | 'step'
   fieldPrefix?: string
   screenIndex?: number
@@ -20,7 +26,7 @@ interface CreateEditWellScreenProps {
   totalScreens?: number
 }
 
-export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
+export const CreateEditWellScreen = <T extends FieldValues>({
   control,
   watch,
   setValue,
@@ -32,7 +38,7 @@ export const CreateEditWellScreen: React.FC<CreateEditWellScreenProps> = ({
   onAddScreen,
   canRemoveScreen = true,
   totalScreens = 1,
-}) => {
+}: CreateEditWellScreenProps<T>) => {
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }

@@ -3,8 +3,16 @@ import PersonOutlined from "@mui/icons-material/PersonOutlined";
 import CategoryOutlined from "@mui/icons-material/CategoryOutlined";
 import Science from "@mui/icons-material/Science";
 import CookieOutlined from "@mui/icons-material/CookieOutlined";
+import type { ResourceMeta } from "./types";
 
-const geochronology = [
+const geochronology: {
+  name: string;
+  list?: string;
+  show?: string;
+  create?: string;
+  icon?: JSX.Element;
+  meta?: ResourceMeta;
+}[] = [
   {
     name: "dashboard",
     list: "/geochronology/dashboard",
@@ -50,12 +58,12 @@ const geochronology = [
 ];
 
 export const geochronologyResources = geochronology.map((g) => {
-  const meta = g.meta || {};
-  meta["parent"] = "geochronology";
-  meta["dataProviderName"] = "geochronology";
+  const meta: ResourceMeta = { ...g.meta };
+  meta.parent = "geochronology";
+  meta.dataProviderName = "geochronology";
 
   return {
     ...g,
-    meta: meta,
+    meta,
   };
 });

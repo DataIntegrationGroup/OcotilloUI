@@ -15,7 +15,9 @@ export const SpatialSearchComponent: React.FC<SpatialSearchComponentProps> = ({
   setSpatialSearchWKT,
 }) => {
   const [spatialSearchOpen, setSpatialSearchOpen] = useState(false)
-  const [selectionPolygons, setSelectionPolygons] = useState({})
+  const [selectionPolygons, setSelectionPolygons] = useState<
+    Record<string, GeoJSON.Geometry>
+  >({})
   const mapRef = useRef<MapRef>(null)
 
   const handlePolygonSearch = () => {
@@ -25,7 +27,9 @@ export const SpatialSearchComponent: React.FC<SpatialSearchComponentProps> = ({
     }
 
     const polygon = Object.values(selectionPolygons)[0]
-    const wktString = wellknown.stringify(polygon)
+    const wktString = wellknown.stringify(
+      polygon as Parameters<typeof wellknown.stringify>[0]
+    )
     setSpatialSearchWKT(wktString)
     setSelectionPolygons({})
   }
@@ -33,6 +37,9 @@ export const SpatialSearchComponent: React.FC<SpatialSearchComponentProps> = ({
     if (mapRef.current) {
       const map = mapRef.current.getMap()
       const bounds = map.getBounds()
+      if (!bounds) {
+        return
+      }
       const wktString = wellknown.stringify({
         type: 'Polygon',
         coordinates: [

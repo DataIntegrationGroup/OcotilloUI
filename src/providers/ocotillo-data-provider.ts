@@ -26,7 +26,9 @@ axiosInstance.interceptors.request.use(
 
 const refreshAuthLogic = async (failedRequest: AxiosError) => {
   const token = await getAccessToken({ refresh: true })
-  failedRequest.response.config.headers['Authorization'] = 'Bearer ' + token
+  if (failedRequest.response) {
+    failedRequest.response.config.headers['Authorization'] = 'Bearer ' + token
+  }
   return Promise.resolve()
 }
 
@@ -81,7 +83,7 @@ export const ocotilloDataProvider: DataProvider = {
 
     if (pagination) {
       params.append('page', (pagination.currentPage ?? 1).toString())
-      params.append('size', pagination.pageSize.toString())
+      params.append('size', (pagination.pageSize ?? 10).toString())
     }
 
     if (sorters && sorters.length > 0) {
@@ -188,6 +190,7 @@ export const ocotilloDataProvider: DataProvider = {
     } catch (error) {
       // Transform Pydantic validation errors to Refine format
       if (
+        axios.isAxiosError(error) &&
         (error.response?.status === 422 || error.response?.status === 409) &&
         error.response?.data?.detail
       ) {
@@ -289,6 +292,7 @@ export const ocotilloDataProvider: DataProvider = {
     } catch (error) {
       // Transform Pydantic validation errors to Refine format
       if (
+        axios.isAxiosError(error) &&
         (error.response?.status === 422 || error.response?.status === 409) &&
         error.response?.data?.detail
       ) {

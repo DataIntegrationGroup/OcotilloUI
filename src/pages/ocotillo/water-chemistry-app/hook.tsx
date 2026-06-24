@@ -44,11 +44,61 @@ export const sequentialPromises = async <
   }
   return results
 }
+type ImportResult<TVariables, TData extends BaseRecord> = {
+  succeeded: ImportSuccessResult<TVariables, TData>[]
+  errored: ImportErrorResult<TVariables>[]
+}
+
+type SampleCreateValues = {
+  thing_id: number
+  sample_type: string
+  field_sample_id: string
+  release_status: string
+  sampler_name: string
+  qc_sample: string
+  sensor_id: number
+  sample_matrix: string
+  sample_method: string
+  sample_date: string
+  row_idx?: number
+}
+
+type ObservationCreateValues = {
+  field_sample_id: string
+  sensor_id: number
+  release_status: string
+  observed_property: string
+  units: string
+  value: string
+  observation_datetime: string
+  row_idx?: number
+}
+
+type CreateMutationResult<TData extends BaseRecord = BaseRecord> = {
+  response: { data: TData }
+  values: (SampleCreateValues | ObservationCreateValues)[]
+}
+
+type UseImportWaterChemistrySamplesProps<
+  TData extends BaseRecord = BaseRecord,
+  TVariables = unknown,
+> = {
+  dataProviderName?: string
+  onFinish?: (result: ImportResult<TVariables, TData>) => void
+  onProgress?: (progress: {
+    totalAmount: number
+    processedAmount: number
+  }) => void
+  samples: ISampleUploadSchema[]
+  observations: IObservationUploadSchema[]
+  batchSize?: number
+}
+
 export const useImportWaterChemistrySamples = <
-  TItem = any,
+  TItem = unknown,
   TData extends BaseRecord = BaseRecord,
   TError extends HttpError = HttpError,
-  TVariables = any,
+  TVariables = unknown,
 >({
   dataProviderName = 'ocotillo',
   onFinish,
@@ -56,7 +106,7 @@ export const useImportWaterChemistrySamples = <
   samples,
   observations,
   batchSize = Number.MAX_SAFE_INTEGER,
-}) => {
+}: UseImportWaterChemistrySamplesProps<TData, TVariables>) => {
   const [processedAmount, setProcessedAmount] = useState<number>(0)
   const [totalAmount, setTotalAmount] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -118,7 +168,7 @@ export const useImportWaterChemistrySamples = <
       const items = [...samples, ...observations]
 
       const sampleFns = samples.map((sample: ISampleUploadSchema) => {
-        const vs = {
+        const vs: SampleCreateValues = {
           thing_id: 1,
           sample_type: 'groundwater',
           field_sample_id: sample.sampleId,
@@ -148,7 +198,7 @@ export const useImportWaterChemistrySamples = <
 
       const observationFns = observations.map(
         (observation: IObservationUploadSchema) => {
-          const vs = {
+          const vs: ObservationCreateValues = {
             field_sample_id: observation.sampleId,
             sensor_id: 1, // hardcoded for now
             release_status: 'draft',
@@ -175,10 +225,13 @@ export const useImportWaterChemistrySamples = <
         }
       )
 
-      const allFns = [...sampleFns, ...observationFns]
+      const allFns: (() => Promise<CreateMutationResult<TData>>)[] = [
+        ...sampleFns,
+        ...observationFns,
+      ]
       setTotalAmount(allFns.length)
       const createdValues = sequentialPromises(
-        [...sampleFns, ...observationFns],
+        allFns,
         ({ response, values }) => {
           setProcessedAmount((currentAmount) => {
             return currentAmount + 1

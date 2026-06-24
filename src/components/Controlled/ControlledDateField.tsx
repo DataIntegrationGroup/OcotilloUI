@@ -1,4 +1,4 @@
-import { Controller, Control, Path } from 'react-hook-form'
+import { Controller, Control, FieldValues, Path } from 'react-hook-form'
 import { Box, FormControl } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import dayjs from 'dayjs'
@@ -9,7 +9,7 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 const MOUNTAIN_TZ = 'America/Denver'
 
-export const ControlledDateField = <T,>({
+export const ControlledDateField = <T extends FieldValues>({
   control,
   name,
   label,
@@ -26,7 +26,7 @@ export const ControlledDateField = <T,>({
   return (
     <Controller
       name={name as Path<T>}
-      control={control as Control<T>}
+      control={control}
       render={({ field, fieldState }) => (
         <FormControl fullWidth error={!!fieldState.error} required={required}>
           <DateTimePicker
