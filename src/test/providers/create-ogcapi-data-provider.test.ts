@@ -5,10 +5,12 @@ const COLLECTION = 'water_wells'
 const FEATURE_ID = 'NM-12345'
 
 const createTestProvider = () => {
-  const request = vi.fn(async () => ({
-    status: 200,
-    data: { type: 'FeatureCollection', features: [] },
-  }))
+  const request = vi.fn(
+    async (_url: string, _config?: unknown) => ({
+      status: 200,
+      data: { type: 'FeatureCollection', features: [] },
+    })
+  )
 
   const provider = createOgcapiDataProvider({
     supportedResources: ['ogcapi'],
