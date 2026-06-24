@@ -43,8 +43,14 @@ const LexiconHeaderButtons = () => {
   )
 }
 
+interface LexiconCategory {
+  id: number | string
+  name: string
+}
+
 export const LexiconList = () => {
-  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [selectedCategory, setSelectedCategory] =
+    useState<LexiconCategory | null>(null)
   const handleRowClick = useCallback((params?: any) => {
     setSelectedCategory((prev?: any) =>
       prev?.id === params.row.id ? null : params.row
@@ -149,7 +155,6 @@ export const LexiconList = () => {
             <CardContent>
               <DataGrid
                 pagination
-                disableRowSelectionOnClick
                 pageSizeOptions={[5, 10, 25]}
                 paginationModel={{ pageSize: 10, page: 0 }}
                 {...termDataGridProps}

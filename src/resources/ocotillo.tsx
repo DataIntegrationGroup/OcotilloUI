@@ -19,6 +19,7 @@ import {
   Timeline,
   Workspaces,
 } from '@mui/icons-material'
+import type { ResourceMeta } from './types'
 
 let tables: {
   name: string
@@ -26,15 +27,7 @@ let tables: {
   show?: string
   create?: string
   list?: string
-  meta: {
-    label?: string
-    icon?: JSX.Element
-    disabled?: boolean
-    routes?: any
-    parent?: string
-    nestedLevel?: number
-    hide?: boolean
-  }
+  meta: ResourceMeta
 }[] = [
   {
     name: 'thing-well',
@@ -204,11 +197,11 @@ tables.push({
 })
 
 tables = tables.map((b) => {
-  const meta = b.meta || {}
-  meta['nestedLevel'] = 0
+  const meta: ResourceMeta = { ...b.meta }
+  meta.nestedLevel = 0
   return {
     ...b,
-    meta: meta,
+    meta,
   }
 })
 
@@ -238,7 +231,7 @@ let forms: {
   show?: string
   create?: string
   list: string
-  meta: { label?: string; icon?: JSX.Element; disabled?: boolean }
+  meta: ResourceMeta
 }[] = [
   {
     name: 'well-inventory-form',
@@ -267,14 +260,14 @@ let forms: {
 ]
 
 forms = forms.map((b) => {
-  const meta = b.meta || {}
-  if (!meta['parent']) {
-    meta['parent'] = 'ocotillo.forms'
+  const meta: ResourceMeta = { ...b.meta }
+  if (!meta.parent) {
+    meta.parent = 'ocotillo.forms'
   }
-  meta['nestedLevel'] = 2
+  meta.nestedLevel = 2
   return {
     ...b,
-    meta: meta,
+    meta,
   }
 })
 
@@ -284,7 +277,7 @@ let observations: {
   show?: string
   create?: string
   list: string
-  meta: { label?: string; icon?: JSX.Element }
+  meta: ResourceMeta
 }[] = [
   {
     name: 'groundwater-level-observation',
@@ -298,14 +291,14 @@ let observations: {
 ]
 
 observations = observations.map((b) => {
-  const meta = b.meta || {}
-  if (!meta['parent']) {
-    meta['parent'] = 'ocotillo.observation'
+  const meta: ResourceMeta = { ...b.meta }
+  if (!meta.parent) {
+    meta.parent = 'ocotillo.observation'
   }
-  meta['nestedLevel'] = 3
+  meta.nestedLevel = 3
   return {
     ...b,
-    meta: meta,
+    meta,
   }
 })
 
@@ -368,12 +361,12 @@ const ocotillo = [
 ]
 
 export const ocotilloResources = ocotillo.map((b) => {
-  const meta = b.meta || {}
-  meta['dataProviderName'] = 'ocotillo'
+  const meta: ResourceMeta = { ...b.meta }
+  meta.dataProviderName = 'ocotillo'
   return {
     ...b,
     name: `ocotillo.${b.name}`,
-    meta: meta,
+    meta,
   }
 })
 

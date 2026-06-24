@@ -19,10 +19,12 @@ export const LocationShow = () => {
 
   return (
     <Show isLoading={query.isLoading}>
-      <DynamicShowDisplay<ILocation>
-        record={record}
-        fieldConfigs={fieldConfigs}
-      />
+      {record ? (
+        <DynamicShowDisplay<ILocation>
+          record={record}
+          fieldConfigs={fieldConfigs}
+        />
+      ) : null}
     </Show>
   )
 }

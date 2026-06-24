@@ -69,6 +69,10 @@ export const CreateEditAsset: React.FC<CreateEditAssetProps> = ({
       const formData = new FormData()
       formData.append('file', file)
 
+      if (!provider.custom) {
+        throw new Error('Asset upload is not available')
+      }
+
       const asset = await provider
         .custom({
           url: 'asset/upload',

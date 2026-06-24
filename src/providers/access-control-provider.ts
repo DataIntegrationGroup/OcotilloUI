@@ -4,8 +4,8 @@ import { canAccessResource } from '@/utils'
 type Actions = 'list' | 'show' | 'create' | 'edit' | 'delete' | 'manage'
 
 type AccessControlCanParams = {
-  resource: string
-  action: Actions
+  resource?: string
+  action: string
   params?: unknown
 }
 
@@ -25,7 +25,12 @@ export const accessControlProvider = {
     )
 
     return {
-      can: canAccessResource({ groups, resource, action, isWip }),
+      can: canAccessResource({
+        groups,
+        resource: resource ?? '',
+        action: action as Actions,
+        isWip,
+      }),
     }
   },
 }

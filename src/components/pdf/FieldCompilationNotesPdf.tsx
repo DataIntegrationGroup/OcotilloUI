@@ -534,7 +534,7 @@ const PdfTable = <T extends Record<string, unknown>>({
             key={column.label}
             style={[
               styles.cellHeader,
-              compact ? styles.compactCellHeader : null,
+              ...(compact ? [styles.compactCellHeader] : []),
               { width: column.width },
             ]}
           >
@@ -547,7 +547,7 @@ const PdfTable = <T extends Record<string, unknown>>({
           key={rowIndex}
           style={[
             styles.tableRow,
-            rowIndex === arr.length - 1 ? styles.tableRowLast : null,
+            ...(rowIndex === arr.length - 1 ? [styles.tableRowLast] : []),
           ]}
         >
           {columns.map((column) => (
@@ -555,7 +555,7 @@ const PdfTable = <T extends Record<string, unknown>>({
               key={column.label}
               style={[
                 styles.cell,
-                compact ? styles.compactCell : null,
+                ...(compact ? [styles.compactCell] : []),
                 { width: column.width },
               ]}
             >
@@ -857,9 +857,9 @@ const FieldCompilationNotesPage = ({
                   key={column}
                   style={[
                     styles.cutMethodTableHeaderCell,
-                    index === cutMethodColumns.length - 1
-                      ? styles.cutMethodTableValueCellLast
-                      : null,
+                    ...(index === cutMethodColumns.length - 1
+                      ? [styles.cutMethodTableValueCellLast]
+                      : []),
                   ]}
                 >
                   {column}
@@ -871,9 +871,9 @@ const FieldCompilationNotesPage = ({
                 key={rowLabel}
                 style={[
                   styles.cutMethodTableRow,
-                  rowIndex === cutMethodRows.length - 1
-                    ? styles.cutMethodTableRowLast
-                    : null,
+                  ...(rowIndex === cutMethodRows.length - 1
+                    ? [styles.cutMethodTableRowLast]
+                    : []),
                 ]}
               >
                 <Text style={styles.cutMethodTableLabelCell}>{rowLabel}</Text>
@@ -882,9 +882,9 @@ const FieldCompilationNotesPage = ({
                     key={`${rowLabel}-${column}`}
                     style={[
                       styles.cutMethodTableValueCell,
-                      index === cutMethodColumns.length - 1
-                        ? styles.cutMethodTableValueCellLast
-                        : null,
+                      ...(index === cutMethodColumns.length - 1
+                        ? [styles.cutMethodTableValueCellLast]
+                        : []),
                     ]}
                   >
                     <View style={styles.fillLine} />

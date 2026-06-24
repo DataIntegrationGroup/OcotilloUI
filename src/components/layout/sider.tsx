@@ -214,8 +214,8 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
           >
             <ListItemButton
               disabled={disabled}
-              component={RouterLink}
-              to={route}
+              component={route ? RouterLink : 'div'}
+              to={route ?? ''}
               style={linkStyle}
               onClick={() => {
                 if (!isNested) setOpen({})

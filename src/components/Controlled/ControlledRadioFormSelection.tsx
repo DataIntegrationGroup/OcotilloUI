@@ -7,7 +7,7 @@ import {
   RadioGroup,
   Box,
 } from '@mui/material'
-import { Controller, Control, Path } from 'react-hook-form'
+import { Controller, Control, FieldValues, Path } from 'react-hook-form'
 import { ReactNode, ComponentProps } from 'react'
 
 export interface RadioOption {
@@ -17,7 +17,7 @@ export interface RadioOption {
   icon?: ReactNode
 }
 
-export const ControlledRadioFormSelection = <T,>({
+export const ControlledRadioFormSelection = <T extends FieldValues>({
   control,
   name,
   label,

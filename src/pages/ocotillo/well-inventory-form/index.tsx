@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useStepsForm } from '@refinedev/react-hook-form'
 import { useAutocomplete } from '@refinedev/mui'
-import { useFieldArray, Controller } from 'react-hook-form'
+import { useFieldArray, Controller, FieldArrayWithId } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useNotification } from '@refinedev/core'
 import { useMutation } from '@tanstack/react-query'
@@ -18,6 +18,8 @@ import { Add, Delete } from '@mui/icons-material'
 import { ControlledTextField, ControlledRadioFormSelection } from '@/components'
 import { IWellInventoryForm } from '@/interfaces/ocotillo/IWellInventoryForm'
 import { ILocation } from '@/interfaces/ocotillo/ILocation'
+import { Nullable } from '@/interfaces'
+import { HttpError } from '@refinedev/core'
 import { createWellInventoryForm } from '@/pages/ocotillo/well-inventory-form/well_inventory.service'
 import { CreateEditLocation } from '@/components/form/location/CreateEditLocation'
 import { CreateEditWell } from '@/components/form/thing/CreateEditWell'
@@ -37,6 +39,7 @@ export const WellInventoryForm: React.FC = () => {
   const { open, close } = useNotification()
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const go = useGo()
+  const currentStepRef = useRef(0)
 
   const { autocompleteProps: locationAutocompleteProps } =
     useAutocomplete<ILocation>({
@@ -63,14 +66,20 @@ export const WellInventoryForm: React.FC = () => {
     formState: { errors },
     steps: { currentStep, gotoStep },
     refineCore: { onFinish },
-  } = useStepsForm<IWellInventoryForm>({
+  } = useStepsForm<IWellInventoryForm, HttpError, Nullable<IWellInventoryForm>>({
     defaultValues: SchemaDefaults,
     resolver: (data, ctx, opts) =>
-      yupResolver(wellInventoryStepSchemas[currentStep])(data, ctx, opts),
+      yupResolver(wellInventoryStepSchemas[currentStepRef.current])(
+        data,
+        ctx,
+        opts
+      ),
     stepsProps: {
       isBackValidate: false,
     },
   })
+
+  currentStepRef.current = currentStep
 
   // ------------------------------------------------------------
   // Step Labels with Descriptions
@@ -355,7 +364,9 @@ export const WellInventoryForm: React.FC = () => {
         currentStep={currentStep}
         onNext={handleNext}
         onBack={handleBack}
-        onSubmit={handleSubmit(handleFormSubmit)}
+        onSubmit={handleSubmit((data) =>
+          handleFormSubmit(data as IWellInventoryForm)
+        )}
         onReset={handleReset}
         isSubmitting={isPending}
         onStepClick={handleStepClick}
@@ -506,7 +517,11 @@ const WellScreensStep: React.FC<{
 }) => (
   <Grid container spacing={3}>
 
-    {wellScreenFields.map((field, screenIndex) => (
+    {wellScreenFields.map(
+      (
+        field: FieldArrayWithId<IWellInventoryForm, 'wellScreens', 'id'>,
+        screenIndex: number
+      ) => (
       <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
         <CreateEditWellScreen
           control={control}
@@ -576,7 +591,11 @@ const ContactsStep: React.FC<{
 }) => (
   <Grid container spacing={3}>
 
-    {contactFields.map((field, contactIndex) => (
+    {contactFields.map(
+      (
+        field: FieldArrayWithId<IWellInventoryForm, 'contacts', 'id'>,
+        contactIndex: number
+      ) => (
       <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
         {/*  Contact Form ----------------------------------------*/}
         {/*  /components/form/contact/CreateEditContact.tsx */}
@@ -641,7 +660,11 @@ const AssetsStep: React.FC<{
 }) => (
   <Grid container spacing={3}>
 
-    {assetFields.map((field, index) => (
+    {assetFields.map(
+      (
+        field: FieldArrayWithId<IWellInventoryForm, 'assets', 'id'>,
+        index: number
+      ) => (
       <Grid container key={field.id} spacing={2} sx={{ mb: 3 }}>
         <CreateEditAsset
           control={control}
@@ -756,16 +779,24 @@ const ReviewStep: React.FC<{
     {
       title: `Well Screens (${formData.wellScreens?.length || 0})`,
       items:
-        formData.wellScreens?.map((screen, index) => ({
+        formData.wellScreens?.map(
+          (
+            screen: IWellInventoryForm['wellScreens'][number],
+            index: number
+          ) => ({
           label: `Screen ${index + 1}`,
           value: `Top: ${screen.screen_depth_top || 'N/A'} ft, Bottom: ${screen.screen_depth_bottom || 'N/A'} ft, Description: ${screen.screen_description || 'None'}, Release Status: ${screen.release_status || 'None'}`,
         })) || [],
     },
     {
       title: `Contacts (${formData.contacts?.length || 0})`,
-      items: [],
+      items: [] as { label: string; value: string }[],
       groupedItems:
-        formData.contacts?.map((contact, index) => [
+        formData.contacts?.map(
+          (
+            contact: IWellInventoryForm['contacts'][number],
+            index: number
+          ) => [
           { label: `Contact ${index + 1} - Name`, value: contact.name },
           { label: `Contact ${index + 1} - Role`, value: contact.role },
           { label: `Emails`, value: `${contact.emails?.length || 0} email(s)` },
@@ -780,7 +811,8 @@ const ReviewStep: React.FC<{
     {
       title: `Assets (${formData.assets?.length || 0})`,
       items:
-        formData.assets?.map((asset, index) => ({
+        formData.assets?.map(
+          (asset: NonNullable<IWellInventoryForm['assets']>[number], index: number) => ({
           label: `Asset ${index + 1}`,
           value: `${asset.label || 'Not specified'} - ${asset.name || 'Not specified'}`,
           release_status: asset.release_status,

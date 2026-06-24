@@ -42,7 +42,7 @@ export async function enrichMapFeaturesWithWellDetails(
     ...new Set(
       features
         .map((f) => getFeatureId(f))
-        .filter((id): id is string => Boolean(id) && /^\d+$/.test(id))
+        .filter((id): id is string => typeof id === 'string' && /^\d+$/.test(id))
     ),
   ]
 

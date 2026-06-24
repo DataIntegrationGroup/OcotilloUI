@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zSensorResponse,
@@ -30,10 +31,10 @@ describe('Ocotillo Integration Tests: Sensor', () => {
         const validatedSensor = zSensorResponse.parse(sensor)
         expect(validatedSensor).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('Sensor data:', JSON.stringify(sensor, null, 2))
         throw new Error(
-          `API response doesn't match ISensor interface: ${error.message}`
+          `API response doesn't match ISensor interface: ${getErrorMessage(error)}`
         )
       }
     }
@@ -55,10 +56,10 @@ describe('Ocotillo Integration Tests: Sensor', () => {
       const validatedSensor = zSensorResponse.parse(sensor)
       expect(validatedSensor).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Sensor data:', JSON.stringify(sensor, null, 2))
       throw new Error(
-        `API response doesn't match ISensor interface: ${error.message}`
+        `API response doesn't match ISensor interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -88,10 +89,10 @@ describe('Ocotillo Integration Tests: Sensor', () => {
       const validatedSensor = zSensorResponse.parse(sensor)
       expect(validatedSensor).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Sensor data:', JSON.stringify(sensor, null, 2))
       throw new Error(
-        `API response doesn't match ISensor interface: ${error.message}`
+        `API response doesn't match ISensor interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -122,10 +123,10 @@ describe('Ocotillo Integration Tests: Sensor', () => {
       const validatedSensor = zSensorResponse.parse(sensor)
       expect(validatedSensor).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Sensor data:', JSON.stringify(sensor, null, 2))
       throw new Error(
-        `API response doesn't match ISensor interface: ${error.message}`
+        `API response doesn't match ISensor interface: ${getErrorMessage(error)}`
       )
     }
   })

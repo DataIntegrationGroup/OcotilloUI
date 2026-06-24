@@ -4,6 +4,15 @@ import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { Controller } from 'react-hook-form'
+import type {
+  Control,
+  FieldErrors,
+  FieldValues,
+  Path,
+  PathValue,
+  UseFormRegister,
+  UseFormSetValue,
+} from 'react-hook-form'
 import { Autocomplete, Typography } from '@mui/material'
 import { useRef, useEffect, useState } from 'react'
 import { MapPolygonComponent } from '@/components/MapPolygonComponent'
@@ -11,19 +20,34 @@ import Grid from '@mui/material/Grid2'
 import wellknown from 'wellknown'
 import { useLexicon } from '@/hooks'
 import { ControlledSelectField } from '@/components/Controlled/ControlledSelectField'
+import { MapRef } from 'react-map-gl'
 
-export const CreateEditGroup = ({
+type SelectionPolygon = { geometry: GeoJSON.Geometry }
+
+interface CreateEditGroupProps<T extends FieldValues = FieldValues> {
+  control: Control<T>
+  register: UseFormRegister<T>
+  errors?: FieldErrors<T>
+  setValue: UseFormSetValue<T>
+  mode?: 'standalone' | 'step'
+  fieldPrefix?: string
+}
+
+export const CreateEditGroup = <T extends FieldValues>({
   control,
   register,
-  errors,
+  errors = {},
   setValue,
-  mode,
+  mode = 'standalone',
   fieldPrefix = '',
-}) => {
+}: CreateEditGroupProps<T>) => {
 
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
+
+  const fieldPath = (fieldName: string) =>
+    getFieldName(fieldName) as Path<T>
 
   //release status options
   const { options: releaseStatusOptions, isLoading: releaseStatusLoading } = useLexicon({ 
@@ -42,8 +66,11 @@ export const CreateEditGroup = ({
     ],
   })
 
-  const [polygon, setPolygon] = useState(null)
-  const mapRef = useRef(null)
+  const [polygon, setPolygon] = useState<Record<
+    string,
+    SelectionPolygon
+  > | null>(null)
+  const mapRef = useRef<MapRef>(null)
 
   useEffect(() => {
     if (!polygon) {
@@ -53,14 +80,22 @@ export const CreateEditGroup = ({
     const keys = Object.keys(polygon)
     const p = polygon[keys[0]]
     // convert the geojson polygon to WKT
-    const wkt = wellknown.stringify(p.geometry)
-    setValue('project_area', wkt)
+    const wkt = wellknown.stringify(
+      p.geometry as Parameters<typeof wellknown.stringify>[0]
+    )
+    setValue(
+      fieldPath('project_area'),
+      wkt as PathValue<T, Path<T>>
+    )
   }, [polygon])
 
   const handleMapExtentSearch = () => {
     if (mapRef.current) {
       const map = mapRef.current.getMap()
       const bounds = map.getBounds()
+      if (!bounds) {
+        return
+      }
       const wktString = wellknown.stringify({
         type: 'MultiPolygon',
         coordinates: [
@@ -73,7 +108,10 @@ export const CreateEditGroup = ({
           ]],
         ],
       })
-      setValue('project_area', wktString)
+      setValue(
+        fieldPath('project_area'),
+        wktString as PathValue<T, Path<T>>
+      )
     }
   }
 
@@ -81,11 +119,11 @@ export const CreateEditGroup = ({
     <Grid container spacing={2} alignItems="center">
       <Grid size={12}>
         <TextField
-          {...register('name', {
+          {...register(fieldPath('name'), {
             required: 'This field is required',
           })}
           error={!!errors.name}
-          helperText={errors.name?.message}
+          helperText={errors.name?.message?.toString()}
           margin="normal"
           fullWidth
           label="Name"
@@ -95,7 +133,7 @@ export const CreateEditGroup = ({
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
         <Controller
-          name="parent_group_id"
+          name={fieldPath('parent_group_id')}
           control={control}
           // rules={{ required: 'This field is required' }}
           render={({ field }) => (
@@ -112,7 +150,7 @@ export const CreateEditGroup = ({
                   label="Parent Group"
                   margin="normal"
                   error={!!errors.parent_group_id}
-                  helperText={errors.parent_group_id?.message}
+                  helperText={errors.parent_group_id?.message?.toString()}
                 />
               )}
             />
@@ -130,9 +168,9 @@ export const CreateEditGroup = ({
       </Grid>
       <Grid size={{ xs: 12}}>
         <TextField
-          {...register('description')}
+          {...register(fieldPath('description'))}
           error={!!errors.description}
-          helperText={errors.description?.message}
+          helperText={errors.description?.message?.toString()}
           margin="normal"
           fullWidth
           label="Description"
@@ -147,10 +185,10 @@ export const CreateEditGroup = ({
       </Grid>
       <Grid size={12}>
         <TextField
-          {...register('project_area')}
+          {...register(fieldPath('project_area'))}
           fullWidth
           error={!!errors.project_area}
-          helperText={errors.project_area?.message}
+          helperText={errors.project_area?.message?.toString()}
           name="project_area"
         />
       </Grid>

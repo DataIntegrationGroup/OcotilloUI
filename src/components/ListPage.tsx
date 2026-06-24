@@ -227,7 +227,11 @@ export const ListPage: React.FC<ListPageProps> = ({
   }
 
   const { triggerExport, isLoading: exportIsLoading } = useExport(exportProps)
-  const defaultHeaderButtons = ({ defaultButtons }) => {
+  const defaultHeaderButtons = ({
+    defaultButtons,
+  }: {
+    defaultButtons: React.ReactNode
+  }) => {
     return (
       <>
         <CanAccess>{defaultButtons}</CanAccess>

@@ -55,17 +55,17 @@ export function buildSensorDeploymentRows(
 
   const unattachedRows: DeploymentRow[] = sensors
     .filter((s) => !deployedSensorIds.has(s.id))
-    .map((s) => ({
+    .map((s): DeploymentRow => ({
       id: `sensor-${s.id}`,
       sensor: s,
       thing_id: s.thing_id ?? null,
-      installation_date: null,
-      removal_date: null,
+      installation_date: null as string | null,
+      removal_date: null as string | null,
       release_status: s.release_status ?? null,
-      notes: null,
-      hanging_cable_length: null,
-      recording_interval: null,
-      recording_interval_units: null,
+      notes: null as string | null,
+      hanging_cable_length: null as number | null,
+      recording_interval: null as number | string | null,
+      recording_interval_units: null as string | null,
       isUnattached: true,
     }))
 

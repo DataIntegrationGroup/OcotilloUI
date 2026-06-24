@@ -9,7 +9,7 @@ import {
   startSessionRecordingIfEligible,
 } from '@/analytics/posthog'
 
-export const PostHogIdentify = () => {
+export const PostHogIdentify = (): null => {
   const { data: identity, isLoading } = useGetIdentity<AuthentikIdentity>()
 
   useEffect(() => {

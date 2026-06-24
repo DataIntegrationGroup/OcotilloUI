@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zWellScreenResponse,
@@ -30,10 +31,10 @@ describe('Ocotillo Integration Tests: Well Screen', () => {
         const validatedWellScreen = zWellScreenResponse.parse(wellScreen)
         expect(validatedWellScreen).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('WellScreen data:', JSON.stringify(wellScreen, null, 2))
         throw new Error(
-          `API response doesn't match IWellScreen interface: ${error.message}`
+          `API response doesn't match IWellScreen interface: ${getErrorMessage(error)}`
         )
       }
     }
@@ -55,10 +56,10 @@ describe('Ocotillo Integration Tests: Well Screen', () => {
       const validatedWellScreen = zWellScreenResponse.parse(wellScreen)
       expect(validatedWellScreen).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('WellScreen data:', JSON.stringify(wellScreen, null, 2))
       throw new Error(
-        `API response doesn't match IWellScreen interface: ${error.message}`
+        `API response doesn't match IWellScreen interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -87,10 +88,10 @@ describe('Ocotillo Integration Tests: Well Screen', () => {
       const validatedWellScreen = zWellScreenResponse.parse(wellScreen)
       expect(validatedWellScreen).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('WellScreen data:', JSON.stringify(wellScreen, null, 2))
       throw new Error(
-        `API response doesn't match IWellScreen interface: ${error.message}`
+        `API response doesn't match IWellScreen interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -119,10 +120,10 @@ describe('Ocotillo Integration Tests: Well Screen', () => {
       const validatedWellScreen = zWellScreenResponse.parse(wellScreen)
       expect(validatedWellScreen).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('WellScreen data:', JSON.stringify(wellScreen, null, 2))
       throw new Error(
-        `API response doesn't match IWellScreen interface: ${error.message}`
+        `API response doesn't match IWellScreen interface: ${getErrorMessage(error)}`
       )
     }
   })

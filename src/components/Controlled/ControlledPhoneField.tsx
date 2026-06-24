@@ -1,16 +1,16 @@
-import InputMask from "react-input-mask";
-import { TextField, TextFieldProps } from "@mui/material";
-import { Controller, Control, Path } from "react-hook-form";
+import InputMask from 'react-input-mask'
+import { TextField, TextFieldProps } from '@mui/material'
+import { Controller, Control, FieldValues, Path } from 'react-hook-form'
 
-export const ControlledPhoneField = <T,>({
+export const ControlledPhoneField = <T extends FieldValues>({
   control,
   name,
   label,
-  ...textFieldProps
+  ..._textFieldProps
 }: {
-  control: Control<T>;
-  name: string;
-  label: string;
+  control: Control<T>
+  name: string
+  label: string
 } & TextFieldProps) => {
   return (
     <Controller
@@ -19,22 +19,22 @@ export const ControlledPhoneField = <T,>({
       render={({ field, fieldState }) => (
         <InputMask
           mask="(999)-999-9999"
-          value={field.value || ""}
+          value={String(field.value ?? '')}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            field.onChange(event.target.value.replace(/\D/g, ""))
+            field.onChange(event.target.value.replace(/\D/g, ''))
           }
         >
-          {(textFieldProps) => (
+          {(maskInputProps: React.InputHTMLAttributes<HTMLInputElement>) => (
             <TextField
-              {...textFieldProps}
+              {...(maskInputProps as unknown as Partial<TextFieldProps>)}
               label={label}
               error={!!fieldState?.error}
-              helperText={fieldState?.error?.message || ""}
+              helperText={fieldState?.error?.message || ''}
               fullWidth
             />
           )}
         </InputMask>
       )}
     />
-  );
-};
+  )
+}

@@ -1,4 +1,4 @@
-import { Control, FieldErrors } from 'react-hook-form'
+import { Control, FieldErrors, FieldValues } from 'react-hook-form'
 import Grid from '@mui/material/Grid2'
 import { ControlledTextField, ControlledSelectField, ControlledDateField } from '@/components'
 import { useLexicon } from '@/hooks'
@@ -13,19 +13,19 @@ import { useLexicon } from '@/hooks'
  * @param fieldPrefix - The prefix for the field names
  */
 
-interface CreateEditSensorProps {
-  control: Control<any>
-  errors?: FieldErrors<any>
+interface CreateEditSensorProps<T extends FieldValues = FieldValues> {
+  control: Control<T>
+  errors?: FieldErrors<T>
   mode?: 'standalone' | 'step'
   fieldPrefix?: string
 }
 
-export const CreateEditSensor: React.FC<CreateEditSensorProps> = ({
+export const CreateEditSensor = <T extends FieldValues>({
   control,
   errors,
   mode = 'standalone',
   fieldPrefix = '',
-}) => {
+}: CreateEditSensorProps<T>) => {
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }

@@ -34,9 +34,13 @@ type UseAllOptionsType<
   meta?: MetaQuery;
 };
 
+type TriggerAllProps = {
+  resource?: string;
+};
+
 type UseAllReturnType<TData> = {
   isLoading: boolean;
-  triggerAll: (props?: any) => Promise<any[]>;
+  triggerAll: (props?: TriggerAllProps) => Promise<TData[] | undefined>;
 };
 
 export const useAll = <
@@ -70,10 +74,10 @@ export const useAll = <
     meta,
   });
 
-  const triggerAll = async (props) => {
+  const triggerAll = async (props?: TriggerAllProps) => {
     setIsLoading(true);
 
-    let rawData = [];
+    let rawData: TData[] = [];
 
     let current = 1;
     let preparingData = true;
@@ -86,7 +90,7 @@ export const useAll = <
     while (preparingData) {
       try {
         const { data, total } = await getList({
-          resource: resourceTag.toString(),
+          resource: (resourceTag ?? '').toString(),
           pagination: {
             currentPage: current,
             pageSize: pageSize,
@@ -96,7 +100,7 @@ export const useAll = <
 
         current++;
 
-        rawData.push(...data);
+        rawData.push(...(data as TData[]));
 
         if (maxItemCount && rawData.length >= maxItemCount) {
           rawData = rawData.slice(0, maxItemCount);

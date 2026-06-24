@@ -18,7 +18,11 @@ const isHttpsUrl = (
 ): value is `https://${string}` =>
   typeof value === 'string' && value.startsWith('https://')
 
-export const OSEPODInfoCard = ({ pod_id }) => {
+type OSEPODInfoCardProps = {
+  pod_id: string
+}
+
+export const OSEPODInfoCard = ({ pod_id }: OSEPODInfoCardProps) => {
   const podInfoQuery = useOSEPODInfo(pod_id)
   const rows = useMemo(() => {
     // Pin URL rows to the top so the useful links are easy to find for users.
