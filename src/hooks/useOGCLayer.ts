@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react'
 import { useDataProvider, type BaseKey } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
+import { captureEvent } from '@/analytics/posthog'
 import { withRetry } from '@/utils/httpRetry'
 
 // ---------------------------------------------------------------------------
@@ -293,6 +295,7 @@ export const useOGCLayer = ({
     staleTime: 30000, // Treat data as fresh for 30 s before allowing a background re-fetch
     enabled: enabled && collection.length > 0,
     queryFn: async () => {
+      const loadStartedAt = performance.now()
       const provider = dataProvider(providerName)
 
       // Wrap each page request in withRetry so transient server errors
@@ -333,15 +336,47 @@ export const useOGCLayer = ({
           requireGeometry,
         })
 
+      const pageCount = Math.ceil((loadedCount || 0) / pageSize) || 0
+
       return {
         type: 'FeatureCollection',
         features,
         loadedCount,
         totalMatched,
         loadStatus,
+        pageCount,
+        loadDurationMs: Math.round(performance.now() - loadStartedAt),
       }
     },
   })
+
+  const lastReportedLoadKey = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!enabled || isLoading || !data || data.type !== 'FeatureCollection') return
+
+    const loadKey = `${collection}:${String(data.loadStatus)}:${String(data.loadedCount)}`
+    if (lastReportedLoadKey.current === loadKey) return
+    lastReportedLoadKey.current = loadKey
+
+    captureEvent('map_layer_loaded', {
+      layer_key: collection,
+      feature_count: data.loadedCount ?? data.features?.length ?? 0,
+      total_matched: data.totalMatched,
+      load_status: data.loadStatus,
+      page_count: data.pageCount,
+      page_size: pageSize,
+      max_features: maxFeatures,
+      load_duration_ms: data.loadDurationMs,
+    })
+  }, [
+    enabled,
+    isLoading,
+    data,
+    collection,
+    pageSize,
+    maxFeatures,
+  ])
 
   // Guard against undefined data while loading or if the query hasn't run yet.
   const safeGeoJSONBase =

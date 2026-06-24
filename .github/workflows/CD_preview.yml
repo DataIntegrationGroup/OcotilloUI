@@ -71,6 +71,10 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
           NODE_OPTIONS: --max-old-space-size=6144
+          VITE_POSTHOG_KEY: ${{ env.VITE_PUBLIC_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ env.VITE_PUBLIC_POSTHOG_HOST }}
+          VITE_APP_ENV: preview
+          VITE_APP_VERSION: ${{ github.sha }}
         run: |
           set -euo pipefail
 
@@ -88,6 +92,8 @@ jobs:
             --build-arg VITE_MAPBOX_TOKEN=${{ secrets.VITE_MAPBOX_TOKEN }} \
             --build-arg VITE_PUBLIC_POSTHOG_KEY=${{ env.VITE_PUBLIC_POSTHOG_KEY }} \
             --build-arg VITE_PUBLIC_POSTHOG_HOST=${{ env.VITE_PUBLIC_POSTHOG_HOST }} \
+            --build-arg VITE_APP_ENV=preview \
+            --build-arg VITE_APP_VERSION=${{ github.sha }} \
             -t "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/${SERVICE_NAME}:$IMAGE_TAG" .
 
           docker push "us-central1-docker.pkg.dev/$GCP_PROJECT_ID/ocotillo-previews/${SERVICE_NAME}:$IMAGE_TAG"

@@ -4,6 +4,7 @@ const posthogKey = import.meta.env.VITE_POSTHOG_KEY
 const posthogHost =
   import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com'
 const appEnv = import.meta.env.VITE_APP_ENV || 'production'
+const appVersion = import.meta.env.VITE_APP_VERSION || 'unknown'
 
 /** Canonical production app host (matches GAE production deploy). */
 export const PRODUCTION_HOSTNAME = 'ocotillo.newmexicowaterdata.org'
@@ -56,9 +57,15 @@ export const initPostHog = () => {
     ...(shouldRecordSessions() ? { session_recording: sessionRecordingConfig } : {}),
   })
 
-  // Tag every event with the environment so staging visits are
-  // distinguishable from production in the PostHog dashboard.
-  posthog.register({ environment: appEnv })
+  // Tag every event with deployment context so dashboards can filter
+  // staging, production, and preview traffic separately.
+  posthog.register({
+    environment: appEnv,
+    app_version: appVersion,
+    ...(typeof window !== 'undefined'
+      ? { deployment_host: window.location.hostname }
+      : {}),
+  })
 
   initialized = true
 }
