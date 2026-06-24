@@ -52,6 +52,7 @@ jobs:
           VITE_POSTHOG_KEY: ${{ env.VITE_POSTHOG_KEY }}
           VITE_POSTHOG_HOST: ${{ env.VITE_POSTHOG_HOST }}
           VITE_APP_ENV: 'production'
+          VITE_APP_VERSION: ${{ github.sha }}
 
         run: |
           npm ci
