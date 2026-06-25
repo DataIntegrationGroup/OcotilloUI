@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Box, Typography, Button } from '@mui/material'
-import type { IAsset } from '@/interfaces/ocotillo'
+import { Autocomplete, Box, Typography, Button, TextField } from '@mui/material'
+import type { IAsset, IWell } from '@/interfaces/ocotillo'
 import { QueryObserverResult } from '@tanstack/react-query'
 import {
   GetListResponse,
@@ -8,6 +8,7 @@ import {
   useCustomMutation,
   useNotification,
 } from '@refinedev/core'
+import { useAutocomplete } from '@refinedev/mui'
 import { HttpStatus } from '@/enums'
 import { isImage, isPdf, isText } from '@/utils'
 import {
@@ -21,6 +22,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -28,7 +37,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button as UiButton } from '@/components/ui/button'
-import { MoreVertical, Trash2, Unlink } from 'lucide-react'
+import { Link2, MoreVertical, Trash2, Unlink } from 'lucide-react'
 
 const previewStyles = {
   grid: {
@@ -117,8 +126,24 @@ export const AssetPreviewWithOverlay = ({
   const { mutateAsync: mutateAsset, mutation: assetMutation } =
     useCustomMutation()
   const [confirmAction, setConfirmAction] = useState<
-    'remove-association' | 'delete-asset' | null
+    'disassociate-asset' | 'delete-asset' | null
   >(null)
+  const [isReassociateDialogOpen, setIsReassociateDialogOpen] = useState(false)
+  const [selectedWell, setSelectedWell] = useState<IWell | null>(null)
+  const { autocompleteProps: wellAutocompleteProps } = useAutocomplete<IWell>({
+    resource: 'thing/water-well',
+    dataProviderName: 'ocotillo',
+    queryOptions: {
+      enabled: canManageAsset && isReassociateDialogOpen,
+    },
+    onSearch: (value) => [
+      {
+        field: 'name',
+        operator: 'contains',
+        value,
+      },
+    ],
+  })
 
   const getRefreshedAsset = async (
     assetId: IAsset['id'],
@@ -210,39 +235,80 @@ export const AssetPreviewWithOverlay = ({
   const handleConfirmAssetAction = async () => {
     if (!confirmAction) return
 
-    const isRemoveAssociation = confirmAction === 'remove-association'
+    const isDisassociate = confirmAction === 'disassociate-asset'
 
     try {
-      await mutateAsset({
-        url: isRemoveAssociation
-          ? `asset/${asset.id}/remove`
-          : `asset/${asset.id}`,
-        method: 'delete',
-        values: {},
-        dataProviderName: 'ocotillo',
-      })
+      if (isDisassociate) {
+        await mutateAsset({
+          url: `asset/${asset.id}/association`,
+          method: 'patch',
+          values: { thing_id: null },
+          dataProviderName: 'ocotillo',
+        })
+      } else {
+        await mutateAsset({
+          url: `asset/${asset.id}`,
+          method: 'delete',
+          values: {},
+          dataProviderName: 'ocotillo',
+        })
+      }
 
       await refetchAssets()
 
       notify?.({
         type: 'success',
-        message: isRemoveAssociation
-          ? 'Attachment removed from well'
-          : 'Attachment deleted',
+        message: isDisassociate ? 'Attachment disassociated' : 'Asset deleted',
       })
     } catch (error) {
       console.error(error)
       notify?.({
         type: 'error',
-        message: isRemoveAssociation
-          ? 'Could not remove attachment from well'
-          : 'Could not delete attachment',
+        message: isDisassociate
+          ? 'Could not disassociate attachment'
+          : 'Could not delete asset',
         description: getMutationErrorMessage(error),
       })
     } finally {
       setConfirmAction(null)
     }
   }
+
+  const handleReassociateAsset = async () => {
+    if (!selectedWell) return
+
+    try {
+      await mutateAsset({
+        url: `asset/${asset.id}/association`,
+        method: 'patch',
+        values: { thing_id: selectedWell.id },
+        dataProviderName: 'ocotillo',
+      })
+
+      await refetchAssets()
+      notify?.({
+        type: 'success',
+        message: 'Attachment reassociated',
+        description: selectedWell.name
+          ? `Attachment moved to ${selectedWell.name}.`
+          : undefined,
+      })
+      setIsReassociateDialogOpen(false)
+      setSelectedWell(null)
+    } catch (error) {
+      console.error(error)
+      notify?.({
+        type: 'error',
+        message: 'Could not reassociate attachment',
+        description: getMutationErrorMessage(error),
+      })
+    }
+  }
+
+  const currentThingId = asset.thing_id ?? null
+  const wellOptions = ((wellAutocompleteProps.options ?? []) as IWell[]).filter(
+    (well) => well.id !== currentThingId
+  )
 
   return (
     <>
@@ -344,11 +410,21 @@ export const AssetPreviewWithOverlay = ({
                 <DropdownMenuItem
                   onClick={(event) => {
                     event.stopPropagation()
-                    setConfirmAction('remove-association')
+                    setConfirmAction('disassociate-asset')
                   }}
                 >
                   <Unlink />
-                  Remove from this well
+                  Disassociate attachment
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    setSelectedWell(null)
+                    setIsReassociateDialogOpen(true)
+                  }}
+                >
+                  <Link2 />
+                  Reassociate attachment
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -378,13 +454,13 @@ export const AssetPreviewWithOverlay = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmAction === 'remove-association'
-                ? 'Remove attachment from this well?'
+              {confirmAction === 'disassociate-asset'
+                ? 'Disassociate this attachment?'
                 : 'Delete this asset?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmAction === 'remove-association'
-                ? 'The asset will remain uploaded, but it will no longer be associated with this well.'
+              {confirmAction === 'disassociate-asset'
+                ? 'The asset will remain uploaded, but it will no longer be associated with any well.'
                 : 'This permanently deletes the uploaded asset record. Use this only when the file should not be kept.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -406,13 +482,87 @@ export const AssetPreviewWithOverlay = ({
             >
               {assetMutation.isPending
                 ? 'Working...'
-                : confirmAction === 'remove-association'
-                  ? 'Remove from well'
+                : confirmAction === 'disassociate-asset'
+                  ? 'Disassociate attachment'
                   : 'Delete asset'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={isReassociateDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && assetMutation.isPending) {
+            return
+          }
+
+          setIsReassociateDialogOpen(open)
+
+          if (!open) {
+            setSelectedWell(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Reassociate attachment</DialogTitle>
+            <DialogDescription>
+              Move this attachment to one other well. It will be removed from
+              any current well association.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Box className="space-y-2">
+            <Autocomplete
+              {...wellAutocompleteProps}
+              options={wellOptions}
+              loading={Boolean(wellAutocompleteProps.loading)}
+              value={selectedWell}
+              filterOptions={(options) => options}
+              getOptionLabel={(well) => well?.name ?? ''}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              onChange={(_, value) => setSelectedWell(value)}
+              renderOption={(props, well) => (
+                <Box component="li" {...props}>
+                  <Box>
+                    <Typography variant="body2">{well.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      ID {well.id}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Well"
+                  placeholder="Search by well name"
+                  size="small"
+                />
+              )}
+            />
+          </Box>
+
+          <DialogFooter>
+            <UiButton
+              type="button"
+              variant="outline"
+              onClick={() => setIsReassociateDialogOpen(false)}
+              disabled={assetMutation.isPending}
+            >
+              Cancel
+            </UiButton>
+            <UiButton
+              type="button"
+              onClick={() => void handleReassociateAsset()}
+              disabled={!selectedWell || assetMutation.isPending}
+            >
+              {assetMutation.isPending ? 'Working...' : 'Reassociate'}
+            </UiButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
