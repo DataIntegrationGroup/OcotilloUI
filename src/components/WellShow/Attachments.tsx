@@ -163,6 +163,7 @@ export const AttachmentsCard = ({
                           asset={asset}
                           variant="grid"
                           refetchAssets={refetchAssets}
+                          canManageAsset={canManageAmp}
                         />
                       </ButtonBase>
                     ))}
@@ -186,6 +187,7 @@ export const AttachmentsCard = ({
                         asset={currentAsset}
                         variant="slideshow"
                         refetchAssets={refetchAssets}
+                        canManageAsset={canManageAmp}
                       />
                     )}
                     {previewAssets.length > 1 && (
