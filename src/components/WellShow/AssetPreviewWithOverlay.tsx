@@ -258,7 +258,9 @@ export const AssetPreviewWithOverlay = ({
 
       notify?.({
         type: 'success',
-        message: isDisassociate ? 'Attachment disassociated' : 'Asset deleted',
+        message: isDisassociate
+          ? 'Attachment disassociated'
+          : 'Attachment deleted',
       })
     } catch (error) {
       console.error(error)
@@ -266,7 +268,7 @@ export const AssetPreviewWithOverlay = ({
         type: 'error',
         message: isDisassociate
           ? 'Could not disassociate attachment'
-          : 'Could not delete asset',
+          : 'Could not delete attachment',
         description: getMutationErrorMessage(error),
       })
     } finally {
@@ -438,7 +440,7 @@ export const AssetPreviewWithOverlay = ({
                   }}
                 >
                   <Trash2 />
-                  Delete asset
+                  Delete attachment
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -459,7 +461,7 @@ export const AssetPreviewWithOverlay = ({
             <AlertDialogTitle>
               {confirmAction === 'disassociate-asset'
                 ? 'Disassociate this attachment?'
-                : 'Delete this asset?'}
+                : 'Delete this attachment?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmAction === 'disassociate-asset'
@@ -487,7 +489,7 @@ export const AssetPreviewWithOverlay = ({
                 ? 'Working...'
                 : confirmAction === 'disassociate-asset'
                   ? 'Disassociate attachment'
-                  : 'Delete asset'}
+                  : 'Delete attachment'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

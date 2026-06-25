@@ -151,7 +151,18 @@ export const AttachmentsCard = ({
                         role="button"
                         tabIndex={0}
                         aria-label={`Open ${asset.name || `attachment ${idx + 1}`} in slideshow`}
-                        onClick={() => openSlideshow(idx)}
+                        onClick={(event) => {
+                          const target = event.target
+
+                          if (
+                            target instanceof Node &&
+                            !event.currentTarget.contains(target)
+                          ) {
+                            return
+                          }
+
+                          openSlideshow(idx)
+                        }}
                         onKeyDown={(event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault()
