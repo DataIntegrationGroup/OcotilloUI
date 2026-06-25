@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
   Box,
-  ButtonBase,
   IconButton,
   Stack,
   Typography,
@@ -64,6 +63,11 @@ export const AttachmentsCard = ({
   const hasAssets = previewAssets.length > 0
 
   const { canManageAmp } = useAccessCapabilities()
+
+  const openSlideshow = (index: number) => {
+    setSlideshowIndex(index)
+    setPreviewViewMode('slideshow')
+  }
 
   return (
     <Card
@@ -142,13 +146,17 @@ export const AttachmentsCard = ({
                 {previewViewMode === 'grid' ? (
                   <Masonry columns={3} spacing={2}>
                     {previewAssets.map((asset, idx) => (
-                      <ButtonBase
+                      <Box
                         key={asset.id ?? idx}
-                        focusRipple
+                        role="button"
+                        tabIndex={0}
                         aria-label={`Open ${asset.name || `attachment ${idx + 1}`} in slideshow`}
-                        onClick={() => {
-                          setSlideshowIndex(idx)
-                          setPreviewViewMode('slideshow')
+                        onClick={() => openSlideshow(idx)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            openSlideshow(idx)
+                          }
                         }}
                         sx={{
                           display: 'block',
@@ -157,6 +165,14 @@ export const AttachmentsCard = ({
                           overflow: 'hidden',
                           boxShadow: 2,
                           textAlign: 'left',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          '&:focus-visible': {
+                            boxShadow: 4,
+                            outline: '2px solid',
+                            outlineColor: 'primary.main',
+                            outlineOffset: 2,
+                          },
                         }}
                       >
                         <AssetPreviewWithOverlay
@@ -165,7 +181,7 @@ export const AttachmentsCard = ({
                           refetchAssets={refetchAssets}
                           canManageAsset={canManageAmp}
                         />
-                      </ButtonBase>
+                      </Box>
                     ))}
                   </Masonry>
                 ) : (

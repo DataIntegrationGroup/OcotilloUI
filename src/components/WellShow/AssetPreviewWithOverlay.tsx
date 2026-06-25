@@ -358,6 +358,9 @@ export const AssetPreviewWithOverlay = ({
 
         <Box
           className="asset-overlay"
+          onClick={(event) => event.stopPropagation()}
+          onMouseDown={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
           sx={{
             position: 'absolute',
             right: 8,
@@ -525,12 +528,7 @@ export const AssetPreviewWithOverlay = ({
               onChange={(_, value) => setSelectedWell(value)}
               renderOption={(props, well) => (
                 <Box component="li" {...props}>
-                  <Box>
-                    <Typography variant="body2">{well.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      ID {well.id}
-                    </Typography>
-                  </Box>
+                  <Typography variant="body2">{well.name}</Typography>
                 </Box>
               )}
               renderInput={(params) => (
