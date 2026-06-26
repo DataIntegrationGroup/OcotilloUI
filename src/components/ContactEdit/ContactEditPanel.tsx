@@ -949,30 +949,29 @@ export function ContactEditPanel({
             </>
           ) : (
             <>
-              <EditPanelField label="Name" span="full">
-                <Input
-                  value={draft.name}
-                  onChange={(e) =>
-                    setDraft((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  disabled={isSaving}
-                  className="h-8 text-sm"
-                  placeholder="Contact name"
-                />
-              </EditPanelField>
-              <EditPanelField label="Organization" span="full">
-                <Input
-                  value={draft.organization}
-                  onChange={(e) =>
-                    setDraft((prev) => ({
-                      ...prev,
-                      organization: e.target.value,
-                    }))
-                  }
-                  disabled={isSaving}
-                  className="h-8 text-sm"
-                  placeholder="Organization"
-                />
+              <EditPanelField label="Contact Type">
+                {isOptionsLoading ? (
+                  <Skeleton className="h-8 w-full rounded-md" />
+                ) : (
+                  <Select
+                    value={draft.contact_type}
+                    onValueChange={(v) =>
+                      setDraft((prev) => ({ ...prev, contact_type: v }))
+                    }
+                    disabled={isSaving}
+                  >
+                    <SelectTrigger className="h-8 w-full text-sm">
+                      <SelectValue placeholder="Select type…" />
+                    </SelectTrigger>
+                    <SelectContent position="popper" className="max-h-60">
+                      {contactTypeOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </EditPanelField>
               <EditPanelField label="Role">
                 {isOptionsLoading ? (
@@ -998,29 +997,30 @@ export function ContactEditPanel({
                   </Select>
                 )}
               </EditPanelField>
-              <EditPanelField label="Contact Type">
-                {isOptionsLoading ? (
-                  <Skeleton className="h-8 w-full rounded-md" />
-                ) : (
-                  <Select
-                    value={draft.contact_type}
-                    onValueChange={(v) =>
-                      setDraft((prev) => ({ ...prev, contact_type: v }))
-                    }
-                    disabled={isSaving}
-                  >
-                    <SelectTrigger className="h-8 w-full text-sm">
-                      <SelectValue placeholder="Select type…" />
-                    </SelectTrigger>
-                    <SelectContent position="popper" className="max-h-60">
-                      {contactTypeOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+              <EditPanelField label="Name" span="full">
+                <Input
+                  value={draft.name}
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  disabled={isSaving}
+                  className="h-8 text-sm"
+                  placeholder="Contact name"
+                />
+              </EditPanelField>
+              <EditPanelField label="Organization" span="full">
+                <Input
+                  value={draft.organization}
+                  onChange={(e) =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      organization: e.target.value,
+                    }))
+                  }
+                  disabled={isSaving}
+                  className="h-8 text-sm"
+                  placeholder="Organization"
+                />
               </EditPanelField>
             </>
           )}
