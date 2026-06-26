@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom'
 import { beforeAll, vi } from 'vitest'
 import { checkMockServerHealth } from './mock-server'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
