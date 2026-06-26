@@ -171,8 +171,18 @@ vi.mock('@/components/ui/skeleton', () => ({
 import { WellEditPanel } from '@/components/WellEdit/WellEditPanel'
 import type { IGroup } from '@/interfaces/ocotillo/IGroup'
 
-const GROUP_ALPHA: IGroup = { id: 1, name: 'Project Alpha', group_type: 'Monitoring' }
-const GROUP_BETA: IGroup = { id: 2, name: 'Project Beta', group_type: null }
+const GROUP_ALPHA: IGroup = {
+  id: 1,
+  name: 'Project Alpha',
+  group_type: 'Monitoring',
+  created_at: '2024-01-01T00:00:00Z',
+}
+const GROUP_BETA: IGroup = {
+  id: 2,
+  name: 'Project Beta',
+  group_type: null,
+  created_at: '2024-01-01T00:00:00Z',
+}
 
 const renderPanel = (assignedGroups: IGroup[] = [GROUP_ALPHA]) =>
   render(
