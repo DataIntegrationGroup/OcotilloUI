@@ -1019,7 +1019,7 @@ export function ContactEditPanel({
                   }
                   disabled={isSaving}
                   className="h-8 text-sm"
-                  placeholder="Organization"
+                  placeholder="Organization or Company"
                 />
               </EditPanelField>
             </>
