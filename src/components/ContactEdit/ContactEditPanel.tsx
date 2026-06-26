@@ -914,46 +914,6 @@ export function ContactEditPanel({
           )}
         </EditPanelSection>
 
-        {/* Emails */}
-        <EditPanelSection title="Email Addresses" defaultOpen={false}>
-          {draftEmails.map((email) => (
-            <EmailRow
-              key={email.draftId}
-              email={email}
-              onChange={(updated) =>
-                setDraftEmails((prev) =>
-                  prev.map((e) => (e.draftId === updated.draftId ? updated : e))
-                )
-              }
-              onDelete={() => handleDeleteEmail(email)}
-              disabled={isSaving}
-              typeOptions={emailTypeOptions}
-            />
-          ))}
-          <div className="col-span-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setDraftEmails((prev) => [
-                  ...prev,
-                  {
-                    draftId: generateDraftId(),
-                    email: '',
-                    email_type: emailTypeOptions[0]?.value ?? 'Primary',
-                  },
-                ])
-              }
-              disabled={isSaving}
-              className="w-full"
-            >
-              <PlusIcon className="size-4" />
-              Add email
-            </Button>
-          </div>
-        </EditPanelSection>
-
         {/* Phones */}
         <EditPanelSection title="Phone Numbers" defaultOpen={false}>
           {draftPhones.map((phone) => (
@@ -990,6 +950,46 @@ export function ContactEditPanel({
             >
               <PlusIcon className="size-4" />
               Add phone
+            </Button>
+          </div>
+        </EditPanelSection>
+
+        {/* Emails */}
+        <EditPanelSection title="Email Addresses" defaultOpen={false}>
+          {draftEmails.map((email) => (
+            <EmailRow
+              key={email.draftId}
+              email={email}
+              onChange={(updated) =>
+                setDraftEmails((prev) =>
+                  prev.map((e) => (e.draftId === updated.draftId ? updated : e))
+                )
+              }
+              onDelete={() => handleDeleteEmail(email)}
+              disabled={isSaving}
+              typeOptions={emailTypeOptions}
+            />
+          ))}
+          <div className="col-span-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setDraftEmails((prev) => [
+                  ...prev,
+                  {
+                    draftId: generateDraftId(),
+                    email: '',
+                    email_type: emailTypeOptions[0]?.value ?? 'Primary',
+                  },
+                ])
+              }
+              disabled={isSaving}
+              className="w-full"
+            >
+              <PlusIcon className="size-4" />
+              Add email
             </Button>
           </div>
         </EditPanelSection>
