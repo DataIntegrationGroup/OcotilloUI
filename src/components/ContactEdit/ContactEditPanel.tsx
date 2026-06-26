@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Label } from '@/components/ui/label'
 import {
   useUpdate,
   useNotification,
@@ -186,8 +187,9 @@ function EmailRow({
   typeOptions: { value: string; label: string }[]
 }) {
   return (
-    <div className="col-span-2 grid grid-cols-[1fr_auto_auto] items-end gap-2">
-      <EditPanelField label="Email address" span="full">
+    <div className="col-span-2 flex items-end gap-2">
+      <div className="flex flex-1 flex-col gap-1.5">
+        <Label className="text-xs text-muted-foreground">Email address</Label>
         <Input
           type="email"
           value={email.email}
@@ -196,8 +198,9 @@ function EmailRow({
           className="h-8 text-sm"
           placeholder="name@example.com"
         />
-      </EditPanelField>
-      <EditPanelField label="Type">
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-xs text-muted-foreground">Type</Label>
         <Select
           value={email.email_type}
           onValueChange={(v) => onChange({ ...email, email_type: v })}
@@ -214,7 +217,7 @@ function EmailRow({
             ))}
           </SelectContent>
         </Select>
-      </EditPanelField>
+      </div>
       <button
         type="button"
         onClick={onDelete}
@@ -242,8 +245,9 @@ function PhoneRow({
   typeOptions: { value: string; label: string }[]
 }) {
   return (
-    <div className="col-span-2 grid grid-cols-[1fr_auto_auto] items-end gap-2">
-      <EditPanelField label="Phone number" span="full">
+    <div className="col-span-2 flex items-end gap-2">
+      <div className="flex flex-1 flex-col gap-1.5">
+        <Label className="text-xs text-muted-foreground">Phone number</Label>
         <Input
           type="tel"
           value={phone.phone_number}
@@ -252,8 +256,9 @@ function PhoneRow({
           className="h-8 text-sm"
           placeholder="+1 (505) 555-0100"
         />
-      </EditPanelField>
-      <EditPanelField label="Type">
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-xs text-muted-foreground">Type</Label>
         <Select
           value={phone.phone_type}
           onValueChange={(v) => onChange({ ...phone, phone_type: v })}
@@ -270,7 +275,7 @@ function PhoneRow({
             ))}
           </SelectContent>
         </Select>
-      </EditPanelField>
+      </div>
       <button
         type="button"
         onClick={onDelete}
