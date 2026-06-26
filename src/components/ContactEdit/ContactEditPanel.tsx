@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useUpdate, useNotification, useInvalidate } from '@refinedev/core'
 import { Loader2 } from 'lucide-react'
+import { captureEvent } from '@/analytics/posthog'
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -94,6 +95,13 @@ export function ContactEditPanel({
   const isOptionsLoading = roleLoading || contactTypeLoading
 
   useEffect(() => {
+    captureEvent('edit_panel_opened', {
+      resource: 'contact',
+      contact_id: contactId,
+    })
+  }, [contactId])
+
+  useEffect(() => {
     wasLoadingRef.current = true
   }, [contactId])
 
@@ -148,6 +156,11 @@ export function ContactEditPanel({
         id: contactId,
         invalidates: ['detail', 'list'],
       })
+      captureEvent('edit_saved', {
+        resource: 'contact',
+        contact_id: contactId,
+        fields_changed: Object.keys(changes),
+      })
       onClose()
     } catch {
       notify?.({
@@ -167,6 +180,11 @@ export function ContactEditPanel({
   }
 
   const handleDiscardChanges = () => {
+    captureEvent('edit_abandoned', {
+      resource: 'contact',
+      contact_id: contactId,
+      had_changes: isDirty,
+    })
     onClose()
   }
 
