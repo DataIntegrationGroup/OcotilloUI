@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const captureEventMock = vi.fn()
 const updateMutateAsyncMock = vi.fn()
+const customMutateMock = vi.fn()
 const invalidateMock = vi.fn()
 const notifyMock = vi.fn()
 const onCloseMock = vi.fn()
@@ -19,24 +20,40 @@ vi.mock('@refinedev/core', () => ({
     mutateAsync: updateMutateAsyncMock,
     mutation: { isPending: false },
   }),
+  useCustomMutation: () => ({
+    mutateAsync: customMutateMock,
+    mutation: { isPending: false },
+  }),
   useInvalidate: () => invalidateMock,
   useNotification: () => ({ open: notifyMock }),
 }))
 
 vi.mock('@/hooks', () => ({
-  useLexicon: ({ category }: { category: string }) => ({
-    options:
-      category === 'role'
-        ? [
-            { value: 'Owner', label: 'Owner' },
-            { value: 'Manager', label: 'Manager' },
-          ]
-        : [
-            { value: 'Primary', label: 'Primary' },
-            { value: 'Secondary', label: 'Secondary' },
-          ],
-    isLoading: false,
-  }),
+  useLexicon: ({ category }: { category: string }) => {
+    const options: Record<string, { value: string; label: string }[]> = {
+      role: [
+        { value: 'Owner', label: 'Owner' },
+        { value: 'Manager', label: 'Manager' },
+      ],
+      contact_type: [
+        { value: 'Primary', label: 'Primary' },
+        { value: 'Secondary', label: 'Secondary' },
+      ],
+      email_type: [
+        { value: 'Primary', label: 'Primary' },
+        { value: 'Work', label: 'Work' },
+      ],
+      phone_type: [
+        { value: 'Primary', label: 'Primary' },
+        { value: 'Mobile', label: 'Mobile' },
+      ],
+      address_type: [
+        { value: 'Mailing', label: 'Mailing' },
+        { value: 'Physical', label: 'Physical' },
+      ],
+    }
+    return { options: options[category] ?? [], isLoading: false }
+  },
 }))
 
 vi.mock('@/components/editing', () => ({
@@ -153,6 +170,8 @@ vi.mock('@/components/ui/skeleton', () => ({
 import { ContactEditPanel } from '@/components/ContactEdit/ContactEditPanel'
 import type { IContact } from '@/interfaces/ocotillo'
 
+// ─── Test fixtures ────────────────────────────────────────────────────────────
+
 const SAMPLE_CONTACT: IContact = {
   id: 7,
   name: 'Rachel Benjamin',
@@ -161,6 +180,52 @@ const SAMPLE_CONTACT: IContact = {
   contact_type: 'Primary',
   created_at: new Date('2026-01-01'),
   release_status: 'public',
+}
+
+const CONTACT_WITH_EMAIL: IContact = {
+  ...SAMPLE_CONTACT,
+  emails: [
+    {
+      id: 101,
+      email: 'rachel@nmbgmr.gov',
+      email_type: 'Primary',
+      contact_id: 7,
+      created_at: new Date('2026-01-01'),
+      release_status: 'public',
+    },
+  ],
+}
+
+const CONTACT_WITH_PHONE: IContact = {
+  ...SAMPLE_CONTACT,
+  phones: [
+    {
+      id: 201,
+      phone_number: '5055550001',
+      phone_type: 'Primary',
+      contact_id: 7,
+      created_at: new Date('2026-01-01'),
+      release_status: 'public',
+    },
+  ],
+}
+
+const CONTACT_WITH_ADDRESS: IContact = {
+  ...SAMPLE_CONTACT,
+  addresses: [
+    {
+      id: 301,
+      address_line_1: '801 Leroy Place',
+      city: 'Socorro',
+      state: 'NM',
+      postal_code: '87801',
+      country: 'United States',
+      address_type: 'Mailing',
+      contact_id: 7,
+      created_at: new Date('2026-01-01'),
+      release_status: 'public',
+    },
+  ],
 }
 
 const renderPanel = (contact: IContact = SAMPLE_CONTACT) =>
@@ -173,14 +238,18 @@ const renderPanel = (contact: IContact = SAMPLE_CONTACT) =>
     />
   )
 
+// ─── Tests ────────────────────────────────────────────────────────────────────
+
 describe('ContactEditPanel', () => {
   beforeEach(() => {
     captureEventMock.mockClear()
     updateMutateAsyncMock.mockClear()
+    customMutateMock.mockClear()
     invalidateMock.mockClear()
     notifyMock.mockClear()
     onCloseMock.mockClear()
     updateMutateAsyncMock.mockResolvedValue({})
+    customMutateMock.mockResolvedValue({})
     invalidateMock.mockResolvedValue(undefined)
   })
 
@@ -193,7 +262,7 @@ describe('ContactEditPanel', () => {
       })
     })
 
-    it('fires edit_saved with changed fields after a successful save', async () => {
+    it('fires edit_saved with contact_details section after saving basic fields', async () => {
       const user = userEvent.setup()
       renderPanel()
 
@@ -208,7 +277,26 @@ describe('ContactEditPanel', () => {
           expect.objectContaining({
             resource: 'contact',
             contact_id: SAMPLE_CONTACT.id,
-            fields_changed: ['name'],
+            fields_changed: ['contact_details'],
+          })
+        )
+      })
+    })
+
+    it('fires edit_saved with emails section after deleting an email', async () => {
+      const user = userEvent.setup()
+      renderPanel(CONTACT_WITH_EMAIL)
+
+      await user.click(
+        screen.getByRole('button', { name: /Remove email rachel@nmbgmr.gov/i })
+      )
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(captureEventMock).toHaveBeenCalledWith(
+          'edit_saved',
+          expect.objectContaining({
+            fields_changed: expect.arrayContaining(['emails']),
           })
         )
       })
@@ -311,7 +399,7 @@ describe('ContactEditPanel', () => {
     })
   })
 
-  describe('saving', () => {
+  describe('saving contact details', () => {
     it('sends only the changed field to useUpdate', async () => {
       const user = userEvent.setup()
       renderPanel()
@@ -411,6 +499,294 @@ describe('ContactEditPanel', () => {
       await user.click(screen.getByRole('button', { name: 'Keep editing' }))
 
       expect(onCloseMock).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('email section', () => {
+    it('renders existing email addresses from the contact', () => {
+      renderPanel(CONTACT_WITH_EMAIL)
+      expect(screen.getByDisplayValue('rachel@nmbgmr.gov')).toBeTruthy()
+    })
+
+    it('keeps Save disabled when an empty email row is added', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add email/i }))
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+    })
+
+    it('enables Save after typing into a new email row', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add email/i }))
+      await user.type(
+        screen.getByPlaceholderText('name@example.com'),
+        'new@example.com'
+      )
+      expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
+    })
+
+    it('enables Save when an existing email is deleted', async () => {
+      const user = userEvent.setup()
+      renderPanel(CONTACT_WITH_EMAIL)
+      await user.click(
+        screen.getByRole('button', { name: /Remove email rachel@nmbgmr.gov/i })
+      )
+      expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
+    })
+
+    it('removes the email row from view after deletion', async () => {
+      const user = userEvent.setup()
+      renderPanel(CONTACT_WITH_EMAIL)
+      await user.click(
+        screen.getByRole('button', { name: /Remove email rachel@nmbgmr.gov/i })
+      )
+      expect(screen.queryByDisplayValue('rachel@nmbgmr.gov')).toBeNull()
+    })
+
+    it('sends DELETE mutation for a removed email on save', async () => {
+      const user = userEvent.setup()
+      renderPanel(CONTACT_WITH_EMAIL)
+
+      await user.click(
+        screen.getByRole('button', { name: /Remove email rachel@nmbgmr.gov/i })
+      )
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(customMutateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            url: 'contact/email/101',
+            method: 'delete',
+          })
+        )
+      })
+    })
+
+    it('sends POST mutation for a new email on save', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+
+      await user.click(screen.getByRole('button', { name: /Add email/i }))
+      await user.type(
+        screen.getByPlaceholderText('name@example.com'),
+        'new@example.com'
+      )
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(customMutateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            url: 'contact/email',
+            method: 'post',
+            values: expect.objectContaining({
+              contact_id: SAMPLE_CONTACT.id,
+              email: 'new@example.com',
+            }),
+          })
+        )
+      })
+    })
+
+    it('sends PATCH mutation for a modified email on save', async () => {
+      const user = userEvent.setup()
+      renderPanel(CONTACT_WITH_EMAIL)
+
+      const emailInput = screen.getByDisplayValue('rachel@nmbgmr.gov')
+      await user.clear(emailInput)
+      await user.type(emailInput, 'rachel.updated@nmbgmr.gov')
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(customMutateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            url: 'contact/email/101',
+            method: 'patch',
+            values: expect.objectContaining({
+              email: 'rachel.updated@nmbgmr.gov',
+            }),
+          })
+        )
+      })
+    })
+  })
+
+  describe('phone section', () => {
+    it('renders existing phone numbers from the contact', () => {
+      renderPanel(CONTACT_WITH_PHONE)
+      expect(screen.getByDisplayValue('5055550001')).toBeTruthy()
+    })
+
+    it('keeps Save disabled when an empty phone row is added', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add phone/i }))
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+    })
+
+    it('enables Save after typing into a new phone row', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add phone/i }))
+      await user.type(
+        screen.getByPlaceholderText('+1 (505) 555-0100'),
+        '5055559999'
+      )
+      expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
+    })
+
+    it('enables Save when an existing phone is deleted', async () => {
+      const user = userEvent.setup()
+      renderPanel(CONTACT_WITH_PHONE)
+      await user.click(
+        screen.getByRole('button', { name: /Remove phone 5055550001/i })
+      )
+      expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
+    })
+
+    it('sends DELETE mutation for a removed phone on save', async () => {
+      const user = userEvent.setup()
+      renderPanel(CONTACT_WITH_PHONE)
+
+      await user.click(
+        screen.getByRole('button', { name: /Remove phone 5055550001/i })
+      )
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(customMutateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            url: 'contact/phone/201',
+            method: 'delete',
+          })
+        )
+      })
+    })
+
+    it('sends POST mutation for a new phone on save', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+
+      await user.click(screen.getByRole('button', { name: /Add phone/i }))
+      await user.type(
+        screen.getByPlaceholderText('+1 (505) 555-0100'),
+        '5055559999'
+      )
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(customMutateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            url: 'contact/phone',
+            method: 'post',
+            values: expect.objectContaining({
+              contact_id: SAMPLE_CONTACT.id,
+              phone_number: '5055559999',
+            }),
+          })
+        )
+      })
+    })
+  })
+
+  describe('address section', () => {
+    it('renders existing address fields from the contact', () => {
+      renderPanel(CONTACT_WITH_ADDRESS)
+      expect(screen.getByDisplayValue('801 Leroy Place')).toBeTruthy()
+      expect(screen.getByDisplayValue('Socorro')).toBeTruthy()
+    })
+
+    it('keeps Save disabled when an empty address block is added', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add address/i }))
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+    })
+
+    it('enables Save after typing an address line into a new block', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add address/i }))
+      await user.type(
+        screen.getByRole('textbox', { name: /Address line 1/i }),
+        '123 Main St'
+      )
+      expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
+    })
+
+    it('enables Save when an existing address is deleted', async () => {
+      const user = userEvent.setup()
+      renderPanel(CONTACT_WITH_ADDRESS)
+      await user.click(
+        screen.getByRole('button', { name: /Remove address 801 Leroy Place/i })
+      )
+      expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
+    })
+
+    it('sends DELETE mutation for a removed address on save', async () => {
+      const user = userEvent.setup()
+      renderPanel(CONTACT_WITH_ADDRESS)
+
+      await user.click(
+        screen.getByRole('button', { name: /Remove address 801 Leroy Place/i })
+      )
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(customMutateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            url: 'contact/address/301',
+            method: 'delete',
+          })
+        )
+      })
+    })
+
+    it('sends POST mutation for a new address on save', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+
+      await user.click(screen.getByRole('button', { name: /Add address/i }))
+      await user.type(
+        screen.getByRole('textbox', { name: /Address line 1/i }),
+        '123 Main St'
+      )
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(customMutateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            url: 'contact/address',
+            method: 'post',
+            values: expect.objectContaining({
+              contact_id: SAMPLE_CONTACT.id,
+              address_line_1: '123 Main St',
+            }),
+          })
+        )
+      })
+    })
+
+    it('sends PATCH mutation for a modified address on save', async () => {
+      const user = userEvent.setup()
+      renderPanel(CONTACT_WITH_ADDRESS)
+
+      const cityInput = screen.getByDisplayValue('Socorro')
+      await user.clear(cityInput)
+      await user.type(cityInput, 'Albuquerque')
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(customMutateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            url: 'contact/address/301',
+            method: 'patch',
+            values: expect.objectContaining({
+              city: 'Albuquerque',
+            }),
+          })
+        )
+      })
     })
   })
 })
