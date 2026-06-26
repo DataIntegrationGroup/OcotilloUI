@@ -51,6 +51,10 @@ vi.mock('@/hooks', () => ({
         { value: 'Mailing', label: 'Mailing' },
         { value: 'Physical', label: 'Physical' },
       ],
+      organization: [
+        { value: 'NMBGMR', label: 'NMBGMR' },
+        { value: 'Bureau of Geology', label: 'Bureau of Geology' },
+      ],
     }
     return { options: options[category] ?? [], isLoading: false }
   },
@@ -381,9 +385,8 @@ describe('ContactEditPanel', () => {
     it('enables Save after editing the organization field', async () => {
       const user = userEvent.setup()
       renderPanel()
-      const orgInput = screen.getByDisplayValue('NMBGMR')
-      await user.clear(orgInput)
-      await user.type(orgInput, 'Bureau of Geology')
+      const orgSelect = screen.getByDisplayValue('NMBGMR')
+      await user.selectOptions(orgSelect, 'Bureau of Geology')
       expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
     })
 
@@ -404,9 +407,8 @@ describe('ContactEditPanel', () => {
       const user = userEvent.setup()
       renderPanel()
 
-      const orgInput = screen.getByDisplayValue('NMBGMR')
-      await user.clear(orgInput)
-      await user.type(orgInput, 'Bureau of Geology')
+      const orgSelect = screen.getByDisplayValue('NMBGMR')
+      await user.selectOptions(orgSelect, 'Bureau of Geology')
       await user.click(screen.getByRole('button', { name: 'Save' }))
 
       await waitFor(() => {
@@ -526,6 +528,33 @@ describe('ContactEditPanel', () => {
       expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
     })
 
+    it('does not show a validation error while typing an invalid email before blur', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add email/i }))
+      await user.type(screen.getByPlaceholderText('name@example.com'), 'notvalid')
+      // role="alert" is only added once the field has been blurred
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+
+    it('shows a validation error after blurring an invalid email field', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add email/i }))
+      const input = screen.getByPlaceholderText('name@example.com')
+      await user.type(input, 'notvalid')
+      await user.tab() // triggers blur
+      expect(screen.getByRole('alert')).toHaveTextContent('Enter a valid email address.')
+    })
+
+    it('disables Save when a new email row has an invalid format', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add email/i }))
+      await user.type(screen.getByPlaceholderText('name@example.com'), 'notvalid')
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+    })
+
     it('enables Save when an existing email is deleted', async () => {
       const user = userEvent.setup()
       renderPanel(CONTACT_WITH_EMAIL)
@@ -634,6 +663,33 @@ describe('ContactEditPanel', () => {
         '5055559999'
       )
       expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
+    })
+
+    it('does not show a validation error while typing an incomplete number before blur', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add phone/i }))
+      await user.type(screen.getByPlaceholderText('(505) 555-0100'), '505')
+      // role="alert" is only added once the field has been blurred
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+
+    it('shows a validation error after blurring an incomplete phone field', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add phone/i }))
+      const input = screen.getByPlaceholderText('(505) 555-0100')
+      await user.type(input, '505')
+      await user.tab() // triggers blur
+      expect(screen.getByRole('alert')).toHaveTextContent('Enter a 10-digit US phone number.')
+    })
+
+    it('disables Save when a phone row has fewer than 10 digits', async () => {
+      const user = userEvent.setup()
+      renderPanel()
+      await user.click(screen.getByRole('button', { name: /Add phone/i }))
+      await user.type(screen.getByPlaceholderText('(505) 555-0100'), '505')
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
     })
 
     it('enables Save when an existing phone is deleted', async () => {
