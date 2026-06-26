@@ -197,6 +197,7 @@ export const ContactList: React.FC = () => {
         columns={columns}
         dataGridProps={{ ...dataGridPropsWithAnalytics, rows: visibleContacts }}
         getRowId={(row) => row.id}
+        hideHeaderButtons
         onRowClick={(params) =>
           captureEvent('contacts_row_clicked', { contact_id: params.id })
         }
