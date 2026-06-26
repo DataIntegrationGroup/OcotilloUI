@@ -44,14 +44,17 @@ interface ContactEditPanelProps {
   contact: IContact | undefined
   isLoading?: boolean
   onClose: () => void
+  onSaved?: () => void
 }
 
 interface ContactDetailsDraft {
   name: string
-  organization: string
+  organization: string | null
   role: string
   contact_type: string
 }
+
+const ORG_NONE = '__none__'
 
 interface EmailDraft {
   draftId: string
@@ -89,7 +92,7 @@ function generateDraftId() {
 function initContactDraft(contact: IContact | undefined): ContactDetailsDraft {
   return {
     name: contact?.name ?? '',
-    organization: contact?.organization ?? '',
+    organization: contact?.organization ?? null,
     role: contact?.role ?? '',
     contact_type: contact?.contact_type ?? '',
   }
@@ -281,7 +284,7 @@ function EmailRow({
   const errorId = `email-error-${email.draftId}`
 
   return (
-    <div className="col-span-2 flex flex-col gap-0.5">
+    <div className="flex flex-col gap-0.5">
       <div className="flex items-end gap-2">
         <div className="flex flex-1 flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">Email address</Label>
@@ -331,7 +334,7 @@ function EmailRow({
         role={showError ? 'alert' : undefined}
         aria-live="polite"
         aria-hidden={!showError || undefined}
-        className={`min-h-4 text-xs text-destructive ${showError ? 'visible' : 'invisible'}`}
+        className={`min-h-3 text-xs text-destructive ${showError ? 'visible' : 'invisible'}`}
       >
         Enter a valid email address.
       </p>
@@ -358,7 +361,7 @@ function PhoneRow({
   const errorId = `phone-error-${phone.draftId}`
 
   return (
-    <div className="col-span-2 flex flex-col gap-0.5">
+    <div className="flex flex-col gap-0.5">
       <div className="flex items-end gap-2">
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">Code</Label>
@@ -417,7 +420,7 @@ function PhoneRow({
         role={showError ? 'alert' : undefined}
         aria-live="polite"
         aria-hidden={!showError || undefined}
-        className={`min-h-4 text-xs text-destructive ${showError ? 'visible' : 'invisible'}`}
+        className={`min-h-3 text-xs text-destructive ${showError ? 'visible' : 'invisible'}`}
       >
         Enter a 10-digit US phone number.
       </p>
@@ -536,6 +539,7 @@ export function ContactEditPanel({
   contact,
   isLoading = false,
   onClose,
+  onSaved,
 }: ContactEditPanelProps) {
   const { open: notify } = useNotification()
   const invalidate = useInvalidate()
@@ -595,13 +599,16 @@ export function ContactEditPanel({
   })
   const { options: addressTypeOptions, isLoading: addressTypeLoading } =
     useLexicon({ category: 'address_type' })
+  const { options: organizationOptions, isLoading: organizationLoading } =
+    useLexicon({ category: 'organization' })
 
   const isOptionsLoading =
     roleLoading ||
     contactTypeLoading ||
     emailTypeLoading ||
     phoneTypeLoading ||
-    addressTypeLoading
+    addressTypeLoading ||
+    organizationLoading
 
   const panelTitle = contact
     ? `Edit: ${getContactDisplayName(contact)}`
@@ -737,10 +744,10 @@ export function ContactEditPanel({
 
       // ── Contact details ──────────────────────────────────────────────────
       if (!contactDraftsEqual(draft, initial)) {
-        const changes: Record<string, string | undefined> = {}
+        const changes: Record<string, string | null | undefined> = {}
         if (draft.name !== initial.name) changes.name = draft.name || undefined
         if (draft.organization !== initial.organization)
-          changes.organization = draft.organization || undefined
+          changes.organization = draft.organization
         if (draft.role !== initial.role) changes.role = draft.role || undefined
         if (draft.contact_type !== initial.contact_type)
           changes.contact_type = draft.contact_type || undefined
@@ -927,6 +934,7 @@ export function ContactEditPanel({
         contact_id: contactId,
         fields_changed: changedSections,
       })
+      onSaved?.()
       onClose()
     } catch {
       notify?.({
@@ -1073,18 +1081,36 @@ export function ContactEditPanel({
                 />
               </EditPanelField>
               <EditPanelField label="Organization" span="full">
-                <Input
-                  value={draft.organization}
-                  onChange={(e) =>
-                    setDraft((prev) => ({
-                      ...prev,
-                      organization: e.target.value,
-                    }))
-                  }
-                  disabled={isSaving}
-                  className="h-8 text-sm"
-                  placeholder="Organization or Company"
-                />
+                {isOptionsLoading ? (
+                  <Skeleton className="h-8 w-full rounded-md" />
+                ) : (
+                  <Select
+                    value={draft.organization ?? ORG_NONE}
+                    onValueChange={(v) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        organization: v === ORG_NONE ? null : v,
+                      }))
+                    }
+                    disabled={isSaving}
+                  >
+                    <SelectTrigger className="h-8 w-full text-sm">
+                      <SelectValue placeholder="Select organization…" />
+                    </SelectTrigger>
+                    <SelectContent position="popper" className="max-h-60">
+                      <SelectItem value={ORG_NONE}>
+                        <span className="text-muted-foreground">
+                          No organization
+                        </span>
+                      </SelectItem>
+                      {organizationOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </EditPanelField>
             </>
           )}
@@ -1092,20 +1118,22 @@ export function ContactEditPanel({
 
         {/* Phones */}
         <EditPanelSection title="Phone Numbers" defaultOpen={false}>
-          {draftPhones.map((phone) => (
-            <PhoneRow
-              key={phone.draftId}
-              phone={phone}
-              onChange={(updated) =>
-                setDraftPhones((prev) =>
-                  prev.map((p) => (p.draftId === updated.draftId ? updated : p))
-                )
-              }
-              onDelete={() => handleDeletePhone(phone)}
-              disabled={isSaving}
-              typeOptions={phoneTypeOptions}
-            />
-          ))}
+          <div className="col-span-2 flex flex-col gap-1">
+            {draftPhones.map((phone) => (
+              <PhoneRow
+                key={phone.draftId}
+                phone={phone}
+                onChange={(updated) =>
+                  setDraftPhones((prev) =>
+                    prev.map((p) => (p.draftId === updated.draftId ? updated : p))
+                  )
+                }
+                onDelete={() => handleDeletePhone(phone)}
+                disabled={isSaving}
+                typeOptions={phoneTypeOptions}
+              />
+            ))}
+          </div>
           <div className="col-span-2">
             <Button
               type="button"
@@ -1132,20 +1160,22 @@ export function ContactEditPanel({
 
         {/* Emails */}
         <EditPanelSection title="Email Addresses" defaultOpen={false}>
-          {draftEmails.map((email) => (
-            <EmailRow
-              key={email.draftId}
-              email={email}
-              onChange={(updated) =>
-                setDraftEmails((prev) =>
-                  prev.map((e) => (e.draftId === updated.draftId ? updated : e))
-                )
-              }
-              onDelete={() => handleDeleteEmail(email)}
-              disabled={isSaving}
-              typeOptions={emailTypeOptions}
-            />
-          ))}
+          <div className="col-span-2 flex flex-col gap-1">
+            {draftEmails.map((email) => (
+              <EmailRow
+                key={email.draftId}
+                email={email}
+                onChange={(updated) =>
+                  setDraftEmails((prev) =>
+                    prev.map((e) => (e.draftId === updated.draftId ? updated : e))
+                  )
+                }
+                onDelete={() => handleDeleteEmail(email)}
+                disabled={isSaving}
+                typeOptions={emailTypeOptions}
+              />
+            ))}
+          </div>
           <div className="col-span-2">
             <Button
               type="button"
