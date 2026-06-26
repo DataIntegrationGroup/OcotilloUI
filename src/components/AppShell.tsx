@@ -1060,8 +1060,8 @@ const NESTED_LIST_BREADCRUMBS: Record<
   { parentLabel: string; parentHref: string; label: string }
 > = {}
 
-// Pattern: /<prefix>/<slug>/show/<id>  or  /<prefix>/<slug>/edit/<id>
-const DETAIL_PATTERN = /\/([a-z0-9-]+)\/(show|edit)\/([^/]+)$/
+// Pattern: /<prefix>/<slug>/show/<id>, /edit/<id>, or /pdf-preview/<id>
+const DETAIL_PATTERN = /\/([a-z0-9-]+)\/(show|edit|pdf-preview)\/([^/]+)$/
 
 function NestedListBreadcrumb({
   parentLabel,
@@ -1092,6 +1092,7 @@ function HeaderBreadcrumb() {
   const nestedList = NESTED_LIST_BREADCRUMBS[location.pathname]
   const routeMatch = location.pathname.match(DETAIL_PATTERN)
   const slug = routeMatch?.[1] ?? ''
+  const action = routeMatch?.[2] ?? ''
   const id = routeMatch?.[3] ?? ''
   const resourceInfo = BREADCRUMB_RESOURCES[slug]
 
@@ -1111,6 +1112,7 @@ function HeaderBreadcrumb() {
   if (!routeMatch || !resourceInfo) return null
 
   const recordLabel = recordName ?? `#${id}`
+  const isPdfPreview = action === 'pdf-preview'
 
   return (
     <nav aria-label="breadcrumb" className="flex items-center gap-1 text-sm shrink-0">
@@ -1121,7 +1123,23 @@ function HeaderBreadcrumb() {
         {resourceInfo.label}
       </Link>
       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" aria-hidden="true" />
-      <span className="text-foreground font-medium">{recordLabel}</span>
+      {isPdfPreview ? (
+        <>
+          <Link
+            to={`/ocotillo/${slug}/show/${id}`}
+            className="text-muted-foreground hover:text-foreground transition-colors no-underline"
+          >
+            {recordLabel}
+          </Link>
+          <ChevronRight
+            className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0"
+            aria-hidden="true"
+          />
+          <span className="text-foreground font-medium">PDF Preview</span>
+        </>
+      ) : (
+        <span className="text-foreground font-medium">{recordLabel}</span>
+      )}
     </nav>
   )
 }
