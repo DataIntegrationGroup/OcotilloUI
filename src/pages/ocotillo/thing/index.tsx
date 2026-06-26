@@ -1,6 +1,5 @@
 export * from './list'
 export * from './create'
-export * from './edit'
 export * from './well-show'
 export * from './well-show-pdf-preview'
 export * from './well-batch-export'
