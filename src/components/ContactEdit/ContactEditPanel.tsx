@@ -220,9 +220,10 @@ function EmailRow({
   typeOptions: { value: string; label: string }[]
 }) {
   const invalid = !isValidEmail(email.email)
+  const errorId = `email-error-${email.draftId}`
 
   return (
-    <div className="col-span-2 flex flex-col gap-1">
+    <div className="col-span-2 flex flex-col gap-0.5">
       <div className="flex items-end gap-2">
         <div className="flex flex-1 flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">Email address</Label>
@@ -234,6 +235,7 @@ function EmailRow({
             className={`h-8 text-sm ${invalid ? 'border-destructive focus-visible:ring-destructive' : ''}`}
             placeholder="name@example.com"
             aria-invalid={invalid}
+            aria-describedby={errorId}
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -265,9 +267,15 @@ function EmailRow({
           <Trash2Icon className="size-4" />
         </button>
       </div>
-      {invalid && (
-        <p className="text-xs text-destructive">Enter a valid email address.</p>
-      )}
+      <p
+        id={errorId}
+        role={invalid ? 'alert' : undefined}
+        aria-live="polite"
+        aria-hidden={!invalid || undefined}
+        className={`min-h-4 text-xs text-destructive ${invalid ? 'visible' : 'invisible'}`}
+      >
+        Enter a valid email address.
+      </p>
     </div>
   )
 }
@@ -286,9 +294,10 @@ function PhoneRow({
   typeOptions: { value: string; label: string }[]
 }) {
   const invalid = phone.phone_number.trim() !== '' && !isValidPhone(phone.phone_number)
+  const errorId = `phone-error-${phone.draftId}`
 
   return (
-    <div className="col-span-2 flex flex-col gap-1">
+    <div className="col-span-2 flex flex-col gap-0.5">
       <div className="flex items-end gap-2">
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs text-muted-foreground">Code</Label>
@@ -309,6 +318,7 @@ function PhoneRow({
             className={`h-8 text-sm ${invalid ? 'border-destructive focus-visible:ring-destructive' : ''}`}
             placeholder="(505) 555-0100"
             aria-invalid={invalid}
+            aria-describedby={errorId}
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -340,6 +350,15 @@ function PhoneRow({
           <Trash2Icon className="size-4" />
         </button>
       </div>
+      <p
+        id={errorId}
+        role={invalid ? 'alert' : undefined}
+        aria-live="polite"
+        aria-hidden={!invalid || undefined}
+        className={`min-h-4 text-xs text-destructive ${invalid ? 'visible' : 'invisible'}`}
+      >
+        Enter a 10-digit US phone number.
+      </p>
     </div>
   )
 }
@@ -560,6 +579,12 @@ export function ContactEditPanel({
   }, [contact, isLoading, contactId])
 
   // ── isDirty ───────────────────────────────────────────────────────────────
+  const hasValidationErrors = useMemo(() => {
+    if (draftEmails.some((e) => !isValidEmail(e.email))) return true
+    if (draftPhones.some((p) => p.phone_number.trim() !== '' && !isValidPhone(p.phone_number))) return true
+    return false
+  }, [draftEmails, draftPhones])
+
   const isDirty = useMemo(() => {
     if (!contactDraftsEqual(draft, initial)) return true
     if (deletedEmailIds.size > 0) return true
@@ -881,7 +906,7 @@ export function ContactEditPanel({
             <Button
               size="sm"
               onClick={handleSave}
-              disabled={!isDirty || isSaving}
+              disabled={!isDirty || isSaving || hasValidationErrors}
             >
               {isSaving ? (
                 <>
