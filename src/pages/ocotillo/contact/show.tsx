@@ -52,6 +52,7 @@ export const ContactShow = () => {
             contact={contact}
             isLoading={query.isLoading}
             onClose={closeEditPanel}
+            onSaved={() => query.refetch()}
           />
         ) : null
       }
