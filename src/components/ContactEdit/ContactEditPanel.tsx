@@ -108,7 +108,7 @@ function initPhoneDrafts(contact: IContact | undefined): PhoneDraft[] {
   return (contact?.phones ?? []).map((p) => ({
     draftId: generateDraftId(),
     id: p.id,
-    phone_number: p.phone_number,
+    phone_number: e164ToDisplay(p.phone_number),
     phone_type: p.phone_type,
   }))
 }
@@ -153,6 +153,39 @@ function isPhoneModified(draft: PhoneDraft, initials: PhoneDraft[]): boolean {
   return draft.phone_number !== orig.phone_number || draft.phone_type !== orig.phone_type
 }
 
+// ─── Phone / email helpers ────────────────────────────────────────────────────
+
+function formatPhoneDigits(digits: string): string {
+  const d = digits.replace(/\D/g, '').slice(0, 10)
+  if (d.length === 0) return ''
+  if (d.length <= 3) return `(${d}`
+  if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`
+  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`
+}
+
+function e164ToDisplay(e164: string | undefined | null): string {
+  if (!e164) return ''
+  const digits = e164.replace(/\D/g, '')
+  const local =
+    digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits
+  return formatPhoneDigits(local)
+}
+
+function displayToE164(display: string): string {
+  const digits = display.replace(/\D/g, '')
+  return digits.length === 10 ? `+1${digits}` : display
+}
+
+function isValidEmail(email: string): boolean {
+  if (!email.trim()) return true
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+}
+
+function isValidPhone(display: string): boolean {
+  if (!display.trim()) return true
+  return display.replace(/\D/g, '').length === 10
+}
+
 function isAddressModified(
   draft: AddressDraft,
   initials: AddressDraft[]
@@ -186,47 +219,55 @@ function EmailRow({
   disabled: boolean
   typeOptions: { value: string; label: string }[]
 }) {
+  const invalid = !isValidEmail(email.email)
+
   return (
-    <div className="col-span-2 flex items-end gap-2">
-      <div className="flex flex-1 flex-col gap-1.5">
-        <Label className="text-xs text-muted-foreground">Email address</Label>
-        <Input
-          type="email"
-          value={email.email}
-          onChange={(e) => onChange({ ...email, email: e.target.value })}
+    <div className="col-span-2 flex flex-col gap-1">
+      <div className="flex items-end gap-2">
+        <div className="flex flex-1 flex-col gap-1.5">
+          <Label className="text-xs text-muted-foreground">Email address</Label>
+          <Input
+            type="email"
+            value={email.email}
+            onChange={(e) => onChange({ ...email, email: e.target.value })}
+            disabled={disabled}
+            className={`h-8 text-sm ${invalid ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+            placeholder="name@example.com"
+            aria-invalid={invalid}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs text-muted-foreground">Type</Label>
+          <Select
+            value={email.email_type}
+            onValueChange={(v) => onChange({ ...email, email_type: v })}
+            disabled={disabled}
+          >
+            <SelectTrigger className="h-8 w-28 text-sm">
+              <SelectValue placeholder="Type…" />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              {typeOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <button
+          type="button"
+          onClick={onDelete}
           disabled={disabled}
-          className="h-8 text-sm"
-          placeholder="name@example.com"
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-xs text-muted-foreground">Type</Label>
-        <Select
-          value={email.email_type}
-          onValueChange={(v) => onChange({ ...email, email_type: v })}
-          disabled={disabled}
+          aria-label={`Remove email ${email.email}`}
+          className="mb-0.5 rounded p-1 text-muted-foreground hover:text-destructive disabled:opacity-50"
         >
-          <SelectTrigger className="h-8 w-28 text-sm">
-            <SelectValue placeholder="Type…" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            {typeOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Trash2Icon className="size-4" />
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onDelete}
-        disabled={disabled}
-        aria-label={`Remove email ${email.email}`}
-        className="mb-0.5 rounded p-1 text-muted-foreground hover:text-destructive disabled:opacity-50"
-      >
-        <Trash2Icon className="size-4" />
-      </button>
+      {invalid && (
+        <p className="text-xs text-destructive">Enter a valid email address.</p>
+      )}
     </div>
   )
 }
@@ -244,47 +285,61 @@ function PhoneRow({
   disabled: boolean
   typeOptions: { value: string; label: string }[]
 }) {
+  const invalid = phone.phone_number.trim() !== '' && !isValidPhone(phone.phone_number)
+
   return (
-    <div className="col-span-2 flex items-end gap-2">
-      <div className="flex flex-1 flex-col gap-1.5">
-        <Label className="text-xs text-muted-foreground">Phone number</Label>
-        <Input
-          type="tel"
-          value={phone.phone_number}
-          onChange={(e) => onChange({ ...phone, phone_number: e.target.value })}
+    <div className="col-span-2 flex flex-col gap-1">
+      <div className="flex items-end gap-2">
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs text-muted-foreground">Code</Label>
+          <div className="flex h-8 select-none items-center rounded-md border border-input bg-muted px-2.5 text-sm text-muted-foreground">
+            +1
+          </div>
+        </div>
+        <div className="flex flex-1 flex-col gap-1.5">
+          <Label className="text-xs text-muted-foreground">Phone number</Label>
+          <Input
+            type="tel"
+            value={phone.phone_number}
+            onChange={(e) => {
+              const formatted = formatPhoneDigits(e.target.value)
+              onChange({ ...phone, phone_number: formatted })
+            }}
+            disabled={disabled}
+            className={`h-8 text-sm ${invalid ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+            placeholder="(505) 555-0100"
+            aria-invalid={invalid}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs text-muted-foreground">Type</Label>
+          <Select
+            value={phone.phone_type}
+            onValueChange={(v) => onChange({ ...phone, phone_type: v })}
+            disabled={disabled}
+          >
+            <SelectTrigger className="h-8 w-28 text-sm">
+              <SelectValue placeholder="Type…" />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              {typeOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <button
+          type="button"
+          onClick={onDelete}
           disabled={disabled}
-          className="h-8 text-sm"
-          placeholder="+1 (505) 555-0100"
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-xs text-muted-foreground">Type</Label>
-        <Select
-          value={phone.phone_type}
-          onValueChange={(v) => onChange({ ...phone, phone_type: v })}
-          disabled={disabled}
+          aria-label={`Remove phone ${phone.phone_number}`}
+          className="mb-0.5 rounded p-1 text-muted-foreground hover:text-destructive disabled:opacity-50"
         >
-          <SelectTrigger className="h-8 w-28 text-sm">
-            <SelectValue placeholder="Type…" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            {typeOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Trash2Icon className="size-4" />
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onDelete}
-        disabled={disabled}
-        aria-label={`Remove phone ${phone.phone_number}`}
-        className="mb-0.5 rounded p-1 text-muted-foreground hover:text-destructive disabled:opacity-50"
-      >
-        <Trash2Icon className="size-4" />
-      </button>
     </div>
   )
 }
@@ -558,6 +613,27 @@ export function ContactEditPanel({
 
   const handleSave = async () => {
     if (!isDirty || isSaving) return
+
+    const invalidEmails = draftEmails.filter((e) => !isValidEmail(e.email))
+    if (invalidEmails.length > 0) {
+      notify?.({
+        type: 'error',
+        message: 'Fix the invalid email addresses before saving.',
+      })
+      return
+    }
+
+    const invalidPhones = draftPhones.filter(
+      (p) => p.phone_number.trim() !== '' && !isValidPhone(p.phone_number)
+    )
+    if (invalidPhones.length > 0) {
+      notify?.({
+        type: 'error',
+        message: 'Phone numbers must be 10 digits.',
+      })
+      return
+    }
+
     setIsSaving(true)
 
     try {
@@ -658,7 +734,7 @@ export function ContactEditPanel({
               method: 'post',
               values: {
                 contact_id: Number(contactId),
-                phone_number: phone.phone_number,
+                phone_number: displayToE164(phone.phone_number),
                 phone_type: phone.phone_type,
               },
               dataProviderName: 'ocotillo',
@@ -673,7 +749,7 @@ export function ContactEditPanel({
               url: `contact/phone/${phone.id}`,
               method: 'patch',
               values: {
-                phone_number: phone.phone_number,
+                phone_number: displayToE164(phone.phone_number),
                 phone_type: phone.phone_type,
               },
               dataProviderName: 'ocotillo',

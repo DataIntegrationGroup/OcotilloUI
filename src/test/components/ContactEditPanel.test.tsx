@@ -612,9 +612,10 @@ describe('ContactEditPanel', () => {
   })
 
   describe('phone section', () => {
-    it('renders existing phone numbers from the contact', () => {
+    it('renders existing phone numbers from the contact in display format', () => {
       renderPanel(CONTACT_WITH_PHONE)
-      expect(screen.getByDisplayValue('5055550001')).toBeTruthy()
+      // 5055550001 is formatted as (505) 555-0001 on load
+      expect(screen.getByDisplayValue('(505) 555-0001')).toBeTruthy()
     })
 
     it('keeps Save disabled when an empty phone row is added', async () => {
@@ -624,12 +625,12 @@ describe('ContactEditPanel', () => {
       expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
     })
 
-    it('enables Save after typing into a new phone row', async () => {
+    it('enables Save after typing a valid number into a new phone row', async () => {
       const user = userEvent.setup()
       renderPanel()
       await user.click(screen.getByRole('button', { name: /Add phone/i }))
       await user.type(
-        screen.getByPlaceholderText('+1 (505) 555-0100'),
+        screen.getByPlaceholderText('(505) 555-0100'),
         '5055559999'
       )
       expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
@@ -639,7 +640,7 @@ describe('ContactEditPanel', () => {
       const user = userEvent.setup()
       renderPanel(CONTACT_WITH_PHONE)
       await user.click(
-        screen.getByRole('button', { name: /Remove phone 5055550001/i })
+        screen.getByRole('button', { name: /Remove phone \(505\) 555-0001/i })
       )
       expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
     })
@@ -649,7 +650,7 @@ describe('ContactEditPanel', () => {
       renderPanel(CONTACT_WITH_PHONE)
 
       await user.click(
-        screen.getByRole('button', { name: /Remove phone 5055550001/i })
+        screen.getByRole('button', { name: /Remove phone \(505\) 555-0001/i })
       )
       await user.click(screen.getByRole('button', { name: 'Save' }))
 
@@ -663,13 +664,13 @@ describe('ContactEditPanel', () => {
       })
     })
 
-    it('sends POST mutation for a new phone on save', async () => {
+    it('sends POST mutation with E.164 format for a new phone on save', async () => {
       const user = userEvent.setup()
       renderPanel()
 
       await user.click(screen.getByRole('button', { name: /Add phone/i }))
       await user.type(
-        screen.getByPlaceholderText('+1 (505) 555-0100'),
+        screen.getByPlaceholderText('(505) 555-0100'),
         '5055559999'
       )
       await user.click(screen.getByRole('button', { name: 'Save' }))
@@ -681,7 +682,7 @@ describe('ContactEditPanel', () => {
             method: 'post',
             values: expect.objectContaining({
               contact_id: SAMPLE_CONTACT.id,
-              phone_number: '5055559999',
+              phone_number: '+15055559999',
             }),
           })
         )
