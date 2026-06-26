@@ -219,7 +219,9 @@ function EmailRow({
   disabled: boolean
   typeOptions: { value: string; label: string }[]
 }) {
+  const [touched, setTouched] = useState(false)
   const invalid = !isValidEmail(email.email)
+  const showError = touched && invalid
   const errorId = `email-error-${email.draftId}`
 
   return (
@@ -231,10 +233,11 @@ function EmailRow({
             type="email"
             value={email.email}
             onChange={(e) => onChange({ ...email, email: e.target.value })}
+            onBlur={() => setTouched(true)}
             disabled={disabled}
-            className={`h-8 text-sm ${invalid ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+            className={`h-8 text-sm ${showError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
             placeholder="name@example.com"
-            aria-invalid={invalid}
+            aria-invalid={showError}
             aria-describedby={errorId}
           />
         </div>
@@ -269,10 +272,10 @@ function EmailRow({
       </div>
       <p
         id={errorId}
-        role={invalid ? 'alert' : undefined}
+        role={showError ? 'alert' : undefined}
         aria-live="polite"
-        aria-hidden={!invalid || undefined}
-        className={`min-h-4 text-xs text-destructive ${invalid ? 'visible' : 'invisible'}`}
+        aria-hidden={!showError || undefined}
+        className={`min-h-4 text-xs text-destructive ${showError ? 'visible' : 'invisible'}`}
       >
         Enter a valid email address.
       </p>
@@ -293,7 +296,9 @@ function PhoneRow({
   disabled: boolean
   typeOptions: { value: string; label: string }[]
 }) {
+  const [touched, setTouched] = useState(false)
   const invalid = phone.phone_number.trim() !== '' && !isValidPhone(phone.phone_number)
+  const showError = touched && invalid
   const errorId = `phone-error-${phone.draftId}`
 
   return (
@@ -314,10 +319,11 @@ function PhoneRow({
               const formatted = formatPhoneDigits(e.target.value)
               onChange({ ...phone, phone_number: formatted })
             }}
+            onBlur={() => setTouched(true)}
             disabled={disabled}
-            className={`h-8 text-sm ${invalid ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+            className={`h-8 text-sm ${showError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
             placeholder="(505) 555-0100"
-            aria-invalid={invalid}
+            aria-invalid={showError}
             aria-describedby={errorId}
           />
         </div>
@@ -352,10 +358,10 @@ function PhoneRow({
       </div>
       <p
         id={errorId}
-        role={invalid ? 'alert' : undefined}
+        role={showError ? 'alert' : undefined}
         aria-live="polite"
-        aria-hidden={!invalid || undefined}
-        className={`min-h-4 text-xs text-destructive ${invalid ? 'visible' : 'invisible'}`}
+        aria-hidden={!showError || undefined}
+        className={`min-h-4 text-xs text-destructive ${showError ? 'visible' : 'invisible'}`}
       >
         Enter a 10-digit US phone number.
       </p>
