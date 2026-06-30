@@ -521,6 +521,7 @@ export const AssetPreviewWithOverlay = ({
           <Box className="space-y-2">
             <Autocomplete
               {...wellAutocompleteProps}
+              disablePortal
               options={wellOptions}
               loading={Boolean(wellAutocompleteProps.loading)}
               value={selectedWell}
@@ -528,8 +529,8 @@ export const AssetPreviewWithOverlay = ({
               getOptionLabel={(well) => well?.name ?? ''}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               onChange={(_, value) => setSelectedWell(value)}
-              renderOption={(props, well) => (
-                <Box component="li" {...props}>
+              renderOption={({ key, ...props }, well) => (
+                <Box component="li" key={key} {...props}>
                   <Typography variant="body2">{well.name}</Typography>
                 </Box>
               )}
