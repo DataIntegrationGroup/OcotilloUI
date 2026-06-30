@@ -37,7 +37,6 @@ import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import { IWell } from '@/interfaces/ocotillo'
 import { IHydrographDatasource } from '@/interfaces/st2'
-import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import {
   ocotilloCardHeaderProps,
   OcotilloHeaderButtons,
@@ -226,15 +225,7 @@ export const WellShowPdfPreview = () => {
       resource="thing-well"
       recordItemId={id}
       goBack={false}
-      breadcrumb={
-        <AppBreadcrumb
-          items={[
-            { label: 'Wells', href: '/ocotillo/well' },
-            { label: 'Show', href: `/ocotillo/well/show/${id}` },
-            { label: 'PDF Preview' },
-          ]}
-        />
-      }
+      breadcrumb={false}
       wrapperProps={{
         elevation: 0,
         sx: {
