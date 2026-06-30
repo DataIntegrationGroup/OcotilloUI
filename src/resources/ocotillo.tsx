@@ -32,7 +32,6 @@ let tables: {
   {
     name: 'thing-well',
     list: '/ocotillo/well',
-    edit: '/ocotillo/well/edit/:id',
     show: '/ocotillo/well/show/:id',
     create: '/ocotillo/well/create',
     meta: {
@@ -54,9 +53,7 @@ let tables: {
   {
     name: 'contact',
     list: '/ocotillo/contact',
-    edit: '/ocotillo/contact/edit/:id',
     show: '/ocotillo/contact/show/:id',
-    create: '/ocotillo/contact/create',
     meta: {
       icon: <Contacts />,
       label: 'Contacts & Owners',

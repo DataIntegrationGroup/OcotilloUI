@@ -1,16 +1,13 @@
 import { Route, Routes } from 'react-router'
 import { ErrorComponent } from '@refinedev/mui'
 import {
-  ContactEdit,
   ContactList,
   ContactShow,
-  ContactCreate,
 } from '@/pages/ocotillo/contact'
 import {
   SpringList,
   SpringCreate,
   WellCreate,
-  WellEdit,
   WellList,
   WellShow,
   WellShowPdfPreview,
@@ -88,8 +85,6 @@ export const OcotilloRoutes = () => {
       <Route path="contact">
         <Route index element={<ContactList />} />
         <Route path={'show/:id'} element={<ContactShow />} />
-        <Route path={'edit/:id'} element={<ContactEdit />} />
-        <Route path={'create'} element={<ContactCreate />} />
       </Route>
       <Route path="well">
         <Route index element={<WellList />} />
@@ -128,7 +123,6 @@ export const OcotilloRoutes = () => {
             </ProtectedRoute>
           }
         />
-        <Route path={'edit/:id'} element={<WellEdit />} />
         <Route path={'create'} element={<WellCreate />} />
       </Route>
       <Route path="spring">

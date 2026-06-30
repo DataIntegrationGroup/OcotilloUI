@@ -10,9 +10,7 @@ import {
 } from '@/interfaces/ocotillo/IContact'
 import { Card, CardHeader, SxProps } from '@mui/material'
 import { Email, Home, Phone } from '@mui/icons-material'
-import { Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useLink, useNavigation } from '@refinedev/core'
+import { useLink } from '@refinedev/core'
 import { settings } from '@/settings'
 import { formatAppDateTime, formatPhone } from '@/utils'
 import { getContactDisplayName } from '@/utils/contactDisplayName'
@@ -44,7 +42,6 @@ export const ContactList: React.FC = () => {
     [canViewConfidential, dataGridProps.rows]
   )
 
-  const { create } = useNavigation()
   const Link = useLink()
 
   const columns = useMemo<GridColDef<IContact>[]>(
@@ -193,15 +190,6 @@ export const ContactList: React.FC = () => {
     meta: { enabled: !!selectedContactId },
   })
 
-  const customHeaderButtons = () => (
-    <>
-      <Button onClick={() => create('contact')}>
-        <Plus />
-        Create
-      </Button>
-    </>
-  )
-
   return (
     <>
       <ListPage
@@ -209,7 +197,7 @@ export const ContactList: React.FC = () => {
         columns={columns}
         dataGridProps={{ ...dataGridPropsWithAnalytics, rows: visibleContacts }}
         getRowId={(row) => row.id}
-        headerButtons={customHeaderButtons}
+        hideHeaderButtons
         onRowClick={(params) =>
           captureEvent('contacts_row_clicked', { contact_id: params.id })
         }

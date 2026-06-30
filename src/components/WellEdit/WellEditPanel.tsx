@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCustomMutation, useList, useNotification } from '@refinedev/core'
 import { useQueryClient } from '@tanstack/react-query'
+import { captureEvent } from '@/analytics/posthog'
 import { Loader2, XIcon } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
@@ -138,6 +139,10 @@ export function WellEditPanel({
   const isLoading = isAssignedGroupsLoading || isGroupsLoading
 
   useEffect(() => {
+    captureEvent('edit_panel_opened', { resource: 'well', well_id: wellId })
+  }, [wellId])
+
+  useEffect(() => {
     wasLoadingRef.current = true
   }, [wellId])
 
@@ -221,6 +226,11 @@ export function WellEditPanel({
       ])
 
       await invalidateWellDetails(queryClient, wellId)
+      captureEvent('edit_saved', {
+        resource: 'well',
+        well_id: wellId,
+        fields_changed: ['groups'],
+      })
       onClose()
     } catch {
       notify?.({
@@ -245,6 +255,11 @@ export function WellEditPanel({
   }
 
   const handleDiscardChanges = () => {
+    captureEvent('edit_abandoned', {
+      resource: 'well',
+      well_id: wellId,
+      had_changes: isDirty,
+    })
     onClose()
   }
 
