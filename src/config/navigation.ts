@@ -5,6 +5,7 @@ import {
   FileText,
   FolderKanban,
   Home,
+  Image,
   LineChart,
   Map as MapIcon,
   MapPin,
@@ -22,7 +23,7 @@ import type { PortalRole } from '@/utils/accessControl'
 export const AmpRole = {
   Viewer: 'AMP.Viewer',
   Editor: 'AMP.Editor',
-  Admin:  'AMP.Admin',
+  Admin: 'AMP.Admin',
 } as const satisfies Record<string, PortalRole>
 
 export type NavItem = {
@@ -81,7 +82,11 @@ export const PRIMARY_NAV: NavItem[] = [
   },
 ]
 
-const viewerAndAbove: PortalRole[] = [AmpRole.Viewer, AmpRole.Editor, AmpRole.Admin]
+const viewerAndAbove: PortalRole[] = [
+  AmpRole.Viewer,
+  AmpRole.Editor,
+  AmpRole.Admin,
+]
 const adminOnly: PortalRole[] = [AmpRole.Admin]
 
 /**
@@ -124,6 +129,13 @@ export const RESOURCE_NAV: NavItem[] = [
     icon: Database,
     resource: 'ocotillo.collections',
     roles: viewerAndAbove,
+  },
+  {
+    label: 'Unassociated Assets',
+    href: '/ocotillo/asset/unassociated',
+    icon: Image,
+    resource: 'ocotillo.asset-unassociated',
+    roles: adminOnly,
   },
   {
     label: 'Locations',
