@@ -118,6 +118,10 @@ export const WellShow = () => {
       // Treat asset data as fresh for 9 minutes. The periodic refetch updates
       // the signed URLs before they expire.
       staleTime: 9 * 60 * 1000,
+
+      // Refresh when navigating back to this page so asset associations and
+      // signed URLs reflect changes made elsewhere.
+      refetchOnMount: 'always',
     },
   })
   useEffect(() => {

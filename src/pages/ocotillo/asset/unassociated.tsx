@@ -70,6 +70,7 @@ export const UnassociatedAssetList: React.FC = () => {
       refetchInterval: 10 * 60 * 1000,
       refetchIntervalInBackground: false,
       staleTime: 9 * 60 * 1000,
+      refetchOnMount: 'always',
     },
   })
 
