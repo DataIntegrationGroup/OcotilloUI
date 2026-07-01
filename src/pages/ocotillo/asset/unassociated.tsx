@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Box, Chip, Typography } from '@mui/material'
 import type { GridColDef, GridRowParams } from '@mui/x-data-grid'
-import { useList } from '@refinedev/core'
+import { useDataGrid } from '@refinedev/mui'
 import type { IAsset } from '@/interfaces/ocotillo'
 import { ListPage } from '@/components'
 import { AssetActions, AssetPreview } from '@/components/WellShow'
@@ -60,9 +60,10 @@ const AssetThumbnail = ({ asset }: { asset: IAsset }) => {
 
 export const UnassociatedAssetList: React.FC = () => {
   const [previewAsset, setPreviewAsset] = useState<IAsset | null>(null)
-  const { result, query } = useList<IAsset>({
+  const { dataGridProps, tableQuery } = useDataGrid<IAsset>({
     resource: 'asset/unassociated',
     dataProviderName: 'ocotillo',
+    pagination: { pageSize: 10, mode: 'server' },
     queryOptions: {
       // Signed URLs expire after 15 minutes. Refresh periodically for preview
       // and download flows that may stay open during cleanup work.
@@ -71,8 +72,6 @@ export const UnassociatedAssetList: React.FC = () => {
       staleTime: 9 * 60 * 1000,
     },
   })
-
-  const unassociatedAssets = result?.data ?? []
 
   const columns = useMemo<GridColDef<IAsset>[]>(
     () => [
@@ -154,7 +153,7 @@ export const UnassociatedAssetList: React.FC = () => {
           >
             <AssetActions
               asset={row}
-              refetchAssets={query.refetch}
+              refetchAssets={tableQuery.refetch}
               includeDisassociate={false}
               noun="asset"
             />
@@ -162,15 +161,8 @@ export const UnassociatedAssetList: React.FC = () => {
         ),
       },
     ],
-    [query.refetch]
+    [tableQuery.refetch]
   )
-
-  const dataGridProps = {
-    rows: unassociatedAssets,
-    rowCount: result?.total ?? unassociatedAssets.length,
-    loading: query.isLoading || query.isFetching,
-    paginationMode: 'client',
-  }
 
   const handleRowClick = (params: GridRowParams<IAsset>) => {
     setPreviewAsset(params.row)
