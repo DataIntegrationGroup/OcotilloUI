@@ -97,6 +97,7 @@ export const AssetPreviewWithOverlay = ({
   refetchAssets,
   canManageAsset = false,
   onViewMore,
+  slideshowCaption,
 }: {
   asset: IAsset
   variant: 'grid' | 'slideshow'
@@ -105,6 +106,7 @@ export const AssetPreviewWithOverlay = ({
   >
   canManageAsset?: boolean
   onViewMore?: () => void
+  slideshowCaption?: string
 }) => {
   const isSlideshow = variant === 'slideshow'
 
@@ -221,10 +223,10 @@ export const AssetPreviewWithOverlay = ({
               borderColor: 'divider',
               bgcolor: 'background.paper',
               display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) auto',
+              gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)',
               gridTemplateAreas: `
-                "name actions"
-                "label label"
+                "name caption actions"
+                "label label label"
               `,
               gap: 1,
               alignItems: 'center',
@@ -245,6 +247,24 @@ export const AssetPreviewWithOverlay = ({
             >
               {asset.name}
             </Typography>
+
+            {slideshowCaption && (
+              <Typography
+                variant="caption"
+                sx={{
+                  gridArea: 'caption',
+                  justifySelf: 'center',
+                  bgcolor: 'rgba(0,0,0,0.5)',
+                  color: 'white',
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 1,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {slideshowCaption}
+              </Typography>
+            )}
 
             <Box
               sx={{

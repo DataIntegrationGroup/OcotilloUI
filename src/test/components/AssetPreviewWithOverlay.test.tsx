@@ -182,4 +182,19 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
 
     expect(screen.getByText('Expanded slideshow label')).toBeTruthy()
   })
+
+  it('shows the slideshow caption in the footer', () => {
+    const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
+
+    render(
+      <AssetPreviewWithOverlay
+        asset={asset}
+        variant="slideshow"
+        refetchAssets={refetchAssets}
+        slideshowCaption="2 / 5"
+      />
+    )
+
+    expect(screen.getByText('2 / 5')).toBeTruthy()
+  })
 })

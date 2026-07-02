@@ -218,6 +218,9 @@ export const AttachmentsCard = ({
                         variant="slideshow"
                         refetchAssets={refetchAssets}
                         canManageAsset={canManageAmp}
+                        slideshowCaption={`${slideshowIndex + 1} / ${
+                          previewAssets.length
+                        }`}
                       />
                     )}
                     {previewAssets.length > 1 && (
@@ -258,22 +261,6 @@ export const AttachmentsCard = ({
                         >
                           <ChevronRight />
                         </IconButton>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            position: 'absolute',
-                            bottom: 50,
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            bgcolor: 'rgba(0,0,0,0.5)',
-                            color: 'white',
-                            px: 1.5,
-                            py: 0.5,
-                            borderRadius: 1,
-                          }}
-                        >
-                          {slideshowIndex + 1} / {previewAssets.length}
-                        </Typography>
                       </>
                     )}
                   </Box>
