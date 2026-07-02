@@ -148,4 +148,53 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
     ).toBe(false)
     expect(mockedMutateAsset).not.toHaveBeenCalled()
   })
+
+  it('shows the asset name in grid mode with a view more action', async () => {
+    const user = userEvent.setup()
+    const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
+    const onViewMore = vi.fn()
+
+    render(
+      <AssetPreviewWithOverlay
+        asset={{ ...asset, label: 'Field inspection photo label' }}
+        variant="grid"
+        refetchAssets={refetchAssets}
+        onViewMore={onViewMore}
+      />
+    )
+
+    expect(screen.getByText('field-photo.jpg')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'View more' }))
+
+    expect(onViewMore).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the asset label in slideshow mode', () => {
+    const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
+
+    render(
+      <AssetPreviewWithOverlay
+        asset={{ ...asset, label: 'Expanded slideshow label' }}
+        variant="slideshow"
+        refetchAssets={refetchAssets}
+      />
+    )
+
+    expect(screen.getByText('Expanded slideshow label')).toBeTruthy()
+  })
+
+  it('shows the slideshow caption in the footer', () => {
+    const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
+
+    render(
+      <AssetPreviewWithOverlay
+        asset={asset}
+        variant="slideshow"
+        refetchAssets={refetchAssets}
+        slideshowCaption="2 / 5"
+      />
+    )
+
+    expect(screen.getByText('2 / 5')).toBeTruthy()
+  })
 })
