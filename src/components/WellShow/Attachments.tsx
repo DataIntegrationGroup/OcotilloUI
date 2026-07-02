@@ -191,6 +191,7 @@ export const AttachmentsCard = ({
                           variant="grid"
                           refetchAssets={refetchAssets}
                           canManageAsset={canManageAmp}
+                          onViewMore={() => openSlideshow(idx)}
                         />
                       </Box>
                     ))}
@@ -200,10 +201,12 @@ export const AttachmentsCard = ({
                     sx={{
                       position: 'relative',
                       borderRadius: 2,
-                      overflow: 'hidden',
+                      overflow: 'auto',
                       boxShadow: 2,
                       bgcolor: 'grey.100',
-                      minHeight: 300,
+                      minHeight: 360,
+                      height: 480,
+                      resize: 'vertical',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -259,7 +262,7 @@ export const AttachmentsCard = ({
                           variant="caption"
                           sx={{
                             position: 'absolute',
-                            bottom: 8,
+                            bottom: 56,
                             left: '50%',
                             transform: 'translateX(-50%)',
                             bgcolor: 'rgba(0,0,0,0.5)',
