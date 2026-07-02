@@ -35,6 +35,7 @@ const routableResourceNames = routableResources
   .map((resource) => resource.name)
   .sort()
 const expectedRegisteredRoutableResources = [
+  'ocotillo.asset-unassociated',
   'ocotillo.collections',
   'ocotillo.contact',
   'ocotillo.hydrograph-correction',

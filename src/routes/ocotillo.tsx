@@ -1,9 +1,6 @@
 import { Route, Routes } from 'react-router'
 import { ErrorComponent } from '@refinedev/mui'
-import {
-  ContactList,
-  ContactShow,
-} from '@/pages/ocotillo/contact'
+import { ContactList, ContactShow } from '@/pages/ocotillo/contact'
 import {
   SpringList,
   SpringCreate,
@@ -51,6 +48,7 @@ import {
   AssetCreate,
   AssetEdit,
   AssetShow,
+  UnassociatedAssetList,
 } from '@/pages/ocotillo/asset'
 import {
   ThingIdLinkList,
@@ -180,6 +178,17 @@ export const OcotilloRoutes = () => {
       </Route>
       <Route path="asset">
         <Route index element={<AssetList />} />
+        <Route
+          path={'unassociated'}
+          element={
+            <ProtectedRoute
+              resource="ocotillo.asset-unassociated"
+              action="manage"
+            >
+              <UnassociatedAssetList />
+            </ProtectedRoute>
+          }
+        />
         <Route path={'create'} element={<AssetCreate />} />
         <Route path={'edit/:id'} element={<AssetEdit />} />
         <Route path={'show/:id'} element={<AssetShow />} />

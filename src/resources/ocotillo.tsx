@@ -4,7 +4,7 @@ import {
   DatasetLinked,
   Contacts,
   // DynamicFormOutlined,
-  // Image,
+  Image,
   LibraryBooksOutlined,
   // Link,
   Map,
@@ -220,6 +220,15 @@ tables.push({
     icon: <Workspaces />,
     parent: 'ocotillo.thing-well',
     nestedLevel: 1,
+  },
+})
+
+tables.push({
+  name: 'asset-unassociated',
+  list: '/ocotillo/asset/unassociated',
+  meta: {
+    label: 'Unassociated Assets',
+    icon: <Image />,
   },
 })
 

@@ -93,6 +93,14 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
   'ocotillo.thing-well-projects': { list: viewerRoles, show: viewerRoles },
+  'ocotillo.asset-unassociated': {
+    list: adminRoles,
+    show: adminRoles,
+    edit: adminRoles,
+    create: adminRoles,
+    delete: adminRoles,
+    manage: adminRoles,
+  },
   'ocotillo.groundwater-level-observation': {
     list: viewerRoles,
     show: viewerRoles,
