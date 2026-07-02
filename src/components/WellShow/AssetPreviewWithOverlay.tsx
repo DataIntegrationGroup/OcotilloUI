@@ -107,7 +107,6 @@ export const AssetPreviewWithOverlay = ({
   onViewMore?: () => void
 }) => {
   const isSlideshow = variant === 'slideshow'
-  const assetLabel = asset.label || asset.name
 
   const getRefreshedAsset = async (
     assetId: IAsset['id'],
@@ -223,6 +222,10 @@ export const AssetPreviewWithOverlay = ({
               bgcolor: 'background.paper',
               display: 'grid',
               gridTemplateColumns: 'minmax(0, 1fr) auto',
+              gridTemplateAreas: `
+                "name actions"
+                "label label"
+              `,
               gap: 1,
               alignItems: 'center',
               px: 1.5,
@@ -230,27 +233,30 @@ export const AssetPreviewWithOverlay = ({
             }}
           >
             <Typography
-              variant="body2"
-              title={assetLabel}
+              variant="body1"
+              title={asset.name}
               sx={{
+                gridArea: 'name',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                fontWeight: 500,
               }}
             >
-              {assetLabel}
+              {asset.name}
             </Typography>
 
             <Box
+              sx={{
+                gridArea: 'actions',
+                display: 'flex',
+                gap: 1,
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+              }}
               onClick={(event) => event.stopPropagation()}
               onMouseDown={(event) => event.stopPropagation()}
               onPointerDown={(event) => event.stopPropagation()}
-              sx={{
-                pointerEvents: 'auto',
-                display: 'flex',
-                gap: 1,
-                alignItems: 'center',
-              }}
             >
               {asset.signed_url && (
                 <Button
@@ -259,16 +265,10 @@ export const AssetPreviewWithOverlay = ({
                   onClick={(event) => {
                     event.stopPropagation()
 
-                    if (!asset?.signed_url) return
+                    if (!asset.signed_url) return
                     void downloadAsset(asset, refetchAssets).catch(
                       console.error
                     )
-                  }}
-                  sx={{
-                    bgcolor: 'background.paper',
-                    '&:hover': {
-                      bgcolor: 'background.paper',
-                    },
                   }}
                 >
                   Download
@@ -279,6 +279,20 @@ export const AssetPreviewWithOverlay = ({
                 <AssetActions asset={asset} refetchAssets={refetchAssets} />
               )}
             </Box>
+
+            <Typography
+              variant="body2"
+              title={asset.label}
+              color="text.secondary"
+              sx={{
+                gridArea: 'label',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {asset.label}
+            </Typography>
           </Box>
         ) : (
           <Box
@@ -294,7 +308,7 @@ export const AssetPreviewWithOverlay = ({
           >
             <Typography
               variant="caption"
-              title={assetLabel}
+              title={asset?.name}
               sx={{
                 minWidth: 0,
                 overflow: 'hidden',
@@ -302,7 +316,7 @@ export const AssetPreviewWithOverlay = ({
                 whiteSpace: 'nowrap',
               }}
             >
-              {assetLabel}
+              {asset?.name}
             </Typography>
 
             {onViewMore && (
