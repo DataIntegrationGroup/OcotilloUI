@@ -149,7 +149,7 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
     expect(mockedMutateAsset).not.toHaveBeenCalled()
   })
 
-  it('shows the asset label in grid mode with a view more action', async () => {
+  it('shows the asset name in grid mode with a view more action', async () => {
     const user = userEvent.setup()
     const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
     const onViewMore = vi.fn()
@@ -163,7 +163,7 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
       />
     )
 
-    expect(screen.getByText('Field inspection photo label')).toBeTruthy()
+    expect(screen.getByText('field-photo.jpg')).toBeTruthy()
     await user.click(screen.getByRole('button', { name: 'View more' }))
 
     expect(onViewMore).toHaveBeenCalledTimes(1)

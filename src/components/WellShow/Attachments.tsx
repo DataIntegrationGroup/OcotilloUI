@@ -262,7 +262,7 @@ export const AttachmentsCard = ({
                           variant="caption"
                           sx={{
                             position: 'absolute',
-                            bottom: 56,
+                            bottom: 50,
                             left: '50%',
                             transform: 'translateX(-50%)',
                             bgcolor: 'rgba(0,0,0,0.5)',
