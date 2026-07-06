@@ -341,7 +341,14 @@ export const AssetActions = ({
           }
         }}
       >
-        <DialogContent className="max-w-xl">
+        <DialogContent
+          className="max-w-xl"
+          onKeyDown={(event) => {
+            if (event.key === ' ') {
+              event.stopPropagation()
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Reassociate {noun}</DialogTitle>
             <DialogDescription>
@@ -414,7 +421,14 @@ export const AssetActions = ({
           }
         }}
       >
-        <DialogContent className="max-w-xl">
+        <DialogContent
+          className="max-w-xl"
+          onKeyDown={(event) => {
+            if (event.key === ' ') {
+              event.stopPropagation()
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Edit {noun}</DialogTitle>
             <DialogDescription>

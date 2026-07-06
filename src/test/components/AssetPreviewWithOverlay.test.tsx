@@ -51,6 +51,7 @@ vi.mock('@refinedev/mui', () => ({
 }))
 
 import { AssetPreviewWithOverlay } from '@/components/WellShow/AssetPreviewWithOverlay'
+import { AssetActions } from '@/components/WellShow/AssetActions'
 
 const asset: IAsset = {
   id: 10,
@@ -231,6 +232,50 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
       })
     })
     expect(refetchAssets).toHaveBeenCalled()
+  })
+
+  it('allows spaces in asset edit fields when rendered inside a space-key parent handler', async () => {
+    const user = userEvent.setup()
+    const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
+
+    render(
+      <div
+        onKeyDown={(event) => {
+          if (event.key === ' ') {
+            event.preventDefault()
+          }
+        }}
+      >
+        <AssetActions
+          asset={{
+            ...asset,
+            name: 'original-photo.jpg',
+            label: 'Original label',
+          }}
+          refetchAssets={refetchAssets}
+          allowAssetEdit
+        />
+      </div>
+    )
+
+    await user.click(
+      screen.getByLabelText('Attachment actions for original-photo.jpg')
+    )
+    await user.click(screen.getByText('Edit asset'))
+
+    const dialog = screen.getByRole('dialog', {
+      name: 'Edit attachment',
+    })
+    const nameInput = within(dialog).getByLabelText<HTMLInputElement>('Name')
+    const labelInput = within(dialog).getByLabelText<HTMLTextAreaElement>('Label')
+
+    await user.clear(nameInput)
+    await user.type(nameInput, 'Updated Photo Name.jpg')
+    await user.clear(labelInput)
+    await user.type(labelInput, 'Updated field label')
+
+    expect(nameInput.value).toBe('Updated Photo Name.jpg')
+    expect(labelInput.value).toBe('Updated field label')
   })
 
   it('offers asset editing in grid mode', async () => {
