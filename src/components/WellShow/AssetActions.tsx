@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 type AssetAction = 'disassociate-asset' | 'delete-asset'
+type AssetEditableField = 'label' | 'name'
 
 const getMutationErrorMessage = (error: unknown) => {
   if (
@@ -74,8 +75,8 @@ export const AssetActions = ({
     useCustomMutation()
   const [confirmAction, setConfirmAction] = useState<AssetAction | null>(null)
   const [isReassociateDialogOpen, setIsReassociateDialogOpen] = useState(false)
-  const [isEditLabelDialogOpen, setIsEditLabelDialogOpen] = useState(false)
-  const [labelValue, setLabelValue] = useState(asset.label ?? '')
+  const [editField, setEditField] = useState<AssetEditableField | null>(null)
+  const [editValue, setEditValue] = useState('')
   const [selectedWell, setSelectedWell] = useState<IWell | null>(null)
   const capitalizedNoun = noun[0].toUpperCase() + noun.slice(1)
 
@@ -169,26 +170,33 @@ export const AssetActions = ({
     }
   }
 
-  const handleUpdateLabel = async () => {
+  const openEditDialog = (field: AssetEditableField) => {
+    setEditValue(asset[field] ?? '')
+    setEditField(field)
+  }
+
+  const handleUpdateField = async () => {
+    if (!editField) return
+
     try {
       await mutateAsset({
         url: `asset/${asset.id}`,
         method: 'patch',
-        values: { label: labelValue },
+        values: { [editField]: editValue },
         dataProviderName: 'ocotillo',
       })
 
       await refetchAssets()
       notify?.({
         type: 'success',
-        message: `${capitalizedNoun} label updated`,
+        message: `${capitalizedNoun} ${editField} updated`,
       })
-      setIsEditLabelDialogOpen(false)
+      setEditField(null)
     } catch (error) {
       console.error(error)
       notify?.({
         type: 'error',
-        message: `Could not update ${noun} label`,
+        message: `Could not update ${noun} ${editField}`,
         description: getMutationErrorMessage(error),
       })
     }
@@ -199,7 +207,18 @@ export const AssetActions = ({
     (well) => well.id !== currentThingId
   )
   const canOpenLabelEdit = allowLabelEdit && Boolean(asset.name)
-  const isLabelUnchanged = labelValue === (asset.label ?? '')
+  const isEditUnchanged = editField
+    ? editValue === (asset[editField] ?? '')
+    : true
+  const editFieldLabel = editField === 'name' ? 'Name' : 'Label'
+  const editDialogTitle =
+    editField === 'name'
+      ? `Edit ${noun} name`
+      : `Edit ${noun} label`
+  const editDialogDescription =
+    editField === 'name'
+      ? `Update the name shown for ${asset.name}.`
+      : `Update the label shown for ${asset.name}.`
 
   return (
     <>
@@ -218,16 +237,26 @@ export const AssetActions = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           {canOpenLabelEdit && (
-            <DropdownMenuItem
-              onClick={(event) => {
-                event.stopPropagation()
-                setLabelValue(asset.label ?? '')
-                setIsEditLabelDialogOpen(true)
-              }}
-            >
-              <Pencil />
-              Edit label
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem
+                onClick={(event) => {
+                  event.stopPropagation()
+                  openEditDialog('label')
+                }}
+              >
+                <Pencil />
+                Edit label
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(event) => {
+                  event.stopPropagation()
+                  openEditDialog('name')
+                }}
+              >
+                <Pencil />
+                Edit name
+              </DropdownMenuItem>
+            </>
           )}
           {includeDisassociate && (
             <DropdownMenuItem
@@ -382,25 +411,22 @@ export const AssetActions = ({
       </Dialog>
 
       <Dialog
-        open={isEditLabelDialogOpen}
+        open={editField !== null}
         onOpenChange={(open) => {
           if (!open && assetMutation.isPending) {
             return
           }
 
-          setIsEditLabelDialogOpen(open)
-
-          if (open) {
-            setLabelValue(asset.label ?? '')
+          if (!open) {
+            setEditField(null)
+            return
           }
         }}
       >
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Edit {noun} label</DialogTitle>
-            <DialogDescription>
-              Update the label shown for {asset.name}.
-            </DialogDescription>
+            <DialogTitle>{editDialogTitle}</DialogTitle>
+            <DialogDescription>{editDialogDescription}</DialogDescription>
           </DialogHeader>
 
           <Box className="space-y-3">
@@ -411,9 +437,9 @@ export const AssetActions = ({
               <Typography variant="body2">{asset.name}</Typography>
             </Box>
             <TextField
-              label="Label"
-              value={labelValue}
-              onChange={(event) => setLabelValue(event.target.value)}
+              label={editFieldLabel}
+              value={editValue}
+              onChange={(event) => setEditValue(event.target.value)}
               size="small"
               fullWidth
               autoFocus
@@ -424,17 +450,19 @@ export const AssetActions = ({
             <UiButton
               type="button"
               variant="outline"
-              onClick={() => setIsEditLabelDialogOpen(false)}
+              onClick={() => setEditField(null)}
               disabled={assetMutation.isPending}
             >
               Cancel
             </UiButton>
             <UiButton
               type="button"
-              onClick={() => void handleUpdateLabel()}
-              disabled={isLabelUnchanged || assetMutation.isPending}
+              onClick={() => void handleUpdateField()}
+              disabled={isEditUnchanged || assetMutation.isPending}
             >
-              {assetMutation.isPending ? 'Saving...' : 'Save label'}
+              {assetMutation.isPending
+                ? 'Saving...'
+                : `Save ${editField ?? 'field'}`}
             </UiButton>
           </DialogFooter>
         </DialogContent>
