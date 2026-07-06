@@ -422,7 +422,8 @@ export const AssetActions = ({
             </DialogDescription>
           </DialogHeader>
 
-          <Box className="space-y-3">
+          <Box className="flex flex-col gap-y-6">
+            <Typography variant="body2">Current Name: {asset?.name}</Typography>
             <TextField
               label="Name"
               value={editAssetValue.name}
@@ -436,6 +437,9 @@ export const AssetActions = ({
               fullWidth
               autoFocus
             />
+            <Typography variant="body2">
+              Current Label: {asset?.label}
+            </Typography>
             <TextField
               label="Label"
               value={editAssetValue.label}
