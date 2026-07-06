@@ -242,7 +242,7 @@ export const AssetActions = ({
               }}
             >
               <Pencil />
-              Edit asset
+              Edit attachment
             </DropdownMenuItem>
           )}
           {includeDisassociate && (
