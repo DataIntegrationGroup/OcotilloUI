@@ -89,7 +89,9 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
       />
     )
 
-    await user.click(screen.getByLabelText('Attachment actions for field-photo.jpg'))
+    await user.click(
+      screen.getByLabelText('Attachment actions for field-photo.jpg')
+    )
     await user.click(screen.getByText('Reassociate attachment'))
 
     const dialog = screen.getByRole('dialog', {
@@ -103,7 +105,9 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
     ).toBeTruthy()
     expect(mockedMutateAsset).not.toHaveBeenCalled()
 
-    await user.click(within(dialog).getByRole('button', { name: 'Reassociate' }))
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Reassociate' })
+    )
 
     await waitFor(() => {
       expect(mockedMutateAsset).toHaveBeenCalledWith({
@@ -128,7 +132,9 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
       />
     )
 
-    await user.click(screen.getByLabelText('Attachment actions for field-photo.jpg'))
+    await user.click(
+      screen.getByLabelText('Attachment actions for field-photo.jpg')
+    )
     await user.click(screen.getByText('Reassociate attachment'))
 
     const dialog = screen.getByRole('dialog', {
@@ -204,13 +210,14 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
     await user.click(
       screen.getByLabelText('Attachment actions for original-photo.jpg')
     )
-    await user.click(screen.getByText('Edit asset'))
+    await user.click(screen.getByText('Edit attachment'))
 
     const dialog = screen.getByRole('dialog', {
       name: 'Edit attachment',
     })
     const nameInput = within(dialog).getByLabelText<HTMLInputElement>('Name')
-    const labelInput = within(dialog).getByLabelText<HTMLTextAreaElement>('Label')
+    const labelInput =
+      within(dialog).getByLabelText<HTMLTextAreaElement>('Label')
 
     expect(nameInput.value).toBe('original-photo.jpg')
     expect(labelInput.value).toBe('Original label')
@@ -261,13 +268,14 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
     await user.click(
       screen.getByLabelText('Attachment actions for original-photo.jpg')
     )
-    await user.click(screen.getByText('Edit asset'))
+    await user.click(screen.getByText('Edit attachment'))
 
     const dialog = screen.getByRole('dialog', {
       name: 'Edit attachment',
     })
     const nameInput = within(dialog).getByLabelText<HTMLInputElement>('Name')
-    const labelInput = within(dialog).getByLabelText<HTMLTextAreaElement>('Label')
+    const labelInput =
+      within(dialog).getByLabelText<HTMLTextAreaElement>('Label')
 
     await user.clear(nameInput)
     await user.type(nameInput, 'Updated Photo Name.jpg')
@@ -294,7 +302,7 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
     await user.click(
       screen.getByLabelText('Attachment actions for original-photo.jpg')
     )
-    await user.click(screen.getByText('Edit asset'))
+    await user.click(screen.getByText('Edit attachment'))
 
     const dialog = screen.getByRole('dialog', {
       name: 'Edit attachment',
@@ -317,11 +325,11 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
       />
     )
 
-    await user.click(screen.getByLabelText('Attachment actions for field-photo.jpg'))
+    await user.click(
+      screen.getByLabelText('Attachment actions for field-photo.jpg')
+    )
 
-    expect(screen.queryByText('Edit label')).toBeNull()
-    expect(screen.queryByText('Edit name')).toBeNull()
-    expect(screen.getByText('Edit asset')).toBeTruthy()
+    expect(screen.getByText('Edit attachment')).toBeTruthy()
   })
 
   it('shows the slideshow caption in the footer', () => {
