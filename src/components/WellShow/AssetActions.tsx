@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Autocomplete, Box, TextField, Typography } from '@mui/material'
 import { useCustomMutation, useNotification } from '@refinedev/core'
 import { useAutocomplete } from '@refinedev/mui'
-import { Link2, MoreVertical, Trash2, Unlink } from 'lucide-react'
+import { Link2, MoreVertical, Pencil, Trash2, Unlink } from 'lucide-react'
 import type { IAsset, IWell } from '@/interfaces/ocotillo'
 import {
   AlertDialog,
@@ -59,11 +59,13 @@ const getMutationErrorMessage = (error: unknown) => {
 export const AssetActions = ({
   asset,
   refetchAssets,
+  allowLabelEdit = false,
   includeDisassociate = true,
   noun = 'attachment',
 }: {
   asset: IAsset
   refetchAssets: () => Promise<unknown>
+  allowLabelEdit?: boolean
   includeDisassociate?: boolean
   noun?: 'asset' | 'attachment'
 }) => {
@@ -72,6 +74,8 @@ export const AssetActions = ({
     useCustomMutation()
   const [confirmAction, setConfirmAction] = useState<AssetAction | null>(null)
   const [isReassociateDialogOpen, setIsReassociateDialogOpen] = useState(false)
+  const [isEditLabelDialogOpen, setIsEditLabelDialogOpen] = useState(false)
+  const [labelValue, setLabelValue] = useState(asset.label ?? '')
   const [selectedWell, setSelectedWell] = useState<IWell | null>(null)
   const capitalizedNoun = noun[0].toUpperCase() + noun.slice(1)
 
@@ -165,10 +169,37 @@ export const AssetActions = ({
     }
   }
 
+  const handleUpdateLabel = async () => {
+    try {
+      await mutateAsset({
+        url: `asset/${asset.id}`,
+        method: 'patch',
+        values: { label: labelValue },
+        dataProviderName: 'ocotillo',
+      })
+
+      await refetchAssets()
+      notify?.({
+        type: 'success',
+        message: `${capitalizedNoun} label updated`,
+      })
+      setIsEditLabelDialogOpen(false)
+    } catch (error) {
+      console.error(error)
+      notify?.({
+        type: 'error',
+        message: `Could not update ${noun} label`,
+        description: getMutationErrorMessage(error),
+      })
+    }
+  }
+
   const currentThingId = asset.thing_id ?? null
   const wellOptions = ((wellAutocompleteProps.options ?? []) as IWell[]).filter(
     (well) => well.id !== currentThingId
   )
+  const canOpenLabelEdit = allowLabelEdit && Boolean(asset.name)
+  const isLabelUnchanged = labelValue === (asset.label ?? '')
 
   return (
     <>
@@ -186,6 +217,18 @@ export const AssetActions = ({
           </UiButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
+          {canOpenLabelEdit && (
+            <DropdownMenuItem
+              onClick={(event) => {
+                event.stopPropagation()
+                setLabelValue(asset.label ?? '')
+                setIsEditLabelDialogOpen(true)
+              }}
+            >
+              <Pencil />
+              Edit label
+            </DropdownMenuItem>
+          )}
           {includeDisassociate && (
             <DropdownMenuItem
               onClick={(event) => {
@@ -333,6 +376,65 @@ export const AssetActions = ({
               disabled={!selectedWell || assetMutation.isPending}
             >
               {assetMutation.isPending ? 'Working...' : 'Reassociate'}
+            </UiButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isEditLabelDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && assetMutation.isPending) {
+            return
+          }
+
+          setIsEditLabelDialogOpen(open)
+
+          if (open) {
+            setLabelValue(asset.label ?? '')
+          }
+        }}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Edit {noun} label</DialogTitle>
+            <DialogDescription>
+              Update the label shown for {asset.name}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Box className="space-y-3">
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                File name
+              </Typography>
+              <Typography variant="body2">{asset.name}</Typography>
+            </Box>
+            <TextField
+              label="Label"
+              value={labelValue}
+              onChange={(event) => setLabelValue(event.target.value)}
+              size="small"
+              fullWidth
+              autoFocus
+            />
+          </Box>
+
+          <DialogFooter>
+            <UiButton
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditLabelDialogOpen(false)}
+              disabled={assetMutation.isPending}
+            >
+              Cancel
+            </UiButton>
+            <UiButton
+              type="button"
+              onClick={() => void handleUpdateLabel()}
+              disabled={isLabelUnchanged || assetMutation.isPending}
+            >
+              {assetMutation.isPending ? 'Saving...' : 'Save label'}
             </UiButton>
           </DialogFooter>
         </DialogContent>

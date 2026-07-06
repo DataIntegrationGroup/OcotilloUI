@@ -183,6 +183,60 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
     expect(screen.getByText('Expanded slideshow label')).toBeTruthy()
   })
 
+  it('updates the asset label from slideshow mode', async () => {
+    const user = userEvent.setup()
+    const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
+
+    render(
+      <AssetPreviewWithOverlay
+        asset={{ ...asset, label: 'Original label' }}
+        variant="slideshow"
+        refetchAssets={refetchAssets}
+        canManageAsset
+      />
+    )
+
+    await user.click(screen.getByLabelText('Attachment actions for field-photo.jpg'))
+    await user.click(screen.getByText('Edit label'))
+
+    const dialog = screen.getByRole('dialog', {
+      name: 'Edit attachment label',
+    })
+    const labelInput = within(dialog).getByLabelText('Label')
+
+    await user.clear(labelInput)
+    await user.type(labelInput, 'Updated field label')
+    await user.click(within(dialog).getByRole('button', { name: 'Save label' }))
+
+    await waitFor(() => {
+      expect(mockedMutateAsset).toHaveBeenCalledWith({
+        url: 'asset/10',
+        method: 'patch',
+        values: { label: 'Updated field label' },
+        dataProviderName: 'ocotillo',
+      })
+    })
+    expect(refetchAssets).toHaveBeenCalled()
+  })
+
+  it('does not offer label editing in grid mode', async () => {
+    const user = userEvent.setup()
+    const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
+
+    render(
+      <AssetPreviewWithOverlay
+        asset={asset}
+        variant="grid"
+        refetchAssets={refetchAssets}
+        canManageAsset
+      />
+    )
+
+    await user.click(screen.getByLabelText('Attachment actions for field-photo.jpg'))
+
+    expect(screen.queryByText('Edit label')).toBeNull()
+  })
+
   it('shows the slideshow caption in the footer', () => {
     const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
 

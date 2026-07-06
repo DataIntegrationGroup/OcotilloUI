@@ -296,7 +296,11 @@ export const AssetPreviewWithOverlay = ({
               )}
 
               {canManageAsset && (
-                <AssetActions asset={asset} refetchAssets={refetchAssets} />
+                <AssetActions
+                  asset={asset}
+                  refetchAssets={refetchAssets}
+                  allowLabelEdit
+                />
               )}
             </Box>
 
