@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Autocomplete, Box, TextField, Typography } from '@mui/material'
 import { useCustomMutation, useNotification } from '@refinedev/core'
 import { useAutocomplete } from '@refinedev/mui'
-import { Link2, MoreVertical, Trash2, Unlink } from 'lucide-react'
+import { Link2, MoreVertical, Pencil, Trash2, Unlink } from 'lucide-react'
 import type { IAsset, IWell } from '@/interfaces/ocotillo'
 import {
   AlertDialog,
@@ -32,6 +32,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 type AssetAction = 'disassociate-asset' | 'delete-asset'
+type AssetEditForm = {
+  name: string
+  label: string
+}
 
 const getMutationErrorMessage = (error: unknown) => {
   if (
@@ -59,11 +63,13 @@ const getMutationErrorMessage = (error: unknown) => {
 export const AssetActions = ({
   asset,
   refetchAssets,
+  allowAssetEdit = false,
   includeDisassociate = true,
   noun = 'attachment',
 }: {
   asset: IAsset
   refetchAssets: () => Promise<unknown>
+  allowAssetEdit?: boolean
   includeDisassociate?: boolean
   noun?: 'asset' | 'attachment'
 }) => {
@@ -72,6 +78,11 @@ export const AssetActions = ({
     useCustomMutation()
   const [confirmAction, setConfirmAction] = useState<AssetAction | null>(null)
   const [isReassociateDialogOpen, setIsReassociateDialogOpen] = useState(false)
+  const [isEditAssetDialogOpen, setIsEditAssetDialogOpen] = useState(false)
+  const [editAssetValue, setEditAssetValue] = useState<AssetEditForm>({
+    name: '',
+    label: '',
+  })
   const [selectedWell, setSelectedWell] = useState<IWell | null>(null)
   const capitalizedNoun = noun[0].toUpperCase() + noun.slice(1)
 
@@ -165,10 +176,47 @@ export const AssetActions = ({
     }
   }
 
+  const openEditAssetDialog = () => {
+    setEditAssetValue({
+      name: asset.name ?? '',
+      label: asset.label ?? '',
+    })
+    setIsEditAssetDialogOpen(true)
+  }
+
+  const handleUpdateAsset = async () => {
+    try {
+      await mutateAsset({
+        url: `asset/${asset.id}`,
+        method: 'patch',
+        values: editAssetValue,
+        dataProviderName: 'ocotillo',
+      })
+
+      await refetchAssets()
+      notify?.({
+        type: 'success',
+        message: `${capitalizedNoun} updated`,
+      })
+      setIsEditAssetDialogOpen(false)
+    } catch (error) {
+      console.error(error)
+      notify?.({
+        type: 'error',
+        message: `Could not update ${noun}`,
+        description: getMutationErrorMessage(error),
+      })
+    }
+  }
+
   const currentThingId = asset.thing_id ?? null
   const wellOptions = ((wellAutocompleteProps.options ?? []) as IWell[]).filter(
     (well) => well.id !== currentThingId
   )
+  const canOpenAssetEdit = allowAssetEdit && Boolean(asset.name)
+  const isEditUnchanged =
+    editAssetValue.name === (asset.name ?? '') &&
+    editAssetValue.label === (asset.label ?? '')
 
   return (
     <>
@@ -186,6 +234,17 @@ export const AssetActions = ({
           </UiButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
+          {canOpenAssetEdit && (
+            <DropdownMenuItem
+              onClick={(event) => {
+                event.stopPropagation()
+                openEditAssetDialog()
+              }}
+            >
+              <Pencil />
+              Edit attachment
+            </DropdownMenuItem>
+          )}
           {includeDisassociate && (
             <DropdownMenuItem
               onClick={(event) => {
@@ -282,7 +341,14 @@ export const AssetActions = ({
           }
         }}
       >
-        <DialogContent className="max-w-xl">
+        <DialogContent
+          className="max-w-xl"
+          onKeyDown={(event) => {
+            if (event.key === ' ') {
+              event.stopPropagation()
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Reassociate {noun}</DialogTitle>
             <DialogDescription>
@@ -333,6 +399,98 @@ export const AssetActions = ({
               disabled={!selectedWell || assetMutation.isPending}
             >
               {assetMutation.isPending ? 'Working...' : 'Reassociate'}
+            </UiButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isEditAssetDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && assetMutation.isPending) {
+            return
+          }
+
+          setIsEditAssetDialogOpen(open)
+
+          if (open) {
+            setEditAssetValue({
+              name: asset.name ?? '',
+              label: asset.label ?? '',
+            })
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-xl"
+          onKeyDown={(event) => {
+            if (event.key === ' ') {
+              event.stopPropagation()
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Edit {noun}</DialogTitle>
+            <DialogDescription>
+              Update the name and label shown for this {noun}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Box className="flex flex-col gap-y-6">
+            <Typography variant="body2">Current Name: {asset?.name}</Typography>
+            <TextField
+              label="Name"
+              value={editAssetValue.name}
+              onChange={(event) =>
+                setEditAssetValue((current) => ({
+                  ...current,
+                  name: event.target.value,
+                }))
+              }
+              size="small"
+              fullWidth
+              autoFocus
+            />
+            <Typography variant="body2">
+              Current Label: {asset?.label}
+            </Typography>
+            <TextField
+              label="Label"
+              value={editAssetValue.label}
+              onChange={(event) =>
+                setEditAssetValue((current) => ({
+                  ...current,
+                  label: event.target.value,
+                }))
+              }
+              size="small"
+              fullWidth
+              multiline
+              minRows={3}
+              maxRows={10}
+              sx={{
+                '& textarea': {
+                  resize: 'vertical',
+                },
+              }}
+            />
+          </Box>
+
+          <DialogFooter>
+            <UiButton
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditAssetDialogOpen(false)}
+              disabled={assetMutation.isPending}
+            >
+              Cancel
+            </UiButton>
+            <UiButton
+              type="button"
+              onClick={() => void handleUpdateAsset()}
+              disabled={isEditUnchanged || assetMutation.isPending}
+            >
+              {assetMutation.isPending ? 'Saving...' : 'Save asset'}
             </UiButton>
           </DialogFooter>
         </DialogContent>
