@@ -32,7 +32,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 type AssetAction = 'disassociate-asset' | 'delete-asset'
-type AssetEditableField = 'label' | 'name'
+type AssetEditForm = {
+  name: string
+  label: string
+}
 
 const getMutationErrorMessage = (error: unknown) => {
   if (
@@ -60,13 +63,13 @@ const getMutationErrorMessage = (error: unknown) => {
 export const AssetActions = ({
   asset,
   refetchAssets,
-  allowLabelEdit = false,
+  allowAssetEdit = false,
   includeDisassociate = true,
   noun = 'attachment',
 }: {
   asset: IAsset
   refetchAssets: () => Promise<unknown>
-  allowLabelEdit?: boolean
+  allowAssetEdit?: boolean
   includeDisassociate?: boolean
   noun?: 'asset' | 'attachment'
 }) => {
@@ -75,8 +78,11 @@ export const AssetActions = ({
     useCustomMutation()
   const [confirmAction, setConfirmAction] = useState<AssetAction | null>(null)
   const [isReassociateDialogOpen, setIsReassociateDialogOpen] = useState(false)
-  const [editField, setEditField] = useState<AssetEditableField | null>(null)
-  const [editValue, setEditValue] = useState('')
+  const [isEditAssetDialogOpen, setIsEditAssetDialogOpen] = useState(false)
+  const [editAssetValue, setEditAssetValue] = useState<AssetEditForm>({
+    name: '',
+    label: '',
+  })
   const [selectedWell, setSelectedWell] = useState<IWell | null>(null)
   const capitalizedNoun = noun[0].toUpperCase() + noun.slice(1)
 
@@ -170,33 +176,34 @@ export const AssetActions = ({
     }
   }
 
-  const openEditDialog = (field: AssetEditableField) => {
-    setEditValue(asset[field] ?? '')
-    setEditField(field)
+  const openEditAssetDialog = () => {
+    setEditAssetValue({
+      name: asset.name ?? '',
+      label: asset.label ?? '',
+    })
+    setIsEditAssetDialogOpen(true)
   }
 
-  const handleUpdateField = async () => {
-    if (!editField) return
-
+  const handleUpdateAsset = async () => {
     try {
       await mutateAsset({
         url: `asset/${asset.id}`,
         method: 'patch',
-        values: { [editField]: editValue },
+        values: editAssetValue,
         dataProviderName: 'ocotillo',
       })
 
       await refetchAssets()
       notify?.({
         type: 'success',
-        message: `${capitalizedNoun} ${editField} updated`,
+        message: `${capitalizedNoun} updated`,
       })
-      setEditField(null)
+      setIsEditAssetDialogOpen(false)
     } catch (error) {
       console.error(error)
       notify?.({
         type: 'error',
-        message: `Could not update ${noun} ${editField}`,
+        message: `Could not update ${noun}`,
         description: getMutationErrorMessage(error),
       })
     }
@@ -206,19 +213,10 @@ export const AssetActions = ({
   const wellOptions = ((wellAutocompleteProps.options ?? []) as IWell[]).filter(
     (well) => well.id !== currentThingId
   )
-  const canOpenLabelEdit = allowLabelEdit && Boolean(asset.name)
-  const isEditUnchanged = editField
-    ? editValue === (asset[editField] ?? '')
-    : true
-  const editFieldLabel = editField === 'name' ? 'Name' : 'Label'
-  const editDialogTitle =
-    editField === 'name'
-      ? `Edit ${noun} name`
-      : `Edit ${noun} label`
-  const editDialogDescription =
-    editField === 'name'
-      ? `Update the name shown for ${asset.name}.`
-      : `Update the label shown for ${asset.name}.`
+  const canOpenAssetEdit = allowAssetEdit && Boolean(asset.name)
+  const isEditUnchanged =
+    editAssetValue.name === (asset.name ?? '') &&
+    editAssetValue.label === (asset.label ?? '')
 
   return (
     <>
@@ -236,27 +234,16 @@ export const AssetActions = ({
           </UiButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          {canOpenLabelEdit && (
-            <>
-              <DropdownMenuItem
-                onClick={(event) => {
-                  event.stopPropagation()
-                  openEditDialog('label')
-                }}
-              >
-                <Pencil />
-                Edit label
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(event) => {
-                  event.stopPropagation()
-                  openEditDialog('name')
-                }}
-              >
-                <Pencil />
-                Edit name
-              </DropdownMenuItem>
-            </>
+          {canOpenAssetEdit && (
+            <DropdownMenuItem
+              onClick={(event) => {
+                event.stopPropagation()
+                openEditAssetDialog()
+              }}
+            >
+              <Pencil />
+              Edit asset
+            </DropdownMenuItem>
           )}
           {includeDisassociate && (
             <DropdownMenuItem
@@ -411,38 +398,63 @@ export const AssetActions = ({
       </Dialog>
 
       <Dialog
-        open={editField !== null}
+        open={isEditAssetDialogOpen}
         onOpenChange={(open) => {
           if (!open && assetMutation.isPending) {
             return
           }
 
-          if (!open) {
-            setEditField(null)
-            return
+          setIsEditAssetDialogOpen(open)
+
+          if (open) {
+            setEditAssetValue({
+              name: asset.name ?? '',
+              label: asset.label ?? '',
+            })
           }
         }}
       >
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>{editDialogTitle}</DialogTitle>
-            <DialogDescription>{editDialogDescription}</DialogDescription>
+            <DialogTitle>Edit {noun}</DialogTitle>
+            <DialogDescription>
+              Update the name and label shown for this {noun}.
+            </DialogDescription>
           </DialogHeader>
 
           <Box className="space-y-3">
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                File name
-              </Typography>
-              <Typography variant="body2">{asset.name}</Typography>
-            </Box>
             <TextField
-              label={editFieldLabel}
-              value={editValue}
-              onChange={(event) => setEditValue(event.target.value)}
+              label="Name"
+              value={editAssetValue.name}
+              onChange={(event) =>
+                setEditAssetValue((current) => ({
+                  ...current,
+                  name: event.target.value,
+                }))
+              }
               size="small"
               fullWidth
               autoFocus
+            />
+            <TextField
+              label="Label"
+              value={editAssetValue.label}
+              onChange={(event) =>
+                setEditAssetValue((current) => ({
+                  ...current,
+                  label: event.target.value,
+                }))
+              }
+              size="small"
+              fullWidth
+              multiline
+              minRows={3}
+              maxRows={10}
+              sx={{
+                '& textarea': {
+                  resize: 'vertical',
+                },
+              }}
             />
           </Box>
 
@@ -450,19 +462,17 @@ export const AssetActions = ({
             <UiButton
               type="button"
               variant="outline"
-              onClick={() => setEditField(null)}
+              onClick={() => setIsEditAssetDialogOpen(false)}
               disabled={assetMutation.isPending}
             >
               Cancel
             </UiButton>
             <UiButton
               type="button"
-              onClick={() => void handleUpdateField()}
+              onClick={() => void handleUpdateAsset()}
               disabled={isEditUnchanged || assetMutation.isPending}
             >
-              {assetMutation.isPending
-                ? 'Saving...'
-                : `Save ${editField ?? 'field'}`}
+              {assetMutation.isPending ? 'Saving...' : 'Save asset'}
             </UiButton>
           </DialogFooter>
         </DialogContent>

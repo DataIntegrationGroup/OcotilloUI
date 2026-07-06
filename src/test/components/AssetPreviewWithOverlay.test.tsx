@@ -183,50 +183,17 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
     expect(screen.getByText('Expanded slideshow label')).toBeTruthy()
   })
 
-  it('updates the asset label from slideshow mode', async () => {
+  it('updates the asset name and label from slideshow mode', async () => {
     const user = userEvent.setup()
     const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
 
     render(
       <AssetPreviewWithOverlay
-        asset={{ ...asset, label: 'Original label' }}
-        variant="slideshow"
-        refetchAssets={refetchAssets}
-        canManageAsset
-      />
-    )
-
-    await user.click(screen.getByLabelText('Attachment actions for field-photo.jpg'))
-    await user.click(screen.getByText('Edit label'))
-
-    const dialog = screen.getByRole('dialog', {
-      name: 'Edit attachment label',
-    })
-    const labelInput = within(dialog).getByLabelText<HTMLInputElement>('Label')
-
-    expect(labelInput.value).toBe('Original label')
-    await user.clear(labelInput)
-    await user.type(labelInput, 'Updated field label')
-    await user.click(within(dialog).getByRole('button', { name: 'Save label' }))
-
-    await waitFor(() => {
-      expect(mockedMutateAsset).toHaveBeenCalledWith({
-        url: 'asset/10',
-        method: 'patch',
-        values: { label: 'Updated field label' },
-        dataProviderName: 'ocotillo',
-      })
-    })
-    expect(refetchAssets).toHaveBeenCalled()
-  })
-
-  it('updates the asset name from slideshow mode', async () => {
-    const user = userEvent.setup()
-    const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
-
-    render(
-      <AssetPreviewWithOverlay
-        asset={{ ...asset, name: 'original-photo.jpg' }}
+        asset={{
+          ...asset,
+          name: 'original-photo.jpg',
+          label: 'Original label',
+        }}
         variant="slideshow"
         refetchAssets={refetchAssets}
         canManageAsset
@@ -236,30 +203,63 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
     await user.click(
       screen.getByLabelText('Attachment actions for original-photo.jpg')
     )
-    await user.click(screen.getByText('Edit name'))
+    await user.click(screen.getByText('Edit asset'))
 
     const dialog = screen.getByRole('dialog', {
-      name: 'Edit attachment name',
+      name: 'Edit attachment',
     })
     const nameInput = within(dialog).getByLabelText<HTMLInputElement>('Name')
+    const labelInput = within(dialog).getByLabelText<HTMLTextAreaElement>('Label')
 
     expect(nameInput.value).toBe('original-photo.jpg')
+    expect(labelInput.value).toBe('Original label')
     await user.clear(nameInput)
     await user.type(nameInput, 'updated-photo.jpg')
-    await user.click(within(dialog).getByRole('button', { name: 'Save name' }))
+    await user.clear(labelInput)
+    await user.type(labelInput, 'Updated field label with more detail.')
+    await user.click(within(dialog).getByRole('button', { name: 'Save asset' }))
 
     await waitFor(() => {
       expect(mockedMutateAsset).toHaveBeenCalledWith({
         url: 'asset/10',
         method: 'patch',
-        values: { name: 'updated-photo.jpg' },
+        values: {
+          name: 'updated-photo.jpg',
+          label: 'Updated field label with more detail.',
+        },
         dataProviderName: 'ocotillo',
       })
     })
     expect(refetchAssets).toHaveBeenCalled()
   })
 
-  it('does not offer label editing in grid mode', async () => {
+  it('offers asset editing in grid mode', async () => {
+    const user = userEvent.setup()
+    const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
+
+    render(
+      <AssetPreviewWithOverlay
+        asset={{ ...asset, name: 'original-photo.jpg' }}
+        variant="grid"
+        refetchAssets={refetchAssets}
+        canManageAsset
+      />
+    )
+
+    await user.click(
+      screen.getByLabelText('Attachment actions for original-photo.jpg')
+    )
+    await user.click(screen.getByText('Edit asset'))
+
+    const dialog = screen.getByRole('dialog', {
+      name: 'Edit attachment',
+    })
+    const nameInput = within(dialog).getByLabelText<HTMLInputElement>('Name')
+
+    expect(nameInput.value).toBe('original-photo.jpg')
+  })
+
+  it('does not offer the previous separate edit menu items in grid mode', async () => {
     const user = userEvent.setup()
     const refetchAssets = vi.fn().mockResolvedValue({ data: { data: [asset] } })
 
@@ -276,6 +276,7 @@ describe('AssetPreviewWithOverlay reassociation dialog', () => {
 
     expect(screen.queryByText('Edit label')).toBeNull()
     expect(screen.queryByText('Edit name')).toBeNull()
+    expect(screen.getByText('Edit asset')).toBeTruthy()
   })
 
   it('shows the slideshow caption in the footer', () => {
