@@ -35,6 +35,17 @@ export type ContactResult = BaseResult & {
   }
 }
 
+export type ProjectResult = BaseResult & {
+  group: GroupType.Projects
+  properties: {
+    id: number
+    name?: string
+    description?: string | null
+    group_type?: string | null
+    well_count?: number
+  }
+}
+
 export type WellResult = BaseResult & {
   group: GroupType.Wells | GroupType.Springs
   properties: {
@@ -63,4 +74,5 @@ export type SearchResult =
   | ContactResult
   | WellResult
   | AssetResult
+  | ProjectResult
   | MessageResult
