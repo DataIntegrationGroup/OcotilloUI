@@ -1,7 +1,12 @@
 import { Box, Chip, Divider, Typography } from '@mui/material'
-import { Description, Opacity, Person } from '@mui/icons-material'
+import { Description, Opacity, Person, Workspaces } from '@mui/icons-material'
 import { GroupType } from '@/constants'
-import { ContactResult, SearchResult, WellResult } from '@/interfaces/ocotillo'
+import {
+  ContactResult,
+  ProjectResult,
+  SearchResult,
+  WellResult,
+} from '@/interfaces/ocotillo'
 import { highlight } from '@/utils'
 
 const TypeIcon = ({ group }: { group: GroupType }) => {
@@ -15,6 +20,8 @@ const TypeIcon = ({ group }: { group: GroupType }) => {
       return <Person sx={sx} />
     case GroupType.Assets:
       return <Description sx={sx} />
+    case GroupType.Projects:
+      return <Workspaces sx={sx} />
     default:
       return null
   }
@@ -46,6 +53,19 @@ const buildSubtitle = (option: SearchResult): string | null => {
 
     if (properties.phone?.length) parts.push(properties.phone[0])
     if (properties.address?.length) parts.push(properties.address[0])
+
+    return parts.length ? parts.join('  ·  ') : null
+  }
+
+  if (option.group === GroupType.Projects) {
+    const properties = (option as ProjectResult).properties
+    const parts: string[] = []
+
+    if (properties.group_type) parts.push(properties.group_type)
+    if (typeof properties.well_count === 'number') {
+      parts.push(`${properties.well_count} wells`)
+    }
+    if (properties.description) parts.push(properties.description)
 
     return parts.length ? parts.join('  ·  ') : null
   }
