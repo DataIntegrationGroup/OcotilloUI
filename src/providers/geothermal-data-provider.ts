@@ -1,13 +1,26 @@
 import type { DataProvider } from "@refinedev/core";
 import { settings } from "@/settings";
+import { getAccessToken } from "@/providers/authentik-provider";
 
 export const fetcher = async (url: string, options?: RequestInit) => {
-  return fetch(`${settings.nmbgmr_geothermal_api_url}/${url}`, {
-    ...options,
-    headers: {
-      ...options?.headers,
-    },
-  });
+  const doFetch = (token?: string | null) =>
+    fetch(`${settings.nmbgmr_geothermal_api_url}/${url}`, {
+      ...options,
+      headers: {
+        ...options?.headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+  let response = await doFetch(await getAccessToken());
+
+  // On 401, refresh the token once and retry (mirrors the ocotillo provider).
+  if (response.status === 401) {
+    const token = await getAccessToken({ refresh: true });
+    if (token) response = await doFetch(token);
+  }
+
+  return response;
 };
 
 export const geothermalDataProvider: DataProvider = {

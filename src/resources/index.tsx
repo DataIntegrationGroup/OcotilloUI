@@ -1,4 +1,5 @@
 import { ocotilloResources } from '@/resources/ocotillo'
+import { geothermalResources } from '@/resources/geothermal'
 
 // No parent group: ocotillo items are top-level in the sidebar (Map, Wells, etc.)
-export const resources = [...ocotilloResources]
+export const resources = [...ocotilloResources, ...geothermalResources]
