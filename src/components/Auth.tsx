@@ -106,7 +106,7 @@ export const Callback = () => {
         setError(e instanceof Error ? e.message : 'Callback failed')
       }
     })()
-  }, [navigate])
+  }, [navigate, queryClient])
 
   const goToLogin = () => navigate('/login', { replace: true })
 
