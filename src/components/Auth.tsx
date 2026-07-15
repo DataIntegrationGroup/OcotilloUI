@@ -48,11 +48,8 @@ export const Callback = () => {
         const state = url.searchParams.get('state')
         const fallbackPkce = state ? consumePkceFallbackByState(state) : null
 
-        const verifier =
-          transientStore.pkceVerifier ??
-          fallbackPkce?.verifier
-        const expectedState =
-          transientStore.pkceState ?? fallbackPkce?.state
+        const verifier = transientStore.pkceVerifier ?? fallbackPkce?.verifier
+        const expectedState = transientStore.pkceState ?? fallbackPkce?.state
 
         if (!code || !verifier) {
           throw new Error('Missing authorization code or PKCE verifier')
@@ -63,7 +60,10 @@ export const Callback = () => {
           throw new Error('Invalid state parameter')
         }
 
-        const tokenUrl = new URL(`${AUTHENTIK_URL}/token/`)
+        const tokenUrl = new URL(
+          'token/',
+          `${AUTHENTIK_URL.replace(/\/+$/, '')}/`
+        )
 
         const resp = await fetch(tokenUrl.toString(), {
           method: 'POST',
