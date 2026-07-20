@@ -1,11 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router'
-import { useExport, useGo, useLink, useOne, type CrudFilter } from '@refinedev/core'
-import { useDataGrid } from '@refinedev/mui'
 import {
-  GridColDef,
-} from '@mui/x-data-grid'
-import { captureEvent, consumeWellsProjectFilterSource, setWellsProjectFilterSource } from '@/analytics/posthog'
+  useExport,
+  useGo,
+  useLink,
+  useOne,
+  type CrudFilter,
+} from '@refinedev/core'
+import { useDataGrid } from '@refinedev/mui'
+import { GridColDef } from '@mui/x-data-grid'
+import {
+  captureEvent,
+  consumeWellsProjectFilterSource,
+  setWellsProjectFilterSource,
+} from '@/analytics/posthog'
 import { Download, FileText, Loader2, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -84,9 +92,7 @@ export const WellList: React.FC = () => {
 
   const projectFilters = useMemo<CrudFilter[]>(
     () =>
-      projectId
-        ? [{ field: 'groups', operator: 'eq', value: projectId }]
-        : [],
+      projectId ? [{ field: 'groups', operator: 'eq', value: projectId }] : [],
     [projectId]
   )
 
@@ -477,14 +483,16 @@ export const WellList: React.FC = () => {
       onRowClick={(params) =>
         captureEvent('wells_row_clicked', { well_id: params.id })
       }
+      accessResource="ocotillo.thing-well"
     >
       {projectId ? (
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <Badge variant="filter" className="h-7 gap-1 py-0 pl-2.5 pr-1" asChild>
-            <div
-              role="status"
-              className="inline-flex items-center"
-            >
+          <Badge
+            variant="filter"
+            className="h-7 gap-1 py-0 pl-2.5 pr-1"
+            asChild
+          >
+            <div role="status" className="inline-flex items-center">
               <span>Project: {projectName ?? projectId}</span>
               <Button
                 type="button"
