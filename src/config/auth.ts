@@ -1,6 +1,11 @@
 export const AUTHENTIK_URL =
   import.meta.env.VITE_AUTHENTIK_URL || 'http://localhost:8000/'
 
+export const buildAuthentikUrl = (
+  path: string,
+  baseUrl = AUTHENTIK_URL
+): URL => new URL(path.replace(/^\/+/, ''), `${baseUrl.replace(/\/+$/, '')}/`)
+
 export const CLIENT_ID = import.meta.env.VITE_AUTHENTIK_CLIENT_ID || 'authentik'
 
 const envRedirect = import.meta.env.VITE_AUTHENTIK_REDIRECT_URI
