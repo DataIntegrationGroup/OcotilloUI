@@ -1,5 +1,6 @@
-import {Stack, Typography} from "@mui/material";
-import {useList, useOne, useParsed, useShow} from "@refinedev/core";
+import {Button, Stack, Typography} from "@mui/material";
+import {useGo, useList, useOne, useParsed, useShow} from "@refinedev/core";
+import {useAccessCapabilities} from "@/hooks";
 import {
     DateField,
     MarkdownField,
@@ -14,6 +15,8 @@ import type {IWell, IWellRecord} from "@/interfaces/geothermal";
 
 export const GeoThermalWellShow = () => {
     const {id} = useParsed();
+    const go = useGo();
+    const {canManageGeothermal} = useAccessCapabilities();
 
     const {query, result: record} = useShow({
         resource: "wells",
@@ -130,6 +133,18 @@ export const GeoThermalWellShow = () => {
             </Stack>
 
             <Stack gap={1}>
+                {canManageGeothermal && id != null && (
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        sx={{alignSelf: "flex-start"}}
+                        onClick={() =>
+                            go({to: `/geothermal/wells/records-grid/${id}`})
+                        }
+                    >
+                        Open data-entry grid
+                    </Button>
+                )}
                 <DataGrid
                     {...dataGridProps}
                     disableRowSelectionOnClick={false}
