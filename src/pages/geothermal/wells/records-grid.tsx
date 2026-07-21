@@ -5,6 +5,7 @@ import { useAccessCapabilities } from '@/hooks'
 import { EditableDataGrid, type GridColumnSpec } from '@/components/grid'
 import { Button } from '@/components/ui/button'
 import {
+  canEnterGeothermalData,
   computePendingOps,
   flattenFieldErrors,
   makeBlankRecord,
@@ -88,7 +89,9 @@ export const GeoThermalRecordsGrid = () => {
     resource: `wells/${id}/records`,
     dataProviderName: 'geothermal',
     pagination: { pageSize: 500, mode: 'server' },
-    queryOptions: { enabled: canManageGeothermal && id != null },
+    queryOptions: {
+      enabled: canEnterGeothermalData(canManageGeothermal) && id != null,
+    },
   })
 
   // Local, editable copy. `original` is the pristine snapshot used to compute
@@ -209,7 +212,7 @@ export const GeoThermalRecordsGrid = () => {
     )
   }
 
-  if (!canManageGeothermal) {
+  if (!canEnterGeothermalData(canManageGeothermal)) {
     return (
       <div className="flex items-center justify-center h-40 text-sm text-muted-foreground">
         You need the Geothermal Admin role to enter well data.

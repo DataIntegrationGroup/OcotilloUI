@@ -1,6 +1,7 @@
 import {Button, Stack, Typography} from "@mui/material";
 import {useGo, useList, useOne, useParsed, useShow} from "@refinedev/core";
 import {useAccessCapabilities} from "@/hooks";
+import {canEnterGeothermalData} from "./recordsGridLogic";
 import {
     DateField,
     MarkdownField,
@@ -133,7 +134,7 @@ export const GeoThermalWellShow = () => {
             </Stack>
 
             <Stack gap={1}>
-                {canManageGeothermal && id != null && (
+                {canEnterGeothermalData(canManageGeothermal) && id != null && (
                     <Button
                         variant="outlined"
                         size="small"

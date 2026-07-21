@@ -1,6 +1,7 @@
 import { useList, useGo } from '@refinedev/core'
 import type { IWell } from '@/interfaces/geothermal'
 import { useAccessCapabilities } from '@/hooks'
+import { canEnterGeothermalData } from './recordsGridLogic'
 import {
   Select,
   SelectContent,
@@ -33,7 +34,7 @@ export const GeoThermalRecordsGridPicker = () => {
     resource: 'wells',
     dataProviderName: 'geothermal',
     pagination: { pageSize: 500, mode: 'server' },
-    queryOptions: { enabled: canManageGeothermal },
+    queryOptions: { enabled: canEnterGeothermalData(canManageGeothermal) },
   })
 
   if (permLoading) {
@@ -44,7 +45,7 @@ export const GeoThermalRecordsGridPicker = () => {
     )
   }
 
-  if (!canManageGeothermal) {
+  if (!canEnterGeothermalData(canManageGeothermal)) {
     return (
       <div className="flex items-center justify-center h-40 text-sm text-muted-foreground">
         You need the Geothermal Admin role to enter well data.
