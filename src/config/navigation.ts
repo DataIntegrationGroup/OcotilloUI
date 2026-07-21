@@ -56,7 +56,7 @@ export type NavItem = {
 }
 
 /** Toggle Example nav (typography, data grid demos). Set true to restore. */
-export const SHOW_EXAMPLE_NAV = false
+export const SHOW_EXAMPLE_NAV = true
 
 /**
  * Top bar: views and tools.
