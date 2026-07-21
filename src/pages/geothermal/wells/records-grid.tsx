@@ -28,13 +28,27 @@ function textCol(
   }
 }
 
+// Editable field keys (everything except the server-assigned OBJECTID).
+const EDITABLE_KEYS: (keyof IWellRecord)[] = [
+  'WellDataID',
+  'WellName',
+  'WellNumber',
+  'API_suffix',
+  'ActionDate',
+  'EntryDate',
+  'EnteredBy',
+  'RecrdSetID',
+  'SourceID',
+  'Comments',
+]
+
 const RECORD_COLUMNS: GridColumnSpec<IWellRecord>[] = [
   {
     id: 'OBJECTID',
     title: 'ID',
     width: 90,
     kind: 'number',
-    // Server-assigned key — read-only.
+    // Server-assigned key — read-only. Blank for not-yet-saved new rows.
     getValue: (r) => r.OBJECTID,
   },
   textCol('WellDataID', 'WellDataID', 130),
@@ -49,8 +63,37 @@ const RECORD_COLUMNS: GridColumnSpec<IWellRecord>[] = [
   textCol('Comments', 'Comments', 280),
 ]
 
+// New rows carry a client-only temp id (`new:N`) in OBJECTID until the server
+// assigns a real one on create. The prefix distinguishes create from update.
+const NEW_PREFIX = 'new:'
+const ADD_ROW_COUNT = 10
+
 function rowKey(r: IWellRecord): string {
   return String(r.OBJECTID)
+}
+
+function isNewRow(r: IWellRecord): boolean {
+  return rowKey(r).startsWith(NEW_PREFIX)
+}
+
+function isBlankNew(r: IWellRecord): boolean {
+  return EDITABLE_KEYS.every((k) => !r[k])
+}
+
+function makeBlankRecord(tempId: string): IWellRecord {
+  return {
+    OBJECTID: tempId,
+    WellDataID: '',
+    WellName: '',
+    WellNumber: '',
+    API_suffix: '',
+    ActionDate: '',
+    EntryDate: '',
+    EnteredBy: '',
+    RecrdSetID: '',
+    SourceID: '',
+    Comments: '',
+  }
 }
 
 /** Refine's `fieldErrors` ({ field: [msg] }) flattened to { field: joinedMsg }. */
@@ -65,22 +108,31 @@ function flattenFieldErrors(raw: unknown): FieldErrors | undefined {
   return Object.keys(out).length > 0 ? out : undefined
 }
 
+type PendingOp = {
+  kind: 'create' | 'update'
+  index: number
+  key: string
+  row: IWellRecord
+}
+
 interface SaveSummary {
   saved: number
   failed: number
 }
 
 /**
- * Phase 2/3 — inline-editable spreadsheet of the records belonging to one well,
- * with an explicit batch save.
+ * Phase 2/3/4 — inline-editable spreadsheet of the records belonging to one
+ * well, with explicit batch save and inline new-record entry.
  *
  * Reads `wells/{id}/records` through the geothermal provider and lets an admin
- * edit cells in place. Edits accumulate in local state and mark rows dirty. A
- * "Save changes" action flushes every dirty row through the provider `update`
- * (there is no server bulk endpoint), tracking success/failure per row:
- * saved rows clear their dirty flag; failed rows stay dirty for retry and have
- * their rejected cells tinted via the provider's Pydantic `fieldErrors`.
- * Admin-gated per BDMS-878 (`canManageGeothermal`).
+ * edit cells in place and append blank rows for new records — no separate
+ * upload step. Edits and new rows accumulate in local state; "Save changes"
+ * flushes each pending row through the provider (there is no server bulk
+ * endpoint): existing dirty rows via `update`, new rows via `create`. Per-row
+ * tracking — saved rows clear their pending flag (a created row adopts the
+ * server-returned record, gaining its real id); failed rows stay pending for
+ * retry and have their rejected cells tinted from the provider's Pydantic
+ * `fieldErrors`. Admin-gated per BDMS-878 (`canManageGeothermal`).
  */
 export const GeoThermalRecordsGrid = () => {
   const { id } = useParsed()
@@ -96,9 +148,10 @@ export const GeoThermalRecordsGrid = () => {
   })
 
   // Local, editable copy. `original` is the pristine snapshot used to compute
-  // which rows are dirty (keyed by server id).
+  // which existing rows are dirty (keyed by server id).
   const [records, setRecords] = useState<IWellRecord[]>([])
   const [original, setOriginal] = useState<Map<string, string>>(new Map())
+  const [newCounter, setNewCounter] = useState(0)
   const [saving, setSaving] = useState(false)
   const [saveErrors, setSaveErrors] = useState<Map<string, FieldErrors>>(
     new Map()
@@ -114,17 +167,23 @@ export const GeoThermalRecordsGrid = () => {
     setSummary(null)
   }, [query.data])
 
-  // Rows whose current value differs from the last-saved snapshot.
-  const dirtyRows = useMemo(
-    () =>
-      records
-        .map((r, index) => ({ r, index }))
-        .filter(({ r }) => {
-          const snap = original.get(rowKey(r))
-          return snap !== undefined && snap !== JSON.stringify(r)
-        }),
-    [records, original]
-  )
+  // Pending write operations: changed existing rows (update) + non-blank new
+  // rows (create). Blank appended rows are ignored until the user fills them.
+  const pending = useMemo<PendingOp[]>(() => {
+    const ops: PendingOp[] = []
+    records.forEach((r, index) => {
+      const key = rowKey(r)
+      if (isNewRow(r)) {
+        if (!isBlankNew(r)) ops.push({ kind: 'create', index, key, row: r })
+      } else {
+        const snap = original.get(key)
+        if (snap !== undefined && snap !== JSON.stringify(r)) {
+          ops.push({ kind: 'update', index, key, row: r })
+        }
+      }
+    })
+    return ops
+  }, [records, original])
 
   const cellErrors = useCallback(
     (rowIndex: number): FieldErrors | undefined => {
@@ -134,8 +193,18 @@ export const GeoThermalRecordsGrid = () => {
     [records, saveErrors]
   )
 
+  const handleAddRows = useCallback(() => {
+    setRecords((prev) => {
+      const blanks = Array.from({ length: ADD_ROW_COUNT }, (_, i) =>
+        makeBlankRecord(`${NEW_PREFIX}${newCounter + i}`)
+      )
+      return [...prev, ...blanks]
+    })
+    setNewCounter((n) => n + ADD_ROW_COUNT)
+  }, [newCounter])
+
   const handleSave = useCallback(async () => {
-    if (dirtyRows.length === 0) return
+    if (pending.length === 0) return
     setSaving(true)
     setSummary(null)
 
@@ -143,42 +212,61 @@ export const GeoThermalRecordsGrid = () => {
     const provider = dataProvider('geothermal')
 
     const results = await Promise.allSettled(
-      dirtyRows.map(({ r }) =>
-        provider.update({ resource, id: r.OBJECTID, variables: r })
-      )
+      pending.map((op) => {
+        if (op.kind === 'create') {
+          // Server assigns OBJECTID — omit the temp id from the payload.
+          const { OBJECTID: _tempId, ...variables } = op.row
+          return provider.create({ resource, variables })
+        }
+        return provider.update({
+          resource,
+          id: op.row.OBJECTID,
+          variables: op.row,
+        })
+      })
     )
 
-    setOriginal((prev) => {
-      const next = new Map(prev)
-      results.forEach((res, i) => {
-        if (res.status === 'fulfilled') {
-          const row = dirtyRows[i].r
-          next.set(rowKey(row), JSON.stringify(row))
-        }
-      })
-      return next
-    })
-
+    const createdByIndex = new Map<number, IWellRecord>()
+    const nextSnaps: Array<[string, string]> = []
     const nextErrors = new Map<string, FieldErrors>()
     let saved = 0
     let failed = 0
+
     results.forEach((res, i) => {
-      const key = rowKey(dirtyRows[i].r)
+      const op = pending[i]
       if (res.status === 'fulfilled') {
         saved++
+        if (op.kind === 'create') {
+          // Adopt the server record (real OBJECTID) so the row stops being new.
+          const created = (res.value?.data as IWellRecord) ?? op.row
+          createdByIndex.set(op.index, created)
+          nextSnaps.push([rowKey(created), JSON.stringify(created)])
+        } else {
+          nextSnaps.push([op.key, JSON.stringify(op.row)])
+        }
       } else {
         failed++
         const fe = flattenFieldErrors(
           (res.reason as { fieldErrors?: unknown })?.fieldErrors
         )
-        if (fe) nextErrors.set(key, fe)
+        if (fe) nextErrors.set(op.key, fe)
       }
     })
 
+    if (createdByIndex.size > 0) {
+      setRecords((prev) =>
+        prev.map((r, i) => createdByIndex.get(i) ?? r)
+      )
+    }
+    setOriginal((prev) => {
+      const next = new Map(prev)
+      nextSnaps.forEach(([k, v]) => next.set(k, v))
+      return next
+    })
     setSaveErrors(nextErrors)
     setSummary({ saved, failed })
     setSaving(false)
-  }, [dirtyRows, id, dataProvider])
+  }, [pending, id, dataProvider])
 
   if (permLoading) {
     return (
@@ -196,7 +284,7 @@ export const GeoThermalRecordsGrid = () => {
     )
   }
 
-  const dirtyCount = dirtyRows.length
+  const pendingCount = pending.length
 
   return (
     <div className="flex flex-col h-[calc(100svh-3.5rem)] overflow-hidden">
@@ -222,12 +310,20 @@ export const GeoThermalRecordsGrid = () => {
             </span>
           )}
           <span className="text-sm text-muted-foreground">
-            {dirtyCount} unsaved {dirtyCount === 1 ? 'change' : 'changes'}
+            {pendingCount} unsaved {pendingCount === 1 ? 'change' : 'changes'}
           </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddRows}
+            disabled={saving}
+          >
+            Add {ADD_ROW_COUNT} rows
+          </Button>
           <Button
             size="sm"
             onClick={handleSave}
-            disabled={saving || dirtyCount === 0}
+            disabled={saving || pendingCount === 0}
           >
             {saving ? 'Saving…' : 'Save changes'}
           </Button>
