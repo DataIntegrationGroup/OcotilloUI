@@ -486,9 +486,9 @@ function ExampleNavItem() {
     <Collapsible open={open} onOpenChange={setOpen} className="group/example">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Example" onClick={handleClick}>
+          <SidebarMenuButton tooltip="Sandbox" onClick={handleClick}>
             <FlaskConical />
-            <span>Example</span>
+            <span>Sandbox</span>
             <ChevronRight className="ml-auto size-3.5 transition-transform duration-100 group-data-[state=open]/example:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
