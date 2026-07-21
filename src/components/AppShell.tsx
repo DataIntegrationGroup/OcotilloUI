@@ -468,13 +468,22 @@ function AppSidebar() {
   )
 }
 
+const SANDBOX_GEOTHERMAL_GRID = '/geothermal/wells/records-grid'
+
+function isSandboxPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/example') ||
+    pathname.startsWith(SANDBOX_GEOTHERMAL_GRID)
+  )
+}
+
 function ExampleNavItem() {
   const location = useLocation()
   const navigate = useNavigate()
-  const [open, setOpen] = useState(location.pathname.startsWith('/example'))
+  const [open, setOpen] = useState(isSandboxPath(location.pathname))
 
   useEffect(() => {
-    if (!location.pathname.startsWith('/example')) setOpen(false)
+    if (!isSandboxPath(location.pathname)) setOpen(false)
   }, [location.pathname])
 
   const handleClick = () => {
@@ -508,6 +517,14 @@ function ExampleNavItem() {
                 isActive={location.pathname === '/example/data-grid'}
               >
                 <Link to="/example/data-grid">Data Grid</Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname.startsWith(SANDBOX_GEOTHERMAL_GRID)}
+              >
+                <Link to={SANDBOX_GEOTHERMAL_GRID}>Geothermal Records</Link>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
           </SidebarMenuSub>

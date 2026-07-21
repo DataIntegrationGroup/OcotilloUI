@@ -5,6 +5,7 @@ import {
   GeoThermalWellList,
   GeoThermalWellShow,
   GeoThermalRecordsGrid,
+  GeoThermalRecordsGridPicker,
 } from '@/pages/geothermal'
 
 export const GeothermalRoutes = () => {
@@ -14,6 +15,7 @@ export const GeothermalRoutes = () => {
       <Route path="wells">
         <Route index element={<GeoThermalWellList />} />
         <Route path="show/:id" element={<GeoThermalWellShow />} />
+        <Route path="records-grid" element={<GeoThermalRecordsGridPicker />} />
         <Route path="records-grid/:id" element={<GeoThermalRecordsGrid />} />
       </Route>
       <Route path="*" element={<ErrorComponent />} />
