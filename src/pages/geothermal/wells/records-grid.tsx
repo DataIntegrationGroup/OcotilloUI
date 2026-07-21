@@ -86,7 +86,7 @@ export const GeoThermalRecordsGrid = () => {
   const dataProvider = useDataProvider()
 
   const { query } = useList<IWellRecord>({
-    resource: `wells/${id}/records`,
+    resource: `thing/geothermal-well/${id}/records`,
     dataProviderName: 'geothermal',
     pagination: { pageSize: 500, mode: 'server' },
     queryOptions: {
@@ -144,7 +144,7 @@ export const GeoThermalRecordsGrid = () => {
     setSaving(true)
     setSummary(null)
 
-    const resource = `wells/${id}/records`
+    const resource = `thing/geothermal-well/${id}/records`
     const provider = dataProvider('geothermal')
 
     const results = await Promise.allSettled(

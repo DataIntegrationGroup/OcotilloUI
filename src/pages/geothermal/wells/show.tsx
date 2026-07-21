@@ -20,13 +20,13 @@ export const GeoThermalWellShow = () => {
     const {canManageGeothermal} = useAccessCapabilities();
 
     const {query, result: record} = useShow({
-        resource: "wells",
+        resource: "thing/geothermal-well",
         id: id,
         dataProviderName: "geothermal",
     });
 
     const {result: boreData, query: boreQuery} = useOne({
-        resource: "wells",
+        resource: "thing/geothermal-well",
         id: `${id}/bore`,
         dataProviderName: "geothermal",
     });
@@ -34,7 +34,7 @@ export const GeoThermalWellShow = () => {
     const {dataGridProps} = useDataGrid<IWellRecord>(
         {
             dataProviderName: "geothermal",
-            resource: `wells/${id}/records`,
+            resource: `thing/geothermal-well/${id}/records`,
         }
     );
 

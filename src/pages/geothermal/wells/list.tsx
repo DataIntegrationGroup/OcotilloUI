@@ -7,7 +7,7 @@ import { ListPage } from '@/components'
 export const GeoThermalWellList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IWell>({
     dataProviderName: 'geothermal',
-    resource: 'wells',
+    resource: 'thing/geothermal-well',
   })
 
   const columns = React.useMemo<GridColDef<IWell>[]>(
@@ -58,7 +58,7 @@ export const GeoThermalWellList: React.FC = () => {
       exportProps={{
         pageSize: 1000,
         dataProviderName: 'geothermal',
-        resource: 'wells',
+        resource: 'thing/geothermal-well',
       }}
     />
   )

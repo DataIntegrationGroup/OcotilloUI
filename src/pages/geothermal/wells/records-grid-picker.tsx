@@ -31,7 +31,7 @@ export const GeoThermalRecordsGridPicker = () => {
     useAccessCapabilities()
 
   const { query } = useList<WellRow>({
-    resource: 'wells',
+    resource: 'thing/geothermal-well',
     dataProviderName: 'geothermal',
     pagination: { pageSize: 500, mode: 'server' },
     queryOptions: { enabled: canEnterGeothermalData(canManageGeothermal) },
