@@ -4,6 +4,14 @@ import type { IWellRecord } from '@/interfaces/geothermal'
 import { useAccessCapabilities } from '@/hooks'
 import { EditableDataGrid, type GridColumnSpec } from '@/components/grid'
 import { Button } from '@/components/ui/button'
+import {
+  computePendingOps,
+  flattenFieldErrors,
+  makeBlankRecord,
+  NEW_PREFIX,
+  rowKey,
+  type FieldErrors,
+} from './recordsGridLogic'
 
 /**
  * Editable text column for a well-record field.
@@ -28,20 +36,6 @@ function textCol(
   }
 }
 
-// Editable field keys (everything except the server-assigned OBJECTID).
-const EDITABLE_KEYS: (keyof IWellRecord)[] = [
-  'WellDataID',
-  'WellName',
-  'WellNumber',
-  'API_suffix',
-  'ActionDate',
-  'EntryDate',
-  'EnteredBy',
-  'RecrdSetID',
-  'SourceID',
-  'Comments',
-]
-
 const RECORD_COLUMNS: GridColumnSpec<IWellRecord>[] = [
   {
     id: 'OBJECTID',
@@ -63,57 +57,7 @@ const RECORD_COLUMNS: GridColumnSpec<IWellRecord>[] = [
   textCol('Comments', 'Comments', 280),
 ]
 
-// New rows carry a client-only temp id (`new:N`) in OBJECTID until the server
-// assigns a real one on create. The prefix distinguishes create from update.
-const NEW_PREFIX = 'new:'
 const ADD_ROW_COUNT = 10
-
-function rowKey(r: IWellRecord): string {
-  return String(r.OBJECTID)
-}
-
-function isNewRow(r: IWellRecord): boolean {
-  return rowKey(r).startsWith(NEW_PREFIX)
-}
-
-function isBlankNew(r: IWellRecord): boolean {
-  return EDITABLE_KEYS.every((k) => !r[k])
-}
-
-function makeBlankRecord(tempId: string): IWellRecord {
-  return {
-    OBJECTID: tempId,
-    WellDataID: '',
-    WellName: '',
-    WellNumber: '',
-    API_suffix: '',
-    ActionDate: '',
-    EntryDate: '',
-    EnteredBy: '',
-    RecrdSetID: '',
-    SourceID: '',
-    Comments: '',
-  }
-}
-
-/** Refine's `fieldErrors` ({ field: [msg] }) flattened to { field: joinedMsg }. */
-type FieldErrors = Record<string, string>
-
-function flattenFieldErrors(raw: unknown): FieldErrors | undefined {
-  if (!raw || typeof raw !== 'object') return undefined
-  const out: FieldErrors = {}
-  for (const [field, msgs] of Object.entries(raw as Record<string, unknown>)) {
-    out[field] = Array.isArray(msgs) ? msgs.join(' ') : String(msgs)
-  }
-  return Object.keys(out).length > 0 ? out : undefined
-}
-
-type PendingOp = {
-  kind: 'create' | 'update'
-  index: number
-  key: string
-  row: IWellRecord
-}
 
 interface SaveSummary {
   saved: number
@@ -169,21 +113,10 @@ export const GeoThermalRecordsGrid = () => {
 
   // Pending write operations: changed existing rows (update) + non-blank new
   // rows (create). Blank appended rows are ignored until the user fills them.
-  const pending = useMemo<PendingOp[]>(() => {
-    const ops: PendingOp[] = []
-    records.forEach((r, index) => {
-      const key = rowKey(r)
-      if (isNewRow(r)) {
-        if (!isBlankNew(r)) ops.push({ kind: 'create', index, key, row: r })
-      } else {
-        const snap = original.get(key)
-        if (snap !== undefined && snap !== JSON.stringify(r)) {
-          ops.push({ kind: 'update', index, key, row: r })
-        }
-      }
-    })
-    return ops
-  }, [records, original])
+  const pending = useMemo(
+    () => computePendingOps(records, original),
+    [records, original]
+  )
 
   const cellErrors = useCallback(
     (rowIndex: number): FieldErrors | undefined => {
