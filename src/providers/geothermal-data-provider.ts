@@ -23,6 +23,57 @@ export const fetcher = async (url: string, options?: RequestInit) => {
   return response;
 };
 
+/**
+ * Map a FastAPI/Pydantic validation payload (`{ detail: [{ loc, msg }] }`) to
+ * Refine's `fieldErrors` shape (`{ field: [msg] }`). Mirrors the ocotillo
+ * provider so failed cells can surface inline. Strips the leading `body.`
+ * segment Pydantic prepends to request-body fields.
+ */
+const buildFieldErrors = (
+  detail: Array<{ loc?: (string | number)[]; msg?: string }>,
+): Record<string, string[]> => {
+  const refined: Record<string, string[]> = {};
+  detail.forEach((issue) => {
+    const path = (issue.loc ?? []).join(".");
+    const field = path.startsWith("body.") ? path.substring(5) : path;
+    if (!field) return;
+    (refined[field] ??= []).push(issue.msg ?? "Invalid value");
+  });
+  return refined;
+};
+
+/**
+ * Throw on a non-2xx write response. For 422/409 with a Pydantic `detail`
+ * array, throw a transformed Error carrying `fieldErrors`/`errors` so callers
+ * can attach messages to specific cells; otherwise throw the raw Response.
+ */
+const throwOnWriteError = async (response: Response): Promise<void> => {
+  if (response.status >= 200 && response.status <= 299) return;
+
+  if (response.status === 422 || response.status === 409) {
+    let body: { detail?: unknown } | undefined;
+    try {
+      body = await response.json();
+    } catch {
+      throw response;
+    }
+    if (body?.detail && Array.isArray(body.detail)) {
+      const fieldErrors = buildFieldErrors(body.detail);
+      const error = new Error("Validation Error") as Error & {
+        status?: number;
+        errors?: Record<string, string[]>;
+        fieldErrors?: Record<string, string[]>;
+      };
+      error.status = response.status;
+      error.errors = fieldErrors;
+      error.fieldErrors = fieldErrors;
+      throw error;
+    }
+  }
+
+  throw response;
+};
+
 export const geothermalDataProvider: DataProvider = {
   getList: async ({ resource, pagination, filters, sorters, meta }) => {
     const params = new URLSearchParams();
@@ -91,7 +142,7 @@ export const geothermalDataProvider: DataProvider = {
       },
     });
 
-    if (response.status < 200 || response.status > 299) throw response;
+    await throwOnWriteError(response);
 
     const data = await response.json();
 
@@ -106,7 +157,7 @@ export const geothermalDataProvider: DataProvider = {
       },
     });
 
-    if (response.status < 200 || response.status > 299) throw response;
+    await throwOnWriteError(response);
 
     const data = await response.json();
 

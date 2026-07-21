@@ -75,10 +75,19 @@ export interface EditableDataGridProps<T>
    * rows for an explicit batch save.
    */
   onRowsChange?: (rows: T[]) => void
+  /**
+   * Per-row validation errors keyed by column id. Return `undefined` for a row
+   * with no errors. Errored cells render with an error-tinted background so
+   * failures (e.g. a rejected batch save) surface inline.
+   */
+  cellErrors?: (rowIndex: number) => Record<string, string> | undefined
   /** Show a centered loading message instead of the grid. */
   isLoading?: boolean
   loadingMessage?: string
 }
+
+// Background tint applied to a cell that has a validation error.
+const ERROR_CELL_THEME = { bgCell: '#fee2e2', bgCellMedium: '#fee2e2' }
 
 function toDisplayString(value: CellValue): string {
   return value != null ? String(value) : ''
@@ -95,6 +104,7 @@ export function EditableDataGrid<T>({
   columns,
   rows,
   onRowsChange,
+  cellErrors,
   isLoading = false,
   loadingMessage = 'Loading…',
   freezeColumns,
@@ -125,6 +135,8 @@ export function EditableDataGrid<T>({
       const value = colDef.getValue(rowData)
       const display = toDisplayString(value)
       const editable = colDef.editable === true && colDef.setValue !== undefined
+      const error = cellErrors?.(row)?.[colDef.id]
+      const errorTheme = error ? { themeOverride: ERROR_CELL_THEME } : {}
 
       if (colDef.kind === 'uri') {
         return {
@@ -133,6 +145,7 @@ export function EditableDataGrid<T>({
           allowOverlay: false,
           readonly: true,
           hoverEffect: colDef.onClick !== undefined,
+          ...errorTheme,
         }
       }
 
@@ -143,6 +156,7 @@ export function EditableDataGrid<T>({
           displayData: display,
           allowOverlay: editable,
           readonly: !editable,
+          ...errorTheme,
         }
       }
 
@@ -152,9 +166,10 @@ export function EditableDataGrid<T>({
         displayData: display,
         allowOverlay: editable,
         readonly: !editable,
+        ...errorTheme,
       }
     },
-    [columns, rows]
+    [columns, rows, cellErrors]
   )
 
   const onCellEdited = useCallback(
