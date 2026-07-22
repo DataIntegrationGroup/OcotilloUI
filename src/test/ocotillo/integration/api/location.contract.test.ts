@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zLocationResponse,
@@ -30,10 +31,10 @@ describe('Ocotillo Integration Tests: Location', () => {
         const validatedLocation = zLocationResponse.parse(location)
         expect(validatedLocation).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('Location data:', JSON.stringify(location, null, 2))
         throw new Error(
-          `API response doesn't match ILocation interface: ${error.message}`
+          `API response doesn't match ILocation interface: ${getErrorMessage(error)}`
         )
       }
     }
@@ -55,9 +56,9 @@ describe('Ocotillo Integration Tests: Location', () => {
       const validatedLocation = zLocationResponse.parse(location)
       expect(validatedLocation).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       throw new Error(
-        `API response doesn't match ILocation interface: ${error.message}`
+        `API response doesn't match ILocation interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -101,14 +102,14 @@ describe('Ocotillo Integration Tests: Location', () => {
       } catch (error) {
         console.error(
           'Created location schema validation failed:',
-          error.message
+          getErrorMessage(error)
         )
         console.error(
           'Created location data:',
           JSON.stringify(createdLocation, null, 2)
         )
         throw new Error(
-          `Created location doesn't match ILocation interface: ${error.message}`
+          `Created location doesn't match ILocation interface: ${getErrorMessage(error)}`
         )
       }
     } catch (error) {
@@ -158,14 +159,14 @@ describe('Ocotillo Integration Tests: Location', () => {
       } catch (error) {
         console.error(
           'Updated location schema validation failed:',
-          error.message
+          getErrorMessage(error)
         )
         console.error(
           'Updated location data:',
           JSON.stringify(updatedLocation, null, 2)
         )
         throw new Error(
-          `Updated location doesn't match ILocation interface: ${error.message}`
+          `Updated location doesn't match ILocation interface: ${getErrorMessage(error)}`
         )
       }
     } catch (error) {

@@ -1,24 +1,28 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useDataGrid } from '@refinedev/mui'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
+import { captureEvent } from '@/analytics/posthog'
 import {
   IAddress,
   IContact,
   IEmail,
   IPhone,
 } from '@/interfaces/ocotillo/IContact'
-import { Button, Card, CardHeader, SxProps } from '@mui/material'
+import { Card, CardHeader, SxProps } from '@mui/material'
 import { Email, Home, Phone } from '@mui/icons-material'
-import AddIcon from '@mui/icons-material/Add'
-import { useLink, useNavigation } from '@refinedev/core'
+import { useLink } from '@refinedev/core'
 import { settings } from '@/settings'
 import { formatAppDateTime, formatPhone } from '@/utils'
 import { getContactDisplayName } from '@/utils/contactDisplayName'
-import { ListPage } from '@/components'
-import { useAccessCapabilities } from '@/hooks'
+import { ListPage } from '@/components/ListPage'
+import { useAccessCapabilities, useListPageDataGridAnalytics } from '@/hooks'
 import { filterConfidentialRows, sanitizeContacts } from '@/utils'
 
 export const ContactList: React.FC = () => {
+  useEffect(() => {
+    captureEvent('feature_used', { feature: 'contacts_list' })
+  }, [])
+
   const { canViewConfidential } = useAccessCapabilities()
   const [selectedContactId, setSelectedContactId] = useState<number | null>(
     null
@@ -27,12 +31,17 @@ export const ContactList: React.FC = () => {
   const { dataGridProps } = useDataGrid<IContact>({
     pagination: { pageSize: 50 },
   })
+
+  const dataGridPropsWithAnalytics = useListPageDataGridAnalytics(
+    dataGridProps,
+    'contacts'
+  )
+
   const visibleContacts = useMemo(
     () => sanitizeContacts(dataGridProps.rows, canViewConfidential),
     [canViewConfidential, dataGridProps.rows]
   )
 
-  const { create } = useNavigation()
   const Link = useLink()
 
   const columns = useMemo<GridColDef<IContact>[]>(
@@ -144,7 +153,7 @@ export const ContactList: React.FC = () => {
                         id: thing.id,
                       },
                     }}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   >
                     {thing.name}
                   </Link>
@@ -181,28 +190,17 @@ export const ContactList: React.FC = () => {
     meta: { enabled: !!selectedContactId },
   })
 
-  const customHeaderButtons = () => (
-    <>
-      <Button
-        size="small"
-        variant="contained"
-        startIcon={<AddIcon />}
-        onClick={() => create('contact')}
-      >
-        Create
-      </Button>
-    </>
-  )
-
   return (
     <>
       <ListPage
         title="Contacts & Owners"
-        description="People and organizations associated with monitoring sites. Contacts can be linked to wells and springs and may have multiple phone numbers, email addresses, and mailing addresses."
         columns={columns}
-        dataGridProps={{ ...dataGridProps, rows: visibleContacts }}
+        dataGridProps={{ ...dataGridPropsWithAnalytics, rows: visibleContacts }}
         getRowId={(row) => row.id}
-        headerButtons={customHeaderButtons}
+        hideHeaderButtons
+        onRowClick={(params) =>
+          captureEvent('contacts_row_clicked', { contact_id: params.id })
+        }
         onSelectionChange={(params) =>
           setSelectedContactId(params.length > 0 ? (params[0] as number) : null)
         }

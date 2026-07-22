@@ -1,9 +1,13 @@
 import { 
     Control, 
     FieldErrors, 
+    FieldValues,
     UseFormWatch, 
     UseFormSetValue,
-    useFieldArray
+    useFieldArray,
+    type ArrayPath,
+    type FieldArray,
+    type Path,
 } from 'react-hook-form'
 import Grid from '@mui/material/Grid2'
 import { 
@@ -37,11 +41,11 @@ import { useLexicon } from '@/hooks'
  * @param totalContacts - The total number of contacts
  */
 
-interface CreateEditContactProps {
-  control: Control<any>
-  watch?: UseFormWatch<any>
-  setValue?: UseFormSetValue<any>
-  errors?: FieldErrors<any>
+interface CreateEditContactProps<T extends FieldValues = FieldValues> {
+  control: Control<T>
+  watch?: UseFormWatch<T>
+  setValue?: UseFormSetValue<T>
+  errors?: FieldErrors<T>
   mode?: 'standalone' | 'step'
   fieldPrefix?: string
   showDynamicArrays?: boolean
@@ -53,7 +57,7 @@ interface CreateEditContactProps {
   totalContacts?: number
 }
 
-export const CreateEditContact: React.FC<CreateEditContactProps> = ({
+export const CreateEditContact = <T extends FieldValues>({
   control,
   watch,
   setValue,
@@ -66,24 +70,27 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
   onAddContact,
   canRemoveContact = true,
   totalContacts = 1
-}) => {
+}: CreateEditContactProps<T>) => {
   const getFieldName = (fieldName: string) => {
     return mode === 'step' ? `${fieldPrefix}${fieldName}` : fieldName
   }
 
+  const arrayPath = (fieldName: string) =>
+    getFieldName(fieldName) as ArrayPath<T>
+
   const { fields: emailFields, append: appendEmail, remove: removeEmail } = useFieldArray({
     control,
-    name: getFieldName('emails'),
+    name: arrayPath('emails'),
   })
 
   const { fields: phoneFields, append: appendPhone, remove: removePhone } = useFieldArray({
     control,
-    name: getFieldName('phones'),
+    name: arrayPath('phones'),
   })
 
   const { fields: addressFields, append: appendAddress, remove: removeAddress } = useFieldArray({
     control,
-    name: getFieldName('addresses'),
+    name: arrayPath('addresses'),
   })
 
   //get contact role options
@@ -205,7 +212,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                   email: '', 
                   email_type: 'Primary',
                   release_status: 'private'
-                })}
+                } as FieldArray<T, ArrayPath<T>>)}
                 variant="outlined"
                 size="small"
               >
@@ -267,7 +274,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                   phone_number: '', 
                   phone_type: 'Primary',
                   release_status: 'private'
-                })}
+                } as FieldArray<T, ArrayPath<T>>)}
                 variant="outlined"
                 size="small"
               >
@@ -345,7 +352,7 @@ export const CreateEditContact: React.FC<CreateEditContactProps> = ({
                   country: 'United States',
                   address_type: 'Primary',
                   release_status: 'private'
-                })}
+                } as FieldArray<T, ArrayPath<T>>)}
                 variant="outlined"
                 size="small"
               >

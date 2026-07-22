@@ -291,7 +291,7 @@ const createPiperPoint = (feature: GeoJsonFeature): PiperPoint | null => {
   })
 
   return {
-    featureId: getFeatureId(feature),
+    featureId: getFeatureId(feature) ?? '',
     name: getName(feature),
     chemistryDate: formatDate(properties.latest_chemistry_date),
     cation,
@@ -348,7 +348,7 @@ const triangleGridPaths = (offsetX = 0): string[] => {
   const values = d3.range(0.1, 1, 0.1)
   const paths: string[] = []
 
-  values.forEach((value) => {
+  values.forEach((value: number) => {
     paths.push(
       buildLinePath([
         ternaryPoint(value, 0, 1 - value, offsetX),
@@ -376,7 +376,7 @@ const diamondGridPaths = (): string[] => {
   const values = d3.range(0.1, 1, 0.1)
   const paths: string[] = []
 
-  values.forEach((value) => {
+  values.forEach((value: number) => {
     paths.push(
       buildLinePath([
         diamondFromFractions({ alkalisFraction: value, strongAcidsFraction: 0 }),
@@ -468,8 +468,8 @@ type AxisLabel = {
 }
 
 const centroid = (vertices: Point[]) => ({
-  x: d3.mean(vertices, (d) => d.x) ?? 0,
-  y: d3.mean(vertices, (d) => d.y) ?? 0,
+  x: d3.mean(vertices, (d: Point) => d.x) ?? 0,
+  y: d3.mean(vertices, (d: Point) => d.y) ?? 0,
 })
 
 const edgeLabel = ({

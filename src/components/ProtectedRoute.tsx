@@ -9,7 +9,7 @@ export const ProtectedRoute = ({
   children,
 }: {
   resource: string
-  action?: 'list' | 'show' | 'create' | 'edit' | 'delete'
+  action?: 'list' | 'show' | 'create' | 'edit' | 'delete' | 'manage'
   children: ReactNode
 }) => {
   const { data, isLoading } = useCan({ resource, action })

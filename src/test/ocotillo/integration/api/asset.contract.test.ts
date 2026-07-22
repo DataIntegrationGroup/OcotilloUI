@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zAssetResponse,
@@ -31,9 +32,9 @@ describe('Ocotillo Integration Tests: Asset', () => {
         const validatedAsset = zAssetResponse.parse(asset)
         expect(validatedAsset).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('Asset data:', JSON.stringify(asset, null, 2))
-        throw new Error(`API response doesn't match IAsset interface: ${error.message}`)
+        throw new Error(`API response doesn't match IAsset interface: ${getErrorMessage(error)}`)
       }
     }
   })
@@ -54,9 +55,9 @@ describe('Ocotillo Integration Tests: Asset', () => {
     const validatedAsset = zAssetResponse.parse(asset)
     expect(validatedAsset).toBeDefined()
   } catch (error) {
-    console.error('Schema validation failed:', error.message)
+    console.error('Schema validation failed:', getErrorMessage(error))
     console.error('Asset data:', JSON.stringify(asset, null, 2))
-    throw new Error(`API response doesn't match IAsset interface: ${error.message}`)
+    throw new Error(`API response doesn't match IAsset interface: ${getErrorMessage(error)}`)
   }
   })
 
@@ -85,9 +86,9 @@ describe('Ocotillo Integration Tests: Asset', () => {
       const validatedAsset = zAssetResponse.parse(createdAsset)
       expect(validatedAsset).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Asset data:', JSON.stringify(createdAsset, null, 2))
-      throw new Error(`API response doesn't match IAsset interface: ${error.message}`)
+      throw new Error(`API response doesn't match IAsset interface: ${getErrorMessage(error)}`)
     }
   })
 
@@ -113,9 +114,9 @@ describe('Ocotillo Integration Tests: Asset', () => {
       const validatedAsset = zAssetResponse.parse(updatedAsset)
       expect(validatedAsset).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Asset data:', JSON.stringify(updatedAsset, null, 2))
-      throw new Error(`API response doesn't match IAsset interface: ${error.message}`)
+      throw new Error(`API response doesn't match IAsset interface: ${getErrorMessage(error)}`)
     }
   })
 })

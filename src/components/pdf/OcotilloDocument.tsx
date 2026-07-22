@@ -13,11 +13,11 @@ export const OcotilloDocument = ({
 }: OcotilloDocumentProps) => {
   return (
     <Document
-      title={title}
+      title={title ?? undefined}
       author="NMBGMR Ocotillo"
       creator="NMBGMR Ocotillo System"
       language="en-US"
-      subject={subject}
+      subject={subject ?? undefined}
     >
       {children}
     </Document>

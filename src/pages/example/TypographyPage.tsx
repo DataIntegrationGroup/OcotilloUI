@@ -22,8 +22,8 @@ export function TypographyPage() {
           time, for the dinner had only just been put into the oven.
         </p>
         <p>
-          "Well, now," said I to myself, "if this man is in a hurry, nothing can satisfy him; but if the
-          hunger comes upon him, he will cry out furiously for his dinner."
+          &quot;Well, now,&quot; said I to myself, &quot;if this man is in a hurry, nothing can satisfy him; but if the
+          hunger comes upon him, he will cry out furiously for his dinner.&quot;
         </p>
         <p>
           Professor Otto Lidenbrock was not a bad sort of man, I fully admit; but unless he mightily changes,
@@ -38,8 +38,8 @@ export function TypographyPage() {
         <h2>Blockquote</h2>
         <blockquote>
           <p>
-            "Science, my lad, is made up of mistakes, but they are mistakes which it is useful to make,
-            because they lead little by little to the truth."
+            &quot;Science, my lad, is made up of mistakes, but they are mistakes which it is useful to make,
+            because they lead little by little to the truth.&quot;
           </p>
           <p>— Professor Lidenbrock</p>
         </blockquote>
@@ -194,7 +194,7 @@ function decodeRunic(cipher: string): string {
           <dt>Scartaris</dt>
           <dd>
             A peak adjacent to Sneffels whose shadow points to the correct crater entrance at the end
-            of June, as described in Saknussemm's manuscript.
+            of June, as described in Saknussemm&apos;s manuscript.
           </dd>
         </dl>
       </section>

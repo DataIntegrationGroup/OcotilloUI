@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zGroundwaterLevelObservationResponse,
@@ -31,9 +32,9 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
         const validatedObservation = zGroundwaterLevelObservationResponse.parse(observation)
         expect(validatedObservation).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('Groundwater level observation data:', JSON.stringify(observation, null, 2))
-        throw new Error(`API response doesn't match IGroundwaterLevelObservation interface: ${error.message}`)
+        throw new Error(`API response doesn't match IGroundwaterLevelObservation interface: ${getErrorMessage(error)}`)
       }
     }
   })
@@ -54,9 +55,9 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
       const validatedObservation = zGroundwaterLevelObservationResponse.parse(observation)
       expect(validatedObservation).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Groundwater level observation data:', JSON.stringify(observation, null, 2))
-      throw new Error(`API response doesn't match IGroundwaterLevelObservation interface: ${error.message}`)
+      throw new Error(`API response doesn't match IGroundwaterLevelObservation interface: ${getErrorMessage(error)}`)
     }
   })
 
@@ -85,9 +86,9 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
     const validatedObservation = zGroundwaterLevelObservationResponse.parse(observation)
     expect(validatedObservation).toBeDefined()
   } catch (error) {
-    console.error('Schema validation failed:', error.message)
+    console.error('Schema validation failed:', getErrorMessage(error))
     console.error('Groundwater level observation data:', JSON.stringify(observation, null, 2))
-    throw new Error(`API response doesn't match IGroundwaterLevelObservation interface: ${error.message}`)
+    throw new Error(`API response doesn't match IGroundwaterLevelObservation interface: ${getErrorMessage(error)}`)
   }
   })
 
@@ -117,9 +118,9 @@ describe('Ocotillo Integration Tests: Groundwater Level Observation', () => {
     const validatedObservation = zGroundwaterLevelObservationResponse.parse(observation)
     expect(validatedObservation).toBeDefined()
   } catch (error) {
-    console.error('Schema validation failed:', error.message)
+    console.error('Schema validation failed:', getErrorMessage(error))
     console.error('Groundwater level observation data:', JSON.stringify(observation, null, 2))
-    throw new Error(`API response doesn't match IGroundwaterLevelObservation interface: ${error.message}`)
+    throw new Error(`API response doesn't match IGroundwaterLevelObservation interface: ${getErrorMessage(error)}`)
   }
   })
 })

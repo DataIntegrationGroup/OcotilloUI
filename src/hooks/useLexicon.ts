@@ -1,10 +1,15 @@
 import { useList } from '@refinedev/core'
 import { ITerm } from '@/interfaces/ocotillo/ILexicon'
 
-export const useLexicon = ({ category }) => {
+type UseLexiconProps = {
+  category: string
+}
+
+export const useLexicon = ({ category }: UseLexiconProps) => {
   const data = useList<ITerm>({
     resource: 'lexicon/term',
     dataProviderName: 'ocotillo',
+    pagination: { pageSize: 500 },
     queryOptions: {
       gcTime: 1000 * 60 * 5, // 5 minutes
       staleTime: 1000 * 60 * 2, // 2 minutes

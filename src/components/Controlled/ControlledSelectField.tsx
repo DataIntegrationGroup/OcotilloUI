@@ -7,10 +7,10 @@ import {
   SelectProps,
   Box,
 } from '@mui/material'
-import { Controller, Control, Path } from 'react-hook-form'
+import { Controller, Control, FieldValues, Path } from 'react-hook-form'
 import { omit } from 'lodash'
 
-export const ControlledSelectField = <T,>({
+export const ControlledSelectField = <T extends FieldValues>({
   control,
   name,
   label,
@@ -31,7 +31,7 @@ export const ControlledSelectField = <T,>({
 } & SelectProps) => (
   <Controller
     name={name as Path<T>}
-    control={control as unknown as Control<T>}
+    control={control}
     render={({ field, fieldState }) => (
       <FormControl fullWidth error={!!fieldState.error} required={required}>
         <InputLabel id={labelId ? labelId : undefined}>

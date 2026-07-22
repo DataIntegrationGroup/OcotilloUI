@@ -14,7 +14,7 @@ export const useLayer = ({
   const { result, query } = useOne({
     dataProviderName: 'ocotillo',
     resource: 'geospatial',
-    id: null,
+    id: undefined,
     queryOptions: {
       enabled,
       gcTime: 60000,

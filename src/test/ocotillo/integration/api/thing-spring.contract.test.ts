@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zSpringResponse,
@@ -26,10 +27,10 @@ describe('Ocotillo Integration Tests: Spring', () => {
         const validatedSpring = zSpringResponse.parse(spring)
         expect(validatedSpring).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('Spring data:', JSON.stringify(spring, null, 2))
         throw new Error(
-          `API response doesn't match ISpring interface: ${error.message}`
+          `API response doesn't match ISpring interface: ${getErrorMessage(error)}`
         )
       }
     }
@@ -51,10 +52,10 @@ describe('Ocotillo Integration Tests: Spring', () => {
       const validatedSpring = zSpringResponse.parse(spring)
       expect(validatedSpring).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Spring data:', JSON.stringify(spring, null, 2))
       throw new Error(
-        `API response doesn't match ISpring interface: ${error.message}`
+        `API response doesn't match ISpring interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -83,10 +84,10 @@ describe('Ocotillo Integration Tests: Spring', () => {
       const validatedSpring = zSpringResponse.parse(spring)
       expect(validatedSpring).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Spring data:', JSON.stringify(spring, null, 2))
       throw new Error(
-        `API response doesn't match ISpring interface: ${error.message}`
+        `API response doesn't match ISpring interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -114,10 +115,10 @@ describe('Ocotillo Integration Tests: Spring', () => {
       const validatedSpring = zSpringResponse.parse(spring)
       expect(validatedSpring).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Spring data:', JSON.stringify(spring, null, 2))
       throw new Error(
-        `API response doesn't match ISpring interface: ${error.message}`
+        `API response doesn't match ISpring interface: ${getErrorMessage(error)}`
       )
     }
   })

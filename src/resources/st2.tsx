@@ -4,8 +4,14 @@ import Plumbing from "@mui/icons-material/Plumbing";
 import { WaterOutlined } from "@mui/icons-material";
 import SensorsOutlinedIcon from "@mui/icons-material/SensorsOutlined";
 import BiotechOutlinedIcon from "@mui/icons-material/BiotechOutlined";
+import type { ResourceMeta } from "./types";
 
-let st2 = [
+const st2: {
+  name: string;
+  list?: string;
+  icon?: JSX.Element;
+  meta?: ResourceMeta;
+}[] = [
   {
     name: "dashboard",
     list: "/st2/dashboard",
@@ -54,13 +60,13 @@ let st2 = [
 ];
 
 export const st2Resources = st2.map((b) => {
-  let meta = b.meta || {};
-  if (!meta["parent"]) {
-    meta["parent"] = "st2";
+  const meta: ResourceMeta = { ...b.meta };
+  if (!meta.parent) {
+    meta.parent = "st2";
   }
-  meta["dataProviderName"] = "st2";
+  meta.dataProviderName = "st2";
   return {
     ...b,
-    meta: meta,
+    meta,
   };
 });

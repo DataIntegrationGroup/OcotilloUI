@@ -38,14 +38,14 @@ export const ClearableSelect: React.FC<IClearableSelect> = ({
   return (
     <FormControl fullWidth>
       <InputLabel>{label}</InputLabel>
-      <Select
+      <Select<string | string[]>
         disabled={disabled}
         multiple={multiple}
         variant={"outlined"}
         label={label}
         value={value}
-        onChange={(e: SelectChangeEvent) => {
-          setValue(e.target.value as string);
+        onChange={(e: SelectChangeEvent<string | string[]>) => {
+          setValue(e.target.value);
         }}
         endAdornment={
           clear && (

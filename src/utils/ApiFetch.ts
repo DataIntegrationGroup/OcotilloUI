@@ -22,6 +22,9 @@ export const apiFetch = async ({
   method?: string
 }): Promise<any> => {
   const accessToken = await getAccessToken()
+  if (!accessToken) {
+    throw new Error('Authentication required')
+  }
 
   // Normalize endpoint to always begin without leading slash
   const normalizedEndpoint = endpoint.startsWith('/')

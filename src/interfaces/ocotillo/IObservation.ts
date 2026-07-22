@@ -32,10 +32,15 @@ export interface IObservationAttributes {
   parameter?: IParameterSummary
 }
 
+type GroundwaterLevelFields = Omit<
+  IGroundwaterLevelObservationAttributes,
+  'value'
+>
+
 export interface IObservation
   extends IObservationAttributes,
-    IGroundwaterLevelObservationAttributes {}
+    GroundwaterLevelFields {}
 
 export interface IGroundwaterLevelObservation
   extends IObservationAttributes,
-    IGroundwaterLevelObservationAttributes {}
+    GroundwaterLevelFields {}

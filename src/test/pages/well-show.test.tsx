@@ -9,6 +9,7 @@ const mockedUseDataProvider = vi.fn()
 const mockedUseQuery = vi.fn()
 const mockedUseResourceParams = vi.fn()
 const mockedUseAccessCapabilities = vi.fn()
+const mockedUseWellDetails = vi.fn()
 
 vi.mock('@refinedev/core', async () => {
   const actual =
@@ -37,7 +38,37 @@ vi.mock('@tanstack/react-query', () => ({
 
 vi.mock('@/hooks', () => ({
   useAccessCapabilities: () => mockedUseAccessCapabilities(),
-  useSensorDeploymentRows: () => [],
+  useSensorDeploymentRows:
+    (): import('@/utils/SensorDeploymentRows').SensorDeploymentRow[] => [],
+  useSidebarPanelSync: () => ({
+    isPanelOpen: false,
+    openPanel: vi.fn(),
+    closePanel: vi.fn(),
+    togglePanel: vi.fn(),
+  }),
+  useContainerMinWidth: () => false,
+  useWellDetails: (id: unknown) => {
+    mockedUseWellDetails(id)
+    return {
+      query: {
+        data: {
+          well: { id: 42, name: 'Test Well' },
+          contacts: [],
+          sensors: [],
+          deployments: [],
+          well_screens: [],
+          field_events: [],
+          first_field_event: null,
+        },
+        isLoading: false,
+        isPending: false,
+      },
+      well: { id: 42, name: 'Test Well' },
+      isLoading: false,
+      isPending: false,
+      invalidateWellDetails: vi.fn(),
+    }
+  },
 }))
 
 vi.mock('@/components', () => {
@@ -52,13 +83,12 @@ vi.mock('@/components', () => {
     AlternateIdsCard: () => <Stub name="ids" />,
     USGSInfoCard: () => <Stub name="usgs" />,
     OSEPODInfoCard: () => <Stub name="osepod" />,
-    WellPDFPreviewButton: () => <Stub name="preview" />,
+    WellPDFActionsButton: () => <Stub name="pdf-actions" />,
     WellScreensCard: () => <Stub name="screens" />,
     EquipmentCard: () => <Stub name="equipment" />,
     NotesAccordion: () => <Stub name="notes" />,
     ConstructionInfoCard: () => <Stub name="construction" />,
     GeologyInformationCard: () => <Stub name="geology" />,
-    WellPDFDownloadButton: () => <Stub name="download" />,
     WellShowTitle: () => <Stub name="title" />,
     OwnerPermissionsCard: () => <Stub name="owner" />,
     MonitoringInfoCard: () => <Stub name="monitoring" />,
@@ -75,6 +105,7 @@ describe('WellShow data loading', () => {
     mockedUseQuery.mockClear()
     mockedUseResourceParams.mockClear()
     mockedUseAccessCapabilities.mockClear()
+    mockedUseWellDetails.mockClear()
 
     mockedUseList.mockImplementation((args: any) => ({
       result: { data: [] },
@@ -88,24 +119,10 @@ describe('WellShow data loading', () => {
       custom: vi.fn(),
     }))
     mockedUseQuery.mockImplementation((args: any) => {
-      if (args?.queryKey?.[0] === 'well-details') {
-        return {
-          data: {
-            well: { id: 42, name: 'Test Well' },
-            contacts: [],
-            sensors: [],
-            deployments: [],
-            well_screens: [],
-            field_events: [],
-            first_field_event: null,
-          },
-          isLoading: false,
-        }
-      }
-
       return {
         data: { manualRows: [], transducerRows: [] },
         isLoading: false,
+        isPending: false,
       }
     })
     mockedUseResourceParams.mockReturnValue({ id: '42' })
@@ -133,12 +150,7 @@ describe('WellShow data loading', () => {
       ])
     )
 
-    expect(mockedUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({
-        queryKey: ['well-details', '42'],
-        enabled: true,
-      })
-    )
+    expect(mockedUseWellDetails).toHaveBeenCalledWith('42')
   })
 
   it('keeps well-scoped queries disabled until an id exists', () => {
@@ -160,11 +172,6 @@ describe('WellShow data loading', () => {
       dataGridCalls.every((args) => args.queryOptions?.enabled === false)
     ).toBe(true)
 
-    expect(mockedUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({
-        queryKey: ['well-details', undefined],
-        enabled: false,
-      })
-    )
+    expect(mockedUseWellDetails).toHaveBeenCalledWith(undefined)
   })
 })

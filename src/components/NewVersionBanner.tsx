@@ -1,0 +1,24 @@
+import { Button } from '@/components/ui/button'
+import { useNewVersion } from '@/hooks/useNewVersion'
+
+export const NewVersionBanner = () => {
+  const { isNewVersionAvailable } = useNewVersion()
+
+  if (!isNewVersionAvailable) return null
+
+  return (
+    <div className="flex items-center justify-between gap-4 px-4 py-2.5 bg-primary text-primary-foreground text-sm shrink-0">
+      <span className="font-medium">
+        We just made Ocotillo 5% better. Refresh to get the good stuff!
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => window.location.reload()}
+        className="border-white/60 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+      >
+        Refresh Now
+      </Button>
+    </div>
+  )
+}

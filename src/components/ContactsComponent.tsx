@@ -1,9 +1,19 @@
 import { useMemo } from 'react'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { Chip } from '@mui/material'
+import {
+  IAddress,
+  IContact,
+  IEmail,
+  IPhone,
+} from '@/interfaces/ocotillo/IContact'
 
-export const ContactsComponent = ({ contacts }) => {
-  const columns: GridColDef[] = useMemo(() => {
+type ContactsComponentProps = {
+  contacts: IContact[]
+}
+
+export const ContactsComponent = ({ contacts }: ContactsComponentProps) => {
+  const columns: GridColDef<IContact>[] = useMemo(() => {
     return [
       {
         field: 'name',
@@ -22,7 +32,7 @@ export const ContactsComponent = ({ contacts }) => {
         renderCell: (params) => {
           return (
             <>
-              {params.row.emails?.map((p, idx: number) => (
+              {params.row.emails?.map((p: IEmail, idx: number) => (
                 <div
                   key={idx}
                   style={{ marginBottom: '5px', marginTop: '5px' }}
@@ -40,7 +50,7 @@ export const ContactsComponent = ({ contacts }) => {
         flex: 1,
         renderCell: (params) => (
           <>
-            {params.row.phones?.map((p, idx: number) => (
+            {params.row.phones?.map((p: IPhone, idx: number) => (
               <div key={idx} style={{ marginBottom: '5px', marginTop: '5px' }}>
                 {p.phone_number} <Chip label={p.phone_type} size="small" />
               </div>
@@ -56,7 +66,7 @@ export const ContactsComponent = ({ contacts }) => {
         renderCell: (params) => {
           return (
             <>
-              {params.row.addresses?.map((a, idx: number) => (
+              {params.row.addresses?.map((a: IAddress, idx: number) => (
                 <div
                   key={idx}
                   style={{ marginBottom: '5px', marginTop: '5px' }}
@@ -74,7 +84,7 @@ export const ContactsComponent = ({ contacts }) => {
 
   return (
     <>
-      <DataGrid
+      <DataGrid<IContact>
         getRowHeight={() => 'auto'}
         getRowId={(row) => row.id}
         columns={columns}

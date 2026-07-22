@@ -5,7 +5,12 @@ import { GroupType } from '@/constants'
 import { useAbortableList } from './useAbortableList'
 import { useDebounce } from './useDebounce'
 import { useSearchHistory } from './useSearchHistory'
-import { ContactResult, SearchResult, WellResult } from '@/interfaces/ocotillo'
+import {
+  ContactResult,
+  ProjectResult,
+  SearchResult,
+  WellResult,
+} from '@/interfaces/ocotillo'
 import { DocEntry, searchDocs } from '@/utils/docsSearch'
 import {
   ArcadeGame,
@@ -205,6 +210,12 @@ export const useSearchModalState = ({
             action: 'show',
             id: (option as any).properties.id,
           },
+        })
+        break
+      case GroupType.Projects:
+        go({
+          to: `/ocotillo/well/projects/show/${(option as ProjectResult).properties.id}`,
+          type: 'push',
         })
         break
     }

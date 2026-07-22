@@ -4,9 +4,10 @@ import { GridColDef } from '@mui/x-data-grid'
 import { IWellScreen } from '@/interfaces/ocotillo/IWellScreen'
 import { ListPage } from '@/components/ListPage'
 import { actionColumnDef, idColumnDef } from '@/components/CommonColumnDefs'
-import { linkColumn } from '@/utils'
+import { linkColumn, useLink } from '@/utils'
 
 export const WellScreenList: React.FC = () => {
+  const Link = useLink()
   const { dataGridProps } = useDataGrid<IWellScreen>({
     resource: 'thing/well-screen',
     dataProviderName: 'ocotillo',
@@ -25,6 +26,7 @@ export const WellScreenList: React.FC = () => {
     () => [
       idColumnDef(),
       linkColumn(
+        Link,
         'ocotillo.thing-well',
         {
           field: 'thing_id',
@@ -35,7 +37,7 @@ export const WellScreenList: React.FC = () => {
         (params) => {
           return params.row.thing.name
         }
-      ),
+      ) as GridColDef<IWellScreen>,
       {
         field: 'screen_type',
         headerName: 'Type',

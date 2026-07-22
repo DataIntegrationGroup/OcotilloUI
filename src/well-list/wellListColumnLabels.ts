@@ -11,6 +11,7 @@ export const WellListColumnLabels = {
   wellStatus: 'Well Status',
   type: 'Type',
   aquifers: 'Aquifers',
+  projects: 'Projects',
   releaseStatus: 'Release Status',
   wellDepthFt: 'Well Depth (ft)',
   holeDepthFt: 'Hole Depth (ft)',

@@ -26,7 +26,9 @@ axiosInstance.interceptors.request.use(
 
 const refreshAuthLogic = async (failedRequest: AxiosError) => {
   const token = await getAccessToken({ refresh: true })
-  failedRequest.response.config.headers['Authorization'] = 'Bearer ' + token
+  if (failedRequest.response) {
+    failedRequest.response.config.headers['Authorization'] = 'Bearer ' + token
+  }
   return Promise.resolve()
 }
 
@@ -81,7 +83,7 @@ export const ocotilloDataProvider: DataProvider = {
 
     if (pagination) {
       params.append('page', (pagination.currentPage ?? 1).toString())
-      params.append('size', pagination.pageSize.toString())
+      params.append('size', (pagination.pageSize ?? 10).toString())
     }
 
     if (sorters && sorters.length > 0) {
@@ -95,7 +97,7 @@ export const ocotilloDataProvider: DataProvider = {
       })
     }
 
-    let url: string = resource
+    const url: string = resource
 
     const response = await axiosCall(url, {
       params: params,
@@ -111,7 +113,7 @@ export const ocotilloDataProvider: DataProvider = {
     })
     if (response.status < 200 || response.status > 299) throw response
 
-    let data = await response.data
+    const data = await response.data
 
     return {
       data: data.items,
@@ -142,7 +144,7 @@ export const ocotilloDataProvider: DataProvider = {
       resource === 'thing/well' ||
       resource === 'thing/spring'
     ) {
-      let url: string = `thing/${id}`
+      const url: string = `thing/${id}`
       const response = await fetcher(url, meta?.requestConfig)
 
       if (response.status < 200 || response.status > 299) throw response
@@ -158,7 +160,7 @@ export const ocotilloDataProvider: DataProvider = {
      * for other resources, use path parameter structure /location/123
      */
 
-    let url =
+    const url =
       id === undefined || id === null ? `${resource}` : `${resource}/${id}`
 
     const response = await fetcher(url, meta?.requestConfig)
@@ -188,6 +190,7 @@ export const ocotilloDataProvider: DataProvider = {
     } catch (error) {
       // Transform Pydantic validation errors to Refine format
       if (
+        axios.isAxiosError(error) &&
         (error.response?.status === 422 || error.response?.status === 409) &&
         error.response?.data?.detail
       ) {
@@ -221,11 +224,13 @@ export const ocotilloDataProvider: DataProvider = {
     }
   },
   custom: async ({ url, method, payload, headers }) => {
+    const isFormData = payload instanceof FormData
+
     const config: AxiosRequestConfig = {
       url: `${API_URL}/${url}`,
       method: method || 'GET',
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...headers,
       },
     }
@@ -251,7 +256,7 @@ export const ocotilloDataProvider: DataProvider = {
        */
       // for water wells:
       if (resource === 'thing/well') {
-        let endpoint = `thing/water-well/${id}`
+        const endpoint = `thing/water-well/${id}`
 
         const response = await axiosCall(endpoint, {
           method: 'PATCH',
@@ -287,6 +292,7 @@ export const ocotilloDataProvider: DataProvider = {
     } catch (error) {
       // Transform Pydantic validation errors to Refine format
       if (
+        axios.isAxiosError(error) &&
         (error.response?.status === 422 || error.response?.status === 409) &&
         error.response?.data?.detail
       ) {

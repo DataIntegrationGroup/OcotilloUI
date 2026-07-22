@@ -1,6 +1,12 @@
 import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
+import type { ResourceMeta } from "./types";
 
-let criticalminerals = [
+const criticalminerals: {
+  name: string;
+  list?: string;
+  icon?: JSX.Element;
+  meta?: ResourceMeta;
+}[] = [
   {
     name: "dashboard",
     list: "/criticalminerals/dashboard",
@@ -12,12 +18,12 @@ let criticalminerals = [
 ];
 
 export const criticalMineralResources = criticalminerals.map((g) => {
-  let meta = g.meta || {};
-  meta["parent"] = "criticalminerals";
-  meta["dataProviderName"] = "criticalminerals";
+  const meta: ResourceMeta = { ...g.meta };
+  meta.parent = "criticalminerals";
+  meta.dataProviderName = "criticalminerals";
 
   return {
     ...g,
-    meta: meta,
+    meta,
   };
 });

@@ -92,6 +92,15 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
   'ocotillo.hydrograph-correction': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
+  'ocotillo.thing-well-projects': { list: viewerRoles, show: viewerRoles },
+  'ocotillo.asset-unassociated': {
+    list: adminRoles,
+    show: adminRoles,
+    edit: adminRoles,
+    create: adminRoles,
+    delete: adminRoles,
+    manage: adminRoles,
+  },
   'ocotillo.groundwater-level-observation': {
     list: viewerRoles,
     show: viewerRoles,
@@ -210,6 +219,8 @@ export const getAccessCapabilities = (groups: string[] | null | undefined) => {
     canEditGeothermal,
     canManageGeothermal,
     canViewLexicon: canEditAmp,
+    // Change canManageAmp → canEditAmp here when editors should get well editing access.
+    canEditWell: canManageAmp,
   }
 }
 
@@ -237,6 +248,11 @@ export const canAccessResource = ({
   }
 
   if (resource === 'ocotillo.thing-well-batch-export') {
+    const policy = resourcePolicies[resource]
+    return matchesPolicy(policy[action], capabilities.roles)
+  }
+
+  if (resource === 'ocotillo.thing-well-projects') {
     const policy = resourcePolicies[resource]
     return matchesPolicy(policy[action], capabilities.roles)
   }
@@ -315,7 +331,7 @@ export const sanitizeContact = (
     ...contact,
     name: contactIsPrivate ? 'Confidential Contact' : contact.name,
     organization: contactIsPrivate ? undefined : contact.organization,
-    role: contactIsPrivate ? undefined : contact.role,
+    role: contactIsPrivate ? '' : (contact.role ?? ''),
     contact_type: contactIsPrivate ? undefined : contact.contact_type,
     emails: sanitizeContactMethods(contact.emails, false) as
       | IEmail[]

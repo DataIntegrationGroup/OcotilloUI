@@ -47,7 +47,7 @@ describe('SearchModal arcade easter eggs', () => {
     useAbortableListMock.mockReset()
     useSearchHistoryMock.mockReset()
     useSearchHistoryMock.mockReturnValue({
-      get: () => [],
+      get: (): string[] => [],
       add: vi.fn(),
       clear: vi.fn(),
     })
@@ -182,5 +182,41 @@ describe('SearchModal arcade easter eggs', () => {
     await user.keyboard('{Enter}')
 
     expect(goMock).toHaveBeenCalledWith({ to: '/about', type: 'push' })
+  })
+
+  it('navigates to the project show page when a project result is selected', async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+
+    useAbortableListMock.mockReturnValue({
+      query: {
+        isFetching: false,
+        isError: false,
+      },
+      result: {
+        data: [
+          {
+            label: 'Ocotillo Monitoring Project',
+            group: 'Projects',
+            properties: {
+              id: 42,
+              group_type: 'Monitoring',
+              well_count: 7,
+            },
+          },
+        ],
+      },
+    })
+
+    render(<SearchModal open={true} onClose={onClose} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Search' }), 'ocotillo')
+    await user.click(screen.getByText(/Monitoring Project/))
+
+    expect(goMock).toHaveBeenCalledWith({
+      to: '/ocotillo/well/projects/show/42',
+      type: 'push',
+    })
+    expect(onClose).toHaveBeenCalled()
   })
 })

@@ -20,7 +20,7 @@ export const geochronologyDataProvider: DataProvider = {
         params.append("size", meta.pagination.pageSize.toString());
       } else {
         params.append("page", (pagination.currentPage ?? 1).toString());
-        params.append("size", pagination.pageSize.toString());
+        params.append("size", (pagination.pageSize ?? 10).toString());
       }
     }
 
@@ -36,19 +36,24 @@ export const geochronologyDataProvider: DataProvider = {
     }
     if (filters && filters.length > 0) {
       filters.forEach((filter) => {
-        if (filter["field"] == "title" && convert_title) {
+        const fieldFilter = filter as {
+          field?: string;
+          operator?: string;
+          value?: unknown;
+        };
+        if (fieldFilter.field == "title" && convert_title) {
           if (resource == "principal_investigators") {
-            filter["field"] = "last_name";
+            fieldFilter.field = "last_name";
           }
           if (resource == "projects") {
-            filter["field"] = "name";
+            fieldFilter.field = "name";
           }
           if (resource == "materials") {
-            filter["field"] = "name";
+            fieldFilter.field = "name";
           }
         }
 
-        params.append("filter", JSON.stringify(filter));
+        params.append("filter", JSON.stringify(fieldFilter));
       });
     }
 

@@ -111,7 +111,7 @@ export const GroundwaterLevelEntryComponent: React.FC<EntryProps> = ({
       error = errors.observation
     }
     let field_error = null
-    if (!!error) {
+    if (error) {
       field_error = error[fieldName]
     }
     return {

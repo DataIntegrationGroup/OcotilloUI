@@ -18,6 +18,7 @@ import type {
   IDatastream,
   IHydrographDatasource,
   IHydrographOptions,
+  IObservation,
   ISensor,
 } from '@/interfaces/st2'
 import { ExpandMore } from '@mui/icons-material'
@@ -63,7 +64,7 @@ export const ST2DatastreamList = () => {
   })
 
   const getObservationFilter = () => {
-    let fs = []
+    const fs = []
     if (minDate) {
       fs.push(`phenomenonTime gt ${minDate.toISOString()}`)
     }
@@ -83,7 +84,7 @@ export const ST2DatastreamList = () => {
   })
 
   const getFilter = () => {
-    let fs = [
+    const fs = [
       `name ne 'OSERealTime Discharge'`,
       `name ne 'OSERealTime Gage Height'`,
     ]
@@ -148,7 +149,8 @@ export const ST2DatastreamList = () => {
         field: 'locationID',
         headerName: 'Location ID',
         renderCell: function render({ row }) {
-          const locationId = row.Thing.Locations[0]['@iot.id']
+          const locationId = row.Thing?.Locations?.[0]?.['@iot.id']
+          if (locationId == null) return null
           return (
             <div>
               <a href={`${settings.st2_url}/Locations(${locationId})`}>
@@ -164,7 +166,8 @@ export const ST2DatastreamList = () => {
         field: 'ThingID',
         headerName: 'Thing ID',
         renderCell: function render({ row }) {
-          const thingId = row.Thing['@iot.id']
+          const thingId = row.Thing?.['@iot.id']
+          if (thingId == null) return null
           return (
             <div>
               <a href={`${settings.st2_url}/Things(${thingId})`}>{thingId}</a>
@@ -221,13 +224,15 @@ export const ST2DatastreamList = () => {
         return triggerAll().then((data) => {
           return {
             id: dsid,
-            name: row.Thing?.Locations?.map((loc) => loc.name).join(', '),
-            data: data,
-          }
+            name: row?.Thing?.Locations?.map((loc) => loc.name).join(', ') ?? '',
+            data: data as IObservation[],
+          } satisfies IHydrographDatasource
         })
       }
     })
-    const sources = await Promise.all(ps)
+    const sources = (await Promise.all(ps)).filter(
+      (source): source is IHydrographDatasource => source !== undefined
+    )
     setDataSource(sources)
     setRefreshHydrograph((prev) => prev + 1)
   }
@@ -385,7 +390,7 @@ export const ST2DatastreamList = () => {
                 />
                 <ClearableSelect
                   label={'Data Zoom'}
-                  value={hydrographOptions.dataZoom}
+                  value={hydrographOptions.dataZoom ?? ''}
                   onClear={() =>
                     setHydrographOptions({
                       ...hydrographOptions,

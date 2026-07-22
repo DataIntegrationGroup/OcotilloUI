@@ -3,7 +3,9 @@ import {
   Database,
   Droplets,
   FileText,
+  FolderKanban,
   Home,
+  Image,
   LineChart,
   Map as MapIcon,
   MapPin,
@@ -21,7 +23,7 @@ import type { PortalRole } from '@/utils/accessControl'
 export const AmpRole = {
   Viewer: 'AMP.Viewer',
   Editor: 'AMP.Editor',
-  Admin:  'AMP.Admin',
+  Admin: 'AMP.Admin',
 } as const satisfies Record<string, PortalRole>
 
 export type NavItem = {
@@ -47,7 +49,14 @@ export type NavItem = {
    * Renders as non-interactive. Use for features not yet implemented.
    */
   disabled?: boolean
+  /**
+   * Nested items shown under this entry in the sidebar (e.g. Projects under Wells).
+   */
+  children?: NavItem[]
 }
+
+/** Toggle Example nav (typography, data grid demos). Set true to restore. */
+export const SHOW_EXAMPLE_NAV = false
 
 /**
  * Top bar: views and tools.
@@ -73,7 +82,11 @@ export const PRIMARY_NAV: NavItem[] = [
   },
 ]
 
-const viewerAndAbove: PortalRole[] = [AmpRole.Viewer, AmpRole.Editor, AmpRole.Admin]
+const viewerAndAbove: PortalRole[] = [
+  AmpRole.Viewer,
+  AmpRole.Editor,
+  AmpRole.Admin,
+]
 const adminOnly: PortalRole[] = [AmpRole.Admin]
 
 /**
@@ -87,6 +100,13 @@ export const RESOURCE_NAV: NavItem[] = [
     href: '/ocotillo/well',
     icon: Droplets,
     resource: 'ocotillo.thing-well',
+    roles: viewerAndAbove,
+  },
+  {
+    label: 'Projects',
+    href: '/ocotillo/well/projects',
+    icon: FolderKanban,
+    resource: 'ocotillo.thing-well-projects',
     roles: viewerAndAbove,
   },
   {
@@ -109,6 +129,13 @@ export const RESOURCE_NAV: NavItem[] = [
     icon: Database,
     resource: 'ocotillo.collections',
     roles: viewerAndAbove,
+  },
+  {
+    label: 'Unassociated Assets',
+    href: '/ocotillo/asset/unassociated',
+    icon: Image,
+    resource: 'ocotillo.asset-unassociated',
+    roles: adminOnly,
   },
   {
     label: 'Locations',

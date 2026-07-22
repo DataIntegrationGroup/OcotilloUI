@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getErrorMessage } from '@/utils/getErrorMessage'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   zContactResponse,
@@ -42,10 +43,10 @@ describe('Ocotillo Integration Tests: Contact', () => {
         const validatedContact = zContactResponse.parse(contact)
         expect(validatedContact).toBeDefined()
       } catch (error) {
-        console.error('Schema validation failed:', error.message)
+        console.error('Schema validation failed:', getErrorMessage(error))
         console.error('Contact data:', JSON.stringify(contact, null, 2))
         throw new Error(
-          `API response doesn't match IContact interface: ${error.message}`
+          `API response doesn't match IContact interface: ${getErrorMessage(error)}`
         )
       }
     }
@@ -67,10 +68,10 @@ describe('Ocotillo Integration Tests: Contact', () => {
       const validatedContact = zContactResponse.parse(contact)
       expect(validatedContact).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Contact data:', JSON.stringify(contact, null, 2))
       throw new Error(
-        `API response doesn't match IContact interface: ${error.message}`
+        `API response doesn't match IContact interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -124,10 +125,10 @@ describe('Ocotillo Integration Tests: Contact', () => {
       const validatedContact = zContactResponse.parse(createdContact)
       expect(validatedContact).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Contact data:', JSON.stringify(createdContact, null, 2))
       throw new Error(
-        `API response doesn't match IContact interface: ${error.message}`
+        `API response doesn't match IContact interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -156,10 +157,10 @@ describe('Ocotillo Integration Tests: Contact', () => {
       const validatedContact = zContactResponse.parse(updatedContact)
       expect(validatedContact).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Contact data:', JSON.stringify(updatedContact, null, 2))
       throw new Error(
-        `API response doesn't match IContact interface: ${error.message}`
+        `API response doesn't match IContact interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -180,10 +181,10 @@ describe('Ocotillo Integration Tests: Contact', () => {
       const validatedEmail = zEmailResponse.parse(email)
       expect(validatedEmail).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Email data:', JSON.stringify(email, null, 2))
       throw new Error(
-        `API response doesn't match EmailResponse interface: ${error.message}`
+        `API response doesn't match EmailResponse interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -211,10 +212,10 @@ describe('Ocotillo Integration Tests: Contact', () => {
       const validatedEmail = zEmailResponse.parse(updatedEmail)
       expect(validatedEmail).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Email data:', JSON.stringify(updatedEmail, null, 2))
       throw new Error(
-        `API response doesn't match EmailResponse interface: ${error.message}`
+        `API response doesn't match EmailResponse interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -235,10 +236,10 @@ describe('Ocotillo Integration Tests: Contact', () => {
       const validatedPhone = zPhoneResponse.parse(phone)
       expect(validatedPhone).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Phone data:', JSON.stringify(phone, null, 2))
       throw new Error(
-        `API response doesn't match PhoneResponse interface: ${error.message}`
+        `API response doesn't match PhoneResponse interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -266,10 +267,10 @@ describe('Ocotillo Integration Tests: Contact', () => {
       const validatedPhone = zPhoneResponse.parse(updatedPhone)
       expect(validatedPhone).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Phone data:', JSON.stringify(updatedPhone, null, 2))
       throw new Error(
-        `API response doesn't match PhoneResponse interface: ${error.message}`
+        `API response doesn't match PhoneResponse interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -290,10 +291,10 @@ describe('Ocotillo Integration Tests: Contact', () => {
       const validatedAddress = zAddressResponse.parse(address)
       expect(validatedAddress).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Address data:', JSON.stringify(address, null, 2))
       throw new Error(
-        `API response doesn't match AddressResponse interface: ${error.message}`
+        `API response doesn't match AddressResponse interface: ${getErrorMessage(error)}`
       )
     }
   })
@@ -326,10 +327,10 @@ describe('Ocotillo Integration Tests: Contact', () => {
       const validatedAddress = zAddressResponse.parse(updatedAddress)
       expect(validatedAddress).toBeDefined()
     } catch (error) {
-      console.error('Schema validation failed:', error.message)
+      console.error('Schema validation failed:', getErrorMessage(error))
       console.error('Address data:', JSON.stringify(updatedAddress, null, 2))
       throw new Error(
-        `API response doesn't match AddressResponse interface: ${error.message}`
+        `API response doesn't match AddressResponse interface: ${getErrorMessage(error)}`
       )
     }
   })

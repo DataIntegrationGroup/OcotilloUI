@@ -10,9 +10,9 @@ import {
   Box,
   SelectChangeEvent,
 } from '@mui/material'
-import { Controller, Control, Path } from 'react-hook-form'
+import { Controller, Control, FieldValues, Path } from 'react-hook-form'
 
-export const ControlledSelectWithChipsField = <T,>({
+export const ControlledSelectWithChipsField = <T extends FieldValues>({
   control,
   name,
   label,
@@ -33,7 +33,10 @@ export const ControlledSelectWithChipsField = <T,>({
   chipLimit?: number
   clearChipsSignal: boolean
   resetClearChipsSignal: () => void
-} & SelectProps) => {
+} & Omit<
+  SelectProps<string[]>,
+  'value' | 'onChange' | 'defaultValue' | 'multiple' | 'renderValue'
+>) => {
   const [selectedChips, setSelectedChips] = useState<string[]>([])
 
   useEffect(() => {
@@ -59,7 +62,7 @@ export const ControlledSelectWithChipsField = <T,>({
   return (
     <Controller
       name={name as Path<T>}
-      control={control as unknown as Control<T>}
+      control={control}
       render={({ field, fieldState }) => (
         <FormControl fullWidth error={!!fieldState.error} required={required}>
           <InputLabel>{label}</InputLabel>
@@ -71,11 +74,11 @@ export const ControlledSelectWithChipsField = <T,>({
             value={selectedChips}
             onChange={(event: SelectChangeEvent<string[]>) => {
               const { value: selectedValues } = event.target
-              if (selectedValues.length <= chipLimit) {
-                field.onChange(selectedValues)
-              } else {
-                field.onChange(selectedValues.slice(-chipLimit))
-              }
+              if (selectedValues.length <= chipLimit) {
+                field.onChange(selectedValues)
+              } else {
+                field.onChange(selectedValues.slice(-chipLimit))
+              }
               handleSelectChange(event)
             }}
             renderValue={(selected: string[]) => (

@@ -20,7 +20,7 @@ export const geothermalDataProvider: DataProvider = {
         params.append("size", meta.pagination.pageSize.toString());
       } else {
         params.append("page", (pagination.currentPage ?? 1).toString());
-        params.append("size", pagination.pageSize.toString());
+        params.append("size", (pagination.pageSize ?? 10).toString());
       }
     }
 
@@ -38,10 +38,8 @@ export const geothermalDataProvider: DataProvider = {
     if (response.status < 200 || response.status > 299) throw response;
     const resp = await response.json();
 
-    let data;
-    let total;
-    data = resp;
-    total = data.length;
+    const data = resp;
+    const total = data.length;
 
     return {
       data,

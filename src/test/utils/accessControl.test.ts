@@ -35,6 +35,7 @@ const routableResourceNames = routableResources
   .map((resource) => resource.name)
   .sort()
 const expectedRegisteredRoutableResources = [
+  'ocotillo.asset-unassociated',
   'ocotillo.collections',
   'ocotillo.contact',
   'ocotillo.hydrograph-correction',
@@ -44,6 +45,7 @@ const expectedRegisteredRoutableResources = [
   'ocotillo.thing-well',
   'ocotillo.thing-well-batch-export',
   'ocotillo.thing-well-pdf-preview',
+  'ocotillo.thing-well-projects',
 ].sort()
 
 const expectedAccessByScenario: Scenario[] = [
@@ -61,6 +63,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.contact',
       'ocotillo.thing-well',
       'ocotillo.thing-well-batch-export',
+      'ocotillo.thing-well-projects',
     ],
   },
   {
@@ -72,6 +75,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.thing-well',
       'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
+      'ocotillo.thing-well-projects',
     ],
   },
   {
@@ -103,6 +107,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.thing-well',
       'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
+      'ocotillo.thing-well-projects',
     ],
   },
 ]

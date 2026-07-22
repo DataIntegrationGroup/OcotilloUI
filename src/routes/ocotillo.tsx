@@ -1,20 +1,16 @@
 import { Route, Routes } from 'react-router'
 import { ErrorComponent } from '@refinedev/mui'
-import {
-  ContactEdit,
-  ContactList,
-  ContactShow,
-  ContactCreate,
-} from '@/pages/ocotillo/contact'
+import { ContactList, ContactShow } from '@/pages/ocotillo/contact'
 import {
   SpringList,
   SpringCreate,
   WellCreate,
-  WellEdit,
   WellList,
   WellShow,
   WellShowPdfPreview,
   WellBatchExport,
+  WellProjectList,
+  WellProjectShow,
   SpringShow,
 } from '@/pages/ocotillo/thing'
 import { MapView } from '@/pages/ocotillo/map'
@@ -52,6 +48,7 @@ import {
   AssetCreate,
   AssetEdit,
   AssetShow,
+  UnassociatedAssetList,
 } from '@/pages/ocotillo/asset'
 import {
   ThingIdLinkList,
@@ -86,8 +83,6 @@ export const OcotilloRoutes = () => {
       <Route path="contact">
         <Route index element={<ContactList />} />
         <Route path={'show/:id'} element={<ContactShow />} />
-        <Route path={'edit/:id'} element={<ContactEdit />} />
-        <Route path={'create'} element={<ContactCreate />} />
       </Route>
       <Route path="well">
         <Route index element={<WellList />} />
@@ -99,6 +94,24 @@ export const OcotilloRoutes = () => {
             </ProtectedRoute>
           }
         />
+        <Route path={'projects'}>
+          <Route
+            index
+            element={
+              <ProtectedRoute resource="ocotillo.thing-well-projects">
+                <WellProjectList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={'show/:id'}
+            element={
+              <ProtectedRoute resource="ocotillo.thing-well-projects">
+                <WellProjectShow />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
         <Route path={'show/:id'} element={<WellShow />} />
         <Route
           path={'pdf-preview/:id'}
@@ -108,7 +121,6 @@ export const OcotilloRoutes = () => {
             </ProtectedRoute>
           }
         />
-        <Route path={'edit/:id'} element={<WellEdit />} />
         <Route path={'create'} element={<WellCreate />} />
       </Route>
       <Route path="spring">
@@ -166,6 +178,17 @@ export const OcotilloRoutes = () => {
       </Route>
       <Route path="asset">
         <Route index element={<AssetList />} />
+        <Route
+          path={'unassociated'}
+          element={
+            <ProtectedRoute
+              resource="ocotillo.asset-unassociated"
+              action="manage"
+            >
+              <UnassociatedAssetList />
+            </ProtectedRoute>
+          }
+        />
         <Route path={'create'} element={<AssetCreate />} />
         <Route path={'edit/:id'} element={<AssetEdit />} />
         <Route path={'show/:id'} element={<AssetShow />} />
@@ -212,7 +235,7 @@ export const OcotilloRoutes = () => {
           }
         />
       </Route>
-      // Apps
+      {/* Apps */}
       <Route path={'water-chemistry-import'}>
         <Route index element={<WaterChemistryApp />} />
       </Route>
@@ -226,7 +249,7 @@ export const OcotilloRoutes = () => {
           }
         />
       </Route>
-      // Forms
+      {/* Forms */}
       <Route path="groundwater-level-form">
         <Route index element={<GroundwaterLevelForm />} />
       </Route>
