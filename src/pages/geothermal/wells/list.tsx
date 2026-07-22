@@ -13,20 +13,32 @@ export const GeoThermalWellList: React.FC = () => {
   const columns = React.useMemo<GridColDef<IWell>[]>(
     () => [
       {
-        field: 'OBJECTID',
-        headerName: 'ID',
-        type: 'number',
-        minWidth: 150,
-      },
-      {
-        field: 'WellDataID',
-        headerName: 'Well ID',
+        field: 'name',
+        headerName: 'Well',
         type: 'string',
-        minWidth: 150,
+        minWidth: 160,
       },
       {
-        field: 'County',
+        field: 'well_type',
+        headerName: 'Type',
+        type: 'string',
+        minWidth: 130,
+      },
+      {
+        field: 'status',
+        headerName: 'Status',
+        type: 'string',
+        minWidth: 130,
+      },
+      {
+        field: 'county',
         headerName: 'County',
+        type: 'string',
+        minWidth: 130,
+      },
+      {
+        field: 'operator',
+        headerName: 'Operator',
         type: 'string',
         minWidth: 150,
       },
@@ -36,8 +48,8 @@ export const GeoThermalWellList: React.FC = () => {
         renderCell: function render({ row }) {
           return (
             <>
-              <EditButton hideText recordItemId={row.OBJECTID} />
-              <ShowButton hideText recordItemId={row.OBJECTID} />
+              <EditButton hideText recordItemId={row.well_data_id} />
+              <ShowButton hideText recordItemId={row.well_data_id} />
             </>
           )
         },
@@ -53,7 +65,7 @@ export const GeoThermalWellList: React.FC = () => {
   return (
     <ListPage
       columns={columns}
-      getRowId={(row) => row.OBJECTID}
+      getRowId={(row) => row.well_data_id}
       dataGridProps={dataGridProps}
       exportProps={{
         pageSize: 1000,

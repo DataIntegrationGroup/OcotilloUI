@@ -10,14 +10,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-// The geothermal wells endpoint returns more than IWell currently types; read
-// the label fields loosely until the contract/interface is finalized.
-type WellRow = IWell & { WellDataID?: string; County?: string }
-
-function wellLabel(w: WellRow): string {
-  const parts = [w.WellDataID, w.County].filter(Boolean)
+function wellLabel(w: IWell): string {
+  const parts = [w.county, w.well_type].filter(Boolean)
   const suffix = parts.length ? ` — ${parts.join(', ')}` : ''
-  return `${w.OBJECTID}${suffix}`
+  return `${w.name ?? w.well_data_id}${suffix}`
 }
 
 /**
@@ -30,7 +26,7 @@ export const GeoThermalRecordsGridPicker = () => {
   const { canManageGeothermal, isLoading: permLoading } =
     useAccessCapabilities()
 
-  const { query } = useList<WellRow>({
+  const { query } = useList<IWell>({
     resource: 'thing/geothermal-well',
     dataProviderName: 'geothermal',
     pagination: { pageSize: 500, mode: 'server' },
@@ -55,7 +51,7 @@ export const GeoThermalRecordsGridPicker = () => {
 
   // Radix SelectItem forbids an empty value, so drop rows without a usable id.
   const wells = (query.data?.data ?? []).filter(
-    (w) => w.OBJECTID != null && String(w.OBJECTID) !== ''
+    (w) => w.well_data_id != null && w.well_data_id !== ''
   )
 
   return (
@@ -86,7 +82,7 @@ export const GeoThermalRecordsGridPicker = () => {
         </SelectTrigger>
         <SelectContent>
           {wells.map((w) => (
-            <SelectItem key={String(w.OBJECTID)} value={String(w.OBJECTID)}>
+            <SelectItem key={w.well_data_id} value={w.well_data_id}>
               {wellLabel(w)}
             </SelectItem>
           ))}

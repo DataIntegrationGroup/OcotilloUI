@@ -105,9 +105,9 @@ export const GeoThermalWellShow = () => {
                 {/*    {"PointID"}*/}
                 {/*</Typography>*/}
 
-                <TextField value={record?.OBJECTID}/>
-                <TextField value={record?.WellDataID}/>
-                <TextField value={record?.County}/>
+                <TextField value={record?.name}/>
+                <TextField value={record?.well_data_id}/>
+                <TextField value={record?.county}/>
 
                 {/*<Typography variant="body1" fontWeight="bold">*/}
                 {/*  {"Title"}*/}
