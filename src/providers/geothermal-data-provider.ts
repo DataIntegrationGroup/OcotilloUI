@@ -102,8 +102,20 @@ export const geothermalDataProvider: DataProvider = {
     if (response.status < 200 || response.status > 299) throw response;
     const resp = await response.json();
 
-    const data = resp;
-    const total = data.length;
+    // The API may return either a paginated envelope
+    // ({ items, total, ... }) or a bare array (older geothermal endpoints).
+    let data;
+    let total;
+    if (resp && Array.isArray(resp.items)) {
+      data = resp.items;
+      total = typeof resp.total === "number" ? resp.total : resp.items.length;
+    } else if (Array.isArray(resp)) {
+      data = resp;
+      total = resp.length;
+    } else {
+      data = [];
+      total = 0;
+    }
 
     return {
       data,

@@ -53,7 +53,10 @@ export const GeoThermalRecordsGridPicker = () => {
     )
   }
 
-  const wells = query.data?.data ?? []
+  // Radix SelectItem forbids an empty value, so drop rows without a usable id.
+  const wells = (query.data?.data ?? []).filter(
+    (w) => w.OBJECTID != null && String(w.OBJECTID) !== ''
+  )
 
   return (
     <div className="flex flex-col gap-4 p-6 max-w-xl">

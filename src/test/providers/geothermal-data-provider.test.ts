@@ -100,3 +100,43 @@ describe('geothermal provider write error mapping', () => {
     expect(result).toEqual({ data: created })
   })
 })
+
+describe('geothermal provider getList response shapes', () => {
+  const list = (resource: string) =>
+    geothermalDataProvider.getList!({
+      resource,
+      pagination: { currentPage: 1, pageSize: 10, mode: 'server' },
+      filters: [],
+      sorters: [],
+    } as never)
+
+  it('unwraps a paginated { items, total } envelope', async () => {
+    stubFetch(
+      resp(200, { items: [{ OBJECTID: 1 }, { OBJECTID: 2 }], total: 42 })
+    )
+
+    const { data, total } = await list('thing/geothermal-well')
+
+    expect(data).toEqual([{ OBJECTID: 1 }, { OBJECTID: 2 }])
+    expect(total).toBe(42)
+  })
+
+  it('handles a bare array response', async () => {
+    stubFetch(resp(200, [{ OBJECTID: 1 }]))
+
+    const { data, total } = await list('thing/geothermal-well')
+
+    expect(data).toEqual([{ OBJECTID: 1 }])
+    expect(total).toBe(1)
+  })
+
+  it('returns an empty list (never a non-array) for an empty envelope', async () => {
+    stubFetch(resp(200, { items: [], total: 0, page: 1, size: 10, pages: 0 }))
+
+    const { data, total } = await list('thing/geothermal-well')
+
+    expect(Array.isArray(data)).toBe(true)
+    expect(data).toEqual([])
+    expect(total).toBe(0)
+  })
+})
