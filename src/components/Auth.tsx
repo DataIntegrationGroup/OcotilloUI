@@ -18,7 +18,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { AUTHENTIK_URL, CLIENT_ID, REDIRECT_URI } from '@/config'
+import { buildAuthentikUrl, CLIENT_ID, REDIRECT_URI } from '@/config'
 
 type TokenResponse = {
   access_token: string
@@ -60,10 +60,7 @@ export const Callback = () => {
           throw new Error('Invalid state parameter')
         }
 
-        const tokenUrl = new URL(
-          'token/',
-          `${AUTHENTIK_URL.replace(/\/+$/, '')}/`
-        )
+        const tokenUrl = buildAuthentikUrl('token/')
 
         const resp = await fetch(tokenUrl.toString(), {
           method: 'POST',

@@ -15,7 +15,7 @@ import { getStatusCode, hasError } from '@/utils/Http'
 import { isJwtExpired } from '@/utils/Jwt'
 import { HttpStatus } from '@/enums'
 import {
-  AUTHENTIK_URL,
+  buildAuthentikUrl,
   CLIENT_ID,
   REDIRECT_URI,
   STORAGE_KEYS,
@@ -136,7 +136,7 @@ export const getAccessToken = async ({
   const refreshToken = localStorage.getItem(STORAGE_KEYS.refreshToken)
   if (!refreshToken) return null
 
-  const url = new URL(`${AUTHENTIK_URL}/token/`)
+  const url = buildAuthentikUrl('token/')
 
   const response = await fetch(url.toString(), {
     method: 'POST',
@@ -204,7 +204,7 @@ export const authentikAuthProvider: AuthProvider = {
       const RESPONSE_TYPE = 'code'
       const SCOPE = 'openid profile email offline_access permissions'
 
-      const authUrl = new URL(`${AUTHENTIK_URL}/authorize/`)
+      const authUrl = buildAuthentikUrl('authorize/')
       authUrl.searchParams.set('client_id', CLIENT_ID)
       authUrl.searchParams.set('redirect_uri', REDIRECT_URI)
       authUrl.searchParams.set('response_type', RESPONSE_TYPE)

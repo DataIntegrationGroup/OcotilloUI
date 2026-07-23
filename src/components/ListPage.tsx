@@ -182,6 +182,8 @@ type ListPageProps = {
   hideBreadcrumb?: boolean
   /** Hide create/edit header buttons and default export */
   hideHeaderButtons?: boolean
+  /** Explicit access-control resource when Refine cannot infer it from custom routes. */
+  accessResource?: string
 }
 
 export const ListPage: React.FC<ListPageProps> = ({
@@ -207,6 +209,7 @@ export const ListPage: React.FC<ListPageProps> = ({
   hideBreadcrumb = false,
   hideHeaderButtons = false,
   getRowHref,
+  accessResource,
 }) => {
   if (!exportProps) {
     exportProps = { pageSize: 1000 }
@@ -219,6 +222,7 @@ export const ListPage: React.FC<ListPageProps> = ({
 
   const { show } = useNavigation()
   const { resource } = useResourceParams()
+  const canAccessResource = accessResource ?? resource?.name
 
   const handleSelectionChangeWrapper = (selectionModel: any) => {
     if (onSelectionChange) {
@@ -234,7 +238,9 @@ export const ListPage: React.FC<ListPageProps> = ({
   }) => {
     return (
       <>
-        <CanAccess>{defaultButtons}</CanAccess>
+        <CanAccess resource={canAccessResource} action="create">
+          {defaultButtons}
+        </CanAccess>
         <ExportButton
           variant={'contained'}
           loading={exportIsLoading}
@@ -304,7 +310,7 @@ export const ListPage: React.FC<ListPageProps> = ({
     getRowHref || (!disableRowClick && resource) ? 'pointer' : 'default'
 
   return (
-    <CanAccess>
+    <CanAccess resource={canAccessResource} action="list">
       <List
         headerButtons={
           hideHeaderButtons ? () => null : headerButtons || defaultHeaderButtons
