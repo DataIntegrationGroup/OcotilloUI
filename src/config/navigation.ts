@@ -55,8 +55,12 @@ export type NavItem = {
   children?: NavItem[]
 }
 
-/** Toggle Example nav (typography, data grid demos). Set true to restore. */
-export const SHOW_EXAMPLE_NAV = true
+/**
+ * Show the Sandbox nav (typography + data-grid demos, WIP geothermal grids).
+ * Dev-only: true under `vite` dev, false in production builds, so the WIP
+ * section doesn't ship. Force true here to preview it in a prod build.
+ */
+export const SHOW_EXAMPLE_NAV = import.meta.env.DEV
 
 /**
  * Top bar: views and tools.

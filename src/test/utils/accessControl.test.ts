@@ -35,6 +35,8 @@ const routableResourceNames = routableResources
   .map((resource) => resource.name)
   .sort()
 const expectedRegisteredRoutableResources = [
+  'geothermal.dashboard',
+  'geothermal.geothermal_wells',
   'ocotillo.asset-unassociated',
   'ocotillo.collections',
   'ocotillo.contact',
@@ -47,6 +49,13 @@ const expectedRegisteredRoutableResources = [
   'ocotillo.thing-well-pdf-preview',
   'ocotillo.thing-well-projects',
 ].sort()
+
+// Geothermal resources are a separate portal — accessible to Geothermal roles
+// (list/show), not AMP roles.
+const GEOTHERMAL_ROUTABLE = [
+  'geothermal.dashboard',
+  'geothermal.geothermal_wells',
+]
 
 const expectedAccessByScenario: Scenario[] = [
   {
@@ -81,22 +90,29 @@ const expectedAccessByScenario: Scenario[] = [
   {
     name: 'AMP.Admin',
     groups: ['AMP.Admin'],
-    allowedResources: routableResources.map((resource) => resource.name),
+    // AMP.Admin owns the water portal, not geothermal.
+    allowedResources: routableResources
+      .map((resource) => resource.name)
+      .filter((name) => !name.startsWith('geothermal.')),
   },
   {
     name: 'Geothermal.Viewer',
     groups: ['Geothermal.Viewer'],
-    allowedResources: [],
+    allowedResources: [...GEOTHERMAL_ROUTABLE],
   },
   {
     name: 'Geothermal.Editor',
     groups: ['Geothermal.Editor'],
-    allowedResources: [],
+    allowedResources: [...GEOTHERMAL_ROUTABLE],
   },
   {
     name: 'Geothermal.Admin',
     groups: ['Geothermal.Admin'],
-    allowedResources: ['water.locations', 'ocotillo.location'],
+    allowedResources: [
+      'water.locations',
+      'ocotillo.location',
+      ...GEOTHERMAL_ROUTABLE,
+    ],
   },
   {
     name: 'AMP.Viewer + Geothermal.Editor',
@@ -108,6 +124,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
+      ...GEOTHERMAL_ROUTABLE,
     ],
   },
 ]

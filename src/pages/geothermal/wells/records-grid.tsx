@@ -8,6 +8,7 @@ import {
   canEnterGeothermalData,
   computePendingOps,
   flattenFieldErrors,
+  isNewRow,
   makeBlankRecord,
   NEW_PREFIX,
   rowKey,
@@ -42,9 +43,9 @@ const RECORD_COLUMNS: GridColumnSpec<IWellRecord>[] = [
     id: 'OBJECTID',
     title: 'ID',
     width: 90,
-    kind: 'number',
-    // Server-assigned key — read-only. Blank for not-yet-saved new rows.
-    getValue: (r) => r.OBJECTID,
+    // Server-assigned string key — read-only text. Blank for new rows (their
+    // OBJECTID holds a client temp id like "new:1" until saved).
+    getValue: (r) => (isNewRow(r) ? '' : r.OBJECTID),
   },
   textCol('WellDataID', 'WellDataID', 130),
   textCol('WellName', 'WellName', 180),
