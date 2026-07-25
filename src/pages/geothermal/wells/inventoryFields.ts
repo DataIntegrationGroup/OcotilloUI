@@ -1,0 +1,65 @@
+import type { IWell } from '@/interfaces/geothermal'
+
+// A not-yet-saved well being inventoried. well_data_id / thing_id are
+// server-assigned, so drafts hold only the user-entered fields.
+export type WellDraft = Partial<Omit<IWell, 'well_data_id' | 'thing_id'>>
+
+// Fields the user fills when inventorying a new well (everything except the
+// server-assigned id). Enum fields (well_class/well_type/status) are plain text
+// in P1–P3 — dropdowns land in P4.
+export const TEXT_FIELDS: (keyof WellDraft)[] = [
+  'name',
+  'api',
+  'well_number',
+  'well_class',
+  'well_type',
+  'status',
+  'operator',
+  'owner',
+  'completion_date',
+  'has_geothermal_data',
+  'county',
+  'state',
+]
+
+export const NUMBER_FIELDS: (keyof WellDraft)[] = [
+  'total_depth',
+  'latitude',
+  'longitude',
+]
+
+export const ALL_FIELDS: (keyof WellDraft)[] = [...TEXT_FIELDS, ...NUMBER_FIELDS]
+
+export const HEADERS: Record<keyof WellDraft, string> = {
+  name: 'Name',
+  api: 'API',
+  well_number: 'Well #',
+  well_class: 'Class',
+  well_type: 'Type',
+  status: 'Status',
+  operator: 'Operator',
+  owner: 'Owner',
+  completion_date: 'Completion',
+  has_geothermal_data: 'Geo data?',
+  county: 'County',
+  state: 'State',
+  total_depth: 'Total depth',
+  latitude: 'Latitude',
+  longitude: 'Longitude',
+}
+
+export function isBlankDraft(r: WellDraft): boolean {
+  return ALL_FIELDS.every((k) => {
+    const v = r[k]
+    return v == null || v === ''
+  })
+}
+
+// Drop empty fields so the create payload carries only what the user entered.
+export function cleanDraft(r: WellDraft): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(r)) {
+    if (v !== null && v !== '' && v !== undefined) out[k] = v
+  }
+  return out
+}

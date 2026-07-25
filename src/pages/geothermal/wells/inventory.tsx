@@ -1,6 +1,5 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useDataProvider } from '@refinedev/core'
-import type { IWell } from '@/interfaces/geothermal'
 import { useAccessCapabilities } from '@/hooks'
 import {
   EditableDataGrid,
@@ -13,56 +12,21 @@ import {
   flattenFieldErrors,
   type FieldErrors,
 } from './recordsGridLogic'
-
-// A not-yet-saved well being inventoried. well_data_id / thing_id are
-// server-assigned, so drafts hold only the user-entered fields.
-type WellDraft = Partial<Omit<IWell, 'well_data_id' | 'thing_id'>>
-
-// Fields the user fills when inventorying a new well (everything except the
-// server-assigned id). Enum fields (well_class/well_type/status) are plain text
-// in P1 — dropdowns land in P4. Boolean/date editors also come in P4.
-const TEXT_FIELDS: (keyof WellDraft)[] = [
-  'name',
-  'api',
-  'well_number',
-  'well_class',
-  'well_type',
-  'status',
-  'operator',
-  'owner',
-  'completion_date',
-  'has_geothermal_data',
-  'county',
-  'state',
-]
-const NUMBER_FIELDS: (keyof WellDraft)[] = [
-  'total_depth',
-  'latitude',
-  'longitude',
-]
-
-const HEADERS: Partial<Record<keyof WellDraft, string>> = {
-  name: 'Name',
-  api: 'API',
-  well_number: 'Well #',
-  well_class: 'Class',
-  well_type: 'Type',
-  status: 'Status',
-  operator: 'Operator',
-  owner: 'Owner',
-  completion_date: 'Completion',
-  has_geothermal_data: 'Geo data?',
-  county: 'County',
-  state: 'State',
-  total_depth: 'Total depth',
-  latitude: 'Latitude',
-  longitude: 'Longitude',
-}
+import {
+  ALL_FIELDS,
+  HEADERS,
+  NUMBER_FIELDS,
+  TEXT_FIELDS,
+  cleanDraft,
+  isBlankDraft,
+  type WellDraft,
+} from './inventoryFields'
+import { buildTemplateCsv, parseCsvFile } from './inventoryCsv'
 
 function textCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
   return {
     id,
-    title: HEADERS[id] ?? id,
+    title: HEADERS[id],
     width: 150,
     editable: true,
     getValue: (r) => (r[id] as CellValue) ?? '',
@@ -73,7 +37,7 @@ function textCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
 function numberCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
   return {
     id,
-    title: HEADERS[id] ?? id,
+    title: HEADERS[id],
     width: 130,
     kind: 'number',
     editable: true,
@@ -87,24 +51,6 @@ const COLUMNS: GridColumnSpec<WellDraft>[] = [
   ...NUMBER_FIELDS.map(numberCol),
 ]
 
-const ALL_FIELDS: (keyof WellDraft)[] = [...TEXT_FIELDS, ...NUMBER_FIELDS]
-
-function isBlankDraft(r: WellDraft): boolean {
-  return ALL_FIELDS.every((k) => {
-    const v = r[k]
-    return v == null || v === ''
-  })
-}
-
-// Drop empty fields so the create payload carries only what the user entered.
-function cleanDraft(r: WellDraft): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(r)) {
-    if (v !== null && v !== '' && v !== undefined) out[k] = v
-  }
-  return out
-}
-
 interface CreateSummary {
   created: number
   failed: number
@@ -112,33 +58,40 @@ interface CreateSummary {
 
 const INITIAL_ROWS = 10
 const ADD_ROW_COUNT = 10
+const TEMPLATE_FILENAME = 'geothermal-well-inventory-template.csv'
+
+function blankRows(n: number): WellDraft[] {
+  return Array.from({ length: n }, () => ({}))
+}
 
 /**
- * P1/P2 — Geothermal well inventory (direct grid entry + batch create).
+ * P1/P2/P3 — Geothermal well inventory (direct grid entry + CSV load + batch
+ * create).
  *
- * An editable spreadsheet for inventorying new geothermal wells. Rows are blank
- * well drafts the user types or pastes into; "Add rows" appends more. "Create
- * wells" POSTs every non-blank draft through the geothermal provider
- * (one request per row — no server bulk endpoint), tracking success/failure per
- * row: created wells drop out of the grid, failed rows stay with their rejected
- * cells tinted from the provider's Pydantic `fieldErrors`. CSV load lands in P3;
- * dropdown/date/boolean editors + client validation in P4. Admin-gated per
- * BDMS-878 (`canEnterGeothermalData`, bypassed in local dev).
+ * An editable spreadsheet for inventorying new geothermal wells. Rows come from
+ * typing/pasting into blank rows ("Add rows"), or from an uploaded CSV
+ * ("Upload CSV", with a matching "Download template"). "Create wells" POSTs
+ * every non-blank draft through the geothermal provider (one request per row —
+ * no server bulk endpoint), tracking success/failure per row: created wells
+ * drop out of the grid, failed rows stay with their rejected cells tinted from
+ * the provider's Pydantic `fieldErrors`. Dropdown/date/boolean editors +
+ * client validation land in P4. Admin-gated per BDMS-878
+ * (`canEnterGeothermalData`, bypassed in local dev).
  */
 export const GeoThermalWellInventory = () => {
   const { canManageGeothermal, isLoading: permLoading } =
     useAccessCapabilities()
   const dataProvider = useDataProvider()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [rows, setRows] = useState<WellDraft[]>(() =>
-    Array.from({ length: INITIAL_ROWS }, () => ({}))
-  )
+  const [rows, setRows] = useState<WellDraft[]>(() => blankRows(INITIAL_ROWS))
   const [saving, setSaving] = useState(false)
   // Validation errors per current row index (from a rejected create).
   const [saveErrors, setSaveErrors] = useState<Map<number, FieldErrors>>(
     new Map()
   )
   const [summary, setSummary] = useState<CreateSummary | null>(null)
+  const [csvStatus, setCsvStatus] = useState<string | null>(null)
 
   const filledCount = useMemo(
     () => rows.filter((r) => !isBlankDraft(r)).length,
@@ -150,6 +103,50 @@ export const GeoThermalWellInventory = () => {
     [saveErrors]
   )
 
+  const handleAddRows = useCallback(
+    () => setRows((prev) => [...prev, ...blankRows(ADD_ROW_COUNT)]),
+    []
+  )
+
+  const handleDownloadTemplate = useCallback(() => {
+    const blob = new Blob([buildTemplateCsv()], {
+      type: 'text/csv;charset=utf-8',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = TEMPLATE_FILENAME
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [])
+
+  const handleUploadCsv = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      // Reset so re-selecting the same file fires change again.
+      event.target.value = ''
+      if (!file) return
+
+      setSummary(null)
+      setSaveErrors(new Map())
+      try {
+        const { rows: parsed, unknownHeaders, errorCount } =
+          await parseCsvFile(file)
+        // Loaded rows plus a few blanks for further manual entry.
+        setRows([...parsed, ...blankRows(3)])
+        const notes: string[] = [`Loaded ${parsed.length} rows`]
+        if (unknownHeaders.length > 0) {
+          notes.push(`ignored columns: ${unknownHeaders.join(', ')}`)
+        }
+        if (errorCount > 0) notes.push(`${errorCount} malformed rows skipped`)
+        setCsvStatus(notes.join(' · '))
+      } catch {
+        setCsvStatus('Could not parse that CSV file.')
+      }
+    },
+    []
+  )
+
   const handleCreate = useCallback(async () => {
     const pending = rows
       .map((r, index) => ({ r, index }))
@@ -158,11 +155,14 @@ export const GeoThermalWellInventory = () => {
 
     setSaving(true)
     setSummary(null)
+    setCsvStatus(null)
 
     const provider = dataProvider('geothermal')
     const resource = 'thing/geothermal-well'
     const results = await Promise.allSettled(
-      pending.map(({ r }) => provider.create({ resource, variables: cleanDraft(r) }))
+      pending.map(({ r }) =>
+        provider.create({ resource, variables: cleanDraft(r) })
+      )
     )
 
     const succeeded = new Set<number>()
@@ -194,11 +194,7 @@ export const GeoThermalWellInventory = () => {
       nextRows.push(r)
     })
 
-    setRows(
-      nextRows.length > 0
-        ? nextRows
-        : Array.from({ length: INITIAL_ROWS }, () => ({}))
-    )
+    setRows(nextRows.length > 0 ? nextRows : blankRows(INITIAL_ROWS))
     setSaveErrors(nextErrors)
     setSummary({ created, failed })
     setSaving(false)
@@ -220,12 +216,6 @@ export const GeoThermalWellInventory = () => {
     )
   }
 
-  const handleAddRows = () =>
-    setRows((prev) => [
-      ...prev,
-      ...Array.from({ length: ADD_ROW_COUNT }, () => ({})),
-    ])
-
   return (
     <div className="flex flex-col h-[calc(100svh-3.5rem)] overflow-hidden">
       {/* Toolbar */}
@@ -235,6 +225,9 @@ export const GeoThermalWellInventory = () => {
           Enter new geothermal wells
         </span>
         <div className="ml-auto flex items-center gap-3">
+          {csvStatus && (
+            <span className="text-sm text-muted-foreground">{csvStatus}</span>
+          )}
           {summary && (
             <span
               className={
@@ -251,6 +244,29 @@ export const GeoThermalWellInventory = () => {
             {filledCount} {filledCount === 1 ? 'well' : 'wells'} to add
           </span>
           <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDownloadTemplate}
+            disabled={saving}
+          >
+            Download template
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={saving}
+          >
+            Upload CSV
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleUploadCsv}
+          />
+          <Button
             variant="outline"
             size="sm"
             onClick={handleAddRows}
@@ -258,7 +274,6 @@ export const GeoThermalWellInventory = () => {
           >
             Add {ADD_ROW_COUNT} rows
           </Button>
-          {/* CSV upload lands in P3. */}
           <Button
             size="sm"
             onClick={handleCreate}
