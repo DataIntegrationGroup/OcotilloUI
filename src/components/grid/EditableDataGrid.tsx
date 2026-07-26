@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import '@glideapps/glide-data-grid/dist/index.css'
+import '@glideapps/glide-data-grid-cells/dist/index.css'
 import {
   DataEditor,
   type DataEditorProps,
@@ -9,14 +10,15 @@ import {
   type GridColumn,
   type Item,
 } from '@glideapps/glide-data-grid'
+import { allCells } from '@glideapps/glide-data-grid-cells'
 import { useGdgTheme } from './gdgTheme'
 import { useElementSize } from './useElementSize'
 
 /** Value a single cell can hold. */
-export type CellValue = string | number | null | undefined
+export type CellValue = string | number | boolean | null | undefined
 
 /** Which Glide cell editor a column renders. */
-export type GridCellType = 'text' | 'number' | 'uri'
+export type GridCellType = 'text' | 'number' | 'uri' | 'boolean' | 'dropdown'
 
 /**
  * Entity-agnostic column definition for {@link EditableDataGrid}.
@@ -37,6 +39,8 @@ export interface GridColumnSpec<T> {
   group?: string
   /** Editor kind. Defaults to `'text'`. */
   kind?: GridCellType
+  /** Allowed values for a `'dropdown'` column. Ignored for other kinds. */
+  options?: string[]
   /** Whether cells in this column can be edited inline. Defaults to `false`. */
   editable?: boolean
   /** Read the display value for a row. */
@@ -160,6 +164,31 @@ export function EditableDataGrid<T>({
         }
       }
 
+      if (colDef.kind === 'boolean') {
+        return {
+          kind: GridCellKind.Boolean,
+          data: value === true || value === 'true',
+          allowOverlay: false,
+          readonly: !editable,
+          ...errorTheme,
+        }
+      }
+
+      if (colDef.kind === 'dropdown') {
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: editable,
+          readonly: !editable,
+          copyData: display,
+          data: {
+            kind: 'dropdown-cell',
+            value: display,
+            allowedValues: colDef.options ?? [],
+          },
+          ...errorTheme,
+        }
+      }
+
       return {
         kind: GridCellKind.Text,
         data: display,
@@ -184,6 +213,12 @@ export function EditableDataGrid<T>({
         next = newValue.data ?? null
       } else if (newValue.kind === GridCellKind.Text) {
         next = newValue.data === '' ? null : newValue.data
+      } else if (newValue.kind === GridCellKind.Boolean) {
+        next = newValue.data === true
+      } else if (newValue.kind === GridCellKind.Custom) {
+        // Dropdown cell — read the selected value from its data payload.
+        const raw = (newValue.data as { value?: string | null })?.value
+        next = raw == null || raw === '' ? null : raw
       } else {
         return
       }
@@ -217,6 +252,7 @@ export function EditableDataGrid<T>({
           getCellContent={getCellContent}
           onCellEdited={onCellEdited}
           onCellClicked={onCellClicked}
+          customRenderers={allCells}
           width={size.width}
           height={size.height}
           theme={theme}

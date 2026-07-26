@@ -323,7 +323,7 @@ function CreateWellPanel({ onClose }: { onClose: () => void }) {
   )
 }
 
-type BulkRow = Partial<Record<string, string | number | null>>
+type BulkRow = Partial<Record<string, CellValue>>
 
 function makeBulkRow(): BulkRow {
   return {}

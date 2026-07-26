@@ -48,6 +48,38 @@ export const HEADERS: Record<keyof WellDraft, string> = {
   longitude: 'Longitude',
 }
 
+// Allowed values for the enum (dropdown) fields.
+// PROVISIONAL — observed from the live data (8 wells); confirm the full lists
+// with the backend once the contract lands.
+export const ENUM_OPTIONS: Partial<Record<keyof WellDraft, string[]>> = {
+  well_type: ['Wildcat', 'Production', 'Exploration'],
+  well_class: ['Oil & Gas'],
+  status: ['Active', 'Abandoned', 'Plugged'],
+}
+
+// Fields required to create a well.
+// PROVISIONAL — the create schema isn't in the (stripped) OpenAPI; confirm the
+// real required set with the backend.
+export const REQUIRED_FIELDS: (keyof WellDraft)[] = [
+  'name',
+  'api',
+  'well_type',
+  'county',
+  'state',
+  'latitude',
+  'longitude',
+]
+
+/** Required fields that are empty on a draft, keyed field → message. */
+export function missingRequired(r: WellDraft): Record<string, string> {
+  const errors: Record<string, string> = {}
+  for (const f of REQUIRED_FIELDS) {
+    const v = r[f]
+    if (v == null || v === '') errors[f] = 'Required'
+  }
+  return errors
+}
+
 export function isBlankDraft(r: WellDraft): boolean {
   return ALL_FIELDS.every((k) => {
     const v = r[k]

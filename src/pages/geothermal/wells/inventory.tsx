@@ -14,16 +14,44 @@ import {
 } from './recordsGridLogic'
 import {
   ALL_FIELDS,
+  ENUM_OPTIONS,
   HEADERS,
   NUMBER_FIELDS,
   TEXT_FIELDS,
   cleanDraft,
   isBlankDraft,
+  missingRequired,
   type WellDraft,
 } from './inventoryFields'
 import { buildTemplateCsv, parseCsvFile } from './inventoryCsv'
 
+const BOOLEAN_FIELD: keyof WellDraft = 'has_geothermal_data'
+
 function textCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
+  // Enum fields render as dropdowns; has_geothermal_data as a checkbox.
+  if (ENUM_OPTIONS[id]) {
+    return {
+      id,
+      title: HEADERS[id],
+      width: 140,
+      kind: 'dropdown',
+      options: ENUM_OPTIONS[id],
+      editable: true,
+      getValue: (r) => (r[id] as CellValue) ?? '',
+      setValue: (r, v) => ({ ...r, [id]: v ?? '' }),
+    }
+  }
+  if (id === BOOLEAN_FIELD) {
+    return {
+      id,
+      title: HEADERS[id],
+      width: 110,
+      kind: 'boolean',
+      editable: true,
+      getValue: (r) => r.has_geothermal_data ?? false,
+      setValue: (r, v) => ({ ...r, has_geothermal_data: v === true }),
+    }
+  }
   return {
     id,
     title: HEADERS[id],
@@ -98,9 +126,28 @@ export const GeoThermalWellInventory = () => {
     [rows]
   )
 
+  // Client-side validation: required fields missing on any non-blank row.
+  const validationErrors = useMemo(() => {
+    const map = new Map<number, FieldErrors>()
+    rows.forEach((r, i) => {
+      if (isBlankDraft(r)) return
+      const missing = missingRequired(r)
+      if (Object.keys(missing).length > 0) map.set(i, missing)
+    })
+    return map
+  }, [rows])
+
+  const invalidCount = validationErrors.size
+
+  // Validation errors tint immediately; save (server) errors override them.
   const cellErrors = useCallback(
-    (rowIndex: number) => saveErrors.get(rowIndex),
-    [saveErrors]
+    (rowIndex: number): FieldErrors | undefined => {
+      const validation = validationErrors.get(rowIndex)
+      const save = saveErrors.get(rowIndex)
+      if (!validation && !save) return undefined
+      return { ...validation, ...save }
+    },
+    [validationErrors, saveErrors]
   )
 
   const handleAddRows = useCallback(
@@ -240,9 +287,16 @@ export const GeoThermalWellInventory = () => {
               {summary.failed > 0 ? `, ${summary.failed} failed` : ''}
             </span>
           )}
-          <span className="text-sm text-muted-foreground">
-            {filledCount} {filledCount === 1 ? 'well' : 'wells'} to add
-          </span>
+          {invalidCount > 0 ? (
+            <span className="text-sm text-destructive">
+              {invalidCount} {invalidCount === 1 ? 'row' : 'rows'} missing
+              required fields
+            </span>
+          ) : (
+            <span className="text-sm text-muted-foreground">
+              {filledCount} {filledCount === 1 ? 'well' : 'wells'} to add
+            </span>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -277,7 +331,7 @@ export const GeoThermalWellInventory = () => {
           <Button
             size="sm"
             onClick={handleCreate}
-            disabled={saving || filledCount === 0}
+            disabled={saving || filledCount === 0 || invalidCount > 0}
           >
             {saving ? 'Creating…' : 'Create wells'}
           </Button>
