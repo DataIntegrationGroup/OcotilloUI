@@ -7,35 +7,46 @@ const H = 460
 const M = { top: 16, right: 16, bottom: 40, left: 52 }
 
 /**
- * Temperature-depth plot: temperature on X, depth on Y (increasing downward).
+ * Depth profile: a chosen measurement on X, depth on Y (increasing downward).
  * Renders the log's points as a connected line + dots. Pure SVG + d3 scales.
  */
-export function TempDepthChart({ points }: { points: ITempDepthPoint[] }) {
+export function TempDepthChart({
+  points,
+  xField,
+  xLabel,
+}: {
+  points: ITempDepthPoint[]
+  xField: keyof ITempDepthPoint
+  xLabel: string
+}) {
   const data = useMemo(
     () =>
       points
-        .filter((p) => p.depth_ft != null && p.temp_c != null)
-        .map((p) => ({ depth: p.depth_ft as number, temp: p.temp_c as number }))
+        .filter((p) => p.depth_ft != null && p[xField] != null)
+        .map((p) => ({
+          depth: p.depth_ft as number,
+          value: p[xField] as number,
+        }))
         .sort((a, b) => a.depth - b.depth),
-    [points]
+    [points, xField]
   )
 
   if (data.length < 2) {
     return (
       <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-        Add depth (ft) and temp (°C) to plot the temperature-depth profile.
+        Add depth (ft) and {xLabel} to plot the profile.
       </div>
     )
   }
 
-  const tExtent = extent(data, (d) => d.temp) as [number, number]
+  const vExtent = extent(data, (d) => d.value) as [number, number]
   const dExtent = extent(data, (d) => d.depth) as [number, number]
-  const x = scaleLinear().domain(tExtent).nice().range([M.left, W - M.right])
+  const x = scaleLinear().domain(vExtent).nice().range([M.left, W - M.right])
   // Depth increases downward: min depth at top, max at bottom.
   const y = scaleLinear().domain(dExtent).nice().range([M.top, H - M.bottom])
   const path =
-    line<{ depth: number; temp: number }>()
-      .x((d) => x(d.temp))
+    line<{ depth: number; value: number }>()
+      .x((d) => x(d.value))
       .y((d) => y(d.depth))(data) ?? ''
 
   return (
@@ -86,7 +97,7 @@ export function TempDepthChart({ points }: { points: ITempDepthPoint[] }) {
         textAnchor="middle"
         className="fill-muted-foreground text-[10px]"
       >
-        Temp (°C)
+        {xLabel}
       </text>
       <text
         x={-(M.top + H - M.bottom) / 2}
@@ -102,7 +113,7 @@ export function TempDepthChart({ points }: { points: ITempDepthPoint[] }) {
       {data.map((d, i) => (
         <circle
           key={i}
-          cx={x(d.temp)}
+          cx={x(d.value)}
           cy={y(d.depth)}
           r={1.6}
           fill="currentColor"

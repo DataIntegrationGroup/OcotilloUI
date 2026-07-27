@@ -27,6 +27,14 @@ export const TEMP_DEPTH_SPECS: TempDepthFieldSpec[] = [
 export const TEMP_DEPTH_FIELDS: (keyof ITempDepthPoint)[] = TEMP_DEPTH_SPECS.map(
   (s) => s.id
 )
+
+// Measurements that can be plotted against depth.
+export const PLOT_FIELDS: { id: keyof ITempDepthPoint; label: string }[] = [
+  { id: 'temp_c', label: 'Temp (°C)' },
+  { id: 'temp_f', label: 'Temp (°F)' },
+  { id: 'resistance', label: 'Resistance' },
+  { id: 'gradient_c_km', label: 'Gradient (°C/km)' },
+]
 const NUMBER_FIELDS = new Set<keyof ITempDepthPoint>(
   TEMP_DEPTH_SPECS.filter((s) => s.kind === 'number').map((s) => s.id)
 )

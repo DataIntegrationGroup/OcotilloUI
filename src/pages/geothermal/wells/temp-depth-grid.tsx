@@ -4,8 +4,16 @@ import type { ITempDepthPoint } from '@/interfaces/geothermal'
 import { useAccessCapabilities } from '@/hooks'
 import { EditableDataGrid } from '@/components/grid'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { canEnterGeothermalData } from './recordsGridLogic'
 import {
+  PLOT_FIELDS,
   TEMP_DEPTH_COLUMNS,
   buildTempDepthTemplate,
   isBlankPoint,
@@ -51,6 +59,7 @@ export const GeoThermalTempDepthGrid = () => {
   )
   const [saving, setSaving] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
+  const [plotField, setPlotField] = useState<keyof ITempDepthPoint>('temp_c')
 
   useEffect(() => {
     const data = query.data?.data
@@ -205,8 +214,32 @@ export const GeoThermalTempDepthGrid = () => {
             freezeColumns={1}
           />
         </div>
-        <div className="w-[360px] shrink-0 overflow-y-auto border-l p-3">
-          <TempDepthChart points={points} />
+        <div className="flex w-[360px] shrink-0 flex-col gap-2 overflow-y-auto border-l p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Depth vs</span>
+            <Select
+              value={plotField}
+              onValueChange={(v) => setPlotField(v as keyof ITempDepthPoint)}
+            >
+              <SelectTrigger className="h-7 w-[180px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PLOT_FIELDS.map((f) => (
+                  <SelectItem key={f.id} value={f.id}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <TempDepthChart
+            points={points}
+            xField={plotField}
+            xLabel={
+              PLOT_FIELDS.find((f) => f.id === plotField)?.label ?? plotField
+            }
+          />
         </div>
       </div>
     </div>
