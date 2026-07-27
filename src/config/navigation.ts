@@ -57,10 +57,11 @@ export type NavItem = {
 
 /**
  * Show the Sandbox nav (typography + data-grid demos, WIP geothermal grids).
- * Dev-only: true under `vite` dev, false in production builds, so the WIP
- * section doesn't ship. Force true here to preview it in a prod build.
+ * Visible in local dev and on PR preview deploys (VITE_APP_ENV=preview), so
+ * reviewers can exercise the WIP work; hidden on staging/production.
  */
-export const SHOW_EXAMPLE_NAV = import.meta.env.DEV
+export const SHOW_EXAMPLE_NAV =
+  import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview'
 
 /**
  * Top bar: views and tools.
