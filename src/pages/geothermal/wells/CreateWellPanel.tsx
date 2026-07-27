@@ -158,6 +158,8 @@ export function CreateWellPanel({ onClose, onCreated }: CreateWellPanelProps) {
           onConfirm={(lat, lon) => {
             setField('latitude', lat)
             setField('longitude', lon)
+            // Map pins are WGS84 — record the datum for the picked coordinates.
+            setField('source_datum', 'WGS84')
             setPickerOpen(false)
           }}
           onClose={() => setPickerOpen(false)}
