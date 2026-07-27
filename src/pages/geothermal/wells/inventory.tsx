@@ -7,11 +7,13 @@ import {
   type GridColumnSpec,
 } from '@/components/grid'
 import { Button } from '@/components/ui/button'
+import { EditPanelLayout } from '@/components/editing'
 import {
   canEnterGeothermalData,
   flattenFieldErrors,
   type FieldErrors,
 } from './recordsGridLogic'
+import { CreateWellPanel } from './CreateWellPanel'
 import {
   FIELD_SPECS,
   type FieldSpec,
@@ -161,6 +163,7 @@ export const GeoThermalWellInventory = () => {
     const draft = loadDraft()
     return draft ? `Restored ${draft.length} saved rows` : null
   })
+  const [createOpen, setCreateOpen] = useState(false)
   // Row whose location is being picked on the map (null = closed).
   const [pickerRow, setPickerRow] = useState<number | null>(null)
 
@@ -411,6 +414,14 @@ export const GeoThermalWellInventory = () => {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => setCreateOpen(true)}
+            disabled={saving}
+          >
+            Create Well
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleAddRows}
             disabled={saving}
           >
@@ -434,14 +445,27 @@ export const GeoThermalWellInventory = () => {
         </div>
       </div>
 
-      <EditableDataGrid
-        columns={columns}
-        rows={rows}
-        onRowsChange={setRows}
-        cellErrors={cellErrors}
-        rowMarkers="number"
-        freezeColumns={1}
-      />
+      <EditPanelLayout
+        open={createOpen}
+        panel={
+          <CreateWellPanel
+            onClose={() => setCreateOpen(false)}
+            onCreated={() => {
+              setCreateOpen(false)
+              setSummary({ created: 1, failed: 0 })
+            }}
+          />
+        }
+      >
+        <EditableDataGrid
+          columns={columns}
+          rows={rows}
+          onRowsChange={setRows}
+          cellErrors={cellErrors}
+          rowMarkers="number"
+          freezeColumns={1}
+        />
+      </EditPanelLayout>
 
       {pickerRow !== null && (
         <LocationPickerModal
