@@ -1275,7 +1275,7 @@ function SidebarAutoCollapse(): null {
       autoCollapsed.current = false
       setOpen(true)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: setOpen is stable from sidebar context.
   }, [location.pathname])
 
   return null
