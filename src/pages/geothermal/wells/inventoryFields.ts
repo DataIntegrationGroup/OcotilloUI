@@ -86,6 +86,25 @@ export function formatCoord(n: number): string {
   return Number(n.toFixed(7)).toString()
 }
 
+// Column header tooltips — one per field.
+export const DESCRIPTIONS: Record<keyof WellDraft, string> = {
+  name: 'Well name / identifier',
+  api: 'API well number',
+  well_number: 'Well number',
+  well_class: 'Well class (e.g. Oil & Gas)',
+  well_type: 'Well type (Wildcat, Production, Exploration)',
+  status: 'Well status (Active, Abandoned, Plugged)',
+  operator: 'Operator company',
+  owner: 'Owner',
+  completion_date: 'Completion date (ISO, e.g. 2006-04-06)',
+  has_geothermal_data: 'Whether the well has geothermal data',
+  county: 'County — server-derived from lat/lon when left blank',
+  state: 'State — server-derived from lat/lon when blank (default NM)',
+  total_depth: 'Total depth, in feet',
+  latitude: 'Latitude in decimal degrees',
+  longitude: 'Longitude in decimal degrees',
+}
+
 export function isBlankDraft(r: WellDraft): boolean {
   return ALL_FIELDS.every((k) => {
     const v = r[k]

@@ -18,6 +18,7 @@ import {
   HEADERS,
   NUMBER_FIELDS,
   TEXT_FIELDS,
+  DESCRIPTIONS,
   cleanDraft,
   formatCoord,
   isBlankDraft,
@@ -35,6 +36,7 @@ function textCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
     return {
       id,
       title: HEADERS[id],
+      tooltip: DESCRIPTIONS[id],
       width: 140,
       kind: 'dropdown',
       options: ENUM_OPTIONS[id],
@@ -47,6 +49,7 @@ function textCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
     return {
       id,
       title: HEADERS[id],
+      tooltip: DESCRIPTIONS[id],
       width: 110,
       kind: 'boolean',
       editable: true,
@@ -57,6 +60,7 @@ function textCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
   return {
     id,
     title: HEADERS[id],
+    tooltip: DESCRIPTIONS[id],
     width: 150,
     editable: true,
     getValue: (r) => (r[id] as CellValue) ?? '',
@@ -70,6 +74,7 @@ function numberCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
   return {
     id,
     title: HEADERS[id],
+    tooltip: DESCRIPTIONS[id],
     width: 130,
     kind: 'number',
     editable: true,
@@ -179,6 +184,7 @@ export const GeoThermalWellInventory = () => {
       {
         id: '__location',
         title: 'Location',
+        tooltip: 'Pick the well location on a map',
         width: 140,
         getValue: (r) =>
           r.latitude != null && r.longitude != null
