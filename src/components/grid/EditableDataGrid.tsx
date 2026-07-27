@@ -141,12 +141,19 @@ export function EditableDataGrid<T>({
 
   const onItemHovered = useCallback(
     (args: GridMouseEventArgs) => {
-      const text =
-        (args.kind === 'header' && columns[args.location[0]]?.tooltip) || null
+      const [col, row] = args.location
+      let text: string | null = null
+      if (args.kind === 'header') {
+        text = columns[col]?.tooltip ?? null
+      } else if (args.kind === 'cell') {
+        // On an errored cell, show its validation message (guidance).
+        const colId = columns[col]?.id
+        text = (colId && cellErrors?.(row)?.[colId]) || null
+      }
       hoverTextRef.current = text
       if (!text) setTooltip(null)
     },
-    [columns]
+    [columns, cellErrors]
   )
 
   const onMouseMove = useCallback((e: React.MouseEvent) => {

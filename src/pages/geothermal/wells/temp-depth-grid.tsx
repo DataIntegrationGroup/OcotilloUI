@@ -12,6 +12,7 @@ import {
   makeBlankPoint,
   parseTempDepthCsv,
 } from './tempDepth'
+import { TempDepthChart } from './TempDepthChart'
 
 const INITIAL_ROWS = 20
 const ADD_ROW_COUNT = 20
@@ -192,15 +193,22 @@ export const GeoThermalTempDepthGrid = () => {
         </div>
       </div>
 
-      <EditableDataGrid
-        columns={TEMP_DEPTH_COLUMNS}
-        rows={points}
-        onRowsChange={setPoints}
-        rowMarkers="number"
-        isLoading={query.isLoading}
-        loadingMessage="Loading log…"
-        freezeColumns={1}
-      />
+      <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-w-0 flex-col">
+          <EditableDataGrid
+            columns={TEMP_DEPTH_COLUMNS}
+            rows={points}
+            onRowsChange={setPoints}
+            rowMarkers="number"
+            isLoading={query.isLoading}
+            loadingMessage="Loading log…"
+            freezeColumns={1}
+          />
+        </div>
+        <div className="w-[360px] shrink-0 overflow-y-auto border-l p-3">
+          <TempDepthChart points={points} />
+        </div>
+      </div>
     </div>
   )
 }

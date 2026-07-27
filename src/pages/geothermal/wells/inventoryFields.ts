@@ -23,7 +23,9 @@ export interface FieldSpec {
 /** Structured API number, e.g. 30-039-05212 (state-county-well). */
 export function validateApi(value: unknown): string | undefined {
   const s = String(value).trim()
-  return /^\d{2}-\d{3}-\d{4,5}$/.test(s) ? undefined : 'Format: SS-CCC-NNNNN'
+  return /^\d{2}-\d{3}-\d{4,5}$/.test(s)
+    ? undefined
+    : 'Invalid API. Use SS-CCC-NNNNN (2-3-4/5 digits), e.g. 30-039-05212.'
 }
 
 // PLSS legal description in one field: township + N/S, range + E/W, section,
@@ -32,7 +34,9 @@ const PLSS_RE =
   /^\s*T?\s*\d{1,3}\s*[NS]\s+R?\s*\d{1,3}\s*[EW]\s+(?:S|SEC\.?)?\s*\d{1,2}(?:\s+[A-Z0-9/-]+)?\s*$/i
 
 export function validatePlss(value: unknown): string | undefined {
-  return PLSS_RE.test(String(value)) ? undefined : 'Format: T24N R5W S33 [part]'
+  return PLSS_RE.test(String(value))
+    ? undefined
+    : 'Invalid PLSS. Use township-range-section, e.g. T24N R5W S33 SE-SE.'
 }
 
 export interface ParsedApi {
@@ -134,7 +138,7 @@ export function validateDraft(r: WellDraft): Record<string, string> {
     const v = r[spec.id]
     const empty = v == null || v === ''
     if (spec.required && empty) {
-      errors[spec.id] = 'Required'
+      errors[spec.id] = `${spec.header} is required — enter a value.`
       continue
     }
     if (spec.validate && !empty) {
