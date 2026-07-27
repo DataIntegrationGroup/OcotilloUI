@@ -1,11 +1,10 @@
 import Papa from 'papaparse'
 import {
   ALL_FIELDS,
+  BOOLEAN_FIELDS,
   NUMBER_FIELDS,
   type WellDraft,
 } from './inventoryFields'
-
-const NUMBER_FIELD_SET = new Set<string>(NUMBER_FIELDS as string[])
 
 // Canonical field name for a CSV header, matched case-insensitively and
 // trimmed. Returns undefined for headers that aren't well fields.
@@ -45,10 +44,14 @@ export function mapRecordsToDrafts(
       if (!field) continue
       const value = (raw ?? '').trim()
       if (value === '') continue
-      if (NUMBER_FIELD_SET.has(field)) {
+      if (NUMBER_FIELDS.has(field)) {
         const n = Number(value)
         if (Number.isNaN(n)) continue
         ;(draft as Record<string, unknown>)[field] = n
+      } else if (BOOLEAN_FIELDS.has(field)) {
+        ;(draft as Record<string, unknown>)[field] = /^(1|true|yes|y)$/i.test(
+          value
+        )
       } else {
         ;(draft as Record<string, unknown>)[field] = value
       }

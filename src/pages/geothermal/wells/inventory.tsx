@@ -13,84 +13,71 @@ import {
   type FieldErrors,
 } from './recordsGridLogic'
 import {
-  ALL_FIELDS,
-  ENUM_OPTIONS,
-  HEADERS,
-  NUMBER_FIELDS,
-  TEXT_FIELDS,
-  DESCRIPTIONS,
+  FIELD_SPECS,
+  type FieldSpec,
   cleanDraft,
   formatCoord,
   isBlankDraft,
-  missingRequired,
+  validateDraft,
   type WellDraft,
 } from './inventoryFields'
 import { buildTemplateCsv, parseCsvFile } from './inventoryCsv'
 import { LocationPickerModal } from './LocationPickerModal'
 
-const BOOLEAN_FIELD: keyof WellDraft = 'has_geothermal_data'
-
-function textCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
-  // Enum fields render as dropdowns; has_geothermal_data as a checkbox.
-  if (ENUM_OPTIONS[id]) {
+// Build a grid column from a field spec, dispatching by kind.
+function specToColumn(spec: FieldSpec): GridColumnSpec<WellDraft> {
+  const id = spec.id
+  const base = {
+    id,
+    title: spec.header,
+    tooltip: spec.description,
+    group: spec.group,
+    editable: true,
+  }
+  if (spec.kind === 'boolean') {
     return {
-      id,
-      title: HEADERS[id],
-      tooltip: DESCRIPTIONS[id],
-      width: 140,
+      ...base,
+      width: 90,
+      kind: 'boolean',
+      getValue: (r) => (r[id] as boolean | null) ?? false,
+      setValue: (r, v) => ({ ...r, [id]: v === true }),
+    }
+  }
+  if (spec.kind === 'dropdown') {
+    return {
+      ...base,
+      width: 130,
       kind: 'dropdown',
-      options: ENUM_OPTIONS[id],
-      editable: true,
+      options: spec.options ?? [],
       getValue: (r) => (r[id] as CellValue) ?? '',
       setValue: (r, v) => ({ ...r, [id]: v ?? '' }),
     }
   }
-  if (id === BOOLEAN_FIELD) {
+  if (spec.kind === 'number') {
     return {
-      id,
-      title: HEADERS[id],
-      tooltip: DESCRIPTIONS[id],
-      width: 110,
-      kind: 'boolean',
-      editable: true,
-      getValue: (r) => r.has_geothermal_data ?? false,
-      setValue: (r, v) => ({ ...r, has_geothermal_data: v === true }),
+      ...base,
+      width: 120,
+      kind: 'number',
+      getValue: (r) => (r[id] as CellValue) ?? null,
+      setValue: (r, v) => ({ ...r, [id]: v as number | null }),
+      // Coordinates display rounded; full precision kept for save.
+      ...(spec.coord
+        ? {
+            format: (v: CellValue) =>
+              typeof v === 'number' ? formatCoord(v) : '',
+          }
+        : {}),
     }
   }
   return {
-    id,
-    title: HEADERS[id],
-    tooltip: DESCRIPTIONS[id],
+    ...base,
     width: 150,
-    editable: true,
     getValue: (r) => (r[id] as CellValue) ?? '',
     setValue: (r, v) => ({ ...r, [id]: v ?? '' }),
   }
 }
 
-const COORD_FIELDS = new Set<keyof WellDraft>(['latitude', 'longitude'])
-
-function numberCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
-  return {
-    id,
-    title: HEADERS[id],
-    tooltip: DESCRIPTIONS[id],
-    width: 130,
-    kind: 'number',
-    editable: true,
-    getValue: (r) => (r[id] as CellValue) ?? null,
-    setValue: (r, v) => ({ ...r, [id]: v as number | null }),
-    // Coordinates: show 7 sig figs; full precision is kept for save.
-    ...(COORD_FIELDS.has(id)
-      ? { format: (v: CellValue) => (typeof v === 'number' ? formatCoord(v) : '') }
-      : {}),
-  }
-}
-
-const COLUMNS: GridColumnSpec<WellDraft>[] = [
-  ...TEXT_FIELDS.map(textCol),
-  ...NUMBER_FIELDS.map(numberCol),
-]
+const COLUMNS: GridColumnSpec<WellDraft>[] = FIELD_SPECS.map(specToColumn)
 
 interface CreateSummary {
   created: number
@@ -183,7 +170,8 @@ export const GeoThermalWellInventory = () => {
       ...COLUMNS,
       {
         id: '__location',
-        title: 'Location',
+        title: 'Pick',
+        group: 'Location',
         tooltip: 'Pick the well location on a map',
         width: 140,
         getValue: (r) =>
@@ -212,13 +200,14 @@ export const GeoThermalWellInventory = () => {
     [rows]
   )
 
-  // Client-side validation: required fields missing on any non-blank row.
+  // Client-side validation: required-empty + per-field validators (e.g. API
+  // format) on any non-blank row.
   const validationErrors = useMemo(() => {
     const map = new Map<number, FieldErrors>()
     rows.forEach((r, i) => {
       if (isBlankDraft(r)) return
-      const missing = missingRequired(r)
-      if (Object.keys(missing).length > 0) map.set(i, missing)
+      const errs = validateDraft(r)
+      if (Object.keys(errs).length > 0) map.set(i, errs)
     })
     return map
   }, [rows])
@@ -389,8 +378,7 @@ export const GeoThermalWellInventory = () => {
           )}
           {invalidCount > 0 ? (
             <span className="text-sm text-destructive">
-              {invalidCount} {invalidCount === 1 ? 'row' : 'rows'} missing
-              required fields
+              {invalidCount} {invalidCount === 1 ? 'row' : 'rows'} with errors
             </span>
           ) : (
             <span className="text-sm text-muted-foreground">

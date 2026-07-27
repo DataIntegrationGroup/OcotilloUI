@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import '@glideapps/glide-data-grid/dist/index.css'
 import '@glideapps/glide-data-grid-cells/dist/index.css'
 import {
@@ -130,7 +130,9 @@ export function EditableDataGrid<T>({
 }: EditableDataGridProps<T>) {
   const theme = useGdgTheme()
   const [containerRef, size] = useElementSize()
-  // Header tooltip: text + position (relative to the grid container).
+  // Header tooltip: text follows the cursor (fixed viewport position). The
+  // hovered header's description is tracked in a ref; mousemove positions it.
+  const hoverTextRef = useRef<string | null>(null)
   const [tooltip, setTooltip] = useState<{
     text: string
     x: number
@@ -139,21 +141,18 @@ export function EditableDataGrid<T>({
 
   const onItemHovered = useCallback(
     (args: GridMouseEventArgs) => {
-      if (args.kind === 'header') {
-        const text = columns[args.location[0]]?.tooltip
-        if (text) {
-          setTooltip({
-            text,
-            x: args.bounds.x + args.bounds.width / 2,
-            y: args.bounds.y + args.bounds.height,
-          })
-          return
-        }
-      }
-      setTooltip(null)
+      const text =
+        (args.kind === 'header' && columns[args.location[0]]?.tooltip) || null
+      hoverTextRef.current = text
+      if (!text) setTooltip(null)
     },
     [columns]
   )
+
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
+    const text = hoverTextRef.current
+    setTooltip(text ? { text, x: e.clientX, y: e.clientY } : null)
+  }, [])
 
   const gridColumns: GridColumn[] = columns.map((c) => ({
     id: c.id,
@@ -275,7 +274,12 @@ export function EditableDataGrid<T>({
   )
 
   return (
-    <div ref={containerRef} className="relative flex flex-col flex-1 min-w-0">
+    <div
+      ref={containerRef}
+      onMouseMove={onMouseMove}
+      onMouseLeave={() => setTooltip(null)}
+      className="relative flex flex-col flex-1 min-w-0"
+    >
       {isLoading || size.width === 0 ? (
         <div className="flex items-center justify-center flex-1 text-sm text-muted-foreground">
           {isLoading ? loadingMessage : null}
@@ -304,8 +308,8 @@ export function EditableDataGrid<T>({
           />
           {tooltip && (
             <div
-              className="pointer-events-none absolute z-50 max-w-xs -translate-x-1/2 rounded bg-neutral-900 px-2 py-1 text-xs text-white shadow-md"
-              style={{ left: tooltip.x, top: tooltip.y + 4 }}
+              className="pointer-events-none fixed z-50 max-w-xs rounded bg-neutral-900 px-2 py-1 text-xs text-white shadow-md"
+              style={{ left: tooltip.x + 12, top: tooltip.y + 16 }}
             >
               {tooltip.text}
             </div>
