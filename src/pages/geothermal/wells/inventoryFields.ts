@@ -54,7 +54,7 @@ export const FIELD_SPECS: FieldSpec[] = [
   { id: 'well_number', header: 'Well #', group: 'Identity', kind: 'text', description: 'Well number' },
   { id: 'import_id', header: 'Import ID', group: 'Identity', kind: 'text', description: 'Source import identifier' },
   { id: 'import_db', header: 'Import DB', group: 'Identity', kind: 'text', description: 'Source import database' },
-  { id: 'guid', header: 'GUID', group: 'Identity', kind: 'text', description: 'Globally unique identifier' },
+  // guid is server-assigned — not a user field.
 
   // ── Classification ──
   { id: 'well_class', header: 'Class', group: 'Classification', kind: 'dropdown', description: 'Well class', options: ['Oil & Gas', 'Water', 'Geothermal'] },

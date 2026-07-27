@@ -19,10 +19,12 @@ import {
   FIELD_SPECS,
   type FieldSpec,
   cleanDraft,
+  formatCoord,
   validateDraft,
   type WellDraft,
 } from './inventoryFields'
 import { flattenFieldErrors } from './recordsGridLogic'
+import { LocationPickerModal } from './LocationPickerModal'
 
 // FIELD_SPECS grouped into ordered sections for the form.
 const SECTIONS: { title: string; specs: FieldSpec[] }[] = (() => {
@@ -57,6 +59,7 @@ export function CreateWellPanel({ onClose, onCreated }: CreateWellPanelProps) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [message, setMessage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const setField = useCallback((id: keyof WellDraft, value: unknown) => {
     setDraft((d) => ({ ...d, [id]: value }))
@@ -130,8 +133,36 @@ export function CreateWellPanel({ onClose, onCreated }: CreateWellPanelProps) {
               )}
             </EditPanelField>
           ))}
+          {section.title === 'Location' && (
+            <EditPanelField label="Map" span="full">
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-start"
+                onClick={() => setPickerOpen(true)}
+              >
+                📍{' '}
+                {draft.latitude != null && draft.longitude != null
+                  ? `${formatCoord(draft.latitude)}, ${formatCoord(draft.longitude)}`
+                  : 'Pick on map'}
+              </Button>
+            </EditPanelField>
+          )}
         </EditPanelSection>
       ))}
+
+      {pickerOpen && (
+        <LocationPickerModal
+          lat={draft.latitude ?? null}
+          lon={draft.longitude ?? null}
+          onConfirm={(lat, lon) => {
+            setField('latitude', lat)
+            setField('longitude', lon)
+            setPickerOpen(false)
+          }}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
     </EditPanel>
   )
 }

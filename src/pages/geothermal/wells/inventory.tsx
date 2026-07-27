@@ -24,7 +24,6 @@ import {
   type WellDraft,
 } from './inventoryFields'
 import { buildTemplateCsv, parseCsvFile } from './inventoryCsv'
-import { LocationPickerModal } from './LocationPickerModal'
 
 // Build a grid column from a field spec, dispatching by kind.
 function specToColumn(spec: FieldSpec): GridColumnSpec<WellDraft> {
@@ -164,39 +163,6 @@ export const GeoThermalWellInventory = () => {
     return draft ? `Restored ${draft.length} saved rows` : null
   })
   const [createOpen, setCreateOpen] = useState(false)
-  // Row whose location is being picked on the map (null = closed).
-  const [pickerRow, setPickerRow] = useState<number | null>(null)
-
-  // A read-only "Location" column that opens the map picker for its row.
-  const columns = useMemo<GridColumnSpec<WellDraft>[]>(
-    () => [
-      ...COLUMNS,
-      {
-        id: '__location',
-        title: 'Pick',
-        group: 'Location',
-        tooltip: 'Pick the well location on a map',
-        width: 140,
-        getValue: (r) =>
-          r.latitude != null && r.longitude != null
-            ? `${formatCoord(r.latitude)}, ${formatCoord(r.longitude)}`
-            : '📍 Pin on map',
-        onClick: (_r, rowIndex) => setPickerRow(rowIndex),
-      },
-    ],
-    []
-  )
-
-  const applyLocation = useCallback(
-    (rowIndex: number, lat: number, lon: number) => {
-      setRows((prev) =>
-        prev.map((r, i) =>
-          i === rowIndex ? { ...r, latitude: lat, longitude: lon } : r
-        )
-      )
-    },
-    []
-  )
 
   const filledCount = useMemo(
     () => rows.filter((r) => !isBlankDraft(r)).length,
@@ -446,6 +412,7 @@ export const GeoThermalWellInventory = () => {
       </div>
 
       <EditPanelLayout
+        className="flex-1 min-h-0"
         open={createOpen}
         panel={
           <CreateWellPanel
@@ -458,7 +425,7 @@ export const GeoThermalWellInventory = () => {
         }
       >
         <EditableDataGrid
-          columns={columns}
+          columns={COLUMNS}
           rows={rows}
           onRowsChange={setRows}
           cellErrors={cellErrors}
@@ -466,19 +433,6 @@ export const GeoThermalWellInventory = () => {
           freezeColumns={1}
         />
       </EditPanelLayout>
-
-      {pickerRow !== null && (
-        <LocationPickerModal
-          key={pickerRow}
-          lat={rows[pickerRow]?.latitude ?? null}
-          lon={rows[pickerRow]?.longitude ?? null}
-          onConfirm={(lat, lon) => {
-            applyLocation(pickerRow, lat, lon)
-            setPickerRow(null)
-          }}
-          onClose={() => setPickerRow(null)}
-        />
-      )}
     </div>
   )
 }
