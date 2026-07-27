@@ -1,17 +1,15 @@
-import {Button, Stack, Typography} from "@mui/material";
-import {useGo, useList, useOne, useParsed, useShow} from "@refinedev/core";
+import {Button, Stack} from "@mui/material";
+import {useGo, useOne, useParsed, useShow} from "@refinedev/core";
 import {useAccessCapabilities} from "@/hooks";
 import {canEnterGeothermalData} from "./recordsGridLogic";
 import {
-    DateField,
-    MarkdownField,
     Show,
     TextFieldComponent as TextField, useDataGrid,
 } from "@refinedev/mui";
 import {settings} from "@/settings";
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 import React from "react";
-import type {IWell, IWellRecord} from "@/interfaces/geothermal";
+import type {IWellRecord} from "@/interfaces/geothermal";
 
 
 export const GeoThermalWellShow = () => {
@@ -25,7 +23,7 @@ export const GeoThermalWellShow = () => {
         dataProviderName: "geothermal",
     });
 
-    const {result: boreData, query: boreQuery} = useOne({
+    const {query: boreQuery} = useOne({
         resource: "thing/geothermal-well",
         id: `${id}/bore`,
         dataProviderName: "geothermal",
@@ -88,49 +86,13 @@ export const GeoThermalWellShow = () => {
             },
         ], []
     )
-    // const { data: categoryData, isLoading: categoryIsLoading } = useOne({
-    //   resource: "categories",
-    //   id: record?.category?.id || "",
-    //   queryOptions: {
-    //     enabled: !!record,
-    //   },
-    // });
 
     return (
         <Show isLoading={query.isLoading}>
             <Stack gap={1}>
-
-
-                {/*<Typography variant="body1" fontWeight="bold">*/}
-                {/*    {"PointID"}*/}
-                {/*</Typography>*/}
-
                 <TextField value={record?.name}/>
                 <TextField value={record?.well_data_id}/>
                 <TextField value={record?.county}/>
-
-                {/*<Typography variant="body1" fontWeight="bold">*/}
-                {/*  {"Title"}*/}
-                {/*</Typography>*/}
-                {/*<TextField value={record?.title} />*/}
-
-                {/*<Typography variant="body1" fontWeight="bold">*/}
-                {/*  {"Content"}*/}
-                {/*</Typography>*/}
-                {/*<MarkdownField value={record?.content} />*/}
-
-                {/*<Typography variant="body1" fontWeight="bold">*/}
-                {/*  {"Category"}*/}
-                {/*</Typography>*/}
-                {/*{categoryIsLoading ? <>Loading...</> : <>{categoryData?.data?.title}</>}*/}
-                {/*<Typography variant="body1" fontWeight="bold">*/}
-                {/*  {"Status"}*/}
-                {/*</Typography>*/}
-                {/*<TextField value={record?.status} />*/}
-                {/*<Typography variant="body1" fontWeight="bold">*/}
-                {/*  {"CreatedAt"}*/}
-                {/*</Typography>*/}
-                {/*<DateField value={record?.createdAt} />*/}
             </Stack>
 
             <Stack gap={1}>
@@ -153,7 +115,6 @@ export const GeoThermalWellShow = () => {
                     getRowId={(row) => row.OBJECTID}
                     columns={columns}
                     autoHeight
-                    // onRowSelectionModelChange={handleSelectionChangeWrapper}
                     loading={query.isLoading || boreQuery.isLoading}
                 />
             </Stack>

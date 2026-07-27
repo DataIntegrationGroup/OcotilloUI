@@ -13,7 +13,7 @@ export function canEnterGeothermalData(canManageGeothermal: boolean): boolean {
 }
 
 // Editable field keys (everything except the server-assigned OBJECTID).
-export const EDITABLE_KEYS: (keyof IWellRecord)[] = [
+const EDITABLE_KEYS: (keyof IWellRecord)[] = [
   'WellDataID',
   'WellName',
   'WellNumber',

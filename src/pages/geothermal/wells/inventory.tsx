@@ -128,18 +128,18 @@ function hasDraft(): boolean {
 }
 
 /**
- * P1/P2/P3 — Geothermal well inventory (direct grid entry + CSV load + batch
- * create).
+ * Geothermal well inventory — an editable spreadsheet for entering new wells.
  *
- * An editable spreadsheet for inventorying new geothermal wells. Rows come from
- * typing/pasting into blank rows ("Add rows"), or from an uploaded CSV
- * ("Upload CSV", with a matching "Download template"). "Create wells" POSTs
- * every non-blank draft through the geothermal provider (one request per row —
- * no server bulk endpoint), tracking success/failure per row: created wells
- * drop out of the grid, failed rows stay with their rejected cells tinted from
- * the provider's Pydantic `fieldErrors`. Dropdown/date/boolean editors +
- * client validation land in P4. Admin-gated per BDMS-878
- * (`canEnterGeothermalData`, bypassed in local dev).
+ * Rows come from typing/pasting into blank rows ("Add rows"), an uploaded CSV
+ * ("Upload CSV", with a matching "Download template"), or the single-well
+ * side-panel form ("Create Well"), which also edits an existing row via its
+ * "Edit" cell. Drafts can be cached locally ("Save for later"). "Create wells"
+ * POSTs every non-blank draft through the geothermal provider (one request per
+ * row — no server bulk endpoint), tracking success/failure per row: created
+ * wells drop out of the grid, failed rows stay with their rejected cells tinted
+ * from the provider's Pydantic `fieldErrors`. Client validation (required
+ * fields, API/PLSS formats) tints cells and blocks create. Admin-gated per
+ * BDMS-878 (`canEnterGeothermalData`, bypassed in local dev).
  */
 export const GeoThermalWellInventory = () => {
   const { canManageGeothermal, isLoading: permLoading } =

@@ -39,20 +39,6 @@ export function validatePlss(value: unknown): string | undefined {
     : 'Invalid PLSS. Use township-range-section, e.g. T24N R5W S33 SE-SE.'
 }
 
-export interface ParsedApi {
-  stateCode: string
-  countyCode: string
-  wellId: string
-}
-
-export function parseApi(value: string): ParsedApi | null {
-  const m = String(value)
-    .trim()
-    .match(/^(\d{2})-(\d{3})-(\d{4,5})$/)
-  if (!m) return null
-  return { stateCode: m[1], countyCode: m[2], wellId: m[3] }
-}
-
 // Single source of truth for every editable well field. All derived maps
 // (headers, tooltips, options, required set, number/boolean fields) come from
 // here. PROVISIONAL — see IWell.

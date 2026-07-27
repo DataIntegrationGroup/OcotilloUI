@@ -82,6 +82,9 @@ export default defineConfig(({ mode }) => {
       environment: 'node',
       setupFiles: ['./src/test/setup.ts'],
       css: true,
+      // Don't scan checkout copies inside agent worktrees (.claude/worktrees/…)
+      // — their stale duplicates otherwise fail local runs.
+      exclude: ['**/node_modules/**', '**/dist/**', '**/.claude/**'],
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
