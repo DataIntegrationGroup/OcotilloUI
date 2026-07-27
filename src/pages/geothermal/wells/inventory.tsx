@@ -406,6 +406,7 @@ export const GeoThermalWellInventory = () => {
         rows={rows}
         onRowsChange={setRows}
         cellErrors={cellErrors}
+        rowMarkers="number"
         freezeColumns={1}
       />
     </div>
