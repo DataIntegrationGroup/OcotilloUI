@@ -19,11 +19,13 @@ import {
   NUMBER_FIELDS,
   TEXT_FIELDS,
   cleanDraft,
+  formatCoord,
   isBlankDraft,
   missingRequired,
   type WellDraft,
 } from './inventoryFields'
 import { buildTemplateCsv, parseCsvFile } from './inventoryCsv'
+import { LocationPickerModal } from './LocationPickerModal'
 
 const BOOLEAN_FIELD: keyof WellDraft = 'has_geothermal_data'
 
@@ -62,6 +64,8 @@ function textCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
   }
 }
 
+const COORD_FIELDS = new Set<keyof WellDraft>(['latitude', 'longitude'])
+
 function numberCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
   return {
     id,
@@ -71,6 +75,10 @@ function numberCol(id: keyof WellDraft): GridColumnSpec<WellDraft> {
     editable: true,
     getValue: (r) => (r[id] as CellValue) ?? null,
     setValue: (r, v) => ({ ...r, [id]: v as number | null }),
+    // Coordinates: show 7 sig figs; full precision is kept for save.
+    ...(COORD_FIELDS.has(id)
+      ? { format: (v: CellValue) => (typeof v === 'number' ? formatCoord(v) : '') }
+      : {}),
   }
 }
 
@@ -161,6 +169,37 @@ export const GeoThermalWellInventory = () => {
     const draft = loadDraft()
     return draft ? `Restored ${draft.length} saved rows` : null
   })
+  // Row whose location is being picked on the map (null = closed).
+  const [pickerRow, setPickerRow] = useState<number | null>(null)
+
+  // A read-only "Location" column that opens the map picker for its row.
+  const columns = useMemo<GridColumnSpec<WellDraft>[]>(
+    () => [
+      ...COLUMNS,
+      {
+        id: '__location',
+        title: 'Location',
+        width: 140,
+        getValue: (r) =>
+          r.latitude != null && r.longitude != null
+            ? `${formatCoord(r.latitude)}, ${formatCoord(r.longitude)}`
+            : '📍 Pin on map',
+        onClick: (_r, rowIndex) => setPickerRow(rowIndex),
+      },
+    ],
+    []
+  )
+
+  const applyLocation = useCallback(
+    (rowIndex: number, lat: number, lon: number) => {
+      setRows((prev) =>
+        prev.map((r, i) =>
+          i === rowIndex ? { ...r, latitude: lat, longitude: lon } : r
+        )
+      )
+    },
+    []
+  )
 
   const filledCount = useMemo(
     () => rows.filter((r) => !isBlankDraft(r)).length,
@@ -402,13 +441,26 @@ export const GeoThermalWellInventory = () => {
       </div>
 
       <EditableDataGrid
-        columns={COLUMNS}
+        columns={columns}
         rows={rows}
         onRowsChange={setRows}
         cellErrors={cellErrors}
         rowMarkers="number"
         freezeColumns={1}
       />
+
+      {pickerRow !== null && (
+        <LocationPickerModal
+          key={pickerRow}
+          lat={rows[pickerRow]?.latitude ?? null}
+          lon={rows[pickerRow]?.longitude ?? null}
+          onConfirm={(lat, lon) => {
+            applyLocation(pickerRow, lat, lon)
+            setPickerRow(null)
+          }}
+          onClose={() => setPickerRow(null)}
+        />
+      )}
     </div>
   )
 }

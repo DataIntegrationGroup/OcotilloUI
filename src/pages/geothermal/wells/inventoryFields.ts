@@ -43,7 +43,7 @@ export const HEADERS: Record<keyof WellDraft, string> = {
   has_geothermal_data: 'Geo data?',
   county: 'County',
   state: 'State',
-  total_depth: 'Total depth',
+  total_depth: 'Total Depth (ft)',
   latitude: 'Latitude',
   longitude: 'Longitude',
 }
@@ -79,6 +79,11 @@ export function missingRequired(r: WellDraft): Record<string, string> {
     if (v == null || v === '') errors[f] = 'Required'
   }
   return errors
+}
+
+/** Round a coordinate to 7 decimal places for display (value unchanged). */
+export function formatCoord(n: number): string {
+  return Number(n.toFixed(7)).toString()
 }
 
 export function isBlankDraft(r: WellDraft): boolean {

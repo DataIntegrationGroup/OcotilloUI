@@ -46,6 +46,12 @@ export interface GridColumnSpec<T> {
   /** Read the display value for a row. */
   getValue: (row: T) => CellValue
   /**
+   * Optional display formatter. Overrides the default string rendering for the
+   * cell without changing the underlying edit value (e.g. round a coordinate
+   * for display while keeping full precision for save).
+   */
+  format?: (value: CellValue) => string
+  /**
    * Produce an updated row given a new cell value. Required for editable
    * columns; ignored otherwise.
    */
@@ -57,7 +63,7 @@ export interface GridColumnSpec<T> {
    */
   validate?: (value: CellValue, row: T) => string | undefined
   /** Called when a cell in this column is clicked (e.g. a URI link). */
-  onClick?: (row: T) => void
+  onClick?: (row: T, rowIndex: number) => void
 }
 
 export interface EditableDataGridProps<T>
@@ -137,7 +143,9 @@ export function EditableDataGrid<T>({
       }
       const colDef = columns[col]
       const value = colDef.getValue(rowData)
-      const display = toDisplayString(value)
+      const display = colDef.format
+        ? colDef.format(value)
+        : toDisplayString(value)
       const editable = colDef.editable === true && colDef.setValue !== undefined
       const error = cellErrors?.(row)?.[colDef.id]
       const errorTheme = error ? { themeOverride: ERROR_CELL_THEME } : {}
@@ -234,7 +242,7 @@ export function EditableDataGrid<T>({
     ([col, row]: Item) => {
       const colDef = columns[col]
       const rowData = rows[row]
-      if (colDef?.onClick && rowData !== undefined) colDef.onClick(rowData)
+      if (colDef?.onClick && rowData !== undefined) colDef.onClick(rowData, row)
     },
     [columns, rows]
   )
