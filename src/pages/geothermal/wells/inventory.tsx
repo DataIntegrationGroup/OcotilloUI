@@ -87,9 +87,43 @@ interface CreateSummary {
 const INITIAL_ROWS = 10
 const ADD_ROW_COUNT = 10
 const TEMPLATE_FILENAME = 'geothermal-well-inventory-template.csv'
+const DRAFT_KEY = 'geothermal:inventory:draft'
 
 function blankRows(n: number): WellDraft[] {
   return Array.from({ length: n }, () => ({}))
+}
+
+// "Save for later" persistence — cache the non-blank rows in localStorage so
+// entered/imported data survives navigation and reloads.
+function loadDraft(): WellDraft[] | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed as WellDraft[]
+  } catch {
+    /* ignore malformed / unavailable storage */
+  }
+  return null
+}
+
+function saveDraft(rows: WellDraft[]): number {
+  const filled = rows.filter((r) => !isBlankDraft(r))
+  try {
+    if (filled.length > 0) localStorage.setItem(DRAFT_KEY, JSON.stringify(filled))
+    else localStorage.removeItem(DRAFT_KEY)
+  } catch {
+    /* ignore */
+  }
+  return filled.length
+}
+
+function hasDraft(): boolean {
+  try {
+    return localStorage.getItem(DRAFT_KEY) != null
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -112,7 +146,10 @@ export const GeoThermalWellInventory = () => {
   const dataProvider = useDataProvider()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [rows, setRows] = useState<WellDraft[]>(() => blankRows(INITIAL_ROWS))
+  const [rows, setRows] = useState<WellDraft[]>(() => {
+    const draft = loadDraft()
+    return draft ? [...draft, ...blankRows(3)] : blankRows(INITIAL_ROWS)
+  })
   const [saving, setSaving] = useState(false)
   // Validation errors per current row index (from a rejected create).
   const [saveErrors, setSaveErrors] = useState<Map<number, FieldErrors>>(
@@ -120,6 +157,10 @@ export const GeoThermalWellInventory = () => {
   )
   const [summary, setSummary] = useState<CreateSummary | null>(null)
   const [csvStatus, setCsvStatus] = useState<string | null>(null)
+  const [draftStatus, setDraftStatus] = useState<string | null>(() => {
+    const draft = loadDraft()
+    return draft ? `Restored ${draft.length} saved rows` : null
+  })
 
   const filledCount = useMemo(
     () => rows.filter((r) => !isBlankDraft(r)).length,
@@ -154,6 +195,15 @@ export const GeoThermalWellInventory = () => {
     () => setRows((prev) => [...prev, ...blankRows(ADD_ROW_COUNT)]),
     []
   )
+
+  const handleSaveForLater = useCallback(() => {
+    const n = saveDraft(rows)
+    setCsvStatus(null)
+    setSummary(null)
+    setDraftStatus(
+      n > 0 ? `Saved ${n} ${n === 1 ? 'row' : 'rows'} for later` : 'Nothing to save'
+    )
+  }, [rows])
 
   const handleDownloadTemplate = useCallback(() => {
     const blob = new Blob([buildTemplateCsv()], {
@@ -245,6 +295,8 @@ export const GeoThermalWellInventory = () => {
     setSaveErrors(nextErrors)
     setSummary({ created, failed })
     setSaving(false)
+    // Keep a saved draft in sync with what still needs creating.
+    if (created > 0 && hasDraft()) saveDraft(nextRows)
   }, [rows, dataProvider])
 
   if (permLoading) {
@@ -272,6 +324,9 @@ export const GeoThermalWellInventory = () => {
           Enter new geothermal wells
         </span>
         <div className="ml-auto flex items-center gap-3">
+          {draftStatus && (
+            <span className="text-sm text-muted-foreground">{draftStatus}</span>
+          )}
           {csvStatus && (
             <span className="text-sm text-muted-foreground">{csvStatus}</span>
           )}
@@ -327,6 +382,14 @@ export const GeoThermalWellInventory = () => {
             disabled={saving}
           >
             Add {ADD_ROW_COUNT} rows
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSaveForLater}
+            disabled={saving || filledCount === 0}
+          >
+            Save for later
           </Button>
           <Button
             size="sm"
