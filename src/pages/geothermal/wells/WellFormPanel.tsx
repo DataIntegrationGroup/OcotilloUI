@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react'
-import { useDataProvider } from '@refinedev/core'
 import {
   EditPanel,
   EditPanelField,
@@ -18,12 +17,10 @@ import {
 import {
   FIELD_SPECS,
   type FieldSpec,
-  cleanDraft,
   formatCoord,
   validateDraft,
   type WellDraft,
 } from './inventoryFields'
-import { flattenFieldErrors } from './recordsGridLogic'
 import { LocationPickerModal } from './LocationPickerModal'
 
 // FIELD_SPECS grouped into ordered sections for the form.
@@ -40,22 +37,36 @@ const SECTIONS: { title: string; specs: FieldSpec[] }[] = (() => {
   return order.map((title) => ({ title, specs: byGroup.get(title)! }))
 })()
 
-interface CreateWellPanelProps {
+export interface SubmitResult {
+  ok: boolean
+  fieldErrors?: Record<string, string>
+  message?: string
+}
+
+interface WellFormPanelProps {
+  title: string
+  submitLabel: string
+  /** Starting values (a blank draft to create, or an existing row to edit). */
+  initial: WellDraft
+  /** Persist/apply the draft; return ok or per-field errors. */
+  onSubmit: (draft: WellDraft) => Promise<SubmitResult>
   onClose: () => void
-  /** Called after a well is successfully created. */
-  onCreated: () => void
 }
 
 /**
- * Single-well entry form for the geothermal inventory — a slide-out panel
- * (modeled on the Data Grid example's Create Well panel) built from FIELD_SPECS.
- * Client-validates, then POSTs one well through the geothermal provider; server
- * field errors surface under the offending inputs. (No bulk add here — the grid
- * covers batch entry.)
+ * Slide-out well form (built from FIELD_SPECS) used to create a new well or
+ * edit an existing grid row. Client-validates, then hands the draft to
+ * `onSubmit`; server/field errors surface under the offending inputs. Mount it
+ * keyed by the target so it re-initializes from `initial`.
  */
-export function CreateWellPanel({ onClose, onCreated }: CreateWellPanelProps) {
-  const dataProvider = useDataProvider()
-  const [draft, setDraft] = useState<WellDraft>({})
+export function WellFormPanel({
+  title,
+  submitLabel,
+  initial,
+  onSubmit,
+  onClose,
+}: WellFormPanelProps) {
+  const [draft, setDraft] = useState<WellDraft>(initial)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [message, setMessage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -65,7 +76,7 @@ export function CreateWellPanel({ onClose, onCreated }: CreateWellPanelProps) {
     setDraft((d) => ({ ...d, [id]: value }))
   }, [])
 
-  const handleCreate = useCallback(async () => {
+  const handleSubmit = useCallback(async () => {
     const clientErrors = validateDraft(draft)
     if (Object.keys(clientErrors).length > 0) {
       setErrors(clientErrors)
@@ -75,38 +86,32 @@ export function CreateWellPanel({ onClose, onCreated }: CreateWellPanelProps) {
     setSubmitting(true)
     setErrors({})
     setMessage(null)
-    try {
-      await dataProvider('geothermal').create({
-        resource: 'thing/geothermal-well',
-        variables: cleanDraft(draft),
-      })
-      onCreated()
-    } catch (reason) {
-      const fe = flattenFieldErrors(
-        (reason as { fieldErrors?: unknown })?.fieldErrors
-      )
-      if (fe) {
-        setErrors(fe)
-        setMessage('The server rejected some fields.')
-      } else {
-        setMessage('Could not create the well (create endpoint unavailable).')
-      }
-    } finally {
-      setSubmitting(false)
+    const result = await onSubmit(draft)
+    if (result.ok) {
+      onClose()
+      return
     }
-  }, [draft, dataProvider, onCreated])
+    if (result.fieldErrors) setErrors(result.fieldErrors)
+    setMessage(result.message ?? 'Could not save.')
+    setSubmitting(false)
+  }, [draft, onSubmit, onClose])
 
   return (
     <EditPanel
-      title="Create Well"
+      title={title}
       onClose={onClose}
       footer={
         <>
-          <Button variant="outline" size="sm" onClick={onClose} disabled={submitting}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            disabled={submitting}
+          >
             Cancel
           </Button>
-          <Button size="sm" onClick={handleCreate} disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create Well'}
+          <Button size="sm" onClick={handleSubmit} disabled={submitting}>
+            {submitting ? 'Saving…' : submitLabel}
           </Button>
         </>
       }
@@ -228,7 +233,9 @@ function FieldInput({
     <Input
       className="h-8 text-sm"
       value={typeof value === 'string' ? value : ''}
-      onChange={(e) => setField(spec.id, e.target.value === '' ? null : e.target.value)}
+      onChange={(e) =>
+        setField(spec.id, e.target.value === '' ? null : e.target.value)
+      }
     />
   )
 }

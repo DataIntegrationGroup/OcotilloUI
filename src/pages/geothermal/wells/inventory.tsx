@@ -13,7 +13,7 @@ import {
   flattenFieldErrors,
   type FieldErrors,
 } from './recordsGridLogic'
-import { CreateWellPanel } from './CreateWellPanel'
+import { WellFormPanel, type SubmitResult } from './WellFormPanel'
 import {
   FIELD_SPECS,
   type FieldSpec,
@@ -162,7 +162,61 @@ export const GeoThermalWellInventory = () => {
     const draft = loadDraft()
     return draft ? `Restored ${draft.length} saved rows` : null
   })
-  const [createOpen, setCreateOpen] = useState(false)
+  // The side-panel form: create a new well, or edit an existing grid row.
+  const [panel, setPanel] = useState<
+    { mode: 'create' } | { mode: 'edit'; index: number } | null
+  >(null)
+
+  // Grid columns with a leading read-only "Edit" cell that opens the panel.
+  const columns = useMemo<GridColumnSpec<WellDraft>[]>(
+    () => [
+      {
+        id: '__edit',
+        title: 'Edit',
+        group: 'Identity',
+        tooltip: 'Edit this row in the side panel',
+        width: 70,
+        getValue: () => '✎ Edit',
+        onClick: (_r, index) => setPanel({ mode: 'edit', index }),
+      },
+      ...COLUMNS,
+    ],
+    []
+  )
+
+  const createSubmit = useCallback(
+    async (draft: WellDraft): Promise<SubmitResult> => {
+      try {
+        await dataProvider('geothermal').create({
+          resource: 'thing/geothermal-well',
+          variables: cleanDraft(draft),
+        })
+        setSummary({ created: 1, failed: 0 })
+        return { ok: true }
+      } catch (reason) {
+        const fe = flattenFieldErrors(
+          (reason as { fieldErrors?: unknown })?.fieldErrors
+        )
+        return {
+          ok: false,
+          fieldErrors: fe,
+          message: fe
+            ? 'The server rejected some fields.'
+            : 'Could not create the well (create endpoint unavailable).',
+        }
+      }
+    },
+    [dataProvider]
+  )
+
+  const editSubmit = useCallback(
+    (index: number) =>
+      async (draft: WellDraft): Promise<SubmitResult> => {
+        setRows((prev) => prev.map((r, i) => (i === index ? draft : r)))
+        return { ok: true }
+      },
+    []
+  )
 
   const filledCount = useMemo(
     () => rows.filter((r) => !isBlankDraft(r)).length,
@@ -380,7 +434,7 @@ export const GeoThermalWellInventory = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCreateOpen(true)}
+            onClick={() => setPanel({ mode: 'create' })}
             disabled={saving}
           >
             Create Well
@@ -413,19 +467,31 @@ export const GeoThermalWellInventory = () => {
 
       <EditPanelLayout
         className="flex-1 min-h-0"
-        open={createOpen}
+        open={panel !== null}
         panel={
-          <CreateWellPanel
-            onClose={() => setCreateOpen(false)}
-            onCreated={() => {
-              setCreateOpen(false)
-              setSummary({ created: 1, failed: 0 })
-            }}
-          />
+          panel?.mode === 'edit' ? (
+            <WellFormPanel
+              key={`edit-${panel.index}`}
+              title="Edit Well"
+              submitLabel="Save"
+              initial={rows[panel.index] ?? {}}
+              onSubmit={editSubmit(panel.index)}
+              onClose={() => setPanel(null)}
+            />
+          ) : (
+            <WellFormPanel
+              key="create"
+              title="Create Well"
+              submitLabel="Create Well"
+              initial={{}}
+              onSubmit={createSubmit}
+              onClose={() => setPanel(null)}
+            />
+          )
         }
       >
         <EditableDataGrid
-          columns={COLUMNS}
+          columns={columns}
           rows={rows}
           onRowsChange={setRows}
           cellErrors={cellErrors}
