@@ -518,14 +518,6 @@ function ExampleNavItem() {
             <SidebarMenuSubItem>
               <SidebarMenuSubButton
                 asChild
-                isActive={location.pathname === '/example/data-grid'}
-              >
-                <Link to="/example/data-grid">Data Grid</Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton
-                asChild
                 isActive={location.pathname.startsWith(SANDBOX_GEOTHERMAL_GRID)}
               >
                 <Link to={SANDBOX_GEOTHERMAL_GRID}>Geothermal Records</Link>

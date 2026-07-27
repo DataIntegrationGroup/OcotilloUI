@@ -56,7 +56,7 @@ export type NavItem = {
 }
 
 /**
- * Show the Sandbox nav (typography + data-grid demos, WIP geothermal grids).
+ * Show the Sandbox nav (typography specimen, WIP geothermal grids).
  * Visible in local dev and on PR preview deploys (VITE_APP_ENV=preview), so
  * reviewers can exercise the WIP work; hidden on staging/production.
  */
