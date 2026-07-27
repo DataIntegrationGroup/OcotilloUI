@@ -46,18 +46,8 @@ export interface IWell {
   county: string | null
   state: string | null
 
-  // ── PLSS (G2) ──
-  township: number | null
-  township_dir: string | null
-  range: number | null
-  range_dir: string | null
-  section: number | null
-  unit_letter: string | null
-  section_part: string | null
-  footage_ns: number | null
-  footage_ns_dir: string | null
-  footage_ew: number | null
-  footage_ew_dir: string | null
+  // ── PLSS (G2) ── single legal-description string, e.g. "T24N R5W S33 SE-SE"
+  plss: string | null
   utm_zone: string | null
 
   // ── Location accuracy (G2) ──

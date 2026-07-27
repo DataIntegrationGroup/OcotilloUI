@@ -20,13 +20,19 @@ export interface FieldSpec {
   validate?: (value: unknown) => string | undefined
 }
 
-const NS = ['N', 'S']
-const EW = ['E', 'W']
-
 /** Structured API number, e.g. 30-039-05212 (state-county-well). */
 export function validateApi(value: unknown): string | undefined {
   const s = String(value).trim()
   return /^\d{2}-\d{3}-\d{4,5}$/.test(s) ? undefined : 'Format: SS-CCC-NNNNN'
+}
+
+// PLSS legal description in one field: township + N/S, range + E/W, section,
+// optional aliquot part. Examples: "T24N R5W S33", "24N 5W 33 SE-SE".
+const PLSS_RE =
+  /^\s*T?\s*\d{1,3}\s*[NS]\s+R?\s*\d{1,3}\s*[EW]\s+(?:S|SEC\.?)?\s*\d{1,2}(?:\s+[A-Z0-9/-]+)?\s*$/i
+
+export function validatePlss(value: unknown): string | undefined {
+  return PLSS_RE.test(String(value)) ? undefined : 'Format: T24N R5W S33 [part]'
 }
 
 export interface ParsedApi {
@@ -87,18 +93,8 @@ export const FIELD_SPECS: FieldSpec[] = [
   { id: 'county', header: 'County', group: 'Location', kind: 'text', description: 'County — server-derived from lat/lon when blank' },
   { id: 'state', header: 'State', group: 'Location', kind: 'text', description: 'State — server-derived from lat/lon when blank (default NM)' },
 
-  // ── PLSS ──
-  { id: 'township', header: 'Township', group: 'PLSS', kind: 'number', description: 'PLSS township' },
-  { id: 'township_dir', header: 'T dir', group: 'PLSS', kind: 'dropdown', description: 'Township direction', options: NS },
-  { id: 'range', header: 'Range', group: 'PLSS', kind: 'number', description: 'PLSS range' },
-  { id: 'range_dir', header: 'R dir', group: 'PLSS', kind: 'dropdown', description: 'Range direction', options: EW },
-  { id: 'section', header: 'Section', group: 'PLSS', kind: 'number', description: 'PLSS section' },
-  { id: 'unit_letter', header: 'Unit', group: 'PLSS', kind: 'text', description: 'PLSS unit letter' },
-  { id: 'section_part', header: 'Sec part', group: 'PLSS', kind: 'text', description: 'Section part (e.g. SE-SE)' },
-  { id: 'footage_ns', header: 'Ftg NS', group: 'PLSS', kind: 'number', description: 'Footage north/south' },
-  { id: 'footage_ns_dir', header: 'NS dir', group: 'PLSS', kind: 'dropdown', description: 'Footage NS direction', options: NS },
-  { id: 'footage_ew', header: 'Ftg EW', group: 'PLSS', kind: 'number', description: 'Footage east/west' },
-  { id: 'footage_ew_dir', header: 'EW dir', group: 'PLSS', kind: 'dropdown', description: 'Footage EW direction', options: EW },
+  // ── PLSS ── one legal-description string, regex-validated.
+  { id: 'plss', header: 'PLSS', group: 'PLSS', kind: 'text', description: 'PLSS legal description, e.g. T24N R5W S33 SE-SE', validate: validatePlss },
   { id: 'utm_zone', header: 'UTM zone', group: 'PLSS', kind: 'text', description: 'UTM zone' },
 
   // ── Location accuracy ──
