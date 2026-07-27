@@ -114,10 +114,24 @@ Reuse the batch-save pattern already built in `records-grid.tsx`
 - **Client (pre-save):** required fields must be non-empty; numeric/date/bool
   fields must parse. Invalid cells are tinted and block that row's save.
 - **Server:** 422/409 `fieldErrors` surface inline (existing mapping).
-- **Proposed required fields:** `name`, `api`, `well_type`, `county`, `state`,
-  `latitude`, `longitude`. **TBD** — the API's create schema isn't in the
-  OpenAPI (stripped), so the real required set must be confirmed against the
-  backend.
+- **Required fields:** `name`, `api`, `well_type`, `latitude`, `longitude`.
+  `county`/`state` are **not** required — see §6a. **TBD** — the API's create
+  schema isn't in the OpenAPI (stripped), so the real required set must be
+  confirmed against the backend.
+
+### 6a. county / state — server-derived from lat/lon
+
+Decision: `county` and `state` are reverse-geocoded from `latitude`/`longitude`
+**by the backend**, **auto-filling only when left blank** (a user-entered value
+is kept). Rationale: reverse-geocoding is authoritative and avoids bundling a
+county-boundaries dataset in the client.
+
+- Frontend: `latitude`/`longitude` are the required location inputs; `county`/
+  `state` are optional (the user may still type them, e.g. from CSV). No
+  client-side geocoding.
+- Backend (to implement): on create, if `county`/`state` are absent, derive
+  them from the coordinates (NM county point-in-polygon; `state` defaults to
+  `NM`) before persisting.
 
 ---
 

@@ -57,15 +57,16 @@ export const ENUM_OPTIONS: Partial<Record<keyof WellDraft, string[]>> = {
   status: ['Active', 'Abandoned', 'Plugged'],
 }
 
-// Fields required to create a well.
+// Fields required to create a well. county/state are intentionally NOT
+// required — the backend reverse-geocodes them from lat/lon when left blank
+// (auto-fill empty only), so latitude/longitude are the required location
+// inputs instead.
 // PROVISIONAL — the create schema isn't in the (stripped) OpenAPI; confirm the
 // real required set with the backend.
 export const REQUIRED_FIELDS: (keyof WellDraft)[] = [
   'name',
   'api',
   'well_type',
-  'county',
-  'state',
   'latitude',
   'longitude',
 ]
