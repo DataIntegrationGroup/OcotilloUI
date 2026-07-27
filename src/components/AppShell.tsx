@@ -470,12 +470,14 @@ function AppSidebar() {
 
 const SANDBOX_GEOTHERMAL_GRID = '/geothermal/wells/records-grid'
 const SANDBOX_GEOTHERMAL_INVENTORY = '/geothermal/wells/inventory'
+const SANDBOX_GEOTHERMAL_TEMP_DEPTH = '/geothermal/wells/temp-depth'
 
 function isSandboxPath(pathname: string): boolean {
   return (
     pathname.startsWith('/example') ||
     pathname.startsWith(SANDBOX_GEOTHERMAL_GRID) ||
-    pathname.startsWith(SANDBOX_GEOTHERMAL_INVENTORY)
+    pathname.startsWith(SANDBOX_GEOTHERMAL_INVENTORY) ||
+    pathname.startsWith(SANDBOX_GEOTHERMAL_TEMP_DEPTH)
   )
 }
 
@@ -538,6 +540,18 @@ function ExampleNavItem() {
               >
                 <Link to={SANDBOX_GEOTHERMAL_INVENTORY}>
                   Geothermal Inventory
+                </Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname.startsWith(
+                  SANDBOX_GEOTHERMAL_TEMP_DEPTH
+                )}
+              >
+                <Link to={SANDBOX_GEOTHERMAL_TEMP_DEPTH}>
+                  Geothermal Temp-Depth
                 </Link>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>

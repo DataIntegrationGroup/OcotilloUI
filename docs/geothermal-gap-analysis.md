@@ -33,6 +33,13 @@ below are what's missing.
 
 ## Gaps (priority-ordered)
 
+> **Update:** G1 frontend built — a per-well **temp-depth log grid**
+> (`temp-depth-grid.tsx`) with a CSV importer that handles the legacy export
+> shape (the Borderplex file), a template, editable grid, and a batch "Save
+> log" write. `ITempDepthPoint` models depth/temp/resistance/gradient. Still
+> needs the backend temp-depth endpoint (GET + batch POST) to persist. G2/G3/G4
+> frontend also built (see commits).
+
 ### 🔴 G1 — The core geothermal measurements are not modeled
 
 The whole purpose of the system is thermal data:
