@@ -5,17 +5,16 @@ import {
   Autocomplete,
   Box,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
   Chip,
+  Paper,
   Skeleton,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { AutoAwesome, Publish, Timeline } from '@mui/icons-material'
+import { AutoAwesome, Publish } from '@mui/icons-material'
+import { OcotilloPageTitle } from '@/components/OcotilloPageHeader'
 import { IWell } from '@/interfaces/ocotillo'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { OcotilloHydrographCorrectionWorkbench } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
@@ -235,13 +234,16 @@ export const HydrographCorrectionPage = () => {
       <Stack spacing={2}>
         <Breadcrumb hideIcons={true} />
 
-        <Card elevation={2}>
-          <CardHeader
-            avatar={<Timeline color="primary" />}
-            title="Hydrograph Correction"
-            subheader="Upload a transducer text file first. Ocotillo will try to extract thing.name from the file and resolve the well automatically."
-          />
-          <CardContent>
+        <Stack spacing={0.5}>
+          <OcotilloPageTitle title="Hydrograph Correction" />
+          <Typography variant="body2" color="text.secondary">
+            Upload a transducer file first. Ocotillo will try to extract
+            thing.name from the file and resolve the well automatically.
+          </Typography>
+        </Stack>
+
+        <Paper elevation={2} sx={{ borderRadius: 2 }}>
+          <Box sx={{ px: 2, py: 2 }}>
             <Stack spacing={2}>
               <input
                 ref={fileInputRef}
@@ -340,8 +342,8 @@ export const HydrographCorrectionPage = () => {
                 </Grid>
               </Grid>
             </Stack>
-          </CardContent>
-        </Card>
+          </Box>
+        </Paper>
 
         {!parsedUpload ? (
           <Alert severity="info">
@@ -363,11 +365,9 @@ export const HydrographCorrectionPage = () => {
             to continue.
           </Alert>
         ) : isLoading || isResolvingWell ? (
-          <Card elevation={2}>
-            <CardContent>
-              <Skeleton variant="rounded" height={520} />
-            </CardContent>
-          </Card>
+          <Paper elevation={2} sx={{ borderRadius: 2, p: 2 }}>
+            <Skeleton variant="rounded" height={520} />
+          </Paper>
         ) : (
           <OcotilloHydrographCorrectionWorkbench
             thingName={selectedWell.name}

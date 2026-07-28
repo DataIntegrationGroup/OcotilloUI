@@ -5,9 +5,6 @@ import {
   Autocomplete,
   Box,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
   Checkbox,
   Chip,
   Divider,
@@ -21,7 +18,6 @@ import {
 import Grid from '@mui/material/Grid2'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import {
-  Build,
   CleaningServices,
   Publish,
   Refresh,
@@ -187,6 +183,31 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const parsedPointId = uploaded?.pointId ?? null
   const highlightedManualPoint = selectedManualOption?.point ?? null
 
+  // Charts pull series colors and text styles from the MUI theme so they
+  // match the rest of the app and adapt to dark mode.
+  const chartTextStyles = useMemo(
+    () => ({
+      legend: { top: 0, textStyle: { color: theme.palette.text.primary } },
+      xAxis: {
+        axisLabel: { color: theme.palette.text.secondary },
+        splitLine: { show: true, lineStyle: { color: theme.palette.divider } },
+      },
+      yAxis: {
+        axisLabel: { color: theme.palette.text.secondary },
+        nameTextStyle: {
+          color: theme.palette.text.secondary,
+          padding: [0, 0, 0, 6],
+        },
+        splitLine: { lineStyle: { color: theme.palette.divider } },
+      },
+      tooltip: {
+        backgroundColor: theme.palette.background.paper,
+        textStyle: { color: theme.palette.text.primary },
+      },
+    }),
+    [theme]
+  )
+
   const chartOption = useMemo(() => {
     const series = [
       manualPoints.length > 0
@@ -195,7 +216,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             type: 'scatter',
             symbolSize: 10,
             data: manualPoints.map((point) => [point.time, point.value]),
-            itemStyle: { color: '#1565C0' },
+            itemStyle: { color: theme.palette.primary.main },
           }
         : null,
       highlightedManualPoint
@@ -207,8 +228,8 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             z: 10,
             data: [[highlightedManualPoint.time, highlightedManualPoint.value]],
             itemStyle: {
-              color: '#D32F2F',
-              borderColor: '#FFFFFF',
+              color: theme.palette.error.main,
+              borderColor: theme.palette.background.paper,
               borderWidth: 2,
             },
           }
@@ -219,7 +240,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             type: 'line',
             showSymbol: false,
             data: storedTransducerPoints.map((point) => [point.time, point.value]),
-            lineStyle: { color: '#6D4C41', width: 2 },
+            lineStyle: { color: theme.palette.secondary.main, width: 2 },
           }
         : null,
       rawUploadedMeasurements.length > 0
@@ -228,7 +249,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             type: 'line',
             showSymbol: false,
             data: rawUploadedMeasurements.map((point) => [point.time, point.value]),
-            lineStyle: { color: '#78909C', width: 1, type: 'dashed' },
+            lineStyle: {
+              color: theme.palette.text.secondary,
+              width: 1,
+              type: 'dashed',
+            },
           }
         : null,
       correctedMeasurements.length > 0
@@ -237,16 +262,14 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             type: 'line',
             showSymbol: false,
             data: correctedMeasurements.map((point) => [point.time, point.value]),
-            lineStyle: { color: '#2E7D32', width: 3 },
+            lineStyle: { color: theme.palette.success.main, width: 3 },
           }
         : null,
     ].filter(Boolean)
 
     return {
       animation: false,
-      legend: {
-        top: 0,
-      },
+      legend: chartTextStyles.legend,
       grid: {
         left: 100,
         right: 32,
@@ -264,7 +287,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'cross' },
-        backgroundColor: theme.palette.background.paper,
+        ...chartTextStyles.tooltip,
       },
       brush: {
         xAxisIndex: 'all',
@@ -277,7 +300,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       ],
       xAxis: {
         type: 'time',
-        splitLine: { show: true },
+        ...chartTextStyles.xAxis,
       },
       yAxis: {
         type: 'value',
@@ -286,19 +309,18 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         name: 'Depth To Water Below Ground Surface (ft)',
         nameLocation: 'center',
         nameGap: 74,
-        nameTextStyle: {
-          padding: [0, 0, 0, 6],
-        },
+        ...chartTextStyles.yAxis,
       },
       series,
     }
   }, [
+    chartTextStyles,
     correctedMeasurements,
     highlightedManualPoint,
     manualPoints,
     rawUploadedMeasurements,
     storedTransducerPoints,
-    theme.palette.background.paper,
+    theme,
   ])
 
   // Diver uploads get a separate raw water-head plot (mirroring wellpy's
@@ -309,7 +331,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
     return {
       animation: false,
-      legend: { top: 0 },
+      legend: chartTextStyles.legend,
       grid: {
         left: 100,
         right: 32,
@@ -319,12 +341,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'cross' },
-        backgroundColor: theme.palette.background.paper,
+        ...chartTextStyles.tooltip,
       },
       dataZoom: [{ type: 'inside', realtime: true }],
       xAxis: {
         type: 'time',
-        splitLine: { show: true },
+        ...chartTextStyles.xAxis,
       },
       yAxis: {
         type: 'value',
@@ -332,9 +354,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         name: 'Water Head (ft)',
         nameLocation: 'center',
         nameGap: 74,
-        nameTextStyle: {
-          padding: [0, 0, 0, 6],
-        },
+        ...chartTextStyles.yAxis,
       },
       series: [
         {
@@ -342,11 +362,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
           type: 'line',
           showSymbol: false,
           data: uploaded.measurements.map((point) => [point.time, point.value]),
-          lineStyle: { color: '#00838F', width: 2 },
+          lineStyle: { color: theme.palette.info.main, width: 2 },
         },
       ],
     }
-  }, [theme.palette.background.paper, uploaded])
+  }, [chartTextStyles, theme, uploaded])
 
   const tableRows = useMemo(() => {
     interface CorrectionTableRow {
@@ -550,13 +570,17 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   }
 
   return (
-    <Card elevation={2}>
-      <CardHeader
-        avatar={<Build color="primary" />}
-        title="Hydrograph Correction Workspace"
-        subheader="Upload a logger text file, compare it with Ocotillo measurements, and apply local alignment edits."
-      />
-      <CardContent>
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ px: 2, py: 1.5 }}>
+        <Typography variant="body1" fontWeight="bold">
+          Hydrograph Correction Workspace
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Upload a logger file, compare it with Ocotillo measurements, and
+          apply local alignment edits.
+        </Typography>
+      </Box>
+      <Box sx={{ px: 2, pb: 2 }}>
         <Stack spacing={2}>
           <input
             ref={fileInputRef}
@@ -852,7 +876,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             are applied to the corrected trace.
           </Typography>
         </Stack>
-      </CardContent>
-    </Card>
+      </Box>
+    </Paper>
   )
 }
