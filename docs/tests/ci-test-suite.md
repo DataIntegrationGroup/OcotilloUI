@@ -4,12 +4,12 @@ OcotilloUI runs several automated checks on every pull request. These checks are
 
 ## Workflow Summary
 
-| Workflow | Purpose | Main commands |
-|---|---|---|
-| `.github/workflows/CI_lint.yml` | Biome linting and TypeScript type checking | `npm run lint`, `npm run typecheck` |
-| `.github/workflows/CI_vitest.yml` | Generated API drift check and Vitest suite | `npx @hey-api/openapi-ts`, `npm run mock:server:vitest`, `npm run test:run` |
-| `.github/workflows/CI_cypress.yml` | End-to-end browser tests against a seeded API | `npm run build:fast`, Cypress GitHub Action |
-| `.github/workflows/CI_production_build.yml` | Production build validation | `npm run build:ci` |
+| Workflow                                    | Purpose                                       | Main commands                                                               |
+| ------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------- |
+| `.github/workflows/CI_lint.yml`             | Biome linting and TypeScript type checking    | `npm run lint`, `npm run typecheck`                                         |
+| `.github/workflows/CI_vitest.yml`           | Generated API drift check and Vitest suite    | `npx @hey-api/openapi-ts`, `npm run mock:server:vitest`, `npm run test:run` |
+| `.github/workflows/CI_cypress.yml`          | End-to-end browser tests against a seeded API | `npm run build:fast`, Cypress GitHub Action                                 |
+| `.github/workflows/CI_production_build.yml` | Production build validation                   | `npm run build:ci`                                                          |
 
 ## Local Commands
 
@@ -36,7 +36,7 @@ npm run test
 npm run test:ui
 ```
 
-## Lint And Typecheck
+## Lint and Typecheck
 
 The lint workflow runs on every pull request:
 
@@ -186,13 +186,13 @@ Common failures:
 
 Start with the failing workflow name, then run the closest local command:
 
-| Failed workflow | First local command |
-|---|---|
-| Lint | `npm run lint` |
-| Lint typecheck step | `npm run typecheck` |
-| Vitest generated check | `npm run openapi:generate` |
-| Vitest test step | `npm run mock:server:vitest` in one shell, then `npm run test:run` in another |
-| Cypress | Reproduce with the backend, seeded database, and Cypress spec named in the CI logs |
-| PR Build Test | `npm run build:ci` |
+| Failed workflow        | First local command                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| Lint                   | `npm run lint`                                                                     |
+| Lint typecheck step    | `npm run typecheck`                                                                |
+| Vitest generated check | `npm run openapi:generate`                                                         |
+| Vitest test step       | `npm run mock:server:vitest` in one shell, then `npm run test:run` in another      |
+| Cypress                | Reproduce with the backend, seeded database, and Cypress spec named in the CI logs |
+| PR Build Test          | `npm run build:ci`                                                                 |
 
 When fixing tests, prefer updating the behavior or fixture data that changed rather than weakening assertions. If generated files changed, review the generated diff before committing it so API contract changes are intentional.
