@@ -119,7 +119,7 @@ Cypress E2E tests run in `.github/workflows/CI_cypress.yml` on every pull reques
 The workflow:
 
 1. Checks out this frontend repository.
-2. Checks out `DataIntegrationGroup/NMSampleLocations` at the `staging` branch into `api-repo`.
+2. Checks out `DataIntegrationGroup/OcotilloAPI` at the `staging` branch into `api-repo`.
 3. Starts the backend with Docker Compose.
 4. Waits for `http://localhost:8000/docs`.
 5. Seeds the database with `python -m transfers.seed`.
