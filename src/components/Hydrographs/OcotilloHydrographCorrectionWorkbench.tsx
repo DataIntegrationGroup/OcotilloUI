@@ -19,12 +19,14 @@ import {
   useTheme,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import {
   Build,
   CleaningServices,
   Publish,
   Refresh,
   Straighten,
+  TableRows,
 } from '@mui/icons-material'
 import {
   applyOffsetToRange,
@@ -298,6 +300,92 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     storedTransducerPoints,
     theme.palette.background.paper,
   ])
+
+  const tableRows = useMemo(() => {
+    interface CorrectionTableRow {
+      id: number
+      time: Date
+      waterHead: number | null
+      rawDtw: number | null
+      correctedDtw: number | null
+      manualDtw: number | null
+      storedTransducer: number | null
+    }
+
+    const rows = new Map<number, CorrectionTableRow>()
+    const rowFor = (time: Date) => {
+      const key = time.getTime()
+      let row = rows.get(key)
+      if (!row) {
+        row = {
+          id: key,
+          time,
+          waterHead: null,
+          rawDtw: null,
+          correctedDtw: null,
+          manualDtw: null,
+          storedTransducer: null,
+        }
+        rows.set(key, row)
+      }
+      return row
+    }
+
+    if (uploaded?.valueKind === 'water_head') {
+      uploaded.measurements.forEach((point) => {
+        rowFor(point.time).waterHead = point.value
+      })
+    }
+    rawUploadedMeasurements.forEach((point) => {
+      rowFor(point.time).rawDtw = point.value
+    })
+    correctedMeasurements.forEach((point) => {
+      rowFor(point.time).correctedDtw = point.value
+    })
+    manualPoints.forEach((point) => {
+      rowFor(point.time).manualDtw = point.value
+    })
+    storedTransducerPoints.forEach((point) => {
+      rowFor(point.time).storedTransducer = point.value
+    })
+
+    return [...rows.values()].sort((a, b) => a.id - b.id)
+  }, [
+    correctedMeasurements,
+    manualPoints,
+    rawUploadedMeasurements,
+    storedTransducerPoints,
+    uploaded,
+  ])
+
+  const tableColumns = useMemo<GridColDef[]>(() => {
+    const numberColumn = (field: string, headerName: string): GridColDef => ({
+      field,
+      headerName,
+      width: 170,
+      type: 'number',
+      valueFormatter: (value: number | null) =>
+        value == null ? '' : value.toFixed(3),
+    })
+
+    return [
+      {
+        field: 'time',
+        headerName: 'Timestamp',
+        width: 190,
+        valueFormatter: (value: Date) => value.toLocaleString(),
+      },
+      ...(uploaded?.valueKind === 'water_head'
+        ? [numberColumn('waterHead', 'Water Head (ft)')]
+        : []),
+      numberColumn('rawDtw', 'Raw DTW (ft bgs)'),
+      numberColumn('correctedDtw', 'Corrected DTW (ft bgs)'),
+      numberColumn('manualDtw', 'Manual DTW (ft bgs)'),
+      ...(storedTransducerPoints.length > 0
+        ? [numberColumn('storedTransducer', 'Stored Transducer (ft bgs)')]
+        : []),
+    ]
+  }, [storedTransducerPoints.length, uploaded?.valueKind])
 
   const handleUpload = async (file?: File) => {
     if (!file) return
@@ -666,6 +754,33 @@ export const OcotilloHydrographCorrectionWorkbench = ({
               </Paper>
             </Grid>
           </Grid>
+
+          <Paper
+            variant="outlined"
+            sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.paper' }}
+          >
+            <Stack spacing={1}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <TableRows color="primary" fontSize="small" />
+                <Typography variant="overline" color="primary.main">
+                  Data Table
+                </Typography>
+                <Chip size="small" label={`${tableRows.length} rows`} />
+              </Stack>
+              <Box sx={{ height: 400 }}>
+                <DataGrid
+                  rows={tableRows}
+                  columns={tableColumns}
+                  density="compact"
+                  disableRowSelectionOnClick
+                  initialState={{
+                    pagination: { paginationModel: { pageSize: 100 } },
+                  }}
+                  pageSizeOptions={[25, 50, 100]}
+                />
+              </Box>
+            </Stack>
+          </Paper>
 
           <Divider />
 
