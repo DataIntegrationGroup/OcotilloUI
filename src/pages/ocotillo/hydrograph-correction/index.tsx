@@ -32,9 +32,12 @@ import {
   DEMO_FILE_NAME,
   DEMO_MANUAL_OBSERVATIONS,
   DEMO_WELL_NAME,
+  DEMO_WELLNTEL_FILE_NAME,
+  DEMO_WELLNTEL_MANUAL_OBSERVATIONS,
+  DEMO_WELLNTEL_WELL_NAME,
 } from './demoData'
 
-type DemoKind = 'transducer' | 'diver'
+type DemoKind = 'transducer' | 'diver' | 'wellntel'
 
 const DEMO_CONFIG: Record<
   DemoKind,
@@ -53,6 +56,11 @@ const DEMO_CONFIG: Record<
     fileName: DEMO_DIVER_FILE_NAME,
     wellName: DEMO_DIVER_WELL_NAME,
     manualObservations: DEMO_DIVER_MANUAL_OBSERVATIONS,
+  },
+  wellntel: {
+    fileName: DEMO_WELLNTEL_FILE_NAME,
+    wellName: DEMO_WELLNTEL_WELL_NAME,
+    manualObservations: DEMO_WELLNTEL_MANUAL_OBSERVATIONS,
   },
 }
 
@@ -280,6 +288,14 @@ export const HydrographCorrectionPage = () => {
                   disabled={isLoadingDemo}
                 >
                   Diver Office Demo
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<AutoAwesome />}
+                  onClick={() => handleLoadDemoFile('wellntel')}
+                  disabled={isLoadingDemo}
+                >
+                  Wellntel Demo
                 </Button>
                 <Typography variant="body2" color="text.secondary">
                   If extraction fails, use the well search below.

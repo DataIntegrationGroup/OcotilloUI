@@ -10,6 +10,7 @@ import {
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
   removeOffsetsAndZeros,
+  removeSpuriousReflections,
 } from './hydrographCorrection'
 
 describe('hydrograph correction utilities', () => {
@@ -204,6 +205,47 @@ END OF DATA`)
     expect(cleaned.map((point) => point.value)).toEqual([
       10, 10.1, 10.1, 10.2, 10.3,
     ])
+  })
+
+  it('removes isolated spurious reflections in either direction', () => {
+    const day = (n: number, value: number) => ({
+      time: new Date(Date.UTC(2025, 0, n)),
+      value,
+    })
+    const measurements = [
+      day(1, 42.0),
+      day(2, 42.05),
+      day(3, 45.15), // spurious deep echo
+      day(4, 42.1),
+      day(5, 39.9), // spurious shallow echo
+      day(6, 42.15),
+      day(7, 42.2),
+    ]
+
+    const cleaned = removeSpuriousReflections(measurements, 0.25)
+
+    expect(cleaned.map((point) => point.value)).toEqual([
+      42.0, 42.05, 42.1, 42.15, 42.2,
+    ])
+  })
+
+  it('keeps genuine steps and points outside the selected range', () => {
+    const day = (n: number, value: number) => ({
+      time: new Date(Date.UTC(2025, 0, n)),
+      value,
+    })
+
+    // A sustained two-sample offset is a real step, not a reflection.
+    const step = [day(1, 42), day(2, 45), day(3, 45.05), day(4, 42.1)]
+    expect(removeSpuriousReflections(step, 0.25)).toHaveLength(4)
+
+    // A reflection outside the brushed range is untouched.
+    const spike = [day(1, 42), day(2, 45.1), day(3, 42.05), day(4, 42.1)]
+    const cleaned = removeSpuriousReflections(spike, 0.25, {
+      startTime: new Date(Date.UTC(2025, 0, 3)),
+      endTime: new Date(Date.UTC(2025, 0, 4)),
+    })
+    expect(cleaned).toHaveLength(4)
   })
 
   it('only cancels jumps inside the selected range', () => {

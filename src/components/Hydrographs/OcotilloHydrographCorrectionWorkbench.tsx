@@ -33,6 +33,7 @@ import {
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
   removeOffsetsAndZeros,
+  removeSpuriousReflections,
   type HydrographPoint,
   type HydrographRange,
   type ParsedHydrographUpload,
@@ -93,6 +94,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     useState<ManualOption | null>(null)
   const [shiftAmount, setShiftAmount] = useState<number>(0.1)
   const [cleanThreshold, setCleanThreshold] = useState<number>(0.25)
+  const [reflectionThreshold, setReflectionThreshold] = useState<number>(0.25)
   const [correctDrift, setCorrectDrift] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string | null>(initialFileName ?? null)
@@ -527,6 +529,14 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     )
   }
 
+  const cleanSpuriousReflections = () => {
+    if (correctedMeasurements.length === 0) return
+
+    setCorrectedMeasurements((current) =>
+      removeSpuriousReflections(current, reflectionThreshold, selectedRange)
+    )
+  }
+
   const snapToManual = () => {
     if (!selectedManualOption || correctedMeasurements.length === 0) return
 
@@ -688,6 +698,29 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     >
                       Remove Offsets/Zeros
                     </Button>
+                    <TextField
+                      type="number"
+                      label="Reflection threshold (ft)"
+                      size="small"
+                      value={reflectionThreshold}
+                      onChange={(event) =>
+                        setReflectionThreshold(Number(event.target.value))
+                      }
+                    />
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<CleaningServices />}
+                      onClick={cleanSpuriousReflections}
+                      disabled={correctedMeasurements.length === 0}
+                    >
+                      Remove Reflections
+                    </Button>
+                    <Typography variant="caption" color="text.secondary">
+                      Reflections are isolated readings offset from both
+                      neighbors (acoustic echoes). Steps lasting more than one
+                      reading are kept.
+                    </Typography>
                   </Stack>
                 </Paper>
 

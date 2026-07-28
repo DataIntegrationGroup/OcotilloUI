@@ -753,6 +753,38 @@ export const removeOffsetsAndZeros = (
   }))
 }
 
+// Wellntel acoustic sensors occasionally record spurious reflections: an
+// echo off a casing joint or other obstruction takes a longer (or shorter)
+// path, producing an isolated reading systematically offset from the true
+// depth to water. This is the workbench analog of wellpy's acoustic
+// upspike removal, generalized to both directions: a point is dropped when
+// it departs from BOTH neighbors in the same direction by at least the
+// threshold while the neighbors agree with each other, i.e. the trace jumps
+// away for exactly one sample and comes straight back. Genuine steps (two
+// or more consecutive offset readings) are kept.
+export const removeSpuriousReflections = (
+  measurements: HydrographPoint[],
+  threshold: number,
+  range?: HydrographRange | null
+): HydrographPoint[] =>
+  measurements.filter((point, index) => {
+    if (!includesTime(point.time, range)) return true
+
+    const previous = measurements[index - 1]
+    const next = measurements[index + 1]
+    if (!previous || !next) return true
+
+    const departsPrevious = point.value - previous.value
+    const departsNext = point.value - next.value
+
+    return !(
+      Math.abs(departsPrevious) >= threshold &&
+      Math.abs(departsNext) >= threshold &&
+      Math.sign(departsPrevious) === Math.sign(departsNext) &&
+      Math.abs(previous.value - next.value) < threshold
+    )
+  })
+
 export const applyOffsetToRange = (
   measurements: HydrographPoint[],
   offset: number,

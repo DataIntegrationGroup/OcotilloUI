@@ -33,3 +33,19 @@ export const DEMO_DIVER_MANUAL_OBSERVATIONS = [
   { observation_datetime: '2025-03-01T12:00:00', depth_to_water_bgs: 42.28 },
   { observation_datetime: '2025-04-13T12:00:00', depth_to_water_bgs: 43.27 },
 ]
+
+// Companion data for the Wellntel acoustic demo
+// (public/example_wellntel.wcsv): 90 days of 6-hour depth-to-water readings
+// with 18 isolated spurious reflections, each systematically +3.1 ft deep
+// (echo off a casing joint takes a longer path). The Remove Reflections
+// button in the Clean panel drops them; values are already DTW, so no
+// water-head conversion is involved.
+export const DEMO_WELLNTEL_WELL_NAME = 'WL-0036 (demo)'
+
+export const DEMO_WELLNTEL_FILE_NAME = 'example_wellntel.wcsv'
+
+export const DEMO_WELLNTEL_MANUAL_OBSERVATIONS = [
+  { observation_datetime: '2025-01-27T12:00:00', depth_to_water_bgs: 42.17 },
+  { observation_datetime: '2025-03-06T12:00:00', depth_to_water_bgs: 42.71 },
+  { observation_datetime: '2025-04-10T12:00:00', depth_to_water_bgs: 43.26 },
+]
