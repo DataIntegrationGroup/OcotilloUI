@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactECharts from 'echarts-for-react'
 import {
   Alert,
@@ -8,8 +8,10 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Checkbox,
   Chip,
   Divider,
+  FormControlLabel,
   Paper,
   Stack,
   TextField,
@@ -17,14 +19,22 @@ import {
   useTheme,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { Build, Publish, Refresh, Straighten } from '@mui/icons-material'
+import {
+  Build,
+  CleaningServices,
+  Publish,
+  Refresh,
+  Straighten,
+} from '@mui/icons-material'
 import {
   applyOffsetToRange,
   buildCsvFromMeasurements,
   calculateSnapOffset,
+  convertWaterHeadToDepthToWater,
   normalizePointId,
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
+  removeOffsetsAndZeros,
   type HydrographPoint,
   type HydrographRange,
   type ParsedHydrographUpload,
@@ -70,30 +80,24 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [uploaded, setUploaded] = useState<ParsedHydrographUpload | null>(
     initialUpload ?? null
   )
+  // Populated by the effect below once the upload is derived (water-head
+  // uploads are converted first, so raw parsed values are never charted).
   const [rawUploadedMeasurements, setRawUploadedMeasurements] = useState<
     HydrographPoint[]
-  >(initialUpload?.measurements ?? [])
+  >([])
   const [correctedMeasurements, setCorrectedMeasurements] = useState<
     HydrographPoint[]
-  >(initialUpload?.measurements ?? [])
+  >([])
   const [selectedRange, setSelectedRange] = useState<HydrographRange | null>(
     null
   )
   const [selectedManualOption, setSelectedManualOption] =
     useState<ManualOption | null>(null)
   const [shiftAmount, setShiftAmount] = useState<number>(0.1)
+  const [cleanThreshold, setCleanThreshold] = useState<number>(0.25)
+  const [correctDrift, setCorrectDrift] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string | null>(initialFileName ?? null)
-
-  useEffect(() => {
-    setUploaded(initialUpload ?? null)
-    setRawUploadedMeasurements(initialUpload?.measurements ?? [])
-    setCorrectedMeasurements(initialUpload?.measurements ?? [])
-    setFileName(initialFileName ?? null)
-    setSelectedRange(null)
-    setSelectedManualOption(null)
-    setError(null)
-  }, [initialFileName, initialUpload])
 
   const manualPoints = useMemo<HydrographPoint[]>(
     () =>
@@ -133,6 +137,50 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       })),
     [manualPoints]
   )
+
+  // Water-head uploads (Diver Office pressure transducers) are converted to
+  // depth to water using the manual observations as sensor-depth anchors,
+  // mirroring wellpy. Depth-to-water uploads pass through unchanged.
+  const deriveWorkingMeasurements = useCallback(
+    (upload: ParsedHydrographUpload) =>
+      upload.valueKind === 'water_head'
+        ? convertWaterHeadToDepthToWater({
+            measurements: upload.measurements,
+            manualPoints,
+            correctDrift,
+          })
+        : upload.measurements,
+    [correctDrift, manualPoints]
+  )
+
+  useEffect(() => {
+    setUploaded(initialUpload ?? null)
+    setFileName(initialFileName ?? null)
+    setSelectedRange(null)
+    setSelectedManualOption(null)
+
+    if (!initialUpload) {
+      setRawUploadedMeasurements([])
+      setCorrectedMeasurements([])
+      setError(null)
+      return
+    }
+
+    try {
+      const working = deriveWorkingMeasurements(initialUpload)
+      setRawUploadedMeasurements(working)
+      setCorrectedMeasurements(working)
+      setError(null)
+    } catch (deriveError) {
+      setRawUploadedMeasurements([])
+      setCorrectedMeasurements([])
+      setError(
+        deriveError instanceof Error
+          ? deriveError.message
+          : 'Unable to prepare the uploaded data.'
+      )
+    }
+  }, [deriveWorkingMeasurements, initialFileName, initialUpload])
 
   const parsedPointId = uploaded?.pointId ?? null
   const highlightedManualPoint = selectedManualOption?.point ?? null
@@ -258,9 +306,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       const parsed = file.name.toLowerCase().endsWith('.xlsx')
         ? parseHydrographWorkbookUpload(await file.arrayBuffer(), file.name)
         : parseHydrographUpload(await file.text())
+      const working = deriveWorkingMeasurements(parsed)
       setUploaded(parsed)
-      setRawUploadedMeasurements(parsed.measurements)
-      setCorrectedMeasurements(parsed.measurements)
+      setRawUploadedMeasurements(working)
+      setCorrectedMeasurements(working)
       setSelectedRange(null)
       setError(null)
       setFileName(file.name)
@@ -312,6 +361,14 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
     setCorrectedMeasurements((current) =>
       applyOffsetToRange(current, shiftAmount * direction, selectedRange)
+    )
+  }
+
+  const cleanOffsetsAndZeros = () => {
+    if (correctedMeasurements.length === 0) return
+
+    setCorrectedMeasurements((current) =>
+      removeOffsetsAndZeros(current, cleanThreshold, selectedRange)
     )
   }
 
@@ -370,7 +427,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             ref={fileInputRef}
             hidden
             type="file"
-            accept=".txt,.csv,.dat,.xlsx"
+            accept=".txt,.csv,.dat,.wcsv,.xlsx"
             onChange={(event) => handleUpload(event.target.files?.[0])}
           />
 
@@ -387,6 +444,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             ) : null}
             {uploaded?.detectedValueColumn ? (
               <Chip label={`Value: ${uploaded.detectedValueColumn}`} />
+            ) : null}
+            {uploaded?.valueKind === 'water_head' ? (
+              <Chip color="info" label="Water head converted to DTW" />
             ) : null}
             {selectedRange ? (
               <Chip
@@ -417,6 +477,57 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       onClick={() => fileInputRef.current?.click()}
                     >
                       Replace File
+                    </Button>
+                    {uploaded?.valueKind === 'water_head' ? (
+                      <>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              size="small"
+                              checked={correctDrift}
+                              onChange={(event) =>
+                                setCorrectDrift(event.target.checked)
+                              }
+                            />
+                          }
+                          label="Correct drift"
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          Water head is converted to depth to water using
+                          manual observations as sensor-depth anchors. Drift
+                          correction interpolates the sensor depth between
+                          anchors. Recomputing discards manual edits.
+                        </Typography>
+                      </>
+                    ) : null}
+                  </Stack>
+                </Paper>
+
+                <Paper
+                  variant="outlined"
+                  sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.default' }}
+                >
+                  <Stack spacing={1.25}>
+                    <Typography variant="overline" color="primary.main">
+                      Clean
+                    </Typography>
+                    <TextField
+                      type="number"
+                      label="Jump threshold (ft)"
+                      size="small"
+                      value={cleanThreshold}
+                      onChange={(event) =>
+                        setCleanThreshold(Number(event.target.value))
+                      }
+                    />
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<CleaningServices />}
+                      onClick={cleanOffsetsAndZeros}
+                      disabled={correctedMeasurements.length === 0}
+                    >
+                      Remove Offsets/Zeros
                     </Button>
                   </Stack>
                 </Paper>

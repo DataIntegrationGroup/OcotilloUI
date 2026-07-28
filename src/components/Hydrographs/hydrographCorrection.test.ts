@@ -4,10 +4,12 @@ import { describe, expect, it } from 'vitest'
 import {
   applyOffsetToRange,
   calculateSnapOffset,
+  convertWaterHeadToDepthToWater,
   extractPointIdFromText,
   normalizePointId,
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
+  removeOffsetsAndZeros,
 } from './hydrographCorrection'
 
 describe('hydrograph correction utilities', () => {
@@ -69,6 +71,137 @@ SO-0200,2025-02-01,13:00:00,44.2`)
     })
 
     expect(offset).toBe(-0.75)
+  })
+
+  it('parses a Diver Office pressure-transducer export as water head', () => {
+    const parsed = parseHydrographUpload(`Data file for DataLogger.
+Serial number=V5806  1250
+Location=SO-0167
+2025-01-01 00:00:00,10.000,14.1
+2025-01-01 06:00:00,10.500,14.2
+2025-01-01 12:00:00,9.800,14.1,412.0
+END OF DATA`)
+
+    expect(parsed.valueKind).toBe('water_head')
+    expect(parsed.pointId).toBe('SO-0167')
+    expect(parsed.measurements).toHaveLength(3)
+    expect(parsed.measurements[1].value).toBe(10.5)
+    expect(parsed.detectedValueColumn).toBe('Water head (ft)')
+  })
+
+  it('parses a Wellntel acoustic wcsv export as depth to water', () => {
+    const parsed = parseHydrographUpload(`timestamp,temperature_C,temperature_raw,depth
+2025-01-01 00:00:00,21.5,708,42.1
+2025-01-01 06:00:00,21.4,707,42.2`)
+
+    expect(parsed.valueKind).toBe('depth_to_water')
+    expect(parsed.detectedTimeColumn).toBe('timestamp')
+    expect(parsed.detectedValueColumn).toBe('depth')
+    expect(parsed.measurements.map((point) => point.value)).toEqual([
+      42.1, 42.2,
+    ])
+  })
+
+  it('converts water head to depth to water anchored on manual observations', () => {
+    const measurements = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+      { time: new Date('2025-01-02T00:00:00Z'), value: 10.5 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 9.8 },
+      { time: new Date('2025-01-04T00:00:00Z'), value: 9.6 },
+    ]
+    const manualPoints = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 50 },
+      { time: new Date('2025-01-04T00:00:00Z'), value: 52 },
+    ]
+
+    // Bin covers the first three points; L1 = 52 + 9.8 = 61.8. The final
+    // point falls at the second manual observation and extends the last
+    // bin's sensor depth.
+    const converted = convertWaterHeadToDepthToWater({
+      measurements,
+      manualPoints,
+    })
+
+    expect(converted.map((point) => point.value)).toEqual([
+      51.8, 51.3, 52, 52.2,
+    ])
+  })
+
+  it('interpolates the sensor depth when drift correction is enabled', () => {
+    const measurements = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+      { time: new Date('2025-01-02T00:00:00Z'), value: 10.5 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 9.8 },
+    ]
+    const manualPoints = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 50 },
+      { time: new Date('2025-01-03T06:00:00Z'), value: 52 },
+    ]
+
+    // L0 = 50 + 10 = 60, L1 = 52 + 9.8 = 61.8, interpolated across the
+    // covered span, so the trace starts exactly at the first manual value.
+    const converted = convertWaterHeadToDepthToWater({
+      measurements,
+      manualPoints,
+      correctDrift: true,
+    })
+
+    expect(converted.map((point) => point.value)).toEqual([50, 50.4, 52])
+  })
+
+  it('requires two overlapping manual observations to convert water head', () => {
+    const measurements = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+    ]
+
+    expect(() =>
+      convertWaterHeadToDepthToWater({
+        measurements,
+        manualPoints: [{ time: new Date('2025-01-01T00:00:00Z'), value: 50 }],
+      })
+    ).toThrow('At least two manual observations')
+
+    expect(() =>
+      convertWaterHeadToDepthToWater({
+        measurements,
+        manualPoints: [
+          { time: new Date('2026-01-01T00:00:00Z'), value: 50 },
+          { time: new Date('2026-02-01T00:00:00Z'), value: 51 },
+        ],
+      })
+    ).toThrow('do not overlap')
+  })
+
+  it('removes zeros and cancels offset jumps beyond the threshold', () => {
+    const measurements = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+      { time: new Date('2025-01-02T00:00:00Z'), value: 10.1 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 0 },
+      { time: new Date('2025-01-04T00:00:00Z'), value: 12.1 },
+      { time: new Date('2025-01-05T00:00:00Z'), value: 12.2 },
+      { time: new Date('2025-01-06T00:00:00Z'), value: 12.3 },
+    ]
+
+    const cleaned = removeOffsetsAndZeros(measurements, 0.25)
+
+    expect(cleaned.map((point) => point.value)).toEqual([
+      10, 10.1, 10.1, 10.2, 10.3,
+    ])
+  })
+
+  it('only cancels jumps inside the selected range', () => {
+    const measurements = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+      { time: new Date('2025-01-02T00:00:00Z'), value: 12 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 12.1 },
+    ]
+
+    const cleaned = removeOffsetsAndZeros(measurements, 0.25, {
+      startTime: new Date('2025-01-02T12:00:00Z'),
+      endTime: new Date('2025-01-03T12:00:00Z'),
+    })
+
+    expect(cleaned.map((point) => point.value)).toEqual([10, 12, 12.1])
   })
 
   it('parses the sample wellpy workbook export', () => {

@@ -10,11 +10,19 @@ export interface HydrographRange {
   endTime: Date
 }
 
+// 'water_head' measurements are the height of the water column above the
+// sensor (Diver Office pressure-transducer exports) and must be converted to
+// depth to water below ground surface with convertWaterHeadToDepthToWater
+// before they are comparable to Ocotillo observations. 'depth_to_water'
+// measurements (wellpy workbooks, Wellntel acoustic exports) are used as-is.
+export type HydrographValueKind = 'depth_to_water' | 'water_head'
+
 export interface ParsedHydrographUpload {
   pointId: string | null
   detectedDelimiter: string
   detectedValueColumn: string
   detectedTimeColumn: string
+  valueKind: HydrographValueKind
   measurements: HydrographPoint[]
 }
 
@@ -45,7 +53,10 @@ const VALUE_COLUMN_PATTERNS = [
   /reading/i,
   /result/i,
   /value/i,
+  /^depth$/i,
 ]
+
+const WATER_HEAD_COLUMN_PATTERN = /head/i
 
 const DATE_ONLY_PATTERN = /date/i
 const TIME_ONLY_PATTERN = /^time$/i
@@ -150,6 +161,7 @@ const pickPreferredValueColumnIndex = (headers: string[]) => {
     /reading/i,
     /result/i,
     /value/i,
+    /^depth$/i,
   ]
 
   for (const pattern of priorities) {
@@ -257,6 +269,68 @@ const parseMeasurementRows = ({
   }
 }
 
+// Diver Office pressure-transducer CSV exports have no header row: a block
+// of metadata lines (including `Serial number=...` and `Location=...`), then
+// bare data rows of `date,water head,temperature[,conductivity]`, terminated
+// by an `END OF DATA` line. The head values are the water column above the
+// sensor in feet, mirroring wellpy's `DataModel._load_csv`.
+const DIVER_OFFICE_LOCATION_PATTERN = /^Location\s*[:=](.+)$/i
+const DIVER_OFFICE_SERIAL_PATTERN = /^Serial number\s*[:=](.+)$/i
+
+const looksLikeDiverOfficeUpload = (text: string) =>
+  text
+    .split(/\r?\n/)
+    .some((line) => DIVER_OFFICE_SERIAL_PATTERN.test(line.trim())) ||
+  /^END OF DATA/im.test(text)
+
+export const parseDiverOfficeUpload = (
+  text: string
+): ParsedHydrographUpload => {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  let pointId: string | null = null
+  const measurements: HydrographPoint[] = []
+
+  for (const line of lines) {
+    if (/^END OF DATA/i.test(line)) break
+
+    const locationMatch = line.match(DIVER_OFFICE_LOCATION_PATTERN)
+    if (locationMatch) {
+      pointId = normalizePointId(locationMatch[1])
+      continue
+    }
+
+    const cells = splitRow(line, ',')
+    if (cells.length !== 3 && cells.length !== 4) continue
+
+    const parsedDate = maybeParseDate(cells[0])
+    const parsedHead = Number.parseFloat(cells[1])
+    if (!parsedDate || !Number.isFinite(parsedHead)) continue
+
+    measurements.push({ time: parsedDate, value: parsedHead })
+  }
+
+  if (measurements.length === 0) {
+    throw new Error(
+      'No data rows could be parsed from the Diver Office export.'
+    )
+  }
+
+  return {
+    pointId,
+    detectedDelimiter: ',',
+    detectedTimeColumn: 'Date/time',
+    detectedValueColumn: 'Water head (ft)',
+    valueKind: 'water_head',
+    measurements: measurements.sort(
+      (a, b) => toUnixTime(a.time) - toUnixTime(b.time)
+    ),
+  }
+}
+
 export const parseHydrographUpload = (text: string): ParsedHydrographUpload => {
   const lines = text
     .split(/\r?\n/)
@@ -272,6 +346,10 @@ export const parseHydrographUpload = (text: string): ParsedHydrographUpload => {
   const headerIndex = resolveHeaderRow(rows)
 
   if (headerIndex < 0) {
+    if (looksLikeDiverOfficeUpload(text)) {
+      return parseDiverOfficeUpload(text)
+    }
+
     throw new Error(
       'Unable to detect a header row with timestamp and water-level columns.'
     )
@@ -288,6 +366,9 @@ export const parseHydrographUpload = (text: string): ParsedHydrographUpload => {
     detectedDelimiter,
     detectedValueColumn: parsed.detectedValueColumn,
     detectedTimeColumn: parsed.detectedTimeColumn,
+    valueKind: WATER_HEAD_COLUMN_PATTERN.test(parsed.detectedValueColumn)
+      ? 'water_head'
+      : 'depth_to_water',
     measurements: parsed.measurements,
   }
 }
@@ -474,6 +555,7 @@ const parseXlsxWorksheet = (rows: XlsxRow[], fileName: string): ParsedHydrograph
     detectedDelimiter: 'xlsx',
     detectedTimeColumn: headers[timeIndex],
     detectedValueColumn: headers[valueIndex],
+    valueKind: 'depth_to_water',
     measurements: measurements.sort(
       (a, b) => toUnixTime(a.time) - toUnixTime(b.time)
     ),
@@ -514,6 +596,159 @@ const includesTime = (time: Date, range?: HydrographRange | null) => {
   return (
     target >= toUnixTime(range.startTime) && target <= toUnixTime(range.endTime)
   )
+}
+
+// Port of wellpy's `Model.calculate_depth_to_water` for pressure-transducer
+// data. Water head is the height of the water column above the sensor, so
+// depth to water = sensor depth (L) - head. The sensor depth is anchored by
+// manual observations: within each pair of consecutive manual observations
+// (d0 at t0, d1 at t1), L1 = d1 + head at the end of the bin and
+// L0 = d0 + head at the start. Without drift correction the whole bin uses
+// L1; with it, L is interpolated linearly from L0 to L1.
+//
+// Wellpy leaves measurements outside manual coverage at zero; here the
+// nearest bin's sensor depth is extended instead so the full trace stays
+// plottable.
+export const convertWaterHeadToDepthToWater = ({
+  measurements,
+  manualPoints,
+  correctDrift = false,
+}: {
+  measurements: HydrographPoint[]
+  manualPoints: HydrographPoint[]
+  correctDrift?: boolean
+}): HydrographPoint[] => {
+  if (manualPoints.length < 2) {
+    throw new Error(
+      'At least two manual observations are required to convert water head to depth to water.'
+    )
+  }
+
+  const sorted = [...measurements].sort(
+    (a, b) => toUnixTime(a.time) - toUnixTime(b.time)
+  )
+  const manual = [...manualPoints].sort(
+    (a, b) => toUnixTime(a.time) - toUnixTime(b.time)
+  )
+
+  const sensorDepths: Array<number | null> = sorted.map(() => null)
+  let firstBinStartDepth: number | null = null
+  let lastBinEndDepth: number | null = null
+
+  for (let i = 0; i < manual.length - 1; i += 1) {
+    const m0 = manual[i]
+    const m1 = manual[i + 1]
+    const indices: number[] = []
+
+    sorted.forEach((point, index) => {
+      const t = toUnixTime(point.time)
+      if (t >= toUnixTime(m0.time) && t < toUnixTime(m1.time)) {
+        indices.push(index)
+      }
+    })
+
+    if (indices.length === 0) continue
+
+    const firstIndex = indices[0]
+    const lastIndex = indices[indices.length - 1]
+    const l0 = m0.value + sorted[firstIndex].value
+    const l1 = m1.value + sorted[lastIndex].value
+
+    if (firstBinStartDepth === null) {
+      firstBinStartDepth = l0
+    }
+    lastBinEndDepth = l1
+
+    const t0 = toUnixTime(sorted[firstIndex].time)
+    const t1 = toUnixTime(sorted[lastIndex].time)
+    const span = t1 - t0
+
+    for (const index of indices) {
+      const l =
+        correctDrift && span > 0
+          ? l0 + ((l1 - l0) * (toUnixTime(sorted[index].time) - t0)) / span
+          : l1
+      sensorDepths[index] = l
+    }
+  }
+
+  if (firstBinStartDepth === null || lastBinEndDepth === null) {
+    throw new Error(
+      'The manual observations do not overlap the uploaded water-head data.'
+    )
+  }
+
+  return sorted.map((point, index) => {
+    let sensorDepth = sensorDepths[index]
+    if (sensorDepth === null) {
+      sensorDepth =
+        toUnixTime(point.time) < toUnixTime(manual[0].time)
+          ? firstBinStartDepth
+          : lastBinEndDepth
+    }
+
+    return {
+      time: point.time,
+      value: Number((sensorDepth - point.value).toFixed(4)),
+    }
+  })
+}
+
+// Port of wellpy's `DataModel.fix_data` ("Remove Offsets/Zeros"): drop
+// zero readings (sensor out of water) and cancel abrupt jumps larger than
+// the threshold (sensor repositioning) by shifting the subsequent segment
+// back. Without a range, jumps are removed repeatedly until none remain;
+// with a range, each jump inside it shifts everything after it once.
+export const removeOffsetsAndZeros = (
+  measurements: HydrographPoint[],
+  threshold: number,
+  range?: HydrographRange | null
+): HydrographPoint[] => {
+  const kept = measurements.filter(
+    (point) => !(point.value === 0 && includesTime(point.time, range))
+  )
+  const values = kept.map((point) => point.value)
+
+  const jumpIndices = () => {
+    const indices: number[] = []
+    for (let i = 0; i < values.length - 1; i += 1) {
+      if (Math.abs(values[i + 1] - values[i]) >= threshold) {
+        indices.push(i)
+      }
+    }
+    return indices
+  }
+
+  if (range) {
+    for (const index of jumpIndices()) {
+      if (
+        includesTime(kept[index].time, range) &&
+        includesTime(kept[index + 1].time, range)
+      ) {
+        const offset = values[index] - values[index + 1]
+        for (let i = index + 1; i < values.length; i += 1) {
+          values[i] += offset
+        }
+      }
+    }
+  } else {
+    for (let pass = 0; pass < 100; pass += 1) {
+      const indices = jumpIndices()
+      if (indices.length === 0) break
+
+      const start = indices[0]
+      const end = indices.length > 1 ? indices[1] : values.length - 1
+      const offset = values[start] - values[start + 1]
+      for (let i = start + 1; i <= end; i += 1) {
+        values[i] += offset
+      }
+    }
+  }
+
+  return kept.map((point, index) => ({
+    time: point.time,
+    value: Number(values[index].toFixed(4)),
+  }))
 }
 
 export const applyOffsetToRange = (

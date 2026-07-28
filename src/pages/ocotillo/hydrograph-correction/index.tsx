@@ -221,7 +221,7 @@ export const HydrographCorrectionPage = () => {
                 ref={fileInputRef}
                 hidden
                 type="file"
-                accept=".txt,.csv,.dat,.xlsx"
+                accept=".txt,.csv,.dat,.wcsv,.xlsx"
                 onChange={(event) => handleInitialUpload(event.target.files?.[0])}
               />
 
