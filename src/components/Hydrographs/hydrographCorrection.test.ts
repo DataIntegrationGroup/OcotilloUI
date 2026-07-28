@@ -6,6 +6,7 @@ import {
   calculateSnapOffset,
   convertWaterHeadToDepthToWater,
   extractPointIdFromText,
+  interpolateSpuriousReflections,
   normalizePointId,
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
@@ -250,6 +251,40 @@ END OF DATA`)
 
     expect(cleaned.map((point) => point.value)).toEqual([
       42.0, 42.05, 42.1, 42.15, 42.2, 42.25,
+    ])
+  })
+
+  it('interpolates across removed reflections instead of deleting them', () => {
+    const day = (n: number, value: number) => ({
+      time: new Date(Date.UTC(2025, 0, n)),
+      value,
+    })
+    const measurements = [
+      day(1, 42.0),
+      day(2, 84.2), // spurious 2x
+      day(3, 42.1),
+      day(4, 45.3), // adjacent pair: 1x...
+      day(5, 84.5), // ...and 2x
+      day(6, 42.2),
+      day(7, 42.25),
+    ]
+
+    const interpolated = interpolateSpuriousReflections(measurements, 0.25)
+
+    // cadence preserved: same length, same timestamps
+    expect(interpolated).toHaveLength(measurements.length)
+    expect(interpolated.map((point) => point.time)).toEqual(
+      measurements.map((point) => point.time)
+    )
+    // spurious values replaced with linear fits between survivors
+    expect(interpolated.map((point) => point.value)).toEqual([
+      42.0,
+      42.05, // midpoint of day 1 (42.0) and day 3 (42.1)
+      42.1,
+      42.1333, // one third of day 3 (42.1) -> day 6 (42.2)
+      42.1667, // two thirds
+      42.2,
+      42.25,
     ])
   })
 

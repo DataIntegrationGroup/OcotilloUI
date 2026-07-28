@@ -775,13 +775,15 @@ const median = (values: number[]) => {
 // (sustained excursions) while dropping reflections even when two
 // different ones land side by side. This is the workbench analog of
 // wellpy's acoustic upspike removal.
-export const removeSpuriousReflections = (
+const findSpuriousReflectionIndices = (
   measurements: HydrographPoint[],
   threshold: number,
   range?: HydrographRange | null
-): HydrographPoint[] =>
-  measurements.filter((point, index) => {
-    if (!includesTime(point.time, range)) return true
+) => {
+  const spurious = new Set<number>()
+
+  measurements.forEach((point, index) => {
+    if (!includesTime(point.time, range)) return
 
     const windowValues = measurements
       .slice(
@@ -791,7 +793,7 @@ export const removeSpuriousReflections = (
       .map((neighbor) => neighbor.value)
 
     if (Math.abs(point.value - median(windowValues)) < threshold) {
-      return true
+      return
     }
 
     const previous = measurements[index - 1]
@@ -802,8 +804,65 @@ export const removeSpuriousReflections = (
     const agreesWithNext =
       next !== undefined && Math.abs(point.value - next.value) < threshold
 
-    return agreesWithPrevious || agreesWithNext
+    if (!agreesWithPrevious && !agreesWithNext) {
+      spurious.add(index)
+    }
   })
+
+  return spurious
+}
+
+export const removeSpuriousReflections = (
+  measurements: HydrographPoint[],
+  threshold: number,
+  range?: HydrographRange | null
+): HydrographPoint[] => {
+  const spurious = findSpuriousReflectionIndices(measurements, threshold, range)
+  return measurements.filter((_point, index) => !spurious.has(index))
+}
+
+// Same detection as removeSpuriousReflections, but instead of deleting the
+// spurious readings this keeps the sampling cadence and replaces each one
+// with a linear interpolation in time between the nearest surviving
+// readings on either side (nearest single side at the series edges).
+export const interpolateSpuriousReflections = (
+  measurements: HydrographPoint[],
+  threshold: number,
+  range?: HydrographRange | null
+): HydrographPoint[] => {
+  const spurious = findSpuriousReflectionIndices(measurements, threshold, range)
+
+  return measurements.map((point, index) => {
+    if (!spurious.has(index)) return point
+
+    let previousIndex = index - 1
+    while (previousIndex >= 0 && spurious.has(previousIndex)) previousIndex -= 1
+    let nextIndex = index + 1
+    while (nextIndex < measurements.length && spurious.has(nextIndex))
+      nextIndex += 1
+
+    const previous = previousIndex >= 0 ? measurements[previousIndex] : null
+    const next = nextIndex < measurements.length ? measurements[nextIndex] : null
+
+    if (!previous && !next) return point
+
+    let value: number
+    if (previous && next) {
+      const span = toUnixTime(next.time) - toUnixTime(previous.time)
+      value =
+        span > 0
+          ? previous.value +
+            ((next.value - previous.value) *
+              (toUnixTime(point.time) - toUnixTime(previous.time))) /
+              span
+          : previous.value
+    } else {
+      value = (previous ?? next)!.value
+    }
+
+    return { time: point.time, value: Number(value.toFixed(4)) }
+  })
+}
 
 export const applyOffsetToRange = (
   measurements: HydrographPoint[],

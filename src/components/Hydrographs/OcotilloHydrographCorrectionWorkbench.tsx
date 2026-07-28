@@ -29,6 +29,7 @@ import {
   buildCsvFromMeasurements,
   calculateSnapOffset,
   convertWaterHeadToDepthToWater,
+  interpolateSpuriousReflections,
   normalizePointId,
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
@@ -95,6 +96,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [shiftAmount, setShiftAmount] = useState<number>(0.1)
   const [cleanThreshold, setCleanThreshold] = useState<number>(0.25)
   const [reflectionThreshold, setReflectionThreshold] = useState<number>(0.25)
+  const [interpolateReflections, setInterpolateReflections] = useState(false)
   const [correctDrift, setCorrectDrift] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string | null>(initialFileName ?? null)
@@ -532,8 +534,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const cleanSpuriousReflections = () => {
     if (correctedMeasurements.length === 0) return
 
+    const treat = interpolateReflections
+      ? interpolateSpuriousReflections
+      : removeSpuriousReflections
     setCorrectedMeasurements((current) =>
-      removeSpuriousReflections(current, reflectionThreshold, selectedRange)
+      treat(current, reflectionThreshold, selectedRange)
     )
   }
 
@@ -707,6 +712,18 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         setReflectionThreshold(Number(event.target.value))
                       }
                     />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          size="small"
+                          checked={interpolateReflections}
+                          onChange={(event) =>
+                            setInterpolateReflections(event.target.checked)
+                          }
+                        />
+                      }
+                      label="Interpolate across removals"
+                    />
                     <Button
                       variant="outlined"
                       size="small"
@@ -714,12 +731,17 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       onClick={cleanSpuriousReflections}
                       disabled={correctedMeasurements.length === 0}
                     >
-                      Remove Reflections
+                      {interpolateReflections
+                        ? 'Interpolate Reflections'
+                        : 'Remove Reflections'}
                     </Button>
                     <Typography variant="caption" color="text.secondary">
                       Reflections are acoustic-echo readings offset from the
                       local trend — positive or negative, near the true depth
                       (1x) or near twice it (2x). Sustained steps are kept.
+                      Interpolating keeps the sampling cadence, replacing each
+                      removed reading with a linear fit between its surviving
+                      neighbors.
                     </Typography>
                   </Stack>
                 </Paper>
