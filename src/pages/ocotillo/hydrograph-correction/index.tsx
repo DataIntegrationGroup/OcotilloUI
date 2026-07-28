@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react'
+import axios from 'axios'
+import { useInvalidate } from '@refinedev/core'
 import { Breadcrumb, useAutocomplete, useDataGrid } from '@refinedev/mui'
 import {
   Alert,
@@ -6,6 +8,10 @@ import {
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Paper,
   Skeleton,
   Stack,
@@ -21,7 +27,10 @@ import {
 } from './WellntelIngestDialog'
 import { IWell } from '@/interfaces/ocotillo'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
-import { OcotilloHydrographCorrectionWorkbench } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
+import {
+  OcotilloHydrographCorrectionWorkbench,
+  type HydrographPublishArgs,
+} from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
 import {
   normalizePointId,
   parseHydrographUpload,
@@ -81,6 +90,18 @@ export const HydrographCorrectionPage = () => {
   const [demoKind, setDemoKind] = useState<DemoKind | null>(null)
   const [isIngestDialogOpen, setIsIngestDialogOpen] = useState(false)
   const [ingestedWellName, setIngestedWellName] = useState<string | null>(null)
+  const [publishSuccess, setPublishSuccess] = useState<{
+    blockId: number | null
+    count: number
+    wellName: string
+  } | null>(null)
+  const [publishError, setPublishError] = useState<string | null>(null)
+  const [pendingOverlap, setPendingOverlap] = useState<{
+    blockIds: number[]
+    args: HydrographPublishArgs
+  } | null>(null)
+  const dtwParameterIdRef = useRef<number | null>(null)
+  const invalidate = useInvalidate()
 
   const { autocompleteProps } = useAutocomplete<IWell>({
     resource: 'thing',
@@ -190,6 +211,129 @@ export const HydrographCorrectionPage = () => {
     setUploadedFileName(fileName)
     setUploadError(null)
     await resolveWellFromUpload(parsed)
+  }
+
+  // Resolve the depth-to-water parameter id from the lexicon at runtime
+  // (upload-contract open question #1 — this avoids a hardcoded id).
+  const resolveDtwParameterId = async () => {
+    if (dtwParameterIdRef.current !== null) return dtwParameterIdRef.current
+
+    const fetchTerms = async (category?: string) => {
+      const response = await ocotilloDataProvider.getList({
+        resource: 'lexicon/term',
+        pagination: { currentPage: 1, pageSize: 500 },
+        meta: { params: category ? { category } : {} },
+      })
+      return response.data as Array<{ id: number; term: string }>
+    }
+    const findDtw = (terms: Array<{ id: number; term: string }>) =>
+      terms.find((item) =>
+        /depth\s*to\s*water.*(bgs|below\s*ground)/i.test(item.term)
+      ) ?? terms.find((item) => /depth\s*to\s*water/i.test(item.term))
+
+    let match = findDtw(await fetchTerms('parameter').catch(() => []))
+    if (!match) match = findDtw(await fetchTerms())
+    if (!match) {
+      throw new Error(
+        'Could not resolve the depth-to-water parameter from the lexicon.'
+      )
+    }
+
+    dtwParameterIdRef.current = match.id
+    return match.id
+  }
+
+  // POST per docs/hydrograph-correction-upload-contract.md.
+  const postCorrectedBlock = async (
+    args: HydrographPublishArgs,
+    replaceOverlapping: boolean
+  ) => {
+    if (!selectedWell) throw new Error('No well is selected.')
+
+    const parameterId = await resolveDtwParameterId()
+    const payload = {
+      thing_id: selectedWell.id,
+      parameter_id: parameterId,
+      release_status: 'provisional',
+      review_status: 'not reviewed',
+      provenance: {
+        source_file: args.sourceFileName ?? 'unknown',
+        source_kind: args.sourceKind,
+        corrections: args.corrections,
+      },
+      measurements: args.measurements.map((measurement) => ({
+        observation_datetime: measurement.time.toISOString(),
+        value: measurement.value,
+      })),
+    }
+
+    const url = `observation/transducer-groundwater-level/block${
+      replaceOverlapping ? '?replace_overlapping=true' : ''
+    }`
+    const { data } = await ocotilloDataProvider.custom!({
+      url,
+      method: 'post',
+      payload,
+    })
+    return data as { block?: { id?: number }; observation_count?: number }
+  }
+
+  const applyPublishSuccess = (
+    data: { block?: { id?: number }; observation_count?: number },
+    args: HydrographPublishArgs
+  ) => {
+    setPublishSuccess({
+      blockId: data.block?.id ?? null,
+      count: data.observation_count ?? args.measurements.length,
+      wellName: selectedWell?.name ?? '',
+    })
+    invalidate({
+      resource: 'observation/transducer-groundwater-level',
+      dataProviderName: 'ocotillo',
+      invalidates: ['list'],
+    })
+  }
+
+  const handlePublish = async (args: HydrographPublishArgs) => {
+    setPublishSuccess(null)
+    setPublishError(null)
+
+    try {
+      applyPublishSuccess(await postCorrectedBlock(args, false), args)
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        const body = error.response.data ?? {}
+        const blockIds: number[] =
+          body.overlapping_block_ids ??
+          body.detail?.overlapping_block_ids ??
+          []
+        setPendingOverlap({ blockIds, args })
+        return
+      }
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        setPublishError(
+          'The transducer block upload endpoint is not available yet — see docs/hydrograph-correction-upload-contract.md.'
+        )
+        return
+      }
+      setPublishError(
+        error instanceof Error ? error.message : 'Publishing failed.'
+      )
+    }
+  }
+
+  const confirmReplaceOverlap = async () => {
+    if (!pendingOverlap) return
+    const { args } = pendingOverlap
+    setPendingOverlap(null)
+
+    try {
+      applyPublishSuccess(await postCorrectedBlock(args, true), args)
+    } catch (error) {
+      setPublishError(
+        error instanceof Error ? error.message : 'Publishing failed.'
+      )
+    }
   }
 
   const handleWellntelIngested = ({
@@ -406,6 +550,21 @@ export const HydrographCorrectionPage = () => {
           </Box>
         </Paper>
 
+        {publishSuccess ? (
+          <Alert severity="success" onClose={() => setPublishSuccess(null)}>
+            Published {publishSuccess.count} corrected observations
+            {publishSuccess.blockId !== null
+              ? ` (block ${publishSuccess.blockId})`
+              : ''}{' '}
+            to {publishSuccess.wellName}.
+          </Alert>
+        ) : null}
+        {publishError ? (
+          <Alert severity="error" onClose={() => setPublishError(null)}>
+            {publishError}
+          </Alert>
+        ) : null}
+
         {!parsedUpload ? (
           <Alert severity="info">
             Upload a transducer file to begin. If the file contains `thing.name`
@@ -440,9 +599,38 @@ export const HydrographCorrectionPage = () => {
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
             onUploadParsed={applyParsedUpload}
+            onPublish={handlePublish}
           />
         )}
       </Stack>
+
+      <Dialog
+        open={Boolean(pendingOverlap)}
+        onClose={() => setPendingOverlap(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Replace existing blocks?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            The corrected time span overlaps existing transducer observation
+            {(pendingOverlap?.blockIds.length ?? 0) === 1
+              ? ' block '
+              : ' blocks '}
+            {pendingOverlap?.blockIds.length
+              ? pendingOverlap.blockIds.join(', ')
+              : '(ids unavailable)'}
+            . Replacing deletes those blocks and their observations in the
+            same transaction.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingOverlap(null)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={confirmReplaceOverlap}>
+            Replace Existing Blocks
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <WellntelIngestDialog
         open={isIngestDialogOpen}

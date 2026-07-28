@@ -19,6 +19,7 @@ import Grid from '@mui/material/Grid2'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import {
   CleaningServices,
+  CloudUpload,
   Publish,
   Refresh,
   Straighten,
@@ -55,6 +56,16 @@ interface ManualOption {
   point: HydrographPoint
 }
 
+// Everything the page needs to build the upload-contract payload
+// (docs/hydrograph-correction-upload-contract.md): the corrected series
+// plus provenance gathered from the session.
+export interface HydrographPublishArgs {
+  measurements: HydrographPoint[]
+  corrections: string[]
+  sourceFileName: string | null
+  sourceKind: 'depth_to_water' | 'water_head'
+}
+
 export const OcotilloHydrographCorrectionWorkbench = ({
   thingName,
   manualObservations,
@@ -62,6 +73,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   initialUpload,
   initialFileName,
   onUploadParsed,
+  onPublish,
 }: {
   thingName: string
   manualObservations: readonly ManualHydrographObservation[]
@@ -72,6 +84,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     parsed: ParsedHydrographUpload,
     fileName: string | null
   ) => void
+  onPublish?: (args: HydrographPublishArgs) => Promise<void>
 }) => {
   const theme = useTheme()
   const chartRef = useRef<ReactECharts>(null)
@@ -97,6 +110,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [cleanThreshold, setCleanThreshold] = useState<number>(0.25)
   const [reflectionThreshold, setReflectionThreshold] = useState<number>(0.25)
   const [interpolateReflections, setInterpolateReflections] = useState(false)
+  // Audit trail of applied operations, in order — becomes the provenance
+  // corrections list in the upload-contract payload.
+  const [correctionLog, setCorrectionLog] = useState<string[]>([])
+  const [isPublishing, setIsPublishing] = useState(false)
   const [correctDrift, setCorrectDrift] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string | null>(initialFileName ?? null)
@@ -155,6 +172,19 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     [correctDrift, manualPoints]
   )
 
+  const baselineCorrectionLog = useCallback(
+    (upload: ParsedHydrographUpload | null) =>
+      upload?.valueKind === 'water_head'
+        ? [`convert_water_head${correctDrift ? ' (drift corrected)' : ''}`]
+        : [],
+    [correctDrift]
+  )
+
+  const selectedRangeSuffix = () =>
+    selectedRange
+      ? `, ${selectedRange.startTime.toISOString()} to ${selectedRange.endTime.toISOString()}`
+      : ''
+
   useEffect(() => {
     setUploaded(initialUpload ?? null)
     setFileName(initialFileName ?? null)
@@ -172,17 +202,24 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       const working = deriveWorkingMeasurements(initialUpload)
       setRawUploadedMeasurements(working)
       setCorrectedMeasurements(working)
+      setCorrectionLog(baselineCorrectionLog(initialUpload))
       setError(null)
     } catch (deriveError) {
       setRawUploadedMeasurements([])
       setCorrectedMeasurements([])
+      setCorrectionLog([])
       setError(
         deriveError instanceof Error
           ? deriveError.message
           : 'Unable to prepare the uploaded data.'
       )
     }
-  }, [deriveWorkingMeasurements, initialFileName, initialUpload])
+  }, [
+    baselineCorrectionLog,
+    deriveWorkingMeasurements,
+    initialFileName,
+    initialUpload,
+  ])
 
   const parsedPointId = uploaded?.pointId ?? null
   const highlightedManualPoint = selectedManualOption?.point ?? null
@@ -469,6 +506,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       setUploaded(parsed)
       setRawUploadedMeasurements(working)
       setCorrectedMeasurements(working)
+      setCorrectionLog(baselineCorrectionLog(parsed))
       setSelectedRange(null)
       setError(null)
       setFileName(file.name)
@@ -518,9 +556,14 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const shiftSelection = (direction: 1 | -1) => {
     if (correctedMeasurements.length === 0) return
 
+    const offset = shiftAmount * direction
     setCorrectedMeasurements((current) =>
-      applyOffsetToRange(current, shiftAmount * direction, selectedRange)
+      applyOffsetToRange(current, offset, selectedRange)
     )
+    setCorrectionLog((log) => [
+      ...log,
+      `shift (${offset > 0 ? '+' : ''}${offset} ft${selectedRangeSuffix()})`,
+    ])
   }
 
   const cleanOffsetsAndZeros = () => {
@@ -529,6 +572,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     setCorrectedMeasurements((current) =>
       removeOffsetsAndZeros(current, cleanThreshold, selectedRange)
     )
+    setCorrectionLog((log) => [
+      ...log,
+      `remove_offsets_zeros (threshold ${cleanThreshold}${selectedRangeSuffix()})`,
+    ])
   }
 
   const cleanSpuriousReflections = () => {
@@ -540,6 +587,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     setCorrectedMeasurements((current) =>
       treat(current, reflectionThreshold, selectedRange)
     )
+    setCorrectionLog((log) => [
+      ...log,
+      `${interpolateReflections ? 'interpolate' : 'remove'}_reflections (threshold ${reflectionThreshold}${selectedRangeSuffix()})`,
+    ])
   }
 
   const snapToManual = () => {
@@ -555,6 +606,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       setCorrectedMeasurements((current) =>
         applyOffsetToRange(current, offset, selectedRange)
       )
+      setCorrectionLog((log) => [
+        ...log,
+        `snap_to_manual (${offset > 0 ? '+' : ''}${offset} ft to ${selectedManualOption.point.time.toISOString()}${selectedRangeSuffix()})`,
+      ])
       setError(null)
     } catch (snapError) {
       setError(
@@ -567,8 +622,25 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
   const resetCorrections = () => {
     setCorrectedMeasurements(rawUploadedMeasurements)
+    setCorrectionLog(baselineCorrectionLog(uploaded))
     setSelectedRange(null)
     setError(null)
+  }
+
+  const publishToOcotillo = async () => {
+    if (!onPublish || correctedMeasurements.length === 0) return
+
+    setIsPublishing(true)
+    try {
+      await onPublish({
+        measurements: correctedMeasurements,
+        corrections: correctionLog,
+        sourceFileName: fileName,
+        sourceKind: uploaded?.valueKind ?? 'depth_to_water',
+      })
+    } finally {
+      setIsPublishing(false)
+    }
   }
 
   const downloadCorrectedCsv = () => {
@@ -852,6 +924,25 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         Download CSV
                       </Button>
                     </Stack>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<CloudUpload />}
+                      onClick={publishToOcotillo}
+                      disabled={
+                        !onPublish ||
+                        correctedMeasurements.length === 0 ||
+                        isPublishing
+                      }
+                    >
+                      {isPublishing ? 'Publishing...' : 'Publish to Ocotillo'}
+                    </Button>
+                    {!onPublish ? (
+                      <Typography variant="caption" color="text.secondary">
+                        Publishing requires a resolved Ocotillo well and is
+                        disabled in demo mode.
+                      </Typography>
+                    ) : null}
                     <Typography variant="caption" color="text.secondary">
                       Brush the chart to scope edits. Without a selection,
                       actions apply to the full uploaded trace.
