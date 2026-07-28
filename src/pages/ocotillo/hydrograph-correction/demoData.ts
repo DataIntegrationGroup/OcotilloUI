@@ -17,3 +17,19 @@ export const DEMO_MANUAL_OBSERVATIONS = [
   { observation_datetime: '2025-02-24T12:00:00', depth_to_water_bgs: 43.1 },
   { observation_datetime: '2025-03-31T12:00:00', depth_to_water_bgs: 43.53 },
 ]
+
+// Companion data for the Diver Office demo (public/example_diver_office.csv),
+// a water-head export: 90 days of 6-hour readings with a stretch of zero
+// head around day 30 (sensor out of water, dropped during conversion) and a
+// +0.9 ft head offset from day 55 on (cable slip, removable with the Clean
+// panel). Sensor depth is ~55 ft for the first two anchors and 55.4 ft for
+// the last, so the Correct Drift toggle visibly tilts the trace.
+export const DEMO_DIVER_WELL_NAME = 'DM-0107 (demo)'
+
+export const DEMO_DIVER_FILE_NAME = 'example_diver_office.csv'
+
+export const DEMO_DIVER_MANUAL_OBSERVATIONS = [
+  { observation_datetime: '2025-01-23T12:00:00', depth_to_water_bgs: 41.67 },
+  { observation_datetime: '2025-03-01T12:00:00', depth_to_water_bgs: 42.28 },
+  { observation_datetime: '2025-04-13T12:00:00', depth_to_water_bgs: 43.27 },
+]

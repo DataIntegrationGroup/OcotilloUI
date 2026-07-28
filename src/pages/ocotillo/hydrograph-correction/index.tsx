@@ -27,10 +27,35 @@ import {
 } from '@/components/Hydrographs/hydrographCorrection'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
+  DEMO_DIVER_FILE_NAME,
+  DEMO_DIVER_MANUAL_OBSERVATIONS,
+  DEMO_DIVER_WELL_NAME,
   DEMO_FILE_NAME,
   DEMO_MANUAL_OBSERVATIONS,
   DEMO_WELL_NAME,
 } from './demoData'
+
+type DemoKind = 'transducer' | 'diver'
+
+const DEMO_CONFIG: Record<
+  DemoKind,
+  {
+    fileName: string
+    wellName: string
+    manualObservations: typeof DEMO_MANUAL_OBSERVATIONS
+  }
+> = {
+  transducer: {
+    fileName: DEMO_FILE_NAME,
+    wellName: DEMO_WELL_NAME,
+    manualObservations: DEMO_MANUAL_OBSERVATIONS,
+  },
+  diver: {
+    fileName: DEMO_DIVER_FILE_NAME,
+    wellName: DEMO_DIVER_WELL_NAME,
+    manualObservations: DEMO_DIVER_MANUAL_OBSERVATIONS,
+  },
+}
 
 export const HydrographCorrectionPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -42,7 +67,7 @@ export const HydrographCorrectionPage = () => {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [isResolvingWell, setIsResolvingWell] = useState(false)
   const [isLoadingDemo, setIsLoadingDemo] = useState(false)
-  const [isDemo, setIsDemo] = useState(false)
+  const [demoKind, setDemoKind] = useState<DemoKind | null>(null)
 
   const { autocompleteProps } = useAutocomplete<IWell>({
     resource: 'thing',
@@ -146,7 +171,7 @@ export const HydrographCorrectionPage = () => {
     parsed: ParsedHydrographUpload,
     fileName: string | null
   ) => {
-    setIsDemo(false)
+    setDemoKind(null)
     setParsedUpload(parsed)
     setUploadedFileName(fileName)
     setUploadError(null)
@@ -173,31 +198,32 @@ export const HydrographCorrectionPage = () => {
     }
   }
 
-  const handleLoadDemoFile = async () => {
+  const handleLoadDemoFile = async (kind: DemoKind) => {
+    const { fileName } = DEMO_CONFIG[kind]
     setIsLoadingDemo(true)
     try {
-      const response = await fetch(`/${DEMO_FILE_NAME}`)
+      const response = await fetch(`/${fileName}`)
       if (!response.ok) {
-        throw new Error('Unable to fetch the example transducer file.')
+        throw new Error(`Unable to fetch the example file ${fileName}.`)
       }
 
       const parsed = parseHydrographUpload(await response.text())
       // Demo mode is self-contained: no well lookup, synthetic manual
       // observations stand in for Ocotillo records.
       setParsedUpload(parsed)
-      setUploadedFileName(DEMO_FILE_NAME)
+      setUploadedFileName(fileName)
       setSelectedWell(null)
       setUploadError(null)
-      setIsDemo(true)
+      setDemoKind(kind)
     } catch (error) {
       setParsedUpload(null)
       setUploadedFileName(null)
       setSelectedWell(null)
-      setIsDemo(false)
+      setDemoKind(null)
       setUploadError(
         error instanceof Error
           ? error.message
-          : 'Unable to load the example transducer file.'
+          : 'Unable to load the example file.'
       )
     } finally {
       setIsLoadingDemo(false)
@@ -240,10 +266,18 @@ export const HydrographCorrectionPage = () => {
                 <Button
                   variant="outlined"
                   startIcon={<AutoAwesome />}
-                  onClick={handleLoadDemoFile}
+                  onClick={() => handleLoadDemoFile('transducer')}
                   disabled={isLoadingDemo}
                 >
-                  {isLoadingDemo ? 'Loading Demo...' : 'Load Demo File'}
+                  Transducer Demo
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<AutoAwesome />}
+                  onClick={() => handleLoadDemoFile('diver')}
+                  disabled={isLoadingDemo}
+                >
+                  Diver Office Demo
                 </Button>
                 <Typography variant="body2" color="text.secondary">
                   If extraction fails, use the well search below.
@@ -251,7 +285,7 @@ export const HydrographCorrectionPage = () => {
               </Stack>
 
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {isDemo ? <Chip color="info" label="Demo data" /> : null}
+                {demoKind ? <Chip color="info" label="Demo data" /> : null}
                 {uploadedFileName ? <Chip label={`File: ${uploadedFileName}`} /> : null}
                 {parsedUpload?.pointId ? (
                   <Chip label={`Extracted PointID: ${parsedUpload.pointId}`} />
@@ -282,7 +316,7 @@ export const HydrographCorrectionPage = () => {
                     getOptionLabel={(option: IWell) => option?.name ?? ''}
                     filterOptions={(options) => options}
                     onChange={(_event, value) => {
-                      setIsDemo(false)
+                      setDemoKind(null)
                       setSelectedWell(value)
                     }}
                     renderInput={(params) => (
@@ -314,10 +348,10 @@ export const HydrographCorrectionPage = () => {
             Upload a transducer file to begin. If the file contains `thing.name`
             or point id metadata, the matching well will be selected automatically.
           </Alert>
-        ) : isDemo ? (
+        ) : demoKind ? (
           <OcotilloHydrographCorrectionWorkbench
-            thingName={DEMO_WELL_NAME}
-            manualObservations={DEMO_MANUAL_OBSERVATIONS}
+            thingName={DEMO_CONFIG[demoKind].wellName}
+            manualObservations={DEMO_CONFIG[demoKind].manualObservations}
             transducerObservations={[]}
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}

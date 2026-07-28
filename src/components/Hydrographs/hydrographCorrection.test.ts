@@ -127,6 +127,23 @@ END OF DATA`)
     ])
   })
 
+  it('drops zero-head readings before converting', () => {
+    const converted = convertWaterHeadToDepthToWater({
+      measurements: [
+        { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+        { time: new Date('2025-01-02T00:00:00Z'), value: 0 },
+        { time: new Date('2025-01-03T00:00:00Z'), value: 9.8 },
+      ],
+      manualPoints: [
+        { time: new Date('2025-01-01T00:00:00Z'), value: 50 },
+        { time: new Date('2025-01-04T00:00:00Z'), value: 52 },
+      ],
+    })
+
+    expect(converted).toHaveLength(2)
+    expect(converted.map((point) => point.value)).toEqual([51.8, 52])
+  })
+
   it('interpolates the sensor depth when drift correction is enabled', () => {
     const measurements = [
       { time: new Date('2025-01-01T00:00:00Z'), value: 10 },

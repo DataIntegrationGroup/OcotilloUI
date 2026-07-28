@@ -624,9 +624,11 @@ export const convertWaterHeadToDepthToWater = ({
     )
   }
 
-  const sorted = [...measurements].sort(
-    (a, b) => toUnixTime(a.time) - toUnixTime(b.time)
-  )
+  // Zero head means the sensor was out of the water; converting it would
+  // chart the bare sensor depth as a false reading, so drop those rows.
+  const sorted = measurements
+    .filter((point) => point.value !== 0)
+    .sort((a, b) => toUnixTime(a.time) - toUnixTime(b.time))
   const manual = [...manualPoints].sort(
     (a, b) => toUnixTime(a.time) - toUnixTime(b.time)
   )
