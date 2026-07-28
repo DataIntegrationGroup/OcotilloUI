@@ -418,10 +418,6 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     >
                       Replace File
                     </Button>
-                    <Typography variant="caption" color="text.secondary">
-                      Supports `.txt`, `.csv`, `.dat`, and the `wellpy` workbook
-                      export format `.xlsx`.
-                    </Typography>
                   </Stack>
                 </Paper>
 
