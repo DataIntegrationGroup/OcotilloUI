@@ -32,6 +32,16 @@ export const settings = {
     'https://api.waterdata.usgs.gov/ogcapi/v0',
 
   st2_url: 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
+  wellntel: {
+    // Direct Wellntel analytics API access, ported from wellpy. A
+    // browser-held key is interim parity with wellpy's client-side key; the
+    // upload contract proposes moving this behind an Ocotillo proxy
+    // (GET /wellntel/readings), at which point api_url points there instead.
+    api_url:
+      import.meta.env.VITE_WELLNTEL_API_URL ||
+      'https://connect.wellntel.com/analytics-api',
+    api_key: import.meta.env.VITE_WELLNTEL_API_KEY || '',
+  },
   nmbgmr_geothermal_api_url:
     import.meta.env.VITE_NMBGMR_GEOTHERMAL_API_URL || 'http://localhost:8008',
   mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN || '',

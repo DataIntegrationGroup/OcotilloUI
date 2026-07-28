@@ -16,6 +16,11 @@ import { CloudDownload } from '@mui/icons-material'
 import { IWell } from '@/interfaces/ocotillo'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
+import {
+  fetchWellntelReadings,
+  isWellntelConfigured,
+  toHydrographPoints,
+} from '@/providers/wellntel-data-provider'
 import type { HydrographPoint } from '@/components/Hydrographs/hydrographCorrection'
 import {
   DEMO_WELLNTEL_LAST_INGESTED,
@@ -189,7 +194,16 @@ export const WellntelIngestDialog = ({
     try {
       let measurements: HydrographPoint[]
 
-      if (selectedOption.well) {
+      if (selectedOption.well && isWellntelConfigured()) {
+        // Direct Wellntel analytics API access (ported from wellpy),
+        // scoped to the selected well's PointID.
+        const readings = await fetchWellntelReadings({
+          start,
+          end,
+          pointId: selectedOption.wellName,
+        })
+        measurements = toHydrographPoints(readings)
+      } else if (selectedOption.well) {
         // Proposed Ocotillo proxy for the Wellntel analytics API (keeps the
         // Wellntel API key server-side); shape mirrors the wcsv export:
         // rows with timestamp and depth.
@@ -233,7 +247,9 @@ export const WellntelIngestDialog = ({
       })
     } catch {
       setError(
-        'Unable to retrieve Wellntel readings. The Ocotillo Wellntel proxy endpoint may not be available yet.'
+        isWellntelConfigured()
+          ? 'Unable to retrieve readings from the Wellntel API.'
+          : 'Unable to retrieve Wellntel readings. Configure VITE_WELLNTEL_API_KEY for direct access, or wait for the Ocotillo Wellntel proxy endpoint.'
       )
     } finally {
       setIsRetrieving(false)
