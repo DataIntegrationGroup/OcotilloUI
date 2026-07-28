@@ -1,13 +1,15 @@
 import type { IWellRecord } from '@/interfaces/geothermal'
 
 /**
- * Whether to bypass the Geothermal.Admin gate. True only in local dev
- * (`vite` dev server / vitest); production builds (`vite build`) set
- * `import.meta.env.DEV` to false, so the gate stays enforced when deployed.
+ * Whether to bypass the Geothermal.Admin gate. True in local dev (`vite` dev
+ * server / vitest) and on PR preview deploys (VITE_APP_ENV=preview, set by the
+ * preview workflow), so any reviewer can exercise the WIP geothermal pages.
+ * Staging/production builds set neither, so the gate stays enforced there.
  */
-export const BYPASS_GEOTHERMAL_GATE = import.meta.env.DEV === true
+export const BYPASS_GEOTHERMAL_GATE =
+  import.meta.env.DEV === true || import.meta.env.VITE_APP_ENV === 'preview'
 
-/** Admins can always enter data; locally the gate is bypassed for testing. */
+/** Admins can always enter data; dev/preview bypass the gate for testing. */
 export function canEnterGeothermalData(canManageGeothermal: boolean): boolean {
   return canManageGeothermal || BYPASS_GEOTHERMAL_GATE
 }
