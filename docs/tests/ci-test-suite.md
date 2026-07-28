@@ -159,6 +159,41 @@ Common failures:
 - Frontend routes or labels changed without updating Cypress specs
 - A Cypress test depends on record ordering that is not stable
 
+### Backend Changes That Can Break Cypress
+
+The Cypress workflow depends on the backend repository being able to build, migrate a fresh PostGIS database, start FastAPI, and load deterministic seed data. A backend-only change can therefore fail the frontend Cypress job even when no frontend code changed.
+
+The backend Docker entrypoint runs:
+
+```bash
+alembic upgrade head
+```
+
+before starting Uvicorn. If the Alembic migration graph has more than one head, has a detached revision, has a missing `down_revision`, or contains a migration that cannot run from an empty database, the app container exits before FastAPI serves `/docs`. In the frontend Cypress workflow this usually appears as a timeout in the "Wait for FastAPI to be ready" step, not as a browser test failure.
+
+Backend-side causes to check first:
+
+- Multiple Alembic heads from parallel migrations that were not merged with `alembic merge heads`
+- A migration file whose `down_revision` points at the wrong revision, a deleted revision, or `None` when it is not the base migration
+- A migration that depends on local state, existing data, unavailable extensions, or a table/view not created earlier in the migration chain
+- Model and migration drift where the app starts but seeded records fail because expected tables, columns, constraints, triggers, or materialized views are missing
+- Startup environment changes such as renamed `POSTGRES_*`, `PYGEOAPI_POSTGRES_*`, `MODE`, `SESSION_SECRET_KEY`, or `AUTHENTIK_DISABLE_AUTHENTICATION` variables
+- Docker Compose changes that rename the `app` or `db` service, change port `8000`, remove PostGIS initialization, or alter database names used by CI
+- Changes to `transfers.seed` that make seed data nondeterministic, remove records Cypress asserts against, or require credentials/files unavailable in CI
+- API route, response shape, status code, auth, CORS, pagination, filtering, sorting, or OpenAPI changes that the generated frontend client or Cypress specs still expect
+
+Useful backend checks before updating the frontend Cypress workflow dependency:
+
+```bash
+uv run alembic heads
+uv run pytest tests/integration/test_alembic_migrations.py tests/test_migrations.py
+docker compose up --build
+docker compose exec -T app python -m transfers.seed
+curl -sf http://localhost:8000/docs
+```
+
+The backend repo already includes Alembic-focused tests that assert there is a single migration head and that migrations can upgrade a fresh database to `head`. Those checks should run in backend CI before backend changes are merged into the branch consumed by `.github/workflows/CI_cypress.yml`.
+
 ## Production Build Validation
 
 The production build workflow runs on every pull request:
