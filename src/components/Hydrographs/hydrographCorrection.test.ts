@@ -215,9 +215,9 @@ END OF DATA`)
     const measurements = [
       day(1, 42.0),
       day(2, 42.05),
-      day(3, 45.15), // spurious deep echo
+      day(3, 45.15), // spurious positive 1x echo
       day(4, 42.1),
-      day(5, 39.9), // spurious shallow echo
+      day(5, 39.9), // spurious negative 1x echo
       day(6, 42.15),
       day(7, 42.2),
     ]
@@ -226,6 +226,30 @@ END OF DATA`)
 
     expect(cleaned.map((point) => point.value)).toEqual([
       42.0, 42.05, 42.1, 42.15, 42.2,
+    ])
+  })
+
+  it('removes 2x double-bounce reflections and adjacent reflection pairs', () => {
+    const day = (n: number, value: number) => ({
+      time: new Date(Date.UTC(2025, 0, n)),
+      value,
+    })
+    const measurements = [
+      day(1, 42.0),
+      day(2, 42.05),
+      day(3, 84.2), // 2x double bounce (~twice true depth)
+      day(4, 42.1),
+      day(5, 45.2), // adjacent pair: positive 1x...
+      day(6, 84.3), // ...next to a 2x — both must go
+      day(7, 42.15),
+      day(8, 42.2),
+      day(9, 42.25),
+    ]
+
+    const cleaned = removeSpuriousReflections(measurements, 0.25)
+
+    expect(cleaned.map((point) => point.value)).toEqual([
+      42.0, 42.05, 42.1, 42.15, 42.2, 42.25,
     ])
   })
 

@@ -717,9 +717,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       Remove Reflections
                     </Button>
                     <Typography variant="caption" color="text.secondary">
-                      Reflections are isolated readings offset from both
-                      neighbors (acoustic echoes). Steps lasting more than one
-                      reading are kept.
+                      Reflections are acoustic-echo readings offset from the
+                      local trend — positive or negative, near the true depth
+                      (1x) or near twice it (2x). Sustained steps are kept.
                     </Typography>
                   </Stack>
                 </Paper>

@@ -753,15 +753,28 @@ export const removeOffsetsAndZeros = (
   }))
 }
 
+const REFLECTION_WINDOW_HALF_WIDTH = 3
+
+// Lower median: for even-length windows (truncated at the series edges),
+// averaging the two middle values can land between two genuine water
+// levels and flag every point in the window; picking an actual observed
+// value cannot.
+const median = (values: number[]) => {
+  const sorted = [...values].sort((a, b) => a - b)
+  return sorted[Math.floor((sorted.length - 1) / 2)]
+}
+
 // Wellntel acoustic sensors occasionally record spurious reflections: an
-// echo off a casing joint or other obstruction takes a longer (or shorter)
-// path, producing an isolated reading systematically offset from the true
-// depth to water. This is the workbench analog of wellpy's acoustic
-// upspike removal, generalized to both directions: a point is dropped when
-// it departs from BOTH neighbors in the same direction by at least the
-// threshold while the neighbors agree with each other, i.e. the trace jumps
-// away for exactly one sample and comes straight back. Genuine steps (two
-// or more consecutive offset readings) are kept.
+// echo off a casing joint or other obstruction produces a reading offset
+// from the true depth to water. Reflections can be positive or negative
+// (longer or shorter echo path) and can land near the true depth (1x) or
+// near twice it (2x double-bounce), so magnitude is unbounded. A point is
+// flagged when it departs from the median of its surrounding window by at
+// least the threshold; a flagged point survives only if it agrees with an
+// immediate neighbor within the threshold, which preserves genuine steps
+// (sustained excursions) while dropping reflections even when two
+// different ones land side by side. This is the workbench analog of
+// wellpy's acoustic upspike removal.
 export const removeSpuriousReflections = (
   measurements: HydrographPoint[],
   threshold: number,
@@ -770,19 +783,26 @@ export const removeSpuriousReflections = (
   measurements.filter((point, index) => {
     if (!includesTime(point.time, range)) return true
 
+    const windowValues = measurements
+      .slice(
+        Math.max(0, index - REFLECTION_WINDOW_HALF_WIDTH),
+        index + REFLECTION_WINDOW_HALF_WIDTH + 1
+      )
+      .map((neighbor) => neighbor.value)
+
+    if (Math.abs(point.value - median(windowValues)) < threshold) {
+      return true
+    }
+
     const previous = measurements[index - 1]
     const next = measurements[index + 1]
-    if (!previous || !next) return true
+    const agreesWithPrevious =
+      previous !== undefined &&
+      Math.abs(point.value - previous.value) < threshold
+    const agreesWithNext =
+      next !== undefined && Math.abs(point.value - next.value) < threshold
 
-    const departsPrevious = point.value - previous.value
-    const departsNext = point.value - next.value
-
-    return !(
-      Math.abs(departsPrevious) >= threshold &&
-      Math.abs(departsNext) >= threshold &&
-      Math.sign(departsPrevious) === Math.sign(departsNext) &&
-      Math.abs(previous.value - next.value) < threshold
-    )
+    return agreesWithPrevious || agreesWithNext
   })
 
 export const applyOffsetToRange = (
