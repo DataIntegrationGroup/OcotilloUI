@@ -13,8 +13,12 @@ import {
   Typography,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { AutoAwesome, Publish } from '@mui/icons-material'
+import { AutoAwesome, CloudDownload, Publish } from '@mui/icons-material'
 import { OcotilloPageTitle } from '@/components/OcotilloPageHeader'
+import {
+  WellntelIngestDialog,
+  type WellntelIngestResult,
+} from './WellntelIngestDialog'
 import { IWell } from '@/interfaces/ocotillo'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import { OcotilloHydrographCorrectionWorkbench } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
@@ -75,6 +79,8 @@ export const HydrographCorrectionPage = () => {
   const [isResolvingWell, setIsResolvingWell] = useState(false)
   const [isLoadingDemo, setIsLoadingDemo] = useState(false)
   const [demoKind, setDemoKind] = useState<DemoKind | null>(null)
+  const [isIngestDialogOpen, setIsIngestDialogOpen] = useState(false)
+  const [ingestedWellName, setIngestedWellName] = useState<string | null>(null)
 
   const { autocompleteProps } = useAutocomplete<IWell>({
     resource: 'thing',
@@ -179,10 +185,40 @@ export const HydrographCorrectionPage = () => {
     fileName: string | null
   ) => {
     setDemoKind(null)
+    setIngestedWellName(null)
     setParsedUpload(parsed)
     setUploadedFileName(fileName)
     setUploadError(null)
     await resolveWellFromUpload(parsed)
+  }
+
+  const handleWellntelIngested = ({
+    well,
+    wellName,
+    measurements,
+    isDemo,
+  }: WellntelIngestResult) => {
+    setParsedUpload({
+      pointId: wellName,
+      detectedDelimiter: 'wellntel-api',
+      detectedTimeColumn: 'timestamp',
+      detectedValueColumn: 'depth',
+      valueKind: 'depth_to_water',
+      measurements,
+    })
+    setUploadedFileName(`Wellntel API (${wellName})`)
+    setUploadError(null)
+    setIsIngestDialogOpen(false)
+
+    if (isDemo || !well) {
+      setSelectedWell(null)
+      setIngestedWellName(`${wellName} (demo)`)
+      setDemoKind('wellntel')
+    } else {
+      setDemoKind(null)
+      setIngestedWellName(null)
+      setSelectedWell(well)
+    }
   }
 
   const handleInitialUpload = async (file?: File) => {
@@ -221,6 +257,7 @@ export const HydrographCorrectionPage = () => {
       setUploadedFileName(fileName)
       setSelectedWell(null)
       setUploadError(null)
+      setIngestedWellName(null)
       setDemoKind(kind)
     } catch (error) {
       setParsedUpload(null)
@@ -297,6 +334,13 @@ export const HydrographCorrectionPage = () => {
                 >
                   Wellntel Demo
                 </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<CloudDownload />}
+                  onClick={() => setIsIngestDialogOpen(true)}
+                >
+                  Ingest Wellntel
+                </Button>
                 <Typography variant="body2" color="text.secondary">
                   If extraction fails, use the well search below.
                 </Typography>
@@ -335,6 +379,7 @@ export const HydrographCorrectionPage = () => {
                     filterOptions={(options) => options}
                     onChange={(_event, value) => {
                       setDemoKind(null)
+                      setIngestedWellName(null)
                       setSelectedWell(value)
                     }}
                     renderInput={(params) => (
@@ -368,7 +413,7 @@ export const HydrographCorrectionPage = () => {
           </Alert>
         ) : demoKind ? (
           <OcotilloHydrographCorrectionWorkbench
-            thingName={DEMO_CONFIG[demoKind].wellName}
+            thingName={ingestedWellName ?? DEMO_CONFIG[demoKind].wellName}
             manualObservations={DEMO_CONFIG[demoKind].manualObservations}
             transducerObservations={[]}
             initialUpload={parsedUpload}
@@ -398,6 +443,12 @@ export const HydrographCorrectionPage = () => {
           />
         )}
       </Stack>
+
+      <WellntelIngestDialog
+        open={isIngestDialogOpen}
+        onClose={() => setIsIngestDialogOpen(false)}
+        onIngested={handleWellntelIngested}
+      />
     </Box>
   )
 }

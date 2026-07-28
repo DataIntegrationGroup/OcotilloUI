@@ -50,3 +50,67 @@ export const DEMO_WELLNTEL_MANUAL_OBSERVATIONS = [
   { observation_datetime: '2025-03-06T12:00:00', depth_to_water_bgs: 42.71 },
   { observation_datetime: '2025-04-10T12:00:00', depth_to_water_bgs: 43.26 },
 ]
+
+// Demo wells for the Wellntel ingest dialog, used when no Ocotillo well
+// with an installed Acoustic Sounder sensor can be found. Names come from
+// wellpy's Wellntel POINTID_MAP (real Wellntel installations).
+export const DEMO_WELLNTEL_WELLS = [
+  { name: 'WL-0036', description: 'Gaume Well' },
+  { name: 'SA-0240', description: 'Eileen Dodds Well' },
+  { name: 'EB-165', description: 'Moss Farms Well' },
+]
+
+// Pretend last-ingested timestamp for demo wells; the dialog uses it as the
+// default start bound, mirroring the real flow where the bound comes from
+// the latest stored transducer observation.
+export const DEMO_WELLNTEL_LAST_INGESTED = '2025-01-15T00:00:00'
+
+const mulberry32 = (seed: number) => {
+  let state = seed
+  return () => {
+    state |= 0
+    state = (state + 0x6d2b79f5) | 0
+    let t = Math.imul(state ^ (state >>> 15), 1 | state)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+const DEMO_READING_INTERVAL_MS = 6 * 60 * 60 * 1000
+const DEMO_READING_CAP = 2000
+
+// Synthesizes Wellntel API readings for the demo wells: the same trend as
+// example_wellntel.wcsv, sprinkled with spurious 1x/2x reflections so the
+// ingest -> clean workflow can be exercised end to end.
+export const generateDemoWellntelReadings = (start: Date, end: Date) => {
+  const rand = mulberry32(20250115)
+  const origin = new Date(DEMO_WELLNTEL_LAST_INGESTED).getTime()
+  const readings: Array<{ time: Date; value: number }> = []
+  let previousWasSpurious = true // never start on a reflection
+
+  for (
+    let t = start.getTime();
+    t <= end.getTime() && readings.length < DEMO_READING_CAP;
+    t += DEMO_READING_INTERVAL_MS
+  ) {
+    const i = (t - origin) / DEMO_READING_INTERVAL_MS
+    const trend =
+      42.0 + i * 0.0037 + 0.05 * Math.sin(i / 5.5) + (rand() - 0.5) * 0.06
+
+    let value = trend
+    const roll = rand()
+    if (!previousWasSpurious && roll < 0.05) {
+      value = roll < 0.025 ? trend + 3.1 : trend * 2
+      previousWasSpurious = true
+    } else if (!previousWasSpurious && roll > 0.98) {
+      value = trend - 2.4
+      previousWasSpurious = true
+    } else {
+      previousWasSpurious = false
+    }
+
+    readings.push({ time: new Date(t), value: Number(value.toFixed(3)) })
+  }
+
+  return readings
+}
