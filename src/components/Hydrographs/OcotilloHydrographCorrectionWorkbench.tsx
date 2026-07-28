@@ -301,6 +301,53 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     theme.palette.background.paper,
   ])
 
+  // Diver uploads get a separate raw water-head plot (mirroring wellpy's
+  // stacked head plot) since head and DTW share neither units nor axis
+  // orientation.
+  const headChartOption = useMemo(() => {
+    if (uploaded?.valueKind !== 'water_head') return null
+
+    return {
+      animation: false,
+      legend: { top: 0 },
+      grid: {
+        left: 100,
+        right: 32,
+        top: 32,
+        bottom: 48,
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'cross' },
+        backgroundColor: theme.palette.background.paper,
+      },
+      dataZoom: [{ type: 'inside', realtime: true }],
+      xAxis: {
+        type: 'time',
+        splitLine: { show: true },
+      },
+      yAxis: {
+        type: 'value',
+        scale: true,
+        name: 'Water Head (ft)',
+        nameLocation: 'center',
+        nameGap: 74,
+        nameTextStyle: {
+          padding: [0, 0, 0, 6],
+        },
+      },
+      series: [
+        {
+          name: 'Raw water head',
+          type: 'line',
+          showSymbol: false,
+          data: uploaded.measurements.map((point) => [point.time, point.value]),
+          lineStyle: { color: '#00838F', width: 2 },
+        },
+      ],
+    }
+  }, [theme.palette.background.paper, uploaded])
+
   const tableRows = useMemo(() => {
     interface CorrectionTableRow {
       id: number
@@ -736,22 +783,37 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             </Grid>
 
             <Grid size={{ xs: 12, lg: 8.5 }}>
-              <Paper
-                variant="outlined"
-                sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.paper' }}
-              >
-                <Box sx={{ height: { xs: 420, lg: 560 } }}>
-                  <ReactECharts
-                    ref={chartRef}
-                    option={chartOption}
-                    style={{ width: '100%', height: '100%' }}
-                    onEvents={{
-                      brushSelected: handleBrushSelected,
-                      click: handleChartClick,
-                    }}
-                  />
-                </Box>
-              </Paper>
+              <Stack spacing={1.5}>
+                {headChartOption ? (
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.paper' }}
+                  >
+                    <Box sx={{ height: 220 }}>
+                      <ReactECharts
+                        option={headChartOption}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </Box>
+                  </Paper>
+                ) : null}
+                <Paper
+                  variant="outlined"
+                  sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.paper' }}
+                >
+                  <Box sx={{ height: { xs: 420, lg: 560 } }}>
+                    <ReactECharts
+                      ref={chartRef}
+                      option={chartOption}
+                      style={{ width: '100%', height: '100%' }}
+                      onEvents={{
+                        brushSelected: handleBrushSelected,
+                        click: handleChartClick,
+                      }}
+                    />
+                  </Box>
+                </Paper>
+              </Stack>
             </Grid>
           </Grid>
 
