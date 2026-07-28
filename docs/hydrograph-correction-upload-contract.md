@@ -155,6 +155,68 @@ Individual observations are not echoed back (the client already has them);
 - On success, the stored-transducer series is refetched so the new block
   appears on the chart and in the data table.
 
+## Supporting endpoints for Wellntel ingestion
+
+The Wellntel ingest dialog (Ingest Wellntel on the Hydrograph Correction
+page) needs two additional endpoints. The UI already calls both and falls
+back to demo data when they are unavailable.
+
+### 1. Sensor-type filter on the thing list
+
+```
+GET /thing?sensor_type=Acoustic%20Sounder
+```
+
+Returns only things that have a deployment whose sensor is of the given
+`sensor_type` (existing `sensor_type` enum; Wellntel units are
+`"Acoustic Sounder"`). Used to restrict the dialog's well picker to wells
+with a Wellntel sensor installed. Today this linkage is only walkable in
+the other direction (`GET /sensor?thing_id=...`), which would force an
+N+1 scan over every well.
+
+Alternative shape if filtering `/thing` is awkward server-side: a
+dedicated `GET /deployment?sensor_type=...` list endpoint returning
+`thing_id`s; the UI would then hydrate names with one thing query.
+
+### 2. Wellntel readings proxy
+
+```
+GET /wellntel/readings?thing_id=1234&start_time=...&end_time=...
+```
+
+Server-side proxy for the Wellntel analytics API
+(`https://connect.wellntel.com/analytics-api/readings`). Rationale:
+
+- The Wellntel API key stays server-side. (wellpy currently stores the
+  key in client preferences — this is the chance to fix that.)
+- The server owns the wellname→PointID mapping (wellpy hardcodes
+  `POINTID_MAP`; it should live in the database, e.g. on the deployment
+  or a thing-id-link).
+- The Wellntel API pages at 1000 readings per request with cursor-style
+  `start` advancement; the proxy hides that pagination and returns the
+  full range.
+
+Response rows mirror wellpy's `.wcsv` export shape:
+
+```jsonc
+{
+  "items": [
+    { "timestamp": "2025-01-15T06:00:00Z", "depth": 42.01, "temperature_C": 18.2 }
+  ],
+  "total": 356,
+  "page": 1,
+  "size": 10000,
+  "pages": 1
+}
+```
+
+`depth` is already depth to water bgs in feet — no head conversion. The
+dialog defaults the requested `start_time` to the timestamp of the latest
+stored transducer observation for the well (queried via
+`GET /observation/transducer-groundwater-level?thing_id=...` sorted
+descending, size 1 — requires that endpoint to honor `sort`/`order`
+parameters), so recurring ingests continue where the last one ended.
+
 ## Open questions
 
 1. **Parameter id source** — hardcode the DTW-bgs lexicon id in UI config, or
@@ -168,3 +230,6 @@ Individual observations are not echoed back (the client already has them);
 4. **Wellntel cadence** — acoustic data may arrive via recurring API pulls
    rather than file uploads; same endpoint, or a separate ingest path with
    dedupe-by-timestamp instead of block overlap rejection?
+5. **Wellntel identity mapping** — where should the wellname→PointID map
+   live (deployment metadata, thing-id-link, or a wellntel-specific
+   table), and who maintains it when new sensors are installed?
