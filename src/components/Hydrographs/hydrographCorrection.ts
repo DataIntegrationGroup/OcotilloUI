@@ -724,6 +724,83 @@ const includesTime = (time: Date, range?: HydrographRange | null) => {
   )
 }
 
+// The methodology's key QC test: the converted series should pass through
+// the bounding manual measurements. A large misfit at a manual means the
+// logger (or its barometer) is drifting and the data should not be
+// published without review. Reports the misfit at every manual that has a
+// converted reading within maxGapMs.
+export interface DriftAssessment {
+  anchorTime: Date
+  manualValue: number
+  seriesValue: number
+  misfit: number
+}
+
+export const assessDriftAtManualObservations = (
+  converted: HydrographPoint[],
+  manualPoints: HydrographPoint[],
+  { maxGapMs = 12 * 60 * 60 * 1000 }: { maxGapMs?: number } = {}
+): DriftAssessment[] => {
+  if (converted.length === 0) return []
+
+  return manualPoints
+    .map((manual) => {
+      const nearest = [...converted].sort(
+        (a, b) =>
+          Math.abs(toUnixTime(a.time) - toUnixTime(manual.time)) -
+          Math.abs(toUnixTime(b.time) - toUnixTime(manual.time))
+      )[0]
+      if (
+        Math.abs(toUnixTime(nearest.time) - toUnixTime(manual.time)) > maxGapMs
+      ) {
+        return null
+      }
+
+      return {
+        anchorTime: manual.time,
+        manualValue: manual.value,
+        seriesValue: nearest.value,
+        misfit: Number((nearest.value - manual.value).toFixed(4)),
+      }
+    })
+    .filter((assessment): assessment is DriftAssessment => assessment !== null)
+}
+
+// A Diver pushed past its pressure range records its maximum — a
+// flat-topped plateau at the series max. Reports the longest such run
+// when it reaches minRunLength consecutive readings.
+export const detectOverpressureClipping = (
+  measurements: HydrographPoint[],
+  minRunLength = 6
+): { start: Date; end: Date; value: number; count: number } | null => {
+  if (measurements.length === 0) return null
+
+  const max = Math.max(...measurements.map((point) => point.value))
+  let best: { start: number; count: number } | null = null
+  let runStart = -1
+
+  measurements.forEach((point, index) => {
+    if (Math.abs(point.value - max) < 0.001) {
+      if (runStart < 0) runStart = index
+      const count = index - runStart + 1
+      if (!best || count > best.count) best = { start: runStart, count }
+    } else {
+      runStart = -1
+    }
+  })
+
+  if (!best) return null
+  const { start, count } = best as { start: number; count: number }
+  if (count < minRunLength) return null
+
+  return {
+    start: measurements[start].time,
+    end: measurements[start + count - 1].time,
+    value: max,
+    count,
+  }
+}
+
 // Port of wellpy's `Model.calculate_depth_to_water` for pressure-transducer
 // data. Water head is the height of the water column above the sensor, so
 // depth to water = sensor depth (L) - head. The sensor depth is anchored by

@@ -145,12 +145,25 @@ Gaps:
 
 ## Recommended order of work
 
-1. Fix Diver Office CSV parsing (delimiter re-sniff + `Location` point-id
-   pattern + encoding tolerance) — blocks the primary real workflow.
-2. Add the field-data-logger `.txt` parser (with battery QC surfacing).
-3. Add a running-baseline / rolling-quantile reflection mode for dense
-   one-sided clusters; keep temperature through parsing.
-4. Single-anchor head→DTW conversion.
-5. Drift diagnostic against bounding manual measurements (pre-publish
-   warning).
-6. Overpressurization flatline detection.
+1. ✅ Fix Diver Office CSV parsing (500-line delimiter sample + `Location`
+   point-id pattern with compact-id normalization). Real export is a
+   committed regression fixture.
+2. ✅ Field-data-logger `.txt` parser with low-battery warning surfaced on
+   the page. Real telemetry file is a committed fixture.
+3. ✅ Dense-cluster reflection mode: 'baseline' detection flags readings
+   above the trailing lower quantile of a 15-sample window — clears
+   EB-165's clusters (nothing above 486 survives) while following the
+   genuine ~3.5 ft July rise. Selectable in the Clean panel.
+   *Deferred*: temperature-aware assist (temperature is still dropped at
+   parse time).
+4. ✅ Single-anchor head→DTW conversion (constant calculated hanging point
+   per methodology eq. 2/3).
+5. ✅ Drift diagnostic: converted water-head series is checked against
+   every in-coverage manual; misfits > 0.1 ft raise a workbench warning
+   citing the methodology's do-not-publish guidance.
+6. ✅ Overpressurization detection: a plateau of ≥ 6 readings at the raw
+   head's maximum raises a clipping warning.
+
+Remaining from the analysis: manual-measurement quality flags feeding
+anchor selection/omission (session task #1), and the temperature-aware
+reflection assist.

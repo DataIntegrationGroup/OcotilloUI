@@ -31,9 +31,11 @@ import {
 } from '@mui/icons-material'
 import {
   applyOffsetToRange,
+  assessDriftAtManualObservations,
   buildCsvFromMeasurements,
   calculateSnapOffset,
   convertWaterHeadToDepthToWater,
+  detectOverpressureClipping,
   interpolateSpuriousReflections,
   normalizePointId,
   removeOffsetsAndZeros,
@@ -145,6 +147,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [isPublishing, setIsPublishing] = useState(false)
   const [correctDrift, setCorrectDrift] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [qualityWarnings, setQualityWarnings] = useState<string[]>([])
   const [fileName, setFileName] = useState<string | null>(initialFileName ?? null)
 
   const manualPoints = useMemo<HydrographPoint[]>(
@@ -223,6 +226,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     if (!initialUpload) {
       setRawUploadedMeasurements([])
       setCorrectedMeasurements([])
+      setQualityWarnings([])
       setError(null)
       return
     }
@@ -233,10 +237,32 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       setCorrectedMeasurements(working)
       setCorrectionLog(baselineCorrectionLog(initialUpload))
       setError(null)
+
+      // Methodology QC checks on water-head uploads: drift misfit at the
+      // manual measurements, and overpressurization clipping in raw head.
+      const warnings: string[] = []
+      if (initialUpload.valueKind === 'water_head') {
+        assessDriftAtManualObservations(working, manualPoints)
+          .filter((assessment) => Math.abs(assessment.misfit) > 0.1)
+          .forEach((assessment) => {
+            warnings.push(
+              `Drift check: the converted series misses the manual measurement on ${assessment.anchorTime.toLocaleString()} by ${assessment.misfit > 0 ? '+' : ''}${assessment.misfit.toFixed(2)} ft — possible logger drift; per the methodology, review before publishing.`
+            )
+          })
+
+        const clipping = detectOverpressureClipping(initialUpload.measurements)
+        if (clipping) {
+          warnings.push(
+            `Water head plateaus at its maximum (${clipping.value.toFixed(2)} ft) for ${clipping.count} consecutive readings (${clipping.start.toLocaleString()} to ${clipping.end.toLocaleString()}) — the Diver may have been overpressurized past its range; readings in that span are clipped.`
+          )
+        }
+      }
+      setQualityWarnings(warnings)
     } catch (deriveError) {
       setRawUploadedMeasurements([])
       setCorrectedMeasurements([])
       setCorrectionLog([])
+      setQualityWarnings([])
       setError(
         deriveError instanceof Error
           ? deriveError.message
@@ -724,6 +750,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       <Box sx={{ px: 2, pb: 2 }}>
         <Stack spacing={2}>
           {error ? <Alert severity="warning">{error}</Alert> : null}
+          {qualityWarnings.map((warning) => (
+            <Alert key={warning} severity="warning">
+              {warning}
+            </Alert>
+          ))}
 
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Chip label={`Well: ${thingName || 'Unknown'}`} />

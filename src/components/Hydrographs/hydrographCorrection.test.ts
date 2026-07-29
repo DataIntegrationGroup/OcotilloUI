@@ -3,8 +3,10 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   applyOffsetToRange,
+  assessDriftAtManualObservations,
   calculateSnapOffset,
   convertWaterHeadToDepthToWater,
+  detectOverpressureClipping,
   extractPointIdFromText,
   interpolateSpuriousReflections,
   normalizePointId,
@@ -508,6 +510,52 @@ END OF DATA`)
     expect(parsed.measurements.length - kept.length).toBeGreaterThanOrEqual(165)
     expect(values.filter((value) => value > 486)).toHaveLength(0)
     expect(july.length).toBeGreaterThanOrEqual(40)
+  })
+
+  it('assesses drift misfit at manual observations', () => {
+    const converted = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 42.0 },
+      { time: new Date('2025-02-01T00:00:00Z'), value: 42.5 },
+    ]
+    const manualPoints = [
+      { time: new Date('2025-01-01T02:00:00Z'), value: 42.31 }, // misses by -0.31
+      { time: new Date('2025-02-01T01:00:00Z'), value: 42.49 }, // fits
+      { time: new Date('2025-06-01T00:00:00Z'), value: 44 }, // outside coverage
+    ]
+
+    const assessments = assessDriftAtManualObservations(converted, manualPoints)
+
+    expect(assessments).toHaveLength(2)
+    expect(assessments[0].misfit).toBeCloseTo(-0.31, 4)
+    expect(assessments[1].misfit).toBeCloseTo(0.01, 4)
+  })
+
+  it('detects overpressurization clipping as a plateau at the series max', () => {
+    const day = (n: number, value: number) => ({
+      time: new Date(Date.UTC(2025, 0, n)),
+      value,
+    })
+    const clipped = [
+      day(1, 30),
+      day(2, 31),
+      day(3, 32.8084), // hits the Diver's range ceiling...
+      day(4, 32.8084),
+      day(5, 32.8084),
+      day(6, 32.8084),
+      day(7, 32.8084),
+      day(8, 32.8084),
+      day(9, 31.5),
+    ]
+
+    const clipping = detectOverpressureClipping(clipped)
+    expect(clipping).not.toBeNull()
+    expect(clipping?.count).toBe(6)
+    expect(clipping?.value).toBeCloseTo(32.8084, 4)
+
+    // a normal trace whose max occurs once is not clipping
+    expect(
+      detectOverpressureClipping([day(1, 30), day(2, 31), day(3, 30.5)])
+    ).toBeNull()
   })
 
   it('parses a real Diver Office compensated export', () => {
