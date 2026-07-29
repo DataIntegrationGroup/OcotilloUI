@@ -634,10 +634,15 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     }
   }
 
+  // Restore the originally loaded dataset, undoing every correction. For
+  // water-head uploads, turning drift correction off re-derives the
+  // baseline conversion through the effect above.
   const resetCorrections = () => {
+    setCorrectDrift(false)
     setCorrectedMeasurements(rawUploadedMeasurements)
     setCorrectionLog(baselineCorrectionLog(uploaded))
     setSelectedRange(null)
+    setSelectedManualOption(null)
     setError(null)
   }
 
@@ -875,7 +880,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         onClick={resetCorrections}
                         disabled={rawUploadedMeasurements.length === 0}
                       >
-                        Reset
+                        Reset to Original
                       </Button>
                       <Button
                         variant="text"
@@ -907,7 +912,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     ) : null}
                     <Typography variant="caption" color="text.secondary">
                       Brush the chart to scope edits. Without a selection,
-                      actions apply to the full uploaded trace.
+                      actions apply to the full uploaded trace. Reset to
+                      Original discards every correction and restores the
+                      dataset as it was loaded.
                     </Typography>
                 </WorkbenchSection>
               </Stack>
