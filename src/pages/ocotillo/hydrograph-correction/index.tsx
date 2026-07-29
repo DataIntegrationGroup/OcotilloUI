@@ -694,7 +694,6 @@ export const HydrographCorrectionPage = () => {
             transducerObservations={[]}
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
-            onUploadParsed={applyParsedUpload}
           />
         ) : !selectedWell ? (
           <Alert severity="info">
@@ -715,7 +714,6 @@ export const HydrographCorrectionPage = () => {
             }))}
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
-            onUploadParsed={applyParsedUpload}
             onPublish={handlePublish}
           />
         )}

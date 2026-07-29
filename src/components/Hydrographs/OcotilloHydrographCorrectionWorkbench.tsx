@@ -24,7 +24,6 @@ import {
   CleaningServices,
   CloudUpload,
   ExpandMore,
-  Publish,
   Refresh,
   Straighten,
   TableRows,
@@ -36,8 +35,6 @@ import {
   convertWaterHeadToDepthToWater,
   interpolateSpuriousReflections,
   normalizePointId,
-  parseHydrographUpload,
-  parseHydrographWorkbookUpload,
   removeOffsetsAndZeros,
   removeSpuriousReflections,
   type HydrographPoint,
@@ -106,7 +103,6 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   transducerObservations,
   initialUpload,
   initialFileName,
-  onUploadParsed,
   onPublish,
 }: {
   thingName: string
@@ -114,15 +110,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   transducerObservations: readonly TransducerHydrographObservation[]
   initialUpload?: ParsedHydrographUpload | null
   initialFileName?: string | null
-  onUploadParsed?: (
-    parsed: ParsedHydrographUpload,
-    fileName: string | null
-  ) => void
   onPublish?: (args: HydrographPublishArgs) => Promise<void>
 }) => {
   const theme = useTheme()
   const chartRef = useRef<ReactECharts>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [uploaded, setUploaded] = useState<ParsedHydrographUpload | null>(
     initialUpload ?? null
@@ -547,35 +538,6 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     uploaded?.valueKind,
   ])
 
-  const handleUpload = async (file?: File) => {
-    if (!file) return
-
-    try {
-      const parsed = file.name.toLowerCase().endsWith('.xlsx')
-        ? parseHydrographWorkbookUpload(await file.arrayBuffer(), file.name)
-        : parseHydrographUpload(await file.text())
-      const working = deriveWorkingMeasurements(parsed)
-      setUploaded(parsed)
-      setRawUploadedMeasurements(working)
-      setCorrectedMeasurements(working)
-      setCorrectionLog(baselineCorrectionLog(parsed))
-      setSelectedRange(null)
-      setError(null)
-      setFileName(file.name)
-      onUploadParsed?.(parsed, file.name)
-    } catch (uploadError) {
-      setUploaded(null)
-      setRawUploadedMeasurements([])
-      setCorrectedMeasurements([])
-      setSelectedRange(null)
-      setError(
-        uploadError instanceof Error
-          ? uploadError.message
-          : 'Unable to parse the uploaded file.'
-      )
-    }
-  }
-
   const handleBrushSelected = (params: {
     batch?: Array<{ areas?: Array<{ coordRange?: [number, number] }> }>
   }) => {
@@ -721,14 +683,6 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       </Box>
       <Box sx={{ px: 2, pb: 2 }}>
         <Stack spacing={2}>
-          <input
-            ref={fileInputRef}
-            hidden
-            type="file"
-            accept=".txt,.csv,.dat,.wcsv,.xlsx"
-            onChange={(event) => handleUpload(event.target.files?.[0])}
-          />
-
           {error ? <Alert severity="warning">{error}</Alert> : null}
 
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -760,15 +714,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, lg: 3.5 }}>
               <Stack spacing={1.5}>
-                <WorkbenchSection title="Upload" defaultExpanded>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      startIcon={<Publish />}
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      Replace File
-                    </Button>
+                <WorkbenchSection title="Clean">
                     {uploaded?.valueKind === 'water_head' ? (
                       <>
                         <FormControlLabel
@@ -791,9 +737,6 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         </Typography>
                       </>
                     ) : null}
-                </WorkbenchSection>
-
-                <WorkbenchSection title="Clean">
                     <TextField
                       type="number"
                       label="Jump threshold (ft)"
