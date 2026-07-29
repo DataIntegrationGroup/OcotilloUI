@@ -113,6 +113,11 @@ export const HydrographCorrectionPage = () => {
   const [demoMenuAnchor, setDemoMenuAnchor] = useState<HTMLElement | null>(
     null
   )
+  const [selectedIngestKind, setSelectedIngestKind] = useState<
+    'wellntel' | 'diverhub'
+  >('wellntel')
+  const [ingestMenuAnchor, setIngestMenuAnchor] =
+    useState<HTMLElement | null>(null)
   const [ingestedWellName, setIngestedWellName] = useState<string | null>(null)
   const [publishSuccess, setPublishSuccess] = useState<{
     blockId: number | null
@@ -547,20 +552,53 @@ export const HydrographCorrectionPage = () => {
                     </MenuItem>
                   ))}
                 </Menu>
-                <Button
-                  variant="outlined"
-                  startIcon={<CloudDownload />}
-                  onClick={() => setIsIngestDialogOpen(true)}
+                <ButtonGroup variant="outlined">
+                  <Button
+                    startIcon={<CloudDownload />}
+                    onClick={() =>
+                      selectedIngestKind === 'wellntel'
+                        ? setIsIngestDialogOpen(true)
+                        : setIsDiverHubDialogOpen(true)
+                    }
+                  >
+                    {selectedIngestKind === 'wellntel'
+                      ? 'Ingest Wellntel'
+                      : 'Ingest Diver-HUB'}
+                  </Button>
+                  <Button
+                    size="small"
+                    aria-label="Select ingest source"
+                    aria-haspopup="menu"
+                    onClick={(event) =>
+                      setIngestMenuAnchor(event.currentTarget)
+                    }
+                  >
+                    <ArrowDropDown />
+                  </Button>
+                </ButtonGroup>
+                <Menu
+                  anchorEl={ingestMenuAnchor}
+                  open={Boolean(ingestMenuAnchor)}
+                  onClose={() => setIngestMenuAnchor(null)}
                 >
-                  Ingest Wellntel
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<CloudDownload />}
-                  onClick={() => setIsDiverHubDialogOpen(true)}
-                >
-                  Ingest Diver-HUB
-                </Button>
+                  {(
+                    [
+                      ['wellntel', 'Ingest Wellntel'],
+                      ['diverhub', 'Ingest Diver-HUB'],
+                    ] as const
+                  ).map(([kind, label]) => (
+                    <MenuItem
+                      key={kind}
+                      selected={kind === selectedIngestKind}
+                      onClick={() => {
+                        setSelectedIngestKind(kind)
+                        setIngestMenuAnchor(null)
+                      }}
+                    >
+                      {label}
+                    </MenuItem>
+                  ))}
+                </Menu>
                 <Typography variant="body2" color="text.secondary">
                   If extraction fails, use the well search below.
                 </Typography>
