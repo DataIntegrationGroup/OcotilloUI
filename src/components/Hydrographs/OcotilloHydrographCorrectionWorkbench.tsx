@@ -572,7 +572,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
     const offset = shiftAmount * direction
     setCorrectedMeasurements((current) =>
-      applyOffsetToRange(current, offset, selectedRange)
+      applyOffsetToRange(
+        current,
+        offset,
+        selectedRange,
+        `shifted ${offset > 0 ? '+' : ''}${offset} ft`
+      )
     )
     setCorrectionLog((log) => [
       ...log,
@@ -618,7 +623,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       })
 
       setCorrectedMeasurements((current) =>
-        applyOffsetToRange(current, offset, selectedRange)
+        applyOffsetToRange(
+          current,
+          offset,
+          selectedRange,
+          `snapped ${offset > 0 ? '+' : ''}${offset} ft to manual ${selectedManualOption.point.time.toISOString()}`
+        )
       )
       setCorrectionLog((log) => [
         ...log,

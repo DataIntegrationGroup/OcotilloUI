@@ -68,6 +68,22 @@ const TIME_ONLY_PATTERN = /^time$/i
 
 const toUnixTime = (value: Date) => value.getTime()
 
+// Every operation that changes a point's value appends a clause to its
+// correctionNote, so any corrected observation carries a full account of
+// what happened to it.
+const appendCorrectionNote = (
+  point: HydrographPoint,
+  note?: string
+): HydrographPoint =>
+  note
+    ? {
+        ...point,
+        correctionNote: point.correctionNote
+          ? `${point.correctionNote}; ${note}`
+          : note,
+      }
+    : point
+
 export const normalizePointId = (value?: string | null) =>
   (value ?? '').trim().toUpperCase()
 
@@ -771,18 +787,27 @@ export const removeOffsetsAndZeros = (
 
   let cumulativeOffset = 0
   let nextStep = 0
-  const corrected = values.map((value, index) => {
+  const appliedOffsets = values.map((_value, index) => {
     if (nextStep < steps.length && index === steps[nextStep].index) {
       cumulativeOffset += steps[nextStep].delta
       nextStep += 1
     }
-    return value - cumulativeOffset
+    return cumulativeOffset
   })
 
-  return kept.map((point, index) => ({
-    ...point,
-    value: Number(corrected[index].toFixed(4)),
-  }))
+  return kept.map((point, index) => {
+    const applied = appliedOffsets[index]
+    const updated = {
+      ...point,
+      value: Number((point.value - applied).toFixed(4)),
+    }
+    return applied === 0
+      ? updated
+      : appendCorrectionNote(
+          updated,
+          `level offset removed (${applied > 0 ? '-' : '+'}${Math.abs(applied).toFixed(4)} ft)`
+        )
+  })
 }
 
 const REFLECTION_WINDOW_HALF_WIDTH = 3
@@ -903,14 +928,18 @@ export const interpolateSpuriousReflections = (
 export const applyOffsetToRange = (
   measurements: HydrographPoint[],
   offset: number,
-  range?: HydrographRange | null
+  range?: HydrographRange | null,
+  note?: string
 ) =>
   measurements.map((measurement) =>
     includesTime(measurement.time, range)
-      ? {
-          ...measurement,
-          value: Number((measurement.value + offset).toFixed(4)),
-        }
+      ? appendCorrectionNote(
+          {
+            ...measurement,
+            value: Number((measurement.value + offset).toFixed(4)),
+          },
+          note
+        )
       : measurement
   )
 

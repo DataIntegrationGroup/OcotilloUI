@@ -52,12 +52,28 @@ SO-0200,2025-02-01,13:00:00,44.2`)
       { time: new Date('2025-01-03T00:00:00Z'), value: 12 },
     ]
 
-    const shifted = applyOffsetToRange(measurements, 1.5, {
-      startTime: new Date('2025-01-02T00:00:00Z'),
-      endTime: new Date('2025-01-03T00:00:00Z'),
-    })
+    const shifted = applyOffsetToRange(
+      measurements,
+      1.5,
+      {
+        startTime: new Date('2025-01-02T00:00:00Z'),
+        endTime: new Date('2025-01-03T00:00:00Z'),
+      },
+      'shifted +1.5 ft'
+    )
 
     expect(shifted.map((point) => point.value)).toEqual([10, 12.5, 13.5])
+    // only the modified points carry the correction note
+    expect(shifted.map((point) => point.correctionNote ?? null)).toEqual([
+      null,
+      'shifted +1.5 ft',
+      'shifted +1.5 ft',
+    ])
+
+    // a second correction appends to the existing note
+    const snapped = applyOffsetToRange(shifted, -0.5, null, 'snapped -0.5 ft')
+    expect(snapped[0].correctionNote).toBe('snapped -0.5 ft')
+    expect(snapped[1].correctionNote).toBe('shifted +1.5 ft; snapped -0.5 ft')
   })
 
   it('calculates the offset needed to snap to the nearest manual point', () => {
@@ -259,6 +275,18 @@ END OF DATA`)
       42.0, 42.01, 45.0, 42.03, 42.04, 42.05, 42.02, 42.03, 42.04, 42.05,
       42.06, 42.07,
     ])
+
+    // only the re-leveled points carry the correction note
+    expect(cleaned.slice(0, 6).every((point) => !point.correctionNote)).toBe(
+      true
+    )
+    expect(
+      cleaned
+        .slice(6)
+        .every((point) =>
+          point.correctionNote?.includes('level offset removed (-2.0300 ft)')
+        )
+    ).toBe(true)
   })
 
   it('removes isolated spurious reflections in either direction', () => {
