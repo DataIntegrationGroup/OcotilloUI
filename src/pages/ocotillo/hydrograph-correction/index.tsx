@@ -434,7 +434,7 @@ export const HydrographCorrectionPage = () => {
     try {
       const parsed = file.name.toLowerCase().endsWith('.xlsx')
         ? parseHydrographWorkbookUpload(await file.arrayBuffer(), file.name)
-        : parseHydrographUpload(await file.text())
+        : parseHydrographUpload(await file.text(), file.name)
       await applyParsedUpload(parsed, file.name)
     } catch (error) {
       setParsedUpload(null)
@@ -628,6 +628,11 @@ export const HydrographCorrectionPage = () => {
               </Stack>
 
               {uploadError ? <Alert severity="warning">{uploadError}</Alert> : null}
+              {parsedUpload?.warnings?.map((warning) => (
+                <Alert key={warning} severity="warning">
+                  {warning}
+                </Alert>
+              ))}
 
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 7 }}>

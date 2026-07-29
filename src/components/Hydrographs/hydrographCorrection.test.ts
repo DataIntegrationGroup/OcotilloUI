@@ -436,6 +436,35 @@ END OF DATA`)
     expect(parsed.measurements[0].time.getFullYear()).toBe(2024)
   })
 
+  it('parses a real field data logger telemetry file', () => {
+    const text = readFileSync(
+      resolve(process.cwd(), 'tmp/wellpy-samples/2025-11-25_MG009.txt'),
+      'utf-8'
+    )
+
+    const parsed = parseHydrographUpload(text, '2025-11-25_MG009.txt')
+
+    expect(parsed.valueKind).toBe('depth_to_water')
+    expect(parsed.pointId).toBe('MG-009')
+    expect(parsed.detectedDelimiter).toBe('field-logger')
+    expect(parsed.measurements.length).toBeGreaterThan(1000)
+    expect(parsed.measurements[0].value).toBeCloseTo(151.02, 2)
+    // healthy ~14 V battery: no low-battery warning
+    expect(parsed.warnings).toBeUndefined()
+  })
+
+  it('warns on low field logger battery and reads the ID token', () => {
+    const parsed = parseHydrographUpload(
+      `2024/11/19 18:54:05   ID 009  D  151.02  T  51.2  B 11.4  G 218  R 0001
+2024/11/20 02:54:03   ID 009  D  149.23  T  50.6  B 11.2  G 217  R 0000`
+    )
+
+    expect(parsed.pointId).toBe('009')
+    expect(parsed.measurements).toHaveLength(2)
+    expect(parsed.warnings?.[0]).toContain('battery is low')
+    expect(parsed.warnings?.[0]).toContain('11.2 V')
+  })
+
   it('parses the sample wellpy workbook export', () => {
     const path = resolve(
       process.cwd(),

@@ -29,6 +29,9 @@ export interface ParsedHydrographUpload {
   detectedTimeColumn: string
   valueKind: HydrographValueKind
   measurements: HydrographPoint[]
+  // Non-fatal quality observations surfaced during parsing (e.g. a field
+  // logger reporting low battery voltage).
+  warnings?: string[]
 }
 
 const DELIMITER_CANDIDATES = ['\t', ',', ';', '|']
@@ -366,7 +369,91 @@ export const parseDiverOfficeUpload = (
   }
 }
 
-export const parseHydrographUpload = (text: string): ParsedHydrographUpload => {
+// NMBGMR field data logger telemetry: one space-delimited record per line,
+// no header, depth to water already computed.
+//   2024/11/19 18:54:05   ID 009  D  151.02  T  51.2  B 13.9  G 218  R 0001
+// D = depth to water (ft bgs), T = temperature (F), B = battery voltage,
+// G = signal, R = restart flag.
+const FIELD_LOGGER_ROW_PATTERN =
+  /^(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})\s+ID\s+(\S+)\s+D\s+(-?\d+(?:\.\d+)?)\s+T\s+(-?\d+(?:\.\d+)?)\s+B\s+(-?\d+(?:\.\d+)?)/
+
+const FIELD_LOGGER_LOW_BATTERY_VOLTS = 12
+
+export const parseFieldLoggerUpload = (
+  text: string,
+  fileName?: string | null
+): ParsedHydrographUpload => {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  const measurements: HydrographPoint[] = []
+  let stationId: string | null = null
+  let lastBattery: number | null = null
+  let minBattery: number | null = null
+
+  for (const line of lines) {
+    const match = line.match(FIELD_LOGGER_ROW_PATTERN)
+    if (!match) continue
+
+    const parsedDate = maybeParseDate(match[1])
+    const depth = Number.parseFloat(match[3])
+    if (!parsedDate || !Number.isFinite(depth)) continue
+
+    if (!stationId) stationId = match[2]
+    const battery = Number.parseFloat(match[5])
+    if (Number.isFinite(battery)) {
+      lastBattery = battery
+      minBattery = minBattery === null ? battery : Math.min(minBattery, battery)
+    }
+
+    measurements.push({ time: parsedDate, value: depth })
+  }
+
+  if (measurements.length === 0) {
+    throw new Error(
+      'No data rows could be parsed from the field data logger file.'
+    )
+  }
+
+  // The filename usually carries the well id ("2025-11-25_MG009.txt");
+  // fall back to the numeric ID token from the records.
+  const fileToken = (fileName ?? '')
+    .replace(/\.[^.]+$/, '')
+    .split(/[_\-\s]+/)
+    .map((token) => token.match(/^([A-Za-z]{1,4})(\d{3,6})$/))
+    .find(Boolean)
+  const pointId = fileToken
+    ? normalizePointId(`${fileToken[1]}-${fileToken[2]}`)
+    : stationId
+      ? normalizePointId(stationId)
+      : null
+
+  const warnings: string[] = []
+  if (lastBattery !== null && lastBattery < FIELD_LOGGER_LOW_BATTERY_VOLTS) {
+    warnings.push(
+      `Field logger battery is low: last reading ${lastBattery.toFixed(1)} V (minimum ${minBattery?.toFixed(1)} V). The methodology recommends replacing declining loggers.`
+    )
+  }
+
+  return {
+    pointId,
+    detectedDelimiter: 'field-logger',
+    detectedTimeColumn: 'Date/time',
+    detectedValueColumn: 'D (depth to water, ft)',
+    valueKind: 'depth_to_water',
+    measurements: measurements.sort(
+      (a, b) => toUnixTime(a.time) - toUnixTime(b.time)
+    ),
+    ...(warnings.length > 0 ? { warnings } : {}),
+  }
+}
+
+export const parseHydrographUpload = (
+  text: string,
+  fileName?: string | null
+): ParsedHydrographUpload => {
   const lines = text
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -374,6 +461,10 @@ export const parseHydrographUpload = (text: string): ParsedHydrographUpload => {
 
   if (lines.length === 0) {
     throw new Error('Uploaded file is empty.')
+  }
+
+  if (FIELD_LOGGER_ROW_PATTERN.test(lines[0])) {
+    return parseFieldLoggerUpload(text, fileName)
   }
 
   const detectedDelimiter = detectDelimiter(lines)
