@@ -32,6 +32,14 @@ export const settings = {
     'https://api.waterdata.usgs.gov/ogcapi/v0',
 
   st2_url: 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
+  diverhub: {
+    // Diver-HUB (VanEssen GroundwaterOnline) web API. The published swagger
+    // declares no security scheme; if a key is provided it is sent as a
+    // bearer token.
+    api_url:
+      import.meta.env.VITE_DIVERHUB_API_URL || 'https://diver-hub.com/api',
+    api_key: import.meta.env.VITE_DIVERHUB_API_KEY || '',
+  },
   wellntel: {
     // Direct Wellntel analytics API access, ported from wellpy. A
     // browser-held key is interim parity with wellpy's client-side key; the

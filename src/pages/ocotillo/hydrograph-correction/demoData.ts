@@ -65,6 +65,28 @@ export const DEMO_WELLNTEL_WELLS = [
 // the latest stored transducer observation.
 export const DEMO_WELLNTEL_LAST_INGESTED = '2025-01-15T00:00:00'
 
+// Demo Diver-HUB locations, used when the Diver-HUB API is unreachable
+// (or unauthorized). Names line up with the Diver Office demo well so the
+// demo manual observations anchor correctly.
+export const DEMO_DIVERHUB_LOCATIONS = [
+  {
+    projectName: 'NMBGMR Demo',
+    id: 1,
+    uid: null,
+    name: 'DM-0107',
+    isActive: true,
+    monitoringPoints: [{ id: 11, name: 'Screen 1', isActive: true }],
+  },
+  {
+    projectName: 'NMBGMR Demo',
+    id: 2,
+    uid: null,
+    name: 'AR-0209',
+    isActive: true,
+    monitoringPoints: [{ id: 21, name: 'Screen 1', isActive: true }],
+  },
+]
+
 const mulberry32 = (seed: number) => {
   let state = seed
   return () => {
@@ -78,6 +100,30 @@ const mulberry32 = (seed: number) => {
 
 const DEMO_READING_INTERVAL_MS = 6 * 60 * 60 * 1000
 const DEMO_READING_CAP = 2000
+
+// Synthesizes Diver-HUB water levels for the demo locations: depth to
+// water matching the Diver Office demo trend (so the diver demo manual
+// observations anchor correctly), with a -0.9 ft cable-slip offset from
+// day 55 on that the Clean and Snap tools can correct.
+export const generateDemoDiverHubReadings = (start: Date, end: Date) => {
+  const rand = mulberry32(20250107)
+  const origin = new Date(DEMO_WELLNTEL_LAST_INGESTED).getTime()
+  const readings: Array<{ time: Date; value: number }> = []
+
+  for (
+    let t = start.getTime();
+    t <= end.getTime() && readings.length < 2000;
+    t += 6 * 60 * 60 * 1000
+  ) {
+    const i = (t - origin) / (6 * 60 * 60 * 1000)
+    let dtw =
+      41.5 + i * 0.004 - 0.05 * Math.sin(i / 6) + (rand() - 0.5) * 0.03
+    if (i >= 55 * 4) dtw -= 0.9
+    readings.push({ time: new Date(t), value: Number(dtw.toFixed(3)) })
+  }
+
+  return readings
+}
 
 // Synthesizes Wellntel API readings for the demo wells: the same trend as
 // example_wellntel.wcsv, sprinkled with spurious 1x/2x reflections so the

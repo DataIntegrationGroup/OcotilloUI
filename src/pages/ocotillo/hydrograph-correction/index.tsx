@@ -25,6 +25,10 @@ import {
   WellntelIngestDialog,
   type WellntelIngestResult,
 } from './WellntelIngestDialog'
+import {
+  DiverHubIngestDialog,
+  type DiverHubIngestResult,
+} from './DiverHubIngestDialog'
 import { IWell } from '@/interfaces/ocotillo'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
@@ -89,6 +93,7 @@ export const HydrographCorrectionPage = () => {
   const [isLoadingDemo, setIsLoadingDemo] = useState(false)
   const [demoKind, setDemoKind] = useState<DemoKind | null>(null)
   const [isIngestDialogOpen, setIsIngestDialogOpen] = useState(false)
+  const [isDiverHubDialogOpen, setIsDiverHubDialogOpen] = useState(false)
   const [ingestedWellName, setIngestedWellName] = useState<string | null>(null)
   const [publishSuccess, setPublishSuccess] = useState<{
     blockId: number | null
@@ -336,33 +341,64 @@ export const HydrographCorrectionPage = () => {
     }
   }
 
-  const handleWellntelIngested = ({
-    well,
-    wellName,
-    measurements,
-    isDemo,
-  }: WellntelIngestResult) => {
+  const applyExternalIngest = (
+    { well, wellName, measurements, isDemo }: WellntelIngestResult,
+    {
+      demoKindWhenUnbound,
+      sourceLabel,
+      delimiter,
+      timeColumn,
+      valueColumn,
+    }: {
+      demoKindWhenUnbound: DemoKind
+      sourceLabel: string
+      delimiter: string
+      timeColumn: string
+      valueColumn: string
+    }
+  ) => {
     setParsedUpload({
       pointId: wellName,
-      detectedDelimiter: 'wellntel-api',
-      detectedTimeColumn: 'timestamp',
-      detectedValueColumn: 'depth',
+      detectedDelimiter: delimiter,
+      detectedTimeColumn: timeColumn,
+      detectedValueColumn: valueColumn,
       valueKind: 'depth_to_water',
       measurements,
     })
-    setUploadedFileName(`Wellntel API (${wellName})`)
+    setUploadedFileName(sourceLabel)
     setUploadError(null)
-    setIsIngestDialogOpen(false)
 
     if (isDemo || !well) {
       setSelectedWell(null)
       setIngestedWellName(`${wellName} (demo)`)
-      setDemoKind('wellntel')
+      setDemoKind(demoKindWhenUnbound)
     } else {
       setDemoKind(null)
       setIngestedWellName(null)
       setSelectedWell(well)
     }
+  }
+
+  const handleWellntelIngested = (result: WellntelIngestResult) => {
+    setIsIngestDialogOpen(false)
+    applyExternalIngest(result, {
+      demoKindWhenUnbound: 'wellntel',
+      sourceLabel: `Wellntel API (${result.wellName})`,
+      delimiter: 'wellntel-api',
+      timeColumn: 'timestamp',
+      valueColumn: 'depth',
+    })
+  }
+
+  const handleDiverHubIngested = (result: DiverHubIngestResult) => {
+    setIsDiverHubDialogOpen(false)
+    applyExternalIngest(result, {
+      demoKindWhenUnbound: 'diver',
+      sourceLabel: `Diver-HUB API (${result.wellName})`,
+      delimiter: 'diver-hub-api',
+      timeColumn: 'ts',
+      valueColumn: 'depth to water (gs)',
+    })
   }
 
   const handleInitialUpload = async (file?: File) => {
@@ -484,6 +520,13 @@ export const HydrographCorrectionPage = () => {
                   onClick={() => setIsIngestDialogOpen(true)}
                 >
                   Ingest Wellntel
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<CloudDownload />}
+                  onClick={() => setIsDiverHubDialogOpen(true)}
+                >
+                  Ingest Diver-HUB
                 </Button>
                 <Typography variant="body2" color="text.secondary">
                   If extraction fails, use the well search below.
@@ -636,6 +679,12 @@ export const HydrographCorrectionPage = () => {
         open={isIngestDialogOpen}
         onClose={() => setIsIngestDialogOpen(false)}
         onIngested={handleWellntelIngested}
+      />
+
+      <DiverHubIngestDialog
+        open={isDiverHubDialogOpen}
+        onClose={() => setIsDiverHubDialogOpen(false)}
+        onIngested={handleDiverHubIngested}
       />
     </Box>
   )
