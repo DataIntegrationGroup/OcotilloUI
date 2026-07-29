@@ -677,14 +677,35 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ px: 2, py: 1.5 }}>
-        <Typography variant="body1" fontWeight="bold">
-          Hydrograph Correction Workspace
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Upload a logger file, compare it with Ocotillo measurements, and
-          apply local alignment edits.
-        </Typography>
+      <Box
+        sx={{
+          px: 2,
+          py: 1.5,
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1.5,
+        }}
+      >
+        <Box>
+          <Typography variant="body1" fontWeight="bold">
+            Hydrograph Correction Workspace
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Upload a logger file, compare it with Ocotillo measurements, and
+            apply local alignment edits.
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<Refresh />}
+          onClick={resetCorrections}
+          disabled={rawUploadedMeasurements.length === 0}
+        >
+          Reset to Original
+        </Button>
       </Box>
       <Box sx={{ px: 2, pb: 2 }}>
         <Stack spacing={2}>
