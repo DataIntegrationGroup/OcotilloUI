@@ -7,11 +7,14 @@ import {
   Autocomplete,
   Box,
   Button,
+  ButtonGroup,
   Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Menu,
+  MenuItem,
   Paper,
   Skeleton,
   Stack,
@@ -19,7 +22,12 @@ import {
   Typography,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { AutoAwesome, CloudDownload, Publish } from '@mui/icons-material'
+import {
+  ArrowDropDown,
+  AutoAwesome,
+  CloudDownload,
+  Publish,
+} from '@mui/icons-material'
 import { OcotilloPageTitle } from '@/components/OcotilloPageHeader'
 import {
   WellntelIngestDialog,
@@ -59,27 +67,33 @@ type DemoKind = 'transducer' | 'diver' | 'wellntel'
 const DEMO_CONFIG: Record<
   DemoKind,
   {
+    label: string
     fileName: string
     wellName: string
     manualObservations: typeof DEMO_MANUAL_OBSERVATIONS
   }
 > = {
   transducer: {
+    label: 'Transducer Demo',
     fileName: DEMO_FILE_NAME,
     wellName: DEMO_WELL_NAME,
     manualObservations: DEMO_MANUAL_OBSERVATIONS,
   },
   diver: {
+    label: 'Diver Office Demo',
     fileName: DEMO_DIVER_FILE_NAME,
     wellName: DEMO_DIVER_WELL_NAME,
     manualObservations: DEMO_DIVER_MANUAL_OBSERVATIONS,
   },
   wellntel: {
+    label: 'Wellntel Demo',
     fileName: DEMO_WELLNTEL_FILE_NAME,
     wellName: DEMO_WELLNTEL_WELL_NAME,
     manualObservations: DEMO_WELLNTEL_MANUAL_OBSERVATIONS,
   },
 }
+
+const DEMO_KINDS = Object.keys(DEMO_CONFIG) as DemoKind[]
 
 export const HydrographCorrectionPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -94,6 +108,11 @@ export const HydrographCorrectionPage = () => {
   const [demoKind, setDemoKind] = useState<DemoKind | null>(null)
   const [isIngestDialogOpen, setIsIngestDialogOpen] = useState(false)
   const [isDiverHubDialogOpen, setIsDiverHubDialogOpen] = useState(false)
+  const [selectedDemoKind, setSelectedDemoKind] =
+    useState<DemoKind>('transducer')
+  const [demoMenuAnchor, setDemoMenuAnchor] = useState<HTMLElement | null>(
+    null
+  )
   const [ingestedWellName, setIngestedWellName] = useState<string | null>(null)
   const [publishSuccess, setPublishSuccess] = useState<{
     blockId: number | null
@@ -490,30 +509,44 @@ export const HydrographCorrectionPage = () => {
                 >
                   Upload Transducer File
                 </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<AutoAwesome />}
-                  onClick={() => handleLoadDemoFile('transducer')}
-                  disabled={isLoadingDemo}
+                <ButtonGroup variant="outlined">
+                  <Button
+                    startIcon={<AutoAwesome />}
+                    onClick={() => handleLoadDemoFile(selectedDemoKind)}
+                    disabled={isLoadingDemo}
+                  >
+                    {isLoadingDemo
+                      ? 'Loading Demo...'
+                      : DEMO_CONFIG[selectedDemoKind].label}
+                  </Button>
+                  <Button
+                    size="small"
+                    aria-label="Select demo style"
+                    aria-haspopup="menu"
+                    onClick={(event) => setDemoMenuAnchor(event.currentTarget)}
+                    disabled={isLoadingDemo}
+                  >
+                    <ArrowDropDown />
+                  </Button>
+                </ButtonGroup>
+                <Menu
+                  anchorEl={demoMenuAnchor}
+                  open={Boolean(demoMenuAnchor)}
+                  onClose={() => setDemoMenuAnchor(null)}
                 >
-                  Transducer Demo
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<AutoAwesome />}
-                  onClick={() => handleLoadDemoFile('diver')}
-                  disabled={isLoadingDemo}
-                >
-                  Diver Office Demo
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<AutoAwesome />}
-                  onClick={() => handleLoadDemoFile('wellntel')}
-                  disabled={isLoadingDemo}
-                >
-                  Wellntel Demo
-                </Button>
+                  {DEMO_KINDS.map((kind) => (
+                    <MenuItem
+                      key={kind}
+                      selected={kind === selectedDemoKind}
+                      onClick={() => {
+                        setSelectedDemoKind(kind)
+                        setDemoMenuAnchor(null)
+                      }}
+                    >
+                      {DEMO_CONFIG[kind].label}
+                    </MenuItem>
+                  ))}
+                </Menu>
                 <Button
                   variant="outlined"
                   startIcon={<CloudDownload />}
