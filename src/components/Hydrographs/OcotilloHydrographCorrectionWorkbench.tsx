@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactECharts from 'echarts-for-react'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Autocomplete,
   Box,
@@ -20,6 +23,7 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import {
   CleaningServices,
   CloudUpload,
+  ExpandMore,
   Publish,
   Refresh,
   Straighten,
@@ -65,6 +69,36 @@ export interface HydrographPublishArgs {
   sourceFileName: string | null
   sourceKind: 'depth_to_water' | 'water_head'
 }
+
+const WorkbenchSection = ({
+  title,
+  defaultExpanded = false,
+  children,
+}: {
+  title: string
+  defaultExpanded?: boolean
+  children: React.ReactNode
+}) => (
+  <Accordion
+    defaultExpanded={defaultExpanded}
+    disableGutters
+    variant="outlined"
+    sx={{
+      borderRadius: 2,
+      bgcolor: 'background.default',
+      '&:before': { display: 'none' },
+    }}
+  >
+    <AccordionSummary expandIcon={<ExpandMore />} sx={{ px: 1.5 }}>
+      <Typography variant="overline" color="primary.main">
+        {title}
+      </Typography>
+    </AccordionSummary>
+    <AccordionDetails sx={{ px: 1.5, pt: 0 }}>
+      <Stack spacing={1.25}>{children}</Stack>
+    </AccordionDetails>
+  </Accordion>
+)
 
 export const OcotilloHydrographCorrectionWorkbench = ({
   thingName,
@@ -726,14 +760,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, lg: 3.5 }}>
               <Stack spacing={1.5}>
-                <Paper
-                  variant="outlined"
-                  sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.default' }}
-                >
-                  <Stack spacing={1.25}>
-                    <Typography variant="overline" color="primary.main">
-                      Upload
-                    </Typography>
+                <WorkbenchSection title="Upload" defaultExpanded>
                     <Button
                       variant="contained"
                       size="small"
@@ -764,17 +791,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         </Typography>
                       </>
                     ) : null}
-                  </Stack>
-                </Paper>
+                </WorkbenchSection>
 
-                <Paper
-                  variant="outlined"
-                  sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.default' }}
-                >
-                  <Stack spacing={1.25}>
-                    <Typography variant="overline" color="primary.main">
-                      Clean
-                    </Typography>
+                <WorkbenchSection title="Clean">
                     <TextField
                       type="number"
                       label="Jump threshold (ft)"
@@ -839,17 +858,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       removed reading with a linear fit between its surviving
                       neighbors.
                     </Typography>
-                  </Stack>
-                </Paper>
+                </WorkbenchSection>
 
-                <Paper
-                  variant="outlined"
-                  sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.default' }}
-                >
-                  <Stack spacing={1.25}>
-                    <Typography variant="overline" color="primary.main">
-                      Shift
-                    </Typography>
+                <WorkbenchSection title="Shift">
                     <TextField
                       type="number"
                       label="Shift amount (ft)"
@@ -879,17 +890,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         Shift Down
                       </Button>
                     </Stack>
-                  </Stack>
-                </Paper>
+                </WorkbenchSection>
 
-                <Paper
-                  variant="outlined"
-                  sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.default' }}
-                >
-                  <Stack spacing={1.25}>
-                    <Typography variant="overline" color="primary.main">
-                      Snap
-                    </Typography>
+                <WorkbenchSection title="Snap">
                     <Autocomplete
                       size="small"
                       options={manualOptions}
@@ -918,17 +921,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     >
                       Snap To Manual
                     </Button>
-                  </Stack>
-                </Paper>
+                </WorkbenchSection>
 
-                <Paper
-                  variant="outlined"
-                  sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.default' }}
-                >
-                  <Stack spacing={1.25}>
-                    <Typography variant="overline" color="primary.main">
-                      Output
-                    </Typography>
+                <WorkbenchSection title="Output" defaultExpanded>
                     <Stack direction="row" spacing={1}>
                       <Button
                         variant="text"
@@ -971,8 +966,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       Brush the chart to scope edits. Without a selection,
                       actions apply to the full uploaded trace.
                     </Typography>
-                  </Stack>
-                </Paper>
+                </WorkbenchSection>
               </Stack>
             </Grid>
 
