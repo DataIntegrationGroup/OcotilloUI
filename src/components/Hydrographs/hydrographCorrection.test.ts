@@ -418,6 +418,83 @@ END OF DATA`)
     expect(cleaned.map((point) => point.value)).toEqual([10, 12, 12.1])
   })
 
+  it('baseline detection clears dense reflection clusters the median method cannot', () => {
+    const day = (n: number, value: number) => ({
+      time: new Date(Date.UTC(2025, 0, n)),
+      value,
+    })
+    const measurements = [
+      day(1, 42.0),
+      day(2, 42.02),
+      day(3, 42.04),
+      day(4, 42.06),
+      day(5, 42.08),
+      day(6, 45.3), // dense adjacent cluster: readings rescue each other...
+      day(7, 45.31),
+      day(8, 45.32),
+      day(9, 45.3),
+      day(10, 42.1),
+      day(11, 42.12),
+      day(12, 42.14),
+      day(13, 42.16),
+    ]
+
+    // median method: the cluster members agree with their neighbors and survive
+    const medianKept = removeSpuriousReflections(measurements, 0.25)
+    expect(medianKept.some((point) => point.value > 45)).toBe(true)
+
+    // baseline method: trailing lower quantile flags the whole cluster
+    const baselineKept = removeSpuriousReflections(
+      measurements,
+      0.25,
+      null,
+      'baseline'
+    )
+    expect(baselineKept.every((point) => point.value < 43)).toBe(true)
+    expect(baselineKept.length).toBe(9)
+  })
+
+  it('baseline detection follows a genuine sustained rise', () => {
+    const points = [
+      ...Array.from({ length: 10 }, (_value, i) => ({
+        time: new Date(Date.UTC(2025, 0, 1 + i)),
+        value: 42 + i * 0.01,
+      })),
+      ...Array.from({ length: 20 }, (_value, i) => ({
+        time: new Date(Date.UTC(2025, 0, 11 + i)),
+        value: 44 + i * 0.01,
+      })),
+    ]
+
+    const kept = removeSpuriousReflections(points, 0.25, null, 'baseline')
+
+    // the transition is flagged for up to ~a window, but once the new level
+    // fills the trailing window it is accepted — the rise is not erased
+    expect(kept.filter((point) => point.value >= 44).length).toBeGreaterThan(5)
+    expect(kept[kept.length - 1].value).toBeCloseTo(44.19, 4)
+  })
+
+  it('baseline detection cleans the real EB-165 Wellntel export', () => {
+    const parsed = parseHydrographUpload(
+      readFileSync(resolve(process.cwd(), 'tmp/wellpy-samples/EB-165.wcsv'), 'utf-8')
+    )
+
+    const kept = removeSpuriousReflections(
+      parsed.measurements,
+      0.5,
+      null,
+      'baseline'
+    )
+    const values = kept.map((point) => point.value)
+    const july = kept.filter((point) => point.time.getMonth() === 6)
+
+    // ~170 of 405 readings are spurious echoes; none of the deep multiples
+    // survive, while the genuine ~3.5 ft seasonal rise into July is kept
+    expect(parsed.measurements.length - kept.length).toBeGreaterThanOrEqual(165)
+    expect(values.filter((value) => value > 486)).toHaveLength(0)
+    expect(july.length).toBeGreaterThanOrEqual(40)
+  })
+
   it('parses a real Diver Office compensated export', () => {
     const text = readFileSync(
       resolve(process.cwd(), 'tmp/wellpy-samples/sa-0231_DK744_compensated.CSV'),

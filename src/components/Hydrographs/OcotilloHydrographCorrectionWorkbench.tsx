@@ -12,6 +12,7 @@ import {
   Chip,
   Divider,
   FormControlLabel,
+  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -37,6 +38,7 @@ import {
   normalizePointId,
   removeOffsetsAndZeros,
   removeSpuriousReflections,
+  type ReflectionDetectionMethod,
   type HydrographPoint,
   type HydrographRange,
   type ParsedHydrographUpload,
@@ -135,6 +137,8 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [cleanThreshold, setCleanThreshold] = useState<number>(0.25)
   const [reflectionThreshold, setReflectionThreshold] = useState<number>(0.25)
   const [interpolateReflections, setInterpolateReflections] = useState(false)
+  const [reflectionMethod, setReflectionMethod] =
+    useState<ReflectionDetectionMethod>('median')
   // Audit trail of applied operations, in order — becomes the provenance
   // corrections list in the upload-contract payload.
   const [correctionLog, setCorrectionLog] = useState<string[]>([])
@@ -604,11 +608,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       ? interpolateSpuriousReflections
       : removeSpuriousReflections
     setCorrectedMeasurements((current) =>
-      treat(current, reflectionThreshold, selectedRange)
+      treat(current, reflectionThreshold, selectedRange, reflectionMethod)
     )
     setCorrectionLog((log) => [
       ...log,
-      `${interpolateReflections ? 'interpolate' : 'remove'}_reflections (threshold ${reflectionThreshold}${selectedRangeSuffix()})`,
+      `${interpolateReflections ? 'interpolate' : 'remove'}_reflections (${reflectionMethod}, threshold ${reflectionThreshold}${selectedRangeSuffix()})`,
     ])
   }
 
@@ -806,6 +810,24 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         setReflectionThreshold(Number(event.target.value))
                       }
                     />
+                    <TextField
+                      select
+                      size="small"
+                      label="Detection"
+                      value={reflectionMethod}
+                      onChange={(event) =>
+                        setReflectionMethod(
+                          event.target.value as ReflectionDetectionMethod
+                        )
+                      }
+                    >
+                      <MenuItem value="median">
+                        Isolated echoes (median window)
+                      </MenuItem>
+                      <MenuItem value="baseline">
+                        Dense one-sided (running baseline)
+                      </MenuItem>
+                    </TextField>
                     <FormControlLabel
                       control={
                         <Checkbox
@@ -832,10 +854,14 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     <Typography variant="caption" color="text.secondary">
                       Reflections are acoustic-echo readings offset from the
                       local trend — positive or negative, near the true depth
-                      (1x) or near twice it (2x). Sustained steps are kept.
-                      Interpolating keeps the sampling cadence, replacing each
-                      removed reading with a linear fit between its surviving
-                      neighbors.
+                      (1x) or near twice it (2x). The median method targets
+                      isolated echoes and keeps sustained steps; the running
+                      baseline method rejects dense one-sided clusters (echoes
+                      reading deeper), but treats genuine upward steps as
+                      spurious — brush the affected span when the trace has
+                      real steps. Interpolating keeps the sampling cadence,
+                      replacing each removed reading with a linear fit between
+                      its surviving neighbors.
                     </Typography>
                 </WorkbenchSection>
 

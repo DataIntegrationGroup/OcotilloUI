@@ -974,12 +974,79 @@ const findSpuriousReflectionIndices = (
   return spurious
 }
 
-export const removeSpuriousReflections = (
+// Detection strategies for spurious reflections:
+// - 'median': isolated-echo detection (median window + neighbor-agreement
+//   rescue). Robust for scattered reflections; defeated when spurious
+//   readings arrive in dense runs that rescue each other.
+// - 'baseline': running-baseline rejection for dense ONE-SIDED clusters,
+//   the behavior real Wellntel wells exhibit (echoes always read deeper).
+//   Port of wellpy's remove_up_spikes normal mode: track the last accepted
+//   value and reject anything more than the threshold above it, seeded
+//   from the lower median of the first window. Handles arbitrarily long
+//   spurious runs; the tradeoff is that a genuine sustained upward step
+//   larger than the threshold is also rejected, so scope it with the
+//   brush when the trace has real steps.
+export type ReflectionDetectionMethod = 'median' | 'baseline'
+
+const BASELINE_WINDOW = 15
+const BASELINE_QUANTILE = 0.25
+
+const lowerQuantile = (values: number[], quantile: number) => {
+  const sorted = [...values].sort((a, b) => a - b)
+  return sorted[Math.floor(quantile * (sorted.length - 1))]
+}
+
+// The baseline is the trailing lower quantile of the last BASELINE_WINDOW
+// readings (spurious included — the quantile ignores them as long as they
+// are a minority of the window). Unlike a last-accepted-value baseline,
+// this follows genuine level changes: a real seasonal rise fills the
+// window and pulls the quantile up within ~a window of samples, while
+// dense one-sided reflection clusters stay above it and get flagged.
+const findBaselineSpuriousIndices = (
   measurements: HydrographPoint[],
   threshold: number,
   range?: HydrographRange | null
+) => {
+  const spurious = new Set<number>()
+  const inRange: number[] = []
+  measurements.forEach((point, index) => {
+    if (includesTime(point.time, range)) inRange.push(index)
+  })
+  if (inRange.length === 0) return spurious
+
+  inRange.forEach((index, position) => {
+    const windowStart = Math.max(0, position - BASELINE_WINDOW)
+    const window = inRange
+      .slice(windowStart, position)
+      .map((i) => measurements[i].value)
+    if (window.length < 3) return
+
+    const baseline = lowerQuantile(window, BASELINE_QUANTILE)
+    if (measurements[index].value - baseline > threshold) {
+      spurious.add(index)
+    }
+  })
+
+  return spurious
+}
+
+const findReflectionIndices = (
+  measurements: HydrographPoint[],
+  threshold: number,
+  range: HydrographRange | null | undefined,
+  method: ReflectionDetectionMethod
+) =>
+  method === 'baseline'
+    ? findBaselineSpuriousIndices(measurements, threshold, range)
+    : findSpuriousReflectionIndices(measurements, threshold, range)
+
+export const removeSpuriousReflections = (
+  measurements: HydrographPoint[],
+  threshold: number,
+  range?: HydrographRange | null,
+  method: ReflectionDetectionMethod = 'median'
 ): HydrographPoint[] => {
-  const spurious = findSpuriousReflectionIndices(measurements, threshold, range)
+  const spurious = findReflectionIndices(measurements, threshold, range, method)
   return measurements.filter((_point, index) => !spurious.has(index))
 }
 
@@ -990,9 +1057,10 @@ export const removeSpuriousReflections = (
 export const interpolateSpuriousReflections = (
   measurements: HydrographPoint[],
   threshold: number,
-  range?: HydrographRange | null
+  range?: HydrographRange | null,
+  method: ReflectionDetectionMethod = 'median'
 ): HydrographPoint[] => {
-  const spurious = findSpuriousReflectionIndices(measurements, threshold, range)
+  const spurious = findReflectionIndices(measurements, threshold, range, method)
 
   return measurements.map((point, index) => {
     if (!spurious.has(index)) return point
