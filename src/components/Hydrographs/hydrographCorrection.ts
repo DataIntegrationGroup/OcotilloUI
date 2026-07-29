@@ -701,11 +701,24 @@ export const convertWaterHeadToDepthToWater = ({
   })
 }
 
-// Port of wellpy's `DataModel.fix_data` ("Remove Offsets/Zeros"): drop
-// zero readings (sensor out of water) and cancel abrupt jumps larger than
-// the threshold (sensor repositioning) by shifting the subsequent segment
-// back. Without a range, jumps are removed repeatedly until none remain;
-// with a range, each jump inside it shifts everything after it once.
+const OFFSET_WINDOW_HALF_WIDTH = 5
+
+// "Remove Offsets/Zeros": drop zero readings (sensor out of water) and
+// cancel sustained level shifts (sensor repositioning / cable slip) by
+// re-leveling the trace after each step.
+//
+// This replaces wellpy's `fix_data`, whose single-sample diff detection
+// mistook isolated spikes for offsets and estimated the step size from two
+// noisy samples. Here a step boundary is a point where the median of the
+// window before it and the median of the window after it differ by at
+// least the threshold — a single spurious spike cannot move either median,
+// so spikes are left for the reflection tool. Consecutive flagged
+// boundaries around one step are collapsed to the boundary with the
+// largest raw sample-to-sample jump (localization), while the step size
+// comes from the median difference (noise-robust magnitude). Each detected
+// step shifts everything after it, cumulatively, so multiple slips
+// re-level correctly; steps closer together than the window may blur into
+// one. With a brush range, only boundaries inside it are corrected.
 export const removeOffsetsAndZeros = (
   measurements: HydrographPoint[],
   threshold: number,
@@ -714,47 +727,61 @@ export const removeOffsetsAndZeros = (
   const kept = measurements.filter(
     (point) => !(point.value === 0 && includesTime(point.time, range))
   )
+  const n = kept.length
+  if (n < 2) return kept.map((point) => ({ ...point }))
+
   const values = kept.map((point) => point.value)
+  const half = Math.min(OFFSET_WINDOW_HALF_WIDTH, Math.floor(n / 2))
 
-  const jumpIndices = () => {
-    const indices: number[] = []
-    for (let i = 0; i < values.length - 1; i += 1) {
-      if (Math.abs(values[i + 1] - values[i]) >= threshold) {
-        indices.push(i)
-      }
+  const candidates: Array<{ index: number; delta: number }> = []
+  for (let i = half; i <= n - half; i += 1) {
+    const before = median(values.slice(i - half, i))
+    const after = median(values.slice(i, i + half))
+    const delta = after - before
+    if (Math.abs(delta) >= threshold && includesTime(kept[i].time, range)) {
+      candidates.push({ index: i, delta })
     }
-    return indices
   }
 
-  if (range) {
-    for (const index of jumpIndices()) {
+  // One step produces a run of consecutive flagged boundaries; keep the one
+  // sitting on the largest raw jump.
+  const steps: Array<{ index: number; delta: number }> = []
+  let run: typeof candidates = []
+  const flushRun = () => {
+    if (run.length === 0) return
+    let best = run[0]
+    for (const candidate of run) {
       if (
-        includesTime(kept[index].time, range) &&
-        includesTime(kept[index + 1].time, range)
+        Math.abs(values[candidate.index] - values[candidate.index - 1]) >
+        Math.abs(values[best.index] - values[best.index - 1])
       ) {
-        const offset = values[index] - values[index + 1]
-        for (let i = index + 1; i < values.length; i += 1) {
-          values[i] += offset
-        }
+        best = candidate
       }
     }
-  } else {
-    for (let pass = 0; pass < 100; pass += 1) {
-      const indices = jumpIndices()
-      if (indices.length === 0) break
-
-      const start = indices[0]
-      const end = indices.length > 1 ? indices[1] : values.length - 1
-      const offset = values[start] - values[start + 1]
-      for (let i = start + 1; i <= end; i += 1) {
-        values[i] += offset
-      }
-    }
+    steps.push(best)
+    run = []
   }
+  for (const candidate of candidates) {
+    if (run.length > 0 && candidate.index !== run[run.length - 1].index + 1) {
+      flushRun()
+    }
+    run.push(candidate)
+  }
+  flushRun()
+
+  let cumulativeOffset = 0
+  let nextStep = 0
+  const corrected = values.map((value, index) => {
+    if (nextStep < steps.length && index === steps[nextStep].index) {
+      cumulativeOffset += steps[nextStep].delta
+      nextStep += 1
+    }
+    return value - cumulativeOffset
+  })
 
   return kept.map((point, index) => ({
     ...point,
-    value: Number(values[index].toFixed(4)),
+    value: Number(corrected[index].toFixed(4)),
   }))
 }
 

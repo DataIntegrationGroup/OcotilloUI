@@ -793,6 +793,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     >
                       Remove Offsets/Zeros
                     </Button>
+                    <Typography variant="caption" color="text.secondary">
+                      Offsets are sustained level shifts (sensor repositioning
+                      or cable slip): each step is detected from the medians
+                      around it and the trace after it is re-leveled. Zero
+                      readings (sensor out of water) are dropped.
+                    </Typography>
                     <TextField
                       type="number"
                       label="Reflection threshold (ft)"

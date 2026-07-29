@@ -203,8 +203,61 @@ END OF DATA`)
 
     const cleaned = removeOffsetsAndZeros(measurements, 0.25)
 
+    // step size estimated from window medians (2.1 here), zeros dropped
     expect(cleaned.map((point) => point.value)).toEqual([
-      10, 10.1, 10.1, 10.2, 10.3,
+      10, 10.1, 10, 10.1, 10.2,
+    ])
+  })
+
+  it('does not mistake an isolated spike for an offset', () => {
+    const day = (n: number, value: number) => ({
+      time: new Date(Date.UTC(2025, 0, n)),
+      value,
+    })
+    const measurements = [
+      day(1, 42),
+      day(2, 42.05),
+      day(3, 45.2), // reflection-style spike: the reflection tool's job
+      day(4, 42.1),
+      day(5, 42.15),
+      day(6, 42.2),
+      day(7, 42.25),
+    ]
+
+    const cleaned = removeOffsetsAndZeros(measurements, 0.25)
+
+    expect(cleaned.map((point) => point.value)).toEqual(
+      measurements.map((point) => point.value)
+    )
+  })
+
+  it('localizes a step boundary exactly, even with a spike nearby', () => {
+    const day = (n: number, value: number) => ({
+      time: new Date(Date.UTC(2025, 0, n)),
+      value,
+    })
+    const measurements = [
+      day(1, 42.0),
+      day(2, 42.01),
+      day(3, 45.0), // spike inside the pre-step window
+      day(4, 42.03),
+      day(5, 42.04),
+      day(6, 42.05),
+      day(7, 44.05), // sustained +2 step starts here
+      day(8, 44.06),
+      day(9, 44.07),
+      day(10, 44.08),
+      day(11, 44.09),
+      day(12, 44.1),
+    ]
+
+    const cleaned = removeOffsetsAndZeros(measurements, 0.25)
+
+    // pre-step samples (including the spike) untouched; the step segment is
+    // re-leveled by the median-estimated 2.03 starting at the true boundary
+    expect(cleaned.map((point) => point.value)).toEqual([
+      42.0, 42.01, 45.0, 42.03, 42.04, 42.05, 42.02, 42.03, 42.04, 42.05,
+      42.06, 42.07,
     ])
   })
 
