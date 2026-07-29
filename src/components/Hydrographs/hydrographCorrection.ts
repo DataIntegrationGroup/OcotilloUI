@@ -38,6 +38,10 @@ const POINT_ID_PATTERNS = [
   /point(?:\s|_|-)?id\s*[:=]\s*([A-Za-z0-9._-]+)/i,
   /well(?:\s|_|-)?name\s*[:=]\s*([A-Za-z0-9._-]+)/i,
   /site(?:\s|_|-)?id\s*[:=]\s*([A-Za-z0-9._-]+)/i,
+  // Diver Office metadata identifies the well as `Location =sa-0231`.
+  // Restricted to point-id-shaped values so prose location names (e.g.
+  // wellpy workbook "Location=Aztec MW") fall through to other sources.
+  /^\s*location\s*[:=]\s*([A-Za-z]{1,4}[-_ ]?\d{3,6})\b/im,
 ]
 
 const TIME_COLUMN_PATTERNS = [
@@ -114,19 +118,29 @@ export const extractPointIdFromFileName = (fileName: string) => {
   return normalizePointId(baseName)
 }
 
+// Compact ids like "AR0209" normalize to the canonical dashed form
+// ("AR-0209") used by Ocotillo well names.
+const expandCompactPointId = (value: string) => {
+  const compact = value.match(/^([A-Za-z]{1,4})[-_ ]?(\d{3,6})$/)
+  return compact ? `${compact[1]}-${compact[2]}` : value
+}
+
 export const extractPointIdFromText = (text: string) => {
   for (const pattern of POINT_ID_PATTERNS) {
     const match = text.match(pattern)
     if (match?.[1]) {
-      return normalizePointId(match[1])
+      return normalizePointId(expandCompactPointId(match[1]))
     }
   }
 
   return null
 }
 
+// Sample well past any metadata preamble: real Diver Office exports open
+// with ~50 lines of metadata containing stray pipes but no commas, which a
+// 20-line sample mis-sniffed as pipe-delimited.
 const detectDelimiter = (lines: string[]) => {
-  const sample = lines.slice(0, 20).join('\n')
+  const sample = lines.slice(0, 500).join('\n')
 
   const ranked = DELIMITER_CANDIDATES.map((delimiter) => ({
     delimiter,

@@ -418,6 +418,24 @@ END OF DATA`)
     expect(cleaned.map((point) => point.value)).toEqual([10, 12, 12.1])
   })
 
+  it('parses a real Diver Office compensated export', () => {
+    const text = readFileSync(
+      resolve(process.cwd(), 'tmp/wellpy-samples/sa-0231_DK744_compensated.CSV'),
+      'latin1'
+    )
+
+    const parsed = parseHydrographUpload(text)
+
+    expect(parsed.valueKind).toBe('water_head')
+    expect(parsed.pointId).toBe('SA-0231')
+    expect(parsed.detectedDelimiter).toBe(',')
+    expect(parsed.detectedTimeColumn).toBe('Date/time')
+    expect(parsed.detectedValueColumn).toBe('Water head[ft]')
+    expect(parsed.measurements.length).toBeGreaterThan(700)
+    expect(parsed.measurements[0].value).toBeCloseTo(23.09766, 4)
+    expect(parsed.measurements[0].time.getFullYear()).toBe(2024)
+  })
+
   it('parses the sample wellpy workbook export', () => {
     const path = resolve(
       process.cwd(),
