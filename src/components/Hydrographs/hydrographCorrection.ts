@@ -3,6 +3,10 @@ import { inflateRaw } from 'pako'
 export interface HydrographPoint {
   time: Date
   value: number
+  // Sensor temperature in the source's units (°C for Wellntel exports).
+  // Reflections correlate with high sensor temperature, so the reflection
+  // tools can use it as a supporting signal.
+  temperature?: number
   // Per-observation audit note set when a correction replaces this
   // reading's value (e.g. a spurious reflection interpolated away). Carried
   // through later edits, shown in the data table, and uploaded with the
@@ -240,6 +244,9 @@ const parseMeasurementRows = ({
   const valueIndex = pickPreferredValueColumnIndex(headers)
   const dateIndex = pickColumnIndex(headers, [DATE_ONLY_PATTERN])
   const timeIndex = pickColumnIndex(headers, [TIME_ONLY_PATTERN])
+  const temperatureIndex = headers.findIndex(
+    (header, index) => index !== valueIndex && /temp/i.test(header.trim())
+  )
 
   if (valueIndex < 0) {
     throw new Error('Unable to find a water-level column in the uploaded file.')
@@ -276,9 +283,17 @@ const parseMeasurementRows = ({
       continue
     }
 
+    const parsedTemperature =
+      temperatureIndex >= 0
+        ? Number.parseFloat(row[temperatureIndex] ?? '')
+        : Number.NaN
+
     measurements.push({
       time: parsedDate,
       value: parsedValue,
+      ...(Number.isFinite(parsedTemperature)
+        ? { temperature: parsedTemperature }
+        : {}),
     })
   }
 
@@ -348,7 +363,14 @@ export const parseDiverOfficeUpload = (
     const parsedHead = Number.parseFloat(cells[1])
     if (!parsedDate || !Number.isFinite(parsedHead)) continue
 
-    measurements.push({ time: parsedDate, value: parsedHead })
+    const parsedTemperature = Number.parseFloat(cells[2] ?? '')
+    measurements.push({
+      time: parsedDate,
+      value: parsedHead,
+      ...(Number.isFinite(parsedTemperature)
+        ? { temperature: parsedTemperature }
+        : {}),
+    })
   }
 
   if (measurements.length === 0) {
@@ -408,7 +430,12 @@ export const parseFieldLoggerUpload = (
       minBattery = minBattery === null ? battery : Math.min(minBattery, battery)
     }
 
-    measurements.push({ time: parsedDate, value: depth })
+    const temperature = Number.parseFloat(match[4])
+    measurements.push({
+      time: parsedDate,
+      value: depth,
+      ...(Number.isFinite(temperature) ? { temperature } : {}),
+    })
   }
 
   if (measurements.length === 0) {
@@ -1133,23 +1160,99 @@ const findBaselineSpuriousIndices = (
   return spurious
 }
 
+// Reflections correlate with high sensor temperature (real Wellntel data
+// shows the spurious population arriving overwhelmingly on warm readings).
+// The temperature assist flags readings that are only marginally above the
+// value baseline (half the threshold) when their sensor temperature is
+// also well above the trailing temperature median — supporting evidence
+// that lets marginal echoes be caught without loosening the value
+// threshold for everything. Temperatures are compared in the source's
+// units.
+const TEMPERATURE_ASSIST_DELTA = 5
+const TEMPERATURE_ASSIST_VALUE_FACTOR = 0.5
+
+const findTemperatureAssistedIndices = (
+  measurements: HydrographPoint[],
+  threshold: number,
+  range?: HydrographRange | null
+) => {
+  const flagged = new Set<number>()
+  const inRange: number[] = []
+  measurements.forEach((point, index) => {
+    if (includesTime(point.time, range)) inRange.push(index)
+  })
+
+  inRange.forEach((index, position) => {
+    const point = measurements[index]
+    if (point.temperature === undefined) return
+
+    const windowIndices = inRange.slice(
+      Math.max(0, position - BASELINE_WINDOW),
+      position
+    )
+    const windowValues = windowIndices.map((i) => measurements[i].value)
+    const windowTemperatures = windowIndices
+      .map((i) => measurements[i].temperature)
+      .filter((temperature): temperature is number => temperature !== undefined)
+    if (windowValues.length < 3 || windowTemperatures.length < 3) return
+
+    const valueBaseline = lowerQuantile(windowValues, BASELINE_QUANTILE)
+    const temperatureMedian = median(windowTemperatures)
+
+    if (
+      point.value - valueBaseline > threshold * TEMPERATURE_ASSIST_VALUE_FACTOR &&
+      point.temperature - temperatureMedian > TEMPERATURE_ASSIST_DELTA
+    ) {
+      flagged.add(index)
+    }
+  })
+
+  return flagged
+}
+
+export interface ReflectionOptions {
+  useTemperature?: boolean
+}
+
 const findReflectionIndices = (
   measurements: HydrographPoint[],
   threshold: number,
   range: HydrographRange | null | undefined,
-  method: ReflectionDetectionMethod
-) =>
-  method === 'baseline'
-    ? findBaselineSpuriousIndices(measurements, threshold, range)
-    : findSpuriousReflectionIndices(measurements, threshold, range)
+  method: ReflectionDetectionMethod,
+  options?: ReflectionOptions
+) => {
+  const spurious =
+    method === 'baseline'
+      ? findBaselineSpuriousIndices(measurements, threshold, range)
+      : findSpuriousReflectionIndices(measurements, threshold, range)
+
+  if (options?.useTemperature) {
+    for (const index of findTemperatureAssistedIndices(
+      measurements,
+      threshold,
+      range
+    )) {
+      spurious.add(index)
+    }
+  }
+
+  return spurious
+}
 
 export const removeSpuriousReflections = (
   measurements: HydrographPoint[],
   threshold: number,
   range?: HydrographRange | null,
-  method: ReflectionDetectionMethod = 'median'
+  method: ReflectionDetectionMethod = 'median',
+  options?: ReflectionOptions
 ): HydrographPoint[] => {
-  const spurious = findReflectionIndices(measurements, threshold, range, method)
+  const spurious = findReflectionIndices(
+    measurements,
+    threshold,
+    range,
+    method,
+    options
+  )
   return measurements.filter((_point, index) => !spurious.has(index))
 }
 
@@ -1161,9 +1264,16 @@ export const interpolateSpuriousReflections = (
   measurements: HydrographPoint[],
   threshold: number,
   range?: HydrographRange | null,
-  method: ReflectionDetectionMethod = 'median'
+  method: ReflectionDetectionMethod = 'median',
+  options?: ReflectionOptions
 ): HydrographPoint[] => {
-  const spurious = findReflectionIndices(measurements, threshold, range, method)
+  const spurious = findReflectionIndices(
+    measurements,
+    threshold,
+    range,
+    method,
+    options
+  )
 
   return measurements.map((point, index) => {
     if (!spurious.has(index)) return point
@@ -1194,7 +1304,7 @@ export const interpolateSpuriousReflections = (
     }
 
     return {
-      time: point.time,
+      ...point,
       value: Number(value.toFixed(4)),
       correctionNote: `spurious reflection removed; value interpolated from neighbors (was ${point.value})`,
     }

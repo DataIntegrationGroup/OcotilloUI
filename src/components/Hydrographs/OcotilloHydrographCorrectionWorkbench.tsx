@@ -141,6 +141,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [interpolateReflections, setInterpolateReflections] = useState(false)
   const [reflectionMethod, setReflectionMethod] =
     useState<ReflectionDetectionMethod>('median')
+  const [useTemperatureAssist, setUseTemperatureAssist] = useState(false)
   // Audit trail of applied operations, in order — becomes the provenance
   // corrections list in the upload-contract payload.
   const [correctionLog, setCorrectionLog] = useState<string[]>([])
@@ -634,11 +635,13 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       ? interpolateSpuriousReflections
       : removeSpuriousReflections
     setCorrectedMeasurements((current) =>
-      treat(current, reflectionThreshold, selectedRange, reflectionMethod)
+      treat(current, reflectionThreshold, selectedRange, reflectionMethod, {
+        useTemperature: useTemperatureAssist,
+      })
     )
     setCorrectionLog((log) => [
       ...log,
-      `${interpolateReflections ? 'interpolate' : 'remove'}_reflections (${reflectionMethod}, threshold ${reflectionThreshold}${selectedRangeSuffix()})`,
+      `${interpolateReflections ? 'interpolate' : 'remove'}_reflections (${reflectionMethod}${useTemperatureAssist ? '+temp' : ''}, threshold ${reflectionThreshold}${selectedRangeSuffix()})`,
     ])
   }
 
@@ -863,6 +866,23 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       control={
                         <Checkbox
                           size="small"
+                          checked={useTemperatureAssist}
+                          onChange={(event) =>
+                            setUseTemperatureAssist(event.target.checked)
+                          }
+                          disabled={
+                            !correctedMeasurements.some(
+                              (point) => point.temperature !== undefined
+                            )
+                          }
+                        />
+                      }
+                      label="Temperature assist"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          size="small"
                           checked={interpolateReflections}
                           onChange={(event) =>
                             setInterpolateReflections(event.target.checked)
@@ -890,9 +910,13 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       baseline method rejects dense one-sided clusters (echoes
                       reading deeper), but treats genuine upward steps as
                       spurious — brush the affected span when the trace has
-                      real steps. Interpolating keeps the sampling cadence,
-                      replacing each removed reading with a linear fit between
-                      its surviving neighbors.
+                      real steps. Temperature assist additionally flags
+                      readings that sit marginally above the local trend while
+                      their sensor temperature is well above the local norm —
+                      echoes correlate with warm readings (requires a
+                      temperature column in the upload). Interpolating keeps
+                      the sampling cadence, replacing each removed reading
+                      with a linear fit between its surviving neighbors.
                     </Typography>
                 </WorkbenchSection>
 

@@ -491,6 +491,81 @@ END OF DATA`)
     expect(kept[kept.length - 1].value).toBeCloseTo(44.19, 4)
   })
 
+  it('temperature assist flags marginal warm echoes the value test misses', () => {
+    const day = (n: number, value: number, temperature: number) => ({
+      time: new Date(Date.UTC(2025, 0, n)),
+      value,
+      temperature,
+    })
+    const measurements = [
+      day(1, 42.0, 8),
+      day(2, 42.01, 9),
+      day(3, 42.02, 8),
+      day(4, 42.03, 9),
+      day(5, 42.2, 22), // marginal (+0.17 < threshold) but hot: echo
+      day(6, 42.05, 8),
+      day(7, 42.18, 9), // equally marginal but cool: genuine wiggle
+      day(8, 42.07, 9),
+    ]
+
+    const withoutAssist = removeSpuriousReflections(measurements, 0.25)
+    expect(withoutAssist).toHaveLength(8)
+
+    const withAssist = removeSpuriousReflections(
+      measurements,
+      0.25,
+      null,
+      'median',
+      { useTemperature: true }
+    )
+    expect(withAssist).toHaveLength(7)
+    expect(withAssist.some((point) => point.value === 42.2)).toBe(false)
+    expect(withAssist.some((point) => point.value === 42.18)).toBe(true)
+  })
+
+  it('parses temperature columns and keeps them through interpolation', () => {
+    const parsed = parseHydrographUpload(`timestamp,temperature_C,temperature_raw,depth
+2025-01-01 00:00:00,21.5,708,42.1
+2025-01-01 06:00:00,21.4,707,42.2`)
+
+    expect(parsed.measurements.map((point) => point.temperature)).toEqual([
+      21.5, 21.4,
+    ])
+
+    const interpolated = interpolateSpuriousReflections(
+      [
+        { time: new Date('2025-01-01T00:00:00Z'), value: 42, temperature: 8 },
+        { time: new Date('2025-01-02T00:00:00Z'), value: 84, temperature: 22 },
+        { time: new Date('2025-01-03T00:00:00Z'), value: 42.1, temperature: 9 },
+      ],
+      0.25
+    )
+    expect(interpolated[1].temperature).toBe(22)
+    expect(interpolated[1].correctionNote).toContain('interpolated')
+  })
+
+  it('temperature assist improves the median method on real EB-165 data', () => {
+    const parsed = parseHydrographUpload(
+      readFileSync(resolve(process.cwd(), 'tmp/wellpy-samples/EB-165.wcsv'), 'utf-8')
+    )
+    expect(parsed.measurements[0].temperature).toBeCloseTo(1.5556, 3)
+
+    const withoutAssist = removeSpuriousReflections(
+      parsed.measurements,
+      0.5
+    ).length
+    const withAssist = removeSpuriousReflections(
+      parsed.measurements,
+      0.5,
+      null,
+      'median',
+      { useTemperature: true }
+    ).length
+
+    // assist removes at least 30 additional warm echoes
+    expect(withoutAssist - withAssist).toBeGreaterThanOrEqual(30)
+  })
+
   it('baseline detection cleans the real EB-165 Wellntel export', () => {
     const parsed = parseHydrographUpload(
       readFileSync(resolve(process.cwd(), 'tmp/wellpy-samples/EB-165.wcsv'), 'utf-8')
