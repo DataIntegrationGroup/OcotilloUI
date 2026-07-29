@@ -184,17 +184,32 @@ END OF DATA`)
     expect(converted.map((point) => point.value)).toEqual([50, 50.4, 52])
   })
 
-  it('requires two overlapping manual observations to convert water head', () => {
+  it('converts with a single manual anchor as a constant hanging point', () => {
+    const measurements = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+      { time: new Date('2025-01-02T00:00:00Z'), value: 10.5 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 9.8 },
+    ]
+
+    // hanging point = 50 + head at the nearest reading to the manual (10.5)
+    const converted = convertWaterHeadToDepthToWater({
+      measurements,
+      manualPoints: [
+        { time: new Date('2025-01-02T03:00:00Z'), value: 50 },
+      ],
+    })
+
+    expect(converted.map((point) => point.value)).toEqual([50.5, 50, 50.7])
+  })
+
+  it('rejects conversion without manual observations or overlap', () => {
     const measurements = [
       { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
     ]
 
     expect(() =>
-      convertWaterHeadToDepthToWater({
-        measurements,
-        manualPoints: [{ time: new Date('2025-01-01T00:00:00Z'), value: 50 }],
-      })
-    ).toThrow('At least two manual observations')
+      convertWaterHeadToDepthToWater({ measurements, manualPoints: [] })
+    ).toThrow('At least one manual observation')
 
     expect(() =>
       convertWaterHeadToDepthToWater({

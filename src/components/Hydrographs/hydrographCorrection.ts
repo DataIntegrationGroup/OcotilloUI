@@ -744,10 +744,36 @@ export const convertWaterHeadToDepthToWater = ({
   manualPoints: HydrographPoint[]
   correctDrift?: boolean
 }): HydrographPoint[] => {
-  if (manualPoints.length < 2) {
+  if (manualPoints.length === 0) {
     throw new Error(
-      'At least two manual observations are required to convert water head to depth to water.'
+      'At least one manual observation is required to convert water head to depth to water.'
     )
+  }
+
+  // Single anchor (the methodology's "Snap to Selected" flow, eq. 2/3):
+  // calculated hanging point = manual DTW + head at the manual's time,
+  // applied as a constant across the whole series. The common case for
+  // annual site visits, where only the download-day manual exists.
+  if (manualPoints.length === 1) {
+    const anchor = manualPoints[0]
+    const sortedSingle = measurements
+      .filter((point) => point.value !== 0)
+      .sort((a, b) => toUnixTime(a.time) - toUnixTime(b.time))
+    if (sortedSingle.length === 0) {
+      throw new Error('No non-zero water-head measurements to convert.')
+    }
+
+    const nearest = [...sortedSingle].sort(
+      (a, b) =>
+        Math.abs(toUnixTime(a.time) - toUnixTime(anchor.time)) -
+        Math.abs(toUnixTime(b.time) - toUnixTime(anchor.time))
+    )[0]
+    const hangingPoint = anchor.value + nearest.value
+
+    return sortedSingle.map((point) => ({
+      time: point.time,
+      value: Number((hangingPoint - point.value).toFixed(4)),
+    }))
   }
 
   // Zero head means the sensor was out of the water; converting it would
