@@ -73,9 +73,19 @@ Authorization: Bearer <OAuth2 access token>   (same OAuth2AuthorizationCodeBeare
   // The corrected series. Values are depth to water below ground surface in
   // feet. Timestamps are ISO 8601; naive timestamps are rejected — the
   // client must send an explicit offset (the workbench sends UTC).
+  //
+  // `note` is an optional per-observation correction annotation, present
+  // only on observations whose value was replaced by an estimate (e.g. a
+  // spurious acoustic reflection interpolated from its neighbors). The
+  // server should persist it with the observation so downstream review can
+  // distinguish measured from estimated values.
   "measurements": [
     { "observation_datetime": "2025-01-15T00:00:00Z", "value": 42.51 },
-    { "observation_datetime": "2025-01-15T06:00:00Z", "value": 42.55 }
+    {
+      "observation_datetime": "2025-01-15T06:00:00Z",
+      "value": 42.55,
+      "note": "spurious reflection removed; value interpolated from neighbors (was 84.53)"
+    }
   ]
 }
 ```

@@ -418,6 +418,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       correctedDtw: number | null
       manualDtw: number | null
       storedTransducer: number | null
+      correctionNote: string | null
     }
 
     const rows = new Map<number, CorrectionTableRow>()
@@ -433,6 +434,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
           correctedDtw: null,
           manualDtw: null,
           storedTransducer: null,
+          correctionNote: null,
         }
         rows.set(key, row)
       }
@@ -448,7 +450,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       rowFor(point.time).rawDtw = point.value
     })
     correctedMeasurements.forEach((point) => {
-      rowFor(point.time).correctedDtw = point.value
+      const row = rowFor(point.time)
+      row.correctedDtw = point.value
+      row.correctionNote = point.correctionNote ?? null
     })
     manualPoints.forEach((point) => {
       rowFor(point.time).manualDtw = point.value
@@ -492,8 +496,22 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       ...(storedTransducerPoints.length > 0
         ? [numberColumn('storedTransducer', 'Stored Transducer (ft bgs)')]
         : []),
+      ...(correctedMeasurements.some((point) => point.correctionNote)
+        ? [
+            {
+              field: 'correctionNote',
+              headerName: 'Correction',
+              flex: 1,
+              minWidth: 260,
+            } satisfies GridColDef,
+          ]
+        : []),
     ]
-  }, [storedTransducerPoints.length, uploaded?.valueKind])
+  }, [
+    correctedMeasurements,
+    storedTransducerPoints.length,
+    uploaded?.valueKind,
+  ])
 
   const handleUpload = async (file?: File) => {
     if (!file) return

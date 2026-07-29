@@ -293,6 +293,9 @@ export const HydrographCorrectionPage = () => {
       measurements: args.measurements.map((measurement) => ({
         observation_datetime: measurement.time.toISOString(),
         value: measurement.value,
+        ...(measurement.correctionNote
+          ? { note: measurement.correctionNote }
+          : {}),
       })),
     }
 

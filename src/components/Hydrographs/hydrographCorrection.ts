@@ -3,6 +3,11 @@ import { inflateRaw } from 'pako'
 export interface HydrographPoint {
   time: Date
   value: number
+  // Per-observation audit note set when a correction replaces this
+  // reading's value (e.g. a spurious reflection interpolated away). Carried
+  // through later edits, shown in the data table, and uploaded with the
+  // observation.
+  correctionNote?: string
 }
 
 export interface HydrographRange {
@@ -748,7 +753,7 @@ export const removeOffsetsAndZeros = (
   }
 
   return kept.map((point, index) => ({
-    time: point.time,
+    ...point,
     value: Number(values[index].toFixed(4)),
   }))
 }
@@ -860,7 +865,11 @@ export const interpolateSpuriousReflections = (
       value = (previous ?? next)!.value
     }
 
-    return { time: point.time, value: Number(value.toFixed(4)) }
+    return {
+      time: point.time,
+      value: Number(value.toFixed(4)),
+      correctionNote: `spurious reflection removed; value interpolated from neighbors (was ${point.value})`,
+    }
   })
 }
 

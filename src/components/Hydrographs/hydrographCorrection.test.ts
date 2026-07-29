@@ -286,6 +286,21 @@ END OF DATA`)
       42.2,
       42.25,
     ])
+
+    // each replaced observation is flagged with what happened to it
+    expect(interpolated.map((point) => point.correctionNote ?? null)).toEqual([
+      null,
+      'spurious reflection removed; value interpolated from neighbors (was 84.2)',
+      null,
+      'spurious reflection removed; value interpolated from neighbors (was 45.3)',
+      'spurious reflection removed; value interpolated from neighbors (was 84.5)',
+      null,
+      null,
+    ])
+
+    // notes survive later whole-trace edits
+    const shifted = applyOffsetToRange(interpolated, 0.5)
+    expect(shifted[1].correctionNote).toContain('spurious reflection removed')
   })
 
   it('keeps genuine steps and points outside the selected range', () => {
