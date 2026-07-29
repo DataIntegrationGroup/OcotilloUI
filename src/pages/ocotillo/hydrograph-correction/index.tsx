@@ -60,6 +60,8 @@ import {
   DEMO_WELLNTEL_FILE_NAME,
   DEMO_WELLNTEL_MANUAL_OBSERVATIONS,
   DEMO_WELLNTEL_WELL_NAME,
+  INGEST_DIVER_MANUAL_OBSERVATIONS,
+  INGEST_WELLNTEL_MANUAL_OBSERVATIONS,
 } from './demoData'
 
 type DemoKind = 'transducer' | 'diver' | 'wellntel'
@@ -74,7 +76,7 @@ const DEMO_CONFIG: Record<
   }
 > = {
   transducer: {
-    label: 'Transducer Demo',
+    label: 'Field Logger Demo',
     fileName: DEMO_FILE_NAME,
     wellName: DEMO_WELL_NAME,
     manualObservations: DEMO_MANUAL_OBSERVATIONS,
@@ -94,6 +96,15 @@ const DEMO_CONFIG: Record<
 }
 
 const DEMO_KINDS = Object.keys(DEMO_CONFIG) as DemoKind[]
+
+// The ingest-dialog demos generate synthetic readings, so they use manual
+// observations aligned with the generators rather than the real-file demos.
+const INGEST_DEMO_MANUAL_OBSERVATIONS: Partial<
+  Record<DemoKind, typeof DEMO_MANUAL_OBSERVATIONS>
+> = {
+  wellntel: INGEST_WELLNTEL_MANUAL_OBSERVATIONS,
+  diver: INGEST_DIVER_MANUAL_OBSERVATIONS,
+}
 
 export const HydrographCorrectionPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -457,9 +468,9 @@ export const HydrographCorrectionPage = () => {
         throw new Error(`Unable to fetch the example file ${fileName}.`)
       }
 
-      const parsed = parseHydrographUpload(await response.text())
-      // Demo mode is self-contained: no well lookup, synthetic manual
-      // observations stand in for Ocotillo records.
+      const parsed = parseHydrographUpload(await response.text(), fileName)
+      // Demo mode is self-contained: no well lookup; manual observations
+      // derived from the artifact stand in for Ocotillo records.
       setParsedUpload(parsed)
       setUploadedFileName(fileName)
       setSelectedWell(null)
@@ -695,7 +706,11 @@ export const HydrographCorrectionPage = () => {
         ) : demoKind ? (
           <OcotilloHydrographCorrectionWorkbench
             thingName={ingestedWellName ?? DEMO_CONFIG[demoKind].wellName}
-            manualObservations={DEMO_CONFIG[demoKind].manualObservations}
+            manualObservations={
+              (ingestedWellName
+                ? INGEST_DEMO_MANUAL_OBSERVATIONS[demoKind]
+                : undefined) ?? DEMO_CONFIG[demoKind].manualObservations
+            }
             transducerObservations={[]}
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
