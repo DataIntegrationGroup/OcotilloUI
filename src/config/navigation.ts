@@ -87,6 +87,7 @@ const viewerAndAbove: PortalRole[] = [
   AmpRole.Editor,
   AmpRole.Admin,
 ]
+const editorAndAbove: PortalRole[] = [AmpRole.Editor, AmpRole.Admin]
 const adminOnly: PortalRole[] = [AmpRole.Admin]
 
 /**
@@ -135,7 +136,7 @@ export const RESOURCE_NAV: NavItem[] = [
     href: '/ocotillo/asset/unassociated',
     icon: Image,
     resource: 'ocotillo.asset-unassociated',
-    roles: adminOnly,
+    roles: editorAndAbove,
   },
   {
     label: 'Locations',

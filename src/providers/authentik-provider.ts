@@ -204,7 +204,7 @@ export const authentikAuthProvider: AuthProvider = {
       const RESPONSE_TYPE = 'code'
       const SCOPE = 'openid profile email offline_access permissions'
 
-      const authUrl = new URL(`${AUTHENTIK_URL}/authorize/`)
+      const authUrl = new URL(`${AUTHENTIK_URL.replace(/\/$/, '')}/authorize/`)
       authUrl.searchParams.set('client_id', CLIENT_ID)
       authUrl.searchParams.set('redirect_uri', REDIRECT_URI)
       authUrl.searchParams.set('response_type', RESPONSE_TYPE)
