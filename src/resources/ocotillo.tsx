@@ -1,8 +1,8 @@
 import {
   // Apps,
   Construction,
-  DatasetLinked,
   Contacts,
+  DatasetLinked,
   // DynamicFormOutlined,
   Image,
   LibraryBooksOutlined,
@@ -14,7 +14,7 @@ import {
   Place,
   ScaleOutlined,
   // ScienceOutlined,
-  // SettingsInputAntenna,
+  SettingsInputAntenna,
   // Spa,
   Timeline,
   Workspaces,
@@ -335,6 +335,14 @@ const ocotillo = [
       parent: 'Sandbox',
       nestedLevel: 1,
       icon: <Timeline />,
+    },
+  },
+  {
+    name: 'sensor-dashboard',
+    list: '/ocotillo/sensor-dashboard',
+    meta: {
+      label: 'Sensor Dashboard',
+      icon: <SettingsInputAntenna />,
     },
   },
   {

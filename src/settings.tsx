@@ -35,6 +35,15 @@ export const settings = {
   nmbgmr_geothermal_api_url:
     import.meta.env.VITE_NMBGMR_GEOTHERMAL_API_URL || 'http://localhost:8008',
   mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN || '',
+
+  /**
+   * Serve the sensor dashboard from generated fixtures instead of the
+   * OcotilloAPI sensor-source endpoints. Defaults on under test so suites do
+   * not depend on backend routes that do not exist yet.
+   */
+  sensor_mock:
+    import.meta.env.VITE_SENSOR_MOCK === 'true' || isVitest || isTest,
+
   fief: {
     baseURL:
       import.meta.env.VITE_FIEF_BASE_URL ||

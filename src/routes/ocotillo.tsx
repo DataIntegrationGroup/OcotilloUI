@@ -1,81 +1,80 @@
-import { Route, Routes } from 'react-router'
 import { ErrorComponent } from '@refinedev/mui'
-import { ContactList, ContactShow } from '@/pages/ocotillo/contact'
+import { Route, Routes } from 'react-router'
+import { ProtectedRoute } from '@/components'
 import {
-  SpringList,
-  SpringCreate,
-  WellCreate,
-  WellList,
-  WellShow,
-  WellShowPdfPreview,
-  WellBatchExport,
-  WellProjectList,
-  WellProjectShow,
-  SpringShow,
-} from '@/pages/ocotillo/thing'
-import { MapView } from '@/pages/ocotillo/map'
+  AssetCreate,
+  AssetEdit,
+  AssetList,
+  AssetShow,
+  UnassociatedAssetList,
+} from '@/pages/ocotillo/asset'
 import { CollectionsPage } from '@/pages/ocotillo/collections'
-import {
-  LocationList,
-  LocationCreate,
-  LocationEdit,
-  LocationShow,
-} from '@/pages/ocotillo/location'
-import {
-  SensorList,
-  SensorCreate,
-  SensorEdit,
-  SensorShow,
-} from '@/pages/ocotillo/sensor'
-import {
-  SampleList,
-  SampleShow,
-  SampleEdit,
-  SampleCreate,
-} from '@/pages/ocotillo/sample'
-import {
-  GroundwaterLevelObservationCreate,
-  GroundwaterLevelObservationList,
-} from '@/pages/ocotillo/observation'
+import { ContactList, ContactShow } from '@/pages/ocotillo/contact'
+import { GroundwaterLevelForm } from '@/pages/ocotillo/groundwater-level-form/stepperform'
 import {
   GroupCreate,
   GroupEdit,
   GroupList,
   GroupShow,
 } from '@/pages/ocotillo/group'
+import { HydrographCorrectionPage } from '@/pages/ocotillo/hydrograph-correction'
 import {
-  AssetList,
-  AssetCreate,
-  AssetEdit,
-  AssetShow,
-  UnassociatedAssetList,
-} from '@/pages/ocotillo/asset'
-import {
-  ThingIdLinkList,
-  ThingIdLinkCreate,
-  ThingIdLinkEdit,
-  ThingIdLinkShow,
-} from '@/pages/ocotillo/thing-id-link'
-
-import {
-  TermCreate,
-  TermEdit,
   CategoryCreate,
   CategoryEdit,
+  LexiconList,
+  TermCreate,
+  TermEdit,
 } from '@/pages/ocotillo/lexicon'
-
-import { GroundwaterLevelForm } from '@/pages/ocotillo/groundwater-level-form/stepperform'
-import { WellInventoryForm } from '@/pages/ocotillo/well-inventory-form'
-import { LexiconList } from '@/pages/ocotillo/lexicon'
+import {
+  LocationCreate,
+  LocationEdit,
+  LocationList,
+  LocationShow,
+} from '@/pages/ocotillo/location'
+import { MapView } from '@/pages/ocotillo/map'
+import {
+  GroundwaterLevelObservationCreate,
+  GroundwaterLevelObservationList,
+} from '@/pages/ocotillo/observation'
+import {
+  SampleCreate,
+  SampleEdit,
+  SampleList,
+  SampleShow,
+} from '@/pages/ocotillo/sample'
+import {
+  SensorCreate,
+  SensorEdit,
+  SensorList,
+  SensorShow,
+} from '@/pages/ocotillo/sensor'
+import { SensorDashboardPage } from '@/pages/ocotillo/sensor-dashboard'
+import {
+  SpringCreate,
+  SpringList,
+  SpringShow,
+  WellBatchExport,
+  WellCreate,
+  WellList,
+  WellProjectList,
+  WellProjectShow,
+  WellShow,
+  WellShowPdfPreview,
+} from '@/pages/ocotillo/thing'
+import {
+  ThingIdLinkCreate,
+  ThingIdLinkEdit,
+  ThingIdLinkList,
+  ThingIdLinkShow,
+} from '@/pages/ocotillo/thing-id-link'
 import { WaterChemistryApp } from '@/pages/ocotillo/water-chemistry-app'
-import { HydrographCorrectionPage } from '@/pages/ocotillo/hydrograph-correction'
+import { WellInventoryForm } from '@/pages/ocotillo/well-inventory-form'
 import {
   WellScreenCreate,
   WellScreenEdit,
   WellScreenList,
   WellScreenShow,
 } from '@/pages/ocotillo/well-screen'
-import { ProtectedRoute } from '@/components'
 
 export const OcotilloRoutes = () => {
   return (
@@ -245,6 +244,16 @@ export const OcotilloRoutes = () => {
           element={
             <ProtectedRoute resource="ocotillo.hydrograph-correction">
               <HydrographCorrectionPage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+      <Route path={'sensor-dashboard'}>
+        <Route
+          index
+          element={
+            <ProtectedRoute resource="ocotillo.sensor-dashboard">
+              <SensorDashboardPage />
             </ProtectedRoute>
           }
         />
