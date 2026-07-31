@@ -12,6 +12,22 @@ const isTest =
   getNodeEnv('NODE_ENV') === 'test' ||
   import.meta.env.MODE === 'test' ||
   import.meta.env.NODE_ENV === 'test'
+const isPreview = import.meta.env.VITE_APP_ENV === 'preview'
+
+/**
+ * Whether the sensor dashboard runs on generated fixtures instead of the
+ * OcotilloAPI sensor-source endpoints (which do not exist yet).
+ *
+ * On by default wherever there is no real backend to talk to -- preview
+ * deploys and test runs -- and off everywhere else, so a build that forgets
+ * to set VITE_APP_ENV shows real data or an honest error rather than
+ * convincing fake numbers. VITE_SENSOR_MOCK overrides in either direction.
+ */
+const sensorMockOverride = import.meta.env.VITE_SENSOR_MOCK
+const useSensorMock =
+  sensorMockOverride === 'true' || sensorMockOverride === 'false'
+    ? sensorMockOverride === 'true'
+    : isPreview || isVitest || isTest
 
 export const settings = {
   rowHeight: 27,
@@ -36,13 +52,7 @@ export const settings = {
     import.meta.env.VITE_NMBGMR_GEOTHERMAL_API_URL || 'http://localhost:8008',
   mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN || '',
 
-  /**
-   * Serve the sensor dashboard from generated fixtures instead of the
-   * OcotilloAPI sensor-source endpoints. Defaults on under test so suites do
-   * not depend on backend routes that do not exist yet.
-   */
-  sensor_mock:
-    import.meta.env.VITE_SENSOR_MOCK === 'true' || isVitest || isTest,
+  sensor_mock: useSensorMock,
 
   fief: {
     baseURL:

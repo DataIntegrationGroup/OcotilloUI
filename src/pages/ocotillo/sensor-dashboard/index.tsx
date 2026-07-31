@@ -61,10 +61,11 @@ export const SensorDashboardPage = () => {
       </Stack>
 
       {settings.sensor_mock && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Showing generated fixture data. The OcotilloAPI sensor-source
-          endpoints are not implemented yet -- set{' '}
-          <code>VITE_SENSOR_MOCK=false</code> once they are.
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <strong>Demo data.</strong> The OcotilloAPI sensor-source endpoints do
+          not exist yet, so every device, reading, and pending batch on this
+          page is generated -- no real sensor is being described. Triggering an
+          ingestion run does not write anything.
         </Alert>
       )}
 
