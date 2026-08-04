@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import axios from 'axios'
 import { useInvalidate } from '@refinedev/core'
-import { Breadcrumb, useAutocomplete, useDataGrid } from '@refinedev/mui'
+import { useQuery } from '@tanstack/react-query'
+import { Breadcrumb, useAutocomplete } from '@refinedev/mui'
 import {
   Alert,
   Autocomplete,
@@ -37,18 +38,32 @@ import {
   DiverHubIngestDialog,
   type DiverHubIngestResult,
 } from './DiverHubIngestDialog'
-import { IWell } from '@/interfaces/ocotillo'
+import { IObservation, IWell } from '@/interfaces/ocotillo'
+import { fetchAllOcotilloPages } from '@/utils/ocotilloPaging'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
   OcotilloHydrographCorrectionWorkbench,
   type HydrographPublishArgs,
+  type HydrographSensorDeployment,
+  type HydrographWellMetadata,
 } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
+import { useWellDetails } from '@/hooks/useWellDetails'
+import {
+  buildSensorDeploymentRows,
+  type DeploymentLike,
+  type SensorLike,
+} from '@/utils/SensorDeploymentRows'
 import {
   normalizePointId,
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
   ParsedHydrographUpload,
 } from '@/components/Hydrographs/hydrographCorrection'
+import { HydrographUiModeToggle } from '@/components/Hydrographs/HydrographUiModeToggle'
+import {
+  isAtLeastMode,
+  useHydrographUiMode,
+} from '@/components/Hydrographs/hydrographUiMode'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 import {
   DEMO_DIVER_FILE_NAME,
@@ -97,6 +112,19 @@ const DEMO_CONFIG: Record<
 
 const DEMO_KINDS = Object.keys(DEMO_CONFIG) as DemoKind[]
 
+type IngestKind = 'wellntel' | 'diverhub'
+
+const INGEST_KINDS: IngestKind[] = ['wellntel', 'diverhub']
+
+// Stable identities so an unresolved query does not remount the workbench.
+const EMPTY_MANUAL_ROWS: IObservation[] = []
+const EMPTY_TRANSDUCER_ROWS: TransducerObservationWithBlockResponse[] = []
+
+const INGEST_LABELS: Record<IngestKind, string> = {
+  wellntel: 'Ingest Wellntel',
+  diverhub: 'Ingest Diver-HUB',
+}
+
 // The ingest-dialog demos generate synthetic readings, so they use manual
 // observations aligned with the generators rather than the real-file demos.
 const INGEST_DEMO_MANUAL_OBSERVATIONS: Partial<
@@ -124,9 +152,8 @@ export const HydrographCorrectionPage = () => {
   const [demoMenuAnchor, setDemoMenuAnchor] = useState<HTMLElement | null>(
     null
   )
-  const [selectedIngestKind, setSelectedIngestKind] = useState<
-    'wellntel' | 'diverhub'
-  >('wellntel')
+  const [selectedIngestKind, setSelectedIngestKind] =
+    useState<IngestKind>('wellntel')
   const [ingestMenuAnchor, setIngestMenuAnchor] =
     useState<HTMLElement | null>(null)
   const [ingestedWellName, setIngestedWellName] = useState<string | null>(null)
@@ -142,6 +169,11 @@ export const HydrographCorrectionPage = () => {
   } | null>(null)
   const dtwParameterIdRef = useRef<number | null>(null)
   const invalidate = useInvalidate()
+  const { mode, setMode } = useHydrographUiMode()
+
+  // Simple mode is the plain pressure-transducer workflow: upload a file and
+  // correct it. The demo and external-ingest sources start at Intermediate.
+  const showAllSources = isAtLeastMode(mode, 'intermediate')
 
   const { autocompleteProps } = useAutocomplete<IWell>({
     resource: 'thing',
@@ -155,41 +187,83 @@ export const HydrographCorrectionPage = () => {
     ],
   })
 
-  const {
-    dataGridProps: { rows: manualRows, loading: manualLoading },
-  } = useDataGrid({
-    resource: 'observation/groundwater-level',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: selectedWell?.id,
-      },
-    },
-    queryOptions: {
-      enabled: Boolean(selectedWell?.id),
-      gcTime: 10 * 60 * 1000,
-      staleTime: 5 * 60 * 1000,
+  // Both series are charted in full, so every page is fetched. A paginated
+  // list hook would cap the stored transducer trace at its first page —
+  // a few hours of readings against a year-long upload, which reads on the
+  // chart as "no stored data at all".
+  const wellSeriesQuery = useQuery({
+    queryKey: ['hydrograph-correction-well-series', selectedWell?.id ?? ''],
+    enabled: Boolean(selectedWell?.id),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    queryFn: async ({ queryKey, signal }) => {
+      const thingId = queryKey[1]
+      if (thingId === '' || thingId == null) {
+        return {
+          manualRows: [] as IObservation[],
+          transducerRows: [] as TransducerObservationWithBlockResponse[],
+        }
+      }
+
+      const [manualRows, transducerRows] = await Promise.all([
+        fetchAllOcotilloPages<IObservation>(
+          'observation/groundwater-level',
+          { thing_id: thingId },
+          { signal }
+        ),
+        fetchAllOcotilloPages<TransducerObservationWithBlockResponse>(
+          'observation/transducer-groundwater-level',
+          { thing_id: thingId },
+          { pageSize: 5000, signal }
+        ),
+      ])
+
+      return { manualRows, transducerRows }
     },
   })
 
-  const {
-    dataGridProps: { rows: transducerRows, loading: transducerLoading },
-  } = useDataGrid<TransducerObservationWithBlockResponse>({
-    resource: 'observation/transducer-groundwater-level',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: selectedWell?.id,
-      },
-    },
-    queryOptions: {
-      enabled: Boolean(selectedWell?.id),
-      gcTime: 10 * 60 * 1000,
-      staleTime: 5 * 60 * 1000,
-    },
-  })
+  const manualRows = wellSeriesQuery.data?.manualRows ?? EMPTY_MANUAL_ROWS
+  const transducerRows =
+    wellSeriesQuery.data?.transducerRows ?? EMPTY_TRANSDUCER_ROWS
+  const isLoading = wellSeriesQuery.isLoading
 
-  const isLoading = manualLoading || transducerLoading
+  // Shares the well-details cache with the well show page.
+  const { query: wellDetailsQuery } = useWellDetails(selectedWell?.id)
+  const wellDetails = wellDetailsQuery.data?.well
+
+  const wellMetadata = useMemo<HydrographWellMetadata | null>(() => {
+    if (!selectedWell) return null
+    return {
+      href: `/ocotillo/well/show/${selectedWell.id}`,
+      siteName: wellDetails?.site_name ?? null,
+      wellStatus: wellDetails?.well_status ?? null,
+      wellDepth: wellDetails?.well_depth ?? null,
+      wellDepthUnit: wellDetails?.well_depth_unit ?? null,
+      casingDepth: wellDetails?.well_casing_depth ?? null,
+      casingDepthUnit: wellDetails?.well_casing_depth_unit ?? null,
+      measuringPointHeight: wellDetails?.measuring_point_height ?? null,
+      measuringPointHeightUnit:
+        wellDetails?.measuring_point_height_unit ?? null,
+    }
+  }, [selectedWell, wellDetails])
+
+  const sensorDeployments = useMemo<HydrographSensorDeployment[]>(() => {
+    const rows = buildSensorDeploymentRows(
+      (wellDetailsQuery.data?.deployments ?? []) as DeploymentLike[],
+      (wellDetailsQuery.data?.sensors ?? []) as SensorLike[]
+    )
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.sensor_name,
+      model: row.sensor_model,
+      serialNo: row.serial_no,
+      installedAt: row.datetime_installed,
+      removedAt: row.datetime_removed,
+      hangingCableLength: row.hanging_cable_length ?? null,
+      recordingInterval: row.recording_interval_display,
+    }))
+  }, [wellDetailsQuery.data])
   const normalizedParsedPointId = normalizePointId(parsedUpload?.pointId)
   const pointIdMatchesSelectedWell =
     !!selectedWell &&
@@ -497,12 +571,22 @@ export const HydrographCorrectionPage = () => {
       <Stack spacing={2}>
         <Breadcrumb hideIcons={true} />
 
-        <Stack spacing={0.5}>
-          <OcotilloPageTitle title="Hydrograph Correction" />
-          <Typography variant="body2" color="text.secondary">
-            Upload a transducer file first. Ocotillo will try to extract
-            thing.name from the file and resolve the well automatically.
-          </Typography>
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={2}
+          justifyContent="space-between"
+          alignItems={{ xs: 'stretch', md: 'flex-start' }}
+        >
+          <Stack spacing={0.5}>
+            <OcotilloPageTitle title="Hydrograph Correction" />
+            <Typography variant="body2" color="text.secondary">
+              Upload a transducer file first. Ocotillo will try to extract
+              thing.name from the file and resolve the well automatically.
+            </Typography>
+          </Stack>
+          <Box sx={{ maxWidth: { md: 420 } }}>
+            <HydrographUiModeToggle mode={mode} onChange={setMode} />
+          </Box>
         </Stack>
 
         <Paper elevation={2} sx={{ borderRadius: 2 }}>
@@ -528,91 +612,90 @@ export const HydrographCorrectionPage = () => {
                 >
                   Upload Transducer File
                 </Button>
-                <ButtonGroup variant="outlined">
-                  <Button
-                    startIcon={<AutoAwesome />}
-                    onClick={() => handleLoadDemoFile(selectedDemoKind)}
-                    disabled={isLoadingDemo}
-                  >
-                    {isLoadingDemo
-                      ? 'Loading Demo...'
-                      : DEMO_CONFIG[selectedDemoKind].label}
-                  </Button>
-                  <Button
-                    size="small"
-                    aria-label="Select demo style"
-                    aria-haspopup="menu"
-                    onClick={(event) => setDemoMenuAnchor(event.currentTarget)}
-                    disabled={isLoadingDemo}
-                  >
-                    <ArrowDropDown />
-                  </Button>
-                </ButtonGroup>
-                <Menu
-                  anchorEl={demoMenuAnchor}
-                  open={Boolean(demoMenuAnchor)}
-                  onClose={() => setDemoMenuAnchor(null)}
-                >
-                  {DEMO_KINDS.map((kind) => (
-                    <MenuItem
-                      key={kind}
-                      selected={kind === selectedDemoKind}
-                      onClick={() => {
-                        setSelectedDemoKind(kind)
-                        setDemoMenuAnchor(null)
-                      }}
+                {showAllSources ? (
+                  <>
+                    <ButtonGroup variant="outlined">
+                      <Button
+                        startIcon={<AutoAwesome />}
+                        onClick={() => handleLoadDemoFile(selectedDemoKind)}
+                        disabled={isLoadingDemo}
+                      >
+                        {isLoadingDemo
+                          ? 'Loading Demo...'
+                          : DEMO_CONFIG[selectedDemoKind].label}
+                      </Button>
+                      <Button
+                        size="small"
+                        aria-label="Select demo style"
+                        aria-haspopup="menu"
+                        onClick={(event) =>
+                          setDemoMenuAnchor(event.currentTarget)
+                        }
+                        disabled={isLoadingDemo}
+                      >
+                        <ArrowDropDown />
+                      </Button>
+                    </ButtonGroup>
+                    <Menu
+                      anchorEl={demoMenuAnchor}
+                      open={Boolean(demoMenuAnchor)}
+                      onClose={() => setDemoMenuAnchor(null)}
                     >
-                      {DEMO_CONFIG[kind].label}
-                    </MenuItem>
-                  ))}
-                </Menu>
-                <ButtonGroup variant="outlined">
-                  <Button
-                    startIcon={<CloudDownload />}
-                    onClick={() =>
-                      selectedIngestKind === 'wellntel'
-                        ? setIsIngestDialogOpen(true)
-                        : setIsDiverHubDialogOpen(true)
-                    }
-                  >
-                    {selectedIngestKind === 'wellntel'
-                      ? 'Ingest Wellntel'
-                      : 'Ingest Diver-HUB'}
-                  </Button>
-                  <Button
-                    size="small"
-                    aria-label="Select ingest source"
-                    aria-haspopup="menu"
-                    onClick={(event) =>
-                      setIngestMenuAnchor(event.currentTarget)
-                    }
-                  >
-                    <ArrowDropDown />
-                  </Button>
-                </ButtonGroup>
-                <Menu
-                  anchorEl={ingestMenuAnchor}
-                  open={Boolean(ingestMenuAnchor)}
-                  onClose={() => setIngestMenuAnchor(null)}
-                >
-                  {(
-                    [
-                      ['wellntel', 'Ingest Wellntel'],
-                      ['diverhub', 'Ingest Diver-HUB'],
-                    ] as const
-                  ).map(([kind, label]) => (
-                    <MenuItem
-                      key={kind}
-                      selected={kind === selectedIngestKind}
-                      onClick={() => {
-                        setSelectedIngestKind(kind)
-                        setIngestMenuAnchor(null)
-                      }}
+                      {DEMO_KINDS.map((kind) => (
+                        <MenuItem
+                          key={kind}
+                          selected={kind === selectedDemoKind}
+                          onClick={() => {
+                            setSelectedDemoKind(kind)
+                            setDemoMenuAnchor(null)
+                          }}
+                        >
+                          {DEMO_CONFIG[kind].label}
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                    <ButtonGroup variant="outlined">
+                      <Button
+                        startIcon={<CloudDownload />}
+                        onClick={() =>
+                          selectedIngestKind === 'wellntel'
+                            ? setIsIngestDialogOpen(true)
+                            : setIsDiverHubDialogOpen(true)
+                        }
+                      >
+                        {INGEST_LABELS[selectedIngestKind]}
+                      </Button>
+                      <Button
+                        size="small"
+                        aria-label="Select ingest source"
+                        aria-haspopup="menu"
+                        onClick={(event) =>
+                          setIngestMenuAnchor(event.currentTarget)
+                        }
+                      >
+                        <ArrowDropDown />
+                      </Button>
+                    </ButtonGroup>
+                    <Menu
+                      anchorEl={ingestMenuAnchor}
+                      open={Boolean(ingestMenuAnchor)}
+                      onClose={() => setIngestMenuAnchor(null)}
                     >
-                      {label}
-                    </MenuItem>
-                  ))}
-                </Menu>
+                      {INGEST_KINDS.map((kind) => (
+                        <MenuItem
+                          key={kind}
+                          selected={kind === selectedIngestKind}
+                          onClick={() => {
+                            setSelectedIngestKind(kind)
+                            setIngestMenuAnchor(null)
+                          }}
+                        >
+                          {INGEST_LABELS[kind]}
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </>
+                ) : null}
                 <Typography variant="body2" color="text.secondary">
                   If extraction fails, use the well search below.
                 </Typography>
@@ -714,6 +797,7 @@ export const HydrographCorrectionPage = () => {
             transducerObservations={[]}
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
+            mode={mode}
           />
         ) : !selectedWell ? (
           <Alert severity="info">
@@ -735,6 +819,9 @@ export const HydrographCorrectionPage = () => {
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
             onPublish={handlePublish}
+            mode={mode}
+            wellMetadata={wellMetadata}
+            sensorDeployments={sensorDeployments}
           />
         )}
       </Stack>

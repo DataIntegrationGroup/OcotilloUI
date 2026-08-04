@@ -42,8 +42,26 @@ SO-0200,2025-02-01,13:00:00,44.2`)
 
     expect(parsed.pointId).toBe('SO-0200')
     expect(parsed.detectedTimeColumn).toBe('Date + Time')
-    expect(parsed.measurements[1].time.getTime()).toBe(
-      new Date('2025-02-01 13:00:00').getTime()
+    // Logger timestamps carry no timezone and Ocotillo ingests them as UTC,
+    // so they must be read as UTC rather than in the viewer's timezone.
+    expect(parsed.measurements[1].time.toISOString()).toBe(
+      '2025-02-01T13:00:00.000Z'
+    )
+  })
+
+  it('reads naive upload timestamps as UTC and honours declared zones', () => {
+    const parsed = parseHydrographUpload(`PointID: SO-0167
+Date Time,Depth To Water
+2025/01/01 08:00:00,12.5
+2025-01-01T09:00:00Z,12.6
+2025-01-01T10:00:00-07:00,12.7`)
+
+    expect(parsed.measurements.map((point) => point.time.toISOString())).toEqual(
+      [
+        '2025-01-01T08:00:00.000Z',
+        '2025-01-01T09:00:00.000Z',
+        '2025-01-01T17:00:00.000Z',
+      ]
     )
   })
 

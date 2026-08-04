@@ -79,6 +79,42 @@ const TIME_ONLY_PATTERN = /^time$/i
 
 const toUnixTime = (value: Date) => value.getTime()
 
+// "2024/02/20 12:00:00", "2024-02-20T12:00", with optional seconds and
+// fractional seconds, and no timezone designator.
+const NAIVE_TIMESTAMP_PATTERN =
+  /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?(?:\.(\d{1,3}))?$/
+
+/**
+ * Parse a timestamp, reading one without a timezone as UTC.
+ *
+ * Logger exports carry naive wall-clock timestamps, and Ocotillo ingests them
+ * as UTC — the stored observations for a file come back as the same wall-clock
+ * time with a `Z`. `new Date()` instead reads a naive string in the browser's
+ * timezone, so an upload plotted against its own already-stored observations
+ * appeared shifted by the viewer's UTC offset (8 hours in US Pacific).
+ * Timestamps that do declare a zone are honoured as written.
+ */
+export const parseObservationTimestamp = (value: string | Date) => {
+  if (value instanceof Date) return value
+
+  const candidate = String(value).trim()
+  const naive = NAIVE_TIMESTAMP_PATTERN.exec(candidate)
+  if (!naive) return new Date(candidate)
+
+  const [, year, month, day, hour, minute, second, milli] = naive
+  return new Date(
+    Date.UTC(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second ?? 0),
+      Number((milli ?? '').padEnd(3, '0') || 0)
+    )
+  )
+}
+
 // Every operation that changes a point's value appends a clause to its
 // correctionNote, so any corrected observation carries a full account of
 // what happened to it.
@@ -166,7 +202,7 @@ const maybeParseDate = (value: string) => {
   const candidate = value.trim()
   if (!candidate) return null
 
-  const parsed = new Date(candidate)
+  const parsed = parseObservationTimestamp(candidate)
   if (!Number.isNaN(parsed.getTime())) {
     return parsed
   }
