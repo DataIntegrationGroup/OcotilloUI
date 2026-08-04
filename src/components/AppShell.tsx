@@ -468,13 +468,26 @@ function AppSidebar() {
   )
 }
 
+const SANDBOX_GEOTHERMAL_GRID = '/geothermal/wells/records-grid'
+const SANDBOX_GEOTHERMAL_INVENTORY = '/geothermal/wells/inventory'
+const SANDBOX_GEOTHERMAL_TEMP_DEPTH = '/geothermal/wells/temp-depth'
+
+function isSandboxPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/example') ||
+    pathname.startsWith(SANDBOX_GEOTHERMAL_GRID) ||
+    pathname.startsWith(SANDBOX_GEOTHERMAL_INVENTORY) ||
+    pathname.startsWith(SANDBOX_GEOTHERMAL_TEMP_DEPTH)
+  )
+}
+
 function ExampleNavItem() {
   const location = useLocation()
   const navigate = useNavigate()
-  const [open, setOpen] = useState(location.pathname.startsWith('/example'))
+  const [open, setOpen] = useState(isSandboxPath(location.pathname))
 
   useEffect(() => {
-    if (!location.pathname.startsWith('/example')) setOpen(false)
+    if (!isSandboxPath(location.pathname)) setOpen(false)
   }, [location.pathname])
 
   const handleClick = () => {
@@ -486,9 +499,9 @@ function ExampleNavItem() {
     <Collapsible open={open} onOpenChange={setOpen} className="group/example">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Example" onClick={handleClick}>
+          <SidebarMenuButton tooltip="Sandbox" onClick={handleClick}>
             <FlaskConical />
-            <span>Example</span>
+            <span>Sandbox</span>
             <ChevronRight className="ml-auto size-3.5 transition-transform duration-100 group-data-[state=open]/example:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
@@ -505,9 +518,33 @@ function ExampleNavItem() {
             <SidebarMenuSubItem>
               <SidebarMenuSubButton
                 asChild
-                isActive={location.pathname === '/example/data-grid'}
+                isActive={location.pathname.startsWith(SANDBOX_GEOTHERMAL_GRID)}
               >
-                <Link to="/example/data-grid">Data Grid</Link>
+                <Link to={SANDBOX_GEOTHERMAL_GRID}>Geothermal Records</Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname.startsWith(
+                  SANDBOX_GEOTHERMAL_INVENTORY
+                )}
+              >
+                <Link to={SANDBOX_GEOTHERMAL_INVENTORY}>
+                  Geothermal Inventory
+                </Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname.startsWith(
+                  SANDBOX_GEOTHERMAL_TEMP_DEPTH
+                )}
+              >
+                <Link to={SANDBOX_GEOTHERMAL_TEMP_DEPTH}>
+                  Geothermal Temp-Depth
+                </Link>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
           </SidebarMenuSub>

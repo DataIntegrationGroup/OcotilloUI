@@ -33,7 +33,7 @@ export const settings = {
 
   st2_url: 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
   nmbgmr_geothermal_api_url:
-    import.meta.env.VITE_NMBGMR_GEOTHERMAL_API_URL || 'http://localhost:8008',
+    import.meta.env.VITE_NMBGMR_GEOTHERMAL_API_URL || 'http://localhost:8000',
   mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN || '',
   fief: {
     baseURL:

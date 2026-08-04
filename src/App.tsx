@@ -6,9 +6,8 @@ import { ThemedTitleV2 } from '@/components/layout/title'
 import { Callback } from '@/components/Auth'
 import { Home } from '@/pages/home'
 import { TypographyPage } from '@/pages/example/TypographyPage'
-import { DataGridPage } from '@/pages/example/DataGridPage'
 import { ContentPage } from '@/pages/content'
-import { OcotilloRoutes, ST2Routes } from '@/routes'
+import { GeothermalRoutes, OcotilloRoutes, ST2Routes } from '@/routes'
 import { settings } from '@/settings'
 import { AppProviders } from '@/AppProviders'
 
@@ -65,8 +64,8 @@ const App: React.FC = () => (
           />
           {/* TEMPORARY: example specimen pages */}
           <Route path="/example/typography" element={<TypographyPage />} />
-          <Route path="/example/data-grid" element={<DataGridPage />} />
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
+          <Route path="/geothermal/*" element={<GeothermalRoutes />} />
           <Route path="/st2/*" element={<ST2Routes />} />
         </Route>
         <Route
