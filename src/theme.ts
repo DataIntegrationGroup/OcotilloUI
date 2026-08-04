@@ -20,6 +20,38 @@ const colors = {
   white: '#ffffff',
   black: '#000000',
 
+  /*
+   * Ocotillo brand blue — the one ramp that is NOT from Tailwind.
+   *
+   * Sampled from the product's own artwork: the pixel water-splash mark
+   * (public/images/pixel/ocotillo-splash.svg, #2C5778 / #467B96) and the
+   * high-desert sky in src/img/ocotillo.jpeg. In OKLCH the whole ramp sits at
+   * hue ~235-245 — a water/desert-sky blue with no violet cast, replacing the
+   * off-brand indigo (hue 277) that used to own primary.
+   *
+   * Contrast against the app surfaces (WCAG AA needs 4.5 for text):
+   *   600 on white ............ 5.57   light-mode links + contained buttons
+   *   700 on white ............ 7.70   light-mode hover
+   *   300 on zinc-900 ......... 9.51   dark-mode links
+   *   300 on zinc-700 (paper) . 5.61   dark-mode links on cards
+   *   200 on zinc-900 ........ 12.59   dark-mode hover
+   *
+   * Keep these values in sync with the --primary* tokens in src/index.css.
+   */
+  brand: {
+    50:  '#eff8fd',
+    100: '#dceffb',
+    200: '#b8dff6', // ← primary.dark dark-mode (hover lightens)
+    300: '#83c6ee', // ← primary.main dark-mode, primary.light light-mode
+    400: '#47a6dd', // ← primary.light dark-mode
+    500: '#1e88c4',
+    600: '#0e6da8', // ← primary.main light-mode
+    700: '#0f5786', // ← primary.dark light-mode
+    800: '#12496e',
+    900: '#143d5b', // ← .description card background dark-mode
+    950: '#0d273c',
+  },
+
   slate: {
     50:  '#f8fafc',
     100: '#f1f5f9', // ← text.primary dark
@@ -182,13 +214,13 @@ const colors = {
     50:  '#f0fdfa',
     100: '#ccfbf1',
     200: '#99f6e4',
-    300: '#5eead4',
+    300: '#5eead4', // ← info.light
     400: '#2dd4bf',
     500: '#14b8a6',
     600: '#0d9488',
-    700: '#0f766e',
+    700: '#0f766e', // ← info.main
     800: '#115e59',
-    900: '#134e4a',
+    900: '#134e4a', // ← info.dark
     950: '#042f2e',
   },
 
@@ -196,12 +228,12 @@ const colors = {
     50:  '#ecfeff',
     100: '#cffafe',
     200: '#a5f3fc',
-    300: '#67e8f9', // ← info.light
+    300: '#67e8f9',
     400: '#22d3ee',
     500: '#06b6d4',
-    600: '#0891b2', // ← info.main
+    600: '#0891b2',
     700: '#0e7490',
-    800: '#155e75', // ← info.dark
+    800: '#155e75',
     900: '#164e63',
     950: '#083344',
   },
@@ -235,11 +267,11 @@ const colors = {
     50:  '#eef2ff',
     100: '#e0e7ff',
     200: '#c7d2fe',
-    300: '#a5b4fc', // ← primary.light
+    300: '#a5b4fc',
     400: '#818cf8',
-    500: '#6366f1', // ← primary.main
+    500: '#6366f1',
     600: '#4f46e5',
-    700: '#4338ca', // ← primary.dark
+    700: '#4338ca',
     800: '#3730a3',
     900: '#312e81',
     950: '#1e1b4b',
@@ -336,10 +368,17 @@ export const getTheme = (mode: PaletteMode) =>
     },
     palette: {
       mode,
+      /*
+       * Primary is mode-aware: a mid-dark brand blue reads well on the light
+       * surfaces, but the same value is far too heavy on zinc-900/zinc-700, so
+       * dark mode steps up the ramp instead. `dark` is MUI's hover/emphasis
+       * slot, which means in dark mode it has to get *lighter*, not darker.
+       */
       primary: {
-        light: colors.indigo[300],
-        main: colors.indigo[500],
-        dark: colors.indigo[700],
+        light: mode === 'dark' ? colors.brand[400] : colors.brand[300],
+        main: mode === 'dark' ? colors.brand[300] : colors.brand[600],
+        dark: mode === 'dark' ? colors.brand[200] : colors.brand[700],
+        contrastText: mode === 'dark' ? colors.zinc[900] : colors.white,
       },
       secondary: {
         light: colors.amber[300], // amber-300
@@ -361,10 +400,13 @@ export const getTheme = (mode: PaletteMode) =>
         main: colors.emerald[700],  // emerald-700
         dark: colors.emerald[900],  // emerald-900
       },
+      // Teal, not cyan: cyan sits ~20 degrees of hue from the brand blue and
+      // the two read as the same colour when an info alert lands next to a
+      // primary button. Teal stays in the water family but is unambiguous.
       info: {
-        light: colors.cyan[300], // cyan-300
-        main: colors.cyan[600],  // cyan-600
-        dark: colors.cyan[800],  // cyan-800
+        light: colors.teal[300], // teal-300
+        main: colors.teal[700],  // teal-700
+        dark: colors.teal[900],  // teal-900
       },
       divider: mode === 'dark' ? colors.zinc[700] : colors.stone[300],
       background: {
@@ -473,8 +515,12 @@ export const getTheme = (mode: PaletteMode) =>
       MuiCard: {
         styleOverrides: {
           root: ({ theme }) => ({
+            // Uses the ends of the brand ramp rather than primary.light/dark:
+            // those are hover/emphasis tokens and both are now light in dark
+            // mode, which would leave slate-100 body text unreadable.
             '&.description': {
-              backgroundColor: `${theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.light}`,
+              backgroundColor:
+                theme.palette.mode === 'dark' ? colors.brand[900] : colors.brand[50],
               color: theme.palette.text.primary,
             },
           }),
@@ -507,14 +553,18 @@ export const getTheme = (mode: PaletteMode) =>
                 },
               }),
 
-            // Secondary Contained
+            // Secondary Contained — an outlined button in all but name.
+            // Hover tints the surface with the brand blue and darkens the
+            // border; it must not fill with primary.dark, because the label is
+            // primary.dark too and the two cancel out.
             ...(ownerState.variant === 'contained' &&
               ownerState.color === 'secondary' && {
                 backgroundColor: theme.palette.background.paper,
                 color: theme.palette.primary.main,
                 border: `1px solid ${theme.palette.primary.main}`,
                 '&:hover': {
-                  backgroundColor: `${theme.palette.primary.dark}CC`,
+                  backgroundColor:
+                    theme.palette.mode === 'dark' ? `${colors.brand[300]}1F` : colors.brand[50],
                   color: theme.palette.primary.dark,
                   border: `1px solid ${theme.palette.primary.dark}`,
                 },

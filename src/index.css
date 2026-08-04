@@ -18,10 +18,15 @@
  * all MUI components have been replaced.
  *
  * Color notation: oklch(lightness chroma hue)
- * Tailwind color references used:
- *   primary   → indigo-500 (light) / indigo-300 (dark)
+ * Color references used:
+ *   primary   → brand-600 (light) / brand-300 (dark)
  *   secondary → amber-600 (light) / amber-300 (dark)
+ *   info      → teal-700 (light) / teal-300 (dark)
  *   Colors match the values in src/theme.ts exactly.
+ *
+ * `brand` is the Ocotillo blue ramp defined in src/theme.ts — sampled from the
+ * pixel water-splash mark and the desert sky in the masthead photo. Everything
+ * else is Tailwind v3. Change a brand value here and change it there too.
  */
 @layer base {
   :root {
@@ -41,11 +46,11 @@
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.195 0.026 264.182);
 
-    /* Primary — indigo (matches refresh bar) */
-    --primary: oklch(0.585 0.233 277.117); /* indigo-500 */
+    /* Primary — Ocotillo brand blue */
+    --primary: oklch(0.515 0.122 244.044); /* brand-600  #0e6da8 */
     --primary-foreground: oklch(1 0 0); /* white */
-    --primary-light: oklch(0.785 0.115 274.713); /* indigo-300 */
-    --primary-dark: oklch(0.457 0.24 277.023); /* indigo-700 */
+    --primary-light: oklch(0.796 0.089 235.66); /* brand-300 #83c6ee */
+    --primary-dark: oklch(0.44 0.102 244.066); /* brand-700 #0f5786 */
 
     /* Secondary — amber */
     --secondary: oklch(0.666 0.171 60.454); /* amber-600 */
@@ -67,13 +72,13 @@
     --success-foreground: oklch(1 0 0);
     --warning: oklch(0.702 0.191 47.604); /* orange-500 */
     --warning-foreground: oklch(1 0 0);
-    --info: oklch(0.566 0.128 233.997); /* cyan-600 */
+    --info: oklch(0.511 0.096 186.391); /* teal-700 #0f766e */
     --info-foreground: oklch(1 0 0);
 
     /* Borders and inputs */
     --border: oklch(0.9 0 0); /* neutral-200 */
     --input: oklch(0.9 0 0); /* neutral-200 */
-    --ring: oklch(0.585 0.233 277.117); /* indigo-500 */
+    --ring: oklch(0.515 0.122 244.044); /* brand-600 #0e6da8 */
 
     /* Radius — shared by shadcn components (buttons, inputs, cards, etc.) */
     --radius: 0.375rem;
@@ -81,12 +86,12 @@
     /* Sidebar — same background as app, slightly different accent for hovers */
     --sidebar: oklch(0.985 0 0); /* neutral-50, matches --background */
     --sidebar-foreground: oklch(0.195 0.026 264.182);
-    --sidebar-primary: oklch(0.585 0.233 277.117); /* indigo-500 */
+    --sidebar-primary: oklch(0.515 0.122 244.044); /* brand-600 #0e6da8 */
     --sidebar-primary-foreground: oklch(1 0 0);
     --sidebar-accent: oklch(0.94 0 0); /* neutral-150 for hover */
     --sidebar-accent-foreground: oklch(0.195 0.026 264.182);
     --sidebar-border: oklch(0.9 0 0); /* neutral-200 */
-    --sidebar-ring: oklch(0.585 0.233 277.117); /* indigo-500 */
+    --sidebar-ring: oklch(0.515 0.122 244.044); /* brand-600 #0e6da8 */
   }
 
   .dark {
@@ -104,11 +109,15 @@
     --popover: oklch(0.372 0 0); /* zinc-700 */
     --popover-foreground: oklch(0.966 0.007 247.858);
 
-    /* Primary — indigo (inverted for dark mode) */
-    --primary: oklch(0.785 0.115 274.713); /* indigo-300 */
+    /*
+     * Primary — Ocotillo brand blue, stepped up the ramp for dark mode.
+     * --primary-dark is the hover/emphasis token, so on dark surfaces it has
+     * to resolve *lighter* than --primary, not darker.
+     */
+    --primary: oklch(0.796 0.089 235.66); /* brand-300 #83c6ee */
     --primary-foreground: oklch(0.21 0 0); /* zinc-900 */
-    --primary-light: oklch(0.785 0.115 274.713); /* indigo-300 */
-    --primary-dark: oklch(0.457 0.24 277.023); /* indigo-700 */
+    --primary-light: oklch(0.692 0.12 237.556); /* brand-400 #47a6dd */
+    --primary-dark: oklch(0.883 0.052 234.04); /* brand-200 #b8dff6 */
 
     /* Secondary — amber (inverted for dark mode) */
     --secondary: oklch(0.883 0.156 99.265); /* amber-300 */
@@ -130,23 +139,23 @@
     --success-foreground: oklch(0.21 0 0);
     --warning: oklch(0.837 0.128 66.29); /* orange-300 */
     --warning-foreground: oklch(0.21 0 0);
-    --info: oklch(0.865 0.127 207.078); /* cyan-300 */
+    --info: oklch(0.855 0.125 181.071); /* teal-300 #5eead4 */
     --info-foreground: oklch(0.21 0 0);
 
     /* Borders and inputs */
     --border: oklch(0.372 0 0); /* zinc-700 / matches MUI divider */
     --input: oklch(0.274 0 0); /* zinc-800 */
-    --ring: oklch(0.785 0.115 274.713); /* indigo-300 */
+    --ring: oklch(0.796 0.089 235.66); /* brand-300 #83c6ee */
 
     /* Sidebar */
     --sidebar: oklch(0.274 0 0); /* zinc-800 */
     --sidebar-foreground: oklch(0.966 0.007 247.858);
-    --sidebar-primary: oklch(0.785 0.115 274.713); /* indigo-300 */
+    --sidebar-primary: oklch(0.796 0.089 235.66); /* brand-300 #83c6ee */
     --sidebar-primary-foreground: oklch(0.21 0 0);
     --sidebar-accent: oklch(0.372 0 0); /* zinc-700 */
     --sidebar-accent-foreground: oklch(0.966 0.007 247.858);
     --sidebar-border: oklch(0.372 0 0); /* zinc-700 */
-    --sidebar-ring: oklch(0.785 0.115 274.713); /* indigo-300 */
+    --sidebar-ring: oklch(0.796 0.089 235.66); /* brand-300 #83c6ee */
   }
 
   * {

@@ -775,7 +775,8 @@ function SupportPanel() {
                   </div>
                 </button>
               </div>
-              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #38bdf8, #0ea5e9, #6366f1)' }}>
+              {/* Brand-blue gradient border: brand-300 → brand-500 → brand-700 */}
+              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #83c6ee, #1e88c4, #0f5786)' }}>
                 <button
                   onClick={() => setView('feature')}
                   className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
