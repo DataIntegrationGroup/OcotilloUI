@@ -1,17 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-
-type OSEPODInfoRow = {
-  id: number
-  name: string
-  value: unknown
-}
+import type { OSEPODAttributes } from '@/utils/osePodSummary'
 
 const OSE_POD_QUERY_URL =
   'https://services2.arcgis.com/qXZbWTdPDbTjl7Dy/arcgis/rest/services/OSE_Points_of_Diversion/FeatureServer/0/query'
 
-// Queries the OSE Points of Diversion feature service and flattens one POD's
-// attributes into DataGrid-friendly { name, value } rows.
-const fetchPOD = async (pod_id: string): Promise<OSEPODInfoRow[]> => {
+// Queries the OSE Points of Diversion feature service for one POD's attributes.
+const fetchPOD = async (pod_id: string): Promise<OSEPODAttributes | null> => {
   const url = new URL(OSE_POD_QUERY_URL)
   url.search = new URLSearchParams({
     // Single quotes are doubled so they cannot break out of the where clause.
@@ -32,16 +26,7 @@ const fetchPOD = async (pod_id: string): Promise<OSEPODInfoRow[]> => {
     throw new Error(data.error.message ?? 'OSE POD request failed')
   }
 
-  const attributes = data?.features?.[0]?.attributes
-  if (!attributes) {
-    return []
-  }
-
-  return Object.keys(attributes).map((key, index) => ({
-    id: index,
-    name: key,
-    value: attributes[key],
-  }))
+  return (data?.features?.[0]?.attributes as OSEPODAttributes) ?? null
 }
 
 // React Query hook used by OSEPODInfoCard; skips fetch when pod_id is missing or "N/A".
