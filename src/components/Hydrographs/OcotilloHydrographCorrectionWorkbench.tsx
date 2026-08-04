@@ -143,6 +143,25 @@ const CHART_PANEL_HEIGHTS = {
 
 type ChartPanel = keyof typeof CHART_PANEL_HEIGHTS
 
+const RESIDUAL_STORED_SERIES = 'Residual: stored − manual'
+const RESIDUAL_CORRECTED_SERIES = 'Residual: corrected − manual'
+const RESIDUAL_SERIES_NAMES = [
+  RESIDUAL_STORED_SERIES,
+  RESIDUAL_CORRECTED_SERIES,
+]
+
+// Speech bubble, for the toolbox button that turns the hover popup on/off.
+const TOOLTIP_TOGGLE_ICON =
+  'path://M4,3 L28,3 Q30,3 30,5 L30,19 Q30,21 28,21 L14,21 L8,27 L8,21 L4,21 Q2,21 2,19 L2,5 Q2,3 4,3 Z'
+
+/** The subset of an ECharts tooltip callback param this chart formats. */
+interface TooltipParam {
+  seriesName?: string
+  marker?: string
+  axisValueLabel?: string
+  value?: [unknown, number | null | undefined]
+}
+
 const MINUTE_MS = 60 * 1000
 const HOUR_MS = 60 * MINUTE_MS
 const DAY_MS = 24 * HOUR_MS
@@ -412,6 +431,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   )
   const [controlsWidth, setControlsWidth] = useState(DEFAULT_CONTROLS_WIDTH)
   const [controlsCollapsed, setControlsCollapsed] = useState(false)
+  const [showTooltip, setShowTooltip] = useState(true)
 
   const [uploaded, setUploaded] = useState<ParsedHydrographUpload | null>(
     initialUpload ?? null
@@ -783,7 +803,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         : null,
       residuals.stored.length > 0
         ? {
-            name: 'Residual: stored − manual',
+            name: RESIDUAL_STORED_SERIES,
             ...residualBarSeries(
               residuals.stored,
               theme.palette.secondary.main,
@@ -793,7 +813,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         : null,
       residuals.corrected.length > 0
         ? {
-            name: 'Residual: corrected − manual',
+            name: RESIDUAL_CORRECTED_SERIES,
             ...residualBarSeries(
               residuals.corrected,
               theme.palette.success.main,
@@ -950,6 +970,17 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         top: 0,
         right: 8,
         feature: {
+          myToggleTooltip: {
+            show: true,
+            title: showTooltip ? 'Hide hover popup' : 'Show hover popup',
+            icon: TOOLTIP_TOGGLE_ICON,
+            iconStyle: {
+              borderColor: showTooltip
+                ? theme.palette.primary.main
+                : theme.palette.text.secondary,
+            },
+            onclick: () => setShowTooltip((current) => !current),
+          },
           dataZoom: [{ show: true }, { type: 'inside' }],
           restore: {},
           brush: { type: ['lineX', 'clear'] },
@@ -957,8 +988,29 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         },
       },
       tooltip: {
+        show: showTooltip,
         trigger: 'axis',
         axisPointer: { type: 'cross' },
+        // Residuals are read off their own panel; listing them here just
+        // padded every popup, two rows per series for the zero anchor and
+        // the value.
+        formatter: (params: TooltipParam | TooltipParam[]) => {
+          const entries = (Array.isArray(params) ? params : [params]).filter(
+            (entry) => !RESIDUAL_SERIES_NAMES.includes(entry.seriesName ?? '')
+          )
+
+          const rows = entries
+            .filter((entry) => entry.value?.[1] !== null && entry.value?.[1] !== undefined)
+            .map(
+              (entry) =>
+                `${entry.marker ?? ''}${entry.seriesName}: ${Number(
+                  entry.value?.[1]
+                ).toFixed(3)}`
+            )
+
+          if (rows.length === 0) return ''
+          return [entries[0]?.axisValueLabel ?? '', ...rows].join('<br/>')
+        },
         ...chartTextStyles.tooltip,
       },
       // Crosshair follows the same instant in both panels.
@@ -1001,6 +1053,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     manualPoints,
     rawUploadedMeasurements,
     residuals,
+    showTooltip,
     storedTransducerPoints,
     theme,
   ])

@@ -9,6 +9,7 @@ import {
   HYDROGRAPH_UI_MODES,
   HYDROGRAPH_UI_MODE_DESCRIPTIONS,
   HYDROGRAPH_UI_MODE_LABELS,
+  isHydrographUiModeEnabled,
   type HydrographUiMode,
 } from './hydrographUiMode'
 
@@ -38,7 +39,11 @@ export const HydrographUiModeToggle = ({
     >
       {HYDROGRAPH_UI_MODES.map((value) => (
         <Tooltip key={value} title={HYDROGRAPH_UI_MODE_DESCRIPTIONS[value]}>
-          <ToggleButton value={value} sx={{ px: 1.75, textTransform: 'none' }}>
+          <ToggleButton
+            value={value}
+            disabled={!isHydrographUiModeEnabled(value)}
+            sx={{ px: 1.75, textTransform: 'none' }}
+          >
             {HYDROGRAPH_UI_MODE_LABELS[value]}
           </ToggleButton>
         </Tooltip>

@@ -37,6 +37,16 @@ const MODE_RANK: Record<HydrographUiMode, number> = {
 
 export const DEFAULT_HYDROGRAPH_UI_MODE: HydrographUiMode = 'simple'
 
+// Modes a user can currently select. Intermediate and Advanced are built but
+// switched off, so their buttons render disabled rather than disappearing —
+// re-enable by adding them back here.
+export const ENABLED_HYDROGRAPH_UI_MODES: readonly HydrographUiMode[] = [
+  'simple',
+]
+
+export const isHydrographUiModeEnabled = (mode: HydrographUiMode) =>
+  ENABLED_HYDROGRAPH_UI_MODES.includes(mode)
+
 /** True when `mode` exposes at least as much as `minimum`. */
 export const isAtLeastMode = (
   mode: HydrographUiMode,
@@ -54,7 +64,10 @@ export const HYDROGRAPH_UI_MODE_STORAGE_KEY = 'ocotillo.hydrographCorrection.uiM
 export const readStoredHydrographUiMode = (): HydrographUiMode => {
   try {
     const stored = window.localStorage.getItem(HYDROGRAPH_UI_MODE_STORAGE_KEY)
-    return isHydrographUiMode(stored) ? stored : DEFAULT_HYDROGRAPH_UI_MODE
+    // A mode persisted before it was switched off must not stick.
+    return isHydrographUiMode(stored) && isHydrographUiModeEnabled(stored)
+      ? stored
+      : DEFAULT_HYDROGRAPH_UI_MODE
   } catch {
     // Private-mode / disabled storage: fall back to the default.
     return DEFAULT_HYDROGRAPH_UI_MODE
@@ -71,6 +84,8 @@ export const useHydrographUiMode = () => {
   )
 
   const setMode = useCallback((next: HydrographUiMode) => {
+    if (!isHydrographUiModeEnabled(next)) return
+
     setModeState(next)
     try {
       window.localStorage.setItem(HYDROGRAPH_UI_MODE_STORAGE_KEY, next)
