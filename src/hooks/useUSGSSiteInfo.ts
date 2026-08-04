@@ -85,6 +85,7 @@ export const useUSGSSiteInfo = (site_no: string) => {
     queryKey: ['site_no', normalizedSiteNo],
     queryFn: () => fetchSiteInfo(normalizedSiteNo),
     enabled: hasValidSiteNo,
-    initialData: [],
+    staleTime: 5 * 60 * 1000, // matches the other well-show queries
+    gcTime: 10 * 60 * 1000,
   })
 }
