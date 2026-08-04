@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import { resources } from '@/resources'
 import {
   canAccessResource,
   getAccessCapabilities,
   isResourceListAdminOnly,
   normalizeAccessControlGroups,
 } from '@/utils/accessControl'
-import { resources } from '@/resources'
 
 type Action = 'list' | 'show' | 'create' | 'edit' | 'delete' | 'manage'
 type Scenario = {
@@ -44,6 +44,7 @@ const expectedRegisteredRoutableResources = [
   'ocotillo.lexicon',
   'ocotillo.location',
   'ocotillo.map',
+  'ocotillo.sensor-dashboard',
   'ocotillo.thing-well',
   'ocotillo.thing-well-batch-export',
   'ocotillo.thing-well-pdf-preview',
@@ -70,6 +71,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.collections',
       'ocotillo.map',
       'ocotillo.contact',
+      'ocotillo.sensor-dashboard',
       'ocotillo.thing-well',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
@@ -83,6 +85,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.map',
       'ocotillo.thing-well',
       'ocotillo.contact',
+      'ocotillo.sensor-dashboard',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
     ],
@@ -122,6 +125,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.map',
       'ocotillo.thing-well',
       'ocotillo.contact',
+      'ocotillo.sensor-dashboard',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
       ...GEOTHERMAL_ROUTABLE,

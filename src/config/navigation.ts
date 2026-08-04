@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react'
 import {
   BookOpen,
   Database,
@@ -9,10 +10,10 @@ import {
   LineChart,
   Map as MapIcon,
   MapPin,
+  RadioTower,
   Search,
   Users,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import type { PortalRole } from '@/utils/accessControl'
 
 /**
@@ -133,6 +134,13 @@ export const RESOURCE_NAV: NavItem[] = [
     href: '/ocotillo/collections',
     icon: Database,
     resource: 'ocotillo.collections',
+    roles: viewerAndAbove,
+  },
+  {
+    label: 'Sensor Dashboard',
+    href: '/ocotillo/sensor-dashboard',
+    icon: RadioTower,
+    resource: 'ocotillo.sensor-dashboard',
     roles: viewerAndAbove,
   },
   {

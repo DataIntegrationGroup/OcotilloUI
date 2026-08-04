@@ -90,6 +90,14 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     manage: adminRoles,
   },
   'ocotillo.hydrograph-correction': { list: adminRoles, show: adminRoles },
+  // Read-only health view for viewers; triggering an ingestion run writes to
+  // the observation tables, so that stays with editors and admins.
+  'ocotillo.sensor-dashboard': {
+    list: viewerRoles,
+    show: viewerRoles,
+    create: editorRoles,
+    manage: editorRoles,
+  },
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
   'ocotillo.thing-well-projects': { list: viewerRoles, show: viewerRoles },
