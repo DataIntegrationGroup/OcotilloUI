@@ -80,6 +80,16 @@
     --input: oklch(0.9 0 0); /* neutral-200 */
     --ring: oklch(0.515 0.122 244.044); /* brand-600 #0e6da8 */
 
+    /*
+     * Brand identity — NOT semantic slots, and never to be wired to one.
+     * The bloom sits at hue 36, only 8.7 degrees from --destructive and 11.6
+     * from --warning, so anything painted in it inside the UI chrome reads as
+     * an alarm. Brand surfaces only: the favicon, artwork, splash screens.
+     * Mode-independent by design — a logo does not change colour with theme.
+     */
+    --bloom: oklch(0.632 0.184 35.973); /* bloom-500 #e2552e */
+    --sand: oklch(0.935 0.032 89.142); /* sand-100  #f2e9d2 */
+
     /* Radius — shared by shadcn components (buttons, inputs, cards, etc.) */
     --radius: 0.375rem;
 
@@ -240,6 +250,8 @@
   --color-info-foreground: var(--info-foreground);
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
+  --color-bloom: var(--bloom);
+  --color-sand: var(--sand);
   --color-secondary-light: var(--secondary-light);
   --color-secondary-dark: var(--secondary-dark);
 

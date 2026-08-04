@@ -52,6 +52,28 @@ const colors = {
     950: '#0d273c',
   },
 
+  /*
+   * Ocotillo bloom — the scarlet of the flower, and the sand of the stems.
+   *
+   * This is brand identity, NOT a semantic slot, and it must never be wired to
+   * one. In OKLCH the bloom sits at hue 36, which is 8.7 degrees from
+   * `error` (red-600, hue 27.3) and 11.6 from `warning` (orange-500, hue 47.6).
+   * Anything painted in it inside the UI chrome will read as an alarm. Use it
+   * for brand surfaces only — the favicon, marketing artwork, splash screens.
+   *
+   * `secondary` deliberately stays amber: at hue 58.3 it clears warning by 10.7
+   * degrees, which is already tight, and the bloom would be worse.
+   */
+  bloom: {
+    400: '#ea7b58',
+    500: '#e2552e', // ← favicon blooms
+    600: '#c43f1c',
+  },
+  sand: {
+    100: '#f2e9d2', // ← favicon stems
+    200: '#e4d6b4',
+  },
+
   slate: {
     50:  '#f8fafc',
     100: '#f1f5f9', // ← text.primary dark

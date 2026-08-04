@@ -451,6 +451,54 @@ that MUI uses the `dark` slot as the hover/emphasis token, so in dark mode
 `info` is teal rather than cyan: cyan sits only ~20 degrees of hue from the brand
 blue, and an info alert next to a primary button read as the same colour.
 
+### Brand identity colours (not semantic)
+
+Two more ramps exist in the `colors` object, and they play by different rules:
+
+| Token | Hex | What it is |
+| --- | --- | --- |
+| `bloom[500]` | `#e2552e` | The scarlet of the ocotillo flower |
+| `sand[100]` | `#f2e9d2` | The bone/sand of the stems |
+
+These are **brand identity, not semantic slots, and must never be wired to one.**
+In OKLCH the bloom sits at hue 36 — 8.7 degrees from `error` (red-600, hue 27.3)
+and 11.6 from `warning` (orange-500, hue 47.6). Anything painted in it inside the
+UI chrome will read as an alarm. Use it for brand surfaces only: the favicon,
+artwork, splash screens.
+
+This is also why `secondary` stays amber. At hue 58.3 it clears `warning` by 10.7
+degrees, which is already tight; promoting the bloom into that slot would be
+worse, not better.
+
+The matching CSS variables are `--bloom` and `--sand` (utilities `bg-bloom`,
+`text-sand`). Unlike every other token they are **mode-independent** — declared
+once in `:root` with no `.dark` override, because a logo does not change colour
+with the theme.
+
+### The favicon
+
+The favicon is the one place the whole palette appears at once, and it is built
+from palette values only:
+
+| Part | Token | Hex |
+| --- | --- | --- |
+| Field | `brand[950]` | `#0d273c` |
+| Stems | `sand[100]` | `#f2e9d2` |
+| Blooms | `bloom[500]` | `#e2552e` |
+
+`public/favicon.svg` is the source of truth. The rasters are generated from it,
+so **edit the SVG and regenerate** rather than touching the PNGs:
+
+```bash
+cd public
+rsvg-convert -w 180 -h 180 -b '#0d273c' favicon.svg -o apple-touch-icon.png
+rsvg-convert -w 48 -h 48 favicon.svg -o favicon.png
+```
+
+`favicon.ico` bundles 16/32/48 in one container. There is no ImageMagick in this
+project, so it is assembled by hand — see the commit that introduced it for the
+script.
+
 ### Contrast
 
 The brand ramp is chosen so every primary-on-surface pairing clears WCAG AA
