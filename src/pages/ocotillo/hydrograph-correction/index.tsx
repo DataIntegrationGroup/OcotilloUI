@@ -1,32 +1,138 @@
-import { useRef, useState } from 'react'
-import { HttpError } from '@refinedev/core'
-import { Breadcrumb, useAutocomplete, useDataGrid } from '@refinedev/mui'
+import { useMemo, useRef, useState } from 'react'
+import axios from 'axios'
+import { useInvalidate } from '@refinedev/core'
+import { useQuery } from '@tanstack/react-query'
+import { Breadcrumb, useAutocomplete } from '@refinedev/mui'
 import {
   Alert,
   Autocomplete,
   Box,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
+  ButtonGroup,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Menu,
+  MenuItem,
+  Paper,
   Skeleton,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { Publish, Timeline } from '@mui/icons-material'
-import { IWell } from '@/interfaces/ocotillo'
+import {
+  ArrowDropDown,
+  AutoAwesome,
+  CloudDownload,
+  Publish,
+} from '@mui/icons-material'
+import { OcotilloPageTitle } from '@/components/OcotilloPageHeader'
+import {
+  WellntelIngestDialog,
+  type WellntelIngestResult,
+} from './WellntelIngestDialog'
+import {
+  DiverHubIngestDialog,
+  type DiverHubIngestResult,
+} from './DiverHubIngestDialog'
+import { IObservation, IWell } from '@/interfaces/ocotillo'
+import { fetchAllOcotilloPages } from '@/utils/ocotilloPaging'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
-import { OcotilloHydrographCorrectionWorkbench } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
+import {
+  OcotilloHydrographCorrectionWorkbench,
+  type HydrographPublishArgs,
+  type HydrographSensorDeployment,
+  type HydrographWellMetadata,
+} from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
+import { useWellDetails } from '@/hooks/useWellDetails'
+import {
+  buildSensorDeploymentRows,
+  type DeploymentLike,
+  type SensorLike,
+} from '@/utils/SensorDeploymentRows'
 import {
   normalizePointId,
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
   ParsedHydrographUpload,
 } from '@/components/Hydrographs/hydrographCorrection'
+import { HydrographUiModeToggle } from '@/components/Hydrographs/HydrographUiModeToggle'
+import {
+  isAtLeastMode,
+  useHydrographUiMode,
+} from '@/components/Hydrographs/hydrographUiMode'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
+import {
+  DEMO_DIVER_FILE_NAME,
+  DEMO_DIVER_MANUAL_OBSERVATIONS,
+  DEMO_DIVER_WELL_NAME,
+  DEMO_FILE_NAME,
+  DEMO_MANUAL_OBSERVATIONS,
+  DEMO_WELL_NAME,
+  DEMO_WELLNTEL_FILE_NAME,
+  DEMO_WELLNTEL_MANUAL_OBSERVATIONS,
+  DEMO_WELLNTEL_WELL_NAME,
+  INGEST_DIVER_MANUAL_OBSERVATIONS,
+  INGEST_WELLNTEL_MANUAL_OBSERVATIONS,
+} from './demoData'
+
+type DemoKind = 'transducer' | 'diver' | 'wellntel'
+
+const DEMO_CONFIG: Record<
+  DemoKind,
+  {
+    label: string
+    fileName: string
+    wellName: string
+    manualObservations: typeof DEMO_MANUAL_OBSERVATIONS
+  }
+> = {
+  transducer: {
+    label: 'Field Logger Demo',
+    fileName: DEMO_FILE_NAME,
+    wellName: DEMO_WELL_NAME,
+    manualObservations: DEMO_MANUAL_OBSERVATIONS,
+  },
+  diver: {
+    label: 'Diver Office Demo',
+    fileName: DEMO_DIVER_FILE_NAME,
+    wellName: DEMO_DIVER_WELL_NAME,
+    manualObservations: DEMO_DIVER_MANUAL_OBSERVATIONS,
+  },
+  wellntel: {
+    label: 'Wellntel Demo',
+    fileName: DEMO_WELLNTEL_FILE_NAME,
+    wellName: DEMO_WELLNTEL_WELL_NAME,
+    manualObservations: DEMO_WELLNTEL_MANUAL_OBSERVATIONS,
+  },
+}
+
+const DEMO_KINDS = Object.keys(DEMO_CONFIG) as DemoKind[]
+
+type IngestKind = 'wellntel' | 'diverhub'
+
+const INGEST_KINDS: IngestKind[] = ['wellntel', 'diverhub']
+
+// Stable identities so an unresolved query does not remount the workbench.
+const EMPTY_MANUAL_ROWS: IObservation[] = []
+const EMPTY_TRANSDUCER_ROWS: TransducerObservationWithBlockResponse[] = []
+
+const INGEST_LABELS: Record<IngestKind, string> = {
+  wellntel: 'Ingest Wellntel',
+  diverhub: 'Ingest Diver-HUB',
+}
+
+// The ingest-dialog demos generate synthetic readings, so they use manual
+// observations aligned with the generators rather than the real-file demos.
+const INGEST_DEMO_MANUAL_OBSERVATIONS: Partial<
+  Record<DemoKind, typeof DEMO_MANUAL_OBSERVATIONS>
+> = {
+  wellntel: INGEST_WELLNTEL_MANUAL_OBSERVATIONS,
+  diver: INGEST_DIVER_MANUAL_OBSERVATIONS,
+}
 
 export const HydrographCorrectionPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -37,6 +143,37 @@ export const HydrographCorrectionPage = () => {
   )
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [isResolvingWell, setIsResolvingWell] = useState(false)
+  const [isLoadingDemo, setIsLoadingDemo] = useState(false)
+  const [demoKind, setDemoKind] = useState<DemoKind | null>(null)
+  const [isIngestDialogOpen, setIsIngestDialogOpen] = useState(false)
+  const [isDiverHubDialogOpen, setIsDiverHubDialogOpen] = useState(false)
+  const [selectedDemoKind, setSelectedDemoKind] =
+    useState<DemoKind>('transducer')
+  const [demoMenuAnchor, setDemoMenuAnchor] = useState<HTMLElement | null>(
+    null
+  )
+  const [selectedIngestKind, setSelectedIngestKind] =
+    useState<IngestKind>('wellntel')
+  const [ingestMenuAnchor, setIngestMenuAnchor] =
+    useState<HTMLElement | null>(null)
+  const [ingestedWellName, setIngestedWellName] = useState<string | null>(null)
+  const [publishSuccess, setPublishSuccess] = useState<{
+    blockId: number | null
+    count: number
+    wellName: string
+  } | null>(null)
+  const [publishError, setPublishError] = useState<string | null>(null)
+  const [pendingOverlap, setPendingOverlap] = useState<{
+    blockIds: number[]
+    args: HydrographPublishArgs
+  } | null>(null)
+  const dtwParameterIdRef = useRef<number | null>(null)
+  const invalidate = useInvalidate()
+  const { mode, setMode } = useHydrographUiMode()
+
+  // Simple mode is the plain pressure-transducer workflow: upload a file and
+  // correct it. The demo and external-ingest sources start at Intermediate.
+  const showAllSources = isAtLeastMode(mode, 'intermediate')
 
   const { autocompleteProps } = useAutocomplete<IWell>({
     resource: 'thing',
@@ -50,41 +187,83 @@ export const HydrographCorrectionPage = () => {
     ],
   })
 
-  const {
-    dataGridProps: { rows: manualRows, loading: manualLoading },
-  } = useDataGrid({
-    resource: 'observation/groundwater-level',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: selectedWell?.id,
-      },
-    },
-    queryOptions: {
-      enabled: Boolean(selectedWell?.id),
-      gcTime: 10 * 60 * 1000,
-      staleTime: 5 * 60 * 1000,
+  // Both series are charted in full, so every page is fetched. A paginated
+  // list hook would cap the stored transducer trace at its first page —
+  // a few hours of readings against a year-long upload, which reads on the
+  // chart as "no stored data at all".
+  const wellSeriesQuery = useQuery({
+    queryKey: ['hydrograph-correction-well-series', selectedWell?.id ?? ''],
+    enabled: Boolean(selectedWell?.id),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    queryFn: async ({ queryKey, signal }) => {
+      const thingId = queryKey[1]
+      if (thingId === '' || thingId == null) {
+        return {
+          manualRows: [] as IObservation[],
+          transducerRows: [] as TransducerObservationWithBlockResponse[],
+        }
+      }
+
+      const [manualRows, transducerRows] = await Promise.all([
+        fetchAllOcotilloPages<IObservation>(
+          'observation/groundwater-level',
+          { thing_id: thingId },
+          { signal }
+        ),
+        fetchAllOcotilloPages<TransducerObservationWithBlockResponse>(
+          'observation/transducer-groundwater-level',
+          { thing_id: thingId },
+          { pageSize: 5000, signal }
+        ),
+      ])
+
+      return { manualRows, transducerRows }
     },
   })
 
-  const {
-    dataGridProps: { rows: transducerRows, loading: transducerLoading },
-  } = useDataGrid<TransducerObservationWithBlockResponse>({
-    resource: 'observation/transducer-groundwater-level',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: selectedWell?.id,
-      },
-    },
-    queryOptions: {
-      enabled: Boolean(selectedWell?.id),
-      gcTime: 10 * 60 * 1000,
-      staleTime: 5 * 60 * 1000,
-    },
-  })
+  const manualRows = wellSeriesQuery.data?.manualRows ?? EMPTY_MANUAL_ROWS
+  const transducerRows =
+    wellSeriesQuery.data?.transducerRows ?? EMPTY_TRANSDUCER_ROWS
+  const isLoading = wellSeriesQuery.isLoading
 
-  const isLoading = manualLoading || transducerLoading
+  // Shares the well-details cache with the well show page.
+  const { query: wellDetailsQuery } = useWellDetails(selectedWell?.id)
+  const wellDetails = wellDetailsQuery.data?.well
+
+  const wellMetadata = useMemo<HydrographWellMetadata | null>(() => {
+    if (!selectedWell) return null
+    return {
+      href: `/ocotillo/well/show/${selectedWell.id}`,
+      siteName: wellDetails?.site_name ?? null,
+      wellStatus: wellDetails?.well_status ?? null,
+      wellDepth: wellDetails?.well_depth ?? null,
+      wellDepthUnit: wellDetails?.well_depth_unit ?? null,
+      casingDepth: wellDetails?.well_casing_depth ?? null,
+      casingDepthUnit: wellDetails?.well_casing_depth_unit ?? null,
+      measuringPointHeight: wellDetails?.measuring_point_height ?? null,
+      measuringPointHeightUnit:
+        wellDetails?.measuring_point_height_unit ?? null,
+    }
+  }, [selectedWell, wellDetails])
+
+  const sensorDeployments = useMemo<HydrographSensorDeployment[]>(() => {
+    const rows = buildSensorDeploymentRows(
+      (wellDetailsQuery.data?.deployments ?? []) as DeploymentLike[],
+      (wellDetailsQuery.data?.sensors ?? []) as SensorLike[]
+    )
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.sensor_name,
+      model: row.sensor_model,
+      serialNo: row.serial_no,
+      installedAt: row.datetime_installed,
+      removedAt: row.datetime_removed,
+      hangingCableLength: row.hanging_cable_length ?? null,
+      recordingInterval: row.recording_interval_display,
+    }))
+  }, [wellDetailsQuery.data])
   const normalizedParsedPointId = normalizePointId(parsedUpload?.pointId)
   const pointIdMatchesSelectedWell =
     !!selectedWell &&
@@ -140,10 +319,198 @@ export const HydrographCorrectionPage = () => {
     parsed: ParsedHydrographUpload,
     fileName: string | null
   ) => {
+    setDemoKind(null)
+    setIngestedWellName(null)
     setParsedUpload(parsed)
     setUploadedFileName(fileName)
     setUploadError(null)
     await resolveWellFromUpload(parsed)
+  }
+
+  // Resolve the depth-to-water parameter id from the lexicon at runtime
+  // (upload-contract open question #1 — this avoids a hardcoded id).
+  const resolveDtwParameterId = async () => {
+    if (dtwParameterIdRef.current !== null) return dtwParameterIdRef.current
+
+    const fetchTerms = async (category?: string) => {
+      const response = await ocotilloDataProvider.getList({
+        resource: 'lexicon/term',
+        pagination: { currentPage: 1, pageSize: 500 },
+        meta: { params: category ? { category } : {} },
+      })
+      return response.data as Array<{ id: number; term: string }>
+    }
+    const findDtw = (terms: Array<{ id: number; term: string }>) =>
+      terms.find((item) =>
+        /depth\s*to\s*water.*(bgs|below\s*ground)/i.test(item.term)
+      ) ?? terms.find((item) => /depth\s*to\s*water/i.test(item.term))
+
+    let match = findDtw(await fetchTerms('parameter').catch(() => []))
+    if (!match) match = findDtw(await fetchTerms())
+    if (!match) {
+      throw new Error(
+        'Could not resolve the depth-to-water parameter from the lexicon.'
+      )
+    }
+
+    dtwParameterIdRef.current = match.id
+    return match.id
+  }
+
+  // POST per docs/hydrograph-correction-upload-contract.md.
+  const postCorrectedBlock = async (
+    args: HydrographPublishArgs,
+    replaceOverlapping: boolean
+  ) => {
+    if (!selectedWell) throw new Error('No well is selected.')
+
+    const parameterId = await resolveDtwParameterId()
+    const payload = {
+      thing_id: selectedWell.id,
+      parameter_id: parameterId,
+      release_status: 'provisional',
+      review_status: 'not reviewed',
+      provenance: {
+        source_file: args.sourceFileName ?? 'unknown',
+        source_kind: args.sourceKind,
+        corrections: args.corrections,
+      },
+      measurements: args.measurements.map((measurement) => ({
+        observation_datetime: measurement.time.toISOString(),
+        value: measurement.value,
+        ...(measurement.correctionNote
+          ? { note: measurement.correctionNote }
+          : {}),
+      })),
+    }
+
+    const url = `observation/transducer-groundwater-level/block${
+      replaceOverlapping ? '?replace_overlapping=true' : ''
+    }`
+    const { data } = await ocotilloDataProvider.custom!({
+      url,
+      method: 'post',
+      payload,
+    })
+    return data as { block?: { id?: number }; observation_count?: number }
+  }
+
+  const applyPublishSuccess = (
+    data: { block?: { id?: number }; observation_count?: number },
+    args: HydrographPublishArgs
+  ) => {
+    setPublishSuccess({
+      blockId: data.block?.id ?? null,
+      count: data.observation_count ?? args.measurements.length,
+      wellName: selectedWell?.name ?? '',
+    })
+    invalidate({
+      resource: 'observation/transducer-groundwater-level',
+      dataProviderName: 'ocotillo',
+      invalidates: ['list'],
+    })
+  }
+
+  const handlePublish = async (args: HydrographPublishArgs) => {
+    setPublishSuccess(null)
+    setPublishError(null)
+
+    try {
+      applyPublishSuccess(await postCorrectedBlock(args, false), args)
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        const body = error.response.data ?? {}
+        const blockIds: number[] =
+          body.overlapping_block_ids ??
+          body.detail?.overlapping_block_ids ??
+          []
+        setPendingOverlap({ blockIds, args })
+        return
+      }
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        setPublishError(
+          'The transducer block upload endpoint is not available yet — see docs/hydrograph-correction-upload-contract.md.'
+        )
+        return
+      }
+      setPublishError(
+        error instanceof Error ? error.message : 'Publishing failed.'
+      )
+    }
+  }
+
+  const confirmReplaceOverlap = async () => {
+    if (!pendingOverlap) return
+    const { args } = pendingOverlap
+    setPendingOverlap(null)
+
+    try {
+      applyPublishSuccess(await postCorrectedBlock(args, true), args)
+    } catch (error) {
+      setPublishError(
+        error instanceof Error ? error.message : 'Publishing failed.'
+      )
+    }
+  }
+
+  const applyExternalIngest = (
+    { well, wellName, measurements, isDemo }: WellntelIngestResult,
+    {
+      demoKindWhenUnbound,
+      sourceLabel,
+      delimiter,
+      timeColumn,
+      valueColumn,
+    }: {
+      demoKindWhenUnbound: DemoKind
+      sourceLabel: string
+      delimiter: string
+      timeColumn: string
+      valueColumn: string
+    }
+  ) => {
+    setParsedUpload({
+      pointId: wellName,
+      detectedDelimiter: delimiter,
+      detectedTimeColumn: timeColumn,
+      detectedValueColumn: valueColumn,
+      valueKind: 'depth_to_water',
+      measurements,
+    })
+    setUploadedFileName(sourceLabel)
+    setUploadError(null)
+
+    if (isDemo || !well) {
+      setSelectedWell(null)
+      setIngestedWellName(`${wellName} (demo)`)
+      setDemoKind(demoKindWhenUnbound)
+    } else {
+      setDemoKind(null)
+      setIngestedWellName(null)
+      setSelectedWell(well)
+    }
+  }
+
+  const handleWellntelIngested = (result: WellntelIngestResult) => {
+    setIsIngestDialogOpen(false)
+    applyExternalIngest(result, {
+      demoKindWhenUnbound: 'wellntel',
+      sourceLabel: `Wellntel API (${result.wellName})`,
+      delimiter: 'wellntel-api',
+      timeColumn: 'timestamp',
+      valueColumn: 'depth',
+    })
+  }
+
+  const handleDiverHubIngested = (result: DiverHubIngestResult) => {
+    setIsDiverHubDialogOpen(false)
+    applyExternalIngest(result, {
+      demoKindWhenUnbound: 'diver',
+      sourceLabel: `Diver-HUB API (${result.wellName})`,
+      delimiter: 'diver-hub-api',
+      timeColumn: 'ts',
+      valueColumn: 'depth to water (gs)',
+    })
   }
 
   const handleInitialUpload = async (file?: File) => {
@@ -152,7 +519,7 @@ export const HydrographCorrectionPage = () => {
     try {
       const parsed = file.name.toLowerCase().endsWith('.xlsx')
         ? parseHydrographWorkbookUpload(await file.arrayBuffer(), file.name)
-        : parseHydrographUpload(await file.text())
+        : parseHydrographUpload(await file.text(), file.name)
       await applyParsedUpload(parsed, file.name)
     } catch (error) {
       setParsedUpload(null)
@@ -166,24 +533,70 @@ export const HydrographCorrectionPage = () => {
     }
   }
 
+  const handleLoadDemoFile = async (kind: DemoKind) => {
+    const { fileName } = DEMO_CONFIG[kind]
+    setIsLoadingDemo(true)
+    try {
+      const response = await fetch(`/${fileName}`)
+      if (!response.ok) {
+        throw new Error(`Unable to fetch the example file ${fileName}.`)
+      }
+
+      const parsed = parseHydrographUpload(await response.text(), fileName)
+      // Demo mode is self-contained: no well lookup; manual observations
+      // derived from the artifact stand in for Ocotillo records.
+      setParsedUpload(parsed)
+      setUploadedFileName(fileName)
+      setSelectedWell(null)
+      setUploadError(null)
+      setIngestedWellName(null)
+      setDemoKind(kind)
+    } catch (error) {
+      setParsedUpload(null)
+      setUploadedFileName(null)
+      setSelectedWell(null)
+      setDemoKind(null)
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to load the example file.'
+      )
+    } finally {
+      setIsLoadingDemo(false)
+    }
+  }
+
   return (
     <Box sx={{ p: { xs: 1, md: 2 } }}>
       <Stack spacing={2}>
         <Breadcrumb hideIcons={true} />
 
-        <Card elevation={2}>
-          <CardHeader
-            avatar={<Timeline color="primary" />}
-            title="Hydrograph Correction"
-            subheader="Upload a transducer text file first. Ocotillo will try to extract thing.name from the file and resolve the well automatically."
-          />
-          <CardContent>
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={2}
+          justifyContent="space-between"
+          alignItems={{ xs: 'stretch', md: 'flex-start' }}
+        >
+          <Stack spacing={0.5}>
+            <OcotilloPageTitle title="Hydrograph Correction" />
+            <Typography variant="body2" color="text.secondary">
+              Upload a transducer file first. Ocotillo will try to extract
+              thing.name from the file and resolve the well automatically.
+            </Typography>
+          </Stack>
+          <Box sx={{ maxWidth: { md: 420 } }}>
+            <HydrographUiModeToggle mode={mode} onChange={setMode} />
+          </Box>
+        </Stack>
+
+        <Paper elevation={2} sx={{ borderRadius: 2 }}>
+          <Box sx={{ px: 2, py: 2 }}>
             <Stack spacing={2}>
               <input
                 ref={fileInputRef}
                 hidden
                 type="file"
-                accept=".txt,.csv,.dat,.xlsx"
+                accept=".txt,.csv,.dat,.wcsv,.xlsx"
                 onChange={(event) => handleInitialUpload(event.target.files?.[0])}
               />
 
@@ -199,12 +612,97 @@ export const HydrographCorrectionPage = () => {
                 >
                   Upload Transducer File
                 </Button>
+                {showAllSources ? (
+                  <>
+                    <ButtonGroup variant="outlined">
+                      <Button
+                        startIcon={<AutoAwesome />}
+                        onClick={() => handleLoadDemoFile(selectedDemoKind)}
+                        disabled={isLoadingDemo}
+                      >
+                        {isLoadingDemo
+                          ? 'Loading Demo...'
+                          : DEMO_CONFIG[selectedDemoKind].label}
+                      </Button>
+                      <Button
+                        size="small"
+                        aria-label="Select demo style"
+                        aria-haspopup="menu"
+                        onClick={(event) =>
+                          setDemoMenuAnchor(event.currentTarget)
+                        }
+                        disabled={isLoadingDemo}
+                      >
+                        <ArrowDropDown />
+                      </Button>
+                    </ButtonGroup>
+                    <Menu
+                      anchorEl={demoMenuAnchor}
+                      open={Boolean(demoMenuAnchor)}
+                      onClose={() => setDemoMenuAnchor(null)}
+                    >
+                      {DEMO_KINDS.map((kind) => (
+                        <MenuItem
+                          key={kind}
+                          selected={kind === selectedDemoKind}
+                          onClick={() => {
+                            setSelectedDemoKind(kind)
+                            setDemoMenuAnchor(null)
+                          }}
+                        >
+                          {DEMO_CONFIG[kind].label}
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                    <ButtonGroup variant="outlined">
+                      <Button
+                        startIcon={<CloudDownload />}
+                        onClick={() =>
+                          selectedIngestKind === 'wellntel'
+                            ? setIsIngestDialogOpen(true)
+                            : setIsDiverHubDialogOpen(true)
+                        }
+                      >
+                        {INGEST_LABELS[selectedIngestKind]}
+                      </Button>
+                      <Button
+                        size="small"
+                        aria-label="Select ingest source"
+                        aria-haspopup="menu"
+                        onClick={(event) =>
+                          setIngestMenuAnchor(event.currentTarget)
+                        }
+                      >
+                        <ArrowDropDown />
+                      </Button>
+                    </ButtonGroup>
+                    <Menu
+                      anchorEl={ingestMenuAnchor}
+                      open={Boolean(ingestMenuAnchor)}
+                      onClose={() => setIngestMenuAnchor(null)}
+                    >
+                      {INGEST_KINDS.map((kind) => (
+                        <MenuItem
+                          key={kind}
+                          selected={kind === selectedIngestKind}
+                          onClick={() => {
+                            setSelectedIngestKind(kind)
+                            setIngestMenuAnchor(null)
+                          }}
+                        >
+                          {INGEST_LABELS[kind]}
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </>
+                ) : null}
                 <Typography variant="body2" color="text.secondary">
                   If extraction fails, use the well search below.
                 </Typography>
               </Stack>
 
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {demoKind ? <Chip color="info" label="Demo data" /> : null}
                 {uploadedFileName ? <Chip label={`File: ${uploadedFileName}`} /> : null}
                 {parsedUpload?.pointId ? (
                   <Chip label={`Extracted PointID: ${parsedUpload.pointId}`} />
@@ -224,6 +722,11 @@ export const HydrographCorrectionPage = () => {
               </Stack>
 
               {uploadError ? <Alert severity="warning">{uploadError}</Alert> : null}
+              {parsedUpload?.warnings?.map((warning) => (
+                <Alert key={warning} severity="warning">
+                  {warning}
+                </Alert>
+              ))}
 
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 7 }}>
@@ -234,7 +737,11 @@ export const HydrographCorrectionPage = () => {
                     value={selectedWell}
                     getOptionLabel={(option: IWell) => option?.name ?? ''}
                     filterOptions={(options) => options}
-                    onChange={(_event, value) => setSelectedWell(value)}
+                    onChange={(_event, value) => {
+                      setDemoKind(null)
+                      setIngestedWellName(null)
+                      setSelectedWell(value)
+                    }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -256,25 +763,51 @@ export const HydrographCorrectionPage = () => {
                 </Grid>
               </Grid>
             </Stack>
-          </CardContent>
-        </Card>
+          </Box>
+        </Paper>
+
+        {publishSuccess ? (
+          <Alert severity="success" onClose={() => setPublishSuccess(null)}>
+            Published {publishSuccess.count} corrected observations
+            {publishSuccess.blockId !== null
+              ? ` (block ${publishSuccess.blockId})`
+              : ''}{' '}
+            to {publishSuccess.wellName}.
+          </Alert>
+        ) : null}
+        {publishError ? (
+          <Alert severity="error" onClose={() => setPublishError(null)}>
+            {publishError}
+          </Alert>
+        ) : null}
 
         {!parsedUpload ? (
           <Alert severity="info">
             Upload a transducer file to begin. If the file contains `thing.name`
             or point id metadata, the matching well will be selected automatically.
           </Alert>
+        ) : demoKind ? (
+          <OcotilloHydrographCorrectionWorkbench
+            thingName={ingestedWellName ?? DEMO_CONFIG[demoKind].wellName}
+            manualObservations={
+              (ingestedWellName
+                ? INGEST_DEMO_MANUAL_OBSERVATIONS[demoKind]
+                : undefined) ?? DEMO_CONFIG[demoKind].manualObservations
+            }
+            transducerObservations={[]}
+            initialUpload={parsedUpload}
+            initialFileName={uploadedFileName}
+            mode={mode}
+          />
         ) : !selectedWell ? (
           <Alert severity="info">
             The file was parsed, but no well is selected yet. Use the well search
             to continue.
           </Alert>
         ) : isLoading || isResolvingWell ? (
-          <Card elevation={2}>
-            <CardContent>
-              <Skeleton variant="rounded" height={520} />
-            </CardContent>
-          </Card>
+          <Paper elevation={2} sx={{ borderRadius: 2, p: 2 }}>
+            <Skeleton variant="rounded" height={520} />
+          </Paper>
         ) : (
           <OcotilloHydrographCorrectionWorkbench
             thingName={selectedWell.name}
@@ -285,10 +818,53 @@ export const HydrographCorrectionPage = () => {
             }))}
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
-            onUploadParsed={applyParsedUpload}
+            onPublish={handlePublish}
+            mode={mode}
+            wellMetadata={wellMetadata}
+            sensorDeployments={sensorDeployments}
           />
         )}
       </Stack>
+
+      <Dialog
+        open={Boolean(pendingOverlap)}
+        onClose={() => setPendingOverlap(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Replace existing blocks?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            The corrected time span overlaps existing transducer observation
+            {(pendingOverlap?.blockIds.length ?? 0) === 1
+              ? ' block '
+              : ' blocks '}
+            {pendingOverlap?.blockIds.length
+              ? pendingOverlap.blockIds.join(', ')
+              : '(ids unavailable)'}
+            . Replacing deletes those blocks and their observations in the
+            same transaction.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingOverlap(null)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={confirmReplaceOverlap}>
+            Replace Existing Blocks
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <WellntelIngestDialog
+        open={isIngestDialogOpen}
+        onClose={() => setIsIngestDialogOpen(false)}
+        onIngested={handleWellntelIngested}
+      />
+
+      <DiverHubIngestDialog
+        open={isDiverHubDialogOpen}
+        onClose={() => setIsDiverHubDialogOpen(false)}
+        onIngested={handleDiverHubIngested}
+      />
     </Box>
   )
 }
