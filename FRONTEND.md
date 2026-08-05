@@ -475,6 +475,30 @@ The matching CSS variables are `--bloom` and `--sand` (utilities `bg-bloom`,
 once in `:root` with no `.dark` override, because a logo does not change colour
 with the theme.
 
+### The favicon
+
+The favicon is the one place the whole palette appears at once, and it is built
+from palette values only:
+
+| Part | Token | Hex |
+| --- | --- | --- |
+| Field | `brand[950]` | `#0d273c` |
+| Stems | `sand[100]` | `#f2e9d2` |
+| Blooms | `bloom[500]` | `#e2552e` |
+
+`public/favicon.svg` is the source of truth. The rasters are generated from it,
+so **edit the SVG and regenerate** rather than touching the PNGs:
+
+```bash
+cd public
+rsvg-convert -w 180 -h 180 -b '#0d273c' favicon.svg -o apple-touch-icon.png
+rsvg-convert -w 48 -h 48 favicon.svg -o favicon.png
+```
+
+`favicon.ico` bundles 16/32/48 in one container. There is no ImageMagick in this
+project, so it is assembled by hand — see the commit that introduced it for the
+script.
+
 ### Contrast
 
 The brand ramp is chosen so every primary-on-surface pairing clears WCAG AA
