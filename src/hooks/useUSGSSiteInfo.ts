@@ -1,18 +1,39 @@
 import { useQuery } from '@tanstack/react-query'
 
-// Fetches expanded USGS site metadata for a given site number and exposes it as key/value rows.
+// Fetches expanded USGS site metadata for a given site number, along with the
+// column labels the service documents in the response header.
 
-type USGSSiteRecord = Record<string, string>
+export type USGSSiteRecord = Record<string, string>
 
-type USGSSiteInfoRow = {
-  id: number
-  name: string
-  value: string
+export type USGSSiteInfo = {
+  record: USGSSiteRecord
+  /** Column name -> the label USGS documents for it, e.g. site_tp_cd -> "Site type". */
+  labels: Record<string, string>
+  url: string
+}
+
+// The RDB header documents every column it is about to return, one per line:
+//   #  site_tp_cd      -- Site type
+const LABEL_PATTERN = /^#\s+(\w+)\s+--\s+(.+?)\s*$/
+
+const parseLabels = (text: string): Record<string, string> => {
+  const labels: Record<string, string> = {}
+
+  for (const line of text.split('\n')) {
+    if (!line.startsWith('#')) continue
+
+    const match = line.match(LABEL_PATTERN)
+    if (match) {
+      labels[match[1]] = match[2]
+    }
+  }
+
+  return labels
 }
 
 // Parses USGS RDB (tab-delimited) site response text into record objects.
 // Adapted by AI from Jacob's Data Integration Engine code.
-const makeRecords = (text: string, url: string): USGSSiteRecord[] => {
+const makeRecords = (text: string): USGSSiteRecord[] => {
   let header: string[] = []
   const records: USGSSiteRecord[] = []
 
@@ -36,26 +57,16 @@ const makeRecords = (text: string, url: string): USGSSiteRecord[] => {
       continue
     }
 
-    records.push({
-      ...Object.fromEntries(header.map((key, index) => [key, values[index]])),
-      url,
-    })
+    records.push(
+      Object.fromEntries(header.map((key, index) => [key, values[index]]))
+    )
   }
 
   return records
 }
 
-// Flattens a site record into DataGrid-friendly { name, value } rows.
-const toKeyValueRows = (record: USGSSiteRecord): USGSSiteInfoRow[] => {
-  return Object.entries(record).map(([name, value], index) => ({
-    id: index,
-    name,
-    value,
-  }))
-}
-
-// Calls the USGS NWIS site service and returns parsed site fields for one site.
-const fetchSiteInfo = async (site_no: string): Promise<USGSSiteInfoRow[]> => {
+// Calls the USGS NWIS site service and returns the parsed fields for one site.
+const fetchSiteInfo = async (site_no: string): Promise<USGSSiteInfo | null> => {
   const url = new URL('https://waterservices.usgs.gov/nwis/site/')
   url.search = new URLSearchParams({
     format: 'rdb',
@@ -70,11 +81,15 @@ const fetchSiteInfo = async (site_no: string): Promise<USGSSiteInfoRow[]> => {
   }
 
   const text = await res.text()
-  const records = makeRecords(text, url.toString())
+  const records = makeRecords(text)
+  if (records.length === 0) return null
 
-  return records.length > 0 ? toKeyValueRows(records[0]) : []
+  return {
+    record: records[0],
+    labels: parseLabels(text),
+    url: url.toString(),
+  }
 }
-
 
 // React Query hook used by USGSInfoCard; skips fetch when site_no is missing or "N/A".
 export const useUSGSSiteInfo = (site_no: string) => {
@@ -85,6 +100,7 @@ export const useUSGSSiteInfo = (site_no: string) => {
     queryKey: ['site_no', normalizedSiteNo],
     queryFn: () => fetchSiteInfo(normalizedSiteNo),
     enabled: hasValidSiteNo,
-    initialData: [],
+    staleTime: 5 * 60 * 1000, // matches the other well-show queries
+    gcTime: 10 * 60 * 1000,
   })
 }
