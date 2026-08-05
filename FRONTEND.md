@@ -393,53 +393,143 @@ Apply the same pattern to any other detail page where the record name adds meani
 
 ## Color System
 
-Colors are defined in `src/theme.ts` and sourced entirely from the [Tailwind CSS v3 color palette](https://v3.tailwindcss.com/docs/customizing-colors).
+There are **two** colour pipelines, and they must be kept in step:
 
-### How it works
+| Pipeline | Source of truth | Consumed by |
+| --- | --- | --- |
+| MUI | `src/theme.ts` (`palette` block) | Everything rendered by MUI / Refine |
+| Tailwind + shadcn/ui | `src/index.css` (CSS custom properties) | `className="bg-primary"`, shadcn components |
 
-`tailwindcss@3` is installed as a devDependency **only as a color value source** — there is no Tailwind CSS processing, no `tailwind.config.js`, no utility classes in templates. The package exports a `colors` object with every Tailwind color as a plain hex value, which is imported directly into `theme.ts`:
+Both express the same palette. Change a colour in one and you must change it in
+the other, or light and dark mode will drift apart between the two halves of the
+app.
 
-```ts
-import colors from 'tailwindcss/colors'
+### The brand ramp
 
-colors.blue[700]   // '#1d4ed8'
-colors.stone[200]  // '#e7e5e4'
-colors.zinc[950]   // '#09090b'
-```
+`primary` is **Ocotillo blue** — a bespoke 50–950 ramp defined at the top of the
+`colors` object in `src/theme.ts`. It is the only ramp that is not from
+Tailwind. The values were sampled from the product's own artwork: the pixel
+water-splash mark (`public/images/pixel/ocotillo-splash.svg`) and the high-desert
+sky in `src/img/ocotillo.jpeg`. In OKLCH the ramp sits at hue ~235–245 — a
+water/sky blue with no violet cast.
 
-The theme uses these values directly for the MUI `palette`. **Do not add Tailwind utility classes (`className="text-blue-700"`)** — they will not work. All styling goes through MUI's `sx` prop and `theme.ts`.
+| Stop | Hex | Role |
+| --- | --- | --- |
+| `brand[200]` | `#b8dff6` | `primary.dark` (dark mode — hover lightens) |
+| `brand[300]` | `#83c6ee` | `primary.main` dark mode / `primary.light` light mode |
+| `brand[400]` | `#47a6dd` | `primary.light` dark mode |
+| `brand[600]` | `#0e6da8` | `primary.main` light mode |
+| `brand[700]` | `#0f5786` | `primary.dark` light mode |
+
+Every other ramp still comes from the [Tailwind v3 palette](https://v3.tailwindcss.com/docs/customizing-colors),
+inlined as hex in the same `colors` object. Tailwind v4 returns `oklch()`
+strings from `tailwindcss/colors`, which MUI's palette parser cannot read — that
+is why the hex values are inlined rather than imported.
 
 ### Palette slots
 
+Unlike the other slots, `primary` is **mode-aware**: a mid-dark blue that works
+on white is far too heavy on `zinc-900`, so dark mode steps up the ramp. Note
+that MUI uses the `dark` slot as the hover/emphasis token, so in dark mode
+`primary.dark` resolves *lighter* than `primary.main`, not darker.
+
 | Slot | Light mode | Dark mode | Used for |
 | --- | --- | --- | --- |
-| `primary` | `blue[300/700/900]` | same | Buttons, links, focus rings |
+| `primary` | `brand[300/600/700]` | `brand[400/300/200]` | Buttons, links, focus rings |
 | `secondary` | `amber[300/600/800]` | same | Secondary actions |
 | `error` | `red[300/600/800]` | same | Validation errors |
 | `warning` | `orange[300/500/700]` | same | Warning alerts |
 | `success` | `emerald[300/700/900]` | same | Success states |
-| `info` | `cyan[300/600/800]` | same | Info alerts |
-| `background.default` | `stone[200]` | `zinc[950]` | Page background, sidebar |
+| `info` | `teal[300/700/900]` | same | Info alerts |
+| `background.default` | `zinc[50]` | `zinc[900]` | Page background, sidebar |
 | `background.paper` | `white` | `zinc[700]` | Cards, DataGrid, inputs |
-| `background.wrapper` | `stone[100]` | `zinc[800]` | List page wrapper card |
+| `background.wrapper` | `zinc[50]` | `zinc[800]` | List page wrapper card |
 | `divider` | `stone[300]` | `zinc[700]` | Borders, dividers |
 | `text.primary` | `slate[900]` | `slate[100]` | Body text |
 | `text.secondary` | `slate[500]` | `slate[400]` | Descriptions, labels |
 
-### Changing a color
+`info` is teal rather than cyan: cyan sits only ~20 degrees of hue from the brand
+blue, and an info alert next to a primary button read as the same colour.
 
-Open `src/theme.ts` and find the relevant slot in the `palette` block. Change the Tailwind color reference:
+### Brand identity colours (not semantic)
 
-```ts
-// Change primary from blue to sky
-primary: {
-  light: colors.sky[300],
-  main:  colors.sky[700],
-  dark:  colors.sky[900],
-},
+Two more ramps exist in the `colors` object, and they play by different rules:
+
+| Token | Hex | What it is |
+| --- | --- | --- |
+| `bloom[500]` | `#e2552e` | The scarlet of the ocotillo flower |
+| `sand[100]` | `#f2e9d2` | The bone/sand of the stems |
+
+These are **brand identity, not semantic slots, and must never be wired to one.**
+In OKLCH the bloom sits at hue 36 — 8.7 degrees from `error` (red-600, hue 27.3)
+and 11.6 from `warning` (orange-500, hue 47.6). Anything painted in it inside the
+UI chrome will read as an alarm. Use it for brand surfaces only: the favicon,
+artwork, splash screens.
+
+This is also why `secondary` stays amber. At hue 58.3 it clears `warning` by 10.7
+degrees, which is already tight; promoting the bloom into that slot would be
+worse, not better.
+
+The matching CSS variables are `--bloom` and `--sand` (utilities `bg-bloom`,
+`text-sand`). Unlike every other token they are **mode-independent** — declared
+once in `:root` with no `.dark` override, because a logo does not change colour
+with the theme.
+
+### The favicon
+
+The favicon is the one place the whole palette appears at once, and it is built
+from palette values only:
+
+| Part | Token | Hex |
+| --- | --- | --- |
+| Field | `brand[950]` | `#0d273c` |
+| Stems | `sand[100]` | `#f2e9d2` |
+| Blooms | `bloom[500]` | `#e2552e` |
+
+`public/favicon.svg` is the source of truth. The rasters are generated from it,
+so **edit the SVG and regenerate** rather than touching the PNGs:
+
+```bash
+cd public
+rsvg-convert -w 180 -h 180 -b '#0d273c' favicon.svg -o apple-touch-icon.png
+rsvg-convert -w 48 -h 48 favicon.svg -o favicon.png
 ```
 
-Refer to the [Tailwind v3 color palette](https://v3.tailwindcss.com/docs/customizing-colors) for all available color names and numeric stops (50 through 950). Lighter numbers are lighter colors; darker numbers are darker.
+`favicon.ico` bundles 16/32/48 in one container. There is no ImageMagick in this
+project, so it is assembled by hand — see the commit that introduced it for the
+script.
+
+### Contrast
+
+The brand ramp is chosen so every primary-on-surface pairing clears WCAG AA
+(4.5:1 for text, 3:1 for UI):
+
+| Pairing | Ratio |
+| --- | --- |
+| `brand[600]` on white — light links, contained buttons | 5.57 |
+| `brand[700]` on white — light hover | 7.70 |
+| `brand[300]` on `zinc[900]` — dark links | 9.51 |
+| `brand[300]` on `zinc[700]` — dark links on a card | 5.61 |
+| `brand[200]` on `zinc[900]` — dark hover | 12.59 |
+
+If you restop the ramp, re-check these. Anything landing under 4.5 against
+`zinc[700]` (the dark-mode card surface) is the first thing to break.
+
+### Changing a colour
+
+1. Edit the slot in the `palette` block of `src/theme.ts`.
+2. Edit the matching CSS variable in **both** `:root` and `.dark` in
+   `src/index.css`. Those are `oklch()`, so convert the hex first.
+3. Grep for hardcoded hex — e.g. the gradient border in `src/components/AppShell.tsx`.
+
+```ts
+// Change primary from the brand ramp to Tailwind sky
+primary: {
+  light: colors.sky[300],
+  main:  colors.sky[600],
+  dark:  colors.sky[800],
+},
+```
 
 ### Custom background tokens
 
