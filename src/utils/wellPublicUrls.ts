@@ -5,7 +5,12 @@ export function getOcotilloPublicAppOrigin(): string {
   return trimmed || 'https://ocotillo.newmexicowaterdata.org'
 }
 
+/** In-app route to a well detail page. */
+export function buildWellShowPath(thingId: string | number): string {
+  return `/ocotillo/well/show/${thingId}`
+}
+
 /** Canonical Ocotillo well detail URL for field workflows (production unless overridden). */
 export function buildWellShowAbsoluteUrl(thingId: string | number): string {
-  return `${getOcotilloPublicAppOrigin()}/ocotillo/well/show/${thingId}`
+  return `${getOcotilloPublicAppOrigin()}${buildWellShowPath(thingId)}`
 }
