@@ -15,6 +15,7 @@ import {
   useGridSelector,
   GridColDef,
   GridRowParams,
+  MuiEvent,
 } from '@mui/x-data-grid'
 import { settings } from '@/settings'
 import React, { useMemo, useState } from 'react'
@@ -22,6 +23,7 @@ import { useNavigate } from 'react-router'
 import {
   CanAccess,
   useExport,
+  useGetToPath,
   useNavigation,
   useResourceParams,
 } from '@refinedev/core'
@@ -154,6 +156,26 @@ function ListPageToolbar({
   )
 }
 
+/**
+ * DataGrid rows are not anchors, so modifier clicks would otherwise navigate in
+ * place. Treat the browser conventions for "open elsewhere" as new-window intent.
+ */
+export function isNewWindowClick(event: {
+  ctrlKey?: boolean
+  metaKey?: boolean
+  button?: number
+}): boolean {
+  // Shift is left alone: the DataGrid uses it for row range selection.
+  return Boolean(event.ctrlKey || event.metaKey || event.button === 1)
+}
+
+export function openInNewWindow(href: string) {
+  // Router paths are basename-relative; window.open is not.
+  const target = href.startsWith('/') ? `${settings.urlprefix}${href}` : href
+  const opened = window.open(target, '_blank', 'noopener,noreferrer')
+  if (opened) opened.opener = null
+}
+
 type ListPageProps = {
   title?: string
   description?: string
@@ -284,21 +306,46 @@ export const ListPage: React.FC<ListPageProps> = ({
     hideExport: restDataGridProps.paginationMode === 'server',
   }
 
-  const handleRowClick = getRowHref
-    ? (params: GridRowParams) => {
-        onRowClick?.(params)
-        navigate(getRowHref(params))
-      }
-    : disableRowClick
-      ? onRowClick
-        ? (params: GridRowParams) => onRowClick(params)
-        : undefined
-      : resource
-        ? (params: GridRowParams) => {
-            onRowClick?.(params)
+  const getToPath = useGetToPath()
+
+  // Href for the row's destination, used for modifier-click new-window opens.
+  const resolveRowHref = (params: GridRowParams): string | undefined => {
+    if (getRowHref) return getRowHref(params)
+    if (disableRowClick || !resource) return undefined
+    return getToPath({
+      resource,
+      action: 'show',
+      meta: { id: params.id },
+    })
+  }
+
+  const rowClickNavigates = Boolean(
+    getRowHref || (!disableRowClick && resource)
+  )
+
+  const handleRowClick =
+    rowClickNavigates || onRowClick
+      ? (params: GridRowParams, event: MuiEvent<React.MouseEvent>) => {
+          onRowClick?.(params)
+
+          if (!rowClickNavigates) return
+
+          const href = resolveRowHref(params)
+          if (href && isNewWindowClick(event)) {
+            openInNewWindow(href)
+            return
+          }
+
+          if (getRowHref) {
+            navigate(getRowHref(params))
+            return
+          }
+
+          if (resource) {
             show(resource.name, params.id as string | number)
           }
-        : undefined
+        }
+      : undefined
 
   const rowCursor =
     getRowHref || (!disableRowClick && resource) ? 'pointer' : 'default'
