@@ -94,6 +94,8 @@ Adopt **Option A**.
 
 A **dedicated Field Planning page** is the home for this feature — minting is a planning activity done before going out, not a step inside the well-create form. The create form is only lightly touched, and only so a technician can pick an ID they already minted.
 
+> **Mockup:** [`field-planning-well-id-minting-mockup.html`](https://github.com/DataIntegrationGroup/OcotilloMockups/blob/main/field-planning-well-id-minting-mockup.html) in the `OcotilloMockups` repo. Where the mockup and this text disagree, the mockup is the more current picture of layout and wording; this section is the authority on behavior.
+
 **Honesty check first:** this app has no offline mode. It's a normal SPA — no service worker, no IndexedDB, no local write queue (checked; none exists). So "field techs are offline" doesn't mean the app works offline — it means the technician has no signal to open the app at all while they're out. What minting actually buys them: mint a batch of guaranteed-unique IDs on the Field Planning page **before** leaving connectivity, take them into the field (printed, exported, or written down), and create the wells later, back online. This ADR does not propose making well creation work offline.
 
 #### 1. Field Planning page (new route — the primary surface)
