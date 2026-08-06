@@ -7,7 +7,7 @@
 
 ## Summary
 
-Field technicians currently type a well's identifier by hand into a free-text field, often offline. The identifier follows a house convention — a short prefix plus a zero-padded sequence number, e.g. `WL-0001`, `WL-0002` — but nothing enforces it and nothing enforces uniqueness. Two technicians can independently pick `WL-0047` and collide. This ADR proposes a **minting service**: a backend endpoint that atomically reserves unique, unused well IDs ahead of time, backed by a new database table, consumed by a picker on the well-create form. Not every minted ID gets used, and not every well needs one pre-minted — minting is a collision-avoidance mechanism, not a mandatory gate.
+Field technicians currently type a well's identifier by hand into a free-text field, often offline. The identifier follows a house convention — a short prefix plus a zero-padded sequence number, e.g. `WL-0001`, `WL-0002` — but nothing enforces it and nothing enforces uniqueness. Two technicians can independently pick `WL-0047` and collide. This ADR proposes a **minting service**: a backend endpoint that atomically reserves unique, unused well IDs ahead of time, backed by a new database table, driven from a dedicated **Field Planning** page where technicians mint a batch of IDs before a trip and review every minted ID and its status. Not every minted ID gets used, and not every well needs one pre-minted — minting is a collision-avoidance mechanism, not a mandatory gate.
 
 ## Context
 
