@@ -10,4 +10,5 @@
 
 | # | Title | Status |
 |---|-------|--------|
-| [0001](0001-well-id-minting-service.md) | Well ID Minting Service | Draft |
+| [0001](0001-contextual-media-mapping.md) | Contextual Media Mapping | Draft |
+| [0002](0002-well-id-minting-service.md) | Well ID Minting Service | Draft |

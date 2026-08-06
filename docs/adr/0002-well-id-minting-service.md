@@ -1,4 +1,4 @@
-# 0001 — Well ID Minting Service
+# 0002 — Well ID Minting Service
 
 **Status:** Draft
 **Ticket:** none yet.
