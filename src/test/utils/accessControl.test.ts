@@ -83,6 +83,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.map',
       'ocotillo.thing-well',
       'ocotillo.contact',
+      'ocotillo.hydrograph-correction',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
     ],
@@ -193,11 +194,11 @@ const specialResourceExpectations: Array<{
     expected: false,
   },
   {
-    name: 'AMP editor cannot access ocotillo hydrograph correction',
+    name: 'AMP editor can access ocotillo hydrograph correction',
     groups: ['AMP.Editor'],
     resource: 'ocotillo.hydrograph-correction',
     action: 'show',
-    expected: false,
+    expected: true,
   },
   {
     name: 'AMP admin can access ocotillo hydrograph correction',
@@ -422,7 +423,6 @@ describe('accessControl special resources and write gates', () => {
 describe('isResourceListAdminOnly', () => {
   it('returns true for list resources restricted to admin roles', () => {
     expect(isResourceListAdminOnly('ocotillo.location')).toBe(true)
-    expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(true)
     expect(isResourceListAdminOnly('ocotillo.lexicon')).toBe(true)
     expect(isResourceListAdminOnly('Sandbox')).toBe(true)
     expect(isResourceListAdminOnly('water.locations')).toBe(true)
@@ -430,6 +430,7 @@ describe('isResourceListAdminOnly', () => {
 
   it('returns false for non-admin list resources and unknown resources', () => {
     expect(isResourceListAdminOnly('ocotillo.thing-well')).toBe(false)
+    expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(false)
     expect(isResourceListAdminOnly('unknown.resource')).toBe(false)
   })
 })

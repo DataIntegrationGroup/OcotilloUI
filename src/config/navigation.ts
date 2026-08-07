@@ -94,6 +94,7 @@ const viewerAndAbove: PortalRole[] = [
   AmpRole.Editor,
   AmpRole.Admin,
 ]
+const editorAndAbove: PortalRole[] = [AmpRole.Editor, AmpRole.Admin]
 const adminOnly: PortalRole[] = [AmpRole.Admin]
 
 /**
@@ -163,6 +164,6 @@ export const RESOURCE_NAV: NavItem[] = [
     href: '/ocotillo/hydrograph-correction',
     icon: LineChart,
     resource: 'ocotillo.hydrograph-correction',
-    roles: adminOnly,
+    roles: editorAndAbove,
   },
 ]
