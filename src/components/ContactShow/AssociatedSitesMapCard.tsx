@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, Paper, Typography } from '@mui/material'
 import { Map } from '@mui/icons-material'
-import { Layer, MapRef, Source } from 'react-map-gl'
+import { Layer, MapRef, Source } from 'react-map-gl/maplibre'
 import { Link } from '@refinedev/core'
 import type { IThing } from '@/interfaces/ocotillo'
 import { MapComponent } from '@/components'

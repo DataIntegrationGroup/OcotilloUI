@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { MapRef } from 'react-map-gl'
+import type { MapRef } from 'react-map-gl/maplibre'
 
 export type ViewportBboxOptions = {
   /** debounce updates while the user is moving the map */

@@ -3,6 +3,7 @@ import { useDataProvider, type BaseKey } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
 import { captureEvent } from '@/analytics/posthog'
 import { withRetry } from '@/utils/httpRetry'
+import { DEFAULT_TEXT_FONT } from '@/basemaps'
 
 // ---------------------------------------------------------------------------
 // useOGCLayer
@@ -441,7 +442,10 @@ export const useOGCLayer = ({
   }
 
   return {
-    sourceProps: { type: 'geojson', data: safeGeoJSON }, // Mapbox source configuration
+    // MapLibre source configuration. `type` is asserted so it narrows to the
+    // "geojson" literal the Source component's discriminated union expects,
+    // rather than widening to string.
+    sourceProps: { type: 'geojson' as const, data: safeGeoJSON },
     sourceData: safeGeoJSON,                              // Raw GeoJSON for consumers that need it
     legendColor: fallbackColor,
     legendScale: hasColorMapping && colorMappingEnabled ? legendScale : undefined,
@@ -464,6 +468,10 @@ export const useOGCLayer = ({
           type: 'symbol' as const,
           layout: {
             'text-field': ['get', '__label'],
+            // MapLibre defaults to "Open Sans Regular", which the OpenFreeMap
+            // glyph server does not serve. Ask for a stack it has, or the
+            // glyph request 404s and the labels never draw.
+            'text-font': DEFAULT_TEXT_FONT,
             'text-size': 19,
             'text-anchor': 'top-left',
             'text-offset': [0.35, 0.35],

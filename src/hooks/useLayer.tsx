@@ -37,7 +37,9 @@ export const useLayer = ({
       : { type: 'FeatureCollection', features: [] }
 
   return {
-    sourceProps: enabled ? { type: 'geojson', data: safeGeoJSON } : null,
+    // `type` is asserted so it narrows to the "geojson" literal the Source
+    // component's discriminated union expects, rather than widening to string.
+    sourceProps: enabled ? { type: 'geojson' as const, data: safeGeoJSON } : null,
     layerProps: {
       label,
       type: 'circle' as const,

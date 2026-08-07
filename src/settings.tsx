@@ -52,7 +52,6 @@ export const settings = {
   },
   nmbgmr_geothermal_api_url:
     import.meta.env.VITE_NMBGMR_GEOTHERMAL_API_URL || 'http://localhost:8000',
-  mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN || '',
   fief: {
     baseURL:
       import.meta.env.VITE_FIEF_BASE_URL ||

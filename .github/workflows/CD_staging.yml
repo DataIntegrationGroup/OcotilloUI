@@ -44,7 +44,6 @@ jobs:
       - name: Install deps & build
         env:
           VITE_APP_TITLE: "Ocotillo (Staging)"
-          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
           VITE_BASE_URL: '/'
           VITE_AUTHENTIK_CLIENT_ID: ${{ vars.VITE_AUTHENTIK_CLIENT_ID }}
           VITE_AUTHENTIK_URL: ${{ vars.VITE_AUTHENTIK_URL }}

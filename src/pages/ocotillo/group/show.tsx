@@ -4,7 +4,7 @@ import { DynamicShowDisplay } from '@/components/DynamicShowDisplay'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
 import Grid from '@mui/material/Grid2'
 import MapComponent from '@/components/MapComponent'
-import { Source, Layer } from 'react-map-gl'
+import { Source, Layer } from 'react-map-gl/maplibre'
 import { ErrorBoundary } from 'react-error-boundary'
 
 import wellknown from 'wellknown'
