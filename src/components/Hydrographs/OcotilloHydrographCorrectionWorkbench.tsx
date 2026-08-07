@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import ReactECharts from 'echarts-for-react'
 import {
   Accordion,
@@ -625,6 +632,26 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [selectedRange, setSelectedRange] = useState<HydrographRange | null>(
     null
   )
+  // The chart is rendered with `notMerge`, because the panel count varies with
+  // the upload (a head panel only for water-head files, a residual panel only
+  // once residuals exist) and merging across a changing panel count leaves
+  // stale grids and axes behind. The cost is that every option change tears
+  // the instance down and rebuilds it, which drops the zoom window and the
+  // brush — so both are held here and re-applied after each rebuild.
+  //
+  // The zoom window lives in a ref rather than state: the inside zoom fires
+  // continuously while scrolling, and re-rendering the option on every notch
+  // would fight the gesture.
+  const zoomWindowRef = useRef<{ start: number; end: number }>({
+    start: 0,
+    end: 100,
+  })
+  const selectedRangeRef = useRef<HydrographRange | null>(null)
+  const renderedOptionRef = useRef<unknown>(null)
+  const appliedOptionRef = useRef<unknown>(null)
+  // Set while the brush is being re-applied programmatically, so the
+  // brushSelected echo is not mistaken for the user clearing the selection.
+  const isSyncingBrushRef = useRef(false)
   const [selectedManualOption, setSelectedManualOption] =
     useState<ManualOption | null>(null)
   const [shiftAmount, setShiftAmount] = useState<number>(0.1)
@@ -898,8 +925,14 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   useEffect(() => {
     setUploaded(initialUpload ?? null)
     setFileName(initialFileName ?? null)
+    // Written inline rather than through applySelectedRange so this effect
+    // does not take a dependency that changes every render.
+    selectedRangeRef.current = null
     setSelectedRange(null)
     setSelectedManualOption(null)
+    // A new file spans a different period, so carrying the previous window
+    // over would drop the user somewhere arbitrary in the new trace.
+    zoomWindowRef.current = { start: 0, end: 100 }
 
     if (!initialUpload) {
       setRawUploadedMeasurements([])
@@ -1429,22 +1462,134 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     uploaded?.valueKind,
   ])
 
+  // Arming the brush suppression has to happen here, in the render phase.
+  // The rebuild's empty brushSelected is emitted while echarts-for-react
+  // applies the new option, which is during the commit — earlier than any
+  // effect of ours could run, and too late to undo once the clear has been
+  // queued. Setting a ref during render is the only point that precedes it.
+  if (renderedOptionRef.current !== chartOption) {
+    renderedOptionRef.current = chartOption
+    isSyncingBrushRef.current = true
+  }
+
+  const applySelectedRange = (range: HydrographRange | null) => {
+    // The ref is written synchronously alongside the state so the restore
+    // effect below never re-applies a stale range over a fresh one.
+    selectedRangeRef.current = range
+    setSelectedRange(range)
+  }
+
+  // Clearing from outside the chart has to take the brush overlay with it,
+  // otherwise the shaded band survives on a chart that no longer has a
+  // selection and the next rebuild would restore the stale range.
+  const clearBrushSelection = () => {
+    applySelectedRange(null)
+
+    const instance = chartRef.current?.getEchartsInstance()
+    if (!instance) return
+
+    isSyncingBrushRef.current = true
+    try {
+      instance.dispatchAction({ type: 'brush', areas: [] })
+    } finally {
+      isSyncingBrushRef.current = false
+    }
+  }
+
   const handleBrushSelected = (params: {
     batch?: Array<{ areas?: Array<{ coordRange?: [number, number] }> }>
   }) => {
+    // Teardown or re-apply echo, not a user action. Without this the empty
+    // event from a rebuild reads as "cleared", and the next edit silently
+    // widens to the whole trace.
+    if (isSyncingBrushRef.current) return
+
     const area = params.batch?.[0]?.areas?.[0]
     const coordRange = area?.coordRange
 
     if (!coordRange || coordRange.length !== 2) {
-      setSelectedRange(null)
+      if (selectedRangeRef.current !== null) applySelectedRange(null)
       return
     }
 
-    setSelectedRange({
-      startTime: new Date(coordRange[0]),
-      endTime: new Date(coordRange[1]),
-    })
+    const startTime = new Date(coordRange[0])
+    const endTime = new Date(coordRange[1])
+    const current = selectedRangeRef.current
+
+    // Identical ranges are dropped, so a re-applied brush cannot start a
+    // render loop through the restore effect.
+    if (
+      current &&
+      current.startTime.getTime() === startTime.getTime() &&
+      current.endTime.getTime() === endTime.getTime()
+    ) {
+      return
+    }
+
+    applySelectedRange({ startTime, endTime })
   }
+
+  const handleDataZoom = () => {
+    const zoom = (
+      chartRef.current?.getEchartsInstance()?.getOption() as
+        | { dataZoom?: Array<{ start?: number; end?: number }> }
+        | undefined
+    )?.dataZoom?.[0]
+
+    if (typeof zoom?.start !== 'number' || typeof zoom?.end !== 'number') return
+    zoomWindowRef.current = { start: zoom.start, end: zoom.end }
+  }
+
+  // The toolbox restore button resets the option, so the remembered window
+  // has to go with it — otherwise the effect below would immediately zoom
+  // back in and restore would appear to do nothing.
+  const handleChartRestore = () => {
+    zoomWindowRef.current = { start: 0, end: 100 }
+    // Restore already dropped the chart's own brush, so only the mirrored
+    // state needs clearing.
+    applySelectedRange(null)
+  }
+
+  // Re-apply the zoom window and brush after every rebuild. Runs in the layout
+  // phase, after echarts-for-react has set the new option (child effects flush
+  // first) and before paint, so neither one flickers back to its default.
+  useLayoutEffect(() => {
+    // Only an option identity change rebuilds the instance; any other reason
+    // for this effect to run leaves the chart alone.
+    if (appliedOptionRef.current === chartOption) return
+    appliedOptionRef.current = chartOption
+
+    const instance = chartRef.current?.getEchartsInstance()
+    try {
+      if (!instance) return
+
+      const { start, end } = zoomWindowRef.current
+      if (start !== 0 || end !== 100) {
+        instance.dispatchAction({ type: 'dataZoom', start, end })
+      }
+
+      const range = selectedRangeRef.current
+      instance.dispatchAction({
+        type: 'brush',
+        areas: range
+          ? [
+              {
+                brushType: 'lineX',
+                xAxisIndex: 'all',
+                coordRange: [
+                  range.startTime.getTime(),
+                  range.endTime.getTime(),
+                ],
+              },
+            ]
+          : [],
+      })
+    } finally {
+      // Disarmed only once the rebuild has been fully compensated, so every
+      // event it emitted along the way was suppressed.
+      isSyncingBrushRef.current = false
+    }
+  }, [chartOption])
 
   const handleChartClick = (params: {
     seriesName?: string
@@ -1547,7 +1692,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     setCorrectDrift(false)
     setCorrectedMeasurements(rawUploadedMeasurements)
     setCorrectionLog(baselineCorrectionLog(uploaded))
-    setSelectedRange(null)
+    clearBrushSelection()
     setSelectedManualOption(null)
     setError(null)
   }
@@ -1668,7 +1813,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             <Chip
               color="secondary"
               label={`Selection: ${selectedRange.startTime.toLocaleString()} to ${selectedRange.endTime.toLocaleString()}`}
-              onDelete={() => setSelectedRange(null)}
+              onDelete={clearBrushSelection}
             />
           ) : (
             <Chip variant="outlined" label="Selection: entire uploaded trace" />
@@ -1712,8 +1857,18 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                 width: { xs: '100%', lg: controlsCollapsed ? 0 : controlsWidth },
                 flexShrink: 0,
                 minWidth: 0,
-                overflow: 'hidden',
+                // Scrolls on its own, capped to the chart's height. Opening
+                // several sections used to grow the column past the chart and
+                // lengthen the whole page, so reaching a tool meant scrolling
+                // the hydrograph off screen — exactly when it is needed.
+                // Only above lg: the stacked layout puts the chart below the
+                // controls anyway, where an inner scroll would just trap it.
+                maxHeight: { xs: 'none', lg: chartHeight + CHART_PANEL_GAP * 2 },
+                overflowY: { xs: 'visible', lg: 'auto' },
+                overflowX: 'hidden',
                 display: controlsCollapsed ? { xs: 'none', lg: 'block' } : 'block',
+                // Room for the scrollbar so it never sits on top of a control.
+                pr: { xs: 0, lg: 0.5 },
               }}
             >
               <Stack spacing={1.5}>
@@ -2182,6 +2337,8 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       onEvents={{
                         brushSelected: handleBrushSelected,
                         click: handleChartClick,
+                        datazoom: handleDataZoom,
+                        restore: handleChartRestore,
                       }}
                     />
                   </Box>
