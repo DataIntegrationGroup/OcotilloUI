@@ -114,8 +114,10 @@ jobs:
             --memory 512Mi \
             --cpu 1
 
+      # Runs on close too: the service still exists at this point, and its URL is
+      # the only reliable way to identify the redirect URI to strip from authentik.
+      # Cloud Run URLs embed a generated hash, so they cannot be reconstructed.
       - name: Get Cloud Run URL
-        if: github.event.action != 'closed'
         id: cloudrun-url
         run: |
           set -euo pipefail
@@ -123,10 +125,22 @@ jobs:
           URL=$(gcloud run services describe "${SERVICE_NAME}" \
             --platform managed \
             --region "$GCP_REGION" \
-            --format 'value(status.url)')
+            --format 'value(status.url)' 2>/dev/null || true)
 
-          echo "Cloud Run URL: $URL"
+          if [ -z "$URL" ]; then
+            # Expected when a PR is closed without ever deploying a preview.
+            echo "No Cloud Run service named ${SERVICE_NAME}"
+          else
+            echo "Cloud Run URL: $URL"
+          fi
+
           echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if the deploy produced no URL
+        if: github.event.action != 'closed' && steps.cloudrun-url.outputs.url == ''
+        run: |
+          echo "Deploy succeeded but ${SERVICE_NAME} has no URL." >&2
+          exit 1
 
       - name: Add exact preview origin to authentik provider
         if: github.event.action != 'closed'
@@ -183,7 +197,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Removing authentik redirect/origin: $PREVIEW_ORIGIN"
+          echo "Removing authentik redirect/origin for ${SERVICE_NAME}: ${PREVIEW_ORIGIN:-<unresolved>}"
 
           tmp="$(mktemp)"
           payload="$(mktemp)"
@@ -193,10 +207,30 @@ jobs:
             "${AUTHENTIK_BASE_URL}/api/v3/providers/oauth2/${AUTHENTIK_PROVIDER_ID}/" \
             > "$tmp"
 
-          jq --arg origin "$PREVIEW_ORIGIN" '
-            .redirect_uris |= map(select(.url != $origin))
-            | {redirect_uris: .redirect_uris}
+          # Match the exact URL when it resolved, and additionally sweep this
+          # service's own host. The sweep cleans up entries stranded by earlier
+          # runs, when the URL came back empty and nothing was removed.
+          #
+          # The trailing "-[0-9]+\." is load-bearing: it pins the match to the
+          # project-number segment of a Cloud Run hostname. A bare
+          # "^https://<service>-" prefix would also match a longer sibling
+          # service, so closing preview-foo would strip preview-foo-bar's origin
+          # and break an unrelated open PR.
+          jq --arg origin "$PREVIEW_ORIGIN" --arg service "$SERVICE_NAME" '
+            def is_preview($u):
+              ($origin != "" and $u == $origin)
+              or ($u | test("^https://" + $service + "-[0-9]+\\."));
+
+            {redirect_uris: (.redirect_uris | map(select(is_preview(.url) | not)))}
           ' "$tmp" > "$payload"
+
+          before=$(jq '.redirect_uris | length' "$tmp")
+          after=$(jq '.redirect_uris | length' "$payload")
+
+          if [ "$before" -eq "$after" ]; then
+            echo "No matching authentik redirect URI for ${SERVICE_NAME}; nothing to remove."
+            exit 0
+          fi
 
           curl -fsS -X PATCH \
             -H "Authorization: Bearer ${AUTHENTIK_API_TOKEN}" \
@@ -204,7 +238,7 @@ jobs:
             --data @"$payload" \
             "${AUTHENTIK_BASE_URL}/api/v3/providers/oauth2/${AUTHENTIK_PROVIDER_ID}/"
 
-          echo "Removed strict preview origin from authentik."
+          echo "Removed $((before - after)) preview origin(s) from authentik."
 
       - name: Delete preview on PR close
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
