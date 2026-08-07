@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactECharts from 'echarts-for-react'
 import {
   Accordion,
@@ -174,6 +167,18 @@ const CHART_PANEL_HEIGHTS = {
 } as const
 
 type ChartPanel = keyof typeof CHART_PANEL_HEIGHTS
+
+// Every panel is always present in the option, at a fixed index; the ones the
+// current upload does not use collapse to zero height and hide their axes.
+//
+// This is what lets the chart be updated by merge instead of `notMerge`.
+// ECharts matches components and series across a `setOption` by array
+// position, so an option whose arrays change length silently rebinds series to
+// the wrong grid — which is why the chart used to be rebuilt from scratch on
+// every edit, discarding the zoom window and the brushed selection with it.
+// Fixed positions make merge safe, and merge preserves both natively.
+const CHART_PANEL_ORDER = ['head', 'dtw', 'residual'] as const
+const GRID_INDEX: Record<ChartPanel, number> = { head: 0, dtw: 1, residual: 2 }
 
 const RESIDUAL_STORED_SERIES = 'Residual: stored − manual'
 const RESIDUAL_CORRECTED_SERIES = 'Residual: corrected − manual'
@@ -632,26 +637,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [selectedRange, setSelectedRange] = useState<HydrographRange | null>(
     null
   )
-  // The chart is rendered with `notMerge`, because the panel count varies with
-  // the upload (a head panel only for water-head files, a residual panel only
-  // once residuals exist) and merging across a changing panel count leaves
-  // stale grids and axes behind. The cost is that every option change tears
-  // the instance down and rebuilds it, which drops the zoom window and the
-  // brush — so both are held here and re-applied after each rebuild.
-  //
-  // The zoom window lives in a ref rather than state: the inside zoom fires
-  // continuously while scrolling, and re-rendering the option on every notch
-  // would fight the gesture.
-  const zoomWindowRef = useRef<{ start: number; end: number }>({
-    start: 0,
-    end: 100,
-  })
+  // Mirror of the brushed selection, so the chart event handlers can compare
+  // against it without closing over changing state.
   const selectedRangeRef = useRef<HydrographRange | null>(null)
-  const renderedOptionRef = useRef<unknown>(null)
-  const appliedOptionRef = useRef<unknown>(null)
-  // Set while the brush is being re-applied programmatically, so the
-  // brushSelected echo is not mistaken for the user clearing the selection.
-  const isSyncingBrushRef = useRef(false)
   const [selectedManualOption, setSelectedManualOption] =
     useState<ManualOption | null>(null)
   const [shiftAmount, setShiftAmount] = useState<number>(0.1)
@@ -930,9 +918,13 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     selectedRangeRef.current = null
     setSelectedRange(null)
     setSelectedManualOption(null)
-    // A new file spans a different period, so carrying the previous window
-    // over would drop the user somewhere arbitrary in the new trace.
-    zoomWindowRef.current = { start: 0, end: 100 }
+    // Merge keeps the zoom window across every other option change, which is
+    // the point of it. A new upload is the one case that has to opt out: it
+    // spans a different period, so the previous window would drop the user
+    // somewhere arbitrary in the new trace.
+    chartRef.current
+      ?.getEchartsInstance()
+      ?.dispatchAction({ type: 'dataZoom', start: 0, end: 100 })
 
     if (!initialUpload) {
       setRawUploadedMeasurements([])
@@ -1035,162 +1027,163 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   // lockstep across them.
   const headPoints = uploaded?.valueKind === 'water_head' ? uploaded.measurements : null
 
-  // Panels are stacked top to bottom in this order, and every one of them is
-  // driven by the same time axis.
-  const chartPanels = useMemo<ChartPanel[]>(
-    () =>
-      [
-        headPoints ? 'head' : null,
-        'dtw' as const,
-        hasResiduals ? 'residual' : null,
-      ].filter(Boolean) as ChartPanel[],
+  // Which of the three panels this upload actually uses. They keep their
+  // fixed positions either way; the unused ones just collapse.
+  const visiblePanels = useMemo<Record<ChartPanel, boolean>>(
+    () => ({ head: Boolean(headPoints), dtw: true, residual: hasResiduals }),
     [hasResiduals, headPoints]
+  )
+
+  const shownPanels = useMemo(
+    () => CHART_PANEL_ORDER.filter((panel) => visiblePanels[panel]),
+    [visiblePanels]
   )
 
   const chartHeight = useMemo(
     () =>
       CHART_TOOLBAR_HEIGHT +
-      chartPanels.reduce((total, panel) => total + CHART_PANEL_HEIGHTS[panel], 0) +
-      CHART_PANEL_GAP * Math.max(0, chartPanels.length - 1) +
+      shownPanels.reduce((total, panel) => total + CHART_PANEL_HEIGHTS[panel], 0) +
+      CHART_PANEL_GAP * Math.max(0, shownPanels.length - 1) +
       CHART_AXIS_FOOTER_HEIGHT,
-    [chartPanels]
+    [shownPanels]
   )
 
   const chartOption = useMemo(() => {
-    const gridIndexOf = (panel: ChartPanel) => chartPanels.indexOf(panel)
-    const dtwGridIndex = gridIndexOf('dtw')
-    const residualGridIndex = gridIndexOf('residual')
-    const lastGridIndex = chartPanels.length - 1
+    const lastShownIndex = CHART_PANEL_ORDER.reduce(
+      (last, panel, index) => (visiblePanels[panel] ? index : last),
+      0
+    )
 
+    // Fixed length, fixed order, fixed panel binding. A series with nothing to
+    // draw carries an empty `data` rather than dropping out of the array, so
+    // merge never rebinds one series' data onto another.
+    //
+    // Every series also states its own `itemStyle` colour. Legend markers
+    // otherwise fall back to the palette entry for the series' position, which
+    // ties the swatch to how many series happen to be present.
     const series = [
-      headPoints
-        ? {
-            name: 'Raw water head',
-            type: 'line',
-            showSymbol: false,
-            xAxisIndex: gridIndexOf('head'),
-            yAxisIndex: gridIndexOf('head'),
-            data: headPoints.map((point) => [point.time, point.value]),
-            lineStyle: { color: theme.palette.info.main, width: 2 },
-          }
-        : null,
-      residuals.stored.length > 0
-        ? {
-            name: RESIDUAL_STORED_SERIES,
-            ...residualBarSeries(
-              residuals.stored,
-              theme.palette.secondary.main,
-              residualGridIndex
-            ),
-          }
-        : null,
-      residuals.corrected.length > 0
-        ? {
-            name: RESIDUAL_CORRECTED_SERIES,
-            ...residualBarSeries(
-              residuals.corrected,
-              theme.palette.success.main,
-              residualGridIndex
-            ),
-            // Perfect agreement sits on this line.
-            markLine: {
-              silent: true,
-              symbol: 'none',
-              data: [{ yAxis: 0 }],
-              lineStyle: { color: theme.palette.text.secondary, type: 'dashed' },
-              label: { show: false },
-            },
-          }
-        : null,
-      manualPoints.length > 0
-        ? {
-            name: 'Manual water levels',
-            type: 'scatter',
-            symbolSize: 10,
-            data: manualPoints.map((point) => [point.time, point.value]),
-            itemStyle: { color: theme.palette.primary.main },
-          }
-        : null,
-      highlightedManualPoint
-        ? {
-            name: 'Selected manual point',
-            type: 'scatter',
-            symbol: 'diamond',
-            symbolSize: 16,
-            z: 10,
-            data: [[highlightedManualPoint.time, highlightedManualPoint.value]],
-            itemStyle: {
-              color: theme.palette.error.main,
-              borderColor: theme.palette.background.paper,
-              borderWidth: 2,
-            },
-          }
-        : null,
-      storedTransducerPoints.length > 0
-        ? {
-            name: 'Stored transducer',
-            type: 'line',
-            showSymbol: false,
-            data: storedTransducerPoints.map((point) => [point.time, point.value]),
-            lineStyle: { color: theme.palette.secondary.main, width: 2 },
-            // Shade the span a pending deletion would remove, so the range
-            // being confirmed is visible against the data itself rather than
-            // only as two timestamps in the form.
-            ...(deleteRange
-              ? {
-                  markArea: {
-                    silent: true,
-                    itemStyle: {
-                      color: theme.palette.error.main,
-                      opacity: 0.15,
-                    },
-                    label: {
-                      show: true,
-                      position: 'insideTop',
-                      color: theme.palette.error.main,
-                      formatter: 'Pending deletion',
-                    },
-                    data: [
-                      [
-                        { xAxis: deleteRange.startTime },
-                        { xAxis: deleteRange.endTime },
-                      ],
-                    ],
-                  },
-                }
-              : {}),
-          }
-        : null,
-      rawUploadedMeasurements.length > 0
-        ? {
-            name: 'Uploaded raw',
-            type: 'line',
-            showSymbol: false,
-            data: rawUploadedMeasurements.map((point) => [point.time, point.value]),
-            lineStyle: {
-              color: theme.palette.text.secondary,
-              width: 1,
-              type: 'dashed',
-            },
-          }
-        : null,
-      correctedMeasurements.length > 0
-        ? {
-            name: 'Uploaded corrected',
-            type: 'line',
-            showSymbol: false,
-            data: correctedMeasurements.map((point) => [point.time, point.value]),
-            lineStyle: { color: theme.palette.success.main, width: 3 },
-          }
-        : null,
+      {
+        name: 'Raw water head',
+        type: 'line',
+        showSymbol: false,
+        xAxisIndex: GRID_INDEX.head,
+        yAxisIndex: GRID_INDEX.head,
+        data: (headPoints ?? []).map((point) => [point.time, point.value]),
+        lineStyle: { color: theme.palette.info.main, width: 2 },
+        itemStyle: { color: theme.palette.info.main },
+      },
+      {
+        name: RESIDUAL_STORED_SERIES,
+        ...residualBarSeries(
+          residuals.stored,
+          theme.palette.secondary.main,
+          GRID_INDEX.residual
+        ),
+      },
+      {
+        name: RESIDUAL_CORRECTED_SERIES,
+        ...residualBarSeries(
+          residuals.corrected,
+          theme.palette.success.main,
+          GRID_INDEX.residual
+        ),
+        // Perfect agreement sits on this line.
+        markLine: {
+          silent: true,
+          symbol: 'none',
+          data: residuals.corrected.length > 0 ? [{ yAxis: 0 }] : [],
+          lineStyle: { color: theme.palette.text.secondary, type: 'dashed' },
+          label: { show: false },
+        },
+      },
+      {
+        name: 'Manual water levels',
+        type: 'scatter',
+        symbolSize: 10,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: manualPoints.map((point) => [point.time, point.value]),
+        itemStyle: { color: theme.palette.primary.main },
+      },
+      {
+        name: 'Selected manual point',
+        type: 'scatter',
+        symbol: 'diamond',
+        symbolSize: 16,
+        z: 10,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: highlightedManualPoint
+          ? [[highlightedManualPoint.time, highlightedManualPoint.value]]
+          : [],
+        itemStyle: {
+          color: theme.palette.error.main,
+          borderColor: theme.palette.background.paper,
+          borderWidth: 2,
+        },
+      },
+      {
+        name: 'Stored transducer',
+        type: 'line',
+        showSymbol: false,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: storedTransducerPoints.map((point) => [point.time, point.value]),
+        lineStyle: { color: theme.palette.secondary.main, width: 2 },
+        itemStyle: { color: theme.palette.secondary.main },
+        // Shade the span a pending deletion would remove, so the range being
+        // confirmed is visible against the data itself rather than only as two
+        // timestamps in the form.
+        markArea: {
+          silent: true,
+          itemStyle: { color: theme.palette.error.main, opacity: 0.15 },
+          label: {
+            show: true,
+            position: 'insideTop',
+            color: theme.palette.error.main,
+            formatter: 'Pending deletion',
+          },
+          data: deleteRange
+            ? [
+                [
+                  { xAxis: deleteRange.startTime },
+                  { xAxis: deleteRange.endTime },
+                ],
+              ]
+            : [],
+        },
+      },
+      {
+        name: 'Uploaded raw',
+        type: 'line',
+        showSymbol: false,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: rawUploadedMeasurements.map((point) => [point.time, point.value]),
+        lineStyle: {
+          color: theme.palette.text.secondary,
+          width: 1,
+          type: 'dashed',
+        },
+        itemStyle: { color: theme.palette.text.secondary },
+      },
+      {
+        name: 'Uploaded corrected',
+        type: 'line',
+        showSymbol: false,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: correctedMeasurements.map((point) => [point.time, point.value]),
+        lineStyle: { color: theme.palette.success.main, width: 3 },
+        itemStyle: { color: theme.palette.success.main },
+      },
     ]
-      .filter(Boolean)
-      // Series that did not claim a panel belong to the DTW grid.
-      .map((entry) =>
-        entry!.xAxisIndex === undefined
-          ? { ...entry, xAxisIndex: dtwGridIndex, yAxisIndex: dtwGridIndex }
-          : entry
-      )
+
+    // Empty series stay in the option but not in the legend, which would
+    // otherwise list traces the chart is not drawing.
+    const legendNames = series
+      .filter((entry) => (entry.data as unknown[]).length > 0)
+      .map((entry) => entry.name)
 
     // Every panel must span the same instants, not each series' own extent.
     // The head record usually covers one deployment while the DTW panel also
@@ -1198,7 +1191,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     // head trace would stretch across the full width and imply coverage it
     // does not have.
     const sharedTimeDomain =
-      chartPanels.length > 1
+      shownPanels.length > 1
         ? [
             headPoints ?? [],
             manualPoints,
@@ -1248,22 +1241,25 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     }
 
     // Stack the panels top to bottom, each one a fixed height with a small
-    // gap, so the whole column lines up on the shared axis at the bottom.
+    // gap, so the whole column lines up on the shared axis at the bottom. A
+    // panel this upload does not use keeps its slot at zero height, taking no
+    // space and no gap.
     let panelTop = CHART_TOOLBAR_HEIGHT
-    const grids = chartPanels.map((panel) => {
+    const grids = CHART_PANEL_ORDER.map((panel) => {
+      const height = visiblePanels[panel] ? CHART_PANEL_HEIGHTS[panel] : 0
       const grid = {
         left: 100,
         right: CHART_LEGEND_GUTTER,
         top: panelTop,
-        height: CHART_PANEL_HEIGHTS[panel],
+        height,
       }
-      panelTop += CHART_PANEL_HEIGHTS[panel] + CHART_PANEL_GAP
+      if (height > 0) panelTop += height + CHART_PANEL_GAP
       return grid
     })
 
     return {
       animation: false,
-      legend: chartTextStyles.legend,
+      legend: { ...chartTextStyles.legend, data: legendNames },
       grid: grids,
       toolbox: {
         top: 0,
@@ -1324,18 +1320,20 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         { type: 'inside', realtime: true, xAxisIndex: 'all' },
         { show: true, realtime: true, xAxisIndex: 'all' },
       ],
-      xAxis: chartPanels.map((_panel, index) => ({
+      xAxis: CHART_PANEL_ORDER.map((panel, index) => ({
         type: 'time',
         gridIndex: index,
+        show: visiblePanels[panel],
         ...sharedExtent,
         ...chartTextStyles.xAxis,
-        // Only the bottom panel carries labels; the ones above would just
-        // repeat them.
-        ...(index === lastGridIndex ? {} : { axisLabel: { show: false } }),
+        // Only the bottom visible panel carries labels; the ones above would
+        // just repeat them.
+        ...(index === lastShownIndex ? {} : { axisLabel: { show: false } }),
       })),
-      yAxis: chartPanels.map((panel, index) => ({
+      yAxis: CHART_PANEL_ORDER.map((panel, index) => ({
         type: 'value',
         gridIndex: index,
+        show: visiblePanels[panel],
         nameLocation: 'center',
         nameGap: 74,
         ...panelYAxis[panel],
@@ -1344,7 +1342,6 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       series,
     }
   }, [
-    chartPanels,
     chartTextStyles,
     correctedMeasurements,
     deleteRange,
@@ -1353,9 +1350,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     manualPoints,
     rawUploadedMeasurements,
     residuals,
+    shownPanels.length,
     showTooltip,
     storedTransducerPoints,
     theme,
+    visiblePanels,
   ])
 
   const tableRows = useMemo(() => {
@@ -1462,48 +1461,26 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     uploaded?.valueKind,
   ])
 
-  // Arming the brush suppression has to happen here, in the render phase.
-  // The rebuild's empty brushSelected is emitted while echarts-for-react
-  // applies the new option, which is during the commit — earlier than any
-  // effect of ours could run, and too late to undo once the clear has been
-  // queued. Setting a ref during render is the only point that precedes it.
-  if (renderedOptionRef.current !== chartOption) {
-    renderedOptionRef.current = chartOption
-    isSyncingBrushRef.current = true
-  }
-
   const applySelectedRange = (range: HydrographRange | null) => {
-    // The ref is written synchronously alongside the state so the restore
-    // effect below never re-applies a stale range over a fresh one.
+    // Mirrored into a ref so the handlers below can compare against the
+    // current selection without being re-created on every change.
     selectedRangeRef.current = range
     setSelectedRange(range)
   }
 
   // Clearing from outside the chart has to take the brush overlay with it,
   // otherwise the shaded band survives on a chart that no longer has a
-  // selection and the next rebuild would restore the stale range.
+  // selection.
   const clearBrushSelection = () => {
     applySelectedRange(null)
-
-    const instance = chartRef.current?.getEchartsInstance()
-    if (!instance) return
-
-    isSyncingBrushRef.current = true
-    try {
-      instance.dispatchAction({ type: 'brush', areas: [] })
-    } finally {
-      isSyncingBrushRef.current = false
-    }
+    chartRef.current
+      ?.getEchartsInstance()
+      ?.dispatchAction({ type: 'brush', areas: [] })
   }
 
   const handleBrushSelected = (params: {
     batch?: Array<{ areas?: Array<{ coordRange?: [number, number] }> }>
   }) => {
-    // Teardown or re-apply echo, not a user action. Without this the empty
-    // event from a rebuild reads as "cleared", and the next edit silently
-    // widens to the whole trace.
-    if (isSyncingBrushRef.current) return
-
     const area = params.batch?.[0]?.areas?.[0]
     const coordRange = area?.coordRange
 
@@ -1516,8 +1493,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     const endTime = new Date(coordRange[1])
     const current = selectedRangeRef.current
 
-    // Identical ranges are dropped, so a re-applied brush cannot start a
-    // render loop through the restore effect.
+    // Identical ranges are dropped: ECharts re-emits the selection whenever
+    // the brush layer redraws, and a fresh object each time would re-render
+    // the workbench for no change.
     if (
       current &&
       current.startTime.getTime() === startTime.getTime() &&
@@ -1529,67 +1507,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     applySelectedRange({ startTime, endTime })
   }
 
-  const handleDataZoom = () => {
-    const zoom = (
-      chartRef.current?.getEchartsInstance()?.getOption() as
-        | { dataZoom?: Array<{ start?: number; end?: number }> }
-        | undefined
-    )?.dataZoom?.[0]
-
-    if (typeof zoom?.start !== 'number' || typeof zoom?.end !== 'number') return
-    zoomWindowRef.current = { start: zoom.start, end: zoom.end }
-  }
-
-  // The toolbox restore button resets the option, so the remembered window
-  // has to go with it — otherwise the effect below would immediately zoom
-  // back in and restore would appear to do nothing.
+  // Restore drops the chart's own brush; the mirrored state has to follow.
   const handleChartRestore = () => {
-    zoomWindowRef.current = { start: 0, end: 100 }
-    // Restore already dropped the chart's own brush, so only the mirrored
-    // state needs clearing.
     applySelectedRange(null)
   }
 
-  // Re-apply the zoom window and brush after every rebuild. Runs in the layout
-  // phase, after echarts-for-react has set the new option (child effects flush
-  // first) and before paint, so neither one flickers back to its default.
-  useLayoutEffect(() => {
-    // Only an option identity change rebuilds the instance; any other reason
-    // for this effect to run leaves the chart alone.
-    if (appliedOptionRef.current === chartOption) return
-    appliedOptionRef.current = chartOption
-
-    const instance = chartRef.current?.getEchartsInstance()
-    try {
-      if (!instance) return
-
-      const { start, end } = zoomWindowRef.current
-      if (start !== 0 || end !== 100) {
-        instance.dispatchAction({ type: 'dataZoom', start, end })
-      }
-
-      const range = selectedRangeRef.current
-      instance.dispatchAction({
-        type: 'brush',
-        areas: range
-          ? [
-              {
-                brushType: 'lineX',
-                xAxisIndex: 'all',
-                coordRange: [
-                  range.startTime.getTime(),
-                  range.endTime.getTime(),
-                ],
-              },
-            ]
-          : [],
-      })
-    } finally {
-      // Disarmed only once the rebuild has been fully compensated, so every
-      // event it emitted along the way was suppressed.
-      isSyncingBrushRef.current = false
-    }
-  }, [chartOption])
 
   const handleChartClick = (params: {
     seriesName?: string
@@ -2332,12 +2254,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     <ReactECharts
                       ref={chartRef}
                       option={chartOption}
-                      notMerge
                       style={{ width: '100%', height: '100%' }}
                       onEvents={{
                         brushSelected: handleBrushSelected,
                         click: handleChartClick,
-                        datazoom: handleDataZoom,
                         restore: handleChartRestore,
                       }}
                     />
