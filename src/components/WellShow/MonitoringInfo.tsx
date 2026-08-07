@@ -153,7 +153,9 @@ const FrequencyRow = ({
   freq: { monitoring_frequency: string; start_date: string; end_date: string | null }
   active: boolean
 }) => (
-  <Typography variant="body2">
+  // Rendered as a div, not the default <p>: Chip renders a <div>, and a <div>
+  // inside a <p> is invalid nesting that React warns about.
+  <Typography variant="body2" component="div">
     {active && (
       <Chip
         label="Current"
