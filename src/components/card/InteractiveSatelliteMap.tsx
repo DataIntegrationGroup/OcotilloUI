@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import wellknown from 'wellknown'
 import { IWell } from '@/interfaces/ocotillo'
 import type { IGroup } from '@/interfaces/ocotillo/IGroup'
@@ -16,11 +16,42 @@ import {
 } from '@mui/material'
 import { ContentCopy, Directions, Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl'
-import { MapComponent, MapPopup, CardHeaderTitle } from '@/components'
+import {
+  BasemapControl,
+  MapComponent,
+  MapPopup,
+  CardHeaderTitle,
+} from '@/components'
 import { useLayer } from '@/hooks'
 import { useGo } from '@refinedev/core'
+import { captureEvent } from '@/analytics/posthog'
+import { ColorModeContext } from '@/contexts'
+import { THEMED_MAPBOX_BASEMAPS } from '@/constants'
 
 const MAP_HEIGHT = 450
+
+/**
+ * Basemap state for a map card. Seeded from the active color mode so the map
+ * matches the app theme on first paint; MapComponent keeps the two in sync
+ * until the user picks a basemap of their own.
+ */
+const useCardBasemap = (surface: 'well' | 'project') => {
+  const { mode } = useContext(ColorModeContext)
+  const [basemapUri, setBasemapUri] = useState<string>(
+    () => THEMED_MAPBOX_BASEMAPS[mode === 'dark' ? 'dark' : 'light'].uri
+  )
+
+  const onBasemapChange = (nextBasemap: string) => {
+    setBasemapUri(nextBasemap)
+  }
+
+  const onUserBasemapChange = (nextBasemap: string) => {
+    setBasemapUri(nextBasemap)
+    captureEvent('map_basemap_changed', { basemap: nextBasemap, surface })
+  }
+
+  return { basemapUri, onBasemapChange, onUserBasemapChange }
+}
 
 const MapCardHeader = ({ title }: { title: string }) => (
   <CardHeaderTitle icon={<Map color="primary" />} title={title} />
@@ -108,6 +139,8 @@ const ProjectMapView = ({
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
+  const { basemapUri, onBasemapChange, onUserBasemapChange } =
+    useCardBasemap('project')
 
   const boundary = useMemo(() => parseProjectArea(projectArea), [projectArea])
   const wellsFeatureCollection = useMemo(
@@ -247,6 +280,8 @@ const ProjectMapView = ({
               onMouseMoveCallback={onMapMouseMove}
               setPopupContent={setPopupContent}
               popupContent={popupContent}
+              basemapUri={basemapUri}
+              onBasemapChange={onBasemapChange}
               style={{ flex: 1, width: '100%', height: '100%' }}
               containerRef={containerRef}
             >
@@ -289,6 +324,10 @@ const ProjectMapView = ({
                 </Source>
               ) : null}
             </MapComponent>
+            <BasemapControl
+              value={basemapUri}
+              onChange={onUserBasemapChange}
+            />
           </Box>
         )}
       </CardContent>
@@ -308,6 +347,8 @@ const WellMapView = ({ well }: { well: IWell }) => {
   })
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
+  const { basemapUri, onBasemapChange, onUserBasemapChange } =
+    useCardBasemap('well')
 
   const sourceProps = waterWellsLayer?.sourceProps
   const layerProps = waterWellsLayer?.layerProps
@@ -486,6 +527,8 @@ const WellMapView = ({ well }: { well: IWell }) => {
             onMouseMoveCallback={onMapMouseMove}
             setPopupContent={setPopupContent}
             popupContent={popupContent}
+            basemapUri={basemapUri}
+            onBasemapChange={onBasemapChange}
             style={{ flex: 1, width: '100%', height: '100%' }}
             containerRef={containerRef}
           >
@@ -509,6 +552,7 @@ const WellMapView = ({ well }: { well: IWell }) => {
               </Source>
             ) : null}
           </MapComponent>
+          <BasemapControl value={basemapUri} onChange={onUserBasemapChange} />
         </Box>
         {locationNote ? (
           <>
