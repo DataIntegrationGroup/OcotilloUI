@@ -201,6 +201,22 @@ const specialResourceExpectations: Array<{
     expected: true,
   },
   {
+    // Correcting and publishing is an editor task; deleting stored
+    // transducer observations is not.
+    name: 'AMP editor cannot delete ocotillo hydrograph stored data',
+    groups: ['AMP.Editor'],
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'delete',
+    expected: false,
+  },
+  {
+    name: 'AMP admin can delete ocotillo hydrograph stored data',
+    groups: ['AMP.Admin'],
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'delete',
+    expected: true,
+  },
+  {
     name: 'AMP admin can access ocotillo hydrograph correction',
     groups: ['AMP.Admin'],
     resource: 'ocotillo.hydrograph-correction',

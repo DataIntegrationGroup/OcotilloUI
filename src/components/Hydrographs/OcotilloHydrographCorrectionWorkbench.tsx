@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link as RouterLink } from 'react-router'
 import ReactECharts from 'echarts-for-react'
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Alert,
-  Autocomplete,
   Box,
   Button,
   Checkbox,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   FormControlLabel,
   IconButton,
@@ -20,6 +22,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   TextField,
@@ -28,12 +31,17 @@ import {
   useTheme,
 } from '@mui/material'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import { DateTimePicker } from '@mui/x-date-pickers'
+import dayjs, { type Dayjs } from 'dayjs'
 import {
   ChevronLeft,
   ChevronRight,
   CleaningServices,
+  Clear,
   CloudUpload,
+  DeleteForever,
   ExpandMore,
+  OpenInNew,
   Refresh,
   Straighten,
   TableRows,
@@ -60,10 +68,19 @@ import {
   isAtLeastMode,
   type HydrographUiMode,
 } from './hydrographUiMode'
+import {
+  formatCollector,
+  type ManualObservationFieldMetadata,
+} from '@/utils/manualObservationFieldMetadata'
 
 interface ManualHydrographObservation {
   observation_datetime: string | Date
   depth_to_water_bgs: number
+  /**
+   * Field-event provenance for this reading, joined on by the page. Optional
+   * because demo mode has no Ocotillo records to join against.
+   */
+  fieldMetadata?: ManualObservationFieldMetadata | null
 }
 
 interface TransducerHydrographObservation {
@@ -72,8 +89,16 @@ interface TransducerHydrographObservation {
 }
 
 interface ManualOption {
+  /** Position in the manual series — also the chart's `dataIndex`. */
+  index: number
   label: string
   point: HydrographPoint
+  fieldMetadata: ManualObservationFieldMetadata | null
+}
+
+/** Outcome of a stored-data deletion, surfaced back in the workbench. */
+export interface HydrographDeleteResult {
+  deletedCount: number
 }
 
 // Everything the page needs to build the upload-contract payload
@@ -142,6 +167,18 @@ const CHART_PANEL_HEIGHTS = {
 } as const
 
 type ChartPanel = keyof typeof CHART_PANEL_HEIGHTS
+
+// Every panel is always present in the option, at a fixed index; the ones the
+// current upload does not use collapse to zero height and hide their axes.
+//
+// This is what lets the chart be updated by merge instead of `notMerge`.
+// ECharts matches components and series across a `setOption` by array
+// position, so an option whose arrays change length silently rebinds series to
+// the wrong grid — which is why the chart used to be rebuilt from scratch on
+// every edit, discarding the zoom window and the brushed selection with it.
+// Fixed positions make merge safe, and merge preserves both natively.
+const CHART_PANEL_ORDER = ['head', 'dtw', 'residual'] as const
+const GRID_INDEX: Record<ChartPanel, number> = { head: 0, dtw: 1, residual: 2 }
 
 const RESIDUAL_STORED_SERIES = 'Residual: stored − manual'
 const RESIDUAL_CORRECTED_SERIES = 'Residual: corrected − manual'
@@ -371,6 +408,150 @@ const MetadataFacts = ({ facts }: { facts: readonly MetadataFact[] }) => (
   </Box>
 )
 
+/** Field-event detail for the row tooltip; null when nothing is recorded. */
+const fieldEventTooltip = (
+  metadata: ManualObservationFieldMetadata | null | undefined
+) => {
+  if (!metadata) return null
+
+  const lines = [
+    ['Collected by', formatCollector(metadata)],
+    ['Method', metadata.measurementMethod],
+    ['Field event', formatDate(metadata.fieldEventDate)],
+    ['Notes', metadata.notes],
+  ].filter(([, value]) => value) as [string, string][]
+
+  if (lines.length === 0) return null
+
+  return (
+    <Box>
+      {lines.map(([label, value]) => (
+        <Typography key={label} variant="caption" display="block">
+          <strong>{label}:</strong> {value}
+        </Typography>
+      ))}
+    </Box>
+  )
+}
+
+/**
+ * Manual observations as a selectable table, replacing the dropdown that
+ * used to feed the snap target. The dropdown collapsed every measurement to
+ * one line of text and hid the rest, so comparing candidate anchors meant
+ * reopening it repeatedly; the table keeps the whole series visible and the
+ * selected anchor marked while the snap is applied.
+ */
+const ManualMeasurementTable = ({
+  options,
+  selected,
+  onSelect,
+}: {
+  options: readonly ManualOption[]
+  selected: ManualOption | null
+  onSelect: (option: ManualOption | null) => void
+}) => {
+  const selectedRowRef = useRef<HTMLTableRowElement>(null)
+  const selectedIndex = selected?.index
+
+  // Newest first: the most recent hand measurement is the usual snap anchor,
+  // so it should not be at the bottom of a decade-long scroll. Only the
+  // display order flips — `options` stays in chart order, since each entry's
+  // `index` is the series `dataIndex` the chart selects by.
+  const rowsNewestFirst = useMemo(() => [...options].reverse(), [options])
+
+  // Clicking a manual point on the chart selects a row that may sit outside
+  // the table's scroll viewport, so the selection pulls itself into view.
+  useEffect(() => {
+    if (selectedIndex === undefined) return
+    selectedRowRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [selectedIndex])
+
+  if (options.length === 0) {
+    return (
+      <Typography variant="caption" color="text.secondary">
+        No manual observations are available for this well.
+      </Typography>
+    )
+  }
+
+  return (
+    <TableContainer sx={{ maxHeight: 240 }}>
+      <Table
+        size="small"
+        stickyHeader
+        sx={{
+          '& td, & th': {
+            px: 0.75,
+            py: 0.25,
+            fontSize: '0.7rem',
+            whiteSpace: 'nowrap',
+          },
+          '& th': {
+            color: 'text.secondary',
+            fontWeight: 'bold',
+            bgcolor: 'background.default',
+          },
+        }}
+      >
+        <TableHead>
+          <TableRow>
+            <TableCell>Measured</TableCell>
+            <TableCell align="right">DTW (ft bgs)</TableCell>
+            <TableCell>Collected by</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rowsNewestFirst.map((option) => {
+            const isSelected = selected?.index === option.index
+            // Re-clicking the snap target clears it, so the table is also the
+            // way to undo a selection made by clicking the chart.
+            const toggle = () => onSelect(isSelected ? null : option)
+
+            const row = (
+              <TableRow
+                key={option.index}
+                ref={isSelected ? selectedRowRef : undefined}
+                hover
+                selected={isSelected}
+                tabIndex={0}
+                aria-selected={isSelected}
+                onClick={toggle}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return
+                  event.preventDefault()
+                  toggle()
+                }}
+                sx={{ cursor: 'pointer' }}
+              >
+                <TableCell>{option.point.time.toLocaleString()}</TableCell>
+                <TableCell align="right">
+                  {option.point.value.toFixed(2)}
+                </TableCell>
+                {/* Name only — the control column is narrow, and the
+                    organization would push it into a horizontal scroll. The
+                    row tooltip carries the qualified form. */}
+                <TableCell>{option.fieldMetadata?.collectedBy ?? '—'}</TableCell>
+              </TableRow>
+            )
+
+            // The rest of the field event — method, visit date, notes — is
+            // what decides whether an anchor is trustworthy, but it does not
+            // fit the control column, so it hangs off the row.
+            const details = fieldEventTooltip(option.fieldMetadata)
+            return details ? (
+              <Tooltip key={option.index} title={details} placement="left">
+                {row}
+              </Tooltip>
+            ) : (
+              row
+            )
+          })}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  )
+}
+
 const WorkbenchSection = ({
   title,
   defaultExpanded = false,
@@ -408,6 +589,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   initialUpload,
   initialFileName,
   onPublish,
+  onDeleteStoredRange,
   mode = DEFAULT_HYDROGRAPH_UI_MODE,
   wellMetadata,
   sensorDeployments = EMPTY_SENSOR_DEPLOYMENTS,
@@ -418,6 +600,14 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   initialUpload?: ParsedHydrographUpload | null
   initialFileName?: string | null
   onPublish?: (args: HydrographPublishArgs) => Promise<void>
+  /**
+   * Permanently deletes the stored transducer observations inside the range.
+   * Omitted when the session has no bound well, or when the signed-in user
+   * lacks delete permission — the destructive pane is hidden in both cases.
+   */
+  onDeleteStoredRange?: (
+    range: HydrographRange
+  ) => Promise<HydrographDeleteResult>
   mode?: HydrographUiMode
   wellMetadata?: HydrographWellMetadata | null
   sensorDeployments?: readonly HydrographSensorDeployment[]
@@ -447,6 +637,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [selectedRange, setSelectedRange] = useState<HydrographRange | null>(
     null
   )
+  // Mirror of the brushed selection, so the chart event handlers can compare
+  // against it without closing over changing state.
+  const selectedRangeRef = useRef<HydrographRange | null>(null)
   const [selectedManualOption, setSelectedManualOption] =
     useState<ManualOption | null>(null)
   const [shiftAmount, setShiftAmount] = useState<number>(0.1)
@@ -464,6 +657,17 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [error, setError] = useState<string | null>(null)
   const [qualityWarnings, setQualityWarnings] = useState<string[]>([])
   const [fileName, setFileName] = useState<string | null>(initialFileName ?? null)
+
+  // Stored-data deletion. The bounds are held separately from the brushed
+  // chart selection: the brush scopes correction edits, and reusing it for a
+  // destructive action would let an accidental drag arm a delete.
+  const [deleteStart, setDeleteStart] = useState<Dayjs | null>(null)
+  const [deleteEnd, setDeleteEnd] = useState<Dayjs | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null)
 
   // Progressive disclosure. Simple mode is the pressure-transducer workflow
   // only, so the acoustic-logger tooling (reflections) and its tuning knobs
@@ -569,19 +773,31 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     }
   }, [showReflectionTuning])
 
-  const manualPoints = useMemo<HydrographPoint[]>(
+  // Points and their field-event provenance are kept together through the
+  // parse/filter/sort so the metadata cannot drift out of step with the
+  // series the chart and the snap table index into.
+  const manualEntries = useMemo(
     () =>
       manualObservations
         .map((observation) => ({
-          time: parseObservationTimestamp(observation.observation_datetime),
-          value: Number(observation.depth_to_water_bgs),
+          point: {
+            time: parseObservationTimestamp(observation.observation_datetime),
+            value: Number(observation.depth_to_water_bgs),
+          },
+          fieldMetadata: observation.fieldMetadata ?? null,
         }))
         .filter(
-          (point) =>
-            !Number.isNaN(point.time.getTime()) && Number.isFinite(point.value)
+          (entry) =>
+            !Number.isNaN(entry.point.time.getTime()) &&
+            Number.isFinite(entry.point.value)
         )
-        .sort((a, b) => a.time.getTime() - b.time.getTime()),
+        .sort((a, b) => a.point.time.getTime() - b.point.time.getTime()),
     [manualObservations]
+  )
+
+  const manualPoints = useMemo<HydrographPoint[]>(
+    () => manualEntries.map((entry) => entry.point),
+    [manualEntries]
   )
 
   const storedTransducerPoints = useMemo<HydrographPoint[]>(
@@ -601,12 +817,51 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
   const manualOptions = useMemo<ManualOption[]>(
     () =>
-      manualPoints.map((point, index) => ({
+      manualEntries.map(({ point, fieldMetadata }, index) => ({
+        index,
         label: `${point.time.toLocaleString()} · ${point.value.toFixed(2)} ft`,
         point,
+        fieldMetadata,
       })),
-    [manualPoints]
+    [manualEntries]
   )
+
+  // Both bounds must be set explicitly — there is deliberately no "delete
+  // everything" default, and an inverted or unparsable range resolves to null
+  // rather than being silently reordered.
+  const deleteRange = useMemo<HydrographRange | null>(() => {
+    if (!deleteStart?.isValid() || !deleteEnd?.isValid()) return null
+    const startTime = deleteStart.toDate()
+    const endTime = deleteEnd.toDate()
+    return endTime.getTime() > startTime.getTime()
+      ? { startTime, endTime }
+      : null
+  }, [deleteEnd, deleteStart])
+
+  const deleteRangeIsInverted =
+    Boolean(deleteStart?.isValid() && deleteEnd?.isValid()) && !deleteRange
+
+  // Exactly what the request would remove, computed from the same stored
+  // series the chart draws, so the confirmation count is verifiable on screen.
+  const doomedStoredPoints = useMemo(() => {
+    if (!deleteRange) return []
+    const start = deleteRange.startTime.getTime()
+    const end = deleteRange.endTime.getTime()
+    return storedTransducerPoints.filter((point) => {
+      const time = point.time.getTime()
+      return time >= start && time <= end
+    })
+  }, [deleteRange, storedTransducerPoints])
+
+  const deletesEveryStoredPoint =
+    storedTransducerPoints.length > 0 &&
+    doomedStoredPoints.length === storedTransducerPoints.length
+
+  // Typed confirmation. The well name is used rather than a generic word so
+  // the phrase cannot be muscle-memoried across wells.
+  const deleteConfirmPhrase = thingName || 'DELETE'
+  const deleteConfirmMatches =
+    deleteConfirmText.trim() === deleteConfirmPhrase.trim()
 
   // Residuals against the manual measurements: at each manual observation,
   // the nearest transducer reading minus the manual value. Positive means the
@@ -658,8 +913,18 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   useEffect(() => {
     setUploaded(initialUpload ?? null)
     setFileName(initialFileName ?? null)
+    // Written inline rather than through applySelectedRange so this effect
+    // does not take a dependency that changes every render.
+    selectedRangeRef.current = null
     setSelectedRange(null)
     setSelectedManualOption(null)
+    // Merge keeps the zoom window across every other option change, which is
+    // the point of it. A new upload is the one case that has to opt out: it
+    // spans a different period, so the previous window would drop the user
+    // somewhere arbitrary in the new trace.
+    chartRef.current
+      ?.getEchartsInstance()
+      ?.dispatchAction({ type: 'dataZoom', start: 0, end: 100 })
 
     if (!initialUpload) {
       setRawUploadedMeasurements([])
@@ -762,136 +1027,163 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   // lockstep across them.
   const headPoints = uploaded?.valueKind === 'water_head' ? uploaded.measurements : null
 
-  // Panels are stacked top to bottom in this order, and every one of them is
-  // driven by the same time axis.
-  const chartPanels = useMemo<ChartPanel[]>(
-    () =>
-      [
-        headPoints ? 'head' : null,
-        'dtw' as const,
-        hasResiduals ? 'residual' : null,
-      ].filter(Boolean) as ChartPanel[],
+  // Which of the three panels this upload actually uses. They keep their
+  // fixed positions either way; the unused ones just collapse.
+  const visiblePanels = useMemo<Record<ChartPanel, boolean>>(
+    () => ({ head: Boolean(headPoints), dtw: true, residual: hasResiduals }),
     [hasResiduals, headPoints]
+  )
+
+  const shownPanels = useMemo(
+    () => CHART_PANEL_ORDER.filter((panel) => visiblePanels[panel]),
+    [visiblePanels]
   )
 
   const chartHeight = useMemo(
     () =>
       CHART_TOOLBAR_HEIGHT +
-      chartPanels.reduce((total, panel) => total + CHART_PANEL_HEIGHTS[panel], 0) +
-      CHART_PANEL_GAP * Math.max(0, chartPanels.length - 1) +
+      shownPanels.reduce((total, panel) => total + CHART_PANEL_HEIGHTS[panel], 0) +
+      CHART_PANEL_GAP * Math.max(0, shownPanels.length - 1) +
       CHART_AXIS_FOOTER_HEIGHT,
-    [chartPanels]
+    [shownPanels]
   )
 
   const chartOption = useMemo(() => {
-    const gridIndexOf = (panel: ChartPanel) => chartPanels.indexOf(panel)
-    const dtwGridIndex = gridIndexOf('dtw')
-    const residualGridIndex = gridIndexOf('residual')
-    const lastGridIndex = chartPanels.length - 1
+    const lastShownIndex = CHART_PANEL_ORDER.reduce(
+      (last, panel, index) => (visiblePanels[panel] ? index : last),
+      0
+    )
 
+    // Fixed length, fixed order, fixed panel binding. A series with nothing to
+    // draw carries an empty `data` rather than dropping out of the array, so
+    // merge never rebinds one series' data onto another.
+    //
+    // Every series also states its own `itemStyle` colour. Legend markers
+    // otherwise fall back to the palette entry for the series' position, which
+    // ties the swatch to how many series happen to be present.
     const series = [
-      headPoints
-        ? {
-            name: 'Raw water head',
-            type: 'line',
-            showSymbol: false,
-            xAxisIndex: gridIndexOf('head'),
-            yAxisIndex: gridIndexOf('head'),
-            data: headPoints.map((point) => [point.time, point.value]),
-            lineStyle: { color: theme.palette.info.main, width: 2 },
-          }
-        : null,
-      residuals.stored.length > 0
-        ? {
-            name: RESIDUAL_STORED_SERIES,
-            ...residualBarSeries(
-              residuals.stored,
-              theme.palette.secondary.main,
-              residualGridIndex
-            ),
-          }
-        : null,
-      residuals.corrected.length > 0
-        ? {
-            name: RESIDUAL_CORRECTED_SERIES,
-            ...residualBarSeries(
-              residuals.corrected,
-              theme.palette.success.main,
-              residualGridIndex
-            ),
-            // Perfect agreement sits on this line.
-            markLine: {
-              silent: true,
-              symbol: 'none',
-              data: [{ yAxis: 0 }],
-              lineStyle: { color: theme.palette.text.secondary, type: 'dashed' },
-              label: { show: false },
-            },
-          }
-        : null,
-      manualPoints.length > 0
-        ? {
-            name: 'Manual water levels',
-            type: 'scatter',
-            symbolSize: 10,
-            data: manualPoints.map((point) => [point.time, point.value]),
-            itemStyle: { color: theme.palette.primary.main },
-          }
-        : null,
-      highlightedManualPoint
-        ? {
-            name: 'Selected manual point',
-            type: 'scatter',
-            symbol: 'diamond',
-            symbolSize: 16,
-            z: 10,
-            data: [[highlightedManualPoint.time, highlightedManualPoint.value]],
-            itemStyle: {
-              color: theme.palette.error.main,
-              borderColor: theme.palette.background.paper,
-              borderWidth: 2,
-            },
-          }
-        : null,
-      storedTransducerPoints.length > 0
-        ? {
-            name: 'Stored transducer',
-            type: 'line',
-            showSymbol: false,
-            data: storedTransducerPoints.map((point) => [point.time, point.value]),
-            lineStyle: { color: theme.palette.secondary.main, width: 2 },
-          }
-        : null,
-      rawUploadedMeasurements.length > 0
-        ? {
-            name: 'Uploaded raw',
-            type: 'line',
-            showSymbol: false,
-            data: rawUploadedMeasurements.map((point) => [point.time, point.value]),
-            lineStyle: {
-              color: theme.palette.text.secondary,
-              width: 1,
-              type: 'dashed',
-            },
-          }
-        : null,
-      correctedMeasurements.length > 0
-        ? {
-            name: 'Uploaded corrected',
-            type: 'line',
-            showSymbol: false,
-            data: correctedMeasurements.map((point) => [point.time, point.value]),
-            lineStyle: { color: theme.palette.success.main, width: 3 },
-          }
-        : null,
+      {
+        name: 'Raw water head',
+        type: 'line',
+        showSymbol: false,
+        xAxisIndex: GRID_INDEX.head,
+        yAxisIndex: GRID_INDEX.head,
+        data: (headPoints ?? []).map((point) => [point.time, point.value]),
+        lineStyle: { color: theme.palette.info.main, width: 2 },
+        itemStyle: { color: theme.palette.info.main },
+      },
+      {
+        name: RESIDUAL_STORED_SERIES,
+        ...residualBarSeries(
+          residuals.stored,
+          theme.palette.secondary.main,
+          GRID_INDEX.residual
+        ),
+      },
+      {
+        name: RESIDUAL_CORRECTED_SERIES,
+        ...residualBarSeries(
+          residuals.corrected,
+          theme.palette.success.main,
+          GRID_INDEX.residual
+        ),
+        // Perfect agreement sits on this line.
+        markLine: {
+          silent: true,
+          symbol: 'none',
+          data: residuals.corrected.length > 0 ? [{ yAxis: 0 }] : [],
+          lineStyle: { color: theme.palette.text.secondary, type: 'dashed' },
+          label: { show: false },
+        },
+      },
+      {
+        name: 'Manual water levels',
+        type: 'scatter',
+        symbolSize: 10,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: manualPoints.map((point) => [point.time, point.value]),
+        itemStyle: { color: theme.palette.primary.main },
+      },
+      {
+        name: 'Selected manual point',
+        type: 'scatter',
+        symbol: 'diamond',
+        symbolSize: 16,
+        z: 10,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: highlightedManualPoint
+          ? [[highlightedManualPoint.time, highlightedManualPoint.value]]
+          : [],
+        itemStyle: {
+          color: theme.palette.error.main,
+          borderColor: theme.palette.background.paper,
+          borderWidth: 2,
+        },
+      },
+      {
+        name: 'Stored transducer',
+        type: 'line',
+        showSymbol: false,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: storedTransducerPoints.map((point) => [point.time, point.value]),
+        lineStyle: { color: theme.palette.secondary.main, width: 2 },
+        itemStyle: { color: theme.palette.secondary.main },
+        // Shade the span a pending deletion would remove, so the range being
+        // confirmed is visible against the data itself rather than only as two
+        // timestamps in the form.
+        markArea: {
+          silent: true,
+          itemStyle: { color: theme.palette.error.main, opacity: 0.15 },
+          label: {
+            show: true,
+            position: 'insideTop',
+            color: theme.palette.error.main,
+            formatter: 'Pending deletion',
+          },
+          data: deleteRange
+            ? [
+                [
+                  { xAxis: deleteRange.startTime },
+                  { xAxis: deleteRange.endTime },
+                ],
+              ]
+            : [],
+        },
+      },
+      {
+        name: 'Uploaded raw',
+        type: 'line',
+        showSymbol: false,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: rawUploadedMeasurements.map((point) => [point.time, point.value]),
+        lineStyle: {
+          color: theme.palette.text.secondary,
+          width: 1,
+          type: 'dashed',
+        },
+        itemStyle: { color: theme.palette.text.secondary },
+      },
+      {
+        name: 'Uploaded corrected',
+        type: 'line',
+        showSymbol: false,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: correctedMeasurements.map((point) => [point.time, point.value]),
+        lineStyle: { color: theme.palette.success.main, width: 3 },
+        itemStyle: { color: theme.palette.success.main },
+      },
     ]
-      .filter(Boolean)
-      // Series that did not claim a panel belong to the DTW grid.
-      .map((entry) =>
-        entry!.xAxisIndex === undefined
-          ? { ...entry, xAxisIndex: dtwGridIndex, yAxisIndex: dtwGridIndex }
-          : entry
-      )
+
+    // Empty series stay in the option but not in the legend, which would
+    // otherwise list traces the chart is not drawing.
+    const legendNames = series
+      .filter((entry) => (entry.data as unknown[]).length > 0)
+      .map((entry) => entry.name)
 
     // Every panel must span the same instants, not each series' own extent.
     // The head record usually covers one deployment while the DTW panel also
@@ -899,7 +1191,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     // head trace would stretch across the full width and imply coverage it
     // does not have.
     const sharedTimeDomain =
-      chartPanels.length > 1
+      shownPanels.length > 1
         ? [
             headPoints ?? [],
             manualPoints,
@@ -949,22 +1241,25 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     }
 
     // Stack the panels top to bottom, each one a fixed height with a small
-    // gap, so the whole column lines up on the shared axis at the bottom.
+    // gap, so the whole column lines up on the shared axis at the bottom. A
+    // panel this upload does not use keeps its slot at zero height, taking no
+    // space and no gap.
     let panelTop = CHART_TOOLBAR_HEIGHT
-    const grids = chartPanels.map((panel) => {
+    const grids = CHART_PANEL_ORDER.map((panel) => {
+      const height = visiblePanels[panel] ? CHART_PANEL_HEIGHTS[panel] : 0
       const grid = {
         left: 100,
         right: CHART_LEGEND_GUTTER,
         top: panelTop,
-        height: CHART_PANEL_HEIGHTS[panel],
+        height,
       }
-      panelTop += CHART_PANEL_HEIGHTS[panel] + CHART_PANEL_GAP
+      if (height > 0) panelTop += height + CHART_PANEL_GAP
       return grid
     })
 
     return {
       animation: false,
-      legend: chartTextStyles.legend,
+      legend: { ...chartTextStyles.legend, data: legendNames },
       grid: grids,
       toolbox: {
         top: 0,
@@ -1025,18 +1320,20 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         { type: 'inside', realtime: true, xAxisIndex: 'all' },
         { show: true, realtime: true, xAxisIndex: 'all' },
       ],
-      xAxis: chartPanels.map((_panel, index) => ({
+      xAxis: CHART_PANEL_ORDER.map((panel, index) => ({
         type: 'time',
         gridIndex: index,
+        show: visiblePanels[panel],
         ...sharedExtent,
         ...chartTextStyles.xAxis,
-        // Only the bottom panel carries labels; the ones above would just
-        // repeat them.
-        ...(index === lastGridIndex ? {} : { axisLabel: { show: false } }),
+        // Only the bottom visible panel carries labels; the ones above would
+        // just repeat them.
+        ...(index === lastShownIndex ? {} : { axisLabel: { show: false } }),
       })),
-      yAxis: chartPanels.map((panel, index) => ({
+      yAxis: CHART_PANEL_ORDER.map((panel, index) => ({
         type: 'value',
         gridIndex: index,
+        show: visiblePanels[panel],
         nameLocation: 'center',
         nameGap: 74,
         ...panelYAxis[panel],
@@ -1045,17 +1342,19 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       series,
     }
   }, [
-    chartPanels,
     chartTextStyles,
     correctedMeasurements,
+    deleteRange,
     headPoints,
     highlightedManualPoint,
     manualPoints,
     rawUploadedMeasurements,
     residuals,
+    shownPanels.length,
     showTooltip,
     storedTransducerPoints,
     theme,
+    visiblePanels,
   ])
 
   const tableRows = useMemo(() => {
@@ -1162,6 +1461,23 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     uploaded?.valueKind,
   ])
 
+  const applySelectedRange = (range: HydrographRange | null) => {
+    // Mirrored into a ref so the handlers below can compare against the
+    // current selection without being re-created on every change.
+    selectedRangeRef.current = range
+    setSelectedRange(range)
+  }
+
+  // Clearing from outside the chart has to take the brush overlay with it,
+  // otherwise the shaded band survives on a chart that no longer has a
+  // selection.
+  const clearBrushSelection = () => {
+    applySelectedRange(null)
+    chartRef.current
+      ?.getEchartsInstance()
+      ?.dispatchAction({ type: 'brush', areas: [] })
+  }
+
   const handleBrushSelected = (params: {
     batch?: Array<{ areas?: Array<{ coordRange?: [number, number] }> }>
   }) => {
@@ -1169,15 +1485,33 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     const coordRange = area?.coordRange
 
     if (!coordRange || coordRange.length !== 2) {
-      setSelectedRange(null)
+      if (selectedRangeRef.current !== null) applySelectedRange(null)
       return
     }
 
-    setSelectedRange({
-      startTime: new Date(coordRange[0]),
-      endTime: new Date(coordRange[1]),
-    })
+    const startTime = new Date(coordRange[0])
+    const endTime = new Date(coordRange[1])
+    const current = selectedRangeRef.current
+
+    // Identical ranges are dropped: ECharts re-emits the selection whenever
+    // the brush layer redraws, and a fresh object each time would re-render
+    // the workbench for no change.
+    if (
+      current &&
+      current.startTime.getTime() === startTime.getTime() &&
+      current.endTime.getTime() === endTime.getTime()
+    ) {
+      return
+    }
+
+    applySelectedRange({ startTime, endTime })
   }
+
+  // Restore drops the chart's own brush; the mirrored state has to follow.
+  const handleChartRestore = () => {
+    applySelectedRange(null)
+  }
+
 
   const handleChartClick = (params: {
     seriesName?: string
@@ -1256,9 +1590,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
           `snapped ${offset > 0 ? '+' : ''}${offset} ft to manual ${selectedManualOption.point.time.toISOString()}`
         )
       )
+      // The anchor's collector rides along in the audit trail: a snap is only
+      // as good as the manual reading it was aligned to.
+      const collector = formatCollector(selectedManualOption.fieldMetadata)
       setCorrectionLog((log) => [
         ...log,
-        `snap_to_manual (${offset > 0 ? '+' : ''}${offset} ft to ${selectedManualOption.point.time.toISOString()}${selectedRangeSuffix()})`,
+        `snap_to_manual (${offset > 0 ? '+' : ''}${offset} ft to ${selectedManualOption.point.time.toISOString()}${collector ? `, collected by ${collector}` : ''}${selectedRangeSuffix()})`,
       ])
       setError(null)
     } catch (snapError) {
@@ -1277,7 +1614,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     setCorrectDrift(false)
     setCorrectedMeasurements(rawUploadedMeasurements)
     setCorrectionLog(baselineCorrectionLog(uploaded))
-    setSelectedRange(null)
+    clearBrushSelection()
     setSelectedManualOption(null)
     setError(null)
   }
@@ -1295,6 +1632,64 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       })
     } finally {
       setIsPublishing(false)
+    }
+  }
+
+  // Prefill the delete bounds from the brushed chart selection. Copying is
+  // explicit rather than automatic so brushing never arms a deletion on its
+  // own, and the copied bounds stay editable in the pickers.
+  const useSelectionAsDeleteRange = () => {
+    if (!selectedRange) return
+    setDeleteStart(dayjs(selectedRange.startTime))
+    setDeleteEnd(dayjs(selectedRange.endTime))
+    setDeleteError(null)
+    setDeleteSuccess(null)
+  }
+
+  const clearDeleteRange = () => {
+    setDeleteStart(null)
+    setDeleteEnd(null)
+    setDeleteError(null)
+    setDeleteSuccess(null)
+  }
+
+  const openDeleteDialog = () => {
+    if (!deleteRange || doomedStoredPoints.length === 0) return
+    setDeleteConfirmText('')
+    setDeleteError(null)
+    setDeleteSuccess(null)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const closeDeleteDialog = () => {
+    // Never abandon the dialog mid-request — the caller is still writing.
+    if (isDeleting) return
+    setIsDeleteDialogOpen(false)
+    setDeleteConfirmText('')
+  }
+
+  const confirmDeleteStoredRange = async () => {
+    if (!onDeleteStoredRange || !deleteRange || !deleteConfirmMatches) return
+
+    setIsDeleting(true)
+    setDeleteError(null)
+    try {
+      const { deletedCount } = await onDeleteStoredRange(deleteRange)
+      setDeleteSuccess(
+        `Deleted ${deletedCount} stored transducer observation${deletedCount === 1 ? '' : 's'} between ${deleteRange.startTime.toLocaleString()} and ${deleteRange.endTime.toLocaleString()}.`
+      )
+      setIsDeleteDialogOpen(false)
+      setDeleteConfirmText('')
+      setDeleteStart(null)
+      setDeleteEnd(null)
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : 'Deleting the stored transducer data failed.'
+      )
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -1340,20 +1735,24 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             <Chip
               color="secondary"
               label={`Selection: ${selectedRange.startTime.toLocaleString()} to ${selectedRange.endTime.toLocaleString()}`}
-              onDelete={() => setSelectedRange(null)}
+              onDelete={clearBrushSelection}
             />
           ) : (
             <Chip variant="outlined" label="Selection: entire uploaded trace" />
           )}
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Refresh />}
-            onClick={resetCorrections}
-            disabled={rawUploadedMeasurements.length === 0}
-          >
-            Reset to Original
-          </Button>
+          <Tooltip title="Discard every correction and restore the dataset as it was loaded.">
+            <span>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Refresh />}
+                onClick={resetCorrections}
+                disabled={rawUploadedMeasurements.length === 0}
+              >
+                Reset to Original
+              </Button>
+            </span>
+          </Tooltip>
         </Stack>
       </Box>
       <Box sx={{ px: 2, pb: 2 }}>
@@ -1380,8 +1779,18 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                 width: { xs: '100%', lg: controlsCollapsed ? 0 : controlsWidth },
                 flexShrink: 0,
                 minWidth: 0,
-                overflow: 'hidden',
+                // Scrolls on its own, capped to the chart's height. Opening
+                // several sections used to grow the column past the chart and
+                // lengthen the whole page, so reaching a tool meant scrolling
+                // the hydrograph off screen — exactly when it is needed.
+                // Only above lg: the stacked layout puts the chart below the
+                // controls anyway, where an inner scroll would just trap it.
+                maxHeight: { xs: 'none', lg: chartHeight + CHART_PANEL_GAP * 2 },
+                overflowY: { xs: 'visible', lg: 'auto' },
+                overflowX: 'hidden',
                 display: controlsCollapsed ? { xs: 'none', lg: 'block' } : 'block',
+                // Room for the scrollbar so it never sits on top of a control.
+                pr: { xs: 0, lg: 0.5 },
               }}
             >
               <Stack spacing={1.5}>
@@ -1391,14 +1800,17 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         label={`Well: ${thingName || 'Unknown'}`}
                         {...(wellMetadata?.href
                           ? {
-                              // Routed link so opening the well details page
-                              // does not reload the app and discard the
-                              // corrections.
-                              component: RouterLink,
-                              to: wellMetadata.href,
+                              // Opens in a new tab: the correction session
+                              // holds unsaved edits, so navigating this tab to
+                              // the well details page would discard them.
+                              component: 'a',
+                              href: wellMetadata.href,
+                              target: '_blank',
+                              rel: 'noopener noreferrer',
                               clickable: true,
                               color: 'primary',
                               variant: 'outlined',
+                              icon: <OpenInNew fontSize="small" />,
                             }
                           : {})}
                       />
@@ -1600,21 +2012,15 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                 </WorkbenchSection>
 
                 <WorkbenchSection title="Snap">
-                    <Autocomplete
-                      size="small"
+                    <Typography variant="caption" color="text.secondary">
+                      Select the manual measurement to snap to. Clicking a
+                      manual point on the chart selects its row; clicking the
+                      selected row again clears it.
+                    </Typography>
+                    <ManualMeasurementTable
                       options={manualOptions}
-                      value={selectedManualOption}
-                      onChange={(_event, value) =>
-                        setSelectedManualOption(value)
-                      }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Manual observation"
-                          placeholder="Select or click on chart"
-                        />
-                      )}
-                      noOptionsText="No manual observations available for this well"
+                      selected={selectedManualOption}
+                      onSelect={setSelectedManualOption}
                     />
                     <Button
                       variant="outlined"
@@ -1630,26 +2036,131 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     </Button>
                 </WorkbenchSection>
 
-                <WorkbenchSection title="Output" defaultExpanded>
+                {/* Only rendered when the caller supplies a delete handler,
+                    i.e. a real well is bound and the user may delete. */}
+                {onDeleteStoredRange ? (
+                  <WorkbenchSection title="Delete Stored Data">
+                    <Alert severity="warning" sx={{ py: 0.25 }}>
+                      Permanently deletes stored transducer observations in
+                      Ocotillo. This cannot be undone.
+                    </Alert>
+                    <Typography variant="caption" color="text.secondary">
+                      Stored transducer observations for this well:{' '}
+                      {storedTransducerPoints.length}
+                    </Typography>
+                    <DateTimePicker
+                      label="Delete from"
+                      value={deleteStart}
+                      onChange={(value) => {
+                        setDeleteStart(value)
+                        setDeleteSuccess(null)
+                      }}
+                      disabled={isDeleting}
+                      slotProps={{ textField: { size: 'small' } }}
+                    />
+                    <DateTimePicker
+                      label="Delete to"
+                      value={deleteEnd}
+                      onChange={(value) => {
+                        setDeleteEnd(value)
+                        setDeleteSuccess(null)
+                      }}
+                      disabled={isDeleting}
+                      slotProps={{ textField: { size: 'small' } }}
+                    />
                     <Stack direction="row" spacing={1}>
                       <Button
                         variant="text"
                         size="small"
-                        startIcon={<Refresh />}
-                        onClick={resetCorrections}
-                        disabled={rawUploadedMeasurements.length === 0}
+                        fullWidth
+                        onClick={useSelectionAsDeleteRange}
+                        disabled={!selectedRange || isDeleting}
                       >
-                        Reset to Original
+                        Use Chart Selection
                       </Button>
                       <Button
                         variant="text"
                         size="small"
-                        onClick={downloadCorrectedCsv}
-                        disabled={correctedMeasurements.length === 0}
+                        fullWidth
+                        startIcon={<Clear />}
+                        onClick={clearDeleteRange}
+                        disabled={
+                          isDeleting || (!deleteStart && !deleteEnd)
+                        }
                       >
-                        Download CSV
+                        Clear Dates
                       </Button>
                     </Stack>
+                    {deleteRangeIsInverted ? (
+                      <Typography variant="caption" color="error">
+                        The end of the range must be after its start.
+                      </Typography>
+                    ) : null}
+                    {deleteRange ? (
+                      <Typography
+                        variant="caption"
+                        color={
+                          doomedStoredPoints.length > 0
+                            ? 'text.primary'
+                            : 'text.secondary'
+                        }
+                      >
+                        {doomedStoredPoints.length} stored observation
+                        {doomedStoredPoints.length === 1 ? '' : 's'} fall inside
+                        this range
+                        {deletesEveryStoredPoint
+                          ? ' — that is every stored observation for this well.'
+                          : '.'}
+                      </Typography>
+                    ) : null}
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      startIcon={<DeleteForever />}
+                      onClick={openDeleteDialog}
+                      // Nothing to delete is not a no-op worth confirming, so
+                      // an empty range never reaches the dialog.
+                      disabled={
+                        isDeleting ||
+                        !deleteRange ||
+                        doomedStoredPoints.length === 0
+                      }
+                    >
+                      Delete Stored Data...
+                    </Button>
+                    {deleteSuccess ? (
+                      <Alert
+                        severity="success"
+                        onClose={() => setDeleteSuccess(null)}
+                      >
+                        {deleteSuccess}
+                      </Alert>
+                    ) : null}
+                    {deleteError && !isDeleteDialogOpen ? (
+                      <Alert severity="error" onClose={() => setDeleteError(null)}>
+                        {deleteError}
+                      </Alert>
+                    ) : null}
+                    <Typography variant="caption" color="text.secondary">
+                      Deletion applies to data already stored in Ocotillo, not
+                      to the uploaded file or the corrections in this session.
+                    </Typography>
+                  </WorkbenchSection>
+                ) : null}
+
+                <WorkbenchSection title="Output" defaultExpanded>
+                    {/* Reset to Original lives in the header, next to the
+                        selection chip — a destructive discard does not belong
+                        beside the publish action. */}
+                    <Button
+                      variant="text"
+                      size="small"
+                      onClick={downloadCorrectedCsv}
+                      disabled={correctedMeasurements.length === 0}
+                    >
+                      Download CSV
+                    </Button>
                     <Button
                       variant="contained"
                       size="small"
@@ -1671,9 +2182,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     ) : null}
                     <Typography variant="caption" color="text.secondary">
                       Brush the chart to scope edits. Without a selection,
-                      actions apply to the full uploaded trace. Reset to
-                      Original discards every correction and restores the
-                      dataset as it was loaded.
+                      actions apply to the full uploaded trace.
                     </Typography>
                 </WorkbenchSection>
               </Stack>
@@ -1745,11 +2254,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     <ReactECharts
                       ref={chartRef}
                       option={chartOption}
-                      notMerge
                       style={{ width: '100%', height: '100%' }}
                       onEvents={{
                         brushSelected: handleBrushSelected,
                         click: handleChartClick,
+                        restore: handleChartRestore,
                       }}
                     />
                   </Box>
@@ -1790,12 +2299,100 @@ export const OcotilloHydrographCorrectionWorkbench = ({
           <Divider />
 
           <Typography variant="body2" color="text.secondary">
-            Click a manual point on the chart to prefill the snap target. The
-            uploaded raw trace stays visible as a dashed reference while edits
-            are applied to the corrected trace.
+            Click a manual point on the chart to select it in the Snap table.
+            The uploaded raw trace stays visible as a dashed reference while
+            edits are applied to the corrected trace.
           </Typography>
         </Stack>
       </Box>
+
+      <Dialog
+        open={isDeleteDialogOpen}
+        onClose={closeDeleteDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle color="error.main">
+          Delete stored transducer data?
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5}>
+            <Alert severity="error">
+              This permanently deletes {doomedStoredPoints.length} stored
+              observation{doomedStoredPoints.length === 1 ? '' : 's'} from
+              Ocotillo. It cannot be undone.
+            </Alert>
+            {deletesEveryStoredPoint ? (
+              <Alert severity="warning">
+                This range covers every stored transducer observation for this
+                well — nothing will remain.
+              </Alert>
+            ) : null}
+            <Table size="small">
+              <TableBody>
+                <TableRow>
+                  <TableCell sx={{ border: 0, pl: 0 }}>Well</TableCell>
+                  <TableCell sx={{ border: 0 }}>
+                    {thingName || 'Unknown'}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ border: 0, pl: 0 }}>From</TableCell>
+                  <TableCell sx={{ border: 0 }}>
+                    {deleteRange?.startTime.toLocaleString() ?? '—'}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ border: 0, pl: 0 }}>To</TableCell>
+                  <TableCell sx={{ border: 0 }}>
+                    {deleteRange?.endTime.toLocaleString() ?? '—'}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ border: 0, pl: 0 }}>Observations</TableCell>
+                  <TableCell sx={{ border: 0 }}>
+                    {doomedStoredPoints.length} of{' '}
+                    {storedTransducerPoints.length}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+            {/* Typed confirmation: deleting requires reading and reproducing
+                the well name, so the dialog cannot be cleared by reflex. */}
+            <Typography variant="body2">
+              Type <strong>{deleteConfirmPhrase}</strong> to confirm.
+            </Typography>
+            <TextField
+              size="small"
+              autoComplete="off"
+              label="Well name"
+              value={deleteConfirmText}
+              onChange={(event) => setDeleteConfirmText(event.target.value)}
+              disabled={isDeleting}
+              error={
+                deleteConfirmText.length > 0 && !deleteConfirmMatches
+              }
+            />
+            {deleteError ? <Alert severity="error">{deleteError}</Alert> : null}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            startIcon={<DeleteForever />}
+            onClick={confirmDeleteStoredRange}
+            disabled={!deleteConfirmMatches || isDeleting || !deleteRange}
+          >
+            {isDeleting
+              ? 'Deleting...'
+              : `Delete ${doomedStoredPoints.length} Observations`}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   )
 }

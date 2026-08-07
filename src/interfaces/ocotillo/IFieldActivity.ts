@@ -31,6 +31,7 @@ export interface IFieldActivitySample {
   observations?: IFieldActivitySampleObservation[]
   contact?: {
     name?: string | null
+    organization?: string | null
   } | null
 }
 
