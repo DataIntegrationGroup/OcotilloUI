@@ -62,10 +62,14 @@ Authorization: Bearer <OAuth2 access token>   (same OAuth2AuthorizationCodeBeare
   "provenance": {
     "source_file": "SO-0167_20250115.csv",
     "source_kind": "water_head",        // "water_head" | "depth_to_water"
-    "corrections": [                     // free-form audit trail, applied order
+    // Free-form audit trail, in applied order. Snap entries name the manual
+    // anchor's collector when the field event records one — the alignment is
+    // only as good as the hand measurement it was pinned to.
+    "corrections": [
       "convert_water_head (drift corrected)",
       "remove_offsets_zeros (threshold 0.25)",
-      "shift (-1.25 ft, 2025-03-16T00:00:00Z to 2025-04-15T00:00:00Z)"
+      "shift (-1.25 ft, 2025-03-16T00:00:00Z to 2025-04-15T00:00:00Z)",
+      "snap_to_manual (+0.42 ft to 2025-02-11T17:00:00Z, collected by Joseph Beman (NMBGMR))"
     ],
     "notes": "Snapped to 2025-04-13 manual measurement."
   },
@@ -166,6 +170,85 @@ Individual observations are not echoed back (the client already has them);
   `replace_overlapping=true`.
 - On success, the stored-transducer series is refetched so the new block
   appears on the chart and in the data table.
+
+## Proposed endpoint — delete stored observations by time range
+
+The workbench's **Delete Stored Data** pane removes stored transducer
+observations for a well over an explicit time range (re-ingesting a span that
+was published from a bad file, clearing readings recorded while the sensor was
+out of the water, and so on). No delete endpoint exists yet.
+
+```
+DELETE /observation/transducer-groundwater-level?thing_id=1234&start_time=2025-03-01T00:00:00Z&end_time=2025-03-15T00:00:00Z
+Authorization: Bearer <OAuth2 access token>
+```
+
+Query parameters mirror the existing `GET` on the same path, so the set the
+client previews with `GET` is exactly the set `DELETE` removes.
+
+| Parameter | Required | Detail |
+|---|---|---|
+| `thing_id` | yes | target well; deleting without it is rejected |
+| `start_time` | yes | ISO 8601 with explicit offset; inclusive |
+| `end_time` | yes | ISO 8601 with explicit offset; inclusive; must be after `start_time` |
+
+### Server-side semantics
+
+- Deletes every transducer observation for `thing_id` whose
+  `observation_datetime` falls within `[start_time, end_time]`, in one
+  transaction.
+- Blocks are reconciled: a block fully covered by the range is deleted; a
+  block partially covered keeps its surviving observations and has its
+  `start_datetime` / `end_datetime` narrowed to them.
+- Omitting `thing_id`, `start_time`, or `end_time` is a `422` — there is
+  deliberately no "delete everything" form of the request.
+
+### Response — `200 OK`
+
+```jsonc
+{
+  "deleted_observation_count": 1204,
+  "deleted_block_ids": [512],
+  "updated_block_ids": [498],
+  "thing_id": 1234
+}
+```
+
+### Errors
+
+| Status | Meaning |
+|---|---|
+| 401 | missing/expired token |
+| 403 | authenticated but lacking delete permission |
+| 404 | `thing_id` not found |
+| 422 | missing bound, unparsable timestamp, or `end_time` <= `start_time` |
+
+### UI safeguards
+
+Deletion is irreversible, so the workbench gates it at several points:
+
+- The pane only renders when a real Ocotillo well is bound (never in demo
+  mode) **and** the signed-in user passes
+  `can({ resource: 'ocotillo.hydrograph-correction', action: 'delete' })` —
+  admin-only, one step above the editor access the rest of the page needs.
+  The gate is a UX affordance, not a security control; the server must still
+  enforce `403`.
+- Both bounds must be entered explicitly. The brushed chart selection can be
+  copied into them with a button, but brushing alone never arms a deletion —
+  the brush scopes correction edits and reusing it here would let a stray drag
+  set up a delete.
+- An inverted range resolves to "no range" rather than being silently
+  reordered, and reports the problem inline.
+- The pending range is shaded on the chart over the stored series, so the
+  span being confirmed is visible against the data.
+- The pane counts the stored observations inside the range before anything is
+  sent, and the delete button stays disabled while that count is zero.
+- Confirmation is a modal that restates well, bounds, and the affected count
+  as a fraction of all stored observations, warns separately when the range
+  covers every stored observation, and requires the user to type the well
+  name — a per-well phrase, so the confirmation cannot be muscle-memoried.
+- The dialog cannot be dismissed while the request is in flight, and the
+  stored series is refetched on success so the chart shows what remains.
 
 ## Supporting endpoints for Wellntel ingestion
 
