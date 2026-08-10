@@ -58,6 +58,27 @@ export const zAddressResponse = z.object({
 });
 
 /**
+ * AssetAssociationResponse
+ */
+export const zAssetAssociationResponse = z.object({
+    asset_id: z.int(),
+    thing_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ]))
+});
+
+/**
+ * AssetAssociationUpdate
+ */
+export const zAssetAssociationUpdate = z.object({
+    thing_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ]))
+});
+
+/**
  * AssetResponse
  */
 export const zAssetResponse = z.object({
@@ -103,6 +124,22 @@ export const zAuthorResponse = z.object({
  */
 export const zBodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost = z.object({
     file: z.string()
+});
+
+/**
+ * Body_upload_and_record_asset_asset_upload_and_record_post
+ */
+export const zBodyUploadAndRecordAssetAssetUploadAndRecordPost = z.object({
+    file: z.string(),
+    thing_id: z.int(),
+    label: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
 });
 
 /**
@@ -1467,6 +1504,58 @@ export const zFeatureCollectionResponse = z.object({
 });
 
 /**
+ * FeedbackCreate
+ */
+export const zFeedbackCreate = z.object({
+    type: z.enum([
+        'bug',
+        'feature'
+    ]),
+    page_url: z.string(),
+    reporter_name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    reporter_email: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    browser: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    submitted_at: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    what_happened: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    severity: z.optional(z.string()).default('Low'),
+    problem: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    who_would_use: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    what_it_should_do: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
+});
+
+/**
+ * FeedbackResponse
+ */
+export const zFeedbackResponse = z.object({
+    jira_key: z.string(),
+    jira_url: z.string()
+});
+
+/**
  * activity_type
  */
 export const zActivityType = z.enum([
@@ -1583,6 +1672,87 @@ export const zGeoJsonProperties = z.object({
     ])),
     nma_site_date: z.optional(z.union([
         z.iso.date(),
+        z.null()
+    ]))
+});
+
+/**
+ * GeothermalWellResponse
+ *
+ * Read model for a geothermal well sourced from the legacy NM_Wells mirror.
+ *
+ * NOTE: This currently reads directly from the ``NMW_WellHeaders`` /
+ * ``NMW_WellLocations`` staging tables (see ``db/nmw_legacy.py``). Once the
+ * NM_Wells -> Ocotillo transform lands, these rows will be backed by the
+ * ``thing`` table and ``thing_id`` will be populated. Until then ``thing_id``
+ * is always ``None`` and ``well_data_id`` (legacy GUID) is the identifier.
+ */
+export const zGeothermalWellResponse = z.object({
+    well_data_id: z.uuid(),
+    thing_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    api: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_number: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_class: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    well_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    status: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    operator: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    owner: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    total_depth: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    completion_date: z.optional(z.union([
+        z.iso.datetime({
+            offset: true
+        }),
+        z.null()
+    ])),
+    has_geothermal_data: z.optional(z.union([
+        z.boolean(),
+        z.null()
+    ])),
+    county: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    state: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    latitude: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    longitude: z.optional(z.union([
+        z.number(),
         z.null()
     ]))
 });
@@ -1820,7 +1990,8 @@ export const zGroupResponse = z.object({
     parent_group_id: z.union([
         z.int(),
         z.null()
-    ])
+    ]),
+    well_count: z.optional(z.int()).default(0)
 });
 
 /**
@@ -2066,6 +2237,17 @@ export const zPageEmailResponse = z.object({
 });
 
 /**
+ * Page[GeothermalWellResponse]
+ */
+export const zPageGeothermalWellResponse = z.object({
+    items: z.array(zGeothermalWellResponse),
+    total: z.int().gte(0),
+    page: z.int().gte(1),
+    size: z.int().gte(1),
+    pages: z.int().gte(0)
+});
+
+/**
  * Page[GroundwaterLevelObservationResponse]
  */
 export const zPageGroundwaterLevelObservationResponse = z.object({
@@ -2177,12 +2359,15 @@ export const zOrganization = z.enum([
     'Pena Blanca Water & Sanitation District',
     'Town of Questa',
     'Town of Cerro',
+    'Cerro MDWCA',
     'Farr Cattle Company',
     'Carrizozo Orchard',
+    'White Oaks Pottery',
     'USFS, Kiowa Grasslands',
     'Cloud Country West Subdivision',
     'Chama West WUA',
     'El Rito Regional Water and Waste Water Association',
+    'El Rito MDWCA',
     'West Rim MDWUA',
     'Village of Willard',
     'Quemado Municipal Water & SWA',
@@ -2349,6 +2534,7 @@ export const zOrganization = z.enum([
     'Land Ventures LLC',
     'Las Lagunitas',
     'Las Lagunitas HOA',
+    'Lightning Dock Zanskar',
     'Living World Ministries',
     'Los Atrevidos, Inc',
     'Los Prados HOA',
@@ -2389,6 +2575,8 @@ export const zOrganization = z.enum([
     'Sierra Grande Lodge',
     'Sierra Vista Retirement Community',
     'Slash Triangle Ranch',
+    'Spanish Stirrup Rockshop',
+    'Sparrowhawk Farm',
     'Stagecoach Motel',
     'State of New Mexico',
     'Stephenson Ranch',
@@ -2410,6 +2598,7 @@ export const zOrganization = z.enum([
     'US Bureau of Indian Affairs, Santa Fe Indian School',
     'USFS, Carson NF, Taos Office',
     'USFS, Cibola NF, Magdalena Ranger District',
+    "USFS, Cibola NF, Supervisor's Office",
     'USFS, Santa Fe NF, Espanola Ranger District',
     'Ute Mountain Farms',
     'VA Hospital',
@@ -2440,6 +2629,9 @@ export const zOrganization = z.enum([
     'Los Ojos Mutual Domestic',
     'The Nature Conservancy (TNC)',
     'Smith Ranch LLC',
+    'Santa Ana Pueblo Department of Natural Resources',
+    'Village of Hope',
+    'WSP',
     'Zia Pueblo',
     'Our Lady of Guadalupe (OLG)',
     'PLSS'
@@ -3869,6 +4061,12 @@ export const zWellExportResponse = z.object({
     deployments: z.optional(z.array(zDeploymentResponse))
 });
 
+export const zHealthHealthGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
 export const zUploadAssetAssetUploadPostData = z.object({
     body: zBodyUploadAssetAssetUploadPost,
     path: z.optional(z.never()),
@@ -3881,6 +4079,17 @@ export const zUploadAssetAssetUploadPostData = z.object({
  * Successful Response
  */
 export const zUploadAssetAssetUploadPostResponse = z.record(z.string(), z.unknown());
+
+export const zUploadAndRecordAssetAssetUploadAndRecordPostData = z.object({
+    body: zBodyUploadAndRecordAssetAssetUploadAndRecordPost,
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zUploadAndRecordAssetAssetUploadAndRecordPostResponse = zAssetResponse;
 
 export const zListAssetsAssetGetData = z.object({
     body: z.optional(z.never()),
@@ -3907,6 +4116,20 @@ export const zAddAssetAssetPostData = z.object({
  * Successful Response
  */
 export const zAddAssetAssetPostResponse = zAssetResponse;
+
+export const zListUnassociatedAssetsAssetUnassociatedGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.object({
+        page: z.optional(z.int().gte(1)).default(1),
+        size: z.optional(z.int().gte(1).lte(10000)).default(25)
+    }))
+});
+
+/**
+ * Successful Response
+ */
+export const zListUnassociatedAssetsAssetUnassociatedGetResponse = zPageAssetResponse;
 
 export const zDeleteAssetAssetAssetIdDeleteData = z.object({
     body: z.optional(z.never()),
@@ -3942,6 +4165,19 @@ export const zUpdateAssetAssetAssetIdPatchData = z.object({
     query: z.optional(z.never())
 });
 
+export const zUpdateAssetThingAssociationAssetAssetIdAssociationPatchData = z.object({
+    body: zAssetAssociationUpdate,
+    path: z.object({
+        asset_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateAssetThingAssociationAssetAssetIdAssociationPatchResponse = zAssetAssociationResponse;
+
 export const zRemoveAssetAssetAssetIdRemoveDeleteData = z.object({
     body: z.optional(z.never()),
     path: z.object({
@@ -3976,7 +4212,10 @@ export const zGetContactsContactGetData = z.object({
     query: z.optional(z.object({
         sort: z.optional(z.string()),
         order: z.optional(z.string()),
-        filter: z.optional(z.string()),
+        filter: z.optional(z.union([
+            z.array(z.string()),
+            z.null()
+        ])),
         thing_id: z.optional(z.union([
             z.int(),
             z.null()
@@ -4261,6 +4500,17 @@ export const zGetContactAddressesContactContactIdAddressGetData = z.object({
  */
 export const zGetContactAddressesContactContactIdAddressGetResponse = zPageAddressResponse;
 
+export const zGetDisclaimerDisclaimerGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.object({
+        f: z.optional(z.union([
+            z.string(),
+            z.null()
+        ]))
+    }))
+});
+
 export const zGetGeospatialGeospatialGetData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -4312,6 +4562,29 @@ export const zCreateGroupGroupPostData = z.object({
  * Successful Response
  */
 export const zCreateGroupGroupPostResponse = zGroupResponse;
+
+export const zRemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        group_id: z.int(),
+        thing_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zRemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteResponse = z.void();
+
+export const zAddThingToGroupRouteGroupGroupIdThingsThingIdPostData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        group_id: z.int(),
+        thing_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
 
 export const zDeleteGroupGroupGroupIdDeleteData = z.object({
     body: z.optional(z.never()),
@@ -5086,6 +5359,45 @@ export const zSearchApiSearchGetData = z.object({
  */
 export const zSearchApiSearchGetResponse = zPageDict;
 
+export const zGetGeothermalWellsThingGeothermalWellGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.object({
+        county: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        name_contains: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        q: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        page: z.optional(z.int().gte(1)).default(1),
+        size: z.optional(z.int().gte(1).lte(10000)).default(25)
+    }))
+});
+
+/**
+ * Successful Response
+ */
+export const zGetGeothermalWellsThingGeothermalWellGetResponse = zPageGeothermalWellResponse;
+
+export const zGetGeothermalWellThingGeothermalWellWellDataIdGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        well_data_id: z.uuid()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zGetGeothermalWellThingGeothermalWellWellDataIdGetResponse = zGeothermalWellResponse;
+
 export const zGetWaterWellsThingWaterWellGetData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -5098,12 +5410,19 @@ export const zGetWaterWellsThingWaterWellGetData = z.object({
             z.string(),
             z.null()
         ])),
-        filter: z.optional(z.string()),
+        filter: z.optional(z.union([
+            z.array(z.string()),
+            z.null()
+        ])),
         query: z.optional(z.union([
             z.string(),
             z.null()
         ])),
         name: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        name_contains: z.optional(z.union([
             z.string(),
             z.null()
         ])),
@@ -5244,8 +5563,15 @@ export const zGetSpringsThingSpringGetData = z.object({
     query: z.optional(z.object({
         sort: z.optional(z.string()),
         order: z.optional(z.string()),
-        filter: z.optional(z.string()),
+        filter: z.optional(z.union([
+            z.array(z.string()),
+            z.null()
+        ])),
         query: z.optional(z.string()),
+        name_contains: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
         page: z.optional(z.int().gte(1)).default(1),
         size: z.optional(z.int().gte(1).lte(10000)).default(25)
     }))
@@ -5381,7 +5707,14 @@ export const zGetThingsThingGetData = z.object({
             z.null()
         ])),
         include_contacts: z.optional(z.boolean()).default(false),
-        filter: z.optional(z.string()),
+        filter: z.optional(z.union([
+            z.array(z.string()),
+            z.null()
+        ])),
+        name_contains: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
         page: z.optional(z.int().gte(1)).default(1),
         size: z.optional(z.int().gte(1).lte(10000)).default(25)
     }))
@@ -5499,3 +5832,16 @@ export const zReadNgwmnLithologyNgwmnLithologyPointidGetData = z.object({
     }),
     query: z.optional(z.never())
 });
+
+export const zCreateFeedbackFeedbackPostData = z.object({
+    body: zFeedbackCreate,
+    path: z.optional(z.never()),
+    query: z.optional(z.object({
+        _user: z.optional(z.unknown())
+    }))
+});
+
+/**
+ * Successful Response
+ */
+export const zCreateFeedbackFeedbackPostResponse = zFeedbackResponse;
