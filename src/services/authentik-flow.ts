@@ -1,6 +1,8 @@
 import {
   AUTHENTIK_AUTH_FLOW_SLUG,
+  AUTHENTIK_PASSWORD_RECOVERY_FLOW_SLUG,
   AUTHENTIK_SCOPE,
+  AUTHENTIK_BASE_URL,
   buildAuthentikApiUrl,
   buildAuthentikUrl,
   CLIENT_ID,
@@ -22,6 +24,7 @@ export type AuthentikFlowComponent =
   | 'ak-stage-identification'
   | 'ak-stage-password'
   | 'ak-stage-authenticator-validate'
+  | 'ak-stage-user-login'
   | 'ak-stage-access-denied'
   | 'ak-stage-flow-error'
   | 'xak-flow-redirect'
@@ -39,11 +42,15 @@ type FlowInfo = {
 
 export type AuthentikChallenge = {
   component: AuthentikFlowComponent
+  type?: string
   flow_info?: FlowInfo
   response_errors?: Record<string, ResponseErrorDetail[] | string[]>
   error_message?: string
   to?: string
   password_fields?: boolean
+  allow_show_password?: boolean
+  user_fields?: string[]
+  flow_designation?: string
   device_challenges?: Array<Record<string, unknown>>
 }
 
@@ -51,6 +58,7 @@ export type AuthentikFlowTransaction = {
   flowSlug: string
   query: string
   state: string
+  selectedOtpChallenge?: Record<string, unknown>
 }
 
 export type LoginFlowResult =
@@ -67,6 +75,8 @@ const GENERIC_AUTH_ERROR = 'The username or password is incorrect.'
 const GENERIC_OTP_ERROR = 'The verification code is incorrect or expired.'
 const GENERIC_NETWORK_ERROR =
   'Authentik is unavailable. Check your connection and try again.'
+const OTP_DEVICE_CLASSES = new Set(['totp', 'static', 'sms', 'email'])
+const MAX_FLOW_CONTINUATIONS = 8
 
 export class AuthentikFlowError extends Error {
   constructor(message: string) {
@@ -93,6 +103,11 @@ const getTransaction = (): AuthentikFlowTransaction | null => {
       flowSlug: parsed.flowSlug,
       query: parsed.query,
       state: parsed.state,
+      selectedOtpChallenge:
+        parsed.selectedOtpChallenge &&
+        typeof parsed.selectedOtpChallenge === 'object'
+          ? parsed.selectedOtpChallenge
+          : undefined,
     }
   } catch {
     return null
@@ -147,6 +162,21 @@ const buildAuthorizeQuery = async (): Promise<{
   return { query: params.toString(), state }
 }
 
+export const buildAuthentikPasswordRecoveryUrl = async (): Promise<string> => {
+  clearAuthentikFlowTransaction()
+  const { query } = await buildAuthorizeQuery()
+  const url = buildAuthentikUrl(
+    `/if/flow/${AUTHENTIK_PASSWORD_RECOVERY_FLOW_SLUG}/`,
+    AUTHENTIK_BASE_URL
+  )
+  const params = new URLSearchParams(query)
+  params.forEach((value, key) => {
+    url.searchParams.set(key, value)
+  })
+
+  return url.toString()
+}
+
 const executorUrl = (transaction: AuthentikFlowTransaction): URL => {
   const url = buildAuthentikApiUrl(
     `/api/v3/flows/executor/${transaction.flowSlug}/`
@@ -182,7 +212,29 @@ const requestChallenge = async (
     throw new AuthentikFlowError(GENERIC_NETWORK_ERROR)
   }
 
-  return (await response.json()) as AuthentikChallenge
+  const challenge = (await response.json()) as AuthentikChallenge
+  debugChallenge(challenge)
+  return challenge
+}
+
+const debugChallenge = (challenge: AuthentikChallenge): void => {
+  if (!import.meta.env.DEV || import.meta.env.MODE === 'test') return
+
+  console.debug('Authentik flow component:', challenge.component, {
+    component: challenge.component,
+    type: challenge.type,
+    flow_designation: challenge.flow_designation,
+    user_fields: challenge.user_fields,
+    password_fields: challenge.password_fields,
+    allow_show_password: challenge.allow_show_password,
+    response_error_fields: challenge.response_errors
+      ? Object.keys(challenge.response_errors)
+      : [],
+    device_challenge_count: challenge.device_challenges?.length ?? 0,
+    device_challenge_classes:
+      challenge.device_challenges?.map((device) => device.device_class) ?? [],
+    has_redirect: challenge.component === 'xak-flow-redirect',
+  })
 }
 
 const getFirstResponseError = (
@@ -230,27 +282,91 @@ const resolveRedirect = (challenge: AuthentikChallenge): string | null =>
     ? normalizeRedirect(challenge.to)
     : null
 
-const submitCredentials = async (
-  transaction: AuthentikFlowTransaction,
-  username: string,
-  password: string
-): Promise<AuthentikChallenge> => {
-  let challenge = await requestChallenge(transaction)
+const unsupportedComponentMessage = (challenge: AuthentikChallenge): string =>
+  `Authentik returned unsupported flow component "${challenge.component}".`
 
-  if (challenge.component === 'ak-stage-identification') {
-    challenge = await requestChallenge(transaction, {
-      component: 'ak-stage-identification',
-      uid_field: username,
-      ...(challenge.password_fields ? { password } : {}),
-    })
+const isOtpDeviceChallenge = (device: Record<string, unknown>): boolean =>
+  typeof device.device_class === 'string' &&
+  OTP_DEVICE_CLASSES.has(device.device_class)
+
+const prepareOtpTransaction = (
+  transaction: AuthentikFlowTransaction,
+  challenge: AuthentikChallenge
+): LoginFlowResult => {
+  const compatible =
+    challenge.device_challenges?.filter(isOtpDeviceChallenge) ?? []
+
+  if (challenge.device_challenges && compatible.length === 0) {
+    return {
+      status: 'error',
+      message:
+        'This sign-in requires an authenticator type this page does not support yet.',
+    }
   }
 
-  if (challenge.component !== 'ak-stage-password') return challenge
+  if (compatible.length > 1) {
+    return {
+      status: 'error',
+      message:
+        'Multiple authenticator choices are available. This page does not support choosing one yet.',
+    }
+  }
 
-  return requestChallenge(transaction, {
-    component: 'ak-stage-password',
-    password,
-  })
+  authentikFlowStore.transaction = {
+    ...transaction,
+    selectedOtpChallenge: compatible[0],
+  }
+  return {
+    status: 'otp_required',
+    transaction: authentikFlowStore.transaction ?? transaction,
+  }
+}
+
+const continueFlowAfterChallenge = async (
+  transaction: AuthentikFlowTransaction,
+  challenge: AuthentikChallenge
+): Promise<LoginFlowResult> => {
+  let current = challenge
+
+  for (let i = 0; i < MAX_FLOW_CONTINUATIONS; i++) {
+    const redirect = resolveRedirect(current)
+    if (redirect) {
+      clearAuthentikFlowTransaction()
+      return { status: 'redirect', to: redirect }
+    }
+
+    if (current.component === 'ak-stage-authenticator-validate') {
+      return prepareOtpTransaction(transaction, current)
+    }
+
+    if (current.component === 'ak-stage-user-login') {
+      current = await requestChallenge(transaction, {
+        component: 'ak-stage-user-login',
+      })
+      continue
+    }
+
+    if (
+      current.component === 'ak-stage-access-denied' ||
+      current.component === 'ak-stage-flow-error' ||
+      current.response_errors
+    ) {
+      return {
+        status: 'error',
+        message: publicErrorForChallenge(current, GENERIC_AUTH_ERROR),
+      }
+    }
+
+    return {
+      status: 'error',
+      message: unsupportedComponentMessage(current),
+    }
+  }
+
+  return {
+    status: 'error',
+    message: 'Authentik did not complete the sign-in flow.',
+  }
 }
 
 export const startAuthentikLoginFlow = async ({
@@ -278,26 +394,31 @@ export const startAuthentikLoginFlow = async ({
 
     authentikFlowStore.transaction = transaction
 
-    const nextChallenge = await submitCredentials(
-      transaction,
-      trimmedUsername,
-      password
-    )
+    let challenge = await requestChallenge(transaction)
 
-    const redirect = resolveRedirect(nextChallenge)
-    if (redirect) {
-      clearAuthentikFlowTransaction()
-      return { status: 'redirect', to: redirect }
-    }
+    for (let i = 0; i < MAX_FLOW_CONTINUATIONS; i++) {
+      if (challenge.component === 'ak-stage-identification') {
+        challenge = await requestChallenge(transaction, {
+          component: 'ak-stage-identification',
+          uid_field: trimmedUsername,
+        })
+        continue
+      }
 
-    if (nextChallenge.component === 'ak-stage-authenticator-validate') {
-      authentikFlowStore.transaction = transaction
-      return { status: 'otp_required', transaction }
+      if (challenge.component === 'ak-stage-password') {
+        challenge = await requestChallenge(transaction, {
+          component: 'ak-stage-password',
+          password,
+        })
+        return continueFlowAfterChallenge(transaction, challenge)
+      }
+
+      return continueFlowAfterChallenge(transaction, challenge)
     }
 
     return {
       status: 'error',
-      message: publicErrorForChallenge(nextChallenge, GENERIC_AUTH_ERROR),
+      message: 'Authentik did not request the expected password challenge.',
     }
   } catch (error) {
     return {
@@ -329,24 +450,56 @@ export const submitAuthentikOtp = async (
   }
 
   try {
-    const challenge = await requestChallenge(transaction, {
+    let challenge = await requestChallenge(transaction, {
       component: 'ak-stage-authenticator-validate',
       code,
+      ...(transaction.selectedOtpChallenge
+        ? { selected_challenge: transaction.selectedOtpChallenge }
+        : {}),
     })
 
-    const redirect = resolveRedirect(challenge)
-    if (redirect) {
-      clearAuthentikFlowTransaction()
-      return { status: 'redirect', to: redirect }
-    }
+    for (let i = 0; i < MAX_FLOW_CONTINUATIONS; i++) {
+      const redirect = resolveRedirect(challenge)
+      if (redirect) {
+        clearAuthentikFlowTransaction()
+        return { status: 'redirect', to: redirect }
+      }
 
-    if (
-      challenge.component === 'ak-stage-authenticator-validate' ||
-      challenge.response_errors
-    ) {
+      if (challenge.component === 'ak-stage-user-login') {
+        challenge = await requestChallenge(transaction, {
+          component: 'ak-stage-user-login',
+        })
+        continue
+      }
+
+      if (
+        challenge.component === 'ak-stage-authenticator-validate' ||
+        challenge.response_errors
+      ) {
+        return {
+          status: 'error',
+          message: publicErrorForChallenge(challenge, GENERIC_OTP_ERROR),
+        }
+      }
+
+      if (
+        challenge.component === 'ak-stage-access-denied' ||
+        challenge.component === 'ak-stage-flow-error'
+      ) {
+        clearAuthentikFlowTransaction()
+        return {
+          status: 'expired',
+          message: publicErrorForChallenge(
+            challenge,
+            'This sign-in session has expired. Start again to continue.'
+          ),
+        }
+      }
+
+      clearAuthentikFlowTransaction()
       return {
-        status: 'error',
-        message: publicErrorForChallenge(challenge, GENERIC_OTP_ERROR),
+        status: 'expired',
+        message: unsupportedComponentMessage(challenge),
       }
     }
 

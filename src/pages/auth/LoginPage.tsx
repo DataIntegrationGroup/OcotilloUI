@@ -8,7 +8,10 @@ import {
   TextField,
 } from '@mui/material'
 import { AuthLayout } from './AuthLayout'
-import { startAuthentikLoginFlow } from '@/services/authentik-flow'
+import {
+  buildAuthentikPasswordRecoveryUrl,
+  startAuthentikLoginFlow,
+} from '@/services/authentik-flow'
 
 export const LoginPage = () => {
   const navigate = useNavigate()
@@ -16,6 +19,7 @@ export const LoginPage = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [recoveryLoading, setRecoveryLoading] = useState(false)
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -39,6 +43,19 @@ export const LoginPage = () => {
     setError(result.message)
   }
 
+  const onForgotPassword = async () => {
+    setError(null)
+    setRecoveryLoading(true)
+
+    try {
+      const recoveryUrl = await buildAuthentikPasswordRecoveryUrl()
+      window.location.assign(recoveryUrl)
+    } catch {
+      setRecoveryLoading(false)
+      setError('Could not start password recovery. Try again in a moment.')
+    }
+  }
+
   return (
     <AuthLayout
       title="Sign in"
@@ -54,7 +71,7 @@ export const LoginPage = () => {
         <TextField
           autoComplete="username"
           autoFocus
-          disabled={loading}
+          disabled={loading || recoveryLoading}
           fullWidth
           id="username"
           label="Username or email"
@@ -66,7 +83,7 @@ export const LoginPage = () => {
 
         <TextField
           autoComplete="current-password"
-          disabled={loading}
+          disabled={loading || recoveryLoading}
           fullWidth
           id="password"
           label="Password"
@@ -78,13 +95,28 @@ export const LoginPage = () => {
         />
 
         <Button
-          disabled={loading}
+          disabled={loading || recoveryLoading}
           fullWidth
           size="large"
           type="submit"
           variant="contained"
         >
           {loading ? <CircularProgress color="inherit" size={22} /> : 'Sign in'}
+        </Button>
+
+        <Button
+          disabled={loading || recoveryLoading}
+          fullWidth
+          onClick={onForgotPassword}
+          size="large"
+          type="button"
+          variant="text"
+        >
+          {recoveryLoading ? (
+            <CircularProgress color="inherit" size={22} />
+          ) : (
+            'Forgot password?'
+          )}
         </Button>
       </Stack>
     </AuthLayout>

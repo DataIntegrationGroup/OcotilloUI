@@ -24,6 +24,12 @@ describe('authentik flow service', () => {
   })
 
   it('submits username and password, preserves transaction, and accepts OTP', async () => {
+    const selectedChallenge = {
+      device_class: 'totp',
+      device_uid: 'device-1',
+      challenge: {},
+      last_used: null,
+    }
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -31,8 +37,12 @@ describe('authentik flow service', () => {
       )
       .mockResolvedValueOnce(jsonResponse({ component: 'ak-stage-password' }))
       .mockResolvedValueOnce(
-        jsonResponse({ component: 'ak-stage-authenticator-validate' })
+        jsonResponse({
+          component: 'ak-stage-authenticator-validate',
+          device_challenges: [selectedChallenge],
+        })
       )
+      .mockResolvedValueOnce(jsonResponse({ component: 'ak-stage-user-login' }))
       .mockResolvedValueOnce(
         jsonResponse({
           component: 'xak-flow-redirect',
@@ -51,6 +61,9 @@ describe('authentik flow service', () => {
 
     expect(login.status).toBe('otp_required')
     expect(authentikFlowStore.transaction?.state).toBe('state')
+    expect(authentikFlowStore.transaction?.selectedOtpChallenge).toEqual(
+      selectedChallenge
+    )
 
     const otp = await submitAuthentikOtp('123456')
 
@@ -59,11 +72,17 @@ describe('authentik flow service', () => {
       to: 'http://localhost:3000/callback?code=abc&state=state',
     })
     expect(authentikFlowStore.transaction).toBeNull()
-    expect(fetchMock).toHaveBeenLastCalledWith(
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
       expect.stringContaining(
         '/api/v3/flows/executor/default-authentication-flow/'
       ),
       expect.objectContaining({
+        body: JSON.stringify({
+          component: 'ak-stage-authenticator-validate',
+          code: '123456',
+          selected_challenge: selectedChallenge,
+        }),
         credentials: 'include',
         method: 'POST',
       })
@@ -104,7 +123,7 @@ describe('authentik flow service', () => {
     })
   })
 
-  it('supports identification stages that collect password directly', async () => {
+  it('does not submit password to the identification stage', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -113,8 +132,13 @@ describe('authentik flow service', () => {
           password_fields: true,
         })
       )
+      .mockResolvedValueOnce(jsonResponse({ component: 'ak-stage-password' }))
+      .mockResolvedValueOnce(jsonResponse({ component: 'ak-stage-user-login' }))
       .mockResolvedValueOnce(
-        jsonResponse({ component: 'ak-stage-authenticator-validate' })
+        jsonResponse({
+          component: 'xak-flow-redirect',
+          to: 'http://localhost:3000/callback?code=abc&state=state',
+        })
       )
     vi.stubGlobal('fetch', fetchMock)
 
@@ -127,18 +151,54 @@ describe('authentik flow service', () => {
         username: 'user@example.com',
         password: 'password',
       })
-    ).resolves.toMatchObject({ status: 'otp_required' })
+    ).resolves.toMatchObject({ status: 'redirect' })
 
-    expect(fetchMock).toHaveBeenLastCalledWith(
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
       expect.any(String),
       expect.objectContaining({
         body: JSON.stringify({
           component: 'ak-stage-identification',
           uid_field: 'user@example.com',
-          password: 'password',
         }),
       })
     )
+  })
+
+  it('reports multiple authenticator choices without guessing', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          jsonResponse({ component: 'ak-stage-identification' })
+        )
+        .mockResolvedValueOnce(jsonResponse({ component: 'ak-stage-password' }))
+        .mockResolvedValueOnce(
+          jsonResponse({
+            component: 'ak-stage-authenticator-validate',
+            device_challenges: [
+              { device_class: 'totp', device_uid: 'totp-1' },
+              { device_class: 'email', device_uid: 'email-1' },
+            ],
+          })
+        )
+    )
+
+    const { startAuthentikLoginFlow } = await import(
+      '@/services/authentik-flow'
+    )
+
+    await expect(
+      startAuthentikLoginFlow({
+        username: 'user@example.com',
+        password: 'password',
+      })
+    ).resolves.toEqual({
+      status: 'error',
+      message:
+        'Multiple authenticator choices are available. This page does not support choosing one yet.',
+    })
   })
 
   it('returns an OTP error for invalid codes', async () => {
@@ -195,5 +255,22 @@ describe('authentik flow service', () => {
       status: 'error',
       message: 'Authentik is unavailable. Check your connection and try again.',
     })
+  })
+
+  it('builds a password recovery URL with PKCE authorize parameters', async () => {
+    const { buildAuthentikPasswordRecoveryUrl } = await import(
+      '@/services/authentik-flow'
+    )
+
+    const recoveryUrl = new URL(await buildAuthentikPasswordRecoveryUrl())
+
+    expect(recoveryUrl.pathname).toBe('/if/flow/password-recovery-flow/')
+    expect(recoveryUrl.searchParams.get('client_id')).toBeTruthy()
+    expect(recoveryUrl.searchParams.get('redirect_uri')).toContain('/callback')
+    expect(recoveryUrl.searchParams.get('response_type')).toBe('code')
+    expect(recoveryUrl.searchParams.get('code_challenge')).toBe('challenge')
+    expect(recoveryUrl.searchParams.get('code_challenge_method')).toBe('S256')
+    expect(recoveryUrl.searchParams.get('state')).toBe('state')
+    expect(sessionStorage.getItem('pkce_code_verifier')).toBe('verifier')
   })
 })

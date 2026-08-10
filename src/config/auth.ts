@@ -18,6 +18,10 @@ export const CLIENT_ID = import.meta.env.VITE_AUTHENTIK_CLIENT_ID || 'authentik'
 export const AUTHENTIK_AUTH_FLOW_SLUG =
   import.meta.env.VITE_AUTHENTIK_AUTH_FLOW_SLUG || 'default-authentication-flow'
 
+export const AUTHENTIK_PASSWORD_RECOVERY_FLOW_SLUG =
+  import.meta.env.VITE_AUTHENTIK_PASSWORD_RECOVERY_FLOW_SLUG ||
+  'password-recovery-flow'
+
 export const AUTHENTIK_SCOPE =
   import.meta.env.VITE_AUTHENTIK_SCOPE ||
   'openid profile email offline_access permissions'
