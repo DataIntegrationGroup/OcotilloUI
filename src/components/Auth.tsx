@@ -18,7 +18,12 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { buildAuthentikUrl, CLIENT_ID, REDIRECT_URI } from '@/config'
+import {
+  buildAuthentikUrl,
+  CLIENT_ID,
+  REDIRECT_URI,
+  STORAGE_KEYS,
+} from '@/config'
 
 type TokenResponse = {
   access_token: string
@@ -92,6 +97,7 @@ export const Callback = () => {
         transientStore.pkceVerifier = null
         transientStore.pkceState = null
         clearPkceFallbacks()
+        sessionStorage.removeItem(STORAGE_KEYS.authentikFlowTransaction)
 
         // Re-check everything under new auth context
         await queryClient.invalidateQueries()

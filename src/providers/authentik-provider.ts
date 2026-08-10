@@ -128,7 +128,9 @@ export const clearPkceFallbacks = (): void => {
 
 export const getAccessToken = async ({
   refresh,
-}: { refresh?: boolean } = {}): Promise<string | null> => {
+}: {
+  refresh?: boolean
+} = {}): Promise<string | null> => {
   const currentAccess = localStorage.getItem(STORAGE_KEYS.accessToken)
 
   if (!refresh) return currentAccess
@@ -240,6 +242,7 @@ export const authentikAuthProvider: AuthProvider = {
     transientStore.pkceVerifier = null
     transientStore.pkceState = null
     clearPkceFallbacks()
+    sessionStorage.removeItem(STORAGE_KEYS.authentikFlowTransaction)
 
     return { success: true, redirectTo: '/login' }
   },
@@ -278,6 +281,7 @@ export const authentikAuthProvider: AuthProvider = {
         transientStore.pkceVerifier = null
         transientStore.pkceState = null
         clearPkceFallbacks()
+        sessionStorage.removeItem(STORAGE_KEYS.authentikFlowTransaction)
 
         return { authenticated: false, redirectTo: '/login' }
       }
@@ -378,6 +382,7 @@ export const authentikAuthProvider: AuthProvider = {
       transientStore.pkceVerifier = null
       transientStore.pkceState = null
       clearPkceFallbacks()
+      sessionStorage.removeItem(STORAGE_KEYS.authentikFlowTransaction)
 
       return {
         logout: true,
