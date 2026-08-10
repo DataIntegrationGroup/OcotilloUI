@@ -1001,6 +1001,9 @@ export const convertWaterHeadToDepthToWater = ({
   const sensorDepths: Array<number | null> = sorted.map(() => null)
   let firstBinStartDepth: number | null = null
   let lastBinEndDepth: number | null = null
+  // Manuals the sensor depth is actually pinned to — the closing anchor of a
+  // bin that contained readings. See the knot insertion below.
+  const anchoredManuals: HydrographPoint[] = []
 
   for (let i = 0; i < manual.length - 1; i += 1) {
     const m0 = manual[i]
@@ -1035,6 +1038,7 @@ export const convertWaterHeadToDepthToWater = ({
       firstBinStartDepth = l0
     }
     lastBinEndDepth = l1
+    anchoredManuals.push(m1)
 
     // Drift is interpolated between the manual timestamps for the same reason.
     const t0 = toUnixTime(m0.time)
@@ -1056,7 +1060,7 @@ export const convertWaterHeadToDepthToWater = ({
     )
   }
 
-  return sorted.map((point, index) => {
+  const converted = sorted.map((point, index) => {
     let sensorDepth = sensorDepths[index]
     if (sensorDepth === null) {
       sensorDepth =
@@ -1070,6 +1074,63 @@ export const convertWaterHeadToDepthToWater = ({
       value: Number((sensorDepth - point.value).toFixed(4)),
     }
   })
+
+  return withAnchorKnots(converted, anchoredManuals)
+}
+
+/**
+ * Add a vertex to the converted trace at each manual measurement's own instant.
+ *
+ * Anchoring the sensor depth on the head at the measurement time (above) makes
+ * the *model* pass through the manual, but the chart draws straight segments
+ * between readings, and the model is not straight across them:
+ *
+ * - Without drift correction the sensor depth steps at every visit, so the
+ *   segment straddling a manual has its two ends computed from two different
+ *   sensor depths and the chord blends them.
+ * - With drift correction the sensor depth ramps while the head moves
+ *   independently, so depth to water is not linear between two readings.
+ *
+ * Either way the drawn line lands near the manual rather than on it — a few
+ * thousandths of a foot on a 12-hour cadence, and proportionally more the
+ * coarser the logging interval. Giving the polyline a vertex at the
+ * measurement instant removes the gap by construction.
+ *
+ * The value is the manual's own reading: the sensor depth the model pins at
+ * that instant is `manual + head(manual)`, so `sensorDepth - head` is the
+ * manual value exactly, in both drift modes.
+ *
+ * Knots carry a correction note. They are not logger readings, and anything
+ * downstream — publishing especially — should be able to tell them apart.
+ */
+const withAnchorKnots = (
+  converted: HydrographPoint[],
+  anchoredManuals: HydrographPoint[]
+): HydrographPoint[] => {
+  if (converted.length === 0 || anchoredManuals.length === 0) return converted
+
+  const first = toUnixTime(converted[0].time)
+  const last = toUnixTime(converted[converted.length - 1].time)
+  const existing = new Set(converted.map((point) => toUnixTime(point.time)))
+
+  const knots = anchoredManuals
+    .filter((anchor) => {
+      const t = toUnixTime(anchor.time)
+      // Strictly inside the record, and not already a reading — a manual that
+      // lands exactly on a logger timestamp needs no vertex added.
+      return t > first && t < last && !existing.has(t)
+    })
+    .map((anchor) => ({
+      time: anchor.time,
+      value: Number(anchor.value.toFixed(4)),
+      correctionNote: `anchor knot at the manual measurement (${anchor.value} ft)`,
+    }))
+
+  if (knots.length === 0) return converted
+
+  return [...converted, ...knots].sort(
+    (a, b) => toUnixTime(a.time) - toUnixTime(b.time)
+  )
 }
 
 const OFFSET_WINDOW_HALF_WIDTH = 5

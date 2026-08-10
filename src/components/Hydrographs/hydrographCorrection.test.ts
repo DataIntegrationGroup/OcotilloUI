@@ -748,75 +748,96 @@ END OF DATA`)
   })
 
   it('puts the corrected trace through the manual value at its own time, on a real export', () => {
-    // End to end on the real Diver Office artifact: parse, convert water head
-    // to depth to water against manual anchors, then snap. The manual times
-    // used here are deliberately off the logger's 12-hour cadence, which is
-    // the case the sampling-offset bug showed up in.
+    // End to end on the real Diver Office artifact, against the real manual
+    // observations Ocotillo holds for SA-0231. Only one of them falls inside
+    // the logged period, at 17:38 — five and a half hours off the logger's
+    // 12-hour cadence, which is the case the sampling offset showed up in.
     const text = readFileSync(
       resolve(process.cwd(), 'tmp/wellpy-samples/sa-0231_DK744_compensated.CSV'),
       'latin1'
     )
-    const parsed = parseHydrographUpload(text)
-    const readings = parsed.measurements
-
-    const mid = readings[Math.floor(readings.length / 2)].time
+    const readings = parseHydrographUpload(text).measurements
     const manualPoints = [
-      { time: new Date(readings[10].time.getTime() + 5 * 60 * 60 * 1000), value: 96.9 },
-      { time: new Date(mid.getTime() + 7 * 60 * 60 * 1000), value: 99.3 },
+      { time: new Date('2023-02-20T19:54:00Z'), value: 90.76 },
+      { time: new Date('2024-02-20T17:38:00Z'), value: 88.85 },
+      { time: new Date('2025-02-11T17:00:00Z'), value: 85.35 },
     ]
+    const anchor = manualPoints[1]
 
+    for (const correctDrift of [false, true]) {
+      const converted = convertWaterHeadToDepthToWater({
+        measurements: readings,
+        manualPoints,
+        correctDrift,
+      })
+
+      // The drawn line passes through the manual at its own instant, exactly.
+      // Before the anchor knot it landed at 88.8443 without drift correction
+      // and 88.8507 with it — near the measurement, but not on it.
+      expect(interpolateSeriesValueAt(converted, anchor.time)).toBeCloseTo(
+        anchor.value,
+        4
+      )
+
+      // The knot is a vertex the logger never recorded, so it is marked.
+      const knot = converted.find(
+        (point) => point.time.getTime() === anchor.time.getTime()
+      )
+      expect(knot?.correctionNote).toMatch(/anchor knot/)
+
+      // Nothing else gained a note, and no reading was dropped or duplicated.
+      expect(converted.filter((p) => p.correctionNote)).toHaveLength(1)
+      expect(converted).toHaveLength(readings.length + 1)
+
+      // So the residual at that manual reads zero, which is how the workbench
+      // shows the user the correction landed.
+      const [assessment] = assessDriftAtManualObservations(converted, [anchor])
+      expect(assessment.misfit).toBeCloseTo(0, 4)
+
+      // And a snap onto it is a no-op rather than a correction that
+      // reintroduces the offset.
+      const { offset, method } = calculateSnapOffset({
+        measurements: converted,
+        target: anchor,
+      })
+      expect(method).toBe('interpolated')
+      expect(offset).toBeCloseTo(0, 4)
+    }
+  })
+
+  it('snaps a converted trace onto a manual it was not anchored to', () => {
+    const text = readFileSync(
+      resolve(process.cwd(), 'tmp/wellpy-samples/sa-0231_DK744_compensated.CSV'),
+      'latin1'
+    )
+    const readings = parseHydrographUpload(text).measurements
     const converted = convertWaterHeadToDepthToWater({
       measurements: readings,
-      manualPoints,
+      manualPoints: [
+        { time: new Date('2023-02-20T19:54:00Z'), value: 90.76 },
+        { time: new Date('2024-02-20T17:38:00Z'), value: 88.85 },
+        { time: new Date('2025-02-11T17:00:00Z'), value: 85.35 },
+      ],
     })
 
-    // The conversion anchors on the head at each manual's own instant, so the
-    // trace passes exactly through the manual it is anchored to.
-    expect(interpolateSeriesValueAt(converted, manualPoints[1].time)).toBeCloseTo(
-      manualPoints[1].value,
-      4
-    )
-
-    // With drift correction the sensor depth ramps between the manual times,
-    // so the straight segment the chart draws between two readings is a blend
-    // of two different sensor depths and lands a few thousandths of a foot
-    // off. That residue is inherent to ramping, not a sampling offset.
-    const drifted = convertWaterHeadToDepthToWater({
-      measurements: readings,
-      manualPoints,
-      correctDrift: true,
-    })
-    for (const manual of manualPoints) {
-      expect(interpolateSeriesValueAt(drifted, manual.time)).toBeCloseTo(
-        manual.value,
-        2
-      )
-    }
-
-    // And a snap onto either anchor is a no-op rather than a correction that
-    // reintroduces the offset.
-    const { offset, method } = calculateSnapOffset({
-      measurements: converted,
-      target: manualPoints[1],
-    })
-    expect(method).toBe('interpolated')
-    expect(offset).toBeCloseTo(0, 3)
-
-    // Snapping to a manual the conversion did not anchor on still lands
-    // exactly on the measurement time.
-    const looseTarget = {
+    // Deliberately off-cadence: three hours into a 12-hour interval.
+    const target = {
       time: new Date(readings[200].time.getTime() + 3 * 60 * 60 * 1000),
       value: 97.5,
     }
-    const loose = calculateSnapOffset({
-      measurements: converted,
-      target: looseTarget,
-    })
-    expect(loose.method).toBe('interpolated')
 
-    const snapped = applyOffsetToRange(converted, loose.offset, null, 'snapped')
-    expect(interpolateSeriesValueAt(snapped, looseTarget.time)).toBeCloseTo(
-      looseTarget.value,
+    const { offset, method } = calculateSnapOffset({
+      measurements: converted,
+      target,
+    })
+    expect(method).toBe('interpolated')
+
+    // Offsets are rounded to four decimals before being applied, so the
+    // landing is exact to within that rounding — 0.0001 ft, a thousandth of
+    // an inch.
+    const snapped = applyOffsetToRange(converted, offset, null, 'snapped')
+    expect(interpolateSeriesValueAt(snapped, target.time)).toBeCloseTo(
+      target.value,
       3
     )
   })
