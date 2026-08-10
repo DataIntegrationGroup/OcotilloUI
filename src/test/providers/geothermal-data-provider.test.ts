@@ -121,6 +121,41 @@ describe('geothermal provider getList response shapes', () => {
     expect(total).toBe(42)
   })
 
+  it('passes meta.params through as query parameters', async () => {
+    const fn = stubFetch(resp(200, { items: [], total: 0 }))
+
+    await geothermalDataProvider.getList!({
+      resource: 'thing/geothermal-well',
+      pagination: { currentPage: 1, pageSize: 50, mode: 'server' },
+      filters: [],
+      sorters: [],
+      meta: { params: { q: 'jemez' } },
+    } as never)
+
+    const [requestedUrl] = fn.mock.calls[0] as unknown as [string]
+    const url = new URL(requestedUrl)
+    expect(url.searchParams.get('q')).toBe('jemez')
+    expect(url.searchParams.get('size')).toBe('50')
+  })
+
+  it('skips empty meta.params rather than sending them as literals', async () => {
+    const fn = stubFetch(resp(200, { items: [], total: 0 }))
+
+    await geothermalDataProvider.getList!({
+      resource: 'thing/geothermal-well',
+      pagination: { currentPage: 1, pageSize: 10, mode: 'server' },
+      filters: [],
+      sorters: [],
+      meta: { params: { q: '', county: null, basin: undefined } },
+    } as never)
+
+    const [requestedUrl] = fn.mock.calls[0] as unknown as [string]
+    const url = new URL(requestedUrl)
+    expect(url.searchParams.has('q')).toBe(false)
+    expect(url.searchParams.has('county')).toBe(false)
+    expect(url.searchParams.has('basin')).toBe(false)
+  })
+
   it('handles a bare array response', async () => {
     stubFetch(resp(200, [{ OBJECTID: 1 }]))
 

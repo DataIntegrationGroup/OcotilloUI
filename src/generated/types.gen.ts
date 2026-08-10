@@ -51,6 +51,30 @@ export type AddressResponse = {
 };
 
 /**
+ * AssetAssociationResponse
+ */
+export type AssetAssociationResponse = {
+    /**
+     * Asset Id
+     */
+    asset_id: number;
+    /**
+     * Thing Id
+     */
+    thing_id?: number | null;
+};
+
+/**
+ * AssetAssociationUpdate
+ */
+export type AssetAssociationUpdate = {
+    /**
+     * Thing Id
+     */
+    thing_id?: number | null;
+};
+
+/**
  * AssetResponse
  */
 export type AssetResponse = {
@@ -129,6 +153,28 @@ export type BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUpload
      * File
      */
     file: string;
+};
+
+/**
+ * Body_upload_and_record_asset_asset_upload_and_record_post
+ */
+export type BodyUploadAndRecordAssetAssetUploadAndRecordPost = {
+    /**
+     * File
+     */
+    file: string;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    /**
+     * Label
+     */
+    label?: string | null;
+    /**
+     * Name
+     */
+    name?: string | null;
 };
 
 /**
@@ -983,6 +1029,70 @@ export type FeatureCollectionResponse = {
 };
 
 /**
+ * FeedbackCreate
+ */
+export type FeedbackCreate = {
+    /**
+     * Type
+     */
+    type: 'bug' | 'feature';
+    /**
+     * Page Url
+     */
+    page_url: string;
+    /**
+     * Reporter Name
+     */
+    reporter_name?: string | null;
+    /**
+     * Reporter Email
+     */
+    reporter_email?: string | null;
+    /**
+     * Browser
+     */
+    browser?: string | null;
+    /**
+     * Submitted At
+     */
+    submitted_at?: string | null;
+    /**
+     * What Happened
+     */
+    what_happened?: string | null;
+    /**
+     * Severity
+     */
+    severity?: string;
+    /**
+     * Problem
+     */
+    problem?: string | null;
+    /**
+     * Who Would Use
+     */
+    who_would_use?: string | null;
+    /**
+     * What It Should Do
+     */
+    what_it_should_do?: string | null;
+};
+
+/**
+ * FeedbackResponse
+ */
+export type FeedbackResponse = {
+    /**
+     * Jira Key
+     */
+    jira_key: string;
+    /**
+     * Jira Url
+     */
+    jira_url: string;
+};
+
+/**
  * FieldActivityResponse
  */
 export type FieldActivityResponse = {
@@ -1132,6 +1242,88 @@ export type GeoJsonutmCoordinates = {
 };
 
 /**
+ * GeothermalWellResponse
+ *
+ * Read model for a geothermal well sourced from the legacy NM_Wells mirror.
+ *
+ * NOTE: This currently reads directly from the ``NMW_WellHeaders`` /
+ * ``NMW_WellLocations`` staging tables (see ``db/nmw_legacy.py``). Once the
+ * NM_Wells -> Ocotillo transform lands, these rows will be backed by the
+ * ``thing`` table and ``thing_id`` will be populated. Until then ``thing_id``
+ * is always ``None`` and ``well_data_id`` (legacy GUID) is the identifier.
+ */
+export type GeothermalWellResponse = {
+    /**
+     * Well Data Id
+     */
+    well_data_id: string;
+    /**
+     * Thing Id
+     */
+    thing_id?: number | null;
+    /**
+     * Api
+     */
+    api?: string | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Well Number
+     */
+    well_number?: string | null;
+    /**
+     * Well Class
+     */
+    well_class?: string | null;
+    /**
+     * Well Type
+     */
+    well_type?: string | null;
+    /**
+     * Status
+     */
+    status?: string | null;
+    /**
+     * Operator
+     */
+    operator?: string | null;
+    /**
+     * Owner
+     */
+    owner?: string | null;
+    /**
+     * Total Depth
+     */
+    total_depth?: number | null;
+    /**
+     * Completion Date
+     */
+    completion_date?: string | null;
+    /**
+     * Has Geothermal Data
+     */
+    has_geothermal_data?: boolean | null;
+    /**
+     * County
+     */
+    county?: string | null;
+    /**
+     * State
+     */
+    state?: string | null;
+    /**
+     * Latitude
+     */
+    latitude?: number | null;
+    /**
+     * Longitude
+     */
+    longitude?: number | null;
+};
+
+/**
  * GroundwaterLevelObservationResponse
  */
 export type GroundwaterLevelObservationResponse = {
@@ -1213,6 +1405,10 @@ export type GroupResponse = {
      * Parent Group Id
      */
     parent_group_id: number | null;
+    /**
+     * Well Count
+     */
+    well_count?: number;
 };
 
 /**
@@ -1593,6 +1789,32 @@ export type PageEmailResponse = {
      * Items
      */
     items: Array<EmailResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
+
+/**
+ * Page[GeothermalWellResponse]
+ */
+export type PageGeothermalWellResponse = {
+    /**
+     * Items
+     */
+    items: Array<GeothermalWellResponse>;
     /**
      * Total
      */
@@ -3860,7 +4082,7 @@ export type NoteType = 'Access' | 'Directions' | 'Communication' | 'Construction
 /**
  * organization
  */
-export type Organization = 'Unknown' | 'City of Aztec' | 'Daybreak Investments' | 'Vallecitos HOA' | 'SFC, Santa Fe Animal Shelter' | 'El Guicu Ditch Association' | 'Santa Fe Municipal Airport' | 'Uluru Development' | "AllSup's Convenience Stores" | 'Santa Fe Downs Resort' | 'City of Truth or Consequences, WWTP' | 'Riverbend Hotsprings' | 'Armendaris Ranch' | 'El Paso Water' | 'BLM, Socorro Field Office' | 'USFWS' | 'Sile MDWCA' | 'Pena Blanca Water & Sanitation District' | 'Town of Questa' | 'Town of Cerro' | 'Farr Cattle Company' | 'Carrizozo Orchard' | 'USFS, Kiowa Grasslands' | 'Cloud Country West Subdivision' | 'Chama West WUA' | 'El Rito Regional Water and Waste Water Association' | 'West Rim MDWUA' | 'Village of Willard' | 'Quemado Municipal Water & SWA' | 'Coyote Creek MDWUA' | 'Lamy MDWCA' | 'La Joya CWDA' | 'NM Firefighters Training Academy' | 'Cebolleta Land Grant' | 'Madrid Water Co-op' | 'Sun Valley Water and Sanitation' | 'Bluewater Lake MDWCA' | 'Bluewater Acres Domestic WUA' | 'Lybrook MDWCA' | 'New Mexico Museum of Natural History' | 'Hillsboro MDWCA' | 'Tyrone MDWCA' | 'Santa Clara Water System' | 'Casas Adobes MDWCA' | 'Lake Roberts WUA' | 'El Creston MDWCA' | 'Reserve Municipality Water Works' | 'Town of Estancia' | 'Pie Town MDWCA' | 'Roosevelt SWCD' | 'Otis MDWCA' | 'White Cliffs MDWUA' | 'Vista Linda Water Co-op' | 'Anasazi Trails Water Co-op' | 'Canon MDWCA' | 'Placitas Trails Water Co-op' | 'BLM, Roswell Office' | 'Forked Lightning Ranch' | 'Cottonwood RWA' | 'Pinon Ridge WUA' | 'McSherry Farms' | 'Agua Sana WUA' | 'Chamita MDWCA' | 'W Spear-bar Ranch' | 'Village of Capitan' | 'Brazos MDWCA' | 'Alto Alps HOA' | 'Chiricahua Desert Museum' | 'Bike Ranch' | 'Hachita MDWCA' | 'Carrizozo Municipal Water' | 'Dunhill Ranch' | 'Santa Fe Conservation Trust' | 'NMSU' | 'USGS' | 'TWDB' | 'NMED' | 'NMOSE' | 'NMBGMR' | 'Bernalillo County' | 'BLM' | 'BLM Taos Office' | 'SFC' | 'SFC, Fire Facilities' | 'SFC, Utilities Dept.' | 'SFC, Valle Vista Water Utility, Inc.' | 'City of Santa Fe' | 'City of Santa Fe WWTP' | 'City of Santa Fe, Municipal Recreation Complex' | 'City of Santa Fe, Sangre de Cristo Water Co.' | 'NMISC' | 'PVACD' | 'Bayard' | 'SNL' | 'USFS' | 'NMT' | 'NPS' | 'NMRWA' | 'NMDOT' | 'Taos SWCD' | 'Otero SWCD' | 'Northeastern SWCD' | 'CDWR' | 'Pendaries Village' | 'A&T Pump & Well Service, LLC' | 'A. G. Wassenaar, Inc' | 'AMEC' | 'Balleau Groundwater, Inc' | 'CDM Smith' | 'CH2M Hill' | 'Corbin Consulting, Inc' | 'Chevron' | 'Daniel B. Stephens & Associates, Inc' | 'EnecoTech' | 'Faith Engineering, Inc' | 'Foster Well Service, Inc' | 'Glorieta Geoscience, Inc' | 'Golder Associates, Inc' | "Hathorn's Well Service, Inc" | 'Hydroscience Associates, Inc' | 'IC Tech, Inc' | 'John Shomaker & Associates, Inc' | 'Kuckleman Pump Service' | 'Los Golondrinas' | 'Minton Engineers' | 'MJDarrconsult, Inc' | 'Puerta del Canon Ranch' | 'Rodgers & Company, Inc' | 'San Pedro Creek Estates HOA' | 'Statewide Drilling, Inc' | 'Tec Drilling Limited' | 'Tetra Tech, Inc' | 'Thompson Drilling, Inc' | 'Witcher & Associates' | 'Zeigler Geologic Consulting, LLC' | 'Sandia Well Service, Inc' | 'San Marcos Association' | 'URS' | 'Vista del Oro' | 'Abeyta Engineering, Inc' | 'Adobe Ranch' | 'Agua Fria Community Water Association' | 'Apache Gap Ranch' | 'Aspendale Mountain Retreat' | 'Augustin Plains Ranch LLC' | 'B & B Cattle Co' | 'Berridge Distributing Company' | "Bishop's Lodge" | 'Bonanza Creek Ranch' | 'Bug Scuffle Water Association' | 'Wehinahpay Mountain Camp' | 'Campbell Ranch' | 'Capitol Ford Santa Fe' | 'Cemex, Inc' | 'Cerro Community Center' | 'Santa Fe Jewish Center' | 'Chupadero MDWCA' | 'Cielo Lumbre HOA' | 'Circle Cross Ranch' | 'City of Alamogordo' | 'City of Portales, Public Works Dept.' | 'City of Socorro' | 'Commonwealth Conservancy' | 'Costilla MDWCA' | 'Country Club Garden Mobile Home Park' | 'Crossroads Cattle Co., Ltd' | 'Double H Ranch' | 'E.A. Meadows East' | 'El Camino Realty, Inc' | 'Eldorado Area Water & Sanitation District' | 'Bourbon Grill at El Gancho' | 'El Prado HOA' | 'El Rancho de las Golondrinas' | 'El Rito Canyon MDWCA' | 'Encantado Enterprises' | 'Estrella Concepts LLC' | 'Sixteen Springs Fire Department' | 'Fire Water Lodge' | 'Ford County Land & Cattle Company, Inc' | 'Friendly Construction, Inc' | 'Hacienda Del Cerezo' | 'Hefker Vega Ranch' | 'High Nogal Ranch' | 'Holloman Air Force Base' | 'Hyde Park Estates MDWCA' | 'Desert Village RV & Mobile Home Park' | 'K. Schmitt Trust' | 'La Cienega MDWCA' | 'La Vista HOA' | 'Land Ventures LLC' | 'Las Lagunitas' | 'Las Lagunitas HOA' | 'Living World Ministries' | 'Los Atrevidos, Inc' | 'Los Prados HOA' | 'Malaga MDWCA & SWA' | 'Mangas Outfitters' | 'Medina Gravel Pit' | 'Mendenhall Trading Co' | 'Mesa Verde Ranch' | 'NMDGF' | 'NMSU College of Agriculture' | 'Naiche Development' | 'NRAO' | 'NMSA' | 'Nogal MDWCA' | 'O Bar O Ranch' | 'OMI Wastewater Treatment Plant' | 'Old Road Ranch Pardners Ltd' | 'PNM Service Center' | 'Peace Tabernacle Church' | 'Pecos Trail Inn' | 'Pelican Spa' | 'Pistachio Tree Ranch' | 'Rancho Encantado' | 'Rancho San Lucas' | 'Rancho San Marcos' | 'Rancho Viejo Partnership' | 'Ranney Ranch' | 'Rio En Medio MDWCA' | 'San Acacia MDWCA' | 'San Juan Residences' | 'Sangre de Cristo Estates' | 'Santa Fe Community College' | 'Sangre de Cristo Center' | 'Santa Fe Horse Park' | 'Santa Fe Opera' | 'Santa Fe Waldorf School' | 'Shidoni Foundry and Gallery' | 'Sierra Grande Lodge' | 'Sierra Vista Retirement Community' | 'Slash Triangle Ranch' | 'Stagecoach Motel' | 'State of New Mexico' | 'Stephenson Ranch' | 'Sun Broadcasting Network' | 'Tano Rd LLC' | 'UNM-Taos' | 'Tee Pee Ranch/Tee Pee Subdivision' | 'Tent Rock, Inc' | 'Tesuque MDWCA' | 'The Great Cloud Zen Center' | 'Three Rivers Ranch' | 'Timberon Water and Sanitation District' | 'Town of Magdalena' | 'Town of Taos' | 'Town of Taos, National Guard Armory' | 'Trinity Ranch' | 'Tularosa Basin National Desalination Research Facility' | 'Turquoise Trail Charter School' | 'US Bureau of Indian Affairs, Santa Fe Indian School' | 'USFS, Carson NF, Taos Office' | 'USFS, Cibola NF, Magdalena Ranger District' | 'USFS, Santa Fe NF, Espanola Ranger District' | 'Ute Mountain Farms' | 'VA Hospital' | 'Velte' | 'Vereda Serena Property' | 'Village of Corona' | 'Village of Floyd' | 'Village of Melrose' | 'Village of Vaughn' | 'Vista Land Company' | 'Vista Redonda MDWCA' | 'Vista de Oro de Placitas Water Users Coop' | 'Walker Ranch' | 'Wild & Woolley Trailer Ranch' | 'Winter Brothers' | 'Yates Petroleum Corporation' | 'Zamora Accounting Services' | 'Agua Sana MWCD' | 'Canada Los Alamos MDWCA' | 'Canjilon Mutual Domestic Water System' | 'Cebolla Mutual Domestic' | 'Chihuahuan Desert Rangeland Research Center (CDRRC)' | 'East Rio Arriba SWCD' | 'El Prado Municipal Water' | 'Hachita Mutual Domestic' | 'Jornada Experimental Range (JER)' | 'La Canada Way HOA' | 'Los Ojos Mutual Domestic' | 'The Nature Conservancy (TNC)' | 'Smith Ranch LLC' | 'Zia Pueblo' | 'Our Lady of Guadalupe (OLG)' | 'PLSS';
+export type Organization = 'Unknown' | 'City of Aztec' | 'Daybreak Investments' | 'Vallecitos HOA' | 'SFC, Santa Fe Animal Shelter' | 'El Guicu Ditch Association' | 'Santa Fe Municipal Airport' | 'Uluru Development' | "AllSup's Convenience Stores" | 'Santa Fe Downs Resort' | 'City of Truth or Consequences, WWTP' | 'Riverbend Hotsprings' | 'Armendaris Ranch' | 'El Paso Water' | 'BLM, Socorro Field Office' | 'USFWS' | 'Sile MDWCA' | 'Pena Blanca Water & Sanitation District' | 'Town of Questa' | 'Town of Cerro' | 'Cerro MDWCA' | 'Farr Cattle Company' | 'Carrizozo Orchard' | 'White Oaks Pottery' | 'USFS, Kiowa Grasslands' | 'Cloud Country West Subdivision' | 'Chama West WUA' | 'El Rito Regional Water and Waste Water Association' | 'El Rito MDWCA' | 'West Rim MDWUA' | 'Village of Willard' | 'Quemado Municipal Water & SWA' | 'Coyote Creek MDWUA' | 'Lamy MDWCA' | 'La Joya CWDA' | 'NM Firefighters Training Academy' | 'Cebolleta Land Grant' | 'Madrid Water Co-op' | 'Sun Valley Water and Sanitation' | 'Bluewater Lake MDWCA' | 'Bluewater Acres Domestic WUA' | 'Lybrook MDWCA' | 'New Mexico Museum of Natural History' | 'Hillsboro MDWCA' | 'Tyrone MDWCA' | 'Santa Clara Water System' | 'Casas Adobes MDWCA' | 'Lake Roberts WUA' | 'El Creston MDWCA' | 'Reserve Municipality Water Works' | 'Town of Estancia' | 'Pie Town MDWCA' | 'Roosevelt SWCD' | 'Otis MDWCA' | 'White Cliffs MDWUA' | 'Vista Linda Water Co-op' | 'Anasazi Trails Water Co-op' | 'Canon MDWCA' | 'Placitas Trails Water Co-op' | 'BLM, Roswell Office' | 'Forked Lightning Ranch' | 'Cottonwood RWA' | 'Pinon Ridge WUA' | 'McSherry Farms' | 'Agua Sana WUA' | 'Chamita MDWCA' | 'W Spear-bar Ranch' | 'Village of Capitan' | 'Brazos MDWCA' | 'Alto Alps HOA' | 'Chiricahua Desert Museum' | 'Bike Ranch' | 'Hachita MDWCA' | 'Carrizozo Municipal Water' | 'Dunhill Ranch' | 'Santa Fe Conservation Trust' | 'NMSU' | 'USGS' | 'TWDB' | 'NMED' | 'NMOSE' | 'NMBGMR' | 'Bernalillo County' | 'BLM' | 'BLM Taos Office' | 'SFC' | 'SFC, Fire Facilities' | 'SFC, Utilities Dept.' | 'SFC, Valle Vista Water Utility, Inc.' | 'City of Santa Fe' | 'City of Santa Fe WWTP' | 'City of Santa Fe, Municipal Recreation Complex' | 'City of Santa Fe, Sangre de Cristo Water Co.' | 'NMISC' | 'PVACD' | 'Bayard' | 'SNL' | 'USFS' | 'NMT' | 'NPS' | 'NMRWA' | 'NMDOT' | 'Taos SWCD' | 'Otero SWCD' | 'Northeastern SWCD' | 'CDWR' | 'Pendaries Village' | 'A&T Pump & Well Service, LLC' | 'A. G. Wassenaar, Inc' | 'AMEC' | 'Balleau Groundwater, Inc' | 'CDM Smith' | 'CH2M Hill' | 'Corbin Consulting, Inc' | 'Chevron' | 'Daniel B. Stephens & Associates, Inc' | 'EnecoTech' | 'Faith Engineering, Inc' | 'Foster Well Service, Inc' | 'Glorieta Geoscience, Inc' | 'Golder Associates, Inc' | "Hathorn's Well Service, Inc" | 'Hydroscience Associates, Inc' | 'IC Tech, Inc' | 'John Shomaker & Associates, Inc' | 'Kuckleman Pump Service' | 'Los Golondrinas' | 'Minton Engineers' | 'MJDarrconsult, Inc' | 'Puerta del Canon Ranch' | 'Rodgers & Company, Inc' | 'San Pedro Creek Estates HOA' | 'Statewide Drilling, Inc' | 'Tec Drilling Limited' | 'Tetra Tech, Inc' | 'Thompson Drilling, Inc' | 'Witcher & Associates' | 'Zeigler Geologic Consulting, LLC' | 'Sandia Well Service, Inc' | 'San Marcos Association' | 'URS' | 'Vista del Oro' | 'Abeyta Engineering, Inc' | 'Adobe Ranch' | 'Agua Fria Community Water Association' | 'Apache Gap Ranch' | 'Aspendale Mountain Retreat' | 'Augustin Plains Ranch LLC' | 'B & B Cattle Co' | 'Berridge Distributing Company' | "Bishop's Lodge" | 'Bonanza Creek Ranch' | 'Bug Scuffle Water Association' | 'Wehinahpay Mountain Camp' | 'Campbell Ranch' | 'Capitol Ford Santa Fe' | 'Cemex, Inc' | 'Cerro Community Center' | 'Santa Fe Jewish Center' | 'Chupadero MDWCA' | 'Cielo Lumbre HOA' | 'Circle Cross Ranch' | 'City of Alamogordo' | 'City of Portales, Public Works Dept.' | 'City of Socorro' | 'Commonwealth Conservancy' | 'Costilla MDWCA' | 'Country Club Garden Mobile Home Park' | 'Crossroads Cattle Co., Ltd' | 'Double H Ranch' | 'E.A. Meadows East' | 'El Camino Realty, Inc' | 'Eldorado Area Water & Sanitation District' | 'Bourbon Grill at El Gancho' | 'El Prado HOA' | 'El Rancho de las Golondrinas' | 'El Rito Canyon MDWCA' | 'Encantado Enterprises' | 'Estrella Concepts LLC' | 'Sixteen Springs Fire Department' | 'Fire Water Lodge' | 'Ford County Land & Cattle Company, Inc' | 'Friendly Construction, Inc' | 'Hacienda Del Cerezo' | 'Hefker Vega Ranch' | 'High Nogal Ranch' | 'Holloman Air Force Base' | 'Hyde Park Estates MDWCA' | 'Desert Village RV & Mobile Home Park' | 'K. Schmitt Trust' | 'La Cienega MDWCA' | 'La Vista HOA' | 'Land Ventures LLC' | 'Las Lagunitas' | 'Las Lagunitas HOA' | 'Lightning Dock Zanskar' | 'Living World Ministries' | 'Los Atrevidos, Inc' | 'Los Prados HOA' | 'Malaga MDWCA & SWA' | 'Mangas Outfitters' | 'Medina Gravel Pit' | 'Mendenhall Trading Co' | 'Mesa Verde Ranch' | 'NMDGF' | 'NMSU College of Agriculture' | 'Naiche Development' | 'NRAO' | 'NMSA' | 'Nogal MDWCA' | 'O Bar O Ranch' | 'OMI Wastewater Treatment Plant' | 'Old Road Ranch Pardners Ltd' | 'PNM Service Center' | 'Peace Tabernacle Church' | 'Pecos Trail Inn' | 'Pelican Spa' | 'Pistachio Tree Ranch' | 'Rancho Encantado' | 'Rancho San Lucas' | 'Rancho San Marcos' | 'Rancho Viejo Partnership' | 'Ranney Ranch' | 'Rio En Medio MDWCA' | 'San Acacia MDWCA' | 'San Juan Residences' | 'Sangre de Cristo Estates' | 'Santa Fe Community College' | 'Sangre de Cristo Center' | 'Santa Fe Horse Park' | 'Santa Fe Opera' | 'Santa Fe Waldorf School' | 'Shidoni Foundry and Gallery' | 'Sierra Grande Lodge' | 'Sierra Vista Retirement Community' | 'Slash Triangle Ranch' | 'Spanish Stirrup Rockshop' | 'Sparrowhawk Farm' | 'Stagecoach Motel' | 'State of New Mexico' | 'Stephenson Ranch' | 'Sun Broadcasting Network' | 'Tano Rd LLC' | 'UNM-Taos' | 'Tee Pee Ranch/Tee Pee Subdivision' | 'Tent Rock, Inc' | 'Tesuque MDWCA' | 'The Great Cloud Zen Center' | 'Three Rivers Ranch' | 'Timberon Water and Sanitation District' | 'Town of Magdalena' | 'Town of Taos' | 'Town of Taos, National Guard Armory' | 'Trinity Ranch' | 'Tularosa Basin National Desalination Research Facility' | 'Turquoise Trail Charter School' | 'US Bureau of Indian Affairs, Santa Fe Indian School' | 'USFS, Carson NF, Taos Office' | 'USFS, Cibola NF, Magdalena Ranger District' | "USFS, Cibola NF, Supervisor's Office" | 'USFS, Santa Fe NF, Espanola Ranger District' | 'Ute Mountain Farms' | 'VA Hospital' | 'Velte' | 'Vereda Serena Property' | 'Village of Corona' | 'Village of Floyd' | 'Village of Melrose' | 'Village of Vaughn' | 'Vista Land Company' | 'Vista Redonda MDWCA' | 'Vista de Oro de Placitas Water Users Coop' | 'Walker Ranch' | 'Wild & Woolley Trailer Ranch' | 'Winter Brothers' | 'Yates Petroleum Corporation' | 'Zamora Accounting Services' | 'Agua Sana MWCD' | 'Canada Los Alamos MDWCA' | 'Canjilon Mutual Domestic Water System' | 'Cebolla Mutual Domestic' | 'Chihuahuan Desert Rangeland Research Center (CDRRC)' | 'East Rio Arriba SWCD' | 'El Prado Municipal Water' | 'Hachita Mutual Domestic' | 'Jornada Experimental Range (JER)' | 'La Canada Way HOA' | 'Los Ojos Mutual Domestic' | 'The Nature Conservancy (TNC)' | 'Smith Ranch LLC' | 'Santa Ana Pueblo Department of Natural Resources' | 'Village of Hope' | 'WSP' | 'Zia Pueblo' | 'Our Lady of Guadalupe (OLG)' | 'PLSS';
 
 /**
  * origin_type
@@ -3993,6 +4215,20 @@ export type WellPumpType = 'Submersible' | 'Jet' | 'Line Shaft' | 'Hand' | 'Wind
  */
 export type WellPurpose = 'Unknown' | 'Open, unequipped well' | 'Commercial' | 'Domestic' | 'Power generation' | 'Irrigation' | 'Livestock' | 'Mining' | 'Industrial' | 'Observation' | 'Public supply' | 'Shared domestic' | 'Institutional' | 'Unused' | 'Exploration' | 'Monitoring' | 'Production' | 'Injection';
 
+export type HealthHealthGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/health';
+};
+
+export type HealthHealthGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type UploadAssetAssetUploadPostData = {
     body: BodyUploadAssetAssetUploadPost;
     path?: never;
@@ -4021,6 +4257,31 @@ export type UploadAssetAssetUploadPostResponses = {
 };
 
 export type UploadAssetAssetUploadPostResponse = UploadAssetAssetUploadPostResponses[keyof UploadAssetAssetUploadPostResponses];
+
+export type UploadAndRecordAssetAssetUploadAndRecordPostData = {
+    body: BodyUploadAndRecordAssetAssetUploadAndRecordPost;
+    path?: never;
+    query?: never;
+    url: '/asset/upload-and-record';
+};
+
+export type UploadAndRecordAssetAssetUploadAndRecordPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UploadAndRecordAssetAssetUploadAndRecordPostError = UploadAndRecordAssetAssetUploadAndRecordPostErrors[keyof UploadAndRecordAssetAssetUploadAndRecordPostErrors];
+
+export type UploadAndRecordAssetAssetUploadAndRecordPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: AssetResponse;
+};
+
+export type UploadAndRecordAssetAssetUploadAndRecordPostResponse = UploadAndRecordAssetAssetUploadAndRecordPostResponses[keyof UploadAndRecordAssetAssetUploadAndRecordPostResponses];
 
 export type ListAssetsAssetGetData = {
     body?: never;
@@ -4086,6 +4347,42 @@ export type AddAssetAssetPostResponses = {
 };
 
 export type AddAssetAssetPostResponse = AddAssetAssetPostResponses[keyof AddAssetAssetPostResponses];
+
+export type ListUnassociatedAssetsAssetUnassociatedGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/asset/unassociated';
+};
+
+export type ListUnassociatedAssetsAssetUnassociatedGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListUnassociatedAssetsAssetUnassociatedGetError = ListUnassociatedAssetsAssetUnassociatedGetErrors[keyof ListUnassociatedAssetsAssetUnassociatedGetErrors];
+
+export type ListUnassociatedAssetsAssetUnassociatedGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageAssetResponse;
+};
+
+export type ListUnassociatedAssetsAssetUnassociatedGetResponse = ListUnassociatedAssetsAssetUnassociatedGetResponses[keyof ListUnassociatedAssetsAssetUnassociatedGetResponses];
 
 export type DeleteAssetAssetAssetIdDeleteData = {
     body?: never;
@@ -4175,6 +4472,36 @@ export type UpdateAssetAssetAssetIdPatchResponses = {
     200: unknown;
 };
 
+export type UpdateAssetThingAssociationAssetAssetIdAssociationPatchData = {
+    body: AssetAssociationUpdate;
+    path: {
+        /**
+         * Asset Id
+         */
+        asset_id: number;
+    };
+    query?: never;
+    url: '/asset/{asset_id}/association';
+};
+
+export type UpdateAssetThingAssociationAssetAssetIdAssociationPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateAssetThingAssociationAssetAssetIdAssociationPatchError = UpdateAssetThingAssociationAssetAssetIdAssociationPatchErrors[keyof UpdateAssetThingAssociationAssetAssetIdAssociationPatchErrors];
+
+export type UpdateAssetThingAssociationAssetAssetIdAssociationPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: AssetAssociationResponse;
+};
+
+export type UpdateAssetThingAssociationAssetAssetIdAssociationPatchResponse = UpdateAssetThingAssociationAssetAssetIdAssociationPatchResponses[keyof UpdateAssetThingAssociationAssetAssetIdAssociationPatchResponses];
+
 export type RemoveAssetAssetAssetIdRemoveDeleteData = {
     body?: never;
     path: {
@@ -4252,7 +4579,7 @@ export type GetContactsContactGetData = {
         /**
          * Filter
          */
-        filter?: string;
+        filter?: Array<string> | null;
         /**
          * Thing Id
          */
@@ -4972,6 +5299,36 @@ export type GetContactAddressesContactContactIdAddressGetResponses = {
 
 export type GetContactAddressesContactContactIdAddressGetResponse = GetContactAddressesContactContactIdAddressGetResponses[keyof GetContactAddressesContactContactIdAddressGetResponses];
 
+export type GetDisclaimerDisclaimerGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * F
+         *
+         * Response format. Use 'json' for the text as data.
+         */
+        f?: string | null;
+    };
+    url: '/disclaimer';
+};
+
+export type GetDisclaimerDisclaimerGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetDisclaimerDisclaimerGetError = GetDisclaimerDisclaimerGetErrors[keyof GetDisclaimerDisclaimerGetErrors];
+
+export type GetDisclaimerDisclaimerGetResponses = {
+    /**
+     * The disclaimer as HTML (default) or JSON (?f=json).
+     */
+    200: unknown;
+};
+
 export type GetGeospatialGeospatialGetData = {
     body?: never;
     path?: never;
@@ -5104,6 +5461,72 @@ export type CreateGroupGroupPostResponses = {
 };
 
 export type CreateGroupGroupPostResponse = CreateGroupGroupPostResponses[keyof CreateGroupGroupPostResponses];
+
+export type RemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: number;
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: never;
+    url: '/group/{group_id}/things/{thing_id}';
+};
+
+export type RemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteError = RemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteErrors[keyof RemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteErrors];
+
+export type RemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type RemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteResponse = RemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteResponses[keyof RemoveThingFromGroupRouteGroupGroupIdThingsThingIdDeleteResponses];
+
+export type AddThingToGroupRouteGroupGroupIdThingsThingIdPostData = {
+    body?: never;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: number;
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+    };
+    query?: never;
+    url: '/group/{group_id}/things/{thing_id}';
+};
+
+export type AddThingToGroupRouteGroupGroupIdThingsThingIdPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddThingToGroupRouteGroupGroupIdThingsThingIdPostError = AddThingToGroupRouteGroupGroupIdThingsThingIdPostErrors[keyof AddThingToGroupRouteGroupGroupIdThingsThingIdPostErrors];
+
+export type AddThingToGroupRouteGroupGroupIdThingsThingIdPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: unknown;
+};
 
 export type DeleteGroupGroupGroupIdDeleteData = {
     body?: never;
@@ -6787,6 +7210,86 @@ export type SearchApiSearchGetResponses = {
 
 export type SearchApiSearchGetResponse = SearchApiSearchGetResponses[keyof SearchApiSearchGetResponses];
 
+export type GetGeothermalWellsThingGeothermalWellGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * County
+         */
+        county?: string | null;
+        /**
+         * Name Contains
+         */
+        name_contains?: string | null;
+        /**
+         * Q
+         *
+         * Free-text search across well name, API, well number, operator and county. Whitespace-separated words are ANDed, so each word added narrows the result. Case-insensitive substring match.
+         */
+        q?: string | null;
+        /**
+         * Page
+         *
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/thing/geothermal-well';
+};
+
+export type GetGeothermalWellsThingGeothermalWellGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetGeothermalWellsThingGeothermalWellGetError = GetGeothermalWellsThingGeothermalWellGetErrors[keyof GetGeothermalWellsThingGeothermalWellGetErrors];
+
+export type GetGeothermalWellsThingGeothermalWellGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageGeothermalWellResponse;
+};
+
+export type GetGeothermalWellsThingGeothermalWellGetResponse = GetGeothermalWellsThingGeothermalWellGetResponses[keyof GetGeothermalWellsThingGeothermalWellGetResponses];
+
+export type GetGeothermalWellThingGeothermalWellWellDataIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Well Data Id
+         */
+        well_data_id: string;
+    };
+    query?: never;
+    url: '/thing/geothermal-well/{well_data_id}';
+};
+
+export type GetGeothermalWellThingGeothermalWellWellDataIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetGeothermalWellThingGeothermalWellWellDataIdGetError = GetGeothermalWellThingGeothermalWellWellDataIdGetErrors[keyof GetGeothermalWellThingGeothermalWellWellDataIdGetErrors];
+
+export type GetGeothermalWellThingGeothermalWellWellDataIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: GeothermalWellResponse;
+};
+
+export type GetGeothermalWellThingGeothermalWellWellDataIdGetResponse = GetGeothermalWellThingGeothermalWellWellDataIdGetResponses[keyof GetGeothermalWellThingGeothermalWellWellDataIdGetResponses];
+
 export type GetWaterWellsThingWaterWellGetData = {
     body?: never;
     path?: never;
@@ -6802,7 +7305,7 @@ export type GetWaterWellsThingWaterWellGetData = {
         /**
          * Filter
          */
-        filter?: string;
+        filter?: Array<string> | null;
         /**
          * Query
          */
@@ -6811,6 +7314,10 @@ export type GetWaterWellsThingWaterWellGetData = {
          * Name
          */
         name?: string | null;
+        /**
+         * Name Contains
+         */
+        name_contains?: string | null;
         /**
          * Include Contacts
          */
@@ -7148,11 +7655,15 @@ export type GetSpringsThingSpringGetData = {
         /**
          * Filter
          */
-        filter?: string;
+        filter?: Array<string> | null;
         /**
          * Query
          */
         query?: string;
+        /**
+         * Name Contains
+         */
+        name_contains?: string | null;
         /**
          * Page
          *
@@ -7460,7 +7971,11 @@ export type GetThingsThingGetData = {
         /**
          * Filter
          */
-        filter?: string;
+        filter?: Array<string> | null;
+        /**
+         * Name Contains
+         */
+        name_contains?: string | null;
         /**
          * Page
          *
@@ -7778,3 +8293,33 @@ export type ReadNgwmnLithologyNgwmnLithologyPointidGetResponses = {
      */
     200: unknown;
 };
+
+export type CreateFeedbackFeedbackPostData = {
+    body: FeedbackCreate;
+    path?: never;
+    query?: {
+        /**
+         *  User
+         */
+        _user?: unknown;
+    };
+    url: '/feedback';
+};
+
+export type CreateFeedbackFeedbackPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateFeedbackFeedbackPostError = CreateFeedbackFeedbackPostErrors[keyof CreateFeedbackFeedbackPostErrors];
+
+export type CreateFeedbackFeedbackPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: FeedbackResponse;
+};
+
+export type CreateFeedbackFeedbackPostResponse = CreateFeedbackFeedbackPostResponses[keyof CreateFeedbackFeedbackPostResponses];
