@@ -1576,7 +1576,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     if (!selectedManualOption || correctedMeasurements.length === 0) return
 
     try {
-      const offset = calculateSnapOffset({
+      const { offset, method } = calculateSnapOffset({
         measurements: correctedMeasurements,
         target: selectedManualOption.point,
         range: selectedRange,
@@ -1591,13 +1591,19 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         )
       )
       // The anchor's collector rides along in the audit trail: a snap is only
-      // as good as the manual reading it was aligned to.
+      // as good as the manual reading it was aligned to. So does how the
+      // anchor value was obtained — a clamped snap does not put the line
+      // through the measurement's own time, and a reviewer needs to know.
       const collector = formatCollector(selectedManualOption.fieldMetadata)
       setCorrectionLog((log) => [
         ...log,
-        `snap_to_manual (${offset > 0 ? '+' : ''}${offset} ft to ${selectedManualOption.point.time.toISOString()}${collector ? `, collected by ${collector}` : ''}${selectedRangeSuffix()})`,
+        `snap_to_manual (${offset > 0 ? '+' : ''}${offset} ft to ${selectedManualOption.point.time.toISOString()}, ${method === 'interpolated' ? 'interpolated at the measurement time' : 'clamped to the nearest end of the trace'}${collector ? `, collected by ${collector}` : ''}${selectedRangeSuffix()})`,
       ])
-      setError(null)
+      setError(
+        method === 'clamped'
+          ? 'The manual measurement falls outside the trace being corrected, so the snap used the nearest end of it instead of the value at the measurement time. Widen the selection, or pick a manual inside the uploaded span, for an exact match.'
+          : null
+      )
     } catch (snapError) {
       setError(
         snapError instanceof Error
