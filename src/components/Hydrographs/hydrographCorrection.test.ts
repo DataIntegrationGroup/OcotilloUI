@@ -8,6 +8,7 @@ import {
   convertWaterHeadToDepthToWater,
   detectOverpressureClipping,
   extractPointIdFromText,
+  interpolateSeriesValueAt,
   interpolateSpuriousReflections,
   normalizePointId,
   parseHydrographUpload,
@@ -96,19 +97,76 @@ Date Time,Depth To Water
     expect(snapped[1].correctionNote).toBe('shifted +1.5 ft; snapped -0.5 ft')
   })
 
-  it('calculates the offset needed to snap to the nearest manual point', () => {
-    const offset = calculateSnapOffset({
+  it('snaps to the trace value at the manual measurement time, not the nearest reading', () => {
+    // Logger rises 2 ft/day. The manual was taken at 18:00, three quarters of
+    // the way through the interval, where the trace reads 11.5. The nearest
+    // reading is the 12.0 at midnight, six hours away.
+    const measurements = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+      { time: new Date('2025-01-02T00:00:00Z'), value: 12 },
+    ]
+    const target = { time: new Date('2025-01-01T18:00:00Z'), value: 11.25 }
+
+    const { offset, method, anchorValue } = calculateSnapOffset({
+      measurements,
+      target,
+    })
+
+    expect(method).toBe('interpolated')
+    expect(anchorValue).toBeCloseTo(11.5, 4)
+    // -0.25 against the measurement time; snapping to the nearest reading
+    // would have given -0.75 and left the line 0.5 ft off at 18:00.
+    expect(offset).toBeCloseTo(-0.25, 4)
+
+    // The acceptance criterion itself: after the offset, the corrected line
+    // passes through the manual value at the manual's own instant.
+    const corrected = applyOffsetToRange(measurements, offset, null, 'snapped')
+    expect(interpolateSeriesValueAt(corrected, target.time)).toBeCloseTo(
+      target.value,
+      4
+    )
+  })
+
+  it('clamps to the nearest end when the manual falls outside the trace', () => {
+    const { offset, method } = calculateSnapOffset({
       measurements: [
         { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
         { time: new Date('2025-01-02T00:00:00Z'), value: 12 },
       ],
-      target: {
-        time: new Date('2025-01-02T06:00:00Z'),
-        value: 11.25,
-      },
+      // Six hours after the last reading: there is no line at this instant.
+      target: { time: new Date('2025-01-02T06:00:00Z'), value: 11.25 },
     })
 
-    expect(offset).toBe(-0.75)
+    expect(method).toBe('clamped')
+    expect(offset).toBeCloseTo(-0.75, 4)
+  })
+
+  it('interpolates the series value at an arbitrary instant', () => {
+    const series = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+      { time: new Date('2025-01-02T00:00:00Z'), value: 12 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 11 },
+    ]
+
+    // Endpoints, an exact sample, and both interpolated halves.
+    expect(interpolateSeriesValueAt(series, new Date('2025-01-01T00:00:00Z'))).toBe(10)
+    expect(interpolateSeriesValueAt(series, new Date('2025-01-02T00:00:00Z'))).toBe(12)
+    expect(interpolateSeriesValueAt(series, new Date('2025-01-03T00:00:00Z'))).toBe(11)
+    expect(
+      interpolateSeriesValueAt(series, new Date('2025-01-01T06:00:00Z'))
+    ).toBeCloseTo(10.5, 4)
+    expect(
+      interpolateSeriesValueAt(series, new Date('2025-01-02T12:00:00Z'))
+    ).toBeCloseTo(11.5, 4)
+
+    // Outside the series, and an empty series: nothing to read.
+    expect(
+      interpolateSeriesValueAt(series, new Date('2024-12-31T23:00:00Z'))
+    ).toBeNull()
+    expect(
+      interpolateSeriesValueAt(series, new Date('2025-01-03T01:00:00Z'))
+    ).toBeNull()
+    expect(interpolateSeriesValueAt([], new Date('2025-01-01T00:00:00Z'))).toBeNull()
   })
 
   it('parses a Diver Office pressure-transducer export as water head', () => {
@@ -152,17 +210,23 @@ END OF DATA`)
       { time: new Date('2025-01-04T00:00:00Z'), value: 52 },
     ]
 
-    // Bin covers the first three points; L1 = 52 + 9.8 = 61.8. The final
-    // point falls at the second manual observation and extends the last
-    // bin's sensor depth.
+    // L1 is anchored on the head at the second manual's own time, which here
+    // falls exactly on the 01-04 reading: L1 = 52 + 9.6 = 61.6. Anchoring on
+    // the bin's last reading instead (9.8, a day early) would put the trace
+    // 0.2 ft off at the measurement.
     const converted = convertWaterHeadToDepthToWater({
       measurements,
       manualPoints,
     })
 
     expect(converted.map((point) => point.value)).toEqual([
-      51.8, 51.3, 52, 52.2,
+      51.6, 51.1, 51.8, 52,
     ])
+
+    // The converted trace passes through the manual at its own time.
+    expect(
+      interpolateSeriesValueAt(converted, manualPoints[1].time)
+    ).toBeCloseTo(52, 4)
   })
 
   it('drops zero-head readings before converting', () => {
@@ -193,15 +257,18 @@ END OF DATA`)
       { time: new Date('2025-01-03T06:00:00Z'), value: 52 },
     ]
 
-    // L0 = 50 + 10 = 60, L1 = 52 + 9.8 = 61.8, interpolated across the
-    // covered span, so the trace starts exactly at the first manual value.
+    // L0 = 50 + 10 = 60 at the first manual, L1 = 52 + 9.8 = 61.8 at the
+    // second. The second manual is six hours past the last reading, so its
+    // head cannot be interpolated and the last reading stands in — but the
+    // drift ramp now spans the manual timestamps (54 h) rather than the
+    // first and last readings (48 h), so L reaches L1 at the measurement.
     const converted = convertWaterHeadToDepthToWater({
       measurements,
       manualPoints,
       correctDrift: true,
     })
 
-    expect(converted.map((point) => point.value)).toEqual([50, 50.4, 52])
+    expect(converted.map((point) => point.value)).toEqual([50, 50.3, 51.8])
   })
 
   it('converts with a single manual anchor as a constant hanging point', () => {
@@ -211,15 +278,20 @@ END OF DATA`)
       { time: new Date('2025-01-03T00:00:00Z'), value: 9.8 },
     ]
 
-    // hanging point = 50 + head at the nearest reading to the manual (10.5)
+    // Hanging point = 50 + head at the manual's own time. The manual sits
+    // three hours into the 01-02 -> 01-03 interval, where the head reads
+    // 10.4125, not the 10.5 of the nearest reading.
+    const manual = { time: new Date('2025-01-02T03:00:00Z'), value: 50 }
     const converted = convertWaterHeadToDepthToWater({
       measurements,
-      manualPoints: [
-        { time: new Date('2025-01-02T03:00:00Z'), value: 50 },
-      ],
+      manualPoints: [manual],
     })
 
-    expect(converted.map((point) => point.value)).toEqual([50.5, 50, 50.7])
+    expect(converted.map((point) => point.value)).toEqual([
+      50.4125, 49.9125, 50.6125,
+    ])
+
+    expect(interpolateSeriesValueAt(converted, manual.time)).toBeCloseTo(50, 4)
   })
 
   it('rejects conversion without manual observations or overlap', () => {
@@ -611,7 +683,7 @@ END OF DATA`)
       { time: new Date('2025-02-01T00:00:00Z'), value: 42.5 },
     ]
     const manualPoints = [
-      { time: new Date('2025-01-01T02:00:00Z'), value: 42.31 }, // misses by -0.31
+      { time: new Date('2025-01-01T02:00:00Z'), value: 42.31 }, // misses by -0.3087
       { time: new Date('2025-02-01T01:00:00Z'), value: 42.49 }, // fits
       { time: new Date('2025-06-01T00:00:00Z'), value: 44 }, // outside coverage
     ]
@@ -619,7 +691,13 @@ END OF DATA`)
     const assessments = assessDriftAtManualObservations(converted, manualPoints)
 
     expect(assessments).toHaveLength(2)
-    expect(assessments[0].misfit).toBeCloseTo(-0.31, 4)
+    // Read at the manual's own time: two hours into a month-long interval
+    // that rises 0.5 ft, so the series is at 42.0013 there, not the 42.0 of
+    // the reading two hours earlier.
+    expect(assessments[0].misfit).toBeCloseTo(-0.3087, 4)
+    // An hour past the last reading, so there is nothing to interpolate
+    // between and the nearest reading stands in — the download-day manual,
+    // which still has to be reported.
     expect(assessments[1].misfit).toBeCloseTo(0.01, 4)
   })
 
@@ -667,6 +745,80 @@ END OF DATA`)
     expect(parsed.measurements.length).toBeGreaterThan(700)
     expect(parsed.measurements[0].value).toBeCloseTo(23.09766, 4)
     expect(parsed.measurements[0].time.getFullYear()).toBe(2024)
+  })
+
+  it('puts the corrected trace through the manual value at its own time, on a real export', () => {
+    // End to end on the real Diver Office artifact: parse, convert water head
+    // to depth to water against manual anchors, then snap. The manual times
+    // used here are deliberately off the logger's 12-hour cadence, which is
+    // the case the sampling-offset bug showed up in.
+    const text = readFileSync(
+      resolve(process.cwd(), 'tmp/wellpy-samples/sa-0231_DK744_compensated.CSV'),
+      'latin1'
+    )
+    const parsed = parseHydrographUpload(text)
+    const readings = parsed.measurements
+
+    const mid = readings[Math.floor(readings.length / 2)].time
+    const manualPoints = [
+      { time: new Date(readings[10].time.getTime() + 5 * 60 * 60 * 1000), value: 96.9 },
+      { time: new Date(mid.getTime() + 7 * 60 * 60 * 1000), value: 99.3 },
+    ]
+
+    const converted = convertWaterHeadToDepthToWater({
+      measurements: readings,
+      manualPoints,
+    })
+
+    // The conversion anchors on the head at each manual's own instant, so the
+    // trace passes exactly through the manual it is anchored to.
+    expect(interpolateSeriesValueAt(converted, manualPoints[1].time)).toBeCloseTo(
+      manualPoints[1].value,
+      4
+    )
+
+    // With drift correction the sensor depth ramps between the manual times,
+    // so the straight segment the chart draws between two readings is a blend
+    // of two different sensor depths and lands a few thousandths of a foot
+    // off. That residue is inherent to ramping, not a sampling offset.
+    const drifted = convertWaterHeadToDepthToWater({
+      measurements: readings,
+      manualPoints,
+      correctDrift: true,
+    })
+    for (const manual of manualPoints) {
+      expect(interpolateSeriesValueAt(drifted, manual.time)).toBeCloseTo(
+        manual.value,
+        2
+      )
+    }
+
+    // And a snap onto either anchor is a no-op rather than a correction that
+    // reintroduces the offset.
+    const { offset, method } = calculateSnapOffset({
+      measurements: converted,
+      target: manualPoints[1],
+    })
+    expect(method).toBe('interpolated')
+    expect(offset).toBeCloseTo(0, 3)
+
+    // Snapping to a manual the conversion did not anchor on still lands
+    // exactly on the measurement time.
+    const looseTarget = {
+      time: new Date(readings[200].time.getTime() + 3 * 60 * 60 * 1000),
+      value: 97.5,
+    }
+    const loose = calculateSnapOffset({
+      measurements: converted,
+      target: looseTarget,
+    })
+    expect(loose.method).toBe('interpolated')
+
+    const snapped = applyOffsetToRange(converted, loose.offset, null, 'snapped')
+    expect(interpolateSeriesValueAt(snapped, looseTarget.time)).toBeCloseTo(
+      looseTarget.value,
+      3
+    )
   })
 
   it('parses a real field data logger telemetry file', () => {

@@ -64,12 +64,15 @@ Authorization: Bearer <OAuth2 access token>   (same OAuth2AuthorizationCodeBeare
     "source_kind": "water_head",        // "water_head" | "depth_to_water"
     // Free-form audit trail, in applied order. Snap entries name the manual
     // anchor's collector when the field event records one — the alignment is
-    // only as good as the hand measurement it was pinned to.
+    // only as good as the hand measurement it was pinned to — and say how the
+    // anchor value was obtained: "interpolated at the measurement time" when
+    // the manual falls inside the trace, "clamped to the nearest end of the
+    // trace" when it does not and the line cannot pass through it.
     "corrections": [
       "convert_water_head (drift corrected)",
       "remove_offsets_zeros (threshold 0.25)",
       "shift (-1.25 ft, 2025-03-16T00:00:00Z to 2025-04-15T00:00:00Z)",
-      "snap_to_manual (+0.42 ft to 2025-02-11T17:00:00Z, collected by Joseph Beman (NMBGMR))"
+      "snap_to_manual (+0.42 ft to 2025-02-11T17:00:00Z, interpolated at the measurement time, collected by Joseph Beman (NMBGMR))"
     ],
     "notes": "Snapped to 2025-04-13 manual measurement."
   },
