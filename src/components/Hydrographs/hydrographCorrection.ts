@@ -1001,10 +1001,6 @@ export const convertWaterHeadToDepthToWater = ({
   const sensorDepths: Array<number | null> = sorted.map(() => null)
   let firstBinStartDepth: number | null = null
   let lastBinEndDepth: number | null = null
-  // Manuals the sensor depth is actually pinned to — the closing anchor of a
-  // bin that contained readings. See the knot insertion below.
-  const anchoredManuals: HydrographPoint[] = []
-
   for (let i = 0; i < manual.length - 1; i += 1) {
     const m0 = manual[i]
     const m1 = manual[i + 1]
@@ -1027,29 +1023,40 @@ export const convertWaterHeadToDepthToWater = ({
     // happen to bracket the visit, up to one logging interval away; anchoring
     // on them makes the converted trace pass through the manual's value at a
     // sample's time instead of at the measurement's time.
-    const l0 =
-      m0.value +
-      (interpolateSeriesValueAt(sorted, m0.time) ?? sorted[firstIndex].value)
-    const l1 =
-      m1.value +
-      (interpolateSeriesValueAt(sorted, m1.time) ?? sorted[lastIndex].value)
+    //
+    // A manual outside the logged period has no head to anchor on. Deriving
+    // one from the closest reading invents a sensor depth at a moment the
+    // logger never covered, and the whole bin then rides on it — which is how
+    // a trace ends up offset from the one manual that is inside the record.
+    // Such an end is left unanchored and the other end carries the bin.
+    const head0 = interpolateSeriesValueAt(sorted, m0.time)
+    const head1 = interpolateSeriesValueAt(sorted, m1.time)
+    const l0 = head0 === null ? null : m0.value + head0
+    const l1 = head1 === null ? null : m1.value + head1
+
+    // Both ends unanchored: nothing in this bin is pinned to a measurement, so
+    // the closing manual and the nearest reading are all there is to go on.
+    const start = l0 ?? l1 ?? m0.value + sorted[firstIndex].value
+    const end = l1 ?? l0 ?? m1.value + sorted[lastIndex].value
 
     if (firstBinStartDepth === null) {
-      firstBinStartDepth = l0
+      firstBinStartDepth = start
     }
-    lastBinEndDepth = l1
-    anchoredManuals.push(m1)
+    lastBinEndDepth = end
 
     // Drift is interpolated between the manual timestamps for the same reason.
+    // It can only be measured when both ends are anchored; with one end the
+    // sensor depth is held constant at it rather than ramped toward a value
+    // that was never observed.
     const t0 = toUnixTime(m0.time)
     const t1 = toUnixTime(m1.time)
     const span = t1 - t0
+    const canRamp = correctDrift && span > 0 && l0 !== null && l1 !== null
 
     for (const index of indices) {
-      const l =
-        correctDrift && span > 0
-          ? l0 + ((l1 - l0) * (toUnixTime(sorted[index].time) - t0)) / span
-          : l1
+      const l = canRamp
+        ? start + ((end - start) * (toUnixTime(sorted[index].time) - t0)) / span
+        : end
       sensorDepths[index] = l
     }
   }
@@ -1060,7 +1067,7 @@ export const convertWaterHeadToDepthToWater = ({
     )
   }
 
-  const converted = sorted.map((point, index) => {
+  return sorted.map((point, index) => {
     let sensorDepth = sensorDepths[index]
     if (sensorDepth === null) {
       sensorDepth =
@@ -1075,62 +1082,6 @@ export const convertWaterHeadToDepthToWater = ({
     }
   })
 
-  return withAnchorKnots(converted, anchoredManuals)
-}
-
-/**
- * Add a vertex to the converted trace at each manual measurement's own instant.
- *
- * Anchoring the sensor depth on the head at the measurement time (above) makes
- * the *model* pass through the manual, but the chart draws straight segments
- * between readings, and the model is not straight across them:
- *
- * - Without drift correction the sensor depth steps at every visit, so the
- *   segment straddling a manual has its two ends computed from two different
- *   sensor depths and the chord blends them.
- * - With drift correction the sensor depth ramps while the head moves
- *   independently, so depth to water is not linear between two readings.
- *
- * Either way the drawn line lands near the manual rather than on it — a few
- * thousandths of a foot on a 12-hour cadence, and proportionally more the
- * coarser the logging interval. Giving the polyline a vertex at the
- * measurement instant removes the gap by construction.
- *
- * The value is the manual's own reading: the sensor depth the model pins at
- * that instant is `manual + head(manual)`, so `sensorDepth - head` is the
- * manual value exactly, in both drift modes.
- *
- * Knots carry a correction note. They are not logger readings, and anything
- * downstream — publishing especially — should be able to tell them apart.
- */
-const withAnchorKnots = (
-  converted: HydrographPoint[],
-  anchoredManuals: HydrographPoint[]
-): HydrographPoint[] => {
-  if (converted.length === 0 || anchoredManuals.length === 0) return converted
-
-  const first = toUnixTime(converted[0].time)
-  const last = toUnixTime(converted[converted.length - 1].time)
-  const existing = new Set(converted.map((point) => toUnixTime(point.time)))
-
-  const knots = anchoredManuals
-    .filter((anchor) => {
-      const t = toUnixTime(anchor.time)
-      // Strictly inside the record, and not already a reading — a manual that
-      // lands exactly on a logger timestamp needs no vertex added.
-      return t > first && t < last && !existing.has(t)
-    })
-    .map((anchor) => ({
-      time: anchor.time,
-      value: Number(anchor.value.toFixed(4)),
-      correctionNote: `anchor knot at the manual measurement (${anchor.value} ft)`,
-    }))
-
-  if (knots.length === 0) return converted
-
-  return [...converted, ...knots].sort(
-    (a, b) => toUnixTime(a.time) - toUnixTime(b.time)
-  )
 }
 
 const OFFSET_WINDOW_HALF_WIDTH = 5

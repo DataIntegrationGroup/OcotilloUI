@@ -88,12 +88,7 @@ Authorization: Bearer <OAuth2 access token>   (same OAuth2AuthorizationCodeBeare
   // accumulate as semicolon-separated clauses. The server should persist
   // it with the observation so downstream review can distinguish measured
   // from corrected/estimated values.
-  //
-  // Water-head conversion also emits one row the logger never recorded: an
-  // "anchor knot" at each manual measurement's own timestamp, carrying the
-  // manual's value, so the corrected series passes through the measurement
-  // at the instant it was taken rather than near it. These rows are noted
-  // as such and fall off the logger's sampling cadence by design.
+
   "measurements": [
     { "observation_datetime": "2025-01-15T00:00:00Z", "value": 42.51 },
     {

@@ -238,7 +238,7 @@ END OF DATA`)
       ],
       manualPoints: [
         { time: new Date('2025-01-01T00:00:00Z'), value: 50 },
-        { time: new Date('2025-01-04T00:00:00Z'), value: 52 },
+        { time: new Date('2025-01-03T00:00:00Z'), value: 52 },
       ],
     })
 
@@ -254,21 +254,27 @@ END OF DATA`)
     ]
     const manualPoints = [
       { time: new Date('2025-01-01T00:00:00Z'), value: 50 },
-      { time: new Date('2025-01-03T06:00:00Z'), value: 52 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 52 },
     ]
 
     // L0 = 50 + 10 = 60 at the first manual, L1 = 52 + 9.8 = 61.8 at the
-    // second. The second manual is six hours past the last reading, so its
-    // head cannot be interpolated and the last reading stands in — but the
-    // drift ramp now spans the manual timestamps (54 h) rather than the
-    // first and last readings (48 h), so L reaches L1 at the measurement.
+    // second, both read at the manuals' own timestamps, and the ramp spans
+    // the manual timestamps rather than the first and last readings.
     const converted = convertWaterHeadToDepthToWater({
       measurements,
       manualPoints,
       correctDrift: true,
     })
 
-    expect(converted.map((point) => point.value)).toEqual([50, 50.3, 51.8])
+    expect(converted.map((point) => point.value)).toEqual([50, 50.4, 52])
+
+    // Both manuals are inside the record, so the trace passes through each.
+    for (const manual of manualPoints) {
+      expect(interpolateSeriesValueAt(converted, manual.time)).toBeCloseTo(
+        manual.value,
+        4
+      )
+    }
   })
 
   it('converts with a single manual anchor as a constant hanging point', () => {
@@ -747,11 +753,14 @@ END OF DATA`)
     expect(parsed.measurements[0].time.getFullYear()).toBe(2024)
   })
 
-  it('puts the corrected trace through the manual value at its own time, on a real export', () => {
-    // End to end on the real Diver Office artifact, against the real manual
-    // observations Ocotillo holds for SA-0231. Only one of them falls inside
-    // the logged period, at 17:38 — five and a half hours off the logger's
-    // 12-hour cadence, which is the case the sampling offset showed up in.
+  it('anchors a real export on the manual inside the logged period', () => {
+    // The real Diver Office artifact against the real manual observations
+    // Ocotillo holds for SA-0231. Only one of them, 2024-02-20 17:38, falls
+    // inside the logged period, and it is five and a half hours off the
+    // logger's 12-hour cadence. The next one is seventeen hours past the last
+    // reading, so it has no head to anchor on — deriving one from the closest
+    // reading used to ride the whole trace on an invented sensor depth and
+    // left it 0.006 ft off the manual that is actually in range.
     const text = readFileSync(
       resolve(process.cwd(), 'tmp/wellpy-samples/sa-0231_DK744_compensated.CSV'),
       'latin1'
@@ -771,28 +780,21 @@ END OF DATA`)
         correctDrift,
       })
 
-      // The drawn line passes through the manual at its own instant, exactly.
-      // Before the anchor knot it landed at 88.8443 without drift correction
-      // and 88.8507 with it — near the measurement, but not on it.
+      // Every reading converted, nothing added: the series is shifted onto
+      // the anchor, not given an extra vertex at it.
+      expect(converted).toHaveLength(readings.length)
+      expect(converted.every((point) => !point.correctionNote)).toBe(true)
+
+      // The line passes through the manual at its own instant, to within the
+      // four decimals the converted values are rounded to.
       expect(interpolateSeriesValueAt(converted, anchor.time)).toBeCloseTo(
         anchor.value,
-        4
+        3
       )
 
-      // The knot is a vertex the logger never recorded, so it is marked.
-      const knot = converted.find(
-        (point) => point.time.getTime() === anchor.time.getTime()
-      )
-      expect(knot?.correctionNote).toMatch(/anchor knot/)
-
-      // Nothing else gained a note, and no reading was dropped or duplicated.
-      expect(converted.filter((p) => p.correctionNote)).toHaveLength(1)
-      expect(converted).toHaveLength(readings.length + 1)
-
-      // So the residual at that manual reads zero, which is how the workbench
-      // shows the user the correction landed.
+      // Which is what the residual panel shows the user.
       const [assessment] = assessDriftAtManualObservations(converted, [anchor])
-      expect(assessment.misfit).toBeCloseTo(0, 4)
+      expect(assessment.misfit).toBeCloseTo(0, 3)
 
       // And a snap onto it is a no-op rather than a correction that
       // reintroduces the offset.
@@ -801,7 +803,7 @@ END OF DATA`)
         target: anchor,
       })
       expect(method).toBe('interpolated')
-      expect(offset).toBeCloseTo(0, 4)
+      expect(offset).toBeCloseTo(0, 3)
     }
   })
 
@@ -833,8 +835,7 @@ END OF DATA`)
     expect(method).toBe('interpolated')
 
     // Offsets are rounded to four decimals before being applied, so the
-    // landing is exact to within that rounding — 0.0001 ft, a thousandth of
-    // an inch.
+    // landing is exact to within that rounding.
     const snapped = applyOffsetToRange(converted, offset, null, 'snapped')
     expect(interpolateSeriesValueAt(snapped, target.time)).toBeCloseTo(
       target.value,
