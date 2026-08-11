@@ -214,7 +214,7 @@ describe('SearchModal arcade easter eggs', () => {
     await user.click(screen.getByText(/Monitoring Project/))
 
     expect(goMock).toHaveBeenCalledWith({
-      to: '/ocotillo/well/projects/show/42',
+      to: '/ocotillo/projects/show/42',
       type: 'push',
     })
     expect(onClose).toHaveBeenCalled()
