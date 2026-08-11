@@ -43,7 +43,7 @@ describe('Ocotillo List Pages', () => {
   })
 
   it('renders the project list with project rows and navigation targets', () => {
-    cy.visit('/ocotillo/well/projects')
+    cy.visit('/ocotillo/projects')
     cy.wait('@getProjects')
 
     cy.contains('h3', /^Projects$/).should('be.visible')
