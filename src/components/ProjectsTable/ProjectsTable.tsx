@@ -4,6 +4,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsUpDownIcon,
+  MapIcon,
   PencilIcon,
   SearchIcon,
 } from 'lucide-react'
@@ -211,6 +212,7 @@ export interface ProjectsTableProps {
   projectHref: (project: IGroup) => string
   onSelect?: (project: IGroup) => void
   onEdit?: (project: IGroup, source: 'row_double_click' | 'edit_action') => void
+  onViewBoundary?: (project: IGroup) => void
 }
 
 export function ProjectsTable({
@@ -221,6 +223,7 @@ export function ProjectsTable({
   projectHref,
   onSelect,
   onEdit,
+  onViewBoundary,
 }: ProjectsTableProps) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState(ALL_OPTION)
@@ -343,8 +346,10 @@ export function ProjectsTable({
       </div>
 
       <div className="rounded-md border">
-        {/* Compact rows: shorter header, tighter cell padding than the shadcn default. */}
-        <Table className="[&_td]:py-1 [&_th]:h-8">
+        {/* Compact rows: shorter header, tighter cell padding than the shadcn
+            default. Row height is floored by the tallest cell content, so the
+            action buttons are icon-xs to keep them under the text line box. */}
+        <Table className="[&_td]:py-0.5 [&_th]:h-7">
           <TableHeader>
             <TableRow>
               {COLUMNS.map((column) => (
@@ -356,7 +361,7 @@ export function ProjectsTable({
                   onSort={handleSort}
                 />
               ))}
-              <TableHead className="w-14">
+              <TableHead className="w-24">
                 <span className="sr-only">Actions</span>
               </TableHead>
             </TableRow>
@@ -427,19 +432,32 @@ export function ProjectsTable({
                     <TableCell className="text-muted-foreground">
                       {formatAppDateTime(project.created_at)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {/* Only offered where there is geometry to look at. */}
+                      {project.project_area ? (
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={`View boundary for ${project.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onViewBoundary?.(project)
+                          }}
+                        >
+                          <MapIcon aria-hidden />
+                        </Button>
+                      ) : null}
                       {canEdit ? (
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="size-7"
+                          size="icon-xs"
                           aria-label={`Edit ${project.name}`}
                           onClick={(event) => {
                             event.stopPropagation()
                             onEdit?.(project, 'edit_action')
                           }}
                         >
-                          <PencilIcon className="size-3.5" aria-hidden />
+                          <PencilIcon aria-hidden />
                         </Button>
                       ) : null}
                     </TableCell>

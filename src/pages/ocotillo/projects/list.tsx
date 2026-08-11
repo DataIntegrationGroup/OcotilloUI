@@ -13,6 +13,7 @@ import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { EditPanelLayout } from '@/components/editing'
 import { ocotilloPageTitleTypographySx } from '@/components/OcotilloPageHeader'
 import { ProjectEditPanel } from '@/components/ProjectEdit/ProjectEditPanel'
+import { ProjectBoundaryDialog } from '@/components/ProjectsTable/ProjectBoundaryDialog'
 import { ProjectsTable } from '@/components/ProjectsTable/ProjectsTable'
 import { useAccessCapabilities } from '@/hooks'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
@@ -26,6 +27,7 @@ export const ProjectList: React.FC = () => {
   const { canEditAmp } = useAccessCapabilities()
   const [selectedProject, setSelectedProject] = useState<IGroup | null>(null)
   const [isPanelOpen, setIsPanelOpen] = useState(false)
+  const [boundaryProject, setBoundaryProject] = useState<IGroup | null>(null)
 
   useEffect(() => {
     captureEvent('feature_used', { feature: 'projects_list' })
@@ -66,6 +68,14 @@ export const ProjectList: React.FC = () => {
     setIsPanelOpen(false)
   }, [])
 
+  const handleViewBoundary = useCallback((project: IGroup) => {
+    setBoundaryProject(project)
+    captureEvent('project_boundary_viewed', {
+      project_id: project.id,
+      project_name: project.name,
+    })
+  }, [])
+
   return (
     <CanAccess resource="ocotillo.projects" action="list">
       <EditPanelLayout
@@ -100,9 +110,15 @@ export const ProjectList: React.FC = () => {
             projectHref={projectHref}
             onSelect={handleSelect}
             onEdit={openProjectPanel}
+            onViewBoundary={handleViewBoundary}
           />
         </div>
       </EditPanelLayout>
+
+      <ProjectBoundaryDialog
+        project={boundaryProject}
+        onClose={() => setBoundaryProject(null)}
+      />
     </CanAccess>
   )
 }

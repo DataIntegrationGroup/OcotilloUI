@@ -85,6 +85,8 @@ const PROJECTS: IGroup[] = [
     name: 'Espanola Basin',
     group_type: 'Historical',
     created_at: '2026-02-01T00:00:00Z',
+    project_area:
+      'MULTIPOLYGON (((-106 35, -105 35, -105 36, -106 36, -106 35)))',
   }),
 ]
 
@@ -251,6 +253,33 @@ describe('ProjectsTable row actions', () => {
 
     expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 3 }))
     expect(onEdit).not.toHaveBeenCalled()
+  })
+
+  it('offers the boundary action only for projects that have geometry', async () => {
+    const user = userEvent.setup()
+    const onViewBoundary = vi.fn()
+    renderTable({ onViewBoundary })
+
+    const buttons = screen.getAllByRole('button', { name: /^View boundary/ })
+    expect(buttons).toHaveLength(1)
+    expect(buttons[0]).toHaveAccessibleName('View boundary for Espanola Basin')
+
+    await user.click(buttons[0])
+    expect(onViewBoundary).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 3 })
+    )
+  })
+
+  it('does not select the row when the boundary action is used', async () => {
+    const user = userEvent.setup()
+    const onSelect = vi.fn()
+    renderTable({ onSelect, onViewBoundary: vi.fn() })
+
+    await user.click(
+      screen.getByRole('button', { name: 'View boundary for Espanola Basin' })
+    )
+
+    expect(onSelect).not.toHaveBeenCalled()
   })
 
   it('marks the selected row for styling and assistive tech', () => {
