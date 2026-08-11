@@ -84,7 +84,6 @@ This application uses Vite environment variables. The following variables are re
 ```bash
 VITE_APP_TITLE="Ocotillo (Dev)"
 VITE_NMBGMR_AMP_API_URL="https://your-amp-development-api-url"
-VITE_NMBGMR_GEOTHERMAL_API_URL="https://your-geothermal-development-api-url"
 VITE_OCOTILLO_API_URL="https://your-ocotillo-development-api-url"
 VITE_REFINE_PROJECT_ID="your-refine-project-id"
 VITE_MAPBOX_TOKEN="your-mapbox-token"
