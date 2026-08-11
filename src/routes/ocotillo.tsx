@@ -55,11 +55,10 @@ import {
   WellBatchExport,
   WellCreate,
   WellList,
-  WellProjectList,
-  WellProjectShow,
   WellShow,
   WellShowPdfPreview,
 } from '@/pages/ocotillo/thing'
+import { ProjectList, ProjectShow } from '@/pages/ocotillo/projects'
 import {
   ThingIdLinkCreate,
   ThingIdLinkEdit,
@@ -82,6 +81,24 @@ export const OcotilloRoutes = () => {
         <Route index element={<ContactList />} />
         <Route path={'show/:id'} element={<ContactShow />} />
       </Route>
+      <Route path="projects">
+        <Route
+          index
+          element={
+            <ProtectedRoute resource="ocotillo.projects">
+              <ProjectList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={'show/:id'}
+          element={
+            <ProtectedRoute resource="ocotillo.projects">
+              <ProjectShow />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
       <Route path="well">
         <Route index element={<WellList />} />
         <Route
@@ -92,24 +109,6 @@ export const OcotilloRoutes = () => {
             </ProtectedRoute>
           }
         />
-        <Route path={'projects'}>
-          <Route
-            index
-            element={
-              <ProtectedRoute resource="ocotillo.thing-well-projects">
-                <WellProjectList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path={'show/:id'}
-            element={
-              <ProtectedRoute resource="ocotillo.thing-well-projects">
-                <WellProjectShow />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
         <Route path={'show/:id'} element={<WellShow />} />
         <Route
           path={'pdf-preview/:id'}

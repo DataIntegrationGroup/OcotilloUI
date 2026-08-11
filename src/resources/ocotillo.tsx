@@ -212,14 +212,12 @@ tables.push({
 })
 
 tables.push({
-  name: 'thing-well-projects',
-  list: '/ocotillo/well/projects',
-  show: '/ocotillo/well/projects/show/:id',
+  name: 'projects',
+  list: '/ocotillo/projects',
+  show: '/ocotillo/projects/show/:id',
   meta: {
     label: 'Projects',
     icon: <Workspaces />,
-    parent: 'ocotillo.thing-well',
-    nestedLevel: 1,
   },
 })
 

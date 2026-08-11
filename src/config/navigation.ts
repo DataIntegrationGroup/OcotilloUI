@@ -112,9 +112,9 @@ export const RESOURCE_NAV: NavItem[] = [
   },
   {
     label: 'Projects',
-    href: '/ocotillo/well/projects',
+    href: '/ocotillo/projects',
     icon: FolderKanban,
-    resource: 'ocotillo.thing-well-projects',
+    resource: 'ocotillo.projects',
     roles: viewerAndAbove,
   },
   {

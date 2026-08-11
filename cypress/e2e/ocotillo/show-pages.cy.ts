@@ -13,7 +13,7 @@ describe('Ocotillo Show Pages', () => {
   it('renders the project show page with details, map, and associated wells', () => {
     interceptProjectShowFixtures()
     cy.login()
-    cy.visit('/ocotillo/well/projects/show/10')
+    cy.visit('/ocotillo/projects/show/10')
     cy.wait('@getProject')
 
     cy.contains('h3', projectAlpha.name).should('be.visible')
