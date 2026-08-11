@@ -78,6 +78,12 @@ vi.mock('@/components/ProjectEdit/ProjectEditPanel', () => ({
   ),
 }))
 
+// Stubbed out because the real dialog pulls in mapbox-gl, which jsdom cannot run.
+vi.mock('@/components/ProjectsTable/ProjectBoundaryDialog', () => ({
+  ProjectBoundaryDialog: ({ project }: { project: IGroup | null }) =>
+    project ? <div data-testid="boundary-dialog">{project.name}</div> : null,
+}))
+
 import { ProjectList } from '@/pages/ocotillo/projects'
 
 describe('ProjectList edit wiring', () => {
@@ -135,6 +141,22 @@ describe('ProjectList edit wiring', () => {
       'projects_edit_opened',
       expect.anything()
     )
+  })
+
+  it('opens the boundary dialog for the chosen project', () => {
+    render(<ProjectList />)
+    expect(screen.queryByTestId('boundary-dialog')).toBeNull()
+
+    act(() => tableProps?.onViewBoundary?.(PROJECT))
+
+    expect(screen.getByTestId('boundary-dialog')).toHaveTextContent(
+      'Questa Red River'
+    )
+    expect(screen.queryByTestId('panel-open')).toBeNull()
+    expect(captureEventMock).toHaveBeenCalledWith('project_boundary_viewed', {
+      project_id: PROJECT.id,
+      project_name: PROJECT.name,
+    })
   })
 
   it('selects a row without opening the panel', () => {
