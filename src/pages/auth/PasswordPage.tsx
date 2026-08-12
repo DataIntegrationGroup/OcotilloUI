@@ -12,15 +12,16 @@ import { AuthLayout } from './AuthLayout'
 import {
   authentikFlowStore,
   clearAuthentikFlowTransaction,
-  submitAuthentikOtp,
+  submitAuthentikPassword,
 } from '@/services/authentik-flow'
 
-export const OtpPage = () => {
+export const PasswordPage = () => {
   const navigate = useNavigate()
-  const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const hasTransaction = Boolean(authentikFlowStore.transaction)
+  const transaction = authentikFlowStore.transaction
+  const hasTransaction = Boolean(transaction)
 
   useEffect(() => {
     if (!hasTransaction) {
@@ -33,17 +34,23 @@ export const OtpPage = () => {
     setError(null)
     setLoading(true)
 
-    const result = await submitAuthentikOtp(code)
+    const result = await submitAuthentikPassword(password)
 
     setLoading(false)
+
+    if (result.status === 'otp_required') {
+      navigate('/login/mfa')
+      return
+    }
 
     if (result.status === 'redirect') {
       window.location.assign(result.to)
       return
     }
 
-    if (result.status === 'expired') {
-      clearAuthentikFlowTransaction()
+    if (result.status === 'password_required') {
+      setError('Enter your password to continue.')
+      return
     }
 
     setError(result.message)
@@ -56,8 +63,12 @@ export const OtpPage = () => {
 
   return (
     <AuthLayout
-      title="Verify MFA"
-      subtitle="Use the 6-digit code from your authenticator app."
+      title="Enter password"
+      subtitle={
+        transaction?.username
+          ? `Signing in as ${transaction.username}`
+          : 'Continue signing in.'
+      }
     >
       <Stack component="form" spacing={2.5} onSubmit={onSubmit} noValidate>
         {error ? (
@@ -67,23 +78,17 @@ export const OtpPage = () => {
         ) : null}
 
         <TextField
-          autoComplete="one-time-code"
+          autoComplete="current-password"
           autoFocus
           disabled={loading || !hasTransaction}
           fullWidth
-          id="otp"
-          inputProps={{
-            inputMode: 'numeric',
-            maxLength: 6,
-            pattern: '[0-9]*',
-          }}
-          label="Verification code"
-          name="otp"
-          onChange={(event) =>
-            setCode(event.target.value.replace(/\D/g, '').slice(0, 6))
-          }
+          id="password"
+          label="Password"
+          name="password"
+          onChange={(event) => setPassword(event.target.value)}
           required
-          value={code}
+          type="password"
+          value={password}
         />
 
         <Button
@@ -96,7 +101,7 @@ export const OtpPage = () => {
           {loading ? (
             <CircularProgress color="inherit" size={22} />
           ) : (
-            'Verify code'
+            'Continue'
           )}
         </Button>
 

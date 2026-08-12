@@ -16,6 +16,12 @@ const jsonResponse = (body: unknown, init?: ResponseInit) =>
     ...init,
   })
 
+const redirectResponse = (location: string) =>
+  new Response(null, {
+    status: 302,
+    headers: { Location: location },
+  })
+
 describe('authentik flow service', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -46,7 +52,7 @@ describe('authentik flow service', () => {
       .mockResolvedValueOnce(
         jsonResponse({
           component: 'xak-flow-redirect',
-          to: 'http://localhost:3000/callback?code=abc&state=state',
+          to: 'http://localhost:5173/callback?code=abc&state=state',
         })
       )
     vi.stubGlobal('fetch', fetchMock)
@@ -69,7 +75,7 @@ describe('authentik flow service', () => {
 
     expect(otp).toEqual({
       status: 'redirect',
-      to: 'http://localhost:3000/callback?code=abc&state=state',
+      to: 'http://localhost:5173/callback?code=abc&state=state',
     })
     expect(authentikFlowStore.transaction).toBeNull()
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -123,7 +129,7 @@ describe('authentik flow service', () => {
     })
   })
 
-  it('does not submit password to the identification stage', async () => {
+  it('submits password from the password step when identification keeps password_fields', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -132,12 +138,10 @@ describe('authentik flow service', () => {
           password_fields: true,
         })
       )
-      .mockResolvedValueOnce(jsonResponse({ component: 'ak-stage-password' }))
-      .mockResolvedValueOnce(jsonResponse({ component: 'ak-stage-user-login' }))
       .mockResolvedValueOnce(
         jsonResponse({
           component: 'xak-flow-redirect',
-          to: 'http://localhost:3000/callback?code=abc&state=state',
+          to: 'http://localhost:5173/callback?code=abc&state=state',
         })
       )
     vi.stubGlobal('fetch', fetchMock)
@@ -160,9 +164,237 @@ describe('authentik flow service', () => {
         body: JSON.stringify({
           component: 'ak-stage-identification',
           uid_field: 'user@example.com',
+          password: 'password',
         }),
       })
     )
+  })
+
+  it('does not submit password to the identification stage when Authentik does not request it', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse({ component: 'ak-stage-identification' })
+      )
+      .mockResolvedValueOnce(jsonResponse({ component: 'ak-stage-password' }))
+      .mockResolvedValueOnce(
+        jsonResponse({ component: 'ak-stage-authenticator-validate' })
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { startAuthentikLoginFlow } = await import(
+      '@/services/authentik-flow'
+    )
+
+    await expect(
+      startAuthentikLoginFlow({
+        username: 'user@example.com',
+        password: 'password',
+      })
+    ).resolves.toMatchObject({ status: 'otp_required' })
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.any(String),
+      expect.objectContaining({
+        body: JSON.stringify({
+          component: 'ak-stage-identification',
+          uid_field: 'user@example.com',
+        }),
+      })
+    )
+  })
+
+  it('continues through the executor API after a hosted UI redirect', async () => {
+    sessionStorage.setItem(
+      'authentik_flow_transaction',
+      JSON.stringify({
+        flowSlug: 'default-authentication-flow',
+        query: 'client_id=authentik&state=state',
+        state: 'state',
+        username: 'user@example.com',
+        currentChallenge: {
+          component: 'ak-stage-identification',
+          password_fields: true,
+        },
+      })
+    )
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        redirectResponse('/if/flow/default-authentication-flow/?state=state')
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({ component: 'ak-stage-authenticator-validate' })
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { submitAuthentikPassword } = await import(
+      '@/services/authentik-flow'
+    )
+
+    await expect(submitAuthentikPassword('password')).resolves.toMatchObject({
+      status: 'otp_required',
+    })
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining(
+        '/api/v3/flows/executor/default-authentication-flow/'
+      ),
+      expect.objectContaining({ method: 'GET' })
+    )
+  })
+
+  it('continues through the executor API after an opaque manual redirect', async () => {
+    sessionStorage.setItem(
+      'authentik_flow_transaction',
+      JSON.stringify({
+        flowSlug: 'default-authentication-flow',
+        query: 'client_id=authentik&state=state',
+        state: 'state',
+        username: 'user@example.com',
+        currentChallenge: {
+          component: 'ak-stage-identification',
+          password_fields: true,
+        },
+      })
+    )
+
+    const opaqueRedirect = new Response(null, { status: 200 })
+    Object.defineProperty(opaqueRedirect, 'type', {
+      value: 'opaqueredirect',
+    })
+    Object.defineProperty(opaqueRedirect, 'status', {
+      value: 0,
+    })
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(opaqueRedirect)
+      .mockResolvedValueOnce(
+        jsonResponse({ component: 'ak-stage-authenticator-validate' })
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { submitAuthentikPassword } = await import(
+      '@/services/authentik-flow'
+    )
+
+    await expect(submitAuthentikPassword('password')).resolves.toMatchObject({
+      status: 'otp_required',
+    })
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining(
+        '/api/v3/flows/executor/default-authentication-flow/'
+      ),
+      expect.objectContaining({ method: 'GET' })
+    )
+  })
+
+  it('continues through the executor API after a hosted UI xak redirect', async () => {
+    sessionStorage.setItem(
+      'authentik_flow_transaction',
+      JSON.stringify({
+        flowSlug: 'default-authentication-flow',
+        query: 'client_id=authentik&state=state',
+        state: 'state',
+        username: 'user@example.com',
+        currentChallenge: {
+          component: 'ak-stage-identification',
+          password_fields: true,
+        },
+      })
+    )
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          component: 'xak-flow-redirect',
+          to: '/if/flow/default-authentication-flow/?state=state',
+        })
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({ component: 'ak-stage-authenticator-validate' })
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { submitAuthentikPassword } = await import(
+      '@/services/authentik-flow'
+    )
+
+    await expect(submitAuthentikPassword('password')).resolves.toMatchObject({
+      status: 'otp_required',
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('treats an OIDC authorize redirect as completion', async () => {
+    sessionStorage.setItem(
+      'authentik_flow_transaction',
+      JSON.stringify({
+        flowSlug: 'default-authentication-flow',
+        query: 'client_id=authentik&state=state',
+        state: 'state',
+        selectedOtpChallenge: { device_class: 'totp', device_uid: 'totp-1' },
+      })
+    )
+
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          jsonResponse({ component: 'ak-stage-user-login' })
+        )
+        .mockResolvedValueOnce(
+          redirectResponse(
+            '/application/o/authorize/?client_id=authentik&state=state'
+          )
+        )
+    )
+
+    const { submitAuthentikOtp } = await import('@/services/authentik-flow')
+
+    await expect(submitAuthentikOtp('123456')).resolves.toEqual({
+      status: 'redirect',
+      to: 'https://authentik.newmexicowaterdata.org/application/o/authorize/?client_id=authentik&state=state',
+    })
+  })
+
+  it('turns Authentik final_redirect into an OIDC authorize redirect', async () => {
+    sessionStorage.setItem(
+      'authentik_flow_transaction',
+      JSON.stringify({
+        flowSlug: 'default-authentication-flow',
+        query:
+          'client_id=authentik&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Fcallback&response_type=code&state=state',
+        state: 'state',
+        selectedOtpChallenge: { device_class: 'totp', device_uid: 'totp-1' },
+      })
+    )
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValueOnce(
+        jsonResponse({
+          component: 'xak-flow-redirect',
+          to: '/',
+          final_redirect: true,
+        })
+      )
+    )
+
+    const { submitAuthentikOtp } = await import('@/services/authentik-flow')
+
+    const result = await submitAuthentikOtp('123456')
+
+    expect(result).toEqual({
+      status: 'redirect',
+      to: 'https://authentik.newmexicowaterdata.org/application/o/authorize/?client_id=authentik&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Fcallback&response_type=code&state=state',
+    })
   })
 
   it('reports multiple authenticator choices without guessing', async () => {
@@ -240,7 +472,7 @@ describe('authentik flow service', () => {
   })
 
   it('handles network failures without leaking details', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new Error('CORS')))
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new TypeError('CORS')))
 
     const { startAuthentikLoginFlow } = await import(
       '@/services/authentik-flow'
@@ -253,7 +485,8 @@ describe('authentik flow service', () => {
       })
     ).resolves.toEqual({
       status: 'error',
-      message: 'Authentik is unavailable. Check your connection and try again.',
+      message:
+        'The browser blocked the Authentik flow request. Check Authentik CORS/credentialed cookie settings or use a same-origin proxy for /api/v3/flows/executor.',
     })
   })
 

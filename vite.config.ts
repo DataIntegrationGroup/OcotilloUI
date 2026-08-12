@@ -8,10 +8,24 @@ import { resolve } from 'path'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
+  const authentikApiBase = env.VITE_AUTHENTIK_API_BASE_URL
+  const authentikProxyPath =
+    authentikApiBase?.startsWith('/') && authentikApiBase !== '/'
+      ? authentikApiBase.replace(/\/+$/, '')
+      : null
+  const authentikProxyTarget =
+    env.VITE_AUTHENTIK_PROXY_TARGET ||
+    env.VITE_AUTHENTIK_BASE_URL ||
+    (env.VITE_AUTHENTIK_URL
+      ? new URL(env.VITE_AUTHENTIK_URL).origin
+      : undefined)
   const enableSourceMap =
     mode !== 'production' && env.VITE_DISABLE_SOURCEMAP !== 'true'
   const enableSentry =
     mode !== 'production' && env.VITE_SENTRY_TELEMETRY_DISABLED !== 'true'
+  const rewriteAuthentikDevCookies =
+    env.VITE_AUTHENTIK_PROXY_REWRITE_COOKIES !== 'false'
+  const logAuthentikProxy = env.VITE_AUTHENTIK_PROXY_DEBUG === 'true'
 
   return {
     build: {
@@ -75,6 +89,62 @@ export default defineConfig(({ mode }) => {
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, ''),
         },
+        ...(authentikProxyPath && authentikProxyTarget
+          ? {
+              [authentikProxyPath]: {
+                target: authentikProxyTarget,
+                changeOrigin: true,
+                secure: true,
+                cookieDomainRewrite: '',
+                rewrite: (path: string) =>
+                  path.replace(new RegExp(`^${authentikProxyPath}`), ''),
+                configure: (proxy) => {
+                  proxy.on('proxyReq', (proxyReq, req) => {
+                    proxyReq.setHeader('Origin', authentikProxyTarget)
+                    proxyReq.setHeader(
+                      'Referer',
+                      `${authentikProxyTarget}${req.url?.replace(
+                        new RegExp(`^${authentikProxyPath}`),
+                        ''
+                      )}`
+                    )
+
+                    if (!logAuthentikProxy) return
+                    console.info(
+                      `[authentik-proxy] -> ${req.method} ${proxyReq.path}`
+                    )
+                  })
+
+                  proxy.on('proxyRes', (proxyRes) => {
+                    if (logAuthentikProxy) {
+                      const location = proxyRes.headers.location
+                      console.info(
+                        `[authentik-proxy] <- ${proxyRes.statusCode}${
+                          location ? ` location=${location}` : ''
+                        }`
+                      )
+                    }
+
+                    if (!rewriteAuthentikDevCookies) return
+
+                    const setCookie = proxyRes.headers['set-cookie']
+                    if (!setCookie) return
+
+                    const cookies = Array.isArray(setCookie)
+                      ? setCookie
+                      : [setCookie]
+
+                    proxyRes.headers['set-cookie'] = cookies.map((cookie) =>
+                      cookie
+                        .replace(/;\s*Secure/gi, '')
+                        .replace(/;\s*Domain=[^;]+/gi, '')
+                        .replace(/;\s*SameSite=None/gi, '; SameSite=Lax')
+                    )
+                  })
+                },
+              },
+            }
+          : {}),
       },
     },
     test: {

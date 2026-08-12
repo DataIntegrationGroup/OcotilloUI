@@ -11,6 +11,10 @@ import { settings } from '@/settings'
 import { AppProviders } from '@/AppProviders'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { OtpPage } from '@/pages/auth/OtpPage'
+import { PasswordPage } from '@/pages/auth/PasswordPage'
+import { RecoveryPage } from '@/pages/auth/RecoveryPage'
+import { AuthErrorPage } from '@/pages/auth/AuthErrorPage'
+import { MfaSetupPage } from '@/pages/auth/MfaSetupPage'
 
 const App: React.FC = () => (
   <BrowserRouter basename={settings.urlprefix}>
@@ -25,6 +29,11 @@ const App: React.FC = () => (
         >
           <Route path="/callback" element={<Callback />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/login/password" element={<PasswordPage />} />
+          <Route path="/login/mfa" element={<OtpPage />} />
+          <Route path="/login/mfa/setup" element={<MfaSetupPage />} />
+          <Route path="/login/recovery" element={<RecoveryPage />} />
+          <Route path="/login/error" element={<AuthErrorPage />} />
           <Route path="/login/otp" element={<OtpPage />} />
         </Route>
         <Route

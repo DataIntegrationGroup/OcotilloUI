@@ -7,11 +7,28 @@ export const AUTHENTIK_BASE_URL =
     ? new URL(AUTHENTIK_URL, window.location.origin).origin
     : AUTHENTIK_URL)
 
+export const AUTHENTIK_API_BASE_URL =
+  import.meta.env.VITE_AUTHENTIK_API_BASE_URL || AUTHENTIK_BASE_URL
+
+const resolveBaseUrl = (baseUrl: string): string => {
+  if (/^https?:\/\//i.test(baseUrl)) return baseUrl
+
+  const origin =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'http://localhost:5173'
+
+  return new URL(baseUrl.replace(/\/+$/, ''), origin).toString()
+}
+
 export const buildAuthentikUrl = (path: string, baseUrl = AUTHENTIK_URL): URL =>
-  new URL(path.replace(/^\/+/, ''), `${baseUrl.replace(/\/+$/, '')}/`)
+  new URL(
+    path.replace(/^\/+/, ''),
+    `${resolveBaseUrl(baseUrl).replace(/\/+$/, '')}/`
+  )
 
 export const buildAuthentikApiUrl = (path: string): URL =>
-  buildAuthentikUrl(path, AUTHENTIK_BASE_URL)
+  buildAuthentikUrl(path, AUTHENTIK_API_BASE_URL)
 
 export const CLIENT_ID = import.meta.env.VITE_AUTHENTIK_CLIENT_ID || 'authentik'
 

@@ -13,4 +13,10 @@ describe('buildAuthentikUrl', () => {
       buildAuthentikUrl('/authorize/', 'http://localhost:8000').toString()
     ).toBe('http://localhost:8000/authorize/')
   })
+
+  it('supports same-origin relative bases for local proxies', () => {
+    expect(buildAuthentikUrl('/api/v3/schema/', '/authentik').toString()).toBe(
+      'http://localhost:5173/authentik/api/v3/schema/'
+    )
+  })
 })

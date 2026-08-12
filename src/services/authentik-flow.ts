@@ -1,5 +1,6 @@
 import {
   AUTHENTIK_AUTH_FLOW_SLUG,
+  AUTHENTIK_API_BASE_URL,
   AUTHENTIK_PASSWORD_RECOVERY_FLOW_SLUG,
   AUTHENTIK_SCOPE,
   AUTHENTIK_BASE_URL,
@@ -47,6 +48,7 @@ export type AuthentikChallenge = {
   response_errors?: Record<string, ResponseErrorDetail[] | string[]>
   error_message?: string
   to?: string
+  final_redirect?: boolean
   password_fields?: boolean
   allow_show_password?: boolean
   user_fields?: string[]
@@ -58,10 +60,13 @@ export type AuthentikFlowTransaction = {
   flowSlug: string
   query: string
   state: string
+  username?: string
+  currentChallenge?: AuthentikChallenge
   selectedOtpChallenge?: Record<string, unknown>
 }
 
 export type LoginFlowResult =
+  | { status: 'password_required'; transaction: AuthentikFlowTransaction }
   | { status: 'otp_required'; transaction: AuthentikFlowTransaction }
   | { status: 'redirect'; to: string }
   | { status: 'error'; message: string }
@@ -75,8 +80,11 @@ const GENERIC_AUTH_ERROR = 'The username or password is incorrect.'
 const GENERIC_OTP_ERROR = 'The verification code is incorrect or expired.'
 const GENERIC_NETWORK_ERROR =
   'Authentik is unavailable. Check your connection and try again.'
+const AUTHENTIK_BROWSER_SECURITY_ERROR =
+  'The browser blocked the Authentik flow request. Check Authentik CORS/credentialed cookie settings or use a same-origin proxy for /api/v3/flows/executor.'
 const OTP_DEVICE_CLASSES = new Set(['totp', 'static', 'sms', 'email'])
 const MAX_FLOW_CONTINUATIONS = 8
+const MAX_HTTP_REDIRECTS = 4
 
 export class AuthentikFlowError extends Error {
   constructor(message: string) {
@@ -103,6 +111,12 @@ const getTransaction = (): AuthentikFlowTransaction | null => {
       flowSlug: parsed.flowSlug,
       query: parsed.query,
       state: parsed.state,
+      username:
+        typeof parsed.username === 'string' ? parsed.username : undefined,
+      currentChallenge:
+        parsed.currentChallenge && typeof parsed.currentChallenge === 'object'
+          ? (parsed.currentChallenge as AuthentikChallenge)
+          : undefined,
       selectedOtpChallenge:
         parsed.selectedOtpChallenge &&
         typeof parsed.selectedOtpChallenge === 'object'
@@ -185,20 +199,186 @@ const executorUrl = (transaction: AuthentikFlowTransaction): URL => {
   return url
 }
 
+const getCookieValue = (name: string): string | null => {
+  if (typeof document === 'undefined') return null
+
+  const encodedName = `${encodeURIComponent(name)}=`
+  const cookie = document.cookie
+    .split(';')
+    .map((entry) => entry.trim())
+    .find((entry) => entry.startsWith(encodedName))
+
+  if (!cookie) return null
+
+  return decodeURIComponent(cookie.slice(encodedName.length))
+}
+
+const flowRequestHeaders = (body?: Record<string, unknown>): HeadersInit => {
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  }
+
+  if (!body) return headers
+
+  headers['Content-Type'] = 'application/json'
+
+  const csrf = getCookieValue('authentik_csrf')
+  if (csrf) {
+    headers['X-CSRFToken'] = csrf
+    headers['X-Authentik-CSRF'] = csrf
+  }
+
+  return headers
+}
+
+const currentOrigin = (): string =>
+  typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'http://localhost:5173'
+
+const resolveProxyRedirectUrl = (
+  location: string,
+  currentUrl: string
+): string => {
+  const url = new URL(location, currentUrl)
+  const authentikOrigin = new URL(AUTHENTIK_BASE_URL).origin
+  const proxyPath = AUTHENTIK_API_BASE_URL.replace(/\/+$/, '')
+
+  if (
+    AUTHENTIK_API_BASE_URL.startsWith('/') &&
+    url.origin === new URL(AUTHENTIK_BASE_URL).origin &&
+    url.pathname.startsWith('/api/')
+  ) {
+    return new URL(`${proxyPath}${url.pathname}${url.search}`, currentOrigin())
+      .href
+  }
+
+  if (
+    AUTHENTIK_API_BASE_URL.startsWith('/') &&
+    url.origin === currentOrigin() &&
+    (url.pathname.startsWith('/application/') ||
+      url.pathname.startsWith('/if/') ||
+      url.pathname.startsWith('/flows/'))
+  ) {
+    return new URL(`${url.pathname}${url.search}`, authentikOrigin).href
+  }
+
+  if (
+    AUTHENTIK_API_BASE_URL.startsWith('/') &&
+    !url.pathname.startsWith(AUTHENTIK_API_BASE_URL) &&
+    url.origin === currentOrigin() &&
+    url.pathname.startsWith('/api/')
+  ) {
+    url.pathname = `${proxyPath}${url.pathname}`
+  }
+
+  return url.toString()
+}
+
+const isCallbackRedirect = (url: string): boolean => {
+  const redirectUrl = new URL(url)
+  const expectedRedirect = new URL(REDIRECT_URI, currentOrigin())
+  return (
+    redirectUrl.origin === expectedRedirect.origin &&
+    redirectUrl.pathname === expectedRedirect.pathname &&
+    redirectUrl.searchParams.has('code')
+  )
+}
+
+const isExecutorApiRedirect = (url: string): boolean => {
+  const redirectUrl = new URL(url)
+  return redirectUrl.pathname.includes('/api/v3/flows/executor/')
+}
+
+const isOidcAuthorizeRedirect = (url: string): boolean => {
+  const redirectUrl = new URL(url)
+  return redirectUrl.pathname.includes('/authorize')
+}
+
+const redirectChallengeResponse = (to: string): Response =>
+  new Response(
+    JSON.stringify({
+      component: 'xak-flow-redirect',
+      to,
+    }),
+    {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }
+  )
+
+const oidcAuthorizeUrl = (transaction: AuthentikFlowTransaction): string => {
+  const url = buildAuthentikUrl('authorize/')
+  const params = new URLSearchParams(transaction.query)
+  params.forEach((value, key) => {
+    url.searchParams.set(key, value)
+  })
+  return url.toString()
+}
+
+const fetchChallengeResponse = async (
+  url: string,
+  body?: Record<string, unknown>
+): Promise<Response> => {
+  let nextUrl = url
+  let nextBody = body
+
+  for (let i = 0; i < MAX_HTTP_REDIRECTS; i++) {
+    let response: Response
+    try {
+      response = await fetch(nextUrl, {
+        method: nextBody ? 'POST' : 'GET',
+        credentials: 'include',
+        redirect: 'manual',
+        headers: flowRequestHeaders(nextBody),
+        body: nextBody ? JSON.stringify(nextBody) : undefined,
+      })
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new AuthentikFlowError(AUTHENTIK_BROWSER_SECURITY_ERROR)
+      }
+      throw error
+    }
+
+    if (response.type === 'opaqueredirect' || response.status === 0) {
+      nextUrl = url
+      nextBody = undefined
+      continue
+    }
+
+    if (response.status < 300 || response.status >= 400) return response
+
+    const location = response.headers.get('Location')
+    if (!location) {
+      nextUrl = url
+      nextBody = undefined
+      continue
+    }
+
+    const redirectUrl = resolveProxyRedirectUrl(location, nextUrl)
+    if (isCallbackRedirect(redirectUrl)) {
+      return redirectChallengeResponse(redirectUrl)
+    }
+
+    if (isOidcAuthorizeRedirect(redirectUrl)) {
+      return redirectChallengeResponse(redirectUrl)
+    }
+
+    nextUrl = isExecutorApiRedirect(redirectUrl) ? redirectUrl : url
+    nextBody = undefined
+  }
+
+  throw new AuthentikFlowError('Authentik redirected too many times.')
+}
+
 const requestChallenge = async (
   transaction: AuthentikFlowTransaction,
   body?: Record<string, unknown>
 ): Promise<AuthentikChallenge> => {
-  const response = await fetch(executorUrl(transaction).toString(), {
-    method: body ? 'POST' : 'GET',
-    credentials: 'include',
-    redirect: 'follow',
-    headers: {
-      Accept: 'application/json',
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
+  const response = await fetchChallengeResponse(
+    executorUrl(transaction).toString(),
+    body
+  )
 
   if (!response.ok) {
     if (response.status === 400 || response.status === 403) {
@@ -270,7 +450,7 @@ const publicErrorForChallenge = (
 
 const normalizeRedirect = (to: string): string => {
   try {
-    return new URL(to, buildAuthentikUrl('').origin).toString()
+    return new URL(to, currentOrigin()).toString()
   } catch {
     return to
   }
@@ -278,9 +458,21 @@ const normalizeRedirect = (to: string): string => {
 
 const resolveRedirect = (challenge: AuthentikChallenge): string | null =>
   challenge.component === 'xak-flow-redirect' &&
-  typeof challenge.to === 'string'
+  typeof challenge.to === 'string' &&
+  (isCallbackRedirect(normalizeRedirect(challenge.to)) ||
+    isOidcAuthorizeRedirect(normalizeRedirect(challenge.to)))
     ? normalizeRedirect(challenge.to)
     : null
+
+const isHostedUiRedirectChallenge = (challenge: AuthentikChallenge): boolean =>
+  challenge.component === 'xak-flow-redirect' &&
+  typeof challenge.to === 'string' &&
+  !isCallbackRedirect(normalizeRedirect(challenge.to)) &&
+  !isOidcAuthorizeRedirect(normalizeRedirect(challenge.to))
+
+const isFinalFlowRedirectChallenge = (challenge: AuthentikChallenge): boolean =>
+  challenge.component === 'xak-flow-redirect' &&
+  challenge.final_redirect === true
 
 const unsupportedComponentMessage = (challenge: AuthentikChallenge): string =>
   `Authentik returned unsupported flow component "${challenge.component}".`
@@ -322,6 +514,21 @@ const prepareOtpTransaction = (
   }
 }
 
+const preparePasswordTransaction = (
+  transaction: AuthentikFlowTransaction,
+  challenge: AuthentikChallenge
+): LoginFlowResult => {
+  authentikFlowStore.transaction = {
+    ...transaction,
+    currentChallenge: challenge,
+  }
+
+  return {
+    status: 'password_required',
+    transaction: authentikFlowStore.transaction ?? transaction,
+  }
+}
+
 const continueFlowAfterChallenge = async (
   transaction: AuthentikFlowTransaction,
   challenge: AuthentikChallenge
@@ -329,14 +536,35 @@ const continueFlowAfterChallenge = async (
   let current = challenge
 
   for (let i = 0; i < MAX_FLOW_CONTINUATIONS; i++) {
+    if (isFinalFlowRedirectChallenge(current)) {
+      clearAuthentikFlowTransaction()
+      return { status: 'redirect', to: oidcAuthorizeUrl(transaction) }
+    }
+
     const redirect = resolveRedirect(current)
     if (redirect) {
       clearAuthentikFlowTransaction()
       return { status: 'redirect', to: redirect }
     }
 
+    if (isHostedUiRedirectChallenge(current)) {
+      current = await requestChallenge(transaction)
+      continue
+    }
+
     if (current.component === 'ak-stage-authenticator-validate') {
       return prepareOtpTransaction(transaction, current)
+    }
+
+    if (current.component === 'ak-stage-password') {
+      return preparePasswordTransaction(transaction, current)
+    }
+
+    if (
+      current.component === 'ak-stage-identification' &&
+      current.password_fields
+    ) {
+      return preparePasswordTransaction(transaction, current)
     }
 
     if (current.component === 'ak-stage-user-login') {
@@ -369,6 +597,124 @@ const continueFlowAfterChallenge = async (
   }
 }
 
+export const startAuthentikIdentification = async (
+  username: string
+): Promise<LoginFlowResult> => {
+  const trimmedUsername = username.trim()
+  if (!trimmedUsername) {
+    return {
+      status: 'error',
+      message: 'Enter your username or email.',
+    }
+  }
+
+  try {
+    const { query, state } = await buildAuthorizeQuery()
+    const transaction: AuthentikFlowTransaction = {
+      flowSlug: AUTHENTIK_AUTH_FLOW_SLUG,
+      query,
+      state,
+      username: trimmedUsername,
+    }
+
+    authentikFlowStore.transaction = transaction
+
+    let challenge = await requestChallenge(transaction)
+    if (challenge.component !== 'ak-stage-identification') {
+      return continueFlowAfterChallenge(transaction, challenge)
+    }
+
+    if (challenge.password_fields) {
+      return preparePasswordTransaction(transaction, challenge)
+    }
+
+    challenge = await requestChallenge(transaction, {
+      component: 'ak-stage-identification',
+      uid_field: trimmedUsername,
+    })
+
+    if (challenge.response_errors) {
+      return {
+        status: 'error',
+        message: publicErrorForChallenge(challenge, GENERIC_AUTH_ERROR),
+      }
+    }
+
+    return continueFlowAfterChallenge(transaction, challenge)
+  } catch (error) {
+    return {
+      status: 'error',
+      message:
+        error instanceof AuthentikFlowError
+          ? error.message
+          : GENERIC_NETWORK_ERROR,
+    }
+  }
+}
+
+export const submitAuthentikPassword = async (
+  password: string
+): Promise<LoginFlowResult> => {
+  const transaction = authentikFlowStore.transaction
+  if (!transaction) {
+    return {
+      status: 'error',
+      message: 'This sign-in session has expired. Start again to continue.',
+    }
+  }
+
+  if (!password) {
+    return {
+      status: 'error',
+      message: 'Enter your password.',
+    }
+  }
+
+  const challenge = transaction.currentChallenge
+
+  try {
+    let nextChallenge: AuthentikChallenge
+
+    if (challenge?.component === 'ak-stage-password') {
+      nextChallenge = await requestChallenge(transaction, {
+        component: 'ak-stage-password',
+        password,
+      })
+    } else if (
+      challenge?.component === 'ak-stage-identification' &&
+      challenge.password_fields
+    ) {
+      nextChallenge = await requestChallenge(transaction, {
+        component: 'ak-stage-identification',
+        uid_field: transaction.username,
+        password,
+      })
+    } else {
+      return {
+        status: 'error',
+        message: 'Authentik did not request a password challenge.',
+      }
+    }
+
+    if (nextChallenge.response_errors) {
+      return {
+        status: 'error',
+        message: publicErrorForChallenge(nextChallenge, GENERIC_AUTH_ERROR),
+      }
+    }
+
+    return continueFlowAfterChallenge(transaction, nextChallenge)
+  } catch (error) {
+    return {
+      status: 'error',
+      message:
+        error instanceof AuthentikFlowError
+          ? error.message
+          : GENERIC_NETWORK_ERROR,
+    }
+  }
+}
+
 export const startAuthentikLoginFlow = async ({
   username,
   password,
@@ -384,51 +730,9 @@ export const startAuthentikLoginFlow = async ({
     }
   }
 
-  try {
-    const { query, state } = await buildAuthorizeQuery()
-    const transaction: AuthentikFlowTransaction = {
-      flowSlug: AUTHENTIK_AUTH_FLOW_SLUG,
-      query,
-      state,
-    }
-
-    authentikFlowStore.transaction = transaction
-
-    let challenge = await requestChallenge(transaction)
-
-    for (let i = 0; i < MAX_FLOW_CONTINUATIONS; i++) {
-      if (challenge.component === 'ak-stage-identification') {
-        challenge = await requestChallenge(transaction, {
-          component: 'ak-stage-identification',
-          uid_field: trimmedUsername,
-        })
-        continue
-      }
-
-      if (challenge.component === 'ak-stage-password') {
-        challenge = await requestChallenge(transaction, {
-          component: 'ak-stage-password',
-          password,
-        })
-        return continueFlowAfterChallenge(transaction, challenge)
-      }
-
-      return continueFlowAfterChallenge(transaction, challenge)
-    }
-
-    return {
-      status: 'error',
-      message: 'Authentik did not request the expected password challenge.',
-    }
-  } catch (error) {
-    return {
-      status: 'error',
-      message:
-        error instanceof AuthentikFlowError
-          ? error.message
-          : GENERIC_NETWORK_ERROR,
-    }
-  }
+  const identification = await startAuthentikIdentification(trimmedUsername)
+  if (identification.status !== 'password_required') return identification
+  return submitAuthentikPassword(password)
 }
 
 export const submitAuthentikOtp = async (
@@ -459,10 +763,20 @@ export const submitAuthentikOtp = async (
     })
 
     for (let i = 0; i < MAX_FLOW_CONTINUATIONS; i++) {
+      if (isFinalFlowRedirectChallenge(challenge)) {
+        clearAuthentikFlowTransaction()
+        return { status: 'redirect', to: oidcAuthorizeUrl(transaction) }
+      }
+
       const redirect = resolveRedirect(challenge)
       if (redirect) {
         clearAuthentikFlowTransaction()
         return { status: 'redirect', to: redirect }
+      }
+
+      if (isHostedUiRedirectChallenge(challenge)) {
+        challenge = await requestChallenge(transaction)
+        continue
       }
 
       if (challenge.component === 'ak-stage-user-login') {

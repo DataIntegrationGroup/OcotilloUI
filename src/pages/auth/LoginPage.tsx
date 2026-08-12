@@ -8,15 +8,11 @@ import {
   TextField,
 } from '@mui/material'
 import { AuthLayout } from './AuthLayout'
-import {
-  buildAuthentikPasswordRecoveryUrl,
-  startAuthentikLoginFlow,
-} from '@/services/authentik-flow'
+import { startAuthentikIdentification } from '@/services/authentik-flow'
 
 export const LoginPage = () => {
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [recoveryLoading, setRecoveryLoading] = useState(false)
@@ -26,12 +22,17 @@ export const LoginPage = () => {
     setError(null)
     setLoading(true)
 
-    const result = await startAuthentikLoginFlow({ username, password })
+    const result = await startAuthentikIdentification(username)
 
     setLoading(false)
 
+    if (result.status === 'password_required') {
+      navigate('/login/password')
+      return
+    }
+
     if (result.status === 'otp_required') {
-      navigate('/login/otp')
+      navigate('/login/mfa')
       return
     }
 
@@ -43,17 +44,10 @@ export const LoginPage = () => {
     setError(result.message)
   }
 
-  const onForgotPassword = async () => {
+  const onForgotPassword = () => {
     setError(null)
     setRecoveryLoading(true)
-
-    try {
-      const recoveryUrl = await buildAuthentikPasswordRecoveryUrl()
-      window.location.assign(recoveryUrl)
-    } catch {
-      setRecoveryLoading(false)
-      setError('Could not start password recovery. Try again in a moment.')
-    }
+    navigate('/login/recovery')
   }
 
   return (
@@ -81,19 +75,6 @@ export const LoginPage = () => {
           value={username}
         />
 
-        <TextField
-          autoComplete="current-password"
-          disabled={loading || recoveryLoading}
-          fullWidth
-          id="password"
-          label="Password"
-          name="password"
-          onChange={(event) => setPassword(event.target.value)}
-          required
-          type="password"
-          value={password}
-        />
-
         <Button
           disabled={loading || recoveryLoading}
           fullWidth
@@ -101,7 +82,11 @@ export const LoginPage = () => {
           type="submit"
           variant="contained"
         >
-          {loading ? <CircularProgress color="inherit" size={22} /> : 'Sign in'}
+          {loading ? (
+            <CircularProgress color="inherit" size={22} />
+          ) : (
+            'Continue'
+          )}
         </Button>
 
         <Button
