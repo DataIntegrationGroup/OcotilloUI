@@ -55,7 +55,6 @@ export const settings = {
   // Geothermal endpoints live on the Ocotillo (water data) API — same host, no
   // separate env var.
   nmbgmr_geothermal_api_url: ocotillo_api_url,
-  mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN || '',
   fief: {
     baseURL:
       import.meta.env.VITE_FIEF_BASE_URL ||

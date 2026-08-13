@@ -89,7 +89,6 @@ jobs:
             --build-arg VITE_AUTHENTIK_CLIENT_ID=${{ vars.VITE_AUTHENTIK_CLIENT_ID }} \
             --build-arg VITE_AUTHENTIK_URL=${{ vars.VITE_AUTHENTIK_URL }} \
             --build-arg VITE_OCOTILLO_API_URL=${{ vars.VITE_OCOTILLO_API_URL }} \
-            --build-arg VITE_MAPBOX_TOKEN=${{ secrets.VITE_MAPBOX_TOKEN }} \
             --build-arg VITE_PUBLIC_POSTHOG_KEY=${{ env.VITE_PUBLIC_POSTHOG_KEY }} \
             --build-arg VITE_PUBLIC_POSTHOG_HOST=${{ env.VITE_PUBLIC_POSTHOG_HOST }} \
             --build-arg VITE_APP_ENV=preview \

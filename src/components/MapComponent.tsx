@@ -1,18 +1,23 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { Map, MapRef, NavigationControl, Popup } from 'react-map-gl'
-import { ControlPosition } from 'react-map-gl'
+import { Map, MapRef, NavigationControl, Popup } from 'react-map-gl/maplibre'
+import { ControlPosition } from 'react-map-gl/maplibre'
 import { CircularProgress } from '@mui/material'
 
-import type { MapLayerMouseEvent, MapGeoJSONFeature } from 'react-map-gl'
+import type {
+  MapLayerMouseEvent,
+  MapGeoJSONFeature,
+} from 'react-map-gl/maplibre'
 
 import DrawControl from './DrawControl'
 
-import { settings } from '@/settings'
-
 import { ColorModeContext } from '@/contexts'
-import { DEFAULT_MAPBOX_BASEMAP, THEMED_MAPBOX_BASEMAPS } from '@/constants'
+import {
+  DEFAULT_BASEMAP_ID,
+  THEMED_BASEMAP_IDS,
+  getBasemapStyle,
+} from '@/basemaps'
 
-import 'mapbox-gl/dist/mapbox-gl.css'
+import 'maplibre-gl/dist/maplibre-gl.css'
 
 type SelectionPolygons = Record<string, any>
 
@@ -33,8 +38,8 @@ interface MapComponentProps {
   showNavigation?: { show: boolean; position?: ControlPosition }
   isLoading?: boolean
   mapRef?: any
-  basemapUri?: string
-  onBasemapChange?: (nextBasemap: string) => void
+  basemapId?: string
+  onBasemapChange?: (nextBasemapId: string) => void
 
   initialViewState?: {
     longitude: number
@@ -67,7 +72,7 @@ export const MapComponent = ({
     show: true,
     position: 'top-right' as ControlPosition,
   },
-  basemapUri = DEFAULT_MAPBOX_BASEMAP,
+  basemapId = DEFAULT_BASEMAP_ID,
   onBasemapChange,
   style = { width: '100%', height: '100%' },
   containerRef,
@@ -111,15 +116,15 @@ export const MapComponent = ({
       return
     }
 
-    const currentThemedBasemap = THEMED_MAPBOX_BASEMAPS[previousMode].uri
-    const nextThemedBasemap = THEMED_MAPBOX_BASEMAPS[nextMode].uri
+    const currentThemedBasemap = THEMED_BASEMAP_IDS[previousMode]
+    const nextThemedBasemap = THEMED_BASEMAP_IDS[nextMode]
 
-    if (basemapUri === currentThemedBasemap) {
+    if (basemapId === currentThemedBasemap) {
       onBasemapChange?.(nextThemedBasemap)
     }
 
     previousModeRef.current = nextMode
-  }, [mode, basemapUri, mapRef, onBasemapChange])
+  }, [mode, basemapId, mapRef, onBasemapChange])
 
   useEffect(() => {
     if (!isRectangleDrawInteractionActive || !setPopupContent) return
@@ -272,9 +277,7 @@ export const MapComponent = ({
   return (
     <Map
       ref={mapRef}
-      mapboxAccessToken={settings.mapboxToken}
       initialViewState={initialViewState}
-      terrain={{ source: 'mapbox-dem', exaggeration: 3 }}
       onClick={handleMouseClick}
       onLoad={emitBoundsChange}
       onMove={(evt) => {
@@ -282,8 +285,11 @@ export const MapComponent = ({
         emitBoundsChange()
       }}
       onMouseMove={onMouseMove}
+      // Style, tile, and glyph failures are otherwise silent — the map just
+      // renders empty. Surface them so a broken basemap source is diagnosable.
+      onError={(event) => console.error('Map error:', event.error)}
       style={style}
-      mapStyle={basemapUri}
+      mapStyle={getBasemapStyle(basemapId)}
     >
       {showNavigation?.show && (
         <NavigationControl position={showNavigation?.position} />

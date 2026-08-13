@@ -9,7 +9,7 @@ import {
 
 import MapComponent from "@/components/MapComponent";
 import {ILocation, IWell} from "@/interfaces/amp";
-import {Layer, Source} from "react-map-gl";
+import {Layer, Source} from "react-map-gl/maplibre";
 import React from "react";
 import {publicReleaseChip} from "@/components/util";
 import SummarizeIcon from '@mui/icons-material/Summarize';

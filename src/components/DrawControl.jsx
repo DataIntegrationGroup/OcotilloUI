@@ -1,5 +1,5 @@
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
-import { useControl } from "react-map-gl";
+import { useControl } from "react-map-gl/maplibre";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import { useEffect, useRef } from "react";
 
@@ -397,6 +397,15 @@ function DrawControl(props) {
     }
   };
 
+  // mapbox-gl-draw builds its toolbar with Mapbox's own "mapboxgl-ctrl-*"
+  // class names, but the app now loads maplibre-gl.css, which only styles the
+  // "maplibregl-ctrl-*" equivalents. Adding the MapLibre classes lets the
+  // toolbar inherit the same chrome as the navigation control instead of
+  // rendering as unstyled buttons.
+  const applyMaplibreControlClasses = (controlGroup) => {
+    controlGroup.classList.add("maplibregl-ctrl", "maplibregl-ctrl-group");
+  };
+
   const ensureRectangleButton = (map) => {
     if (rectangleButtonRef.current) return;
 
@@ -405,6 +414,8 @@ function DrawControl(props) {
       .querySelector(`.${POLYGON_BUTTON_CLASS}`);
     const controlGroup = polygonButton?.parentElement;
     if (!controlGroup) return;
+
+    applyMaplibreControlClasses(controlGroup);
 
     const button = document.createElement("button");
     button.type = "button";

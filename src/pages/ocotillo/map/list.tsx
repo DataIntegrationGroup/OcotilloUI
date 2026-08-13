@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { captureEvent } from '@/analytics/posthog'
-import { Layer, Source } from 'react-map-gl'
+import { Layer, Source } from 'react-map-gl/maplibre'
 import { useDataProvider, useGo } from '@refinedev/core'
 import type { CustomParams } from '@refinedev/core'
 import { useLocation } from 'react-router'
@@ -39,7 +39,7 @@ import {
 } from '@/components/PiperDiagram'
 import { MapPopup } from '@/components'
 import { useMeasuredHeight, useThingLayers, useViewportBbox } from '@/hooks'
-import { DEFAULT_MAPBOX_BASEMAP } from '@/constants'
+import { DEFAULT_BASEMAP_ID } from '@/basemaps'
 import {
   buildLayerCsv,
   filterLayerFeaturesBySelection,
@@ -272,7 +272,7 @@ export const MapView: React.FC = () => {
   const [visiblePointFeaturesByLayer, setVisiblePointFeaturesByLayer] =
     useState<VisibleFeatureGroup[]>([])
   const [visibleFeaturesPage, setVisibleFeaturesPage] = useState(1)
-  const [selectedBasemap, setSelectedBasemap] = useState(DEFAULT_MAPBOX_BASEMAP)
+  const [selectedBasemap, setSelectedBasemap] = useState(DEFAULT_BASEMAP_ID)
   const [isPiperDrawerOpen, setIsPiperDrawerOpen] = useState(false)
   const [activePiperFeatureId, setActivePiperFeatureId] = useState<
     string | null
@@ -933,10 +933,10 @@ export const MapView: React.FC = () => {
               position: 'absolute',
               inset: 0,
               height: '100%',
-              '& .mapboxgl-ctrl-bottom-left, & .mapboxgl-ctrl-bottom-right': {
+              '& .maplibregl-ctrl-bottom-left, & .maplibregl-ctrl-bottom-right': {
                 bottom: '6px',
               },
-              '& .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl, & .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl':
+              '& .maplibregl-ctrl-bottom-left .maplibregl-ctrl, & .maplibregl-ctrl-bottom-right .maplibregl-ctrl':
                 {
                   marginBottom: 0,
                 },
@@ -955,7 +955,7 @@ export const MapView: React.FC = () => {
               popupContent={popupContent}
               onPointClick={onMapPointClick}
               onMouseMoveCallback={onMapMouseMove}
-              basemapUri={selectedBasemap}
+              basemapId={selectedBasemap}
               onBasemapChange={setSelectedBasemap}
             >
               {Object.entries(THING_LAYERS).map(([key, layerDef]) => {
