@@ -4,54 +4,58 @@ import {
   buildUSGSRawRows,
   buildUSGSSections,
   decodeUSGSColumn,
-  formatPackedDms,
+  formatDecimalDms,
 } from '@/utils/usgsSiteSummary'
 
-// Labels are exactly what the NWIS site service documents in its RDB header.
+// Labels and descriptions are exactly what the monitoring-locations collection
+// publishes for itself via its queryables endpoint.
 const labels = {
-  agency_cd: 'Agency',
-  site_no: 'Site identification number',
-  station_nm: 'Site name',
-  site_tp_cd: 'Site type',
-  lat_va: 'DMS latitude',
-  long_va: 'DMS longitude',
-  dec_lat_va: 'Decimal latitude',
-  dec_long_va: 'Decimal longitude',
-  coord_acy_cd: 'Latitude-longitude accuracy',
-  state_cd: 'State code',
-  county_cd: 'County code',
-  alt_va: 'Altitude of Gage/land surface',
-  alt_datum_cd: 'Altitude datum',
-  alt_acy_va: 'Altitude accuracy',
-  well_depth_va: 'Well depth',
-  hole_depth_va: 'Hole depth',
-  aqfr_type_cd: 'Local aquifer type code',
-  topo_cd: 'Topographic setting code',
+  id: 'Monitoring location ID',
+  agency_code: 'Agency code',
+  monitoring_location_number: 'Monitoring location number',
+  monitoring_location_name: 'Monitoring location name',
+  site_type_code: 'Monitoring location type code',
+  state_code: 'State code',
+  county_code: 'County code',
+  altitude: 'Altitude',
+  altitude_accuracy: 'Altitude accuracy',
+  vertical_datum: 'Vertical datum',
+  well_constructed_depth: 'Well constructed depth',
+  hole_constructed_depth: 'Hole constructed depth',
+  aquifer_type_code: 'Aquifer type code',
+  hydrologic_unit_code: 'Hydrologic unit code (HUC)',
+}
+
+const descriptions = {
+  geometry: 'The location of the monitoring location.',
+  site_type_code: 'A code describing the type of monitoring location.',
 }
 
 const info: USGSSiteInfo = {
   labels,
-  url: 'https://waterservices.usgs.gov/nwis/site/',
+  descriptions,
+  latitude: 35.8745,
+  longitude: -106.1424444,
+  url: 'https://api.waterdata.usgs.gov/ogcapi/v0/collections/monitoring-locations/items',
   record: {
-    agency_cd: 'USGS',
-    site_no: '323149106570101',
-    station_nm: 'JL-49 NEAR LAS CRUCES, NM',
-    site_tp_cd: 'GW',
-    lat_va: '355228.2',
-    long_va: '1060832.8',
-    dec_lat_va: '35.8745',
-    dec_long_va: '-106.1424444',
-    coord_acy_cd: 'S',
-    state_cd: '35',
-    county_cd: '013',
-    alt_va: '5491.66',
-    alt_datum_cd: 'NAVD88',
-    alt_acy_va: '.13',
-    well_depth_va: '250',
-    hole_depth_va: '260',
-    aqfr_type_cd: 'U',
-    topo_cd: 'V',
-    project_no: '',
+    id: 'USGS-323149106570101',
+    agency_code: 'USGS',
+    agency_name: 'U.S. Geological Survey',
+    monitoring_location_number: '323149106570101',
+    monitoring_location_name: 'JL-49 NEAR LAS CRUCES, NM',
+    site_type_code: 'GW',
+    site_type: 'Well',
+    state_code: '35',
+    state_name: 'New Mexico',
+    county_code: '013',
+    county_name: 'Dona Ana County',
+    altitude: '5491.66',
+    vertical_datum: 'NAVD88',
+    altitude_accuracy: '.13',
+    well_constructed_depth: '250',
+    hole_constructed_depth: '260',
+    aquifer_type_code: 'U',
+    hydrologic_unit_code: '13030102',
   },
 }
 
@@ -60,51 +64,56 @@ const findItem = (label: string) =>
     .flatMap((section) => section.items)
     .find((item) => item.label === label)
 
-describe('formatPackedDms', () => {
-  it('unpacks a DDMMSS.s latitude', () => {
-    expect(formatPackedDms('355228.2', 'N')).toBe('35° 52\' 28.2" N')
+describe('formatDecimalDms', () => {
+  it('converts a positive decimal latitude', () => {
+    expect(formatDecimalDms(35.8745, 'N', 'S')).toBe('35° 52\' 28.20" N')
   })
 
-  it('unpacks a DDDMMSS.s longitude', () => {
-    expect(formatPackedDms('1060832.8', 'W')).toBe('106° 08\' 32.8" W')
+  it('uses the negative hemisphere for a western longitude', () => {
+    expect(formatDecimalDms(-106.1424444, 'E', 'W')).toBe('106° 08\' 32.80" W')
   })
 
-  it('returns null for a value it cannot unpack', () => {
-    expect(formatPackedDms('not-a-coordinate', 'N')).toBeNull()
+  it('returns null for a value it cannot convert', () => {
+    expect(formatDecimalDms(Number.NaN, 'N', 'S')).toBeNull()
   })
 })
 
 describe('decodeUSGSColumn', () => {
-  it('expands a site type code to its documented name', () => {
-    expect(decodeUSGSColumn(info.record, 'site_tp_cd')).toBe('Well (GW)')
-  })
-
-  it('resolves a county code against the record state FIPS code', () => {
-    expect(decodeUSGSColumn(info.record, 'county_cd')).toBe(
+  it('prefers the name the API resolves alongside the code', () => {
+    expect(decodeUSGSColumn(info.record, 'site_type_code')).toBe('Well (GW)')
+    expect(decodeUSGSColumn(info.record, 'county_code')).toBe(
       'Dona Ana County (013)'
     )
   })
 
+  it('falls back to the reference tables when the API sends no name', () => {
+    expect(decodeUSGSColumn(info.record, 'aquifer_type_code')).toBe(
+      'Unconfined single aquifer (U)'
+    )
+  })
+
   it('leaves uncoded columns untouched', () => {
-    expect(decodeUSGSColumn(info.record, 'station_nm')).toBe(
+    expect(decodeUSGSColumn(info.record, 'monitoring_location_name')).toBe(
       'JL-49 NEAR LAS CRUCES, NM'
     )
   })
 
-  it('returns null for an empty column', () => {
-    expect(decodeUSGSColumn(info.record, 'project_no')).toBeNull()
+  it('returns null for a column the collection did not return', () => {
+    expect(decodeUSGSColumn(info.record, 'basin_code')).toBeNull()
   })
 })
 
 describe('buildUSGSSections', () => {
-  it('labels columns with the definitions from the RDB header', () => {
-    expect(findItem('Site name')?.value).toBe('JL-49 NEAR LAS CRUCES, NM')
-    expect(findItem('Site type')?.value).toBe('Well (GW)')
+  it('labels columns with the collection field definitions', () => {
+    expect(findItem('Monitoring location name')?.value).toBe(
+      'JL-49 NEAR LAS CRUCES, NM'
+    )
+    expect(findItem('Monitoring location type code')?.value).toBe('Well (GW)')
   })
 
-  it('consolidates the packed and decimal coordinates into one line', () => {
+  it('derives the coordinate line from the feature geometry', () => {
     expect(findItem('Latitude / longitude')?.value).toBe(
-      '35° 52\' 28.2" N, 106° 08\' 32.8" W (35.8745, -106.1424444)'
+      '35° 52\' 28.20" N, 106° 08\' 32.80" W (35.8745, -106.1424444)'
     )
   })
 
@@ -118,12 +127,12 @@ describe('buildUSGSSections', () => {
     expect(findItem('Depth')?.value).toBe('250 ft well, 260 ft hole')
   })
 
-  it('drops the columns the site returned empty', () => {
+  it('drops the columns the collection did not return', () => {
     const labelsShown = buildUSGSSections(info).flatMap((section) =>
       section.items.map((item) => item.label)
     )
 
-    expect(labelsShown).not.toContain('Project number')
+    expect(labelsShown).not.toContain('Basin code')
   })
 
   it('returns no sections without a record', () => {
@@ -132,18 +141,20 @@ describe('buildUSGSSections', () => {
 })
 
 describe('buildUSGSRawRows', () => {
-  it('carries the header label and the decoded value for each column', () => {
+  it('carries the field label and the decoded value for each property', () => {
     const rows = buildUSGSRawRows(info)
 
-    expect(rows.find((row) => row.field === 'site_tp_cd')).toMatchObject({
-      label: 'Site type',
+    expect(rows.find((row) => row.field === 'site_type_code')).toMatchObject({
+      label: 'Monitoring location type code',
       value: 'Well (GW)',
     })
   })
 
-  it('omits columns the site returned empty', () => {
-    expect(buildUSGSRawRows(info).map((row) => row.field)).not.toContain(
-      'project_no'
-    )
+  it('omits the sibling name properties folded into their codes', () => {
+    const fields = buildUSGSRawRows(info).map((row) => row.field)
+
+    expect(fields).not.toContain('site_type')
+    expect(fields).not.toContain('county_name')
+    expect(fields).toContain('site_type_code')
   })
 })
