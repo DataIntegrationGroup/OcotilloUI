@@ -16,8 +16,20 @@ const App: React.FC = () => (
       <Routes>
         <Route
           path="/analytics-disclosure"
-          element={<ContentPage src="/content/analytics-disclosure.md" />}
-        />
+          element={
+            <Authenticated
+              key="analytics-disclosure"
+              fallback={<ContentPage src="/content/analytics-disclosure.md" />}
+            >
+              <AppShell />
+            </Authenticated>
+          }
+        >
+          <Route
+            index
+            element={<ContentPage src="/content/analytics-disclosure.md" />}
+          />
+        </Route>
         <Route
           element={
             <Authenticated key={'auth-pages'} fallback={<Outlet />}>
