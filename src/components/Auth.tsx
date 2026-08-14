@@ -1,12 +1,3 @@
-import { useEffect, useRef, useState } from 'react'
-import {
-  clearPkceFallbacks,
-  consumePkceFallbackByState,
-  tokenStore,
-  transientStore,
-} from '@/providers/authentik-provider'
-import { useNavigate } from 'react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   Alert,
   Box,
@@ -15,16 +6,62 @@ import {
   CardContent,
   CircularProgress,
   Container,
+  Link,
   Stack,
   Typography,
 } from '@mui/material'
+import { AuthPage } from '@refinedev/mui'
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
+import { Link as RouterLink, useNavigate } from 'react-router'
+import { ThemedTitleV2 } from '@/components/layout/title'
 import { buildAuthentikUrl, CLIENT_ID, REDIRECT_URI } from '@/config'
+import {
+  clearPkceFallbacks,
+  consumePkceFallbackByState,
+  tokenStore,
+  transientStore,
+} from '@/providers/authentik-provider'
 
 type TokenResponse = {
   access_token: string
   id_token?: string
   refresh_token?: string
 }
+
+export const Login = () => (
+  <AuthPage
+    title={<ThemedTitleV2 collapsed={false} />}
+    hideForm={true}
+    type="login"
+    registerLink={false}
+    providers={[
+      {
+        name: 'authentik',
+        label: 'Sign in with Authentik',
+      },
+    ]}
+    renderContent={(content, title) => (
+      <>
+        {title}
+        {content}
+        <Box sx={{ mt: 2, px: 1, textAlign: 'center' }}>
+          <Typography variant="caption" color="text.secondary">
+            Ocotillo uses PostHog analytics and records production sessions to
+            improve reliability and support users.{' '}
+            <Link
+              component={RouterLink}
+              to="/analytics-disclosure"
+              underline="hover"
+            >
+              Learn why.
+            </Link>
+          </Typography>
+        </Box>
+      </>
+    )}
+  />
+)
 
 export const Callback = () => {
   const queryClient = useQueryClient()
