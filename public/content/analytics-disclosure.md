@@ -12,7 +12,7 @@ Form inputs are masked by default in session recordings. Ocotillo does not use s
 
 ## Why we need it
 
-Ocotillo supports Bureau staff working with water data across many workflows. Session analytics help the team:
+Ocotillo supports Bureau staff working with geologic data across many workflows. Session analytics help the team:
 
 - Find broken or confusing screens
 - Understand which workflows need performance or usability improvements
