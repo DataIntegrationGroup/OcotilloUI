@@ -159,6 +159,7 @@ function ExpandButton() {
 const FOOTER_LINKS = [
   { label: 'About', href: '/about' },
   { label: 'Connect Desktop GIS', href: '/ogcapi' },
+  { label: 'Analytics Disclosure', href: '/analytics-disclosure' },
   { label: 'Report a Bug', href: '/report-a-bug' },
 ] as const
 
