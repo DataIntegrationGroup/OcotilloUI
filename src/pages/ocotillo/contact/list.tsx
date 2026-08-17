@@ -1,22 +1,52 @@
+import { type BaseRecord, useLink, useList, useTable } from '@refinedev/core'
+import {
+  type ColumnDef,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import { MailIcon, MapPinIcon, PhoneIcon } from 'lucide-react'
 import React, { useEffect, useMemo, useState } from 'react'
-import { useDataGrid } from '@refinedev/mui'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { captureEvent } from '@/analytics/posthog'
+import {
+  DataTable,
+  DataTableColumnHeader,
+  DataTablePagination,
+  DataTableToolbar,
+  useRefineDataTable,
+} from '@/components/DataTable'
+import { ListPageShell } from '@/components/ListPageShell'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAccessCapabilities } from '@/hooks'
 import {
   IAddress,
   IContact,
   IEmail,
   IPhone,
 } from '@/interfaces/ocotillo/IContact'
-import { Card, CardHeader, SxProps } from '@mui/material'
-import { Email, Home, Phone } from '@mui/icons-material'
-import { useLink } from '@refinedev/core'
-import { settings } from '@/settings'
-import { formatAppDateTime, formatPhone } from '@/utils'
+import {
+  filterConfidentialRows,
+  formatAppDateTime,
+  formatPhone,
+  sanitizeContacts,
+} from '@/utils'
 import { getContactDisplayName } from '@/utils/contactDisplayName'
-import { ListPage } from '@/components/ListPage'
-import { useAccessCapabilities, useListPageDataGridAnalytics } from '@/hooks'
-import { filterConfidentialRows, sanitizeContacts } from '@/utils'
+
+/**
+ * Contacts list. Rows select rather than navigate: selecting a contact opens
+ * the email, phone and address cards below the table for anyone cleared to see
+ * confidential details, and the name cell links through to the contact page.
+ */
+
+const CONTACTS_PAGE_SIZE = 50
+const NO_VALUE = '—'
+
+const pickPrimary = <T,>(
+  items: T[] | undefined | null,
+  isPrimary: (item: T) => boolean
+): T | undefined => {
+  if (!items || items.length === 0) return undefined
+  return items.find(isPrimary) ?? items[0]
+}
 
 export const ContactList: React.FC = () => {
   useEffect(() => {
@@ -28,123 +58,118 @@ export const ContactList: React.FC = () => {
     null
   )
 
-  const { dataGridProps } = useDataGrid<IContact>({
-    pagination: { pageSize: 50 },
-  })
-
-  const dataGridPropsWithAnalytics = useListPageDataGridAnalytics(
-    dataGridProps,
-    'contacts'
-  )
-
-  const visibleContacts = useMemo(
-    () => sanitizeContacts(dataGridProps.rows, canViewConfidential),
-    [canViewConfidential, dataGridProps.rows]
-  )
-
   const Link = useLink()
 
-  const columns = useMemo<GridColDef<IContact>[]>(
+  const refineTable = useTable<IContact>({
+    pagination: { pageSize: CONTACTS_PAGE_SIZE },
+  })
+
+  const visibleContacts = useMemo(
+    () => sanitizeContacts(refineTable.result.data, canViewConfidential),
+    [canViewConfidential, refineTable.result.data]
+  )
+
+  const columns = useMemo<ColumnDef<IContact, unknown>[]>(
     () => [
       {
-        field: 'name',
-        headerName: 'Name',
-        type: 'string',
-        minWidth: 160,
-        flex: 1,
-        valueGetter: (_: unknown, row: IContact) => getContactDisplayName(row),
-      },
-      {
-        field: 'organization',
-        headerName: 'Organization',
-        type: 'string',
-        minWidth: 180,
-        flex: 1,
-        valueGetter: (_: unknown, row: IContact) => row.organization ?? '',
-      },
-      {
-        field: 'role',
-        headerName: 'Role',
-        type: 'string',
-        width: 140,
-      },
-      {
-        field: 'contact_type',
-        headerName: 'Contact Type',
-        width: 140,
-      },
-      {
-        field: 'primary_phone',
-        headerName: 'Primary Phone',
-        type: 'string',
-        width: 160,
-        sortable: false,
-        valueGetter: (_: unknown, row: IContact) => {
-          const primary = pickPrimary(
-            row.phones,
-            (p) => p.phone_type === 'Primary'
-          )
-          return primary?.phone_number ?? ''
-        },
-        renderCell: (params) => {
-          if (!canViewConfidential) return <span />
-          const primary = pickPrimary(
-            params.row.phones,
-            (p) => p.phone_type === 'Primary'
-          )
-          return primary?.phone_number ? (
-            <span>{formatPhone(primary.phone_number)}</span>
-          ) : (
-            <span />
-          )
+        id: 'name',
+        accessorFn: (contact) => getContactDisplayName(contact),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Name" />
+        ),
+        cell: ({ row, getValue }) => (
+          <Link
+            go={{
+              to: {
+                resource: 'ocotillo.contact',
+                action: 'show',
+                id: row.original.id,
+              },
+            }}
+            onClick={(event: React.MouseEvent<HTMLAnchorElement>) =>
+              event.stopPropagation()
+            }
+          >
+            {(getValue() as string) || NO_VALUE}
+          </Link>
+        ),
+        meta: {
+          label: 'Name',
+          cellClassName: 'font-medium',
+          filter: { type: 'text' },
         },
       },
       {
-        field: 'primary_email',
-        headerName: 'Primary Email',
-        type: 'string',
-        minWidth: 200,
-        flex: 1,
-        sortable: false,
-        valueGetter: (_: unknown, row: IContact) => {
-          const primary = pickPrimary(
-            row.emails,
-            (e) => e.email_type === 'Primary'
-          )
-          return primary?.email ?? ''
-        },
-        renderCell: (params) => {
-          if (!canViewConfidential) return <span />
-          const primary = pickPrimary(
-            params.row.emails,
-            (e) => e.email_type === 'Primary'
-          )
-          return primary?.email ? <span>{primary.email}</span> : <span />
-        },
+        id: 'organization',
+        accessorFn: (contact) => contact.organization ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Organization" />
+        ),
+        meta: { label: 'Organization', filter: { type: 'text' } },
       },
       {
-        field: 'things',
-        headerName: 'Associated Sites',
-        description:
-          'Monitoring sites linked to this contact. Sort uses the alphabetically first linked site name.',
-        type: 'string',
-        minWidth: 180,
-        flex: 1,
-        valueGetter: (_: unknown, row: IContact) =>
-          row.things?.map((thing) => thing.name).join('; ') ?? '',
-        renderCell: (params) => {
-          const things = params.row.things ?? []
+        id: 'role',
+        accessorFn: (contact) => contact.role ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Role" />
+        ),
+        meta: { label: 'Role', filter: { type: 'text' } },
+      },
+      {
+        id: 'contact_type',
+        accessorFn: (contact) => contact.contact_type ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Contact Type" />
+        ),
+        meta: { label: 'Contact Type', filter: { type: 'text' } },
+      },
+      {
+        id: 'primary_phone',
+        accessorFn: (contact) =>
+          pickPrimary(contact.phones, (phone) => phone.phone_type === 'Primary')
+            ?.phone_number ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Primary Phone" />
+        ),
+        // Sorting and filtering are not offered: the value is derived from the
+        // phone list, which the API does not sort or filter on.
+        enableSorting: false,
+        cell: ({ getValue }) => {
+          if (!canViewConfidential) return null
+          const value = getValue() as string
+          return value ? formatPhone(value) : null
+        },
+        meta: { label: 'Primary Phone' },
+      },
+      {
+        id: 'primary_email',
+        accessorFn: (contact) =>
+          pickPrimary(contact.emails, (email) => email.email_type === 'Primary')
+            ?.email ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Primary Email" />
+        ),
+        enableSorting: false,
+        cell: ({ getValue }) =>
+          canViewConfidential ? ((getValue() as string) ?? null) : null,
+        meta: { label: 'Primary Email' },
+      },
+      {
+        id: 'things',
+        accessorFn: (contact) =>
+          contact.things?.map((thing) => thing.name).join('; ') ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Associated Sites" />
+        ),
+        cell: ({ row }) => {
+          const things = row.original.things ?? []
+          if (things.length === 0) return NO_VALUE
+
           return (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-              }}
-            >
-              {things.map((thing, idx) => (
+            <div className="flex flex-wrap items-center">
+              {things.map((thing, index) => (
                 <span key={thing.id}>
-                  {idx > 0 && ', '}
+                  {index > 0 && ', '}
                   <Link
                     go={{
                       to: {
@@ -153,7 +178,9 @@ export const ContactList: React.FC = () => {
                         id: thing.id,
                       },
                     }}
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    onClick={(event: React.MouseEvent<HTMLAnchorElement>) =>
+                      event.stopPropagation()
+                    }
                   >
                     {thing.name}
                   </Link>
@@ -162,174 +189,250 @@ export const ContactList: React.FC = () => {
             </div>
           )
         },
+        meta: {
+          label: 'Associated Sites',
+          description:
+            'Monitoring sites linked to this contact. Sort uses the alphabetically first linked site name.',
+          filter: { type: 'text' },
+        },
       },
       {
-        field: 'created_at',
-        headerName: 'Created At',
-        width: 180,
-        valueGetter: (isoDate: string) => formatAppDateTime(isoDate),
-      },
-    ],
-    [canViewConfidential]
-  )
-  const { dataGridProps: emailDataGridProps } = useDataGrid<IEmail>({
-    dataProviderName: 'ocotillo',
-    resource: `contact/${selectedContactId}/email`,
-    meta: { enabled: !!selectedContactId },
-  })
-
-  const { dataGridProps: phoneDataGridProps } = useDataGrid<IEmail>({
-    dataProviderName: 'ocotillo',
-    resource: `contact/${selectedContactId}/phone`,
-    meta: { enabled: !!selectedContactId },
-  })
-
-  const { dataGridProps: addressDataGridProps } = useDataGrid<IAddress>({
-    dataProviderName: 'ocotillo',
-    resource: `contact/${selectedContactId}/address`,
-    meta: { enabled: !!selectedContactId },
-  })
-
-  return (
-    <>
-      <ListPage
-        title="Contacts & Owners"
-        columns={columns}
-        dataGridProps={{ ...dataGridPropsWithAnalytics, rows: visibleContacts }}
-        getRowId={(row) => row.id}
-        hideHeaderButtons
-        onRowClick={(params) =>
-          captureEvent('contacts_row_clicked', { contact_id: params.id })
-        }
-        onSelectionChange={(params) =>
-          setSelectedContactId(params.length > 0 ? (params[0] as number) : null)
-        }
-        accessResource="ocotillo.contact"
-      />
-      {selectedContactId && (
-        <>
-          {canViewConfidential && (
-            <EmailInfoCard dataGridProps={emailDataGridProps} />
-          )}
-          {canViewConfidential && (
-            <PhoneInfoCard dataGridProps={phoneDataGridProps} />
-          )}
-          {canViewConfidential && (
-            <AddressInfoCard dataGridProps={addressDataGridProps} />
-          )}
-        </>
-      )}
-    </>
-  )
-}
-
-const EmailInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
-  const columns = useMemo<GridColDef<IEmail>[]>(
-    () => [
-      {
-        field: 'email_type',
-        headerName: 'Type',
-        type: 'string',
-        width: 140,
-      },
-      {
-        field: 'email',
-        headerName: 'Email',
-        type: 'string',
-        minWidth: 200,
-        flex: 1,
-      },
-    ],
-    []
-  )
-
-  return (
-    <InfoCard
-      title="Email"
-      icon={<Email />}
-      dataGridProps={{
-        ...dataGridProps,
-        rows: filterConfidentialRows(dataGridProps.rows, true),
-      }}
-      columns={columns}
-    />
-  )
-}
-
-const PhoneInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
-  const columns = useMemo<GridColDef<IPhone>[]>(
-    () => [
-      {
-        field: 'phone_type',
-        headerName: 'Type',
-        type: 'string',
-        width: 140,
-      },
-      {
-        field: 'phone_number',
-        headerName: 'Phone',
-        type: 'string',
-        width: 180,
-        renderCell: (params) => (
-          <span>{formatPhone(params.row.phone_number)}</span>
+        id: 'created_at',
+        accessorFn: (contact) => contact.created_at,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Created At" />
         ),
+        cell: ({ getValue }) => formatAppDateTime(getValue() as string),
+        meta: {
+          label: 'Created At',
+          filter: { type: 'date', defaultOperator: 'gte' },
+        },
+      },
+    ],
+    [Link, canViewConfidential]
+  )
+
+  const tableOptions = useRefineDataTable<IContact>({
+    refineTable,
+    columns,
+    analyticsPrefix: 'contacts',
+  })
+
+  const table = useReactTable({
+    data: visibleContacts,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (contact) => String(contact.id),
+    ...tableOptions,
+  })
+
+  return (
+    <ListPageShell title="Contacts & Owners" accessResource="ocotillo.contact">
+      <DataTableToolbar
+        table={table}
+        summary={
+          refineTable.result.total !== undefined
+            ? `${refineTable.result.total.toLocaleString()} total records`
+            : undefined
+        }
+      />
+
+      <DataTable
+        table={table}
+        isLoading={refineTable.tableQuery.isLoading}
+        emptyMessage="No contacts match these filters."
+        isRowSelected={(contact) => contact.id === selectedContactId}
+        onRowClick={(contact) => {
+          setSelectedContactId(contact.id)
+          captureEvent('contacts_row_clicked', { contact_id: contact.id })
+        }}
+      />
+
+      <DataTablePagination table={table} />
+
+      {selectedContactId && canViewConfidential ? (
+        <div className="flex flex-col gap-4">
+          <EmailInfoCard contactId={selectedContactId} />
+          <PhoneInfoCard contactId={selectedContactId} />
+          <AddressInfoCard contactId={selectedContactId} />
+        </div>
+      ) : null}
+    </ListPageShell>
+  )
+}
+
+/** Small client-side table for the per-contact detail cards. */
+function DetailTable<TData>({
+  rows,
+  columns,
+  isLoading,
+  emptyMessage,
+}: {
+  rows: TData[]
+  columns: ColumnDef<TData, unknown>[]
+  isLoading: boolean
+  emptyMessage: string
+}) {
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  })
+
+  return (
+    <DataTable
+      table={table}
+      isLoading={isLoading}
+      emptyMessage={emptyMessage}
+      skeletonRowCount={3}
+    />
+  )
+}
+
+function InfoCard({
+  title,
+  icon,
+  children,
+}: {
+  title: string
+  icon: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          {icon}
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  )
+}
+
+/** Contact detail lists are short; one page covers them. */
+const DETAIL_PAGE_SIZE = 100
+
+function useContactDetail<
+  TData extends BaseRecord & { release_status?: string | null },
+>(contactId: number, path: string) {
+  const { result, query } = useList<TData>({
+    resource: `contact/${contactId}/${path}`,
+    dataProviderName: 'ocotillo',
+    pagination: { pageSize: DETAIL_PAGE_SIZE },
+  })
+
+  return { rows: result?.data ?? [], isLoading: query.isLoading }
+}
+
+const EmailInfoCard = ({ contactId }: { contactId: number }) => {
+  const { rows, isLoading } = useContactDetail<IEmail>(contactId, 'email')
+
+  const columns = useMemo<ColumnDef<IEmail, unknown>[]>(
+    () => [
+      {
+        id: 'email_type',
+        accessorFn: (email) => email.email_type,
+        header: 'Type',
+        meta: { label: 'Type', headClassName: 'w-36' },
+      },
+      {
+        id: 'email',
+        accessorFn: (email) => email.email,
+        header: 'Email',
+        meta: { label: 'Email' },
       },
     ],
     []
   )
 
   return (
-    <InfoCard
-      title="Phone"
-      icon={<Phone />}
-      dataGridProps={{
-        ...dataGridProps,
-        rows: filterConfidentialRows(dataGridProps.rows, true),
-      }}
-      columns={columns}
-    />
+    <InfoCard title="Email" icon={<MailIcon className="size-4" aria-hidden />}>
+      <DetailTable
+        rows={filterConfidentialRows(rows, true)}
+        columns={columns}
+        isLoading={isLoading}
+        emptyMessage="No email addresses recorded."
+      />
+    </InfoCard>
   )
 }
 
-const AddressInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
-  const columns = useMemo<GridColDef<IAddress>[]>(
+const PhoneInfoCard = ({ contactId }: { contactId: number }) => {
+  const { rows, isLoading } = useContactDetail<IPhone>(contactId, 'phone')
+
+  const columns = useMemo<ColumnDef<IPhone, unknown>[]>(
     () => [
       {
-        field: 'address_type',
-        headerName: 'Type',
-        type: 'string',
-        width: 120,
+        id: 'phone_type',
+        accessorFn: (phone) => phone.phone_type,
+        header: 'Type',
+        meta: { label: 'Type', headClassName: 'w-36' },
       },
       {
-        field: 'address_line_1',
-        headerName: 'Address',
-        type: 'string',
-        minWidth: 200,
-        flex: 1,
+        id: 'phone_number',
+        accessorFn: (phone) => phone.phone_number,
+        header: 'Phone',
+        cell: ({ getValue }) => formatPhone(getValue() as string),
+        meta: { label: 'Phone' },
+      },
+    ],
+    []
+  )
+
+  return (
+    <InfoCard title="Phone" icon={<PhoneIcon className="size-4" aria-hidden />}>
+      <DetailTable
+        rows={filterConfidentialRows(rows, true)}
+        columns={columns}
+        isLoading={isLoading}
+        emptyMessage="No phone numbers recorded."
+      />
+    </InfoCard>
+  )
+}
+
+const AddressInfoCard = ({ contactId }: { contactId: number }) => {
+  const { rows, isLoading } = useContactDetail<IAddress>(contactId, 'address')
+
+  const columns = useMemo<ColumnDef<IAddress, unknown>[]>(
+    () => [
+      {
+        id: 'address_type',
+        accessorFn: (address) => address.address_type,
+        header: 'Type',
+        meta: { label: 'Type', headClassName: 'w-32' },
       },
       {
-        field: 'address_line_2',
-        headerName: 'Line 2',
-        type: 'string',
-        width: 160,
+        id: 'address_line_1',
+        accessorFn: (address) => address.address_line_1,
+        header: 'Address',
+        meta: { label: 'Address' },
       },
       {
-        field: 'city',
-        headerName: 'City',
-        type: 'string',
-        width: 140,
+        id: 'address_line_2',
+        accessorFn: (address) => address.address_line_2 ?? '',
+        header: 'Line 2',
+        meta: { label: 'Line 2' },
       },
       {
-        field: 'state',
-        headerName: 'State',
-        type: 'string',
-        width: 80,
+        id: 'city',
+        accessorFn: (address) => address.city,
+        header: 'City',
+        meta: { label: 'City' },
       },
       {
-        field: 'postal_code',
-        headerName: 'Postal Code',
-        type: 'string',
-        width: 110,
+        id: 'state',
+        accessorFn: (address) => address.state,
+        header: 'State',
+        meta: { label: 'State', headClassName: 'w-20' },
+      },
+      {
+        id: 'postal_code',
+        accessorFn: (address) => address.postal_code,
+        header: 'Postal Code',
+        meta: { label: 'Postal Code', headClassName: 'w-32' },
       },
     ],
     []
@@ -338,61 +441,14 @@ const AddressInfoCard = ({ dataGridProps }: { dataGridProps: any }) => {
   return (
     <InfoCard
       title="Address"
-      icon={<Home />}
-      dataGridProps={{
-        ...dataGridProps,
-        rows: filterConfidentialRows(dataGridProps.rows, true),
-      }}
-      columns={columns}
-    />
+      icon={<MapPinIcon className="size-4" aria-hidden />}
+    >
+      <DetailTable
+        rows={filterConfidentialRows(rows, true)}
+        columns={columns}
+        isLoading={isLoading}
+        emptyMessage="No addresses recorded."
+      />
+    </InfoCard>
   )
-}
-
-const InfoCard = ({
-  title,
-  icon,
-  dataGridProps,
-  columns,
-}: {
-  title: string
-  icon: React.ReactNode
-  dataGridProps: any
-  columns: any[]
-}) => (
-  <Card sx={{ mt: 2 }}>
-    <IconCardHeader text={title} icon={icon} />
-    <DataGrid
-      {...dataGridProps}
-      columns={columns}
-      rowHeight={settings.rowHeight}
-    />
-  </Card>
-)
-
-const IconCardHeader = ({
-  text,
-  icon,
-  sx,
-}: {
-  text: string
-  icon: React.ReactNode
-  sx?: SxProps
-}) => (
-  <CardHeader
-    sx={sx}
-    title={
-      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {icon}
-        {text}
-      </span>
-    }
-  />
-)
-
-const pickPrimary = <T,>(
-  items: T[] | undefined | null,
-  isPrimary: (item: T) => boolean
-): T | undefined => {
-  if (!items || items.length === 0) return undefined
-  return items.find(isPrimary) ?? items[0]
 }
