@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import axios from 'axios'
-import { useInvalidate } from '@refinedev/core'
+import { useCan, useInvalidate } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
 import { Breadcrumb, useAutocomplete } from '@refinedev/mui'
 import {
@@ -43,11 +43,13 @@ import { fetchAllOcotilloPages } from '@/utils/ocotilloPaging'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
   OcotilloHydrographCorrectionWorkbench,
+  type HydrographDeleteResult,
   type HydrographPublishArgs,
   type HydrographSensorDeployment,
   type HydrographWellMetadata,
 } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
 import { useWellDetails } from '@/hooks/useWellDetails'
+import { buildManualObservationFieldMetadata } from '@/utils/manualObservationFieldMetadata'
 import {
   buildSensorDeploymentRows,
   type DeploymentLike,
@@ -57,6 +59,7 @@ import {
   normalizePointId,
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
+  type HydrographRange,
   ParsedHydrographUpload,
 } from '@/components/Hydrographs/hydrographCorrection'
 import { HydrographUiModeToggle } from '@/components/Hydrographs/HydrographUiModeToggle'
@@ -175,6 +178,14 @@ export const HydrographCorrectionPage = () => {
   // correct it. The demo and external-ingest sources start at Intermediate.
   const showAllSources = isAtLeastMode(mode, 'intermediate')
 
+  // Deleting stored observations is irreversible, so it is gated separately
+  // from page access: editors correct and publish, admins may also delete.
+  const { data: deleteAccess } = useCan({
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'delete',
+  })
+  const canDeleteStoredData = Boolean(deleteAccess?.can)
+
   const { autocompleteProps } = useAutocomplete<IWell>({
     resource: 'thing',
     dataProviderName: 'ocotillo',
@@ -246,6 +257,28 @@ export const HydrographCorrectionPage = () => {
         wellDetails?.measuring_point_height_unit ?? null,
     }
   }, [selectedWell, wellDetails])
+
+  // Who took each manual reading, and how. The observation endpoint returns
+  // the reading alone, so the field-event tree from the well-details query
+  // (already loaded for the metadata pane) supplies the provenance.
+  const manualFieldMetadata = useMemo(
+    () =>
+      buildManualObservationFieldMetadata([
+        ...(wellDetailsQuery.data?.field_events ?? []),
+        wellDetailsQuery.data?.first_field_event,
+      ]),
+    [wellDetailsQuery.data]
+  )
+
+  const manualObservations = useMemo(
+    () =>
+      manualRows.map((row) => ({
+        observation_datetime: row.observation_datetime,
+        depth_to_water_bgs: row.depth_to_water_bgs,
+        fieldMetadata: manualFieldMetadata.get(row.id) ?? null,
+      })),
+    [manualFieldMetadata, manualRows]
+  )
 
   const sensorDeployments = useMemo<HydrographSensorDeployment[]>(() => {
     const rows = buildSensorDeploymentRows(
@@ -436,6 +469,50 @@ export const HydrographCorrectionPage = () => {
       setPublishError(
         error instanceof Error ? error.message : 'Publishing failed.'
       )
+    }
+  }
+
+  // DELETE per docs/hydrograph-correction-upload-contract.md. The workbench
+  // owns the confirmation flow; this only issues the request and refreshes the
+  // stored series so the chart reflects what is left.
+  const handleDeleteStoredRange = async (
+    range: HydrographRange
+  ): Promise<HydrographDeleteResult> => {
+    if (!selectedWell) throw new Error('No well is selected.')
+
+    const params = new URLSearchParams({
+      thing_id: String(selectedWell.id),
+      start_time: range.startTime.toISOString(),
+      end_time: range.endTime.toISOString(),
+    })
+
+    try {
+      const { data } = await ocotilloDataProvider.custom!({
+        url: `observation/transducer-groundwater-level?${params.toString()}`,
+        method: 'delete',
+      })
+
+      invalidate({
+        resource: 'observation/transducer-groundwater-level',
+        dataProviderName: 'ocotillo',
+        invalidates: ['list'],
+      })
+      await wellSeriesQuery.refetch()
+
+      const body = data as { deleted_observation_count?: number } | null
+      return { deletedCount: body?.deleted_observation_count ?? 0 }
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        throw new Error(
+          'The transducer observation delete endpoint is not available yet — see docs/hydrograph-correction-upload-contract.md.'
+        )
+      }
+      if (axios.isAxiosError(error) && error.response?.status === 403) {
+        throw new Error(
+          'Your account is not permitted to delete stored transducer observations.'
+        )
+      }
+      throw error
     }
   }
 
@@ -811,7 +888,7 @@ export const HydrographCorrectionPage = () => {
         ) : (
           <OcotilloHydrographCorrectionWorkbench
             thingName={selectedWell.name}
-            manualObservations={manualRows}
+            manualObservations={manualObservations}
             transducerObservations={transducerRows.map(({ observation }) => ({
               observation_datetime: observation.observation_datetime,
               value: observation.value,
@@ -819,6 +896,9 @@ export const HydrographCorrectionPage = () => {
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
             onPublish={handlePublish}
+            onDeleteStoredRange={
+              canDeleteStoredData ? handleDeleteStoredRange : undefined
+            }
             mode={mode}
             wellMetadata={wellMetadata}
             sensorDeployments={sensorDeployments}

@@ -4,7 +4,7 @@ import wellknown from 'wellknown'
 import { Place } from '@mui/icons-material'
 import { Box } from '@mui/system'
 import MapComponent from '@/components/MapComponent'
-import { MapRef } from 'react-map-gl'
+import { MapRef } from 'react-map-gl/maplibre'
 import Grid from '@mui/material/Grid2'
 
 interface SpatialSearchComponentProps {

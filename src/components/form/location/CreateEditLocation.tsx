@@ -17,7 +17,7 @@ import {
   MapComponent,
 } from '@/components'
 import { useLexicon } from '@/hooks'
-import { MapRef, ViewState, Source, Layer } from 'react-map-gl'
+import { MapRef, ViewState, Source, Layer } from 'react-map-gl/maplibre'
 import {
   Typography,
   FormControlLabel,

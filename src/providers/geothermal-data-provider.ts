@@ -98,6 +98,18 @@ export const geothermalDataProvider: DataProvider = {
       });
     }
 
+    // Endpoint-specific query parameters (e.g. the well search term), mirroring
+    // the ocotillo provider. Set last so a caller can override a derived value,
+    // and skipping null/undefined so an unset option does not become "null".
+    if (meta?.params) {
+      Object.entries(meta.params as Record<string, unknown>).forEach(
+        ([key, value]) => {
+          if (value === undefined || value === null || value === "") return;
+          params.set(key, String(value));
+        },
+      );
+    }
+
     const response = await fetcher(`${resource}?${params.toString()}`);
     if (response.status < 200 || response.status > 299) throw response;
     const resp = await response.json();

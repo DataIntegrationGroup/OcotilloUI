@@ -787,6 +787,73 @@ const includesTime = (time: Date, range?: HydrographRange | null) => {
   )
 }
 
+/**
+ * The series' value at `time`, linearly interpolated between the readings on
+ * either side of it.
+ *
+ * A manual water level is measured whenever the technician is on site, which
+ * is almost never one of the logger's own timestamps — a 6-hour cadence puts
+ * the reading up to 3 hours away from the measurement. Comparing against, or
+ * anchoring to, that reading builds the sampling offset into the correction:
+ * on a trace that is moving, the further the sample the larger the error.
+ * Reading the series at the measurement's own instant removes it.
+ *
+ * Returns null when `time` falls outside the series. There is no line there to
+ * read, and extrapolating a transducer trace past its own record would invent
+ * data; callers decide what to do about it.
+ */
+export const interpolateSeriesValueAt = (
+  series: HydrographPoint[],
+  time: Date
+): number | null => {
+  if (series.length === 0) return null
+
+  const target = toUnixTime(time)
+  const sorted = [...series].sort((a, b) => toUnixTime(a.time) - toUnixTime(b.time))
+
+  const first = toUnixTime(sorted[0].time)
+  const last = toUnixTime(sorted[sorted.length - 1].time)
+  if (target < first || target > last) return null
+  if (target === first) return sorted[0].value
+  if (target === last) return sorted[sorted.length - 1].value
+
+  // Binary search for the last reading at or before the target. Manual
+  // measurements are few but the transducer series runs to tens of thousands
+  // of readings, so a scan per manual is worth avoiding.
+  let low = 0
+  let high = sorted.length - 1
+  while (high - low > 1) {
+    const mid = (low + high) >> 1
+    if (toUnixTime(sorted[mid].time) <= target) {
+      low = mid
+    } else {
+      high = mid
+    }
+  }
+
+  const before = sorted[low]
+  const after = sorted[high]
+  const span = toUnixTime(after.time) - toUnixTime(before.time)
+  // Duplicate timestamps leave nothing to interpolate across.
+  if (span === 0) return before.value
+
+  const fraction = (target - toUnixTime(before.time)) / span
+  return before.value + (after.value - before.value) * fraction
+}
+
+/** The reading closest in time to `time`, or null for an empty series. */
+const nearestReading = (
+  series: HydrographPoint[],
+  time: Date
+): HydrographPoint | null => {
+  if (series.length === 0) return null
+  return [...series].sort(
+    (a, b) =>
+      Math.abs(toUnixTime(a.time) - toUnixTime(time)) -
+      Math.abs(toUnixTime(b.time) - toUnixTime(time))
+  )[0]
+}
+
 // The methodology's key QC test: the converted series should pass through
 // the bounding manual measurements. A large misfit at a manual means the
 // logger (or its barometer) is drifting and the data should not be
@@ -808,22 +875,27 @@ export const assessDriftAtManualObservations = (
 
   return manualPoints
     .map((manual) => {
-      const nearest = [...converted].sort(
-        (a, b) =>
-          Math.abs(toUnixTime(a.time) - toUnixTime(manual.time)) -
-          Math.abs(toUnixTime(b.time) - toUnixTime(manual.time))
-      )[0]
+      const nearest = nearestReading(converted, manual.time)
       if (
+        !nearest ||
         Math.abs(toUnixTime(nearest.time) - toUnixTime(manual.time)) > maxGapMs
       ) {
         return null
       }
 
+      // Read the series at the manual's own instant so the misfit is the
+      // logger's drift and not the gap to the nearest sample. A manual taken
+      // just outside the record — the download-day reading, measured after the
+      // logger was pulled — cannot be interpolated, so it falls back to the
+      // nearest reading; the maxGapMs guard above keeps that honest.
+      const seriesValue =
+        interpolateSeriesValueAt(converted, manual.time) ?? nearest.value
+
       return {
         anchorTime: manual.time,
         manualValue: manual.value,
-        seriesValue: nearest.value,
-        misfit: Number((nearest.value - manual.value).toFixed(4)),
+        seriesValue: Number(seriesValue.toFixed(4)),
+        misfit: Number((seriesValue - manual.value).toFixed(4)),
       }
     })
     .filter((assessment): assessment is DriftAssessment => assessment !== null)
@@ -903,12 +975,13 @@ export const convertWaterHeadToDepthToWater = ({
       throw new Error('No non-zero water-head measurements to convert.')
     }
 
-    const nearest = [...sortedSingle].sort(
-      (a, b) =>
-        Math.abs(toUnixTime(a.time) - toUnixTime(anchor.time)) -
-        Math.abs(toUnixTime(b.time) - toUnixTime(anchor.time))
-    )[0]
-    const hangingPoint = anchor.value + nearest.value
+    // Head at the manual's own instant, so the converted trace passes through
+    // the manual measurement at the time it was taken. Falls back to the
+    // nearest reading only when the manual lies outside the record entirely.
+    const headAtAnchor =
+      interpolateSeriesValueAt(sortedSingle, anchor.time) ??
+      nearestReading(sortedSingle, anchor.time)!.value
+    const hangingPoint = anchor.value + headAtAnchor
 
     return sortedSingle.map((point) => ({
       time: point.time,
@@ -928,7 +1001,6 @@ export const convertWaterHeadToDepthToWater = ({
   const sensorDepths: Array<number | null> = sorted.map(() => null)
   let firstBinStartDepth: number | null = null
   let lastBinEndDepth: number | null = null
-
   for (let i = 0; i < manual.length - 1; i += 1) {
     const m0 = manual[i]
     const m1 = manual[i + 1]
@@ -945,23 +1017,46 @@ export const convertWaterHeadToDepthToWater = ({
 
     const firstIndex = indices[0]
     const lastIndex = indices[indices.length - 1]
-    const l0 = m0.value + sorted[firstIndex].value
-    const l1 = m1.value + sorted[lastIndex].value
+
+    // Anchor each sensor depth on the head at the manual's own timestamp, not
+    // on the bin's first and last readings. Those are simply the samples that
+    // happen to bracket the visit, up to one logging interval away; anchoring
+    // on them makes the converted trace pass through the manual's value at a
+    // sample's time instead of at the measurement's time.
+    //
+    // A manual outside the logged period has no head to anchor on. Deriving
+    // one from the closest reading invents a sensor depth at a moment the
+    // logger never covered, and the whole bin then rides on it — which is how
+    // a trace ends up offset from the one manual that is inside the record.
+    // Such an end is left unanchored and the other end carries the bin.
+    const head0 = interpolateSeriesValueAt(sorted, m0.time)
+    const head1 = interpolateSeriesValueAt(sorted, m1.time)
+    const l0 = head0 === null ? null : m0.value + head0
+    const l1 = head1 === null ? null : m1.value + head1
+
+    // Both ends unanchored: nothing in this bin is pinned to a measurement, so
+    // the closing manual and the nearest reading are all there is to go on.
+    const start = l0 ?? l1 ?? m0.value + sorted[firstIndex].value
+    const end = l1 ?? l0 ?? m1.value + sorted[lastIndex].value
 
     if (firstBinStartDepth === null) {
-      firstBinStartDepth = l0
+      firstBinStartDepth = start
     }
-    lastBinEndDepth = l1
+    lastBinEndDepth = end
 
-    const t0 = toUnixTime(sorted[firstIndex].time)
-    const t1 = toUnixTime(sorted[lastIndex].time)
+    // Drift is interpolated between the manual timestamps for the same reason.
+    // It can only be measured when both ends are anchored; with one end the
+    // sensor depth is held constant at it rather than ramped toward a value
+    // that was never observed.
+    const t0 = toUnixTime(m0.time)
+    const t1 = toUnixTime(m1.time)
     const span = t1 - t0
+    const canRamp = correctDrift && span > 0 && l0 !== null && l1 !== null
 
     for (const index of indices) {
-      const l =
-        correctDrift && span > 0
-          ? l0 + ((l1 - l0) * (toUnixTime(sorted[index].time) - t0)) / span
-          : l1
+      const l = canRamp
+        ? start + ((end - start) * (toUnixTime(sorted[index].time) - t0)) / span
+        : end
       sensorDepths[index] = l
     }
   }
@@ -986,6 +1081,7 @@ export const convertWaterHeadToDepthToWater = ({
       value: Number((sensorDepth - point.value).toFixed(4)),
     }
   })
+
 }
 
 const OFFSET_WINDOW_HALF_WIDTH = 5
@@ -1365,6 +1461,31 @@ export const applyOffsetToRange = (
       : measurement
   )
 
+export interface SnapOffset {
+  offset: number
+  /**
+   * `interpolated` — the manual falls inside the trace, so the offset was
+   * measured against the trace's value at the manual's own instant and the
+   * corrected line passes exactly through it.
+   *
+   * `clamped` — the manual falls outside the trace, where there is no line to
+   * pass through, so the nearest end of it was used instead.
+   */
+  method: 'interpolated' | 'clamped'
+  /** The trace value the offset was measured against. */
+  anchorValue: number
+}
+
+/**
+ * How far to move the trace so it passes through `target`.
+ *
+ * The offset is measured against the trace's value at the manual measurement's
+ * own timestamp, interpolated between the readings on either side — not
+ * against the nearest reading. A logger on a 6-hour cadence puts its nearest
+ * sample up to 3 hours from the measurement, and on a trace that is moving
+ * that gap becomes error in the correction: the line ends up passing through
+ * the manual's value at the sample's time rather than at the manual's time.
+ */
 export const calculateSnapOffset = ({
   measurements,
   target,
@@ -1373,7 +1494,7 @@ export const calculateSnapOffset = ({
   measurements: HydrographPoint[]
   target: HydrographPoint
   range?: HydrographRange | null
-}) => {
+}): SnapOffset => {
   const candidates = measurements.filter((measurement) =>
     includesTime(measurement.time, range)
   )
@@ -1382,13 +1503,25 @@ export const calculateSnapOffset = ({
     throw new Error('No uploaded measurements fall inside the selected range.')
   }
 
-  const nearest = [...candidates].sort(
-    (a, b) =>
-      Math.abs(toUnixTime(a.time) - toUnixTime(target.time)) -
-      Math.abs(toUnixTime(b.time) - toUnixTime(target.time))
-  )[0]
+  const interpolated = interpolateSeriesValueAt(candidates, target.time)
+  if (interpolated !== null) {
+    return {
+      offset: Number((target.value - interpolated).toFixed(4)),
+      method: 'interpolated',
+      anchorValue: Number(interpolated.toFixed(4)),
+    }
+  }
 
-  return Number((target.value - nearest.value).toFixed(4))
+  // The manual sits outside the trace being corrected — before it starts or
+  // after it ends, or outside the brushed range. Nothing can pass through that
+  // instant, so the nearest end is the only defined anchor. The caller is told
+  // which happened so it can be recorded and shown.
+  const nearest = nearestReading(candidates, target.time)!
+  return {
+    offset: Number((target.value - nearest.value).toFixed(4)),
+    method: 'clamped',
+    anchorValue: nearest.value,
+  }
 }
 
 export const buildCsvFromMeasurements = (measurements: HydrographPoint[]) => {

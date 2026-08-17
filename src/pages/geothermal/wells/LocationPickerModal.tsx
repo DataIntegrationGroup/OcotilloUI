@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Map, Marker, type MapLayerMouseEvent } from 'react-map-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import { Map, Marker, type MapLayerMouseEvent } from 'react-map-gl/maplibre'
+import 'maplibre-gl/dist/maplibre-gl.css'
 import { MapPin } from 'lucide-react'
-import { settings } from '@/settings'
+import { getBasemapStyle } from '@/basemaps'
 import {
   Dialog,
   DialogContent,
@@ -52,9 +52,8 @@ export function LocationPickerModal({
 
         <div className="h-[440px] w-full overflow-hidden rounded-md border">
           <Map
-            mapboxAccessToken={settings.mapboxToken}
             initialViewState={initialViewState}
-            mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
+            mapStyle={getBasemapStyle('satellite-labels')}
             style={{ width: '100%', height: '100%' }}
             onClick={(e: MapLayerMouseEvent) =>
               setPin({ lat: e.lngLat.lat, lon: e.lngLat.lng })

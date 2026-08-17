@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { Box, Typography } from '@mui/material'
 import { Map as MapIcon } from '@mui/icons-material'
-import { Layer, Source } from 'react-map-gl'
+import { Layer, Source } from 'react-map-gl/maplibre'
 import type { FeatureCollection, Geometry } from 'geojson'
 import type { IWell } from '@/interfaces/ocotillo'
 import MapComponent from '@/components/MapComponent'

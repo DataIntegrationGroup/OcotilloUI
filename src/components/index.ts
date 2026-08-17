@@ -1,4 +1,6 @@
 export * from './Auth'
+export * from './BasemapControl'
+export * from './BasemapSelector'
 export * from './Button'
 export * from './ContactShow'
 export * from './WellShow'

@@ -25,7 +25,7 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 
 - CRUD operations for Ocotillo system through a unified Admin Dashboard
 - User authentication and authorization via Authentik
-- Interactive map visualizations using Mapbox GL
+- Interactive map visualizations using MapLibre GL
 - Data validation with React Hook Form and Zod
 - Theming and layout via Material UI
 
@@ -36,7 +36,7 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 - Vite (Next-generation frontend build tool)
 - Material UI (UI components)
 - React Hook Form & Zod (Forms & validation)
-- Mapbox GL (Map visualizations)
+- MapLibre GL (Map visualizations)
 - Authentik (Authentication)
 - Cypress (E2E Testing)
 
@@ -84,10 +84,8 @@ This application uses Vite environment variables. The following variables are re
 ```bash
 VITE_APP_TITLE="Ocotillo (Dev)"
 VITE_NMBGMR_AMP_API_URL="https://your-amp-development-api-url"
-VITE_NMBGMR_GEOTHERMAL_API_URL="https://your-geothermal-development-api-url"
 VITE_OCOTILLO_API_URL="https://your-ocotillo-development-api-url"
 VITE_REFINE_PROJECT_ID="your-refine-project-id"
-VITE_MAPBOX_TOKEN="your-mapbox-token"
 VITE_POSTHOG_KEY="your-posthog-project-api-key"
 VITE_POSTHOG_HOST="https://us.i.posthog.com"
 VITE_AUTHENTIK_CLIENT_ID="your-authentik-client-id"
@@ -194,6 +192,6 @@ New Mexico Bureau of Geology & Mineral Resources
 ## Acknowledgements
 
 - [Refine.dev](https://refine.dev)
-- [Mapbox GL](https://docs.mapbox.com/mapbox-gl-js/)
+- [MapLibre GL](https://maplibre.org/maplibre-gl-js/docs/)
 - [Material UI](https://mui.com)
 - [Cypress](https://www.cypress.io/)

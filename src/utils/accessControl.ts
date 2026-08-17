@@ -89,7 +89,13 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     delete: adminRoles,
     manage: adminRoles,
   },
-  'ocotillo.hydrograph-correction': { list: adminRoles, show: adminRoles },
+  // Editors correct and publish hydrographs. Deleting stored transducer
+  // observations is irreversible, so it stays a tier above page access.
+  'ocotillo.hydrograph-correction': {
+    list: editorRoles,
+    show: editorRoles,
+    delete: adminRoles,
+  },
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
   'ocotillo.thing-well-projects': { list: viewerRoles, show: viewerRoles },

@@ -5507,27 +5507,31 @@ export const USGS_CODE_TABLES: Record<string, Record<string, USGSCodeEntry>> = {
   },
 }
 
-/** RDB column -> reference collection. Columns absent here render their raw code. */
+/**
+ * OGC API monitoring-locations property -> reference collection. Properties
+ * absent here render their raw code.
+ *
+ * The API resolves many codes itself through sibling name properties (e.g.
+ * site_type alongside site_type_code); these tables cover the ones it does not,
+ * and supply the code descriptions the API omits.
+ */
 export const USGS_COLUMN_CODE_TABLES: Record<string, string> = {
-  agency_cd: 'agency-codes',
-  alt_datum_cd: 'altitude-datums',
-  aqfr_type_cd: 'aquifer-types',
-  coord_acy_cd: 'coordinate-accuracy-codes',
-  coord_datum_cd: 'coordinate-datum-codes',
-  coord_meth_cd: 'coordinate-method-codes',
-  country_cd: 'countries',
-  dec_coord_datum_cd: 'coordinate-datum-codes',
-  district_cd: 'states',
-  nat_aqfr_cd: 'national-aquifer-codes',
-  reliability_cd: 'reliability-codes',
-  site_tp_cd: 'site-types',
-  state_cd: 'states',
-  topo_cd: 'topographic-codes',
-  tz_cd: 'time-zone-codes',
+  agency_code: 'agency-codes',
+  aquifer_type_code: 'aquifer-types',
+  country_code: 'countries',
+  district_code: 'states',
+  horizontal_position_method_code: 'coordinate-method-codes',
+  horizontal_positional_accuracy_code: 'coordinate-accuracy-codes',
+  national_aquifer_code: 'national-aquifer-codes',
+  original_horizontal_datum: 'coordinate-datum-codes',
+  site_type_code: 'site-types',
+  state_code: 'states',
+  time_zone_abbreviation: 'time-zone-codes',
+  vertical_datum: 'altitude-datums',
 }
 
 /**
- * Decodes a coded site-file value, e.g. site_tp_cd "GW" -> "Well".
+ * Decodes a coded site-file value, e.g. site_type_code "GW" -> "Well".
  * County codes need the state FIPS code, which the caller passes as `context`.
  */
 export const decodeUSGSValue = (
@@ -5538,7 +5542,7 @@ export const decodeUSGSValue = (
   const raw = value == null ? '' : String(value).trim()
   if (!raw) return null
 
-  if (column === 'county_cd') {
+  if (column === 'county_code') {
     const stateFips = context?.stateFips?.trim()
     if (!stateFips) return null
     return USGS_CODE_TABLES['counties'][`${stateFips}-${raw}`] ?? null
