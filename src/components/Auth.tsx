@@ -10,13 +10,12 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { AUTHENTIK_URL, CLIENT_ID, REDIRECT_URI } from '@/config'
 import { AuthPage } from '@refinedev/mui'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router'
 import { ThemedTitleV2 } from '@/components/layout/title'
-import { buildAuthentikUrl, CLIENT_ID, REDIRECT_URI } from '@/config'
+import { AUTHENTIK_URL, CLIENT_ID, REDIRECT_URI } from '@/config'
 import {
   clearPkceFallbacks,
   consumePkceFallbackByState,
