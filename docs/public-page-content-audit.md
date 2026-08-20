@@ -10,7 +10,6 @@ The public page should explain what Ocotillo is, how to access it, and who it is
 
 The public page should include:
 
-- A brief description of Ocotillo and NMBGMR.
 - A sign-in button.
 - Instructions for requesting access.
 - A support contact method.
