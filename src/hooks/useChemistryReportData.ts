@@ -2,6 +2,11 @@ import { useList, useOne } from '@refinedev/core'
 import { useMemo } from 'react'
 import type { WaterChemistryObservationResponse } from '@/generated/types.gen'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
+import {
+  CHEMISTRY_REPORT_PAGE_SIZE,
+  chemistryReportYearParams,
+  sortChemistryObservations,
+} from '@/utils/chemistryReport'
 
 export type ChemistryObservation = WaterChemistryObservationResponse
 
@@ -36,28 +41,22 @@ export const useChemistryReportData = ({
     useList<ChemistryObservation>({
       resource: 'observation/water-chemistry',
       dataProviderName: 'ocotillo',
-      pagination: { currentPage: 1, pageSize: 500, mode: 'server' },
+      pagination: {
+        currentPage: 1,
+        pageSize: CHEMISTRY_REPORT_PAGE_SIZE,
+        mode: 'server',
+      },
       meta: {
         params: {
           thing_id: thingId,
-          start_time: `${year}-01-01T00:00:00`,
-          end_time: `${year + 1}-01-01T00:00:00`,
+          ...chemistryReportYearParams(year),
         },
       },
       queryOptions: { enabled },
     })
 
   const observations = useMemo(
-    () =>
-      [...(observationResult?.data ?? [])].sort((a, b) => {
-        const byDate =
-          new Date(a.observation_datetime).getTime() -
-          new Date(b.observation_datetime).getTime()
-        if (byDate !== 0) return byDate
-        return (a.parameter?.parameter_name ?? '').localeCompare(
-          b.parameter?.parameter_name ?? ''
-        )
-      }),
+    () => sortChemistryObservations(observationResult?.data ?? []),
     [observationResult?.data]
   )
 

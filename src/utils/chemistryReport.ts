@@ -30,6 +30,49 @@ export type ChemistryReportSummary = {
 const FIELD_PARAMETER_TYPE = 'Field Parameter'
 
 /**
+ * Page size used when pulling one well's chemistry for one reporting year. A
+ * year of results for a single well is small; the ceiling only exists so a
+ * well with an unusually long parameter list is not silently truncated.
+ */
+export const CHEMISTRY_REPORT_PAGE_SIZE = 500
+
+/**
+ * The API's start_time/end_time window is inclusive of the start and exclusive
+ * of the end, so a calendar year runs from Jan 1 to Jan 1 of the next year.
+ */
+export const chemistryReportYearParams = (year: number) => ({
+  start_time: `${year}-01-01T00:00:00`,
+  end_time: `${year + 1}-01-01T00:00:00`,
+})
+
+/**
+ * The calendar year a sample belongs to, read in UTC to match the window
+ * `chemistryReportYearParams` builds. Reading it locally would file a sample
+ * collected Jan 01 under the previous year anywhere west of Greenwich, and the
+ * report for that year would then come back empty.
+ */
+export const chemistryReportYearOf = (value?: string | null): number | null => {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.getUTCFullYear()
+}
+
+/** Oldest sample first, parameters alphabetical within a sample date. */
+export const sortChemistryObservations = (
+  observations: readonly ChemistryObservation[]
+): ChemistryObservation[] =>
+  [...observations].sort((a, b) => {
+    const byDate =
+      new Date(a.observation_datetime).getTime() -
+      new Date(b.observation_datetime).getTime()
+    if (byDate !== 0) return byDate
+    return (a.parameter?.parameter_name ?? '').localeCompare(
+      b.parameter?.parameter_name ?? ''
+    )
+  })
+
+/**
  * Sample and completion dates are calendar dates, not instants. The API sends
  * them as UTC (or as a bare `YYYY-MM-DD`, which parses as UTC midnight), so
  * they are formatted in UTC — formatting in the viewer's local zone would
