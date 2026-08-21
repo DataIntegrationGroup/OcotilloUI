@@ -13,8 +13,10 @@ import {
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { PDFViewer } from '@react-pdf/renderer'
+import { useOne } from '@refinedev/core'
 import { useAutocomplete } from '@refinedev/mui'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { ChemistryReportDownloadButton } from '@/components/Button'
 import { OcotilloPageTitle } from '@/components/OcotilloPageHeader'
 import {
@@ -26,16 +28,44 @@ import {
 import { useChemistryReportData, useDebounce } from '@/hooks'
 import type { IWell } from '@/interfaces/ocotillo'
 
-/** Reporting periods offered in the picker: this year and the four before it. */
-const buildYearOptions = (): number[] => {
+/**
+ * Reporting periods offered in the picker: this year and the four before it,
+ * plus whatever year was linked to. A well last sampled outside that window
+ * still has to be selectable, or arriving from its details page would land on
+ * a year the picker cannot show.
+ */
+const buildYearOptions = (linkedYear?: number): number[] => {
   const current = new Date().getFullYear()
-  return Array.from({ length: 5 }, (_, index) => current - index)
+  const years = Array.from({ length: 5 }, (_, index) => current - index)
+  if (linkedYear && !years.includes(linkedYear)) years.push(linkedYear)
+  return years.sort((a, b) => b - a)
+}
+
+const parseYearParam = (value: string | null): number | undefined => {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 1900 ? parsed : undefined
 }
 
 export const ChemistryReportExport = () => {
-  const yearOptions = useMemo(buildYearOptions, [])
+  // The well details page links here with the report it wants already chosen.
+  const [searchParams] = useSearchParams()
+  const linkedThingId = searchParams.get('thing_id')
+  const linkedYear = parseYearParam(searchParams.get('year'))
+
+  const yearOptions = useMemo(() => buildYearOptions(linkedYear), [linkedYear])
   const [selectedWell, setSelectedWell] = useState<IWell | null>(null)
-  const [year, setYear] = useState<number>(yearOptions[0])
+  const [year, setYear] = useState<number>(linkedYear ?? yearOptions[0])
+
+  const { result: linkedWell } = useOne<IWell>({
+    resource: 'thing-well',
+    id: linkedThingId ?? undefined,
+    queryOptions: { enabled: Boolean(linkedThingId) },
+  })
+
+  useEffect(() => {
+    // Only seeds the picker — once the user changes it, this stops applying.
+    if (linkedWell && !selectedWell) setSelectedWell(linkedWell as IWell)
+  }, [linkedWell, selectedWell])
   const [sections, setSections] = useState<ChemistryReportSections>(
     CHEMISTRY_REPORT_DEFAULT_SECTIONS
   )
