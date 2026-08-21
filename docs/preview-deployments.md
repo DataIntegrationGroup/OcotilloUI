@@ -113,8 +113,13 @@ Two things the compose setup does not have to worry about:
 
 - Data does not survive a restart. Fine for a demo; not a place to park work.
 - No GCS credentials are wired in, so file upload/download features will fail.
-- `minScale: 1` means an ephemeral preview bills continuously until torn down.
-  Keep the TTL short and tear previews down when you are finished.
+- `minScale: 1` means an ephemeral preview bills continuously until torn down —
+  the instance is the database, so it cannot scale to zero. At the current
+  sizing (2 vCPU and ~3.5 GiB across both containers) that is roughly $3–4 a
+  day. Keep the TTL short and tear previews down when you are finished.
+- Switching a preview back to the staging API deletes its ephemeral backend on
+  the next deploy, so dropping the `preview-backend` label and pushing is enough
+  to stop the bill.
 
 ## Layout
 

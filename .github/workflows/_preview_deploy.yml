@@ -251,6 +251,28 @@ jobs:
             || echo "No revisions found."
           echo "::endgroup::"
 
+      # A preview that switches back to the staging API -- someone drops the
+      # preview-backend label, or redeploys on demand without it -- would
+      # otherwise strand this branch's ephemeral API. That service pins an
+      # always-warm instance, so it bills continuously until the PR closes or
+      # the nightly sweep catches it. Reap it as soon as it is unwanted.
+      - name: Remove stale ephemeral backend
+        if: inputs.backend != 'ephemeral'
+        run: |
+          set -euo pipefail
+
+          if gcloud run services describe "${API_SERVICE_NAME}" \
+               --platform managed \
+               --region "$GCP_REGION" >/dev/null 2>&1; then
+            echo "Deleting stale ephemeral backend ${API_SERVICE_NAME}"
+            gcloud run services delete "${API_SERVICE_NAME}" \
+              --platform managed \
+              --region "$GCP_REGION" \
+              --quiet
+          else
+            echo "No stale ephemeral backend for this branch."
+          fi
+
       - name: Resolve API URL
         id: api-url
         run: |

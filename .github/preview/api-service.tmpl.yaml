@@ -146,10 +146,13 @@ spec:
 
               echo "Starting the application..."
               exec uvicorn main:app --host 0.0.0.0 --port 8000
+          # A preview serves a handful of reviewers, and the expensive part of
+          # startup (migrate + seed) measured in seconds, not minutes. Sized to
+          # keep the always-warm instance cheap rather than fast.
           resources:
             limits:
-              cpu: "2"
-              memory: 2Gi
+              cpu: "1"
+              memory: 1536Mi
           startupProbe:
             tcpSocket:
               port: 8000
