@@ -221,6 +221,36 @@ jobs:
             --role=roles/run.invoker \
             --quiet
 
+      # "services replace" reports only that the revision never became ready.
+      # Which of the two containers failed, and why, is in Cloud Logging --
+      # fetch it here rather than making the next person go digging in the
+      # console. Both containers land in the same revision log stream, tagged
+      # by container name.
+      - name: Dump ephemeral backend logs
+        if: failure() && inputs.backend == 'ephemeral'
+        run: |
+          set -uo pipefail
+
+          echo "::group::Cloud Run logs for ${API_SERVICE_NAME}"
+          gcloud logging read \
+            "resource.type=cloud_run_revision AND resource.labels.service_name=${API_SERVICE_NAME}" \
+            --project "$GCP_PROJECT_ID" \
+            --freshness 30m \
+            --limit 300 \
+            --order asc \
+            --format 'value(timestamp, labels."run.googleapis.com/container_name", textPayload)' \
+            || echo "Could not read logs."
+          echo "::endgroup::"
+
+          echo "::group::Revision status for ${API_SERVICE_NAME}"
+          gcloud run revisions list \
+            --service "${API_SERVICE_NAME}" \
+            --region "$GCP_REGION" \
+            --platform managed \
+            --format 'yaml(metadata.name, status.conditions)' \
+            || echo "No revisions found."
+          echo "::endgroup::"
+
       - name: Resolve API URL
         id: api-url
         run: |
