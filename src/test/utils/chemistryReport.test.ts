@@ -3,7 +3,10 @@ import { compareToStandard } from '@/constants/drinkingWaterStandards'
 import type { ChemistryObservation } from '@/hooks/useChemistryReportData'
 import {
   buildChemistryReportFilename,
+  chemistryReportYearOf,
+  chemistryReportYearParams,
   formatResultValue,
+  sortChemistryObservations,
   summarizeChemistry,
 } from '@/utils/chemistryReport'
 
@@ -133,5 +136,70 @@ describe('buildChemistryReportFilename', () => {
     expect(buildChemistryReportFilename(undefined, 2026)).toBe(
       'chemistry-report-well-unknown-2026.pdf'
     )
+  })
+})
+
+describe('chemistryReportYearParams', () => {
+  it('covers the calendar year without spilling into the next one', () => {
+    expect(chemistryReportYearParams(2026)).toEqual({
+      start_time: '2026-01-01T00:00:00',
+      end_time: '2027-01-01T00:00:00',
+    })
+  })
+})
+
+describe('chemistryReportYearOf', () => {
+  it('reads the year in UTC so a Jan 01 sample is not filed a year early', () => {
+    // Local time west of Greenwich makes this Dec 31, 2025; the API window it
+    // has to match is a UTC one, so 2026 is the year that returns the sample.
+    expect(chemistryReportYearOf('2026-01-01T00:00:00Z')).toBe(2026)
+  })
+
+  it('returns null for a missing or unparseable date', () => {
+    expect(chemistryReportYearOf(null)).toBeNull()
+    expect(chemistryReportYearOf('not a date')).toBeNull()
+  })
+})
+
+describe('sortChemistryObservations', () => {
+  it('orders oldest sample first, then parameters alphabetically', () => {
+    const sorted = sortChemistryObservations([
+      observation({
+        id: 1,
+        parameterName: 'Iron',
+        observation_datetime: '2026-05-15T00:00:00Z',
+      }),
+      observation({
+        id: 2,
+        parameterName: 'Zinc',
+        observation_datetime: '2026-02-04T00:00:00Z',
+      }),
+      observation({
+        id: 3,
+        parameterName: 'Arsenic',
+        observation_datetime: '2026-02-04T00:00:00Z',
+      }),
+    ])
+
+    expect(sorted.map((row) => row.parameter?.parameter_name)).toEqual([
+      'Arsenic',
+      'Zinc',
+      'Iron',
+    ])
+  })
+
+  it('does not mutate the array it is given', () => {
+    const rows = [
+      observation({ id: 1, parameterName: 'Zinc' }),
+      observation({
+        id: 2,
+        parameterName: 'Arsenic',
+        observation_datetime: '2026-02-04T00:00:00Z',
+      }),
+    ]
+
+    sortChemistryObservations(rows)
+
+    expect(rows.map((row) => row.id)).toEqual([1, 2])
   })
 })

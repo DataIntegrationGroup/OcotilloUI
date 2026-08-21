@@ -42,6 +42,7 @@ import {
   USGSInfoCard,
   OSEPODInfoCard,
   WellPDFActionsButton,
+  WellChemistryReportButton,
   WellScreensCard,
   EquipmentCard,
   NotesAccordion,
@@ -99,7 +100,7 @@ export const WellShow = () => {
     isLoading: isDetailsLoading,
   } = useWellDetails(id)
   const viewWell = well as IWell
-  const { canViewAmp, canEditWell } = useAccessCapabilities()
+  const { canViewAmp, canEditWell, canViewAmpStaging } = useAccessCapabilities()
 
   const { result: assetResult, query: assetQuery } = useList<IAsset>({
     resource: 'asset',
@@ -507,6 +508,13 @@ export const WellShow = () => {
                 contacts={contacts}
                 sample={latestSample as Partial<ISample> | undefined}
                 sensorDeployments={sensorDeployments}
+              />
+            ) : null}
+            {canViewAmpStaging ? (
+              <WellChemistryReportButton
+                well={viewWell}
+                contacts={contacts}
+                isLoading={isDetailsLoading}
               />
             ) : null}
             {canEditWell ? (
