@@ -84,7 +84,6 @@ vi.mock('@/components', () => {
     USGSInfoCard: () => <Stub name="usgs" />,
     OSEPODInfoCard: () => <Stub name="osepod" />,
     WellPDFActionsButton: () => <Stub name="pdf-actions" />,
-    WellChemistryReportButton: () => <Stub name="chemistry-report" />,
     WellScreensCard: () => <Stub name="screens" />,
     EquipmentCard: () => <Stub name="equipment" />,
     NotesAccordion: () => <Stub name="notes" />,
