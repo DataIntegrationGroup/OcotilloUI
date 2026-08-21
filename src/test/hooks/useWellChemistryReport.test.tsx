@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ChemistryObservation } from '@/hooks/useChemistryReportData'
+import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 
 const mockedUseList = vi.fn()
 const mockedGetList = vi.fn()
@@ -25,12 +25,14 @@ const observation = (
   observation_datetime: string
 ) =>
   ({
-    id,
+    id: `maj-${id}`,
+    thing_id: 7834,
+    parameter_name: parameterName,
     observation_datetime,
     value: 1,
     unit: 'mg/L',
-    parameter: { parameter_name: parameterName },
-  }) as ChemistryObservation
+    result_kind: 'major',
+  }) as ChemistryResult
 
 describe('useWellChemistryReport', () => {
   beforeEach(() => {
@@ -46,7 +48,7 @@ describe('useWellChemistryReport', () => {
 
     expect(mockedUseList).toHaveBeenCalledWith(
       expect.objectContaining({
-        resource: 'observation/water-chemistry',
+        resource: 'chemistry/results',
         pagination: { currentPage: 1, pageSize: 1, mode: 'server' },
         sorters: [{ field: 'observation_datetime', order: 'desc' }],
         meta: { params: { thing_id: 7834 } },
@@ -107,7 +109,7 @@ describe('useWellChemistryReport', () => {
 
     expect(mockedGetList).toHaveBeenCalledWith(
       expect.objectContaining({
-        resource: 'observation/water-chemistry',
+        resource: 'chemistry/results',
         meta: {
           params: {
             thing_id: 7834,
@@ -117,7 +119,7 @@ describe('useWellChemistryReport', () => {
         },
       })
     )
-    expect(observations.map((row) => row.parameter?.parameter_name)).toEqual([
+    expect(observations.map((row) => row.parameter_name)).toEqual([
       'Arsenic',
       'Zinc',
     ])
