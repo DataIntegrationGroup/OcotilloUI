@@ -80,17 +80,28 @@ jobs:
         working-directory: ./api-repo
         run: docker compose logs --tail=200 app || true
 
+      # Give up as soon as the app container dies. Polling a container that has
+      # already exited used to burn the full timeout before the job failed.
       - name: Wait for FastAPI to be ready
         working-directory: ./api-repo
         run: |
           echo "Waiting for FastAPI to be ready..."
-          timeout 720 bash -c '
-            until curl -sf http://localhost:8000/docs; do 
-              echo "FastAPI not up yet, retrying..."
-              sleep 3
-            done
-          '
-          echo "FastAPI is up and healthy"
+          for _ in $(seq 1 60); do
+            if curl -sf http://localhost:8000/docs >/dev/null; then
+              echo "FastAPI is up and healthy"
+              exit 0
+            fi
+            if [ -z "$(docker compose ps --status running -q app)" ]; then
+              echo "The app container stopped before serving requests:"
+              docker compose logs --tail=100 app
+              exit 1
+            fi
+            echo "FastAPI not up yet, retrying..."
+            sleep 3
+          done
+          echo "FastAPI did not become ready within 180s:"
+          docker compose logs --tail=100 app
+          exit 1
 
       - name: Show API logs after readiness probe
         if: always()
