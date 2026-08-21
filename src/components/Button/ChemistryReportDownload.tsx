@@ -6,7 +6,7 @@ import {
   downloadChemistryReport,
 } from '@/components/pdf/chemistry'
 import { Button } from '@/components/ui/button'
-import type { ChemistryObservation } from '@/hooks/useChemistryReportData'
+import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 
 export const ChemistryReportDownloadButton = ({
@@ -19,7 +19,7 @@ export const ChemistryReportDownloadButton = ({
 }: {
   well?: IWell
   contacts: readonly IContact[]
-  observations: readonly ChemistryObservation[]
+  observations: readonly ChemistryResult[]
   year: number
   sections: ChemistryReportSections
   disabled?: boolean
