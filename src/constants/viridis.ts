@@ -30,8 +30,9 @@ export const VIRIDIS_ANCHORS = [
 ] as const
 
 const clamp01 = (value: number): number => {
-  // Treat non-finite values (NaN/±Infinity) as 0 so callers don't have to guard.
-  if (!Number.isFinite(value)) return 0
+  // NaN has no position on the ramp, so it falls to the low end. The
+  // infinities are ordered, and clamp like any other out-of-range value.
+  if (Number.isNaN(value)) return 0
   if (value < 0) return 0
   if (value > 1) return 1
   return value
@@ -48,9 +49,9 @@ const channelToHex = (value: number): string =>
 
 /**
  * Color at `position` along the viridis ramp, where 0 is the dark purple end
- * and 1 is the bright yellow end. Values outside 0..1 are clamped, and
- * non-finite values (NaN/±Infinity) are treated as 0 so callers never have to
- * sanitize computed ratios.
+ * and 1 is the bright yellow end. Values outside 0..1 are clamped to the
+ * nearer end — including the infinities — and NaN maps to the dark end, so
+ * callers never have to sanitize a computed ratio.
  */
 export const viridisColor = (position: number): string => {
   const scaled = clamp01(position) * (VIRIDIS_ANCHORS.length - 1)

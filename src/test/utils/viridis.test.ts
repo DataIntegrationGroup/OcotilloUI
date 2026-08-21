@@ -60,11 +60,15 @@ describe('viridisColor', () => {
     expect(viridisColor(0.5 / (VIRIDIS_ANCHORS.length - 1))).toBe('#461566')
   })
 
-  it('clamps out-of-range and non-finite positions', () => {
+  it('clamps out-of-range positions to the nearer end', () => {
     expect(viridisColor(-3)).toBe(VIRIDIS_LOW)
     expect(viridisColor(42)).toBe(VIRIDIS_HIGH)
+    expect(viridisColor(Number.NEGATIVE_INFINITY)).toBe(VIRIDIS_LOW)
+    expect(viridisColor(Number.POSITIVE_INFINITY)).toBe(VIRIDIS_HIGH)
+  })
+
+  it('maps NaN to the dark end rather than throwing', () => {
     expect(viridisColor(Number.NaN)).toBe(VIRIDIS_LOW)
-    expect(viridisColor(Number.POSITIVE_INFINITY)).toBe(VIRIDIS_LOW)
   })
 
   it('always produces a six-digit lowercase hex color', () => {
