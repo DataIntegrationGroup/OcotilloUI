@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { captureEvent } from '@/analytics/posthog'
-import { Layer, Source } from 'react-map-gl/maplibre'
+import { Layer, Marker, Source } from 'react-map-gl/maplibre'
 import { useDataProvider, useGo } from '@refinedev/core'
 import type { CustomParams } from '@refinedev/core'
 import { useLocation } from 'react-router'
@@ -37,7 +37,7 @@ import {
   PiperDiagram,
   type PiperDiagramHandle,
 } from '@/components/PiperDiagram'
-import { MapPopup } from '@/components'
+import { MapGeocoderSearch, MapPopup } from '@/components'
 import { useMeasuredHeight, useThingLayers, useViewportBbox } from '@/hooks'
 import { DEFAULT_BASEMAP_ID } from '@/basemaps'
 import {
@@ -57,6 +57,7 @@ import {
   getDistinctMapPoints,
   getMapPointBounds,
 } from '@/utils/mapPointInteraction'
+import type { GeocodeResult } from '@/utils/geocode'
 
 function localDateStampForExport(): string {
   const d = new Date()
@@ -265,6 +266,11 @@ export const MapView: React.FC = () => {
     getExpandedGroupsForLayers(initialVisibleLayers)
   )
   const [popupContent, setPopupContent] = useState<any>(null)
+  const [geocodeMarker, setGeocodeMarker] = useState<{
+    longitude: number
+    latitude: number
+    label: string
+  } | null>(null)
   const [exportFormat, setExportFormat] = useState<'csv' | 'geojson'>('csv')
   const [selectionPolygons, setSelectionPolygons] = useState<
     Record<string, any>
@@ -526,10 +532,58 @@ export const MapView: React.FC = () => {
     }
   }, [visibleFeaturesPage, visiblePointFeaturesByLayer])
   const hasExportableLayers = exportableLayers.length > 0
+  const { ref: geocoderPanelRef, height: geocoderPanelHeight } =
+    useMeasuredHeight<HTMLDivElement>([], 52)
   const { ref: basemapPanelRef, height: basemapPanelHeight } =
     useMeasuredHeight<HTMLDivElement>([basemapCollapsed, selectedBasemap], 52)
-  const layersPanelTop = 12 + basemapPanelHeight
+  const basemapPanelTop = 12 + geocoderPanelHeight + 8
+  const layersPanelTop = basemapPanelTop + basemapPanelHeight
   const layersPanelMaxHeight = `calc(100% - ${layersPanelTop}px - 12px)`
+
+  // Bias geocoder results toward the part of the map the user is looking at.
+  const geocoderProximity = useMemo<[number, number] | undefined>(() => {
+    if (!viewportBbox) return undefined
+
+    const [west, south, east, north] = viewportBbox.split(',').map(Number)
+    if ([west, south, east, north].some((value) => !Number.isFinite(value))) {
+      return undefined
+    }
+
+    return [(west + east) / 2, (south + north) / 2]
+  }, [viewportBbox])
+
+  const onGeocodeSelect = (result: GeocodeResult) => {
+    const map = mapRef.current?.getMap?.()
+    if (!map) return
+
+    setPopupContent(null)
+    setGeocodeMarker({
+      longitude: result.center[0],
+      latitude: result.center[1],
+      label: result.label,
+    })
+
+    if (result.bbox) {
+      const [west, south, east, north] = result.bbox
+      map.fitBounds(
+        [
+          [west, south],
+          [east, north],
+        ],
+        { padding: 80, maxZoom: 14, duration: 800 }
+      )
+    } else {
+      map.easeTo({
+        center: result.center,
+        zoom: Math.max(map.getZoom(), 13),
+        duration: 800,
+      })
+    }
+
+    captureEvent('map_geocoder_result_selected', {
+      has_bbox: Boolean(result.bbox),
+    })
+  }
 
   const downloadLayerBlob = (
     content: BlobPart,
@@ -1015,14 +1069,45 @@ export const MapView: React.FC = () => {
                   />
                 </Source>
               ) : null}
+              {geocodeMarker ? (
+                <Marker
+                  longitude={geocodeMarker.longitude}
+                  latitude={geocodeMarker.latitude}
+                  color="#d32f2f"
+                />
+              ) : null}
             </MapComponent>
           </Box>
+          <Paper
+            elevation={6}
+            ref={geocoderPanelRef}
+            sx={(theme) => ({
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              width: { xs: 'calc(100% - 24px)', sm: 320 },
+              px: 0.8,
+              py: 0.6,
+              borderRadius: 1.25,
+              backdropFilter: 'blur(6px)',
+              backgroundColor: alpha(theme.palette.background.paper, 0.9),
+              border: '1px solid',
+              borderColor: alpha(theme.palette.divider, 0.9),
+              zIndex: 3,
+            })}
+          >
+            <MapGeocoderSearch
+              onSelect={onGeocodeSelect}
+              onClear={() => setGeocodeMarker(null)}
+              proximity={geocoderProximity}
+            />
+          </Paper>
           <Paper
             elevation={6}
             ref={basemapPanelRef}
             sx={(theme) => ({
               position: 'absolute',
-              top: 12,
+              top: basemapPanelTop,
               left: 12,
               width: { xs: 'calc(100% - 24px)', sm: 320 },
               display: 'flex',
