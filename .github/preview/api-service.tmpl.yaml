@@ -97,8 +97,23 @@ spec:
               value: https://authentik.newmexicowaterdata.org/application/o/token/
             - name: AUTHENTIK_CLIENT_ID
               value: "${TPL_AUTHENTIK_CLIENT_ID}"
-            - name: MOUNT_PYGEOAPI_IN_API
-              value: "false"
+            # create_api_app() mounts pygeoapi unconditionally -- the
+            # MOUNT_PYGEOAPI_IN_API flag in OcotilloAPI's app.yaml reads like an
+            # opt-out but no Python reads it. Of these, only the password is
+            # actually required: host/port/db/user each fall back to their
+            # POSTGRES_* equivalent, while the password is checked for None with
+            # no fallback and aborts boot. Set the full block anyway, to match
+            # docker-compose.yml and to keep the next reader out of pygeoapi.py.
+            - name: PYGEOAPI_POSTGRES_HOST
+              value: 127.0.0.1
+            - name: PYGEOAPI_POSTGRES_PORT
+              value: "5432"
+            - name: PYGEOAPI_POSTGRES_DB
+              value: ocotillo_preview
+            - name: PYGEOAPI_POSTGRES_USER
+              value: postgres
+            - name: PYGEOAPI_POSTGRES_PASSWORD
+              value: postgres
             - name: APP_VERSION
               value: "${TPL_API_SOURCE_SHA}"
             - name: RUN_SEED
