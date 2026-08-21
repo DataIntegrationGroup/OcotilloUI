@@ -58,7 +58,7 @@ const GEOTHERMAL_ROUTABLE = [
   'geothermal.geothermal_wells',
 ]
 
-// AMP.staging is an opt-in flag group, not a rung on the AMP ladder. Nothing
+// AMP.Staging is an opt-in flag group, not a rung on the AMP ladder. Nothing
 // else grants these resources — AMP.Admin included.
 const STAGING_ONLY_ROUTABLE = ['ocotillo.chemistry-report']
 
@@ -98,7 +98,7 @@ const expectedAccessByScenario: Scenario[] = [
     name: 'AMP.Admin',
     groups: ['AMP.Admin'],
     // AMP.Admin owns the water portal, not geothermal — and not the
-    // staging-flagged resources, which need the AMP.staging group explicitly.
+    // staging-flagged resources, which need the AMP.Staging group explicitly.
     allowedResources: routableResources
       .map((resource) => resource.name)
       .filter(
@@ -108,13 +108,13 @@ const expectedAccessByScenario: Scenario[] = [
       ),
   },
   {
-    name: 'AMP.staging',
-    groups: ['AMP.staging'],
+    name: 'AMP.Staging',
+    groups: ['AMP.Staging'],
     allowedResources: [...STAGING_ONLY_ROUTABLE],
   },
   {
-    name: 'AMP.Admin + AMP.staging',
-    groups: ['AMP.Admin', 'AMP.staging'],
+    name: 'AMP.Admin + AMP.Staging',
+    groups: ['AMP.Admin', 'AMP.Staging'],
     allowedResources: routableResources
       .map((resource) => resource.name)
       .filter((name) => !name.startsWith('geothermal.')),

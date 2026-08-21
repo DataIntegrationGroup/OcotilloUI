@@ -1,6 +1,6 @@
 import { Page, Text, View } from '@react-pdf/renderer'
 import { useMemo } from 'react'
-import type { ChemistryObservation } from '@/hooks/useChemistryReportData'
+import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import {
   type ChemistryResultRow,
@@ -42,7 +42,7 @@ export const CHEMISTRY_REPORT_SECTION_LABELS: Record<
 type ChemistryReportPdfProps = {
   well?: IWell
   contacts?: readonly IContact[]
-  observations: readonly ChemistryObservation[]
+  observations: readonly ChemistryResult[]
   year: number
   sections?: ChemistryReportSections
 }

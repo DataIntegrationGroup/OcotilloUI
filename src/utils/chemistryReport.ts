@@ -2,13 +2,17 @@ import {
   compareToStandard,
   type DrinkingWaterStandard,
 } from '@/constants/drinkingWaterStandards'
-import type { ChemistryObservation } from '@/hooks/useChemistryReportData'
+import type {
+  ChemistryResult,
+  ChemistryResultKind,
+} from '@/hooks/useChemistryReportData'
 import type { IWell } from '@/interfaces/ocotillo'
 
 export type ChemistryResultRow = {
   key: string
   parameterName: string
-  parameterType: string | null
+  /** Which legacy table the result came from; 'field' was read at the well. */
+  resultKind: ChemistryResultKind
   value: number | null
   unit: string | null
   sampledOn: string
@@ -26,8 +30,6 @@ export type ChemistryReportSummary = {
   mclExceedances: ChemistryResultRow[]
   smclExceedances: ChemistryResultRow[]
 }
-
-const FIELD_PARAMETER_TYPE = 'Field Parameter'
 
 /**
  * Page size used when pulling one well's chemistry for one reporting year. A
@@ -59,17 +61,15 @@ export const chemistryReportYearOf = (value?: string | null): number | null => {
 }
 
 /** Oldest sample first, parameters alphabetical within a sample date. */
-export const sortChemistryObservations = (
-  observations: readonly ChemistryObservation[]
-): ChemistryObservation[] =>
+export const sortChemistryResults = (
+  observations: readonly ChemistryResult[]
+): ChemistryResult[] =>
   [...observations].sort((a, b) => {
     const byDate =
       new Date(a.observation_datetime).getTime() -
       new Date(b.observation_datetime).getTime()
     if (byDate !== 0) return byDate
-    return (a.parameter?.parameter_name ?? '').localeCompare(
-      b.parameter?.parameter_name ?? ''
-    )
+    return (a.parameter_name ?? '').localeCompare(b.parameter_name ?? '')
   })
 
 /**
@@ -99,11 +99,11 @@ export const formatResultValue = (value: number | null): string =>
   value == null ? 'Not detected' : String(value)
 
 export const summarizeChemistry = (
-  observations: readonly ChemistryObservation[]
+  observations: readonly ChemistryResult[]
 ): ChemistryReportSummary => {
   const rows: ChemistryResultRow[] = observations.map((observation) => {
-    const parameterName = observation.parameter?.parameter_name ?? 'Unknown'
-    const unit = observation.unit ?? observation.parameter?.default_unit ?? null
+    const parameterName = observation.parameter_name || 'Unknown'
+    const unit = observation.unit ?? null
     const { standard, exceeds } = compareToStandard(
       parameterName,
       observation.value,
@@ -111,9 +111,9 @@ export const summarizeChemistry = (
     )
 
     return {
-      key: String(observation.id),
+      key: observation.id,
       parameterName,
-      parameterType: observation.parameter?.parameter_type ?? null,
+      resultKind: observation.result_kind,
       value: observation.value,
       unit,
       sampledOn: observation.observation_datetime,
@@ -128,12 +128,8 @@ export const summarizeChemistry = (
 
   return {
     rows,
-    fieldParameters: rows.filter(
-      (row) => row.parameterType === FIELD_PARAMETER_TYPE
-    ),
-    labResults: rows.filter(
-      (row) => row.parameterType !== FIELD_PARAMETER_TYPE
-    ),
+    fieldParameters: rows.filter((row) => row.resultKind === 'field'),
+    labResults: rows.filter((row) => row.resultKind !== 'field'),
     sampleDates,
     parameterCount: new Set(rows.map((row) => row.parameterName)).size,
     comparedCount: new Set(

@@ -1,5 +1,5 @@
 import { pdf } from '@react-pdf/renderer'
-import type { ChemistryObservation } from '@/hooks/useChemistryReportData'
+import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import { buildChemistryReportFilename } from '@/utils/chemistryReport'
 import {
@@ -20,7 +20,7 @@ export const downloadChemistryReport = async ({
 }: {
   well: IWell
   contacts: readonly IContact[]
-  observations: readonly ChemistryObservation[]
+  observations: readonly ChemistryResult[]
   year: number
   sections?: ChemistryReportSections
 }): Promise<string> => {

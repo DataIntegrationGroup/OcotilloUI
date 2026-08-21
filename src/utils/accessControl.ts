@@ -11,8 +11,13 @@ export type AmpRole = 'AMP.Viewer' | 'AMP.Editor' | 'AMP.Admin'
  * rung on the AMP.Viewer → AMP.Editor → AMP.Admin ladder: holding it grants
  * nothing else, and holding AMP.Admin does not imply it. A user has to be put
  * in the group deliberately.
+ *
+ * Spelled exactly as Authentik spells it, because groups arrive as strings in
+ * the token's `groups` claim and are matched literally -- `AMP.staging` looks
+ * right and never matches anything. The API spells it the same way, in
+ * core/dependencies.py.
  */
-export type AmpStagingRole = 'AMP.staging'
+export type AmpStagingRole = 'AMP.Staging'
 export type GeothermalRole =
   | 'Geothermal.Viewer'
   | 'Geothermal.Editor'
@@ -23,7 +28,7 @@ const roleOrder: PortalRole[] = [
   'AMP.Viewer',
   'AMP.Editor',
   'AMP.Admin',
-  'AMP.staging',
+  'AMP.Staging',
   'Geothermal.Viewer',
   'Geothermal.Editor',
   'Geothermal.Admin',
@@ -33,7 +38,7 @@ const roleOrder: PortalRole[] = [
  * Roles that carry no hierarchy — they pass through normalization as-is
  * instead of being expanded from a domain ladder.
  */
-const standaloneRoles: PortalRole[] = ['AMP.staging']
+const standaloneRoles: PortalRole[] = ['AMP.Staging']
 
 export const wipResources = new Set([
   'water.dashboard',
@@ -65,7 +70,7 @@ const geothermalEditorRoles: PortalRole[] = [
   'Geothermal.Admin',
 ]
 const geothermalAdminRoles: PortalRole[] = ['Geothermal.Admin']
-const stagingRoles: PortalRole[] = ['AMP.staging']
+const stagingRoles: PortalRole[] = ['AMP.Staging']
 const adminOnlyRoles = new Set<PortalRole>(['AMP.Admin', 'Geothermal.Admin'])
 
 const resourcePolicies: Record<string, ResourcePolicy> = {
@@ -230,7 +235,7 @@ export const getAccessCapabilities = (groups: string[] | null | undefined) => {
   const canManageAmp = roles.includes('AMP.Admin')
   const canViewConfidential = canEditAmp
   const canViewUnfinished = canManageAmp
-  const canViewAmpStaging = roles.includes('AMP.staging')
+  const canViewAmpStaging = roles.includes('AMP.Staging')
   const canViewGeothermal =
     roles.includes('Geothermal.Viewer') ||
     roles.includes('Geothermal.Editor') ||
