@@ -1,0 +1,168 @@
+# Reusable preview teardown. Removes the frontend service, the ephemeral backend
+# service if one exists, their Artifact Registry images, and the authentik
+# redirect URI. Every step is idempotent: tearing down a preview that was never
+# deployed succeeds and does nothing.
+name: _preview teardown
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: Branch whose preview resources should be removed.
+        type: string
+        required: true
+      delete_images:
+        description: Also delete the branch's images from Artifact Registry.
+        type: boolean
+        default: true
+
+jobs:
+  teardown:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    env:
+      GCP_PROJECT_ID: waterdatainitiative-271000
+      GCP_REGION: us-central1
+      AR_REPO: us-central1-docker.pkg.dev/waterdatainitiative-271000/ocotillo-previews
+      AUTHENTIK_BASE_URL: https://authentik.newmexicowaterdata.org
+      AUTHENTIK_PROVIDER_ID: ${{ secrets.AUTHENTIK_PROVIDER_ID }}
+      AUTHENTIK_API_TOKEN: ${{ secrets.AUTHENTIK_API_TOKEN }}
+
+    steps:
+      - name: Compute preview service names
+        env:
+          BRANCH_NAME: ${{ inputs.branch }}
+        run: |
+          set -euo pipefail
+
+          # Keep this sanitizer byte-for-byte in sync with _preview_deploy.yml.
+          SANITIZED=$(echo "$BRANCH_NAME" \
+            | sed 's/[^a-zA-Z0-9-]/-/g' \
+            | tr '[:upper:]' '[:lower:]' \
+            | cut -c1-40)
+
+          {
+            echo "SANITIZED_BRANCH=$SANITIZED"
+            echo "SERVICE_NAME=preview-$SANITIZED"
+            echo "API_SERVICE_NAME=preview-api-$SANITIZED"
+          } >> "$GITHUB_ENV"
+
+          echo "Tearing down preview-$SANITIZED and preview-api-$SANITIZED"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure gcloud project
+        run: gcloud config set project "$GCP_PROJECT_ID"
+
+      # Resolve the URL before deleting: Cloud Run URLs embed a generated hash,
+      # so once the service is gone the authentik entry cannot be reconstructed.
+      - name: Get Cloud Run URL
+        id: cloudrun-url
+        run: |
+          set -euo pipefail
+
+          URL=$(gcloud run services describe "${SERVICE_NAME}" \
+            --platform managed \
+            --region "$GCP_REGION" \
+            --format 'value(status.url)' 2>/dev/null || true)
+
+          if [ -z "$URL" ]; then
+            echo "No Cloud Run service named ${SERVICE_NAME}"
+          else
+            echo "Cloud Run URL: $URL"
+          fi
+
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Remove exact preview origin from authentik provider
+        env:
+          PREVIEW_ORIGIN: ${{ steps.cloudrun-url.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          echo "Removing authentik redirect/origin for ${SERVICE_NAME}: ${PREVIEW_ORIGIN:-<unresolved>}"
+
+          tmp="$(mktemp)"
+          payload="$(mktemp)"
+
+          curl -fsS \
+            -H "Authorization: Bearer ${AUTHENTIK_API_TOKEN}" \
+            "${AUTHENTIK_BASE_URL}/api/v3/providers/oauth2/${AUTHENTIK_PROVIDER_ID}/" \
+            > "$tmp"
+
+          # Match the exact URL when it resolved, and additionally sweep this
+          # service's own host. The sweep cleans up entries stranded by earlier
+          # runs, when the URL came back empty and nothing was removed.
+          #
+          # The trailing "-[0-9]+\." is load-bearing: it pins the match to the
+          # project-number segment of a Cloud Run hostname. A bare
+          # "^https://<service>-" prefix would also match a longer sibling
+          # service, so closing preview-foo would strip preview-foo-bar's origin
+          # and break an unrelated open PR.
+          jq --arg origin "$PREVIEW_ORIGIN" --arg service "$SERVICE_NAME" '
+            def is_preview($u):
+              ($origin != "" and $u == $origin)
+              or ($u | test("^https://" + $service + "-[0-9]+\\."));
+
+            {redirect_uris: (.redirect_uris | map(select(is_preview(.url) | not)))}
+          ' "$tmp" > "$payload"
+
+          before=$(jq '.redirect_uris | length' "$tmp")
+          after=$(jq '.redirect_uris | length' "$payload")
+
+          if [ "$before" -eq "$after" ]; then
+            echo "No matching authentik redirect URI for ${SERVICE_NAME}; nothing to remove."
+            exit 0
+          fi
+
+          # -o /dev/null is load-bearing: authentik answers a PATCH with the full
+          # provider object, client_secret included, and anything on stdout here
+          # lands in the run log where every repo reader can see it.
+          curl -fsS -X PATCH \
+            -o /dev/null \
+            -H "Authorization: Bearer ${AUTHENTIK_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data @"$payload" \
+            "${AUTHENTIK_BASE_URL}/api/v3/providers/oauth2/${AUTHENTIK_PROVIDER_ID}/"
+
+          echo "Removed $((before - after)) preview origin(s) from authentik."
+
+      - name: Delete Cloud Run services
+        run: |
+          set -euo pipefail
+
+          for svc in "${SERVICE_NAME}" "${API_SERVICE_NAME}"; do
+            gcloud run services delete "$svc" \
+              --platform managed \
+              --region "$GCP_REGION" \
+              --quiet || echo "No service $svc to delete."
+          done
+
+      - name: Delete Artifact Registry images
+        if: inputs.delete_images
+        run: |
+          set -euo pipefail
+
+          for img in "${SERVICE_NAME}" "${API_SERVICE_NAME}"; do
+            gcloud artifacts docker images delete "$AR_REPO/$img" \
+              --delete-tags \
+              --quiet || echo "No images for $img to delete."
+          done
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Preview teardown"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Branch | \`${{ inputs.branch }}\` |"
+            echo "| Frontend service | \`${SERVICE_NAME}\` |"
+            echo "| Backend service | \`${API_SERVICE_NAME}\` |"
+            echo "| Images deleted | ${{ inputs.delete_images }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

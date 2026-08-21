@@ -180,6 +180,8 @@ npm run start
 
 Deploy the contents of the `dist/` folder to any static hosting provider (e.g. GCP). Ensure environment variables are configured on the hosting platform.
 
+For throwaway review deployments off any branch — including ones that spin up their own API and database — see [docs/preview-deployments.md](docs/preview-deployments.md).
+
 ## License
 
 This project is licensed under the Apache 2.0 License - see the [LICENSE](./LICENSE) file for details.

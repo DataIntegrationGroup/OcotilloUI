@@ -1,0 +1,58 @@
+# On-demand preview deploy (BDMS-1173). Unlike CD_preview.yml this needs no pull
+# request: pick any branch in the Actions UI, or
+#
+#   gh workflow run CD_preview_ondemand.yml --ref my-branch -f backend=ephemeral
+#
+# Note that workflow_dispatch always reads the workflow definition from the
+# default branch, but --ref selects the branch that gets built.
+name: Preview deploy (on demand)
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend:
+        description: Which API the preview talks to
+        type: choice
+        default: staging
+        options:
+          - staging
+          - ephemeral
+      backend_ref:
+        description: OcotilloAPI ref to build (ephemeral backend only)
+        type: string
+        default: staging
+      backend_auth:
+        description: >-
+          Authentik enforcement on the ephemeral API. A seeded preview database
+          has no permission rows, so "enabled" locks everyone out.
+        type: choice
+        default: disabled
+        options:
+          - disabled
+          - enabled
+      seed:
+        description: Seed the ephemeral database with fake data
+        type: boolean
+        default: true
+      ttl_hours:
+        description: Hours before the nightly sweep may tear this preview down
+        type: number
+        default: 48
+
+# One preview per branch. A second dispatch supersedes an in-flight one rather
+# than racing it onto the same Cloud Run service.
+concurrency:
+  group: preview-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_preview_deploy.yml
+    secrets: inherit
+    with:
+      branch: ${{ github.ref_name }}
+      backend: ${{ inputs.backend }}
+      backend_ref: ${{ inputs.backend_ref }}
+      backend_auth: ${{ inputs.backend_auth }}
+      seed: ${{ inputs.seed }}
+      ttl_hours: ${{ fromJSON(inputs.ttl_hours) }}
