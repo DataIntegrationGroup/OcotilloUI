@@ -15,8 +15,12 @@ const CHEMISTRY_RESOURCE = 'observation/water-chemistry'
  *
  * The report covers one calendar year, and the year worth reporting on is the
  * most recent one sampled: a well last sampled in 2024 would otherwise produce
- * an empty report for the current year. One row is enough to find it, and it
- * doubles as the "has any chemistry at all" check.
+ * an empty report for the current year. One row is enough to find it.
+ *
+ * A well with nothing on file still gets a year — the current one — because a
+ * report that says the well has no results on it is a legitimate thing to hand
+ * an owner, and is what the chemistry exporter already produces. `hasChemistry`
+ * is there to say so up front, not to block the report.
  *
  * The year's results are left until `fetchYearObservations` is called, since
  * most visits to a well page are not after a chemistry report.
@@ -47,7 +51,7 @@ export const useWellChemistryReport = ({
     },
   })
 
-  const reportYear = chemistryReportYearOf(
+  const latestSampledYear = chemistryReportYearOf(
     result?.data?.[0]?.observation_datetime
   )
 
@@ -78,8 +82,9 @@ export const useWellChemistryReport = ({
   )
 
   return {
-    reportYear,
-    hasChemistry: reportYear != null,
+    reportYear: latestSampledYear ?? new Date().getFullYear(),
+    latestSampledYear,
+    hasChemistry: latestSampledYear != null,
     isLoading: enabled && Boolean(thingId) ? query.isLoading : false,
     fetchYearObservations,
   }
