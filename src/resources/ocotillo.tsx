@@ -13,7 +13,7 @@ import {
   PictureAsPdfOutlined,
   Place,
   ScaleOutlined,
-  // ScienceOutlined,
+  ScienceOutlined,
   // SettingsInputAntenna,
   // Spa,
   Timeline,
@@ -333,6 +333,16 @@ const ocotillo = [
     meta: {
       label: 'Hydrograph Correction',
       icon: <Timeline />,
+    },
+  },
+  {
+    name: 'chemistry-report',
+    list: '/ocotillo/chemistry-report',
+    meta: {
+      label: 'Chemistry Reports',
+      parent: 'Sandbox',
+      nestedLevel: 1,
+      icon: <ScienceOutlined />,
     },
   },
   {
