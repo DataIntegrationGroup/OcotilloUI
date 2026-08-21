@@ -83,26 +83,30 @@ export const WellPDFActionsButton = ({
     enabled: canViewAmpStaging,
   })
 
-  // The chemistry report covers a calendar year, so a well with nothing on
-  // file has no year to report on and neither action can do anything.
-  const chemistryUnavailable =
+  // A well with no chemistry on file still gets a report, marked as having no
+  // results — the same thing the exporter produces, and the honest answer to
+  // "what does this well's water look like". The note only warns what is coming.
+  const chemistryNote =
     isChemistry && !isChemistryLoading && !hasChemistry
-  const chemistryReason = chemistryUnavailable
-    ? 'No water chemistry on file for this well'
-    : undefined
+      ? 'No water chemistry on file — the report will show no results'
+      : undefined
+
+  // Waiting on the year is the one thing that has to hold the actions back,
+  // since acting early would report on the wrong one.
+  const isChemistryYearPending = isChemistry && isChemistryLoading
 
   const previewDisabled =
     isPreviewLoading ||
     isPermissionsLoading ||
     !canManageAmp ||
-    (isChemistry && (isChemistryLoading || !hasChemistry))
+    isChemistryYearPending
 
   const downloadDisabled =
     isDownloadLoading ||
     isPermissionsLoading ||
     !canManageAmp ||
     isGenerating ||
-    (isChemistry && (isChemistryLoading || !hasChemistry))
+    isChemistryYearPending
 
   const handlePreview = () => {
     if (isChemistry) {
@@ -159,12 +163,11 @@ export const WellPDFActionsButton = ({
 
   const handleDownload = async (opts: IPdfOptions) => {
     if (!well?.id) return
-    if (isChemistry && reportYear == null) return
 
     try {
       setIsGenerating(true)
       const filename = isChemistry
-        ? await handleDownloadChemistryReport(reportYear as number)
+        ? await handleDownloadChemistryReport(reportYear)
         : await handleDownloadFieldSheet(opts)
 
       notify?.({
@@ -189,8 +192,9 @@ export const WellPDFActionsButton = ({
 
   const downloadTooltip = isGenerating
     ? 'Generating…'
-    : (chemistryReason ??
-      `Download ${REPORT_TYPE_LABELS[reportType].toLowerCase()}`)
+    : isChemistry
+      ? (chemistryNote ?? `Download chemistry report for ${reportYear}`)
+      : 'Download field sheet'
 
   return (
     <div className="inline-flex items-stretch rounded-lg border border-border bg-background overflow-hidden shadow-xs">
@@ -224,7 +228,7 @@ export const WellPDFActionsButton = ({
         className="rounded-none border-0 shadow-none"
         disabled={previewDisabled}
         onClick={handlePreview}
-        title={chemistryReason}
+        title={chemistryNote}
       >
         <EyeIcon />
         Preview PDF

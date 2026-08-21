@@ -76,15 +76,18 @@ describe('useWellChemistryReport', () => {
     )
 
     expect(result.current.reportYear).toBe(2024)
+    expect(result.current.latestSampledYear).toBe(2024)
     expect(result.current.hasChemistry).toBe(true)
   })
 
-  it('has no year to report on when the well has never been sampled', () => {
+  it('falls back to the current year when the well has never been sampled', () => {
+    // Reporting "no results" for this year beats having no year to offer.
     const { result } = renderHook(() =>
       useWellChemistryReport({ thingId: 7834 })
     )
 
-    expect(result.current.reportYear).toBeNull()
+    expect(result.current.reportYear).toBe(new Date().getFullYear())
+    expect(result.current.latestSampledYear).toBeNull()
     expect(result.current.hasChemistry).toBe(false)
   })
 
