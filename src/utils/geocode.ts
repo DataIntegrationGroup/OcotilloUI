@@ -27,6 +27,8 @@ export type PhotonProperties = {
   state?: string
   postcode?: string
   countrycode?: string
+  /** Photon's own classification: city, county, state, street, house, … */
+  type?: string
   extent?: unknown
 }
 
@@ -100,12 +102,32 @@ const buildLabel = (properties: PhotonProperties | undefined): string => {
     .join(', ')
 }
 
+/**
+ * A query like "socorro" matches both the city and the county, and both
+ * compose to the same label. Where that happens, Photon's own classification
+ * is appended so the two rows are told apart.
+ */
+const disambiguate = (
+  entries: { result: GeocodeResult; kind?: string }[]
+): GeocodeResult[] => {
+  const labelCounts = new Map<string, number>()
+  for (const { result } of entries) {
+    labelCounts.set(result.label, (labelCounts.get(result.label) ?? 0) + 1)
+  }
+
+  return entries.map(({ result, kind }) =>
+    kind && (labelCounts.get(result.label) ?? 0) > 1
+      ? { ...result, label: `${result.label} (${kind})` }
+      : result
+  )
+}
+
 export const normalizePhotonFeatures = (
   features: readonly PhotonFeature[] | null | undefined
 ): GeocodeResult[] => {
   if (!Array.isArray(features)) return []
 
-  return features.flatMap((feature, index) => {
+  const entries = features.flatMap((feature, index) => {
     const center = feature?.geometry?.coordinates
     if (!isLonLat(center)) return []
 
@@ -121,13 +143,18 @@ export const normalizePhotonFeatures = (
 
     return [
       {
-        id: `${properties?.osm_type ?? 'x'}${properties?.osm_id ?? ''}-${index}`,
-        label,
-        center: [center[0], center[1]] as [number, number],
-        ...(bbox ? { bbox } : {}),
+        result: {
+          id: `${properties?.osm_type ?? 'x'}${properties?.osm_id ?? ''}-${index}`,
+          label,
+          center: [center[0], center[1]] as [number, number],
+          ...(bbox ? { bbox } : {}),
+        },
+        kind: properties?.type,
       },
     ]
   })
+
+  return disambiguate(entries)
 }
 
 /**

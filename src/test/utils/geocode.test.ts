@@ -55,6 +55,20 @@ describe('normalizePhotonFeatures', () => {
     expect(result.label).toBe('Socorro, New Mexico')
   })
 
+  it('appends the Photon type when two results share a label', () => {
+    const results = normalizePhotonFeatures([
+      feature({ name: 'Socorro', state: 'New Mexico', type: 'city' }),
+      feature({ name: 'Socorro', state: 'New Mexico', type: 'county' }),
+      feature({ name: 'Magdalena', state: 'New Mexico', type: 'city' }),
+    ])
+
+    expect(results.map((result) => result.label)).toEqual([
+      'Socorro, New Mexico (city)',
+      'Socorro, New Mexico (county)',
+      'Magdalena, New Mexico',
+    ])
+  })
+
   it('skips non-US results, coordinate-less features, and bad input', () => {
     const results = normalizePhotonFeatures([
       feature({ name: 'Socorro', countrycode: 'ES' }),
