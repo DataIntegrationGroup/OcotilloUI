@@ -5,6 +5,10 @@ import { Layer, Source } from 'react-map-gl/maplibre'
 import type { FeatureCollection, Geometry } from 'geojson'
 import type { IWell } from '@/interfaces/ocotillo'
 import MapComponent from '@/components/MapComponent'
+import {
+  MAP_LAYER_COLORS,
+  MAP_SYMBOL_STROKE_COLOR,
+} from '@/constants/mapColors'
 
 export const BatchRouteMap = ({ wells }: { wells: IWell[] }) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -149,8 +153,8 @@ export const BatchRouteMap = ({ wells }: { wells: IWell[] }) => {
             type="circle"
             filter={['==', ['geometry-type'], 'Point']}
             paint={{
-              'circle-color': '#1a5276',
-              'circle-stroke-color': '#ffffff',
+              'circle-color': MAP_LAYER_COLORS.locations,
+              'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
               'circle-stroke-width': 2,
               'circle-radius': 8,
             }}
@@ -168,7 +172,7 @@ export const BatchRouteMap = ({ wells }: { wells: IWell[] }) => {
               'text-allow-overlap': true,
             }}
             paint={{
-              'text-color': '#1a5276',
+              'text-color': MAP_LAYER_COLORS.locations,
               'text-halo-color': '#ffffff',
               'text-halo-width': 1,
             }}
