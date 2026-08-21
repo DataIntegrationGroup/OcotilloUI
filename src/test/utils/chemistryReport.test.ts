@@ -1,44 +1,37 @@
 import { describe, expect, it } from 'vitest'
 import { compareToStandard } from '@/constants/drinkingWaterStandards'
-import type { ChemistryObservation } from '@/hooks/useChemistryReportData'
+import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import {
   buildChemistryReportFilename,
   chemistryReportYearOf,
   chemistryReportYearParams,
   formatResultValue,
-  sortChemistryObservations,
+  sortChemistryResults,
   summarizeChemistry,
 } from '@/utils/chemistryReport'
 
 const observation = (
-  overrides: Partial<ChemistryObservation> & {
+  overrides: Partial<ChemistryResult> & {
     parameterName: string
     parameterType?: string | null
   }
-): ChemistryObservation => {
+): ChemistryResult => {
   const { parameterName, parameterType = 'Metal', ...rest } = overrides
 
   return {
-    id: 1,
-    created_at: '2026-05-15T00:00:00Z',
-    release_status: 'public',
+    id: 'maj-1',
+    thing_id: 2161,
+    station_name: 'EB-339',
     sample_id: 1,
-    sensor_id: null,
-    observation_datetime: '2026-05-15T00:00:00Z',
+    parameter_name: parameterName,
     value: 0,
     unit: 'mg/L',
-    parameter: {
-      id: 1,
-      created_at: '2026-01-01T00:00:00Z',
-      release_status: 'public',
-      parameter_name: parameterName,
-      matrix: 'water',
-      parameter_type: parameterType,
-      cas_number: null,
-      default_unit: 'mg/L',
-    },
+    observation_datetime: '2026-05-15T00:00:00Z',
+    // The legacy source table stands in for the old parameter_type: a field
+    // reading came off the wellhead, anything else came from a lab.
+    result_kind: parameterType === 'Field Parameter' ? 'field' : 'minor',
     ...rest,
-  } as ChemistryObservation
+  } as ChemistryResult
 }
 
 describe('compareToStandard', () => {
@@ -69,11 +62,11 @@ describe('compareToStandard', () => {
 
 describe('summarizeChemistry', () => {
   const rows = [
-    observation({ id: 1, parameterName: 'Arsenic', value: 0.012 }),
-    observation({ id: 2, parameterName: 'Iron', value: 0.9 }),
-    observation({ id: 3, parameterName: 'Calcium', value: 90 }),
+    observation({ id: 'maj-1', parameterName: 'Arsenic', value: 0.012 }),
+    observation({ id: 'maj-2', parameterName: 'Iron', value: 0.9 }),
+    observation({ id: 'maj-3', parameterName: 'Calcium', value: 90 }),
     observation({
-      id: 4,
+      id: 'fld-4',
       parameterName: 'pH',
       parameterType: 'Field Parameter',
       value: 7.8,
@@ -161,27 +154,27 @@ describe('chemistryReportYearOf', () => {
   })
 })
 
-describe('sortChemistryObservations', () => {
+describe('sortChemistryResults', () => {
   it('orders oldest sample first, then parameters alphabetically', () => {
-    const sorted = sortChemistryObservations([
+    const sorted = sortChemistryResults([
       observation({
-        id: 1,
+        id: 'maj-1',
         parameterName: 'Iron',
         observation_datetime: '2026-05-15T00:00:00Z',
       }),
       observation({
-        id: 2,
+        id: 'maj-2',
         parameterName: 'Zinc',
         observation_datetime: '2026-02-04T00:00:00Z',
       }),
       observation({
-        id: 3,
+        id: 'maj-3',
         parameterName: 'Arsenic',
         observation_datetime: '2026-02-04T00:00:00Z',
       }),
     ])
 
-    expect(sorted.map((row) => row.parameter?.parameter_name)).toEqual([
+    expect(sorted.map((row) => row.parameter_name)).toEqual([
       'Arsenic',
       'Zinc',
       'Iron',
@@ -190,16 +183,16 @@ describe('sortChemistryObservations', () => {
 
   it('does not mutate the array it is given', () => {
     const rows = [
-      observation({ id: 1, parameterName: 'Zinc' }),
+      observation({ id: 'maj-1', parameterName: 'Zinc' }),
       observation({
-        id: 2,
+        id: 'maj-2',
         parameterName: 'Arsenic',
         observation_datetime: '2026-02-04T00:00:00Z',
       }),
     ]
 
-    sortChemistryObservations(rows)
+    sortChemistryResults(rows)
 
-    expect(rows.map((row) => row.id)).toEqual([1, 2])
+    expect(rows.map((row) => row.id)).toEqual(['maj-1', 'maj-2'])
   })
 })

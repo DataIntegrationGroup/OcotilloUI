@@ -4,14 +4,18 @@ import {
   CHEMISTRY_REPORT_PAGE_SIZE,
   chemistryReportYearOf,
   chemistryReportYearParams,
-  sortChemistryObservations,
+  sortChemistryResults,
 } from '@/utils/chemistryReport'
-import type { ChemistryObservation } from './useChemistryReportData'
+import type { ChemistryResult } from './useChemistryReportData'
 
-const CHEMISTRY_RESOURCE = 'observation/water-chemistry'
+const CHEMISTRY_RESOURCE = 'chemistry/results'
 
 /**
  * Which year of chemistry a well's report should cover, and a way to pull it.
+ *
+ * Reads `chemistry/results`, which serves the legacy NMA chemistry tables. The
+ * refactored `observation/water-chemistry` endpoint holds no water chemistry at
+ * all, so a report built on it came back empty for every well.
  *
  * The report covers one calendar year, and the year worth reporting on is the
  * most recent one sampled: a well last sampled in 2024 would otherwise produce
@@ -38,7 +42,7 @@ export const useWellChemistryReport = ({
     [dataProvider]
   )
 
-  const { result, query } = useList<ChemistryObservation>({
+  const { result, query } = useList<ChemistryResult>({
     resource: CHEMISTRY_RESOURCE,
     dataProviderName: 'ocotillo',
     pagination: { currentPage: 1, pageSize: 1, mode: 'server' },
@@ -60,7 +64,7 @@ export const useWellChemistryReport = ({
       if (thingId == null) return []
 
       const params = { thing_id: thingId, ...chemistryReportYearParams(year) }
-      const collected: ChemistryObservation[] = []
+      const collected: ChemistryResult[] = []
       let currentPage = 1
 
       while (true) {
@@ -70,13 +74,13 @@ export const useWellChemistryReport = ({
           meta: { params },
         })
 
-        collected.push(...(page.data as ChemistryObservation[]))
+        collected.push(...(page.data as ChemistryResult[]))
 
         if (page.data.length === 0 || collected.length >= page.total) break
         currentPage += 1
       }
 
-      return sortChemistryObservations(collected)
+      return sortChemistryResults(collected)
     },
     [ocotilloDataProvider, thingId]
   )
