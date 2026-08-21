@@ -179,21 +179,30 @@ jobs:
         if: inputs.backend == 'ephemeral'
         env:
           BACKEND_AUTH: ${{ inputs.backend_auth }}
-          RUN_SEED: ${{ inputs.seed }}
-          AUTHENTIK_CLIENT_ID: ${{ vars.VITE_AUTHENTIK_CLIENT_ID }}
+          TPL_RUN_SEED: ${{ inputs.seed }}
+          TPL_AUTHENTIK_CLIENT_ID: ${{ vars.VITE_AUTHENTIK_CLIENT_ID }}
         run: |
           set -euo pipefail
 
           if [ "$BACKEND_AUTH" = "disabled" ]; then
-            DISABLE_AUTH=1
+            TPL_DISABLE_AUTH=1
           else
-            DISABLE_AUTH=0
+            TPL_DISABLE_AUTH=0
           fi
-          export DISABLE_AUTH
+
+          # The template's placeholders are TPL_-prefixed and the values here
+          # come from unprefixed GITHUB_ENV entries, so bridge the two.
+          export TPL_DISABLE_AUTH
+          export TPL_API_SERVICE_NAME="$API_SERVICE_NAME"
+          export TPL_API_IMAGE="$API_IMAGE"
+          export TPL_EXPIRES_AT="$EXPIRES_AT"
+          export TPL_SANITIZED_BRANCH="$SANITIZED_BRANCH"
+          export TPL_API_SOURCE_SHA="$API_SOURCE_SHA"
 
           # envsubst gets an explicit allowlist so the $VARS inside the container
           # startup script in the template survive rendering untouched.
-          envsubst '${API_SERVICE_NAME} ${API_IMAGE} ${EXPIRES_AT} ${SANITIZED_BRANCH} ${DISABLE_AUTH} ${API_SOURCE_SHA} ${RUN_SEED} ${AUTHENTIK_CLIENT_ID}' \
+          # shellcheck disable=SC2016  # envsubst wants the literal names, unexpanded
+          envsubst '${TPL_API_SERVICE_NAME} ${TPL_API_IMAGE} ${TPL_EXPIRES_AT} ${TPL_SANITIZED_BRANCH} ${TPL_DISABLE_AUTH} ${TPL_API_SOURCE_SHA} ${TPL_RUN_SEED} ${TPL_AUTHENTIK_CLIENT_ID}' \
             < .github/preview/api-service.tmpl.yaml \
             > /tmp/api-service.yaml
 
@@ -260,8 +269,8 @@ jobs:
       - name: Load secrets
         run: |
           set -euo pipefail
-          echo "VITE_PUBLIC_POSTHOG_KEY=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_KEY --project=$GCP_PROJECT_ID)" >> $GITHUB_ENV
-          echo "VITE_PUBLIC_POSTHOG_HOST=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_HOST --project=$GCP_PROJECT_ID)" >> $GITHUB_ENV
+          echo "VITE_PUBLIC_POSTHOG_KEY=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_KEY --project="$GCP_PROJECT_ID")" >> "$GITHUB_ENV"
+          echo "VITE_PUBLIC_POSTHOG_HOST=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_HOST --project="$GCP_PROJECT_ID")" >> "$GITHUB_ENV"
 
       - name: Build and push
         env:

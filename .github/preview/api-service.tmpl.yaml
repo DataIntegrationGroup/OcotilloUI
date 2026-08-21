@@ -6,19 +6,22 @@
 #
 # Rendered by _preview_deploy.yml with envsubst and an explicit variable
 # allowlist -- every other $VAR below is meant to be evaluated at runtime by the
-# container shell, not at render time.
+# container shell, not at render time. Render-time placeholders all carry a
+# TPL_ prefix precisely so they cannot collide with a runtime variable:
+# envsubst substitutes $VAR as readily as ${VAR}, so an allowlisted name that
+# also appears in the startup script would get frozen at render time.
 #
 # The database is an in-memory tmpfs. Everything in it is lost when the instance
 # restarts. That is the point: these previews are disposable.
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: ${API_SERVICE_NAME}
+  name: ${TPL_API_SERVICE_NAME}
   labels:
     preview: "true"
-    preview-branch: ${SANITIZED_BRANCH}
+    preview-branch: ${TPL_SANITIZED_BRANCH}
     preview-role: api
-    preview-expires: "${EXPIRES_AT}"
+    preview-expires: "${TPL_EXPIRES_AT}"
   annotations:
     run.googleapis.com/ingress: all
 spec:
@@ -67,7 +70,7 @@ spec:
             failureThreshold: 60
 
         - name: api
-          image: ${API_IMAGE}
+          image: ${TPL_API_IMAGE}
           ports:
             - name: http1
               containerPort: 8000
@@ -85,7 +88,7 @@ spec:
             - name: POSTGRES_DB
               value: ocotillo_preview
             - name: AUTHENTIK_DISABLE_AUTHENTICATION
-              value: "${DISABLE_AUTH}"
+              value: "${TPL_DISABLE_AUTH}"
             - name: AUTHENTIK_URL
               value: https://authentik.newmexicowaterdata.org/application/o/ocotillo/
             - name: AUTHENTIK_AUTHORIZE_URL
@@ -93,13 +96,13 @@ spec:
             - name: AUTHENTIK_TOKEN_URL
               value: https://authentik.newmexicowaterdata.org/application/o/token/
             - name: AUTHENTIK_CLIENT_ID
-              value: "${AUTHENTIK_CLIENT_ID}"
+              value: "${TPL_AUTHENTIK_CLIENT_ID}"
             - name: MOUNT_PYGEOAPI_IN_API
               value: "false"
             - name: APP_VERSION
-              value: "${API_SOURCE_SHA}"
+              value: "${TPL_API_SOURCE_SHA}"
             - name: RUN_SEED
-              value: "${RUN_SEED}"
+              value: "${TPL_RUN_SEED}"
           # Replaces entrypoint.sh so the seed can run between the migration and
           # uvicorn. Cloud Run has no exec, so this is the only hook available.
           command:

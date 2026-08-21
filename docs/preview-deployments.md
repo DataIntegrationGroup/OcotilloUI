@@ -41,8 +41,8 @@ gh workflow run CD_preview_ondemand.yml \
 Or from the Actions tab: **Preview deploy (on demand)** → *Run workflow* → pick
 the branch and the inputs. The preview URL lands in the run's job summary.
 
-`workflow_dispatch` reads the workflow *definition* from the default branch, but
-`--ref` selects the branch that actually gets built.
+`workflow_dispatch` reads the workflow *definition* from the default branch
+(`staging`), but `--ref` selects the branch that actually gets built.
 
 Inputs:
 
@@ -73,10 +73,11 @@ one, both Artifact Registry image sets, and the authentik redirect URI. It is
 idempotent — running it against a branch that has no preview succeeds and does
 nothing.
 
-The `delete` and `schedule` triggers only fire from the repository's **default
-branch**. Until this workflow is merged there, branch-deletion cleanup and the
-nightly sweep do not run; manual teardown and PR-close teardown work from any
-branch.
+The `delete` and `schedule` triggers only fire from the repository's default
+branch, which is **`staging`**. Until `CD_preview_teardown.yml` is merged there,
+branch-deletion cleanup and the nightly sweep do not run. The same applies to
+`CD_preview_ondemand.yml`: `workflow_dispatch` only appears once the file is on
+`staging`.
 
 ## How the ephemeral backend works
 
