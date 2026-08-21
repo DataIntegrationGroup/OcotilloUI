@@ -127,6 +127,7 @@ describe('WellPDFActionsButton report type select', () => {
     })
     mockedUseWellChemistryReport.mockReturnValue({
       reportYear: 2024,
+      latestSampledYear: 2024,
       hasChemistry: true,
       isLoading: false,
       fetchYearObservations: mockedFetchYearObservations,
@@ -207,36 +208,56 @@ describe('WellPDFActionsButton report type select', () => {
     })
   })
 
-  it('offers neither action for a well with no chemistry on file', () => {
+  it('still reports on a well with no chemistry, warning what is coming', async () => {
+    // The report is generated either way, marked as having no results, which
+    // is what the exporter does — a dead-end button is not the answer.
     mockedUseWellChemistryReport.mockReturnValue({
-      reportYear: null,
+      reportYear: 2026,
+      latestSampledYear: null,
       hasChemistry: false,
       isLoading: false,
       fetchYearObservations: mockedFetchYearObservations,
     })
+    mockedFetchYearObservations.mockResolvedValue([])
 
     renderGroup()
     selectChemistryReport()
 
-    expect(previewButton()).toBeDisabled()
-    expect(downloadButton()).toBeDisabled()
+    expect(previewButton()).toBeEnabled()
+    expect(downloadButton()).toBeEnabled()
     expect(previewButton()).toHaveAttribute(
       'title',
-      'No water chemistry on file for this well'
+      'No water chemistry on file — the report will show no results'
     )
+
+    await act(async () => {
+      fireEvent.click(downloadButton())
+    })
+
+    expect(mockedDownloadChemistryReport.mock.calls[0][0]).toMatchObject({
+      year: 2026,
+      observations: [],
+    })
   })
 
-  it('leaves the field sheet usable for a well with no chemistry', () => {
+  it('holds the actions back only while the reporting year is unknown', () => {
     mockedUseWellChemistryReport.mockReturnValue({
-      reportYear: null,
+      reportYear: 2026,
+      latestSampledYear: null,
       hasChemistry: false,
-      isLoading: false,
+      isLoading: true,
       fetchYearObservations: mockedFetchYearObservations,
     })
 
     renderGroup()
 
+    // The field sheet does not wait on chemistry.
     expect(previewButton()).toBeEnabled()
     expect(downloadButton()).toBeEnabled()
+
+    selectChemistryReport()
+
+    expect(previewButton()).toBeDisabled()
+    expect(downloadButton()).toBeDisabled()
   })
 })
