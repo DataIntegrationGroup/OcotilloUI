@@ -38,6 +38,7 @@ const expectedRegisteredRoutableResources = [
   'geothermal.dashboard',
   'geothermal.geothermal_wells',
   'ocotillo.asset-unassociated',
+  'ocotillo.chemistry-report',
   'ocotillo.collections',
   'ocotillo.contact',
   'ocotillo.hydrograph-correction',
@@ -56,6 +57,10 @@ const GEOTHERMAL_ROUTABLE = [
   'geothermal.dashboard',
   'geothermal.geothermal_wells',
 ]
+
+// AMP.staging is an opt-in flag group, not a rung on the AMP ladder. Nothing
+// else grants these resources — AMP.Admin included.
+const STAGING_ONLY_ROUTABLE = ['ocotillo.chemistry-report']
 
 const expectedAccessByScenario: Scenario[] = [
   {
@@ -92,7 +97,24 @@ const expectedAccessByScenario: Scenario[] = [
   {
     name: 'AMP.Admin',
     groups: ['AMP.Admin'],
-    // AMP.Admin owns the water portal, not geothermal.
+    // AMP.Admin owns the water portal, not geothermal — and not the
+    // staging-flagged resources, which need the AMP.staging group explicitly.
+    allowedResources: routableResources
+      .map((resource) => resource.name)
+      .filter(
+        (name) =>
+          !name.startsWith('geothermal.') &&
+          !STAGING_ONLY_ROUTABLE.includes(name)
+      ),
+  },
+  {
+    name: 'AMP.staging',
+    groups: ['AMP.staging'],
+    allowedResources: [...STAGING_ONLY_ROUTABLE],
+  },
+  {
+    name: 'AMP.Admin + AMP.staging',
+    groups: ['AMP.Admin', 'AMP.staging'],
     allowedResources: routableResources
       .map((resource) => resource.name)
       .filter((name) => !name.startsWith('geothermal.')),

@@ -8,6 +8,7 @@ import {
   AssetShow,
   UnassociatedAssetList,
 } from '@/pages/ocotillo/asset'
+import { ChemistryReportExport } from '@/pages/ocotillo/chemistry-report'
 import { CollectionsPage } from '@/pages/ocotillo/collections'
 import { ContactList, ContactShow } from '@/pages/ocotillo/contact'
 import { GroundwaterLevelForm } from '@/pages/ocotillo/groundwater-level-form/stepperform'
@@ -264,6 +265,16 @@ export const OcotilloRoutes = () => {
       {/* Apps */}
       <Route path={'water-chemistry-import'}>
         <Route index element={<WaterChemistryApp />} />
+      </Route>
+      <Route path={'chemistry-report'}>
+        <Route
+          index
+          element={
+            <ProtectedRoute resource="ocotillo.chemistry-report">
+              <ChemistryReportExport />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       <Route path={'hydrograph-correction'}>
         <Route

@@ -1,3 +1,4 @@
+export * from './ChemistryReportDownload'
 export * from './ReportBugButton'
 export * from './WellPDFPreview'
 export * from './WellPDFDownload'
