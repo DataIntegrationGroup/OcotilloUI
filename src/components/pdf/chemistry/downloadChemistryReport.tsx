@@ -1,7 +1,10 @@
 import { pdf } from '@react-pdf/renderer'
 import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
-import { buildChemistryReportFilename } from '@/utils/chemistryReport'
+import {
+  buildChemistryReportFilename,
+  type WaterLevelReading,
+} from '@/utils/chemistryReport'
 import {
   ChemistryReportPdf,
   type ChemistryReportSections,
@@ -15,12 +18,14 @@ export const downloadChemistryReport = async ({
   well,
   contacts,
   observations,
+  waterLevels,
   year,
   sections,
 }: {
   well: IWell
   contacts: readonly IContact[]
   observations: readonly ChemistryResult[]
+  waterLevels?: readonly WaterLevelReading[]
   year: number
   sections?: ChemistryReportSections
 }): Promise<string> => {
@@ -31,6 +36,7 @@ export const downloadChemistryReport = async ({
       well={well}
       contacts={contacts}
       observations={observations}
+      waterLevels={waterLevels}
       year={year}
       sections={sections}
     />

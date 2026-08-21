@@ -1,148 +1,306 @@
 import { StyleSheet } from '@react-pdf/renderer'
 
 /**
- * Print palette for the owner-facing chemistry report. Values mirror the
- * light-mode tokens in the OcotilloMockups design system; the PDF has no dark
- * mode, so they are literals rather than variables.
+ * Print palette and type scale for the owner-facing chemistry report.
+ *
+ * No style here sets `lineHeight`. react-pdf 4.4.0 renders any explicit value
+ * -- 1.0 and 1.55 alike -- with roughly double the leading it should, which
+ * double-spaced every wrapped paragraph in the report. Its default metrics are
+ * correct, so leading is left alone.
+ *
+ * The report is read by well owners, not by staff, so the design does the
+ * triage: a navy masthead, teal section rules, and results that carry their own
+ * verdict as a tinted row and a status pill rather than a number the reader has
+ * to look up. Numeric columns are monospaced so decimal points line up down a
+ * column and 0.012 cannot be mistaken for 0.12 at a glance.
+ *
+ * The PDF has no dark mode, so these are literals rather than variables.
  */
 export const CHEM_REPORT_COLORS = {
-  primary: '#0e6da8',
-  foreground: '#0f172a',
-  muted: '#64748b',
-  border: '#e5e5e5',
-  destructive: '#dc2626',
-  warningText: '#c2410c',
-  wrapper: '#fafafa',
+  navy: '#1c3f66',
+  teal: '#1b6d8f',
+  foreground: '#16202c',
+  muted: '#6b7785',
+  faint: '#96a1ad',
+  border: '#dfe3e8',
+  borderStrong: '#c8ced6',
+  zebra: '#f7f9fb',
+
+  danger: '#c0392b',
+  dangerTint: '#fdf1f0',
+  dangerBorder: '#e8b4ae',
+
+  warning: '#b5651d',
+  warningTint: '#fdf6ef',
+  warningBorder: '#e8cfae',
+
+  ok: '#2f7a4d',
+  okTint: '#f1f8f3',
+  okBorder: '#b7d8c2',
+
+  infoTint: '#f0f6fa',
+  infoBorder: '#bcd6e5',
 } as const
+
+const MONO = 'Courier'
 
 export const chemReportStyles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#ffffff',
-    paddingTop: 32,
-    paddingBottom: 44,
-    paddingHorizontal: 36,
+    paddingTop: 38,
+    paddingBottom: 58,
+    paddingHorizontal: 40,
     color: CHEM_REPORT_COLORS.foreground,
+    fontSize: 8.5,
   },
 
-  masthead: {
-    borderBottomWidth: 2,
-    borderBottomColor: CHEM_REPORT_COLORS.primary,
-    paddingBottom: 10,
+  // ---- Masthead -----------------------------------------------------------
+  org: {
+    fontSize: 7.5,
+    fontWeight: 'bold',
+    color: CHEM_REPORT_COLORS.navy,
+    textTransform: 'uppercase',
+    letterSpacing: 1.1,
+  },
+  reportTitle: {
+    fontSize: 21,
+    fontWeight: 'bold',
+    color: CHEM_REPORT_COLORS.navy,
+    marginTop: 7,
+  },
+  reportSubtitle: {
+    fontSize: 10,
+    color: CHEM_REPORT_COLORS.muted,
+    marginTop: 5,
+  },
+  reportSubtitleStrong: { color: CHEM_REPORT_COLORS.foreground },
+  ownerBlock: { marginTop: 12 },
+  ownerName: { fontWeight: 'bold' },
+  ownerMeta: { fontSize: 7.5, color: CHEM_REPORT_COLORS.muted, marginTop: 2 },
+  mastheadRule: {
+    borderBottomWidth: 0.75,
+    borderBottomColor: CHEM_REPORT_COLORS.borderStrong,
+    marginTop: 14,
     marginBottom: 14,
   },
-  org: {
-    fontSize: 8,
+  lede: { marginBottom: 16 },
+
+  // ---- Section headings ---------------------------------------------------
+  section: { marginBottom: 13 },
+  sectionHeadRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginBottom: 7,
+  },
+  sectionHeading: {
+    fontSize: 8.5,
+    fontWeight: 'bold',
+    color: CHEM_REPORT_COLORS.teal,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  sectionNote: { fontSize: 7.5, color: CHEM_REPORT_COLORS.muted },
+
+  // ---- At a glance --------------------------------------------------------
+  statRow: { flexDirection: 'row', gap: 7 },
+  stat: {
+    flex: 1,
+    borderWidth: 0.75,
+    borderColor: CHEM_REPORT_COLORS.border,
+    borderRadius: 3,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+  },
+  statLabel: {
+    fontSize: 6.5,
     color: CHEM_REPORT_COLORS.muted,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
-  reportTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: CHEM_REPORT_COLORS.primary,
-    marginTop: 4,
-  },
-  reportSubtitle: { fontSize: 10, marginTop: 3 },
-  ownerBlock: { fontSize: 9, marginTop: 8, lineHeight: 1.4 },
-  dim: { color: CHEM_REPORT_COLORS.muted },
+  statValue: { fontSize: 17, fontWeight: 'bold', marginTop: 5 },
+  statValueDanger: { color: CHEM_REPORT_COLORS.danger },
+  statValueWarning: { color: CHEM_REPORT_COLORS.warning },
+  statNote: { fontSize: 7, color: CHEM_REPORT_COLORS.muted, marginTop: 4 },
 
-  lede: { fontSize: 9, lineHeight: 1.5, marginBottom: 12 },
-
-  section: { marginBottom: 12 },
-  sectionHeading: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    borderBottomWidth: 1,
-    borderBottomColor: CHEM_REPORT_COLORS.border,
-    paddingBottom: 3,
-    marginBottom: 6,
-  },
-
-  statRow: { flexDirection: 'row', flexWrap: 'wrap' },
-  stat: {
-    width: '25%',
-    paddingRight: 8,
-    marginBottom: 4,
-  },
-  statLabel: { fontSize: 7.5, color: CHEM_REPORT_COLORS.muted },
-  statValue: { fontSize: 15, fontWeight: 'bold', marginTop: 1 },
-  statNote: { fontSize: 7.5, color: CHEM_REPORT_COLORS.muted },
-
+  // ---- Callouts -----------------------------------------------------------
   callout: {
-    borderWidth: 1,
-    borderColor: CHEM_REPORT_COLORS.destructive,
-    borderLeftWidth: 3,
-    backgroundColor: '#fef2f2',
-    padding: 8,
-    marginBottom: 8,
+    borderLeftWidth: 2.5,
+    borderLeftColor: CHEM_REPORT_COLORS.danger,
+    backgroundColor: CHEM_REPORT_COLORS.dangerTint,
+    paddingVertical: 9,
+    paddingHorizontal: 11,
+    marginBottom: 16,
   },
   calloutWarn: {
-    borderColor: CHEM_REPORT_COLORS.warningText,
-    backgroundColor: '#fff7ed',
+    borderLeftColor: CHEM_REPORT_COLORS.warning,
+    backgroundColor: CHEM_REPORT_COLORS.warningTint,
   },
-  calloutTitle: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    marginBottom: 3,
-    color: CHEM_REPORT_COLORS.destructive,
+  calloutInfo: {
+    borderLeftColor: CHEM_REPORT_COLORS.teal,
+    backgroundColor: CHEM_REPORT_COLORS.infoTint,
   },
-  calloutTitleWarn: { color: CHEM_REPORT_COLORS.warningText },
-  calloutBody: { fontSize: 8.5, lineHeight: 1.45 },
+  calloutTitle: { fontWeight: 'bold', marginBottom: 5 },
+  calloutBody: {},
+  calloutBullet: { marginTop: 4, paddingLeft: 10 },
 
-  kvRow: { flexDirection: 'row', flexWrap: 'wrap' },
-  kvCell: { width: '33.33%', paddingRight: 8, marginBottom: 5 },
-  kvLabel: { fontSize: 7.5, color: CHEM_REPORT_COLORS.muted },
-  kvValue: { fontSize: 9 },
-
-  table: { borderWidth: 1, borderColor: CHEM_REPORT_COLORS.border },
-  tableHeaderRow: {
+  // ---- Key/value grid ----------------------------------------------------
+  kvTable: {
+    borderWidth: 0.75,
+    borderColor: CHEM_REPORT_COLORS.border,
+    borderRadius: 3,
+  },
+  kvRow: {
     flexDirection: 'row',
-    backgroundColor: CHEM_REPORT_COLORS.wrapper,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.75,
     borderBottomColor: CHEM_REPORT_COLORS.border,
-    paddingVertical: 4,
-    paddingHorizontal: 5,
   },
-  tableRow: {
+  kvRowLast: { borderBottomWidth: 0 },
+  kvCell: {
+    flex: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 9,
+    borderRightWidth: 0.75,
+    borderRightColor: CHEM_REPORT_COLORS.border,
+  },
+  kvCellLast: { borderRightWidth: 0 },
+  kvLabel: {
+    fontSize: 6.5,
+    color: CHEM_REPORT_COLORS.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  kvValue: { marginTop: 3 },
+
+  // ---- Tables -------------------------------------------------------------
+  table: { marginTop: 2 },
+  th: {
     flexDirection: 'row',
+    borderBottomWidth: 0.75,
+    borderBottomColor: CHEM_REPORT_COLORS.borderStrong,
+    paddingBottom: 4,
+  },
+  thText: {
+    fontSize: 6.5,
+    color: CHEM_REPORT_COLORS.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  tr: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderBottomWidth: 0.5,
     borderBottomColor: CHEM_REPORT_COLORS.border,
-    paddingVertical: 3,
+    paddingVertical: 3.5,
+  },
+  trZebra: { backgroundColor: CHEM_REPORT_COLORS.zebra },
+  trDanger: { backgroundColor: CHEM_REPORT_COLORS.dangerTint },
+  trWarning: { backgroundColor: CHEM_REPORT_COLORS.warningTint },
+  trMuted: { color: CHEM_REPORT_COLORS.faint },
+  td: { paddingHorizontal: 4 },
+  tdMono: { fontFamily: MONO, fontSize: 8 },
+  tdStrong: { fontWeight: 'bold' },
+  tdNoStandard: { color: CHEM_REPORT_COLORS.faint },
+
+  // ---- Status pills -------------------------------------------------------
+  pill: {
+    borderWidth: 0.75,
+    borderRadius: 7,
+    paddingVertical: 2,
     paddingHorizontal: 5,
+    alignSelf: 'flex-start',
   },
-  th: { fontSize: 7.5, fontWeight: 'bold' },
-  td: { fontSize: 8 },
-  tdExceeds: { color: CHEM_REPORT_COLORS.destructive, fontWeight: 'bold' },
-  tdSecondary: { color: CHEM_REPORT_COLORS.warningText, fontWeight: 'bold' },
-
-  // Right-aligned numeric columns carry their own gutter so a long result or
-  // limit never butts up against the unit or status that follows it.
-  colParameter: { flex: 3, paddingRight: 6 },
-  colValue: { flex: 1.6, textAlign: 'right', paddingRight: 8 },
-  colUnit: { flex: 1.2, paddingRight: 6 },
-  colStandard: { flex: 1.8, textAlign: 'right', paddingRight: 8 },
-  colStatus: { flex: 1.8, paddingRight: 6 },
-  colDate: { flex: 1.8 },
-
-  bullet: { fontSize: 8.5, lineHeight: 1.45, marginBottom: 2 },
-  emptyNote: {
-    fontSize: 9,
+  pillText: { fontSize: 6.5 },
+  pillDanger: {
+    borderColor: CHEM_REPORT_COLORS.dangerBorder,
+    backgroundColor: '#ffffff',
+    color: CHEM_REPORT_COLORS.danger,
+  },
+  pillWarning: {
+    borderColor: CHEM_REPORT_COLORS.warningBorder,
+    backgroundColor: '#ffffff',
+    color: CHEM_REPORT_COLORS.warning,
+  },
+  pillOk: {
+    borderColor: CHEM_REPORT_COLORS.okBorder,
+    backgroundColor: '#ffffff',
+    color: CHEM_REPORT_COLORS.ok,
+  },
+  pillNeutral: {
+    borderColor: CHEM_REPORT_COLORS.border,
+    backgroundColor: '#ffffff',
     color: CHEM_REPORT_COLORS.muted,
-    fontStyle: 'italic',
-    marginBottom: 8,
+  },
+  ndBadge: {
+    borderWidth: 0.75,
+    borderColor: CHEM_REPORT_COLORS.border,
+    borderRadius: 6,
+    paddingVertical: 1,
+    paddingHorizontal: 3,
+    marginLeft: 4,
+    fontSize: 6,
+    color: CHEM_REPORT_COLORS.muted,
   },
 
+  // ---- Legend and footnotes ----------------------------------------------
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 7,
+  },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  legendSwatch: { width: 7, height: 5, borderRadius: 1 },
+  legendText: { fontSize: 6.5, color: CHEM_REPORT_COLORS.muted },
+  footnote: {
+    fontSize: 7,
+    fontStyle: 'italic',
+    color: CHEM_REPORT_COLORS.muted,
+    marginTop: 7,
+  },
+  emptyNote: { fontSize: 8, color: CHEM_REPORT_COLORS.muted },
+
+  // ---- Placeholder for a chart the export cannot draw --------------------
+  chartSlot: {
+    borderWidth: 0.75,
+    borderColor: CHEM_REPORT_COLORS.border,
+    borderRadius: 3,
+    backgroundColor: CHEM_REPORT_COLORS.zebra,
+    height: 118,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+  },
+  chartSlotText: {
+    fontSize: 7,
+    fontStyle: 'italic',
+    color: CHEM_REPORT_COLORS.faint,
+    textAlign: 'center',
+  },
+
+  // ---- Two-column glossary ----------------------------------------------
+  glossaryRow: { flexDirection: 'row', gap: 18 },
+  glossaryColumn: { flex: 1 },
+  glossaryEntry: { marginBottom: 6 },
+  glossaryTerm: { fontWeight: 'bold' },
+
+  // ---- Footer -------------------------------------------------------------
   footer: {
     position: 'absolute',
-    bottom: 22,
-    left: 36,
-    right: 36,
-    borderTopWidth: 0.5,
-    borderTopColor: CHEM_REPORT_COLORS.border,
-    paddingTop: 4,
+    bottom: 26,
+    left: 40,
+    right: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    borderTopWidth: 0.75,
+    borderTopColor: CHEM_REPORT_COLORS.border,
+    paddingTop: 7,
   },
-  footerText: { fontSize: 7, color: CHEM_REPORT_COLORS.muted },
+  footerText: { fontSize: 6.5, color: CHEM_REPORT_COLORS.muted },
+  footerContact: {
+    fontSize: 6.5,
+    color: CHEM_REPORT_COLORS.muted,
+  },
 })

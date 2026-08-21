@@ -6,8 +6,13 @@ import {
   chemistryReportYearOf,
   chemistryReportYearParams,
   formatResultValue,
+  latestResultPerParameter,
+  pivotFieldParameters,
+  resultStatus,
   sortChemistryResults,
   summarizeChemistry,
+  toWaterLevelReadings,
+  waterLevelChangeFt,
 } from '@/utils/chemistryReport'
 
 const observation = (
@@ -194,5 +199,219 @@ describe('sortChemistryResults', () => {
     sortChemistryResults(rows)
 
     expect(rows.map((row) => row.id)).toEqual(['maj-1', 'maj-2'])
+  })
+})
+
+describe('resultStatus', () => {
+  const row = (
+    overrides: Partial<ReturnType<typeof summarizeChemistry>['rows'][number]>
+  ): ReturnType<typeof summarizeChemistry>['rows'][number] => ({
+    key: 'maj-1',
+    parameterName: 'Arsenic',
+    resultKind: 'minor' as const,
+    value: 0.005,
+    unit: 'mg/L',
+    sampledOn: '2026-05-15T00:00:00Z',
+    exceeds: false,
+    ...overrides,
+  })
+
+  it('separates a health limit from a taste guideline', () => {
+    expect(
+      resultStatus(
+        row({
+          exceeds: true,
+          standard: { kind: 'MCL', limit: 0.01, unit: 'mg/L' },
+        })
+      )
+    ).toEqual({ kind: 'above-mcl', label: 'Above limit' })
+
+    expect(
+      resultStatus(
+        row({
+          parameterName: 'Iron',
+          exceeds: true,
+          standard: { kind: 'SMCL', limit: 0.3, unit: 'mg/L' },
+        })
+      )
+    ).toEqual({ kind: 'above-smcl', label: 'Above SMCL' })
+  })
+
+  it('reports a missing value as not detected rather than as passing', () => {
+    expect(resultStatus(row({ value: null })).kind).toBe('not-detected')
+  })
+
+  it('describes hardness instead of passing or failing it', () => {
+    // Hardness has no standard, so a pass/fail verdict would be invented.
+    expect(
+      resultStatus(row({ parameterName: 'Hardness (CaCO3)', value: 284 }))
+    ).toEqual({ kind: 'classification', label: 'Very hard' })
+    expect(
+      resultStatus(row({ parameterName: 'Hardness (CaCO3)', value: 45 })).label
+    ).toBe('Soft')
+  })
+
+  it('says nothing about a parameter with no standard', () => {
+    expect(resultStatus(row({ parameterName: 'Strontium' })).kind).toBe('none')
+  })
+})
+
+describe('pivotFieldParameters', () => {
+  it('gives each parameter one row and each sample date a column', () => {
+    const { dates, rows } = pivotFieldParameters([
+      {
+        key: 'fld-1',
+        parameterName: 'pH',
+        resultKind: 'field',
+        value: 7.61,
+        unit: 'S.U.',
+        sampledOn: '2026-02-04T00:00:00Z',
+        exceeds: false,
+      },
+      {
+        key: 'fld-2',
+        parameterName: 'pH',
+        resultKind: 'field',
+        value: 7.55,
+        unit: 'S.U.',
+        sampledOn: '2026-05-15T00:00:00Z',
+        exceeds: false,
+      },
+    ])
+
+    expect(dates).toEqual(['2026-02-04', '2026-05-15'])
+    expect(rows).toHaveLength(1)
+    expect(rows[0].valuesByDate).toEqual({
+      '2026-02-04': '7.61',
+      '2026-05-15': '7.55',
+    })
+  })
+})
+
+describe('latestResultPerParameter', () => {
+  const result = (
+    key: string,
+    parameterName: string,
+    sampledOn: string,
+    extra: Record<string, unknown> = {}
+  ) =>
+    ({
+      key,
+      parameterName,
+      resultKind: 'minor',
+      value: 1,
+      unit: 'mg/L',
+      sampledOn,
+      exceeds: false,
+      ...extra,
+    }) as ReturnType<typeof summarizeChemistry>['rows'][number]
+
+  it('keeps each parameter once, at its newest value', () => {
+    const { rows, dateRange } = latestResultPerParameter([
+      result('a', 'Arsenic', '2026-02-04T00:00:00Z'),
+      result('b', 'Arsenic', '2026-05-15T00:00:00Z'),
+      result('c', 'Iron', '2026-05-15T00:00:00Z'),
+    ])
+
+    expect(rows.map((row) => row.key)).toEqual(['b', 'c'])
+    expect(dateRange).toEqual(['2026-05-15', '2026-05-15'])
+  })
+
+  it('keeps a parameter sampled on its own visit rather than dropping it', () => {
+    // Majors and trace metals routinely come from different trips. Keying the
+    // table to one date would leave a flagged parameter with no row.
+    const { rows, dateRange } = latestResultPerParameter([
+      result('tds', 'Total Dissolved Solids', '2019-04-09T00:00:00Z', {
+        exceeds: true,
+        standard: { kind: 'SMCL', limit: 500, unit: 'mg/L' },
+      }),
+      result('arsenic', 'Arsenic', '2019-05-24T00:00:00Z'),
+    ])
+
+    expect(rows.map((row) => row.key)).toEqual(['tds', 'arsenic'])
+    expect(dateRange).toEqual(['2019-04-09', '2019-05-24'])
+  })
+
+  it('puts exceedances first, health limits before taste limits', () => {
+    const { rows } = latestResultPerParameter([
+      result('iron', 'Iron', '2026-05-15T00:00:00Z', {
+        exceeds: true,
+        standard: { kind: 'SMCL', limit: 0.3, unit: 'mg/L' },
+      }),
+      result('calcium', 'Calcium', '2026-05-15T00:00:00Z'),
+      result('arsenic', 'Arsenic', '2026-05-15T00:00:00Z', {
+        exceeds: true,
+        standard: { kind: 'MCL', limit: 0.01, unit: 'mg/L' },
+      }),
+    ])
+
+    expect(rows.map((row) => row.key)).toEqual(['arsenic', 'iron', 'calcium'])
+  })
+})
+
+describe('toWaterLevelReadings', () => {
+  const observations = [
+    {
+      id: 1,
+      observation_datetime: '2019-04-09T20:02:00Z',
+      depth_to_water_bgs: 9.35,
+      sensor_id: null,
+    },
+    {
+      id: 2,
+      observation_datetime: '2018-10-04T20:39:00Z',
+      depth_to_water_bgs: 10.5,
+      sensor_id: 7,
+    },
+  ]
+
+  it('works the water table elevation out from the land surface', () => {
+    const readings = toWaterLevelReadings(observations, { elevationFt: 5856.8 })
+
+    expect(readings[0].measuredOn).toBe('2019-04-09T20:02:00Z')
+    // 5856.8 - 9.35, rounded to the tenth of a foot the report prints.
+    expect(readings[0].waterElevationFt).toBe(5847.4)
+    expect(readings[0].method).toBe('Manual')
+    expect(readings[1].method).toBe('Transducer')
+  })
+
+  it('leaves elevation empty rather than printing the depth twice', () => {
+    const readings = toWaterLevelReadings(observations)
+    expect(readings[0].waterElevationFt).toBeNull()
+    expect(readings[0].depthToWaterFt).toBe(9.35)
+  })
+})
+
+describe('waterLevelChangeFt', () => {
+  it('reads a deeper newest reading as a fall in water level', () => {
+    // Depth is measured downward, so deeper is lower.
+    const readings = toWaterLevelReadings([
+      {
+        id: 1,
+        observation_datetime: '2019-04-09T00:00:00Z',
+        depth_to_water_bgs: 12.3,
+      },
+      {
+        id: 2,
+        observation_datetime: '2018-04-09T00:00:00Z',
+        depth_to_water_bgs: 10.5,
+      },
+    ])
+
+    expect(waterLevelChangeFt(readings)).toEqual({
+      changeFt: -1.8,
+      comparedTo: '2018-04-09T00:00:00Z',
+    })
+  })
+
+  it('reports nothing when there is only one reading to go on', () => {
+    const readings = toWaterLevelReadings([
+      {
+        id: 1,
+        observation_datetime: '2019-04-09T00:00:00Z',
+        depth_to_water_bgs: 12.3,
+      },
+    ])
+    expect(waterLevelChangeFt(readings)).toBeNull()
   })
 })

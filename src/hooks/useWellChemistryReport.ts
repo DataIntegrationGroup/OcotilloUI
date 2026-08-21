@@ -5,10 +5,13 @@ import {
   chemistryReportYearOf,
   chemistryReportYearParams,
   sortChemistryResults,
+  toWaterLevelReadings,
+  type WaterLevelObservation,
 } from '@/utils/chemistryReport'
 import type { ChemistryResult } from './useChemistryReportData'
 
 const CHEMISTRY_RESOURCE = 'chemistry/results'
+const WATER_LEVEL_RESOURCE = 'observation/groundwater-level'
 
 /**
  * Which year of chemistry a well's report should cover, and a way to pull it.
@@ -85,11 +88,53 @@ export const useWellChemistryReport = ({
     [ocotilloDataProvider, thingId]
   )
 
+  /**
+   * The year's water level readings, plus the newest reading from before the
+   * year so the report can say which direction the water table moved. A single
+   * year in isolation has nothing to compare against.
+   */
+  const fetchWaterLevels = useCallback(
+    async (year: number, { elevationFt }: { elevationFt?: number | null }) => {
+      if (thingId == null) return []
+
+      const window = chemistryReportYearParams(year)
+
+      const [inYear, prior] = await Promise.all([
+        ocotilloDataProvider.getList({
+          resource: WATER_LEVEL_RESOURCE,
+          pagination: { currentPage: 1, pageSize: CHEMISTRY_REPORT_PAGE_SIZE },
+          meta: { params: { thing_id: thingId, ...window } },
+        }),
+        ocotilloDataProvider.getList({
+          resource: WATER_LEVEL_RESOURCE,
+          pagination: { currentPage: 1, pageSize: 1 },
+          sorters: [{ field: 'observation_datetime', order: 'desc' }],
+          meta: {
+            params: { thing_id: thingId, end_time: window.start_time },
+          },
+        }),
+      ])
+
+      const readings = toWaterLevelReadings(
+        inYear.data as WaterLevelObservation[],
+        { elevationFt }
+      )
+      const priorReadings = toWaterLevelReadings(
+        prior.data as WaterLevelObservation[],
+        { elevationFt }
+      ).map((reading) => ({ ...reading, isPrior: true }))
+
+      return [...readings, ...priorReadings]
+    },
+    [ocotilloDataProvider, thingId]
+  )
+
   return {
     reportYear: latestSampledYear ?? new Date().getFullYear(),
     latestSampledYear,
     hasChemistry: latestSampledYear != null,
     isLoading: enabled && Boolean(thingId) ? query.isLoading : false,
     fetchYearObservations,
+    fetchWaterLevels,
   }
 }

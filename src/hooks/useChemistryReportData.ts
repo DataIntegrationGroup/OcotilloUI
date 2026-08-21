@@ -5,6 +5,8 @@ import {
   CHEMISTRY_REPORT_PAGE_SIZE,
   chemistryReportYearParams,
   sortChemistryResults,
+  toWaterLevelReadings,
+  type WaterLevelObservation,
 } from '@/utils/chemistryReport'
 
 /** Which legacy chemistry table a result came from. */
@@ -80,18 +82,51 @@ export const useChemistryReportData = ({
       queryOptions: { enabled },
     })
 
+  const { result: waterLevelResult, query: waterLevelQuery } =
+    useList<WaterLevelObservation>({
+      resource: 'observation/groundwater-level',
+      dataProviderName: 'ocotillo',
+      pagination: {
+        currentPage: 1,
+        pageSize: CHEMISTRY_REPORT_PAGE_SIZE,
+        mode: 'server',
+      },
+      meta: {
+        params: { thing_id: thingId, ...chemistryReportYearParams(year) },
+      },
+      queryOptions: { enabled },
+    })
+
   const observations = useMemo(
     () => sortChemistryResults(observationResult?.data ?? []),
     [observationResult?.data]
   )
 
+  const elevationFt = (
+    (well as IWell | undefined)?.current_location?.properties as
+      | { elevation?: number | null }
+      | undefined
+  )?.elevation
+
+  const waterLevels = useMemo(
+    () =>
+      toWaterLevelReadings(waterLevelResult?.data ?? [], {
+        elevationFt,
+      }),
+    [waterLevelResult?.data, elevationFt]
+  )
+
   const isLoading =
-    wellQuery.isLoading || contactQuery.isLoading || observationQuery.isLoading
+    wellQuery.isLoading ||
+    contactQuery.isLoading ||
+    observationQuery.isLoading ||
+    waterLevelQuery.isLoading
 
   return {
     well: well as IWell | undefined,
     contacts: contactResult?.data ?? [],
     observations,
+    waterLevels,
     isLoading: enabled ? isLoading : false,
     isError:
       wellQuery.isError || contactQuery.isError || observationQuery.isError,

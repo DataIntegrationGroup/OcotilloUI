@@ -8,11 +8,13 @@ import {
 import { Button } from '@/components/ui/button'
 import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
+import type { WaterLevelReading } from '@/utils/chemistryReport'
 
 export const ChemistryReportDownloadButton = ({
   well,
   contacts,
   observations,
+  waterLevels,
   year,
   sections,
   disabled = false,
@@ -20,6 +22,7 @@ export const ChemistryReportDownloadButton = ({
   well?: IWell
   contacts: readonly IContact[]
   observations: readonly ChemistryResult[]
+  waterLevels?: readonly WaterLevelReading[]
   year: number
   sections: ChemistryReportSections
   disabled?: boolean
@@ -36,6 +39,7 @@ export const ChemistryReportDownloadButton = ({
         well,
         contacts,
         observations,
+        waterLevels,
         year,
         sections,
       })
