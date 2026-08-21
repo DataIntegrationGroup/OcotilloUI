@@ -1,0 +1,387 @@
+# Reusable preview deploy. Both the PR-triggered preview (CD_preview.yml) and the
+# on-demand preview (CD_preview_ondemand.yml) call this so there is exactly one
+# copy of the build/deploy/authentik logic.
+name: _preview deploy
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: >-
+          Branch the preview belongs to. Service names and teardown are keyed off
+          this, so it must be a real branch name even when checkout_ref is set.
+        type: string
+        required: true
+      checkout_ref:
+        description: >-
+          Ref to actually build, when it differs from the branch. PR previews
+          pass the merge ref so the preview shows the merged result rather than
+          the head commit alone. Defaults to the branch.
+        type: string
+        default: ''
+      backend:
+        description: >-
+          "staging" points the preview at the shared staging API.
+          "ephemeral" spins up a throwaway API + postgis for this branch only.
+        type: string
+        default: staging
+      backend_ref:
+        description: Ref of DataIntegrationGroup/OcotilloAPI to build when backend=ephemeral.
+        type: string
+        default: staging
+      backend_auth:
+        description: >-
+          "disabled" runs the ephemeral API with AUTHENTIK_DISABLE_AUTHENTICATION=1.
+          A seeded preview database has no permission rows, so an auth-enabled
+          ephemeral backend locks every user out. Ignored when backend=staging.
+        type: string
+        default: disabled
+      seed:
+        description: Run transfers.seed against the ephemeral database on startup.
+        type: boolean
+        default: true
+      ttl_hours:
+        description: >-
+          Hours before the nightly sweep is allowed to tear this preview down.
+          0 exempts the preview from the TTL sweep entirely, which is what PR
+          previews use -- those are torn down when the PR closes instead.
+        type: number
+        default: 48
+    outputs:
+      preview_url:
+        description: Public URL of the preview frontend.
+        value: ${{ jobs.deploy.outputs.preview_url }}
+      api_url:
+        description: API URL the preview frontend was built against.
+        value: ${{ jobs.deploy.outputs.api_url }}
+      service_name:
+        description: Cloud Run service name of the preview frontend.
+        value: ${{ jobs.deploy.outputs.service_name }}
+      expires_at:
+        description: UTC timestamp after which the sweep may tear this preview down.
+        value: ${{ jobs.deploy.outputs.expires_at }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    outputs:
+      preview_url: ${{ steps.cloudrun-url.outputs.url }}
+      api_url: ${{ steps.api-url.outputs.url }}
+      service_name: ${{ steps.names.outputs.service_name }}
+      expires_at: ${{ steps.names.outputs.expires_human }}
+
+    env:
+      GCP_PROJECT_ID: waterdatainitiative-271000
+      GCP_REGION: us-central1
+      AR_REPO: us-central1-docker.pkg.dev/waterdatainitiative-271000/ocotillo-previews
+      AUTHENTIK_BASE_URL: https://authentik.newmexicowaterdata.org
+      AUTHENTIK_PROVIDER_ID: ${{ secrets.AUTHENTIK_PROVIDER_ID }}
+      AUTHENTIK_API_TOKEN: ${{ secrets.AUTHENTIK_API_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || inputs.branch }}
+
+      - name: Compute preview names and expiry
+        id: names
+        env:
+          BRANCH_NAME: ${{ inputs.branch }}
+          TTL_HOURS: ${{ inputs.ttl_hours }}
+        run: |
+          set -euo pipefail
+
+          # Keep this sanitizer byte-for-byte in sync with _preview_teardown.yml,
+          # or teardown will compute a different service name than deploy did.
+          SANITIZED=$(echo "$BRANCH_NAME" \
+            | sed 's/[^a-zA-Z0-9-]/-/g' \
+            | tr '[:upper:]' '[:lower:]' \
+            | cut -c1-40)
+
+          # 0 is the "never sweep" sentinel the nightly sweep looks for.
+          if [ "$TTL_HOURS" -eq 0 ]; then
+            EXPIRES_AT=0
+            EXPIRES_HUMAN="never (torn down when the PR closes)"
+          else
+            EXPIRES_AT=$(( $(date -u +%s) + TTL_HOURS * 3600 ))
+            EXPIRES_HUMAN=$(date -u -d "@$EXPIRES_AT" +'%Y-%m-%dT%H:%M:%SZ')
+          fi
+
+          {
+            echo "SANITIZED_BRANCH=$SANITIZED"
+            echo "SERVICE_NAME=preview-$SANITIZED"
+            echo "API_SERVICE_NAME=preview-api-$SANITIZED"
+            echo "EXPIRES_AT=$EXPIRES_AT"
+          } >> "$GITHUB_ENV"
+
+          {
+            echo "service_name=preview-$SANITIZED"
+            echo "expires_human=$EXPIRES_HUMAN"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Frontend service: preview-$SANITIZED"
+          echo "Backend mode:     ${{ inputs.backend }}"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud config set project "$GCP_PROJECT_ID"
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      # ---------------------------------------------------------------- backend
+      # The ephemeral backend reuses the same two images the Cypress job runs
+      # under docker compose -- OcotilloAPI's docker/app/Dockerfile and the stock
+      # postgis image -- but wires them together as Cloud Run sidecars instead of
+      # compose services. Sidecars share a network namespace, so the API reaches
+      # postgres on 127.0.0.1 the same way it reaches "db" locally.
+      - name: Checkout OcotilloAPI
+        if: inputs.backend == 'ephemeral'
+        uses: actions/checkout@v4
+        with:
+          repository: DataIntegrationGroup/OcotilloAPI
+          ref: ${{ inputs.backend_ref }}
+          path: api-repo
+
+      - name: Build and push API image
+        if: inputs.backend == 'ephemeral'
+        working-directory: ./api-repo
+        run: |
+          set -euo pipefail
+
+          API_SHA=$(git rev-parse --short HEAD)
+          echo "API_IMAGE=$AR_REPO/${API_SERVICE_NAME}:$API_SHA" >> "$GITHUB_ENV"
+          echo "API_SOURCE_SHA=$API_SHA" >> "$GITHUB_ENV"
+
+          # INSTALL_DEV=true because transfers.seed imports faker, a dev dependency.
+          docker build \
+            --build-arg INSTALL_DEV=true \
+            -f docker/app/Dockerfile \
+            -t "$AR_REPO/${API_SERVICE_NAME}:$API_SHA" \
+            .
+
+          docker push "$AR_REPO/${API_SERVICE_NAME}:$API_SHA"
+
+      - name: Deploy ephemeral backend to Cloud Run
+        if: inputs.backend == 'ephemeral'
+        env:
+          BACKEND_AUTH: ${{ inputs.backend_auth }}
+          RUN_SEED: ${{ inputs.seed }}
+          AUTHENTIK_CLIENT_ID: ${{ vars.VITE_AUTHENTIK_CLIENT_ID }}
+        run: |
+          set -euo pipefail
+
+          if [ "$BACKEND_AUTH" = "disabled" ]; then
+            DISABLE_AUTH=1
+          else
+            DISABLE_AUTH=0
+          fi
+          export DISABLE_AUTH
+
+          # envsubst gets an explicit allowlist so the $VARS inside the container
+          # startup script in the template survive rendering untouched.
+          envsubst '${API_SERVICE_NAME} ${API_IMAGE} ${EXPIRES_AT} ${SANITIZED_BRANCH} ${DISABLE_AUTH} ${API_SOURCE_SHA} ${RUN_SEED} ${AUTHENTIK_CLIENT_ID}' \
+            < .github/preview/api-service.tmpl.yaml \
+            > /tmp/api-service.yaml
+
+          cat /tmp/api-service.yaml
+
+          gcloud run services replace /tmp/api-service.yaml \
+            --region "$GCP_REGION" \
+            --platform managed
+
+          # The browser calls this API directly and cannot present a Google
+          # identity, so the service has to be publicly invokable.
+          gcloud run services add-iam-policy-binding "${API_SERVICE_NAME}" \
+            --region "$GCP_REGION" \
+            --platform managed \
+            --member=allUsers \
+            --role=roles/run.invoker \
+            --quiet
+
+      - name: Resolve API URL
+        id: api-url
+        run: |
+          set -euo pipefail
+
+          if [ "${{ inputs.backend }}" = "ephemeral" ]; then
+            URL=$(gcloud run services describe "${API_SERVICE_NAME}" \
+              --platform managed \
+              --region "$GCP_REGION" \
+              --format 'value(status.url)')
+          else
+            URL='${{ vars.VITE_OCOTILLO_API_URL }}'
+          fi
+
+          if [ -z "$URL" ]; then
+            echo "Could not resolve an API URL for backend=${{ inputs.backend }}." >&2
+            exit 1
+          fi
+
+          echo "API URL: $URL"
+          echo "API_URL=$URL" >> "$GITHUB_ENV"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for ephemeral backend
+        if: inputs.backend == 'ephemeral'
+        run: |
+          set -euo pipefail
+
+          # Migrations plus the optional seed run before uvicorn binds, so the
+          # first successful response can be several minutes out.
+          for _ in $(seq 1 60); do
+            if curl -sf "$API_URL/docs" >/dev/null; then
+              echo "Ephemeral API is serving at $API_URL"
+              exit 0
+            fi
+            echo "API not up yet, retrying..."
+            sleep 10
+          done
+
+          echo "Ephemeral API never became ready. Recent logs:" >&2
+          gcloud run services logs read "${API_SERVICE_NAME}" \
+            --region "$GCP_REGION" --limit 100 || true
+          exit 1
+
+      # --------------------------------------------------------------- frontend
+      - name: Load secrets
+        run: |
+          set -euo pipefail
+          echo "VITE_PUBLIC_POSTHOG_KEY=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_KEY --project=$GCP_PROJECT_ID)" >> $GITHUB_ENV
+          echo "VITE_PUBLIC_POSTHOG_HOST=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_HOST --project=$GCP_PROJECT_ID)" >> $GITHUB_ENV
+
+      - name: Build and push
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          NODE_OPTIONS: --max-old-space-size=6144
+          VITE_POSTHOG_KEY: ${{ env.VITE_PUBLIC_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ env.VITE_PUBLIC_POSTHOG_HOST }}
+          VITE_APP_ENV: preview
+          VITE_APP_VERSION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          npm ci
+          npx tsc
+          npx vite build --mode development
+
+          docker build \
+            --build-arg MODE=development \
+            --build-arg VITE_APP_TITLE="Ocotillo Preview" \
+            --build-arg VITE_BASE_URL="/" \
+            --build-arg VITE_AUTHENTIK_CLIENT_ID=${{ vars.VITE_AUTHENTIK_CLIENT_ID }} \
+            --build-arg VITE_AUTHENTIK_URL=${{ vars.VITE_AUTHENTIK_URL }} \
+            --build-arg VITE_OCOTILLO_API_URL="$API_URL" \
+            --build-arg VITE_PUBLIC_POSTHOG_KEY=${{ env.VITE_PUBLIC_POSTHOG_KEY }} \
+            --build-arg VITE_PUBLIC_POSTHOG_HOST=${{ env.VITE_PUBLIC_POSTHOG_HOST }} \
+            --build-arg VITE_APP_ENV=preview \
+            --build-arg VITE_APP_VERSION=${{ github.sha }} \
+            -t "$AR_REPO/${SERVICE_NAME}:$IMAGE_TAG" .
+
+          docker push "$AR_REPO/${SERVICE_NAME}:$IMAGE_TAG"
+
+      - name: Deploy to Cloud Run
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          gcloud run deploy "${SERVICE_NAME}" \
+            --image "$AR_REPO/${SERVICE_NAME}:$IMAGE_TAG" \
+            --platform managed \
+            --region "$GCP_REGION" \
+            --allow-unauthenticated \
+            --port 8080 \
+            --memory 512Mi \
+            --cpu 1 \
+            --labels "preview=true,preview-branch=${SANITIZED_BRANCH},preview-role=frontend,preview-expires=${EXPIRES_AT}"
+
+      - name: Get Cloud Run URL
+        id: cloudrun-url
+        run: |
+          set -euo pipefail
+
+          URL=$(gcloud run services describe "${SERVICE_NAME}" \
+            --platform managed \
+            --region "$GCP_REGION" \
+            --format 'value(status.url)')
+
+          if [ -z "$URL" ]; then
+            echo "Deploy succeeded but ${SERVICE_NAME} has no URL." >&2
+            exit 1
+          fi
+
+          echo "Cloud Run URL: $URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Add exact preview origin to authentik provider
+        env:
+          PREVIEW_ORIGIN: ${{ steps.cloudrun-url.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          echo "Ensuring authentik redirect/origin exists for: $PREVIEW_ORIGIN"
+
+          tmp="$(mktemp)"
+          payload="$(mktemp)"
+
+          curl -fsS \
+            -H "Authorization: Bearer ${AUTHENTIK_API_TOKEN}" \
+            "${AUTHENTIK_BASE_URL}/api/v3/providers/oauth2/${AUTHENTIK_PROVIDER_ID}/" \
+            > "$tmp"
+
+          jq --arg origin "$PREVIEW_ORIGIN" '
+            .redirect_uris |= (
+              . + [{"matching_mode":"strict","url":$origin}]
+              | unique_by(.matching_mode + "|" + .url)
+            )
+            | {redirect_uris: .redirect_uris}
+          ' "$tmp" > "$payload"
+
+          curl -fsS -X PATCH \
+            -H "Authorization: Bearer ${AUTHENTIK_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data @"$payload" \
+            "${AUTHENTIK_BASE_URL}/api/v3/providers/oauth2/${AUTHENTIK_PROVIDER_ID}/"
+
+          echo "Added/verified strict preview origin in authentik."
+
+      - name: Job summary
+        if: always()
+        env:
+          PREVIEW_URL: ${{ steps.cloudrun-url.outputs.url }}
+        run: |
+          {
+            echo "## Preview deployment"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Branch | \`${{ inputs.branch }}\` |"
+            echo "| Preview URL | ${PREVIEW_URL:-_deploy failed_} |"
+            echo "| Backend | \`${{ inputs.backend }}\` |"
+            echo "| API URL | ${API_URL:-_unresolved_} |"
+            echo "| Expires after | ${{ steps.names.outputs.expires_human }} |"
+            echo "| Teardown | \`gh workflow run CD_preview_teardown.yml -f branch=${{ inputs.branch }}\` |"
+            if [ "${{ inputs.backend }}" = "ephemeral" ]; then
+              echo
+              echo "> **Ephemeral backend.** Data lives in an in-memory postgis sidecar and is"
+              echo "> lost whenever the instance restarts. Do not load real data into it."
+              if [ "${{ inputs.backend_auth }}" = "disabled" ]; then
+                echo ">"
+                echo "> **Authentication is disabled on this API and it is publicly reachable.**"
+              fi
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

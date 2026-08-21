@@ -1,0 +1,147 @@
+# Cloud Run service spec for an ephemeral preview backend.
+#
+# This is the docker-compose stack the Cypress job runs (OcotilloAPI "app" +
+# postgis "db") re-expressed as a single multi-container Cloud Run service.
+# Sidecars share a network namespace, so "db" becomes 127.0.0.1:5432.
+#
+# Rendered by _preview_deploy.yml with envsubst and an explicit variable
+# allowlist -- every other $VAR below is meant to be evaluated at runtime by the
+# container shell, not at render time.
+#
+# The database is an in-memory tmpfs. Everything in it is lost when the instance
+# restarts. That is the point: these previews are disposable.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ${API_SERVICE_NAME}
+  labels:
+    preview: "true"
+    preview-branch: ${SANITIZED_BRANCH}
+    preview-role: api
+    preview-expires: "${EXPIRES_AT}"
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        # One always-warm instance: the database lives in that instance's
+        # memory, so scaling to zero or out to two would lose or fork the data.
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "1"
+        # Postgres needs CPU between requests to run its background workers.
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/container-dependencies: '{"api":["db"]}'
+    spec:
+      containerConcurrency: 40
+      timeoutSeconds: 300
+      containers:
+        - name: db
+          image: postgis/postgis:17-3.5
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: POSTGRES_DB
+              value: ocotillo_preview
+            # PGDATA has to be a subdirectory of the mount: the postgis
+            # entrypoint refuses to initialise into a non-empty directory, and
+            # a fresh mount point is not guaranteed to look empty to it.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          startupProbe:
+            tcpSocket:
+              port: 5432
+            periodSeconds: 5
+            # Cloud Run rejects a probe whose timeout exceeds its period.
+            timeoutSeconds: 3
+            failureThreshold: 60
+
+        - name: api
+          image: ${API_IMAGE}
+          ports:
+            - name: http1
+              containerPort: 8000
+          env:
+            - name: MODE
+              value: development
+            - name: POSTGRES_HOST
+              value: 127.0.0.1
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: POSTGRES_DB
+              value: ocotillo_preview
+            - name: AUTHENTIK_DISABLE_AUTHENTICATION
+              value: "${DISABLE_AUTH}"
+            - name: AUTHENTIK_URL
+              value: https://authentik.newmexicowaterdata.org/application/o/ocotillo/
+            - name: AUTHENTIK_AUTHORIZE_URL
+              value: https://authentik.newmexicowaterdata.org/application/o/authorize/
+            - name: AUTHENTIK_TOKEN_URL
+              value: https://authentik.newmexicowaterdata.org/application/o/token/
+            - name: AUTHENTIK_CLIENT_ID
+              value: "${AUTHENTIK_CLIENT_ID}"
+            - name: MOUNT_PYGEOAPI_IN_API
+              value: "false"
+            - name: APP_VERSION
+              value: "${API_SOURCE_SHA}"
+            - name: RUN_SEED
+              value: "${RUN_SEED}"
+          # Replaces entrypoint.sh so the seed can run between the migration and
+          # uvicorn. Cloud Run has no exec, so this is the only hook available.
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              set -e
+
+              until PGPASSWORD="$POSTGRES_PASSWORD" pg_isready \
+                    -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" \
+                    -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do
+                echo "Waiting for postgres at $POSTGRES_HOST:$POSTGRES_PORT..."
+                sleep 2
+              done
+
+              echo "Applying migrations..."
+              alembic upgrade head
+
+              if [ "$RUN_SEED" = "true" ]; then
+                echo "Seeding preview database..."
+                # A seed failure leaves an empty-but-working API, which is more
+                # useful for a preview than no API at all.
+                python -m transfers.seed || echo "WARNING: seed failed; continuing with an empty database"
+              fi
+
+              echo "Starting the application..."
+              exec uvicorn main:app --host 0.0.0.0 --port 8000
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          startupProbe:
+            tcpSocket:
+              port: 8000
+            periodSeconds: 10
+            timeoutSeconds: 5
+            # Migration + seed can take several minutes on a cold instance.
+            failureThreshold: 90
+
+      volumes:
+        - name: pgdata
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
