@@ -87,7 +87,7 @@ export const ChemistryReportExport = () => {
     },
   })
 
-  const { well, contacts, observations, isLoading, isError } =
+  const { well, contacts, observations, waterLevels, isLoading, isError } =
     useChemistryReportData({ thingId: selectedWell?.id, year })
 
   const toggleSection = (key: keyof ChemistryReportSections) =>
@@ -102,6 +102,7 @@ export const ChemistryReportExport = () => {
           well={well}
           contacts={contacts}
           observations={observations}
+          waterLevels={waterLevels}
           year={year}
           sections={sections}
           disabled={!isReady}
@@ -215,6 +216,7 @@ export const ChemistryReportExport = () => {
               well={well}
               contacts={contacts}
               observations={observations}
+              waterLevels={waterLevels}
               year={year}
               sections={sections}
             />

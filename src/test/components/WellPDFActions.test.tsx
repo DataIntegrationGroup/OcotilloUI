@@ -14,6 +14,7 @@ const mockedGo = vi.fn()
 const mockedNotify = vi.fn()
 const mockedDownloadChemistryReport = vi.fn()
 const mockedFetchYearObservations = vi.fn()
+const mockedFetchWaterLevels = vi.fn()
 const mockedUseAccessCapabilities = vi.fn()
 const mockedUseWellChemistryReport = vi.fn()
 const mockedToBlob = vi.fn()
@@ -118,7 +119,10 @@ describe('WellPDFActionsButton report type select', () => {
     mockedDownloadChemistryReport.mockResolvedValue(
       'chemistry-report-SA-0231-2024.pdf'
     )
-    mockedFetchYearObservations.mockResolvedValue([{ id: 1 }])
+    mockedFetchYearObservations.mockResolvedValue([{ id: 'maj-1' }])
+    mockedFetchWaterLevels.mockResolvedValue([
+      { key: '1', measuredOn: '2024-05-15T00:00:00Z', depthToWaterFt: 9.4 },
+    ])
     mockedUseAccessCapabilities.mockReturnValue({
       isLoading: false,
       canManageAmp: true,
@@ -131,6 +135,7 @@ describe('WellPDFActionsButton report type select', () => {
       hasChemistry: true,
       isLoading: false,
       fetchYearObservations: mockedFetchYearObservations,
+      fetchWaterLevels: mockedFetchWaterLevels,
     })
   })
 
@@ -185,8 +190,15 @@ describe('WellPDFActionsButton report type select', () => {
     expect(mockedDownloadChemistryReport.mock.calls[0][0]).toMatchObject({
       well,
       year: 2024,
-      observations: [{ id: 1 }],
+      observations: [{ id: 'maj-1' }],
     })
+    // The report's water level section is fetched for the same year.
+    expect(mockedFetchWaterLevels).toHaveBeenCalledWith(2024, {
+      elevationFt: undefined,
+    })
+    expect(
+      mockedDownloadChemistryReport.mock.calls[0][0].waterLevels
+    ).toHaveLength(1)
     expect(mockedToBlob).not.toHaveBeenCalled()
   })
 
@@ -217,6 +229,7 @@ describe('WellPDFActionsButton report type select', () => {
       hasChemistry: false,
       isLoading: false,
       fetchYearObservations: mockedFetchYearObservations,
+      fetchWaterLevels: mockedFetchWaterLevels,
     })
     mockedFetchYearObservations.mockResolvedValue([])
 
@@ -247,6 +260,7 @@ describe('WellPDFActionsButton report type select', () => {
       hasChemistry: false,
       isLoading: true,
       fetchYearObservations: mockedFetchYearObservations,
+      fetchWaterLevels: mockedFetchWaterLevels,
     })
 
     renderGroup()
