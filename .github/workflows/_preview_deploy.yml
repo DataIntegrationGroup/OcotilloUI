@@ -360,7 +360,11 @@ jobs:
             | {redirect_uris: .redirect_uris}
           ' "$tmp" > "$payload"
 
+          # -o /dev/null is load-bearing: authentik answers a PATCH with the full
+          # provider object, client_secret included, and anything on stdout here
+          # lands in the run log where every repo reader can see it.
           curl -fsS -X PATCH \
+            -o /dev/null \
             -H "Authorization: Bearer ${AUTHENTIK_API_TOKEN}" \
             -H "Content-Type: application/json" \
             --data @"$payload" \
