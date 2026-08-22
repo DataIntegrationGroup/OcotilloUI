@@ -130,6 +130,12 @@ const getLayerLabel = (layerKey: string): string => {
     'ogc-actively-monitored': 'Actively Monitored',
     'ogc-springs': 'Springs',
     'ogc-project-areas': 'AMP Project Areas',
+    'ogc-geothermal-wells-bht': 'Geothermal Wells (BHT)',
+    'ogc-geothermal-wells-temperature-profile': 'Geothermal Wells (Temp-Depth)',
+    'ogc-bht-measurements': 'BHT Measurements',
+    'ogc-temp-depth-measurements': 'Temperature-Depth Measurements',
+    'ogc-heat-flow': 'Heat Flow',
+    'ogc-dst': 'Drill Stem Tests',
   }
 
   return labelByLayer[layerKey] || titleCase(layerKey.replace(/^ogc-/, ''))

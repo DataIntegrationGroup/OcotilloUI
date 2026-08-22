@@ -162,6 +162,27 @@ export const useThingLayers = (
     'Soil Gas Sample Locations',
     'soil_gas_sample_locations',
   ])
+  const geothermalWellsBht = resolveCollection(collections, [
+    'geothermal_wells_bht',
+    'Geothermal Wells — Bottom-Hole Temperature',
+  ])
+  const geothermalWellsTemperatureProfile = resolveCollection(collections, [
+    'geothermal_wells_temperature_profile',
+    'Geothermal Wells — Temperature-Depth Profile',
+  ])
+  const bhtMeasurements = resolveCollection(collections, [
+    'bht_measurements',
+    'BHT Measurements',
+  ])
+  const tempDepthMeasurements = resolveCollection(collections, [
+    'temp_depth_measurements',
+    'Temperature-Depth Measurements',
+  ])
+  const heatFlow = resolveCollection(collections, ['heat_flow', 'Heat Flow'])
+  const drillStemTests = resolveCollection(collections, [
+    'dst',
+    'Drill Stem Tests',
+  ])
   const latestTdsLayer = useOGCLayer({
     collection: latestTds.id,
     label: latestTds.label,
@@ -651,6 +672,47 @@ export const useThingLayers = (
       soilGasSampleLocations.exists &&
       isLayerActive('ogc-soil-gas-sample-locations'),
   })
+  const geothermalWellsBhtLayer = useOGCLayer({
+    collection: geothermalWellsBht.id,
+    label: geothermalWellsBht.label,
+    color: '#b45309',
+    enabled:
+      geothermalWellsBht.exists && isLayerActive('ogc-geothermal-wells-bht'),
+  })
+  const geothermalWellsTemperatureProfileLayer = useOGCLayer({
+    collection: geothermalWellsTemperatureProfile.id,
+    label: geothermalWellsTemperatureProfile.label,
+    color: '#d97706',
+    enabled:
+      geothermalWellsTemperatureProfile.exists &&
+      isLayerActive('ogc-geothermal-wells-temperature-profile'),
+  })
+  const bhtMeasurementsLayer = useOGCLayer({
+    collection: bhtMeasurements.id,
+    label: bhtMeasurements.label,
+    color: '#ea580c',
+    enabled: bhtMeasurements.exists && isLayerActive('ogc-bht-measurements'),
+  })
+  const tempDepthMeasurementsLayer = useOGCLayer({
+    collection: tempDepthMeasurements.id,
+    label: tempDepthMeasurements.label,
+    color: '#f59e0b',
+    enabled:
+      tempDepthMeasurements.exists &&
+      isLayerActive('ogc-temp-depth-measurements'),
+  })
+  const heatFlowLayer = useOGCLayer({
+    collection: heatFlow.id,
+    label: heatFlow.label,
+    color: '#dc2626',
+    enabled: heatFlow.exists && isLayerActive('ogc-heat-flow'),
+  })
+  const drillStemTestsLayer = useOGCLayer({
+    collection: drillStemTests.id,
+    label: drillStemTests.label,
+    color: '#92400e',
+    enabled: drillStemTests.exists && isLayerActive('ogc-dst'),
+  })
 
   return useMemo(() => {
     const result: Record<string, any> = {}
@@ -735,6 +797,24 @@ export const useThingLayers = (
       soilGasSampleLocations,
       soilGasSampleLocationsLayer
     )
+    addLayer(
+      'ogc-geothermal-wells-bht',
+      geothermalWellsBht,
+      geothermalWellsBhtLayer
+    )
+    addLayer(
+      'ogc-geothermal-wells-temperature-profile',
+      geothermalWellsTemperatureProfile,
+      geothermalWellsTemperatureProfileLayer
+    )
+    addLayer('ogc-bht-measurements', bhtMeasurements, bhtMeasurementsLayer)
+    addLayer(
+      'ogc-temp-depth-measurements',
+      tempDepthMeasurements,
+      tempDepthMeasurementsLayer
+    )
+    addLayer('ogc-heat-flow', heatFlow, heatFlowLayer)
+    addLayer('ogc-dst', drillStemTests, drillStemTestsLayer)
 
     return result
   }, [
@@ -758,5 +838,11 @@ export const useThingLayers = (
     perennialStreamsLayer,
     rockSampleLocationsLayer,
     soilGasSampleLocationsLayer,
+    geothermalWellsBhtLayer,
+    geothermalWellsTemperatureProfileLayer,
+    bhtMeasurementsLayer,
+    tempDepthMeasurementsLayer,
+    heatFlowLayer,
+    drillStemTestsLayer,
   ])
 }

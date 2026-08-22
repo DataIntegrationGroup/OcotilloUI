@@ -65,6 +65,29 @@ describe('resolveCollection', () => {
     expect(resolved.id).toBe('springs')
   })
 
+  it('matches a title containing an em dash', () => {
+    const resolved = resolveCollection(
+      [
+        collection(
+          'geothermal_wells_bht',
+          'Geothermal Wells — Bottom-Hole Temperature'
+        ),
+      ],
+      ['Geothermal Wells — Bottom-Hole Temperature']
+    )
+
+    expect(resolved.id).toBe('geothermal_wells_bht')
+  })
+
+  it('does not confuse dst with collections that contain it', () => {
+    const resolved = resolveCollection(
+      [collection('dst', 'Drill Stem Tests'), collection('dst_summary')],
+      ['dst']
+    )
+
+    expect(resolved.id).toBe('dst')
+  })
+
   it('tries candidates in order', () => {
     const resolved = resolveCollection(
       [collection('project_area'), collection('project_areas')],

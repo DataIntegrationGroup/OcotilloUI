@@ -116,6 +116,7 @@ const DEFAULT_EXPANDED_GROUPS = {
   groundwater: true,
   surfaceWater: true,
   climate: true,
+  geothermal: true,
   geoscience: true,
   reference: true,
 }
@@ -123,6 +124,15 @@ const DEFAULT_EXPANDED_GROUPS = {
 const getLayerGroupKey = (
   layerKey: string
 ): keyof typeof DEFAULT_EXPANDED_GROUPS => {
+  if (
+    layerKey.includes('geothermal') ||
+    layerKey.includes('bht') ||
+    layerKey.includes('temp-depth') ||
+    layerKey.includes('heat-flow') ||
+    layerKey === 'ogc-dst'
+  ) {
+    return 'geothermal'
+  }
   if (
     layerKey.includes('water-well') ||
     layerKey.includes('actively-monitored') ||
@@ -163,6 +173,7 @@ const getExpandedGroupsForLayers = (layerKeys: string[]) => {
     groundwater: false,
     surfaceWater: false,
     climate: false,
+    geothermal: false,
     geoscience: false,
     reference: false,
   }
@@ -701,6 +712,7 @@ export const MapView: React.FC = () => {
     groundwater: 'Groundwater',
     surfaceWater: 'Surface Water',
     climate: 'Climate',
+    geothermal: 'Geothermal',
     geoscience: 'Geoscience',
     reference: 'Reference',
   }
@@ -717,6 +729,7 @@ export const MapView: React.FC = () => {
       groundwater: [] as Array<[string, any]>,
       surfaceWater: [] as Array<[string, any]>,
       climate: [] as Array<[string, any]>,
+      geothermal: [] as Array<[string, any]>,
       geoscience: [] as Array<[string, any]>,
       reference: [] as Array<[string, any]>,
     }

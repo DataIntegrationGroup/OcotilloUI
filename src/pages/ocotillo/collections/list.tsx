@@ -228,6 +228,44 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
     groupKey: 'reference',
     candidates: ['Soil Gas Sample Locations', 'soil_gas_sample_locations'],
   },
+  {
+    layerKey: 'ogc-geothermal-wells-bht',
+    groupKey: 'geothermal',
+    candidates: [
+      'geothermal_wells_bht',
+      'Geothermal Wells — Bottom-Hole Temperature',
+    ],
+    displayLabel: 'Geothermal Wells (BHT)',
+  },
+  {
+    layerKey: 'ogc-geothermal-wells-temperature-profile',
+    groupKey: 'geothermal',
+    candidates: [
+      'geothermal_wells_temperature_profile',
+      'Geothermal Wells — Temperature-Depth Profile',
+    ],
+    displayLabel: 'Geothermal Wells (Temp-Depth)',
+  },
+  {
+    layerKey: 'ogc-bht-measurements',
+    groupKey: 'geothermal',
+    candidates: ['bht_measurements', 'BHT Measurements'],
+  },
+  {
+    layerKey: 'ogc-temp-depth-measurements',
+    groupKey: 'geothermal',
+    candidates: ['temp_depth_measurements', 'Temperature-Depth Measurements'],
+  },
+  {
+    layerKey: 'ogc-heat-flow',
+    groupKey: 'geothermal',
+    candidates: ['heat_flow', 'Heat Flow'],
+  },
+  {
+    layerKey: 'ogc-dst',
+    groupKey: 'geothermal',
+    candidates: ['dst', 'Drill Stem Tests'],
+  },
 ]
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '')
@@ -314,7 +352,8 @@ const groupCollections = (collections: OgcCollectionRecord[]): CollectionGroup[]
     {
       key: 'geothermal',
       title: 'Geothermal',
-      description: 'Reserved for geothermal wells and supporting thermal, meteorological, and sample collections when they are published.',
+      description:
+        'Geothermal wells with bottom-hole and temperature-depth data, plus the underlying measurements, heat flow, and drill stem tests.',
       collections: sortRegisteredCollections(grouped.geothermal),
     },
     {
