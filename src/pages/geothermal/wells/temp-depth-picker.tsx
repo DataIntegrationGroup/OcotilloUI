@@ -1,6 +1,6 @@
 import { WellPickerPage } from './WellPickerPage'
 
-/** Sandbox entry point for the temperature-depth log. */
+/** Entry point for the temperature-depth log. */
 export const GeoThermalTempDepthPicker = () => (
   <WellPickerPage
     title="Temp-depth log"

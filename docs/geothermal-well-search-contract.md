@@ -6,7 +6,7 @@ endpoint at all.
 
 ## Background
 
-The geothermal Sandbox pages (Records Grid, Temp-Depth log) start with a well
+The geothermal grid pages (Records Grid, Temp-Depth log) start with a well
 picker. It used to be a single dropdown populated by one request:
 
 ```
