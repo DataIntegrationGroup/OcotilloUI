@@ -94,29 +94,6 @@ const GROUP_STYLES: Record<
 
 const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
   {
-    layerKey: 'ogc-locations',
-    groupKey: 'reference',
-    candidates: ['Locations', 'locations'],
-  },
-  {
-    layerKey: 'ogc-latest-depth-to-water',
-    groupKey: 'groundwater',
-    candidates: [
-      'Latest Depth to Water (Water Wells)',
-      'latest_depth_to_water_water_wells',
-      'latest_depth_to_water',
-    ],
-  },
-  {
-    layerKey: 'ogc-average-tds',
-    groupKey: 'groundwater',
-    candidates: [
-      'Average TDS (Water Wells)',
-      'average_tds_water_wells',
-      'average_tds',
-    ],
-  },
-  {
     layerKey: 'ogc-latest-tds',
     groupKey: 'groundwater',
     candidates: [
@@ -182,20 +159,6 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
     candidates: ['Springs', 'springs'],
   },
   {
-    layerKey: 'ogc-water-elevation-contours',
-    groupKey: 'groundwater',
-    candidates: [
-      'Water Elevation Contours',
-      'water_elevation_contours',
-      'water_elevation_contour',
-      'groundwater_elevation_contours',
-      'water_level_contours',
-      'water_table_contours',
-      'potentiometric_surface_contours',
-      'piezometric_contours',
-    ],
-  },
-  {
     layerKey: 'ogc-water-elevation-points',
     groupKey: 'groundwater',
     candidates: [
@@ -244,11 +207,6 @@ const REGISTERED_MAP_COLLECTIONS: RegisteredMapCollection[] = [
       'project_area',
     ],
     displayLabel: 'AMP Project Areas',
-  },
-  {
-    layerKey: 'ogc-other-thing-types',
-    groupKey: 'reference',
-    candidates: ['Other Thing Types', 'other_thing_types'],
   },
   {
     layerKey: 'ogc-outfalls-return-flow',

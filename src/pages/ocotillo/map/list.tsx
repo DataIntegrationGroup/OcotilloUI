@@ -63,7 +63,7 @@ function localDateStampForExport(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-const DEFAULT_VISIBLE_LAYERS = ['ogc-latest-depth-to-water']
+const DEFAULT_VISIBLE_LAYERS = ['ogc-water-well-summary']
 const VISIBLE_FEATURES_DRAWER_WIDTH = 360
 const VISIBLE_FEATURES_PAGE_SIZE = 10
 type VisibleFeatureGroup = {
@@ -85,16 +85,6 @@ const PRINCIPAL_VISIBLE_FEATURE_DETAIL_BY_LAYER: Record<
   string,
   { column: string; label: string; dateColumn?: string }
 > = {
-  'ogc-latest-depth-to-water': {
-    column: 'depth_to_water_bgs',
-    label: 'Depth to water',
-    dateColumn: 'observation_datetime',
-  },
-  'ogc-average-tds': {
-    column: 'avg_tds_value',
-    label: 'Avg TDS',
-    dateColumn: 'first_tds_observation_date',
-  },
   'ogc-latest-tds': {
     column: 'latest_tds_value',
     label: 'Latest TDS',
@@ -786,8 +776,6 @@ export const MapView: React.FC = () => {
     const isWaterWellLayer =
       layerId.includes('ogc-water-wells') ||
       layerId.includes('ogc-water-well-summary') ||
-      layerId.includes('ogc-latest-depth-to-water') ||
-      layerId.includes('ogc-average-tds') ||
       layerId.includes('ogc-latest-tds') ||
       layerId.includes('ogc-depth-to-water-trend')
 

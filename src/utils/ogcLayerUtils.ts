@@ -21,13 +21,6 @@ export const TDS_LEGEND = {
   maxLabel: '5000+ mg/L',
 }
 
-export const DEPTH_LEGEND = {
-  gradient:
-    'linear-gradient(90deg, #1a9850 0%, #66bd63 25%, #a6d96a 50%, #fee08b 70%, #f46d43 85%, #d73027 100%)',
-  minLabel: 'Shallow',
-  maxLabel: 'Deep',
-}
-
 export const TREND_LEGEND = {
   gradient: 'linear-gradient(90deg, #2c7bb6 0%, #bdbdbd 50%, #d73027 100%)',
   minLabel: 'Declining',
@@ -111,63 +104,6 @@ export const latestTdsColorFromFeature = (feature: any): string | undefined => {
   return '#d73027'
 }
 
-export const averageTdsColorFromFeature = (feature: any): string | undefined => {
-  const value = findNumericPropertyWithPriority(
-    feature,
-    [
-      /(average|avg|mean).*(tds|dissolved.*solids)/i,
-      /(tds|dissolved.*solids).*(average|avg|mean)/i,
-    ],
-    [/tds/i, /dissolved.*solids/i],
-    [/count/i, /num/i, /code/i, /id$/i, /unit/i, /rank/i, /class/i, /flag/i, /latest/i]
-  )
-  if (value === undefined) return undefined
-  if (value < 300) return '#2b83ba'
-  if (value < 500) return '#4daf4a'
-  if (value < 1000) return '#a6d96a'
-  if (value < 2000) return '#fee08b'
-  if (value < 5000) return '#f46d43'
-  return '#d73027'
-}
-
-export const latestDepthToWaterColorFromFeature = (
-  feature: any
-): string | undefined => {
-  const value = findNumericPropertyWithPriority(
-    feature,
-    [
-      /(latest|recent|most).*(depth.*water|depth_to_water|water_level|depth_to_water_bgs)/i,
-      /(depth.*water|depth_to_water|water_level|depth_to_water_bgs).*(latest|recent|most)/i,
-    ],
-    [/depth.*water/i, /depth_to_water/i, /water_level/i, /depth_to_water_bgs/i],
-    [
-      /count/i,
-      /num/i,
-      /code/i,
-      /id$/i,
-      /unit/i,
-      /rank/i,
-      /class/i,
-      /flag/i,
-      /avg/i,
-      /average/i,
-      /mean/i,
-      /median/i,
-      /min/i,
-      /max/i,
-      /trend/i,
-      /slope/i,
-    ]
-  )
-  if (value === undefined) return undefined
-  if (value < 25) return '#1a9850'
-  if (value < 75) return '#66bd63'
-  if (value < 150) return '#a6d96a'
-  if (value < 250) return '#fee08b'
-  if (value < 400) return '#f46d43'
-  return '#d73027'
-}
-
 export const trendColorFromFeature = (feature: any): string | undefined => {
   const label = findStringProperty(feature, [/trend/i, /trend_class/i])?.toLowerCase()
   if (label) {
@@ -195,56 +131,36 @@ export const resolveCollection = (
   collections: OgcCollectionRecord[],
   candidates: string[]
 ): ResolvedCollection => {
-  const normalizedCandidates = candidates.map(normalize)
-  const keysForCollection = (collection: OgcCollectionRecord) => ({
-    primary: [normalize(collection.id), normalize(collection.collection_id)].filter(
-      Boolean
-    ),
-    secondary: [normalize(collection.name), normalize(collection.title)].filter(
-      Boolean
-    ),
-  })
+  const primaryKeys = (collection: OgcCollectionRecord): string[] =>
+    [collection.id, collection.collection_id].map(normalize).filter(Boolean)
+  const secondaryKeys = (collection: OgcCollectionRecord): string[] =>
+    [collection.name, collection.title].map(normalize).filter(Boolean)
 
-  const scoreMatch = (key: string, candidate: string): number => {
-    if (!key || !candidate) return 0
-    if (key === candidate) return 100
-    if (key.startsWith(candidate)) return 60
-    if (key.endsWith(candidate)) return 50
-    if (key.includes(candidate)) return 20
-    return 0
-  }
+  const findExact = (
+    candidate: string,
+    keysFor: (collection: OgcCollectionRecord) => string[]
+  ): OgcCollectionRecord | undefined =>
+    collections.find((collection) => keysFor(collection).includes(candidate))
 
+  // Matching is exact. A registered layer names the collections it can bind
+  // to, and binds to none of them if the catalog does not publish one --
+  // partial matching used to bind a layer to an unrelated collection whose
+  // name merely contained the candidate.
   let bestMatch: OgcCollectionRecord | undefined
-  let bestScore = 0
 
-  for (const collection of collections) {
-    const { primary, secondary } = keysForCollection(collection)
-    const allKeys = [...primary, ...secondary]
-
-    for (const candidate of normalizedCandidates) {
-      for (const key of allKeys) {
-        const baseScore = scoreMatch(key, candidate)
-        if (baseScore === 0) continue
-
-        // Prefer canonical identifiers over display labels.
-        const canonicalBoost = primary.includes(key) ? 5 : 0
-        const score = baseScore + canonicalBoost
-
-        if (score > bestScore) {
-          bestScore = score
-          bestMatch = collection
-        }
-      }
-    }
+  for (const candidate of candidates.map(normalize).filter(Boolean)) {
+    bestMatch =
+      findExact(candidate, primaryKeys) ?? findExact(candidate, secondaryKeys)
+    if (bestMatch) break
   }
 
-    return {
-      id: bestMatch?.id || bestMatch?.collection_id || bestMatch?.name || '',
-      label:
-        bestMatch?.title ||
-        bestMatch?.name ||
-        candidates[0].replace(/\s*\(Water Wells\)\s*/g, ''),
-      exists: Boolean(bestMatch),
-      description: bestMatch?.description || bestMatch?.abstract,
-    }
+  return {
+    id: bestMatch?.id || bestMatch?.collection_id || bestMatch?.name || '',
+    label:
+      bestMatch?.title ||
+      bestMatch?.name ||
+      candidates[0].replace(/\s*\(Water Wells\)\s*/g, ''),
+    exists: Boolean(bestMatch),
+    description: bestMatch?.description || bestMatch?.abstract,
+  }
 }
