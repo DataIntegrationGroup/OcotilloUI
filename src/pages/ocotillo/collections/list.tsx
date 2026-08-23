@@ -30,6 +30,12 @@ import {
   resolveCollection,
   type OgcCollectionRecord,
 } from '@/utils/ogcLayerUtils'
+import { indexGisLayersByCollection, type GisLayer } from '@/utils/gisArtifacts'
+import { useAccessCapabilities, useGisArtifacts } from '@/hooks'
+import {
+  GisConnectionsPanel,
+  GisLayerDownloads,
+} from '@/components/GisArtifacts'
 
 type CollectionGroupKey =
   | 'groundwater'
@@ -371,6 +377,10 @@ export const CollectionsPage = () => {
     resource: 'ocotillo.collections',
   })
   const dataProvider = useDataProvider()
+  const { canViewAmp } = useAccessCapabilities()
+  const { data: gisCatalog } = useGisArtifacts({
+    enabled: access?.can === true,
+  })
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['ogcapi-collections-page'],
@@ -422,6 +432,7 @@ export const CollectionsPage = () => {
   }
 
   const groups = groupCollections(data ?? [])
+  const gisLayersByCollection = indexGisLayersByCollection(gisCatalog)
   const totalCollections = groups.reduce(
     (count, group) => count + group.collections.length,
     0
@@ -499,6 +510,13 @@ export const CollectionsPage = () => {
           </Box>
         </Paper>
 
+        {gisCatalog ? (
+          <GisConnectionsPanel
+            catalog={gisCatalog}
+            canViewInternal={canViewAmp}
+          />
+        ) : null}
+
         <Grid container spacing={3}>
           {groups.map((group) => (
             <Grid key={group.key} size={{ xs: 12, md: 6 }}>
@@ -558,6 +576,12 @@ export const CollectionsPage = () => {
                             layerKey={layerKey}
                             groupKey={group.key}
                             displayLabel={displayLabel}
+                            gisLayer={gisLayersByCollection.get(
+                              collection.id ||
+                                collection.collection_id ||
+                                collection.name ||
+                                ''
+                            )}
                             index={index}
                           />
                         )
@@ -628,11 +652,13 @@ const CollectionRow = ({
   layerKey,
   groupKey,
   displayLabel,
+  gisLayer,
 }: {
   collection: OgcCollectionRecord
   layerKey: string
   groupKey: CollectionGroupKey
   displayLabel?: string
+  gisLayer?: GisLayer
   index: number
 }) => {
   const style = GROUP_STYLES[groupKey]
@@ -730,6 +756,14 @@ const CollectionRow = ({
             No published description.
           </Typography>
         )}
+        {gisLayer ? (
+          <Stack spacing={0.5}>
+            <Typography variant="caption" color="text.secondary">
+              Styled layer file
+            </Typography>
+            <GisLayerDownloads layer={gisLayer} />
+          </Stack>
+        ) : null}
       </Stack>
     </Paper>
   )
