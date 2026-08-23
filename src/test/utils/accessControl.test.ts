@@ -173,20 +173,6 @@ const specialResourceExpectations: Array<{
     expected: true,
   },
   {
-    name: 'AMP viewer cannot access sandbox special resource',
-    groups: ['AMP.Viewer'],
-    resource: 'Sandbox',
-    action: 'list',
-    expected: false,
-  },
-  {
-    name: 'AMP admin can access sandbox special resource',
-    groups: ['AMP.Admin'],
-    resource: 'Sandbox',
-    action: 'show',
-    expected: true,
-  },
-  {
     name: 'AMP viewer cannot access ocotillo hydrograph correction',
     groups: ['AMP.Viewer'],
     resource: 'ocotillo.hydrograph-correction',
@@ -440,7 +426,6 @@ describe('isResourceListAdminOnly', () => {
   it('returns true for list resources restricted to admin roles', () => {
     expect(isResourceListAdminOnly('ocotillo.location')).toBe(true)
     expect(isResourceListAdminOnly('ocotillo.lexicon')).toBe(true)
-    expect(isResourceListAdminOnly('Sandbox')).toBe(true)
     expect(isResourceListAdminOnly('water.locations')).toBe(true)
   })
 

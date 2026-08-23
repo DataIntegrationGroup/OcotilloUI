@@ -115,7 +115,6 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     delete: adminRoles,
     manage: adminRoles,
   },
-  Sandbox: { list: adminRoles, show: adminRoles },
   geothermal: { list: geothermalViewerRoles, show: geothermalViewerRoles },
   'water.locations': {
     list: ['AMP.Admin', 'Geothermal.Admin'],
@@ -265,8 +264,7 @@ export const canAccessResource = ({
 
   if (
     resource === 'ocotillo.hydrograph-correction' ||
-    resource === 'ocotillo.thing-well-pdf-preview' ||
-    resource === 'Sandbox'
+    resource === 'ocotillo.thing-well-pdf-preview'
   ) {
     const policy = resourcePolicies[resource]
     return matchesPolicy(policy[action], capabilities.roles)

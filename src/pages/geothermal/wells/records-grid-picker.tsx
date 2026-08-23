@@ -1,6 +1,6 @@
 import { WellPickerPage } from './WellPickerPage'
 
-/** Sandbox entry point for the geothermal records grid. */
+/** Entry point for the geothermal records grid. */
 export const GeoThermalRecordsGridPicker = () => (
   <WellPickerPage
     title="Geothermal records"

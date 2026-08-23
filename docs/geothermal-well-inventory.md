@@ -145,9 +145,8 @@ as the records grid (bypassed in local dev, enforced in prod).
 ## 8. Navigation & route
 
 - Route: `/geothermal/wells/inventory`.
-- Nav: a **Geothermal Inventory** entry (Sandbox section for now, consistent
-  with the current geothermal placement; promote to a real geothermal nav
-  group when the feature graduates).
+- Nav: none yet. The page is reachable by URL while the work is in progress;
+  it gets a nav entry when a geothermal nav group lands.
 
 ---
 
@@ -164,7 +163,7 @@ as the records grid (bypassed in local dev, enforced in prod).
 - Boolean, date, and **dropdown** cell kinds in `EditableDataGrid`, plus
   allowed-value lists for the enum fields.
 - Inventory page (grid + toolbar: Add rows, Upload CSV, Download template, Save).
-- Route + nav entry (Sandbox).
+- Route (no nav entry yet).
 - Create-only save wrapper (adapt records-grid save to POST-only).
 
 ---
@@ -176,7 +175,7 @@ as the records grid (bypassed in local dev, enforced in prod).
   surface the conflict inline. No client-side dedupe/upsert in v1. ✔
 - **Enum fields** (`well_type`, `well_class`, `status`): **dropdowns** from
   fixed allowed-value lists (new select cell kind). ✔
-- **Nav placement:** Sandbox (temporary). ✔
+- **Nav placement:** none yet — URL-only until a geothermal nav group lands. ✔
 - **Records vs inventory:** inventory is create-wells only; the existing records
   grid is untouched. ✔
 

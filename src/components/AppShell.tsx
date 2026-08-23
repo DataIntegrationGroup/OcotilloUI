@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { Outlet, Link, useLocation, useNavigate } from 'react-router'
+import { Outlet, Link, useLocation } from 'react-router'
 import {
   CanAccess,
   useCustomMutation,
@@ -50,7 +50,6 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  FlaskConical,
   Lock,
   LogOut,
   Menu,
@@ -63,7 +62,7 @@ import {
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
-import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, SHOW_EXAMPLE_NAV, type NavItem } from '@/config/navigation'
+import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
 import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { SupportPanelContext } from '@/components/SupportPanelContext'
@@ -425,7 +424,7 @@ function AppSidebar() {
 
         <SidebarSeparator className="my-1 bg-border" />
 
-        {/* Resource navigation + temporary Example section — all in one group */}
+        {/* Resource navigation */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -437,8 +436,6 @@ function AppSidebar() {
                   canSeeNavItem={canSeeNavItem}
                 />
               ))}
-              {/* Example demos — toggle SHOW_EXAMPLE_NAV in config/navigation.ts */}
-              {SHOW_EXAMPLE_NAV ? <ExampleNavItem /> : null}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -466,92 +463,6 @@ function AppSidebar() {
         <SupportPanelTrigger collapsed={collapsed} />
       </SidebarFooter>
     </Sidebar>
-  )
-}
-
-const SANDBOX_GEOTHERMAL_GRID = '/geothermal/wells/records-grid'
-const SANDBOX_GEOTHERMAL_INVENTORY = '/geothermal/wells/inventory'
-const SANDBOX_GEOTHERMAL_TEMP_DEPTH = '/geothermal/wells/temp-depth'
-
-function isSandboxPath(pathname: string): boolean {
-  return (
-    pathname.startsWith('/example') ||
-    pathname.startsWith(SANDBOX_GEOTHERMAL_GRID) ||
-    pathname.startsWith(SANDBOX_GEOTHERMAL_INVENTORY) ||
-    pathname.startsWith(SANDBOX_GEOTHERMAL_TEMP_DEPTH)
-  )
-}
-
-function ExampleNavItem() {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [open, setOpen] = useState(isSandboxPath(location.pathname))
-
-  useEffect(() => {
-    if (!isSandboxPath(location.pathname)) setOpen(false)
-  }, [location.pathname])
-
-  const handleClick = () => {
-    setOpen(true)
-    navigate('/example/typography')
-  }
-
-  return (
-    <Collapsible open={open} onOpenChange={setOpen} className="group/example">
-      <SidebarMenuItem>
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Sandbox" onClick={handleClick}>
-            <FlaskConical />
-            <span>Sandbox</span>
-            <ChevronRight className="ml-auto size-3.5 transition-transform duration-100 group-data-[state=open]/example:rotate-90" />
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton
-                asChild
-                isActive={location.pathname === '/example/typography'}
-              >
-                <Link to="/example/typography">Typography</Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton
-                asChild
-                isActive={location.pathname.startsWith(SANDBOX_GEOTHERMAL_GRID)}
-              >
-                <Link to={SANDBOX_GEOTHERMAL_GRID}>Geothermal Records</Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton
-                asChild
-                isActive={location.pathname.startsWith(
-                  SANDBOX_GEOTHERMAL_INVENTORY
-                )}
-              >
-                <Link to={SANDBOX_GEOTHERMAL_INVENTORY}>
-                  Geothermal Inventory
-                </Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton
-                asChild
-                isActive={location.pathname.startsWith(
-                  SANDBOX_GEOTHERMAL_TEMP_DEPTH
-                )}
-              >
-                <Link to={SANDBOX_GEOTHERMAL_TEMP_DEPTH}>
-                  Geothermal Temp-Depth
-                </Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </SidebarMenuItem>
-    </Collapsible>
   )
 }
 

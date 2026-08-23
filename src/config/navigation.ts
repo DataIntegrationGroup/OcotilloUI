@@ -56,16 +56,6 @@ export type NavItem = {
 }
 
 /**
- * Show the Sandbox nav (typography specimen, WIP geothermal grids).
- * Visible in local dev and on PR preview / staging deploys
- * (VITE_APP_ENV=preview|staging), so reviewers can exercise the WIP work;
- * hidden on production.
- */
-export const SHOW_EXAMPLE_NAV =
-  import.meta.env.DEV ||
-  ['preview', 'staging'].includes(import.meta.env.VITE_APP_ENV)
-
-/**
  * Top bar: views and tools.
  * Items without `roles` are visible to every authenticated user.
  */
