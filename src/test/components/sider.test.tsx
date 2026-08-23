@@ -67,7 +67,7 @@ vi.mock('@/components/layout/logout', () => ({
 const renderSider = () =>
   render(
     <MemoryRouter>
-      <ColorModeContext.Provider value={{ mode: 'light', setMode: vi.fn() }}>
+      <ColorModeContext.Provider value={{ mode: 'light', preference: 'light', setMode: vi.fn() }}>
         <ThemedSiderV2 />
       </ColorModeContext.Provider>
     </MemoryRouter>
