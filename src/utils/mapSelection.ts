@@ -292,7 +292,6 @@ export const getSelectedPointColumns = (
   ]
 
   const preferredColumnsByLayer: Record<string, string[]> = {
-    'ogc-average-tds': ['name'],
     'ogc-actively-monitored': [
       'name',
       'last_water_level_datetime',
@@ -300,7 +299,6 @@ export const getSelectedPointColumns = (
       'total_water_levels',
     ],
     'ogc-depth-to-water-trend': ['name'],
-    'ogc-latest-depth-to-water': ['name', 'observation_datetime'],
     'ogc-latest-tds': ['name', 'observation_datetime'],
     'ogc-major-chemistry': ['name', 'latest_chemistry_date', 'analyte_count'],
     'ogc-minor-chemistry': ['name', 'latest_chemistry_date', 'analyte_count'],

@@ -71,7 +71,7 @@ function localDateStampForExport(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-const DEFAULT_VISIBLE_LAYERS = ['ogc-latest-depth-to-water']
+const DEFAULT_VISIBLE_LAYERS = ['ogc-water-well-summary']
 const VISIBLE_FEATURES_DRAWER_WIDTH = 360
 const VISIBLE_FEATURES_PAGE_SIZE = 10
 type VisibleFeatureGroup = {
@@ -93,16 +93,6 @@ const PRINCIPAL_VISIBLE_FEATURE_DETAIL_BY_LAYER: Record<
   string,
   { column: string; label: string; dateColumn?: string }
 > = {
-  'ogc-latest-depth-to-water': {
-    column: 'depth_to_water_bgs',
-    label: 'Depth to water',
-    dateColumn: 'observation_datetime',
-  },
-  'ogc-average-tds': {
-    column: 'avg_tds_value',
-    label: 'Avg TDS',
-    dateColumn: 'first_tds_observation_date',
-  },
   'ogc-latest-tds': {
     column: 'latest_tds_value',
     label: 'Latest TDS',
@@ -127,6 +117,7 @@ const DEFAULT_EXPANDED_GROUPS = {
   groundwater: true,
   surfaceWater: true,
   climate: true,
+  geothermal: true,
   geoscience: true,
   reference: true,
 }
@@ -134,6 +125,15 @@ const DEFAULT_EXPANDED_GROUPS = {
 const getLayerGroupKey = (
   layerKey: string
 ): keyof typeof DEFAULT_EXPANDED_GROUPS => {
+  if (
+    layerKey.includes('geothermal') ||
+    layerKey.includes('bht') ||
+    layerKey.includes('temp-depth') ||
+    layerKey.includes('heat-flow') ||
+    layerKey === 'ogc-dst'
+  ) {
+    return 'geothermal'
+  }
   if (
     layerKey.includes('water-well') ||
     layerKey.includes('actively-monitored') ||
@@ -174,6 +174,7 @@ const getExpandedGroupsForLayers = (layerKeys: string[]) => {
     groundwater: false,
     surfaceWater: false,
     climate: false,
+    geothermal: false,
     geoscience: false,
     reference: false,
   }
@@ -765,6 +766,7 @@ export const MapView: React.FC = () => {
     groundwater: 'Groundwater',
     surfaceWater: 'Surface Water',
     climate: 'Climate',
+    geothermal: 'Geothermal',
     geoscience: 'Geoscience',
     reference: 'Reference',
   }
@@ -781,6 +783,7 @@ export const MapView: React.FC = () => {
       groundwater: [] as Array<[string, any]>,
       surfaceWater: [] as Array<[string, any]>,
       climate: [] as Array<[string, any]>,
+      geothermal: [] as Array<[string, any]>,
       geoscience: [] as Array<[string, any]>,
       reference: [] as Array<[string, any]>,
     }
@@ -847,8 +850,6 @@ export const MapView: React.FC = () => {
     const isWaterWellLayer =
       layerId.includes('ogc-water-wells') ||
       layerId.includes('ogc-water-well-summary') ||
-      layerId.includes('ogc-latest-depth-to-water') ||
-      layerId.includes('ogc-average-tds') ||
       layerId.includes('ogc-latest-tds') ||
       layerId.includes('ogc-depth-to-water-trend')
 

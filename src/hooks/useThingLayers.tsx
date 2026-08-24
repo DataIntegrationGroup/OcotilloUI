@@ -21,11 +21,8 @@ import {
 import {
   OgcCollectionRecord,
   resolveCollection,
-  DEPTH_LEGEND,
   TDS_LEGEND,
   TREND_LEGEND,
-  latestDepthToWaterColorFromFeature,
-  averageTdsColorFromFeature,
   latestTdsColorFromFeature,
   trendColorFromFeature,
 } from '@/utils/ogcLayerUtils'
@@ -74,71 +71,9 @@ export const useThingLayers = (
   })
 
   const collections = collectionsData ?? []
-  const collectionSearchText = (collection: OgcCollectionRecord): string =>
-    [collection.id, collection.collection_id, collection.name, collection.title]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase()
-
-  const resolveCollectionByTokenScore = ({
-    includeAny,
-    includeOneOf,
-    includeAll,
-    exclude = [],
-    fallbackLabel,
-    minScore = 3,
-  }: {
-    includeAny: RegExp[]
-    includeOneOf: RegExp[]
-    includeAll: RegExp[]
-    exclude?: RegExp[]
-    fallbackLabel: string
-    minScore?: number
-  }) => {
-    let bestMatch: OgcCollectionRecord | undefined
-    let bestScore = -1
-
-    for (const collection of collections) {
-      const text = collectionSearchText(collection)
-      if (exclude.some((pattern) => pattern.test(text))) continue
-      if (!includeOneOf.some((pattern) => pattern.test(text))) continue
-      if (!includeAll.every((pattern) => pattern.test(text))) continue
-
-      let score = 0
-      for (const pattern of includeAny) {
-        if (pattern.test(text)) score += 1
-      }
-
-      if (score > bestScore) {
-        bestScore = score
-        bestMatch = collection
-      }
-    }
-
-    const exists = Boolean(bestMatch) && bestScore >= minScore
-
-    return {
-      id: bestMatch?.id || bestMatch?.collection_id || bestMatch?.name || '',
-      label: bestMatch?.title || bestMatch?.name || fallbackLabel,
-      exists,
-      description: bestMatch?.description || bestMatch?.abstract,
-    }
-  }
-
   const isColorMappingEnabled = (layerKey: string): boolean =>
     colorMappingByLayer[layerKey] ?? true
 
-  const locations = resolveCollection(collections, ['Locations', 'locations'])
-  const latestDepthToWater = resolveCollection(collections, [
-    'Latest Depth to Water (Water Wells)',
-    'latest_depth_to_water_water_wells',
-    'latest_depth_to_water',
-  ])
-  const averageTds = resolveCollection(collections, [
-    'Average TDS (Water Wells)',
-    'average_tds_water_wells',
-    'average_tds',
-  ])
   const latestTds = resolveCollection(collections, [
     'Latest TDS (Water Wells)',
     'latest_tds_water_wells',
@@ -178,76 +113,17 @@ export const useThingLayers = (
     'actively_monitored',
   ])
   const springs = resolveCollection(collections, ['Springs', 'springs'])
-  const waterElevationContoursPrimary = resolveCollection(collections, [
-    'Water Elevation Contours',
-    'water_elevation_contours',
-    'water_elevation_contour',
-    'groundwater_elevation_contours',
-    'water_level_contours',
-    'water_table_contours',
-    'potentiometric_surface_contours',
-    'piezometric_contours',
-  ])
-  const waterElevationContours = waterElevationContoursPrimary.exists
-    ? waterElevationContoursPrimary
-    : resolveCollectionByTokenScore({
-        includeAny: [
-          /water/i,
-          /groundwater/i,
-          /elevation/i,
-          /level/i,
-          /table/i,
-          /potentiometric/i,
-          /piezometric/i,
-          /head/i,
-          /surface/i,
-          /contour/i,
-          /isoline/i,
-        ],
-        includeOneOf: [/contour|isoline/i],
-        includeAll: [
-          /potentiometric|piezometric|elevation|water[\s_-]?table|head/i,
-        ],
-        exclude: [/depth[\s_-]?to[\s_-]?water/i, /trend/i, /tds/i],
-        fallbackLabel: 'Water Elevation Contours',
-      })
-  const waterElevationPointsPrimary = resolveCollection(collections, [
+  const waterElevationPoints = resolveCollection(collections, [
     'Water Elevation Points',
     'water_elevation_points',
     'water_elevation_point',
     'water_elevation_wells',
-    'ogcapi/collections/water_elevation_wells/items',
     'groundwater_elevation_points',
     'water_level_points',
     'water_table_points',
     'potentiometric_surface_points',
     'piezometric_points',
   ])
-  const waterElevationPoints = waterElevationPointsPrimary.exists
-    ? waterElevationPointsPrimary
-    : resolveCollectionByTokenScore({
-        includeAny: [
-          /water/i,
-          /groundwater/i,
-          /elevation/i,
-          /level/i,
-          /table/i,
-          /potentiometric/i,
-          /piezometric/i,
-          /head/i,
-          /surface/i,
-          /point/i,
-          /points/i,
-          /station/i,
-          /well/i,
-        ],
-        includeOneOf: [/point|points|station|well/i],
-        includeAll: [
-          /potentiometric|piezometric|elevation|water[\s_-]?table|head/i,
-        ],
-        exclude: [/depth[\s_-]?to[\s_-]?water/i, /trend/i, /tds/i],
-        fallbackLabel: 'Water Elevation Points',
-      })
   const surfaceWaterDiversions = resolveCollection(collections, [
     'Surface Water Diversions',
     'surface_water_diversions',
@@ -263,10 +139,6 @@ export const useThingLayers = (
   const meteorologicalStations = resolveCollection(collections, [
     'Meteorological Stations',
     'meteorological_stations',
-  ])
-  const otherThingTypes = resolveCollection(collections, [
-    'Other Thing Types',
-    'other_thing_types',
   ])
   const projectAreas = resolveCollection(collections, [
     'Project Areas',
@@ -290,33 +162,27 @@ export const useThingLayers = (
     'Soil Gas Sample Locations',
     'soil_gas_sample_locations',
   ])
-  const locationsLayer = useOGCLayer({
-    collection: locations.id,
-    label: locations.label,
-    color: MAP_LAYER_COLORS.locations,
-    enabled: locations.exists && isLayerActive('ogc-locations'),
-  })
-  const latestDepthToWaterLayer = useOGCLayer({
-    collection: latestDepthToWater.id,
-    label: latestDepthToWater.label,
-    legendColor: MAP_LAYER_COLORS.latestDepthToWater,
-    color: MAP_NO_DATA_COLOR,
-    colorAccessor: latestDepthToWaterColorFromFeature,
-    legendScale: DEPTH_LEGEND,
-    colorMappingEnabled: isColorMappingEnabled('ogc-latest-depth-to-water'),
-    enabled:
-      latestDepthToWater.exists && isLayerActive('ogc-latest-depth-to-water'),
-  })
-  const averageTdsLayer = useOGCLayer({
-    collection: averageTds.id,
-    label: averageTds.label,
-    legendColor: MAP_LAYER_COLORS.averageTds,
-    color: MAP_NO_DATA_COLOR,
-    colorAccessor: averageTdsColorFromFeature,
-    legendScale: TDS_LEGEND,
-    colorMappingEnabled: isColorMappingEnabled('ogc-average-tds'),
-    enabled: averageTds.exists && isLayerActive('ogc-average-tds'),
-  })
+  const geothermalWellsBht = resolveCollection(collections, [
+    'geothermal_wells_bht',
+    'Geothermal Wells — Bottom-Hole Temperature',
+  ])
+  const geothermalWellsTemperatureProfile = resolveCollection(collections, [
+    'geothermal_wells_temperature_profile',
+    'Geothermal Wells — Temperature-Depth Profile',
+  ])
+  const bhtMeasurements = resolveCollection(collections, [
+    'bht_measurements',
+    'BHT Measurements',
+  ])
+  const tempDepthMeasurements = resolveCollection(collections, [
+    'temp_depth_measurements',
+    'Temperature-Depth Measurements',
+  ])
+  const heatFlow = resolveCollection(collections, ['heat_flow', 'Heat Flow'])
+  const drillStemTests = resolveCollection(collections, [
+    'dst',
+    'Drill Stem Tests',
+  ])
   const latestTdsLayer = useOGCLayer({
     collection: latestTds.id,
     label: latestTds.label,
@@ -375,23 +241,13 @@ export const useThingLayers = (
     color: MAP_LAYER_COLORS.springs,
     enabled: springs.exists && isLayerActive('ogc-springs'),
   })
-  const waterElevationContoursLayer = useOGCLayer({
-    collection: waterElevationContours.id,
-    label: waterElevationContours.label,
-    color: MAP_LAYER_COLORS.waterElevationContours,
-    layerType: 'line',
-    paint: {
-      'line-width': 1.2,
-      'line-opacity': 0.85,
-    },
-    enabled:
-      waterElevationContours.exists &&
-      isLayerActive('ogc-water-elevation-contours'),
-  })
 
-  const needsDerivedContours =
-    !waterElevationContours.exists &&
-    isLayerActive('ogc-water-elevation-contours-derived')
+
+  // Derived contours are the only water-elevation contour layer -- the
+  // catalog publishes elevation points, not contours.
+  const needsDerivedContours = isLayerActive(
+    'ogc-water-elevation-contours-derived'
+  )
 
   const waterElevationPointsLayer = useOGCLayer({
     collection: waterElevationPoints.id,
@@ -479,9 +335,6 @@ export const useThingLayers = (
   const isWaterElevationPointsColorMapped = isColorMappingEnabled(
     'ogc-water-elevation-points'
   )
-  const isWaterElevationContoursColorMapped = isColorMappingEnabled(
-    'ogc-water-elevation-contours'
-  )
   const isWaterElevationDerivedContoursColorMapped = isColorMappingEnabled(
     'ogc-water-elevation-contours-derived'
   )
@@ -520,31 +373,6 @@ export const useThingLayers = (
     isWaterElevationPointsColorMapped,
   ])
 
-  const waterElevationContoursLayerStyled = useMemo(
-    () => ({
-      ...waterElevationContoursLayer,
-      legendScale: isWaterElevationContoursColorMapped
-        ? waterElevationLegendScale
-        : undefined,
-      colorMappingAvailable: true,
-      colorMappingEnabled: isWaterElevationContoursColorMapped,
-      layerProps: {
-        ...waterElevationContoursLayer.layerProps,
-        paint: {
-          ...(waterElevationContoursLayer.layerProps?.paint || {}),
-          'line-color': isWaterElevationContoursColorMapped
-            ? waterElevationColorExpression
-            : MAP_LAYER_COLORS.waterElevationContours,
-        },
-      },
-    }),
-    [
-      waterElevationContoursLayer,
-      waterElevationLegendScale,
-      waterElevationColorExpression,
-      isWaterElevationContoursColorMapped,
-    ]
-  )
 
   const waterElevationDerivedContourLayerData = useQuery({
     queryKey: [
@@ -816,12 +644,6 @@ export const useThingLayers = (
     },
     enabled: projectAreas.exists && isLayerActive('ogc-project-areas'),
   })
-  const otherThingTypesLayer = useOGCLayer({
-    collection: otherThingTypes.id,
-    label: otherThingTypes.label,
-    color: MAP_LAYER_COLORS.otherThingTypes,
-    enabled: otherThingTypes.exists && isLayerActive('ogc-other-thing-types'),
-  })
   const outfallsReturnFlowLayer = useOGCLayer({
     collection: outfallsReturnFlow.id,
     label: outfallsReturnFlow.label,
@@ -850,6 +672,47 @@ export const useThingLayers = (
       soilGasSampleLocations.exists &&
       isLayerActive('ogc-soil-gas-sample-locations'),
   })
+  const geothermalWellsBhtLayer = useOGCLayer({
+    collection: geothermalWellsBht.id,
+    label: geothermalWellsBht.label,
+    color: '#b45309',
+    enabled:
+      geothermalWellsBht.exists && isLayerActive('ogc-geothermal-wells-bht'),
+  })
+  const geothermalWellsTemperatureProfileLayer = useOGCLayer({
+    collection: geothermalWellsTemperatureProfile.id,
+    label: geothermalWellsTemperatureProfile.label,
+    color: '#d97706',
+    enabled:
+      geothermalWellsTemperatureProfile.exists &&
+      isLayerActive('ogc-geothermal-wells-temperature-profile'),
+  })
+  const bhtMeasurementsLayer = useOGCLayer({
+    collection: bhtMeasurements.id,
+    label: bhtMeasurements.label,
+    color: '#ea580c',
+    enabled: bhtMeasurements.exists && isLayerActive('ogc-bht-measurements'),
+  })
+  const tempDepthMeasurementsLayer = useOGCLayer({
+    collection: tempDepthMeasurements.id,
+    label: tempDepthMeasurements.label,
+    color: '#f59e0b',
+    enabled:
+      tempDepthMeasurements.exists &&
+      isLayerActive('ogc-temp-depth-measurements'),
+  })
+  const heatFlowLayer = useOGCLayer({
+    collection: heatFlow.id,
+    label: heatFlow.label,
+    color: '#dc2626',
+    enabled: heatFlow.exists && isLayerActive('ogc-heat-flow'),
+  })
+  const drillStemTestsLayer = useOGCLayer({
+    collection: drillStemTests.id,
+    label: drillStemTests.label,
+    color: '#92400e',
+    enabled: drillStemTests.exists && isLayerActive('ogc-dst'),
+  })
 
   return useMemo(() => {
     const result: Record<string, any> = {}
@@ -872,13 +735,6 @@ export const useThingLayers = (
       }
     }
 
-    addLayer('ogc-locations', locations, locationsLayer)
-    addLayer(
-      'ogc-latest-depth-to-water',
-      latestDepthToWater,
-      latestDepthToWaterLayer
-    )
-    addLayer('ogc-average-tds', averageTds, averageTdsLayer)
     addLayer('ogc-latest-tds', latestTds, latestTdsLayer)
     addLayer(
       'ogc-depth-to-water-trend',
@@ -890,21 +746,6 @@ export const useThingLayers = (
       waterElevationPoints,
       waterElevationPointsLayerStyled
     )
-    addLayer(
-      'ogc-water-elevation-contours',
-      waterElevationContours,
-      waterElevationContoursLayerStyled
-    )
-    if (!waterElevationContours.exists) {
-      result['ogc-water-elevation-contours-derived'] = {
-        ...waterElevationDerivedContoursLayer,
-        description: waterElevationPoints.description,
-        colorMappingAvailable:
-          waterElevationDerivedContoursLayer.colorMappingAvailable ?? true,
-        colorMappingEnabled:
-          waterElevationDerivedContoursLayer.colorMappingEnabled ?? true,
-      }
-    }
     addLayer('ogc-major-chemistry', majorChemistry, majorChemistryLayer)
     addLayer('ogc-minor-chemistry', minorChemistry, minorChemistryLayer)
     addLayer('ogc-water-well-summary', waterWellSummary, waterWellSummaryLayer)
@@ -915,6 +756,14 @@ export const useThingLayers = (
       activelyMonitoredLayer
     )
     addLayer('ogc-springs', springs, springsLayer)
+    result['ogc-water-elevation-contours-derived'] = {
+      ...waterElevationDerivedContoursLayer,
+      description: waterElevationPoints.description,
+      colorMappingAvailable:
+        waterElevationDerivedContoursLayer.colorMappingAvailable ?? true,
+      colorMappingEnabled:
+        waterElevationDerivedContoursLayer.colorMappingEnabled ?? true,
+    }
     addLayer(
       'ogc-surface-water-diversions',
       surfaceWaterDiversions,
@@ -932,7 +781,6 @@ export const useThingLayers = (
       meteorologicalStationsLayer
     )
     addLayer('ogc-project-areas', projectAreas, projectAreasLayer)
-    addLayer('ogc-other-thing-types', otherThingTypes, otherThingTypesLayer)
     addLayer(
       'ogc-outfalls-return-flow',
       outfallsReturnFlow,
@@ -949,13 +797,28 @@ export const useThingLayers = (
       soilGasSampleLocations,
       soilGasSampleLocationsLayer
     )
+    addLayer(
+      'ogc-geothermal-wells-bht',
+      geothermalWellsBht,
+      geothermalWellsBhtLayer
+    )
+    addLayer(
+      'ogc-geothermal-wells-temperature-profile',
+      geothermalWellsTemperatureProfile,
+      geothermalWellsTemperatureProfileLayer
+    )
+    addLayer('ogc-bht-measurements', bhtMeasurements, bhtMeasurementsLayer)
+    addLayer(
+      'ogc-temp-depth-measurements',
+      tempDepthMeasurements,
+      tempDepthMeasurementsLayer
+    )
+    addLayer('ogc-heat-flow', heatFlow, heatFlowLayer)
+    addLayer('ogc-dst', drillStemTests, drillStemTestsLayer)
 
     return result
   }, [
     collectionsData,
-    locationsLayer,
-    latestDepthToWaterLayer,
-    averageTdsLayer,
     latestTdsLayer,
     majorChemistryLayer,
     minorChemistryLayer,
@@ -964,7 +827,6 @@ export const useThingLayers = (
     waterWellsLayer,
     activelyMonitoredLayer,
     springsLayer,
-    waterElevationContoursLayerStyled,
     waterElevationPointsLayerStyled,
     waterElevationDerivedContoursLayer,
     surfaceWaterDiversionsLayer,
@@ -972,10 +834,15 @@ export const useThingLayers = (
     lakesPondsReservoirsLayer,
     meteorologicalStationsLayer,
     projectAreasLayer,
-    otherThingTypesLayer,
     outfallsReturnFlowLayer,
     perennialStreamsLayer,
     rockSampleLocationsLayer,
     soilGasSampleLocationsLayer,
+    geothermalWellsBhtLayer,
+    geothermalWellsTemperatureProfileLayer,
+    bhtMeasurementsLayer,
+    tempDepthMeasurementsLayer,
+    heatFlowLayer,
+    drillStemTestsLayer,
   ])
 }

@@ -63,8 +63,7 @@ Review available collections before connecting from desktop GIS.
 - [!CHIPS]
 - Water Wells
 - Springs
-- Latest Depth to Water
-- Average TDS
 - Latest TDS
+- Water Well Summary
 
 Collection names can change by deployment. If you do not see one of these, open the [collections endpoint]({{ ocotillo_api_url }}/ogcapi/collections) and use the names published there.
