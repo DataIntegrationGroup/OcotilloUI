@@ -84,6 +84,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.thing-well',
       'ocotillo.contact',
       'ocotillo.hydrograph-correction',
+      'ocotillo.asset-unassociated',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
     ],
@@ -273,6 +274,20 @@ const specialResourceExpectations: Array<{
     expected: true,
   },
   {
+    name: 'AMP editor can manage unassociated assets',
+    groups: ['AMP.Editor'],
+    resource: 'ocotillo.asset-unassociated',
+    action: 'manage',
+    expected: true,
+  },
+  {
+    name: 'AMP editor can delete unassociated assets',
+    groups: ['AMP.Editor'],
+    resource: 'ocotillo.asset-unassociated',
+    action: 'delete',
+    expected: true,
+  },
+  {
     name: 'geothermal editor can edit geothermal resources',
     groups: ['Geothermal.Editor'],
     resource: 'geothermal.dashboard',
@@ -331,6 +346,7 @@ describe('accessControl helpers', () => {
       canViewAmp: false,
       canEditAmp: false,
       canManageAmp: false,
+      canManageAssets: false,
       canViewConfidential: false,
       canViewUnfinished: false,
       canViewGeothermal: false,
@@ -345,6 +361,7 @@ describe('accessControl helpers', () => {
       canViewAmp: true,
       canEditAmp: false,
       canManageAmp: false,
+      canManageAssets: false,
       canViewConfidential: false,
       canViewUnfinished: false,
       canViewGeothermal: false,
@@ -359,6 +376,7 @@ describe('accessControl helpers', () => {
       canViewAmp: true,
       canEditAmp: true,
       canManageAmp: false,
+      canManageAssets: true,
       canViewConfidential: true,
       canViewUnfinished: false,
       canViewLexicon: true,
@@ -376,6 +394,7 @@ describe('accessControl helpers', () => {
       ],
       primaryRole: 'Geothermal.Editor',
       canManageAmp: true,
+      canManageAssets: true,
       canViewUnfinished: true,
       canEditGeothermal: true,
       canManageGeothermal: false,
@@ -432,6 +451,7 @@ describe('isResourceListAdminOnly', () => {
   it('returns false for non-admin list resources and unknown resources', () => {
     expect(isResourceListAdminOnly('ocotillo.thing-well')).toBe(false)
     expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(false)
+    expect(isResourceListAdminOnly('ocotillo.asset-unassociated')).toBe(false)
     expect(isResourceListAdminOnly('unknown.resource')).toBe(false)
   })
 })

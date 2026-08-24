@@ -133,7 +133,7 @@ export const RESOURCE_NAV: NavItem[] = [
     href: '/ocotillo/asset/unassociated',
     icon: Image,
     resource: 'ocotillo.asset-unassociated',
-    roles: adminOnly,
+    roles: editorAndAbove,
   },
   {
     label: 'Locations',
