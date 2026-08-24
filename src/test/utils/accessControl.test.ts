@@ -84,6 +84,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.thing-well',
       'ocotillo.contact',
       'ocotillo.hydrograph-correction',
+      'ocotillo.asset-unassociated',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
     ],
@@ -432,6 +433,7 @@ describe('isResourceListAdminOnly', () => {
   it('returns false for non-admin list resources and unknown resources', () => {
     expect(isResourceListAdminOnly('ocotillo.thing-well')).toBe(false)
     expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(false)
+    expect(isResourceListAdminOnly('ocotillo.asset-unassociated')).toBe(false)
     expect(isResourceListAdminOnly('unknown.resource')).toBe(false)
   })
 })
