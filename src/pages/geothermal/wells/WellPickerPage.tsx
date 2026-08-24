@@ -26,7 +26,7 @@ interface WellPickerPageProps {
 }
 
 /**
- * Shared Sandbox entry point for per-well geothermal pages (records grid,
+ * Shared entry point for per-well geothermal pages (records grid,
  * temp-depth log): find a well, then navigate into `targetPath/{well_data_id}`.
  * Admin-gated per BDMS-878.
  *

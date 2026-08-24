@@ -45,7 +45,6 @@ This mapping is temporary and should be removed before the v1 release once all u
 - Can view confidential data
 
 ### AMP.Admin Only
-- Can access `Sandbox`
 - Can access unfinished / WIP AMP resources
 
 ### Geothermal Roles
@@ -73,8 +72,7 @@ This mapping is temporary and should be removed before the v1 release once all u
 - `ocotillo.thing-well-batch-export` -> AMP view access required
 - `ocotillo.groundwater-level-observation` -> AMP view access required
 
-### AMP / Sandbox
-- `Sandbox` -> `AMP.Admin` only
+### AMP / Water
 - `water.*` -> AMP access required
 - WIP `water.*` resources -> `AMP.Admin` only
 - `water.locations` -> `AMP.Admin` or `Geothermal.Admin`

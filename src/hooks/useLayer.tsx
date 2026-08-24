@@ -1,4 +1,5 @@
 import { useOne } from '@refinedev/core'
+import { MAP_SYMBOL_STROKE_COLOR } from '@/constants/mapColors'
 
 export const useLayer = ({
   thing_type,
@@ -46,7 +47,7 @@ export const useLayer = ({
       paint: {
         'circle-radius': 3,
         'circle-color': color,
-        'circle-stroke-color': '#ffffff',
+        'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
         'circle-stroke-width': 1,
       },
     },

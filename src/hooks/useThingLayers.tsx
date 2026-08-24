@@ -3,6 +3,15 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import * as turf from '@turf/turf'
 import { useOGCLayer } from '@/hooks/useOGCLayer'
+import {
+  MAP_LAYER_COLORS,
+  MAP_NO_DATA_COLOR,
+} from '@/constants/mapColors'
+import {
+  VIRIDIS_LOW,
+  viridisGradient,
+  viridisSamples,
+} from '@/constants/viridis'
 import { parseNumeric } from '@/utils/parseNumeric'
 import {
   getWaterElevationFeet,
@@ -19,11 +28,14 @@ import {
 } from '@/utils/ogcLayerUtils'
 
 const WATER_ELEVATION_LEGEND = {
-  gradient:
-    'linear-gradient(90deg, #2c7bb6 0%, #00a6ca 20%, #00ccbc 40%, #90eb9d 55%, #ffff8c 70%, #f9d057 82%, #f29e2e 92%, #d7191c 100%)',
+  gradient: viridisGradient(),
   minLabel: 'Lower (ft)',
   maxLabel: 'Higher (ft)',
 }
+
+// Seven classes across the viridis ramp: dark purple for the lowest water
+// elevations through yellow for the highest.
+const waterElevationColors = viridisSamples(7)
 
 const EMPTY_FEATURE_COLLECTION = {
   type: 'FeatureCollection',
@@ -153,8 +165,8 @@ export const useThingLayers = (
   const latestTdsLayer = useOGCLayer({
     collection: latestTds.id,
     label: latestTds.label,
-    legendColor: '#fdae61',
-    color: '#9e9e9e',
+    legendColor: MAP_LAYER_COLORS.latestTds,
+    color: MAP_NO_DATA_COLOR,
     colorAccessor: latestTdsColorFromFeature,
     legendScale: TDS_LEGEND,
     colorMappingEnabled: isColorMappingEnabled('ogc-latest-tds'),
@@ -163,20 +175,20 @@ export const useThingLayers = (
   const majorChemistryLayer = useOGCLayer({
     collection: majorChemistry.id,
     label: majorChemistry.label,
-    color: '#8e24aa',
+    color: MAP_LAYER_COLORS.majorChemistry,
     enabled: majorChemistry.exists && isLayerActive('ogc-major-chemistry'),
   })
   const minorChemistryLayer = useOGCLayer({
     collection: minorChemistry.id,
     label: minorChemistry.label,
-    color: '#6a1b9a',
+    color: MAP_LAYER_COLORS.minorChemistry,
     enabled: minorChemistry.exists && isLayerActive('ogc-minor-chemistry'),
   })
   const depthToWaterTrendLayer = useOGCLayer({
     collection: depthToWaterTrend.id,
     label: depthToWaterTrend.label,
-    legendColor: '#b2182b',
-    color: '#9e9e9e',
+    legendColor: MAP_LAYER_COLORS.depthToWaterTrend,
+    color: MAP_NO_DATA_COLOR,
     colorAccessor: trendColorFromFeature,
     legendScale: TREND_LEGEND,
     colorMappingEnabled: isColorMappingEnabled('ogc-depth-to-water-trend'),
@@ -186,26 +198,26 @@ export const useThingLayers = (
   const waterWellSummaryLayer = useOGCLayer({
     collection: waterWellSummary.id,
     label: waterWellSummary.label,
-    color: '#8bc34a',
+    color: MAP_LAYER_COLORS.waterWellSummary,
     enabled: waterWellSummary.exists && isLayerActive('ogc-water-well-summary'),
   })
   const waterWellsLayer = useOGCLayer({
     collection: waterWells.id,
     label: waterWells.label,
-    color: '#2b7dc0',
+    color: MAP_LAYER_COLORS.waterWells,
     enabled: waterWells.exists && isLayerActive('ogc-water-wells'),
   })
   const activelyMonitoredLayer = useOGCLayer({
     collection: activelyMonitored.id,
     label: activelyMonitored.label,
-    color: '#2e7d32',
+    color: MAP_LAYER_COLORS.activelyMonitored,
     enabled:
       activelyMonitored.exists && isLayerActive('ogc-actively-monitored'),
   })
   const springsLayer = useOGCLayer({
     collection: springs.id,
     label: springs.label,
-    color: '#00acc1',
+    color: MAP_LAYER_COLORS.springs,
     enabled: springs.exists && isLayerActive('ogc-springs'),
   })
 
@@ -219,7 +231,7 @@ export const useThingLayers = (
   const waterElevationPointsLayer = useOGCLayer({
     collection: waterElevationPoints.id,
     label: `${waterElevationPoints.label} (ft)`,
-    color: '#1976d2',
+    color: MAP_LAYER_COLORS.waterElevationPoints,
     legendScale: WATER_ELEVATION_LEGEND,
     colorMappingEnabled: isColorMappingEnabled('ogc-water-elevation-points'),
     enabled: waterElevationPoints.exists,
@@ -265,16 +277,6 @@ export const useThingLayers = (
     [waterElevationPointFeatures]
   )
 
-  const waterElevationColors = [
-    '#2c7bb6',
-    '#00a6ca',
-    '#00ccbc',
-    '#90eb9d',
-    '#ffff8c',
-    '#f29e2e',
-    '#d7191c',
-  ]
-
   const buildWaterElevationStepExpression = (propertyName: string): any =>
     waterElevationStats.hasSpread
       ? [
@@ -294,7 +296,7 @@ export const useThingLayers = (
           waterElevationStats.breaks[5],
           waterElevationColors[6],
         ]
-      : '#1976d2'
+      : MAP_LAYER_COLORS.waterElevationPoints
 
   const waterElevationColorExpression = useMemo(
     () => buildWaterElevationStepExpression('water_elevation_ft'),
@@ -338,7 +340,7 @@ export const useThingLayers = (
           ...(waterElevationPointsLayer.layerProps?.paint || {}),
           'circle-color': isWaterElevationPointsColorMapped
             ? waterElevationColorExpression
-            : '#1976d2',
+            : MAP_LAYER_COLORS.waterElevationPoints,
         },
       },
     }
@@ -528,7 +530,7 @@ export const useThingLayers = (
       legendScale: isWaterElevationDerivedContoursColorMapped
         ? waterElevationLegendScale
         : undefined,
-      legendColor: '#0d47a1',
+      legendColor: MAP_LAYER_COLORS.waterElevationContours,
       colorMappingAvailable: true,
       colorMappingEnabled: isWaterElevationDerivedContoursColorMapped,
       layerProps: {
@@ -537,7 +539,7 @@ export const useThingLayers = (
         paint: {
           'line-color': isWaterElevationDerivedContoursColorMapped
             ? waterElevationColorExpression
-            : '#0d47a1',
+            : MAP_LAYER_COLORS.waterElevationContours,
           'line-width': 1.2,
           'line-opacity': 0.85,
         },
@@ -583,7 +585,7 @@ export const useThingLayers = (
   const surfaceWaterDiversionsLayer = useOGCLayer({
     collection: surfaceWaterDiversions.id,
     label: surfaceWaterDiversions.label,
-    color: '#ef6c00',
+    color: MAP_LAYER_COLORS.surfaceWaterDiversions,
     enabled:
       surfaceWaterDiversions.exists &&
       isLayerActive('ogc-surface-water-diversions'),
@@ -591,13 +593,13 @@ export const useThingLayers = (
   const ephemeralStreamsLayer = useOGCLayer({
     collection: ephemeralStreams.id,
     label: ephemeralStreams.label,
-    color: '#8e24aa',
+    color: MAP_LAYER_COLORS.ephemeralStreams,
     enabled: ephemeralStreams.exists && isLayerActive('ogc-ephemeral-streams'),
   })
   const lakesPondsReservoirsLayer = useOGCLayer({
     collection: lakesPondsReservoirs.id,
     label: lakesPondsReservoirs.label,
-    color: '#3949ab',
+    color: MAP_LAYER_COLORS.lakesPondsReservoirs,
     enabled:
       lakesPondsReservoirs.exists &&
       isLayerActive('ogc-lakes-ponds-reservoirs'),
@@ -605,7 +607,7 @@ export const useThingLayers = (
   const meteorologicalStationsLayer = useOGCLayer({
     collection: meteorologicalStations.id,
     label: meteorologicalStations.label,
-    color: '#546e7a',
+    color: MAP_LAYER_COLORS.meteorologicalStations,
     enabled:
       meteorologicalStations.exists &&
       isLayerActive('ogc-meteorological-stations'),
@@ -613,38 +615,38 @@ export const useThingLayers = (
   const projectAreasLayer = useOGCLayer({
     collection: projectAreas.id,
     label: 'AMP Project Areas',
-    color: '#7c3aed',
+    color: MAP_LAYER_COLORS.projectAreas,
     layerType: 'fill',
     paint: {
       'fill-opacity': 0.16,
-      'fill-outline-color': '#5b21b6',
+      'fill-outline-color': VIRIDIS_LOW,
     },
     enabled: projectAreas.exists && isLayerActive('ogc-project-areas'),
   })
   const outfallsReturnFlowLayer = useOGCLayer({
     collection: outfallsReturnFlow.id,
     label: outfallsReturnFlow.label,
-    color: '#5d4037',
+    color: MAP_LAYER_COLORS.outfallsReturnFlow,
     enabled:
       outfallsReturnFlow.exists && isLayerActive('ogc-outfalls-return-flow'),
   })
   const perennialStreamsLayer = useOGCLayer({
     collection: perennialStreams.id,
     label: perennialStreams.label,
-    color: '#1e88e5',
+    color: MAP_LAYER_COLORS.perennialStreams,
     enabled: perennialStreams.exists && isLayerActive('ogc-perennial-streams'),
   })
   const rockSampleLocationsLayer = useOGCLayer({
     collection: rockSampleLocations.id,
     label: rockSampleLocations.label,
-    color: '#6d4c41',
+    color: MAP_LAYER_COLORS.rockSampleLocations,
     enabled:
       rockSampleLocations.exists && isLayerActive('ogc-rock-sample-locations'),
   })
   const soilGasSampleLocationsLayer = useOGCLayer({
     collection: soilGasSampleLocations.id,
     label: soilGasSampleLocations.label,
-    color: '#7cb342',
+    color: MAP_LAYER_COLORS.soilGasSampleLocations,
     enabled:
       soilGasSampleLocations.exists &&
       isLayerActive('ogc-soil-gas-sample-locations'),
