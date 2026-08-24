@@ -9,7 +9,6 @@ import {
 // Class colors for the binned scales below. Sampled straight off the viridis
 // ramp, lowest class first, so the legend gradient and the symbols agree.
 const TDS_CLASS_COLORS = viridisSamples(6)
-const DEPTH_CLASS_COLORS = viridisSamples(6)
 
 export type OgcCollectionRecord = {
   id?: string
