@@ -1,3 +1,16 @@
+import {
+  VIRIDIS_HIGH,
+  VIRIDIS_LOW,
+  VIRIDIS_MID,
+  viridisGradient,
+  viridisSamples,
+} from '@/constants/viridis'
+
+// Class colors for the binned scales below. Sampled straight off the viridis
+// ramp, lowest class first, so the legend gradient and the symbols agree.
+const TDS_CLASS_COLORS = viridisSamples(6)
+const DEPTH_CLASS_COLORS = viridisSamples(6)
+
 export type OgcCollectionRecord = {
   id?: string
   collection_id?: string
@@ -15,21 +28,19 @@ export type ResolvedCollection = {
 }
 
 export const TDS_LEGEND = {
-  gradient:
-    'linear-gradient(90deg, #2b83ba 0%, #4daf4a 20%, #a6d96a 40%, #fee08b 60%, #f46d43 80%, #d73027 100%)',
+  gradient: viridisGradient(),
   minLabel: '<300',
   maxLabel: '5000+ mg/L',
 }
 
 export const DEPTH_LEGEND = {
-  gradient:
-    'linear-gradient(90deg, #1a9850 0%, #66bd63 25%, #a6d96a 50%, #fee08b 70%, #f46d43 85%, #d73027 100%)',
+  gradient: viridisGradient(),
   minLabel: 'Shallow',
   maxLabel: 'Deep',
 }
 
 export const TREND_LEGEND = {
-  gradient: 'linear-gradient(90deg, #2c7bb6 0%, #bdbdbd 50%, #d73027 100%)',
+  gradient: viridisGradient(3),
   minLabel: 'Declining',
   maxLabel: 'Rising',
 }
@@ -103,12 +114,12 @@ export const latestTdsColorFromFeature = (feature: any): string | undefined => {
     ]
   )
   if (value === undefined) return undefined
-  if (value < 300) return '#2b83ba'
-  if (value < 500) return '#4daf4a'
-  if (value < 1000) return '#a6d96a'
-  if (value < 2000) return '#fee08b'
-  if (value < 5000) return '#f46d43'
-  return '#d73027'
+  if (value < 300) return TDS_CLASS_COLORS[0]
+  if (value < 500) return TDS_CLASS_COLORS[1]
+  if (value < 1000) return TDS_CLASS_COLORS[2]
+  if (value < 2000) return TDS_CLASS_COLORS[3]
+  if (value < 5000) return TDS_CLASS_COLORS[4]
+  return TDS_CLASS_COLORS[5]
 }
 
 export const averageTdsColorFromFeature = (feature: any): string | undefined => {
@@ -122,12 +133,12 @@ export const averageTdsColorFromFeature = (feature: any): string | undefined => 
     [/count/i, /num/i, /code/i, /id$/i, /unit/i, /rank/i, /class/i, /flag/i, /latest/i]
   )
   if (value === undefined) return undefined
-  if (value < 300) return '#2b83ba'
-  if (value < 500) return '#4daf4a'
-  if (value < 1000) return '#a6d96a'
-  if (value < 2000) return '#fee08b'
-  if (value < 5000) return '#f46d43'
-  return '#d73027'
+  if (value < 300) return TDS_CLASS_COLORS[0]
+  if (value < 500) return TDS_CLASS_COLORS[1]
+  if (value < 1000) return TDS_CLASS_COLORS[2]
+  if (value < 2000) return TDS_CLASS_COLORS[3]
+  if (value < 5000) return TDS_CLASS_COLORS[4]
+  return TDS_CLASS_COLORS[5]
 }
 
 export const latestDepthToWaterColorFromFeature = (
@@ -160,20 +171,20 @@ export const latestDepthToWaterColorFromFeature = (
     ]
   )
   if (value === undefined) return undefined
-  if (value < 25) return '#1a9850'
-  if (value < 75) return '#66bd63'
-  if (value < 150) return '#a6d96a'
-  if (value < 250) return '#fee08b'
-  if (value < 400) return '#f46d43'
-  return '#d73027'
+  if (value < 25) return DEPTH_CLASS_COLORS[0]
+  if (value < 75) return DEPTH_CLASS_COLORS[1]
+  if (value < 150) return DEPTH_CLASS_COLORS[2]
+  if (value < 250) return DEPTH_CLASS_COLORS[3]
+  if (value < 400) return DEPTH_CLASS_COLORS[4]
+  return DEPTH_CLASS_COLORS[5]
 }
 
 export const trendColorFromFeature = (feature: any): string | undefined => {
   const label = findStringProperty(feature, [/trend/i, /trend_class/i])?.toLowerCase()
   if (label) {
-    if (/(declin|decreas|fall|down)/.test(label)) return '#2c7bb6'
-    if (/(stable|flat|no change|neutral)/.test(label)) return '#bdbdbd'
-    if (/(ris|increas|up)/.test(label)) return '#d73027'
+    if (/(declin|decreas|fall|down)/.test(label)) return VIRIDIS_LOW
+    if (/(stable|flat|no change|neutral)/.test(label)) return VIRIDIS_MID
+    if (/(ris|increas|up)/.test(label)) return VIRIDIS_HIGH
   }
 
   const slope = findNumericPropertyWithPriority(
@@ -183,9 +194,9 @@ export const trendColorFromFeature = (feature: any): string | undefined => {
     [/count/i, /num/i, /code/i, /id$/i, /unit/i, /rank/i, /class/i, /flag/i]
   )
   if (slope === undefined) return undefined
-  if (slope < -0.2) return '#2c7bb6'
-  if (slope > 0.2) return '#d73027'
-  return '#bdbdbd'
+  if (slope < -0.2) return VIRIDIS_LOW
+  if (slope > 0.2) return VIRIDIS_HIGH
+  return VIRIDIS_MID
 }
 
 const normalize = (value?: string): string =>

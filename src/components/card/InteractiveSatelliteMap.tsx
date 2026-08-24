@@ -27,6 +27,12 @@ import { useGo } from '@refinedev/core'
 import { captureEvent } from '@/analytics/posthog'
 import { ColorModeContext } from '@/contexts'
 import { THEMED_BASEMAP_IDS } from '@/basemaps'
+import {
+  MAP_HIGHLIGHT_COLOR,
+  MAP_HIGHLIGHT_STROKE_COLOR,
+  MAP_LAYER_COLORS,
+  MAP_SYMBOL_STROKE_COLOR,
+} from '@/constants/mapColors'
 
 const MAP_HEIGHT = 450
 
@@ -316,8 +322,8 @@ const ProjectMapView = ({
                     type="circle"
                     paint={{
                       'circle-radius': 6,
-                      'circle-color': '#2b7dc0',
-                      'circle-stroke-color': '#ffffff',
+                      'circle-color': MAP_LAYER_COLORS.waterWells,
+                      'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
                       'circle-stroke-width': 2,
                     }}
                   />
@@ -342,7 +348,7 @@ const WellMapView = ({ well }: { well: IWell }) => {
   const waterWellsLayer = useLayer({
     thing_type: 'water well',
     label: 'Water Wells',
-    color: '#2b7dc0',
+    color: MAP_LAYER_COLORS.waterWells,
     enabled: loadNearbyWells,
   })
   const [popupContent, setPopupContent] = useState<any>(null)
@@ -544,8 +550,8 @@ const WellMapView = ({ well }: { well: IWell }) => {
                   type="circle"
                   paint={{
                     'circle-radius': 6,
-                    'circle-color': '#ff4d4d',
-                    'circle-stroke-color': '#ffffff',
+                    'circle-color': MAP_HIGHLIGHT_COLOR,
+                    'circle-stroke-color': MAP_HIGHLIGHT_STROKE_COLOR,
                     'circle-stroke-width': 2,
                   }}
                 />

@@ -41,6 +41,13 @@ import { MapPopup } from '@/components'
 import { useMeasuredHeight, useThingLayers, useViewportBbox } from '@/hooks'
 import { DEFAULT_BASEMAP_ID } from '@/basemaps'
 import {
+  MAP_HIGHLIGHT_COLOR,
+  MAP_HIGHLIGHT_HALO_COLOR,
+  MAP_HIGHLIGHT_STROKE_COLOR,
+  MAP_NO_DATA_COLOR,
+  MAP_SYMBOL_STROKE_COLOR,
+} from '@/constants/mapColors'
+import {
   buildLayerCsv,
   filterLayerFeaturesBySelection,
   sanitizeLayerExportFilename,
@@ -997,9 +1004,9 @@ export const MapView: React.FC = () => {
                     type="circle"
                     paint={{
                       'circle-radius': 10,
-                      'circle-color': '#ffffff',
+                      'circle-color': MAP_HIGHLIGHT_HALO_COLOR,
                       'circle-opacity': 0.22,
-                      'circle-stroke-color': '#0f172a',
+                      'circle-stroke-color': MAP_HIGHLIGHT_STROKE_COLOR,
                       'circle-stroke-width': 2.4,
                     }}
                   />
@@ -1008,8 +1015,8 @@ export const MapView: React.FC = () => {
                     type="circle"
                     paint={{
                       'circle-radius': 6,
-                      'circle-color': '#2563eb',
-                      'circle-stroke-color': '#ffffff',
+                      'circle-color': MAP_HIGHLIGHT_COLOR,
+                      'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
                       'circle-stroke-width': 1.8,
                     }}
                   />
@@ -1301,7 +1308,7 @@ export const MapView: React.FC = () => {
                               layerDef.legendColor ||
                               (typeof paintColor === 'string'
                                 ? paintColor
-                                : '#9e9e9e')
+                                : MAP_NO_DATA_COLOR)
                             const description =
                               typeof layerDef.description === 'string'
                                 ? layerDef.description.trim()

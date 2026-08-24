@@ -4,6 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { captureEvent } from '@/analytics/posthog'
 import { withRetry } from '@/utils/httpRetry'
 import { DEFAULT_TEXT_FONT } from '@/basemaps'
+import {
+  MAP_DEFAULT_LAYER_COLOR,
+  MAP_SYMBOL_STROKE_COLOR,
+} from '@/constants/mapColors'
 
 // ---------------------------------------------------------------------------
 // useOGCLayer
@@ -233,7 +237,7 @@ export const useOGCLayer = ({
   collection,
   label,
   providerName = 'ogcapi',
-  color = '#9cd0ab',
+  color = MAP_DEFAULT_LAYER_COLOR,
   colorAccessor,
   textAccessor,
   textColor = '#111111',
@@ -427,7 +431,7 @@ export const useOGCLayer = ({
     circle: {
       'circle-radius': 3,
       'circle-color': effectiveColor,
-      'circle-stroke-color': '#ffffff',
+      'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
       'circle-stroke-width': 1,
     },
     line: {
