@@ -218,6 +218,7 @@ export const getAccessCapabilities = (groups: string[] | null | undefined) => {
     canViewAmp,
     canEditAmp,
     canManageAmp,
+    canManageAssets: canEditAmp,
     canViewConfidential,
     canViewUnfinished,
     canViewGeothermal,
