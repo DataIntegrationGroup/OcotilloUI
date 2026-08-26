@@ -1,0 +1,123 @@
+# Preview teardown (BDMS-1173). Three ways in:
+#
+#   1. Manual  -- gh workflow run CD_preview_teardown.yml -f branch=my-branch
+#   2. Branch deletion -- deleting a branch removes its preview
+#   3. Nightly sweep -- removes previews past their TTL, and previews whose
+#      branch no longer exists
+#
+# PR-close teardown lives in CD_preview.yml, which calls the same reusable.
+#
+# The "delete" and "schedule" triggers only fire from the repository's default
+# branch, so those two paths do nothing until this file is merged there.
+name: Preview teardown
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch whose preview should be torn down
+        type: string
+        required: true
+      delete_images:
+        description: Also delete the branch's images from Artifact Registry
+        type: boolean
+        default: true
+  delete:
+  schedule:
+    # 09:00 UTC == 02:00 or 03:00 Mountain, depending on DST.
+    - cron: '0 9 * * *'
+
+jobs:
+  manual:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/_preview_teardown.yml
+    secrets: inherit
+    with:
+      branch: ${{ inputs.branch }}
+      delete_images: ${{ inputs.delete_images }}
+
+  on-branch-delete:
+    if: github.event_name == 'delete' && github.event.ref_type == 'branch'
+    uses: ./.github/workflows/_preview_teardown.yml
+    secrets: inherit
+    with:
+      branch: ${{ github.event.ref }}
+
+  discover-expired:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    environment: staging
+    outputs:
+      branches: ${{ steps.scan.outputs.branches }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Find previews to sweep
+        id: scan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GCP_PROJECT_ID: waterdatainitiative-271000
+          GCP_REGION: us-central1
+        run: |
+          set -euo pipefail
+
+          gcloud config set project "$GCP_PROJECT_ID"
+
+          # Live branches, sanitized the same way _preview_deploy.yml names
+          # services, so an orphan check can compare label to label.
+          gh api --paginate \
+            "repos/${{ github.repository }}/branches?per_page=100" \
+            --jq '.[].name' \
+            | sed 's/[^a-zA-Z0-9-]/-/g' \
+            | tr '[:upper:]' '[:lower:]' \
+            | cut -c1-40 \
+            | sort -u > /tmp/live-branches.txt
+
+          gcloud run services list \
+            --platform managed \
+            --region "$GCP_REGION" \
+            --filter 'metadata.labels.preview=true AND metadata.labels.preview-role=frontend' \
+            --format 'value(metadata.labels.preview-branch,metadata.labels.preview-expires)' \
+            > /tmp/previews.txt
+
+          now=$(date -u +%s)
+          : > /tmp/doomed.txt
+
+          while IFS=$'\t' read -r branch expires; do
+            [ -n "$branch" ] || continue
+
+            # preview-expires=0 means "no TTL" -- PR previews set it so the
+            # sweep cannot delete a preview an open PR still points at.
+            reason=""
+            if [ -n "$expires" ] && [ "$expires" != "0" ] && [ "$expires" -lt "$now" ] 2>/dev/null; then
+              reason="TTL expired"
+            elif ! grep -qxF "$branch" /tmp/live-branches.txt; then
+              reason="branch no longer exists"
+            fi
+
+            if [ -n "$reason" ]; then
+              echo "sweep $branch ($reason)"
+              echo "$branch" >> /tmp/doomed.txt
+            else
+              echo "keep  $branch"
+            fi
+          done < /tmp/previews.txt
+
+          BRANCHES=$(jq -R -s -c 'split("\n") | map(select(length > 0))' < /tmp/doomed.txt)
+          echo "branches=$BRANCHES" >> "$GITHUB_OUTPUT"
+          echo "Sweeping: $BRANCHES"
+
+  sweep:
+    needs: discover-expired
+    if: needs.discover-expired.outputs.branches != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJSON(needs.discover-expired.outputs.branches) }}
+    uses: ./.github/workflows/_preview_teardown.yml
+    secrets: inherit
+    with:
+      branch: ${{ matrix.branch }}

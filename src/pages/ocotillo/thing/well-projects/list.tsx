@@ -61,7 +61,8 @@ export const WellProjectList: React.FC = () => {
         type: 'string',
         minWidth: 220,
         flex: 1.5,
-        valueGetter: (_: unknown, row: IGroup) => row.description?.trim() || '—',
+        valueGetter: (_: unknown, row: IGroup) =>
+          row.description?.trim() || '—',
       },
       releaseStatusColumnDef<IGroup>(),
       {
@@ -118,6 +119,7 @@ export const WellProjectList: React.FC = () => {
       hideBreadcrumb
       hideHeaderButtons
       getRowHref={(params) => `/ocotillo/well/projects/show/${params.id}`}
+      accessResource="ocotillo.thing-well-projects"
       onRowClick={(params) => {
         captureEvent('projects_row_clicked', {
           project_id: params.id,

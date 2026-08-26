@@ -1,4 +1,4 @@
-import { MapRef } from 'react-map-gl'
+import { MapRef } from 'react-map-gl/maplibre'
 
 export const updateMapView = (
   map: MapRef | null,

@@ -1,13 +1,77 @@
 import type { DataProvider } from "@refinedev/core";
 import { settings } from "@/settings";
+import { getAccessToken } from "@/providers/authentik-provider";
 
 export const fetcher = async (url: string, options?: RequestInit) => {
-  return fetch(`${settings.nmbgmr_geothermal_api_url}/${url}`, {
-    ...options,
-    headers: {
-      ...options?.headers,
-    },
+  const doFetch = (token?: string | null) =>
+    fetch(`${settings.nmbgmr_geothermal_api_url}/${url}`, {
+      ...options,
+      headers: {
+        ...options?.headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+  let response = await doFetch(await getAccessToken());
+
+  // On 401, refresh the token once and retry (mirrors the ocotillo provider).
+  if (response.status === 401) {
+    const token = await getAccessToken({ refresh: true });
+    if (token) response = await doFetch(token);
+  }
+
+  return response;
+};
+
+/**
+ * Map a FastAPI/Pydantic validation payload (`{ detail: [{ loc, msg }] }`) to
+ * Refine's `fieldErrors` shape (`{ field: [msg] }`). Mirrors the ocotillo
+ * provider so failed cells can surface inline. Strips the leading `body.`
+ * segment Pydantic prepends to request-body fields.
+ */
+const buildFieldErrors = (
+  detail: Array<{ loc?: (string | number)[]; msg?: string }>,
+): Record<string, string[]> => {
+  const refined: Record<string, string[]> = {};
+  detail.forEach((issue) => {
+    const path = (issue.loc ?? []).join(".");
+    const field = path.startsWith("body.") ? path.substring(5) : path;
+    if (!field) return;
+    (refined[field] ??= []).push(issue.msg ?? "Invalid value");
   });
+  return refined;
+};
+
+/**
+ * Throw on a non-2xx write response. For 422/409 with a Pydantic `detail`
+ * array, throw a transformed Error carrying `fieldErrors`/`errors` so callers
+ * can attach messages to specific cells; otherwise throw the raw Response.
+ */
+const throwOnWriteError = async (response: Response): Promise<void> => {
+  if (response.status >= 200 && response.status <= 299) return;
+
+  if (response.status === 422 || response.status === 409) {
+    let body: { detail?: unknown } | undefined;
+    try {
+      body = await response.json();
+    } catch {
+      throw response;
+    }
+    if (body?.detail && Array.isArray(body.detail)) {
+      const fieldErrors = buildFieldErrors(body.detail);
+      const error = new Error("Validation Error") as Error & {
+        status?: number;
+        errors?: Record<string, string[]>;
+        fieldErrors?: Record<string, string[]>;
+      };
+      error.status = response.status;
+      error.errors = fieldErrors;
+      error.fieldErrors = fieldErrors;
+      throw error;
+    }
+  }
+
+  throw response;
 };
 
 export const geothermalDataProvider: DataProvider = {
@@ -34,12 +98,36 @@ export const geothermalDataProvider: DataProvider = {
       });
     }
 
+    // Endpoint-specific query parameters (e.g. the well search term), mirroring
+    // the ocotillo provider. Set last so a caller can override a derived value,
+    // and skipping null/undefined so an unset option does not become "null".
+    if (meta?.params) {
+      Object.entries(meta.params as Record<string, unknown>).forEach(
+        ([key, value]) => {
+          if (value === undefined || value === null || value === "") return;
+          params.set(key, String(value));
+        },
+      );
+    }
+
     const response = await fetcher(`${resource}?${params.toString()}`);
     if (response.status < 200 || response.status > 299) throw response;
     const resp = await response.json();
 
-    const data = resp;
-    const total = data.length;
+    // The API may return either a paginated envelope
+    // ({ items, total, ... }) or a bare array (older geothermal endpoints).
+    let data;
+    let total;
+    if (resp && Array.isArray(resp.items)) {
+      data = resp.items;
+      total = typeof resp.total === "number" ? resp.total : resp.items.length;
+    } else if (Array.isArray(resp)) {
+      data = resp;
+      total = resp.length;
+    } else {
+      data = [];
+      total = 0;
+    }
 
     return {
       data,
@@ -78,7 +166,7 @@ export const geothermalDataProvider: DataProvider = {
       },
     });
 
-    if (response.status < 200 || response.status > 299) throw response;
+    await throwOnWriteError(response);
 
     const data = await response.json();
 
@@ -93,7 +181,7 @@ export const geothermalDataProvider: DataProvider = {
       },
     });
 
-    if (response.status < 200 || response.status > 299) throw response;
+    await throwOnWriteError(response);
 
     const data = await response.json();
 

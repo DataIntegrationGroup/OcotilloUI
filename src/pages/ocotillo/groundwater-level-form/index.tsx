@@ -15,8 +15,8 @@
 // import dayjs from 'dayjs'
 //
 // import { MapComponent } from '@/components'
-// import { Layer, Source } from 'react-map-gl'
-// import { MapRef } from 'react-map-gl'
+// import { Layer, Source } from 'react-map-gl/maplibre'
+// import { MapRef } from 'react-map-gl/maplibre'
 // import { Button, Stack } from '@mui/material'
 // import { MapOutlined } from '@mui/icons-material'
 // import { Hydrograph } from '@/components/Hydrographs/Hydrograph'

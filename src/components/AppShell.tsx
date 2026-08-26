@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { Outlet, Link, useLocation, useNavigate } from 'react-router'
+import { Outlet, Link, useLocation } from 'react-router'
 import {
   CanAccess,
   useCustomMutation,
@@ -50,7 +50,6 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  FlaskConical,
   Lock,
   LogOut,
   Menu,
@@ -63,7 +62,7 @@ import {
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
-import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, SHOW_EXAMPLE_NAV, type NavItem } from '@/config/navigation'
+import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
 import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { SupportPanelContext } from '@/components/SupportPanelContext'
@@ -159,6 +158,7 @@ function ExpandButton() {
 const FOOTER_LINKS = [
   { label: 'About', href: '/about' },
   { label: 'Connect Desktop GIS', href: '/ogcapi' },
+  { label: 'Analytics Disclosure', href: '/analytics-disclosure' },
   { label: 'Report a Bug', href: '/report-a-bug' },
 ] as const
 
@@ -424,7 +424,7 @@ function AppSidebar() {
 
         <SidebarSeparator className="my-1 bg-border" />
 
-        {/* Resource navigation + temporary Example section — all in one group */}
+        {/* Resource navigation */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -436,8 +436,6 @@ function AppSidebar() {
                   canSeeNavItem={canSeeNavItem}
                 />
               ))}
-              {/* Example demos — toggle SHOW_EXAMPLE_NAV in config/navigation.ts */}
-              {SHOW_EXAMPLE_NAV ? <ExampleNavItem /> : null}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -465,55 +463,6 @@ function AppSidebar() {
         <SupportPanelTrigger collapsed={collapsed} />
       </SidebarFooter>
     </Sidebar>
-  )
-}
-
-function ExampleNavItem() {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [open, setOpen] = useState(location.pathname.startsWith('/example'))
-
-  useEffect(() => {
-    if (!location.pathname.startsWith('/example')) setOpen(false)
-  }, [location.pathname])
-
-  const handleClick = () => {
-    setOpen(true)
-    navigate('/example/typography')
-  }
-
-  return (
-    <Collapsible open={open} onOpenChange={setOpen} className="group/example">
-      <SidebarMenuItem>
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Example" onClick={handleClick}>
-            <FlaskConical />
-            <span>Example</span>
-            <ChevronRight className="ml-auto size-3.5 transition-transform duration-100 group-data-[state=open]/example:rotate-90" />
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton
-                asChild
-                isActive={location.pathname === '/example/typography'}
-              >
-                <Link to="/example/typography">Typography</Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton
-                asChild
-                isActive={location.pathname === '/example/data-grid'}
-              >
-                <Link to="/example/data-grid">Data Grid</Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </SidebarMenuItem>
-    </Collapsible>
   )
 }
 
@@ -775,7 +724,8 @@ function SupportPanel() {
                   </div>
                 </button>
               </div>
-              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #38bdf8, #0ea5e9, #6366f1)' }}>
+              {/* Brand-blue gradient border: brand-300 → brand-500 → brand-700 */}
+              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #83c6ee, #1e88c4, #0f5786)' }}>
                 <button
                   onClick={() => setView('feature')}
                   className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
@@ -1275,7 +1225,7 @@ function SidebarAutoCollapse(): null {
       autoCollapsed.current = false
       setOpen(true)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: setOpen is stable from sidebar context.
   }, [location.pathname])
 
   return null

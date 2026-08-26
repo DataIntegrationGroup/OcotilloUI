@@ -1,7 +1,6 @@
 export * from './ControlledCheckbox'
 export * from './ControlledDateField'
 export * from './ControlledEmailField'
-export * from './ControlledMapboxAddressAutocomplete'
 export * from './ControlledNumberField'
 export * from './ControlledPhoneField'
 export * from './ControlledRadio'

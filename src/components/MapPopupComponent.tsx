@@ -120,20 +120,22 @@ const getFeatureType = (properties: Record<string, unknown>): string =>
 
 const getLayerLabel = (layerKey: string): string => {
   const labelByLayer: Record<string, string> = {
-    'ogc-latest-depth-to-water': 'Latest Depth to Water',
-    'ogc-average-tds': 'Average TDS',
     'ogc-latest-tds': 'Latest TDS',
     'ogc-major-chemistry': 'Major Chemistry',
     'ogc-minor-chemistry': 'Minor Chemistry',
     'ogc-depth-to-water-trend': 'Depth to Water Trend',
     'ogc-water-elevation-points': 'Water Elevation',
-    'ogc-water-elevation-contours': 'Water Elevation Contours',
     'ogc-water-well-summary': 'Water Well Summary',
     'ogc-water-wells': 'Water Wells',
     'ogc-actively-monitored': 'Actively Monitored',
     'ogc-springs': 'Springs',
     'ogc-project-areas': 'AMP Project Areas',
-    'ogc-locations': 'Locations',
+    'ogc-geothermal-wells-bht': 'Geothermal Wells (BHT)',
+    'ogc-geothermal-wells-temperature-profile': 'Geothermal Wells (Temp-Depth)',
+    'ogc-bht-measurements': 'BHT Measurements',
+    'ogc-temp-depth-measurements': 'Temperature-Depth Measurements',
+    'ogc-heat-flow': 'Heat Flow',
+    'ogc-dst': 'Drill Stem Tests',
   }
 
   return labelByLayer[layerKey] || titleCase(layerKey.replace(/^ogc-/, ''))
@@ -149,8 +151,6 @@ const isTypeImplicitFromLayer = (
     [
       'ogc-water-wells',
       'ogc-water-well-summary',
-      'ogc-latest-depth-to-water',
-      'ogc-average-tds',
       'ogc-latest-tds',
       'ogc-major-chemistry',
       'ogc-minor-chemistry',
@@ -203,38 +203,6 @@ const buildFeatureRows = (
   const releaseStatus = getString(properties, 'release_status')
 
   const layerSpecificRowsByLayer: Record<string, PopupRow[]> = {
-    'ogc-latest-depth-to-water': [
-      makeRow(
-        'Latest Depth to Water',
-        formatNumberWithUnit(getNumber(properties, 'depth_to_water_bgs'), 'ft bgs')
-      ),
-      makeRow('Observation Date', formatDate(properties.observation_datetime)),
-      makeRow(
-        'Reference Elevation',
-        formatNumberWithUnit(getNumber(properties, 'depth_to_water_reference'), 'ft')
-      ),
-      makeRow(
-        'Measuring Point Height',
-        formatNumberWithUnit(getNumber(properties, 'measuring_point_height'), 'ft')
-      ),
-    ],
-    'ogc-average-tds': [
-      makeRow(
-        'Average TDS',
-        formatNumberWithUnit(getNumber(properties, 'avg_tds_value'), 'mg/L')
-      ),
-      makeRow(
-        'Records Used',
-        getNumber(properties, 'tds_observation_count')?.toString()
-      ),
-      makeRow(
-        'Date Range',
-        formatDateRange(
-          getString(properties, 'first_tds_observation_date'),
-          getString(properties, 'last_tds_observation_date')
-        )
-      ),
-    ],
     'ogc-latest-tds': [
       makeRow(
         'Latest TDS',
@@ -464,17 +432,6 @@ const buildFeatureRows = (
       ),
       makeRow('Release Status', releaseStatus && titleCase(releaseStatus)),
       makeRow('Formation Zone', getString(properties, 'nma_formation_zone')),
-    ],
-    'ogc-locations': [
-      makeRow(
-        'Elevation',
-        formatNumberWithUnit(getNumber(properties, 'elevation'), 'ft')
-      ),
-      makeRow('County', getString(properties, 'county')),
-      makeRow('State', getString(properties, 'state')),
-      makeRow('Quad', getString(properties, 'quad_name')),
-      makeRow('Release Status', releaseStatus && titleCase(releaseStatus)),
-      makeRow('Description', getString(properties, 'description')),
     ],
   }
 

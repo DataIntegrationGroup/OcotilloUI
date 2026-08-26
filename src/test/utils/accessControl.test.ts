@@ -35,6 +35,8 @@ const routableResourceNames = routableResources
   .map((resource) => resource.name)
   .sort()
 const expectedRegisteredRoutableResources = [
+  'geothermal.dashboard',
+  'geothermal.geothermal_wells',
   'ocotillo.asset-unassociated',
   'ocotillo.collections',
   'ocotillo.contact',
@@ -47,6 +49,13 @@ const expectedRegisteredRoutableResources = [
   'ocotillo.thing-well-pdf-preview',
   'ocotillo.thing-well-projects',
 ].sort()
+
+// Geothermal resources are a separate portal — accessible to Geothermal roles
+// (list/show), not AMP roles.
+const GEOTHERMAL_ROUTABLE = [
+  'geothermal.dashboard',
+  'geothermal.geothermal_wells',
+]
 
 const expectedAccessByScenario: Scenario[] = [
   {
@@ -74,6 +83,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.map',
       'ocotillo.thing-well',
       'ocotillo.contact',
+      'ocotillo.hydrograph-correction',
       'ocotillo.asset-unassociated',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
@@ -82,22 +92,29 @@ const expectedAccessByScenario: Scenario[] = [
   {
     name: 'AMP.Admin',
     groups: ['AMP.Admin'],
-    allowedResources: routableResources.map((resource) => resource.name),
+    // AMP.Admin owns the water portal, not geothermal.
+    allowedResources: routableResources
+      .map((resource) => resource.name)
+      .filter((name) => !name.startsWith('geothermal.')),
   },
   {
     name: 'Geothermal.Viewer',
     groups: ['Geothermal.Viewer'],
-    allowedResources: [],
+    allowedResources: [...GEOTHERMAL_ROUTABLE],
   },
   {
     name: 'Geothermal.Editor',
     groups: ['Geothermal.Editor'],
-    allowedResources: [],
+    allowedResources: [...GEOTHERMAL_ROUTABLE],
   },
   {
     name: 'Geothermal.Admin',
     groups: ['Geothermal.Admin'],
-    allowedResources: ['water.locations', 'ocotillo.location'],
+    allowedResources: [
+      'water.locations',
+      'ocotillo.location',
+      ...GEOTHERMAL_ROUTABLE,
+    ],
   },
   {
     name: 'AMP.Viewer + Geothermal.Editor',
@@ -109,6 +126,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
+      ...GEOTHERMAL_ROUTABLE,
     ],
   },
 ]
@@ -156,20 +174,6 @@ const specialResourceExpectations: Array<{
     expected: true,
   },
   {
-    name: 'AMP viewer cannot access sandbox special resource',
-    groups: ['AMP.Viewer'],
-    resource: 'Sandbox',
-    action: 'list',
-    expected: false,
-  },
-  {
-    name: 'AMP admin can access sandbox special resource',
-    groups: ['AMP.Admin'],
-    resource: 'Sandbox',
-    action: 'show',
-    expected: true,
-  },
-  {
     name: 'AMP viewer cannot access ocotillo hydrograph correction',
     groups: ['AMP.Viewer'],
     resource: 'ocotillo.hydrograph-correction',
@@ -177,11 +181,27 @@ const specialResourceExpectations: Array<{
     expected: false,
   },
   {
-    name: 'AMP editor cannot access ocotillo hydrograph correction',
+    name: 'AMP editor can access ocotillo hydrograph correction',
     groups: ['AMP.Editor'],
     resource: 'ocotillo.hydrograph-correction',
     action: 'show',
+    expected: true,
+  },
+  {
+    // Correcting and publishing is an editor task; deleting stored
+    // transducer observations is not.
+    name: 'AMP editor cannot delete ocotillo hydrograph stored data',
+    groups: ['AMP.Editor'],
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'delete',
     expected: false,
+  },
+  {
+    name: 'AMP admin can delete ocotillo hydrograph stored data',
+    groups: ['AMP.Admin'],
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'delete',
+    expected: true,
   },
   {
     name: 'AMP admin can access ocotillo hydrograph correction',
@@ -424,14 +444,13 @@ describe('accessControl special resources and write gates', () => {
 describe('isResourceListAdminOnly', () => {
   it('returns true for list resources restricted to admin roles', () => {
     expect(isResourceListAdminOnly('ocotillo.location')).toBe(true)
-    expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(true)
     expect(isResourceListAdminOnly('ocotillo.lexicon')).toBe(true)
-    expect(isResourceListAdminOnly('Sandbox')).toBe(true)
     expect(isResourceListAdminOnly('water.locations')).toBe(true)
   })
 
   it('returns false for non-admin list resources and unknown resources', () => {
     expect(isResourceListAdminOnly('ocotillo.thing-well')).toBe(false)
+    expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(false)
     expect(isResourceListAdminOnly('ocotillo.asset-unassociated')).toBe(false)
     expect(isResourceListAdminOnly('unknown.resource')).toBe(false)
   })

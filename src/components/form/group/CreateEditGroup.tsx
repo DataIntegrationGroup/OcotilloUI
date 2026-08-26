@@ -20,7 +20,7 @@ import Grid from '@mui/material/Grid2'
 import wellknown from 'wellknown'
 import { useLexicon } from '@/hooks'
 import { ControlledSelectField } from '@/components/Controlled/ControlledSelectField'
-import { MapRef } from 'react-map-gl'
+import { MapRef } from 'react-map-gl/maplibre'
 
 type SelectionPolygon = { geometry: GeoJSON.Geometry }
 

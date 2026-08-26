@@ -33,8 +33,13 @@ mise.toml
 # But keep .env.example and .env.*.example
 !.env.example
 !.env.*.example
+mise.toml
 
 cypress/e2e/1-getting-started/*
 cypress/e2e/2-advanced-examples/*
 cypress/screenshots/*
 cypress/downloads/*
+
+# Claude Code: personal/ephemeral files (shared config like launch.json stays tracked)
+.claude/settings.local.json
+.claude/worktrees/

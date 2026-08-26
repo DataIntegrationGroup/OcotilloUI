@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, Paper, Typography } from '@mui/material'
 import { Map } from '@mui/icons-material'
-import { Layer, MapRef, Source } from 'react-map-gl'
+import { Layer, MapRef, Source } from 'react-map-gl/maplibre'
 import { Link } from '@refinedev/core'
 import type { IThing } from '@/interfaces/ocotillo'
 import { MapComponent } from '@/components'
+import {
+  MAP_LAYER_COLORS,
+  MAP_SYMBOL_STROKE_COLOR,
+} from '@/constants/mapColors'
 
 type AssociatedSitesMapCardProps = {
   things?: IThing[] | null
@@ -195,8 +199,8 @@ export const AssociatedSitesMapCard = ({ things }: AssociatedSitesMapCardProps) 
                   type="circle"
                   paint={{
                     'circle-radius': 6,
-                    'circle-color': '#2b7dc0',
-                    'circle-stroke-color': '#ffffff',
+                    'circle-color': MAP_LAYER_COLORS.waterWells,
+                    'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
                     'circle-stroke-width': 2,
                   }}
                 />

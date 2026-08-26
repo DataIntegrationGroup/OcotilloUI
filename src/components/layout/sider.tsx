@@ -79,9 +79,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
       const isAdminOnly = isResourceListAdminOnly(resourceName)
 
       const icon = deprecatedIcon ?? meta?.icon
-      const derivedLabel = meta?.label || deprecatedLabel || name
-      const label =
-        name === 'Sandbox' || name === 'sandbox' ? 'Sandbox' : derivedLabel
+      const label = meta?.label || deprecatedLabel || name
       const isSelected = key === selectedKey
       const isNested = meta?.parent !== undefined
       const nestedLevel = isNested ? meta?.nestedLevel || 1 : 0
@@ -417,6 +415,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutSiderProps> = ({
               {[
                 { to: '/about', label: 'About' },
                 { to: '/ogcapi', label: 'Connect Desktop GIS' },
+                { to: '/analytics-disclosure', label: 'Analytics Disclosure' },
                 { to: '/report-a-bug', label: 'Report a Bug' },
               ].map(({ to, label }) => (
                 <RouterLink key={to} to={to} style={{ textDecoration: 'none' }}>

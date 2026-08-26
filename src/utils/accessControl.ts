@@ -89,7 +89,13 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     delete: adminRoles,
     manage: adminRoles,
   },
-  'ocotillo.hydrograph-correction': { list: adminRoles, show: adminRoles },
+  // Editors correct and publish hydrographs. Deleting stored transducer
+  // observations is irreversible, so it stays a tier above page access.
+  'ocotillo.hydrograph-correction': {
+    list: editorRoles,
+    show: editorRoles,
+    delete: adminRoles,
+  },
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
   'ocotillo.thing-well-projects': { list: viewerRoles, show: viewerRoles },
@@ -109,7 +115,6 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     delete: adminRoles,
     manage: adminRoles,
   },
-  Sandbox: { list: adminRoles, show: adminRoles },
   geothermal: { list: geothermalViewerRoles, show: geothermalViewerRoles },
   'water.locations': {
     list: ['AMP.Admin', 'Geothermal.Admin'],
@@ -260,8 +265,7 @@ export const canAccessResource = ({
 
   if (
     resource === 'ocotillo.hydrograph-correction' ||
-    resource === 'ocotillo.thing-well-pdf-preview' ||
-    resource === 'Sandbox'
+    resource === 'ocotillo.thing-well-pdf-preview'
   ) {
     const policy = resourcePolicies[resource]
     return matchesPolicy(policy[action], capabilities.roles)

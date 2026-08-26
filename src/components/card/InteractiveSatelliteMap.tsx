@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import wellknown from 'wellknown'
 import { IWell } from '@/interfaces/ocotillo'
 import type { IGroup } from '@/interfaces/ocotillo/IGroup'
@@ -15,12 +15,49 @@ import {
   Typography,
 } from '@mui/material'
 import { ContentCopy, Directions, Map } from '@mui/icons-material'
-import { Layer, MapRef, Source } from 'react-map-gl'
-import { MapComponent, MapPopup, CardHeaderTitle } from '@/components'
+import { Layer, MapRef, Source } from 'react-map-gl/maplibre'
+import {
+  BasemapControl,
+  MapComponent,
+  MapPopup,
+  CardHeaderTitle,
+} from '@/components'
 import { useLayer } from '@/hooks'
 import { useGo } from '@refinedev/core'
+import { captureEvent } from '@/analytics/posthog'
+import { ColorModeContext } from '@/contexts'
+import { THEMED_BASEMAP_IDS } from '@/basemaps'
+import {
+  MAP_HIGHLIGHT_COLOR,
+  MAP_HIGHLIGHT_STROKE_COLOR,
+  MAP_LAYER_COLORS,
+  MAP_SYMBOL_STROKE_COLOR,
+} from '@/constants/mapColors'
 
 const MAP_HEIGHT = 450
+
+/**
+ * Basemap state for a map card. Seeded from the active color mode so the map
+ * matches the app theme on first paint; MapComponent keeps the two in sync
+ * until the user picks a basemap of their own.
+ */
+const useCardBasemap = (surface: 'well' | 'project') => {
+  const { mode } = useContext(ColorModeContext)
+  const [basemapId, setBasemapId] = useState<string>(
+    () => THEMED_BASEMAP_IDS[mode === 'dark' ? 'dark' : 'light']
+  )
+
+  const onBasemapChange = (nextBasemap: string) => {
+    setBasemapId(nextBasemap)
+  }
+
+  const onUserBasemapChange = (nextBasemap: string) => {
+    setBasemapId(nextBasemap)
+    captureEvent('map_basemap_changed', { basemap: nextBasemap, surface })
+  }
+
+  return { basemapId, onBasemapChange, onUserBasemapChange }
+}
 
 const MapCardHeader = ({ title }: { title: string }) => (
   <CardHeaderTitle icon={<Map color="primary" />} title={title} />
@@ -108,6 +145,8 @@ const ProjectMapView = ({
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
+  const { basemapId, onBasemapChange, onUserBasemapChange } =
+    useCardBasemap('project')
 
   const boundary = useMemo(() => parseProjectArea(projectArea), [projectArea])
   const wellsFeatureCollection = useMemo(
@@ -247,6 +286,8 @@ const ProjectMapView = ({
               onMouseMoveCallback={onMapMouseMove}
               setPopupContent={setPopupContent}
               popupContent={popupContent}
+              basemapId={basemapId}
+              onBasemapChange={onBasemapChange}
               style={{ flex: 1, width: '100%', height: '100%' }}
               containerRef={containerRef}
             >
@@ -281,14 +322,18 @@ const ProjectMapView = ({
                     type="circle"
                     paint={{
                       'circle-radius': 6,
-                      'circle-color': '#2b7dc0',
-                      'circle-stroke-color': '#ffffff',
+                      'circle-color': MAP_LAYER_COLORS.waterWells,
+                      'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
                       'circle-stroke-width': 2,
                     }}
                   />
                 </Source>
               ) : null}
             </MapComponent>
+            <BasemapControl
+              value={basemapId}
+              onChange={onUserBasemapChange}
+            />
           </Box>
         )}
       </CardContent>
@@ -303,11 +348,13 @@ const WellMapView = ({ well }: { well: IWell }) => {
   const waterWellsLayer = useLayer({
     thing_type: 'water well',
     label: 'Water Wells',
-    color: '#2b7dc0',
+    color: MAP_LAYER_COLORS.waterWells,
     enabled: loadNearbyWells,
   })
   const [popupContent, setPopupContent] = useState<any>(null)
   const go = useGo()
+  const { basemapId, onBasemapChange, onUserBasemapChange } =
+    useCardBasemap('well')
 
   const sourceProps = waterWellsLayer?.sourceProps
   const layerProps = waterWellsLayer?.layerProps
@@ -486,6 +533,8 @@ const WellMapView = ({ well }: { well: IWell }) => {
             onMouseMoveCallback={onMapMouseMove}
             setPopupContent={setPopupContent}
             popupContent={popupContent}
+            basemapId={basemapId}
+            onBasemapChange={onBasemapChange}
             style={{ flex: 1, width: '100%', height: '100%' }}
             containerRef={containerRef}
           >
@@ -501,14 +550,15 @@ const WellMapView = ({ well }: { well: IWell }) => {
                   type="circle"
                   paint={{
                     'circle-radius': 6,
-                    'circle-color': '#ff4d4d',
-                    'circle-stroke-color': '#ffffff',
+                    'circle-color': MAP_HIGHLIGHT_COLOR,
+                    'circle-stroke-color': MAP_HIGHLIGHT_STROKE_COLOR,
                     'circle-stroke-width': 2,
                   }}
                 />
               </Source>
             ) : null}
           </MapComponent>
+          <BasemapControl value={basemapId} onChange={onUserBasemapChange} />
         </Box>
         {locationNote ? (
           <>

@@ -1,4 +1,5 @@
 import { useOne } from '@refinedev/core'
+import { MAP_SYMBOL_STROKE_COLOR } from '@/constants/mapColors'
 
 export const useLayer = ({
   thing_type,
@@ -37,14 +38,16 @@ export const useLayer = ({
       : { type: 'FeatureCollection', features: [] }
 
   return {
-    sourceProps: enabled ? { type: 'geojson', data: safeGeoJSON } : null,
+    // `type` is asserted so it narrows to the "geojson" literal the Source
+    // component's discriminated union expects, rather than widening to string.
+    sourceProps: enabled ? { type: 'geojson' as const, data: safeGeoJSON } : null,
     layerProps: {
       label,
       type: 'circle' as const,
       paint: {
         'circle-radius': 3,
         'circle-color': color,
-        'circle-stroke-color': '#ffffff',
+        'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
         'circle-stroke-width': 1,
       },
     },

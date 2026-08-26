@@ -204,6 +204,7 @@ export const ContactList: React.FC = () => {
         onSelectionChange={(params) =>
           setSelectedContactId(params.length > 0 ? (params[0] as number) : null)
         }
+        accessResource="ocotillo.contact"
       />
       {selectedContactId && (
         <>

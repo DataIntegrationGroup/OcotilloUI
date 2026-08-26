@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router'
-import { useExport, useGo, useLink, useOne, type CrudFilter } from '@refinedev/core'
-import { useDataGrid } from '@refinedev/mui'
 import {
-  GridColDef,
-} from '@mui/x-data-grid'
-import { captureEvent, consumeWellsProjectFilterSource, setWellsProjectFilterSource } from '@/analytics/posthog'
-import { Download, FileText, Loader2, X } from 'lucide-react'
+  useExport,
+  useGo,
+  useLink,
+  useOne,
+  type CrudFilter,
+} from '@refinedev/core'
+import { useDataGrid } from '@refinedev/mui'
+import { GridColDef } from '@mui/x-data-grid'
+import {
+  captureEvent,
+  consumeWellsProjectFilterSource,
+  setWellsProjectFilterSource,
+} from '@/analytics/posthog'
+import { Download, ExternalLink, FileText, Loader2, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ListPage } from '@/components/ListPage'
@@ -15,6 +23,7 @@ import { ISpring, IWell } from '@/interfaces/ocotillo'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
 import { displayWellSiteName, formatAppDate, formatAppDateTime } from '@/utils'
 import { getContactDisplayName } from '@/utils/contactDisplayName'
+import { buildWellShowPath } from '@/utils/wellPublicUrls'
 import { WellListColumnLabels } from '@/well-list/wellListColumnLabels'
 
 export const SpringList: React.FC = () => {
@@ -84,9 +93,7 @@ export const WellList: React.FC = () => {
 
   const projectFilters = useMemo<CrudFilter[]>(
     () =>
-      projectId
-        ? [{ field: 'groups', operator: 'eq', value: projectId }]
-        : [],
+      projectId ? [{ field: 'groups', operator: 'eq', value: projectId }] : [],
     [projectId]
   )
 
@@ -179,6 +186,42 @@ export const WellList: React.FC = () => {
 
   const columns = useMemo<GridColDef<IWell>[]>(
     () => [
+      {
+        field: 'open_in_new_window',
+        headerName: '',
+        description:
+          'Open this well detail page in a new browser window so several wells can stay open at once.',
+        width: 52,
+        sortable: false,
+        filterable: false,
+        hideable: false,
+        disableColumnMenu: true,
+        disableExport: true,
+        align: 'center',
+        headerAlign: 'center',
+        // Drop the default cell padding so the link can cover the full cell.
+        cellClassName: 'relative !p-0',
+        // The link fills the whole cell so the entire column is the hit target,
+        // not just the icon glyph.
+        renderCell: (params) => (
+          <RouterLink
+            to={buildWellShowPath(params.row.id)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open ${params.row.name ?? 'well'} in a new window`}
+            title="Open in new window"
+            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.stopPropagation()
+              captureEvent('wells_opened_new_window', {
+                well_id: params.row.id,
+              })
+            }}
+            className="absolute inset-0 flex items-center justify-center text-muted-foreground hover:bg-primary/5 hover:text-primary"
+          >
+            <ExternalLink className="size-4" />
+          </RouterLink>
+        ),
+      },
       {
         field: 'name',
         headerName: WellListColumnLabels.name,
@@ -477,14 +520,16 @@ export const WellList: React.FC = () => {
       onRowClick={(params) =>
         captureEvent('wells_row_clicked', { well_id: params.id })
       }
+      accessResource="ocotillo.thing-well"
     >
       {projectId ? (
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <Badge variant="filter" className="h-7 gap-1 py-0 pl-2.5 pr-1" asChild>
-            <div
-              role="status"
-              className="inline-flex items-center"
-            >
+          <Badge
+            variant="filter"
+            className="h-7 gap-1 py-0 pl-2.5 pr-1"
+            asChild
+          >
+            <div role="status" className="inline-flex items-center">
               <span>Project: {projectName ?? projectId}</span>
               <Button
                 type="button"

@@ -332,8 +332,6 @@ const ocotillo = [
     list: '/ocotillo/hydrograph-correction',
     meta: {
       label: 'Hydrograph Correction',
-      parent: 'Sandbox',
-      nestedLevel: 1,
       icon: <Timeline />,
     },
   },
