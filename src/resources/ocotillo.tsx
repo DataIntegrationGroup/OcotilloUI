@@ -340,8 +340,6 @@ const ocotillo = [
     list: '/ocotillo/chemistry-report',
     meta: {
       label: 'Chemistry Reports',
-      parent: 'Sandbox',
-      nestedLevel: 1,
       icon: <ScienceOutlined />,
     },
   },
