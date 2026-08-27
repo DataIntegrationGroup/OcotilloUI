@@ -1,4 +1,7 @@
-import { Page, Text, View } from '@react-pdf/renderer'
+import { Image, Page, Text, View } from '@react-pdf/renderer'
+// Inlined as a data URI: react-pdf cannot read the GIF original, and a
+// bundled URL would make the render depend on a fetch completing first.
+import nmbgmrLogo from '@/img/NMBGMR.png?inline'
 import { useMemo } from 'react'
 import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
@@ -61,6 +64,12 @@ type ChemistryReportPdfProps = {
   waterLevels?: readonly WaterLevelReading[]
   year: number
   sections?: ChemistryReportSections
+  /**
+   * PNG data URI of a QR code for the well's Weaver page, built by
+   * buildWeaverQrDataUrl. Omitted when the well has no point id; the masthead
+   * simply prints without it.
+   */
+  qrCodeDataUrl?: string | null
 }
 
 const SectionHead = ({
@@ -370,9 +379,12 @@ const GLOSSARY_LEFT = [
   },
 ]
 
+/** Only meaningful alongside the sampling & QA notes, which is where the ion balance is reported. */
+const ION_BALANCE_TERM = 'Ion balance'
+
 const GLOSSARY_RIGHT = [
   {
-    term: 'Ion balance',
+    term: ION_BALANCE_TERM,
     body: 'a laboratory check that the positive and negative ions add up. A passing balance means the analysis is internally consistent.',
   },
   {
@@ -392,6 +404,7 @@ export const ChemistryReportPdf = ({
   waterLevels = [],
   year,
   sections = CHEMISTRY_REPORT_DEFAULT_SECTIONS,
+  qrCodeDataUrl,
 }: ChemistryReportPdfProps) => {
   const summary = useMemo(
     () => summarizeChemistry(observations),
@@ -429,6 +442,12 @@ export const ChemistryReportPdf = ({
       link.alternate_organization === 'NMOSE' && link.relation === 'OSEPOD'
   )?.alternate_id
 
+  // The ion balance glossary entry explains a table that only prints with the
+  // sampling notes, so it goes when that section does.
+  const glossaryRight = sections.samplingNotes
+    ? GLOSSARY_RIGHT
+    : GLOSSARY_RIGHT.filter((entry) => entry.term !== ION_BALANCE_TERM)
+
   const wellLabel = well?.name ?? 'Unknown well'
   const hasSamples = summary.rows.length > 0
   const ionBalance = summary.rows.filter(
@@ -442,16 +461,27 @@ export const ChemistryReportPdf = ({
     >
       <Page size="LETTER" style={s.page}>
         {/* ---- Masthead ---- */}
-        <Text style={s.org}>
-          New Mexico Bureau of Geology &amp; Mineral Resources · Aquifer Mapping
-          Program
-        </Text>
-        <Text style={s.reportTitle}>Annual Water Quality Report</Text>
-        <Text style={s.reportSubtitle}>
-          {`Reporting year ${year}  ·  Well `}
-          <Text style={s.reportSubtitleStrong}>{wellLabel}</Text>
-          {well?.site_name ? ` — ${well.site_name}` : ''}
-        </Text>
+        <View style={s.masthead}>
+          <Image style={s.mastheadLogo} src={nmbgmrLogo} />
+          <View style={s.mastheadText}>
+            <Text style={s.org}>
+              New Mexico Bureau of Geology &amp; Mineral Resources · Aquifer
+              Mapping Program
+            </Text>
+            <Text style={s.reportTitle}>Annual Water Quality Report</Text>
+            <Text style={s.reportSubtitle}>
+              {`Reporting year ${year}  ·  Well `}
+              <Text style={s.reportSubtitleStrong}>{wellLabel}</Text>
+              {well?.site_name ? ` — ${well.site_name}` : ''}
+            </Text>
+          </View>
+          {qrCodeDataUrl ? (
+            <View style={s.qrBlock}>
+              <Image style={s.qrImage} src={qrCodeDataUrl} />
+              <Text style={s.qrCaption}>Scan for this well's data</Text>
+            </View>
+          ) : null}
+        </View>
         <View style={s.ownerBlock}>
           <Text>
             {owner ? (
@@ -859,7 +889,7 @@ export const ChemistryReportPdf = ({
                     ))}
                   </View>
                   <View style={s.glossaryColumn}>
-                    {GLOSSARY_RIGHT.map((entry) => (
+                    {glossaryRight.map((entry) => (
                       <Text key={entry.term} style={s.glossaryEntry}>
                         <Text style={s.glossaryTerm}>{entry.term}</Text>
                         {` — ${entry.body}`}
