@@ -24,6 +24,7 @@ import {
   CHEMISTRY_REPORT_SECTION_LABELS,
   ChemistryReportPdf,
   type ChemistryReportSections,
+  buildWeaverQrDataUrl,
 } from '@/components/pdf/chemistry'
 import { useChemistryReportData, useDebounce } from '@/hooks'
 import type { IWell } from '@/interfaces/ocotillo'
@@ -92,6 +93,19 @@ export const ChemistryReportExport = () => {
 
   const toggleSection = (key: keyof ChemistryReportSections) =>
     setSections((previous) => ({ ...previous, [key]: !previous[key] }))
+
+  // The PDF renders synchronously but encoding the QR is async, so it is built
+  // here and handed down. Null until it resolves; the masthead copes.
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    buildWeaverQrDataUrl(well?.name).then((dataUrl) => {
+      if (!cancelled) setQrCodeDataUrl(dataUrl)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [well?.name])
 
   const isReady = Boolean(selectedWell) && !isLoading && !isError
 
@@ -219,6 +233,7 @@ export const ChemistryReportExport = () => {
               waterLevels={waterLevels}
               year={year}
               sections={sections}
+              qrCodeDataUrl={qrCodeDataUrl}
             />
           </PDFViewer>
         )}
