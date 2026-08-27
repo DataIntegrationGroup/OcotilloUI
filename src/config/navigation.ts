@@ -56,6 +56,16 @@ export type NavItem = {
 }
 
 /**
+ * Show nav entries for work in progress (currently the geothermal grids).
+ * Visible in local dev and on PR preview deploys (VITE_APP_ENV=preview) —
+ * a preview branch is where unfinished work gets exercised. Hidden on
+ * staging and production: staging is a pre-production release branch, not a
+ * place to try things out.
+ */
+export const SHOW_WIP_NAV =
+  import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview'
+
+/**
  * Top bar: views and tools.
  * Items without `roles` are visible to every authenticated user.
  */

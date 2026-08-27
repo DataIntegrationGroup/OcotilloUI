@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { Outlet, Link, useLocation } from 'react-router'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router'
 import {
   CanAccess,
   useCustomMutation,
@@ -50,6 +50,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Flame,
   Lock,
   LogOut,
   Menu,
@@ -62,7 +63,7 @@ import {
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
-import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
+import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, SHOW_WIP_NAV, type NavItem } from '@/config/navigation'
 import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { SupportPanelContext } from '@/components/SupportPanelContext'
@@ -424,7 +425,7 @@ function AppSidebar() {
 
         <SidebarSeparator className="my-1 bg-border" />
 
-        {/* Resource navigation */}
+        {/* Resource navigation + WIP geothermal section — all in one group */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -436,6 +437,8 @@ function AppSidebar() {
                   canSeeNavItem={canSeeNavItem}
                 />
               ))}
+              {/* WIP geothermal grids — toggle SHOW_WIP_NAV in config/navigation.ts */}
+              {SHOW_WIP_NAV ? <GeothermalNavItem /> : null}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -463,6 +466,81 @@ function AppSidebar() {
         <SupportPanelTrigger collapsed={collapsed} />
       </SidebarFooter>
     </Sidebar>
+  )
+}
+
+const GEOTHERMAL_RECORDS_GRID = '/geothermal/wells/records-grid'
+const GEOTHERMAL_INVENTORY = '/geothermal/wells/inventory'
+const GEOTHERMAL_TEMP_DEPTH = '/geothermal/wells/temp-depth'
+
+function isGeothermalPath(pathname: string): boolean {
+  return (
+    pathname.startsWith(GEOTHERMAL_RECORDS_GRID) ||
+    pathname.startsWith(GEOTHERMAL_INVENTORY) ||
+    pathname.startsWith(GEOTHERMAL_TEMP_DEPTH)
+  )
+}
+
+function GeothermalNavItem() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(isGeothermalPath(location.pathname))
+
+  useEffect(() => {
+    if (!isGeothermalPath(location.pathname)) setOpen(false)
+  }, [location.pathname])
+
+  const handleClick = () => {
+    setOpen(true)
+    navigate(GEOTHERMAL_RECORDS_GRID)
+  }
+
+  return (
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="group/geothermal"
+    >
+      <SidebarMenuItem>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton tooltip="Geothermal" onClick={handleClick}>
+            <Flame />
+            <span>Geothermal</span>
+            <ChevronRight className="ml-auto size-3.5 transition-transform duration-100 group-data-[state=open]/geothermal:rotate-90" />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname.startsWith(
+                  GEOTHERMAL_RECORDS_GRID
+                )}
+              >
+                <Link to={GEOTHERMAL_RECORDS_GRID}>Records</Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname.startsWith(GEOTHERMAL_INVENTORY)}
+              >
+                <Link to={GEOTHERMAL_INVENTORY}>Inventory</Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname.startsWith(GEOTHERMAL_TEMP_DEPTH)}
+              >
+                <Link to={GEOTHERMAL_TEMP_DEPTH}>Temp-Depth</Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
   )
 }
 

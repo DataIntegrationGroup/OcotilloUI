@@ -120,11 +120,11 @@ UI layering is documented in `FRONTEND.md` — read it before adding styles. Sho
 In code, that means WIP surfaces gate on dev or preview, never on staging:
 
 ```ts
-export const SHOW_WIP_FEATURES =
+export const SHOW_WIP_NAV =
   import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview'
 ```
 
-`recordsGridLogic.ts` gates exactly this way. Do not add `'staging'` to that check, and do not add a staging arm to a new one.
+`SHOW_WIP_NAV` in `src/config/navigation.ts` is the flag for WIP nav entries; `recordsGridLogic.ts` gates the same way. Do not add `'staging'` to either check.
 
 ### Where to branch from
 
