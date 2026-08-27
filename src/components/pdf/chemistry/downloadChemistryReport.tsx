@@ -9,6 +9,7 @@ import {
   ChemistryReportPdf,
   type ChemistryReportSections,
 } from './ChemistryReportPdf'
+import { buildWeaverQrDataUrl } from './wellQrCode'
 
 /**
  * Renders the report and hands it to the browser as a download. Returns the
@@ -30,6 +31,7 @@ export const downloadChemistryReport = async ({
   sections?: ChemistryReportSections
 }): Promise<string> => {
   const filename = buildChemistryReportFilename(well, year)
+  const qrCodeDataUrl = await buildWeaverQrDataUrl(well.name)
 
   const blob = await pdf(
     <ChemistryReportPdf
@@ -39,6 +41,7 @@ export const downloadChemistryReport = async ({
       waterLevels={waterLevels}
       year={year}
       sections={sections}
+      qrCodeDataUrl={qrCodeDataUrl}
     />
   ).toBlob()
 
