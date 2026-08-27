@@ -73,6 +73,17 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     delete: ['AMP.Admin', 'Geothermal.Admin'],
     manage: ['AMP.Admin', 'Geothermal.Admin'],
   },
+  // Grants are the rule about who sees data, not data. Only an admin reads
+  // or writes them, so every action here is admin-only rather than following
+  // the viewer/editor ladder the data resources use.
+  'ocotillo.access-grants': {
+    list: adminRoles,
+    show: adminRoles,
+    edit: adminRoles,
+    create: adminRoles,
+    delete: adminRoles,
+    manage: adminRoles,
+  },
   'ocotillo.lexicon': {
     list: adminRoles,
     show: adminRoles,
@@ -244,6 +255,11 @@ export const canAccessResource = ({
   const capabilities = getAccessCapabilities(groups)
 
   if (resource === 'ocotillo.collections') {
+    const policy = resourcePolicies[resource]
+    return matchesPolicy(policy[action], capabilities.roles)
+  }
+
+  if (resource === 'ocotillo.access-grants') {
     const policy = resourcePolicies[resource]
     return matchesPolicy(policy[action], capabilities.roles)
   }

@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react'
 import {
   BookOpen,
   Database,
@@ -10,9 +11,9 @@ import {
   Map as MapIcon,
   MapPin,
   Search,
+  ShieldCheck,
   Users,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import type { PortalRole } from '@/utils/accessControl'
 
 /**
@@ -147,6 +148,13 @@ export const RESOURCE_NAV: NavItem[] = [
     href: '/ocotillo/lexicon',
     icon: BookOpen,
     resource: 'ocotillo.lexicon',
+    roles: adminOnly,
+  },
+  {
+    label: 'Access Grants',
+    href: '/access/grants',
+    icon: ShieldCheck,
+    resource: 'ocotillo.access-grants',
     roles: adminOnly,
   },
   {

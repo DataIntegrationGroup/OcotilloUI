@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router'
 import { AppProviders } from '@/AppProviders'
 import { AppShell } from '@/components/AppShell'
 import { Callback, Login } from '@/components/Auth'
+import { AccessGrantsPage } from '@/pages/access/grants'
 import { ContentPage } from '@/pages/content'
 import { TypographyPage } from '@/pages/example/TypographyPage'
 import { Home } from '@/pages/home'
@@ -61,6 +62,7 @@ const App: React.FC = () => (
             path="/ogcapi"
             element={<ContentPage src="/content/ogcapi.md" />}
           />
+          <Route path="/access/grants" element={<AccessGrantsPage />} />
           {/* TEMPORARY: example specimen pages */}
           <Route path="/example/typography" element={<TypographyPage />} />
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />

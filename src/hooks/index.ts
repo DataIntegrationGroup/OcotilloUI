@@ -1,6 +1,7 @@
 export * from './useListPageDataGridAnalytics'
 export * from './useAbortableList'
 export * from './useAccessCapabilities'
+export * from './useAccessGrants'
 export * from './useSearchHistory'
 export * from './useAll'
 export * from './useAllNotes'
