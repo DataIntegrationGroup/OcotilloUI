@@ -1,5 +1,6 @@
 import {
   ArrowOutward,
+  DataObject,
   ElectricBolt,
   Opacity,
   OpenInNew,
@@ -37,6 +38,7 @@ import { ErrorComponent } from '@refinedev/mui'
 import { useQuery } from '@tanstack/react-query'
 import { Fragment, useState } from 'react'
 import { Link as RouterLink } from 'react-router'
+import { CollectionSchemaDialog } from '@/components/CollectionSchemaDialog'
 import {
   GisConnectionsPanel,
   GisLayerDownloads,
@@ -59,6 +61,11 @@ import {
 } from '@/utils/ogcLayerUtils'
 
 type CollectionsView = 'cards' | 'table'
+
+type SchemaDialogTarget = {
+  collectionId?: string
+  title: string
+}
 
 type CollectionGroupKey =
   | 'groundwater'
@@ -395,6 +402,18 @@ export const CollectionsPage = () => {
   const dataProvider = useDataProvider()
   const { canViewAmp } = useAccessCapabilities()
   const [view, setView] = useState<CollectionsView>('table')
+  // The target outlives `isSchemaOpen` on purpose: MUI keeps the dialog mounted
+  // through its closing transition, and clearing the target on close would
+  // flash an empty schema shell on the way out.
+  const [schemaTarget, setSchemaTarget] = useState<SchemaDialogTarget | null>(
+    null
+  )
+  const [isSchemaOpen, setIsSchemaOpen] = useState(false)
+
+  const openSchema = (target: SchemaDialogTarget) => {
+    setSchemaTarget(target)
+    setIsSchemaOpen(true)
+  }
   const { data: gisCatalog } = useGisArtifacts({
     enabled: access?.can === true && SHOW_GIS_DOWNLOADS,
   })
@@ -567,6 +586,7 @@ export const CollectionsPage = () => {
           {view === 'table' ? (
             <CollectionsTable
               rows={buildCollectionRows(groups, gisLayersByCollection)}
+              onOpenSchema={openSchema}
             />
           ) : (
             <Grid container spacing={3}>
@@ -631,6 +651,7 @@ export const CollectionsPage = () => {
                                 gisLayer={gisLayersByCollection.get(
                                   collectionIdOf(collection) ?? ''
                                 )}
+                                onOpenSchema={openSchema}
                                 index={index}
                               />
                             )
@@ -647,14 +668,23 @@ export const CollectionsPage = () => {
           )}
         </Stack>
       </Box>
+
+      <CollectionSchemaDialog
+        open={isSchemaOpen}
+        onClose={() => setIsSchemaOpen(false)}
+        collectionId={schemaTarget?.collectionId}
+        title={schemaTarget?.title ?? ''}
+      />
     </Container>
   )
 }
 
 const CollectionsTable = ({
   rows,
+  onOpenSchema,
 }: {
   rows: CollectionsTableRow<CollectionGroupKey>[]
+  onOpenSchema: (target: SchemaDialogTarget) => void
 }) => (
   <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 3 }}>
     <Table size="small" aria-label="Published OGC datasets">
@@ -663,7 +693,7 @@ const CollectionsTable = ({
           <TableCell>Dataset</TableCell>
           <TableCell>Description</TableCell>
           {SHOW_GIS_DOWNLOADS ? <TableCell>Desktop GIS</TableCell> : null}
-          <TableCell align="right">Map</TableCell>
+          <TableCell align="right">Actions</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -733,19 +763,42 @@ const CollectionsTable = ({
                   </TableCell>
                 ) : null}
                 <TableCell align="right">
-                  <Button
-                    component={RouterLink}
-                    to={`/ocotillo/map?layer=${encodeURIComponent(row.layerKey)}`}
-                    size="small"
-                    variant="outlined"
-                    endIcon={<ArrowOutward fontSize="small" />}
-                    sx={{
-                      borderColor: alpha(style.accent, 0.28),
-                      color: style.accent,
-                    }}
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    justifyContent="flex-end"
+                    flexWrap="wrap"
+                    useFlexGap
                   >
-                    Open Map
-                  </Button>
+                    <Button
+                      size="small"
+                      variant="text"
+                      startIcon={<DataObject fontSize="small" />}
+                      disabled={!row.id}
+                      onClick={() =>
+                        onOpenSchema({
+                          collectionId: row.id,
+                          title: row.title,
+                        })
+                      }
+                      sx={{ color: style.accent }}
+                    >
+                      Schema
+                    </Button>
+                    <Button
+                      component={RouterLink}
+                      to={`/ocotillo/map?layer=${encodeURIComponent(row.layerKey)}`}
+                      size="small"
+                      variant="outlined"
+                      endIcon={<ArrowOutward fontSize="small" />}
+                      sx={{
+                        borderColor: alpha(style.accent, 0.28),
+                        color: style.accent,
+                      }}
+                    >
+                      Open Map
+                    </Button>
+                  </Stack>
                 </TableCell>
               </TableRow>
             </Fragment>
@@ -809,12 +862,14 @@ const CollectionRow = ({
   groupKey,
   displayLabel,
   gisLayer,
+  onOpenSchema,
 }: {
   collection: OgcCollectionRecord
   layerKey: string
   groupKey: CollectionGroupKey
   displayLabel?: string
   gisLayer?: GisLayer
+  onOpenSchema: (target: SchemaDialogTarget) => void
   index: number
 }) => {
   const style = GROUP_STYLES[groupKey]
@@ -878,24 +933,35 @@ const CollectionRow = ({
               </Typography>
             ) : null}
           </Stack>
-          <Button
-            component={RouterLink}
-            to={`/ocotillo/map?layer=${encodeURIComponent(layerKey)}`}
-            size="small"
-            variant="outlined"
-            endIcon={<ArrowOutward fontSize="small" />}
-            sx={{
-              flexShrink: 0,
-              borderColor: alpha(style.accent, 0.28),
-              color: style.accent,
-              '&:hover': {
-                borderColor: alpha(style.accent, 0.5),
-                backgroundColor: alpha(style.accent, 0.06),
-              },
-            }}
-          >
-            Open Map
-          </Button>
+          <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+            <Button
+              size="small"
+              variant="text"
+              startIcon={<DataObject fontSize="small" />}
+              disabled={!id}
+              onClick={() => onOpenSchema({ collectionId: id, title })}
+              sx={{ color: style.accent }}
+            >
+              Schema
+            </Button>
+            <Button
+              component={RouterLink}
+              to={`/ocotillo/map?layer=${encodeURIComponent(layerKey)}`}
+              size="small"
+              variant="outlined"
+              endIcon={<ArrowOutward fontSize="small" />}
+              sx={{
+                borderColor: alpha(style.accent, 0.28),
+                color: style.accent,
+                '&:hover': {
+                  borderColor: alpha(style.accent, 0.5),
+                  backgroundColor: alpha(style.accent, 0.06),
+                },
+              }}
+            >
+              Open Map
+            </Button>
+          </Stack>
         </Stack>
         {description ? (
           <Typography variant="body2" color="text.secondary">
