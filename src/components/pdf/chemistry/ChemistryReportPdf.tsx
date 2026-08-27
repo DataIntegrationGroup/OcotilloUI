@@ -27,15 +27,17 @@ export type ChemistryReportSections = {
   fieldParameters: boolean
   chemistryResults: boolean
   standardsComparison: boolean
+  samplingNotes: boolean
   howToRead: boolean
 }
 
 export const CHEMISTRY_REPORT_DEFAULT_SECTIONS: ChemistryReportSections = {
   wellInformation: true,
   waterLevels: true,
-  fieldParameters: true,
+  fieldParameters: false,
   chemistryResults: true,
   standardsComparison: true,
+  samplingNotes: false,
   howToRead: true,
 }
 
@@ -48,6 +50,7 @@ export const CHEMISTRY_REPORT_SECTION_LABELS: Record<
   fieldParameters: 'Field parameters',
   chemistryResults: 'Chemistry results',
   standardsComparison: 'Drinking water standards & exceedances',
+  samplingNotes: 'Sampling & quality assurance notes',
   howToRead: 'How to read this report',
 }
 
@@ -778,9 +781,9 @@ export const ChemistryReportPdf = ({
         ) : null}
 
         {/* ---- Sampling notes and glossary (page 3) ---- */}
-        {sections.howToRead ? (
+        {sections.samplingNotes || sections.howToRead ? (
           <View break>
-            {ionBalance.length ? (
+            {sections.samplingNotes && ionBalance.length ? (
               <View style={s.section}>
                 <SectionHead
                   title="Sampling &amp; quality assurance notes"
@@ -843,35 +846,37 @@ export const ChemistryReportPdf = ({
               </View>
             ) : null}
 
-            <View style={s.section}>
-              <SectionHead title="How to read this report" />
-              <View style={s.glossaryRow}>
-                <View style={s.glossaryColumn}>
-                  {GLOSSARY_LEFT.map((entry) => (
-                    <Text key={entry.term} style={s.glossaryEntry}>
-                      <Text style={s.glossaryTerm}>{entry.term}</Text>
-                      {` — ${entry.body}`}
+            {sections.howToRead ? (
+              <View style={s.section}>
+                <SectionHead title="How to read this report" />
+                <View style={s.glossaryRow}>
+                  <View style={s.glossaryColumn}>
+                    {GLOSSARY_LEFT.map((entry) => (
+                      <Text key={entry.term} style={s.glossaryEntry}>
+                        <Text style={s.glossaryTerm}>{entry.term}</Text>
+                        {` — ${entry.body}`}
+                      </Text>
+                    ))}
+                  </View>
+                  <View style={s.glossaryColumn}>
+                    {GLOSSARY_RIGHT.map((entry) => (
+                      <Text key={entry.term} style={s.glossaryEntry}>
+                        <Text style={s.glossaryTerm}>{entry.term}</Text>
+                        {` — ${entry.body}`}
+                      </Text>
+                    ))}
+                    <Text style={s.glossaryEntry}>
+                      <Text style={s.glossaryTerm}>
+                        Questions, or want more data?
+                      </Text>
+                      {
+                        ' Email aquifermapping@nmt.edu or call (575) 835-5327. You can request the complete record for your well at any time.'
+                      }
                     </Text>
-                  ))}
-                </View>
-                <View style={s.glossaryColumn}>
-                  {GLOSSARY_RIGHT.map((entry) => (
-                    <Text key={entry.term} style={s.glossaryEntry}>
-                      <Text style={s.glossaryTerm}>{entry.term}</Text>
-                      {` — ${entry.body}`}
-                    </Text>
-                  ))}
-                  <Text style={s.glossaryEntry}>
-                    <Text style={s.glossaryTerm}>
-                      Questions, or want more data?
-                    </Text>
-                    {
-                      ' Email aquifermapping@nmt.edu or call (575) 835-5327. You can request the complete record for your well at any time.'
-                    }
-                  </Text>
+                  </View>
                 </View>
               </View>
-            </View>
+            ) : null}
           </View>
         ) : null}
 
