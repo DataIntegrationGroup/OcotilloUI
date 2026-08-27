@@ -81,7 +81,7 @@ export const chemReportStyles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   mastheadText: { flex: 1, paddingHorizontal: 12 },
-  mastheadLogo: { width: 54, height: 41 },
+  mastheadLogo: { width: 78, height: 59 },
   qrBlock: { alignItems: 'center', width: 62 },
   qrImage: { width: 62, height: 62 },
   qrCaption: {
