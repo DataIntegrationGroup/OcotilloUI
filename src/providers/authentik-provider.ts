@@ -22,6 +22,7 @@ import {
   IS_TESTING_AUTH,
 } from '@/config'
 import { normalizeAccessControlGroups } from '@/utils/accessControl'
+import { resetUiSurfaceGrants } from '@/utils/uiSurfaceGrants'
 
 const gravatarUrl = (email: string) => {
   const hash = email.trim().toLowerCase()
@@ -240,6 +241,11 @@ export const authentikAuthProvider: AuthProvider = {
     transientStore.pkceVerifier = null
     transientStore.pkceState = null
     clearPkceFallbacks()
+
+    // Surface-grant answers are cached per session and are about *this*
+    // caller. Leaving them would let the next person to sign in on this tab
+    // inherit the previous one's screens.
+    resetUiSurfaceGrants()
 
     return { success: true, redirectTo: '/login' }
   },
