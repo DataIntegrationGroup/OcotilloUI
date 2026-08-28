@@ -42,7 +42,6 @@ const DownloadButton = ({
     size="small"
     variant={variant}
     startIcon={<Download fontSize="small" />}
-    sx={{ textTransform: 'none' }}
   >
     {label}
   </Button>
