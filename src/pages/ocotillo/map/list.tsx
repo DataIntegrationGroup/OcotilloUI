@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { captureEvent } from '@/analytics/posthog'
-import { Layer, Source } from 'react-map-gl/maplibre'
+import { Layer, Marker, Source } from 'react-map-gl/maplibre'
 import { useDataProvider, useGo } from '@refinedev/core'
 import type { CustomParams } from '@refinedev/core'
 import { useLocation } from 'react-router'
@@ -37,9 +37,16 @@ import {
   PiperDiagram,
   type PiperDiagramHandle,
 } from '@/components/PiperDiagram'
-import { MapPopup } from '@/components'
+import { MapGeocoderSearch, MapPopup } from '@/components'
 import { useMeasuredHeight, useThingLayers, useViewportBbox } from '@/hooks'
 import { DEFAULT_BASEMAP_ID } from '@/basemaps'
+import {
+  MAP_HIGHLIGHT_COLOR,
+  MAP_HIGHLIGHT_HALO_COLOR,
+  MAP_HIGHLIGHT_STROKE_COLOR,
+  MAP_NO_DATA_COLOR,
+  MAP_SYMBOL_STROKE_COLOR,
+} from '@/constants/mapColors'
 import {
   buildLayerCsv,
   filterLayerFeaturesBySelection,
@@ -57,13 +64,14 @@ import {
   getDistinctMapPoints,
   getMapPointBounds,
 } from '@/utils/mapPointInteraction'
+import type { GeocodeResult } from '@/utils/geocode'
 
 function localDateStampForExport(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-const DEFAULT_VISIBLE_LAYERS = ['ogc-latest-depth-to-water']
+const DEFAULT_VISIBLE_LAYERS = ['ogc-water-well-summary']
 const VISIBLE_FEATURES_DRAWER_WIDTH = 360
 const VISIBLE_FEATURES_PAGE_SIZE = 10
 type VisibleFeatureGroup = {
@@ -85,16 +93,6 @@ const PRINCIPAL_VISIBLE_FEATURE_DETAIL_BY_LAYER: Record<
   string,
   { column: string; label: string; dateColumn?: string }
 > = {
-  'ogc-latest-depth-to-water': {
-    column: 'depth_to_water_bgs',
-    label: 'Depth to water',
-    dateColumn: 'observation_datetime',
-  },
-  'ogc-average-tds': {
-    column: 'avg_tds_value',
-    label: 'Avg TDS',
-    dateColumn: 'first_tds_observation_date',
-  },
   'ogc-latest-tds': {
     column: 'latest_tds_value',
     label: 'Latest TDS',
@@ -119,6 +117,7 @@ const DEFAULT_EXPANDED_GROUPS = {
   groundwater: true,
   surfaceWater: true,
   climate: true,
+  geothermal: true,
   geoscience: true,
   reference: true,
 }
@@ -126,6 +125,15 @@ const DEFAULT_EXPANDED_GROUPS = {
 const getLayerGroupKey = (
   layerKey: string
 ): keyof typeof DEFAULT_EXPANDED_GROUPS => {
+  if (
+    layerKey.includes('geothermal') ||
+    layerKey.includes('bht') ||
+    layerKey.includes('temp-depth') ||
+    layerKey.includes('heat-flow') ||
+    layerKey === 'ogc-dst'
+  ) {
+    return 'geothermal'
+  }
   if (
     layerKey.includes('water-well') ||
     layerKey.includes('actively-monitored') ||
@@ -166,6 +174,7 @@ const getExpandedGroupsForLayers = (layerKeys: string[]) => {
     groundwater: false,
     surfaceWater: false,
     climate: false,
+    geothermal: false,
     geoscience: false,
     reference: false,
   }
@@ -265,6 +274,11 @@ export const MapView: React.FC = () => {
     getExpandedGroupsForLayers(initialVisibleLayers)
   )
   const [popupContent, setPopupContent] = useState<any>(null)
+  const [geocodeMarker, setGeocodeMarker] = useState<{
+    longitude: number
+    latitude: number
+    label: string
+  } | null>(null)
   const [exportFormat, setExportFormat] = useState<'csv' | 'geojson'>('csv')
   const [selectionPolygons, setSelectionPolygons] = useState<
     Record<string, any>
@@ -526,10 +540,58 @@ export const MapView: React.FC = () => {
     }
   }, [visibleFeaturesPage, visiblePointFeaturesByLayer])
   const hasExportableLayers = exportableLayers.length > 0
+  const { ref: geocoderPanelRef, height: geocoderPanelHeight } =
+    useMeasuredHeight<HTMLDivElement>([], 52)
   const { ref: basemapPanelRef, height: basemapPanelHeight } =
     useMeasuredHeight<HTMLDivElement>([basemapCollapsed, selectedBasemap], 52)
-  const layersPanelTop = 12 + basemapPanelHeight
+  const basemapPanelTop = 12 + geocoderPanelHeight + 8
+  const layersPanelTop = basemapPanelTop + basemapPanelHeight
   const layersPanelMaxHeight = `calc(100% - ${layersPanelTop}px - 12px)`
+
+  // Bias geocoder results toward the part of the map the user is looking at.
+  const geocoderProximity = useMemo<[number, number] | undefined>(() => {
+    if (!viewportBbox) return undefined
+
+    const [west, south, east, north] = viewportBbox.split(',').map(Number)
+    if ([west, south, east, north].some((value) => !Number.isFinite(value))) {
+      return undefined
+    }
+
+    return [(west + east) / 2, (south + north) / 2]
+  }, [viewportBbox])
+
+  const onGeocodeSelect = (result: GeocodeResult) => {
+    const map = mapRef.current?.getMap?.()
+    if (!map) return
+
+    setPopupContent(null)
+    setGeocodeMarker({
+      longitude: result.center[0],
+      latitude: result.center[1],
+      label: result.label,
+    })
+
+    if (result.bbox) {
+      const [west, south, east, north] = result.bbox
+      map.fitBounds(
+        [
+          [west, south],
+          [east, north],
+        ],
+        { padding: 80, maxZoom: 14, duration: 800 }
+      )
+    } else {
+      map.easeTo({
+        center: result.center,
+        zoom: Math.max(map.getZoom(), 13),
+        duration: 800,
+      })
+    }
+
+    captureEvent('map_geocoder_result_selected', {
+      has_bbox: Boolean(result.bbox),
+    })
+  }
 
   const downloadLayerBlob = (
     content: BlobPart,
@@ -704,6 +766,7 @@ export const MapView: React.FC = () => {
     groundwater: 'Groundwater',
     surfaceWater: 'Surface Water',
     climate: 'Climate',
+    geothermal: 'Geothermal',
     geoscience: 'Geoscience',
     reference: 'Reference',
   }
@@ -720,6 +783,7 @@ export const MapView: React.FC = () => {
       groundwater: [] as Array<[string, any]>,
       surfaceWater: [] as Array<[string, any]>,
       climate: [] as Array<[string, any]>,
+      geothermal: [] as Array<[string, any]>,
       geoscience: [] as Array<[string, any]>,
       reference: [] as Array<[string, any]>,
     }
@@ -786,8 +850,6 @@ export const MapView: React.FC = () => {
     const isWaterWellLayer =
       layerId.includes('ogc-water-wells') ||
       layerId.includes('ogc-water-well-summary') ||
-      layerId.includes('ogc-latest-depth-to-water') ||
-      layerId.includes('ogc-average-tds') ||
       layerId.includes('ogc-latest-tds') ||
       layerId.includes('ogc-depth-to-water-trend')
 
@@ -997,9 +1059,9 @@ export const MapView: React.FC = () => {
                     type="circle"
                     paint={{
                       'circle-radius': 10,
-                      'circle-color': '#ffffff',
+                      'circle-color': MAP_HIGHLIGHT_HALO_COLOR,
                       'circle-opacity': 0.22,
-                      'circle-stroke-color': '#0f172a',
+                      'circle-stroke-color': MAP_HIGHLIGHT_STROKE_COLOR,
                       'circle-stroke-width': 2.4,
                     }}
                   />
@@ -1008,21 +1070,52 @@ export const MapView: React.FC = () => {
                     type="circle"
                     paint={{
                       'circle-radius': 6,
-                      'circle-color': '#2563eb',
-                      'circle-stroke-color': '#ffffff',
+                      'circle-color': MAP_HIGHLIGHT_COLOR,
+                      'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
                       'circle-stroke-width': 1.8,
                     }}
                   />
                 </Source>
               ) : null}
+              {geocodeMarker ? (
+                <Marker
+                  longitude={geocodeMarker.longitude}
+                  latitude={geocodeMarker.latitude}
+                  color="#d32f2f"
+                />
+              ) : null}
             </MapComponent>
           </Box>
+          <Paper
+            elevation={6}
+            ref={geocoderPanelRef}
+            sx={(theme) => ({
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              width: { xs: 'calc(100% - 24px)', sm: 320 },
+              px: 0.8,
+              py: 0.6,
+              borderRadius: 1.25,
+              backdropFilter: 'blur(6px)',
+              backgroundColor: alpha(theme.palette.background.paper, 0.9),
+              border: '1px solid',
+              borderColor: alpha(theme.palette.divider, 0.9),
+              zIndex: 3,
+            })}
+          >
+            <MapGeocoderSearch
+              onSelect={onGeocodeSelect}
+              onClear={() => setGeocodeMarker(null)}
+              proximity={geocoderProximity}
+            />
+          </Paper>
           <Paper
             elevation={6}
             ref={basemapPanelRef}
             sx={(theme) => ({
               position: 'absolute',
-              top: 12,
+              top: basemapPanelTop,
               left: 12,
               width: { xs: 'calc(100% - 24px)', sm: 320 },
               display: 'flex',
@@ -1301,7 +1394,7 @@ export const MapView: React.FC = () => {
                               layerDef.legendColor ||
                               (typeof paintColor === 'string'
                                 ? paintColor
-                                : '#9e9e9e')
+                                : MAP_NO_DATA_COLOR)
                             const description =
                               typeof layerDef.description === 'string'
                                 ? layerDef.description.trim()

@@ -155,6 +155,7 @@ export const UnassociatedAssetList: React.FC = () => {
             <AssetActions
               asset={row}
               refetchAssets={tableQuery.refetch}
+              allowAssetEdit
               includeDisassociate={false}
               noun="asset"
             />

@@ -15,7 +15,7 @@ describe('map point interaction', () => {
   it('deduplicates one well rendered in multiple data layers', () => {
     const features = [
       point(42, [-106.1, 35.1], 'location-ogc-water-wells'),
-      point(42, [-106.1, 35.1], 'location-ogc-latest-depth-to-water'),
+      point(42, [-106.1, 35.1], 'location-ogc-latest-tds'),
     ]
 
     expect(getDistinctMapPoints(features)).toEqual([features[0]])

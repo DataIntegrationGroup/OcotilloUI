@@ -62,7 +62,7 @@ export const AttachmentsCard = ({
   const currentAsset = previewAssets[slideshowIndex]
   const hasAssets = previewAssets.length > 0
 
-  const { canManageAmp } = useAccessCapabilities()
+  const { canManageAssets } = useAccessCapabilities()
 
   const openSlideshow = (index: number) => {
     setSlideshowIndex(index)
@@ -78,7 +78,7 @@ export const AttachmentsCard = ({
         title={<HeaderTitle />}
         sx={{ pb: 0.5 }}
         action={
-          canManageAmp && (
+          canManageAssets && (
             <MuiButton
               onClick={() => setIsUploadDialogOpen(true)}
               startIcon={<FileUpload />}
@@ -190,7 +190,7 @@ export const AttachmentsCard = ({
                           asset={asset}
                           variant="grid"
                           refetchAssets={refetchAssets}
-                          canManageAsset={canManageAmp}
+                          canManageAsset={canManageAssets}
                           onViewMore={() => openSlideshow(idx)}
                         />
                       </Box>
@@ -217,7 +217,7 @@ export const AttachmentsCard = ({
                         asset={currentAsset}
                         variant="slideshow"
                         refetchAssets={refetchAssets}
-                        canManageAsset={canManageAmp}
+                        canManageAsset={canManageAssets}
                         slideshowCaption={`${slideshowIndex + 1} / ${
                           previewAssets.length
                         }`}
