@@ -3,16 +3,15 @@ import {
   describeScope,
   grantQueryParams,
   grantStatusOf,
-  isRevocable,
   isUnfiltered,
   type PermissionGrant,
   scopeIdRequired,
   sortGrants,
   toCreateGrantInput,
-  toDateInputValue,
   validateGrantForm,
   zPermissionGrant,
 } from '@/utils/accessGrants'
+import { isRevocable, toDateInputValue } from '@/utils/accessLifecycle'
 
 const grant = (overrides: Partial<PermissionGrant> = {}): PermissionGrant =>
   zPermissionGrant.parse({

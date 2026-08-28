@@ -151,7 +151,7 @@ export const RESOURCE_NAV: NavItem[] = [
     roles: adminOnly,
   },
   {
-    label: 'Access Grants',
+    label: 'Access Control',
     href: '/access/grants',
     icon: ShieldCheck,
     resource: 'ocotillo.access-grants',

@@ -19,9 +19,9 @@ import {
   PRINCIPAL_TYPES,
   scopeIdRequired,
   toCreateGrantInput,
-  toDateInputValue,
   validateGrantForm,
 } from '@/utils/accessGrants'
+import { toDateInputValue } from '@/utils/accessLifecycle'
 
 export type GrantFormState = {
   principal_type: string

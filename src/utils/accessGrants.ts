@@ -1,4 +1,10 @@
 import { z } from 'zod'
+import {
+  type AccessStatus,
+  accessStatusOf,
+  compareByLifecycle,
+  validateDateWindow,
+} from '@/utils/accessLifecycle'
 
 /**
  * Client model for ADR5 permission grants (`/access/*` on the Ocotillo API).
@@ -116,35 +122,12 @@ export const isUnfiltered = (filters: GrantFilters): boolean =>
   !filters.dataType &&
   !filters.scopeType
 
-export type GrantStatus = 'active' | 'scheduled' | 'expired' | 'revoked'
-
-const dayOf = (value: string): string => value.slice(0, 10)
+export type GrantStatus = AccessStatus
 
 export const grantStatusOf = (
   grant: PermissionGrant,
   today: Date
-): GrantStatus => {
-  if (grant.revoked_at) return 'revoked'
-
-  const day = dayOf(today.toISOString())
-  if (dayOf(grant.starts_at) > day) return 'scheduled'
-  if (grant.ends_at && dayOf(grant.ends_at) < day) return 'expired'
-
-  return 'active'
-}
-
-export const GRANT_STATUS_LABELS: Record<GrantStatus, string> = {
-  active: 'Active',
-  scheduled: 'Scheduled',
-  expired: 'Expired',
-  revoked: 'Revoked',
-}
-
-/** Only an active or scheduled grant is worth revoking. */
-export const isRevocable = (grant: PermissionGrant, today: Date): boolean => {
-  const status = grantStatusOf(grant, today)
-  return status === 'active' || status === 'scheduled'
-}
+): GrantStatus => accessStatusOf(grant, today)
 
 /**
  * A global grant covers everything and names no scope; a group- or
@@ -190,11 +173,7 @@ export const validateGrantForm = (form: {
     }
   }
 
-  if (form.ends_at && form.starts_at && form.ends_at < form.starts_at) {
-    errors.ends_at = 'End date cannot fall before the start date.'
-  }
-
-  return errors
+  return { ...errors, ...validateDateWindow(form) }
 }
 
 export const toCreateGrantInput = (form: {
@@ -219,40 +198,18 @@ export const toCreateGrantInput = (form: {
   reason: form.reason.trim() || null,
 })
 
-const STATUS_ORDER: Record<GrantStatus, number> = {
-  active: 0,
-  scheduled: 1,
-  expired: 2,
-  revoked: 3,
-}
-
 /**
- * Live grants first, then the ones that have not started, then history. Within
- * a status the newest start date leads: an admin reading this page is asking
- * "what is in force now", not "what happened first".
+ * Grants sort by lifecycle first. The list spans principals now, so
+ * equal-dated rows group by who holds them rather than landing in insertion
+ * order.
  */
 export const sortGrants = (
   grants: PermissionGrant[],
   today: Date
 ): PermissionGrant[] =>
-  [...grants].sort((a, b) => {
-    const byStatus =
-      STATUS_ORDER[grantStatusOf(a, today)] -
-      STATUS_ORDER[grantStatusOf(b, today)]
-    if (byStatus !== 0) return byStatus
-
-    return (
-      b.starts_at.localeCompare(a.starts_at) ||
-      // The list now spans principals, so equal-dated rows group by who holds
-      // them rather than landing in insertion order.
+  [...grants].sort(
+    (a, b) =>
+      compareByLifecycle(a, b, today) ||
       a.principal_id.localeCompare(b.principal_id) ||
       b.id - a.id
-    )
-  })
-
-/** `YYYY-MM-DD` for a date input, in local time rather than UTC. */
-export const toDateInputValue = (date: Date): string => {
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${date.getFullYear()}-${month}-${day}`
-}
+  )

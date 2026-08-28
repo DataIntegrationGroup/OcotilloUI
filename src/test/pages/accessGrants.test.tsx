@@ -21,6 +21,23 @@ vi.mock('@refinedev/mui', () => ({
   ErrorComponent: () => <div>not authorized</div>,
 }))
 
+vi.mock('react-router', async () => {
+  const { forwardRef } = await import('react')
+
+  return {
+    // MUI's Tab passes a ref through `component`, and the real react-router
+    // Link is a forwardRef. A plain function here warns instead of rendering.
+    Link: forwardRef<HTMLAnchorElement, { children: React.ReactNode }>(
+      ({ children, ...props }, ref) => (
+        <a href="/" ref={ref} {...props}>
+          {children}
+        </a>
+      )
+    ),
+    useLocation: () => ({ pathname: '/access/grants' }),
+  }
+})
+
 vi.mock('@/hooks', () => ({
   useAccessGrants: (...args: unknown[]) => useAccessGrantsMock(...args),
   useCreateGrant: () => ({

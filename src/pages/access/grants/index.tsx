@@ -5,7 +5,6 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Container,
   FormControlLabel,
   MenuItem,
   Paper,
@@ -21,11 +20,10 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { useCan } from '@refinedev/core'
-import { ErrorComponent } from '@refinedev/mui'
 import { useState } from 'react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useAccessGrants, useCreateGrant, useRevokeGrant } from '@/hooks'
+import { AccessConsole } from '@/pages/access/AccessConsole'
 import { GrantDialog } from '@/pages/access/grants/GrantDialog'
 import {
   ACCESS_DATA_TYPES,
@@ -33,25 +31,18 @@ import {
   type CreateGrantInput,
   describeScope,
   GRANT_SCOPE_TYPES,
-  GRANT_STATUS_LABELS,
   type GrantFilters,
   type GrantStatus,
   grantStatusOf,
-  isRevocable,
   isUnfiltered,
   type PermissionGrant,
   sortGrants,
 } from '@/utils/accessGrants'
-
-const STATUS_COLORS: Record<
-  GrantStatus,
-  'success' | 'info' | 'default' | 'error'
-> = {
-  active: 'success',
-  scheduled: 'info',
-  expired: 'default',
-  revoked: 'error',
-}
+import {
+  ACCESS_STATUS_COLORS,
+  ACCESS_STATUS_LABELS,
+  isRevocable,
+} from '@/utils/accessLifecycle'
 
 /**
  * Operations console for ADR5 permission grants.
@@ -62,12 +53,13 @@ const STATUS_COLORS: Record<
  * this person, role, or key do, and why" — but it does mean an admin has to
  * know who they are asking about before anything loads.
  */
-export const AccessGrantsPage = () => {
-  const { data: access, isLoading: isAccessLoading } = useCan({
-    action: 'manage',
-    resource: 'ocotillo.access-grants',
-  })
+export const AccessGrantsPage = () => (
+  <AccessConsole activePath="/access/grants">
+    <GrantsTab />
+  </AccessConsole>
+)
 
+const GrantsTab = () => {
   // `principal` is what is being typed; `filters.principalId` is what has
   // been submitted. Keeping them apart stops a partially-typed subject from
   // firing a request on every keystroke. The dropdowns have no such problem,
@@ -85,16 +77,6 @@ export const AccessGrantsPage = () => {
   const grants = useAccessGrants(filters)
   const createGrant = useCreateGrant()
   const revokeGrant = useRevokeGrant()
-
-  if (isAccessLoading) {
-    return (
-      <Stack alignItems="center" sx={{ py: 8 }}>
-        <CircularProgress />
-      </Stack>
-    )
-  }
-
-  if (!access?.can) return <ErrorComponent />
 
   const setFilter = <TKey extends keyof GrantFilters>(
     key: TKey,
@@ -124,155 +106,141 @@ export const AccessGrantsPage = () => {
   const rows = grants.data ? sortGrants(grants.data, today) : []
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
-      <Stack spacing={3}>
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          spacing={2}
-          alignItems={{ md: 'flex-end' }}
-          justifyContent="space-between"
+    <Stack spacing={3}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        <Chip
+          size="small"
+          variant="outlined"
+          label={grants.data ? `${grants.data.length} shown` : 'Loading'}
+        />
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => setIsDialogOpen(true)}
         >
-          <Stack spacing={0.75}>
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Typography variant="h4">Access Grants</Typography>
-              {grants.data ? (
-                <Chip
-                  size="small"
-                  variant="outlined"
-                  label={`${grants.data.length} shown`}
-                />
-              ) : null}
-            </Stack>
-            <Typography variant="body1" color="text.secondary">
-              Who may read, enter, correct, or administer each kind of data, and
-              for how long. Revoking takes effect at the next read, not at the
-              next sign-in.
-            </Typography>
-          </Stack>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setIsDialogOpen(true)}
-          >
-            Grant access
-          </Button>
-        </Stack>
-
-        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-          <Stack spacing={2}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                size="small"
-                fullWidth
-                label="Principal"
-                placeholder="Authentik subject, role name, or key label"
-                helperText="Press Enter to apply. Leave empty for every principal."
-                value={principal}
-                onChange={(event) => setPrincipal(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    setFilter('principalId', principal.trim())
-                  }
-                }}
-              />
-              <FilterSelect
-                label="Capability"
-                value={filters.capability ?? ''}
-                options={CAPABILITIES}
-                onChange={(value) => setFilter('capability', value)}
-              />
-              <FilterSelect
-                label="Data type"
-                value={filters.dataType ?? ''}
-                options={ACCESS_DATA_TYPES}
-                onChange={(value) => setFilter('dataType', value)}
-              />
-              <FilterSelect
-                label="Scope"
-                value={filters.scopeType ?? ''}
-                options={GRANT_SCOPE_TYPES}
-                onChange={(value) => setFilter('scopeType', value)}
-              />
-            </Stack>
-            <Stack
-              direction="row"
-              spacing={2}
-              alignItems="center"
-              justifyContent="space-between"
-              flexWrap="wrap"
-              useFlexGap
-            >
-              <FormControlLabel
-                sx={{ mr: 0 }}
-                control={
-                  <Switch
-                    size="small"
-                    checked={filters.includeRevoked ?? false}
-                    onChange={(event) =>
-                      setFilters((previous) => ({
-                        ...previous,
-                        includeRevoked: event.target.checked,
-                      }))
-                    }
-                  />
-                }
-                label="Include revoked"
-              />
-              <Button
-                size="small"
-                startIcon={<FilterAltOff fontSize="small" />}
-                onClick={clearFilters}
-                disabled={isUnfiltered(filters)}
-              >
-                Clear filters
-              </Button>
-            </Stack>
-          </Stack>
-        </Paper>
-
-        {revokeGrant.isError ? (
-          <Alert severity="error">
-            Failed to revoke that grant.
-            {revokeGrant.error instanceof Error
-              ? ` ${revokeGrant.error.message}`
-              : null}
-          </Alert>
-        ) : null}
-
-        {grants.isLoading ? (
-          <Stack alignItems="center" spacing={1.5} sx={{ py: 6 }}>
-            <CircularProgress size={28} />
-            <Typography variant="body2" color="text.secondary">
-              Loading grants...
-            </Typography>
-          </Stack>
-        ) : grants.isError ? (
-          <Alert severity="error">
-            Failed to load grants.
-            {grants.error instanceof Error ? ` ${grants.error.message}` : null}
-          </Alert>
-        ) : rows.length === 0 ? (
-          <EmptyState
-            title={isUnfiltered(filters) ? 'No grants yet' : 'No grants match'}
-            body={
-              isUnfiltered(filters)
-                ? filters.includeRevoked
-                  ? 'No permission grant has ever been recorded.'
-                  : 'No grant is live. Turn on "Include revoked" to see past ones.'
-                : 'Nothing matches these filters. Widen or clear them to see more.'
-            }
-          />
-        ) : (
-          <GrantsTable
-            rows={rows}
-            today={today}
-            onRevoke={setPendingRevoke}
-            revokingId={
-              revokeGrant.isPending ? (revokeGrant.variables ?? null) : null
-            }
-          />
-        )}
+          Grant access
+        </Button>
       </Stack>
+
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+        <Stack spacing={2}>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            <TextField
+              size="small"
+              fullWidth
+              label="Principal"
+              placeholder="Authentik subject, role name, or key label"
+              helperText="Press Enter to apply. Leave empty for every principal."
+              value={principal}
+              onChange={(event) => setPrincipal(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  setFilter('principalId', principal.trim())
+                }
+              }}
+            />
+            <FilterSelect
+              label="Capability"
+              value={filters.capability ?? ''}
+              options={CAPABILITIES}
+              onChange={(value) => setFilter('capability', value)}
+            />
+            <FilterSelect
+              label="Data type"
+              value={filters.dataType ?? ''}
+              options={ACCESS_DATA_TYPES}
+              onChange={(value) => setFilter('dataType', value)}
+            />
+            <FilterSelect
+              label="Scope"
+              value={filters.scopeType ?? ''}
+              options={GRANT_SCOPE_TYPES}
+              onChange={(value) => setFilter('scopeType', value)}
+            />
+          </Stack>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+            flexWrap="wrap"
+            useFlexGap
+          >
+            <FormControlLabel
+              sx={{ mr: 0 }}
+              control={
+                <Switch
+                  size="small"
+                  checked={filters.includeRevoked ?? false}
+                  onChange={(event) =>
+                    setFilters((previous) => ({
+                      ...previous,
+                      includeRevoked: event.target.checked,
+                    }))
+                  }
+                />
+              }
+              label="Include revoked"
+            />
+            <Button
+              size="small"
+              startIcon={<FilterAltOff fontSize="small" />}
+              onClick={clearFilters}
+              disabled={isUnfiltered(filters)}
+            >
+              Clear filters
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
+
+      {revokeGrant.isError ? (
+        <Alert severity="error">
+          Failed to revoke that grant.
+          {revokeGrant.error instanceof Error
+            ? ` ${revokeGrant.error.message}`
+            : null}
+        </Alert>
+      ) : null}
+
+      {grants.isLoading ? (
+        <Stack alignItems="center" spacing={1.5} sx={{ py: 6 }}>
+          <CircularProgress size={28} />
+          <Typography variant="body2" color="text.secondary">
+            Loading grants...
+          </Typography>
+        </Stack>
+      ) : grants.isError ? (
+        <Alert severity="error">
+          Failed to load grants.
+          {grants.error instanceof Error ? ` ${grants.error.message}` : null}
+        </Alert>
+      ) : rows.length === 0 ? (
+        <EmptyState
+          title={isUnfiltered(filters) ? 'No grants yet' : 'No grants match'}
+          body={
+            isUnfiltered(filters)
+              ? filters.includeRevoked
+                ? 'No permission grant has ever been recorded.'
+                : 'No grant is live. Turn on "Include revoked" to see past ones.'
+              : 'Nothing matches these filters. Widen or clear them to see more.'
+          }
+        />
+      ) : (
+        <GrantsTable
+          rows={rows}
+          today={today}
+          onRevoke={setPendingRevoke}
+          revokingId={
+            revokeGrant.isPending ? (revokeGrant.variables ?? null) : null
+          }
+        />
+      )}
 
       <ConfirmDialog
         open={pendingRevoke !== null}
@@ -307,7 +275,7 @@ export const AccessGrantsPage = () => {
           }
         />
       ) : null}
-    </Container>
+    </Stack>
   )
 }
 
@@ -432,8 +400,8 @@ const GrantsTable = ({
                 >
                   <Chip
                     size="small"
-                    label={GRANT_STATUS_LABELS[status]}
-                    color={STATUS_COLORS[status]}
+                    label={ACCESS_STATUS_LABELS[status]}
+                    color={ACCESS_STATUS_COLORS[status]}
                     variant={status === 'active' ? 'filled' : 'outlined'}
                   />
                 </Tooltip>
