@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest'
 import {
   canAccessResource,
   getAccessCapabilities,
+  getPrimaryRole,
   isResourceListAdminOnly,
   normalizeAccessControlGroups,
+  normalizeAuthGroups,
+  normalizeCapabilityGroups,
 } from '@/utils/accessControl'
 import { resources } from '@/resources'
 
@@ -431,7 +434,45 @@ describe('isResourceListAdminOnly', () => {
 
   it('returns false for non-admin list resources and unknown resources', () => {
     expect(isResourceListAdminOnly('ocotillo.thing-well')).toBe(false)
-    expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(false)
+    expect(isResourceListAdminOnly('ocotillo.hydrograph-correction')).toBe(
+      false
+    )
     expect(isResourceListAdminOnly('unknown.resource')).toBe(false)
+  })
+})
+
+describe('capability groups', () => {
+  const groups = ['AMP.Editor', 'OGC.Internal', 'Something.Else']
+
+  it('keeps OGC.Internal out of the portal roles', () => {
+    expect(normalizeAccessControlGroups(groups)).toEqual([
+      'AMP.Viewer',
+      'AMP.Editor',
+    ])
+    expect(getPrimaryRole(groups)).toBe('AMP.Editor')
+  })
+
+  it('matches capability groups exactly and drops anything unknown', () => {
+    expect(normalizeCapabilityGroups(groups)).toEqual(['OGC.Internal'])
+    expect(normalizeCapabilityGroups(['ogc.internal'])).toEqual([])
+    expect(normalizeCapabilityGroups(null)).toEqual([])
+  })
+
+  it('carries roles and capability groups through together', () => {
+    expect(normalizeAuthGroups(groups)).toEqual([
+      'AMP.Viewer',
+      'AMP.Editor',
+      'OGC.Internal',
+    ])
+  })
+
+  it('gates API keys on the group, independent of portal role', () => {
+    expect(getAccessCapabilities(groups).canManageApiKeys).toBe(true)
+    expect(getAccessCapabilities(['AMP.Admin']).canManageApiKeys).toBe(false)
+    // A capability group on its own grants no portal access.
+    const onlyCapability = getAccessCapabilities(['OGC.Internal'])
+    expect(onlyCapability.canManageApiKeys).toBe(true)
+    expect(onlyCapability.roles).toEqual([])
+    expect(onlyCapability.canViewAmp).toBe(false)
   })
 })

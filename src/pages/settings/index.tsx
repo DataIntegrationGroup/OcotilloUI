@@ -246,7 +246,7 @@ export const SettingsPage = () => {
     name?: string
     email?: string
   }>()
-  const { roles, primaryRole } = useAccessCapabilities()
+  const { roles, primaryRole, canManageApiKeys } = useAccessCapabilities()
   const { preference, setMode } = useContext(ColorModeContext)
   const [autoCollapseOnMap, setAutoCollapseOnMap] = useBooleanPreference(
     PREFERENCE_KEYS.autoCollapseSidebarOnMap,
@@ -275,7 +275,7 @@ export const SettingsPage = () => {
           autoCollapseOnMap={autoCollapseOnMap}
           onAutoCollapseChange={setAutoCollapseOnMap}
         />
-        <ApiKeysCard />
+        <ApiKeysCard canManageKeys={canManageApiKeys} />
       </Stack>
     </Container>
   )

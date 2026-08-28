@@ -21,7 +21,7 @@ import {
   STORAGE_KEYS,
   IS_TESTING_AUTH,
 } from '@/config'
-import { normalizeAccessControlGroups } from '@/utils/accessControl'
+import { normalizeAuthGroups } from '@/utils/accessControl'
 
 const gravatarUrl = (email: string) => {
   const hash = email.trim().toLowerCase()
@@ -51,6 +51,7 @@ const TEST_AUTH_GROUPS: AuthentikPermissions = [
   'AMP.Admin',
   'Geothermal.Viewer',
   'Geothermal.Editor',
+  'OGC.Internal',
 ]
 const PKCE_LOCAL_FALLBACK_TTL_MS = 5 * 60 * 1000
 
@@ -128,7 +129,9 @@ export const clearPkceFallbacks = (): void => {
 
 export const getAccessToken = async ({
   refresh,
-}: { refresh?: boolean } = {}): Promise<string | null> => {
+}: {
+  refresh?: boolean
+} = {}): Promise<string | null> => {
   const currentAccess = localStorage.getItem(STORAGE_KEYS.accessToken)
 
   if (!refresh) return currentAccess
@@ -175,7 +178,7 @@ export const getAccessControlGroups = (): string[] | null => {
 
   try {
     const decoded = jwtDecode<{ groups?: string[] }>(idToken)
-    return normalizeAccessControlGroups(decoded.groups)
+    return normalizeAuthGroups(decoded.groups)
   } catch {
     return null
   }
@@ -328,7 +331,7 @@ export const authentikAuthProvider: AuthProvider = {
 
     try {
       const decoded = jwtDecode<AuthentikJwtPayload>(idToken)
-      return normalizeAccessControlGroups(decoded.groups)
+      return normalizeAuthGroups(decoded.groups)
     } catch {
       return null
     }

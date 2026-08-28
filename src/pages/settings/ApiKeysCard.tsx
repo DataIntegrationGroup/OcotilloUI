@@ -1,4 +1,10 @@
-import { Add, ContentCopy, Delete, Edit } from '@mui/icons-material'
+import {
+  Add,
+  ContentCopy,
+  Delete,
+  Edit,
+  WarningAmber,
+} from '@mui/icons-material'
 import {
   Alert,
   Box,
@@ -22,9 +28,12 @@ import {
 } from '@mui/material'
 import { useState } from 'react'
 import { SettingsCard } from '@/pages/settings/SettingsCard'
+import { OGC_INTERNAL_GROUP } from '@/utils/accessControl'
 import {
   type ApiKey,
+  apiKeyStatus,
   createApiKey,
+  describeExpiry,
   describeLastUsed,
   isApiKeyActive,
   renameApiKey,
@@ -179,9 +188,12 @@ const RevokeDialog = ({
  * and the card says as much rather than letting anyone assume otherwise.
  */
 export const ApiKeysCard = ({
+  canManageKeys,
   initialKeys = [],
   now = () => new Date(),
 }: {
+  /** Whether the account holds the group the API will require. */
+  canManageKeys: boolean
   initialKeys?: ApiKey[]
   now?: () => Date
 }) => {
@@ -218,7 +230,29 @@ export const ApiKeysCard = ({
     setRevoking(null)
   }
 
-  const sorted = sortApiKeys(keys)
+  // Shown rather than hidden: a missing card leaves someone guessing why, and
+  // this page exists to answer exactly that kind of question.
+  if (!canManageKeys) {
+    return (
+      <SettingsCard
+        title="API keys"
+        description="Keys for reaching the Ocotillo API from scripts and desktop tools."
+      >
+        <Alert severity="info">
+          API keys are limited to accounts in the{' '}
+          <Typography component="code" variant="inherit">
+            {OGC_INTERNAL_GROUP}
+          </Typography>{' '}
+          group, which this account does not hold. Ask an administrator to add
+          you if you need to reach the API from outside this app.
+        </Alert>
+      </SettingsCard>
+    )
+  }
+
+  // One reading of the clock per render, so every row agrees on what "now" is.
+  const at = now()
+  const sorted = sortApiKeys(keys, at)
 
   return (
     <SettingsCard
@@ -253,13 +287,21 @@ export const ApiKeysCard = ({
                 <TableCell>Name</TableCell>
                 <TableCell>Key</TableCell>
                 <TableCell>Created</TableCell>
+                <TableCell>Expires</TableCell>
                 <TableCell>Last used</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {sorted.map((key) => {
-                const active = isApiKeyActive(key)
+                const status = apiKeyStatus(key, at)
+                const active = isApiKeyActive(key, at)
+                const expiryColor =
+                  status === 'expired'
+                    ? 'error.main'
+                    : status === 'expiring'
+                      ? 'warning.main'
+                      : 'text.secondary'
 
                 return (
                   <TableRow key={key.id} sx={{ opacity: active ? 1 : 0.6 }}>
@@ -274,9 +316,9 @@ export const ApiKeysCard = ({
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
                           {key.name}
                         </Typography>
-                        {active ? null : (
+                        {status === 'revoked' ? (
                           <Chip size="small" label="Revoked" color="default" />
-                        )}
+                        ) : null}
                       </Stack>
                     </TableCell>
                     <TableCell>
@@ -285,13 +327,41 @@ export const ApiKeysCard = ({
                         variant="caption"
                         sx={{ overflowWrap: 'anywhere' }}
                       >
-                        {key.tokenPreview}
+                        {key.token_preview}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
-                        {new Date(key.createdAt).toLocaleDateString()}
+                        {new Date(key.created_at).toLocaleDateString()}
                       </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {/* A revoked key's own expiry no longer means anything. */}
+                      {status === 'revoked' ? (
+                        <Typography variant="body2" color="text.secondary">
+                          —
+                        </Typography>
+                      ) : (
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          alignItems="center"
+                        >
+                          {status === 'expiring' || status === 'expired' ? (
+                            <WarningAmber
+                              fontSize="small"
+                              sx={{ color: expiryColor }}
+                              aria-hidden
+                            />
+                          ) : null}
+                          <Typography
+                            variant="body2"
+                            sx={{ color: expiryColor }}
+                          >
+                            {describeExpiry(key, at)}
+                          </Typography>
+                        </Stack>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">

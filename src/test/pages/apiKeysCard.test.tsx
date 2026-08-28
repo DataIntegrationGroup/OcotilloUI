@@ -15,15 +15,29 @@ const laptopKey = createApiKey({
 })
 
 describe('ApiKeysCard', () => {
+  it('explains the missing group instead of hiding the card', () => {
+    render(<ApiKeysCard canManageKeys={false} initialKeys={[laptopKey]} />)
+
+    expect(screen.getByText(/limited to accounts in the/)).toBeInTheDocument()
+    expect(screen.getByText('OGC.Internal')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Generate key' })
+    ).not.toBeInTheDocument()
+    // No key data leaks into the gated state either.
+    expect(screen.queryByText('Field laptop')).not.toBeInTheDocument()
+  })
+
   it('says it is not connected to the API', () => {
-    render(<ApiKeysCard />)
+    render(<ApiKeysCard canManageKeys />)
 
     expect(screen.getByText(/Preview only/)).toBeInTheDocument()
     expect(screen.getByText(/No keys yet/)).toBeInTheDocument()
   })
 
   it('lists existing keys by preview, never the full token', () => {
-    render(<ApiKeysCard initialKeys={[laptopKey]} now={() => now} />)
+    render(
+      <ApiKeysCard canManageKeys initialKeys={[laptopKey]} now={() => now} />
+    )
 
     expect(screen.getByText('Field laptop')).toBeInTheDocument()
     expect(screen.getByText('ocot_abcde…mnop')).toBeInTheDocument()
@@ -33,7 +47,7 @@ describe('ApiKeysCard', () => {
 
   it('generates a key and shows it once for copying', async () => {
     const user = userEvent.setup()
-    render(<ApiKeysCard now={() => now} />)
+    render(<ApiKeysCard canManageKeys now={() => now} />)
 
     await user.click(screen.getByRole('button', { name: 'Generate key' }))
     await user.type(screen.getByLabelText('Key name'), 'QGIS at the office')
@@ -53,7 +67,7 @@ describe('ApiKeysCard', () => {
 
   it('will not generate a key without a name', async () => {
     const user = userEvent.setup()
-    render(<ApiKeysCard now={() => now} />)
+    render(<ApiKeysCard canManageKeys now={() => now} />)
 
     await user.click(screen.getByRole('button', { name: 'Generate key' }))
 
@@ -62,7 +76,9 @@ describe('ApiKeysCard', () => {
 
   it('renames a key', async () => {
     const user = userEvent.setup()
-    render(<ApiKeysCard initialKeys={[laptopKey]} now={() => now} />)
+    render(
+      <ApiKeysCard canManageKeys initialKeys={[laptopKey]} now={() => now} />
+    )
 
     await user.click(
       screen.getByRole('button', { name: 'Rename Field laptop' })
@@ -78,7 +94,9 @@ describe('ApiKeysCard', () => {
 
   it('revokes a key only after confirmation', async () => {
     const user = userEvent.setup()
-    render(<ApiKeysCard initialKeys={[laptopKey]} now={() => now} />)
+    render(
+      <ApiKeysCard canManageKeys initialKeys={[laptopKey]} now={() => now} />
+    )
 
     await user.click(
       screen.getByRole('button', { name: 'Revoke Field laptop' })
@@ -98,9 +116,44 @@ describe('ApiKeysCard', () => {
     expect(screen.getAllByText('Revoked').length).toBeGreaterThan(0)
   })
 
+  it('warns on a key that is close to expiring', () => {
+    const expiring = createApiKey({
+      name: 'Expiring soon',
+      now,
+      lifetimeDays: 3,
+      id: 'key-2',
+    })
+    render(
+      <ApiKeysCard canManageKeys initialKeys={[expiring]} now={() => now} />
+    )
+
+    expect(screen.getByText('Expires in 3 days')).toBeInTheDocument()
+  })
+
+  it('marks an expired key and disables its actions', () => {
+    const expired = createApiKey({
+      name: 'Old key',
+      now: new Date('2026-01-01T00:00:00Z'),
+      lifetimeDays: 30,
+      id: 'key-3',
+    })
+    render(
+      <ApiKeysCard canManageKeys initialKeys={[expired]} now={() => now} />
+    )
+
+    expect(screen.getByText('Expired')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Rename Old key' })
+    ).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: 'Revoke Old key' })
+    ).toBeDisabled()
+  })
+
   it('disables the actions on an already revoked key', () => {
     render(
       <ApiKeysCard
+        canManageKeys
         initialKeys={[revokeApiKey(laptopKey, now)]}
         now={() => now}
       />
