@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   describeScope,
+  describeSubject,
   grantQueryParams,
   grantStatusOf,
+  isUiSurfaceGrant,
   isUnfiltered,
+  matchesFilters,
   type PermissionGrant,
   scopeIdRequired,
   sortGrants,
@@ -123,9 +126,42 @@ describe('sortGrants', () => {
   })
 })
 
+describe('matchesFilters', () => {
+  const row = grant({
+    principal_id: 'ak-subject-1',
+    capability: 'read',
+    data_type: 'water level',
+    scope_type: 'global',
+  })
+
+  it('matches everything when nothing is filtered', () => {
+    expect(matchesFilters(row, {})).toBe(true)
+  })
+
+  it('matches on each filter the console offers', () => {
+    expect(matchesFilters(row, { principalId: '  ak-subject-1  ' })).toBe(true)
+    expect(matchesFilters(row, { principalId: 'ak-subject-2' })).toBe(false)
+    expect(matchesFilters(row, { capability: 'read' })).toBe(true)
+    expect(matchesFilters(row, { capability: 'enter' })).toBe(false)
+    expect(matchesFilters(row, { dataType: 'water level' })).toBe(true)
+    expect(matchesFilters(row, { dataType: 'site metadata' })).toBe(false)
+    expect(matchesFilters(row, { scopeType: 'global' })).toBe(true)
+    expect(matchesFilters(row, { scopeType: 'thing' })).toBe(false)
+  })
+
+  it('excludes a surface grant from a data type filter', () => {
+    const surface = grant({ data_type: null, ui_surface: 'ocotillo.lexicon' })
+
+    expect(matchesFilters(surface, { dataType: 'water level' })).toBe(false)
+    expect(matchesFilters(surface, {})).toBe(true)
+  })
+})
+
 describe('validateGrantForm', () => {
   const form = {
     principal_id: 'ak-subject-1',
+    subject: 'data_type',
+    ui_surface: '',
     scope_type: 'global',
     scope_id: '',
     starts_at: '2026-06-01',
@@ -159,6 +195,30 @@ describe('validateGrantForm', () => {
       validateGrantForm({ ...form, ends_at: '2026-05-01' })
     ).toHaveProperty('ends_at')
   })
+
+  it('requires a screen on a UI surface grant', () => {
+    expect(
+      validateGrantForm({ ...form, subject: 'ui_surface' })
+    ).toHaveProperty('ui_surface')
+    expect(
+      validateGrantForm({
+        ...form,
+        subject: 'ui_surface',
+        ui_surface: 'ocotillo.lexicon',
+      })
+    ).toEqual({})
+  })
+
+  it('asks for no scope id on a surface grant, whatever the scope select holds', () => {
+    expect(
+      validateGrantForm({
+        ...form,
+        subject: 'ui_surface',
+        ui_surface: 'ocotillo.lexicon',
+        scope_type: 'thing',
+      })
+    ).toEqual({})
+  })
 })
 
 describe('toCreateGrantInput', () => {
@@ -168,7 +228,9 @@ describe('toCreateGrantInput', () => {
     capability: 'enter',
     scope_type: 'global',
     scope_id: '99',
+    subject: 'data_type',
     data_type: 'water chemistry',
+    ui_surface: '',
     starts_at: '2026-06-01',
     ends_at: '',
     reason: '  seasonal fieldwork  ',
@@ -182,9 +244,26 @@ describe('toCreateGrantInput', () => {
       scope_type: 'global',
       scope_id: null,
       data_type: 'water chemistry',
+      ui_surface: null,
       starts_at: '2026-06-01',
       ends_at: null,
       reason: 'seasonal fieldwork',
+    })
+  })
+
+  it('sends a surface grant as global, with no data type', () => {
+    expect(
+      toCreateGrantInput({
+        ...form,
+        subject: 'ui_surface',
+        ui_surface: 'ocotillo.lexicon',
+        scope_type: 'thing',
+      })
+    ).toMatchObject({
+      scope_type: 'global',
+      scope_id: null,
+      data_type: null,
+      ui_surface: 'ocotillo.lexicon',
     })
   })
 
@@ -204,6 +283,22 @@ describe('zPermissionGrant', () => {
     expect(
       grant({ data_type: 'soil gas', capability: 'audit' }).data_type
     ).toBe('soil gas')
+  })
+
+  it('parses a surface grant, which carries no data type', () => {
+    const surfaceGrant = grant({
+      data_type: null,
+      ui_surface: 'ocotillo.lexicon',
+    })
+
+    expect(isUiSurfaceGrant(surfaceGrant)).toBe(true)
+    expect(describeSubject(surfaceGrant)).toBe('ocotillo.lexicon')
+  })
+
+  it('describes a data grant by its data type', () => {
+    expect(describeSubject(grant({ data_type: 'water level' }))).toBe(
+      'water level'
+    )
   })
 })
 

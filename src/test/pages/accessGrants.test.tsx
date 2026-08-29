@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AccessGrantsPage } from '@/pages/access/grants'
@@ -253,6 +253,103 @@ describe('AccessGrantsPage', () => {
       }),
       expect.anything()
     )
+  })
+
+  it('submits a UI surface grant as a global grant with no data type', async () => {
+    const user = userEvent.setup()
+    render(<AccessGrantsPage />)
+
+    await user.click(screen.getByRole('button', { name: 'Grant access' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Principal'), 'ak-subject-9')
+
+    await user.click(within(dialog).getByLabelText('Grant covers'))
+    await user.click(screen.getByRole('option', { name: 'a screen' }))
+    await user.click(within(dialog).getByLabelText('Screen'))
+    await user.click(screen.getByRole('option', { name: 'ocotillo.lexicon' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Grant' }))
+
+    expect(createMutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        principal_id: 'ak-subject-9',
+        scope_type: 'global',
+        scope_id: null,
+        data_type: null,
+        ui_surface: 'ocotillo.lexicon',
+      }),
+      expect.anything()
+    )
+  })
+
+  it('will not submit a surface grant with no screen chosen', async () => {
+    const user = userEvent.setup()
+    render(<AccessGrantsPage />)
+
+    await user.click(screen.getByRole('button', { name: 'Grant access' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Principal'), 'ak-subject-9')
+
+    await user.click(within(dialog).getByLabelText('Grant covers'))
+    await user.click(screen.getByRole('option', { name: 'a screen' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Grant' }))
+
+    expect(createMutateMock).not.toHaveBeenCalled()
+    expect(within(dialog).getByText(/screen is required/i)).toBeInTheDocument()
+  })
+
+  it('keeps the current filters after a grant is created', async () => {
+    const user = userEvent.setup()
+    render(<AccessGrantsPage />)
+
+    await user.type(screen.getByLabelText('Principal'), 'ak-subject-1')
+    await user.keyboard('{Enter}')
+
+    await user.click(screen.getByRole('button', { name: 'Grant access' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Principal'), 'ak-subject-1')
+    await user.click(within(dialog).getByRole('button', { name: 'Grant' }))
+
+    const [, options] = createMutateMock.mock.calls.at(-1) ?? []
+    await act(async () => {
+      options.onSuccess(grant({ id: 9, principal_id: 'ak-subject-1' }))
+    })
+
+    // The list refetches under the same question the admin asked.
+    expect(useAccessGrantsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ principalId: 'ak-subject-1' })
+    )
+    expect(screen.queryByText(/current filters do not show it/i)).toBeNull()
+  })
+
+  it('says so when the new grant lands outside the current filters', async () => {
+    const user = userEvent.setup()
+    render(<AccessGrantsPage />)
+
+    await user.type(screen.getByLabelText('Principal'), 'ak-subject-1')
+    await user.keyboard('{Enter}')
+
+    await user.click(screen.getByRole('button', { name: 'Grant access' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Principal'), 'ak-subject-2')
+    await user.click(within(dialog).getByRole('button', { name: 'Grant' }))
+
+    const [, options] = createMutateMock.mock.calls.at(-1) ?? []
+    await act(async () => {
+      options.onSuccess(grant({ id: 9, principal_id: 'ak-subject-2' }))
+    })
+
+    expect(screen.getByText(/Granted to ak-subject-2/i)).toBeInTheDocument()
+    // Still the admin's own filter until they ask for the new one.
+    expect(useAccessGrantsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ principalId: 'ak-subject-1' })
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Show it' }))
+
+    expect(useAccessGrantsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ principalId: 'ak-subject-2' })
+    )
+    expect(screen.queryByText(/current filters do not show it/i)).toBeNull()
   })
 
   it('blocks a scoped grant that names no scope id', async () => {

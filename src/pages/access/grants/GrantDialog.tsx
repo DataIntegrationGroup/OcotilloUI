@@ -18,7 +18,9 @@ import {
   type GrantFormErrors,
   PRINCIPAL_TYPES,
   scopeIdRequired,
+  scopeTypeFor,
   toCreateGrantInput,
+  UI_SURFACES,
   validateGrantForm,
 } from '@/utils/accessGrants'
 import { toDateInputValue } from '@/utils/accessLifecycle'
@@ -29,7 +31,9 @@ export type GrantFormState = {
   capability: string
   scope_type: string
   scope_id: string
+  subject: string
   data_type: string
+  ui_surface: string
   starts_at: string
   ends_at: string
   reason: string
@@ -44,7 +48,9 @@ export const emptyGrantForm = (
   capability: 'read',
   scope_type: 'global',
   scope_id: '',
+  subject: 'data_type',
   data_type: 'water level',
+  ui_surface: '',
   starts_at: toDateInputValue(today),
   ends_at: '',
   reason: '',
@@ -89,7 +95,10 @@ export const GrantDialog = ({
     onSubmit(toCreateGrantInput(form))
   }
 
-  const needsScopeId = scopeIdRequired(form.scope_type)
+  const isSurface = form.subject === 'ui_surface'
+  // A screen grant is global whatever the scope select last held.
+  const scopeType = scopeTypeFor(form.subject, form.scope_type)
+  const needsScopeId = scopeIdRequired(scopeType)
 
   return (
     <Dialog
@@ -155,16 +164,52 @@ export const GrantDialog = ({
               select
               fullWidth
               size="small"
-              label="Data type"
-              value={form.data_type}
-              onChange={(event) => set('data_type')(event.target.value)}
+              label="Grant covers"
+              value={form.subject}
+              onChange={(event) => set('subject')(event.target.value)}
             >
-              {ACCESS_DATA_TYPES.map((value) => (
-                <MenuItem key={value} value={value}>
-                  {value}
-                </MenuItem>
-              ))}
+              <MenuItem value="data_type">a data type</MenuItem>
+              <MenuItem value="ui_surface">a screen</MenuItem>
             </TextField>
+          </Stack>
+
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            {isSurface ? (
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Screen"
+                helperText={
+                  errors.ui_surface ??
+                  'Opens this screen for the principal. It grants no write access.'
+                }
+                error={Boolean(errors.ui_surface)}
+                value={form.ui_surface}
+                onChange={(event) => set('ui_surface')(event.target.value)}
+              >
+                {UI_SURFACES.map((value) => (
+                  <MenuItem key={value} value={value}>
+                    {value}
+                  </MenuItem>
+                ))}
+              </TextField>
+            ) : (
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Data type"
+                value={form.data_type}
+                onChange={(event) => set('data_type')(event.target.value)}
+              >
+                {ACCESS_DATA_TYPES.map((value) => (
+                  <MenuItem key={value} value={value}>
+                    {value}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
           </Stack>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -173,7 +218,13 @@ export const GrantDialog = ({
               fullWidth
               size="small"
               label="Scope"
-              value={form.scope_type}
+              disabled={isSurface}
+              helperText={
+                isSurface
+                  ? 'Navigation is app-wide, so a screen grant is global.'
+                  : undefined
+              }
+              value={scopeType}
               onChange={(event) => set('scope_type')(event.target.value)}
             >
               {GRANT_SCOPE_TYPES.map((value) => (
@@ -185,7 +236,7 @@ export const GrantDialog = ({
             <TextField
               fullWidth
               size="small"
-              label={needsScopeId ? `${form.scope_type} id` : 'Scope id'}
+              label={needsScopeId ? `${scopeType} id` : 'Scope id'}
               disabled={!needsScopeId}
               helperText={
                 errors.scope_id ??

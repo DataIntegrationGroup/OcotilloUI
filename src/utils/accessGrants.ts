@@ -38,10 +38,38 @@ export const ACCESS_DATA_TYPES = [
   'site metadata',
 ] as const
 
+/**
+ * Screens a grant may open, mirroring the API's `ui_surface` lexicon category.
+ * These are resource ids, the same strings `accessControl` policies key on,
+ * because that is what the nav item asks `/access/decision` about.
+ */
+export const UI_SURFACES = [
+  'ocotillo.map',
+  'ocotillo.thing-well',
+  'ocotillo.thing-well-projects',
+  'ocotillo.thing-well-batch-export',
+  'ocotillo.contact',
+  'ocotillo.collections',
+  'ocotillo.asset-unassociated',
+  'ocotillo.location',
+  'ocotillo.lexicon',
+  'ocotillo.hydrograph-correction',
+  'ocotillo.access-grants',
+] as const
+
+/**
+ * What a grant is about: data the principal may reach, or a screen it may
+ * open. The API stores exactly one of the two and rejects both or neither, so
+ * the form picks between them rather than offering both at once.
+ */
+export const GRANT_SUBJECTS = ['data_type', 'ui_surface'] as const
+
 export type PrincipalType = (typeof PRINCIPAL_TYPES)[number]
 export type Capability = (typeof CAPABILITIES)[number]
 export type GrantScopeType = (typeof GRANT_SCOPE_TYPES)[number]
 export type AccessDataType = (typeof ACCESS_DATA_TYPES)[number]
+export type UiSurface = (typeof UI_SURFACES)[number]
+export type GrantSubject = (typeof GRANT_SUBJECTS)[number]
 
 export const zPermissionGrant = z.looseObject({
   id: z.number(),
@@ -50,7 +78,9 @@ export const zPermissionGrant = z.looseObject({
   capability: zGrantEnum,
   scope_type: zGrantEnum,
   scope_id: z.number().nullable(),
-  data_type: zGrantEnum,
+  // Exactly one of these is set on any row the API returns.
+  data_type: zGrantEnum.nullable(),
+  ui_surface: zGrantEnum.nullable().default(null),
   starts_at: z.string(),
   ends_at: z.string().nullable(),
   granted_by: z.string(),
@@ -69,7 +99,8 @@ export type CreateGrantInput = {
   capability: string
   scope_type: string
   scope_id?: number | null
-  data_type: string
+  data_type?: string | null
+  ui_surface?: string | null
   starts_at: string
   ends_at?: string | null
   reason?: string | null
@@ -115,6 +146,29 @@ export const grantQueryParams = (filters: GrantFilters): GrantQueryParams => {
   return params
 }
 
+/**
+ * Whether a grant would appear under the filters currently applied.
+ *
+ * Used after a create: the list refetches either way, but a grant written
+ * outside the slice on screen would otherwise land nowhere visible, and
+ * "I granted it and nothing happened" is the report that follows. Revocation
+ * state is not considered — a grant is never born revoked.
+ */
+export const matchesFilters = (
+  grant: PermissionGrant,
+  filters: GrantFilters
+): boolean => {
+  const principalId = filters.principalId?.trim()
+
+  if (principalId && grant.principal_id !== principalId) return false
+  if (filters.capability && grant.capability !== filters.capability)
+    return false
+  if (filters.dataType && grant.data_type !== filters.dataType) return false
+  if (filters.scopeType && grant.scope_type !== filters.scopeType) return false
+
+  return true
+}
+
 /** True when the console is showing the unfiltered admin-wide audit view. */
 export const isUnfiltered = (filters: GrantFilters): boolean =>
   !filters.principalId?.trim() &&
@@ -144,8 +198,27 @@ export const describeScope = (grant: PermissionGrant): string => {
 }
 
 export type GrantFormErrors = Partial<
-  Record<'principal_id' | 'scope_id' | 'ends_at', string>
+  Record<'principal_id' | 'scope_id' | 'ends_at' | 'ui_surface', string>
 >
+
+/** True for a grant that opens a screen rather than reaching data. */
+export const isUiSurfaceGrant = (grant: PermissionGrant): boolean =>
+  Boolean(grant.ui_surface)
+
+/**
+ * What the grant is about, for the table. A row always has one of the two, but
+ * an API that grows a third subject should not render an empty cell.
+ */
+export const describeSubject = (grant: PermissionGrant): string =>
+  grant.data_type ?? grant.ui_surface ?? 'unknown'
+
+/**
+ * A screen grant is app-wide: navigation is not scoped to a group or a thing,
+ * and the API answers 422 on `scope_type` for anything else. The form forces
+ * global rather than letting someone build a grant the API will refuse.
+ */
+export const scopeTypeFor = (subject: string, scopeType: string): string =>
+  subject === 'ui_surface' ? 'global' : scopeType
 
 /**
  * Validates what the console can know locally. Everything else — whether the
@@ -154,20 +227,27 @@ export type GrantFormErrors = Partial<
  */
 export const validateGrantForm = (form: {
   principal_id: string
+  subject: string
+  ui_surface: string
   scope_type: string
   scope_id: string
   starts_at: string
   ends_at: string
 }): GrantFormErrors => {
   const errors: GrantFormErrors = {}
+  const scopeType = scopeTypeFor(form.subject, form.scope_type)
 
   if (!form.principal_id.trim()) {
     errors.principal_id = 'A principal is required.'
   }
 
-  if (scopeIdRequired(form.scope_type)) {
+  if (form.subject === 'ui_surface' && !form.ui_surface) {
+    errors.ui_surface = 'A screen is required for a UI surface grant.'
+  }
+
+  if (scopeIdRequired(scopeType)) {
     if (!form.scope_id.trim()) {
-      errors.scope_id = `A ${form.scope_type} id is required for a ${form.scope_type}-scoped grant.`
+      errors.scope_id = `A ${scopeType} id is required for a ${scopeType}-scoped grant.`
     } else if (!/^\d+$/.test(form.scope_id.trim())) {
       errors.scope_id = 'Scope id must be a whole number.'
     }
@@ -182,21 +262,30 @@ export const toCreateGrantInput = (form: {
   capability: string
   scope_type: string
   scope_id: string
+  subject: string
   data_type: string
+  ui_surface: string
   starts_at: string
   ends_at: string
   reason: string
-}): CreateGrantInput => ({
-  principal_type: form.principal_type,
-  principal_id: form.principal_id.trim(),
-  capability: form.capability,
-  scope_type: form.scope_type,
-  scope_id: scopeIdRequired(form.scope_type) ? Number(form.scope_id) : null,
-  data_type: form.data_type,
-  starts_at: form.starts_at,
-  ends_at: form.ends_at || null,
-  reason: form.reason.trim() || null,
-})
+}): CreateGrantInput => {
+  const isSurface = form.subject === 'ui_surface'
+  const scopeType = scopeTypeFor(form.subject, form.scope_type)
+
+  return {
+    principal_type: form.principal_type,
+    principal_id: form.principal_id.trim(),
+    capability: form.capability,
+    scope_type: scopeType,
+    scope_id: scopeIdRequired(scopeType) ? Number(form.scope_id) : null,
+    // Exactly one subject reaches the API; sending both is a 422.
+    data_type: isSurface ? null : form.data_type,
+    ui_surface: isSurface ? form.ui_surface : null,
+    starts_at: form.starts_at,
+    ends_at: form.ends_at || null,
+    reason: form.reason.trim() || null,
+  }
+}
 
 /**
  * Grants sort by lifecycle first. The list spans principals now, so

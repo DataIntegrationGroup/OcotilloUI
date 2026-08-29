@@ -30,11 +30,13 @@ import {
   CAPABILITIES,
   type CreateGrantInput,
   describeScope,
+  describeSubject,
   GRANT_SCOPE_TYPES,
   type GrantFilters,
   type GrantStatus,
   grantStatusOf,
   isUnfiltered,
+  matchesFilters,
   type PermissionGrant,
   sortGrants,
 } from '@/utils/accessGrants'
@@ -73,6 +75,10 @@ const GrantsTab = () => {
     null
   )
   const [today] = useState(() => new Date())
+  // A grant written outside the slice on screen. The list refetches either
+  // way; this is what says so, rather than the row landing nowhere visible.
+  const [grantedOutOfView, setGrantedOutOfView] =
+    useState<PermissionGrant | null>(null)
 
   const grants = useAccessGrants(filters)
   const createGrant = useCreateGrant()
@@ -88,17 +94,23 @@ const GrantsTab = () => {
     setFilters({})
   }
 
+  const showOnlyPrincipal = (principalId: string) => {
+    setPrincipal(principalId)
+    setFilters({
+      principalId,
+      includeRevoked: filters.includeRevoked,
+    })
+    setGrantedOutOfView(null)
+  }
+
   const handleCreate = (input: CreateGrantInput) => {
     createGrant.mutate(input, {
       onSuccess: (grant) => {
         setIsDialogOpen(false)
-        // Grant to a principal the current filter excludes and the new row
-        // would land off-screen, so the console narrows to it instead.
-        setPrincipal(grant.principal_id)
-        setFilters({
-          principalId: grant.principal_id,
-          includeRevoked: filters.includeRevoked,
-        })
+        // The filters an admin set are theirs to change. Creating a grant
+        // refetches the list in place; it does not narrow the view to the new
+        // row, which would hide every grant they were already looking at.
+        setGrantedOutOfView(matchesFilters(grant, filters) ? null : grant)
       },
     })
   }
@@ -126,6 +138,24 @@ const GrantsTab = () => {
           Grant access
         </Button>
       </Stack>
+
+      {grantedOutOfView ? (
+        <Alert
+          severity="info"
+          onClose={() => setGrantedOutOfView(null)}
+          action={
+            <Button
+              size="small"
+              onClick={() => showOnlyPrincipal(grantedOutOfView.principal_id)}
+            >
+              Show it
+            </Button>
+          }
+        >
+          Granted to {grantedOutOfView.principal_id}. The current filters do not
+          show it.
+        </Alert>
+      ) : null}
 
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Stack spacing={2}>
@@ -344,7 +374,7 @@ const GrantsTable = ({
         <TableRow>
           <TableCell>Principal</TableCell>
           <TableCell>Capability</TableCell>
-          <TableCell>Data type</TableCell>
+          <TableCell>Covers</TableCell>
           <TableCell>Scope</TableCell>
           <TableCell>Dates</TableCell>
           <TableCell>Granted by</TableCell>
@@ -373,7 +403,7 @@ const GrantsTable = ({
                 </Stack>
               </TableCell>
               <TableCell>{grant.capability}</TableCell>
-              <TableCell>{grant.data_type}</TableCell>
+              <TableCell>{describeSubject(grant)}</TableCell>
               <TableCell>{describeScope(grant)}</TableCell>
               <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Typography variant="body2">
