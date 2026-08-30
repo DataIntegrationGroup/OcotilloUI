@@ -1,94 +1,52 @@
 /**
- * Client-side model for personal API keys.
+ * Client model for personal API keys (`/api_key` on the Ocotillo API).
  *
- * There is no API behind this yet: the settings page renders the full
- * generate / rename / revoke flow against local state so the interaction can
- * be reviewed before the endpoints exist. Nothing here talks to a server, and
- * nothing here should be treated as a real credential — see `ApiKeysCard`,
- * which says so on screen.
+ * Hand-written, like `accessGrants.ts`: the committed `openapi-auth.json`
+ * snapshot predates the route, so `src/generated` cannot describe it. The
+ * shapes mirror `schemas/api_key.py`; refresh the spec and regenerate once
+ * `/api_key` is in it.
  *
- * When the backend lands, the shapes below are what the page expects; swap the
- * local state for the real calls and keep the helpers. Field names are
- * snake_case to match what the API serialises, so a real response can be
- * dropped in without a translation layer in between.
+ * A key authorizes `/ogcapi-internal` and nothing else, which is why the card
+ * is gated on the group that mount is gated on.
  */
 
-export type ApiKey = {
-  id: string
-  name: string
-  /** Full token. Only ever held for a freshly generated key, never stored. */
-  token?: string
-  /** The leading characters, which is all a server would return afterwards. */
-  token_preview: string
-  created_at: string
-  expires_at: string
-  last_used_at?: string | null
-  revoked_at?: string | null
-}
+import { z } from 'zod'
+
+export const zApiKey = z.looseObject({
+  id: z.number(),
+  name: z.string(),
+  /** The leading characters, which is all the server returns after creation. */
+  token_preview: z.string(),
+  scope: z.string(),
+  created_at: z.string(),
+  expires_at: z.string(),
+  last_used_at: z.string().nullable().default(null),
+  revoked_at: z.string().nullable().default(null),
+})
+
+export const zApiKeyList = z.array(zApiKey)
+
+/**
+ * The create response, and the only one that ever carries the token. Nothing
+ * re-reads it: only the digest is stored, so a client that loses this response
+ * has to issue another key.
+ */
+export const zNewApiKey = zApiKey.extend({ token: z.string() })
+
+export type ApiKey = z.infer<typeof zApiKey>
+export type NewApiKey = z.infer<typeof zNewApiKey>
 
 /** What a key is worth at a glance: usable, nearly stale, or finished. */
 export type ApiKeyStatus = 'active' | 'expiring' | 'expired' | 'revoked'
 
-const TOKEN_PREFIX = 'ocot'
-const TOKEN_BODY_LENGTH = 32
-const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'
-
-/** How long an issued key lasts. The API will own this; the page mirrors it. */
-export const API_KEY_LIFETIME_DAYS = 90
-
 /**
  * How early the page starts warning. Long enough that someone who only opens
  * settings occasionally still sees the warning before the key stops working.
+ * The lifetime itself is the API's to decide — it clamps what it is asked for.
  */
 export const API_KEY_EXPIRY_WARNING_DAYS = 14
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
-
-const randomValues = (length: number): number[] => {
-  const values = new Uint32Array(length)
-  crypto.getRandomValues(values)
-  return [...values]
-}
-
-/**
- * A token that looks like what the API will issue, so the reveal dialog and
- * the copy affordance can be judged at the right length.
- */
-export const generateApiKeyToken = (): string => {
-  const body = randomValues(TOKEN_BODY_LENGTH)
-    .map((value) => ALPHABET[value % ALPHABET.length])
-    .join('')
-
-  return `${TOKEN_PREFIX}_${body}`
-}
-
-/** What a server would show after creation: enough to recognise, not to use. */
-export const previewOfToken = (token: string): string =>
-  // Prefix, separator, five characters — enough to tell two keys apart.
-  `${token.slice(0, TOKEN_PREFIX.length + 6)}…${token.slice(-4)}`
-
-export const createApiKey = ({
-  name,
-  now,
-  token = generateApiKeyToken(),
-  id,
-  lifetimeDays = API_KEY_LIFETIME_DAYS,
-}: {
-  name: string
-  now: Date
-  token?: string
-  id?: string
-  lifetimeDays?: number
-}): ApiKey => ({
-  id: id ?? token.slice(-12),
-  name: name.trim() || 'Untitled key',
-  token,
-  token_preview: previewOfToken(token),
-  created_at: now.toISOString(),
-  expires_at: new Date(now.getTime() + lifetimeDays * MS_PER_DAY).toISOString(),
-  last_used_at: null,
-  revoked_at: null,
-})
 
 /**
  * Whole days left, rounded up, so a key with any part of a day left still
@@ -113,18 +71,13 @@ export const isApiKeyActive = (key: ApiKey, now: Date): boolean => {
   return status === 'active' || status === 'expiring'
 }
 
-export const revokeApiKey = (key: ApiKey, now: Date): ApiKey => ({
-  ...key,
-  token: undefined,
-  revoked_at: now.toISOString(),
-})
-
-export const renameApiKey = (key: ApiKey, name: string): ApiKey => ({
-  ...key,
-  name: name.trim() || key.name,
-})
-
-/** Active keys first, newest first within each group. */
+/**
+ * Active keys first, newest first within each group.
+ *
+ * The route already returns this order. Sorting again costs nothing and keeps
+ * the table right when a mutation puts a fresh row in the cache before the
+ * refetch lands.
+ */
 export const sortApiKeys = (keys: ApiKey[], now: Date): ApiKey[] =>
   [...keys].sort((a, b) => {
     if (isApiKeyActive(a, now) !== isApiKeyActive(b, now))

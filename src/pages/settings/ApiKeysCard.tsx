@@ -10,6 +10,7 @@ import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -27,17 +28,22 @@ import {
   Typography,
 } from '@mui/material'
 import { useState } from 'react'
+import {
+  useApiKeys,
+  useCreateApiKey,
+  useRenameApiKey,
+  useRevokeApiKey,
+} from '@/hooks'
 import { SettingsCard } from '@/pages/settings/SettingsCard'
+import { settings } from '@/settings'
 import { OGC_INTERNAL_GROUP } from '@/utils/accessControl'
 import {
   type ApiKey,
   apiKeyStatus,
-  createApiKey,
   describeExpiry,
   describeLastUsed,
   isApiKeyActive,
-  renameApiKey,
-  revokeApiKey,
+  type NewApiKey,
   sortApiKeys,
 } from '@/utils/apiKeys'
 
@@ -50,7 +56,7 @@ const NewKeyDialog = ({
   apiKey,
   onClose,
 }: {
-  apiKey: ApiKey | null
+  apiKey: NewApiKey | null
   onClose: () => void
 }) => {
   const [copied, setCopied] = useState(false)
@@ -179,55 +185,165 @@ const RevokeDialog = ({
   </Dialog>
 )
 
+/** The one URL a desktop client connects to. A key reaches this and nothing else. */
+const INTERNAL_OGC_URL = `${settings.ocotillo_api_url.replace(/\/+$/, '')}/ogcapi-internal`
+
+/**
+ * How to use a key from ArcGIS Pro.
+ *
+ * Pro cannot carry an Authentik bearer token, which is why keys exist at all:
+ * Basic auth with a saved login is the only scheme its OGC API connection
+ * dialog supports, and the query parameter is the fallback for when an
+ * intermediary refuses Basic.
+ */
+const ArcGisDialog = ({
+  open,
+  onClose,
+}: {
+  open: boolean
+  onClose: () => void
+}) => {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(INTERNAL_OGC_URL)
+    setCopied(true)
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>Connecting from ArcGIS Pro</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2}>
+          <DialogContentText>
+            A key connects ArcGIS Pro to the internal OGC collections, which
+            include draft records and skip the public filters. Generate the key
+            first. It is shown once, so copy it before you start.
+          </DialogContentText>
+
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>
+              Server URL
+            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography
+                component="code"
+                sx={{
+                  flex: 1,
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 1,
+                  bgcolor: 'action.hover',
+                  overflowWrap: 'anywhere',
+                  fontSize: 13,
+                }}
+              >
+                {INTERNAL_OGC_URL}
+              </Typography>
+              <Tooltip title={copied ? 'Copied' : 'Copy URL'}>
+                <IconButton onClick={handleCopy} aria-label="Copy URL">
+                  <ContentCopy fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Box>
+
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>
+              Basic authentication (preferred)
+            </Typography>
+            <Typography
+              variant="body2"
+              component="ol"
+              // Tailwind's preflight resets list-style, so numbered steps stop
+              // being numbered unless the list asks for it back.
+              sx={{ listStyle: 'decimal', pl: 3, m: 0 }}
+            >
+              <li>
+                <strong>Insert</strong> → <strong>Connections</strong> →{' '}
+                <strong>Server</strong> → <strong>New OGC API Server</strong>.
+              </li>
+              <li>Paste the server URL above.</li>
+              <li>
+                Authentication: <strong>Server Authentication</strong>. Any
+                username works, so use <code>apikey</code>. Password: your key.
+              </li>
+              <li>
+                Check <strong>Save Login</strong> so Pro keeps the key with the
+                connection.
+              </li>
+            </Typography>
+          </Box>
+
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>
+              If Basic is refused
+            </Typography>
+            <Typography variant="body2">
+              Leave Authentication as <strong>No Authentication</strong>. Add a
+              custom request parameter named <code>token</code> with your key as
+              the value. Pro re-appends it to every request, including paging.
+            </Typography>
+          </Box>
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Done</Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
+
 /**
  * Personal API keys.
  *
- * Deliberately not wired to the backend: the endpoints do not exist yet, so
- * this renders the whole flow against local state to settle the interaction
- * first. Keys generated here are not credentials and do not survive a reload,
- * and the card says as much rather than letting anyone assume otherwise.
+ * A key here is a real credential for `/ogcapi-internal` and nothing else. The
+ * token is shown once, at creation, because that is the only time the server
+ * has it — everything after reads the digest.
  */
 export const ApiKeysCard = ({
   canManageKeys,
-  initialKeys = [],
   now = () => new Date(),
 }: {
-  /** Whether the account holds the group the API will require. */
+  /** Whether the account holds the group the route requires. */
   canManageKeys: boolean
-  initialKeys?: ApiKey[]
   now?: () => Date
 }) => {
-  const [keys, setKeys] = useState<ApiKey[]>(initialKeys)
-  const [newKey, setNewKey] = useState<ApiKey | null>(null)
+  const [newKey, setNewKey] = useState<NewApiKey | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [editing, setEditing] = useState<ApiKey | null>(null)
   const [revoking, setRevoking] = useState<ApiKey | null>(null)
+  const [isShowingArcGis, setIsShowingArcGis] = useState(false)
+
+  const keys = useApiKeys()
+  const createKey = useCreateApiKey()
+  const renameKey = useRenameApiKey()
+  const revokeKey = useRevokeApiKey()
 
   const handleGenerate = (name: string) => {
-    const created = createApiKey({ name, now: now() })
-    setKeys((existing) => [created, ...existing])
-    setIsGenerating(false)
-    setNewKey(created)
+    createKey.mutate(
+      { name },
+      {
+        onSuccess: (created) => {
+          setIsGenerating(false)
+          // The one moment the token exists outside the server.
+          setNewKey(created)
+        },
+      }
+    )
   }
 
   const handleRename = (name: string) => {
     if (!editing) return
-    setKeys((existing) =>
-      existing.map((key) =>
-        key.id === editing.id ? renameApiKey(key, name) : key
-      )
+    renameKey.mutate(
+      { id: editing.id, name },
+      { onSuccess: () => setEditing(null) }
     )
-    setEditing(null)
   }
 
   const handleRevoke = () => {
     if (!revoking) return
-    setKeys((existing) =>
-      existing.map((key) =>
-        key.id === revoking.id ? revokeApiKey(key, now()) : key
-      )
-    )
-    setRevoking(null)
+    revokeKey.mutate(revoking.id, { onSuccess: () => setRevoking(null) })
   }
 
   // Shown rather than hidden: a missing card leaves someone guessing why, and
@@ -252,7 +368,7 @@ export const ApiKeysCard = ({
 
   // One reading of the clock per render, so every row agrees on what "now" is.
   const at = now()
-  const sorted = sortApiKeys(keys, at)
+  const sorted = keys.data ? sortApiKeys(keys.data, at) : []
 
   return (
     <SettingsCard
@@ -261,22 +377,49 @@ export const ApiKeysCard = ({
     >
       <Stack spacing={2}>
         <Alert severity="info">
-          Preview only. The API does not issue keys yet, so keys created here
-          are not real credentials and disappear when you reload the page.
+          A key reaches the internal OGC collections and nothing else. It is
+          shown once, when it is created.
         </Alert>
 
-        <Box>
+        {keys.isError ? (
+          <Alert severity="error">
+            Failed to load your keys.
+            {keys.error instanceof Error ? ` ${keys.error.message}` : null}
+          </Alert>
+        ) : null}
+
+        {createKey.isError ? (
+          <Alert severity="error">
+            Failed to issue a key.
+            {createKey.error instanceof Error
+              ? ` ${createKey.error.message}`
+              : null}
+          </Alert>
+        ) : null}
+
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Button
             variant="contained"
             size="small"
             startIcon={<Add fontSize="small" />}
+            disabled={createKey.isPending}
             onClick={() => setIsGenerating(true)}
           >
-            Generate key
+            {createKey.isPending ? 'Generating...' : 'Generate key'}
           </Button>
-        </Box>
+          <Button size="small" onClick={() => setIsShowingArcGis(true)}>
+            Connecting from ArcGIS Pro
+          </Button>
+        </Stack>
 
-        {sorted.length === 0 ? (
+        {keys.isLoading ? (
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <CircularProgress size={18} />
+            <Typography variant="body2" color="text.secondary">
+              Loading your keys...
+            </Typography>
+          </Stack>
+        ) : sorted.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
             No keys yet. Generate one to use the API outside this app.
           </Typography>
@@ -430,6 +573,10 @@ export const ApiKeysCard = ({
         onConfirm={handleRevoke}
       />
       <NewKeyDialog apiKey={newKey} onClose={() => setNewKey(null)} />
+      <ArcGisDialog
+        open={isShowingArcGis}
+        onClose={() => setIsShowingArcGis(false)}
+      />
     </SettingsCard>
   )
 }
