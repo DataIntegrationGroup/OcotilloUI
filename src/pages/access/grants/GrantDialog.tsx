@@ -13,13 +13,15 @@ import { useState } from 'react'
 import { useGroups } from '@/hooks'
 import {
   ACCESS_DATA_TYPES,
-  CAPABILITIES,
+  capabilityFor,
+  DATA_CAPABILITIES,
   type CreateGrantInput,
   GRANT_SCOPE_TYPES,
   type GrantFormErrors,
   PRINCIPAL_TYPES,
   scopeIdRequired,
   scopeTypeFor,
+  SURFACE_CAPABILITY,
   toCreateGrantInput,
   UI_SURFACES,
   validateGrantForm,
@@ -98,6 +100,8 @@ export const GrantDialog = ({
   }
 
   const isSurface = form.subject === 'ui_surface'
+  // A screen grant carries `view`; the data verbs belong to a data grant.
+  const capability = capabilityFor(form.subject, form.capability)
   // A screen grant is global whatever the scope select last held.
   const scopeType = scopeTypeFor(form.subject, form.scope_type)
   const needsScopeId = scopeIdRequired(scopeType)
@@ -153,14 +157,22 @@ export const GrantDialog = ({
               fullWidth
               size="small"
               label="Capability"
-              value={form.capability}
+              disabled={isSurface}
+              helperText={
+                isSurface
+                  ? 'A screen grant opens a screen, nothing more.'
+                  : undefined
+              }
+              value={capability}
               onChange={(event) => set('capability')(event.target.value)}
             >
-              {CAPABILITIES.map((value) => (
-                <MenuItem key={value} value={value}>
-                  {value}
-                </MenuItem>
-              ))}
+              {(isSurface ? [SURFACE_CAPABILITY] : DATA_CAPABILITIES).map(
+                (value) => (
+                  <MenuItem key={value} value={value}>
+                    {value}
+                  </MenuItem>
+                )
+              )}
             </TextField>
             <TextField
               select

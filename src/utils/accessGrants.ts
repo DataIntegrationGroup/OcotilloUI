@@ -29,7 +29,24 @@ import {
 const zGrantEnum = z.string()
 
 export const PRINCIPAL_TYPES = ['user', 'role', 'api key'] as const
-export const CAPABILITIES = ['read', 'enter', 'correct', 'administer'] as const
+export const CAPABILITIES = [
+  'read',
+  'enter',
+  'correct',
+  'administer',
+  'view',
+] as const
+
+/**
+ * `view` is the screen verb and the rest are data verbs; the API keeps them
+ * apart and rejects either used over the wrong subject, so the form offers
+ * only the ones that can succeed.
+ */
+export const SURFACE_CAPABILITY = 'view'
+
+export const DATA_CAPABILITIES = CAPABILITIES.filter(
+  (capability) => capability !== SURFACE_CAPABILITY
+)
 export const GRANT_SCOPE_TYPES = ['global', 'group', 'thing'] as const
 export const ACCESS_DATA_TYPES = [
   'water chemistry',
@@ -91,6 +108,20 @@ export const zPermissionGrant = z.looseObject({
 
 export const zPermissionGrantList = z.array(zPermissionGrant)
 
+/**
+ * `GET /access/grant` answers with a page, not a list: `{items, total, page,
+ * size, pages}`. Everything but `items` is read loosely — the console needs
+ * the total to know whether it is looking at everything.
+ */
+export const zPermissionGrantPage = z.looseObject({
+  items: zPermissionGrantList,
+  total: z.number().nullable(),
+  page: z.number().nullable(),
+  size: z.number().nullable(),
+})
+
+export type PermissionGrantPage = z.infer<typeof zPermissionGrantPage>
+
 export type PermissionGrant = z.infer<typeof zPermissionGrant>
 
 export type CreateGrantInput = {
@@ -131,7 +162,19 @@ export type GrantQueryParams = {
   data_type?: string
   scope_type?: string
   include_revoked: boolean
+  size: number
 }
+
+/**
+ * How many grants the console asks for at once.
+ *
+ * The route pages at 25 by default and caps at 10000. Sorting by lifecycle and
+ * the screen/data filter both run over the whole result here, so asking for one
+ * page at a time would sort and filter a slice rather than the set. This asks
+ * for more than any principal will have and says so when the answer is short —
+ * see `isPartialPage`.
+ */
+export const GRANT_PAGE_SIZE = 500
 
 /**
  * Only set filters are sent. Every one is optional on the API, and an empty
@@ -141,6 +184,7 @@ export type GrantQueryParams = {
 export const grantQueryParams = (filters: GrantFilters): GrantQueryParams => {
   const params: GrantQueryParams = {
     include_revoked: filters.includeRevoked ?? false,
+    size: GRANT_PAGE_SIZE,
   }
 
   const principalId = filters.principalId?.trim()
@@ -176,6 +220,13 @@ export const matchesFilters = (
 
   return true
 }
+
+/**
+ * Whether the API held back rows the console never saw. Silence here would be
+ * a table that looks complete and is not.
+ */
+export const isPartialPage = (page: PermissionGrantPage | undefined): boolean =>
+  page !== undefined && page.total !== null && page.items.length < page.total
 
 /** True when the console is showing the unfiltered admin-wide audit view. */
 export const isUnfiltered = (filters: GrantFilters): boolean =>
@@ -222,7 +273,10 @@ export const describeScope = (
 }
 
 export type GrantFormErrors = Partial<
-  Record<'principal_id' | 'scope_id' | 'ends_at' | 'ui_surface', string>
+  Record<
+    'principal_id' | 'scope_id' | 'ends_at' | 'ui_surface' | 'capability',
+    string
+  >
 >
 
 /** True for a grant that opens a screen rather than reaching data. */
@@ -245,6 +299,13 @@ export const scopeTypeFor = (subject: string, scopeType: string): string =>
   subject === 'ui_surface' ? 'global' : scopeType
 
 /**
+ * A screen grant carries `view` and nothing else — `read` over a screen is a
+ * second spelling of the same permission, and the API answers 422 for it.
+ */
+export const capabilityFor = (subject: string, capability: string): string =>
+  subject === 'ui_surface' ? SURFACE_CAPABILITY : capability
+
+/**
  * Validates what the console can know locally. Everything else — whether the
  * principal exists, whether the scope id resolves — is the API's answer to
  * give, and is surfaced from its 422 rather than guessed at here.
@@ -252,6 +313,7 @@ export const scopeTypeFor = (subject: string, scopeType: string): string =>
 export const validateGrantForm = (form: {
   principal_id: string
   subject: string
+  capability: string
   ui_surface: string
   scope_type: string
   scope_id: string
@@ -260,6 +322,10 @@ export const validateGrantForm = (form: {
 }): GrantFormErrors => {
   const errors: GrantFormErrors = {}
   const scopeType = scopeTypeFor(form.subject, form.scope_type)
+
+  if (form.subject === 'data_type' && form.capability === SURFACE_CAPABILITY) {
+    errors.capability = `'${SURFACE_CAPABILITY}' opens a screen, not a data type.`
+  }
 
   if (!form.principal_id.trim()) {
     errors.principal_id = 'A principal is required.'
@@ -299,7 +365,7 @@ export const toCreateGrantInput = (form: {
   return {
     principal_type: form.principal_type,
     principal_id: form.principal_id.trim(),
-    capability: form.capability,
+    capability: capabilityFor(form.subject, form.capability),
     scope_type: scopeType,
     scope_id: scopeIdRequired(scopeType) ? Number(form.scope_id) : null,
     // Exactly one subject reaches the API; sending both is a 422.

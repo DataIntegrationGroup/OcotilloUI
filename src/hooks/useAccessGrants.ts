@@ -5,8 +5,9 @@ import {
   type GrantFilters,
   grantQueryParams,
   type PermissionGrant,
+  type PermissionGrantPage,
   zPermissionGrant,
-  zPermissionGrantList,
+  zPermissionGrantPage,
 } from '@/utils/accessGrants'
 
 /**
@@ -16,15 +17,19 @@ import {
  * admin-wide audit view and each filter narrows it. Filters are sent only
  * when set: an empty string is not the same question as "any", and passing
  * one would match only grants whose field is literally empty.
+ *
+ * The route answers with a page rather than a list, so the query returns the
+ * envelope: the console needs `total` to tell a complete table from a truncated
+ * one.
  */
 export const useAccessGrants = (filters: GrantFilters) =>
-  useQuery<PermissionGrant[]>({
+  useQuery<PermissionGrantPage>({
     queryKey: ['access-grants', grantQueryParams(filters)],
     queryFn: async () => {
       const response = await fetcher('access/grant', {
         params: grantQueryParams(filters),
       })
-      return zPermissionGrantList.parse(response.data)
+      return zPermissionGrantPage.parse(response.data)
     },
   })
 

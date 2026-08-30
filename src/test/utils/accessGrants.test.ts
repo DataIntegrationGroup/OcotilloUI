@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   describeScope,
+  GRANT_PAGE_SIZE,
   describeSubject,
   grantQueryParams,
   grantStatusOf,
@@ -196,6 +197,7 @@ describe('validateGrantForm', () => {
   const form = {
     principal_id: 'ak-subject-1',
     subject: 'data_type',
+    capability: 'read',
     ui_surface: '',
     scope_type: 'global',
     scope_id: '',
@@ -229,6 +231,12 @@ describe('validateGrantForm', () => {
     expect(
       validateGrantForm({ ...form, ends_at: '2026-05-01' })
     ).toHaveProperty('ends_at')
+  })
+
+  it('rejects the screen verb over a data type', () => {
+    expect(validateGrantForm({ ...form, capability: 'view' })).toHaveProperty(
+      'capability'
+    )
   })
 
   it('requires a screen on a UI surface grant', () => {
@@ -286,20 +294,28 @@ describe('toCreateGrantInput', () => {
     })
   })
 
-  it('sends a surface grant as global, with no data type', () => {
+  it('sends a surface grant as global, with no data type and the view verb', () => {
     expect(
       toCreateGrantInput({
         ...form,
         subject: 'ui_surface',
         ui_surface: 'ocotillo.lexicon',
         scope_type: 'thing',
+        capability: 'read',
       })
     ).toMatchObject({
+      capability: 'view',
       scope_type: 'global',
       scope_id: null,
       data_type: null,
       ui_surface: 'ocotillo.lexicon',
     })
+  })
+
+  it('leaves a data grant its own verb', () => {
+    expect(
+      toCreateGrantInput({ ...form, capability: 'correct' }).capability
+    ).toBe('correct')
   })
 
   it('sends the scope id as a number when the scope needs one', () => {
@@ -345,7 +361,10 @@ describe('toDateInputValue', () => {
 
 describe('grantQueryParams', () => {
   it('sends only include_revoked when nothing is filtered', () => {
-    expect(grantQueryParams({})).toEqual({ include_revoked: false })
+    expect(grantQueryParams({})).toEqual({
+      include_revoked: false,
+      size: GRANT_PAGE_SIZE,
+    })
   })
 
   it('maps each filter to its query name', () => {
@@ -363,12 +382,14 @@ describe('grantQueryParams', () => {
       data_type: 'water level',
       scope_type: 'thing',
       include_revoked: true,
+      size: GRANT_PAGE_SIZE,
     })
   })
 
   it('omits an empty filter rather than sending an empty string', () => {
     expect(grantQueryParams({ principalId: '   ', capability: '' })).toEqual({
       include_revoked: false,
+      size: GRANT_PAGE_SIZE,
     })
   })
 

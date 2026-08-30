@@ -1,11 +1,12 @@
 import { fetcher } from '@/providers/ocotillo-data-provider'
+import { SURFACE_CAPABILITY } from '@/utils/accessGrants'
 
 /**
  * UI-surface grants: the widen-only half of access control.
  *
  * A role policy (`canAccessResource`) decides what a role may reach. A grant
  * can open one extra screen for one principal — `GET /access/decision` with a
- * `ui_surface` answers whether it does.
+ * `ui_surface` and the `view` capability answers whether it does.
  *
  * Two rules this module exists to keep:
  *
@@ -31,7 +32,9 @@ export const resetUiSurfaceGrants = () => cache.clear()
 const askDecision = async (surface: string): Promise<boolean> => {
   try {
     const response = await fetcher('access/decision', {
-      params: { capability: 'read', ui_surface: surface },
+      // `view` is the verb a surface grant carries. Asking with `read` matches
+      // no grant the API will store, so the answer would always be no.
+      params: { capability: SURFACE_CAPABILITY, ui_surface: surface },
     })
     return response.data?.allowed === true
   } catch {

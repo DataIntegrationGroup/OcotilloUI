@@ -91,8 +91,9 @@ const grant = (overrides: Partial<PermissionGrant> = {}): PermissionGrant =>
     ...overrides,
   })
 
-const listResult = (rows: PermissionGrant[]) => ({
-  data: rows,
+// The route answers with a page, and the hook hands that envelope through.
+const listResult = (rows: PermissionGrant[], total = rows.length) => ({
+  data: { items: rows, total, page: 1, size: 500 },
   isLoading: false,
   isError: false,
   error: null,
@@ -290,6 +291,7 @@ describe('AccessGrantsPage', () => {
     expect(createMutateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         principal_id: 'ak-subject-9',
+        capability: 'view',
         scope_type: 'global',
         scope_id: null,
         data_type: null,
@@ -373,12 +375,7 @@ describe('AccessGrantsPage', () => {
   it('keeps a long reason on one line and shows it in a tooltip', async () => {
     const user = userEvent.setup()
     const reason = 'a'.repeat(300)
-    useAccessGrantsMock.mockReturnValue({
-      data: [grant({ id: 11, reason })],
-      isLoading: false,
-      isError: false,
-      error: null,
-    })
+    useAccessGrantsMock.mockReturnValue(listResult([grant({ id: 11, reason })]))
     render(<AccessGrantsPage />)
 
     const cell = screen.getByText(reason)
@@ -393,8 +390,8 @@ describe('AccessGrantsPage', () => {
   })
 
   it('tints a scoped grant row and leaves a global one plain', () => {
-    useAccessGrantsMock.mockReturnValue({
-      data: [
+    useAccessGrantsMock.mockReturnValue(
+      listResult([
         grant({ id: 21, principal_id: 'scoped-one', scope_type: 'thing' }),
         grant({
           id: 22,
@@ -402,11 +399,8 @@ describe('AccessGrantsPage', () => {
           scope_type: 'global',
           scope_id: null,
         }),
-      ],
-      isLoading: false,
-      isError: false,
-      error: null,
-    })
+      ])
+    )
     render(<AccessGrantsPage />)
 
     const scopedRow = screen.getByText('scoped-one').closest('tr')
@@ -418,8 +412,8 @@ describe('AccessGrantsPage', () => {
 
   it('marks a screen grant apart from a data grant', async () => {
     const user = userEvent.setup()
-    useAccessGrantsMock.mockReturnValue({
-      data: [
+    useAccessGrantsMock.mockReturnValue(
+      listResult([
         grant({
           id: 31,
           principal_id: 'screen-holder',
@@ -431,11 +425,8 @@ describe('AccessGrantsPage', () => {
           principal_id: 'data-holder',
           data_type: 'water level',
         }),
-      ],
-      isLoading: false,
-      isError: false,
-      error: null,
-    })
+      ])
+    )
     render(<AccessGrantsPage />)
 
     const screenRow = screen.getByText('screen-holder').closest('tr')
@@ -457,8 +448,8 @@ describe('AccessGrantsPage', () => {
 
   it('filters the table down to screen grants', async () => {
     const user = userEvent.setup()
-    useAccessGrantsMock.mockReturnValue({
-      data: [
+    useAccessGrantsMock.mockReturnValue(
+      listResult([
         grant({
           id: 41,
           principal_id: 'screen-holder',
@@ -470,11 +461,8 @@ describe('AccessGrantsPage', () => {
           principal_id: 'data-holder',
           data_type: 'water level',
         }),
-      ],
-      isLoading: false,
-      isError: false,
-      error: null,
-    })
+      ])
+    )
     render(<AccessGrantsPage />)
 
     await user.click(screen.getByLabelText('Covers'))
@@ -512,12 +500,9 @@ describe('AccessGrantsPage', () => {
   })
 
   it('shows a group scope by name', () => {
-    useAccessGrantsMock.mockReturnValue({
-      data: [grant({ id: 51, scope_type: 'group', scope_id: 42 })],
-      isLoading: false,
-      isError: false,
-      error: null,
-    })
+    useAccessGrantsMock.mockReturnValue(
+      listResult([grant({ id: 51, scope_type: 'group', scope_id: 42 })])
+    )
     render(<AccessGrantsPage />)
 
     expect(screen.getByText('group Roswell Basin')).toBeInTheDocument()
@@ -526,18 +511,17 @@ describe('AccessGrantsPage', () => {
 
   it('pages the table rather than rendering every grant', async () => {
     const user = userEvent.setup()
-    useAccessGrantsMock.mockReturnValue({
-      data: Array.from({ length: 30 }, (_, index) =>
-        grant({
-          id: 100 + index,
-          principal_id: `holder-${String(index).padStart(2, '0')}`,
-          starts_at: `2026-01-${String((index % 28) + 1).padStart(2, '0')}`,
-        })
-      ),
-      isLoading: false,
-      isError: false,
-      error: null,
-    })
+    useAccessGrantsMock.mockReturnValue(
+      listResult(
+        Array.from({ length: 30 }, (_, index) =>
+          grant({
+            id: 100 + index,
+            principal_id: `holder-${String(index).padStart(2, '0')}`,
+            starts_at: `2026-01-${String((index % 28) + 1).padStart(2, '0')}`,
+          })
+        )
+      )
+    )
     render(<AccessGrantsPage />)
 
     // 25 a page, so five rows wait on the second.
@@ -547,6 +531,13 @@ describe('AccessGrantsPage', () => {
     await user.click(screen.getByRole('button', { name: /next page/i }))
 
     expect(screen.getAllByText(/^holder-/)).toHaveLength(5)
+  })
+
+  it('says so when the API held rows back', () => {
+    useAccessGrantsMock.mockReturnValue(listResult([grant()], 900))
+    render(<AccessGrantsPage />)
+
+    expect(screen.getByText(/Showing the first 500 of 900/)).toBeInTheDocument()
   })
 
   it('blocks a scoped grant that names no scope id', async () => {

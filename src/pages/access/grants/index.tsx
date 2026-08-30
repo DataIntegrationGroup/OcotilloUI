@@ -32,6 +32,8 @@ import {
   describeSubject,
   GRANT_SCOPE_TYPES,
   type GrantFilters,
+  GRANT_PAGE_SIZE,
+  isPartialPage,
   isUnfiltered,
   matchesFilters,
   type PermissionGrant,
@@ -112,7 +114,7 @@ const GrantsTab = () => {
   // whether a grant names one at all.
   const rows = grants.data
     ? sortGrants(
-        grants.data.filter((grant) => matchesFilters(grant, filters)),
+        grants.data.items.filter((grant) => matchesFilters(grant, filters)),
         today
       )
     : []
@@ -138,6 +140,14 @@ const GrantsTab = () => {
           Grant access
         </Button>
       </Stack>
+
+      {isPartialPage(grants.data) ? (
+        <Alert severity="warning">
+          Showing the first {GRANT_PAGE_SIZE} of {grants.data?.total} grants.
+          Narrow by principal or capability to see the rest — sorting and the
+          Covers filter apply to what is loaded.
+        </Alert>
+      ) : null}
 
       {grantedOutOfView ? (
         <Alert

@@ -24,7 +24,7 @@ describe('isUiSurfaceGranted', () => {
 
     await expect(isUiSurfaceGranted('ocotillo.lexicon')).resolves.toBe(true)
     expect(fetcherMock).toHaveBeenCalledWith('access/decision', {
-      params: { capability: 'read', ui_surface: 'ocotillo.lexicon' },
+      params: { capability: 'view', ui_surface: 'ocotillo.lexicon' },
     })
   })
 
