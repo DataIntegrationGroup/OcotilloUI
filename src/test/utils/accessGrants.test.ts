@@ -372,6 +372,7 @@ describe('grantQueryParams', () => {
       grantQueryParams({
         principalId: 'ak-subject-1',
         capability: 'read',
+        subject: 'ui_surface',
         dataType: 'water level',
         scopeType: 'thing',
         includeRevoked: true,
@@ -379,6 +380,7 @@ describe('grantQueryParams', () => {
     ).toEqual({
       principal_id: 'ak-subject-1',
       capability: 'read',
+      subject: 'ui_surface',
       data_type: 'water level',
       scope_type: 'thing',
       include_revoked: true,
@@ -391,6 +393,13 @@ describe('grantQueryParams', () => {
       include_revoked: false,
       size: GRANT_PAGE_SIZE,
     })
+  })
+
+  it('sends the subject as the route filter rather than only narrowing here', () => {
+    expect(grantQueryParams({ subject: 'ui_surface' }).subject).toBe(
+      'ui_surface'
+    )
+    expect(grantQueryParams({}).subject).toBeUndefined()
   })
 
   it('trims the principal it does send', () => {

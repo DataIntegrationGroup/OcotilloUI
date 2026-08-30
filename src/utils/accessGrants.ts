@@ -146,9 +146,10 @@ export type GrantFilters = {
   principalId?: string
   capability?: string
   /**
-   * Which kind of grant to show. The API filters on an exact `ui_surface`, not
-   * on "any screen", so this one narrows the fetched rows rather than the
-   * query — see `grantQueryParams`, which deliberately does not send it.
+   * Which kind of grant to show: `data_type` or `ui_surface`. Sent as the
+   * route's `subject` filter, and applied again to what comes back — an older
+   * API ignores a query parameter it does not know, and a filter that silently
+   * does nothing is worse than one that costs a pass over the rows.
    */
   subject?: string
   dataType?: string
@@ -159,6 +160,7 @@ export type GrantFilters = {
 export type GrantQueryParams = {
   principal_id?: string
   capability?: string
+  subject?: string
   data_type?: string
   scope_type?: string
   include_revoked: boolean
@@ -168,11 +170,11 @@ export type GrantQueryParams = {
 /**
  * How many grants the console asks for at once.
  *
- * The route pages at 25 by default and caps at 10000. Sorting by lifecycle and
- * the screen/data filter both run over the whole result here, so asking for one
- * page at a time would sort and filter a slice rather than the set. This asks
- * for more than any principal will have and says so when the answer is short —
- * see `isPartialPage`.
+ * The route pages at 25 by default and caps at 10000. Sorting is by lifecycle
+ * and runs over the whole result here, so asking for one page at a time would
+ * sort a slice and present it as the order. This asks for more than any
+ * principal will have and says so when the answer is short — see
+ * `isPartialPage`.
  */
 export const GRANT_PAGE_SIZE = 500
 
@@ -190,6 +192,7 @@ export const grantQueryParams = (filters: GrantFilters): GrantQueryParams => {
   const principalId = filters.principalId?.trim()
   if (principalId) params.principal_id = principalId
   if (filters.capability) params.capability = filters.capability
+  if (filters.subject) params.subject = filters.subject
   if (filters.dataType) params.data_type = filters.dataType
   if (filters.scopeType) params.scope_type = filters.scopeType
 

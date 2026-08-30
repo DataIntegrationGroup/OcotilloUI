@@ -109,9 +109,9 @@ const GrantsTab = () => {
     })
   }
 
-  // Every filter but `subject` is answered by the API; that one narrows the
-  // rows here, because the route filters on an exact screen rather than on
-  // whether a grant names one at all.
+  // Every filter is a query parameter now, including `subject`. They are
+  // applied again here because an API without that filter ignores it rather
+  // than refusing it, and a filter that quietly does nothing is a lie.
   const rows = grants.data
     ? sortGrants(
         grants.data.items.filter((grant) => matchesFilters(grant, filters)),
@@ -144,8 +144,8 @@ const GrantsTab = () => {
       {isPartialPage(grants.data) ? (
         <Alert severity="warning">
           Showing the first {GRANT_PAGE_SIZE} of {grants.data?.total} grants.
-          Narrow by principal or capability to see the rest — sorting and the
-          Covers filter apply to what is loaded.
+          Narrow by principal or capability to see the rest — sorting applies to
+          what is loaded.
         </Alert>
       ) : null}
 
