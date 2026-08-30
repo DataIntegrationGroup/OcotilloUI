@@ -1,7 +1,6 @@
-import { Add, FilterAltOff } from '@mui/icons-material'
+import { Add, DesktopWindows, FilterAltOff, Storage } from '@mui/icons-material'
 import {
   Alert,
-  Box,
   Button,
   Chip,
   CircularProgress,
@@ -10,41 +9,34 @@ import {
   Paper,
   Stack,
   Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
-  Tooltip,
   Typography,
 } from '@mui/material'
 import { useState } from 'react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { useAccessGrants, useCreateGrant, useRevokeGrant } from '@/hooks'
+import {
+  useAccessGrants,
+  useCreateGrant,
+  useGroups,
+  useRevokeGrant,
+} from '@/hooks'
 import { AccessConsole } from '@/pages/access/AccessConsole'
 import { GrantDialog } from '@/pages/access/grants/GrantDialog'
+import { GrantsTable } from '@/pages/access/grants/GrantsTable'
 import {
   ACCESS_DATA_TYPES,
   CAPABILITIES,
+  GRANT_SUBJECTS,
   type CreateGrantInput,
   describeScope,
   describeSubject,
   GRANT_SCOPE_TYPES,
   type GrantFilters,
-  type GrantStatus,
-  grantStatusOf,
   isUnfiltered,
   matchesFilters,
   type PermissionGrant,
   sortGrants,
 } from '@/utils/accessGrants'
-import {
-  ACCESS_STATUS_COLORS,
-  ACCESS_STATUS_LABELS,
-  isRevocable,
-} from '@/utils/accessLifecycle'
 
 /**
  * Operations console for ADR5 permission grants.
@@ -115,7 +107,15 @@ const GrantsTab = () => {
     })
   }
 
-  const rows = grants.data ? sortGrants(grants.data, today) : []
+  // Every filter but `subject` is answered by the API; that one narrows the
+  // rows here, because the route filters on an exact screen rather than on
+  // whether a grant names one at all.
+  const rows = grants.data
+    ? sortGrants(
+        grants.data.filter((grant) => matchesFilters(grant, filters)),
+        today
+      )
+    : []
 
   return (
     <Stack spacing={3}>
@@ -128,7 +128,7 @@ const GrantsTab = () => {
         <Chip
           size="small"
           variant="outlined"
-          label={grants.data ? `${grants.data.length} shown` : 'Loading'}
+          label={grants.data ? `${rows.length} shown` : 'Loading'}
         />
         <Button
           variant="contained"
@@ -181,9 +181,31 @@ const GrantsTab = () => {
               onChange={(value) => setFilter('capability', value)}
             />
             <FilterSelect
+              label="Covers"
+              value={filters.subject ?? ''}
+              options={GRANT_SUBJECTS}
+              labels={SUBJECT_FILTER_LABELS}
+              onChange={(value) =>
+                setFilters((previous) => ({
+                  ...previous,
+                  subject: value || undefined,
+                  // A screen grant carries no data type, so the two filters
+                  // together would always come back empty.
+                  dataType:
+                    value === 'ui_surface' ? undefined : previous.dataType,
+                }))
+              }
+            />
+            <FilterSelect
               label="Data type"
               value={filters.dataType ?? ''}
               options={ACCESS_DATA_TYPES}
+              disabled={filters.subject === 'ui_surface'}
+              helperText={
+                filters.subject === 'ui_surface'
+                  ? 'Screen grants have no data type.'
+                  : undefined
+              }
               onChange={(value) => setFilter('dataType', value)}
             />
             <FilterSelect
@@ -278,7 +300,7 @@ const GrantsTab = () => {
         title="Revoke this grant?"
         text={
           pendingRevoke
-            ? `${pendingRevoke.principal_id} will lose "${pendingRevoke.capability}" on ${pendingRevoke.data_type} (${describeScope(pendingRevoke)}). This cannot be undone from here — restoring access means creating a new grant.`
+            ? `${pendingRevoke.principal_id} will lose "${pendingRevoke.capability}" on ${describeSubject(pendingRevoke)} (${describeScope(pendingRevoke)}). This cannot be undone from here — restoring access means creating a new grant.`
             : ''
         }
         PrimaryActionBtnMsg="Revoke"
@@ -318,11 +340,18 @@ const FilterSelect = ({
   label,
   value,
   options,
+  labels,
+  disabled,
+  helperText,
   onChange,
 }: {
   label: string
   value: string
   options: readonly string[]
+  /** For options whose stored value is not what an admin should read. */
+  labels?: Record<string, string>
+  disabled?: boolean
+  helperText?: string
   onChange: (value: string) => void
 }) => (
   <TextField
@@ -331,13 +360,15 @@ const FilterSelect = ({
     fullWidth
     label={label}
     value={value}
+    disabled={disabled}
+    helperText={helperText}
     onChange={(event) => onChange(event.target.value)}
     sx={{ minWidth: 150 }}
   >
     <MenuItem value="">Any</MenuItem>
     {options.map((option) => (
       <MenuItem key={option} value={option}>
-        {option}
+        {labels?.[option] ?? option}
       </MenuItem>
     ))}
   </TextField>
@@ -357,105 +388,7 @@ const EmptyState = ({ title, body }: { title: string; body: string }) => (
   </Paper>
 )
 
-const GrantsTable = ({
-  rows,
-  today,
-  onRevoke,
-  revokingId,
-}: {
-  rows: PermissionGrant[]
-  today: Date
-  onRevoke: (grant: PermissionGrant) => void
-  revokingId: number | null
-}) => (
-  <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
-    <Table size="small" aria-label="Permission grants">
-      <TableHead>
-        <TableRow>
-          <TableCell>Principal</TableCell>
-          <TableCell>Capability</TableCell>
-          <TableCell>Covers</TableCell>
-          <TableCell>Scope</TableCell>
-          <TableCell>Dates</TableCell>
-          <TableCell>Granted by</TableCell>
-          <TableCell>Status</TableCell>
-          <TableCell align="right">Actions</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {rows.map((grant) => {
-          const status = grantStatusOf(grant, today)
-
-          return (
-            <TableRow key={grant.id} hover>
-              <TableCell sx={{ minWidth: 160 }}>
-                <Stack spacing={0.25}>
-                  <Typography
-                    component="code"
-                    variant="body2"
-                    sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
-                  >
-                    {grant.principal_id}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {grant.principal_type}
-                  </Typography>
-                </Stack>
-              </TableCell>
-              <TableCell>{grant.capability}</TableCell>
-              <TableCell>{describeSubject(grant)}</TableCell>
-              <TableCell>{describeScope(grant)}</TableCell>
-              <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                <Typography variant="body2">
-                  {grant.starts_at} → {grant.ends_at ?? 'no end'}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Stack spacing={0.25}>
-                  <Typography variant="body2">{grant.granted_by}</Typography>
-                  {grant.reason ? (
-                    <Typography variant="caption" color="text.secondary">
-                      {grant.reason}
-                    </Typography>
-                  ) : null}
-                </Stack>
-              </TableCell>
-              <TableCell>
-                <Tooltip
-                  title={
-                    grant.revoked_at
-                      ? `Revoked by ${grant.revoked_by ?? 'unknown'}`
-                      : ''
-                  }
-                >
-                  <Chip
-                    size="small"
-                    label={ACCESS_STATUS_LABELS[status]}
-                    color={ACCESS_STATUS_COLORS[status]}
-                    variant={status === 'active' ? 'filled' : 'outlined'}
-                  />
-                </Tooltip>
-              </TableCell>
-              <TableCell align="right">
-                {isRevocable(grant, today) ? (
-                  <Button
-                    size="small"
-                    color="error"
-                    disabled={revokingId === grant.id}
-                    onClick={() => onRevoke(grant)}
-                  >
-                    {revokingId === grant.id ? 'Revoking...' : 'Revoke'}
-                  </Button>
-                ) : (
-                  <Box component="span" sx={{ color: 'text.disabled' }}>
-                    —
-                  </Box>
-                )}
-              </TableCell>
-            </TableRow>
-          )
-        })}
-      </TableBody>
-    </Table>
-  </TableContainer>
-)
+const SUBJECT_FILTER_LABELS: Record<string, string> = {
+  data_type: 'data grants',
+  ui_surface: 'screen grants',
+}

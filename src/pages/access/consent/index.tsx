@@ -1,6 +1,7 @@
 import { Add } from '@mui/icons-material'
 import {
   Alert,
+  Autocomplete,
   Button,
   Chip,
   CircularProgress,
@@ -29,6 +30,7 @@ import {
   useAccessDestinations,
   useCreateConsent,
   useRevokeConsent,
+  useThingSearch,
 } from '@/hooks'
 import { AccessConsole } from '@/pages/access/AccessConsole'
 import {
@@ -54,6 +56,68 @@ import {
   isRevocable,
   toDateInputValue,
 } from '@/utils/accessLifecycle'
+
+/**
+ * Picks a thing by its PointID and hands back the id the API wants.
+ *
+ * `freeSolo`, because an id pasted from a ticket still has to work — anything
+ * typed that is not chosen from the list is treated as an id, which is what
+ * the field held before it could search by name.
+ */
+const ThingPicker = ({
+  label,
+  helperText,
+  error,
+  inputValue,
+  onInputChange,
+  onSelect,
+  onEnter,
+}: {
+  label: string
+  helperText?: string
+  error?: boolean
+  inputValue: string
+  onInputChange: (value: string) => void
+  onSelect: (thingId: string, name: string) => void
+  onEnter?: () => void
+}) => {
+  const autocompleteProps = useThingSearch()
+
+  return (
+    <Autocomplete
+      {...autocompleteProps}
+      freeSolo
+      fullWidth
+      size="small"
+      inputValue={inputValue}
+      onInputChange={(event, next, reason) => {
+        autocompleteProps.onInputChange?.(event, next, reason)
+        onInputChange(next)
+      }}
+      getOptionLabel={(option) =>
+        typeof option === 'string' ? option : option.name
+      }
+      isOptionEqualToValue={(option, value) => option.id === value.id}
+      onChange={(_event, option) => {
+        if (option && typeof option !== 'string') {
+          onSelect(String(option.id), option.name)
+        }
+      }}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          size="small"
+          label={label}
+          helperText={helperText}
+          error={error}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') onEnter?.()
+          }}
+        />
+      )}
+    />
+  )
+}
 
 export const AccessConsentPage = () => (
   <AccessConsole activePath="/access/consent">
@@ -90,17 +154,13 @@ const ConsentTab = () => {
           spacing={2}
           alignItems={{ sm: 'center' }}
         >
-          <TextField
-            size="small"
-            fullWidth
-            label="Thing id"
-            placeholder="The well or site this consent is about"
-            helperText="Press Enter to load. Consent is recorded per thing."
-            value={thingInput}
-            onChange={(event) => setThingInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') setThingId(thingInput.trim())
-            }}
+          <ThingPicker
+            label="Thing (PointID)"
+            helperText="Search by PointID, or paste an id and press Enter."
+            inputValue={thingInput}
+            onInputChange={setThingInput}
+            onSelect={(selectedId) => setThingId(selectedId)}
+            onEnter={() => setThingId(thingInput.trim())}
           />
           <FormControlLabel
             sx={{ flexShrink: 0, mr: 0 }}
@@ -349,6 +409,9 @@ const ConsentDialog = ({
   isSubmitting: boolean
   submitError?: string
 }) => {
+  // What the picker shows, which is a PointID once one is chosen. The id it
+  // resolves to lives in the form.
+  const [thingInput, setThingInput] = useState(defaultThingId)
   const [form, setForm] = useState({
     thing_id: defaultThingId,
     destination_slug: destinations[0]?.slug ?? '',
@@ -379,14 +442,23 @@ const ConsentDialog = ({
           {submitError ? <Alert severity="error">{submitError}</Alert> : null}
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Thing id"
-              helperText={errors.thing_id}
+            <ThingPicker
+              label="Thing (PointID)"
+              helperText={
+                errors.thing_id ?? 'Search by PointID, or enter an id.'
+              }
               error={Boolean(errors.thing_id)}
-              value={form.thing_id}
-              onChange={(event) => set('thing_id')(event.target.value)}
+              inputValue={thingInput}
+              onInputChange={(value) => {
+                setThingInput(value)
+                // Digits are an id; a partly typed name is not one yet, and
+                // sending it as though it were would fail at the API.
+                set('thing_id')(/^\d+$/.test(value.trim()) ? value.trim() : '')
+              }}
+              onSelect={(thingId, name) => {
+                set('thing_id')(thingId)
+                setThingInput(name)
+              }}
             />
             <TextField
               select

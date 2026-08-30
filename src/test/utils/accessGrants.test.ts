@@ -126,6 +126,32 @@ describe('sortGrants', () => {
   })
 })
 
+describe('describeScope', () => {
+  const groupGrant = grant({ scope_type: 'group', scope_id: 42 })
+
+  it('names the group when the name is known', () => {
+    expect(describeScope(groupGrant, { 42: 'Roswell Basin' })).toBe(
+      'group Roswell Basin'
+    )
+  })
+
+  it('falls back to the id when it is not', () => {
+    expect(describeScope(groupGrant)).toBe('group 42')
+    expect(describeScope(groupGrant, { 7: 'Estancia Basin' })).toBe('group 42')
+  })
+
+  it('leaves other scopes alone', () => {
+    expect(describeScope(grant({ scope_type: 'global', scope_id: null }))).toBe(
+      'global'
+    )
+    expect(
+      describeScope(grant({ scope_type: 'thing', scope_id: 512 }), {
+        512: 'not a group',
+      })
+    ).toBe('thing 512')
+  })
+})
+
 describe('matchesFilters', () => {
   const row = grant({
     principal_id: 'ak-subject-1',
@@ -147,6 +173,15 @@ describe('matchesFilters', () => {
     expect(matchesFilters(row, { dataType: 'site metadata' })).toBe(false)
     expect(matchesFilters(row, { scopeType: 'global' })).toBe(true)
     expect(matchesFilters(row, { scopeType: 'thing' })).toBe(false)
+  })
+
+  it('separates screen grants from data grants', () => {
+    const surface = grant({ data_type: null, ui_surface: 'ocotillo.lexicon' })
+
+    expect(matchesFilters(surface, { subject: 'ui_surface' })).toBe(true)
+    expect(matchesFilters(surface, { subject: 'data_type' })).toBe(false)
+    expect(matchesFilters(row, { subject: 'data_type' })).toBe(true)
+    expect(matchesFilters(row, { subject: 'ui_surface' })).toBe(false)
   })
 
   it('excludes a surface grant from a data type filter', () => {

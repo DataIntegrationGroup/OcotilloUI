@@ -74,8 +74,10 @@ export const AccessConsole = ({
 
   if (!access?.can) return <ErrorComponent />
 
+  // Full width, like the datasets table: eight columns of grants do not fit a
+  // reading-width container without wrapping every cell.
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Container maxWidth={false} sx={{ py: 3 }}>
       <Stack spacing={3}>
         <Stack spacing={1.5}>
           <Typography variant="h4">Access Control</Typography>

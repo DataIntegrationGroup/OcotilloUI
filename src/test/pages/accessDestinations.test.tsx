@@ -5,17 +5,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AccessDestinationsPage } from '@/pages/access/destinations'
 import { type Destination, zDestination } from '@/utils/accessDestinations'
 
-const {
-  useCanMock,
-  useAccessDestinationsMock,
-  usePublishedThingsMock,
-  createMutateMock,
-} = vi.hoisted(() => ({
-  useCanMock: vi.fn(),
-  useAccessDestinationsMock: vi.fn(),
-  usePublishedThingsMock: vi.fn(),
-  createMutateMock: vi.fn(),
-}))
+const { useCanMock, useAccessDestinationsMock, createMutateMock } = vi.hoisted(
+  () => ({
+    useCanMock: vi.fn(),
+    useAccessDestinationsMock: vi.fn(),
+    createMutateMock: vi.fn(),
+  })
+)
 
 vi.mock('@refinedev/core', () => ({
   useCan: (...args: unknown[]) => useCanMock(...args),
@@ -45,7 +41,6 @@ vi.mock('react-router', async () => {
 vi.mock('@/hooks', () => ({
   useAccessDestinations: (...args: unknown[]) =>
     useAccessDestinationsMock(...args),
-  usePublishedThings: (...args: unknown[]) => usePublishedThingsMock(...args),
   useCreateDestination: () => ({
     mutate: createMutateMock,
     isPending: false,
@@ -78,7 +73,6 @@ beforeEach(() => {
     isLoading: false,
   })
   useAccessDestinationsMock.mockReset().mockReturnValue(ok([destination()]))
-  usePublishedThingsMock.mockReset().mockReturnValue(ok([]))
   createMutateMock.mockReset()
 })
 
@@ -109,50 +103,11 @@ describe('AccessDestinationsPage', () => {
     expect(screen.getByText('Retired')).toBeInTheDocument()
   })
 
-  it('points at consent when nothing is published yet', async () => {
-    const user = userEvent.setup()
+  it('no longer offers a published-data view', () => {
     render(<AccessDestinationsPage />)
 
-    await user.click(screen.getByRole('button', { name: 'Show' }))
-
-    expect(
-      screen.getByText(/Consent is what opens this up/)
-    ).toBeInTheDocument()
-  })
-
-  it('explains an empty list for a retired destination differently', async () => {
-    const user = userEvent.setup()
-    useAccessDestinationsMock.mockReturnValue(
-      ok([destination({ active: false })])
-    )
-    render(<AccessDestinationsPage />)
-
-    await user.click(screen.getByRole('button', { name: 'Show' }))
-
-    expect(
-      screen.getByText(/retired, so it may read nothing/)
-    ).toBeInTheDocument()
-  })
-
-  it('shows what a destination may read', async () => {
-    const user = userEvent.setup()
-    usePublishedThingsMock.mockReturnValue(
-      ok([
-        {
-          thing_id: 42,
-          data_types: ['water level', 'site metadata'],
-          properties: {},
-          location: {},
-        },
-      ])
-    )
-    render(<AccessDestinationsPage />)
-
-    await user.click(screen.getByRole('button', { name: 'Show' }))
-
-    expect(screen.getByText('thing 42')).toBeInTheDocument()
-    expect(screen.getByText('water level')).toBeInTheDocument()
-    expect(screen.getByText(/1 thing published to ngwmn/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Show' })).toBeNull()
+    expect(screen.queryByText('Published data')).toBeNull()
   })
 
   it('registers a destination', async () => {

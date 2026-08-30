@@ -21,11 +21,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useState } from 'react'
-import {
-  useAccessDestinations,
-  useCreateDestination,
-  usePublishedThings,
-} from '@/hooks'
+import { useAccessDestinations, useCreateDestination } from '@/hooks'
 import { AccessConsole } from '@/pages/access/AccessConsole'
 import {
   type CreateDestinationInput,
@@ -45,7 +41,6 @@ export const AccessDestinationsPage = () => (
 
 const DestinationsTab = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
   const destinations = useAccessDestinations()
   const createDestination = useCreateDestination()
 
@@ -102,13 +97,7 @@ const DestinationsTab = () => {
           </Stack>
         </Paper>
       ) : (
-        <DestinationsTable
-          rows={rows}
-          expandedSlug={expandedSlug}
-          onToggle={(slug) =>
-            setExpandedSlug((previous) => (previous === slug ? null : slug))
-          }
-        />
+        <DestinationsTable rows={rows} />
       )}
 
       {isDialogOpen ? (
@@ -133,15 +122,7 @@ const DestinationsTab = () => {
   )
 }
 
-const DestinationsTable = ({
-  rows,
-  expandedSlug,
-  onToggle,
-}: {
-  rows: Destination[]
-  expandedSlug: string | null
-  onToggle: (slug: string) => void
-}) => (
+const DestinationsTable = ({ rows }: { rows: Destination[] }) => (
   <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
     <Table size="small" aria-label="Destinations">
       <TableHead>
@@ -150,173 +131,56 @@ const DestinationsTable = ({
           <TableCell>Kind</TableCell>
           <TableCell>Description</TableCell>
           <TableCell>Status</TableCell>
-          <TableCell align="right">Published data</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
         {rows.map((destination) => (
-          <Row
-            key={destination.id}
-            destination={destination}
-            isExpanded={expandedSlug === destination.slug}
-            onToggle={() => onToggle(destination.slug)}
-          />
+          <Row key={destination.id} destination={destination} />
         ))}
       </TableBody>
     </Table>
   </TableContainer>
 )
 
-const Row = ({
-  destination,
-  isExpanded,
-  onToggle,
-}: {
-  destination: Destination
-  isExpanded: boolean
-  onToggle: () => void
-}) => (
-  <>
-    <TableRow hover>
-      <TableCell sx={{ minWidth: 180 }}>
-        <Stack spacing={0.25}>
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            {destination.name}
-          </Typography>
-          <Typography
-            component="code"
-            variant="caption"
-            color="text.secondary"
-            sx={{ overflowWrap: 'anywhere' }}
-          >
-            {destination.slug}
-          </Typography>
-        </Stack>
-      </TableCell>
-      <TableCell>{destination.destination_kind}</TableCell>
-      <TableCell sx={{ maxWidth: 320 }}>
-        {destination.description ? (
-          <Typography variant="body2" color="text.secondary">
-            {destination.description}
-          </Typography>
-        ) : (
-          <Typography variant="caption" color="text.disabled">
-            —
-          </Typography>
-        )}
-      </TableCell>
-      <TableCell>
-        <Chip
-          size="small"
-          label={destination.active ? 'Active' : 'Retired'}
-          color={destination.active ? 'success' : 'default'}
-          variant={destination.active ? 'filled' : 'outlined'}
-        />
-      </TableCell>
-      <TableCell align="right">
-        <Button size="small" onClick={onToggle}>
-          {isExpanded ? 'Hide' : 'Show'}
-        </Button>
-      </TableCell>
-    </TableRow>
-    {isExpanded ? (
-      <TableRow>
-        <TableCell colSpan={5} sx={{ bgcolor: 'action.hover' }}>
-          <PublishedThings
-            slug={destination.slug}
-            active={destination.active}
-          />
-        </TableCell>
-      </TableRow>
-    ) : null}
-  </>
-)
-
-/**
- * What this destination may read, computed server-side from consent rows.
- *
- * An empty list means default deny — either nobody has consented or the
- * destination is retired — and the API does not distinguish those, so neither
- * does this. The retired case is called out only because the row already
- * knows it.
- */
-const PublishedThings = ({
-  slug,
-  active,
-}: {
-  slug: string
-  active: boolean
-}) => {
-  const published = usePublishedThings(slug)
-
-  if (published.isLoading) {
-    return (
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ py: 1 }}>
-        <CircularProgress size={18} />
+const Row = ({ destination }: { destination: Destination }) => (
+  <TableRow hover>
+    <TableCell sx={{ minWidth: 180 }}>
+      <Stack spacing={0.25}>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          {destination.name}
+        </Typography>
+        <Typography
+          component="code"
+          variant="caption"
+          color="text.secondary"
+          sx={{ overflowWrap: 'anywhere' }}
+        >
+          {destination.slug}
+        </Typography>
+      </Stack>
+    </TableCell>
+    <TableCell>{destination.destination_kind}</TableCell>
+    <TableCell sx={{ maxWidth: 320 }}>
+      {destination.description ? (
         <Typography variant="body2" color="text.secondary">
-          Loading what {slug} may read...
+          {destination.description}
         </Typography>
-      </Stack>
-    )
-  }
-
-  if (published.isError) {
-    return (
-      <Alert severity="error" sx={{ my: 1 }}>
-        Failed to load what {slug} may read.
-      </Alert>
-    )
-  }
-
-  const rows = published.data ?? []
-
-  if (rows.length === 0) {
-    return (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-        {active
-          ? 'Nothing is published here yet. Consent is what opens this up.'
-          : 'This destination is retired, so it may read nothing.'}
-      </Typography>
-    )
-  }
-
-  return (
-    <Stack spacing={1} sx={{ py: 1 }}>
-      <Typography variant="subtitle2">
-        {rows.length} thing{rows.length === 1 ? '' : 's'} published to {slug}
-      </Typography>
-      <Stack spacing={0.75}>
-        {rows.slice(0, 25).map((thing) => (
-          <Stack
-            key={thing.thing_id}
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            flexWrap="wrap"
-            useFlexGap
-          >
-            <Typography component="code" variant="caption">
-              thing {thing.thing_id}
-            </Typography>
-            {thing.data_types.map((dataType) => (
-              <Chip
-                key={dataType}
-                size="small"
-                variant="outlined"
-                label={dataType}
-              />
-            ))}
-          </Stack>
-        ))}
-      </Stack>
-      {rows.length > 25 ? (
-        <Typography variant="caption" color="text.secondary">
-          Showing the first 25 of {rows.length}.
+      ) : (
+        <Typography variant="caption" color="text.disabled">
+          —
         </Typography>
-      ) : null}
-    </Stack>
-  )
-}
+      )}
+    </TableCell>
+    <TableCell>
+      <Chip
+        size="small"
+        label={destination.active ? 'Active' : 'Retired'}
+        color={destination.active ? 'success' : 'default'}
+        variant={destination.active ? 'filled' : 'outlined'}
+      />
+    </TableCell>
+  </TableRow>
+)
 
 const DestinationDialog = ({
   onClose,

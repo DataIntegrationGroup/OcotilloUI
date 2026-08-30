@@ -10,6 +10,7 @@ import {
   TextField,
 } from '@mui/material'
 import { useState } from 'react'
+import { useGroups } from '@/hooks'
 import {
   ACCESS_DATA_TYPES,
   CAPABILITIES,
@@ -83,6 +84,7 @@ export const GrantDialog = ({
     emptyGrantForm(today, defaultPrincipalId)
   )
   const [errors, setErrors] = useState<GrantFormErrors>({})
+  const groups = useGroups()
 
   const set = (field: keyof GrantFormState) => (value: string) =>
     setForm((previous) => ({ ...previous, [field]: value }))
@@ -233,19 +235,46 @@ export const GrantDialog = ({
                 </MenuItem>
               ))}
             </TextField>
-            <TextField
-              fullWidth
-              size="small"
-              label={needsScopeId ? `${scopeType} id` : 'Scope id'}
-              disabled={!needsScopeId}
-              helperText={
-                errors.scope_id ??
-                (needsScopeId ? undefined : 'A global grant names no scope id.')
-              }
-              error={Boolean(errors.scope_id)}
-              value={needsScopeId ? form.scope_id : ''}
-              onChange={(event) => set('scope_id')(event.target.value)}
-            />
+            {scopeType === 'group' ? (
+              // An admin knows the group by name; the id is what the API
+              // stores, so the picker carries it and never shows it.
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Group"
+                disabled={groups.isLoading}
+                helperText={
+                  errors.scope_id ??
+                  (groups.isLoading ? 'Loading groups...' : undefined)
+                }
+                error={Boolean(errors.scope_id)}
+                value={form.scope_id}
+                onChange={(event) => set('scope_id')(event.target.value)}
+              >
+                {groups.options.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            ) : (
+              <TextField
+                fullWidth
+                size="small"
+                label={needsScopeId ? `${scopeType} id` : 'Scope id'}
+                disabled={!needsScopeId}
+                helperText={
+                  errors.scope_id ??
+                  (needsScopeId
+                    ? undefined
+                    : 'A global grant names no scope id.')
+                }
+                error={Boolean(errors.scope_id)}
+                value={needsScopeId ? form.scope_id : ''}
+                onChange={(event) => set('scope_id')(event.target.value)}
+              />
+            )}
           </Stack>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

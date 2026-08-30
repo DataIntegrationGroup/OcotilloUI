@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AccessGrantsPage } from '@/pages/access/grants'
@@ -40,6 +47,17 @@ vi.mock('react-router', async () => {
 
 vi.mock('@/hooks', () => ({
   useAccessGrants: (...args: unknown[]) => useAccessGrantsMock(...args),
+  useGroups: () => ({
+    groups: [
+      { id: 42, name: 'Roswell Basin' },
+      { id: 7, name: 'Estancia Basin' },
+    ],
+    isLoading: false,
+    options: [
+      { value: '7', label: 'Estancia Basin' },
+      { value: '42', label: 'Roswell Basin' },
+    ],
+  }),
   useCreateGrant: () => ({
     mutate: createMutateMock,
     isPending: false,
@@ -350,6 +368,185 @@ describe('AccessGrantsPage', () => {
       expect.objectContaining({ principalId: 'ak-subject-2' })
     )
     expect(screen.queryByText(/current filters do not show it/i)).toBeNull()
+  })
+
+  it('keeps a long reason on one line and shows it in a tooltip', async () => {
+    const user = userEvent.setup()
+    const reason = 'a'.repeat(300)
+    useAccessGrantsMock.mockReturnValue({
+      data: [grant({ id: 11, reason })],
+      isLoading: false,
+      isError: false,
+      error: null,
+    })
+    render(<AccessGrantsPage />)
+
+    const cell = screen.getByText(reason)
+    // Tailwind's `truncate` is what holds the row to one line; jsdom loads no
+    // stylesheet, so the class is the thing to assert.
+    expect(cell).toHaveClass('truncate')
+
+    // Radix opens on focus as well as hover, and focus is what jsdom drives
+    // reliably — hover needs pointer events it does not implement.
+    fireEvent.focus(cell)
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(reason)
+  })
+
+  it('tints a scoped grant row and leaves a global one plain', () => {
+    useAccessGrantsMock.mockReturnValue({
+      data: [
+        grant({ id: 21, principal_id: 'scoped-one', scope_type: 'thing' }),
+        grant({
+          id: 22,
+          principal_id: 'global-one',
+          scope_type: 'global',
+          scope_id: null,
+        }),
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    })
+    render(<AccessGrantsPage />)
+
+    const scopedRow = screen.getByText('scoped-one').closest('tr')
+    const globalRow = screen.getByText('global-one').closest('tr')
+
+    expect(scopedRow).toHaveClass('bg-warning/8')
+    expect(globalRow).not.toHaveClass('bg-warning/8')
+  })
+
+  it('marks a screen grant apart from a data grant', async () => {
+    const user = userEvent.setup()
+    useAccessGrantsMock.mockReturnValue({
+      data: [
+        grant({
+          id: 31,
+          principal_id: 'screen-holder',
+          data_type: null,
+          ui_surface: 'ocotillo.lexicon',
+        }),
+        grant({
+          id: 32,
+          principal_id: 'data-holder',
+          data_type: 'water level',
+        }),
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    })
+    render(<AccessGrantsPage />)
+
+    const screenRow = screen.getByText('screen-holder').closest('tr')
+    const dataRow = screen.getByText('data-holder').closest('tr')
+
+    const screenBadge = within(screenRow as HTMLElement).getByText(
+      'ocotillo.lexicon'
+    )
+    const dataBadge = within(dataRow as HTMLElement).getByText('water level')
+
+    expect(screenBadge).toBeInTheDocument()
+    expect(dataBadge).toBeInTheDocument()
+
+    fireEvent.focus(screenBadge)
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      /opens this nav item/i
+    )
+  })
+
+  it('filters the table down to screen grants', async () => {
+    const user = userEvent.setup()
+    useAccessGrantsMock.mockReturnValue({
+      data: [
+        grant({
+          id: 41,
+          principal_id: 'screen-holder',
+          data_type: null,
+          ui_surface: 'ocotillo.lexicon',
+        }),
+        grant({
+          id: 42,
+          principal_id: 'data-holder',
+          data_type: 'water level',
+        }),
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    })
+    render(<AccessGrantsPage />)
+
+    await user.click(screen.getByLabelText('Covers'))
+    await user.click(screen.getByRole('option', { name: 'screen grants' }))
+
+    expect(screen.getByText('screen-holder')).toBeInTheDocument()
+    expect(screen.queryByText('data-holder')).toBeNull()
+    expect(screen.getByText('1 shown')).toBeInTheDocument()
+    // A screen grant has no data type, so that filter stops applying. MUI
+    // renders the select as a combobox div, which carries aria-disabled.
+    expect(screen.getByLabelText('Data type')).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    )
+  })
+
+  it('picks a group by name and sends its id', async () => {
+    const user = userEvent.setup()
+    render(<AccessGrantsPage />)
+
+    await user.click(screen.getByRole('button', { name: 'Grant access' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Principal'), 'ak-subject-9')
+
+    await user.click(within(dialog).getByLabelText('Scope'))
+    await user.click(screen.getByRole('option', { name: 'group' }))
+    await user.click(within(dialog).getByLabelText('Group'))
+    await user.click(screen.getByRole('option', { name: 'Roswell Basin' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Grant' }))
+
+    expect(createMutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ scope_type: 'group', scope_id: 42 }),
+      expect.anything()
+    )
+  })
+
+  it('shows a group scope by name', () => {
+    useAccessGrantsMock.mockReturnValue({
+      data: [grant({ id: 51, scope_type: 'group', scope_id: 42 })],
+      isLoading: false,
+      isError: false,
+      error: null,
+    })
+    render(<AccessGrantsPage />)
+
+    expect(screen.getByText('group Roswell Basin')).toBeInTheDocument()
+    expect(screen.queryByText('group 42')).toBeNull()
+  })
+
+  it('pages the table rather than rendering every grant', async () => {
+    const user = userEvent.setup()
+    useAccessGrantsMock.mockReturnValue({
+      data: Array.from({ length: 30 }, (_, index) =>
+        grant({
+          id: 100 + index,
+          principal_id: `holder-${String(index).padStart(2, '0')}`,
+          starts_at: `2026-01-${String((index % 28) + 1).padStart(2, '0')}`,
+        })
+      ),
+      isLoading: false,
+      isError: false,
+      error: null,
+    })
+    render(<AccessGrantsPage />)
+
+    // 25 a page, so five rows wait on the second.
+    expect(screen.getAllByText(/^holder-/)).toHaveLength(25)
+    expect(screen.getByText('30 shown')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /next page/i }))
+
+    expect(screen.getAllByText(/^holder-/)).toHaveLength(5)
   })
 
   it('blocks a scoped grant that names no scope id', async () => {

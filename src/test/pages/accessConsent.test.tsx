@@ -48,6 +48,13 @@ vi.mock('react-router', async () => {
 
 vi.mock('@/hooks', () => ({
   useAccessConsent: (...args: unknown[]) => useAccessConsentMock(...args),
+  useThingSearch: () => ({
+    options: [
+      { id: 512, name: 'MG-030' },
+      { id: 513, name: 'MG-031' },
+    ],
+    loading: false,
+  }),
   useAccessDestinations: (...args: unknown[]) =>
     useAccessDestinationsMock(...args),
   useCreateConsent: () => ({
@@ -102,7 +109,7 @@ const ok = <T,>(data: T) => ({
 })
 
 const loadThing = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.type(screen.getByLabelText('Thing id'), '42')
+  await user.type(screen.getByLabelText('Thing (PointID)'), '42')
   await user.keyboard('{Enter}')
 }
 
@@ -222,7 +229,7 @@ describe('AccessConsentPage', () => {
 
     await user.click(screen.getByRole('button', { name: /record consent/i }))
     const dialog = screen.getByRole('dialog')
-    await user.type(within(dialog).getByLabelText('Thing id'), '42')
+    await user.type(within(dialog).getByLabelText('Thing (PointID)'), '42')
     await user.click(within(dialog).getByRole('button', { name: 'Record' }))
 
     expect(createMutateMock).toHaveBeenCalledWith(
@@ -235,16 +242,35 @@ describe('AccessConsentPage', () => {
     )
   })
 
-  it('blocks a consent with a non-numeric thing id', async () => {
+  it('blocks a consent when the typed text resolved to no thing', async () => {
     const user = userEvent.setup()
     render(<AccessConsentPage />)
 
     await user.click(screen.getByRole('button', { name: /record consent/i }))
     const dialog = screen.getByRole('dialog')
-    await user.type(within(dialog).getByLabelText('Thing id'), 'abc')
+    // Half a PointID is not an id, and nothing was chosen from the list.
+    await user.type(within(dialog).getByLabelText('Thing (PointID)'), 'abc')
     await user.click(within(dialog).getByRole('button', { name: 'Record' }))
 
     expect(createMutateMock).not.toHaveBeenCalled()
-    expect(within(dialog).getByText(/whole number/i)).toBeInTheDocument()
+    expect(
+      within(dialog).getByText(/thing id is required/i)
+    ).toBeInTheDocument()
+  })
+
+  it('records consent against a thing chosen by PointID', async () => {
+    const user = userEvent.setup()
+    render(<AccessConsentPage />)
+
+    await user.click(screen.getByRole('button', { name: /record consent/i }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Thing (PointID)'), 'MG-0')
+    await user.click(await screen.findByRole('option', { name: 'MG-030' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Record' }))
+
+    expect(createMutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ thing_id: 512 }),
+      expect.anything()
+    )
   })
 })

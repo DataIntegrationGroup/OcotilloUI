@@ -4,6 +4,18 @@ import { checkMockServerHealth } from './mock-server'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 
 process.env.NODE_ENV = 'test'
+
+// Radix positions its popper layers (tooltip, select, dropdown) by measuring
+// the trigger, and jsdom implements no ResizeObserver to measure with. Guarded
+// because the API contract tests run in the node environment, where there is
+// no window to patch.
+if (typeof window !== 'undefined') {
+  window.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver
+}
   
   // Mock the authentication provider (for node api contract tests)
   vi.mock('@/providers/authentik-provider', () => ({

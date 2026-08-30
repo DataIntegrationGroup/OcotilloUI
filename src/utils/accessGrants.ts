@@ -114,6 +114,12 @@ export type CreateGrantInput = {
 export type GrantFilters = {
   principalId?: string
   capability?: string
+  /**
+   * Which kind of grant to show. The API filters on an exact `ui_surface`, not
+   * on "any screen", so this one narrows the fetched rows rather than the
+   * query — see `grantQueryParams`, which deliberately does not send it.
+   */
+  subject?: string
   dataType?: string
   scopeType?: string
   includeRevoked?: boolean
@@ -163,6 +169,8 @@ export const matchesFilters = (
   if (principalId && grant.principal_id !== principalId) return false
   if (filters.capability && grant.capability !== filters.capability)
     return false
+  if (filters.subject === 'ui_surface' && !grant.ui_surface) return false
+  if (filters.subject === 'data_type' && !grant.data_type) return false
   if (filters.dataType && grant.data_type !== filters.dataType) return false
   if (filters.scopeType && grant.scope_type !== filters.scopeType) return false
 
@@ -173,6 +181,7 @@ export const matchesFilters = (
 export const isUnfiltered = (filters: GrantFilters): boolean =>
   !filters.principalId?.trim() &&
   !filters.capability &&
+  !filters.subject &&
   !filters.dataType &&
   !filters.scopeType
 
@@ -192,8 +201,23 @@ export const grantStatusOf = (
 export const scopeIdRequired = (scopeType: string): boolean =>
   scopeType === 'group' || scopeType === 'thing'
 
-export const describeScope = (grant: PermissionGrant): string => {
+/**
+ * The scope, as an admin would say it. A group is stored by id but known by
+ * name, so a name is used when one is to hand — and the id stands in when it
+ * is not, since a row that cannot resolve its group should still say which
+ * group it means.
+ */
+export const describeScope = (
+  grant: PermissionGrant,
+  groupNames?: Record<number, string>
+): string => {
   if (!scopeIdRequired(grant.scope_type)) return grant.scope_type
+
+  if (grant.scope_type === 'group' && grant.scope_id !== null) {
+    const name = groupNames?.[grant.scope_id]
+    if (name) return `group ${name}`
+  }
+
   return `${grant.scope_type} ${grant.scope_id ?? '?'}`
 }
 
