@@ -79,7 +79,7 @@ import {
   SHOW_WIP_NAV,
   type NavItem,
 } from '@/config/navigation'
-import { useAccessCapabilities } from '@/hooks'
+import { useAccessCapabilities, useNavSectionOpen } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { SupportPanelContext } from '@/components/SupportPanelContext'
 import { NewVersionBanner } from '@/components/NewVersionBanner'
@@ -249,18 +249,11 @@ function ResourceNavItem({
       (candidate) =>
         candidate != null && isNavSectionActive(pathname, candidate)
     )
-  const [open, setOpen] = useState(sectionActive)
-  const isOpen = sectionActive || open
-
-  useEffect(() => {
-    setOpen(sectionActive)
-  }, [sectionActive])
+  const [isOpen, setOpen] = useNavSectionOpen(sectionActive)
 
   if (!canSeeNavItem(roles)) return null
 
-  const handleOpenChange = (next: boolean) => {
-    if (!sectionActive) setOpen(next)
-  }
+  const handleOpenChange = setOpen
 
   // Grouping entries need not be resources themselves — each child still gates
   // on its own, so an unnamed parent is not an unguarded one.
@@ -538,11 +531,7 @@ function isGeothermalPath(pathname: string): boolean {
 function GeothermalNavItem() {
   const location = useLocation()
   const navigate = useNavigate()
-  const [open, setOpen] = useState(isGeothermalPath(location.pathname))
-
-  useEffect(() => {
-    if (!isGeothermalPath(location.pathname)) setOpen(false)
-  }, [location.pathname])
+  const [open, setOpen] = useNavSectionOpen(isGeothermalPath(location.pathname))
 
   const handleClick = () => {
     setOpen(true)
