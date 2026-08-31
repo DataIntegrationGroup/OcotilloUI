@@ -146,8 +146,7 @@ as the records grid (bypassed in local dev, enforced in prod).
 
 - Route: `/geothermal/wells/inventory`.
 - Nav: an **Inventory** entry under the **Geothermal** nav group, alongside
-  Records and Temp-Depth. The group is gated by `SHOW_WIP_NAV`, so it appears
-  in local dev and on PR preview deploys only.
+  Records and Temp-Depth.
 
 ---
 
@@ -176,7 +175,7 @@ as the records grid (bypassed in local dev, enforced in prod).
   surface the conflict inline. No client-side dedupe/upsert in v1. ✔
 - **Enum fields** (`well_type`, `well_class`, `status`): **dropdowns** from
   fixed allowed-value lists (new select cell kind). ✔
-- **Nav placement:** Geothermal nav group, preview/dev only. ✔
+- **Nav placement:** Geothermal nav group. ✔
 - **Records vs inventory:** inventory is create-wells only; the existing records
   grid is untouched. ✔
 

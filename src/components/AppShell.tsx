@@ -76,7 +76,6 @@ import {
   AmpRole,
   PRIMARY_NAV,
   RESOURCE_NAV,
-  SHOW_WIP_NAV,
   type NavItem,
 } from '@/config/navigation'
 import { useAccessCapabilities, useNavSectionOpen } from '@/hooks'
@@ -470,11 +469,8 @@ function AppSidebar() {
                     pathname={location.pathname}
                     canSeeNavItem={canSeeNavItem}
                   />
-                  {/* WIP geothermal grids sit directly below AMP — toggle
-                      SHOW_WIP_NAV in config/navigation.ts */}
-                  {SHOW_WIP_NAV && item.id === AMP_NAV_ID ? (
-                    <GeothermalNavItem />
-                  ) : null}
+                  {/* The geothermal group sits directly below AMP. */}
+                  {item.id === AMP_NAV_ID ? <GeothermalNavItem /> : null}
                   {/* Domain groups above, flat resources below. Wrapped in an
                       li because SidebarMenu is a ul. */}
                   {item.id === AMP_NAV_ID ? (
