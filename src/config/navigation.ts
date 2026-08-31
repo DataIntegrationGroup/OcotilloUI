@@ -111,11 +111,12 @@ export const AMP_NAV_ID = 'amp'
 
 export const RESOURCE_NAV: NavItem[] = [
   {
-    // Grouping entry only — it names no resource of its own, so the children
-    // below carry the access gating.
+    // Grouping entry only: it names no resource of its own, so the children
+    // below carry the access gating, and it has no href because its header
+    // toggles the group rather than navigating.
     id: AMP_NAV_ID,
     label: 'AMP',
-    href: '/ocotillo/well',
+    href: null,
     icon: Compass,
     roles: viewerAndAbove,
     children: [

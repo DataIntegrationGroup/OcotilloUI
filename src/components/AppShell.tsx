@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { Outlet, Link, useLocation, useNavigate } from 'react-router'
+import { Outlet, Link, useLocation } from 'react-router'
 import {
   CanAccess,
   useCustomMutation,
@@ -313,27 +313,18 @@ function ResourceNavItem({
       className={groupClass}
     >
       <SidebarMenuItem>
+        {/* Header toggles the group only. Switching page is the child's job,
+            so opening a group never moves you off the page you are on. */}
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton
-            asChild
-            isActive={currentActiveHref === href}
-            tooltip={label}
-          >
-            <Link
-              to={href!}
-              onClick={() =>
-                trackNavClick({ label, href, icon: Icon, resource, roles })
-              }
-            >
-              <Icon />
-              <span>{label}</span>
-              <ChevronRight
-                className={cn(
-                  'ml-auto size-3.5 transition-transform duration-100',
-                  isOpen && 'rotate-90'
-                )}
-              />
-            </Link>
+          <SidebarMenuButton tooltip={label}>
+            <Icon />
+            <span>{label}</span>
+            <ChevronRight
+              className={cn(
+                'ml-auto size-3.5 transition-transform duration-100',
+                isOpen && 'rotate-90'
+              )}
+            />
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent>
@@ -530,13 +521,7 @@ function isGeothermalPath(pathname: string): boolean {
 
 function GeothermalNavItem() {
   const location = useLocation()
-  const navigate = useNavigate()
   const [open, setOpen] = useNavSectionOpen(isGeothermalPath(location.pathname))
-
-  const handleClick = () => {
-    setOpen(true)
-    navigate(GEOTHERMAL_RECORDS_GRID)
-  }
 
   return (
     <Collapsible
@@ -546,7 +531,7 @@ function GeothermalNavItem() {
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Geothermal" onClick={handleClick}>
+          <SidebarMenuButton tooltip="Geothermal">
             <Flame />
             <span>Geothermal</span>
             <ChevronRight className="ml-auto size-3.5 transition-transform duration-100 group-data-[state=open]/geothermal:rotate-90" />

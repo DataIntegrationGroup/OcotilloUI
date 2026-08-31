@@ -42,14 +42,15 @@ describe('AMP nav group', () => {
     }
   })
 
-  it('points at a href its children sit under, so the group opens with them', () => {
-    const parent = amp?.href
-    expect(parent).toBe('/ocotillo/well')
-    // Field Sheets nests under the parent href; Contacts does not, which is why
-    // the renderer also matches on child hrefs.
-    expect(byLabel(amp?.children ?? [], 'Contacts')?.href).toBe(
-      '/ocotillo/contact'
-    )
+  it('has no href of its own, so its header toggles instead of navigating', () => {
+    expect(amp?.href).toBeNull()
+    // The renderer matches on child hrefs, which is what keeps the group open
+    // while you are on one of its pages.
+    expect(amp?.children?.map((child) => child.href)).toEqual([
+      '/ocotillo/well',
+      '/ocotillo/well/batch-export',
+      '/ocotillo/contact',
+    ])
   })
 
   it('carries the id AppShell anchors the geothermal group to', () => {
