@@ -475,6 +475,13 @@ function AppSidebar() {
                   {SHOW_WIP_NAV && item.id === AMP_NAV_ID ? (
                     <GeothermalNavItem />
                   ) : null}
+                  {/* Domain groups above, flat resources below. Wrapped in an
+                      li because SidebarMenu is a ul. */}
+                  {item.id === AMP_NAV_ID ? (
+                    <li role="none">
+                      <SidebarSeparator className="my-1 bg-border" />
+                    </li>
+                  ) : null}
                 </Fragment>
               ))}
             </SidebarMenu>
