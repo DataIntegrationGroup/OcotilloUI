@@ -123,7 +123,10 @@ export function useAssociatedSiteRows(
 
   const items = useMemo(() => things ?? [], [things])
 
-  const wellQueries = useQueries({
+  // `combine` is what keeps these referentially stable. Without it useQueries
+  // hands back a fresh array every render, which defeats the useMemo below and
+  // feeds the table a new `data` identity on every pass.
+  const wells = useQueries({
     queries: items.map((thing) => ({
       queryKey: ['associated-site', 'well', String(thing.id)],
       staleTime: STALE_TIME_MS,
@@ -136,9 +139,14 @@ export function useAssociatedSiteRows(
         return response.data as IWell
       },
     })),
+    combine: (results) =>
+      results.map((result) => ({
+        data: result.data as IWell | undefined,
+        isLoading: result.isLoading,
+      })),
   })
 
-  const observationQueries = useQueries({
+  const observations = useQueries({
     queries: items.map((thing) => ({
       queryKey: ['associated-site', 'observations', String(thing.id)],
       staleTime: STALE_TIME_MS,
@@ -153,15 +161,18 @@ export function useAssociatedSiteRows(
         return (response.data ?? []) as IObservation[]
       },
     })),
+    combine: (results) =>
+      results.map((result) => ({
+        data: result.data as IObservation[] | undefined,
+        isLoading: result.isLoading,
+      })),
   })
 
-  const sampleIds = observationQueries.map(
-    (query) => latestObservation(query.data ?? [])?.sample_id ?? null
-  )
-
-  const sampleQueries = useQueries({
+  const samples = useQueries({
     queries: items.map((thing, index) => {
-      const sampleId = sampleIds[index]
+      const sampleId =
+        latestObservation(observations[index]?.data ?? [])?.sample_id ?? null
+
       return {
         queryKey: ['associated-site', 'sample', String(sampleId ?? 'none')],
         enabled: sampleId != null,
@@ -176,6 +187,8 @@ export function useAssociatedSiteRows(
         },
       }
     }),
+    combine: (results) =>
+      results.map((result) => result.data as ISample | undefined),
   })
 
   return useMemo(
@@ -183,14 +196,14 @@ export function useAssociatedSiteRows(
       items.map((thing, index) =>
         buildAssociatedSiteRow({
           thing,
-          well: wellQueries[index]?.data,
-          observations: observationQueries[index]?.data,
-          sample: sampleQueries[index]?.data,
+          well: wells[index]?.data,
+          observations: observations[index]?.data,
+          sample: samples[index],
           isLoading:
-            wellQueries[index]?.isLoading === true ||
-            observationQueries[index]?.isLoading === true,
+            wells[index]?.isLoading === true ||
+            observations[index]?.isLoading === true,
         })
       ),
-    [items, wellQueries, observationQueries, sampleQueries]
+    [items, wells, observations, samples]
   )
 }

@@ -8,6 +8,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
+import { AssociatedSiteReportActions } from '@/components/ContactShow/AssociatedSiteReportActions'
 import { DataTable, DataTableColumnHeader } from '@/components/DataTable'
 import {
   type AssociatedSiteRow,
@@ -16,11 +17,13 @@ import {
 import type { IThing } from '@/interfaces/ocotillo'
 import { formatAppDateTime } from '@/utils'
 
+// Depths come back at full float precision (272.08212570033396), which is
+// unreadable in a table column.
 const measure = (
   value: number | null,
   unit: string | null,
   fallback: string
-) => (value != null ? `${value} ${unit ?? ''}`.trim() : fallback)
+) => (value != null ? `${value.toFixed(1)} ${unit ?? ''}`.trim() : fallback)
 
 export const AssociatedSitesDetailsCard = ({
   things,
@@ -65,7 +68,7 @@ export const AssociatedSitesDetailsCard = ({
         ),
         cell: ({ row }) =>
           row.original.depthToWater != null
-            ? `${row.original.depthToWater} ft bgs`
+            ? `${row.original.depthToWater.toFixed(1)} ft bgs`
             : 'No measurements',
       },
       {
@@ -83,6 +86,12 @@ export const AssociatedSitesDetailsCard = ({
         ),
         cell: ({ row }) =>
           measure(row.original.holeDepth, row.original.holeDepthUnit, 'N/A'),
+      },
+      {
+        id: 'report',
+        header: 'Report',
+        enableSorting: false,
+        cell: ({ row }) => <AssociatedSiteReportActions row={row.original} />,
       },
     ],
     []
