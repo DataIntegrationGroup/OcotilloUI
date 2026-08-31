@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Compass,
   Database,
   Droplets,
   FileText,
@@ -102,33 +103,50 @@ const adminOnly: PortalRole[] = [AmpRole.Admin]
  * Each item is gated by its `roles` array in AppShell, with CanAccess as a
  * second enforcement layer.
  */
+/**
+ * Anchors the WIP geothermal group directly below AMP in the sidebar, without
+ * AppShell matching on a display label that could be reworded.
+ */
+export const AMP_NAV_ID = 'amp'
+
 export const RESOURCE_NAV: NavItem[] = [
   {
-    label: 'Wells',
+    // Grouping entry only — it names no resource of its own, so the children
+    // below carry the access gating.
+    id: AMP_NAV_ID,
+    label: 'AMP',
     href: '/ocotillo/well',
-    icon: Droplets,
-    resource: 'ocotillo.thing-well',
+    icon: Compass,
     roles: viewerAndAbove,
+    children: [
+      {
+        label: 'Wells',
+        href: '/ocotillo/well',
+        icon: Droplets,
+        resource: 'ocotillo.thing-well',
+        roles: viewerAndAbove,
+      },
+      {
+        label: 'Field Sheets',
+        href: '/ocotillo/well/batch-export',
+        icon: FileText,
+        resource: 'ocotillo.thing-well-batch-export',
+        roles: viewerAndAbove,
+      },
+      {
+        label: 'Contacts',
+        href: '/ocotillo/contact',
+        icon: Users,
+        resource: 'ocotillo.contact',
+        roles: viewerAndAbove,
+      },
+    ],
   },
   {
     label: 'Projects',
     href: '/ocotillo/well/projects',
     icon: FolderKanban,
     resource: 'ocotillo.thing-well-projects',
-    roles: viewerAndAbove,
-  },
-  {
-    label: 'Field Sheets',
-    href: '/ocotillo/well/batch-export',
-    icon: FileText,
-    resource: 'ocotillo.thing-well-batch-export',
-    roles: viewerAndAbove,
-  },
-  {
-    label: 'Contacts',
-    href: '/ocotillo/contact',
-    icon: Users,
-    resource: 'ocotillo.contact',
     roles: viewerAndAbove,
   },
   {
