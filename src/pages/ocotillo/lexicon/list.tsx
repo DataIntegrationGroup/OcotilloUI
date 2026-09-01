@@ -46,6 +46,7 @@ const LexiconHeaderButtons = () => {
 interface LexiconCategory {
   id: number | string
   name: string
+  description?: string | null
 }
 
 export const LexiconList = () => {
@@ -151,7 +152,10 @@ export const LexiconList = () => {
         </Grid>
         <Grid size={{ xs: 6 }}>
           <Card elevation={2}>
-            <CardHeader title="Terms" />
+            <CardHeader
+              title="Terms"
+              subheader={selectedCategory?.description ?? undefined}
+            />
             <CardContent>
               <DataGrid
                 pagination
