@@ -3,7 +3,7 @@ import { Box, Paper, Typography } from '@mui/material'
 import { Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl/maplibre'
 import { Link } from '@refinedev/core'
-import type { IThing } from '@/interfaces/ocotillo'
+import type { AssociatedSiteRow } from '@/hooks/useAssociatedSiteRows'
 import { MapComponent } from '@/components'
 import {
   MAP_LAYER_COLORS,
@@ -11,50 +11,39 @@ import {
 } from '@/constants/mapColors'
 
 type AssociatedSitesMapCardProps = {
-  things?: IThing[] | null
+  /**
+   * Enriched rows rather than raw things: the contact endpoint returns its
+   * things without a current_location, so nothing was ever mappable from them.
+   * The per-well records these rows are built from carry the coordinates.
+   */
+  rows?: AssociatedSiteRow[] | null
 }
 
-const getShowPath = (thingType: string, id: number) => {
-  const type = (thingType || '').toLowerCase()
-  if (type === 'water well' || type === 'geothermal well') {
-    return `/ocotillo/well/show/${id}`
-  }
-  if (type === 'spring') {
-    return `/ocotillo/spring/show/${id}`
-  }
-  return `/ocotillo/well/show/${id}`
-}
-
-export const AssociatedSitesMapCard = ({ things }: AssociatedSitesMapCardProps) => {
+export const AssociatedSitesMapCard = ({ rows }: AssociatedSitesMapCardProps) => {
   const mapRef = useRef<MapRef>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [popupContent, setPopupContent] = useState<{
     coordinates: [number, number]
     name: string
-    id: number
-    thingType: string
+    showPath: string
   } | null>(null)
 
-  const thingsWithCoords = (things ?? []).filter((t) => {
-    const coords = t.current_location?.geometry?.coordinates
-    return coords && coords.length >= 2
-  })
+  const sitesWithCoords = (rows ?? []).filter(
+    (row) => row.latitude != null && row.longitude != null
+  )
 
-  const features = thingsWithCoords.map((t) => {
-    const coords = t.current_location!.geometry!.coordinates as [number, number, number?]
-    return {
-      type: 'Feature' as const,
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [coords[0], coords[1]],
-      },
-      properties: {
-        name: t.name,
-        thing_id: t.id,
-        thing_type: t.thing_type,
-      },
-    }
-  })
+  const features = sitesWithCoords.map((row) => ({
+    type: 'Feature' as const,
+    geometry: {
+      type: 'Point' as const,
+      coordinates: [row.longitude as number, row.latitude as number],
+    },
+    properties: {
+      name: row.name,
+      thing_id: row.id,
+      show_path: row.showPath,
+    },
+  }))
 
   const featureCollection =
     features.length > 0
@@ -97,7 +86,7 @@ export const AssociatedSitesMapCard = ({ things }: AssociatedSitesMapCardProps) 
         duration: 0,
       })
     }
-  }, [thingsWithCoords.map((t) => t.id).join(','), features.length])
+  }, [sitesWithCoords.map((row) => row.id).join(','), features.length])
 
   const onMapPointClick = (
     _e: unknown,
@@ -115,8 +104,7 @@ export const AssociatedSitesMapCard = ({ things }: AssociatedSitesMapCardProps) 
     setPopupContent({
       coordinates: coords,
       name: String(point.properties.name ?? 'Site'),
-      id: Number(point.properties.thing_id),
-      thingType: String(point.properties.thing_type ?? ''),
+      showPath: String(point.properties.show_path ?? ''),
     })
   }
 
@@ -133,7 +121,7 @@ export const AssociatedSitesMapCard = ({ things }: AssociatedSitesMapCardProps) 
     }
   }
 
-  if (thingsWithCoords.length === 0) {
+  if (sitesWithCoords.length === 0) {
     return null
   }
 
@@ -178,7 +166,7 @@ export const AssociatedSitesMapCard = ({ things }: AssociatedSitesMapCardProps) 
                           {popupContent.name}
                         </Typography>
                         <Link
-                          to={getShowPath(popupContent.thingType, popupContent.id)}
+                          to={popupContent.showPath}
                           style={{ fontSize: 12, color: 'inherit' }}
                         >
                           View details

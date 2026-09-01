@@ -10,11 +10,7 @@ import {
 import { useMemo, useState } from 'react'
 import { AssociatedSiteReportActions } from '@/components/ContactShow/AssociatedSiteReportActions'
 import { DataTable, DataTableColumnHeader } from '@/components/DataTable'
-import {
-  type AssociatedSiteRow,
-  useAssociatedSiteRows,
-} from '@/hooks/useAssociatedSiteRows'
-import type { IThing } from '@/interfaces/ocotillo'
+import type { AssociatedSiteRow } from '@/hooks/useAssociatedSiteRows'
 import { formatAppDateTime } from '@/utils'
 
 // Depths come back at full float precision (272.08212570033396), which is
@@ -26,11 +22,10 @@ const measure = (
 ) => (value != null ? `${value.toFixed(1)} ${unit ?? ''}`.trim() : fallback)
 
 export const AssociatedSitesDetailsCard = ({
-  things,
+  rows,
 }: {
-  things?: IThing[] | null
+  rows: AssociatedSiteRow[]
 }) => {
-  const rows = useAssociatedSiteRows(things)
   const [sorting, setSorting] = useState<SortingState>([])
 
   const columns = useMemo<ColumnDef<AssociatedSiteRow>[]>(

@@ -3,7 +3,11 @@ import { Show } from '@refinedev/mui'
 import { useResourceParams } from '@refinedev/core'
 import { PencilIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useAccessCapabilities, useSidebarPanelSync } from '@/hooks'
+import {
+  useAccessCapabilities,
+  useAssociatedSiteRows,
+  useSidebarPanelSync,
+} from '@/hooks'
 import { sanitizeContact } from '@/utils'
 import { getContactDisplayName } from '@/utils/contactDisplayName'
 import { Chip } from '@mui/material'
@@ -33,6 +37,9 @@ export const ContactShow = () => {
       : undefined
 
   const contact = record
+
+  // One fetch feeds both the table and the map.
+  const associatedSiteRows = useAssociatedSiteRows(contact?.things)
 
   const {
     isPanelOpen: isEditPanelOpen,
@@ -102,8 +109,8 @@ export const ContactShow = () => {
       >
         <Stack spacing={2}>
           <ContactDetailsCard contact={contact} />
-          <AssociatedSitesDetailsCard things={contact?.things} />
-          <AssociatedSitesMapCard things={contact?.things} />
+          <AssociatedSitesDetailsCard rows={associatedSiteRows} />
+          <AssociatedSitesMapCard rows={associatedSiteRows} />
         </Stack>
       </Show>
     </EditPanelLayout>
