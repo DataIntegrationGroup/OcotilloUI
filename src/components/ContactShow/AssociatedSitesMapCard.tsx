@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { Box, Paper, Typography } from '@mui/material'
 import { Map } from '@mui/icons-material'
 import { Layer, MapRef, Source } from 'react-map-gl/maplibre'
-import { Link } from '@refinedev/core'
 import type { AssociatedSiteRow } from '@/hooks/useAssociatedSiteRows'
 import { MapComponent } from '@/components'
+import { settings } from '@/settings'
 import {
   MAP_LAYER_COLORS,
   MAP_SYMBOL_STROKE_COLOR,
@@ -165,12 +165,14 @@ export const AssociatedSitesMapCard = ({ rows }: AssociatedSitesMapCardProps) =>
                         <Typography variant="subtitle2" fontWeight={600}>
                           {popupContent.name}
                         </Typography>
-                        <Link
-                          to={popupContent.showPath}
+                        <a
+                          href={`${settings.urlprefix}${popupContent.showPath}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           style={{ fontSize: 12, color: 'inherit' }}
                         >
                           View details
-                        </Link>
+                        </a>
                       </Box>
                     ),
                     maxWidth: '300px',
