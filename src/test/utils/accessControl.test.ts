@@ -47,7 +47,7 @@ const expectedRegisteredRoutableResources = [
   'ocotillo.thing-well',
   'ocotillo.thing-well-batch-export',
   'ocotillo.thing-well-pdf-preview',
-  'ocotillo.thing-well-projects',
+  'ocotillo.projects',
 ].sort()
 
 // Geothermal resources are a separate portal — accessible to Geothermal roles
@@ -72,7 +72,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.contact',
       'ocotillo.thing-well',
       'ocotillo.thing-well-batch-export',
-      'ocotillo.thing-well-projects',
+      'ocotillo.projects',
     ],
   },
   {
@@ -86,7 +86,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.hydrograph-correction',
       'ocotillo.asset-unassociated',
       'ocotillo.thing-well-batch-export',
-      'ocotillo.thing-well-projects',
+      'ocotillo.projects',
     ],
   },
   {
@@ -125,7 +125,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.thing-well',
       'ocotillo.contact',
       'ocotillo.thing-well-batch-export',
-      'ocotillo.thing-well-projects',
+      'ocotillo.projects',
       ...GEOTHERMAL_ROUTABLE,
     ],
   },

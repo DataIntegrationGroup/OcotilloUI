@@ -214,7 +214,7 @@ export const useSearchModalState = ({
         break
       case GroupType.Projects:
         go({
-          to: `/ocotillo/well/projects/show/${(option as ProjectResult).properties.id}`,
+          to: `/ocotillo/projects/show/${(option as ProjectResult).properties.id}`,
           type: 'push',
         })
         break
