@@ -1,4 +1,12 @@
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import {
+  Fragment,
+  type ReactElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Outlet, Link, useLocation } from 'react-router'
@@ -50,6 +58,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Flame,
   Lock,
   LogOut,
   Menu,
@@ -62,8 +71,14 @@ import {
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
-import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
-import { useAccessCapabilities } from '@/hooks'
+import {
+  AMP_NAV_ID,
+  AmpRole,
+  PRIMARY_NAV,
+  RESOURCE_NAV,
+  type NavItem,
+} from '@/config/navigation'
+import { useAccessCapabilities, useNavSectionOpen } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { SupportPanelContext } from '@/components/SupportPanelContext'
 import { NewVersionBanner } from '@/components/NewVersionBanner'
@@ -154,7 +169,6 @@ function ExpandButton() {
   )
 }
 
-
 const FOOTER_LINKS = [
   { label: 'About', href: '/about' },
   { label: 'Connect Desktop GIS', href: '/ogcapi' },
@@ -196,10 +210,7 @@ function SidebarBrand() {
   const collapsed = state === 'collapsed'
 
   return (
-    <Link
-      to="/home"
-      className="flex items-center no-underline text-foreground"
-    >
+    <Link to="/home" className="flex items-center no-underline text-foreground">
       <span
         className="font-heading font-extrabold uppercase leading-none tracking-widest"
         style={{ fontSize: collapsed ? '1.25rem' : '1.1rem' }}
@@ -228,20 +239,31 @@ function ResourceNavItem({
     children?.filter((child) => canSeeNavItem(child.roles)) ?? []
   const hasChildren = visibleChildren.length > 0
   const currentActiveHref = activeHref(pathname)
+  // A group counts as active for its own href and for any of its children's,
+  // so moving between siblings does not collapse it.
+  const sectionHrefs = [href, ...visibleChildren.map((child) => child.href)]
   const sectionActive =
-    hasChildren && href != null && isNavSectionActive(pathname, href)
-  const [open, setOpen] = useState(sectionActive)
-  const isOpen = sectionActive || open
-
-  useEffect(() => {
-    setOpen(sectionActive)
-  }, [sectionActive])
+    hasChildren &&
+    sectionHrefs.some(
+      (candidate) =>
+        candidate != null && isNavSectionActive(pathname, candidate)
+    )
+  const [isOpen, setOpen] = useNavSectionOpen(sectionActive)
 
   if (!canSeeNavItem(roles)) return null
 
-  const handleOpenChange = (next: boolean) => {
-    if (!sectionActive) setOpen(next)
-  }
+  const handleOpenChange = setOpen
+
+  // Grouping entries need not be resources themselves — each child still gates
+  // on its own, so an unnamed parent is not an unguarded one.
+  const withAccess = (node: ReactElement) =>
+    resource ? (
+      <CanAccess resource={resource} action="list">
+        {node}
+      </CanAccess>
+    ) : (
+      node
+    )
 
   const trackNavClick = (target: NavItem, parentLabel?: string) => {
     if (!target.href) return
@@ -254,92 +276,87 @@ function ResourceNavItem({
   }
 
   if (!hasChildren) {
-    return (
-      <CanAccess resource={resource!} action="list">
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            asChild
-            isActive={currentActiveHref === href}
-            tooltip={label}
+    return withAccess(
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          asChild
+          isActive={currentActiveHref === href}
+          tooltip={label}
+        >
+          <Link
+            to={href!}
+            onClick={() =>
+              trackNavClick({ label, href, icon: Icon, resource, roles })
+            }
           >
-            <Link
-              to={href!}
-              onClick={() => trackNavClick({ label, href, icon: Icon, resource, roles })}
-            >
-              <Icon />
-              <span>{label}</span>
-              {roles && !roles.includes(AmpRole.Viewer) && (
-                <Lock
-                  className="ml-auto text-muted-foreground/70 shrink-0"
-                  style={{ width: 11, height: 11 }}
-                />
-              )}
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </CanAccess>
+            <Icon />
+            <span>{label}</span>
+            {roles && !roles.includes(AmpRole.Viewer) && (
+              <Lock
+                className="ml-auto text-muted-foreground/70 shrink-0"
+                style={{ width: 11, height: 11 }}
+              />
+            )}
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
     )
   }
 
   const groupClass = `group/nav-${resource?.replace(/\./g, '-') ?? label}`
 
-  return (
-    <CanAccess resource={resource!} action="list">
-      <Collapsible open={isOpen} onOpenChange={handleOpenChange} className={groupClass}>
-        <SidebarMenuItem>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton
-              asChild
-              isActive={currentActiveHref === href}
-              tooltip={label}
-            >
-              <Link
-                to={href!}
-                onClick={() => trackNavClick({ label, href, icon: Icon, resource, roles })}
-              >
-                <Icon />
-                <span>{label}</span>
-                <ChevronRight
-                  className={cn(
-                    'ml-auto size-3.5 transition-transform duration-100',
-                    isOpen && 'rotate-90'
-                  )}
-                />
-              </Link>
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {visibleChildren.map((child) => {
-                const ChildIcon = child.icon
-                return (
-                  <CanAccess
-                    key={child.href}
-                    resource={child.resource!}
-                    action="list"
-                  >
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={currentActiveHref === child.href}
+  return withAccess(
+    <Collapsible
+      open={isOpen}
+      onOpenChange={handleOpenChange}
+      className={groupClass}
+    >
+      <SidebarMenuItem>
+        {/* Header toggles the group only. Switching page is the child's job,
+            so opening a group never moves you off the page you are on. */}
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton tooltip={label}>
+            <Icon />
+            <span>{label}</span>
+            <ChevronRight
+              className={cn(
+                'ml-auto size-3.5 transition-transform duration-100',
+                isOpen && 'rotate-90'
+              )}
+            />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {visibleChildren.map((child) => {
+              const ChildIcon = child.icon
+              return (
+                <CanAccess
+                  key={child.href}
+                  resource={child.resource!}
+                  action="list"
+                >
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      asChild
+                      isActive={currentActiveHref === child.href}
+                    >
+                      <Link
+                        to={child.href!}
+                        onClick={() => trackNavClick(child, label)}
                       >
-                        <Link
-                          to={child.href!}
-                          onClick={() => trackNavClick(child, label)}
-                        >
-                          <ChildIcon />
-                          <span>{child.label}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  </CanAccess>
-                )
-              })}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </SidebarMenuItem>
-      </Collapsible>
-    </CanAccess>
+                        <ChildIcon />
+                        <span>{child.label}</span>
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </CanAccess>
+              )
+            })}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
   )
 }
 
@@ -377,64 +394,91 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {PRIMARY_NAV.map(({ id, label, href, icon: Icon, disabled, resource, roles }) => {
-                if (!canSeeNavItem(roles)) return null
+              {PRIMARY_NAV.map(
+                ({
+                  id,
+                  label,
+                  href,
+                  icon: Icon,
+                  disabled,
+                  resource,
+                  roles,
+                }) => {
+                  if (!canSeeNavItem(roles)) return null
 
-                const button = id === 'search' ? (
-                  <SidebarMenuButton onClick={openSearch} tooltip={label}>
-                    <Icon />
-                    <span>{label}</span>
-                  </SidebarMenuButton>
-                ) : disabled ? (
-                  <SidebarMenuButton
-                    tooltip={`${label} (coming soon)`}
-                    className="cursor-not-allowed disabled:opacity-100 disabled:pointer-events-none"
-                  >
-                    <Icon />
-                    <span>{label}</span>
-                  </SidebarMenuButton>
-                ) : (
-                  <SidebarMenuButton
-                    asChild
-                    isActive={activeHref(location.pathname) === href}
-                    tooltip={label}
-                  >
-                    <Link to={href!}>
-                      <Icon />
-                      <span>{label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                )
+                  const button =
+                    id === 'search' ? (
+                      <SidebarMenuButton onClick={openSearch} tooltip={label}>
+                        <Icon />
+                        <span>{label}</span>
+                      </SidebarMenuButton>
+                    ) : disabled ? (
+                      <SidebarMenuButton
+                        tooltip={`${label} (coming soon)`}
+                        className="cursor-not-allowed disabled:opacity-100 disabled:pointer-events-none"
+                      >
+                        <Icon />
+                        <span>{label}</span>
+                      </SidebarMenuButton>
+                    ) : (
+                      <SidebarMenuButton
+                        asChild
+                        isActive={activeHref(location.pathname) === href}
+                        tooltip={label}
+                      >
+                        <Link to={href!}>
+                          <Icon />
+                          <span>{label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    )
 
-                const item = (
-                  <SidebarMenuItem key={`primary-${label}`}>
-                    {button}
-                  </SidebarMenuItem>
-                )
+                  const item = (
+                    <SidebarMenuItem key={`primary-${label}`}>
+                      {button}
+                    </SidebarMenuItem>
+                  )
 
-                return resource ? (
-                  <CanAccess key={`primary-${label}`} resource={resource} action="list">
-                    {item}
-                  </CanAccess>
-                ) : item
-              })}
+                  return resource ? (
+                    <CanAccess
+                      key={`primary-${label}`}
+                      resource={resource}
+                      action="list"
+                    >
+                      {item}
+                    </CanAccess>
+                  ) : (
+                    item
+                  )
+                }
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarSeparator className="my-1 bg-border" />
 
-        {/* Resource navigation */}
+        {/* Resource navigation + WIP geothermal section — all in one group */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {RESOURCE_NAV.map((item) => (
-                <ResourceNavItem
-                  key={item.href ?? item.label}
-                  item={item}
-                  pathname={location.pathname}
-                  canSeeNavItem={canSeeNavItem}
-                />
+                <Fragment key={item.href ?? item.label}>
+                  <ResourceNavItem
+                    item={item}
+                    pathname={location.pathname}
+                    canSeeNavItem={canSeeNavItem}
+                  />
+                  {/* The geothermal group sits directly below AMP. */}
+                  {item.id === AMP_NAV_ID ? <GeothermalNavItem /> : null}
+                  {/* Domain groups above, flat resources below. Wrapped in an
+                      li because SidebarMenu is a ul. */}
+                  {item.id === AMP_NAV_ID ? (
+                    <li role="none">
+                      <SidebarSeparator className="my-1 bg-border" />
+                    </li>
+                  ) : null}
+                </Fragment>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -466,6 +510,69 @@ function AppSidebar() {
   )
 }
 
+const GEOTHERMAL_RECORDS_GRID = '/geothermal/wells/records-grid'
+const GEOTHERMAL_INVENTORY = '/geothermal/wells/inventory'
+const GEOTHERMAL_TEMP_DEPTH = '/geothermal/wells/temp-depth'
+
+function isGeothermalPath(pathname: string): boolean {
+  return (
+    pathname.startsWith(GEOTHERMAL_RECORDS_GRID) ||
+    pathname.startsWith(GEOTHERMAL_INVENTORY) ||
+    pathname.startsWith(GEOTHERMAL_TEMP_DEPTH)
+  )
+}
+
+function GeothermalNavItem() {
+  const location = useLocation()
+  const [open, setOpen] = useNavSectionOpen(isGeothermalPath(location.pathname))
+
+  return (
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="group/geothermal"
+    >
+      <SidebarMenuItem>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton tooltip="Geothermal">
+            <Flame />
+            <span>Geothermal</span>
+            <ChevronRight className="ml-auto size-3.5 transition-transform duration-100 group-data-[state=open]/geothermal:rotate-90" />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname.startsWith(GEOTHERMAL_RECORDS_GRID)}
+              >
+                <Link to={GEOTHERMAL_RECORDS_GRID}>Records</Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname.startsWith(GEOTHERMAL_INVENTORY)}
+              >
+                <Link to={GEOTHERMAL_INVENTORY}>Inventory</Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
+                asChild
+                isActive={location.pathname.startsWith(GEOTHERMAL_TEMP_DEPTH)}
+              >
+                <Link to={GEOTHERMAL_TEMP_DEPTH}>Temp-Depth</Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
+  )
+}
+
 function SupportPanelTrigger({ collapsed }: { collapsed: boolean }) {
   const { isOpen, open, close } = useContext(SupportPanelContext)
   return (
@@ -476,7 +583,9 @@ function SupportPanelTrigger({ collapsed }: { collapsed: boolean }) {
         className={cn(
           'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent cursor-pointer',
           collapsed && 'justify-center',
-          isOpen ? 'text-foreground bg-accent' : 'text-muted-foreground hover:text-foreground'
+          isOpen
+            ? 'text-foreground bg-accent'
+            : 'text-muted-foreground hover:text-foreground'
         )}
       >
         <Bug className="size-4 shrink-0" />
@@ -561,7 +670,10 @@ function SupportPanel() {
     reset()
   }
 
-  const [bugForm, setBugForm] = useState<BugFormData>({ whatHappened: '', severity: 'Low' })
+  const [bugForm, setBugForm] = useState<BugFormData>({
+    whatHappened: '',
+    severity: 'Low',
+  })
   const [featureForm, setFeatureForm] = useState<FeatureFormData>({
     problem: '',
     whoWouldUse: '',
@@ -585,20 +697,26 @@ function SupportPanel() {
     }
   }, [isOpen])
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    dragState.current = { startX: e.clientX, startWidth: width }
-    if (outerRef.current) outerRef.current.style.transition = 'none'
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-  }, [width])
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      dragState.current = { startX: e.clientX, startWidth: width }
+      if (outerRef.current) outerRef.current.style.transition = 'none'
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+    },
+    [width]
+  )
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!dragState.current) return
       const maxWidth = Math.floor(window.innerWidth / 2)
       const delta = dragState.current.startX - e.clientX
-      const next = Math.min(maxWidth, Math.max(PANEL_MIN_WIDTH, dragState.current.startWidth + delta))
+      const next = Math.min(
+        maxWidth,
+        Math.max(PANEL_MIN_WIDTH, dragState.current.startWidth + delta)
+      )
       if (outerRef.current) outerRef.current.style.width = `${next}px`
       if (innerRef.current) innerRef.current.style.width = `${next}px`
     }
@@ -674,285 +792,357 @@ function SupportPanel() {
       className="flex h-full w-full flex-col"
       style={isMobile ? undefined : { width }}
     >
-        {/* Panel header */}
-        <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-2">
-            {view !== 'home' && (
-              <button
-                onClick={() => { setView('home'); clearSubmitFeedback() }}
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                aria-label="Back"
-              >
-                <ChevronRight className="size-4 rotate-180" />
-              </button>
-            )}
-            <span className="font-semibold text-sm">
-              {view === 'home' && 'Get Help'}
-              {view === 'bug' && 'Report a Bug'}
-              {view === 'feature' && 'Request a Feature'}
-            </span>
-          </div>
-          <button
-            onClick={close}
-            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            aria-label="Close panel"
-          >
-            <X className="size-4" />
-          </button>
+      {/* Panel header */}
+      <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
+        <div className="flex items-center gap-2">
+          {view !== 'home' && (
+            <button
+              onClick={() => {
+                setView('home')
+                clearSubmitFeedback()
+              }}
+              className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              aria-label="Back"
+            >
+              <ChevronRight className="size-4 rotate-180" />
+            </button>
+          )}
+          <span className="font-semibold text-sm">
+            {view === 'home' && 'Get Help'}
+            {view === 'bug' && 'Report a Bug'}
+            {view === 'feature' && 'Request a Feature'}
+          </span>
         </div>
-
-        {/* Panel body */}
-        <div className="flex flex-1 flex-col overflow-y-auto">
-
-          {/* Home view */}
-          {view === 'home' && (
-            <div className="flex flex-col gap-3 p-4">
-              <p className="text-sm text-muted-foreground">
-                Found something broken or have a suggestion? Let us know.
-              </p>
-              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6, #06b6d4)' }}>
-                <button
-                  onClick={() => setView('bug')}
-                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
-                >
-                  <Bug className="size-5 shrink-0 mt-0.5 text-emerald-500" />
-                  <div>
-                    <p className="font-medium text-sm">Report a Bug</p>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Something is broken or not working as expected.
-                    </p>
-                  </div>
-                </button>
-              </div>
-              {/* Brand-blue gradient border: brand-300 → brand-500 → brand-700 */}
-              <div className="rounded-xl p-[2.5px]" style={{ background: 'linear-gradient(135deg, #83c6ee, #1e88c4, #0f5786)' }}>
-                <button
-                  onClick={() => setView('feature')}
-                  className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
-                >
-                  <User className="size-5 shrink-0 mt-0.5 text-sky-500" />
-                  <div>
-                    <p className="font-medium text-sm">Request a Feature</p>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Describe something you need that Ocotillo doesn&apos;t do yet.
-                    </p>
-                  </div>
-                </button>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground px-1">
-                For urgent issues, email{' '}
-                <a
-                  href="mailto:ocotillo-nmbg@nmt.edu"
-                  className="underline hover:text-foreground"
-                >
-                  ocotillo-nmbg@nmt.edu
-                </a>
-              </p>
-            </div>
-          )}
-
-          {/* Bug form */}
-          {view === 'bug' && (
-            <div className="flex flex-col gap-4 p-4">
-              {/* Auto-captured context */}
-              <div className="rounded-md bg-orange-100 dark:bg-orange-950/40 p-3 flex flex-col gap-1.5">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Captured automatically</p>
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Page:</span> {pageUrl}
-                </p>
-                {user?.name && (
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">Reported by:</span> {user.name}
-                  </p>
-                )}
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Browser:</span> {getBrowser()}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Date & time:</span>{' '}
-                  {new Date().toLocaleString(undefined, {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                  })}
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="bug-what-happened" className="text-sm">
-                  What happened? <span className="text-destructive">*</span>
-                </Label>
-                <Textarea
-                  id="bug-what-happened"
-                  placeholder={"Describe what went wrong.\n\nInclude:\n• What you expected to happen\n• What actually happened\n• Steps to reproduce"}
-                  rows={7}
-                  value={bugForm.whatHappened}
-                  onChange={(e) => setBugForm((f) => ({ ...f, whatHappened: e.target.value }))}
-                  disabled={formLocked}
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label className="text-sm">Severity</Label>
-                {[
-                  { value: 'Low', label: 'Low', description: 'Minor annoyance, workaround exists' },
-                  { value: 'Medium', label: 'Medium', description: 'Impacts my workflow' },
-                  { value: 'High', label: 'High', description: 'Blocking, data loss, or completely broken' },
-                ].map(({ value, label, description }) => (
-                  <label
-                    key={value}
-                    className={cn(
-                      'flex items-start gap-3 rounded-md border p-3 cursor-pointer transition-colors',
-                      bugForm.severity === value
-                        ? 'border-primary bg-primary/5'
-                        : 'hover:bg-accent',
-                      (formLocked) && 'pointer-events-none opacity-50'
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      name="severity"
-                      value={value}
-                      checked={bugForm.severity === value}
-                      onChange={() => setBugForm((f) => ({ ...f, severity: value }))}
-                      disabled={formLocked}
-                      className="mt-0.5 accent-primary"
-                    />
-                    <div>
-                      <p className="text-sm font-medium leading-tight">{label}</p>
-                      <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-
-              {showSuccess && (
-                <div className="rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 text-sm text-green-800 dark:text-green-300">
-                  Bug filed —{' '}
-                  <a href={ticketUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
-                    {ticketKey}
-                  </a>
-                  . Thanks!
-                </div>
-              )}
-
-              {showError && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-                  {errorMsg}
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { setView('home'); clearSubmitFeedback() }}
-                  disabled={isPending}
-                  className="flex-1"
-                >
-                  Back
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleSubmit('bug')}
-                  disabled={!bugForm.whatHappened.trim() || formLocked}
-                  className="flex-1"
-                >
-                  {isPending ? 'Submitting…' : 'Submit Bug'}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Feature request form */}
-          {view === 'feature' && (
-            <div className="flex flex-col gap-4 p-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="feat-problem" className="text-sm">
-                  What problem does this solve? <span className="text-destructive">*</span>
-                </Label>
-                <Textarea
-                  id="feat-problem"
-                  placeholder="Describe the pain point or gap in the current workflow."
-                  rows={4}
-                  value={featureForm.problem}
-                  onChange={(e) => setFeatureForm((f) => ({ ...f, problem: e.target.value }))}
-                  disabled={formLocked}
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="feat-who" className="text-sm">
-                  Who would use this?{' '}
-                  <span className="text-muted-foreground font-normal">(optional)</span>
-                </Label>
-                <input
-                  id="feat-who"
-                  type="text"
-                  placeholder="e.g. field staff, all users, data managers"
-                  value={featureForm.whoWouldUse}
-                  onChange={(e) => setFeatureForm((f) => ({ ...f, whoWouldUse: e.target.value }))}
-                  disabled={formLocked}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="feat-what" className="text-sm">
-                  What should it do? <span className="text-destructive">*</span>
-                </Label>
-                <Textarea
-                  id="feat-what"
-                  placeholder="Describe the feature and how it should work."
-                  rows={4}
-                  value={featureForm.whatItShouldDo}
-                  onChange={(e) => setFeatureForm((f) => ({ ...f, whatItShouldDo: e.target.value }))}
-                  disabled={formLocked}
-                />
-              </div>
-
-              {showSuccess && (
-                <div className="rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 text-sm text-green-800 dark:text-green-300">
-                  Request filed —{' '}
-                  <a href={ticketUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
-                    {ticketKey}
-                  </a>
-                  . Thanks!
-                </div>
-              )}
-
-              {showError && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-                  {errorMsg}
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { setView('home'); clearSubmitFeedback() }}
-                  disabled={isPending}
-                  className="flex-1"
-                >
-                  Back
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleSubmit('feature')}
-                  disabled={
-                    !featureForm.problem.trim() ||
-                    !featureForm.whatItShouldDo.trim() ||
-                    formLocked
-                  }
-                  className="flex-1"
-                >
-                  {isPending ? 'Submitting…' : 'Submit Request'}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        <button
+          onClick={close}
+          className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          aria-label="Close panel"
+        >
+          <X className="size-4" />
+        </button>
       </div>
+
+      {/* Panel body */}
+      <div className="flex flex-1 flex-col overflow-y-auto">
+        {/* Home view */}
+        {view === 'home' && (
+          <div className="flex flex-col gap-3 p-4">
+            <p className="text-sm text-muted-foreground">
+              Found something broken or have a suggestion? Let us know.
+            </p>
+            <div
+              className="rounded-xl p-[2.5px]"
+              style={{
+                background:
+                  'linear-gradient(135deg, #10b981, #14b8a6, #06b6d4)',
+              }}
+            >
+              <button
+                onClick={() => setView('bug')}
+                className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
+              >
+                <Bug className="size-5 shrink-0 mt-0.5 text-emerald-500" />
+                <div>
+                  <p className="font-medium text-sm">Report a Bug</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Something is broken or not working as expected.
+                  </p>
+                </div>
+              </button>
+            </div>
+            {/* Brand-blue gradient border: brand-300 → brand-500 → brand-700 */}
+            <div
+              className="rounded-xl p-[2.5px]"
+              style={{
+                background:
+                  'linear-gradient(135deg, #83c6ee, #1e88c4, #0f5786)',
+              }}
+            >
+              <button
+                onClick={() => setView('feature')}
+                className="flex w-full items-start gap-3 rounded-[9px] bg-background p-4 text-left hover:bg-accent transition-colors cursor-pointer"
+              >
+                <User className="size-5 shrink-0 mt-0.5 text-sky-500" />
+                <div>
+                  <p className="font-medium text-sm">Request a Feature</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Describe something you need that Ocotillo doesn&apos;t do
+                    yet.
+                  </p>
+                </div>
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground px-1">
+              For urgent issues, email{' '}
+              <a
+                href="mailto:ocotillo-nmbg@nmt.edu"
+                className="underline hover:text-foreground"
+              >
+                ocotillo-nmbg@nmt.edu
+              </a>
+            </p>
+          </div>
+        )}
+
+        {/* Bug form */}
+        {view === 'bug' && (
+          <div className="flex flex-col gap-4 p-4">
+            {/* Auto-captured context */}
+            <div className="rounded-md bg-orange-100 dark:bg-orange-950/40 p-3 flex flex-col gap-1.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Captured automatically
+              </p>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Page:</span>{' '}
+                {pageUrl}
+              </p>
+              {user?.name && (
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">
+                    Reported by:
+                  </span>{' '}
+                  {user.name}
+                </p>
+              )}
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Browser:</span>{' '}
+                {getBrowser()}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  Date & time:
+                </span>{' '}
+                {new Date().toLocaleString(undefined, {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bug-what-happened" className="text-sm">
+                What happened? <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="bug-what-happened"
+                placeholder={
+                  'Describe what went wrong.\n\nInclude:\n• What you expected to happen\n• What actually happened\n• Steps to reproduce'
+                }
+                rows={7}
+                value={bugForm.whatHappened}
+                onChange={(e) =>
+                  setBugForm((f) => ({ ...f, whatHappened: e.target.value }))
+                }
+                disabled={formLocked}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm">Severity</Label>
+              {[
+                {
+                  value: 'Low',
+                  label: 'Low',
+                  description: 'Minor annoyance, workaround exists',
+                },
+                {
+                  value: 'Medium',
+                  label: 'Medium',
+                  description: 'Impacts my workflow',
+                },
+                {
+                  value: 'High',
+                  label: 'High',
+                  description: 'Blocking, data loss, or completely broken',
+                },
+              ].map(({ value, label, description }) => (
+                <label
+                  key={value}
+                  className={cn(
+                    'flex items-start gap-3 rounded-md border p-3 cursor-pointer transition-colors',
+                    bugForm.severity === value
+                      ? 'border-primary bg-primary/5'
+                      : 'hover:bg-accent',
+                    formLocked && 'pointer-events-none opacity-50'
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="severity"
+                    value={value}
+                    checked={bugForm.severity === value}
+                    onChange={() =>
+                      setBugForm((f) => ({ ...f, severity: value }))
+                    }
+                    disabled={formLocked}
+                    className="mt-0.5 accent-primary"
+                  />
+                  <div>
+                    <p className="text-sm font-medium leading-tight">{label}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {description}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            {showSuccess && (
+              <div className="rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 text-sm text-green-800 dark:text-green-300">
+                Bug filed —{' '}
+                <a
+                  href={ticketUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium underline"
+                >
+                  {ticketKey}
+                </a>
+                . Thanks!
+              </div>
+            )}
+
+            {showError && (
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                {errorMsg}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setView('home')
+                  clearSubmitFeedback()
+                }}
+                disabled={isPending}
+                className="flex-1"
+              >
+                Back
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleSubmit('bug')}
+                disabled={!bugForm.whatHappened.trim() || formLocked}
+                className="flex-1"
+              >
+                {isPending ? 'Submitting…' : 'Submit Bug'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Feature request form */}
+        {view === 'feature' && (
+          <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="feat-problem" className="text-sm">
+                What problem does this solve?{' '}
+                <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="feat-problem"
+                placeholder="Describe the pain point or gap in the current workflow."
+                rows={4}
+                value={featureForm.problem}
+                onChange={(e) =>
+                  setFeatureForm((f) => ({ ...f, problem: e.target.value }))
+                }
+                disabled={formLocked}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="feat-who" className="text-sm">
+                Who would use this?{' '}
+                <span className="text-muted-foreground font-normal">
+                  (optional)
+                </span>
+              </Label>
+              <input
+                id="feat-who"
+                type="text"
+                placeholder="e.g. field staff, all users, data managers"
+                value={featureForm.whoWouldUse}
+                onChange={(e) =>
+                  setFeatureForm((f) => ({ ...f, whoWouldUse: e.target.value }))
+                }
+                disabled={formLocked}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="feat-what" className="text-sm">
+                What should it do? <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="feat-what"
+                placeholder="Describe the feature and how it should work."
+                rows={4}
+                value={featureForm.whatItShouldDo}
+                onChange={(e) =>
+                  setFeatureForm((f) => ({
+                    ...f,
+                    whatItShouldDo: e.target.value,
+                  }))
+                }
+                disabled={formLocked}
+              />
+            </div>
+
+            {showSuccess && (
+              <div className="rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 text-sm text-green-800 dark:text-green-300">
+                Request filed —{' '}
+                <a
+                  href={ticketUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium underline"
+                >
+                  {ticketKey}
+                </a>
+                . Thanks!
+              </div>
+            )}
+
+            {showError && (
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                {errorMsg}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setView('home')
+                  clearSubmitFeedback()
+                }}
+                disabled={isPending}
+                className="flex-1"
+              >
+                Back
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleSubmit('feature')}
+                disabled={
+                  !featureForm.problem.trim() ||
+                  !featureForm.whatItShouldDo.trim() ||
+                  formLocked
+                }
+                className="flex-1"
+              >
+                {isPending ? 'Submitting…' : 'Submit Request'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   )
 
   if (isMobile) {
@@ -993,10 +1183,26 @@ const BREADCRUMB_RESOURCES: Record<
   { label: string; listHref: string; resource: string }
 > = {
   well: { label: 'Wells', listHref: '/ocotillo/well', resource: 'thing-well' },
-  contact: { label: 'Contacts', listHref: '/ocotillo/contact', resource: 'contact' },
-  location: { label: 'Locations', listHref: '/ocotillo/location', resource: 'location' },
-  sensor: { label: 'Sensors', listHref: '/ocotillo/sensor', resource: 'sensor' },
-  sample: { label: 'Samples', listHref: '/ocotillo/sample', resource: 'sample' },
+  contact: {
+    label: 'Contacts',
+    listHref: '/ocotillo/contact',
+    resource: 'contact',
+  },
+  location: {
+    label: 'Locations',
+    listHref: '/ocotillo/location',
+    resource: 'location',
+  },
+  sensor: {
+    label: 'Sensors',
+    listHref: '/ocotillo/sensor',
+    resource: 'sensor',
+  },
+  sample: {
+    label: 'Samples',
+    listHref: '/ocotillo/sample',
+    resource: 'sample',
+  },
   projects: {
     label: 'Projects',
     listHref: '/ocotillo/well/projects',
@@ -1023,14 +1229,20 @@ function NestedListBreadcrumb({
   label: string
 }) {
   return (
-    <nav aria-label="breadcrumb" className="flex items-center gap-1 text-sm shrink-0">
+    <nav
+      aria-label="breadcrumb"
+      className="flex items-center gap-1 text-sm shrink-0"
+    >
       <Link
         to={parentHref}
         className="text-muted-foreground hover:text-foreground transition-colors no-underline"
       >
         {parentLabel}
       </Link>
-      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" aria-hidden="true" />
+      <ChevronRight
+        className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0"
+        aria-hidden="true"
+      />
       <span className="text-foreground font-medium">{label}</span>
     </nav>
   )
@@ -1051,9 +1263,8 @@ function HeaderBreadcrumb() {
     id,
     queryOptions: { enabled: !nestedList && !!id && !!resourceInfo },
   })
-  const recordName = (query?.data?.data as Record<string, unknown> | undefined)?.name as
-    | string
-    | undefined
+  const recordName = (query?.data?.data as Record<string, unknown> | undefined)
+    ?.name as string | undefined
 
   if (nestedList) {
     return <NestedListBreadcrumb {...nestedList} />
@@ -1065,14 +1276,20 @@ function HeaderBreadcrumb() {
   const isPdfPreview = action === 'pdf-preview'
 
   return (
-    <nav aria-label="breadcrumb" className="flex items-center gap-1 text-sm shrink-0">
+    <nav
+      aria-label="breadcrumb"
+      className="flex items-center gap-1 text-sm shrink-0"
+    >
       <Link
         to={resourceInfo.listHref}
         className="text-muted-foreground hover:text-foreground transition-colors no-underline"
       >
         {resourceInfo.label}
       </Link>
-      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" aria-hidden="true" />
+      <ChevronRight
+        className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0"
+        aria-hidden="true"
+      />
       {isPdfPreview ? (
         <>
           <Link
@@ -1151,11 +1368,16 @@ function ShellHeader() {
         <ReportBugButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-9 px-2 mobile-lg:px-2.5 gap-1.5 font-semibold cursor-pointer">
+            <Button
+              variant="ghost"
+              className="h-9 px-2 mobile-lg:px-2.5 gap-1.5 font-semibold cursor-pointer"
+            >
               <span className="flex mobile-lg:hidden size-7 rounded bg-primary items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
                 {initials}
               </span>
-              <span className="hidden mobile-lg:inline">{user?.name || 'User'}</span>
+              <span className="hidden mobile-lg:inline">
+                {user?.name || 'User'}
+              </span>
               <ChevronDown className="size-3.5 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
