@@ -41,13 +41,21 @@ interface MapComponentProps {
   basemapId?: string
   onBasemapChange?: (nextBasemapId: string) => void
 
-  initialViewState?: {
-    longitude: number
-    latitude: number
-    zoom: number
-    bearing?: number
-    pitch?: number
-  }
+  initialViewState?:
+    | {
+        longitude: number
+        latitude: number
+        zoom: number
+        bearing?: number
+        pitch?: number
+      }
+    // react-map-gl also frames the initial camera from a bounding box, letting
+    // a caller open the map already fitted to its data without a follow-up
+    // animation. Forwarded straight to <Map initialViewState>.
+    | {
+        bounds: [[number, number], [number, number]]
+        fitBoundsOptions?: { padding?: number; maxZoom?: number }
+      }
   style?: React.CSSProperties
   containerRef?: any
 }

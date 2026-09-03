@@ -20,9 +20,19 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useAccessDestinations, useCreateDestination } from '@/hooks'
 import { AccessConsole } from '@/pages/access/AccessConsole'
+
+// Lazy so the map stack (maplibre) only loads once a destination is selected.
+const DestinationItemsPanel = lazy(() =>
+  import('@/pages/access/destinations/DestinationItemsPanel').then(
+    (module) => ({
+      default: module.DestinationItemsPanel,
+    })
+  )
+)
+
 import {
   type CreateDestinationInput,
   DESTINATION_KINDS,
@@ -41,10 +51,12 @@ export const AccessDestinationsPage = () => (
 
 const DestinationsTab = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null)
   const destinations = useAccessDestinations()
   const createDestination = useCreateDestination()
 
   const rows = destinations.data ? sortDestinations(destinations.data) : []
+  const selected = rows.find((row) => row.slug === selectedSlug) ?? null
 
   return (
     <Stack spacing={3}>
@@ -97,7 +109,34 @@ const DestinationsTab = () => {
           </Stack>
         </Paper>
       ) : (
-        <DestinationsTable rows={rows} />
+        <>
+          <DestinationsTable
+            rows={rows}
+            selectedSlug={selectedSlug}
+            onSelect={(slug) =>
+              setSelectedSlug((current) => (current === slug ? null : slug))
+            }
+          />
+          {selected ? (
+            <Suspense
+              fallback={
+                <Stack alignItems="center" sx={{ py: 4 }}>
+                  <CircularProgress size={24} />
+                </Stack>
+              }
+            >
+              <DestinationItemsPanel
+                key={selected.slug}
+                destination={selected}
+              />
+            </Suspense>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Select a destination to view its published items on a map, in a
+              grid, and as an exportable CSV.
+            </Typography>
+          )}
+        </>
       )}
 
       {isDialogOpen ? (
@@ -122,7 +161,15 @@ const DestinationsTab = () => {
   )
 }
 
-const DestinationsTable = ({ rows }: { rows: Destination[] }) => (
+const DestinationsTable = ({
+  rows,
+  selectedSlug,
+  onSelect,
+}: {
+  rows: Destination[]
+  selectedSlug: string | null
+  onSelect: (slug: string) => void
+}) => (
   <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
     <Table size="small" aria-label="Destinations">
       <TableHead>
@@ -135,15 +182,34 @@ const DestinationsTable = ({ rows }: { rows: Destination[] }) => (
       </TableHead>
       <TableBody>
         {rows.map((destination) => (
-          <Row key={destination.id} destination={destination} />
+          <Row
+            key={destination.id}
+            destination={destination}
+            selected={destination.slug === selectedSlug}
+            onSelect={() => onSelect(destination.slug)}
+          />
         ))}
       </TableBody>
     </Table>
   </TableContainer>
 )
 
-const Row = ({ destination }: { destination: Destination }) => (
-  <TableRow hover>
+const Row = ({
+  destination,
+  selected,
+  onSelect,
+}: {
+  destination: Destination
+  selected: boolean
+  onSelect: () => void
+}) => (
+  <TableRow
+    hover
+    selected={selected}
+    onClick={onSelect}
+    sx={{ cursor: 'pointer' }}
+    aria-selected={selected}
+  >
     <TableCell sx={{ minWidth: 180 }}>
       <Stack spacing={0.25}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
