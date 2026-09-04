@@ -12,6 +12,20 @@ export type GeothermalRole =
   | 'Geothermal.Admin'
 export type PortalRole = AmpRole | GeothermalRole
 
+/**
+ * Groups that grant a capability without being a portal role.
+ *
+ * These are deliberately outside `PortalRole`: they carry no viewer/editor/admin
+ * hierarchy, they never win the primary role, and they do not belong in the
+ * settings page's portal grouping. `OGC.Internal` marks staff allowed to hold
+ * personal API keys against the internal OGC services.
+ */
+export type CapabilityGroup = 'OGC.Internal'
+
+export const OGC_INTERNAL_GROUP: CapabilityGroup = 'OGC.Internal'
+
+const capabilityGroupOrder: CapabilityGroup[] = [OGC_INTERNAL_GROUP]
+
 const roleOrder: PortalRole[] = [
   'AMP.Viewer',
   'AMP.Editor',
@@ -186,6 +200,28 @@ export const normalizeAccessControlGroups = (
   return roleOrder.filter((role) => expandedRoles.has(role))
 }
 
+/**
+ * Capability groups the account actually holds. Unlike portal roles these are
+ * matched exactly — nothing expands into anything else.
+ */
+export const normalizeCapabilityGroups = (
+  groups: string[] | null | undefined
+): CapabilityGroup[] => {
+  const held = new Set(groups ?? [])
+  return capabilityGroupOrder.filter((group) => held.has(group))
+}
+
+/**
+ * Everything the app understands from an id token's groups claim: portal roles
+ * first, then capability groups. Anything unrecognised is still dropped.
+ */
+export const normalizeAuthGroups = (
+  groups: string[] | null | undefined
+): string[] => [
+  ...normalizeAccessControlGroups(groups),
+  ...normalizeCapabilityGroups(groups),
+]
+
 export const getPrimaryRole = (
   groups: string[] | null | undefined
 ): PortalRole | null => {
@@ -195,6 +231,7 @@ export const getPrimaryRole = (
 
 export const getAccessCapabilities = (groups: string[] | null | undefined) => {
   const roles = normalizeAccessControlGroups(groups)
+  const capabilityGroups = normalizeCapabilityGroups(groups)
   const primaryRole = getPrimaryRole(groups)
   const canViewAmp =
     roles.includes('AMP.Viewer') ||
@@ -214,6 +251,7 @@ export const getAccessCapabilities = (groups: string[] | null | undefined) => {
 
   return {
     roles,
+    capabilityGroups,
     primaryRole,
     canViewAmp,
     canEditAmp,
@@ -225,6 +263,7 @@ export const getAccessCapabilities = (groups: string[] | null | undefined) => {
     canEditGeothermal,
     canManageGeothermal,
     canViewLexicon: canEditAmp,
+    canManageApiKeys: capabilityGroups.includes(OGC_INTERNAL_GROUP),
     // Change canManageAmp → canEditAmp here when editors should get well editing access.
     canEditWell: canManageAmp,
   }
