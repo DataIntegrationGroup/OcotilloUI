@@ -49,6 +49,9 @@ const TEST_AUTH_GROUPS: AuthentikPermissions = [
   'AMP.Viewer',
   'AMP.Editor',
   'AMP.Admin',
+  // Not implied by AMP.Admin, so the local test identity has to hold it
+  // explicitly or staging-gated screens are unreachable in dev.
+  'AMP.Staging',
   'Geothermal.Viewer',
   'Geothermal.Editor',
 ]
