@@ -111,6 +111,7 @@ const NameDialog = ({
   title,
   confirmLabel,
   initialName,
+  isPending = false,
   onCancel,
   onConfirm,
 }: {
@@ -118,6 +119,7 @@ const NameDialog = ({
   title: string
   confirmLabel: string
   initialName?: string
+  isPending?: boolean
   onCancel: () => void
   onConfirm: (name: string) => void
 }) => {
@@ -126,7 +128,11 @@ const NameDialog = ({
   return (
     <Dialog
       open={open}
-      onClose={onCancel}
+      // Ignore backdrop/escape dismissals while the request is in flight, so
+      // the dialog cannot close out from under a pending mutation.
+      onClose={() => {
+        if (!isPending) onCancel()
+      }}
       fullWidth
       maxWidth="xs"
       // Remount on open so the field starts from the key being edited.
@@ -142,14 +148,22 @@ const NameDialog = ({
           placeholder="e.g. Field laptop, QGIS at the office"
           value={name}
           onChange={(event) => setName(event.target.value)}
+          disabled={isPending}
           helperText="A name you will recognise later, so you know what to revoke."
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel} disabled={isPending}>
+          Cancel
+        </Button>
         <Button
           variant="contained"
-          disabled={!name.trim()}
+          disabled={!name.trim() || isPending}
+          startIcon={
+            isPending ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : undefined
+          }
           onClick={() => onConfirm(name)}
         >
           {confirmLabel}
@@ -401,7 +415,13 @@ export const ApiKeysCard = ({
           <Button
             variant="contained"
             size="small"
-            startIcon={<Add fontSize="small" />}
+            startIcon={
+              createKey.isPending ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <Add fontSize="small" />
+              )
+            }
             disabled={createKey.isPending}
             onClick={() => setIsGenerating(true)}
           >
@@ -556,6 +576,7 @@ export const ApiKeysCard = ({
         open={isGenerating}
         title="Generate an API key"
         confirmLabel="Generate"
+        isPending={createKey.isPending}
         onCancel={() => setIsGenerating(false)}
         onConfirm={handleGenerate}
       />
@@ -564,6 +585,7 @@ export const ApiKeysCard = ({
         title="Rename key"
         confirmLabel="Save"
         initialName={editing?.name}
+        isPending={renameKey.isPending}
         onCancel={() => setEditing(null)}
         onConfirm={handleRename}
       />
