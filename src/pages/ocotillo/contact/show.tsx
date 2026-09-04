@@ -3,11 +3,14 @@ import { Show } from '@refinedev/mui'
 import { useResourceParams } from '@refinedev/core'
 import { PencilIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useAccessCapabilities, useSidebarPanelSync } from '@/hooks'
+import {
+  useAccessCapabilities,
+  useAssociatedSiteRows,
+  useSidebarPanelSync,
+} from '@/hooks'
 import { sanitizeContact } from '@/utils'
 import { getContactDisplayName } from '@/utils/contactDisplayName'
 import { Chip } from '@mui/material'
-import Grid from '@mui/material/Grid2'
 import { Stack } from '@mui/material'
 import { IContact } from '@/interfaces/ocotillo'
 import {
@@ -34,6 +37,9 @@ export const ContactShow = () => {
       : undefined
 
   const contact = record
+
+  // One fetch feeds both the table and the map.
+  const associatedSiteRows = useAssociatedSiteRows(contact?.things)
 
   const {
     isPanelOpen: isEditPanelOpen,
@@ -102,22 +108,9 @@ export const ContactShow = () => {
         )}
       >
         <Stack spacing={2}>
-          <Grid container spacing={2}>
-            {/* Left column: 8 cols */}
-            <Grid size={{ xs: 12, md: 8, lg: 9 }}>
-              <Stack spacing={2}>
-                <AssociatedSitesDetailsCard things={contact?.things} />
-                <AssociatedSitesMapCard things={contact?.things} />
-              </Stack>
-            </Grid>
-
-            {/* Right column: 4 cols */}
-            <Grid size={{ xs: 12, md: 4, lg: 3 }}>
-              <Stack spacing={2}>
-                <ContactDetailsCard contact={contact} />
-              </Stack>
-            </Grid>
-          </Grid>
+          <ContactDetailsCard contact={contact} />
+          <AssociatedSitesDetailsCard rows={associatedSiteRows} />
+          <AssociatedSitesMapCard rows={associatedSiteRows} />
         </Stack>
       </Show>
     </EditPanelLayout>
