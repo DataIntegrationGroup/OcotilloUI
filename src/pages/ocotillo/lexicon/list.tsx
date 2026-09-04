@@ -1,11 +1,35 @@
-import { useState, useCallback } from 'react'
-import { DataGrid } from '@mui/x-data-grid'
-import { ExportButton, List, useDataGrid } from '@refinedev/mui'
-import { alpha } from '@mui/material/styles'
-import { Card, CardContent, CardHeader, Typography } from '@mui/material'
-import Grid from '@mui/material/Grid2'
-import { useExport } from '@refinedev/core'
-import { settings } from '@/settings'
+import { useExport, useTable } from '@refinedev/core'
+import { ExportButton } from '@refinedev/mui'
+import {
+  type ColumnDef,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import { useMemo, useState } from 'react'
+import { captureEvent } from '@/analytics/posthog'
+import {
+  DataTable,
+  DataTableColumnHeader,
+  DataTablePagination,
+  useRefineDataTable,
+} from '@/components/DataTable'
+import { ListPageShell } from '@/components/ListPageShell'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import type { ICategory, ITerm } from '@/interfaces/ocotillo/ILexicon'
+
+/**
+ * Lexicon / Glossary. Two server-paginated tables side by side: selecting a
+ * category filters the terms table to that category. The terms table stays
+ * hidden until a category is picked, so its query never runs unfiltered.
+ */
+
+const LEXICON_PAGE_SIZE = 25
 
 const LexiconHeaderButtons = () => {
   const { triggerExport: triggerTermExport, isLoading: exportTermIsLoading } =
@@ -43,139 +67,167 @@ const LexiconHeaderButtons = () => {
   )
 }
 
-interface LexiconCategory {
-  id: number | string
-  name: string
-  description?: string | null
-}
-
 export const LexiconList = () => {
-  const [selectedCategory, setSelectedCategory] =
-    useState<LexiconCategory | null>(null)
-  const handleRowClick = useCallback((params?: any) => {
-    setSelectedCategory((prev?: any) =>
-      prev?.id === params.row.id ? null : params.row
-    )
-  }, [])
-
-  const getRowClassName = useCallback(
-    (params?: any) =>
-      params.id === selectedCategory?.id ? 'selected-row' : '',
-    [selectedCategory]
+  const [selectedCategory, setSelectedCategory] = useState<ICategory | null>(
+    null
   )
 
-  const { dataGridProps: termDataGridProps } = useDataGrid({
+  // --- Categories -----------------------------------------------------------
+  const categoryTable = useTable<ICategory>({
+    resource: 'lexicon/category',
+    dataProviderName: 'ocotillo',
+    pagination: { pageSize: LEXICON_PAGE_SIZE },
+    queryOptions: {
+      gcTime: 10 * 60 * 1000, // Cache for 10 minutes
+      staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    },
+  })
+
+  const categoryColumns = useMemo<ColumnDef<ICategory, unknown>[]>(
+    () => [
+      {
+        id: 'name',
+        accessorFn: (category) => category.name,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Name" />
+        ),
+        meta: { label: 'Name', cellClassName: 'font-medium' },
+      },
+      {
+        id: 'description',
+        accessorFn: (category) => category.description ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Description" />
+        ),
+        meta: { label: 'Description' },
+      },
+    ],
+    []
+  )
+
+  const categoryTableOptions = useRefineDataTable<ICategory>({
+    refineTable: categoryTable,
+    columns: categoryColumns,
+    analyticsPrefix: 'lexicon_categories',
+  })
+
+  const categoryReactTable = useReactTable({
+    data: categoryTable.result.data,
+    columns: categoryColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (category) => String(category.id),
+    ...categoryTableOptions,
+  })
+
+  // --- Terms ----------------------------------------------------------------
+  // The query is disabled until a category is picked; the table is not
+  // rendered before then either, so it never shows an unfiltered page.
+  const termTable = useTable<ITerm>({
     resource: 'lexicon/term',
     dataProviderName: 'ocotillo',
+    pagination: { pageSize: LEXICON_PAGE_SIZE },
     meta: {
-      params: {
-        category: selectedCategory ? selectedCategory.name : undefined,
-      },
+      params: { category: selectedCategory?.name },
     },
     queryOptions: {
       enabled: !!selectedCategory,
-      gcTime: 10 * 60 * 1000, // Cache for 10 minutes
-      staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+      gcTime: 10 * 60 * 1000,
+      staleTime: 5 * 60 * 1000,
     },
   })
 
-  const termColumns = [
-    { field: 'term', headerName: 'Term', width: 150 },
-    { field: 'definition', headerName: 'Definition', width: 300 },
-    {
-      field: 'categories',
-      headerName: 'Category',
-      width: 150,
-      valueGetter: (params: any) => {
-        return params.map((c: { name: string }) => c.name).join(', ')
+  const termColumns = useMemo<ColumnDef<ITerm, unknown>[]>(
+    () => [
+      {
+        id: 'term',
+        accessorFn: (term) => term.term,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Term" />
+        ),
+        meta: { label: 'Term', cellClassName: 'font-medium' },
       },
-      sortable: false,
-      filterable: false,
-    },
-  ]
-  const { dataGridProps: categoryDataGridProps } = useDataGrid({
-    resource: 'lexicon/category',
-    dataProviderName: 'ocotillo',
-    queryOptions: {
-      gcTime: 10 * 60 * 1000, // Cache for 10 minutes
-      staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    },
+      {
+        id: 'definition',
+        accessorFn: (term) => term.definition,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Definition" />
+        ),
+        meta: { label: 'Definition' },
+      },
+    ],
+    []
+  )
+
+  const termTableOptions = useRefineDataTable<ITerm>({
+    refineTable: termTable,
+    columns: termColumns,
+    analyticsPrefix: 'lexicon_terms',
   })
-  const categoryColumns = [
-    { field: 'name', headerName: 'Name', width: 200 },
-    { field: 'description', headerName: 'Description', width: 300 },
-  ]
+
+  const termReactTable = useReactTable({
+    data: termTable.result.data,
+    columns: termColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (term) => String(term.id),
+    ...termTableOptions,
+  })
 
   return (
-    <List headerButtons={<LexiconHeaderButtons />} title="Lexicon / Glossary">
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12 }}>
-          <Card
-            className="description"
-            variant="outlined"
-            sx={{
-              marginTop: 1,
-              marginBottom: 1,
-              padding: 1,
-            }}
-          >
-            <Typography variant="body1">
-              The Lexicon (aka Glossary) stores all the terms and definitions
-              used in the data sytem
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6 }}>
-          <Card elevation={2}>
-            <CardHeader title="Categories" />
-            <CardContent>
-              <DataGrid
-                pagination
-                pageSizeOptions={[5, 10, 25]}
-                paginationModel={{ pageSize: 10, page: 0 }}
-                {...categoryDataGridProps}
-                rowHeight={settings.rowHeight}
-                columns={categoryColumns}
-                onRowClick={handleRowClick}
-                getRowClassName={getRowClassName}
-                sx={{
-                  '& .selected-row': {
-                    bgcolor: (theme) => theme.palette.secondary.light,
-                    '&:hover': {
-                      bgcolor: (theme) =>
-                        alpha(theme.palette.secondary.light, 0.75),
-                    },
-                  },
-                }}
-              />
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6 }}>
-          <Card elevation={2}>
-            <CardHeader
-              title="Terms"
-              subheader={selectedCategory?.description ?? undefined}
+    <ListPageShell
+      title="Lexicon / Glossary"
+      description="The Lexicon (aka Glossary) stores all the terms and definitions used in the data system."
+      accessResource="ocotillo.lexicon"
+      headerButtons={<LexiconHeaderButtons />}
+    >
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Categories</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <DataTable
+              table={categoryReactTable}
+              isLoading={categoryTable.tableQuery.isLoading}
+              emptyMessage="No categories found."
+              isRowSelected={(category) => category.id === selectedCategory?.id}
+              onRowClick={(category) => {
+                setSelectedCategory((previous) =>
+                  previous?.id === category.id ? null : category
+                )
+                captureEvent('lexicon_category_clicked', {
+                  category_id: category.id,
+                })
+              }}
             />
-            <CardContent>
-              {selectedCategory ? (
-                <DataGrid
-                  pagination
-                  pageSizeOptions={[5, 10, 25]}
-                  paginationModel={{ pageSize: 10, page: 0 }}
-                  {...termDataGridProps}
-                  rowHeight={settings.rowHeight}
-                  columns={termColumns}
+            <DataTablePagination table={categoryReactTable} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Terms</CardTitle>
+            {selectedCategory?.description ? (
+              <CardDescription>{selectedCategory.description}</CardDescription>
+            ) : null}
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {selectedCategory ? (
+              <>
+                <DataTable
+                  table={termReactTable}
+                  isLoading={termTable.tableQuery.isLoading}
+                  emptyMessage="No terms in this category."
                 />
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Please select a category
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </List>
+                <DataTablePagination table={termReactTable} />
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Please select a category
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </ListPageShell>
   )
 }
