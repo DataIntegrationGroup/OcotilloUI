@@ -6,6 +6,12 @@ prompted-by: jakeross
 
 # Implementing the GIS artifact downloads
 
+> **Status (2026-09-06):** shipped in v1.2.0, rolled back by the v1.2.1 hotfix,
+> and restored behind the `SHOW_GIS_DOWNLOADS` gate in `src/config/features.ts`.
+> The UI is on in dev and on preview/staging, off in production until the
+> artifact catalogue is signed off; `VITE_ENABLE_GIS_DOWNLOADS` overrides it
+> either way. When the gate is off the `/gis` catalogue is not even fetched.
+
 Task brief for an agent working in **OcotilloUI**. Adds a surface that lets a
 user download ready-made QGIS and ArcGIS Pro files for our OGC API layers, so
 they can open our data in a desktop GIS without configuring a connection by

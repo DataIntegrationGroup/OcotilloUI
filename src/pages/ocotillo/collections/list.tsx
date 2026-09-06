@@ -41,6 +41,7 @@ import {
   GisConnectionsPanel,
   GisLayerDownloads,
 } from '@/components/GisArtifacts'
+import { SHOW_GIS_DOWNLOADS } from '@/config/features'
 import { SCREENS } from '@/constants/breakpoints'
 import { useAccessCapabilities, useGisArtifacts } from '@/hooks'
 import { settings } from '@/settings'
@@ -298,13 +299,6 @@ const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '')
 const baseApiUrl = trimTrailingSlash(settings.ocotillo_api_url)
 const ogcCollectionsUrl = `${baseApiUrl}/ogcapi/collections`
 
-const sortOgcCollections = (collections: OgcCollectionRecord[]) =>
-  [...collections].sort((a, b) => {
-    const aLabel = a.title || a.name || a.id || a.collection_id || ''
-    const bLabel = b.title || b.name || b.id || b.collection_id || ''
-    return aLabel.localeCompare(bLabel)
-  })
-
 const sortRegisteredCollections = (collections: RegisteredCollectionMatch[]) =>
   [...collections].sort((a, b) => {
     const aLabel =
@@ -402,7 +396,7 @@ export const CollectionsPage = () => {
   const { canViewAmp } = useAccessCapabilities()
   const [view, setView] = useState<CollectionsView>('table')
   const { data: gisCatalog } = useGisArtifacts({
-    enabled: access?.can === true,
+    enabled: access?.can === true && SHOW_GIS_DOWNLOADS,
   })
 
   const { data, isLoading, isError, error } = useQuery({
@@ -563,7 +557,7 @@ export const CollectionsPage = () => {
             </Box>
           </Paper>
 
-          {gisCatalog ? (
+          {SHOW_GIS_DOWNLOADS && gisCatalog ? (
             <GisConnectionsPanel
               catalog={gisCatalog}
               canViewInternal={canViewAmp}
@@ -668,7 +662,7 @@ const CollectionsTable = ({
         <TableRow>
           <TableCell>Dataset</TableCell>
           <TableCell>Description</TableCell>
-          <TableCell>Desktop GIS</TableCell>
+          {SHOW_GIS_DOWNLOADS ? <TableCell>Desktop GIS</TableCell> : null}
           <TableCell align="right">Map</TableCell>
         </TableRow>
       </TableHead>
@@ -684,7 +678,7 @@ const CollectionsTable = ({
               {startsGroup ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={SHOW_GIS_DOWNLOADS ? 4 : 3}
                     sx={{
                       py: 0.75,
                       bgcolor: alpha(style.accent, 0.16),
@@ -727,15 +721,17 @@ const CollectionsTable = ({
                     </Typography>
                   )}
                 </TableCell>
-                <TableCell sx={{ minWidth: 200 }}>
-                  {row.gisLayer ? (
-                    <GisLayerDownloads layer={row.gisLayer} />
-                  ) : (
-                    <Typography variant="caption" color="text.secondary">
-                      —
-                    </Typography>
-                  )}
-                </TableCell>
+                {SHOW_GIS_DOWNLOADS ? (
+                  <TableCell sx={{ minWidth: 200 }}>
+                    {row.gisLayer ? (
+                      <GisLayerDownloads layer={row.gisLayer} />
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        —
+                      </Typography>
+                    )}
+                  </TableCell>
+                ) : null}
                 <TableCell align="right">
                   <Button
                     component={RouterLink}
@@ -910,7 +906,7 @@ const CollectionRow = ({
             No published description.
           </Typography>
         )}
-        {gisLayer ? (
+        {SHOW_GIS_DOWNLOADS && gisLayer ? (
           <Stack spacing={0.5}>
             <Typography variant="caption" color="text.secondary">
               Open in desktop GIS
