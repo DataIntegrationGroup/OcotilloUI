@@ -28,20 +28,23 @@ describe('SHOW_GIS_DOWNLOADS', () => {
     vi.resetModules()
   })
 
-  it('is off in a production build with no override', async () => {
+  it('is off with no override', async () => {
     await expect(loadFlag({})).resolves.toBe(false)
   })
 
-  it('is on in local dev', async () => {
-    await expect(loadFlag({ DEV: 'true' })).resolves.toBe(true)
+  it('stays off in local dev', async () => {
+    await expect(loadFlag({ DEV: 'true' })).resolves.toBe(false)
   })
 
-  it.each(['preview', 'staging'])('is on for the %s deploy', async (appEnv) => {
-    await expect(loadFlag({ VITE_APP_ENV: appEnv })).resolves.toBe(true)
-  })
+  it.each(['preview', 'staging'])(
+    'stays off on the %s deploy',
+    async (appEnv) => {
+      await expect(loadFlag({ VITE_APP_ENV: appEnv })).resolves.toBe(false)
+    }
+  )
 
   it.each(['1', 'true', 'yes', 'on', ' TRUE '])(
-    'turns production on for VITE_ENABLE_GIS_DOWNLOADS=%j',
+    'is on for VITE_ENABLE_GIS_DOWNLOADS=%j',
     async (value) => {
       await expect(
         loadFlag({ VITE_ENABLE_GIS_DOWNLOADS: value })
@@ -50,20 +53,17 @@ describe('SHOW_GIS_DOWNLOADS', () => {
   )
 
   it.each(['0', 'false', 'no', 'off'])(
-    'turns staging off for VITE_ENABLE_GIS_DOWNLOADS=%j',
+    'is off for VITE_ENABLE_GIS_DOWNLOADS=%j',
     async (value) => {
       await expect(
-        loadFlag({
-          VITE_APP_ENV: 'staging',
-          VITE_ENABLE_GIS_DOWNLOADS: value,
-        })
+        loadFlag({ DEV: 'true', VITE_ENABLE_GIS_DOWNLOADS: value })
       ).resolves.toBe(false)
     }
   )
 
-  it('ignores a value it does not recognise and uses the default', async () => {
+  it('ignores a value it does not recognise and stays off', async () => {
     await expect(
-      loadFlag({ VITE_APP_ENV: 'staging', VITE_ENABLE_GIS_DOWNLOADS: 'maybe' })
-    ).resolves.toBe(true)
+      loadFlag({ DEV: 'true', VITE_ENABLE_GIS_DOWNLOADS: 'maybe' })
+    ).resolves.toBe(false)
   })
 })
