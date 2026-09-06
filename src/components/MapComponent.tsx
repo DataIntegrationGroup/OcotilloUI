@@ -30,6 +30,8 @@ interface MapComponentProps {
   popupContent?: any
   setPopupContent?: any
   onMouseMoveCallback?: any
+  /** Fires once the map is ready, for callers that fit bounds after mount. */
+  onLoad?: () => void
   showDrawControls?: {
     show: boolean
     position?: ControlPosition
@@ -61,6 +63,7 @@ export const MapComponent = ({
   popupContent,
   setPopupContent,
   onMouseMoveCallback,
+  onLoad,
   setSelectionPolygons,
   isLoading = false,
   initialViewState,
@@ -279,7 +282,10 @@ export const MapComponent = ({
       ref={mapRef}
       initialViewState={initialViewState}
       onClick={handleMouseClick}
-      onLoad={emitBoundsChange}
+      onLoad={() => {
+        emitBoundsChange()
+        onLoad?.()
+      }}
       onMove={(evt) => {
         setViewState(evt.viewState)
         emitBoundsChange()

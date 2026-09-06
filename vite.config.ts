@@ -67,7 +67,10 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: '0.0.0.0',
-      port: 5173,
+      // 5173 by default because the Authentik redirect URI is registered
+      // against it; override with PORT when that instance is already taken
+      // (e.g. a second dev server on the same checkout).
+      port: Number(process.env.PORT) || 5173,
       proxy: {
         '/api': {
           target: env.VITE_API_URL,

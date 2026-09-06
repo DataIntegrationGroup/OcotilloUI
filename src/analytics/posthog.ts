@@ -145,7 +145,7 @@ export const listPageviewProps = (
   pathname: string,
   search: string
 ): Record<string, unknown> | undefined => {
-  if (pathname === '/ocotillo/well/projects') {
+  if (pathname === '/ocotillo/projects') {
     return { page_template: 'projects_list' }
   }
 

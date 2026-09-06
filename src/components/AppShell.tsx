@@ -1002,7 +1002,7 @@ const BREADCRUMB_RESOURCES: Record<
   sample: { label: 'Samples', listHref: '/ocotillo/sample', resource: 'sample' },
   projects: {
     label: 'Projects',
-    listHref: '/ocotillo/well/projects',
+    listHref: '/ocotillo/projects',
     resource: 'group',
   },
 }
