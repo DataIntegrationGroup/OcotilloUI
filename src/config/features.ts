@@ -15,17 +15,14 @@ const envFlag = (value: unknown): boolean | undefined => {
  * the "Desktop GIS" table column, and the connections panel.
  *
  * The v1.2.1 hotfix pulled the whole datasets page back to its pre-v1.2.0
- * state, taking the table view and these downloads with it. The table view
- * comes back unconditionally; the downloads stay dark in production until the
- * artifact catalogue is signed off. Local dev and preview/staging deploys get
- * them by default so reviewers can exercise the feature — the same rule as
- * SHOW_EXAMPLE_NAV in src/config/navigation.ts.
+ * state, taking the table view and these downloads with it. The table view is
+ * back; the downloads stay dark everywhere — including local dev and
+ * preview/staging — until the artifact catalogue is signed off, so no reviewer
+ * or demo audience is shown a surface that is not ready.
  *
- * VITE_ENABLE_GIS_DOWNLOADS overrides that default in either direction, so
- * production can turn them on without a code change and staging can turn them
- * off for a demo.
+ * Set VITE_ENABLE_GIS_DOWNLOADS to turn them on for a given deploy. That is
+ * the only way they appear, so enabling them later needs an env change, not a
+ * code change.
  */
 export const SHOW_GIS_DOWNLOADS =
-  envFlag(import.meta.env.VITE_ENABLE_GIS_DOWNLOADS) ??
-  (import.meta.env.DEV ||
-    ['preview', 'staging'].includes(import.meta.env.VITE_APP_ENV))
+  envFlag(import.meta.env.VITE_ENABLE_GIS_DOWNLOADS) ?? false
