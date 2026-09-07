@@ -42,13 +42,14 @@ beforeEach(() => {
   useCollectionSchemaMock.mockReturnValue(loaded)
 })
 
-const renderDialog = (overrides?: { open?: boolean }) =>
+const renderDialog = (overrides?: { open?: boolean; pathPrefix?: string }) =>
   render(
     <CollectionSchemaDialog
       open={overrides?.open ?? true}
       onClose={() => {}}
       collectionId="latest_tds_wells"
       title="Latest TDS"
+      pathPrefix={overrides?.pathPrefix}
     />
   )
 
@@ -122,6 +123,16 @@ describe('CollectionSchemaDialog', () => {
 
     expect(useCollectionSchemaMock).toHaveBeenCalledWith('latest_tds_wells', {
       enabled: false,
+      pathPrefix: 'ogcapi',
+    })
+  })
+
+  it('asks the mount it was pointed at', () => {
+    renderDialog({ pathPrefix: 'ogcapi-internal' })
+
+    expect(useCollectionSchemaMock).toHaveBeenCalledWith('latest_tds_wells', {
+      enabled: true,
+      pathPrefix: 'ogcapi-internal',
     })
   })
 })

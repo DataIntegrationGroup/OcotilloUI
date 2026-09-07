@@ -86,4 +86,16 @@ describe('collectionSchemaUrl', () => {
       'https://api.example.org/ogcapi/collections/water_wells/schema?f=json'
     )
   })
+
+  it('points at the internal mount when asked for it', () => {
+    expect(
+      collectionSchemaUrl(
+        'https://api.example.org',
+        'staff_only_wells',
+        'ogcapi-internal'
+      )
+    ).toBe(
+      'https://api.example.org/ogcapi-internal/collections/staff_only_wells/schema?f=json'
+    )
+  })
 })

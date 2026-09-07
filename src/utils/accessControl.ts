@@ -264,6 +264,7 @@ export const getAccessCapabilities = (groups: string[] | null | undefined) => {
     canManageGeothermal,
     canViewLexicon: canEditAmp,
     canManageApiKeys: capabilityGroups.includes(OGC_INTERNAL_GROUP),
+    canViewOgcInternal: capabilityGroups.includes(OGC_INTERNAL_GROUP),
     // Change canManageAmp → canEditAmp here when editors should get well editing access.
     canEditWell: canManageAmp,
   }
