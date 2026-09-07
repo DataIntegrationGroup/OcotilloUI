@@ -495,4 +495,12 @@ describe('capability groups', () => {
     expect(onlyCapability.roles).toEqual([])
     expect(onlyCapability.canViewAmp).toBe(false)
   })
+
+  it('gates the internal OGC catalogue on the same group', () => {
+    expect(getAccessCapabilities(groups).canViewOgcInternal).toBe(true)
+    expect(getAccessCapabilities(['OGC.Internal']).canViewOgcInternal).toBe(true)
+    // An AMP admin is not automatically cleared for the internal mount.
+    expect(getAccessCapabilities(['AMP.Admin']).canViewOgcInternal).toBe(false)
+    expect(getAccessCapabilities([]).canViewOgcInternal).toBe(false)
+  })
 })

@@ -44,6 +44,8 @@ export type CollectionSchemaDialogProps = {
   collectionId?: string
   /** Catalogue title, used until the schema document supplies its own. */
   title: string
+  /** OGC mount the collection lives on: `ogcapi`, or `ogcapi-internal`. */
+  pathPrefix?: string
 }
 
 /**
@@ -60,6 +62,7 @@ export const CollectionSchemaDialog = ({
   onClose,
   collectionId,
   title,
+  pathPrefix = 'ogcapi',
 }: CollectionSchemaDialogProps) => {
   const [view, setView] = useState<SchemaView>('fields')
   const [copied, setCopied] = useState(false)
@@ -68,11 +71,11 @@ export const CollectionSchemaDialog = ({
     isLoading,
     isError,
     error,
-  } = useCollectionSchema(collectionId, { enabled: open })
+  } = useCollectionSchema(collectionId, { enabled: open, pathPrefix })
 
   const rows = schema ? buildSchemaFieldRows(schema) : []
   const schemaUrl = collectionId
-    ? collectionSchemaUrl(settings.ocotillo_api_url, collectionId)
+    ? collectionSchemaUrl(settings.ocotillo_api_url, collectionId, pathPrefix)
     : undefined
   const rawJson = schema ? JSON.stringify(schema, null, 2) : ''
 

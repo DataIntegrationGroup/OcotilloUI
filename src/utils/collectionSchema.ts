@@ -115,7 +115,11 @@ export const buildSchemaFieldRows = (
     .map(({ row }) => row)
 }
 
-export const collectionSchemaUrl = (baseApiUrl: string, collectionId: string) =>
-  `${baseApiUrl.replace(/\/+$/, '')}/ogcapi/collections/${encodeURIComponent(
+export const collectionSchemaUrl = (
+  baseApiUrl: string,
+  collectionId: string,
+  pathPrefix = 'ogcapi'
+) =>
+  `${baseApiUrl.replace(/\/+$/, '')}/${pathPrefix}/collections/${encodeURIComponent(
     collectionId
   )}/schema?f=json`

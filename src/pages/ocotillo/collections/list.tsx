@@ -20,12 +20,14 @@ import {
   Link,
   Paper,
   Stack,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Tabs,
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
@@ -43,6 +45,11 @@ import {
   GisConnectionsPanel,
   GisLayerDownloads,
 } from '@/components/GisArtifacts'
+import {
+  INTERNAL_PATH_PREFIX,
+  InternalCollectionsPanel,
+  internalCollectionsUrl,
+} from '@/components/InternalCollectionsPanel'
 import { SHOW_GIS_DOWNLOADS } from '@/config/features'
 import { SCREENS } from '@/constants/breakpoints'
 import { useAccessCapabilities, useGisArtifacts } from '@/hooks'
@@ -62,9 +69,13 @@ import {
 
 type CollectionsView = 'cards' | 'table'
 
+type CollectionsTab = 'published' | 'internal'
+
 type SchemaDialogTarget = {
   collectionId?: string
   title: string
+  /** OGC mount the collection came from, so the modal asks the right one. */
+  pathPrefix?: string
 }
 
 type CollectionGroupKey =
@@ -400,8 +411,9 @@ export const CollectionsPage = () => {
     resource: 'ocotillo.collections',
   })
   const dataProvider = useDataProvider()
-  const { canViewAmp } = useAccessCapabilities()
+  const { canViewAmp, canViewOgcInternal } = useAccessCapabilities()
   const [view, setView] = useState<CollectionsView>('table')
+  const [tab, setTab] = useState<CollectionsTab>('published')
   // The target outlives `isSchemaOpen` on purpose: MUI keeps the dialog mounted
   // through its closing transition, and clearing the target on close would
   // flash an empty schema shell on the way out.
@@ -426,6 +438,29 @@ export const CollectionsPage = () => {
       const provider = dataProvider('ogcapi')
       const result = await provider.getList({
         resource: 'ogcapi',
+        pagination: { currentPage: 1, pageSize: 500 },
+      })
+
+      return (result?.data ?? []) as OgcCollectionRecord[]
+    },
+  })
+
+  // The internal mount is a separate catalogue, not a filter over the public
+  // one, so it gets its own query. It is only asked for once the tab is open,
+  // since most people who can see this page cannot read it at all.
+  const {
+    data: internalData,
+    isLoading: isInternalLoading,
+    isError: isInternalError,
+    error: internalError,
+  } = useQuery({
+    queryKey: ['ogcapi-internal-collections-page'],
+    enabled: access?.can === true && canViewOgcInternal && tab === 'internal',
+    staleTime: 60000,
+    queryFn: async () => {
+      const provider = dataProvider(INTERNAL_PATH_PREFIX)
+      const result = await provider.getList({
+        resource: INTERNAL_PATH_PREFIX,
         pagination: { currentPage: 1, pageSize: 500 },
       })
 
@@ -473,6 +508,11 @@ export const CollectionsPage = () => {
     (count, group) => count + group.collections.length,
     0
   )
+  const internalCollections = internalData ?? []
+  // The capability, not the tab state, decides what renders: permissions load
+  // asynchronously and can narrow after the fact, and a stale `tab` must not
+  // leave the internal panel on screen once the group is gone.
+  const isInternalTab = canViewOgcInternal && tab === 'internal'
 
   return (
     // Wider than the old `lg` cap, which left the table cramped: full width
@@ -510,9 +550,9 @@ export const CollectionsPage = () => {
                   <Stack spacing={1.25}>
                     <Typography variant="h4">OGC Datasets</Typography>
                     <Typography variant="body1" color="text.secondary">
-                      Published map-backed datasets grouped into Water and
-                      Geothermal with cleaner IDs and descriptions for quick
-                      review.
+                      {isInternalTab
+                        ? 'Collections served only on the internal OGC mount. They are not published to the public service and are not registered as map layers.'
+                        : 'Published map-backed datasets grouped into Water and Geothermal with cleaner IDs and descriptions for quick review.'}
                     </Typography>
                     <Stack
                       direction="row"
@@ -520,42 +560,60 @@ export const CollectionsPage = () => {
                       useFlexGap
                       flexWrap="wrap"
                     >
-                      <Chip label={`${totalCollections} total`} />
-                      {groups.map((group) => (
+                      {isInternalTab ? (
                         <Chip
-                          key={group.key}
-                          label={`${group.title}: ${group.collections.length}`}
-                          variant="outlined"
+                          label={
+                            isInternalLoading
+                              ? 'Loading...'
+                              : `${internalCollections.length} total`
+                          }
                         />
-                      ))}
+                      ) : (
+                        <>
+                          <Chip label={`${totalCollections} total`} />
+                          {groups.map((group) => (
+                            <Chip
+                              key={group.key}
+                              label={`${group.title}: ${group.collections.length}`}
+                              variant="outlined"
+                            />
+                          ))}
+                        </>
+                      )}
                     </Stack>
                   </Stack>
                 </Grid>
                 <Grid size={{ xs: 12, md: 4 }}>
                   <Stack spacing={0.75} sx={{ alignItems: { md: 'flex-end' } }}>
-                    <ToggleButtonGroup
-                      size="small"
-                      exclusive
-                      value={view}
-                      onChange={(_event, next: CollectionsView | null) => {
-                        if (next) setView(next)
-                      }}
-                      aria-label="Dataset layout"
-                    >
-                      <ToggleButton value="cards" aria-label="Card view">
-                        <ViewModule fontSize="small" sx={{ mr: 0.75 }} />
-                        Cards
-                      </ToggleButton>
-                      <ToggleButton value="table" aria-label="Table view">
-                        <TableRows fontSize="small" sx={{ mr: 0.75 }} />
-                        Table
-                      </ToggleButton>
-                    </ToggleButtonGroup>
+                    {isInternalTab ? null : (
+                      <ToggleButtonGroup
+                        size="small"
+                        exclusive
+                        value={view}
+                        onChange={(_event, next: CollectionsView | null) => {
+                          if (next) setView(next)
+                        }}
+                        aria-label="Dataset layout"
+                      >
+                        <ToggleButton value="cards" aria-label="Card view">
+                          <ViewModule fontSize="small" sx={{ mr: 0.75 }} />
+                          Cards
+                        </ToggleButton>
+                        <ToggleButton value="table" aria-label="Table view">
+                          <TableRows fontSize="small" sx={{ mr: 0.75 }} />
+                          Table
+                        </ToggleButton>
+                      </ToggleButtonGroup>
+                    )}
                     <Typography variant="caption" color="text.secondary">
                       Source endpoint
                     </Typography>
                     <Link
-                      href={ogcCollectionsUrl}
+                      href={
+                        isInternalTab
+                          ? internalCollectionsUrl
+                          : ogcCollectionsUrl
+                      }
                       target="_blank"
                       rel="noreferrer"
                       underline="hover"
@@ -567,7 +625,9 @@ export const CollectionsPage = () => {
                         fontSize: 13,
                       }}
                     >
-                      {ogcCollectionsUrl}
+                      {isInternalTab
+                        ? internalCollectionsUrl
+                        : ogcCollectionsUrl}
                       <OpenInNew fontSize="inherit" />
                     </Link>
                   </Stack>
@@ -576,95 +636,126 @@ export const CollectionsPage = () => {
             </Box>
           </Paper>
 
-          {SHOW_GIS_DOWNLOADS && gisCatalog ? (
-            <GisConnectionsPanel
-              catalog={gisCatalog}
-              canViewInternal={canViewAmp}
-            />
+          {/*
+            The tab bar only exists for staff who can read the internal mount.
+            For everyone else the page is exactly the single catalogue it was.
+          */}
+          {canViewOgcInternal ? (
+            <Tabs
+              value={tab}
+              onChange={(_event, next: CollectionsTab) => setTab(next)}
+              aria-label="Dataset catalogue"
+              sx={{ borderBottom: 1, borderColor: 'divider' }}
+            >
+              <Tab value="published" label="Published" />
+              <Tab value="internal" label="Internal" />
+            </Tabs>
           ) : null}
 
-          {view === 'table' ? (
-            <CollectionsTable
-              rows={buildCollectionRows(groups, gisLayersByCollection)}
+          {isInternalTab ? (
+            <InternalCollectionsPanel
+              collections={internalCollections}
+              isLoading={isInternalLoading}
+              isError={isInternalError}
+              error={internalError}
               onOpenSchema={openSchema}
             />
           ) : (
-            <Grid container spacing={3}>
-              {groups.map((group) => (
-                <Grid key={group.key} size={{ xs: 12, md: 6 }}>
-                  <Card
-                    variant="outlined"
-                    sx={(theme) => {
-                      const style = GROUP_STYLES[group.key]
+            <Fragment>
+              {SHOW_GIS_DOWNLOADS && gisCatalog ? (
+                <GisConnectionsPanel
+                  catalog={gisCatalog}
+                  canViewInternal={canViewAmp}
+                />
+              ) : null}
 
-                      return {
-                        height: '100%',
-                        borderRadius: 3,
-                        overflow: 'hidden',
-                        borderColor: alpha(style.borderAccent, 0.85),
-                        boxShadow:
-                          theme.palette.mode === 'dark'
-                            ? '0 12px 32px rgba(0,0,0,0.18)'
-                            : '0 12px 32px rgba(15,23,42,0.06)',
-                      }
-                    }}
-                  >
-                    <Box
-                      sx={(theme) => {
-                        const style = GROUP_STYLES[group.key]
+              {view === 'table' ? (
+                <CollectionsTable
+                  rows={buildCollectionRows(groups, gisLayersByCollection)}
+                  onOpenSchema={openSchema}
+                />
+              ) : (
+                <Grid container spacing={3}>
+                  {groups.map((group) => (
+                    <Grid key={group.key} size={{ xs: 12, md: 6 }}>
+                      <Card
+                        variant="outlined"
+                        sx={(theme) => {
+                          const style = GROUP_STYLES[group.key]
 
-                        return {
-                          px: 2.5,
-                          py: 2,
-                          borderBottom: `1px solid ${alpha(style.borderAccent, 0.75)}`,
-                          background:
-                            theme.palette.mode === 'dark'
-                              ? `linear-gradient(135deg, ${alpha(style.accent, 0.28)} 0%, ${alpha(
-                                  theme.palette.background.paper,
-                                  0.9
-                                )} 100%)`
-                              : `linear-gradient(135deg, ${style.softAccent} 0%, ${alpha(
-                                  '#ffffff',
-                                  0.92
-                                )} 100%)`,
-                        }
-                      }}
-                    >
-                      <GroupHeader group={group} />
-                    </Box>
-                    <CardContent sx={{ p: 2 }}>
-                      <Stack spacing={1.5}>
-                        {group.collections.length > 0 ? (
-                          group.collections.map(
-                            ({ layerKey, collection, displayLabel }, index) => (
-                              <CollectionRow
-                                key={
-                                  collection.id ||
-                                  collection.collection_id ||
-                                  collection.name ||
-                                  collection.title
-                                }
-                                collection={collection}
-                                layerKey={layerKey}
-                                groupKey={group.key}
-                                displayLabel={displayLabel}
-                                gisLayer={gisLayersByCollection.get(
-                                  collectionIdOf(collection) ?? ''
-                                )}
-                                onOpenSchema={openSchema}
-                                index={index}
-                              />
-                            )
-                          )
-                        ) : (
-                          <EmptyGroupState groupKey={group.key} />
-                        )}
-                      </Stack>
-                    </CardContent>
-                  </Card>
+                          return {
+                            height: '100%',
+                            borderRadius: 3,
+                            overflow: 'hidden',
+                            borderColor: alpha(style.borderAccent, 0.85),
+                            boxShadow:
+                              theme.palette.mode === 'dark'
+                                ? '0 12px 32px rgba(0,0,0,0.18)'
+                                : '0 12px 32px rgba(15,23,42,0.06)',
+                          }
+                        }}
+                      >
+                        <Box
+                          sx={(theme) => {
+                            const style = GROUP_STYLES[group.key]
+
+                            return {
+                              px: 2.5,
+                              py: 2,
+                              borderBottom: `1px solid ${alpha(style.borderAccent, 0.75)}`,
+                              background:
+                                theme.palette.mode === 'dark'
+                                  ? `linear-gradient(135deg, ${alpha(style.accent, 0.28)} 0%, ${alpha(
+                                      theme.palette.background.paper,
+                                      0.9
+                                    )} 100%)`
+                                  : `linear-gradient(135deg, ${style.softAccent} 0%, ${alpha(
+                                      '#ffffff',
+                                      0.92
+                                    )} 100%)`,
+                            }
+                          }}
+                        >
+                          <GroupHeader group={group} />
+                        </Box>
+                        <CardContent sx={{ p: 2 }}>
+                          <Stack spacing={1.5}>
+                            {group.collections.length > 0 ? (
+                              group.collections.map(
+                                (
+                                  { layerKey, collection, displayLabel },
+                                  index
+                                ) => (
+                                  <CollectionRow
+                                    key={
+                                      collection.id ||
+                                      collection.collection_id ||
+                                      collection.name ||
+                                      collection.title
+                                    }
+                                    collection={collection}
+                                    layerKey={layerKey}
+                                    groupKey={group.key}
+                                    displayLabel={displayLabel}
+                                    gisLayer={gisLayersByCollection.get(
+                                      collectionIdOf(collection) ?? ''
+                                    )}
+                                    onOpenSchema={openSchema}
+                                    index={index}
+                                  />
+                                )
+                              )
+                            ) : (
+                              <EmptyGroupState groupKey={group.key} />
+                            )}
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
-            </Grid>
+              )}
+            </Fragment>
           )}
         </Stack>
       </Box>
@@ -674,6 +765,7 @@ export const CollectionsPage = () => {
         onClose={() => setIsSchemaOpen(false)}
         collectionId={schemaTarget?.collectionId}
         title={schemaTarget?.title ?? ''}
+        pathPrefix={schemaTarget?.pathPrefix}
       />
     </Container>
   )

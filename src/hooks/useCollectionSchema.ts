@@ -17,16 +17,21 @@ import {
  */
 export const useCollectionSchema = (
   collectionId: string | undefined,
-  options?: { enabled?: boolean }
-) =>
-  useQuery<CollectionSchema>({
-    queryKey: ['ogcapi-collection-schema', collectionId],
+  options?: { enabled?: boolean; pathPrefix?: string }
+) => {
+  const pathPrefix = options?.pathPrefix ?? 'ogcapi'
+
+  return useQuery<CollectionSchema>({
+    // The prefix is part of the key: a collection id can exist on both the
+    // public and the internal mount with different schemas.
+    queryKey: ['ogcapi-collection-schema', pathPrefix, collectionId],
     enabled: (options?.enabled ?? true) && Boolean(collectionId),
     staleTime: Number.POSITIVE_INFINITY,
     queryFn: async () => {
       const response = await fetcher(
-        `ogcapi/collections/${encodeURIComponent(collectionId as string)}/schema?f=json`
+        `${pathPrefix}/collections/${encodeURIComponent(collectionId as string)}/schema?f=json`
       )
       return zCollectionSchema.parse(response.data)
     },
   })
+}
