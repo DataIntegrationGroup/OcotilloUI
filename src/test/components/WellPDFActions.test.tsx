@@ -48,6 +48,22 @@ vi.mock('@/hooks', () => ({
   useWellChemistryReport: (args: unknown) => mockedUseWellChemistryReport(args),
 }))
 
+// BYPASS_AMP_STAGING_GATE is resolved from the env at module load, and vitest
+// runs as a dev build, so it would be on for every case. A getter lets each
+// test say which kind of build it is standing in for.
+const featureFlags = { bypassAmpStagingGate: false }
+
+vi.mock('@/config', async () => {
+  const actual = await vi.importActual<typeof import('@/config')>('@/config')
+
+  return {
+    ...actual,
+    get BYPASS_AMP_STAGING_GATE() {
+      return featureFlags.bypassAmpStagingGate
+    },
+  }
+})
+
 // The report-type select stands in for the Radix one: this exercises the
 // button group's wiring, not the primitive's open/close behavior.
 vi.mock('@/components/ui/select', () => ({
@@ -119,6 +135,7 @@ const selectChemistryReport = () =>
 describe('WellPDFActionsButton report type select', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    featureFlags.bypassAmpStagingGate = false
     URL.createObjectURL = vi.fn(() => 'blob:pdf')
     URL.revokeObjectURL = vi.fn()
     mockedToBlob.mockResolvedValue(new Blob())
@@ -168,6 +185,31 @@ describe('WellPDFActionsButton report type select', () => {
 
     const options = within(reportTypeSelect()).getAllByRole('option')
     expect(options.map((option) => option.textContent)).toEqual(['Field sheet'])
+    // Nothing was asked of the chemistry endpoint on a well that cannot offer
+    // the report.
+    expect(mockedUseWellChemistryReport).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: false })
+    )
+  })
+
+  it('offers the chemistry report without the group on a dev or preview build', () => {
+    // Reviewers exercise work in progress on the preview deploy, where holding
+    // the group is not something that can be arranged.
+    featureFlags.bypassAmpStagingGate = true
+    mockedUseAccessCapabilities.mockReturnValue({
+      isLoading: false,
+      canManageAmp: true,
+      canViewConfidential: true,
+      canViewAmpStaging: false,
+    })
+
+    renderGroup()
+
+    const options = within(reportTypeSelect()).getAllByRole('option')
+    expect(options.map((option) => option.textContent)).toEqual([
+      'Field sheet',
+      'Chemistry report',
+    ])
   })
 
   it('generates the field sheet while it is the selected type', async () => {

@@ -26,3 +26,17 @@ const envFlag = (value: unknown): boolean | undefined => {
  */
 export const SHOW_GIS_DOWNLOADS =
   envFlag(import.meta.env.VITE_ENABLE_GIS_DOWNLOADS) ?? false
+
+/**
+ * Whether a surface still gated on the `AMP.Staging` group is offered to a user
+ * who does not hold it. True in local dev (vite dev server / vitest) and on PR
+ * preview deploys (VITE_APP_ENV=preview, set by the preview workflow), so a
+ * reviewer can exercise work that is still under review — the preview deploy is
+ * the sandbox for exactly that. Staging and production builds set neither, so
+ * the group gate stays enforced where it matters.
+ *
+ * Without this a reviewer who is not in the group sees no sign the feature
+ * exists, which reads as a broken deploy rather than a gated one.
+ */
+export const BYPASS_AMP_STAGING_GATE =
+  import.meta.env.DEV === true || import.meta.env.VITE_APP_ENV === 'preview'

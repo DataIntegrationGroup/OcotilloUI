@@ -18,7 +18,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { PDF_SINGLE_PAGE_OPTION } from '@/config'
+import { BYPASS_AMP_STAGING_GATE, PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { useAccessCapabilities, useWellChemistryReport } from '@/hooks'
 import { IPdfOptions } from '@/interfaces'
 import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
@@ -71,6 +71,10 @@ export const WellPDFActionsButton = ({
     useState<WellReportType>('field-sheet')
   const [isGenerating, setIsGenerating] = useState(false)
 
+  // The report is still under review, so it is offered to the staging group —
+  // plus anyone on a dev or preview build, where reviewing it is the point.
+  const canOfferChemistryReport = canViewAmpStaging || BYPASS_AMP_STAGING_GATE
+
   const {
     reportYear,
     hasChemistry,
@@ -80,7 +84,7 @@ export const WellPDFActionsButton = ({
   } = useWellChemistryReport({
     thingId: id,
     // Only worth asking once the report is on offer at all.
-    enabled: canViewAmpStaging,
+    enabled: canOfferChemistryReport,
   })
 
   // A well with nothing on file has no report to give, so the option is shown
@@ -232,8 +236,7 @@ export const WellPDFActionsButton = ({
           <SelectItem value="field-sheet">
             {REPORT_TYPE_LABELS['field-sheet']}
           </SelectItem>
-          {/* Still under review, so it is only offered to the staging group. */}
-          {canViewAmpStaging ? (
+          {canOfferChemistryReport ? (
             <SelectItem
               value="chemistry-report"
               disabled={isChemistryUnavailable}
