@@ -24,10 +24,11 @@ const WATER_LEVEL_RESOURCE = 'observation/groundwater-level'
  * most recent one sampled: a well last sampled in 2024 would otherwise produce
  * an empty report for the current year. One row is enough to find it.
  *
- * A well with nothing on file still gets a year — the current one — because a
- * report that says the well has no results on it is a legitimate thing to hand
- * an owner, and is what the chemistry exporter already produces. `hasChemistry`
- * is there to say so up front, not to block the report.
+ * A well with nothing on file still gets a year — the current one — so callers
+ * always have something to render; `hasChemistry` says whether it means
+ * anything. The well details page greys its report option out on that flag,
+ * while the standalone exporter still produces a no-results report, which is a
+ * legitimate thing to hand an owner who asked for one by name.
  *
  * The year's results are left until `fetchYearObservations` is called, since
  * most visits to a well page are not after a chemistry report.
