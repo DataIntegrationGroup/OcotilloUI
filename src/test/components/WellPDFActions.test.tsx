@@ -75,11 +75,17 @@ vi.mock('@/components/ui/select', () => ({
   ),
   SelectItem: ({
     value,
+    disabled,
     children,
   }: {
     value: string
+    disabled?: boolean
     children: React.ReactNode
-  }) => <option value={value}>{children}</option>,
+  }) => (
+    <option value={value} disabled={disabled}>
+      {children}
+    </option>
+  ),
 }))
 
 import { WellPDFActionsButton } from '@/components/Button/WellPDFActions'
@@ -220,9 +226,9 @@ describe('WellPDFActionsButton report type select', () => {
     })
   })
 
-  it('still reports on a well with no chemistry, warning what is coming', async () => {
-    // The report is generated either way, marked as having no results, which
-    // is what the exporter does — a dead-end button is not the answer.
+  it('greys out the chemistry report on a well with no chemistry', async () => {
+    // Nothing on file means nothing to report, so the option says why it is
+    // unavailable rather than producing an empty PDF.
     mockedUseWellChemistryReport.mockReturnValue({
       reportYear: 2026,
       latestSampledYear: null,
@@ -234,23 +240,46 @@ describe('WellPDFActionsButton report type select', () => {
     mockedFetchYearObservations.mockResolvedValue([])
 
     renderGroup()
-    selectChemistryReport()
 
-    expect(previewButton()).toBeEnabled()
-    expect(downloadButton()).toBeEnabled()
-    expect(previewButton()).toHaveAttribute(
-      'title',
-      'No water chemistry on file — the report will show no results'
+    const [, chemistryOption] = within(reportTypeSelect()).getAllByRole(
+      'option'
     )
+    expect(chemistryOption).toBeDisabled()
+    expect(chemistryOption).toHaveTextContent(
+      'Chemistry report — no chemistry data'
+    )
+
+    // Selecting it anyway falls back rather than acting on a report that is
+    // not on offer.
+    selectChemistryReport()
+    expect(reportTypeSelect()).toHaveValue('field-sheet')
 
     await act(async () => {
       fireEvent.click(downloadButton())
     })
 
-    expect(mockedDownloadChemistryReport.mock.calls[0][0]).toMatchObject({
-      year: 2026,
-      observations: [],
+    expect(mockedDownloadChemistryReport).not.toHaveBeenCalled()
+    expect(mockedToBlob).toHaveBeenCalledTimes(1)
+  })
+
+  it('leaves the chemistry report selectable while the lookup is in flight', () => {
+    // Greying out on a pending lookup would flicker; the actions already wait.
+    mockedUseWellChemistryReport.mockReturnValue({
+      reportYear: 2026,
+      latestSampledYear: null,
+      hasChemistry: false,
+      isLoading: true,
+      fetchYearObservations: mockedFetchYearObservations,
+      fetchWaterLevels: mockedFetchWaterLevels,
     })
+
+    renderGroup()
+
+    const [, chemistryOption] = within(reportTypeSelect()).getAllByRole(
+      'option'
+    )
+    expect(chemistryOption).toBeEnabled()
+    expect(chemistryOption).toHaveTextContent('Chemistry report')
   })
 
   it('holds the actions back only while the reporting year is unknown', () => {

@@ -67,10 +67,9 @@ export const WellPDFActionsButton = ({
     canViewAmpStaging,
   } = useAccessCapabilities()
 
-  const [reportType, setReportType] = useState<WellReportType>('field-sheet')
+  const [selectedReportType, setSelectedReportType] =
+    useState<WellReportType>('field-sheet')
   const [isGenerating, setIsGenerating] = useState(false)
-
-  const isChemistry = reportType === 'chemistry-report'
 
   const {
     reportYear,
@@ -84,13 +83,20 @@ export const WellPDFActionsButton = ({
     enabled: canViewAmpStaging,
   })
 
-  // A well with no chemistry on file still gets a report, marked as having no
-  // results — the same thing the exporter produces, and the honest answer to
-  // "what does this well's water look like". The note only warns what is coming.
-  const chemistryNote =
-    isChemistry && !isChemistryLoading && !hasChemistry
-      ? 'No water chemistry on file — the report will show no results'
-      : undefined
+  // A well with nothing on file has no report to give, so the option is shown
+  // greyed out rather than handing back an empty PDF. It stays selectable while
+  // the lookup is in flight, since the actions already wait on the year.
+  const isChemistryUnavailable = !isChemistryLoading && !hasChemistry
+
+  // Covers the gap where the option was picked before the lookup came back
+  // empty: the selection falls back instead of acting on a report that is no
+  // longer on offer.
+  const reportType: WellReportType =
+    selectedReportType === 'chemistry-report' && isChemistryUnavailable
+      ? 'field-sheet'
+      : selectedReportType
+
+  const isChemistry = reportType === 'chemistry-report'
 
   // Waiting on the year is the one thing that has to hold the actions back,
   // since acting early would report on the wrong one.
@@ -204,14 +210,16 @@ export const WellPDFActionsButton = ({
   const downloadTooltip = isGenerating
     ? 'Generating…'
     : isChemistry
-      ? (chemistryNote ?? `Download chemistry report for ${reportYear}`)
+      ? `Download chemistry report for ${reportYear}`
       : 'Download field sheet'
 
   return (
     <div className="inline-flex items-stretch rounded-lg border border-border bg-background overflow-hidden shadow-xs">
       <Select
         value={reportType}
-        onValueChange={(value) => setReportType(value as WellReportType)}
+        onValueChange={(value) =>
+          setSelectedReportType(value as WellReportType)
+        }
       >
         <SelectTrigger
           size="sm"
@@ -226,8 +234,13 @@ export const WellPDFActionsButton = ({
           </SelectItem>
           {/* Still under review, so it is only offered to the staging group. */}
           {canViewAmpStaging ? (
-            <SelectItem value="chemistry-report">
-              {REPORT_TYPE_LABELS['chemistry-report']}
+            <SelectItem
+              value="chemistry-report"
+              disabled={isChemistryUnavailable}
+            >
+              {isChemistryUnavailable
+                ? `${REPORT_TYPE_LABELS['chemistry-report']} — no chemistry data`
+                : REPORT_TYPE_LABELS['chemistry-report']}
             </SelectItem>
           ) : null}
         </SelectContent>
@@ -239,7 +252,6 @@ export const WellPDFActionsButton = ({
         className="rounded-none border-0 shadow-none"
         disabled={previewDisabled}
         onClick={handlePreview}
-        title={chemistryNote}
       >
         <EyeIcon />
         Preview PDF
