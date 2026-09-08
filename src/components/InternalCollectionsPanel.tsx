@@ -217,7 +217,7 @@ export const InternalCollectionsPanel = ({
         sx={{ p: 3, borderRadius: 3, borderStyle: 'dashed' }}
       >
         <Typography variant="body2" color="text.secondary">
-          The internal mount published no collections.
+          The internal service has no collections.
         </Typography>
       </Paper>
     )

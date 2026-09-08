@@ -41,6 +41,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Fragment, useState } from 'react'
 import { Link as RouterLink } from 'react-router'
 import { CollectionSchemaDialog } from '@/components/CollectionSchemaDialog'
+import { CollectionsUrlGuidance } from '@/components/CollectionsUrlGuidance'
 import {
   GisConnectionsPanel,
   GisLayerDownloads,
@@ -445,9 +446,11 @@ export const CollectionsPage = () => {
     },
   })
 
-  // The internal mount is a separate catalogue, not a filter over the public
-  // one, so it gets its own query. It is only asked for once the tab is open,
-  // since most people who can see this page cannot read it at all.
+  // The internal endpoint answers for itself: it serves the same data the
+  // public one does, minus the public filters, so its catalogue cannot be
+  // derived from the list above and gets its own query. It is only asked for
+  // once the tab is open, since most people who can see this page cannot read
+  // it at all.
   const {
     data: internalData,
     isLoading: isInternalLoading,
@@ -551,7 +554,7 @@ export const CollectionsPage = () => {
                     <Typography variant="h4">OGC Datasets</Typography>
                     <Typography variant="body1" color="text.secondary">
                       {isInternalTab
-                        ? 'Collections served only on the internal OGC mount. They are not published to the public service and are not registered as map layers.'
+                        ? 'The internal OGC service, which serves this data without the filters the public service applies. Collections here carry public records alongside records held back from release, and the map layers read the public service rather than this one.'
                         : 'Published map-backed datasets grouped into Water and Geothermal with cleaner IDs and descriptions for quick review.'}
                     </Typography>
                     <Stack
@@ -650,6 +653,17 @@ export const CollectionsPage = () => {
               <Tab value="published" label="Published" />
               <Tab value="internal" label="Internal" />
             </Tabs>
+          ) : null}
+
+          {/*
+            Only the people who can reach both mounts need the difference
+            explained: for everyone else there is one catalogue, one URL, and
+            no internal endpoint on the page to confuse it with.
+          */}
+          {canViewOgcInternal ? (
+            <CollectionsUrlGuidance
+              tab={isInternalTab ? 'internal' : 'published'}
+            />
           ) : null}
 
           {isInternalTab ? (

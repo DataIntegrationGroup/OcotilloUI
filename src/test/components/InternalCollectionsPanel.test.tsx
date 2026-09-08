@@ -214,7 +214,9 @@ describe('InternalCollectionsPanel', () => {
   it('says so when the mount publishes nothing', () => {
     renderPanel({ collections: [] })
 
-    expect(screen.getByText(/published no collections/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/internal service has no collections/i)
+    ).toBeInTheDocument()
   })
 
   it('surfaces the failure message', () => {
