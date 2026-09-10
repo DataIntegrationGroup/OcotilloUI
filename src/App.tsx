@@ -7,6 +7,7 @@ import { Callback, Login } from '@/components/Auth'
 import { ContentPage } from '@/pages/content'
 import { TypographyPage } from '@/pages/example/TypographyPage'
 import { Home } from '@/pages/home'
+import { SettingsPage } from '@/pages/settings'
 import { GeothermalRoutes, OcotilloRoutes, ST2Routes } from '@/routes'
 import { settings } from '@/settings'
 
@@ -61,6 +62,7 @@ const App: React.FC = () => (
             path="/ogcapi"
             element={<ContentPage src="/content/ogcapi.md" />}
           />
+          <Route path="/settings" element={<SettingsPage />} />
           {/* TEMPORARY: example specimen pages */}
           <Route path="/example/typography" element={<TypographyPage />} />
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
