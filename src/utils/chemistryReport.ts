@@ -15,7 +15,13 @@ export type ChemistryResultRow = {
   resultKind: ChemistryResultKind
   value: number | null
   unit: string | null
+  /** When the water was collected, shared by every result in the sample. */
   sampledOn: string
+  /**
+   * Which sample the result belongs to. Results are grouped and counted by
+   * this, never by date: a lab runs one sample's analytes over several days.
+   */
+  sampleKey: string
   standard?: DrinkingWaterStandard
   exceeds: boolean
 }
@@ -24,6 +30,9 @@ export type ChemistryReportSummary = {
   rows: ChemistryResultRow[]
   fieldParameters: ChemistryResultRow[]
   labResults: ChemistryResultRow[]
+  /** Distinct samples collected in the period. */
+  sampleCount: number
+  /** Distinct collection dates -- sampling visits -- oldest first. */
   sampleDates: string[]
   parameterCount: number
   comparedCount: number
@@ -45,6 +54,17 @@ export const CHEMISTRY_REPORT_PAGE_SIZE = 500
 export const chemistryReportYearParams = (year: number) => ({
   start_time: `${year}-01-01T00:00:00`,
   end_time: `${year + 1}-01-01T00:00:00`,
+})
+
+/**
+ * The same calendar year for the groundwater level endpoints, whose end_time
+ * is inclusive (`<=`) rather than exclusive. Ending on Jan 1 there would pull a
+ * reading logged at midnight on New Year's Day -- which an hourly logger
+ * always has -- into the year before.
+ */
+export const inclusiveEndYearParams = (year: number) => ({
+  start_time: `${year}-01-01T00:00:00`,
+  end_time: `${year}-12-31T23:59:59.999`,
 })
 
 /**
@@ -98,6 +118,15 @@ export const formatReportDate = (value?: string | null): string => {
 export const formatResultValue = (value: number | null): string =>
   value == null ? 'Not detected' : String(value)
 
+/**
+ * A result's sample, as a key. Falls back to the collection date for a result
+ * with no sample id, which is the best the record allows.
+ */
+const sampleKeyOf = (observation: ChemistryResult): string =>
+  observation.sample_id != null
+    ? `sample-${observation.sample_id}`
+    : `date-${observation.observation_datetime.slice(0, 10)}`
+
 export const summarizeChemistry = (
   observations: readonly ChemistryResult[]
 ): ChemistryReportSummary => {
@@ -117,6 +146,7 @@ export const summarizeChemistry = (
       value: observation.value,
       unit,
       sampledOn: observation.observation_datetime,
+      sampleKey: sampleKeyOf(observation),
       standard,
       exceeds,
     }
@@ -130,6 +160,7 @@ export const summarizeChemistry = (
     rows,
     fieldParameters: rows.filter((row) => row.resultKind === 'field'),
     labResults: rows.filter((row) => row.resultKind !== 'field'),
+    sampleCount: new Set(rows.map((row) => row.sampleKey)).size,
     sampleDates,
     parameterCount: new Set(rows.map((row) => row.parameterName)).size,
     comparedCount: new Set(
@@ -284,11 +315,19 @@ export const latestResultPerParameter = (
   return { rows: kept, dateRange: [days[0], days[days.length - 1]] }
 }
 
+/**
+ * What a depth to water is measured down from. The API gives a depth below
+ * ground only where the measuring point height is on file; otherwise all there
+ * is is the depth below the measuring point (usually the top of casing).
+ */
+export type DepthReference = 'ground surface' | 'measuring point'
+
 /** One water level reading as the report's table prints it. */
 export type WaterLevelReading = {
   key: string
   measuredOn: string
   depthToWaterFt: number | null
+  depthReference: DepthReference
   waterElevationFt: number | null
   method: string
   /** True for a reading carried in from before the reporting year. */
@@ -304,13 +343,13 @@ export type WaterLevelObservation = {
 }
 
 /**
- * Water level readings, deepest-first by date, with the water table elevation
- * worked out where the land surface elevation is known.
+ * Water level readings, newest first, with the water table elevation worked
+ * out where it can be.
  *
- * Depth to water is measured downward from the ground and elevation is
- * measured upward from sea level, so the water table sits at the difference.
- * Without a land surface elevation the column is left empty rather than
- * printing the depth twice under two different headings.
+ * Elevation is the land surface elevation less the depth below ground, so it
+ * needs both. A depth measured from the measuring point would put the water
+ * table too low by the height of the casing stickup, so those readings get no
+ * elevation rather than a wrong one.
  */
 export const toWaterLevelReadings = (
   observations: readonly WaterLevelObservation[],
@@ -323,15 +362,18 @@ export const toWaterLevelReadings = (
         new Date(a.observation_datetime).getTime()
     )
     .map((observation) => {
-      const depth = observation.depth_to_water_bgs ?? observation.value ?? null
+      const belowGround = observation.depth_to_water_bgs ?? null
+      const depth = belowGround ?? observation.value ?? null
 
       return {
         key: String(observation.id),
         measuredOn: observation.observation_datetime,
         depthToWaterFt: depth,
+        depthReference:
+          belowGround != null ? 'ground surface' : 'measuring point',
         waterElevationFt:
-          elevationFt != null && depth != null
-            ? Number((elevationFt - depth).toFixed(1))
+          elevationFt != null && belowGround != null
+            ? Number((elevationFt - belowGround).toFixed(1))
             : null,
         // The legacy records carry no method field. A reading tied to a sensor
         // came off a transducer; anything else was read by hand.
@@ -343,14 +385,20 @@ export const toWaterLevelReadings = (
 /**
  * Change in water level between the newest reading and the one before it, as
  * a signed depth change in feet. Negative means the water table fell.
+ *
+ * Only readings measured from the same reference are compared: a depth below
+ * ground against a depth below the measuring point differs by the casing
+ * stickup, which would read as a change in the water table.
  */
 export const waterLevelChangeFt = (
   readings: readonly WaterLevelReading[]
 ): { changeFt: number; comparedTo: string } | null => {
   const measured = readings.filter((reading) => reading.depthToWaterFt != null)
-  if (measured.length < 2) return null
-
-  const [newest, previous] = measured
+  const [newest] = measured
+  const previous = measured
+    .slice(1)
+    .find((reading) => reading.depthReference === newest?.depthReference)
+  if (!newest || !previous) return null
   // Depth grows downward, so a deeper reading is a fall in water level.
   const changeFt = Number(
     (
@@ -360,6 +408,103 @@ export const waterLevelChangeFt = (
 
   return { changeFt, comparedTo: previous.measuredOn }
 }
+
+/** One logged reading, reduced to what the continuous summary prints. */
+export type ContinuousReading = { measuredOn: string; depthToWaterFt: number }
+
+/**
+ * A logger's record for the reporting year, summarized rather than listed. An
+ * hourly logger writes close to 9,000 readings a year; the owner wants to know
+ * how much there is, what span it covers, and which way the water went.
+ */
+export type ContinuousWaterLevelSummary = {
+  recordsInYear: number
+  recordsOnFile: number
+  /** First and last logged reading ever, across every deployment. */
+  periodOfRecord: [string, string] | null
+  firstInYear: ContinuousReading | null
+  lastInYear: ContinuousReading | null
+  shallowestInYear: ContinuousReading | null
+  deepestInYear: ContinuousReading | null
+  /**
+   * Water level change from the first reading of the year to the last, in
+   * feet. Positive is a rise -- the depth to water got smaller.
+   */
+  changeInYearFt: number | null
+  /** True when the latest reading in the year has not been reviewed. */
+  provisional: boolean
+}
+
+/** The fields of a transducer reading the summary reads. */
+export type TransducerReadingLike = {
+  observation: { observation_datetime: string; value: number }
+  block?: { review_status?: string | null } | null
+}
+
+const toContinuousReading = (
+  row: TransducerReadingLike | undefined
+): ContinuousReading | null =>
+  row
+    ? {
+        measuredOn: row.observation.observation_datetime,
+        depthToWaterFt: row.observation.value,
+      }
+    : null
+
+/**
+ * Builds the summary from single readings picked off the ends of the record --
+ * the first and last by time, the shallowest and deepest by value -- so a
+ * year of hourly data never has to be downloaded to describe it.
+ */
+export const summarizeContinuousWaterLevels = ({
+  recordsInYear,
+  recordsOnFile,
+  firstEver,
+  lastEver,
+  firstInYear,
+  lastInYear,
+  shallowestInYear,
+  deepestInYear,
+}: {
+  recordsInYear: number
+  recordsOnFile: number
+  firstEver?: TransducerReadingLike
+  lastEver?: TransducerReadingLike
+  firstInYear?: TransducerReadingLike
+  lastInYear?: TransducerReadingLike
+  shallowestInYear?: TransducerReadingLike
+  deepestInYear?: TransducerReadingLike
+}): ContinuousWaterLevelSummary => {
+  const first = toContinuousReading(firstInYear)
+  const last = toContinuousReading(lastInYear)
+
+  return {
+    recordsInYear,
+    recordsOnFile,
+    periodOfRecord:
+      firstEver && lastEver
+        ? [
+            firstEver.observation.observation_datetime,
+            lastEver.observation.observation_datetime,
+          ]
+        : null,
+    firstInYear: first,
+    lastInYear: last,
+    shallowestInYear: toContinuousReading(shallowestInYear),
+    deepestInYear: toContinuousReading(deepestInYear),
+    changeInYearFt:
+      first && last && first.measuredOn !== last.measuredOn
+        ? Number((first.depthToWaterFt - last.depthToWaterFt).toFixed(2))
+        : null,
+    provisional:
+      lastInYear?.block?.review_status != null &&
+      lastInYear.block.review_status !== 'approved',
+  }
+}
+
+/** `+0.4 ft`, `-1.2 ft`, or `0.0 ft` for a signed change in water level. */
+export const formatLevelChange = (changeFt: number): string =>
+  `${changeFt > 0 ? '+' : ''}${changeFt.toFixed(1)} ft`
 
 /**
  * Readable labels for legacy analyte symbols the lexicon has no term for.
