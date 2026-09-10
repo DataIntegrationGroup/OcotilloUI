@@ -81,6 +81,7 @@ export const WellPDFActionsButton = ({
     isLoading: isChemistryLoading,
     fetchYearObservations,
     fetchWaterLevels,
+    fetchContinuous,
   } = useWellChemistryReport({
     thingId: id,
     // Only worth asking once the report is on offer at all.
@@ -168,9 +169,10 @@ export const WellPDFActionsButton = ({
         | undefined
     )?.elevation
 
-    const [yearObservations, waterLevels] = await Promise.all([
+    const [yearObservations, waterLevels, continuous] = await Promise.all([
       fetchYearObservations(year),
       fetchWaterLevels(year, { elevationFt }),
+      fetchContinuous(year),
     ])
 
     return downloadChemistryReport({
@@ -178,6 +180,7 @@ export const WellPDFActionsButton = ({
       contacts,
       observations: yearObservations,
       waterLevels,
+      continuous,
       year,
     })
   }

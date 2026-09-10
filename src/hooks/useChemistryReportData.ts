@@ -1,13 +1,12 @@
-import { useList, useOne } from '@refinedev/core'
+import { useDataProvider, useList, useOne } from '@refinedev/core'
+import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import {
-  CHEMISTRY_REPORT_PAGE_SIZE,
-  chemistryReportYearParams,
-  sortChemistryResults,
-  toWaterLevelReadings,
-  type WaterLevelObservation,
-} from '@/utils/chemistryReport'
+  fetchChemistryYear,
+  fetchContinuousWaterLevels,
+  fetchReportWaterLevels,
+} from './chemistryReportFetchers'
 
 /** Which legacy chemistry table a result came from. */
 export type ChemistryResultKind =
@@ -32,15 +31,19 @@ export type ChemistryResult = {
   parameter_name: string
   value: number | null
   unit: string | null
+  /** When the water was collected; every result in a sample shares it. */
   observation_datetime: string
+  /** When the lab ran the result. Null for field parameters. */
+  analysis_date?: string | null
   result_kind: ChemistryResultKind
 }
 
+const REPORT_STALE_TIME = 5 * 60 * 1000
+
 /**
  * Everything the chemistry report needs for one well and one reporting
- * period. Chemistry comes from the legacy NMA tables via `chemistry/results`;
- * the refactored observation endpoint holds none. The period is inclusive of Jan 1 and exclusive of Jan 1 of the
- * following year, which is how the API's start_time/end_time filter behaves.
+ * period. The chemistry and water levels come through the same fetchers the
+ * well details page uses, so a report reads the same wherever it is made.
  */
 export const useChemistryReportData = ({
   thingId,
@@ -50,6 +53,11 @@ export const useChemistryReportData = ({
   year: number
 }) => {
   const enabled = Boolean(thingId)
+  const dataProvider = useDataProvider()
+  const ocotilloDataProvider = useMemo(
+    () => dataProvider('ocotillo'),
+    [dataProvider]
+  )
 
   const { result: well, query: wellQuery } = useOne<IWell>({
     resource: 'thing-well',
@@ -64,71 +72,70 @@ export const useChemistryReportData = ({
     queryOptions: { enabled },
   })
 
-  const { result: observationResult, query: observationQuery } =
-    useList<ChemistryResult>({
-      resource: 'chemistry/results',
-      dataProviderName: 'ocotillo',
-      pagination: {
-        currentPage: 1,
-        pageSize: CHEMISTRY_REPORT_PAGE_SIZE,
-        mode: 'server',
-      },
-      meta: {
-        params: {
-          thing_id: thingId,
-          ...chemistryReportYearParams(year),
-        },
-      },
-      queryOptions: { enabled },
-    })
-
-  const { result: waterLevelResult, query: waterLevelQuery } =
-    useList<WaterLevelObservation>({
-      resource: 'observation/groundwater-level',
-      dataProviderName: 'ocotillo',
-      pagination: {
-        currentPage: 1,
-        pageSize: CHEMISTRY_REPORT_PAGE_SIZE,
-        mode: 'server',
-      },
-      meta: {
-        params: { thing_id: thingId, ...chemistryReportYearParams(year) },
-      },
-      queryOptions: { enabled },
-    })
-
-  const observations = useMemo(
-    () => sortChemistryResults(observationResult?.data ?? []),
-    [observationResult?.data]
-  )
-
   const elevationFt = (
     (well as IWell | undefined)?.current_location?.properties as
       | { elevation?: number | null }
       | undefined
   )?.elevation
 
-  const waterLevels = useMemo(
-    () =>
-      toWaterLevelReadings(waterLevelResult?.data ?? [], {
-        elevationFt,
-      }),
-    [waterLevelResult?.data, elevationFt]
-  )
+  const observationQuery = useQuery({
+    queryKey: ['chemistry-report', 'chemistry', thingId, year],
+    queryFn: () =>
+      fetchChemistryYear(
+        ocotilloDataProvider,
+        thingId as string | number,
+        year
+      ),
+    enabled,
+    staleTime: REPORT_STALE_TIME,
+  })
+
+  // Waits on the well so the elevation is known before the readings are
+  // turned into water table elevations.
+  const waterLevelQuery = useQuery({
+    queryKey: ['chemistry-report', 'water-levels', thingId, year, elevationFt],
+    queryFn: () =>
+      fetchReportWaterLevels(
+        ocotilloDataProvider,
+        thingId as string | number,
+        year,
+        { elevationFt }
+      ),
+    enabled: enabled && !wellQuery.isLoading,
+    staleTime: REPORT_STALE_TIME,
+  })
+
+  const continuousQuery = useQuery({
+    queryKey: ['chemistry-report', 'continuous', thingId, year],
+    queryFn: () =>
+      fetchContinuousWaterLevels(
+        ocotilloDataProvider,
+        thingId as string | number,
+        year
+      ),
+    enabled,
+    staleTime: REPORT_STALE_TIME,
+  })
 
   const isLoading =
     wellQuery.isLoading ||
     contactQuery.isLoading ||
     observationQuery.isLoading ||
-    waterLevelQuery.isLoading
+    waterLevelQuery.isLoading ||
+    continuousQuery.isLoading
 
   return {
     well: well as IWell | undefined,
     contacts: contactResult?.data ?? [],
-    observations,
-    waterLevels,
+    observations: observationQuery.data ?? [],
+    waterLevels: waterLevelQuery.data ?? [],
+    continuous: continuousQuery.data ?? null,
     isLoading: enabled ? isLoading : false,
     isError:
-      wellQuery.isError || contactQuery.isError || observationQuery.isError,
+      wellQuery.isError ||
+      contactQuery.isError ||
+      observationQuery.isError ||
+      waterLevelQuery.isError ||
+      continuousQuery.isError,
   }
 }
