@@ -60,6 +60,7 @@ describe('Ocotillo Show Pages', () => {
     cy.contains(wellOne.name).should('be.visible')
     cy.contains('Depth to water').should('be.visible')
     cy.contains('42.5 ft bgs').should('be.visible')
-    cy.contains('Associated Sites Map').should('be.visible')
+    cy.contains('Associated Sites Map').should('not.exist')
+    cy.get('[data-testid="basemap-control-button"]').should('be.visible')
   })
 })

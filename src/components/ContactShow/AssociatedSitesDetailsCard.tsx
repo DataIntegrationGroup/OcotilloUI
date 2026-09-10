@@ -1,5 +1,5 @@
 import { Place } from '@mui/icons-material'
-import { Box, Typography } from '@mui/material'
+import { Box, Paper, Stack, Typography } from '@mui/material'
 import {
   type ColumnDef,
   type SortingState,
@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
 import { AssociatedSiteReportActions } from '@/components/ContactShow/AssociatedSiteReportActions'
+import { AssociatedSitesMap } from '@/components/ContactShow/AssociatedSitesMap'
 import { DataTable, DataTableColumnHeader } from '@/components/DataTable'
 import type { AssociatedSiteRow } from '@/hooks/useAssociatedSiteRows'
 import { formatAppDateTime } from '@/utils'
@@ -105,20 +106,25 @@ export const AssociatedSitesDetailsCard = ({
   const isLoading = rows.some((row) => row.isLoading)
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      <Box
+        sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+      >
         <Place color="primary" />
         <Typography variant="body1" fontWeight="bold">
           Associated Sites
         </Typography>
       </Box>
-      <DataTable
-        table={table}
-        isLoading={isLoading}
-        emptyMessage="No associated sites."
-        rowHref={(row) => row.showPath}
-        skeletonRowCount={3}
-      />
-    </Box>
+      <Stack spacing={2} sx={{ px: 2, py: 1, pb: 2 }}>
+        <AssociatedSitesMap rows={rows} />
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          emptyMessage="No associated sites."
+          rowHref={(row) => row.showPath}
+          skeletonRowCount={3}
+        />
+      </Stack>
+    </Paper>
   )
 }

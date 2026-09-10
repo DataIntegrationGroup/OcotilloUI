@@ -16,7 +16,6 @@ import { IContact } from '@/interfaces/ocotillo'
 import {
   ContactDetailsCard,
   AssociatedSitesDetailsCard,
-  AssociatedSitesMapCard,
 } from '@/components/ContactShow'
 import {
   ocotilloCardHeaderProps,
@@ -38,7 +37,7 @@ export const ContactShow = () => {
 
   const contact = record
 
-  // One fetch feeds both the table and the map.
+  // One fetch feeds both the map and the table in the Associated Sites card.
   const associatedSiteRows = useAssociatedSiteRows(contact?.things)
 
   const {
@@ -110,7 +109,6 @@ export const ContactShow = () => {
         <Stack spacing={2}>
           <ContactDetailsCard contact={contact} />
           <AssociatedSitesDetailsCard rows={associatedSiteRows} />
-          <AssociatedSitesMapCard rows={associatedSiteRows} />
         </Stack>
       </Show>
     </EditPanelLayout>

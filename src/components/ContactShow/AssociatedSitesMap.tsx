@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Box, Paper, Typography } from '@mui/material'
-import { Map } from '@mui/icons-material'
+import { Box, Typography } from '@mui/material'
 import { Layer, MapRef, Source } from 'react-map-gl/maplibre'
 import type { AssociatedSiteRow } from '@/hooks/useAssociatedSiteRows'
-import { MapComponent } from '@/components'
+import { useCardBasemap } from '@/hooks/useCardBasemap'
+import { BasemapControl, MapComponent } from '@/components'
 import { settings } from '@/settings'
 import {
   MAP_LAYER_COLORS,
   MAP_SYMBOL_STROKE_COLOR,
 } from '@/constants/mapColors'
 
-type AssociatedSitesMapCardProps = {
+type AssociatedSitesMapProps = {
   /**
    * Enriched rows rather than raw things: the contact endpoint returns its
    * things without a current_location, so nothing was ever mappable from them.
@@ -19,9 +19,15 @@ type AssociatedSitesMapCardProps = {
   rows?: AssociatedSiteRow[] | null
 }
 
-export const AssociatedSitesMapCard = ({ rows }: AssociatedSitesMapCardProps) => {
+/**
+ * The map half of the Associated Sites card. Renders nothing when no site has
+ * coordinates, so the card falls back to the table alone.
+ */
+export const AssociatedSitesMap = ({ rows }: AssociatedSitesMapProps) => {
   const mapRef = useRef<MapRef>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const { basemapId, onBasemapChange, onUserBasemapChange } =
+    useCardBasemap('contact')
   const [popupContent, setPopupContent] = useState<{
     coordinates: [number, number]
     name: string
@@ -90,7 +96,11 @@ export const AssociatedSitesMapCard = ({ rows }: AssociatedSitesMapCardProps) =>
 
   const onMapPointClick = (
     _e: unknown,
-    points: { layer?: { id?: string }; properties?: Record<string, unknown>; geometry?: { coordinates?: number[] } }[]
+    points: {
+      layer?: { id?: string }
+      properties?: Record<string, unknown>
+      geometry?: { coordinates?: number[] }
+    }[]
   ) => {
     const point = points.find((p) => p.layer?.id === 'contact-sites-layer')
     if (!point?.properties) {
@@ -113,7 +123,9 @@ export const AssociatedSitesMapCard = ({ rows }: AssociatedSitesMapCardProps) =>
     features: { layer?: { id?: string } }[],
     mapRefObj: React.RefObject<MapRef>
   ) => {
-    const contactFeatures = features.filter((f) => f.layer?.id === 'contact-sites-layer')
+    const contactFeatures = features.filter(
+      (f) => f.layer?.id === 'contact-sites-layer'
+    )
     if (contactFeatures.length > 0 && mapRefObj?.current) {
       mapRefObj.current.getCanvas().style.cursor = 'pointer'
     } else if (mapRefObj?.current) {
@@ -126,79 +138,72 @@ export const AssociatedSitesMapCard = ({ rows }: AssociatedSitesMapCardProps) =>
   }
 
   return (
-    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Map color="primary" />
-        <Typography variant="body1" fontWeight="bold">
-          Associated Sites Map
-        </Typography>
-      </Box>
-      <Box sx={{ px: 2, py: 1, pb: 2 }}>
-        <Box
-          ref={containerRef}
-          sx={{
-            position: 'relative',
-            borderRadius: 2,
-            overflow: 'hidden',
-            border: '2.5px solid',
-            borderColor: 'divider',
-            height: 350,
-            width: '100%',
-          }}
-        >
-          <MapComponent
-            mapRef={mapRef}
-            initialViewState={{
-              longitude: centerLon,
-              latitude: centerLat,
-              zoom: 10,
-            }}
-            onPointClick={onMapPointClick}
-            onMouseMoveCallback={onMapMouseMove}
-            setPopupContent={setPopupContent}
-            popupContent={
-              popupContent
-                ? {
-                    coordinates: popupContent.coordinates,
-                    children: (
-                      <Box sx={{ p: 1, minWidth: 120 }}>
-                        <Typography variant="subtitle2" fontWeight={600}>
-                          {popupContent.name}
-                        </Typography>
-                        <a
-                          href={`${settings.urlprefix}${popupContent.showPath}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ fontSize: 12, color: 'inherit' }}
-                        >
-                          View details
-                        </a>
-                      </Box>
-                    ),
-                    maxWidth: '300px',
-                  }
-                : undefined
-            }
-            style={{ width: '100%', height: '100%' }}
-            containerRef={containerRef}
-          >
-            {featureCollection && (
-              <Source id="contact-sites" type="geojson" data={featureCollection}>
-                <Layer
-                  id="contact-sites-layer"
-                  type="circle"
-                  paint={{
-                    'circle-radius': 6,
-                    'circle-color': MAP_LAYER_COLORS.waterWells,
-                    'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
-                    'circle-stroke-width': 2,
-                  }}
-                />
-              </Source>
-            )}
-          </MapComponent>
-        </Box>
-      </Box>
-    </Paper>
+    <Box
+      ref={containerRef}
+      sx={{
+        position: 'relative',
+        borderRadius: 2,
+        overflow: 'hidden',
+        border: '2.5px solid',
+        borderColor: 'divider',
+        height: 350,
+        width: '100%',
+      }}
+    >
+      <MapComponent
+        mapRef={mapRef}
+        initialViewState={{
+          longitude: centerLon,
+          latitude: centerLat,
+          zoom: 10,
+        }}
+        onPointClick={onMapPointClick}
+        onMouseMoveCallback={onMapMouseMove}
+        setPopupContent={setPopupContent}
+        popupContent={
+          popupContent
+            ? {
+                coordinates: popupContent.coordinates,
+                children: (
+                  <Box sx={{ p: 1, minWidth: 120 }}>
+                    <Typography variant="subtitle2" fontWeight={600}>
+                      {popupContent.name}
+                    </Typography>
+                    <a
+                      href={`${settings.urlprefix}${popupContent.showPath}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 12, color: 'inherit' }}
+                    >
+                      View details
+                    </a>
+                  </Box>
+                ),
+                maxWidth: '300px',
+              }
+            : undefined
+        }
+        basemapId={basemapId}
+        onBasemapChange={onBasemapChange}
+        style={{ width: '100%', height: '100%' }}
+        containerRef={containerRef}
+      >
+        {featureCollection && (
+          <Source id="contact-sites" type="geojson" data={featureCollection}>
+            <Layer
+              id="contact-sites-layer"
+              type="circle"
+              paint={{
+                'circle-radius': 6,
+                'circle-color': MAP_LAYER_COLORS.waterWells,
+                'circle-stroke-color': MAP_SYMBOL_STROKE_COLOR,
+                'circle-stroke-width': 2,
+              }}
+            />
+          </Source>
+        )}
+      </MapComponent>
+      <BasemapControl value={basemapId} onChange={onUserBasemapChange} />
+    </Box>
   )
 }

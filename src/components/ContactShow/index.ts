@@ -1,6 +1,6 @@
 export * from './AssociatedSites'
 export * from './AssociatedSitesDetailsCard'
-export * from './AssociatedSitesMapCard'
+export * from './AssociatedSitesMap'
 export * from './ContactAddresses'
 export * from './ContactDetailsCard'
 export * from './ContactEmails'
