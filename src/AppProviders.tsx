@@ -1,34 +1,35 @@
-import { ReactNode } from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RefineSnackbarProvider, useNotificationProvider } from '@refinedev/mui'
-import { AppBreadcrumb } from '@/components/AppBreadcrumb'
+import { CssBaseline, GlobalStyles } from '@mui/material'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import { CssBaseline, GlobalStyles } from '@mui/material'
 import { Action, IResourceItem, Refine } from '@refinedev/core'
+import { RefineSnackbarProvider, useNotificationProvider } from '@refinedev/mui'
 import routerProvider, {
   DocumentTitleHandler,
   UnsavedChangesNotifier,
 } from '@refinedev/react-router'
-import { ColorModeContextProvider } from '@/contexts'
-import { TooltipProvider } from '@/components/ui/tooltip'
-import {
-  ampDataProvider,
-  authentikAuthProvider,
-  ocotilloDataProvider,
-  accessControlProvider,
-  st2DataProvider,
-  geothermalDataProvider,
-  geochronologyDataProvider,
-  ogcapiDataProvider,
-  usgsNwisOgcapiDataProvider,
-} from '@/providers'
-import { resources } from '@/resources'
-import { PostHogPageview } from '@/components/analytics/PostHogPageview'
-import { PostHogIdentify } from '@/components/analytics/PostHogIdentify'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactNode } from 'react'
+import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { CopyPasteTracking } from '@/components/analytics/CopyPasteTracking'
 import { ErrorBoundary } from '@/components/analytics/ErrorBoundary'
+import { PostHogIdentify } from '@/components/analytics/PostHogIdentify'
+import { PostHogPageview } from '@/components/analytics/PostHogPageview'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { ColorModeContextProvider } from '@/contexts'
+import {
+  accessControlProvider,
+  ampDataProvider,
+  authentikAuthProvider,
+  geochronologyDataProvider,
+  geothermalDataProvider,
+  ocotilloDataProvider,
+  ogcapiDataProvider,
+  ogcapiInternalDataProvider,
+  st2DataProvider,
+  usgsNwisOgcapiDataProvider,
+} from '@/providers'
 import { SearchProvider } from '@/providers/search-provider'
+import { resources } from '@/resources'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,9 +71,9 @@ const customTitleHandler = ({
 export const AppProviders = ({ children }: { children: ReactNode }) => (
   <ColorModeContextProvider>
     <TooltipProvider>
-    <CssBaseline />
-    <GlobalStyles styles={{ html: { WebkitFontSmoothing: 'auto' } }} />
-    <RefineSnackbarProvider>
+      <CssBaseline />
+      <GlobalStyles styles={{ html: { WebkitFontSmoothing: 'auto' } }} />
+      <RefineSnackbarProvider>
         <Refine
           authProvider={authentikAuthProvider}
           dataProvider={{
@@ -81,6 +82,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
             geochronology: geochronologyDataProvider,
             geothermal: geothermalDataProvider,
             ogcapi: ogcapiDataProvider,
+            'ogcapi-internal': ogcapiInternalDataProvider,
             'usgs-nwis-ogcapi': usgsNwisOgcapiDataProvider,
             st2: st2DataProvider,
             ocotillo: ocotilloDataProvider,
@@ -105,14 +107,12 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <SearchProvider>
               <QueryClientProvider client={queryClient}>
-                <ErrorBoundary name="App">
-                  {children}
-                </ErrorBoundary>
+                <ErrorBoundary name="App">{children}</ErrorBoundary>
               </QueryClientProvider>
             </SearchProvider>
           </LocalizationProvider>
         </Refine>
-    </RefineSnackbarProvider>
+      </RefineSnackbarProvider>
     </TooltipProvider>
   </ColorModeContextProvider>
 )

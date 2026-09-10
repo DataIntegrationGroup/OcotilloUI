@@ -53,8 +53,10 @@ import {
   Lock,
   LogOut,
   Menu,
+  Monitor,
   Moon,
   Search,
+  Settings as SettingsIcon,
   Sun,
   User,
   X,
@@ -63,11 +65,12 @@ import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
 import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
-import { useAccessCapabilities } from '@/hooks'
+import { useAccessCapabilities, useBooleanPreference } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
 import { SupportPanelContext } from '@/components/SupportPanelContext'
 import { NewVersionBanner } from '@/components/NewVersionBanner'
 import { trackNavItemClicked } from '@/analytics/posthog'
+import { PREFERENCE_KEYS } from '@/utils/preferences'
 import pkg from '../../package.json'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -1100,7 +1103,7 @@ function ShellHeader() {
   const { warnWhen, setWarnWhen } = useWarnAboutChange()
   const { mutate: logout } = useLogout()
   const translate = useTranslate()
-  const { mode, setMode } = useContext(ColorModeContext)
+  const { preference, setMode } = useContext(ColorModeContext)
   const { openSearch } = useSearch()
 
   const initials = user?.name
@@ -1175,6 +1178,13 @@ function ShellHeader() {
               </div>
             </div>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/settings" className="no-underline text-foreground">
+                <SettingsIcon className="mr-2 size-4" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             {/* Appearance */}
             <DropdownMenuLabel className="text-xs text-muted-foreground/70 px-3 py-1 font-normal">
               Appearance
@@ -1182,12 +1192,17 @@ function ShellHeader() {
             <DropdownMenuItem onClick={() => setMode('light')}>
               <Sun className="mr-2 size-4" />
               Light
-              {mode === 'light' && <Check className="ml-auto size-4" />}
+              {preference === 'light' && <Check className="ml-auto size-4" />}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setMode('dark')}>
               <Moon className="mr-2 size-4" />
               Dark
-              {mode === 'dark' && <Check className="ml-auto size-4" />}
+              {preference === 'dark' && <Check className="ml-auto size-4" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setMode('system')}>
+              <Monitor className="mr-2 size-4" />
+              System
+              {preference === 'system' && <Check className="ml-auto size-4" />}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {isExistAuthentication && (
@@ -1209,13 +1224,18 @@ const AUTO_COLLAPSE_PATHS = ['/ocotillo/map']
 function SidebarAutoCollapse(): null {
   const location = useLocation()
   const { setOpen } = useSidebar()
+  const [autoCollapseEnabled] = useBooleanPreference(
+    PREFERENCE_KEYS.autoCollapseSidebarOnMap,
+    true
+  )
   // Track whether the sidebar was collapsed by this component (not by the user)
   const autoCollapsed = useRef(false)
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: setOpen is stable from sidebar context.
   useEffect(() => {
-    const isAutoCollapsePage = AUTO_COLLAPSE_PATHS.some((p) =>
-      location.pathname.startsWith(p)
-    )
+    const isAutoCollapsePage =
+      autoCollapseEnabled &&
+      AUTO_COLLAPSE_PATHS.some((p) => location.pathname.startsWith(p))
 
     if (isAutoCollapsePage) {
       autoCollapsed.current = true
@@ -1225,8 +1245,7 @@ function SidebarAutoCollapse(): null {
       autoCollapsed.current = false
       setOpen(true)
     }
-    // biome-ignore lint/correctness/useExhaustiveDependencies: setOpen is stable from sidebar context.
-  }, [location.pathname])
+  }, [location.pathname, autoCollapseEnabled])
 
   return null
 }
