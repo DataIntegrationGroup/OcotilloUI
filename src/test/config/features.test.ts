@@ -67,3 +67,47 @@ describe('SHOW_GIS_DOWNLOADS', () => {
     ).resolves.toBe(false)
   })
 })
+
+/**
+ * BYPASS_AMP_STAGING_GATE is resolved once at module load the same way, so each
+ * case stubs the env and re-imports.
+ */
+const loadBypass = async (
+  env: Record<string, string | undefined>
+): Promise<boolean> => {
+  vi.resetModules()
+  for (const [key, value] of Object.entries(env)) {
+    if (value === undefined) continue
+    vi.stubEnv(key, value)
+  }
+  const { BYPASS_AMP_STAGING_GATE } = await import('@/config/features')
+  return BYPASS_AMP_STAGING_GATE
+}
+
+describe('BYPASS_AMP_STAGING_GATE', () => {
+  beforeEach(() => {
+    vi.stubEnv('DEV', false)
+    vi.stubEnv('VITE_APP_ENV', 'production')
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.resetModules()
+  })
+
+  it('is off on a production build', async () => {
+    await expect(loadBypass({})).resolves.toBe(false)
+  })
+
+  it('is on in local dev', async () => {
+    await expect(loadBypass({ DEV: 'true' })).resolves.toBe(true)
+  })
+
+  it('is on for a preview deploy, where reviewers exercise the work', async () => {
+    await expect(loadBypass({ VITE_APP_ENV: 'preview' })).resolves.toBe(true)
+  })
+
+  it('stays off on staging, which is a release branch and not a sandbox', async () => {
+    await expect(loadBypass({ VITE_APP_ENV: 'staging' })).resolves.toBe(false)
+  })
+})

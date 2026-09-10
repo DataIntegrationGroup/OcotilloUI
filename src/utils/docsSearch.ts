@@ -1,4 +1,5 @@
 import { FrontMatter, parseFrontmatter } from '@/pages/content'
+import { CONTENT_BY_PATH } from '@/utils/contentModules'
 
 export type DocEntry = {
   id: string
@@ -10,28 +11,17 @@ export type DocEntry = {
   frontmatter: FrontMatter
 }
 
-const docModules = import.meta.glob('../../public/content/**/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
-
 const startCase = (value: string) =>
-  value
-    .replace(/[-_]+/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase())
-
-const normalizeDocPath = (modulePath: string) =>
-  modulePath.replace(/^.*\/public\/content\//, '')
+  value.replace(/[-_]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 
 const toSlug = (docPath: string) => docPath.replace(/\.md$/i, '')
 
-export const DOC_ENTRIES: DocEntry[] = Object.entries(docModules)
-  .map(([modulePath, rawContent]) => {
-    const path = normalizeDocPath(modulePath)
+export const DOC_ENTRIES: DocEntry[] = Object.entries(CONTENT_BY_PATH)
+  .map(([path, rawContent]) => {
     const slug = toSlug(path)
     const parsed = parseFrontmatter(rawContent)
-    const title = parsed.data.title?.trim() || startCase(slug.split('/').at(-1) || slug)
+    const title =
+      parsed.data.title?.trim() || startCase(slug.split('/').at(-1) || slug)
 
     return {
       id: slug,
@@ -69,11 +59,10 @@ export const searchDocs = (term: string): DocEntry[] => {
 
   if (!normalizedTerm) return DOC_ENTRIES
 
-  return DOC_ENTRIES
-    .map((doc) => ({
-      doc,
-      score: scoreDoc(doc, normalizedTerm),
-    }))
+  return DOC_ENTRIES.map((doc) => ({
+    doc,
+    score: scoreDoc(doc, normalizedTerm),
+  }))
     .filter((entry) => entry.score >= 0)
     .sort((a, b) => b.score - a.score || a.doc.title.localeCompare(b.doc.title))
     .map((entry) => entry.doc)

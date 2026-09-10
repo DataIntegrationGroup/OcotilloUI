@@ -1,4 +1,5 @@
 export * from './OcotilloDocument'
+export * from './chemistry'
 export * from './well'
 export * from './AdditionalInformation'
 export * from './CoreInformation'
