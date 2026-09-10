@@ -62,6 +62,7 @@ import {
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
+import { EnvironmentBadge } from '@/components/layout/environment-badge'
 import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
 import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
@@ -1132,7 +1133,8 @@ function ShellHeader() {
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3">
       <ExpandButton />
-      <div className="min-w-0 shrink overflow-hidden">
+      <div className="min-w-0 shrink overflow-hidden flex items-center gap-2">
+        <EnvironmentBadge />
         <HeaderBreadcrumb />
       </div>
       {/* Search bar — hidden on mobile, visible tablet+ */}
