@@ -1,8 +1,11 @@
 import {
   BookOpen,
+  ClipboardList,
+  Compass,
   Database,
   Droplets,
   FileText,
+  Flame,
   FolderKanban,
   Home,
   Image,
@@ -10,6 +13,8 @@ import {
   Map as MapIcon,
   MapPin,
   Search,
+  Table,
+  Thermometer,
   Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -88,37 +93,55 @@ const editorAndAbove: PortalRole[] = [AmpRole.Editor, AmpRole.Admin]
 const adminOnly: PortalRole[] = [AmpRole.Admin]
 
 /**
+ * Anchors the geothermal group directly below AMP in the sidebar, without
+ * AppShell matching on a display label that could be reworded.
+ */
+export const AMP_NAV_ID = 'amp'
+
+/**
  * Data section: record management and tools.
  * Each item is gated by its `roles` array in AppShell, with CanAccess as a
  * second enforcement layer.
  */
 export const RESOURCE_NAV: NavItem[] = [
   {
-    label: 'Wells',
-    href: '/ocotillo/well',
-    icon: Droplets,
-    resource: 'ocotillo.thing-well',
+    // Grouping entry only: it names no resource of its own, so the children
+    // below carry the access gating, and it has no href because its header
+    // toggles the group rather than navigating.
+    id: AMP_NAV_ID,
+    label: 'AMP',
+    href: null,
+    icon: Compass,
     roles: viewerAndAbove,
+    children: [
+      {
+        label: 'Wells',
+        href: '/ocotillo/well',
+        icon: Droplets,
+        resource: 'ocotillo.thing-well',
+        roles: viewerAndAbove,
+      },
+      {
+        label: 'Field Sheets',
+        href: '/ocotillo/well/batch-export',
+        icon: FileText,
+        resource: 'ocotillo.thing-well-batch-export',
+        roles: viewerAndAbove,
+      },
+      {
+        label: 'Contacts',
+        href: '/ocotillo/contact',
+        icon: Users,
+        resource: 'ocotillo.contact',
+        roles: viewerAndAbove,
+      },
+    ],
   },
   {
     label: 'Projects',
     href: '/ocotillo/well/projects',
     icon: FolderKanban,
     resource: 'ocotillo.thing-well-projects',
-    roles: viewerAndAbove,
-  },
-  {
-    label: 'Field Sheets',
-    href: '/ocotillo/well/batch-export',
-    icon: FileText,
-    resource: 'ocotillo.thing-well-batch-export',
-    roles: viewerAndAbove,
-  },
-  {
-    label: 'Contacts',
-    href: '/ocotillo/contact',
-    icon: Users,
-    resource: 'ocotillo.contact',
     roles: viewerAndAbove,
   },
   {
@@ -157,3 +180,33 @@ export const RESOURCE_NAV: NavItem[] = [
     roles: editorAndAbove,
   },
 ]
+
+/**
+ * Geothermal group, rendered directly below AMP (see AMP_NAV_ID).
+ * Kept out of RESOURCE_NAV so it can sit between AMP and the divider without
+ * AppShell splitting that list. Neither the group nor its pages name a
+ * resource or roles, so it is visible to every authenticated user.
+ */
+export const GEOTHERMAL_NAV: NavItem = {
+  id: 'geothermal',
+  label: 'Geothermal',
+  href: null,
+  icon: Flame,
+  children: [
+    {
+      label: 'Records',
+      href: '/geothermal/wells/records-grid',
+      icon: Table,
+    },
+    {
+      label: 'Inventory',
+      href: '/geothermal/wells/inventory',
+      icon: ClipboardList,
+    },
+    {
+      label: 'Temp-Depth',
+      href: '/geothermal/wells/temp-depth',
+      icon: Thermometer,
+    },
+  ],
+}

@@ -120,8 +120,8 @@ UI layering is documented in `FRONTEND.md` — read it before adding styles. Sho
 In code, that means WIP surfaces gate on dev or preview, never on staging:
 
 ```ts
-export const SHOW_WIP_FEATURES =
-  import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview'
+export const BYPASS_GEOTHERMAL_GATE =
+  import.meta.env.DEV === true || import.meta.env.VITE_APP_ENV === 'preview'
 ```
 
 `recordsGridLogic.ts` gates exactly this way. Do not add `'staging'` to that check, and do not add a staging arm to a new one.
