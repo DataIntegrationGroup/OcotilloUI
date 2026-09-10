@@ -3,6 +3,7 @@ import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import {
   buildChemistryReportFilename,
+  type ContinuousWaterLevelSummary,
   type WaterLevelReading,
 } from '@/utils/chemistryReport'
 import {
@@ -20,6 +21,7 @@ export const downloadChemistryReport = async ({
   contacts,
   observations,
   waterLevels,
+  continuous,
   year,
   sections,
 }: {
@@ -27,6 +29,7 @@ export const downloadChemistryReport = async ({
   contacts: readonly IContact[]
   observations: readonly ChemistryResult[]
   waterLevels?: readonly WaterLevelReading[]
+  continuous?: ContinuousWaterLevelSummary | null
   year: number
   sections?: ChemistryReportSections
 }): Promise<string> => {
@@ -39,6 +42,7 @@ export const downloadChemistryReport = async ({
       contacts={contacts}
       observations={observations}
       waterLevels={waterLevels}
+      continuous={continuous}
       year={year}
       sections={sections}
       qrCodeDataUrl={qrCodeDataUrl}

@@ -88,8 +88,15 @@ export const ChemistryReportExport = () => {
     },
   })
 
-  const { well, contacts, observations, waterLevels, isLoading, isError } =
-    useChemistryReportData({ thingId: selectedWell?.id, year })
+  const {
+    well,
+    contacts,
+    observations,
+    waterLevels,
+    continuous,
+    isLoading,
+    isError,
+  } = useChemistryReportData({ thingId: selectedWell?.id, year })
 
   const toggleSection = (key: keyof ChemistryReportSections) =>
     setSections((previous) => ({ ...previous, [key]: !previous[key] }))
@@ -117,6 +124,7 @@ export const ChemistryReportExport = () => {
           contacts={contacts}
           observations={observations}
           waterLevels={waterLevels}
+          continuous={continuous}
           year={year}
           sections={sections}
           disabled={!isReady}
@@ -231,6 +239,7 @@ export const ChemistryReportExport = () => {
               contacts={contacts}
               observations={observations}
               waterLevels={waterLevels}
+              continuous={continuous}
               year={year}
               sections={sections}
               qrCodeDataUrl={qrCodeDataUrl}
