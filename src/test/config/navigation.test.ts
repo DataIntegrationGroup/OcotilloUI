@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { AMP_NAV_ID, RESOURCE_NAV, type NavItem } from '@/config/navigation'
+import {
+  AMP_NAV_ID,
+  GEOTHERMAL_NAV,
+  RESOURCE_NAV,
+  type NavItem,
+} from '@/config/navigation'
 import { canAccessResource } from '@/utils/accessControl'
 
 const byLabel = (items: NavItem[], label: string) =>
@@ -54,7 +59,7 @@ describe('AMP nav group', () => {
   })
 
   it('carries the id AppShell anchors the geothermal group to', () => {
-    // AppShell renders GeothermalNavItem straight after this entry; matching on
+    // AppShell renders GEOTHERMAL_NAV straight after this entry; matching on
     // the id rather than the label keeps a rewording from moving it.
     expect(amp?.id).toBe(AMP_NAV_ID)
     expect(RESOURCE_NAV.filter((item) => item.id === AMP_NAV_ID)).toHaveLength(
@@ -77,5 +82,40 @@ describe('AMP nav group', () => {
     ]) {
       expect(byLabel(RESOURCE_NAV, label)).toBeDefined()
     }
+  })
+})
+
+describe('Geothermal nav group', () => {
+  it('holds Records, Inventory and Temp-Depth', () => {
+    expect(GEOTHERMAL_NAV.children?.map((child) => child.label)).toEqual([
+      'Records',
+      'Inventory',
+      'Temp-Depth',
+    ])
+  })
+
+  it('points each page at its geothermal route', () => {
+    expect(GEOTHERMAL_NAV.children?.map((child) => child.href)).toEqual([
+      '/geothermal/wells/records-grid',
+      '/geothermal/wells/inventory',
+      '/geothermal/wells/temp-depth',
+    ])
+  })
+
+  it('has no href of its own, so its header toggles instead of navigating', () => {
+    expect(GEOTHERMAL_NAV.href).toBeNull()
+  })
+
+  it('is visible to every authenticated user', () => {
+    expect(GEOTHERMAL_NAV.roles).toBeUndefined()
+    expect(GEOTHERMAL_NAV.resource).toBeUndefined()
+    for (const child of GEOTHERMAL_NAV.children ?? []) {
+      expect(child.roles).toBeUndefined()
+      expect(child.resource).toBeUndefined()
+    }
+  })
+
+  it('stays out of RESOURCE_NAV, so AppShell places it below AMP', () => {
+    expect(byLabel(RESOURCE_NAV, 'Geothermal')).toBeUndefined()
   })
 })

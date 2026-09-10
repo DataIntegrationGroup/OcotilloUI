@@ -58,7 +58,6 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  Flame,
   Lock,
   LogOut,
   Menu,
@@ -76,6 +75,7 @@ import { ReportBugButton } from '@/components/Button'
 import {
   AMP_NAV_ID,
   AmpRole,
+  GEOTHERMAL_NAV,
   PRIMARY_NAV,
   RESOURCE_NAV,
   type NavItem,
@@ -206,6 +206,7 @@ function activeHref(pathname: string): string | null {
   const allHrefs = [
     ...collectNavHrefs(PRIMARY_NAV),
     ...collectNavHrefs(RESOURCE_NAV),
+    ...collectNavHrefs([GEOTHERMAL_NAV]),
   ]
   const matches = allHrefs.filter((h) => isActive(pathname, h))
   if (matches.length === 0) return null
@@ -337,27 +338,32 @@ function ResourceNavItem({
           <SidebarMenuSub>
             {visibleChildren.map((child) => {
               const ChildIcon = child.icon
-              return (
+              const subItem = (
+                <SidebarMenuSubItem key={child.href}>
+                  <SidebarMenuSubButton
+                    asChild
+                    isActive={currentActiveHref === child.href}
+                  >
+                    <Link
+                      to={child.href!}
+                      onClick={() => trackNavClick(child, label)}
+                    >
+                      <ChildIcon />
+                      <span>{child.label}</span>
+                    </Link>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              )
+              return child.resource ? (
                 <CanAccess
                   key={child.href}
-                  resource={child.resource!}
+                  resource={child.resource}
                   action="list"
                 >
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      asChild
-                      isActive={currentActiveHref === child.href}
-                    >
-                      <Link
-                        to={child.href!}
-                        onClick={() => trackNavClick(child, label)}
-                      >
-                        <ChildIcon />
-                        <span>{child.label}</span>
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
+                  {subItem}
                 </CanAccess>
+              ) : (
+                subItem
               )
             })}
           </SidebarMenuSub>
@@ -465,7 +471,7 @@ function AppSidebar() {
 
         <SidebarSeparator className="my-1 bg-border" />
 
-        {/* Resource navigation + WIP geothermal section — all in one group */}
+        {/* Resource navigation, with the geothermal group below AMP */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -477,7 +483,13 @@ function AppSidebar() {
                     canSeeNavItem={canSeeNavItem}
                   />
                   {/* The geothermal group sits directly below AMP. */}
-                  {item.id === AMP_NAV_ID ? <GeothermalNavItem /> : null}
+                  {item.id === AMP_NAV_ID ? (
+                    <ResourceNavItem
+                      item={GEOTHERMAL_NAV}
+                      pathname={location.pathname}
+                      canSeeNavItem={canSeeNavItem}
+                    />
+                  ) : null}
                   {/* Domain groups above, flat resources below. Wrapped in an
                       li because SidebarMenu is a ul. */}
                   {item.id === AMP_NAV_ID ? (
@@ -514,69 +526,6 @@ function AppSidebar() {
         <SupportPanelTrigger collapsed={collapsed} />
       </SidebarFooter>
     </Sidebar>
-  )
-}
-
-const GEOTHERMAL_RECORDS_GRID = '/geothermal/wells/records-grid'
-const GEOTHERMAL_INVENTORY = '/geothermal/wells/inventory'
-const GEOTHERMAL_TEMP_DEPTH = '/geothermal/wells/temp-depth'
-
-function isGeothermalPath(pathname: string): boolean {
-  return (
-    pathname.startsWith(GEOTHERMAL_RECORDS_GRID) ||
-    pathname.startsWith(GEOTHERMAL_INVENTORY) ||
-    pathname.startsWith(GEOTHERMAL_TEMP_DEPTH)
-  )
-}
-
-function GeothermalNavItem() {
-  const location = useLocation()
-  const [open, setOpen] = useNavSectionOpen(isGeothermalPath(location.pathname))
-
-  return (
-    <Collapsible
-      open={open}
-      onOpenChange={setOpen}
-      className="group/geothermal"
-    >
-      <SidebarMenuItem>
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Geothermal">
-            <Flame />
-            <span>Geothermal</span>
-            <ChevronRight className="ml-auto size-3.5 transition-transform duration-100 group-data-[state=open]/geothermal:rotate-90" />
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton
-                asChild
-                isActive={location.pathname.startsWith(GEOTHERMAL_RECORDS_GRID)}
-              >
-                <Link to={GEOTHERMAL_RECORDS_GRID}>Records</Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton
-                asChild
-                isActive={location.pathname.startsWith(GEOTHERMAL_INVENTORY)}
-              >
-                <Link to={GEOTHERMAL_INVENTORY}>Inventory</Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton
-                asChild
-                isActive={location.pathname.startsWith(GEOTHERMAL_TEMP_DEPTH)}
-              >
-                <Link to={GEOTHERMAL_TEMP_DEPTH}>Temp-Depth</Link>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </SidebarMenuItem>
-    </Collapsible>
   )
 }
 
