@@ -51,6 +51,7 @@ import {
   OwnerPermissionsCard,
   MonitoringInfoCard,
   WaterLevelObservationRow,
+  WaterChemistryCard,
 } from '@/components'
 import {
   ocotilloCardHeaderProps,
@@ -382,6 +383,10 @@ export const WellShow = () => {
         rows={wellScreens}
         isLoading={isDetailsLoading}
       />,
+      <WaterChemistryCard
+        key="chemistry"
+        thingId={well?.id ?? (id ? Number(id) : null)}
+      />,
       <AlternateIdsCard key="ids" dataGridProps={idLinkDataGridProps} />,
       <AttachmentsCard
         key="attachments"
@@ -432,6 +437,7 @@ export const WellShow = () => {
       mainCards[8],
       mainCards[9],
       mainCards[10],
+      mainCards[11],
       sideCards[3],
       sideCards[4],
     ]
