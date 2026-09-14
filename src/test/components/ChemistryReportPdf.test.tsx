@@ -36,6 +36,32 @@ const renderReportText = async (
 }
 
 /**
+ * Every text run on the page, as pdf.js hands them back.
+ *
+ * Needed where the question is about layout rather than wording: a value that
+ * wraps comes back as one run per line, while the flattened text of
+ * `renderReportText` rejoins them with a space and looks identical either way.
+ */
+const renderReportRuns = async (
+  element: React.ReactElement
+): Promise<string[]> => {
+  const blob = await pdf(element).toBlob()
+  const data = new Uint8Array(await blob.arrayBuffer())
+  const document = await pdfjsLib.getDocument({ data }).promise
+
+  const runs: string[] = []
+  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber++) {
+    const page = await document.getPage(pageNumber)
+    const textContent = await page.getTextContent()
+    for (const item of textContent.items) {
+      if ('str' in item && item.str.trim()) runs.push(item.str.trim())
+    }
+  }
+
+  return runs
+}
+
+/**
  * The same text with every space removed. The masthead and the section
  * headings are letter-spaced, which pdf.js reads back as one item per glyph,
  * so those strings can only be matched with the spacing taken out of both
@@ -203,7 +229,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     expect(text).not.toContain('needs two readings')
   })
 
-  it('prints the change beside the readings when there are two', async () => {
+  it('keeps the change in the at-a-glance stat, not over the readings', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
         well={makeWell()}
@@ -222,9 +248,15 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain('water level change')
     // Depth grew from 207.5 to 208.4 ft, so the water level fell 0.9 ft.
-    expect(text).toContain('-0.9 ft since aug 15, 2025')
+    expect(text).toContain('water level change')
+    expect(text).toContain('-0.9 ft')
+    expect(text).toContain('vs. aug 15, 2025')
+    // The section carries its heading and its table, and no summary line: the
+    // dates are in the table and the change is already in the stat.
+    expect(text).not.toContain('-0.9 ft since')
+    expect(text).not.toContain('plus the last before it')
+    expect(text).not.toContain('readings in 2026,')
   })
 
   it('scopes the year to the water levels, not to the chemistry', async () => {
@@ -377,6 +409,43 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     // Classified, not scored against a limit it does not have.
     expect(text).toContain('very hard')
     expect(text).not.toContain('x the limit')
+  })
+
+  it('keeps a long stat value on one line instead of stranding its unit', async () => {
+    const runs = await renderReportRuns(
+      <ChemistryReportPdf
+        well={makeWell()}
+        observations={[makeResult()]}
+        continuous={{
+          recordsInYear: 1107,
+          recordsOnFile: 48211,
+          periodOfRecord: ['2019-10-14T00:00:00Z', '2026-09-02T18:00:00Z'],
+          firstInYear: {
+            measuredOn: '2026-01-01T00:00:00Z',
+            depthToWaterFt: 208.9,
+          },
+          lastInYear: {
+            measuredOn: '2026-09-02T18:00:00Z',
+            depthToWaterFt: 209.1,
+          },
+          shallowestInYear: {
+            measuredOn: '2026-03-18T04:00:00Z',
+            depthToWaterFt: 207.8,
+          },
+          deepestInYear: {
+            measuredOn: '2026-07-29T16:00:00Z',
+            depthToWaterFt: 210.4,
+          },
+          changeInYearFt: -0.2,
+          provisional: false,
+        }}
+        year={2026}
+      />
+    )
+
+    // One run, not two: at the display size this value wrapped and left "ft"
+    // on a line of its own.
+    expect(runs).toContain('207.8–210.4 ft')
   })
 
   it('omits well facts that are not on file rather than printing a dash', async () => {

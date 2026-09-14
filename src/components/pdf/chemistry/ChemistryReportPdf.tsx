@@ -106,6 +106,22 @@ type StatEntry = {
   tone?: 'danger' | 'warning'
 }
 
+/**
+ * Point size for a stat's value, stepped down as the string gets longer.
+ *
+ * A stat is about 83pt of text wide, and the display size is set for short
+ * numbers -- "12", "1,107". A depth range like "207.8-210.4 ft" is long enough
+ * to wrap at that size, stranding its unit on a line of its own. Stepping the
+ * size down keeps every stat on one line without shrinking the short values
+ * that carry the page.
+ */
+const statValueFontSize = (value: string): number => {
+  if (value.length >= 13) return 11
+  if (value.length >= 11) return 12.5
+  if (value.length >= 9) return 14
+  return 17
+}
+
 const Stat = ({
   label,
   value,
@@ -117,6 +133,7 @@ const Stat = ({
     <Text
       style={[
         s.statValue,
+        { fontSize: statValueFontSize(String(value)) },
         ...(tone === 'danger' ? [s.statValueDanger] : []),
         ...(tone === 'warning' ? [s.statValueWarning] : []),
       ]}
@@ -681,10 +698,6 @@ export const ChemistryReportPdf = ({
       link.alternate_organization === 'NMOSE' && link.relation === 'OSEPOD'
   )?.alternate_id
 
-  // The prior reading is only there to measure change against; it is not one
-  // of the year's readings and is not counted as one.
-  const readingsInYear = waterLevels.filter((reading) => !reading.isPrior)
-  const hasPriorReading = waterLevels.some((reading) => reading.isPrior)
   const measuredDepths = waterLevels.filter(
     (reading) => reading.depthToWaterFt != null
   )
@@ -950,29 +963,9 @@ export const ChemistryReportPdf = ({
         {/* ---- Water levels ---- */}
         {sections.waterLevels ? (
           <View style={s.section} wrap={false}>
-            <SectionHead
-              title="Water level measurements"
-              note={
-                waterLevels.length
-                  ? [
-                      [
-                        `${readingsInYear.length} reading${readingsInYear.length === 1 ? '' : 's'} in ${year}`,
-                        hasPriorReading ? 'plus the last before it' : null,
-                      ]
-                        .filter(Boolean)
-                        .join(', '),
-                      // The change is only computed between depths read from
-                      // the same reference, so a well that mixes them shows
-                      // the reading count alone.
-                      levelChange
-                        ? `${formatLevelChange(levelChange.changeFt)} since ${formatReportDate(levelChange.comparedTo)}`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join('  ·  ')
-                  : undefined
-              }
-            />
+            {/* No summary line: the table below states the dates outright,
+                and the change is already in the at-a-glance stat. */}
+            <SectionHead title="Water level measurements" />
             {waterLevels.length ? (
               <WaterLevelTable readings={waterLevels} />
             ) : (
