@@ -185,17 +185,22 @@ export const summarizeChemistry = (
 }
 
 /**
- * `WL-1187 Vigil Ranch Well` → `chemistry-report-WL-1187-2026.pdf`
+ * `WL-1187 Vigil Ranch Well` → `chemistry-report-WL-1187-2026.pdf`, or
+ * `chemistry-report-WL-1187.pdf` when the report carries no year.
+ *
+ * The year is the water levels' and is dropped with them: a file named for a
+ * year whose only year-scoped section was switched off would sort and read as
+ * though the chemistry inside it belonged to that year.
  */
 export const buildChemistryReportFilename = (
   well: Pick<IWell, 'id' | 'name'> | undefined,
-  year: number
+  year?: number | null
 ): string => {
   const slug = (well?.name ?? `well-${well?.id ?? 'unknown'}`)
     .trim()
     .replace(/\s+/g, '-')
     .replace(/[^A-Za-z0-9._-]/g, '')
-  return `chemistry-report-${slug}-${year}.pdf`
+  return `chemistry-report-${slug}${year == null ? '' : `-${year}`}.pdf`
 }
 
 /**
@@ -253,8 +258,7 @@ export const resultStatus = (row: ChemistryResultRow): ChemistryStatus => {
 export const standardLimitFor = (
   row: ChemistryResultRow,
   kind: StandardKind
-): string =>
-  row.standard?.kind === kind ? String(row.standard.limit) : '—'
+): string => (row.standard?.kind === kind ? String(row.standard.limit) : '—')
 
 /**
  * Where a result sits against its own limit, as a fraction of it. 1 is exactly

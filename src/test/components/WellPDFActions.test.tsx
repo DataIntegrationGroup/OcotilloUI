@@ -44,7 +44,10 @@ vi.mock('@/components/pdf/chemistry', () => ({
     mockedDownloadChemistryReport(args),
   // The component reads the default sections to decide whether the logger
   // summary is worth fetching, so the mock has to carry them.
-  CHEMISTRY_REPORT_DEFAULT_SECTIONS: { continuousMonitoring: false },
+  CHEMISTRY_REPORT_DEFAULT_SECTIONS: {
+    waterLevels: false,
+    continuousMonitoring: false,
+  },
 }))
 
 vi.mock('@/hooks', () => ({
@@ -248,16 +251,14 @@ describe('WellPDFActionsButton report type select', () => {
       year: 2024,
       observations: [{ id: 'maj-1' }],
     })
-    // The report's water level section is fetched for the same year.
-    expect(mockedFetchWaterLevels).toHaveBeenCalledWith(2024, {
-      elevationFt: undefined,
-    })
-    expect(
-      mockedDownloadChemistryReport.mock.calls[0][0].waterLevels
-    ).toHaveLength(1)
-    // The logger summary is not: the section is off in the report's default
-    // sections, which is what the well page generates with, so its six
-    // requests would buy nothing.
+    // Neither water level section is fetched: both are off in the report's
+    // default sections, which is what the well page generates with, so their
+    // requests would buy nothing. The exporter, where either can be switched
+    // back on, fetches its own.
+    expect(mockedFetchWaterLevels).not.toHaveBeenCalled()
+    expect(mockedDownloadChemistryReport.mock.calls[0][0].waterLevels).toEqual(
+      []
+    )
     expect(mockedFetchContinuous).not.toHaveBeenCalled()
     expect(mockedDownloadChemistryReport.mock.calls[0][0].continuous).toBeNull()
     expect(mockedToBlob).not.toHaveBeenCalled()
