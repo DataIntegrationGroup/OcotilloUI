@@ -263,6 +263,61 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     expect(text).not.toContain('ocotillo')
   })
 
+  it('counts a persistent exceedance once, not once per sample', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        well={makeWell()}
+        observations={[
+          makeResult({
+            id: 'feb',
+            sample_id: 900,
+            value: 0.012,
+            observation_datetime: '2026-02-04T00:00:00Z',
+          }),
+          makeResult({
+            id: 'may',
+            sample_id: 901,
+            value: 0.011,
+            observation_datetime: '2026-05-15T00:00:00Z',
+          }),
+        ]}
+        year={2026}
+      />
+    )
+
+    expect(text).toContain('one result was above a federal health limit')
+    expect(text).not.toContain('2 results were above a federal health limit')
+    // Named once in the stat, at its most recent value in the callout.
+    expect(text).not.toContain('arsenic, arsenic')
+    expect(text).toContain('0.011 mg/l (limit 0.01 mg/l, sampled may 15, 2026)')
+  })
+
+  it('stops reporting a parameter that has since come back under its limit', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        well={makeWell()}
+        observations={[
+          makeResult({
+            id: 'old',
+            sample_id: 900,
+            value: 0.012,
+            observation_datetime: '2019-04-09T00:00:00Z',
+          }),
+          makeResult({
+            id: 'new',
+            sample_id: 901,
+            value: 0.004,
+            observation_datetime: '2026-05-15T00:00:00Z',
+          }),
+        ]}
+        year={2026}
+      />
+    )
+
+    expect(text).not.toContain('above a federal health limit')
+    expect(text).toContain('below limit')
+  })
+
   it('gives the MCL and the SMCL a column each, filled only where they apply', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
