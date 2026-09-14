@@ -118,6 +118,23 @@ const sampleKeyOf = (observation: ChemistryResult): string =>
     ? `sample-${observation.sample_id}`
     : `date-${observation.observation_datetime.slice(0, 10)}`
 
+/**
+ * The parameters currently above a limit of the given kind, one row each,
+ * carrying that parameter's most recent result.
+ *
+ * Reads the newest result per parameter rather than every result, so a
+ * parameter that was above a limit at an earlier sample and is below it now is
+ * not reported as an exceedance, and one that has stayed above is reported
+ * once.
+ */
+const latestExceedances = (
+  rows: readonly ChemistryResultRow[],
+  kind: StandardKind
+): ChemistryResultRow[] =>
+  latestResultPerParameter(
+    rows.filter((row) => row.standard?.kind === kind)
+  ).rows.filter((row) => row.exceeds)
+
 export const summarizeChemistry = (
   observations: readonly ChemistryResult[]
 ): ChemistryReportSummary => {
@@ -157,12 +174,13 @@ export const summarizeChemistry = (
     comparedCount: new Set(
       rows.filter((row) => row.standard).map((row) => row.parameterName)
     ).size,
-    mclExceedances: rows.filter(
-      (row) => row.exceeds && row.standard?.kind === 'MCL'
-    ),
-    smclExceedances: rows.filter(
-      (row) => row.exceeds && row.standard?.kind === 'SMCL'
-    ),
+    // Counted per parameter at its most recent result, matching the table --
+    // never per result. A well sampled twice would otherwise report a single
+    // persistent exceedance as two, and name the parameter twice in the
+    // callout. Now that the report carries a well's whole chemistry record
+    // rather than one year of it, repeat sampling is the normal case.
+    mclExceedances: latestExceedances(rows, 'MCL'),
+    smclExceedances: latestExceedances(rows, 'SMCL'),
   }
 }
 
