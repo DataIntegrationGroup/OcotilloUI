@@ -7,6 +7,7 @@ import {
   type WaterLevelReading,
 } from '@/utils/chemistryReport'
 import {
+  CHEMISTRY_REPORT_DEFAULT_SECTIONS,
   ChemistryReportPdf,
   type ChemistryReportSections,
 } from './ChemistryReportPdf'
@@ -33,7 +34,13 @@ export const downloadChemistryReport = async ({
   year: number
   sections?: ChemistryReportSections
 }): Promise<string> => {
-  const filename = buildChemistryReportFilename(well, year)
+  // The year names the water levels, so it only belongs on the file when one
+  // of the water level sections is actually in the report.
+  const resolved = sections ?? CHEMISTRY_REPORT_DEFAULT_SECTIONS
+  const carriesYear =
+    resolved.waterLevels ||
+    (resolved.continuousMonitoring && continuous != null)
+  const filename = buildChemistryReportFilename(well, carriesYear ? year : null)
   const qrCodeDataUrl = await buildWeaverQrDataUrl(well.name)
 
   const blob = await pdf(

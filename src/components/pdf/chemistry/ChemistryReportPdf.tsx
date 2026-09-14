@@ -41,7 +41,7 @@ export type ChemistryReportSections = {
 
 export const CHEMISTRY_REPORT_DEFAULT_SECTIONS: ChemistryReportSections = {
   wellInformation: true,
-  waterLevels: true,
+  waterLevels: false,
   continuousMonitoring: false,
   fieldParameters: false,
   chemistryResults: true,
@@ -644,9 +644,12 @@ const GLOSSARY_LEFT = [
   },
 ]
 
+/** Only meaningful alongside a water level section, which is where depths are printed. */
+const DEPTH_TERM = 'Depth to water'
+
 const GLOSSARY_RIGHT = [
   {
-    term: 'Depth to water',
+    term: DEPTH_TERM,
     body: 'measured downward from the ground surface. Water elevation is the same measurement expressed as height above sea level, so a falling water table shows as a larger depth and a smaller elevation.',
   },
   {
@@ -782,6 +785,19 @@ export const ChemistryReportPdf = ({
     ] as { label: string; value: string | number | null | undefined }[]
   ).filter((fact): fact is KvEntry => fact.value != null && fact.value !== '')
 
+  // `year` scopes the water levels and nothing else, so every mention of it --
+  // the masthead, the lede, the running footer, the PDF's own title -- belongs
+  // to whichever water level section is switched on. With both off the report
+  // is the well's chemistry record, which has no reporting year to name, and
+  // printing one would invite the reader to date the results by it.
+  const showsWaterLevels =
+    sections.waterLevels ||
+    (sections.continuousMonitoring && continuous != null)
+
+  const glossaryRight = showsWaterLevels
+    ? GLOSSARY_RIGHT
+    : GLOSSARY_RIGHT.filter((entry) => entry.term !== DEPTH_TERM)
+
   const wellLabel = well?.name ?? 'Unknown well'
   const hasSamples = summary.rows.length > 0
   const ionBalance = summary.rows.filter(
@@ -790,7 +806,11 @@ export const ChemistryReportPdf = ({
 
   return (
     <OcotilloDocument
-      title={`Water Quality Report — ${wellLabel} — ${year}`}
+      title={
+        showsWaterLevels
+          ? `Water Quality Report — ${wellLabel} — ${year}`
+          : `Water Quality Report — ${wellLabel}`
+      }
       subject="Water Quality Report"
     >
       <Page size="LETTER" style={s.page}>
@@ -804,7 +824,9 @@ export const ChemistryReportPdf = ({
             </Text>
             <Text style={s.reportTitle}>Water Quality Report</Text>
             <Text style={s.reportSubtitle}>
-              {`Water levels for ${year}  ·  Well `}
+              {showsWaterLevels
+                ? `Water levels for ${year}  ·  Well `
+                : 'Well '}
               <Text style={s.reportSubtitleStrong}>{wellLabel}</Text>
               {well?.site_name ? ` — ${well.site_name}` : ''}
             </Text>
@@ -841,7 +863,16 @@ export const ChemistryReportPdf = ({
         <View style={s.mastheadRule} />
 
         <Text style={s.lede}>
-          {`This report summarizes what is on file for your well: how the well is built, what the water was tested for, and how those results compare to drinking water standards. The chemistry is every result on record, however long ago it was sampled. The water level measurements cover ${year}. It is provided as a courtesy and is not a certification that the water is safe to drink.`}
+          {[
+            'This report summarizes what is on file for your well: how the well is built, what the water was tested for, and how those results compare to drinking water standards.',
+            'The chemistry is every result on record, however long ago it was sampled.',
+            showsWaterLevels
+              ? `The water level measurements cover ${year}.`
+              : null,
+            'It is provided as a courtesy and is not a certification that the water is safe to drink.',
+          ]
+            .filter(Boolean)
+            .join(' ')}
         </Text>
 
         {/* ---- At a glance ---- */}
@@ -889,11 +920,14 @@ export const ChemistryReportPdf = ({
               {
                 // Dropped rather than shown as "Needs two readings": a well
                 // with a single reading has nothing to compare against, which
-                // is not a gap the owner can do anything about.
+                // is not a gap the owner can do anything about. Dropped
+                // outright when the water level section is off, since it is
+                // that section's headline figure.
                 label: 'Water level change',
-                value: levelChange
-                  ? formatLevelChange(levelChange.changeFt)
-                  : null,
+                value:
+                  sections.waterLevels && levelChange
+                    ? formatLevelChange(levelChange.changeFt)
+                    : null,
                 note: levelChange
                   ? `vs. ${formatReportDate(levelChange.comparedTo)}`
                   : '',
@@ -1162,7 +1196,7 @@ export const ChemistryReportPdf = ({
                     ))}
                   </View>
                   <View style={s.glossaryColumn}>
-                    {GLOSSARY_RIGHT.map((entry) => (
+                    {glossaryRight.map((entry) => (
                       <Text key={entry.term} style={s.glossaryEntry}>
                         <Text style={s.glossaryTerm}>{entry.term}</Text>
                         {` — ${entry.body}`}
@@ -1190,7 +1224,7 @@ export const ChemistryReportPdf = ({
           <Text
             style={s.footerText}
             render={({ pageNumber, totalPages }) =>
-              `${wellLabel} · Water Quality Report ${year} · Page ${pageNumber} of ${totalPages}`
+              `${wellLabel} · Water Quality Report${showsWaterLevels ? ` ${year}` : ''} · Page ${pageNumber} of ${totalPages}`
             }
           />
         </View>

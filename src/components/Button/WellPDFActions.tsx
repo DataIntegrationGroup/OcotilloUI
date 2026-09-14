@@ -174,13 +174,15 @@ export const WellPDFActionsButton = ({
 
     // Not named `observations`: the component already takes a prop by that
     // name, holding the field sheet's observations rather than chemistry.
+    // The well page generates with the report's default sections, so a
+    // section switched off there is not worth its requests. The exporter,
+    // where any of them can be switched back on, fetches its own.
     const [chemistry, waterLevels, continuous] = await Promise.all([
       // The whole chemistry record; the year scopes the water levels only.
       fetchObservations(),
-      fetchWaterLevels(year, { elevationFt }),
-      // The well page takes the report's default sections, so the logger
-      // summary is only worth its six requests when that default includes it.
-      // The exporter, where the section can be switched on, fetches its own.
+      CHEMISTRY_REPORT_DEFAULT_SECTIONS.waterLevels
+        ? fetchWaterLevels(year, { elevationFt })
+        : [],
       CHEMISTRY_REPORT_DEFAULT_SECTIONS.continuousMonitoring
         ? fetchContinuous(year)
         : null,

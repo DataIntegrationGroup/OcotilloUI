@@ -265,6 +265,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       <ChemistryReportPdf
         well={makeWell()}
         observations={[makeResult()]}
+        sections={{ ...CHEMISTRY_REPORT_DEFAULT_SECTIONS, waterLevels: true }}
         waterLevels={[
           makeReading(),
           makeReading({
@@ -290,6 +291,58 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     expect(text).not.toContain('readings in 2026,')
   })
 
+  it('names no year at all when no water level section is switched on', async () => {
+    const pages = await renderReportPages(
+      <ChemistryReportPdf
+        well={makeWell()}
+        observations={[
+          makeResult({ observation_datetime: '2019-04-09T00:00:00Z' }),
+        ]}
+        waterLevels={[makeReading()]}
+        year={2026}
+      />
+    )
+    const report = pages.join(' ')
+
+    // Both water level sections are off by default, so the reporting year has
+    // nothing left to scope and appears nowhere: not in the masthead, the
+    // lede, or the running footer.
+    expect(report).not.toContain('water levels for 2026')
+    expect(report).not.toContain('water level measurements cover')
+    expect(report).not.toContain('water quality report 2026')
+    expect(report).not.toContain('water level change')
+    expect(report).not.toContain('depth to water')
+    // The sample's own date is chemistry, and stays.
+    expect(report).toContain('apr 09, 2019')
+  })
+
+  it('names the year once a water level section is switched on', async () => {
+    const pages = await renderReportPages(
+      <ChemistryReportPdf
+        well={makeWell()}
+        observations={[makeResult()]}
+        waterLevels={[
+          makeReading(),
+          makeReading({
+            key: 'wl-0',
+            measuredOn: '2025-08-15T00:00:00Z',
+            depthToWaterFt: 207.5,
+            isPrior: true,
+          }),
+        ]}
+        sections={{ ...CHEMISTRY_REPORT_DEFAULT_SECTIONS, waterLevels: true }}
+        year={2026}
+      />
+    )
+    const report = pages.join(' ')
+
+    expect(report).toContain('water levels for 2026')
+    expect(report).toContain('water level measurements cover 2026')
+    expect(report).toContain('water quality report 2026')
+    expect(report).toContain('water level change')
+    expect(report).toContain('depth to water')
+  })
+
   it('scopes the year to the water levels, not to the chemistry', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
@@ -298,6 +351,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
         observations={[
           makeResult({ observation_datetime: '2019-04-09T00:00:00Z' }),
         ]}
+        sections={{ ...CHEMISTRY_REPORT_DEFAULT_SECTIONS, waterLevels: true }}
         waterLevels={[makeReading()]}
         year={2026}
       />
