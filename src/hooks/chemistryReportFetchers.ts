@@ -2,7 +2,6 @@ import type { DataProvider } from '@refinedev/core'
 import {
   CHEMISTRY_REPORT_PAGE_SIZE,
   type ContinuousWaterLevelSummary,
-  chemistryReportYearParams,
   inclusiveEndYearParams,
   sortChemistryResults,
   summarizeContinuousWaterLevels,
@@ -31,13 +30,20 @@ export const TRANSDUCER_RESOURCE = 'observation/transducer-groundwater-level'
 const NEWEST_FIRST = [{ field: 'observation_datetime', order: 'desc' as const }]
 const OLDEST_FIRST = [{ field: 'observation_datetime', order: 'asc' as const }]
 
-/** Every chemistry result for the year, paged until the total is reached. */
-export const fetchChemistryYear = async (
+/**
+ * Every chemistry result on file for the well, paged until the total is
+ * reached.
+ *
+ * Deliberately not windowed to the reporting year. Most wells carry a single
+ * chemistry record, often years old, so a year's window left the report's
+ * chemistry empty far more often than it scoped it usefully. The reporting
+ * year still applies to the water levels, which are measured repeatedly.
+ */
+export const fetchAllChemistry = async (
   provider: ListProvider,
-  thingId: ThingId,
-  year: number
+  thingId: ThingId
 ): Promise<ChemistryResult[]> => {
-  const params = { thing_id: thingId, ...chemistryReportYearParams(year) }
+  const params = { thing_id: thingId }
   const collected: ChemistryResult[] = []
   let currentPage = 1
 

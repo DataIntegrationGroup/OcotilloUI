@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import {
-  fetchChemistryYear,
+  fetchAllChemistry,
   fetchContinuousWaterLevels,
   fetchReportWaterLevels,
 } from './chemistryReportFetchers'
@@ -41,9 +41,10 @@ export type ChemistryResult = {
 const REPORT_STALE_TIME = 5 * 60 * 1000
 
 /**
- * Everything the chemistry report needs for one well and one reporting
- * period. The chemistry and water levels come through the same fetchers the
- * well details page uses, so a report reads the same wherever it is made.
+ * Everything the chemistry report needs for one well. The chemistry is the
+ * well's whole record; `year` scopes only the water levels and the logger
+ * summary. Both come through the same fetchers the well details page uses, so
+ * a report reads the same wherever it is made.
  */
 export const useChemistryReportData = ({
   thingId,
@@ -78,14 +79,12 @@ export const useChemistryReportData = ({
       | undefined
   )?.elevation
 
+  // Not keyed by year: the report carries the well's whole chemistry record,
+  // and only the water levels below are scoped to the reporting year.
   const observationQuery = useQuery({
-    queryKey: ['chemistry-report', 'chemistry', thingId, year],
+    queryKey: ['chemistry-report', 'chemistry', thingId],
     queryFn: () =>
-      fetchChemistryYear(
-        ocotilloDataProvider,
-        thingId as string | number,
-        year
-      ),
+      fetchAllChemistry(ocotilloDataProvider, thingId as string | number),
     enabled,
     staleTime: REPORT_STALE_TIME,
   })

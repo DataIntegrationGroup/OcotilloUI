@@ -13,7 +13,7 @@ import type { IWell } from '@/interfaces/ocotillo'
 const mockedGo = vi.fn()
 const mockedNotify = vi.fn()
 const mockedDownloadChemistryReport = vi.fn()
-const mockedFetchYearObservations = vi.fn()
+const mockedFetchObservations = vi.fn()
 const mockedFetchWaterLevels = vi.fn()
 const mockedFetchContinuous = vi.fn()
 const mockedUseAccessCapabilities = vi.fn()
@@ -143,7 +143,7 @@ describe('WellPDFActionsButton report type select', () => {
     mockedDownloadChemistryReport.mockResolvedValue(
       'chemistry-report-SA-0231-2024.pdf'
     )
-    mockedFetchYearObservations.mockResolvedValue([{ id: 'maj-1' }])
+    mockedFetchObservations.mockResolvedValue([{ id: 'maj-1' }])
     mockedFetchWaterLevels.mockResolvedValue([
       { key: '1', measuredOn: '2024-05-15T00:00:00Z', depthToWaterFt: 9.4 },
     ])
@@ -159,7 +159,7 @@ describe('WellPDFActionsButton report type select', () => {
       latestSampledYear: 2024,
       hasChemistry: true,
       isLoading: false,
-      fetchYearObservations: mockedFetchYearObservations,
+      fetchObservations: mockedFetchObservations,
       fetchWaterLevels: mockedFetchWaterLevels,
       fetchContinuous: mockedFetchContinuous,
     })
@@ -237,7 +237,9 @@ describe('WellPDFActionsButton report type select', () => {
     await waitFor(() =>
       expect(mockedDownloadChemistryReport).toHaveBeenCalledTimes(1)
     )
-    expect(mockedFetchYearObservations).toHaveBeenCalledWith(2024)
+    // The chemistry is the well's whole record, so the year is not passed to
+    // it -- only to the water level fetchers below.
+    expect(mockedFetchObservations).toHaveBeenCalledWith()
     expect(mockedDownloadChemistryReport.mock.calls[0][0]).toMatchObject({
       well,
       year: 2024,
@@ -284,11 +286,11 @@ describe('WellPDFActionsButton report type select', () => {
       latestSampledYear: null,
       hasChemistry: false,
       isLoading: false,
-      fetchYearObservations: mockedFetchYearObservations,
+      fetchObservations: mockedFetchObservations,
       fetchWaterLevels: mockedFetchWaterLevels,
       fetchContinuous: mockedFetchContinuous,
     })
-    mockedFetchYearObservations.mockResolvedValue([])
+    mockedFetchObservations.mockResolvedValue([])
 
     renderGroup()
 
@@ -320,7 +322,7 @@ describe('WellPDFActionsButton report type select', () => {
       latestSampledYear: null,
       hasChemistry: false,
       isLoading: true,
-      fetchYearObservations: mockedFetchYearObservations,
+      fetchObservations: mockedFetchObservations,
       fetchWaterLevels: mockedFetchWaterLevels,
       fetchContinuous: mockedFetchContinuous,
     })
@@ -340,7 +342,7 @@ describe('WellPDFActionsButton report type select', () => {
       latestSampledYear: null,
       hasChemistry: false,
       isLoading: true,
-      fetchYearObservations: mockedFetchYearObservations,
+      fetchObservations: mockedFetchObservations,
       fetchWaterLevels: mockedFetchWaterLevels,
       fetchContinuous: mockedFetchContinuous,
     })

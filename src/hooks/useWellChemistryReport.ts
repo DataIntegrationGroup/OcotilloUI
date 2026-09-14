@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react'
 import { chemistryReportYearOf } from '@/utils/chemistryReport'
 import {
   CHEMISTRY_RESOURCE,
-  fetchChemistryYear,
+  fetchAllChemistry,
   fetchContinuousWaterLevels,
   fetchReportWaterLevels,
 } from './chemistryReportFetchers'
@@ -16,9 +16,10 @@ import type { ChemistryResult } from './useChemistryReportData'
  * refactored `observation/water-chemistry` endpoint holds no water chemistry at
  * all, so a report built on it came back empty for every well.
  *
- * The report covers one calendar year, and the year worth reporting on is the
- * most recent one sampled: a well last sampled in 2024 would otherwise produce
- * an empty report for the current year. One row is enough to find it.
+ * The chemistry itself is the well's whole record. `reportYear` scopes only
+ * the water levels, and is the most recent year sampled: a well last sampled
+ * in 2024 gets its 2024 water levels beside its chemistry rather than a year
+ * of readings that no sample belongs to. One row is enough to find it.
  *
  * A well with nothing on file still gets a year — the current one — so callers
  * always have something to render; `hasChemistry` says whether it means
@@ -26,7 +27,7 @@ import type { ChemistryResult } from './useChemistryReportData'
  * while the standalone exporter still produces a no-results report, which is a
  * legitimate thing to hand an owner who asked for one by name.
  *
- * The year's data is left until one of the fetchers is called, since most
+ * The data itself is left until one of the fetchers is called, since most
  * visits to a well page are not after a chemistry report.
  */
 export const useWellChemistryReport = ({
@@ -59,11 +60,9 @@ export const useWellChemistryReport = ({
     result?.data?.[0]?.observation_datetime
   )
 
-  const fetchYearObservations = useCallback(
-    async (year: number) =>
-      thingId == null
-        ? []
-        : fetchChemistryYear(ocotilloDataProvider, thingId, year),
+  const fetchObservations = useCallback(
+    async () =>
+      thingId == null ? [] : fetchAllChemistry(ocotilloDataProvider, thingId),
     [ocotilloDataProvider, thingId]
   )
 
@@ -90,7 +89,7 @@ export const useWellChemistryReport = ({
     latestSampledYear,
     hasChemistry: latestSampledYear != null,
     isLoading: enabled && Boolean(thingId) ? query.isLoading : false,
-    fetchYearObservations,
+    fetchObservations,
     fetchWaterLevels,
     fetchContinuous,
   }
