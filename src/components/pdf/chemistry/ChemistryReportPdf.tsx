@@ -279,7 +279,7 @@ const BarLegend = () => (
       </View>
       <Text style={s.legendText}>
         Against the limit — the bar is your result, the notch is the limit for
-        that parameter. Nothing here compares your well with any other well.
+        that parameter.
       </Text>
     </View>
   </View>
@@ -319,7 +319,9 @@ const formatRatio = (ratio: number): string =>
  * It compares a result only with the published standard for that parameter --
  * never with other wells. Which wells count as nearby depends on depth,
  * aquifer, and proximity to surface water as much as on distance, so an
- * automatic comparison would be asserting something the report cannot support.
+ * automatic comparison would be asserting something the report cannot
+ * support. That is a constraint on what this column may ever plot, not
+ * something the report says out loud.
  */
 const StandardBar = ({
   row,
@@ -1086,16 +1088,11 @@ export const ChemistryReportPdf = ({
                 it partway down a page splits it for no reason. Kept outside
                 the section's View so that when it does span pages, the heading
                 travels with the rows rather than being left behind. */}
+            {/* No date note: the table gives every row its own sampled date,
+                so a single date over the heading only competes with them. */}
             <SectionHead
               startsPage
               title="Water chemistry &amp; drinking water standards"
-              note={
-                latest.dateRange
-                  ? latest.dateRange[0] === latest.dateRange[1]
-                    ? `Sampled ${formatReportDate(latest.dateRange[0])}`
-                    : `Most recent result per parameter · ${formatReportDate(latest.dateRange[0])} – ${formatReportDate(latest.dateRange[1])}`
-                  : undefined
-              }
             />
             <View style={s.section}>
               {reportable.rows.length ? (

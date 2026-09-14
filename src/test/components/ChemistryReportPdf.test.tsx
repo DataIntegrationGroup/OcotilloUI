@@ -469,11 +469,12 @@ describe('ChemistryReportPdf — reviewer comments', () => {
 
     expect(text).toContain('1.2x the limit')
     expect(text).toContain('0.60x the limit')
-    expect(text).toContain(
-      'nothing here compares your well with any other well'
-    )
+    expect(text).toContain('the bar is your result, the notch is the limit')
+    // Comparison with other wells is out of scope for the report, and the
+    // column plots nothing of the kind.
     expect(text).not.toContain('nearby')
     expect(text).not.toContain('percentile')
+    expect(text).not.toContain('median')
   })
 
   it('starts the chemistry table on a page of its own', async () => {
@@ -497,6 +498,37 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     expect(dense(pages[chemistryPage])).not.toContain(
       dense('water level measurements')
     )
+  })
+
+  it('puts no date over the chemistry heading', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        well={makeWell()}
+        observations={[
+          makeResult({
+            id: 'a',
+            sample_id: 900,
+            observation_datetime: '2026-02-04T00:00:00Z',
+          }),
+          makeResult({
+            id: 'b',
+            sample_id: 901,
+            parameter_name: 'Chloride',
+            value: 310,
+            observation_datetime: '2026-05-15T00:00:00Z',
+          }),
+        ]}
+        year={2026}
+      />
+    )
+
+    // Every row states its own sampled date, so a date over the heading only
+    // competes with them.
+    expect(text).not.toContain('most recent result per parameter')
+    expect(text).not.toContain('standards sampled')
+    // The column itself is untouched.
+    expect(text).toContain('feb 04, 2026')
+    expect(text).toContain('may 15, 2026')
   })
 
   it('makes no claim about the parameters the table leaves out', async () => {
