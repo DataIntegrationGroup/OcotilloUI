@@ -99,7 +99,8 @@ jobs:
           SANITIZED=$(echo "$BRANCH_NAME" \
             | sed 's/[^a-zA-Z0-9-]/-/g' \
             | tr '[:upper:]' '[:lower:]' \
-            | cut -c1-40)
+            | cut -c1-40 \
+            | sed 's/-*$//')
 
           # 0 is the "never sweep" sentinel the nightly sweep looks for.
           if [ "$TTL_HOURS" -eq 0 ]; then
