@@ -184,6 +184,14 @@ describe('buildChemistryReportFilename', () => {
       'chemistry-report-well-unknown-2026.pdf'
     )
   })
+
+  it('leaves the year off when the report carries none', () => {
+    // The year is the water levels'; with those sections off it would imply
+    // the chemistry inside belonged to it.
+    expect(
+      buildChemistryReportFilename({ id: 1187, name: 'WL-1187' }, null)
+    ).toBe('chemistry-report-WL-1187.pdf')
+  })
 })
 
 describe('chemistryReportYearOf', () => {
