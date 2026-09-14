@@ -79,7 +79,7 @@ export const WellPDFActionsButton = ({
     reportYear,
     hasChemistry,
     isLoading: isChemistryLoading,
-    fetchYearObservations,
+    fetchObservations,
     fetchWaterLevels,
     fetchContinuous,
   } = useWellChemistryReport({
@@ -169,8 +169,11 @@ export const WellPDFActionsButton = ({
         | undefined
     )?.elevation
 
-    const [yearObservations, waterLevels, continuous] = await Promise.all([
-      fetchYearObservations(year),
+    // Not named `observations`: the component already takes a prop by that
+    // name, holding the field sheet's observations rather than chemistry.
+    const [chemistry, waterLevels, continuous] = await Promise.all([
+      // The whole chemistry record; the year scopes the water levels only.
+      fetchObservations(),
       fetchWaterLevels(year, { elevationFt }),
       fetchContinuous(year),
     ])
@@ -178,7 +181,7 @@ export const WellPDFActionsButton = ({
     return downloadChemistryReport({
       well,
       contacts,
-      observations: yearObservations,
+      observations: chemistry,
       waterLevels,
       continuous,
       year,
@@ -196,7 +199,7 @@ export const WellPDFActionsButton = ({
 
       notify?.({
         message: isChemistry
-          ? `Chemistry report generated for ${reportYear}`
+          ? 'Chemistry report generated'
           : 'PDF generated successfully',
         type: 'success',
         description: filename,
@@ -217,7 +220,8 @@ export const WellPDFActionsButton = ({
   const downloadTooltip = isGenerating
     ? 'Generating…'
     : isChemistry
-      ? `Download chemistry report for ${reportYear}`
+      ? // The chemistry is the whole record; the year is the water levels'.
+        `Download chemistry report, with ${reportYear} water levels`
       : 'Download field sheet'
 
   return (
