@@ -129,10 +129,12 @@ export const chemReportStyles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   statLabel: {
-    fontSize: 6.5,
+    fontSize: 6.2,
     color: CHEM_REPORT_COLORS.muted,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    // Tight enough that "ABOVE RECOMMENDED" fits a stat's width on one line;
+    // wider spacing hyphenated it mid-word.
+    letterSpacing: 0.3,
   },
   statValue: { fontSize: 17, fontWeight: 'bold', marginTop: 5 },
   statValueDanger: { color: CHEM_REPORT_COLORS.danger },
@@ -217,6 +219,49 @@ export const chemReportStyles = StyleSheet.create({
   tdMono: { fontFamily: MONO, fontSize: 8 },
   tdStrong: { fontWeight: 'bold' },
   tdNoStandard: { color: CHEM_REPORT_COLORS.faint },
+
+  // A header that has to fit a spelled-out term -- "maximum contaminant
+  // level" -- in a narrow column, so it gives up the wide letter spacing.
+  thTextTight: { fontSize: 6, letterSpacing: 0.1 },
+
+  // ---- Result-against-limit bar -------------------------------------------
+  // One result against its own limit, the way a lab report plots a value on a
+  // reference range. The limit sits at a fixed point on the track so the
+  // notch lines up down the column and rows can be read against each other.
+  barCell: { justifyContent: 'center' },
+  barTrack: {
+    position: 'relative',
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#eef1f4',
+  },
+  barFill: { height: 4, borderRadius: 2 },
+  barFillOk: { backgroundColor: CHEM_REPORT_COLORS.ok },
+  barFillWarning: { backgroundColor: CHEM_REPORT_COLORS.warning },
+  barFillDanger: { backgroundColor: CHEM_REPORT_COLORS.danger },
+  barLimitTick: {
+    position: 'absolute',
+    top: -1.5,
+    width: 0.75,
+    height: 7,
+    backgroundColor: CHEM_REPORT_COLORS.muted,
+  },
+  barCaption: {
+    fontSize: 5.5,
+    color: CHEM_REPORT_COLORS.muted,
+    marginTop: 2.5,
+  },
+  barCaptionDanger: { color: CHEM_REPORT_COLORS.danger },
+  barCaptionWarning: { color: CHEM_REPORT_COLORS.warning },
+  barEmpty: { fontSize: 7, color: CHEM_REPORT_COLORS.faint },
+  /** A fixed-width sample of the track, for the legend beneath the table. */
+  barLegendTrack: {
+    position: 'relative',
+    width: 26,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#eef1f4',
+  },
 
   // ---- Status pills -------------------------------------------------------
   pill: {

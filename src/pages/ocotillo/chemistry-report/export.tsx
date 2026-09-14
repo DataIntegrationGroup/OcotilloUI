@@ -30,10 +30,11 @@ import { useChemistryReportData, useDebounce } from '@/hooks'
 import type { IWell } from '@/interfaces/ocotillo'
 
 /**
- * Reporting periods offered in the picker: this year and the four before it,
+ * Water level years offered in the picker: this year and the four before it,
  * plus whatever year was linked to. A well last sampled outside that window
  * still has to be selectable, or arriving from its details page would land on
- * a year the picker cannot show.
+ * a year the picker cannot show. The chemistry is not filtered by this -- the
+ * report carries the well's whole record.
  */
 const buildYearOptions = (linkedYear?: number): number[] => {
   const current = new Date().getFullYear()
@@ -132,8 +133,10 @@ export const ChemistryReportExport = () => {
       </OcotilloPageTitle>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Generate an owner-facing annual water quality report for a single well.
-        Multi-well runs, delivery, and scheduling are not implemented yet.
+        Generate an owner-facing water quality report for a single well. The
+        report carries the well's whole chemistry record; the year below scopes
+        the water level measurements. Multi-well runs, delivery, and scheduling
+        are not implemented yet.
       </Typography>
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
@@ -159,7 +162,7 @@ export const ChemistryReportExport = () => {
               select
               fullWidth
               size="small"
-              label="Reporting year"
+              label="Water level year"
               value={year}
               onChange={(event) => setYear(Number(event.target.value))}
             >
@@ -211,7 +214,7 @@ export const ChemistryReportExport = () => {
 
       {selectedWell && !isLoading && observations.length === 0 ? (
         <Alert severity="info" sx={{ mb: 2 }}>
-          {`No water chemistry is on file for ${selectedWell.name} in ${year}. The report still generates, marked as having no results.`}
+          {`No water chemistry is on file for ${selectedWell.name}. The report still generates, marked as having no results.`}
         </Alert>
       ) : null}
 
