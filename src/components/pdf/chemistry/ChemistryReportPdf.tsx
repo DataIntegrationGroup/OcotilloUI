@@ -42,7 +42,7 @@ export type ChemistryReportSections = {
 export const CHEMISTRY_REPORT_DEFAULT_SECTIONS: ChemistryReportSections = {
   wellInformation: true,
   waterLevels: true,
-  continuousMonitoring: true,
+  continuousMonitoring: false,
   fieldParameters: false,
   chemistryResults: true,
   standardsComparison: true,

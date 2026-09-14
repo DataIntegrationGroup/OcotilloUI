@@ -90,7 +90,7 @@ column all come back empty.
 | # | Decision | What was built |
 |---|---|---|
 | E1 | **Keep the QR code, pointing at Weaver.** | It already encoded a Weaver location URL; the caption now says so — "Scan for this well on Weaver" — instead of the anonymous "Scan for this well's data" that made the destination a guess. |
-| E2 | **Drop the year for chemistry; keep it for water levels.** | `fetchChemistryYear` became `fetchAllChemistry` and sends no time window, so the report carries the well's whole chemistry record however old it is. `year` still scopes the manual water levels and the logger summary. The masthead reads "Water levels for 2026", the lede says which half the year applies to, the at-a-glance stat is "Samples on record", and the exporter's picker is labelled "Water level year". `chemistryReportYearParams` is gone with its last caller. |
+| E2 | **Drop the year for chemistry; keep it for water levels.** | `fetchChemistryYear` became `fetchAllChemistry` and sends no time window, so the report carries the well's whole chemistry record however old it is. `year` still scopes the manual water levels and the logger summary. The masthead reads "Water levels for 2026", the lede says which half the year applies to, the at-a-glance stat is "Samples on record", and and the exporter no longer offers a year picker at all — it takes the well and the year from the link that reaches it. `chemistryReportYearParams` is gone with its last caller. |
 | E3 | **ST meant the project field, which does not exist.** | Nothing to do. Recorded here so the comment is not reopened: the well information grid has never carried a project. |
 
 ## Status

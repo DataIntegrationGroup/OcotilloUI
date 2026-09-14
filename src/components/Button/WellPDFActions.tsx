@@ -4,7 +4,10 @@ import { DownloadIcon, EyeIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { WellPDF } from '@/components'
-import { downloadChemistryReport } from '@/components/pdf/chemistry'
+import {
+  CHEMISTRY_REPORT_DEFAULT_SECTIONS,
+  downloadChemistryReport,
+} from '@/components/pdf/chemistry'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -175,7 +178,12 @@ export const WellPDFActionsButton = ({
       // The whole chemistry record; the year scopes the water levels only.
       fetchObservations(),
       fetchWaterLevels(year, { elevationFt }),
-      fetchContinuous(year),
+      // The well page takes the report's default sections, so the logger
+      // summary is only worth its six requests when that default includes it.
+      // The exporter, where the section can be switched on, fetches its own.
+      CHEMISTRY_REPORT_DEFAULT_SECTIONS.continuousMonitoring
+        ? fetchContinuous(year)
+        : null,
     ])
 
     return downloadChemistryReport({

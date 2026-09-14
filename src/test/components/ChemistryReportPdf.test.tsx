@@ -1,7 +1,10 @@
 import { pdf } from '@react-pdf/renderer'
 import { describe, expect, it } from 'vitest'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
-import { ChemistryReportPdf } from '@/components/pdf/chemistry/ChemistryReportPdf'
+import {
+  CHEMISTRY_REPORT_DEFAULT_SECTIONS,
+  ChemistryReportPdf,
+} from '@/components/pdf/chemistry/ChemistryReportPdf'
 import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IWell } from '@/interfaces/ocotillo'
 import type { WaterLevelReading } from '@/utils/chemistryReport'
@@ -416,6 +419,11 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       <ChemistryReportPdf
         well={makeWell()}
         observations={[makeResult()]}
+        // Off by default, so the section it lives in has to be asked for.
+        sections={{
+          ...CHEMISTRY_REPORT_DEFAULT_SECTIONS,
+          continuousMonitoring: true,
+        }}
         continuous={{
           recordsInYear: 1107,
           recordsOnFile: 48211,
