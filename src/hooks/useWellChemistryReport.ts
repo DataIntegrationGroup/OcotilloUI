@@ -1,17 +1,13 @@
 import { useDataProvider, useList } from '@refinedev/core'
 import { useCallback, useMemo } from 'react'
+import { chemistryReportYearOf } from '@/utils/chemistryReport'
 import {
-  CHEMISTRY_REPORT_PAGE_SIZE,
-  chemistryReportYearOf,
-  chemistryReportYearParams,
-  sortChemistryResults,
-  toWaterLevelReadings,
-  type WaterLevelObservation,
-} from '@/utils/chemistryReport'
+  CHEMISTRY_RESOURCE,
+  fetchChemistryYear,
+  fetchContinuousWaterLevels,
+  fetchReportWaterLevels,
+} from './chemistryReportFetchers'
 import type { ChemistryResult } from './useChemistryReportData'
-
-const CHEMISTRY_RESOURCE = 'chemistry/results'
-const WATER_LEVEL_RESOURCE = 'observation/groundwater-level'
 
 /**
  * Which year of chemistry a well's report should cover, and a way to pull it.
@@ -30,8 +26,8 @@ const WATER_LEVEL_RESOURCE = 'observation/groundwater-level'
  * while the standalone exporter still produces a no-results report, which is a
  * legitimate thing to hand an owner who asked for one by name.
  *
- * The year's results are left until `fetchYearObservations` is called, since
- * most visits to a well page are not after a chemistry report.
+ * The year's data is left until one of the fetchers is called, since most
+ * visits to a well page are not after a chemistry report.
  */
 export const useWellChemistryReport = ({
   thingId,
@@ -64,69 +60,28 @@ export const useWellChemistryReport = ({
   )
 
   const fetchYearObservations = useCallback(
-    async (year: number) => {
-      if (thingId == null) return []
-
-      const params = { thing_id: thingId, ...chemistryReportYearParams(year) }
-      const collected: ChemistryResult[] = []
-      let currentPage = 1
-
-      while (true) {
-        const page = await ocotilloDataProvider.getList({
-          resource: CHEMISTRY_RESOURCE,
-          pagination: { currentPage, pageSize: CHEMISTRY_REPORT_PAGE_SIZE },
-          meta: { params },
-        })
-
-        collected.push(...(page.data as ChemistryResult[]))
-
-        if (page.data.length === 0 || collected.length >= page.total) break
-        currentPage += 1
-      }
-
-      return sortChemistryResults(collected)
-    },
+    async (year: number) =>
+      thingId == null
+        ? []
+        : fetchChemistryYear(ocotilloDataProvider, thingId, year),
     [ocotilloDataProvider, thingId]
   )
 
-  /**
-   * The year's water level readings, plus the newest reading from before the
-   * year so the report can say which direction the water table moved. A single
-   * year in isolation has nothing to compare against.
-   */
   const fetchWaterLevels = useCallback(
-    async (year: number, { elevationFt }: { elevationFt?: number | null }) => {
-      if (thingId == null) return []
+    async (year: number, { elevationFt }: { elevationFt?: number | null }) =>
+      thingId == null
+        ? []
+        : fetchReportWaterLevels(ocotilloDataProvider, thingId, year, {
+            elevationFt,
+          }),
+    [ocotilloDataProvider, thingId]
+  )
 
-      const window = chemistryReportYearParams(year)
-
-      const [inYear, prior] = await Promise.all([
-        ocotilloDataProvider.getList({
-          resource: WATER_LEVEL_RESOURCE,
-          pagination: { currentPage: 1, pageSize: CHEMISTRY_REPORT_PAGE_SIZE },
-          meta: { params: { thing_id: thingId, ...window } },
-        }),
-        ocotilloDataProvider.getList({
-          resource: WATER_LEVEL_RESOURCE,
-          pagination: { currentPage: 1, pageSize: 1 },
-          sorters: [{ field: 'observation_datetime', order: 'desc' }],
-          meta: {
-            params: { thing_id: thingId, end_time: window.start_time },
-          },
-        }),
-      ])
-
-      const readings = toWaterLevelReadings(
-        inYear.data as WaterLevelObservation[],
-        { elevationFt }
-      )
-      const priorReadings = toWaterLevelReadings(
-        prior.data as WaterLevelObservation[],
-        { elevationFt }
-      ).map((reading) => ({ ...reading, isPrior: true }))
-
-      return [...readings, ...priorReadings]
-    },
+  const fetchContinuous = useCallback(
+    async (year: number) =>
+      thingId == null
+        ? null
+        : fetchContinuousWaterLevels(ocotilloDataProvider, thingId, year),
     [ocotilloDataProvider, thingId]
   )
 
@@ -137,5 +92,6 @@ export const useWellChemistryReport = ({
     isLoading: enabled && Boolean(thingId) ? query.isLoading : false,
     fetchYearObservations,
     fetchWaterLevels,
+    fetchContinuous,
   }
 }

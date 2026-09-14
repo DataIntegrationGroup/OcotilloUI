@@ -5,12 +5,15 @@ import {
   buildChemistryReportFilename,
   chemistryReportYearOf,
   chemistryReportYearParams,
+  formatLevelChange,
   formatResultValue,
+  inclusiveEndYearParams,
   latestResultPerParameter,
   pivotFieldParameters,
   resultStatus,
   sortChemistryResults,
   summarizeChemistry,
+  summarizeContinuousWaterLevels,
   toWaterLevelReadings,
   waterLevelChangeFt,
 } from '@/utils/chemistryReport'
@@ -104,8 +107,55 @@ describe('summarizeChemistry', () => {
     expect(summary.comparedCount).toBe(2)
   })
 
+  it('counts samples by sample, not by the dates their results carry', () => {
+    // AR-0102, 2019: one sample collected Apr 09, whose results the old view
+    // dated by analysis -- eight different days between Apr 09 and May 24.
+    const analysed = [
+      '2019-04-09',
+      '2019-04-12',
+      '2019-04-16',
+      '2019-04-18',
+      '2019-04-22',
+      '2019-04-23',
+      '2019-05-22',
+      '2019-05-24',
+    ]
+    const ar0102 = summarizeChemistry(
+      analysed.map((day, index) =>
+        observation({
+          id: `maj-${index}`,
+          parameterName: `Analyte ${index}`,
+          sample_id: 4321,
+          observation_datetime: `${day}T00:00:00Z`,
+        })
+      )
+    )
+
+    expect(ar0102.sampleCount).toBe(1)
+  })
+
+  it('counts two samples collected on the same day as two', () => {
+    const sameDay = summarizeChemistry([
+      observation({ id: 'maj-1', parameterName: 'Arsenic', sample_id: 1 }),
+      observation({ id: 'maj-2', parameterName: 'Arsenic', sample_id: 2 }),
+    ])
+
+    expect(sameDay.sampleCount).toBe(2)
+    expect(sameDay.sampleDates).toHaveLength(1)
+  })
+
+  it('falls back to the collection date for a result with no sample id', () => {
+    const unkeyed = summarizeChemistry([
+      observation({ id: 'maj-1', parameterName: 'Arsenic', sample_id: null }),
+      observation({ id: 'maj-2', parameterName: 'Iron', sample_id: null }),
+    ])
+
+    expect(unkeyed.sampleCount).toBe(1)
+  })
+
   it('handles a well with no chemistry on file', () => {
     expect(summarizeChemistry([])).toMatchObject({
+      sampleCount: 0,
       sampleDates: [],
       parameterCount: 0,
       mclExceedances: [],
@@ -212,6 +262,7 @@ describe('resultStatus', () => {
     value: 0.005,
     unit: 'mg/L',
     sampledOn: '2026-05-15T00:00:00Z',
+    sampleKey: 'sample-1',
     exceeds: false,
     ...overrides,
   })
@@ -266,6 +317,7 @@ describe('pivotFieldParameters', () => {
         value: 7.61,
         unit: 'S.U.',
         sampledOn: '2026-02-04T00:00:00Z',
+        sampleKey: 'sample-1',
         exceeds: false,
       },
       {
@@ -275,6 +327,7 @@ describe('pivotFieldParameters', () => {
         value: 7.55,
         unit: 'S.U.',
         sampledOn: '2026-05-15T00:00:00Z',
+        sampleKey: 'sample-2',
         exceeds: false,
       },
     ])
@@ -380,6 +433,32 @@ describe('toWaterLevelReadings', () => {
     expect(readings[0].waterElevationFt).toBeNull()
     expect(readings[0].depthToWaterFt).toBe(9.35)
   })
+
+  it('works no elevation out from a depth below the measuring point', () => {
+    // Without the measuring point height, all there is is the depth below
+    // the casing top; subtracting it from the land surface would put the
+    // water table too low by the stickup.
+    const [reading] = toWaterLevelReadings(
+      [
+        {
+          id: 3,
+          observation_datetime: '2019-04-09T20:02:00Z',
+          value: 10.27,
+          depth_to_water_bgs: null,
+        },
+      ],
+      { elevationFt: 5856.8 }
+    )
+
+    expect(reading.depthToWaterFt).toBe(10.27)
+    expect(reading.depthReference).toBe('measuring point')
+    expect(reading.waterElevationFt).toBeNull()
+  })
+
+  it('marks a depth below ground as such', () => {
+    const readings = toWaterLevelReadings(observations)
+    expect(readings[0].depthReference).toBe('ground surface')
+  })
 })
 
 describe('waterLevelChangeFt', () => {
@@ -413,5 +492,131 @@ describe('waterLevelChangeFt', () => {
       },
     ])
     expect(waterLevelChangeFt(readings)).toBeNull()
+  })
+
+  it('only compares depths measured from the same reference', () => {
+    // The 2018 reading is below the measuring point; comparing it with a
+    // depth below ground would report the casing stickup as a change.
+    const readings = toWaterLevelReadings([
+      {
+        id: 1,
+        observation_datetime: '2019-04-09T00:00:00Z',
+        depth_to_water_bgs: 9.3,
+      },
+      { id: 2, observation_datetime: '2018-10-04T00:00:00Z', value: 11.4 },
+      {
+        id: 3,
+        observation_datetime: '2018-03-29T00:00:00Z',
+        depth_to_water_bgs: 8.9,
+      },
+    ])
+
+    expect(waterLevelChangeFt(readings)).toEqual({
+      changeFt: -0.4,
+      comparedTo: '2018-03-29T00:00:00Z',
+    })
+  })
+})
+
+describe('inclusiveEndYearParams', () => {
+  it('ends the year on its last instant, for endpoints whose end is inclusive', () => {
+    // An hourly logger always has a midnight reading on Jan 1; ending the
+    // window on Jan 1 would pull it into the year before.
+    expect(inclusiveEndYearParams(2019)).toEqual({
+      start_time: '2019-01-01T00:00:00',
+      end_time: '2019-12-31T23:59:59.999',
+    })
+  })
+})
+
+describe('formatLevelChange', () => {
+  it('signs a rise and leaves a fall to its minus', () => {
+    expect(formatLevelChange(0.44)).toBe('+0.4 ft')
+    expect(formatLevelChange(-1.25)).toBe('-1.3 ft')
+    expect(formatLevelChange(0)).toBe('0.0 ft')
+  })
+})
+
+describe('summarizeContinuousWaterLevels', () => {
+  const reading = (
+    observation_datetime: string,
+    value: number,
+    review_status = 'approved'
+  ) => ({
+    observation: { observation_datetime, value },
+    block: { review_status },
+  })
+
+  // AR-0102, 2019: hourly logger, Jan 01 - Apr 03, record back to 2016.
+  const summary = summarizeContinuousWaterLevels({
+    recordsInYear: 1107,
+    recordsOnFile: 15901,
+    firstEver: reading('2016-03-09T18:00:00Z', 9.8),
+    lastEver: reading('2019-04-03T05:00:00Z', 9.51),
+    firstInYear: reading('2019-01-01T01:00:00Z', 10.21),
+    lastInYear: reading('2019-04-03T05:00:00Z', 9.51),
+    shallowestInYear: reading('2019-03-30T14:00:00Z', 9.41),
+    deepestInYear: reading('2019-01-12T03:00:00Z', 10.86),
+  })
+
+  it('carries the counts and the spans', () => {
+    expect(summary.recordsInYear).toBe(1107)
+    expect(summary.recordsOnFile).toBe(15901)
+    expect(summary.periodOfRecord).toEqual([
+      '2016-03-09T18:00:00Z',
+      '2019-04-03T05:00:00Z',
+    ])
+    expect(summary.firstInYear?.measuredOn).toBe('2019-01-01T01:00:00Z')
+    expect(summary.lastInYear?.measuredOn).toBe('2019-04-03T05:00:00Z')
+  })
+
+  it('reads a shallower last reading as a rise over the year', () => {
+    // 10.21 ft down on Jan 01, 9.51 ft down on Apr 03: the water came up.
+    expect(summary.changeInYearFt).toBe(0.7)
+  })
+
+  it('keeps the shallowest and deepest readings with their dates', () => {
+    expect(summary.shallowestInYear).toEqual({
+      measuredOn: '2019-03-30T14:00:00Z',
+      depthToWaterFt: 9.41,
+    })
+    expect(summary.deepestInYear?.depthToWaterFt).toBe(10.86)
+  })
+
+  it('flags the year as provisional when its latest reading is unreviewed', () => {
+    expect(summary.provisional).toBe(false)
+    expect(
+      summarizeContinuousWaterLevels({
+        recordsInYear: 2,
+        recordsOnFile: 2,
+        firstInYear: reading('2026-01-01T00:00:00Z', 5),
+        lastInYear: reading('2026-02-01T00:00:00Z', 6, 'not reviewed'),
+      }).provisional
+    ).toBe(true)
+  })
+
+  it('reports no change for a year with a single reading', () => {
+    const single = reading('2019-01-01T00:00:00Z', 10)
+    expect(
+      summarizeContinuousWaterLevels({
+        recordsInYear: 1,
+        recordsOnFile: 1,
+        firstInYear: single,
+        lastInYear: single,
+      }).changeInYearFt
+    ).toBeNull()
+  })
+
+  it('copes with a record that has nothing in the reporting year', () => {
+    const empty = summarizeContinuousWaterLevels({
+      recordsInYear: 0,
+      recordsOnFile: 15901,
+      firstEver: reading('2016-03-09T18:00:00Z', 9.8),
+      lastEver: reading('2019-04-03T05:00:00Z', 9.51),
+    })
+
+    expect(empty.firstInYear).toBeNull()
+    expect(empty.changeInYearFt).toBeNull()
+    expect(empty.periodOfRecord).not.toBeNull()
   })
 })
