@@ -394,6 +394,26 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     expect(text).not.toContain('percentile')
   })
 
+  it('makes no claim about the parameters the table leaves out', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        well={makeWell()}
+        observations={[
+          makeResult({ id: 'a', parameter_name: 'Arsenic', value: 0.012 }),
+          // No standard, so the table omits it.
+          makeResult({ id: 'b', parameter_name: 'Strontium', value: 0.9 }),
+          makeResult({ id: 'c', parameter_name: 'Boron', value: 0.3 }),
+        ]}
+        year={2026}
+      />
+    )
+
+    expect(text).toContain('arsenic')
+    expect(text).not.toContain('further parameter')
+    expect(text).not.toContain('the full list is on file')
+    expect(text).not.toContain('sampling visits')
+  })
+
   it('leaves the comparison blank for a parameter with no standard', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf

@@ -1065,18 +1065,6 @@ export const ChemistryReportPdf = ({
                   />
                   <Legend />
                   {sections.standardsComparison ? <BarLegend /> : null}
-                  <Text style={s.footnote}>
-                    {[
-                      reportable.omittedCount > 0
-                        ? `${reportable.omittedCount} further parameter${reportable.omittedCount === 1 ? ' has' : 's have'} no drinking water standard to compare against; the full list is on file.`
-                        : null,
-                      summary.sampleDates.length > 1
-                        ? `Each parameter is shown at its most recent value, across ${summary.sampleDates.length} sampling visits.`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                  </Text>
                 </>
               ) : (
                 <Text style={s.emptyNote}>
