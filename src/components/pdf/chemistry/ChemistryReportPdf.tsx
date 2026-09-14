@@ -84,15 +84,18 @@ type ChemistryReportPdfProps = {
 const SectionHead = ({
   title,
   note,
+  startsPage = false,
 }: {
   title: string
   note?: string | null
+  /** Forces the section onto a page of its own. */
+  startsPage?: boolean
 }) => (
   // Keeps a heading from being stranded at the foot of a page with its
   // section starting on the next. react-pdf only acts on this when the heading
   // has earlier siblings to stay behind, so a section that can span pages
   // renders its heading outside its own View.
-  <View style={s.sectionHeadRow} minPresenceAhead={60}>
+  <View style={s.sectionHeadRow} minPresenceAhead={60} break={startsPage}>
     <Text style={s.sectionHeading}>{title}</Text>
     {note ? <Text style={s.sectionNote}>{note}</Text> : null}
   </View>
@@ -1044,9 +1047,13 @@ export const ChemistryReportPdf = ({
         {/* ---- Chemistry results ---- */}
         {sections.chemistryResults ? (
           <>
-            {/* Outside the section's View so it can move to the next page
-                with the table rather than be left behind. */}
+            {/* Starts a page of its own: the table is the part of the report
+                a reader comes back to, and it runs long enough that beginning
+                it partway down a page splits it for no reason. Kept outside
+                the section's View so that when it does span pages, the heading
+                travels with the rows rather than being left behind. */}
             <SectionHead
+              startsPage
               title="Water chemistry &amp; drinking water standards"
               note={
                 latest.dateRange

@@ -39,6 +39,34 @@ const renderReportText = async (
 }
 
 /**
+ * The same text, one entry per page, for assertions about where things land.
+ * Built separately from `renderReportText`, whose whitespace collapsing turns
+ * the page breaks into ordinary spaces.
+ */
+const renderReportPages = async (
+  element: React.ReactElement
+): Promise<string[]> => {
+  const blob = await pdf(element).toBlob()
+  const data = new Uint8Array(await blob.arrayBuffer())
+  const document = await pdfjsLib.getDocument({ data }).promise
+
+  const pages: string[] = []
+  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber++) {
+    const page = await document.getPage(pageNumber)
+    const textContent = await page.getTextContent()
+    pages.push(
+      textContent.items
+        .map((item) => ('str' in item ? item.str : ''))
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .toLowerCase()
+    )
+  }
+
+  return pages
+}
+
+/**
  * Every text run on the page, as pdf.js hands them back.
  *
  * Needed where the question is about layout rather than wording: a value that
@@ -392,6 +420,29 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     )
     expect(text).not.toContain('nearby')
     expect(text).not.toContain('percentile')
+  })
+
+  it('starts the chemistry table on a page of its own', async () => {
+    const pages = await renderReportPages(
+      <ChemistryReportPdf
+        well={makeWell()}
+        observations={[makeResult()]}
+        waterLevels={[makeReading()]}
+        year={2026}
+      />
+    )
+
+    // Section headings are letter-spaced, so they only match with the spacing
+    // taken out of both sides.
+    const chemistryPage = pages.findIndex((page) =>
+      dense(page).includes(dense('water chemistry & drinking water standards'))
+    )
+    expect(chemistryPage).toBeGreaterThan(0)
+    // Nothing from the sections above it shares the page.
+    expect(dense(pages[chemistryPage])).not.toContain(dense('at a glance'))
+    expect(dense(pages[chemistryPage])).not.toContain(
+      dense('water level measurements')
+    )
   })
 
   it('makes no claim about the parameters the table leaves out', async () => {
