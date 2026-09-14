@@ -136,6 +136,8 @@ export const chemReportStyles = StyleSheet.create({
     // wider spacing hyphenated it mid-word.
     letterSpacing: 0.3,
   },
+  // fontSize is the display size for a short value; statValueFontSize steps it
+  // down for longer ones so a stat never wraps.
   statValue: { fontSize: 17, fontWeight: 'bold', marginTop: 5 },
   statValueDanger: { color: CHEM_REPORT_COLORS.danger },
   statValueWarning: { color: CHEM_REPORT_COLORS.warning },
