@@ -531,6 +531,26 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     expect(text).toContain('may 15, 2026')
   })
 
+  it('leaves a clean exceedance count to speak for itself', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        well={makeWell()}
+        observations={[
+          // Both well under their limits.
+          makeResult({ id: 'a', parameter_name: 'Fluoride', value: 1.1 }),
+          makeResult({ id: 'b', parameter_name: 'Chloride', value: 40 }),
+        ]}
+        year={2026}
+      />
+    )
+
+    expect(text).toContain('above health limit')
+    expect(text).toContain('above recommended range')
+    // The note names which parameters are over; with none over there is
+    // nothing to name, and "None" under a nought says it twice.
+    expect(text).not.toContain('none')
+  })
+
   it('makes no claim about the parameters the table leaves out', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
