@@ -900,23 +900,22 @@ export const ChemistryReportPdf = ({
                 note: `${summary.comparedCount} with a standard`,
               },
               {
+                // The note names which parameters are over; a count of zero
+                // has none to name, and "None" underneath a nought only says
+                // the same thing twice.
                 label: 'Above health limit',
                 value: summary.mclExceedances.length,
-                note: summary.mclExceedances.length
-                  ? summary.mclExceedances
-                      .map((row) => displayParameterName(row.parameterName))
-                      .join(', ')
-                  : 'None',
+                note: summary.mclExceedances
+                  .map((row) => displayParameterName(row.parameterName))
+                  .join(', '),
                 tone: summary.mclExceedances.length ? 'danger' : undefined,
               },
               {
                 label: 'Above recommended range',
                 value: summary.smclExceedances.length,
-                note: summary.smclExceedances.length
-                  ? summary.smclExceedances
-                      .map((row) => displayParameterName(row.parameterName))
-                      .join(', ')
-                  : 'None',
+                note: summary.smclExceedances
+                  .map((row) => displayParameterName(row.parameterName))
+                  .join(', '),
                 tone: summary.smclExceedances.length ? 'warning' : undefined,
               },
               {
