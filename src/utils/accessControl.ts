@@ -113,10 +113,12 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
   // Editors may change description and release status; renaming is admin-only
-  // and is enforced per-field in the project edit panel.
+  // and is enforced per-field in the project edit panel. Creating a project
+  // sets its name, so it follows the rename rule.
   'ocotillo.projects': {
     list: viewerRoles,
     show: viewerRoles,
+    create: adminRoles,
     edit: editorRoles,
     manage: adminRoles,
   },

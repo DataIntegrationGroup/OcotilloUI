@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ProjectsTableProps } from '@/components/ProjectsTable/ProjectsTable'
@@ -8,6 +8,7 @@ import type { IGroup } from '@/interfaces/ocotillo/IGroup'
 
 const captureEventMock = vi.fn()
 let canEditAmp = true
+let canManageAmp = true
 
 const PROJECT: IGroup = {
   id: 7,
@@ -42,7 +43,7 @@ vi.mock('@/components/OcotilloPageHeader', () => ({
 }))
 
 vi.mock('@/hooks', () => ({
-  useAccessCapabilities: () => ({ canEditAmp }),
+  useAccessCapabilities: () => ({ canEditAmp, canManageAmp }),
 }))
 
 // Captures what the page hands the table so the wiring can be driven directly.
@@ -84,6 +85,11 @@ vi.mock('@/components/ProjectsTable/ProjectBoundaryDialog', () => ({
     project ? <div data-testid="boundary-dialog">{project.name}</div> : null,
 }))
 
+vi.mock('@/components/ProjectEdit/CreateProjectDialog', () => ({
+  CreateProjectDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="create-dialog" /> : null,
+}))
+
 import { ProjectList } from '@/pages/ocotillo/projects'
 
 describe('ProjectList edit wiring', () => {
@@ -91,6 +97,7 @@ describe('ProjectList edit wiring', () => {
     tableProps = null
     captureEventMock.mockClear()
     canEditAmp = true
+    canManageAmp = true
   })
 
   it('tells the table whether the user can edit', () => {
@@ -166,5 +173,22 @@ describe('ProjectList edit wiring', () => {
 
     expect(screen.queryByTestId('panel-open')).toBeNull()
     expect(tableProps?.selectedProjectId).toBe(PROJECT.id)
+  })
+
+  it('opens the create dialog from the New project button', () => {
+    render(<ProjectList />)
+    expect(screen.queryByTestId('create-dialog')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /new project/i }))
+
+    expect(screen.getByTestId('create-dialog')).toBeInTheDocument()
+    expect(captureEventMock).toHaveBeenCalledWith('projects_create_opened')
+  })
+
+  it('hides the New project button from non-admins', () => {
+    canManageAmp = false
+    render(<ProjectList />)
+
+    expect(screen.queryByRole('button', { name: /new project/i })).toBeNull()
   })
 })

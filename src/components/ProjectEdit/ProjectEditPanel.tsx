@@ -1,7 +1,6 @@
 import { useNotification, useOne, useUpdate } from '@refinedev/core'
-import { Loader2, MapIcon, UploadIcon } from 'lucide-react'
+import { Loader2, UploadIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link as RouterLink } from 'react-router'
 import { captureEvent } from '@/analytics/posthog'
 import {
   EditPanel,
@@ -401,13 +400,6 @@ export function ProjectEditPanel({
                 >
                   <UploadIcon className="size-3.5" aria-hidden />
                   Upload GeoJSON
-                </Button>
-
-                <Button variant="outline" size="sm" asChild>
-                  <RouterLink to={`/ocotillo/projects/show/${projectId}`}>
-                    <MapIcon className="size-3.5" aria-hidden />
-                    Edit on map
-                  </RouterLink>
                 </Button>
 
                 {draft.project_area ? (
