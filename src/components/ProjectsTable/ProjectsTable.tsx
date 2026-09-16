@@ -433,6 +433,19 @@ export function ProjectsTable({
                       {formatAppDateTime(project.created_at)}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
+                      {canEdit ? (
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={`Edit ${project.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onEdit?.(project, 'edit_action')
+                          }}
+                        >
+                          <PencilIcon aria-hidden />
+                        </Button>
+                      ) : null}
                       {/* Only offered where there is geometry to look at. */}
                       {project.project_area ? (
                         <Button
@@ -445,19 +458,6 @@ export function ProjectsTable({
                           }}
                         >
                           <MapIcon aria-hidden />
-                        </Button>
-                      ) : null}
-                      {canEdit ? (
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          aria-label={`Edit ${project.name}`}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            onEdit?.(project, 'edit_action')
-                          }}
-                        >
-                          <PencilIcon aria-hidden />
                         </Button>
                       ) : null}
                     </TableCell>
