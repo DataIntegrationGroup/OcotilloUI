@@ -7,14 +7,17 @@
 
 import { Typography } from '@mui/material'
 import { CanAccess, useList } from '@refinedev/core'
+import { PlusIcon } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { captureEvent } from '@/analytics/posthog'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import { EditPanelLayout } from '@/components/editing'
 import { ocotilloPageTitleTypographySx } from '@/components/OcotilloPageHeader'
+import { CreateProjectDialog } from '@/components/ProjectEdit/CreateProjectDialog'
 import { ProjectEditPanel } from '@/components/ProjectEdit/ProjectEditPanel'
 import { ProjectBoundaryDialog } from '@/components/ProjectsTable/ProjectBoundaryDialog'
 import { ProjectsTable } from '@/components/ProjectsTable/ProjectsTable'
+import { Button } from '@/components/ui/button'
 import { useAccessCapabilities } from '@/hooks'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
 
@@ -24,10 +27,11 @@ const ALL_PROJECTS_PAGE_SIZE = 500
 const projectHref = (project: IGroup) => `/ocotillo/projects/show/${project.id}`
 
 export const ProjectList: React.FC = () => {
-  const { canEditAmp } = useAccessCapabilities()
+  const { canEditAmp, canManageAmp } = useAccessCapabilities()
   const [selectedProject, setSelectedProject] = useState<IGroup | null>(null)
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [boundaryProject, setBoundaryProject] = useState<IGroup | null>(null)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   useEffect(() => {
     captureEvent('feature_used', { feature: 'projects_list' })
@@ -76,6 +80,15 @@ export const ProjectList: React.FC = () => {
     })
   }, [])
 
+  const handleOpenCreate = useCallback(() => {
+    setIsCreateOpen(true)
+    captureEvent('projects_create_opened')
+  }, [])
+
+  const handleCreated = useCallback((project: IGroup) => {
+    setSelectedProject(project)
+  }, [])
+
   return (
     <CanAccess resource="ocotillo.projects" action="list">
       <EditPanelLayout
@@ -94,13 +107,21 @@ export const ProjectList: React.FC = () => {
         {/* pt-3 aligns the title with the MUI List header other Ocotillo list pages use. */}
         <div className="flex flex-col gap-4 px-4 pb-4 pt-3 sm:px-6">
           <AppBreadcrumb />
-          <Typography
-            variant="h3"
-            fontWeight={700}
-            sx={ocotilloPageTitleTypographySx}
-          >
-            Projects
-          </Typography>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Typography
+              variant="h3"
+              fontWeight={700}
+              sx={ocotilloPageTitleTypographySx}
+            >
+              Projects
+            </Typography>
+            {canManageAmp ? (
+              <Button size="sm" onClick={handleOpenCreate}>
+                <PlusIcon className="size-4" aria-hidden />
+                New project
+              </Button>
+            ) : null}
+          </div>
 
           <ProjectsTable
             projects={projects}
@@ -119,6 +140,14 @@ export const ProjectList: React.FC = () => {
         project={boundaryProject}
         onClose={() => setBoundaryProject(null)}
       />
+
+      {canManageAmp ? (
+        <CreateProjectDialog
+          open={isCreateOpen}
+          onOpenChange={setIsCreateOpen}
+          onCreated={handleCreated}
+        />
+      ) : null}
     </CanAccess>
   )
 }
