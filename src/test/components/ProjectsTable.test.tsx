@@ -270,6 +270,20 @@ describe('ProjectsTable row actions', () => {
     )
   })
 
+  it('puts the edit action before the boundary action', () => {
+    renderTable({ canEdit: true })
+
+    const row = screen.getByRole('row', { name: /Espanola Basin/ })
+    const actions = within(row)
+      .getAllByRole('button')
+      .map((button) => button.getAttribute('aria-label'))
+
+    expect(actions).toEqual([
+      'Edit Espanola Basin',
+      'View boundary for Espanola Basin',
+    ])
+  })
+
   it('does not select the row when the boundary action is used', async () => {
     const user = userEvent.setup()
     const onSelect = vi.fn()
