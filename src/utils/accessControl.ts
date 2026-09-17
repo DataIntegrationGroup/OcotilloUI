@@ -112,7 +112,16 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
   },
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
   'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
-  'ocotillo.thing-well-projects': { list: viewerRoles, show: viewerRoles },
+  // Editors may change description and release status; renaming is admin-only
+  // and is enforced per-field in the project edit panel. Creating a project
+  // sets its name, so it follows the rename rule.
+  'ocotillo.projects': {
+    list: viewerRoles,
+    show: viewerRoles,
+    create: adminRoles,
+    edit: editorRoles,
+    manage: adminRoles,
+  },
   'ocotillo.asset-unassociated': {
     list: editorRoles,
     show: editorRoles,
@@ -298,7 +307,7 @@ export const canAccessResource = ({
     return matchesPolicy(policy[action], capabilities.roles)
   }
 
-  if (resource === 'ocotillo.thing-well-projects') {
+  if (resource === 'ocotillo.projects') {
     const policy = resourcePolicies[resource]
     return matchesPolicy(policy[action], capabilities.roles)
   }

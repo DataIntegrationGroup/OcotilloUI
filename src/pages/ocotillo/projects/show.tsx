@@ -1,25 +1,22 @@
-import { useEffect, useMemo } from 'react'
-import { useList, useOne } from '@refinedev/core'
-import { Show } from '@refinedev/mui'
 import { Alert, Chip, Stack } from '@mui/material'
 import Grid from '@mui/material/Grid2'
+import { useList, useOne } from '@refinedev/core'
+import { Show } from '@refinedev/mui'
+import { useEffect, useMemo } from 'react'
 import { useParams } from 'react-router'
 import { captureEvent } from '@/analytics/posthog'
 import { InteractiveSatelliteMapCard } from '@/components'
 import {
-  ProjectDetailsCard,
-  ProjectWellsCard,
-} from '@/components/ProjectShow'
-import {
-  ocotilloCardHeaderProps,
   OcotilloPageTitle,
+  ocotilloCardHeaderProps,
 } from '@/components/OcotilloPageHeader'
+import { ProjectDetailsCard, ProjectWellsCard } from '@/components/ProjectShow'
 import type { IWell } from '@/interfaces/ocotillo'
 import type { IGroup } from '@/interfaces/ocotillo/IGroup'
 
 const MAP_WELL_PAGE_SIZE = 500
 
-export const WellProjectShow = () => {
+export const ProjectShow = () => {
   const { id } = useParams<{ id: string }>()
 
   const { query: projectQuery, result: project } = useOne<IGroup>({
