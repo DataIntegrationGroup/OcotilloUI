@@ -33,6 +33,16 @@ vi.mock('@mui/x-data-grid', () => ({
       <div data-testid="column-headers">
         {columns.map((column) => column.headerName).join(',')}
       </div>
+      <div data-testid="column-capabilities">
+        {columns
+          .map(
+            (column) =>
+              `${column.field}:${column.sortable !== false}:${
+                column.filterable !== false
+              }`
+          )
+          .join(',')}
+      </div>
       <div data-testid="row-count">{rows.length}</div>
       <div data-testid="row-ids">{rows.map((row) => row.id).join(',')}</div>
       <div data-testid="rendered-cells">
@@ -137,6 +147,9 @@ describe('WaterChemistryCard', () => {
         new RegExp(`sample_label.*parameter_${tabKey}_result_parameter`)
       )
     ).toBeInTheDocument()
+    expect(screen.getByTestId('column-capabilities')).toHaveTextContent(
+      `sample_label:true:true,collection_date:true:true,parameter_${tabKey}_result_parameter:false:false,sample_notes:false:false`
+    )
   })
 
   it('shows every well sample in the field parameters crosstab', async () => {

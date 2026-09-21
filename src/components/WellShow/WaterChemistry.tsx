@@ -520,6 +520,7 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
   );
 
   const crosstabColumns = useMemo<GridColDef<CrosstabGridRow>[]>(() => {
+    const restrictAnalysisColumns = activeTab !== "field_parameters";
     const parameterColumns: GridColDef<CrosstabGridRow>[] =
       filteredCrosstabColumns.map((column) => ({
         field: `parameter_${column.parameter_key}`,
@@ -527,6 +528,8 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
           column.unit ? ` (${column.unit})` : ""
         }`,
         minWidth: 150,
+        sortable: restrictAnalysisColumns ? false : undefined,
+        filterable: restrictAnalysisColumns ? false : undefined,
         renderCell: (params) => {
           const result = params.row.values[column.parameter_key];
           return (
@@ -558,9 +561,11 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
         headerName: "Sampling Event Note",
         minWidth: 240,
         flex: 1,
+        sortable: restrictAnalysisColumns ? false : undefined,
+        filterable: restrictAnalysisColumns ? false : undefined,
       },
     ];
-  }, [filteredCrosstabColumns]);
+  }, [activeTab, filteredCrosstabColumns]);
 
   if (!thingId) {
     return null;
