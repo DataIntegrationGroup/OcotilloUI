@@ -521,8 +521,17 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
 
   const crosstabColumns = useMemo<GridColDef<CrosstabGridRow>[]>(() => {
     const restrictAnalysisColumns = activeTab !== "field_parameters";
+    const orderedCrosstabColumns = restrictAnalysisColumns
+      ? [...filteredCrosstabColumns].sort((a, b) =>
+          (a.parameter_name ?? a.symbol ?? a.parameter_key).localeCompare(
+            b.parameter_name ?? b.symbol ?? b.parameter_key,
+            undefined,
+            { sensitivity: "base" },
+          ),
+        )
+      : filteredCrosstabColumns;
     const parameterColumns: GridColDef<CrosstabGridRow>[] =
-      filteredCrosstabColumns.map((column) => ({
+      orderedCrosstabColumns.map((column) => ({
         field: `parameter_${column.parameter_key}`,
         headerName: `${column.parameter_name ?? column.symbol ?? column.parameter_key}${
           column.unit ? ` (${column.unit})` : ""

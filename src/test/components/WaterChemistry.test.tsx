@@ -204,6 +204,48 @@ describe('WaterChemistryCard', () => {
     expect(screen.getByTestId('rendered-cells')).not.toHaveTextContent('mg/L')
   })
 
+  it('alphabetizes analysis columns between sample details and notes', async () => {
+    mockedUseQuery.mockReturnValue({
+      data: {
+        ...chemistryResponse,
+        general_chemistry: {
+          results: [
+            {
+              id: 'sulfate-result',
+              sample_info_id: 1,
+              source: 'major',
+              parameter_key: 'sulfate',
+              parameter_name: 'Sulfate',
+              value: 3,
+              unit: 'mg/L',
+            },
+            {
+              id: 'arsenic-result',
+              sample_info_id: 1,
+              source: 'major',
+              parameter_key: 'arsenic',
+              parameter_name: 'Arsenic',
+              value: 2,
+              unit: 'mg/L',
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    const user = userEvent.setup()
+    render(<WaterChemistryCard thingId={42} />)
+
+    await user.click(screen.getByRole('tab', { name: 'General Chemistry' }))
+
+    expect(screen.getByTestId('column-headers')).toHaveTextContent(
+      'Sample,Sample Collection Date,Arsenic (mg/L),Sulfate (mg/L),Sampling Event Note'
+    )
+  })
+
   it('orders the sample selector and crosstab chronologically', async () => {
     mockedUseQuery.mockReturnValue({
       data: chemistryResponse,
