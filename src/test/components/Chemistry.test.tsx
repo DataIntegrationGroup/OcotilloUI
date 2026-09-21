@@ -187,6 +187,59 @@ describe('ChemistryCard', () => {
     expect(screen.getByRole('combobox', { name: 'Sample' })).toBeDisabled()
   })
 
+  it('uses the canonical field parameter aliases and order in the crosstab', async () => {
+    mockedUseQuery.mockReturnValue({
+      data: {
+        ...chemistryResponse,
+        field_parameters: {
+          results: [
+            {
+              id: 'temperature-result',
+              sample_info_id: 2,
+              source: 'field',
+              parameter_key: 'temperature',
+              parameter_name: 'temperture',
+              value: 18,
+              unit: 'deg C',
+            },
+            {
+              id: 'cf-result',
+              sample_info_id: 2,
+              source: 'field',
+              parameter_key: 'cf',
+              parameter_name: 'CF',
+              value: 450,
+              unit: 'uS/cm',
+            },
+            {
+              id: 'dr-result',
+              sample_info_id: 2,
+              source: 'field',
+              parameter_key: 'dr',
+              parameter_name: 'DR',
+              value: 2,
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    const user = userEvent.setup()
+    render(<ChemistryCard thingId={42} />)
+
+    await user.click(screen.getByRole('combobox', { name: 'View' }))
+    await user.click(
+      screen.getByRole('option', { name: 'Cross-tab for all views' })
+    )
+
+    expect(screen.getByTestId('column-headers')).toHaveTextContent(
+      'Sample,Sample Collection Date,Discharge Rate,Dissolved Oxygen,ORP / Redox,pH,Specific Conductance (uS/cm),Temperature (deg C),Turbidity,Sampling Event Note'
+    )
+  })
+
   it('shows the streamlined, left-aligned field parameters columns', () => {
     mockedUseQuery.mockReturnValue({
       data: chemistryResponse,

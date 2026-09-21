@@ -634,15 +634,42 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
 
   const crosstabColumns = useMemo<GridColDef<CrosstabGridRow>[]>(() => {
     const restrictAnalysisColumns = activeTab !== "field_parameters";
-    const orderedCrosstabColumns = restrictAnalysisColumns
-      ? [...filteredCrosstabColumns].sort((a, b) =>
-          (a.parameter_name ?? a.symbol ?? a.parameter_key).localeCompare(
-            b.parameter_name ?? b.symbol ?? b.parameter_key,
-            undefined,
-            { sensitivity: "base" },
-          ),
-        )
-      : filteredCrosstabColumns;
+    const orderedCrosstabColumns =
+      activeTab === "field_parameters"
+        ? [
+            ...FIELD_PARAMETER_DEFINITIONS.map((parameter) => {
+              const matchingResult = activeTabData?.results.find(
+                (result) => fieldParameterDefinition(result) === parameter,
+              );
+
+              return {
+                parameter_key: parameter.key,
+                parameter_name: parameter.label,
+                unit: matchingResult?.unit,
+              };
+            }),
+            ...filteredCrosstabColumns
+              .filter((column) => {
+                const matchingResult = activeTabData?.results.find(
+                  (result) => result.parameter_key === column.parameter_key,
+                );
+                return !matchingResult || !fieldParameterDefinition(matchingResult);
+              })
+              .sort((a, b) =>
+                (a.parameter_name ?? a.symbol ?? a.parameter_key).localeCompare(
+                  b.parameter_name ?? b.symbol ?? b.parameter_key,
+                  undefined,
+                  { sensitivity: "base" },
+                ),
+              ),
+          ]
+        : [...filteredCrosstabColumns].sort((a, b) =>
+            (a.parameter_name ?? a.symbol ?? a.parameter_key).localeCompare(
+              b.parameter_name ?? b.symbol ?? b.parameter_key,
+              undefined,
+              { sensitivity: "base" },
+            ),
+          );
     const parameterColumns: GridColDef<CrosstabGridRow>[] =
       orderedCrosstabColumns.map((column) => ({
         field: `parameter_${column.parameter_key}`,
@@ -653,7 +680,14 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         sortable: restrictAnalysisColumns ? false : undefined,
         filterable: restrictAnalysisColumns ? false : undefined,
         renderCell: (params) => {
-          const result = params.row.values[column.parameter_key];
+          const result =
+            activeTab === "field_parameters"
+              ? Object.values(params.row.values).find(
+                  (value) =>
+                    fieldParameterDefinition(value)?.label ===
+                    column.parameter_name,
+                ) ?? params.row.values[column.parameter_key]
+              : params.row.values[column.parameter_key];
           return (
             <Box>
               <Typography variant="body2">
@@ -687,7 +721,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         filterable: restrictAnalysisColumns ? false : undefined,
       },
     ];
-  }, [activeTab, filteredCrosstabColumns]);
+  }, [activeTab, activeTabData, filteredCrosstabColumns]);
 
   if (!thingId) {
     return null;
