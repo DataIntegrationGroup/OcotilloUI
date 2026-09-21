@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import type { GridColDef } from '@mui/x-data-grid'
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -426,6 +426,48 @@ describe('ChemistryCard', () => {
     expect(screen.getByTestId('row-ids')).not.toHaveTextContent(
       'field_parameters-result'
     )
+  })
+
+  it('constrains the date range to valid sample and calendar dates', () => {
+    mockedUseQuery.mockReturnValue({
+      data: chemistryResponse,
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    render(<ChemistryCard thingId={42} />)
+
+    const from = screen.getByLabelText('From')
+    const to = screen.getByLabelText('To')
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}-${String(now.getDate()).padStart(2, '0')}`
+
+    expect(from).toHaveAttribute('min', '2026-01-02')
+    expect(from).toHaveAttribute('max', today)
+    expect(to).toHaveAttribute('min', '2026-01-02')
+    expect(to).toHaveAttribute('max', today)
+
+    fireEvent.change(to, { target: { value: '2026-01-15' } })
+    expect(to).toHaveValue('2026-01-15')
+    expect(from).toHaveAttribute('max', '2026-01-15')
+
+    fireEvent.change(from, { target: { value: '2026-01-16' } })
+    expect(from).toHaveValue('')
+
+    fireEvent.change(from, { target: { value: '2026-01-10' } })
+    expect(from).toHaveValue('2026-01-10')
+    expect(to).toHaveAttribute('min', '2026-01-10')
+
+    fireEvent.change(to, { target: { value: '2026-01-09' } })
+    expect(to).toHaveValue('2026-01-15')
+    fireEvent.change(from, { target: { value: '2026-01-01' } })
+    expect(from).toHaveValue('2026-01-10')
+    fireEvent.change(to, { target: { value: '2999-01-01' } })
+    expect(to).toHaveValue('2026-01-15')
   })
 
   it('shows the sampling event note only for current field parameters', async () => {

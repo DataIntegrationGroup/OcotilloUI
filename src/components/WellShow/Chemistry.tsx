@@ -4,7 +4,7 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { RotateCcw } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -182,6 +182,21 @@ const formatDateForEndpoint = (value: string, endOfRange = false) => {
   }
 
   return date.toISOString();
+};
+
+const formatDateForInput = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const collectionDateForInput = (value: unknown) => {
+  if (!value) return "";
+
+  const match = String(value).match(/^\d{4}-\d{2}-\d{2}/);
+  return match?.[0] ?? "";
 };
 
 const dateTime = (value: unknown) => {
@@ -390,6 +405,11 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
   const [viewMode, setViewMode] = useState<ChemistryViewMode>("current");
   const [activeTab, setActiveTab] =
     useState<ChemistryDisplayTabKey>("field_parameters");
+  const dateBoundsRef = useRef({ thingId, oldestSampleDate: "" });
+
+  if (dateBoundsRef.current.thingId !== thingId) {
+    dateBoundsRef.current = { thingId, oldestSampleDate: "" };
+  }
 
   const chemistryQuery = useQuery({
     queryKey: ["well-chemistry-display", thingId ?? "", startDate, endDate],
@@ -440,6 +460,46 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
     () => [...(chemistry?.samples ?? [])].sort(compareSamplesByCollectionDate),
     [chemistry?.samples],
   );
+  const oldestVisibleSampleDate = collectionDateForInput(
+    samples[0]?.collection_date,
+  );
+  if (
+    !startDate &&
+    !endDate &&
+    oldestVisibleSampleDate &&
+    (!dateBoundsRef.current.oldestSampleDate ||
+      oldestVisibleSampleDate < dateBoundsRef.current.oldestSampleDate)
+  ) {
+    dateBoundsRef.current.oldestSampleDate = oldestVisibleSampleDate;
+  }
+  const oldestSampleDate = dateBoundsRef.current.oldestSampleDate;
+  const today = formatDateForInput(new Date());
+  const startDateMaximum = endDate && endDate < today ? endDate : today;
+  const endDateMinimum = startDate || oldestSampleDate;
+
+  const handleStartDateChange = (value: string) => {
+    if (
+      value &&
+      ((oldestSampleDate && value < oldestSampleDate) ||
+        value > today ||
+        (endDate && value > endDate))
+    ) {
+      return;
+    }
+
+    setStartDate(value);
+  };
+
+  const handleEndDateChange = (value: string) => {
+    if (
+      value &&
+      ((endDateMinimum && value < endDateMinimum) || value > today)
+    ) {
+      return;
+    }
+
+    setEndDate(value);
+  };
   const selectedSampleId = Number(
     selectedSampleInfoId || samples[samples.length - 1]?.id,
   );
@@ -792,7 +852,9 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
               id="water-chemistry-from"
               type="date"
               value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
+              min={oldestSampleDate || undefined}
+              max={startDateMaximum}
+              onChange={(event) => handleStartDateChange(event.target.value)}
               disabled={controlsDisabled}
             />
           </div>
@@ -802,7 +864,9 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
               id="water-chemistry-to"
               type="date"
               value={endDate}
-              onChange={(event) => setEndDate(event.target.value)}
+              min={endDateMinimum || undefined}
+              max={today}
+              onChange={(event) => handleEndDateChange(event.target.value)}
               disabled={controlsDisabled}
             />
           </div>
