@@ -72,6 +72,13 @@ import {
   formatCollector,
   type ManualObservationFieldMetadata,
 } from '@/utils/manualObservationFieldMetadata'
+import type { ReviewStatus } from '@/generated/types.gen'
+import { StoredBlockReviewSection } from './StoredBlockReviewSection'
+import {
+  type StoredReadingActions,
+  StoredReadingEditor,
+} from './StoredReadingEditor'
+import { type HydrographStoredBlock, nearestIndexByTime } from './storedBlocks'
 
 interface ManualHydrographObservation {
   observation_datetime: string | Date
@@ -84,6 +91,8 @@ interface ManualHydrographObservation {
 }
 
 interface TransducerHydrographObservation {
+  /** Stored reading id; lets a click on the chart open that reading. */
+  id?: number
   observation_datetime: string | Date
   value: number
 }
@@ -590,6 +599,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   initialFileName,
   onPublish,
   onDeleteStoredRange,
+  storedBlocks,
+  onReviewBlock,
+  storedReadingActions,
+  canEditStoredReadings = false,
   mode = DEFAULT_HYDROGRAPH_UI_MODE,
   wellMetadata,
   sensorDeployments = EMPTY_SENSOR_DEPLOYMENTS,
@@ -608,6 +621,20 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   onDeleteStoredRange?: (
     range: HydrographRange
   ) => Promise<HydrographDeleteResult>
+  /** Published blocks for the bound well, for the review pane. */
+  storedBlocks?: readonly HydrographStoredBlock[]
+  /**
+   * Approves a block (and every reading in it) or returns it to provisional.
+   * Omitted when the user may not review -- the pane is hidden then.
+   */
+  onReviewBlock?: (blockId: number, reviewStatus: ReviewStatus) => Promise<void>
+  /**
+   * Per-reading load/edit/delete. When supplied, clicking the stored series
+   * opens that reading. Omitted in demo mode, where nothing is stored.
+   */
+  storedReadingActions?: StoredReadingActions
+  /** Whether the opened reading can be edited or deleted, not just viewed. */
+  canEditStoredReadings?: boolean
   mode?: HydrographUiMode
   wellMetadata?: HydrographWellMetadata | null
   sensorDeployments?: readonly HydrographSensorDeployment[]
@@ -800,20 +827,34 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     [manualEntries]
   )
 
-  const storedTransducerPoints = useMemo<HydrographPoint[]>(
+  // Points and their reading ids in one sorted list, so the chart's
+  // dataIndex on the stored series maps straight back to the reading.
+  const storedTransducerEntries = useMemo(
     () =>
       transducerObservations
         .map((observation) => ({
-          time: parseObservationTimestamp(observation.observation_datetime),
-          value: Number(observation.value),
+          id: observation.id ?? null,
+          point: {
+            time: parseObservationTimestamp(observation.observation_datetime),
+            value: Number(observation.value),
+          },
         }))
         .filter(
-          (point) =>
+          ({ point }) =>
             !Number.isNaN(point.time.getTime()) && Number.isFinite(point.value)
         )
-        .sort((a, b) => a.time.getTime() - b.time.getTime()),
+        .sort((a, b) => a.point.time.getTime() - b.point.time.getTime()),
     [transducerObservations]
   )
+
+  const storedTransducerPoints = useMemo<HydrographPoint[]>(
+    () => storedTransducerEntries.map(({ point }) => point),
+    [storedTransducerEntries]
+  )
+
+  const [selectedStoredReadingId, setSelectedStoredReadingId] = useState<
+    number | null
+  >(null)
 
   const manualOptions = useMemo<ManualOption[]>(
     () =>
@@ -1513,10 +1554,38 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   }
 
 
+  const storedTransducerTimes = useMemo(
+    () => storedTransducerPoints.map((point) => point.time.getTime()),
+    [storedTransducerPoints]
+  )
+
   const handleChartClick = (params: {
     seriesName?: string
     dataIndex?: number
+    event?: { offsetX?: number; offsetY?: number }
   }) => {
+    if (params.seriesName === 'Stored transducer') {
+      if (!storedReadingActions) return
+      // The stored series is drawn without symbols, and ECharts reports a
+      // click on a symbol-less line without a dataIndex. Resolve the click's
+      // pixel to a time and open the nearest stored reading instead.
+      let index = params.dataIndex ?? -1
+      if (index < 0) {
+        const { offsetX, offsetY } = params.event ?? {}
+        const instance = chartRef.current?.getEchartsInstance()
+        if (instance && offsetX != null && offsetY != null) {
+          const [time] = instance.convertFromPixel(
+            { seriesName: 'Stored transducer' },
+            [offsetX, offsetY]
+          ) as number[]
+          index = nearestIndexByTime(storedTransducerTimes, Number(time))
+        }
+      }
+      const id = storedTransducerEntries[index]?.id
+      if (id != null) setSelectedStoredReadingId(id)
+      return
+    }
+
     if (params.seriesName !== 'Manual water levels') return
 
     const option = manualOptions[params.dataIndex ?? -1]
@@ -2152,6 +2221,39 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       Deletion applies to data already stored in Ocotillo, not
                       to the uploaded file or the corrections in this session.
                     </Typography>
+                  </WorkbenchSection>
+                ) : null}
+
+                {onReviewBlock ? (
+                  <WorkbenchSection title="Review Stored Data">
+                    <StoredBlockReviewSection
+                      blocks={storedBlocks ?? []}
+                      onReviewBlock={onReviewBlock}
+                    />
+                  </WorkbenchSection>
+                ) : null}
+
+                {storedReadingActions ? (
+                  <WorkbenchSection
+                    title="Stored Reading"
+                    // Opening a reading from the chart should show it without
+                    // a second click on a collapsed pane.
+                    key={selectedStoredReadingId ?? 'none'}
+                    defaultExpanded={selectedStoredReadingId !== null}
+                  >
+                    {selectedStoredReadingId !== null ? (
+                      <StoredReadingEditor
+                        observationId={selectedStoredReadingId}
+                        actions={storedReadingActions}
+                        canEdit={canEditStoredReadings}
+                        onClose={() => setSelectedStoredReadingId(null)}
+                      />
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        Click a point on the stored transducer series to open
+                        that reading.
+                      </Typography>
+                    )}
                   </WorkbenchSection>
                 ) : null}
 
