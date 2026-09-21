@@ -51,7 +51,7 @@ import {
   OwnerPermissionsCard,
   MonitoringInfoCard,
   WaterLevelObservationRow,
-  WaterChemistryCard,
+  ChemistryCard,
 } from '@/components'
 import {
   ocotilloCardHeaderProps,
@@ -383,7 +383,7 @@ export const WellShow = () => {
         rows={wellScreens}
         isLoading={isDetailsLoading}
       />,
-      <WaterChemistryCard
+      <ChemistryCard
         key="chemistry"
         thingId={well?.id ?? (id ? Number(id) : null)}
       />,

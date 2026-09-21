@@ -1,11 +1,5 @@
 import { Science } from "@mui/icons-material";
-import {
-  Box,
-  Chip,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Chip, Paper, Stack, Typography } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -29,13 +23,13 @@ import type {
   ChemistryDisplayResult,
   ChemistryDisplayStandardStatus,
   ChemistryDisplayTabKey,
-  WaterChemistryResult,
-  WaterChemistryResultsPage,
+  ChemistryResult,
+  ChemistryResultsPage,
 } from "@/interfaces/ocotillo";
 import { axiosCall } from "@/providers/ocotillo-data-provider";
 import { settings } from "@/settings";
 
-type WaterChemistryCardProps = {
+type ChemistryCardProps = {
   thingId?: number | string | null;
 };
 
@@ -227,7 +221,7 @@ const crosstabColumnsForResults = (
 };
 
 const displayResponseFromResults = (
-  items: WaterChemistryResult[],
+  items: ChemistryResult[],
 ): ChemistryDisplayResponse => {
   const resultsByTab: Record<ChemistryDisplayTabKey, ChemistryDisplayResult[]> =
     {
@@ -276,7 +270,7 @@ const displayResponseFromResults = (
   };
 };
 
-export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
+export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
   const [selectedSampleInfoId, setSelectedSampleInfoId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -313,7 +307,7 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
         headers: { "Content-Type": "application/json" },
       });
 
-      const page = response.data as WaterChemistryResultsPage;
+      const page = response.data as ChemistryResultsPage;
       return displayResponseFromResults(page.items);
     },
   });
@@ -608,7 +602,7 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
       >
         <Science color="primary" />
         <Typography variant="body1" fontWeight="bold">
-          Water Chemistry
+          Chemistry
         </Typography>
       </Box>
       <Box sx={{ px: 2, py: 1.5, pb: 3 }}>
@@ -618,9 +612,7 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
             <Select
               value={String(selectedSample?.id ?? "")}
               onValueChange={setSelectedSampleInfoId}
-              disabled={
-                controlsDisabled || effectiveViewMode === "crosstab"
-              }
+              disabled={controlsDisabled || effectiveViewMode === "crosstab"}
             >
               <SelectTrigger id="water-chemistry-sample" className="w-full">
                 <SelectValue placeholder="Select a sample" />
@@ -679,9 +671,7 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
             <Label htmlFor="water-chemistry-view">View</Label>
             <Select
               value={effectiveViewMode}
-              onValueChange={(value) =>
-                setViewMode(value as ChemistryViewMode)
-              }
+              onValueChange={(value) => setViewMode(value as ChemistryViewMode)}
               disabled={controlsDisabled || isCrosstabOnlyTab}
             >
               <SelectTrigger id="water-chemistry-view" className="w-full">

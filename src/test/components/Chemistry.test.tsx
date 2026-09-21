@@ -116,9 +116,9 @@ const chemistryResponse: ChemistryDisplayResponse = {
   additional_analyses: tabData('additional_analyses'),
 }
 
-import { WaterChemistryCard } from '@/components/WellShow/WaterChemistry'
+import { ChemistryCard } from '@/components/WellShow/Chemistry'
 
-describe('WaterChemistryCard', () => {
+describe('ChemistryCard', () => {
   beforeEach(() => {
     mockedUseQuery.mockReset()
     mockedAxiosCall.mockReset()
@@ -137,7 +137,7 @@ describe('WaterChemistryCard', () => {
     })
 
     const user = userEvent.setup()
-    render(<WaterChemistryCard thingId={42} />)
+    render(<ChemistryCard thingId={42} />)
 
     await user.click(screen.getByRole('tab', { name: tabLabel }))
 
@@ -161,7 +161,7 @@ describe('WaterChemistryCard', () => {
     })
 
     const user = userEvent.setup()
-    render(<WaterChemistryCard thingId={42} />)
+    render(<ChemistryCard thingId={42} />)
 
     await user.click(screen.getByRole('combobox', { name: 'View' }))
     await user.click(
@@ -187,7 +187,7 @@ describe('WaterChemistryCard', () => {
     })
 
     const user = userEvent.setup()
-    render(<WaterChemistryCard thingId={42} />)
+    render(<ChemistryCard thingId={42} />)
 
     await user.click(screen.getByRole('combobox', { name: 'View' }))
     await user.click(
@@ -234,7 +234,7 @@ describe('WaterChemistryCard', () => {
     })
 
     const user = userEvent.setup()
-    render(<WaterChemistryCard thingId={42} />)
+    render(<ChemistryCard thingId={42} />)
 
     await user.click(screen.getByRole('tab', { name: 'General Chemistry' }))
 
@@ -252,7 +252,7 @@ describe('WaterChemistryCard', () => {
     })
 
     const user = userEvent.setup()
-    render(<WaterChemistryCard thingId={42} />)
+    render(<ChemistryCard thingId={42} />)
 
     await user.click(screen.getByRole('combobox', { name: 'Sample' }))
 
@@ -279,7 +279,7 @@ describe('WaterChemistryCard', () => {
     })
 
     const user = userEvent.setup()
-    render(<WaterChemistryCard thingId={42} />)
+    render(<ChemistryCard thingId={42} />)
 
     expect(screen.getByText(/Sampling Event Note:/)).toBeInTheDocument()
     expect(screen.getByText('Field parameter sample note')).toBeInTheDocument()
@@ -304,7 +304,7 @@ describe('WaterChemistryCard', () => {
       config: {},
     } as Awaited<ReturnType<typeof axiosCall>>)
 
-    render(<WaterChemistryCard thingId={42} />)
+    render(<ChemistryCard thingId={42} />)
 
     const queryConfig = mockedUseQuery.mock.calls[0][0]
     await queryConfig.queryFn({ signal: undefined })
@@ -355,7 +355,7 @@ describe('WaterChemistryCard', () => {
       },
     } as Awaited<ReturnType<typeof axiosCall>>)
 
-    render(<WaterChemistryCard thingId={42} />)
+    render(<ChemistryCard thingId={42} />)
 
     const queryConfig = mockedUseQuery.mock.calls[0][0]
     const result = await queryConfig.queryFn({ signal: undefined })
