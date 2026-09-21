@@ -434,7 +434,9 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
     () => [...(chemistry?.samples ?? [])].sort(compareSamplesByCollectionDate),
     [chemistry?.samples],
   );
-  const selectedSampleId = Number(selectedSampleInfoId || samples[0]?.id);
+  const selectedSampleId = Number(
+    selectedSampleInfoId || samples[samples.length - 1]?.id,
+  );
   const selectedSample =
     samples.find((sample) => sample.id === selectedSampleId) ?? samples[0];
   const selectedSampleNote = selectedSample?.sample_notes ?? null;

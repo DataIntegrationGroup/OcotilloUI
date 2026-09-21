@@ -101,6 +101,7 @@ const chemistryResponse: ChemistryDisplayResponse = {
       label: 'Sample 2',
       nma_sample_point_id: 'SP-2',
       collection_date: '2026-02-03T00:00:00Z',
+      sample_notes: 'Field parameter sample note',
     },
     {
       id: 1,
@@ -108,7 +109,6 @@ const chemistryResponse: ChemistryDisplayResponse = {
       label: 'Sample 1',
       nma_sample_point_id: 'SP-1',
       collection_date: '2026-01-02T00:00:00Z',
-      sample_notes: 'Field parameter sample note',
     },
   ],
   field_parameters: tabData('field_parameters'),
@@ -216,7 +216,7 @@ describe('ChemistryCard', () => {
           results: [
             {
               id: 'temperature-result',
-              sample_info_id: 1,
+              sample_info_id: 2,
               source: 'field',
               parameter_key: 'temperature',
               parameter_name: 'temperture',
@@ -224,7 +224,7 @@ describe('ChemistryCard', () => {
             },
             {
               id: 'dr-result',
-              sample_info_id: 1,
+              sample_info_id: 2,
               source: 'field',
               parameter_key: 'dr',
               parameter_name: 'DR',
@@ -232,7 +232,7 @@ describe('ChemistryCard', () => {
             },
             {
               id: 'orp-result',
-              sample_info_id: 1,
+              sample_info_id: 2,
               source: 'field',
               parameter_key: 'orp',
               parameter_name: 'ORP',
@@ -240,7 +240,7 @@ describe('ChemistryCard', () => {
             },
             {
               id: 'cf-result',
-              sample_info_id: 1,
+              sample_info_id: 2,
               source: 'field',
               parameter_key: 'cf',
               parameter_name: 'CF',
@@ -352,6 +352,27 @@ describe('ChemistryCard', () => {
     )
 
     expect(screen.getByTestId('row-ids')).toHaveTextContent('1,2')
+  })
+
+  it('selects the newest sample by collection date by default', () => {
+    mockedUseQuery.mockReturnValue({
+      data: chemistryResponse,
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    render(<ChemistryCard thingId={42} />)
+
+    expect(screen.getByRole('combobox', { name: 'Sample' })).toHaveTextContent(
+      /^Sample 2 -/
+    )
+    expect(screen.getByTestId('row-ids')).toHaveTextContent(
+      'field_parameters-sample-2-result'
+    )
+    expect(screen.getByTestId('row-ids')).not.toHaveTextContent(
+      'field_parameters-result'
+    )
   })
 
   it('shows the sampling event note only for current field parameters', async () => {
