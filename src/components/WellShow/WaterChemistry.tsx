@@ -156,6 +156,16 @@ const dateTime = (value: unknown) => {
   return Number.isNaN(date.getTime()) ? 0 : date.getTime();
 };
 
+const compareSamplesByCollectionDate = (
+  a: ChemistryDisplayResponse["samples"][number],
+  b: ChemistryDisplayResponse["samples"][number],
+) => {
+  const aTime = dateTime(a.collection_date) || Number.POSITIVE_INFINITY;
+  const bTime = dateTime(b.collection_date) || Number.POSITIVE_INFINITY;
+
+  return aTime - bTime || a.id - b.id;
+};
+
 const formatValue = (value: unknown) => {
   if (value === null || value === undefined || value === "") return "-";
   return String(value);
@@ -260,9 +270,7 @@ const displayResponseFromResults = (
   }
 
   return {
-    samples: [...samplesById.values()].sort(
-      (a, b) => dateTime(b.collection_date) - dateTime(a.collection_date),
-    ),
+    samples: [...samplesById.values()].sort(compareSamplesByCollectionDate),
     field_parameters: { results: resultsByTab.field_parameters },
     general_chemistry: { results: resultsByTab.general_chemistry },
     environmental_tracers: { results: resultsByTab.environmental_tracers },
@@ -324,7 +332,10 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
   const isLoading = chemistryQuery.isLoading || chemistryQuery.isPending;
   const controlsDisabled = isLoading || noDisplayData || !chemistry;
 
-  const samples = chemistry?.samples ?? [];
+  const samples = useMemo(
+    () => [...(chemistry?.samples ?? [])].sort(compareSamplesByCollectionDate),
+    [chemistry?.samples],
+  );
   const selectedSampleId = Number(selectedSampleInfoId || samples[0]?.id);
   const selectedSample =
     samples.find((sample) => sample.id === selectedSampleId) ?? samples[0];
@@ -596,7 +607,7 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
         >
           <FormControl
             size="small"
-            disabled={controlsDisabled}
+            disabled={controlsDisabled || effectiveViewMode === "crosstab"}
             sx={{ minWidth: { md: 220 } }}
           >
             <InputLabel id="water-chemistry-sample-label">Sample</InputLabel>

@@ -31,6 +31,7 @@ vi.mock('@mui/x-data-grid', () => ({
         {columns.map((column) => column.field).join(',')}
       </div>
       <div data-testid="row-count">{rows.length}</div>
+      <div data-testid="row-ids">{rows.map((row) => row.id).join(',')}</div>
     </div>
   ),
 }))
@@ -63,19 +64,19 @@ const tabData = (key: ChemistryDisplayTabKey) => ({
 const chemistryResponse: ChemistryDisplayResponse = {
   samples: [
     {
+      id: 2,
+      thing_id: 42,
+      label: 'Sample 2',
+      nma_sample_point_id: 'SP-2',
+      collection_date: '2026-02-03T00:00:00Z',
+    },
+    {
       id: 1,
       thing_id: 42,
       label: 'Sample 1',
       nma_sample_point_id: 'SP-1',
       collection_date: '2026-01-02T00:00:00Z',
       sample_notes: 'Field parameter sample note',
-    },
-    {
-      id: 2,
-      thing_id: 42,
-      label: 'Sample 2',
-      nma_sample_point_id: 'SP-2',
-      collection_date: '2026-02-03T00:00:00Z',
     },
   ],
   field_parameters: tabData('field_parameters'),
@@ -148,6 +149,37 @@ describe('WaterChemistryCard', () => {
       )
     ).toBeInTheDocument()
     expect(screen.queryByText(/Sampling Event Note:/)).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Sample' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    )
+  })
+
+  it('orders the sample selector and crosstab chronologically', async () => {
+    mockedUseQuery.mockReturnValue({
+      data: chemistryResponse,
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    const user = userEvent.setup()
+    render(<WaterChemistryCard thingId={42} />)
+
+    await user.click(screen.getByRole('combobox', { name: 'Sample' }))
+
+    const sampleOptions = screen.getAllByRole('option')
+    expect(
+      sampleOptions.map((option) => option.textContent?.split(' - ')[0])
+    ).toEqual(['Sample 1', 'Sample 1', 'Sample 2'])
+
+    await user.keyboard('{Escape}')
+    await user.click(screen.getByRole('combobox', { name: 'View' }))
+    await user.click(
+      screen.getByRole('option', { name: 'Cross-tab for all views' })
+    )
+
+    expect(screen.getByTestId('row-ids')).toHaveTextContent('1,2')
   })
 
   it('shows the sampling event note only for current field parameters', async () => {
@@ -206,6 +238,17 @@ describe('WaterChemistryCard', () => {
       data: {
         items: [
           {
+            id: 'maj-2',
+            thing_id: 42,
+            sample_id: 8,
+            parameter_name: 'Calcium',
+            parameter_key: 'major_calcium',
+            value: 13,
+            source: 'major',
+            result_kind: 'major',
+            observation_datetime: '2025-12-01T00:00:00Z',
+          },
+          {
             id: 'maj-1',
             thing_id: 42,
             sample_id: 7,
@@ -217,7 +260,7 @@ describe('WaterChemistryCard', () => {
             observation_datetime: '2026-01-02T00:00:00Z',
           },
         ],
-        total: 1,
+        total: 2,
         page: 1,
         size: 10000,
         pages: 1,
@@ -231,11 +274,16 @@ describe('WaterChemistryCard', () => {
 
     expect(result.samples).toEqual([
       expect.objectContaining({
+        id: 8,
+        collection_date: '2025-12-01T00:00:00Z',
+      }),
+      expect.objectContaining({
         id: 7,
         collection_date: '2026-01-02T00:00:00Z',
       }),
     ])
     expect(result.general_chemistry.results).toEqual([
+      expect.objectContaining({ id: 'maj-2', sample_info_id: 8 }),
       expect.objectContaining({ id: 'maj-1', sample_info_id: 7 }),
     ])
   })
