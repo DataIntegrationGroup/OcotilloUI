@@ -133,6 +133,19 @@ describe('ChemistryCard', () => {
     mockedAxiosCall.mockReset()
   })
 
+  it('keeps reset enabled while chemistry data is unavailable', () => {
+    mockedUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isPending: true,
+      error: null,
+    })
+
+    render(<ChemistryCard thingId={42} />)
+
+    expect(screen.getByRole('button', { name: 'Reset' })).toBeEnabled()
+  })
+
   it.each([
     ['General Chemistry', 'general_chemistry'],
     ['Environmental Tracers', 'environmental_tracers'],

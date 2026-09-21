@@ -914,7 +914,6 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
             variant="outline"
             size="default"
             onClick={resetFilters}
-            disabled={controlsDisabled}
           >
             <RotateCcw data-icon="inline-start" />
             Reset
