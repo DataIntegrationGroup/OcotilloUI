@@ -24,7 +24,7 @@ vi.mock('@mui/x-data-grid', () => ({
     rows,
   }: {
     columns: GridColDef[]
-    rows: { id: string | number }[]
+    rows: { id: string | number; parameter_name?: string | null }[]
   }) => (
     <div data-testid="water-chemistry-grid">
       <div data-testid="column-fields">
@@ -43,8 +43,16 @@ vi.mock('@mui/x-data-grid', () => ({
           )
           .join(',')}
       </div>
+      <div data-testid="column-alignments">
+        {columns
+          .map((column) => `${column.field}:${column.align}:${column.headerAlign}`)
+          .join(',')}
+      </div>
       <div data-testid="row-count">{rows.length}</div>
       <div data-testid="row-ids">{rows.map((row) => row.id).join(',')}</div>
+      <div data-testid="row-parameters">
+        {rows.map((row) => row.parameter_name).join(',')}
+      </div>
       <div data-testid="rendered-cells">
         {rows[0]
           ? columns.map((column) => (
@@ -72,6 +80,7 @@ const tabData = (key: ChemistryDisplayTabKey) => ({
       parameter_name: `${key} result`,
       value: 2,
       unit: 'mg/L',
+      stabilized: true,
     },
     {
       id: `${key}-sample-2-result`,
@@ -176,6 +185,81 @@ describe('ChemistryCard', () => {
     ).toBeInTheDocument()
     expect(screen.queryByText(/Sampling Event Note:/)).not.toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'Sample' })).toBeDisabled()
+  })
+
+  it('shows the streamlined, left-aligned field parameters columns', () => {
+    mockedUseQuery.mockReturnValue({
+      data: chemistryResponse,
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    render(<ChemistryCard thingId={42} />)
+
+    expect(screen.getByTestId('column-fields')).toHaveTextContent(
+      'parameter_name,value,unit,stabilized,notes'
+    )
+    expect(screen.getByTestId('column-headers')).toHaveTextContent(
+      'Parameter,Value,Unit,Stabilized,Notes'
+    )
+    expect(screen.getByTestId('column-alignments')).toHaveTextContent(
+      'parameter_name:left:left,value:left:left,unit:left:left,stabilized:left:left,notes:left:left'
+    )
+  })
+
+  it('normalizes, fills, and orders the field parameter rows', () => {
+    mockedUseQuery.mockReturnValue({
+      data: {
+        ...chemistryResponse,
+        field_parameters: {
+          results: [
+            {
+              id: 'temperature-result',
+              sample_info_id: 1,
+              source: 'field',
+              parameter_key: 'temperature',
+              parameter_name: 'temperture',
+              value: 18,
+            },
+            {
+              id: 'dr-result',
+              sample_info_id: 1,
+              source: 'field',
+              parameter_key: 'dr',
+              parameter_name: 'DR',
+              value: 2,
+            },
+            {
+              id: 'orp-result',
+              sample_info_id: 1,
+              source: 'field',
+              parameter_key: 'orp',
+              parameter_name: 'ORP',
+              value: 100,
+            },
+            {
+              id: 'cf-result',
+              sample_info_id: 1,
+              source: 'field',
+              parameter_key: 'cf',
+              parameter_name: 'CF',
+              value: 450,
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    render(<ChemistryCard thingId={42} />)
+
+    expect(screen.getByTestId('row-parameters')).toHaveTextContent(
+      'Discharge Rate,Dissolved Oxygen,ORP / Redox,pH,Specific Conductance,Temperature,Turbidity'
+    )
+    expect(screen.getByTestId('row-count')).toHaveTextContent('7')
   })
 
   it('shows units in crosstab headers but not result cells', async () => {

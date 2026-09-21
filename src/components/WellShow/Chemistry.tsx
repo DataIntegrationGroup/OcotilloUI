@@ -81,6 +81,46 @@ const CROSSTAB_ONLY_TABS = new Set<ChemistryDisplayTabKey>([
 
 const EMPTY_CROSSTAB_ROWS: CrosstabGridRow[] = [];
 const EMPTY_RESULTS: ChemistryDisplayResult[] = [];
+const FIELD_PARAMETER_DEFINITIONS = [
+  {
+    key: "discharge_rate",
+    label: "Discharge Rate",
+    aliases: ["dr", "discharge rate"],
+  },
+  {
+    key: "dissolved_oxygen",
+    label: "Dissolved Oxygen",
+    aliases: ["do", "dissolved oxygen"],
+  },
+  {
+    key: "orp_redox",
+    label: "ORP / Redox",
+    aliases: ["orp", "redox", "orp redox", "oxidation reduction potential"],
+  },
+  { key: "ph", label: "pH", aliases: ["ph"] },
+  {
+    key: "specific_conductance",
+    label: "Specific Conductance",
+    aliases: [
+      "cf",
+      "specific conductance",
+      "specific conductivity",
+      "conductivity",
+    ],
+  },
+  {
+    key: "temperature",
+    label: "Temperature",
+    aliases: ["temperature", "temperture", "temp"],
+  },
+  { key: "turbidity", label: "Turbidity", aliases: ["turbidity"] },
+] as const;
+const FIELD_PARAMETER_ORDER = new Map<string, number>(
+  FIELD_PARAMETER_DEFINITIONS.map((parameter, index) => [
+    parameter.label,
+    index,
+  ]),
+);
 const GENERAL_PARAMETERS = new Set([
   "arsenic",
   "bicarbonate",
@@ -168,6 +208,72 @@ const formatValue = (value: unknown) => {
 const formatResultValue = (result?: ChemistryDisplayResult) => {
   if (!result) return "-";
   return formatValue(result.value);
+};
+
+const normalizeParameterName = (value: string) =>
+  value.trim().toLowerCase().replace(/[_/-]+/g, " ").replace(/\s+/g, " ");
+
+const fieldParameterDefinition = (result: ChemistryDisplayResult) => {
+  const candidates = [
+    result.parameter_name,
+    result.symbol,
+    result.analyte,
+    result.parameter_key,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .map(normalizeParameterName);
+
+  return FIELD_PARAMETER_DEFINITIONS.find((parameter) =>
+    parameter.aliases.some((alias) =>
+      candidates.some(
+        (candidate) => candidate === alias || candidate.endsWith(` ${alias}`),
+      ),
+    ),
+  );
+};
+
+const canonicalFieldParameterRows = (
+  rows: ChemistryDisplayResult[],
+  sampleInfoId: number,
+  includeMissing: boolean,
+) => {
+  const canonicalRows = rows.map((row) => {
+    const definition = fieldParameterDefinition(row);
+    return definition ? { ...row, parameter_name: definition.label } : row;
+  });
+
+  if (includeMissing) {
+    const presentLabels = new Set(
+      canonicalRows.map((row) => row.parameter_name).filter(Boolean),
+    );
+
+    for (const parameter of FIELD_PARAMETER_DEFINITIONS) {
+      if (!presentLabels.has(parameter.label)) {
+        canonicalRows.push({
+          id: `field-parameter-placeholder-${sampleInfoId}-${parameter.key}`,
+          sample_info_id: sampleInfoId,
+          source: "field",
+          parameter_key: parameter.key,
+          parameter_name: parameter.label,
+          value: null,
+        });
+      }
+    }
+  }
+
+  return canonicalRows.sort((a, b) => {
+    const aName = a.parameter_name ?? a.analyte ?? a.parameter_key;
+    const bName = b.parameter_name ?? b.analyte ?? b.parameter_key;
+    const aOrder = FIELD_PARAMETER_ORDER.get(aName);
+    const bOrder = FIELD_PARAMETER_ORDER.get(bName);
+
+    if (aOrder !== undefined || bOrder !== undefined) {
+      return (aOrder ?? Number.POSITIVE_INFINITY) -
+        (bOrder ?? Number.POSITIVE_INFINITY);
+    }
+
+    return aName.localeCompare(bName, undefined, { sensitivity: "base" });
+  });
 };
 
 const isNoDisplayDataError = (error: unknown) => {
@@ -344,8 +450,18 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         )
       : (activeTabData?.results ?? EMPTY_RESULTS);
 
-    return rows.filter((row) => matchesStandardFilter(row, standardFilter));
-  }, [activeTabData, selectedSample?.id, standardFilter]);
+    const filteredRows = rows.filter((row) =>
+      matchesStandardFilter(row, standardFilter),
+    );
+
+    if (activeTab !== "field_parameters") return filteredRows;
+
+    return canonicalFieldParameterRows(
+      filteredRows,
+      selectedSample?.id ?? 0,
+      standardFilter === "all",
+    );
+  }, [activeTab, activeTabData, selectedSample?.id, standardFilter]);
 
   const standardsSummary = useMemo(() => {
     if (activeTab !== "general_chemistry") {
@@ -421,6 +537,8 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         headerName: "Parameter",
         minWidth: 190,
         flex: 1,
+        align: "left",
+        headerAlign: "left",
         valueGetter: (_value, row) => row.parameter_name ?? row.analyte ?? "-",
       },
       {
@@ -428,34 +546,33 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         headerName: "Value",
         type: "number",
         minWidth: 110,
+        align: "left",
+        headerAlign: "left",
       },
-      { field: "unit", headerName: "Unit", minWidth: 90 },
       {
-        field: "standard",
-        headerName: "EPA Status",
-        minWidth: 150,
-        renderCell: (params) => (
-          <Chip
-            size="small"
-            label={standardLabel(params.row)}
-            color={standardChipColor(params.row.standard?.status)}
-            variant={
-              params.row.standard?.status === "not_compared"
-                ? "outlined"
-                : "filled"
-            }
-          />
-        ),
+        field: "unit",
+        headerName: "Unit",
+        minWidth: 90,
+        align: "left",
+        headerAlign: "left",
       },
-      { field: "analysis_method", headerName: "Method", minWidth: 150 },
       {
-        field: "analysis_date",
-        headerName: "Analysis Date",
-        minWidth: 140,
-        valueFormatter: (value) => formatDate(value),
+        field: "stabilized",
+        headerName: "Stabilized",
+        minWidth: 120,
+        align: "left",
+        headerAlign: "left",
+        valueFormatter: (value) =>
+          value == null ? "-" : value ? "Yes" : "No",
       },
-      { field: "analyses_agency", headerName: "Agency", minWidth: 160 },
-      { field: "notes", headerName: "Notes", minWidth: 220, flex: 1 },
+      {
+        field: "notes",
+        headerName: "Notes",
+        minWidth: 220,
+        flex: 1,
+        align: "left",
+        headerAlign: "left",
+      },
     ],
     [],
   );

@@ -39,6 +39,7 @@ export interface ChemistryDisplayResult {
   value?: number | null;
   unit?: string | null;
   uncertainty?: number | null;
+  stabilized?: boolean | null;
   analysis_method?: string | null;
   analysis_date?: string | null;
   notes?: string | null;
