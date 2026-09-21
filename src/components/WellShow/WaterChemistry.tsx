@@ -173,9 +173,7 @@ const formatValue = (value: unknown) => {
 
 const formatResultValue = (result?: ChemistryDisplayResult) => {
   if (!result) return "-";
-  const value = formatValue(result.value);
-  const unit = result.unit ? ` ${result.unit}` : "";
-  return `${value}${unit}`;
+  return formatValue(result.value);
 };
 
 const isNoDisplayDataError = (error: unknown) => {

@@ -30,8 +30,20 @@ vi.mock('@mui/x-data-grid', () => ({
       <div data-testid="column-fields">
         {columns.map((column) => column.field).join(',')}
       </div>
+      <div data-testid="column-headers">
+        {columns.map((column) => column.headerName).join(',')}
+      </div>
       <div data-testid="row-count">{rows.length}</div>
       <div data-testid="row-ids">{rows.map((row) => row.id).join(',')}</div>
+      <div data-testid="rendered-cells">
+        {rows[0]
+          ? columns.map((column) => (
+              <React.Fragment key={column.field}>
+                {column.renderCell?.({ row: rows[0] } as never)}
+              </React.Fragment>
+            ))
+          : null}
+      </div>
     </div>
   ),
 }))
@@ -49,6 +61,7 @@ const tabData = (key: ChemistryDisplayTabKey) => ({
       parameter_key: `${key}_result_parameter`,
       parameter_name: `${key} result`,
       value: 2,
+      unit: 'mg/L',
     },
     {
       id: `${key}-sample-2-result`,
@@ -153,6 +166,29 @@ describe('WaterChemistryCard', () => {
       'aria-disabled',
       'true'
     )
+  })
+
+  it('shows units in crosstab headers but not result cells', async () => {
+    mockedUseQuery.mockReturnValue({
+      data: chemistryResponse,
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    const user = userEvent.setup()
+    render(<WaterChemistryCard thingId={42} />)
+
+    await user.click(screen.getByRole('combobox', { name: 'View' }))
+    await user.click(
+      screen.getByRole('option', { name: 'Cross-tab for all views' })
+    )
+
+    expect(screen.getByTestId('column-headers')).toHaveTextContent(
+      'field_parameters result (mg/L)'
+    )
+    expect(screen.getByTestId('rendered-cells')).toHaveTextContent('2')
+    expect(screen.getByTestId('rendered-cells')).not.toHaveTextContent('mg/L')
   })
 
   it('orders the sample selector and crosstab chronologically', async () => {
