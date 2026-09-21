@@ -175,10 +175,7 @@ describe('WaterChemistryCard', () => {
       )
     ).toBeInTheDocument()
     expect(screen.queryByText(/Sampling Event Note:/)).not.toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: 'Sample' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    )
+    expect(screen.getByRole('combobox', { name: 'Sample' })).toBeDisabled()
   })
 
   it('shows units in crosstab headers but not result cells', async () => {
@@ -262,7 +259,7 @@ describe('WaterChemistryCard', () => {
     const sampleOptions = screen.getAllByRole('option')
     expect(
       sampleOptions.map((option) => option.textContent?.split(' - ')[0])
-    ).toEqual(['Sample 1', 'Sample 1', 'Sample 2'])
+    ).toEqual(['Sample 1', 'Sample 2'])
 
     await user.keyboard('{Escape}')
     await user.click(screen.getByRole('combobox', { name: 'View' }))

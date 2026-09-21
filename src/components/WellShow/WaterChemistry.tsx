@@ -1,27 +1,27 @@
-import {
-  DownloadOutlined,
-  RestartAltOutlined,
-  Science,
-} from "@mui/icons-material";
+import { Science } from "@mui/icons-material";
 import {
   Box,
-  Button,
   Chip,
-  FormControl,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Stack,
-  Tab,
-  Tabs,
-  TextField,
   Typography,
 } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   ChemistryDisplayCrosstabColumn,
   ChemistryDisplayCrosstabRow,
@@ -612,108 +612,100 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
         </Typography>
       </Box>
       <Box sx={{ px: 2, py: 1.5, pb: 3 }}>
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={1.5}
-          sx={{ mb: 2 }}
-        >
-          <FormControl
-            size="small"
-            disabled={controlsDisabled || effectiveViewMode === "crosstab"}
-            sx={{ minWidth: { md: 220 } }}
-          >
-            <InputLabel id="water-chemistry-sample-label">Sample</InputLabel>
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end">
+          <div className="grid gap-1.5 md:min-w-[220px]">
+            <Label htmlFor="water-chemistry-sample">Sample</Label>
             <Select
-              labelId="water-chemistry-sample-label"
-              label="Sample"
-              value={selectedSampleInfoId}
-              onChange={(event) => setSelectedSampleInfoId(event.target.value)}
-              displayEmpty
+              value={String(selectedSample?.id ?? "")}
+              onValueChange={setSelectedSampleInfoId}
+              disabled={
+                controlsDisabled || effectiveViewMode === "crosstab"
+              }
             >
-              <MenuItem value="">
-                {selectedSample
-                  ? `${selectedSample.label} - ${formatDate(
-                      selectedSample.collection_date,
-                    )}`
-                  : "Newest sample"}
-              </MenuItem>
-              {samples.map((sample) => (
-                <MenuItem key={sample.id} value={String(sample.id)}>
-                  {sample.label} - {formatDate(sample.collection_date)}
-                </MenuItem>
-              ))}
+              <SelectTrigger id="water-chemistry-sample" className="w-full">
+                <SelectValue placeholder="Select a sample" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {samples.map((sample) => (
+                  <SelectItem key={sample.id} value={String(sample.id)}>
+                    {sample.label} - {formatDate(sample.collection_date)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
-          </FormControl>
-          <TextField
-            label="From"
-            type="date"
-            size="small"
-            value={startDate}
-            onChange={(event) => setStartDate(event.target.value)}
-            disabled={controlsDisabled}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <TextField
-            label="To"
-            type="date"
-            size="small"
-            value={endDate}
-            onChange={(event) => setEndDate(event.target.value)}
-            disabled={controlsDisabled}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <FormControl
-            size="small"
-            disabled={controlsDisabled}
-            sx={{ minWidth: { md: 170 } }}
-          >
-            <InputLabel id="water-chemistry-show-label">Show</InputLabel>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="water-chemistry-from">From</Label>
+            <Input
+              id="water-chemistry-from"
+              type="date"
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+              disabled={controlsDisabled}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="water-chemistry-to">To</Label>
+            <Input
+              id="water-chemistry-to"
+              type="date"
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+              disabled={controlsDisabled}
+            />
+          </div>
+          <div className="grid gap-1.5 md:min-w-[170px]">
+            <Label htmlFor="water-chemistry-show">Show</Label>
             <Select
-              labelId="water-chemistry-show-label"
-              label="Show"
               value={standardFilter}
-              onChange={(event) =>
-                setStandardFilter(event.target.value as StandardFilter)
+              onValueChange={(value) =>
+                setStandardFilter(value as StandardFilter)
               }
+              disabled={controlsDisabled}
             >
-              {STANDARD_FILTER_OPTIONS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
+              <SelectTrigger id="water-chemistry-show" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {STANDARD_FILTER_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
-          </FormControl>
-          <FormControl
-            size="small"
-            disabled={controlsDisabled || isCrosstabOnlyTab}
-            sx={{ minWidth: { md: 180 } }}
-          >
-            <InputLabel id="water-chemistry-view-label">View</InputLabel>
+          </div>
+          <div className="grid gap-1.5 md:min-w-[180px]">
+            <Label htmlFor="water-chemistry-view">View</Label>
             <Select
-              labelId="water-chemistry-view-label"
-              label="View"
               value={effectiveViewMode}
-              onChange={(event) =>
-                setViewMode(event.target.value as ChemistryViewMode)
+              onValueChange={(value) =>
+                setViewMode(value as ChemistryViewMode)
               }
+              disabled={controlsDisabled || isCrosstabOnlyTab}
             >
-              {VIEW_OPTIONS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
+              <SelectTrigger id="water-chemistry-view" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {VIEW_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
-          </FormControl>
+          </div>
           <Button
-            variant="outlined"
-            size="small"
-            startIcon={<RestartAltOutlined />}
+            variant="outline"
+            size="default"
             onClick={resetFilters}
             disabled={controlsDisabled}
           >
+            <RotateCcw data-icon="inline-start" />
             Reset
           </Button>
-        </Stack>
+        </div>
 
         {noDisplayData ? (
           <Typography color="text.secondary" sx={{ mb: 2 }}>
@@ -740,19 +732,23 @@ export const WaterChemistryCard = ({ thingId }: WaterChemistryCardProps) => {
 
         <Tabs
           value={activeTab}
-          onChange={(_event, value) => setActiveTab(value)}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{ mb: 2, borderBottom: "1px solid", borderColor: "divider" }}
+          onValueChange={(value) =>
+            setActiveTab(value as ChemistryDisplayTabKey)
+          }
+          className="mb-4 block overflow-x-auto border-b"
         >
-          {TAB_OPTIONS.map((tab) => (
-            <Tab
-              key={tab.key}
-              value={tab.key}
-              label={tab.label}
-              disabled={controlsDisabled}
-            />
-          ))}
+          <TabsList className="w-max rounded-b-none bg-transparent p-0">
+            {TAB_OPTIONS.map((tab) => (
+              <TabsTrigger
+                key={tab.key}
+                value={tab.key}
+                disabled={controlsDisabled}
+                className="rounded-b-none border-0 border-b-2 border-transparent px-4 shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
         </Tabs>
 
         {showStandardsTable && standardsSummary ? (
