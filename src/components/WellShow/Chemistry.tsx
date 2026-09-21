@@ -211,7 +211,11 @@ const formatResultValue = (result?: ChemistryDisplayResult) => {
 };
 
 const normalizeParameterName = (value: string) =>
-  value.trim().toLowerCase().replace(/[_/-]+/g, " ").replace(/\s+/g, " ");
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[_/-]+/g, " ")
+    .replace(/\s+/g, " ");
 
 const fieldParameterDefinition = (result: ChemistryDisplayResult) => {
   const candidates = [
@@ -268,8 +272,10 @@ const canonicalFieldParameterRows = (
     const bOrder = FIELD_PARAMETER_ORDER.get(bName);
 
     if (aOrder !== undefined || bOrder !== undefined) {
-      return (aOrder ?? Number.POSITIVE_INFINITY) -
-        (bOrder ?? Number.POSITIVE_INFINITY);
+      return (
+        (aOrder ?? Number.POSITIVE_INFINITY) -
+        (bOrder ?? Number.POSITIVE_INFINITY)
+      );
     }
 
     return aName.localeCompare(bName, undefined, { sensitivity: "base" });
@@ -564,8 +570,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         minWidth: 120,
         align: "left",
         headerAlign: "left",
-        valueFormatter: (value) =>
-          value == null ? "-" : value ? "Yes" : "No",
+        valueFormatter: (value) => (value == null ? "-" : value ? "Yes" : "No"),
       },
       {
         field: "notes",
@@ -653,7 +658,9 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 const matchingResult = activeTabData?.results.find(
                   (result) => result.parameter_key === column.parameter_key,
                 );
-                return !matchingResult || !fieldParameterDefinition(matchingResult);
+                return (
+                  !matchingResult || !fieldParameterDefinition(matchingResult)
+                );
               })
               .sort((a, b) =>
                 (a.parameter_name ?? a.symbol ?? a.parameter_key).localeCompare(
@@ -682,11 +689,11 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         renderCell: (params) => {
           const result =
             activeTab === "field_parameters"
-              ? Object.values(params.row.values).find(
+              ? (Object.values(params.row.values).find(
                   (value) =>
                     fieldParameterDefinition(value)?.label ===
                     column.parameter_name,
-                ) ?? params.row.values[column.parameter_key]
+                ) ?? params.row.values[column.parameter_key])
               : params.row.values[column.parameter_key];
           return (
             <Box>
@@ -851,114 +858,116 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         </div>
 
         {noDisplayData ? (
-          <Typography color="text.secondary" sx={{ mb: 2 }}>
+          <Typography color="text.secondary" sx={{ py: 2 }} textAlign="center">
             No chemistry data exists for this well.
           </Typography>
-        ) : null}
-
-        {showSelectedSampleNote ? (
-          <Box
-            sx={{
-              mb: 2,
-              p: 1.5,
-              bgcolor: "action.hover",
-              borderLeft: "3px solid",
-              borderColor: "primary.main",
-              borderRadius: 1,
-            }}
-          >
-            <Typography variant="body2">
-              <strong>Sampling Event Note:</strong> {selectedSampleNote}
-            </Typography>
-          </Box>
-        ) : null}
-
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) =>
-            setActiveTab(value as ChemistryDisplayTabKey)
-          }
-          className="mb-4 block overflow-x-auto border-b"
-        >
-          <TabsList className="w-max rounded-b-none bg-transparent p-0">
-            {TAB_OPTIONS.map((tab) => (
-              <TabsTrigger
-                key={tab.key}
-                value={tab.key}
-                disabled={controlsDisabled}
-                className="rounded-b-none border-0 border-b-2 border-transparent px-4 shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-
-        {showStandardsTable && standardsSummary ? (
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={1}
-            sx={{ mb: 2 }}
-          >
-            <Chip
-              color="error"
-              label={`${standardsSummary.above_mcl_count} MCL`}
-            />
-            <Chip
-              color="warning"
-              label={`${standardsSummary.above_smcl_count} SMCL`}
-            />
-            <Chip
-              variant="outlined"
-              label={`${standardsSummary.compared_parameter_count} compared`}
-            />
-            <Chip
-              variant="outlined"
-              label={`Latest analysis ${formatDate(
-                standardsSummary.latest_analysis_date,
-              )}`}
-            />
-          </Stack>
-        ) : null}
-
-        {effectiveViewMode === "crosstab" ? (
-          <DataGrid
-            rowHeight={settings.rowHeight}
-            rows={crosstabRows}
-            columns={crosstabColumns}
-            pageSizeOptions={[10, 25, 50, 100]}
-            initialState={{
-              pagination: {
-                paginationModel: { pageSize: 10, page: 0 },
-              },
-            }}
-            loading={isLoading}
-            sx={{
-              border: "none",
-              "& .MuiDataGrid-cell": {
-                borderBottom: "1px solid #f0f0f0",
-              },
-            }}
-          />
         ) : (
-          <DataGrid
-            rowHeight={settings.rowHeight}
-            rows={filteredCurrentRows}
-            columns={currentGridColumns}
-            pageSizeOptions={[10, 25, 50, 100]}
-            initialState={{
-              pagination: {
-                paginationModel: { pageSize: 10, page: 0 },
-              },
-            }}
-            loading={isLoading}
-            sx={{
-              border: "none",
-              "& .MuiDataGrid-cell": {
-                borderBottom: "1px solid #f0f0f0",
-              },
-            }}
-          />
+          <>
+            {showSelectedSampleNote ? (
+              <Box
+                sx={{
+                  mb: 2,
+                  p: 1.5,
+                  bgcolor: "action.hover",
+                  borderLeft: "3px solid",
+                  borderColor: "primary.main",
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant="body2">
+                  <strong>Sampling Event Note:</strong> {selectedSampleNote}
+                </Typography>
+              </Box>
+            ) : null}
+
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) =>
+                setActiveTab(value as ChemistryDisplayTabKey)
+              }
+              className="mb-4 block overflow-x-auto border-b"
+            >
+              <TabsList className="w-max rounded-b-none bg-transparent p-0">
+                {TAB_OPTIONS.map((tab) => (
+                  <TabsTrigger
+                    key={tab.key}
+                    value={tab.key}
+                    disabled={controlsDisabled}
+                    className="rounded-b-none border-0 border-b-2 border-transparent px-4 shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            {showStandardsTable && standardsSummary ? (
+              <Stack
+                direction={{ xs: "column", md: "row" }}
+                spacing={1}
+                sx={{ mb: 2 }}
+              >
+                <Chip
+                  color="error"
+                  label={`${standardsSummary.above_mcl_count} MCL`}
+                />
+                <Chip
+                  color="warning"
+                  label={`${standardsSummary.above_smcl_count} SMCL`}
+                />
+                <Chip
+                  variant="outlined"
+                  label={`${standardsSummary.compared_parameter_count} compared`}
+                />
+                <Chip
+                  variant="outlined"
+                  label={`Latest analysis ${formatDate(
+                    standardsSummary.latest_analysis_date,
+                  )}`}
+                />
+              </Stack>
+            ) : null}
+
+            {effectiveViewMode === "crosstab" ? (
+              <DataGrid
+                rowHeight={settings.rowHeight}
+                rows={crosstabRows}
+                columns={crosstabColumns}
+                pageSizeOptions={[10, 25, 50, 100]}
+                initialState={{
+                  pagination: {
+                    paginationModel: { pageSize: 10, page: 0 },
+                  },
+                }}
+                loading={isLoading}
+                sx={{
+                  border: "none",
+                  "& .MuiDataGrid-cell": {
+                    borderBottom: "1px solid #f0f0f0",
+                  },
+                }}
+              />
+            ) : (
+              <DataGrid
+                rowHeight={settings.rowHeight}
+                rows={filteredCurrentRows}
+                columns={currentGridColumns}
+                pageSizeOptions={[10, 25, 50, 100]}
+                initialState={{
+                  pagination: {
+                    paginationModel: { pageSize: 10, page: 0 },
+                  },
+                }}
+                loading={isLoading}
+                sx={{
+                  border: "none",
+                  "& .MuiDataGrid-cell": {
+                    borderBottom: "1px solid #f0f0f0",
+                  },
+                }}
+              />
+            )}
+          </>
         )}
       </Box>
     </Paper>
