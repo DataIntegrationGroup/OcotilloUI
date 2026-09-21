@@ -58,6 +58,26 @@ export const zAddressResponse = z.object({
 });
 
 /**
+ * ApiKeyResponse
+ */
+export const zApiKeyResponse = z.object({
+    id: z.int(),
+    name: z.string(),
+    token_preview: z.string(),
+    scope: z.string(),
+    created_at: z.string(),
+    expires_at: z.string(),
+    last_used_at: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    revoked_at: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
+});
+
+/**
  * AssetAssociationResponse
  */
 export const zAssetAssociationResponse = z.object({
@@ -300,6 +320,22 @@ export const zContactResponse = z.object({
 });
 
 /**
+ * CorrectedMeasurement
+ *
+ * One reading of the corrected series, in feet below ground surface.
+ */
+export const zCorrectedMeasurement = z.object({
+    observation_datetime: z.iso.datetime({
+        offset: true
+    }),
+    value: z.number(),
+    note: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
+});
+
+/**
  * CreateAddress
  *
  * Schema for creating an address.
@@ -329,6 +365,17 @@ export const zCreateAddress = z.object({
     ])),
     country: z.optional(z.string()).default('United States'),
     address_type: z.optional(zAddressType)
+});
+
+/**
+ * CreateApiKey
+ */
+export const zCreateApiKey = z.object({
+    name: z.string().max(255),
+    lifetime_days: z.optional(z.union([
+        z.int().gt(0),
+        z.null()
+    ]))
 });
 
 /**
@@ -489,6 +536,15 @@ export const zCreateGroundwaterLevelObservation = z.object({
 });
 
 /**
+ * group_type
+ */
+export const zGroupType = z.enum([
+    'Monitoring Plan',
+    'Geographic Area',
+    'Historical'
+]);
+
+/**
  * CreateGroup
  *
  * Schema for creating a group.
@@ -504,6 +560,10 @@ export const zCreateGroup = z.object({
     ])),
     parent_group_id: z.optional(z.union([
         z.int(),
+        z.null()
+    ])),
+    group_type: z.optional(z.union([
+        zGroupType,
         z.null()
     ])),
     release_status: z.optional(zReleaseStatus),
@@ -872,9 +932,9 @@ export const zWellPurpose = z.enum([
 ]);
 
 /**
- * origin_type
+ * source_type
  */
-export const zOriginType = z.enum([
+export const zSourceType = z.enum([
     'Reported by another agency',
     "From driller's log or well report",
     'Private geologist, consultant or univ associate',
@@ -1281,7 +1341,7 @@ export const zCreateWell = z.object({
         z.null()
     ])),
     well_depth_source: z.optional(z.union([
-        zOriginType,
+        zSourceType,
         z.null()
     ])),
     well_casing_diameter: z.optional(z.union([
@@ -1387,6 +1447,19 @@ export const zCreateWellScreen = z.object({
         z.string(),
         z.null()
     ]))
+});
+
+/**
+ * DeletedTransducerObservationsResponse
+ *
+ * What a range or single-reading delete removed. ``updated_block_ids`` are
+ * blocks that kept some readings and had their span narrowed to the survivors.
+ */
+export const zDeletedTransducerObservationsResponse = z.object({
+    deleted_observation_count: z.int(),
+    deleted_block_ids: z.array(z.int()),
+    updated_block_ids: z.array(z.int()),
+    thing_id: z.int()
 });
 
 /**
@@ -1629,8 +1702,8 @@ export const zElevationMethod = z.enum([
 export const zGeoJsonutmCoordinates = z.object({
     easting: z.number(),
     northing: z.number(),
-    utm_zone: z.optional(z.string()).default('13N'),
-    horizontal_datum: z.optional(z.string()).default('NAD83')
+    utm_zone: z.string(),
+    horizontal_datum: z.optional(z.string()).default('WGS84')
 });
 
 /**
@@ -1656,7 +1729,10 @@ export const zGeoJsonProperties = z.object({
         z.string(),
         z.null()
     ])),
-    utm_coordinates: z.optional(zGeoJsonutmCoordinates),
+    utm_coordinates: z.optional(z.union([
+        zGeoJsonutmCoordinates,
+        z.null()
+    ])),
     notes: z.optional(z.array(zNoteResponse)).default([]),
     nma_location_notes: z.optional(z.union([
         z.string(),
@@ -1956,15 +2032,6 @@ export const zGroundwaterLevelObservationResponse = z.object({
 });
 
 /**
- * group_type
- */
-export const zGroupType = z.enum([
-    'Monitoring Plan',
-    'Geographic Area',
-    'Historical'
-]);
-
-/**
  * GroupResponse
  *
  * Pydantic model for the response of a group.
@@ -2139,6 +2206,32 @@ export const zMonitoringFrequencyResponse = z.object({
         z.iso.date(),
         z.null()
     ])
+});
+
+/**
+ * NewApiKeyResponse
+ *
+ * The create response, and the only one that ever carries `token`.
+ *
+ * Nothing re-reads it: the digest is all that is stored, so a client that
+ * loses this response has to issue a new key.
+ */
+export const zNewApiKeyResponse = z.object({
+    id: z.int(),
+    name: z.string(),
+    token_preview: z.string(),
+    scope: z.string(),
+    created_at: z.string(),
+    expires_at: z.string(),
+    last_used_at: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    revoked_at: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    token: z.string()
 });
 
 /**
@@ -2336,305 +2429,367 @@ export const zPagePhoneResponse = z.object({
 });
 
 /**
+ * limit_type
+ */
+export const zLimitType = z.enum([
+    'MCL',
+    'SMCL',
+    'GWQS',
+    'MRL',
+    'PQL',
+    'MDL',
+    'RL'
+]);
+
+/**
+ * RegulatoryLimitResponse
+ *
+ * One citable limit for one parameter.
+ *
+ * The parameter is nested rather than left as a bare id: a consumer reading a
+ * chemistry result has an analyte *name* from the lexicon (see
+ * api/chemisty.py), not a parameter id, and a list of limits with only ids in
+ * it cannot be matched against results without a second round trip.
+ *
+ * ``limit_source`` is a plain string, unlike the other three lexicon-backed
+ * columns. It is a foreign key to lexicon_term like they are, but no single
+ * lexicon category collects the issuing agencies: 'EPA' and 'NMED' are both
+ * `organization` terms, alongside 300 well owners and drillers. There is no
+ * category to build an enum from, and building one from `organization` would
+ * advertise every landowner as a source of regulatory limits.
+ */
+export const zRegulatoryLimitResponse = z.object({
+    id: z.int(),
+    created_at: z.string(),
+    release_status: zReleaseStatus,
+    parameter_id: z.int(),
+    parameter: zParameterResponse,
+    limit_source: z.string(),
+    limit_value: z.number(),
+    limit_unit: zUnit,
+    limit_type: z.union([
+        zLimitType,
+        z.null()
+    ])
+});
+
+/**
+ * Page[RegulatoryLimitResponse]
+ */
+export const zPageRegulatoryLimitResponse = z.object({
+    items: z.array(zRegulatoryLimitResponse),
+    total: z.int().gte(0),
+    page: z.int().gte(1),
+    size: z.int().gte(1),
+    pages: z.int().gte(0)
+});
+
+/**
  * organization
  */
 export const zOrganization = z.enum([
     'Unknown',
-    'City of Aztec',
-    'Daybreak Investments',
-    'Vallecitos HOA',
-    'SFC, Santa Fe Animal Shelter',
-    'El Guicu Ditch Association',
-    'Santa Fe Municipal Airport',
-    'Uluru Development',
-    "AllSup's Convenience Stores",
-    'Santa Fe Downs Resort',
-    'City of Truth or Consequences, WWTP',
-    'Riverbend Hotsprings',
-    'Armendaris Ranch',
-    'El Paso Water',
-    'BLM, Socorro Field Office',
-    'USFWS',
-    'Sile MDWCA',
-    'Pena Blanca Water & Sanitation District',
-    'Town of Questa',
-    'Town of Cerro',
-    'Cerro MDWCA',
-    'Farr Cattle Company',
-    'Carrizozo Orchard',
-    'White Oaks Pottery',
-    'USFS, Kiowa Grasslands',
-    'Cloud Country West Subdivision',
-    'Chama West WUA',
-    'El Rito Regional Water and Waste Water Association',
-    'El Rito MDWCA',
-    'West Rim MDWUA',
-    'Village of Willard',
-    'Quemado Municipal Water & SWA',
-    'Coyote Creek MDWUA',
-    'Lamy MDWCA',
-    'La Joya CWDA',
-    'NM Firefighters Training Academy',
-    'Cebolleta Land Grant',
-    'Madrid Water Co-op',
-    'Sun Valley Water and Sanitation',
-    'Bluewater Lake MDWCA',
-    'Bluewater Acres Domestic WUA',
-    'Lybrook MDWCA',
-    'New Mexico Museum of Natural History',
-    'Hillsboro MDWCA',
-    'Tyrone MDWCA',
-    'Santa Clara Water System',
-    'Casas Adobes MDWCA',
-    'Lake Roberts WUA',
-    'El Creston MDWCA',
-    'Reserve Municipality Water Works',
-    'Town of Estancia',
-    'Pie Town MDWCA',
-    'Roosevelt SWCD',
-    'Otis MDWCA',
-    'White Cliffs MDWUA',
-    'Vista Linda Water Co-op',
-    'Anasazi Trails Water Co-op',
-    'Canon MDWCA',
-    'Placitas Trails Water Co-op',
-    'BLM, Roswell Office',
-    'Forked Lightning Ranch',
-    'Cottonwood RWA',
-    'Pinon Ridge WUA',
-    'McSherry Farms',
-    'Agua Sana WUA',
-    'Chamita MDWCA',
-    'W Spear-bar Ranch',
-    'Village of Capitan',
-    'Brazos MDWCA',
-    'Alto Alps HOA',
-    'Chiricahua Desert Museum',
-    'Bike Ranch',
-    'Hachita MDWCA',
-    'Carrizozo Municipal Water',
-    'Dunhill Ranch',
-    'Santa Fe Conservation Trust',
-    'NMSU',
-    'USGS',
-    'TWDB',
-    'NMED',
-    'NMOSE',
-    'NMBGMR',
-    'Bernalillo County',
-    'BLM',
-    'BLM Taos Office',
-    'SFC',
-    'SFC, Fire Facilities',
-    'SFC, Utilities Dept.',
-    'SFC, Valle Vista Water Utility, Inc.',
-    'City of Santa Fe',
-    'City of Santa Fe WWTP',
-    'City of Santa Fe, Municipal Recreation Complex',
-    'City of Santa Fe, Sangre de Cristo Water Co.',
-    'NMISC',
-    'PVACD',
-    'Bayard',
-    'SNL',
-    'USFS',
-    'NMT',
-    'NPS',
-    'NMRWA',
-    'NMDOT',
-    'Taos SWCD',
-    'Otero SWCD',
-    'Northeastern SWCD',
-    'CDWR',
-    'Pendaries Village',
     'A&T Pump & Well Service, LLC',
     'A. G. Wassenaar, Inc',
-    'AMEC',
-    'Balleau Groundwater, Inc',
-    'CDM Smith',
-    'CH2M Hill',
-    'Corbin Consulting, Inc',
-    'Chevron',
-    'Daniel B. Stephens & Associates, Inc',
-    'EnecoTech',
-    'Faith Engineering, Inc',
-    'Foster Well Service, Inc',
-    'Glorieta Geoscience, Inc',
-    'Golder Associates, Inc',
-    "Hathorn's Well Service, Inc",
-    'Hydroscience Associates, Inc',
-    'IC Tech, Inc',
-    'John Shomaker & Associates, Inc',
-    'Kuckleman Pump Service',
-    'Los Golondrinas',
-    'Minton Engineers',
-    'MJDarrconsult, Inc',
-    'Puerta del Canon Ranch',
-    'Rodgers & Company, Inc',
-    'San Pedro Creek Estates HOA',
-    'Statewide Drilling, Inc',
-    'Tec Drilling Limited',
-    'Tetra Tech, Inc',
-    'Thompson Drilling, Inc',
-    'Witcher & Associates',
-    'Zeigler Geologic Consulting, LLC',
-    'Sandia Well Service, Inc',
-    'San Marcos Association',
-    'URS',
-    'Vista del Oro',
     'Abeyta Engineering, Inc',
     'Adobe Ranch',
     'Agua Fria Community Water Association',
+    'Agua Sana MWCD',
+    'Agua Sana WUA',
+    "AllSup's Convenience Stores",
+    'Alto Alps HOA',
+    'AMEC',
+    'Anasazi Trails Water Co-op',
     'Apache Gap Ranch',
+    'Armendaris Ranch',
     'Aspendale Mountain Retreat',
     'Augustin Plains Ranch LLC',
     'B & B Cattle Co',
+    'Balleau Groundwater, Inc',
+    'Bayard',
+    'Bernalillo County',
     'Berridge Distributing Company',
+    'Bike Ranch',
     "Bishop's Lodge",
+    'BLM',
+    'BLM Taos Office',
+    'BLM, Roswell Office',
+    'BLM, Socorro Field Office',
+    'Bluewater Acres Domestic WUA',
+    'Bluewater Lake MDWCA',
     'Bonanza Creek Ranch',
+    'Bourbon Grill at El Gancho',
+    'Brazos MDWCA',
     'Bug Scuffle Water Association',
-    'Wehinahpay Mountain Camp',
     'Campbell Ranch',
+    'Canada Los Alamos MDWCA',
+    'Canjilon Mutual Domestic Water System',
+    'Canon MDWCA',
     'Capitol Ford Santa Fe',
+    'Carrizozo Municipal Water',
+    'Carrizozo Orchard',
+    'Casas Adobes MDWCA',
+    'CDM Smith',
+    'CDWR',
+    'Cebolla Mutual Domestic',
+    'Cebolleta Land Grant',
     'Cemex, Inc',
     'Cerro Community Center',
-    'Santa Fe Jewish Center',
+    'Cerro MDWCA',
+    'CH2M Hill',
+    'Chama West WUA',
+    'Chamita MDWCA',
+    'Chevron',
+    'Chihuahuan Desert Rangeland Research Center (CDRRC)',
+    'Chiricahua Desert Museum',
     'Chupadero MDWCA',
     'Cielo Lumbre HOA',
     'Circle Cross Ranch',
     'City of Alamogordo',
+    'City of Aztec',
     'City of Portales, Public Works Dept.',
+    'City of Santa Fe',
+    'City of Santa Fe WWTP',
+    'City of Santa Fe, Municipal Recreation Complex',
+    'City of Santa Fe, Sangre de Cristo Water Co.',
     'City of Socorro',
+    'City of Truth or Consequences, WWTP',
+    'Cloud Country West Subdivision',
     'Commonwealth Conservancy',
+    'Corbin Consulting, Inc',
     'Costilla MDWCA',
+    'Cottonwood RWA',
     'Country Club Garden Mobile Home Park',
+    'Coyote Creek MDWUA',
     'Crossroads Cattle Co., Ltd',
+    'Daniel B. Stephens & Associates, Inc',
+    'Daybreak Investments',
+    'Desert Village RV & Mobile Home Park',
     'Double H Ranch',
+    'Dunhill Ranch',
     'E.A. Meadows East',
+    'East Rio Arriba SWCD',
     'El Camino Realty, Inc',
-    'Eldorado Area Water & Sanitation District',
-    'Bourbon Grill at El Gancho',
+    'El Creston MDWCA',
+    'El Guicu Ditch Association',
+    'El Paso Water',
     'El Prado HOA',
+    'El Prado Municipal Water',
     'El Rancho de las Golondrinas',
     'El Rito Canyon MDWCA',
+    'El Rito MDWCA',
+    'El Rito Regional Water and Waste Water Association',
+    'Eldorado Area Water & Sanitation District',
     'Encantado Enterprises',
+    'EnecoTech',
+    'EPA',
     'Estrella Concepts LLC',
-    'Sixteen Springs Fire Department',
+    'Faith Engineering, Inc',
+    'Farr Cattle Company',
     'Fire Water Lodge',
     'Ford County Land & Cattle Company, Inc',
+    'Forked Lightning Ranch',
+    'Foster Well Service, Inc',
     'Friendly Construction, Inc',
+    'Glorieta Geoscience, Inc',
+    'Golder Associates, Inc',
+    'Hachita MDWCA',
+    'Hachita Mutual Domestic',
     'Hacienda Del Cerezo',
+    "Hathorn's Well Service, Inc",
     'Hefker Vega Ranch',
     'High Nogal Ranch',
+    'Hillsboro MDWCA',
+    'Hilton Ranch',
     'Holloman Air Force Base',
     'Hyde Park Estates MDWCA',
-    'Desert Village RV & Mobile Home Park',
+    'Hydroscience Associates, Inc',
+    'IC Tech, Inc',
+    'John Shomaker & Associates, Inc',
+    'Jornada Experimental Range (JER)',
     'K. Schmitt Trust',
+    'Kuckleman Pump Service',
+    'La Canada Way HOA',
     'La Cienega MDWCA',
+    'La Joya CWDA',
+    'La Puerta HOA',
     'La Vista HOA',
+    'Lake Roberts WUA',
+    'Lamy MDWCA',
     'Land Ventures LLC',
+    'Las Brisas HOA',
     'Las Lagunitas',
     'Las Lagunitas HOA',
     'Lightning Dock Zanskar',
     'Living World Ministries',
     'Los Atrevidos, Inc',
+    'Los Golondrinas',
+    'Los Ojos Mutual Domestic',
     'Los Prados HOA',
+    'Lower Rio Grande Public Water Works Authority',
+    'Lybrook MDWCA',
+    'Madrid Water Co-op',
     'Malaga MDWCA & SWA',
     'Mangas Outfitters',
+    'McSherry Farms',
     'Medina Gravel Pit',
     'Mendenhall Trading Co',
     'Mesa Verde Ranch',
-    'NMDGF',
-    'NMSU College of Agriculture',
+    'Minton Engineers',
+    'MJDarrconsult, Inc',
     'Naiche Development',
-    'NRAO',
+    'New Mexico Museum of Natural History',
+    'NM Firefighters Training Academy',
+    'NMBGMR',
+    'NMDGF',
+    'NMDOT',
+    'NMED',
+    'NMISC',
+    'NMOSE',
+    'NMRWA',
     'NMSA',
+    'NMSU',
+    'NMSU College of Agriculture',
+    'NMT',
     'Nogal MDWCA',
+    'Northeastern SWCD',
+    'Northwest New Mexico Utility Authority',
+    'NPS',
+    'NRAO',
     'O Bar O Ranch',
-    'OMI Wastewater Treatment Plant',
     'Old Road Ranch Pardners Ltd',
-    'PNM Service Center',
+    'OMI Wastewater Treatment Plant',
+    'Otero SWCD',
+    'Otis MDWCA',
+    'Our Lady of Guadalupe (OLG)',
     'Peace Tabernacle Church',
     'Pecos Trail Inn',
     'Pelican Spa',
+    'Pena Blanca Water & Sanitation District',
+    'Pendaries Village',
+    'Pie Town MDWCA',
+    'Pinon Ridge WUA',
     'Pistachio Tree Ranch',
+    'Placitas Trails Water Co-op',
+    'PLSS',
+    'PNM Service Center',
+    'Puerta del Canon Ranch',
+    'PVACD',
+    'Quemado Municipal Water & SWA',
     'Rancho Encantado',
     'Rancho San Lucas',
     'Rancho San Marcos',
     'Rancho Viejo Partnership',
     'Ranney Ranch',
+    'Reserve Municipality Water Works',
     'Rio En Medio MDWCA',
+    'Riverbend Hotsprings',
+    'Rodgers & Company, Inc',
+    'Roosevelt SWCD',
     'San Acacia MDWCA',
     'San Juan Residences',
-    'Sangre de Cristo Estates',
-    'Santa Fe Community College',
+    'San Marcos Association',
+    'San Pedro Creek Estates HOA',
+    'Sandia Well Service, Inc',
     'Sangre de Cristo Center',
+    'Sangre de Cristo Estates',
+    'Santa Ana Pueblo Department of Natural Resources',
+    'Santa Clara Water System',
+    'Santa Fe Community College',
+    'Santa Fe Conservation Trust',
+    'Santa Fe Downs Resort',
     'Santa Fe Horse Park',
+    'Santa Fe Jewish Center',
+    'Santa Fe Municipal Airport',
     'Santa Fe Opera',
     'Santa Fe Waldorf School',
+    'SFC',
+    'SFC, Fire Facilities',
+    'SFC, Santa Fe Animal Shelter',
+    'SFC, Utilities Dept.',
+    'SFC, Valle Vista Water Utility, Inc.',
     'Shidoni Foundry and Gallery',
     'Sierra Grande Lodge',
     'Sierra Vista Retirement Community',
+    'Sile MDWCA',
+    'Sixteen Springs Fire Department',
     'Slash Triangle Ranch',
+    'Smith Ranch LLC',
+    'SNL',
     'Spanish Stirrup Rockshop',
     'Sparrowhawk Farm',
     'Stagecoach Motel',
     'State of New Mexico',
+    'Statewide Drilling, Inc',
     'Stephenson Ranch',
     'Sun Broadcasting Network',
+    'Sun Valley Water and Sanitation',
     'Tano Rd LLC',
-    'UNM-Taos',
+    'Taos SWCD',
+    'Tec Drilling Limited',
     'Tee Pee Ranch/Tee Pee Subdivision',
     'Tent Rock, Inc',
     'Tesuque MDWCA',
+    'Tetra Tech, Inc',
     'The Great Cloud Zen Center',
+    'The Nature Conservancy (TNC)',
+    'Thompson Drilling, Inc',
     'Three Rivers Ranch',
     'Timberon Water and Sanitation District',
+    'Town of Cerro',
+    'Town of Estancia',
     'Town of Magdalena',
+    'Town of Questa',
     'Town of Taos',
     'Town of Taos, National Guard Armory',
     'Trinity Ranch',
     'Tularosa Basin National Desalination Research Facility',
     'Turquoise Trail Charter School',
+    'TWDB',
+    'Tyrone MDWCA',
+    'Uluru Development',
+    'UNM-Taos',
+    'URS',
     'US Bureau of Indian Affairs, Santa Fe Indian School',
+    'USFS',
     'USFS, Carson NF, Taos Office',
     'USFS, Cibola NF, Magdalena Ranger District',
     "USFS, Cibola NF, Supervisor's Office",
+    'USFS, Kiowa Grasslands',
     'USFS, Santa Fe NF, Espanola Ranger District',
+    'USFWS',
+    'USGS',
     'Ute Mountain Farms',
     'VA Hospital',
+    'Vallecitos HOA',
     'Velte',
     'Vereda Serena Property',
+    'Village of Capitan',
     'Village of Corona',
     'Village of Floyd',
+    'Village of Hope',
     'Village of Melrose',
     'Village of Vaughn',
-    'Vista Land Company',
-    'Vista Redonda MDWCA',
+    'Village of Willard',
     'Vista de Oro de Placitas Water Users Coop',
+    'Vista del Oro',
+    'Vista Land Company',
+    'Vista Linda Water Co-op',
+    'Vista Redonda MDWCA',
+    'W Spear-bar Ranch',
     'Walker Ranch',
+    'Wehinahpay Mountain Camp',
+    'West Rim MDWUA',
+    'White Cliffs MDWUA',
+    'White Oaks Pottery',
     'Wild & Woolley Trailer Ranch',
     'Winter Brothers',
+    'Witcher & Associates',
+    'WSP',
     'Yates Petroleum Corporation',
     'Zamora Accounting Services',
-    'Agua Sana MWCD',
-    'Canada Los Alamos MDWCA',
-    'Canjilon Mutual Domestic Water System',
-    'Cebolla Mutual Domestic',
-    'Chihuahuan Desert Rangeland Research Center (CDRRC)',
-    'East Rio Arriba SWCD',
-    'El Prado Municipal Water',
-    'Hachita Mutual Domestic',
-    'Jornada Experimental Range (JER)',
-    'La Canada Way HOA',
-    'Los Ojos Mutual Domestic',
-    'The Nature Conservancy (TNC)',
-    'Smith Ranch LLC',
-    'Santa Ana Pueblo Department of Natural Resources',
-    'Village of Hope',
-    'WSP',
-    'Zia Pueblo',
-    'Our Lady of Guadalupe (OLG)',
-    'PLSS'
+    'Zeigler Geologic Consulting, LLC',
+    'Zia Pueblo'
 ]);
 
 /**
@@ -2714,7 +2869,10 @@ export const zThingResponse = z.object({
         z.null()
     ])),
     thing_type: z.string(),
-    current_location: zLocationGeoJsonResponse,
+    current_location: z.optional(z.union([
+        zLocationGeoJsonResponse,
+        z.null()
+    ])),
     first_visit_date: z.union([
         z.iso.date(),
         z.null()
@@ -2903,7 +3061,10 @@ export const zSpringResponse = z.object({
         z.null()
     ])),
     thing_type: z.string(),
-    current_location: zLocationGeoJsonResponse,
+    current_location: z.optional(z.union([
+        zLocationGeoJsonResponse,
+        z.null()
+    ])),
     first_visit_date: z.union([
         z.iso.date(),
         z.null()
@@ -2958,6 +3119,15 @@ export const zPageThingResponse = z.object({
 });
 
 /**
+ * data_maturity
+ */
+export const zDataMaturity = z.enum([
+    'approved',
+    'provisional',
+    'in review'
+]);
+
+/**
  * TransducerObservationResponse
  */
 export const zTransducerObservationResponse = z.object({
@@ -2969,7 +3139,15 @@ export const zTransducerObservationResponse = z.object({
         offset: true
     }),
     parameter_id: z.int(),
-    deployment_id: z.int()
+    deployment_id: z.int(),
+    note: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    data_maturity: z.union([
+        zDataMaturity,
+        z.null()
+    ])
 });
 
 /**
@@ -2994,7 +3172,23 @@ export const zTransducerObservationBlockResponse = z.object({
     end_datetime: z.iso.datetime({
         offset: true
     }),
-    parameter_id: z.int()
+    parameter_id: z.int(),
+    source_file: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    source_kind: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    corrections: z.optional(z.union([
+        z.array(z.string()),
+        z.null()
+    ])),
+    comment: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
 });
 
 /**
@@ -3053,6 +3247,139 @@ export const zPageWaterChemistryObservationResponse = z.object({
 });
 
 /**
+ * WaterChemistryResultStandardResponse
+ *
+ * Drinking-water standard comparison for a chemistry result.
+ */
+export const zWaterChemistryResultStandardResponse = z.object({
+    status: z.enum([
+        'above_mcl',
+        'above_smcl',
+        'below_mcl',
+        'below_smcl',
+        'within_smcl',
+        'no_limit',
+        'not_compared'
+    ]),
+    label: z.string(),
+    primary_mcl: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    secondary_smcl: z.optional(z.union([
+        z.number(),
+        z.string(),
+        z.null()
+    ])),
+    unit: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    basis: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
+});
+
+/**
+ * WaterChemistryResultResponse
+ *
+ * One legacy chemistry analyte result.
+ *
+ * Not a `BaseResponseModel`: the row comes from a view over the legacy NMA
+ * tables, so it has a text id rather than an integer one and carries no
+ * `created_at` of its own.
+ */
+export const zWaterChemistryResultResponse = z.object({
+    id: z.string(),
+    thing_id: z.int(),
+    station_name: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    sample_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    parameter_name: z.string(),
+    value: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    unit: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    source: z.optional(z.union([
+        z.enum([
+            'major',
+            'minor',
+            'radionuclide',
+            'field'
+        ]),
+        z.null()
+    ])),
+    parameter_key: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    analyte: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    symbol: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    uncertainty: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    analysis_method: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    notes: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    analyses_agency: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    standard: z.optional(z.union([
+        zWaterChemistryResultStandardResponse,
+        z.null()
+    ])),
+    observation_datetime: z.union([
+        z.string(),
+        z.null()
+    ]),
+    analysis_date: z.optional(z.union([
+        z.iso.date(),
+        z.null()
+    ])),
+    result_kind: z.optional(z.enum([
+        'major',
+        'minor',
+        'radionuclide',
+        'field',
+        'unknown'
+    ]))
+});
+
+/**
+ * Page[WaterChemistryResultResponse]
+ */
+export const zPageWaterChemistryResultResponse = z.object({
+    items: z.array(zWaterChemistryResultResponse),
+    total: z.int().gte(0),
+    page: z.int().gte(1),
+    size: z.int().gte(1),
+    pages: z.int().gte(0)
+});
+
+/**
  * WellResponse
  *
  * Response schema for well details.
@@ -3067,7 +3394,10 @@ export const zWellResponse = z.object({
         z.null()
     ])),
     thing_type: z.string(),
-    current_location: zLocationGeoJsonResponse,
+    current_location: z.optional(z.union([
+        zLocationGeoJsonResponse,
+        z.null()
+    ])),
     first_visit_date: z.union([
         z.iso.date(),
         z.null()
@@ -3281,10 +3611,82 @@ export const zPublicationResponse = z.object({
 });
 
 /**
+ * TransducerBlockProvenance
+ *
+ * Where a corrected series came from and what was done to it.
+ */
+export const zTransducerBlockProvenance = z.object({
+    source_file: z.string().max(255),
+    source_kind: z.optional(z.union([
+        z.enum([
+            'water_head',
+            'depth_to_water'
+        ]),
+        z.null()
+    ])),
+    corrections: z.optional(z.array(z.string())),
+    notes: z.optional(z.union([
+        z.string(),
+        z.null()
+    ]))
+});
+
+/**
+ * PublishTransducerBlock
+ *
+ * A whole corrected file: one block plus every reading in it.
+ */
+export const zPublishTransducerBlock = z.object({
+    release_status: z.optional(zReleaseStatus),
+    thing_id: z.int(),
+    deployment_id: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    parameter_id: z.int(),
+    review_status: z.optional(zReviewStatus),
+    provenance: zTransducerBlockProvenance,
+    measurements: z.array(zCorrectedMeasurement).min(1).max(100000)
+});
+
+/**
+ * PublishedTransducerBlockResponse
+ *
+ * Mirrors the read shape so the client can merge a publish straight into a
+ * ``GET /observation/transducer-groundwater-level`` result set. The
+ * observations are not echoed -- the client just sent them; the count is what
+ * it cannot know.
+ */
+export const zPublishedTransducerBlockResponse = z.object({
+    block: zTransducerObservationBlockResponse,
+    observation_count: z.int(),
+    thing_id: z.int(),
+    deployment_id: z.int()
+});
+
+/**
  * ResourceNotFoundResponse
  */
 export const zResourceNotFoundResponse = z.object({
     detail: z.string()
+});
+
+/**
+ * TransducerObservationDetailResponse
+ *
+ * One reading, the block covering it, and the well it is on.
+ *
+ * ``block`` is None for a reading no block covers -- one a hand-deleted block
+ * left behind. The list pairs every row with a block and so never shows
+ * those; addressed by id, hiding it would misreport a row that still exists.
+ */
+export const zTransducerObservationDetailResponse = z.object({
+    observation: zTransducerObservationResponse,
+    block: z.union([
+        zTransducerObservationBlockResponse,
+        z.null()
+    ]),
+    thing_id: z.int()
 });
 
 /**
@@ -3329,6 +3731,16 @@ export const zUpdateAddress = z.object({
         zAddressType,
         z.null()
     ]))
+});
+
+/**
+ * UpdateApiKey
+ *
+ * The name is the only mutable field. A credential's scope, owner, and
+ * expiry are fixed at creation; changing any of them is issuing a new key.
+ */
+export const zUpdateApiKey = z.object({
+    name: z.string().max(255)
 });
 
 /**
@@ -3466,6 +3878,10 @@ export const zUpdateGroup = z.object({
     ])),
     parent_group_id: z.optional(z.union([
         z.int(),
+        z.null()
+    ])),
+    group_type: z.optional(z.union([
+        zGroupType,
         z.null()
     ])),
     release_status: z.optional(z.union([
@@ -3753,6 +4169,35 @@ export const zUpdateThingIdLink = z.object({
     ])),
     relation: z.optional(z.union([
         z.string(),
+        z.null()
+    ]))
+});
+
+/**
+ * UpdateTransducerObservation
+ *
+ * What may change on a stored reading.
+ *
+ * ``observation_datetime``, ``deployment_id``, and ``parameter_id`` are
+ * deliberately absent, and ``extra="forbid"`` makes sending one a 422 rather
+ * than a silent no-op. Only time ties a reading to its block, so moving one
+ * would orphan it or slide it under another block. Delete and republish.
+ */
+export const zUpdateTransducerObservation = z.object({
+    release_status: z.optional(z.union([
+        zReleaseStatus,
+        z.null()
+    ])),
+    value: z.optional(z.union([
+        z.number(),
+        z.null()
+    ])),
+    note: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    data_maturity: z.optional(z.union([
+        zDataMaturity,
         z.null()
     ]))
 });
@@ -4095,7 +4540,10 @@ export const zListAssetsAssetGetData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
     query: z.optional(z.object({
-        thing_id: z.optional(z.int()),
+        thing_id: z.optional(z.union([
+            z.int(),
+            z.null()
+        ])),
         page: z.optional(z.int().gte(1)).default(1),
         size: z.optional(z.int().gte(1).lte(10000)).default(25)
     }))
@@ -4113,9 +4561,14 @@ export const zAddAssetAssetPostData = z.object({
 });
 
 /**
+ * Response Add Asset Asset Post
+ *
  * Successful Response
  */
-export const zAddAssetAssetPostResponse = zAssetResponse;
+export const zAddAssetAssetPostResponse = z.union([
+    zAssetResponse,
+    z.null()
+]);
 
 export const zListUnassociatedAssetsAssetUnassociatedGetData = z.object({
     body: z.optional(z.never()),
@@ -4190,6 +4643,94 @@ export const zRemoveAssetAssetAssetIdRemoveDeleteData = z.object({
  * Successful Response
  */
 export const zRemoveAssetAssetAssetIdRemoveDeleteResponse = z.void();
+
+export const zGetApiKeysApiKeyGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Response Get Api Keys Api Key Get
+ *
+ * Successful Response
+ */
+export const zGetApiKeysApiKeyGetResponse = z.array(zApiKeyResponse);
+
+export const zCreateApiKeyApiKeyPostData = z.object({
+    body: zCreateApiKey,
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zCreateApiKeyApiKeyPostResponse = zNewApiKeyResponse;
+
+export const zRevokeApiKeyApiKeyApiKeyIdDeleteData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        api_key_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zRevokeApiKeyApiKeyApiKeyIdDeleteResponse = z.void();
+
+export const zUpdateApiKeyApiKeyApiKeyIdPatchData = z.object({
+    body: zUpdateApiKey,
+    path: z.object({
+        api_key_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateApiKeyApiKeyApiKeyIdPatchResponse = zApiKeyResponse;
+
+export const zGetWaterChemistryResultsChemistryResultsGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.object({
+        thing_id: z.optional(z.union([
+            z.int(),
+            z.null()
+        ])),
+        start_time: z.optional(z.union([
+            z.iso.datetime({
+                offset: true
+            }),
+            z.null()
+        ])),
+        end_time: z.optional(z.union([
+            z.iso.datetime({
+                offset: true
+            }),
+            z.null()
+        ])),
+        sort: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        order: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        page: z.optional(z.int().gte(1)).default(1),
+        size: z.optional(z.int().gte(1).lte(10000)).default(25)
+    }))
+});
+
+/**
+ * Successful Response
+ */
+export const zGetWaterChemistryResultsChemistryResultsGetResponse = zPageWaterChemistryResultResponse;
 
 export const zGetAuthorPublicationsAuthorAuthorIdPublicationsGetData = z.object({
     body: z.optional(z.never()),
@@ -4536,6 +5077,70 @@ export const zGetProjectAreaGeospatialProjectAreaGroupIdGetData = z.object({
  * Successful Response
  */
 export const zGetProjectAreaGeospatialProjectAreaGroupIdGetResponse = zFeatureCollectionResponse;
+
+export const zQgisConnectionsGisQgisConnectionsXmlGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zQgisConnectionsGisQgisConnectionsXmlGetResponse = z.string();
+
+export const zQgisConnectionsInternalGisQgisConnectionsInternalXmlGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zQgisConnectionsInternalGisQgisConnectionsInternalXmlGetResponse = z.string();
+
+export const zQgisLayerGisQgisLayersLayerIdQlrGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        layer_id: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zQgisLayerGisQgisLayersLayerIdQlrGetResponse = z.string();
+
+export const zArcgisLayerGisArcgisLayersLayerIdLyrxGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        layer_id: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zArcgisLayerGisArcgisLayersLayerIdLyrxGetResponse = z.string();
+
+export const zGisIndexGisGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.object({
+        f: z.optional(z.union([
+            z.string(),
+            z.null()
+        ]))
+    }))
+});
+
+/**
+ * Successful Response
+ */
+export const zGisIndexGisGetResponse = z.string();
 
 export const zGetGroupsGroupGetData = z.object({
     body: z.optional(z.never()),
@@ -5020,6 +5625,19 @@ export const zAddWaterChemistryObservationObservationWaterChemistryPostData = z.
  */
 export const zAddWaterChemistryObservationObservationWaterChemistryPostResponse = zWaterChemistryObservationResponse;
 
+export const zPublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostData = z.object({
+    body: zPublishTransducerBlock,
+    path: z.optional(z.never()),
+    query: z.optional(z.object({
+        replace_overlapping: z.optional(z.boolean()).default(false)
+    }))
+});
+
+/**
+ * Successful Response
+ */
+export const zPublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostResponse = zPublishedTransducerBlockResponse;
+
 export const zBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostData = z.object({
     body: zBodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost,
     path: z.optional(z.never()),
@@ -5030,6 +5648,45 @@ export const zBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPo
  * Successful Response
  */
 export const zBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostResponse = zWaterLevelBulkUploadResponse;
+
+export const zDeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        observation_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zDeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteResponse = zDeletedTransducerObservationsResponse;
+
+export const zGetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        observation_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zGetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetResponse = zTransducerObservationDetailResponse;
+
+export const zUpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchData = z.object({
+    body: zUpdateTransducerObservation,
+    path: z.object({
+        observation_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchResponse = zTransducerObservationDetailResponse;
 
 export const zGetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetData = z.object({
     body: z.optional(z.never()),
@@ -5083,6 +5740,25 @@ export const zUpdateWaterChemistryObservationObservationWaterChemistryObservatio
  */
 export const zUpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponse = zWaterChemistryObservationResponse;
 
+export const zDeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.object({
+        thing_id: z.int(),
+        start_time: z.iso.datetime({
+            offset: true
+        }),
+        end_time: z.iso.datetime({
+            offset: true
+        })
+    })
+});
+
+/**
+ * Successful Response
+ */
+export const zDeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteResponse = zDeletedTransducerObservationsResponse;
+
 export const zGetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -5101,6 +5777,14 @@ export const zGetTransducerGroundwaterLevelObservationsObservationTransducerGrou
             z.iso.datetime({
                 offset: true
             }),
+            z.null()
+        ])),
+        sort: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        order: z.optional(z.union([
+            z.string(),
             z.null()
         ])),
         page: z.optional(z.int().gte(1)).default(1),
@@ -5196,6 +5880,61 @@ export const zPostPublicationPublicationAddPostData = z.object({
  * Successful Response
  */
 export const zPostPublicationPublicationAddPostResponse = zPublicationResponse;
+
+export const zGetRegulatoryLimitsRegulatoryLimitGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.object({
+        parameter_id: z.optional(z.union([
+            z.int(),
+            z.null()
+        ])),
+        parameter_name: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        limit_source: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        limit_type: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        sort: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        order: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
+        filter: z.optional(z.union([
+            z.array(z.string()),
+            z.null()
+        ])),
+        page: z.optional(z.int().gte(1)).default(1),
+        size: z.optional(z.int().gte(1).lte(10000)).default(25)
+    }))
+});
+
+/**
+ * Successful Response
+ */
+export const zGetRegulatoryLimitsRegulatoryLimitGetResponse = zPageRegulatoryLimitResponse;
+
+export const zGetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        regulatory_limit_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zGetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetResponse = zRegulatoryLimitResponse;
 
 export const zGetSamplesSampleGetData = z.object({
     body: z.optional(z.never()),
@@ -5836,9 +6575,7 @@ export const zReadNgwmnLithologyNgwmnLithologyPointidGetData = z.object({
 export const zCreateFeedbackFeedbackPostData = z.object({
     body: zFeedbackCreate,
     path: z.optional(z.never()),
-    query: z.optional(z.object({
-        _user: z.optional(z.unknown())
-    }))
+    query: z.optional(z.never())
 });
 
 /**
