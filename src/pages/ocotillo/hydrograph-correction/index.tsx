@@ -42,6 +42,7 @@ import { IObservation, IWell } from '@/interfaces/ocotillo'
 import { fetchAllOcotilloPages } from '@/utils/ocotilloPaging'
 import type {
   ReviewStatus,
+  ReviewTransducerBlock,
   TransducerObservationDetailResponse,
   TransducerObservationWithBlockResponse,
   UpdateTransducerObservation,
@@ -600,10 +601,11 @@ export const HydrographCorrectionPage = () => {
     reviewStatus: ReviewStatus
   ) => {
     try {
+      const payload: ReviewTransducerBlock = { review_status: reviewStatus }
       await ocotilloDataProvider.custom!({
         url: `observation/transducer-groundwater-level/block/${blockId}`,
         method: 'patch',
-        payload: { review_status: reviewStatus },
+        payload,
       })
     } catch (error) {
       throw new Error(apiErrorMessage(error, 'Updating the block failed.'))

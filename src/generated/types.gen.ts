@@ -2724,6 +2724,34 @@ export type ResourceNotFoundResponse = {
 };
 
 /**
+ * ReviewTransducerBlock
+ *
+ * Move a published block through review. Its readings' ``data_maturity``
+ * follows: ``approved`` makes them approved, ``not reviewed`` puts them back
+ * to provisional. Nothing else about the block changes here.
+ */
+export type ReviewTransducerBlock = {
+    review_status: ReviewStatus;
+};
+
+/**
+ * ReviewedTransducerBlockResponse
+ *
+ * The block after review, and how many readings moved with it.
+ */
+export type ReviewedTransducerBlockResponse = {
+    block: TransducerObservationBlockResponse;
+    /**
+     * Data Maturity
+     */
+    data_maturity: string;
+    /**
+     * Updated Observation Count
+     */
+    updated_observation_count: number;
+};
+
+/**
  * SampleResponse
  *
  * Developer's note
@@ -7350,6 +7378,36 @@ export type BulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost
 };
 
 export type BulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostResponse = BulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostResponses[keyof BulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostResponses];
+
+export type ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchData = {
+    body: ReviewTransducerBlock;
+    path: {
+        /**
+         * Block Id
+         */
+        block_id: number;
+    };
+    query?: never;
+    url: '/observation/transducer-groundwater-level/block/{block_id}';
+};
+
+export type ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchError = ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchErrors[keyof ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchErrors];
+
+export type ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewedTransducerBlockResponse;
+};
+
+export type ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchResponse = ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchResponses[keyof ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchResponses];
 
 export type DeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteData = {
     body?: never;

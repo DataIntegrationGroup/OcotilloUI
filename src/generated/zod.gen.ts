@@ -3672,6 +3672,28 @@ export const zResourceNotFoundResponse = z.object({
 });
 
 /**
+ * ReviewTransducerBlock
+ *
+ * Move a published block through review. Its readings' ``data_maturity``
+ * follows: ``approved`` makes them approved, ``not reviewed`` puts them back
+ * to provisional. Nothing else about the block changes here.
+ */
+export const zReviewTransducerBlock = z.object({
+    review_status: zReviewStatus
+});
+
+/**
+ * ReviewedTransducerBlockResponse
+ *
+ * The block after review, and how many readings moved with it.
+ */
+export const zReviewedTransducerBlockResponse = z.object({
+    block: zTransducerObservationBlockResponse,
+    data_maturity: z.string(),
+    updated_observation_count: z.int()
+});
+
+/**
  * TransducerObservationDetailResponse
  *
  * One reading, the block covering it, and the well it is on.
@@ -5648,6 +5670,19 @@ export const zBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPo
  * Successful Response
  */
 export const zBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostResponse = zWaterLevelBulkUploadResponse;
+
+export const zReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchData = z.object({
+    body: zReviewTransducerBlock,
+    path: z.object({
+        block_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Successful Response
+ */
+export const zReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchResponse = zReviewedTransducerBlockResponse;
 
 export const zDeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteData = z.object({
     body: z.optional(z.never()),
