@@ -220,6 +220,10 @@ const formatValue = (value: unknown) => {
   return String(value);
 };
 
+const sampleDisplayLabel = (
+  sample: ChemistryDisplayResponse["samples"][number],
+) => sample.nma_sample_point_id?.trim() || sample.label;
+
 const formatResultValue = (result?: ChemistryDisplayResult) => {
   if (!result) return "-";
   return formatValue(result.value);
@@ -367,6 +371,7 @@ const displayResponseFromResults = (
         id: item.sample_id,
         thing_id: item.thing_id,
         label: `Sample ${item.sample_id}`,
+        nma_sample_point_id: item.sample_point_id,
         collection_date: item.observation_datetime,
       });
     }
@@ -590,7 +595,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
       return {
         id: sample.id,
         sample_info_id: sample.id,
-        sample_label: sample.label,
+        sample_label: sampleDisplayLabel(sample),
         collection_date: sample.collection_date,
         values,
         sample_notes: sample.sample_notes,
@@ -840,7 +845,8 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
               <SelectContent position="popper">
                 {samples.map((sample) => (
                   <SelectItem key={sample.id} value={String(sample.id)}>
-                    {sample.label} - {formatDate(sample.collection_date)}
+                    {sampleDisplayLabel(sample)} -{" "}
+                    {formatDate(sample.collection_date)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -910,11 +916,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
               </SelectContent>
             </Select>
           </div>
-          <Button
-            variant="outline"
-            size="default"
-            onClick={resetFilters}
-          >
+          <Button variant="outline" size="default" onClick={resetFilters}>
             <RotateCcw data-icon="inline-start" />
             Reset
           </Button>
@@ -996,10 +998,10 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 rowHeight={settings.rowHeight}
                 rows={crosstabRows}
                 columns={crosstabColumns}
-                pageSizeOptions={[10, 25, 50, 100]}
+                pageSizeOptions={[25, 50, 100]}
                 initialState={{
                   pagination: {
-                    paginationModel: { pageSize: 10, page: 0 },
+                    paginationModel: { pageSize: 25, page: 0 },
                   },
                 }}
                 loading={isLoading}
@@ -1015,10 +1017,10 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 rowHeight={settings.rowHeight}
                 rows={filteredCurrentRows}
                 columns={currentGridColumns}
-                pageSizeOptions={[10, 25, 50, 100]}
+                pageSizeOptions={[25, 50, 100]}
                 initialState={{
                   pagination: {
-                    paginationModel: { pageSize: 10, page: 0 },
+                    paginationModel: { pageSize: 25, page: 0 },
                   },
                 }}
                 loading={isLoading}

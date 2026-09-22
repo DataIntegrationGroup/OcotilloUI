@@ -69,6 +69,7 @@ export interface ChemistryResult
   thing_id: number;
   station_name?: string | null;
   sample_id?: number | null;
+  sample_point_id?: string | null;
   observation_datetime: string;
   result_kind: ChemistryDisplaySource | "unknown";
 }

@@ -409,7 +409,7 @@ describe('ChemistryCard', () => {
     const sampleOptions = screen.getAllByRole('option')
     expect(
       sampleOptions.map((option) => option.textContent?.split(' - ')[0])
-    ).toEqual(['Sample 1', 'Sample 2'])
+    ).toEqual(['SP-1', 'SP-2'])
 
     await user.keyboard('{Escape}')
     await user.click(screen.getByRole('combobox', { name: 'View' }))
@@ -431,7 +431,7 @@ describe('ChemistryCard', () => {
     render(<ChemistryCard thingId={42} />)
 
     expect(screen.getByRole('combobox', { name: 'Sample' })).toHaveTextContent(
-      /^Sample 2 -/
+      /^SP-2 -/
     )
     expect(screen.getByTestId('row-ids')).toHaveTextContent(
       'field_parameters-sample-2-result'
@@ -542,6 +542,7 @@ describe('ChemistryCard', () => {
             id: 'maj-2',
             thing_id: 42,
             sample_id: 8,
+            sample_point_id: 'SP-8',
             parameter_name: 'Calcium',
             parameter_key: 'major_calcium',
             value: 13,
@@ -576,6 +577,7 @@ describe('ChemistryCard', () => {
     expect(result.samples).toEqual([
       expect.objectContaining({
         id: 8,
+        nma_sample_point_id: 'SP-8',
         collection_date: '2025-12-01T00:00:00Z',
       }),
       expect.objectContaining({
