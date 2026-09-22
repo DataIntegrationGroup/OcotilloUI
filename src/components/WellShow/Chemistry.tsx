@@ -995,6 +995,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
 
             {effectiveViewMode === "crosstab" ? (
               <DataGrid
+                rowSelection={false}
                 rowHeight={settings.rowHeight}
                 rows={crosstabRows}
                 columns={crosstabColumns}
@@ -1014,6 +1015,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
               />
             ) : (
               <DataGrid
+                rowSelection={false}
                 rowHeight={settings.rowHeight}
                 rows={filteredCurrentRows}
                 columns={currentGridColumns}
