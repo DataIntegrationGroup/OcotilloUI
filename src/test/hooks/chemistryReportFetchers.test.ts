@@ -3,10 +3,13 @@ import {
   CHEMISTRY_RESOURCE,
   fetchAllChemistry,
   fetchContinuousWaterLevels,
+  fetchDrinkingWaterStandards,
   fetchReportWaterLevels,
+  REGULATORY_LIMIT_RESOURCE,
   TRANSDUCER_RESOURCE,
   WATER_LEVEL_RESOURCE,
 } from '@/hooks/chemistryReportFetchers'
+import { regulatoryLimit } from '../fixtures/regulatoryLimits'
 
 const getList = vi.fn()
 const provider = { getList } as unknown as Parameters<
@@ -200,5 +203,36 @@ describe('fetchContinuousWaterLevels', () => {
         end_time: '2019-12-31T23:59:59.999',
       })
     }
+  })
+})
+
+describe('fetchDrinkingWaterStandards', () => {
+  beforeEach(() => {
+    getList.mockReset()
+  })
+
+  it('pages the regulatory limits and keeps the drinking water standards', async () => {
+    getList
+      .mockResolvedValueOnce({
+        data: [regulatoryLimit('Arsenic', 'MCL', 0.01)],
+        total: 2,
+      })
+      .mockResolvedValueOnce({
+        data: [regulatoryLimit('Arsenic', 'GWQS', 0.1)],
+        total: 2,
+      })
+
+    const standards = await fetchDrinkingWaterStandards(provider)
+
+    expect(getList).toHaveBeenCalledTimes(2)
+    expect(getList.mock.calls[0][0]).toMatchObject({
+      resource: REGULATORY_LIMIT_RESOURCE,
+      pagination: { currentPage: 1 },
+    })
+    expect(getList.mock.calls[1][0]).toMatchObject({
+      pagination: { currentPage: 2 },
+    })
+    expect([...standards.keys()]).toEqual(['Arsenic'])
+    expect(standards.get('Arsenic')?.kind).toBe('MCL')
   })
 })

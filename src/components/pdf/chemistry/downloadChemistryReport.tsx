@@ -1,4 +1,5 @@
 import { pdf } from '@react-pdf/renderer'
+import type { DrinkingWaterStandards } from '@/constants/drinkingWaterStandards'
 import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import {
@@ -21,6 +22,7 @@ export const downloadChemistryReport = async ({
   well,
   contacts,
   observations,
+  standards,
   waterLevels,
   continuous,
   year,
@@ -29,6 +31,7 @@ export const downloadChemistryReport = async ({
   well: IWell
   contacts: readonly IContact[]
   observations: readonly ChemistryResult[]
+  standards: DrinkingWaterStandards
   waterLevels?: readonly WaterLevelReading[]
   continuous?: ContinuousWaterLevelSummary | null
   year: number
@@ -48,6 +51,7 @@ export const downloadChemistryReport = async ({
       well={well}
       contacts={contacts}
       observations={observations}
+      standards={standards}
       waterLevels={waterLevels}
       continuous={continuous}
       year={year}

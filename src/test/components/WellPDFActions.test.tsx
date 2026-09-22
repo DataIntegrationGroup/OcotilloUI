@@ -14,6 +14,10 @@ const mockedGo = vi.fn()
 const mockedNotify = vi.fn()
 const mockedDownloadChemistryReport = vi.fn()
 const mockedFetchObservations = vi.fn()
+const mockedFetchStandards = vi.fn()
+const STANDARDS = new Map([
+  ['Arsenic', { kind: 'MCL', limit: 0.01, unit: 'mg/L', source: 'EPA' }],
+])
 const mockedFetchWaterLevels = vi.fn()
 const mockedFetchContinuous = vi.fn()
 const mockedUseAccessCapabilities = vi.fn()
@@ -150,6 +154,7 @@ describe('WellPDFActionsButton report type select', () => {
       'chemistry-report-SA-0231-2024.pdf'
     )
     mockedFetchObservations.mockResolvedValue([{ id: 'maj-1' }])
+    mockedFetchStandards.mockResolvedValue(STANDARDS)
     mockedFetchWaterLevels.mockResolvedValue([
       { key: '1', measuredOn: '2024-05-15T00:00:00Z', depthToWaterFt: 9.4 },
     ])
@@ -166,6 +171,7 @@ describe('WellPDFActionsButton report type select', () => {
       hasChemistry: true,
       isLoading: false,
       fetchObservations: mockedFetchObservations,
+      fetchStandards: mockedFetchStandards,
       fetchWaterLevels: mockedFetchWaterLevels,
       fetchContinuous: mockedFetchContinuous,
     })
@@ -250,6 +256,8 @@ describe('WellPDFActionsButton report type select', () => {
       well,
       year: 2024,
       observations: [{ id: 'maj-1' }],
+      // Compared against the API's limits, not a table in the client.
+      standards: STANDARDS,
     })
     // Neither water level section is fetched: both are off in the report's
     // default sections, which is what the well page generates with, so their
@@ -291,6 +299,7 @@ describe('WellPDFActionsButton report type select', () => {
       hasChemistry: false,
       isLoading: false,
       fetchObservations: mockedFetchObservations,
+      fetchStandards: mockedFetchStandards,
       fetchWaterLevels: mockedFetchWaterLevels,
       fetchContinuous: mockedFetchContinuous,
     })
@@ -327,6 +336,7 @@ describe('WellPDFActionsButton report type select', () => {
       hasChemistry: false,
       isLoading: true,
       fetchObservations: mockedFetchObservations,
+      fetchStandards: mockedFetchStandards,
       fetchWaterLevels: mockedFetchWaterLevels,
       fetchContinuous: mockedFetchContinuous,
     })
@@ -347,6 +357,7 @@ describe('WellPDFActionsButton report type select', () => {
       hasChemistry: false,
       isLoading: true,
       fetchObservations: mockedFetchObservations,
+      fetchStandards: mockedFetchStandards,
       fetchWaterLevels: mockedFetchWaterLevels,
       fetchContinuous: mockedFetchContinuous,
     })

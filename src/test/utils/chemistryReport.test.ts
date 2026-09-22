@@ -16,6 +16,7 @@ import {
   toWaterLevelReadings,
   waterLevelChangeFt,
 } from '@/utils/chemistryReport'
+import { TEST_STANDARDS } from '../fixtures/regulatoryLimits'
 
 const observation = (
   overrides: Partial<ChemistryResult> & {
@@ -43,24 +44,30 @@ const observation = (
 
 describe('compareToStandard', () => {
   it('flags a result above its MCL', () => {
-    expect(compareToStandard('Arsenic', 0.012, 'mg/L')).toMatchObject({
+    expect(
+      compareToStandard(TEST_STANDARDS, 'Arsenic', 0.012, 'mg/L')
+    ).toMatchObject({
       exceeds: true,
       standard: { kind: 'MCL', limit: 0.01 },
     })
   })
 
   it('treats a result exactly at the limit as within the limit', () => {
-    expect(compareToStandard('Arsenic', 0.01, 'mg/L').exceeds).toBe(false)
+    expect(
+      compareToStandard(TEST_STANDARDS, 'Arsenic', 0.01, 'mg/L').exceeds
+    ).toBe(false)
   })
 
   it('refuses to compare across units rather than misapplying the limit', () => {
     // 12 µg/L is 0.012 mg/L — above the limit — but the numbers are not
     // comparable as given, so the row must not be flagged from the raw value.
-    expect(compareToStandard('Arsenic', 12, 'ug/L').exceeds).toBe(false)
+    expect(
+      compareToStandard(TEST_STANDARDS, 'Arsenic', 12, 'ug/L').exceeds
+    ).toBe(false)
   })
 
   it('reports no standard for an unregulated parameter', () => {
-    expect(compareToStandard('Calcium', 90, 'mg/L')).toEqual({
+    expect(compareToStandard(TEST_STANDARDS, 'Calcium', 90, 'mg/L')).toEqual({
       standard: undefined,
       exceeds: false,
     })
@@ -82,7 +89,7 @@ describe('summarizeChemistry', () => {
     }),
   ]
 
-  const summary = summarizeChemistry(rows)
+  const summary = summarizeChemistry(rows, TEST_STANDARDS)
 
   it('splits field parameters from laboratory results', () => {
     expect(summary.fieldParameters.map((row) => row.parameterName)).toEqual([
@@ -127,33 +134,40 @@ describe('summarizeChemistry', () => {
           sample_id: 4321,
           observation_datetime: `${day}T00:00:00Z`,
         })
-      )
+      ),
+      TEST_STANDARDS
     )
 
     expect(ar0102.sampleCount).toBe(1)
   })
 
   it('counts two samples collected on the same day as two', () => {
-    const sameDay = summarizeChemistry([
-      observation({ id: 'maj-1', parameterName: 'Arsenic', sample_id: 1 }),
-      observation({ id: 'maj-2', parameterName: 'Arsenic', sample_id: 2 }),
-    ])
+    const sameDay = summarizeChemistry(
+      [
+        observation({ id: 'maj-1', parameterName: 'Arsenic', sample_id: 1 }),
+        observation({ id: 'maj-2', parameterName: 'Arsenic', sample_id: 2 }),
+      ],
+      TEST_STANDARDS
+    )
 
     expect(sameDay.sampleCount).toBe(2)
     expect(sameDay.sampleDates).toHaveLength(1)
   })
 
   it('falls back to the collection date for a result with no sample id', () => {
-    const unkeyed = summarizeChemistry([
-      observation({ id: 'maj-1', parameterName: 'Arsenic', sample_id: null }),
-      observation({ id: 'maj-2', parameterName: 'Iron', sample_id: null }),
-    ])
+    const unkeyed = summarizeChemistry(
+      [
+        observation({ id: 'maj-1', parameterName: 'Arsenic', sample_id: null }),
+        observation({ id: 'maj-2', parameterName: 'Iron', sample_id: null }),
+      ],
+      TEST_STANDARDS
+    )
 
     expect(unkeyed.sampleCount).toBe(1)
   })
 
   it('handles a well with no chemistry on file', () => {
-    expect(summarizeChemistry([])).toMatchObject({
+    expect(summarizeChemistry([], TEST_STANDARDS)).toMatchObject({
       sampleCount: 0,
       sampleDates: [],
       parameterCount: 0,
@@ -270,7 +284,7 @@ describe('resultStatus', () => {
       resultStatus(
         row({
           exceeds: true,
-          standard: { kind: 'MCL', limit: 0.01, unit: 'mg/L' },
+          standard: { kind: 'MCL', limit: 0.01, unit: 'mg/L', source: 'EPA' },
         })
       )
     ).toEqual({ kind: 'above-mcl', label: 'Above limit' })
@@ -280,7 +294,7 @@ describe('resultStatus', () => {
         row({
           parameterName: 'Iron',
           exceeds: true,
-          standard: { kind: 'SMCL', limit: 0.3, unit: 'mg/L' },
+          standard: { kind: 'SMCL', limit: 0.3, unit: 'mg/L', source: 'EPA' },
         })
       )
     ).toEqual({ kind: 'above-smcl', label: 'Above recommended range' })
@@ -374,7 +388,7 @@ describe('latestResultPerParameter', () => {
     const { rows, dateRange } = latestResultPerParameter([
       result('tds', 'Total Dissolved Solids', '2019-04-09T00:00:00Z', {
         exceeds: true,
-        standard: { kind: 'SMCL', limit: 500, unit: 'mg/L' },
+        standard: { kind: 'SMCL', limit: 500, unit: 'mg/L', source: 'EPA' },
       }),
       result('arsenic', 'Arsenic', '2019-05-24T00:00:00Z'),
     ])
@@ -387,12 +401,12 @@ describe('latestResultPerParameter', () => {
     const { rows } = latestResultPerParameter([
       result('iron', 'Iron', '2026-05-15T00:00:00Z', {
         exceeds: true,
-        standard: { kind: 'SMCL', limit: 0.3, unit: 'mg/L' },
+        standard: { kind: 'SMCL', limit: 0.3, unit: 'mg/L', source: 'EPA' },
       }),
       result('calcium', 'Calcium', '2026-05-15T00:00:00Z'),
       result('arsenic', 'Arsenic', '2026-05-15T00:00:00Z', {
         exceeds: true,
-        standard: { kind: 'MCL', limit: 0.01, unit: 'mg/L' },
+        standard: { kind: 'MCL', limit: 0.01, unit: 'mg/L', source: 'EPA' },
       }),
     ])
 

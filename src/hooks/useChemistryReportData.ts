@@ -1,10 +1,12 @@
 import { useDataProvider, useList, useOne } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { NO_DRINKING_WATER_STANDARDS } from '@/constants/drinkingWaterStandards'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import {
   fetchAllChemistry,
   fetchContinuousWaterLevels,
+  fetchDrinkingWaterStandards,
   fetchReportWaterLevels,
 } from './chemistryReportFetchers'
 
@@ -89,6 +91,14 @@ export const useChemistryReportData = ({
     staleTime: REPORT_STALE_TIME,
   })
 
+  // The same limits apply to every well, so the key carries no well id.
+  const standardsQuery = useQuery({
+    queryKey: ['chemistry-report', 'standards'],
+    queryFn: () => fetchDrinkingWaterStandards(ocotilloDataProvider),
+    enabled,
+    staleTime: REPORT_STALE_TIME,
+  })
+
   // Waits on the well so the elevation is known before the readings are
   // turned into water table elevations.
   const waterLevelQuery = useQuery({
@@ -120,6 +130,7 @@ export const useChemistryReportData = ({
     wellQuery.isLoading ||
     contactQuery.isLoading ||
     observationQuery.isLoading ||
+    standardsQuery.isLoading ||
     waterLevelQuery.isLoading ||
     continuousQuery.isLoading
 
@@ -127,6 +138,7 @@ export const useChemistryReportData = ({
     well: well as IWell | undefined,
     contacts: contactResult?.data ?? [],
     observations: observationQuery.data ?? [],
+    standards: standardsQuery.data ?? NO_DRINKING_WATER_STANDARDS,
     waterLevels: waterLevelQuery.data ?? [],
     continuous: continuousQuery.data ?? null,
     isLoading: enabled ? isLoading : false,
@@ -134,6 +146,9 @@ export const useChemistryReportData = ({
       wellQuery.isError ||
       contactQuery.isError ||
       observationQuery.isError ||
+      // Without the limits every result would print as having no standard,
+      // which reads as a clean report. Failing is the honest outcome.
+      standardsQuery.isError ||
       waterLevelQuery.isError ||
       continuousQuery.isError,
   }

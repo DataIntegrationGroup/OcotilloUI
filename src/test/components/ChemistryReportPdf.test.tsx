@@ -8,6 +8,7 @@ import {
 import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IWell } from '@/interfaces/ocotillo'
 import type { WaterLevelReading } from '@/utils/chemistryReport'
+import { TEST_STANDARDS } from '../fixtures/regulatoryLimits'
 
 /**
  * The report is rendered for real and read back, rather than asserted against
@@ -157,6 +158,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('names the report and the program the way the bureau does', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         year={2026}
@@ -173,6 +175,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('labels well facts in the reader’s terms', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         year={2026}
@@ -188,6 +191,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('gives an email to write to and no phone number at all', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         year={2026}
@@ -205,6 +209,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('reports an exceedance without explaining why the constituent is there', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         year={2026}
@@ -218,6 +223,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('calls a secondary exceedance a recommended range, not an SMCL', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[
           makeResult({
@@ -237,6 +243,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('leaves the ion balance out of the glossary', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         year={2026}
@@ -249,6 +256,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('drops the water level change stat when there is nothing to compare', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         waterLevels={[makeReading()]}
@@ -263,6 +271,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('keeps the change in the at-a-glance stat, not over the readings', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         sections={{ ...CHEMISTRY_REPORT_DEFAULT_SECTIONS, waterLevels: true }}
@@ -294,6 +303,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('names no year at all when no water level section is switched on', async () => {
     const pages = await renderReportPages(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[
           makeResult({ observation_datetime: '2019-04-09T00:00:00Z' }),
@@ -319,6 +329,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('names the year once a water level section is switched on', async () => {
     const pages = await renderReportPages(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         waterLevels={[
@@ -346,6 +357,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('scopes the year to the water levels, not to the chemistry', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         // Sampled seven years before the reporting year, and still reported.
         observations={[
@@ -368,6 +380,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('names Weaver under the QR code, so the destination is not a guess', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         year={2026}
@@ -383,6 +396,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('counts a persistent exceedance once, not once per sample', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[
           makeResult({
@@ -412,6 +426,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('stops reporting a parameter that has since come back under its limit', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[
           makeResult({
@@ -438,6 +453,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('gives the MCL and the SMCL a column each, filled only where they apply', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[
           makeResult({ id: 'a', parameter_name: 'Arsenic', value: 0.012 }),
@@ -456,6 +472,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('plots each result against its own limit and nothing else', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[
           // 0.012 against an MCL of 0.01.
@@ -480,6 +497,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('starts the chemistry table on a page of its own', async () => {
     const pages = await renderReportPages(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         waterLevels={[makeReading()]}
@@ -503,6 +521,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('puts no date over the chemistry heading', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[
           makeResult({
@@ -534,6 +553,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('leaves a clean exceedance count to speak for itself', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[
           // Both well under their limits.
@@ -554,6 +574,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('makes no claim about the parameters the table leaves out', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[
           makeResult({ id: 'a', parameter_name: 'Arsenic', value: 0.012 }),
@@ -574,6 +595,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('leaves the comparison blank for a parameter with no standard', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[
           makeResult({
@@ -594,6 +616,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('keeps a long stat value on one line instead of stranding its unit', async () => {
     const runs = await renderReportRuns(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell()}
         observations={[makeResult()]}
         // Off by default, so the section it lives in has to be asked for.
@@ -636,6 +659,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
   it('omits well facts that are not on file rather than printing a dash', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
+        standards={TEST_STANDARDS}
         well={makeWell({
           well_depth: null,
           well_casing_diameter: null,
