@@ -6,6 +6,7 @@ import {
   downloadChemistryReport,
 } from '@/components/pdf/chemistry'
 import { Button } from '@/components/ui/button'
+import type { DrinkingWaterStandards } from '@/constants/drinkingWaterStandards'
 import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import type {
@@ -17,6 +18,7 @@ export const ChemistryReportDownloadButton = ({
   well,
   contacts,
   observations,
+  standards,
   waterLevels,
   continuous,
   year,
@@ -26,6 +28,7 @@ export const ChemistryReportDownloadButton = ({
   well?: IWell
   contacts: readonly IContact[]
   observations: readonly ChemistryResult[]
+  standards: DrinkingWaterStandards
   waterLevels?: readonly WaterLevelReading[]
   continuous?: ContinuousWaterLevelSummary | null
   year: number
@@ -44,6 +47,7 @@ export const ChemistryReportDownloadButton = ({
         well,
         contacts,
         observations,
+        standards,
         waterLevels,
         continuous,
         year,

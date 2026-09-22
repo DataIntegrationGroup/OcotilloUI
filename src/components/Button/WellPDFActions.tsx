@@ -83,6 +83,7 @@ export const WellPDFActionsButton = ({
     hasChemistry,
     isLoading: isChemistryLoading,
     fetchObservations,
+    fetchStandards,
     fetchWaterLevels,
     fetchContinuous,
   } = useWellChemistryReport({
@@ -177,9 +178,10 @@ export const WellPDFActionsButton = ({
     // The well page generates with the report's default sections, so a
     // section switched off there is not worth its requests. The exporter,
     // where any of them can be switched back on, fetches its own.
-    const [chemistry, waterLevels, continuous] = await Promise.all([
+    const [chemistry, standards, waterLevels, continuous] = await Promise.all([
       // The whole chemistry record; the year scopes the water levels only.
       fetchObservations(),
+      fetchStandards(),
       CHEMISTRY_REPORT_DEFAULT_SECTIONS.waterLevels
         ? fetchWaterLevels(year, { elevationFt })
         : [],
@@ -192,6 +194,7 @@ export const WellPDFActionsButton = ({
       well,
       contacts,
       observations: chemistry,
+      standards,
       waterLevels,
       continuous,
       year,

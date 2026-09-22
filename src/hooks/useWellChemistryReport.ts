@@ -8,6 +8,7 @@ import {
   CHEMISTRY_RESOURCE,
   fetchAllChemistry,
   fetchContinuousWaterLevels,
+  fetchDrinkingWaterStandards,
   fetchReportWaterLevels,
   WATER_LEVEL_RESOURCE,
 } from './chemistryReportFetchers'
@@ -93,6 +94,11 @@ export const useWellChemistryReport = ({
     [ocotilloDataProvider, thingId]
   )
 
+  const fetchStandards = useCallback(
+    () => fetchDrinkingWaterStandards(ocotilloDataProvider),
+    [ocotilloDataProvider]
+  )
+
   const fetchWaterLevels = useCallback(
     async (year: number, { elevationFt }: { elevationFt?: number | null }) =>
       thingId == null
@@ -123,6 +129,7 @@ export const useWellChemistryReport = ({
         ? query.isLoading || readingQuery.isLoading
         : false,
     fetchObservations,
+    fetchStandards,
     fetchWaterLevels,
     fetchContinuous,
   }
