@@ -57,9 +57,14 @@ describe('Ocotillo Show Pages', () => {
     cy.contains('801 Leroy Place').should('be.visible')
 
     cy.contains('Associated Sites').should('be.visible')
-    cy.contains(wellOne.name).should('be.visible')
-    cy.contains('Depth to water').should('be.visible')
-    cy.contains('42.5 ft bgs').should('be.visible')
-    cy.contains('Associated Sites Map').should('be.visible')
+    cy.contains('Associated Sites Map').should('not.exist')
+    cy.get('[data-testid="basemap-control-button"]')
+      .scrollIntoView()
+      .should('be.visible')
+
+    // The table sits under the map, below the fold of the scroll container.
+    cy.contains('td', wellOne.name).scrollIntoView().should('be.visible')
+    cy.contains('th', 'Depth to water').should('be.visible')
+    cy.contains('td', '42.5 ft bgs').should('be.visible')
   })
 })

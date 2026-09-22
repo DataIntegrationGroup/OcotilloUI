@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import wellknown from 'wellknown'
 import { IWell } from '@/interfaces/ocotillo'
 import type { IGroup } from '@/interfaces/ocotillo/IGroup'
@@ -22,11 +22,8 @@ import {
   MapPopup,
   CardHeaderTitle,
 } from '@/components'
-import { useLayer } from '@/hooks'
+import { useCardBasemap, useLayer } from '@/hooks'
 import { useGo } from '@refinedev/core'
-import { captureEvent } from '@/analytics/posthog'
-import { ColorModeContext } from '@/contexts'
-import { THEMED_BASEMAP_IDS } from '@/basemaps'
 import {
   MAP_HIGHLIGHT_COLOR,
   MAP_HIGHLIGHT_STROKE_COLOR,
@@ -35,29 +32,6 @@ import {
 } from '@/constants/mapColors'
 
 const MAP_HEIGHT = 450
-
-/**
- * Basemap state for a map card. Seeded from the active color mode so the map
- * matches the app theme on first paint; MapComponent keeps the two in sync
- * until the user picks a basemap of their own.
- */
-const useCardBasemap = (surface: 'well' | 'project') => {
-  const { mode } = useContext(ColorModeContext)
-  const [basemapId, setBasemapId] = useState<string>(
-    () => THEMED_BASEMAP_IDS[mode === 'dark' ? 'dark' : 'light']
-  )
-
-  const onBasemapChange = (nextBasemap: string) => {
-    setBasemapId(nextBasemap)
-  }
-
-  const onUserBasemapChange = (nextBasemap: string) => {
-    setBasemapId(nextBasemap)
-    captureEvent('map_basemap_changed', { basemap: nextBasemap, surface })
-  }
-
-  return { basemapId, onBasemapChange, onUserBasemapChange }
-}
 
 const MapCardHeader = ({ title }: { title: string }) => (
   <CardHeaderTitle icon={<Map color="primary" />} title={title} />
