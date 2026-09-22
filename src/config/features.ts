@@ -26,3 +26,4 @@ const envFlag = (value: unknown): boolean | undefined => {
  */
 export const SHOW_GIS_DOWNLOADS =
   envFlag(import.meta.env.VITE_ENABLE_GIS_DOWNLOADS) ?? false
+

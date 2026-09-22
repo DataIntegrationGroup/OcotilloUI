@@ -37,7 +37,7 @@ export function EnvironmentBadge() {
       className={cn(
         'font-bold tracking-wide',
         appEnv === 'staging' &&
-          'bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-400 dark:text-gray-900'
+          'bg-amber-500 text-white dark:bg-amber-400 dark:text-gray-900'
       )}
     >
       {label}
