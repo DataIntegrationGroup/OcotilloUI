@@ -1,0 +1,28 @@
+name: PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, labeled, unlabeled]
+
+permissions: {}
+
+jobs:
+  pr-title:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Require a BDMS ticket in the PR title
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-bdms-check') }}
+      env:
+        # Passed through env, not interpolated into the script, so a crafted
+        # title cannot inject shell.
+        PR_TITLE: ${{ github.event.pull_request.title }}
+      run: |
+        if [[ "$PR_TITLE" =~ BDMS-[0-9]+ ]]; then
+          echo "Found ${BASH_REMATCH[0]} in PR title."
+          exit 0
+        fi
+
+        echo "::error title=Missing BDMS ticket::PR title must reference a Jira ticket, e.g. 'fix(wells): scope the CSV export (BDMS-1216)' or 'BDMS-587: remove hover recolor'. Add the 'skip-bdms-check' label for PRs with no ticket, such as releases."
+        echo "Title was: $PR_TITLE"
+        exit 1
