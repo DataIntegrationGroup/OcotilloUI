@@ -36,9 +36,7 @@ import type {
   ChemistryDisplayStandardStatus,
   ChemistryDisplayTabKey,
   ChemistryResult,
-  ChemistryResultsPage,
 } from "@/interfaces/ocotillo";
-import { axiosCall } from "@/providers/ocotillo-data-provider";
 import { settings } from "@/settings";
 import {
   collectionDateForInput,
@@ -48,6 +46,7 @@ import {
   formatDateForEndpoint,
   formatDateForInput,
 } from "@/utils/Date";
+import { fetchAllOcotilloPages } from "@/utils/ocotilloPaging";
 
 type ChemistryCardProps = {
   thingId?: number | string | null;
@@ -278,28 +277,31 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     queryFn: async ({ signal }) => {
-      const params = new URLSearchParams();
-      params.set("thing_id", String(thingId));
-      params.set("size", "10000");
+      const params: Record<string, string> = {
+        thing_id: String(thingId),
+        exclude_field_duplicate_samples: "true",
+      };
 
       const startTime = formatDateForEndpoint(startDate);
       if (startTime) {
-        params.set("start_time", startTime);
+        params.start_time = startTime;
       }
 
       const endTime = formatDateForEndpoint(endDate, true);
       if (endTime) {
-        params.set("end_time", endTime);
+        params.end_time = endTime;
       }
 
-      const response = await axiosCall(`chemistry/results?${params}`, {
-        method: "GET",
-        signal,
-        headers: { "Content-Type": "application/json" },
-      });
+      const items = await fetchAllOcotilloPages<ChemistryResult>(
+        "chemistry/results",
+        params,
+        {
+          pageSize: 1000,
+          signal,
+        },
+      );
 
-      const page = response.data as ChemistryResultsPage;
-      return displayResponseFromResults(page.items);
+      return displayResponseFromResults(items);
     },
   });
 

@@ -13,6 +13,7 @@ import { axiosCall } from '@/providers/ocotillo-data-provider'
 
 const mockedUseQuery = vi.fn()
 const mockedAxiosCall = vi.mocked(axiosCall)
+const { mockedGetList } = vi.hoisted(() => ({ mockedGetList: vi.fn() }))
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: (args?: unknown) => mockedUseQuery(args),
@@ -68,6 +69,7 @@ vi.mock('@mui/x-data-grid', () => ({
 
 vi.mock('@/providers/ocotillo-data-provider', () => ({
   axiosCall: vi.fn(),
+  ocotilloDataProvider: { getList: mockedGetList },
 }))
 
 const tabData = (key: ChemistryDisplayTabKey) => ({
@@ -131,6 +133,7 @@ describe('ChemistryCard', () => {
   beforeEach(() => {
     mockedUseQuery.mockReset()
     mockedAxiosCall.mockReset()
+    mockedGetList.mockReset()
   })
 
   it('keeps reset enabled while chemistry data is unavailable', () => {
@@ -509,22 +512,24 @@ describe('ChemistryCard', () => {
       isPending: false,
       error: null,
     })
-    mockedAxiosCall.mockResolvedValue({
-      data: { items: [], total: 0, page: 1, size: 10000, pages: 0 },
-      status: 200,
-      statusText: 'OK',
-      headers: {},
-      config: {},
-    } as Awaited<ReturnType<typeof axiosCall>>)
+    mockedGetList.mockResolvedValue({ data: [], total: 0 })
 
     render(<ChemistryCard thingId={42} />)
 
     const queryConfig = mockedUseQuery.mock.calls[0][0]
     await queryConfig.queryFn({ signal: undefined })
 
-    expect(mockedAxiosCall).toHaveBeenCalledWith(
-      'chemistry/results?thing_id=42&size=10000',
-      expect.any(Object)
+    expect(mockedGetList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: 'chemistry/results',
+        pagination: { currentPage: 1, pageSize: 1000 },
+        meta: expect.objectContaining({
+          params: {
+            thing_id: '42',
+            exclude_field_duplicate_samples: 'true',
+          },
+        }),
+      })
     )
   })
 
@@ -535,9 +540,8 @@ describe('ChemistryCard', () => {
       isPending: false,
       error: null,
     })
-    mockedAxiosCall.mockResolvedValue({
-      data: {
-        items: [
+    mockedGetList.mockResolvedValue({
+      data: [
           {
             id: 'maj-2',
             thing_id: 42,
@@ -562,12 +566,8 @@ describe('ChemistryCard', () => {
             observation_datetime: '2026-01-02T00:00:00Z',
           },
         ],
-        total: 2,
-        page: 1,
-        size: 10000,
-        pages: 1,
-      },
-    } as Awaited<ReturnType<typeof axiosCall>>)
+      total: 2,
+    })
 
     render(<ChemistryCard thingId={42} />)
 
