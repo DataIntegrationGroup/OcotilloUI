@@ -40,6 +40,14 @@ import type {
 } from "@/interfaces/ocotillo";
 import { axiosCall } from "@/providers/ocotillo-data-provider";
 import { settings } from "@/settings";
+import {
+  collectionDateForInput,
+  compareSamplesByCollectionDate,
+  dateTime,
+  formatChemistryDate,
+  formatDateForEndpoint,
+  formatDateForInput,
+} from "@/utils/Date";
 
 type ChemistryCardProps = {
   thingId?: number | string | null;
@@ -55,62 +63,6 @@ type CrosstabGridRow = ChemistryDisplayCrosstabRow & {
 
 const EMPTY_CROSSTAB_ROWS: CrosstabGridRow[] = [];
 const EMPTY_RESULTS: ChemistryDisplayResult[] = [];
-
-const formatDate = (value: unknown) => {
-  if (!value) return "";
-  const date = new Date(String(value));
-  if (Number.isNaN(date.getTime())) return String(value);
-
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date);
-};
-
-const formatDateForEndpoint = (value: string, endOfRange = false) => {
-  if (!value) return undefined;
-
-  const date = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(date.getTime())) return undefined;
-
-  if (endOfRange) {
-    date.setUTCDate(date.getUTCDate() + 1);
-  }
-
-  return date.toISOString();
-};
-
-const formatDateForInput = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
-const collectionDateForInput = (value: unknown) => {
-  if (!value) return "";
-
-  const match = String(value).match(/^\d{4}-\d{2}-\d{2}/);
-  return match?.[0] ?? "";
-};
-
-const dateTime = (value: unknown) => {
-  if (!value) return 0;
-  const date = new Date(String(value));
-  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
-};
-
-const compareSamplesByCollectionDate = (
-  a: ChemistryDisplayResponse["samples"][number],
-  b: ChemistryDisplayResponse["samples"][number],
-) => {
-  const aTime = dateTime(a.collection_date) || Number.POSITIVE_INFINITY;
-  const bTime = dateTime(b.collection_date) || Number.POSITIVE_INFINITY;
-
-  return aTime - bTime || a.id - b.id;
-};
 
 const formatValue = (value: unknown) => {
   if (value === null || value === undefined || value === "") return "-";
@@ -678,7 +630,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         field: "collection_date",
         headerName: "Sample Collection Date",
         minWidth: 170,
-        valueFormatter: (value) => formatDate(value),
+        valueFormatter: (value) => formatChemistryDate(value),
       },
       ...parameterColumns,
       {
@@ -743,7 +695,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 {samples.map((sample) => (
                   <SelectItem key={sample.id} value={String(sample.id)}>
                     {sampleDisplayLabel(sample)} -{" "}
-                    {formatDate(sample.collection_date)}
+                    {formatChemistryDate(sample.collection_date)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -883,7 +835,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 />
                 <Chip
                   variant="outlined"
-                  label={`Latest analysis ${formatDate(
+                  label={`Latest analysis ${formatChemistryDate(
                     standardsSummary.latest_analysis_date,
                   )}`}
                 />
