@@ -77,11 +77,6 @@ export const CROSSTAB_ONLY_TABS = new Set<ChemistryDisplayTabKey>([
 
 export const FIELD_PARAMETER_DEFINITIONS = [
   {
-    key: 'discharge_rate',
-    label: 'Discharge Rate',
-    aliases: ['dr', 'discharge rate'],
-  },
-  {
     key: 'dissolved_oxygen',
     label: 'Dissolved Oxygen',
     aliases: ['do', 'dissolved oxygen'],
@@ -107,7 +102,6 @@ export const FIELD_PARAMETER_DEFINITIONS = [
     label: 'Temperature',
     aliases: ['temperature', 'temperture', 'temp'],
   },
-  { key: 'turbidity', label: 'Turbidity', aliases: ['turbidity'] },
 ] as const
 
 export const FIELD_PARAMETER_ORDER = new Map<string, number>(

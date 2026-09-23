@@ -109,9 +109,10 @@ const canonicalFieldParameterRows = (
   sampleInfoId: number,
   includeMissing: boolean,
 ) => {
-  const canonicalRows = rows.map((row) => {
+  const canonicalRows = rows.flatMap((row) => {
     const definition = fieldParameterDefinition(row);
-    return definition ? { ...row, parameter_name: definition.label } : row;
+    if (row.source === 'field' && !definition) return [];
+    return [definition ? { ...row, parameter_name: definition.label } : row];
   });
 
   if (includeMissing) {
@@ -187,6 +188,10 @@ const crosstabColumnsForResults = (
   const columnsByKey = new Map<string, ChemistryDisplayCrosstabColumn>();
 
   for (const result of results) {
+    if (result.source === 'field' && !fieldParameterDefinition(result)) {
+      continue;
+    }
+
     if (!columnsByKey.has(result.parameter_key)) {
       columnsByKey.set(result.parameter_key, {
         parameter_key: result.parameter_key,

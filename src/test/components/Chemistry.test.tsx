@@ -249,7 +249,7 @@ describe('ChemistryCard', () => {
     )
 
     expect(screen.getByTestId('column-headers')).toHaveTextContent(
-      'Sample,Sample Collection Date,Discharge Rate,Dissolved Oxygen,ORP / Redox,pH,Specific Conductance (uS/cm),Temperature (deg C),Turbidity,Sampling Event Note'
+      'Sample,Sample Collection Date,Dissolved Oxygen,ORP / Redox,pH,Specific Conductance (uS/cm),Temperature (deg C),Sampling Event Note'
     )
   })
 
@@ -323,9 +323,9 @@ describe('ChemistryCard', () => {
     render(<ChemistryCard thingId={42} />)
 
     expect(screen.getByTestId('row-parameters')).toHaveTextContent(
-      'Discharge Rate,Dissolved Oxygen,ORP / Redox,pH,Specific Conductance,Temperature,Turbidity'
+      'Dissolved Oxygen,ORP / Redox,pH,Specific Conductance,Temperature'
     )
-    expect(screen.getByTestId('row-count')).toHaveTextContent('7')
+    expect(screen.getByTestId('row-count')).toHaveTextContent('5')
   })
 
   it('shows units in crosstab headers but not result cells', async () => {
