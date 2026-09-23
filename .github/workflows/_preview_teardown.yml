@@ -26,7 +26,7 @@ jobs:
       GCP_REGION: us-central1
       AR_REPO: us-central1-docker.pkg.dev/waterdatainitiative-271000/ocotillo-previews
       AUTHENTIK_BASE_URL: https://authentik.newmexicowaterdata.org
-      AUTHENTIK_PROVIDER_ID: ${{ secrets.AUTHENTIK_PROVIDER_ID }}
+      AUTHENTIK_PROVIDER_ID: ${{ vars.AUTHENTIK_PROVIDER_ID }}
       AUTHENTIK_API_TOKEN: ${{ secrets.AUTHENTIK_API_TOKEN }}
 
     steps:
@@ -40,7 +40,8 @@ jobs:
           SANITIZED=$(echo "$BRANCH_NAME" \
             | sed 's/[^a-zA-Z0-9-]/-/g' \
             | tr '[:upper:]' '[:lower:]' \
-            | cut -c1-40)
+            | cut -c1-40 \
+            | sed 's/-*$//')
 
           {
             echo "SANITIZED_BRANCH=$SANITIZED"

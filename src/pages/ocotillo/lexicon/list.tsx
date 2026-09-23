@@ -46,6 +46,7 @@ const LexiconHeaderButtons = () => {
 interface LexiconCategory {
   id: number | string
   name: string
+  description?: string | null
 }
 
 export const LexiconList = () => {
@@ -72,6 +73,7 @@ export const LexiconList = () => {
       },
     },
     queryOptions: {
+      enabled: !!selectedCategory,
       gcTime: 10 * 60 * 1000, // Cache for 10 minutes
       staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     },
@@ -151,16 +153,25 @@ export const LexiconList = () => {
         </Grid>
         <Grid size={{ xs: 6 }}>
           <Card elevation={2}>
-            <CardHeader title="Terms" />
+            <CardHeader
+              title="Terms"
+              subheader={selectedCategory?.description ?? undefined}
+            />
             <CardContent>
-              <DataGrid
-                pagination
-                pageSizeOptions={[5, 10, 25]}
-                paginationModel={{ pageSize: 10, page: 0 }}
-                {...termDataGridProps}
-                rowHeight={settings.rowHeight}
-                columns={termColumns}
-              />
+              {selectedCategory ? (
+                <DataGrid
+                  pagination
+                  pageSizeOptions={[5, 10, 25]}
+                  paginationModel={{ pageSize: 10, page: 0 }}
+                  {...termDataGridProps}
+                  rowHeight={settings.rowHeight}
+                  columns={termColumns}
+                />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Please select a category
+                </Typography>
+              )}
             </CardContent>
           </Card>
         </Grid>
