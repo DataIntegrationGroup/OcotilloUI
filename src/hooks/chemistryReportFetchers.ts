@@ -1,5 +1,10 @@
 import type { DataProvider } from '@refinedev/core'
 import {
+  type DrinkingWaterStandards,
+  toDrinkingWaterStandards,
+} from '@/constants/drinkingWaterStandards'
+import type { RegulatoryLimitResponse } from '@/generated/types.gen'
+import {
   CHEMISTRY_REPORT_PAGE_SIZE,
   type ContinuousWaterLevelSummary,
   inclusiveEndYearParams,
@@ -26,6 +31,7 @@ type ThingId = string | number
 export const CHEMISTRY_RESOURCE = 'chemistry/results'
 export const WATER_LEVEL_RESOURCE = 'observation/groundwater-level'
 export const TRANSDUCER_RESOURCE = 'observation/transducer-groundwater-level'
+export const REGULATORY_LIMIT_RESOURCE = 'regulatory_limit'
 
 const NEWEST_FIRST = [{ field: 'observation_datetime', order: 'desc' as const }]
 const OLDEST_FIRST = [{ field: 'observation_datetime', order: 'asc' as const }]
@@ -61,6 +67,32 @@ export const fetchAllChemistry = async (
   }
 
   return sortChemistryResults(collected)
+}
+
+/**
+ * The drinking water standards the report compares results against, read from
+ * the API's regulatory limits and paged until the total is reached. Not
+ * scoped to a well: the same limits apply to every report.
+ */
+export const fetchDrinkingWaterStandards = async (
+  provider: ListProvider
+): Promise<DrinkingWaterStandards> => {
+  const collected: RegulatoryLimitResponse[] = []
+  let currentPage = 1
+
+  while (true) {
+    const page = await provider.getList({
+      resource: REGULATORY_LIMIT_RESOURCE,
+      pagination: { currentPage, pageSize: CHEMISTRY_REPORT_PAGE_SIZE },
+    })
+
+    collected.push(...(page.data as RegulatoryLimitResponse[]))
+
+    if (page.data.length === 0 || collected.length >= page.total) break
+    currentPage += 1
+  }
+
+  return toDrinkingWaterStandards(collected)
 }
 
 /**
