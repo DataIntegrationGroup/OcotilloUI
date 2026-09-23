@@ -62,7 +62,7 @@ import {
 import { ColorModeContext } from '@/contexts'
 import SearchBar from '@/components/SearchBar'
 import { ReportBugButton } from '@/components/Button'
-import { EnvironmentBadge } from '@/components/layout/environment-badge'
+import { EnvironmentBanner } from '@/components/layout/environment-banner'
 import { AmpRole, PRIMARY_NAV, RESOURCE_NAV, type NavItem } from '@/config/navigation'
 import { useAccessCapabilities } from '@/hooks'
 import { useSearch } from '@/providers/search-provider'
@@ -1134,7 +1134,6 @@ function ShellHeader() {
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3">
       <ExpandButton />
       <div className="min-w-0 shrink overflow-hidden flex items-center gap-2">
-        <EnvironmentBadge />
         <HeaderBreadcrumb />
       </div>
       {/* Search bar — hidden on mobile, visible tablet+ */}
@@ -1257,6 +1256,7 @@ function AppShellInner({ children }: { children?: React.ReactNode }) {
       <AppSidebar />
       <AppContent className="min-w-0">
         <NewVersionBanner />
+        <EnvironmentBanner />
         <ShellHeader />
         <div className="flex-1 min-h-0 overflow-y-auto">
           {children ?? <Outlet />}
