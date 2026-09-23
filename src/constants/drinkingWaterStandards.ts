@@ -19,47 +19,25 @@ export type DrinkingWaterStandard = {
   /** Threshold in `unit`. A result strictly above this is an exceedance. */
   limit: number
   unit: string
-  /** Plain-language note printed under the exceedance callout. */
-  note?: string
 }
 
 export const DRINKING_WATER_STANDARDS: Partial<
   Record<ParameterName, DrinkingWaterStandard>
 > = {
-  Arsenic: {
-    kind: 'MCL',
-    limit: 0.01,
-    unit: 'mg/L',
-    note: 'Arsenic occurs naturally in New Mexico groundwater. Long-term consumption above the limit is associated with health risk.',
-  },
+  Arsenic: { kind: 'MCL', limit: 0.01, unit: 'mg/L' },
   Barium: { kind: 'MCL', limit: 2, unit: 'mg/L' },
   Antimony: { kind: 'MCL', limit: 0.006, unit: 'mg/L' },
   Beryllium: { kind: 'MCL', limit: 0.004, unit: 'mg/L' },
   Cadmium: { kind: 'MCL', limit: 0.005, unit: 'mg/L' },
   Chromium: { kind: 'MCL', limit: 0.1, unit: 'mg/L' },
   Cyanide: { kind: 'MCL', limit: 0.2, unit: 'mg/L' },
-  Fluoride: {
-    kind: 'MCL',
-    limit: 4,
-    unit: 'mg/L',
-    note: 'Fluoride above 2 mg/L can stain children’s teeth; above 4 mg/L is a health limit.',
-  },
+  Fluoride: { kind: 'MCL', limit: 4, unit: 'mg/L' },
   Mercury: { kind: 'MCL', limit: 0.002, unit: 'mg/L' },
-  'Nitrate (as N)': {
-    kind: 'MCL',
-    limit: 10,
-    unit: 'mg/L',
-    note: 'Nitrate above the limit is an immediate risk to infants under six months and to pregnant people.',
-  },
+  'Nitrate (as N)': { kind: 'MCL', limit: 10, unit: 'mg/L' },
   'Nitrite (as N)': { kind: 'MCL', limit: 1, unit: 'mg/L' },
   Selenium: { kind: 'MCL', limit: 0.05, unit: 'mg/L' },
   Thallium: { kind: 'MCL', limit: 0.002, unit: 'mg/L' },
-  Lead: {
-    kind: 'MCL',
-    limit: 0.015,
-    unit: 'mg/L',
-    note: 'Lead in a private well is usually contributed by household plumbing rather than by the aquifer.',
-  },
+  Lead: { kind: 'MCL', limit: 0.015, unit: 'mg/L' },
   'Uranium (total, by ICP-MS)': { kind: 'MCL', limit: 0.03, unit: 'mg/L' },
 
   Aluminum: { kind: 'SMCL', limit: 0.2, unit: 'mg/L' },
