@@ -16,6 +16,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  CROSSTAB_ONLY_TABS,
+  FIELD_PARAMETER_DEFINITIONS,
+  FIELD_PARAMETER_ORDER,
+  GENERAL_PARAMETERS,
+  STANDARD_FILTER_OPTIONS,
+  TAB_OPTIONS,
+  TRACER_SYMBOLS,
+  VIEW_OPTIONS,
+  type ChemistryViewMode,
+  type StandardFilter,
+} from "@/constants";
 import type {
   ChemistryDisplayCrosstabColumn,
   ChemistryDisplayCrosstabRow,
@@ -33,15 +45,6 @@ type ChemistryCardProps = {
   thingId?: number | string | null;
 };
 
-type StandardFilter =
-  | "all"
-  | "above_mcl"
-  | "above_smcl"
-  | "any_epa_flag"
-  | "non_detects";
-
-type ChemistryViewMode = "current" | "crosstab";
-
 type CurrentResultRow = ChemistryDisplayResult;
 
 type StandardResultRow = ChemistryDisplayResult;
@@ -50,114 +53,8 @@ type CrosstabGridRow = ChemistryDisplayCrosstabRow & {
   id: number;
 };
 
-const TAB_OPTIONS: {
-  key: ChemistryDisplayTabKey;
-  label: string;
-}[] = [
-  { key: "field_parameters", label: "Field Parameters" },
-  { key: "general_chemistry", label: "General Chemistry" },
-  { key: "environmental_tracers", label: "Environmental Tracers" },
-  { key: "additional_analyses", label: "Additional Analyses" },
-];
-
-const STANDARD_FILTER_OPTIONS: { value: StandardFilter; label: string }[] = [
-  { value: "all", label: "All parameters" },
-  { value: "above_mcl", label: "Above MCL only" },
-  { value: "above_smcl", label: "Above SMCL only" },
-  { value: "any_epa_flag", label: "Any EPA flag" },
-  { value: "non_detects", label: "Non-detects only" },
-];
-
-const VIEW_OPTIONS: { value: ChemistryViewMode; label: string }[] = [
-  { value: "current", label: "Current tab" },
-  { value: "crosstab", label: "Cross-tab for all views" },
-];
-
-const CROSSTAB_ONLY_TABS = new Set<ChemistryDisplayTabKey>([
-  "general_chemistry",
-  "environmental_tracers",
-  "additional_analyses",
-]);
-
 const EMPTY_CROSSTAB_ROWS: CrosstabGridRow[] = [];
 const EMPTY_RESULTS: ChemistryDisplayResult[] = [];
-const FIELD_PARAMETER_DEFINITIONS = [
-  {
-    key: "discharge_rate",
-    label: "Discharge Rate",
-    aliases: ["dr", "discharge rate"],
-  },
-  {
-    key: "dissolved_oxygen",
-    label: "Dissolved Oxygen",
-    aliases: ["do", "dissolved oxygen"],
-  },
-  {
-    key: "orp_redox",
-    label: "ORP / Redox",
-    aliases: ["orp", "redox", "orp redox", "oxidation reduction potential"],
-  },
-  { key: "ph", label: "pH", aliases: ["ph"] },
-  {
-    key: "specific_conductance",
-    label: "Specific Conductance",
-    aliases: [
-      "cf",
-      "specific conductance",
-      "specific conductivity",
-      "conductivity",
-    ],
-  },
-  {
-    key: "temperature",
-    label: "Temperature",
-    aliases: ["temperature", "temperture", "temp"],
-  },
-  { key: "turbidity", label: "Turbidity", aliases: ["turbidity"] },
-] as const;
-const FIELD_PARAMETER_ORDER = new Map<string, number>(
-  FIELD_PARAMETER_DEFINITIONS.map((parameter, index) => [
-    parameter.label,
-    index,
-  ]),
-);
-const GENERAL_PARAMETERS = new Set([
-  "arsenic",
-  "bicarbonate",
-  "calcium",
-  "chloride",
-  "fluoride",
-  "ion balance",
-  "iron",
-  "magnesium",
-  "manganese",
-  "nitrate (as n)",
-  "potassium",
-  "sodium",
-  "sulfate",
-  "total dissolved solids",
-  "ph",
-  "uranium (total, by icp-ms)",
-  "uranium, total, unfiltered",
-]);
-
-const TRACER_SYMBOLS = new Set([
-  "3h",
-  "h2r",
-  "o18r",
-  "o17r",
-  "c13r",
-  "c14",
-  "c14_years",
-  "sf6",
-  "cfc11",
-  "cfc12",
-  "cfc113",
-  "cfc113_12",
-  "sr87:sr86",
-  "d18o-so4",
-  "d34s-so4",
-]);
 
 const formatDate = (value: unknown) => {
   if (!value) return "";
