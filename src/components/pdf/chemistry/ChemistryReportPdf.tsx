@@ -8,7 +8,10 @@ import type { IContact, IWell } from '@/interfaces/ocotillo'
 import {
   type ChemistryResultRow,
   type ChemistryStatus,
+  type ContinuousWaterLevelSummary,
+  chemistryReportYearOf,
   displayParameterName,
+  formatLevelChange,
   formatReportDate,
   formatResultValue,
   formatStandardLimit,
@@ -27,6 +30,7 @@ import { CHEM_REPORT_COLORS as c, chemReportStyles as s } from './styles'
 export type ChemistryReportSections = {
   wellInformation: boolean
   waterLevels: boolean
+  continuousMonitoring: boolean
   fieldParameters: boolean
   chemistryResults: boolean
   standardsComparison: boolean
@@ -37,6 +41,7 @@ export type ChemistryReportSections = {
 export const CHEMISTRY_REPORT_DEFAULT_SECTIONS: ChemistryReportSections = {
   wellInformation: true,
   waterLevels: true,
+  continuousMonitoring: true,
   fieldParameters: false,
   chemistryResults: true,
   standardsComparison: true,
@@ -50,6 +55,7 @@ export const CHEMISTRY_REPORT_SECTION_LABELS: Record<
 > = {
   wellInformation: 'Well information & construction',
   waterLevels: 'Water level measurements',
+  continuousMonitoring: 'Continuous monitoring at a glance',
   fieldParameters: 'Field parameters',
   chemistryResults: 'Chemistry results',
   standardsComparison: 'Drinking water standards & exceedances',
@@ -62,6 +68,8 @@ type ChemistryReportPdfProps = {
   contacts?: readonly IContact[]
   observations: readonly ChemistryResult[]
   waterLevels?: readonly WaterLevelReading[]
+  /** The well's logger record, or null/omitted when it has none. */
+  continuous?: ContinuousWaterLevelSummary | null
   year: number
   sections?: ChemistryReportSections
   /**
@@ -79,7 +87,11 @@ const SectionHead = ({
   title: string
   note?: string | null
 }) => (
-  <View style={s.sectionHeadRow}>
+  // Keeps a heading from being stranded at the foot of a page with its
+  // section starting on the next. react-pdf only acts on this when the heading
+  // has earlier siblings to stay behind, so a section that can span pages
+  // renders its heading outside its own View.
+  <View style={s.sectionHeadRow} minPresenceAhead={60}>
     <Text style={s.sectionHeading}>{title}</Text>
     {note ? <Text style={s.sectionNote}>{note}</Text> : null}
   </View>
@@ -237,7 +249,7 @@ const ChemistryTable = ({
           <Text style={[s.thText, s.td, CHEM_COLUMNS.status]}>Status</Text>
         </>
       ) : null}
-      <Text style={[s.thText, s.td, CHEM_COLUMNS.measured]}>Measured</Text>
+      <Text style={[s.thText, s.td, CHEM_COLUMNS.measured]}>Sampled</Text>
     </View>
 
     {rows.map((row, index) => {
@@ -336,7 +348,7 @@ const WaterLevelTable = ({
         >
           {reading.depthToWaterFt == null
             ? '—'
-            : `${reading.depthToWaterFt.toFixed(1)} ft`}
+            : `${reading.depthToWaterFt.toFixed(1)} ft${reading.depthReference === 'measuring point' ? ' †' : ''}`}
         </Text>
         <Text
           style={[
@@ -359,6 +371,114 @@ const WaterLevelTable = ({
     ))}
   </View>
 )
+
+const formatSpan = ([start, end]: [string, string]) =>
+  start.slice(0, 10) === end.slice(0, 10)
+    ? formatReportDate(start)
+    : `${formatReportDate(start)} – ${formatReportDate(end)}`
+
+/** Calendar days from one reading to another, counting both ends. */
+const spanDays = (start: string, end: string) =>
+  Math.round(
+    (Date.parse(end.slice(0, 10)) - Date.parse(start.slice(0, 10))) / 86400000
+  ) + 1
+
+/** `Jan 01`, for spans inside a year the label already names. */
+const formatMonthDay = (value: string) =>
+  new Date(value).toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    timeZone: 'UTC',
+  })
+
+/**
+ * A logger's year in five numbers. The readings themselves are not printed --
+ * an hourly logger writes thousands a year -- only what they add up to.
+ */
+const ContinuousSummary = ({
+  summary,
+  year,
+}: {
+  summary: ContinuousWaterLevelSummary
+  year: number
+}) => {
+  const isCurrentYear = year === new Date().getFullYear()
+  const { firstInYear, lastInYear, shallowestInYear, deepestInYear } = summary
+
+  return (
+    <>
+      <View style={s.statRow}>
+        <Stat
+          label={`Readings in ${year}`}
+          value={summary.recordsInYear.toLocaleString('en-US')}
+          note={`${summary.recordsOnFile.toLocaleString('en-US')} on file in total`}
+        />
+        <Stat
+          label={`Period in ${year}`}
+          value={
+            firstInYear && lastInYear
+              ? `${spanDays(firstInYear.measuredOn, lastInYear.measuredOn)} days`
+              : '—'
+          }
+          note={
+            firstInYear && lastInYear
+              ? `${formatMonthDay(firstInYear.measuredOn)} – ${formatMonthDay(lastInYear.measuredOn)}`
+              : 'No readings logged'
+          }
+        />
+        <Stat
+          label={isCurrentYear ? 'Change, year to date' : `Change over ${year}`}
+          value={
+            summary.changeInYearFt == null
+              ? '—'
+              : formatLevelChange(summary.changeInYearFt)
+          }
+          note={
+            firstInYear && lastInYear && summary.changeInYearFt != null
+              ? // Plain words, not an arrow: Helvetica has no U+2192 and
+                // react-pdf prints a stray glyph in its place.
+                `Depth ${firstInYear.depthToWaterFt.toFixed(1)} to ${lastInYear.depthToWaterFt.toFixed(1)} ft`
+              : 'Needs two readings'
+          }
+        />
+        <Stat
+          label="Range in depth"
+          value={
+            shallowestInYear && deepestInYear
+              ? `${shallowestInYear.depthToWaterFt.toFixed(1)}–${deepestInYear.depthToWaterFt.toFixed(1)} ft`
+              : '—'
+          }
+          note={
+            shallowestInYear && deepestInYear
+              ? `High ${formatReportDate(shallowestInYear.measuredOn)} · low ${formatReportDate(deepestInYear.measuredOn)}`
+              : '—'
+          }
+        />
+        <Stat
+          label="Period of record"
+          value={
+            summary.periodOfRecord
+              ? `${chemistryReportYearOf(summary.periodOfRecord[0])}–${chemistryReportYearOf(summary.periodOfRecord[1])}`
+              : '—'
+          }
+          note={
+            summary.periodOfRecord ? formatSpan(summary.periodOfRecord) : '—'
+          }
+        />
+      </View>
+      <Text style={s.footnote}>
+        {[
+          'Logged by a pressure transducer left in the well. Depths are to water as logged; a positive change means the water rose, and "high" is the shallowest reading of the year.',
+          summary.provisional
+            ? `The latest ${year} readings have not been reviewed yet and are provisional.`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      </Text>
+    </>
+  )
+}
 
 const GLOSSARY_LEFT = [
   {
@@ -402,6 +522,7 @@ export const ChemistryReportPdf = ({
   contacts = [],
   observations,
   waterLevels = [],
+  continuous = null,
   year,
   sections = CHEMISTRY_REPORT_DEFAULT_SECTIONS,
   qrCodeDataUrl,
@@ -447,6 +568,23 @@ export const ChemistryReportPdf = ({
   const glossaryRight = sections.samplingNotes
     ? GLOSSARY_RIGHT
     : GLOSSARY_RIGHT.filter((entry) => entry.term !== ION_BALANCE_TERM)
+
+  // The prior reading is only there to measure change against; it is not one
+  // of the year's readings and is not counted as one.
+  const readingsInYear = waterLevels.filter((reading) => !reading.isPrior)
+  const hasPriorReading = waterLevels.some((reading) => reading.isPrior)
+  const measuredDepths = waterLevels.filter(
+    (reading) => reading.depthToWaterFt != null
+  )
+  const measuringPointDepths = measuredDepths.filter(
+    (reading) => reading.depthReference === 'measuring point'
+  ).length
+  const depthFootnote =
+    measuringPointDepths === 0
+      ? 'Depths are below the ground surface. Water elevation is the land surface elevation less that depth, and is shown only where a surveyed elevation is on file.'
+      : measuringPointDepths === measuredDepths.length
+        ? '† Depths are below the measuring point, because its height above the ground is not on file, so no water elevation is worked out.'
+        : 'Depths are below the ground surface, and water elevation is the land surface elevation less that depth. † Below the measuring point instead, because its height above the ground is not on file; no elevation is worked out for these.'
 
   const wellLabel = well?.name ?? 'Unknown well'
   const hasSamples = summary.rows.length > 0
@@ -516,7 +654,7 @@ export const ChemistryReportPdf = ({
           <View style={s.statRow}>
             <Stat
               label="Samples this year"
-              value={summary.sampleDates.length}
+              value={summary.sampleCount}
               note={
                 summary.sampleDates.length === 0
                   ? 'No samples on file'
@@ -559,9 +697,7 @@ export const ChemistryReportPdf = ({
             <Stat
               label="Water level change"
               value={
-                levelChange
-                  ? `${levelChange.changeFt > 0 ? '+' : ''}${levelChange.changeFt.toFixed(1)} ft`
-                  : '—'
+                levelChange ? formatLevelChange(levelChange.changeFt) : '—'
               }
               note={
                 levelChange
@@ -585,7 +721,7 @@ export const ChemistryReportPdf = ({
                 <Text style={s.calloutTitle}>
                   {`${displayParameterName(row.parameterName)} — ${formatResultValue(row.value)} ${row.unit ?? ''}`}
                 </Text>
-                {` (limit ${row.standard?.limit} ${row.standard?.unit}, measured ${formatReportDate(row.sampledOn)}).`}
+                {` (limit ${row.standard?.limit} ${row.standard?.unit}, sampled ${formatReportDate(row.sampledOn)}).`}
                 {row.standard?.note ? ` ${row.standard.note}` : ''}
               </Text>
             ))}
@@ -699,7 +835,12 @@ export const ChemistryReportPdf = ({
               title="Water level measurements"
               note={
                 waterLevels.length
-                  ? `${waterLevels.length} reading${waterLevels.length === 1 ? '' : 's'} on file`
+                  ? [
+                      `${readingsInYear.length} reading${readingsInYear.length === 1 ? '' : 's'} in ${year}`,
+                      hasPriorReading ? 'plus the last before it' : null,
+                    ]
+                      .filter(Boolean)
+                      .join(', ')
                   : undefined
               }
             />
@@ -711,12 +852,23 @@ export const ChemistryReportPdf = ({
               </Text>
             )}
             {waterLevels.length ? (
-              <Text style={s.footnote}>
-                Depths are measured from the top of casing. Water elevation is
-                the land surface elevation less the depth to water, and is shown
-                only where a surveyed elevation is on file.
-              </Text>
+              <Text style={s.footnote}>{depthFootnote}</Text>
             ) : null}
+          </View>
+        ) : null}
+
+        {/* ---- Continuous monitoring ---- */}
+        {sections.continuousMonitoring && continuous ? (
+          <View style={s.section} wrap={false}>
+            <SectionHead
+              title="Continuous monitoring at a glance"
+              note={
+                continuous.lastInYear
+                  ? `Last logged ${formatReportDate(continuous.lastInYear.measuredOn)}`
+                  : `No logger readings in ${year}`
+              }
+            />
+            <ContinuousSummary summary={continuous} year={year} />
           </View>
         ) : null}
 
@@ -769,7 +921,9 @@ export const ChemistryReportPdf = ({
 
         {/* ---- Chemistry results ---- */}
         {sections.chemistryResults ? (
-          <View style={s.section}>
+          <>
+            {/* Outside the section's View so it can move to the next page
+                with the table rather than be left behind. */}
             <SectionHead
               title="Water chemistry &amp; drinking water standards"
               note={
@@ -780,34 +934,36 @@ export const ChemistryReportPdf = ({
                   : undefined
               }
             />
-            {reportable.rows.length ? (
-              <>
-                <ChemistryTable
-                  rows={reportable.rows}
-                  showStandards={sections.standardsComparison}
-                />
-                <Legend />
-                <Text style={s.footnote}>
-                  {[
-                    reportable.omittedCount > 0
-                      ? `${reportable.omittedCount} further parameters have no drinking water standard to compare against; the full list is on file.`
-                      : null,
-                    summary.sampleDates.length > 1
-                      ? `Each parameter is shown at its most recent ${year} value, across ${summary.sampleDates.length} sampling visits.`
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
+            <View style={s.section}>
+              {reportable.rows.length ? (
+                <>
+                  <ChemistryTable
+                    rows={reportable.rows}
+                    showStandards={sections.standardsComparison}
+                  />
+                  <Legend />
+                  <Text style={s.footnote}>
+                    {[
+                      reportable.omittedCount > 0
+                        ? `${reportable.omittedCount} further parameters have no drinking water standard to compare against; the full list is on file.`
+                        : null,
+                      summary.sampleDates.length > 1
+                        ? `Each parameter is shown at its most recent ${year} value, across ${summary.sampleDates.length} sampling visits.`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  </Text>
+                </>
+              ) : (
+                <Text style={s.emptyNote}>
+                  {hasSamples
+                    ? 'No laboratory results were recorded for this period.'
+                    : `No water chemistry was collected at this well during ${year}.`}
                 </Text>
-              </>
-            ) : (
-              <Text style={s.emptyNote}>
-                {hasSamples
-                  ? 'No laboratory results were recorded for this period.'
-                  : `No water chemistry was collected at this well during ${year}.`}
-              </Text>
-            )}
-          </View>
+              )}
+            </View>
+          </>
         ) : null}
 
         {/* ---- Sampling notes and glossary (page 3) ---- */}
@@ -834,9 +990,8 @@ export const ChemistryReportPdf = ({
                   </View>
                   {ionBalance.map((row) => {
                     const passes = row.value != null && Math.abs(row.value) <= 5
-                    const day = row.sampledOn.slice(0, 10)
                     const inSample = summary.rows.filter(
-                      (other) => other.sampledOn.slice(0, 10) === day
+                      (other) => other.sampleKey === row.sampleKey
                     ).length
 
                     return (
