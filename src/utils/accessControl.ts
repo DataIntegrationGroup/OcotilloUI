@@ -84,7 +84,6 @@ const geothermalEditorRoles: PortalRole[] = [
   'Geothermal.Admin',
 ]
 const geothermalAdminRoles: PortalRole[] = ['Geothermal.Admin']
-const stagingRoles: PortalRole[] = ['AMP.Staging']
 const adminOnlyRoles = new Set<PortalRole>(['AMP.Admin', 'Geothermal.Admin'])
 
 const resourcePolicies: Record<string, ResourcePolicy> = {
@@ -149,7 +148,9 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     delete: adminRoles,
     manage: adminRoles,
   },
-  'ocotillo.chemistry-report': { list: stagingRoles, show: stagingRoles },
+  // Editors run owner-facing reports, the same tier that corrects the
+  // hydrographs the report prints water levels from.
+  'ocotillo.chemistry-report': { list: editorRoles, show: editorRoles },
   geothermal: { list: geothermalViewerRoles, show: geothermalViewerRoles },
   'water.locations': {
     list: ['AMP.Admin', 'Geothermal.Admin'],

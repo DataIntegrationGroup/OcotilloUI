@@ -21,7 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { BYPASS_AMP_STAGING_GATE, PDF_SINGLE_PAGE_OPTION } from '@/config'
+import { PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { useAccessCapabilities, useWellChemistryReport } from '@/hooks'
 import { IPdfOptions } from '@/interfaces'
 import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
@@ -67,16 +67,15 @@ export const WellPDFActionsButton = ({
     isLoading: isPermissionsLoading,
     canManageAmp,
     canViewConfidential,
-    canViewAmpStaging,
+    canEditAmp,
   } = useAccessCapabilities()
 
   const [selectedReportType, setSelectedReportType] =
     useState<WellReportType>('field-sheet')
   const [isGenerating, setIsGenerating] = useState(false)
 
-  // The report is still under review, so it is offered to the staging group —
-  // plus anyone on a dev or preview build, where reviewing it is the point.
-  const canOfferChemistryReport = canViewAmpStaging || BYPASS_AMP_STAGING_GATE
+  // Offered to editors, matching the report route's own access policy.
+  const canOfferChemistryReport = canEditAmp
 
   const {
     reportYear,
