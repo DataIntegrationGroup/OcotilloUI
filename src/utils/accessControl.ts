@@ -6,11 +6,23 @@ import type {
 } from '@/interfaces/ocotillo/IContact'
 
 export type AmpRole = 'AMP.Viewer' | 'AMP.Editor' | 'AMP.Admin'
+/**
+ * Opt-in flag group for features that are still being reviewed. It is not a
+ * rung on the AMP.Viewer → AMP.Editor → AMP.Admin ladder: holding it grants
+ * nothing else, and holding AMP.Admin does not imply it. A user has to be put
+ * in the group deliberately.
+ *
+ * Spelled exactly as Authentik spells it, because groups arrive as strings in
+ * the token's `groups` claim and are matched literally -- `AMP.staging` looks
+ * right and never matches anything. The API spells it the same way, in
+ * core/dependencies.py.
+ */
+export type AmpStagingRole = 'AMP.Staging'
 export type GeothermalRole =
   | 'Geothermal.Viewer'
   | 'Geothermal.Editor'
   | 'Geothermal.Admin'
-export type PortalRole = AmpRole | GeothermalRole
+export type PortalRole = AmpRole | AmpStagingRole | GeothermalRole
 
 /**
  * Groups that grant a capability without being a portal role.
@@ -30,10 +42,17 @@ const roleOrder: PortalRole[] = [
   'AMP.Viewer',
   'AMP.Editor',
   'AMP.Admin',
+  'AMP.Staging',
   'Geothermal.Viewer',
   'Geothermal.Editor',
   'Geothermal.Admin',
 ]
+
+/**
+ * Roles that carry no hierarchy — they pass through normalization as-is
+ * instead of being expanded from a domain ladder.
+ */
+const standaloneRoles: PortalRole[] = ['AMP.Staging']
 
 export const wipResources = new Set([
   'water.dashboard',
@@ -65,6 +84,7 @@ const geothermalEditorRoles: PortalRole[] = [
   'Geothermal.Admin',
 ]
 const geothermalAdminRoles: PortalRole[] = ['Geothermal.Admin']
+const stagingRoles: PortalRole[] = ['AMP.Staging']
 const adminOnlyRoles = new Set<PortalRole>(['AMP.Admin', 'Geothermal.Admin'])
 
 const resourcePolicies: Record<string, ResourcePolicy> = {
@@ -129,6 +149,7 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     delete: adminRoles,
     manage: adminRoles,
   },
+  'ocotillo.chemistry-report': { list: stagingRoles, show: stagingRoles },
   geothermal: { list: geothermalViewerRoles, show: geothermalViewerRoles },
   'water.locations': {
     list: ['AMP.Admin', 'Geothermal.Admin'],
@@ -182,6 +203,12 @@ export const normalizeAccessControlGroups = (
     ['Geothermal.Viewer', 'Geothermal.Editor', 'Geothermal.Admin'],
   ]
 
+  for (const role of standaloneRoles) {
+    if (normalized.has(role)) {
+      expandedRoles.add(role)
+    }
+  }
+
   for (const hierarchy of domainHierarchies) {
     if (normalized.has(hierarchy[2])) {
       hierarchy.forEach((role) => expandedRoles.add(role))
@@ -225,7 +252,11 @@ export const normalizeAuthGroups = (
 export const getPrimaryRole = (
   groups: string[] | null | undefined
 ): PortalRole | null => {
-  const normalized = normalizeAccessControlGroups(groups)
+  // Standalone flag groups are not a rank, so they never become the label a
+  // user is shown as holding.
+  const normalized = normalizeAccessControlGroups(groups).filter(
+    (role) => !standaloneRoles.includes(role)
+  )
   return normalized.length > 0 ? normalized[normalized.length - 1] : null
 }
 
@@ -241,6 +272,7 @@ export const getAccessCapabilities = (groups: string[] | null | undefined) => {
   const canManageAmp = roles.includes('AMP.Admin')
   const canViewConfidential = canEditAmp
   const canViewUnfinished = canManageAmp
+  const canViewAmpStaging = roles.includes('AMP.Staging')
   const canViewGeothermal =
     roles.includes('Geothermal.Viewer') ||
     roles.includes('Geothermal.Editor') ||
@@ -259,6 +291,7 @@ export const getAccessCapabilities = (groups: string[] | null | undefined) => {
     canManageAssets: canEditAmp,
     canViewConfidential,
     canViewUnfinished,
+    canViewAmpStaging,
     canViewGeothermal,
     canEditGeothermal,
     canManageGeothermal,
@@ -305,7 +338,8 @@ export const canAccessResource = ({
 
   if (
     resource === 'ocotillo.hydrograph-correction' ||
-    resource === 'ocotillo.thing-well-pdf-preview'
+    resource === 'ocotillo.thing-well-pdf-preview' ||
+    resource === 'ocotillo.chemistry-report'
   ) {
     const policy = resourcePolicies[resource]
     return matchesPolicy(policy[action], capabilities.roles)

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
   Alert,
   Box,
-  CircularProgress,
   Divider,
   Link,
   Typography,
@@ -15,6 +14,7 @@ import {
 import { ContentCopy } from '@mui/icons-material'
 import { Components } from 'react-markdown'
 import { settings } from '@/settings'
+import { getContentByHref } from '@/utils/contentModules'
 
 export type FrontMatter = {
   title?: string
@@ -273,75 +273,40 @@ export const MarkdownPage: React.FC<MarkdownPageProps> = ({
 }
 
 export const ContentPage: React.FC<ContentPageProps> = ({ src }) => {
-  const [frontmatter, setFrontmatter] = useState<FrontMatter>({})
-  const [body, setBody] = useState<string>('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const page = useMemo(() => {
+    const raw = getContentByHref(src)
+    if (raw === undefined) return null
 
-  useEffect(() => {
-    setLoading(true)
-    setError(null)
-    fetch(src)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load ${src}`)
-        return res.text()
-      })
-      .then((text) => {
-        // Replace template placeholders like {{ key }} in the markdown text
-        // with corresponding values from the `settings` object.
-        //
-        // Example:
-        //   "https://{{ ocotillo_api_url }}/ogcapi"
-        //   → "https://actual-value/ogcapi"
-        //
-        const hydratedText = text.replace(
-          /{{\s*([\w]+)\s*}}/g,
-          (_, key: string) => {
-            const value = (settings as Record<string, any>)[key]
+    // Replace template placeholders like {{ key }} in the markdown text
+    // with corresponding values from the `settings` object.
+    //
+    // Example:
+    //   "https://{{ ocotillo_api_url }}/ogcapi"
+    //   → "https://actual-value/ogcapi"
+    //
+    const hydratedText = raw.replace(/{{\s*([\w]+)\s*}}/g, (_, key: string) => {
+      const value = (settings as Record<string, any>)[key]
 
-            if (typeof value === 'string') {
-              return value.replace(/\/+$/, '')
-            }
+      if (typeof value === 'string') {
+        return value.replace(/\/+$/, '')
+      }
 
-            // if key not found or not string → reinsert key name
-            return `{{ ${key} }}`
-          }
-        )
+      // if key not found or not string → reinsert key name
+      return `{{ ${key} }}`
+    })
 
-        const parsed = parseFrontmatter(hydratedText)
-        setFrontmatter(parsed.data)
-        setBody(parsed.content)
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
+    return parseFrontmatter(hydratedText)
   }, [src])
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100%',
-          bgcolor: 'background.wrapper',
-          display: 'flex',
-          justifyContent: 'center',
-          pt: 8,
-          borderRadius: 1,
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    )
-  }
-
-  if (error) {
+  if (!page) {
     return (
       <Box sx={{ minHeight: '100%', bgcolor: 'background.wrapper', p: 4 }}>
-        <Typography color="error">{error}</Typography>
+        <Typography color="error">{`Failed to load ${src}`}</Typography>
       </Box>
     )
   }
 
-  return <MarkdownPage frontmatter={frontmatter} body={body} />
+  return <MarkdownPage frontmatter={page.data} body={page.content} />
 }
 
 const CopyCodeBlock = ({ value }: { value: string }) => {
