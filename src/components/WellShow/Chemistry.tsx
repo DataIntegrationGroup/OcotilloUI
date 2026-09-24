@@ -6,6 +6,7 @@ import axios from "axios";
 import { RotateCcw } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -75,6 +76,29 @@ const sampleDisplayLabel = (
 const formatResultValue = (result?: ChemistryDisplayResult) => {
   if (!result) return "-";
   return formatValue(result.value);
+};
+
+const isNonDetectResult = (result?: ChemistryDisplayResult) => {
+  if (!result) return false;
+
+  return result.symbol?.trim() === "<";
+};
+
+const displayParameterName = (
+  result: Pick<ChemistryDisplayResult, "parameter_name" | "analyte">,
+) => {
+  return result.parameter_name;
+};
+
+const renderResultValue = (result?: ChemistryDisplayResult) => {
+  if (!isNonDetectResult(result)) return formatResultValue(result);
+
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+      <Badge>ND</Badge>
+      <Typography variant="body2">&lt; {formatResultValue(result)}</Typography>
+    </Box>
+  );
 };
 
 const normalizeParameterName = (value: string) =>
@@ -159,7 +183,7 @@ const matchesStandardFilter = (
   filter: StandardFilter,
 ) => {
   if (filter === "all") return true;
-  if (filter === "non_detects") return result.value == null;
+  if (filter === "non_detects") return isNonDetectResult(result);
 
   const status = result.standard?.status;
   if (filter === "above_mcl") return status === "above_mcl";
@@ -194,7 +218,7 @@ const crosstabColumnsForResults = (
     if (!columnsByKey.has(result.parameter_key)) {
       columnsByKey.set(result.parameter_key, {
         parameter_key: result.parameter_key,
-        parameter_name: result.parameter_name,
+        parameter_name: displayParameterName(result),
         symbol: result.symbol,
         unit: result.unit,
       });
@@ -232,6 +256,7 @@ const displayResponseFromResults = (
     const result: ChemistryDisplayResult = {
       ...item,
       sample_info_id: item.sample_id,
+      parameter_name: displayParameterName(item),
     };
     const parameterName = (item.parameter_name ?? "").toLowerCase();
     const symbol = (item.symbol ?? item.analyte ?? "").trim().toLowerCase();
@@ -468,7 +493,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         flex: 1,
         align: "left",
         headerAlign: "left",
-        valueGetter: (_value, row) => row.parameter_name ?? row.analyte ?? "-",
+        valueGetter: (_value, row) => displayParameterName(row) ?? "-",
       },
       {
         field: "value",
@@ -477,6 +502,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         minWidth: 110,
         align: "left",
         headerAlign: "left",
+        renderCell: (params) => renderResultValue(params.row),
       },
       {
         field: "unit",
@@ -512,9 +538,15 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         headerName: "Parameter",
         minWidth: 190,
         flex: 1,
-        valueGetter: (_value, row) => row.parameter_name ?? row.analyte ?? "-",
+        valueGetter: (_value, row) => displayParameterName(row) ?? "-",
       },
-      { field: "value", headerName: "Result", type: "number", minWidth: 110 },
+      {
+        field: "value",
+        headerName: "Result",
+        type: "number",
+        minWidth: 110,
+        renderCell: (params) => renderResultValue(params.row),
+      },
       { field: "unit", headerName: "Unit", minWidth: 90 },
       {
         field: "primary_mcl",
@@ -618,9 +650,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
               : params.row.values[column.parameter_key];
           return (
             <Box>
-              <Typography variant="body2">
-                {formatResultValue(result)}
-              </Typography>
+              {renderResultValue(result)}
               {result?.notes ? (
                 <Typography variant="caption" color="text.secondary">
                   {result.notes}

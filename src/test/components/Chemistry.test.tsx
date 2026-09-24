@@ -243,9 +243,9 @@ describe('ChemistryCard', () => {
       error: null,
     })
 
-    const user = userEvent.setup()
     render(<ChemistryCard thingId={42} />)
 
+    const user = userEvent.setup()
     await user.click(screen.getByRole('combobox', { name: 'View' }))
     await user.click(
       screen.getByRole('option', { name: 'Cross-tab for all views' })
@@ -589,5 +589,94 @@ describe('ChemistryCard', () => {
       expect.objectContaining({ id: 'maj-2', sample_info_id: 8 }),
       expect.objectContaining({ id: 'maj-1', sample_info_id: 7 }),
     ])
+  })
+
+  it('renders non-detect results with an ND badge in the current view', () => {
+    mockedUseQuery.mockReturnValue({
+      data: {
+        ...chemistryResponse,
+        samples: [
+          {
+            id: 1476,
+            thing_id: 42,
+            label: 'Sample 1476',
+            nma_sample_point_id: 'AR-0102N',
+            collection_date: '2026-02-03T00:00:00Z',
+          },
+        ],
+        field_parameters: {
+          results: [
+            {
+              id: 'sn-total-result',
+              sample_info_id: 1476,
+              source: 'major' as const,
+              parameter_key: 'sn_total',
+              parameter_name: 'Dissolved Oxygen',
+              analyte: 'Sn(total)',
+              symbol: '<',
+              value: 0.2,
+              unit: 'mg/L',
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    render(<ChemistryCard thingId={42} />)
+
+    expect(screen.getByText('ND')).toBeInTheDocument()
+    expect(screen.getByText('< 0.2')).toBeInTheDocument()
+  })
+
+  it('renders non-detect results with an ND badge in the cross-tab view', async () => {
+    mockedUseQuery.mockReturnValue({
+      data: {
+        ...chemistryResponse,
+        samples: [
+          {
+            id: 1476,
+            thing_id: 42,
+            label: 'Sample 1476',
+            nma_sample_point_id: 'AR-0102N',
+            collection_date: '2026-02-03T00:00:00Z',
+          },
+        ],
+        general_chemistry: {
+          results: [
+            {
+              id: 'sn-total-result',
+              sample_info_id: 1476,
+              source: 'major' as const,
+              parameter_key: 'sn_total',
+              parameter_name: 'Tin',
+              analyte: 'Sn(total)',
+              symbol: '<',
+              value: 0.2,
+              unit: 'mg/L',
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    render(<ChemistryCard thingId={42} />)
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('tab', { name: 'General Chemistry' }))
+
+    expect(screen.getByTestId('column-headers')).toHaveTextContent(
+      'Tin (mg/L)'
+    )
+    expect(screen.getByTestId('column-headers')).not.toHaveTextContent(
+      '< (mg/L)'
+    )
+    expect(screen.getByText('ND')).toBeInTheDocument()
+    expect(screen.getByText('< 0.2')).toBeInTheDocument()
   })
 })
