@@ -50,6 +50,7 @@ import {
 } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
 import { useWellDetails } from '@/hooks/useWellDetails'
 import { buildManualObservationFieldMetadata } from '@/utils/manualObservationFieldMetadata'
+import { findGroundwaterLevelParameterId } from '@/utils/groundwaterLevelParameter'
 import {
   buildSensorDeploymentRows,
   type DeploymentLike,
@@ -360,34 +361,47 @@ export const HydrographCorrectionPage = () => {
     await resolveWellFromUpload(parsed)
   }
 
-  // Resolve the depth-to-water parameter id from the lexicon at runtime
-  // (upload-contract open question #1 — this avoids a hardcoded id).
+  // Resolve the groundwater-level Parameter id at runtime (upload-contract
+  // open question #1 — this avoids a hardcoded id). The block route checks
+  // parameter_id against its Parameter row, so a lexicon term id is rejected.
+  // Read it off the selected well's series first; a well with no stored
+  // readings falls back to any groundwater-level observation.
   const resolveDtwParameterId = async () => {
     if (dtwParameterIdRef.current !== null) return dtwParameterIdRef.current
 
-    const fetchTerms = async (category?: string) => {
-      const response = await ocotilloDataProvider.getList({
-        resource: 'lexicon/term',
-        pagination: { currentPage: 1, pageSize: 500 },
-        meta: { params: category ? { category } : {} },
+    let parameterId = findGroundwaterLevelParameterId({
+      transducerRows,
+      manualRows,
+    })
+    if (parameterId === null) {
+      const [manualSample, transducerSample] = await Promise.all(
+        [
+          'observation/groundwater-level',
+          'observation/transducer-groundwater-level',
+        ].map((resource) =>
+          ocotilloDataProvider
+            .getList({
+              resource,
+              pagination: { currentPage: 1, pageSize: 1 },
+            })
+            .then((response) => response.data)
+            .catch(() => [])
+        )
+      )
+      parameterId = findGroundwaterLevelParameterId({
+        transducerRows:
+          transducerSample as TransducerObservationWithBlockResponse[],
+        manualRows: manualSample as IObservation[],
       })
-      return response.data as Array<{ id: number; term: string }>
     }
-    const findDtw = (terms: Array<{ id: number; term: string }>) =>
-      terms.find((item) =>
-        /depth\s*to\s*water.*(bgs|below\s*ground)/i.test(item.term)
-      ) ?? terms.find((item) => /depth\s*to\s*water/i.test(item.term))
-
-    let match = findDtw(await fetchTerms('parameter').catch(() => []))
-    if (!match) match = findDtw(await fetchTerms())
-    if (!match) {
+    if (parameterId === null) {
       throw new Error(
-        'Could not resolve the depth-to-water parameter from the lexicon.'
+        'Could not resolve the groundwater level parameter from existing observations.'
       )
     }
 
-    dtwParameterIdRef.current = match.id
-    return match.id
+    dtwParameterIdRef.current = parameterId
+    return parameterId
   }
 
   // POST per docs/hydrograph-correction-upload-contract.md.
