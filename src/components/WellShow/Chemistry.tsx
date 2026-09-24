@@ -19,6 +19,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   CROSSTAB_ONLY_TABS,
+  CHEMISTRY_PARAMETER_NAME_MAP,
   FIELD_PARAMETER_DEFINITIONS,
   FIELD_PARAMETER_ORDER,
   GENERAL_PARAMETERS,
@@ -87,7 +88,10 @@ const isNonDetectResult = (result?: ChemistryDisplayResult) => {
 const displayParameterName = (
   result: Pick<ChemistryDisplayResult, "parameter_name" | "analyte">,
 ) => {
-  return result.parameter_name;
+  return result.parameter_name
+    ? (CHEMISTRY_PARAMETER_NAME_MAP[result.parameter_name] ??
+        result.parameter_name)
+    : result.parameter_name;
 };
 
 const renderResultValue = (result?: ChemistryDisplayResult) => {
