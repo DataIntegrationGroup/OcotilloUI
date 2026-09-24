@@ -134,7 +134,7 @@ const canonicalFieldParameterRows = (
 ) => {
   const canonicalRows = rows.flatMap((row) => {
     const definition = fieldParameterDefinition(row);
-    if (row.source === 'field' && !definition) return [];
+    if (row.source === "field" && !definition) return [];
     return [definition ? { ...row, parameter_name: definition.label } : row];
   });
 
@@ -211,7 +211,7 @@ const crosstabColumnsForResults = (
   const columnsByKey = new Map<string, ChemistryDisplayCrosstabColumn>();
 
   for (const result of results) {
-    if (result.source === 'field' && !fieldParameterDefinition(result)) {
+    if (result.source === "field" && !fieldParameterDefinition(result)) {
       continue;
     }
 
@@ -648,16 +648,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                     column.parameter_name,
                 ) ?? params.row.values[column.parameter_key])
               : params.row.values[column.parameter_key];
-          return (
-            <Box>
-              {renderResultValue(result)}
-              {result?.notes ? (
-                <Typography variant="caption" color="text.secondary">
-                  {result.notes}
-                </Typography>
-              ) : null}
-            </Box>
-          );
+          return <Box>{renderResultValue(result)}</Box>;
         },
       }));
 
