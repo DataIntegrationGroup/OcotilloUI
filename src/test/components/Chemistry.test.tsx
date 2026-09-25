@@ -200,7 +200,7 @@ describe('ChemistryCard', () => {
       )
     ).toBeInTheDocument()
     expect(screen.queryByText(/Sampling Event Note:/)).not.toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: 'Sample' })).toBeDisabled()
+    expect(screen.getByRole('listbox', { name: 'Sample' })).toBeEnabled()
   })
 
   it('uses the canonical field parameter aliases and order in the crosstab', async () => {

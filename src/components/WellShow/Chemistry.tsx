@@ -7,6 +7,12 @@ import { RotateCcw } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -303,6 +309,9 @@ const displayResponseFromResults = (
 
 export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
   const [selectedSampleInfoId, setSelectedSampleInfoId] = useState("");
+  const [selectedCrosstabSampleIds, setSelectedCrosstabSampleIds] = useState<
+    string[]
+  >([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [standardFilter, setStandardFilter] = useState<StandardFilter>("all");
@@ -504,6 +513,16 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
       };
     });
   }, [activeTabData, samples, standardFilter]);
+
+  const displayedCrosstabRows = useMemo(
+    () =>
+      selectedCrosstabSampleIds.length === 0
+        ? crosstabRows
+        : crosstabRows.filter((row) =>
+            selectedCrosstabSampleIds.includes(String(row.sample_info_id)),
+          ),
+    [crosstabRows, selectedCrosstabSampleIds],
+  );
 
   const currentColumns = useMemo<GridColDef<CurrentResultRow>[]>(
     () => [
@@ -707,6 +726,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
 
   const resetFilters = () => {
     setSelectedSampleInfoId("");
+    setSelectedCrosstabSampleIds([]);
     setStartDate("");
     setEndDate("");
     setStandardFilter("all");
@@ -740,23 +760,64 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end">
           <div className="grid gap-1.5 md:min-w-[220px]">
             <Label htmlFor="water-chemistry-sample">Sample</Label>
-            <Select
-              value={String(selectedSample?.id ?? "")}
-              onValueChange={setSelectedSampleInfoId}
-              disabled={controlsDisabled || effectiveViewMode === "crosstab"}
-            >
-              <SelectTrigger id="water-chemistry-sample" className="w-full">
-                <SelectValue placeholder="Select a sample" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {samples.map((sample) => (
-                  <SelectItem key={sample.id} value={String(sample.id)}>
-                    {sampleDisplayLabel(sample)} -{" "}
-                    {formatChemistryDate(sample.collection_date)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {effectiveViewMode === "crosstab" ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    id="water-chemistry-sample"
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                    disabled={controlsDisabled}
+                  >
+                    {selectedCrosstabSampleIds.length === 0
+                      ? "All samples"
+                      : `${selectedCrosstabSampleIds.length} sample${
+                          selectedCrosstabSampleIds.length === 1 ? "" : "s"
+                        } selected`}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
+                  {samples.map((sample) => {
+                    const sampleId = String(sample.id);
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={sample.id}
+                        checked={selectedCrosstabSampleIds.includes(sampleId)}
+                        onCheckedChange={(checked) =>
+                          setSelectedCrosstabSampleIds((current) =>
+                            checked
+                              ? [...current, sampleId]
+                              : current.filter((id) => id !== sampleId),
+                          )
+                        }
+                        onSelect={(event) => event.preventDefault()}
+                      >
+                        {sampleDisplayLabel(sample)} -{" "}
+                        {formatChemistryDate(sample.collection_date)}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Select
+                value={String(selectedSample?.id ?? "")}
+                onValueChange={setSelectedSampleInfoId}
+                disabled={controlsDisabled}
+              >
+                <SelectTrigger id="water-chemistry-sample" className="w-full">
+                  <SelectValue placeholder="Select a sample" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {samples.map((sample) => (
+                    <SelectItem key={sample.id} value={String(sample.id)}>
+                      {sampleDisplayLabel(sample)} -{" "}
+                      {formatChemistryDate(sample.collection_date)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="water-chemistry-from">From</Label>
@@ -906,7 +967,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 rowHeight={settings.rowHeight}
                 autoHeight
                 hideFooter
-                rows={crosstabRows}
+                rows={displayedCrosstabRows}
                 columns={crosstabColumns}
                 loading={isLoading}
                 sx={{
