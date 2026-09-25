@@ -62,6 +62,12 @@ import {
   type HydrographRange,
   ParsedHydrographUpload,
 } from '@/components/Hydrographs/hydrographCorrection'
+import {
+  parseOverlapConflict,
+  splitAroundPublishedBlocks,
+  type PublishedBlockSpan,
+  type PublishOverlapMode,
+} from '@/components/Hydrographs/publishOverlap'
 import { HydrographUiModeToggle } from '@/components/Hydrographs/HydrographUiModeToggle'
 import {
   isAtLeastMode,
@@ -161,13 +167,14 @@ export const HydrographCorrectionPage = () => {
     useState<HTMLElement | null>(null)
   const [ingestedWellName, setIngestedWellName] = useState<string | null>(null)
   const [publishSuccess, setPublishSuccess] = useState<{
-    blockId: number | null
+    blockIds: number[]
     count: number
+    skippedCount: number
     wellName: string
   } | null>(null)
   const [publishError, setPublishError] = useState<string | null>(null)
   const [pendingOverlap, setPendingOverlap] = useState<{
-    blockIds: number[]
+    blocks: PublishedBlockSpan[]
     args: HydrographPublishArgs
   } | null>(null)
   const dtwParameterIdRef = useRef<number | null>(null)
@@ -428,20 +435,24 @@ export const HydrographCorrectionPage = () => {
     return data as { block?: { id?: number }; observation_count?: number }
   }
 
-  const applyPublishSuccess = (
-    data: { block?: { id?: number }; observation_count?: number },
-    args: HydrographPublishArgs
-  ) => {
-    setPublishSuccess({
-      blockId: data.block?.id ?? null,
-      count: data.observation_count ?? args.measurements.length,
-      wellName: selectedWell?.name ?? '',
-    })
+  const invalidateStoredSeries = () =>
     invalidate({
       resource: 'observation/transducer-groundwater-level',
       dataProviderName: 'ocotillo',
       invalidates: ['list'],
     })
+
+  const applyPublishSuccess = (
+    data: { block?: { id?: number }; observation_count?: number },
+    args: HydrographPublishArgs
+  ) => {
+    setPublishSuccess({
+      blockIds: data.block?.id != null ? [data.block.id] : [],
+      count: data.observation_count ?? args.measurements.length,
+      skippedCount: 0,
+      wellName: selectedWell?.name ?? '',
+    })
+    invalidateStoredSeries()
   }
 
   const handlePublish = async (args: HydrographPublishArgs) => {
@@ -452,12 +463,12 @@ export const HydrographCorrectionPage = () => {
       applyPublishSuccess(await postCorrectedBlock(args, false), args)
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 409) {
-        const body = error.response.data ?? {}
-        const blockIds: number[] =
-          body.overlapping_block_ids ??
-          body.detail?.overlapping_block_ids ??
-          []
-        setPendingOverlap({ blockIds, args })
+        // Nothing was written: the server checks for overlap before any
+        // insert, so the user can still choose how to resolve it.
+        setPendingOverlap({
+          blocks: parseOverlapConflict(error.response.data),
+          args,
+        })
         return
       }
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -516,10 +527,68 @@ export const HydrographCorrectionPage = () => {
     }
   }
 
-  const confirmReplaceOverlap = async () => {
+  // Publishes only the points outside the already-published blocks. What is
+  // left can sit on both sides of a published block, and one block may not
+  // span another, so each contiguous run is published as its own block.
+  const publishIgnoringOverlap = async (
+    args: HydrographPublishArgs,
+    blocks: PublishedBlockSpan[]
+  ) => {
+    const { runs, skippedCount } = splitAroundPublishedBlocks(
+      args.measurements,
+      blocks
+    )
+    const blockIds: number[] = []
+    let count = 0
+
+    try {
+      for (const run of runs) {
+        const data = await postCorrectedBlock(
+          { ...args, measurements: run },
+          false
+        )
+        if (data.block?.id != null) blockIds.push(data.block.id)
+        count += data.observation_count ?? run.length
+      }
+    } catch (error) {
+      // A 409 here means the stored series changed after the overlap was
+      // detected, or unblocked readings sit in the gap; the server says which.
+      const serverMessage = axios.isAxiosError(error)
+        ? error.response?.data?.detail?.[0]?.msg
+        : undefined
+      const reason =
+        typeof serverMessage === 'string'
+          ? serverMessage
+          : error instanceof Error
+            ? error.message
+            : 'publishing failed'
+      setPublishError(
+        blockIds.length > 0
+          ? `Published ${blockIds.length} of ${runs.length} blocks (${blockIds.join(', ')}) before stopping: ${reason}.`
+          : `Publishing failed: ${reason}.`
+      )
+      if (blockIds.length > 0) invalidateStoredSeries()
+      return
+    }
+
+    setPublishSuccess({
+      blockIds,
+      count,
+      skippedCount,
+      wellName: selectedWell?.name ?? '',
+    })
+    if (blockIds.length > 0) invalidateStoredSeries()
+  }
+
+  const resolveOverlap = async (overlapMode: PublishOverlapMode) => {
     if (!pendingOverlap) return
-    const { args } = pendingOverlap
+    const { args, blocks } = pendingOverlap
     setPendingOverlap(null)
+
+    if (overlapMode === 'ignore') {
+      await publishIgnoringOverlap(args, blocks)
+      return
+    }
 
     try {
       applyPublishSuccess(await postCorrectedBlock(args, true), args)
@@ -529,6 +598,17 @@ export const HydrographCorrectionPage = () => {
       )
     }
   }
+
+  const pendingOverlapSkipCount = useMemo(
+    () =>
+      pendingOverlap
+        ? splitAroundPublishedBlocks(
+            pendingOverlap.args.measurements,
+            pendingOverlap.blocks
+          ).skippedCount
+        : 0,
+    [pendingOverlap]
+  )
 
   const applyExternalIngest = (
     { well, wellName, measurements, isDemo }: WellntelIngestResult,
@@ -845,11 +925,20 @@ export const HydrographCorrectionPage = () => {
 
         {publishSuccess ? (
           <Alert severity="success" onClose={() => setPublishSuccess(null)}>
-            Published {publishSuccess.count} corrected observations
-            {publishSuccess.blockId !== null
-              ? ` (block ${publishSuccess.blockId})`
-              : ''}{' '}
-            to {publishSuccess.wellName}.
+            {publishSuccess.count > 0
+              ? `Published ${publishSuccess.count} corrected observations${
+                  publishSuccess.blockIds.length > 0
+                    ? ` (${publishSuccess.blockIds.length === 1 ? 'block' : 'blocks'} ${publishSuccess.blockIds.join(', ')})`
+                    : ''
+                } to ${publishSuccess.wellName}.`
+              : `Nothing new to publish to ${publishSuccess.wellName}.`}
+            {publishSuccess.skippedCount > 0
+              ? ` Ignored ${publishSuccess.skippedCount} already-published ${
+                  publishSuccess.skippedCount === 1
+                    ? 'observation'
+                    : 'observations'
+                }.`
+              : ''}
           </Alert>
         ) : null}
         {publishError ? (
@@ -909,27 +998,61 @@ export const HydrographCorrectionPage = () => {
       <Dialog
         open={Boolean(pendingOverlap)}
         onClose={() => setPendingOverlap(null)}
-        maxWidth="xs"
+        maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Replace existing blocks?</DialogTitle>
+        <DialogTitle>Overlaps published data</DialogTitle>
         <DialogContent>
-          <Typography variant="body2">
-            The corrected time span overlaps existing transducer observation
-            {(pendingOverlap?.blockIds.length ?? 0) === 1
-              ? ' block '
-              : ' blocks '}
-            {pendingOverlap?.blockIds.length
-              ? pendingOverlap.blockIds.join(', ')
-              : '(ids unavailable)'}
-            . Replacing deletes those blocks and their observations in the
-            same transaction.
-          </Typography>
+          <Stack spacing={1.5}>
+            <Typography variant="body2">
+              The corrected series overlaps data already published to this well.
+              Nothing has been written yet.
+            </Typography>
+            {pendingOverlap?.blocks.length ? (
+              <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                {pendingOverlap.blocks.map((block) => (
+                  <Typography component="li" variant="body2" key={block.id}>
+                    Block {block.id}: {block.startTime.toLocaleString()} –{' '}
+                    {block.endTime.toLocaleString()}
+                  </Typography>
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                The overlapping blocks could not be read from the server
+                response.
+              </Typography>
+            )}
+            <Typography variant="body2">
+              <strong>Overwrite existing points</strong> deletes those blocks
+              and their observations, then publishes the full corrected series,
+              in one transaction.
+            </Typography>
+            <Typography variant="body2">
+              <strong>Ignore already published points</strong> keeps the stored
+              data and publishes only the corrected observations outside it
+              {pendingOverlap?.blocks.length
+                ? ` (${pendingOverlapSkipCount} of ${pendingOverlap.args.measurements.length} would be ignored)`
+                : ''}
+              .
+            </Typography>
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPendingOverlap(null)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={confirmReplaceOverlap}>
-            Replace Existing Blocks
+          <Button
+            variant="outlined"
+            disabled={!pendingOverlap?.blocks.length}
+            onClick={() => resolveOverlap('ignore')}
+          >
+            Ignore Already Published Points
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => resolveOverlap('overwrite')}
+          >
+            Overwrite Existing Points
           </Button>
         </DialogActions>
       </Dialog>
