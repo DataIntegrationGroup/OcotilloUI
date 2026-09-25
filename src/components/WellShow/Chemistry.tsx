@@ -803,29 +803,29 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid gap-1.5 md:min-w-[180px]">
-            <Label htmlFor="water-chemistry-view">View</Label>
-            <Select
-              value={effectiveViewMode}
-              onValueChange={(value) => setViewMode(value as ChemistryViewMode)}
-              disabled={controlsDisabled || isCrosstabOnlyTab}
-            >
-              <SelectTrigger id="water-chemistry-view" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {VIEW_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button variant="outline" size="default" onClick={resetFilters}>
-            <RotateCcw data-icon="inline-start" />
-            Reset
-          </Button>
+          {!isCrosstabOnlyTab ? (
+            <div className="grid gap-1.5 md:min-w-[180px]">
+              <Label htmlFor="water-chemistry-view">View</Label>
+              <Select
+                value={effectiveViewMode}
+                onValueChange={(value) =>
+                  setViewMode(value as ChemistryViewMode)
+                }
+                disabled={controlsDisabled}
+              >
+                <SelectTrigger id="water-chemistry-view" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {VIEW_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
         </div>
 
         {noDisplayData ? (
@@ -933,22 +933,30 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 }}
               />
             )}
-            {effectiveViewMode === "crosstab" &&
-            CROSSTAB_ONLY_TABS.has(activeTab) ? (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.75,
-                  mt: 1,
-                }}
-              >
-                <Badge variant="outline">ND</Badge>
-                <Typography variant="body2" color="text.secondary">
-                  Not detected
-                </Typography>
-              </Box>
-            ) : null}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mt: 2,
+              }}
+            >
+              {effectiveViewMode === "crosstab" &&
+              CROSSTAB_ONLY_TABS.has(activeTab) ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                  <Badge variant="outline">ND</Badge>
+                  <Typography variant="body2" color="text.secondary">
+                    Not detected
+                  </Typography>
+                </Box>
+              ) : (
+                <Box />
+              )}
+              <Button variant="outline" size="default" onClick={resetFilters}>
+                <RotateCcw data-icon="inline-start" />
+                Reset
+              </Button>
+            </Box>
           </>
         )}
       </Box>
