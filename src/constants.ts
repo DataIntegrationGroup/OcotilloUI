@@ -41,7 +41,7 @@ export type StandardFilter =
   | "any_epa_flag"
   | "non_detects";
 
-export type ChemistryViewMode = "current" | "crosstab";
+export type ChemistryViewMode = "tabular" | "crosstab";
 
 export const CHEMISTRY_PARAMETER_NAME_MAP: Record<string, string> = {
   "Deuterium:Hydrogen ratio": "δD",
@@ -74,8 +74,8 @@ export const STANDARD_FILTER_OPTIONS: {
 ];
 
 export const VIEW_OPTIONS: { value: ChemistryViewMode; label: string }[] = [
-  { value: "current", label: "Current tab" },
-  { value: "crosstab", label: "Cross-tab for all views" },
+  { value: "tabular", label: "Tabular" },
+  { value: "crosstab", label: "Cross-tab" },
 ];
 
 export const CROSSTAB_ONLY_TABS = new Set<ChemistryDisplayTabKey>([

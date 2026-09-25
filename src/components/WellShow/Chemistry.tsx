@@ -61,7 +61,6 @@ import {
   dateTime,
   formatChemistryDate,
   formatDateForEndpoint,
-  formatDateForInput,
 } from "@/utils/Date";
 import { fetchAllOcotilloPages } from "@/utils/ocotilloPaging";
 
@@ -325,7 +324,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
   const [endDate, setEndDate] = useState("");
   const [dateWarning, setDateWarning] = useState("");
   const [standardFilter, setStandardFilter] = useState<StandardFilter>("all");
-  const [viewMode, setViewMode] = useState<ChemistryViewMode>("current");
+  const [viewMode, setViewMode] = useState<ChemistryViewMode>("tabular");
   const [activeTab, setActiveTab] =
     useState<ChemistryDisplayTabKey>("field_parameters");
   const dateBoundsRef = useRef({
@@ -489,7 +488,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
   const selectedSampleNote = selectedSample?.sample_notes ?? null;
   const showSelectedSampleNote =
     activeTab === "field_parameters" &&
-    effectiveViewMode === "current" &&
+    effectiveViewMode === "tabular" &&
     Boolean(selectedSampleNote);
 
   const filteredCurrentRows = useMemo(() => {
@@ -796,12 +795,12 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
     setEndDate("");
     setDateWarning("");
     setStandardFilter("all");
-    setViewMode("current");
+    setViewMode("tabular");
     setActiveTab("field_parameters");
   };
 
   const showStandardsTable =
-    activeTab === "general_chemistry" && effectiveViewMode === "current";
+    activeTab === "general_chemistry" && effectiveViewMode === "tabular";
   const currentGridColumns = showStandardsTable
     ? standardsColumns
     : currentColumns;
@@ -964,8 +963,8 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
             <AlertDialogHeader>
               <AlertDialogTitle>{dateWarning}</AlertDialogTitle>
               <AlertDialogDescription>
-                Use dates between the oldest and newest samples. From must be
-                on or before To.
+                Use dates between the oldest and newest samples. From must be on
+                or before To.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
