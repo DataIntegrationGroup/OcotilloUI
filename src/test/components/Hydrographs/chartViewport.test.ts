@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import {
+  clampTimeWindow,
   FULL_ZOOM_WINDOW,
+  padTimeWindow,
   passPlainWheelToPage,
   readZoomWindow,
   scaleZoomWindow,
+  selectionVisibility,
+  timeWindowFromZoomEvent,
 } from '@/components/Hydrographs/chartViewport'
 
 describe('scaleZoomWindow', () => {
@@ -102,5 +106,106 @@ describe('passPlainWheelToPage', () => {
     canvas.dispatchEvent(new WheelEvent('wheel', { bubbles: true }))
 
     expect(chartWheel).toHaveBeenCalledTimes(1)
+  })
+})
+
+const EXTENT = { min: 1_000, max: 2_000 }
+
+describe('clampTimeWindow', () => {
+  it('keeps a window that sits inside the extent', () => {
+    expect(
+      clampTimeWindow({ startValue: 1_200, endValue: 1_400 }, EXTENT)
+    ).toEqual({ startValue: 1_200, endValue: 1_400 })
+  })
+
+  it('trims a window that hangs past either end', () => {
+    expect(
+      clampTimeWindow({ startValue: 900, endValue: 1_400 }, EXTENT)
+    ).toEqual({ startValue: 1_000, endValue: 1_400 })
+  })
+
+  it('collapses a window covering the whole extent to the full view', () => {
+    expect(
+      clampTimeWindow({ startValue: 900, endValue: 2_100 }, EXTENT)
+    ).toBeNull()
+  })
+
+  it('drops a window that no longer overlaps the extent', () => {
+    expect(
+      clampTimeWindow({ startValue: 2_500, endValue: 3_000 }, EXTENT)
+    ).toBeNull()
+  })
+})
+
+describe('timeWindowFromZoomEvent', () => {
+  it('resolves percentages against the axis extent', () => {
+    expect(timeWindowFromZoomEvent({ start: 20, end: 40 }, EXTENT)).toEqual({
+      startValue: 1_200,
+      endValue: 1_400,
+    })
+  })
+
+  it('reads the batch a wheel or drag zoom reports', () => {
+    expect(
+      timeWindowFromZoomEvent({ batch: [{ start: 50, end: 75 }] }, EXTENT)
+    ).toEqual({ startValue: 1_500, endValue: 1_750 })
+  })
+
+  it('takes values as given', () => {
+    expect(
+      timeWindowFromZoomEvent({ startValue: 1_100, endValue: 1_300 }, EXTENT)
+    ).toEqual({ startValue: 1_100, endValue: 1_300 })
+  })
+
+  it('reports the full view as null', () => {
+    expect(timeWindowFromZoomEvent({ start: 0, end: 100 }, EXTENT)).toBeNull()
+  })
+
+  it('reports nothing for an event without a window', () => {
+    expect(timeWindowFromZoomEvent({}, EXTENT)).toBeUndefined()
+  })
+})
+
+describe('padTimeWindow', () => {
+  const range = { startTime: new Date(1_400), endTime: new Date(1_600) }
+
+  it('frames the selection with a margin on each side', () => {
+    expect(padTimeWindow(range, EXTENT)).toEqual({
+      startValue: 1_390,
+      endValue: 1_610,
+    })
+  })
+
+  it('stops the margin at the ends of the extent', () => {
+    expect(
+      padTimeWindow(
+        { startTime: new Date(1_000), endTime: new Date(1_200) },
+        EXTENT
+      )
+    ).toEqual({ startValue: 1_000, endValue: 1_210 })
+  })
+})
+
+describe('selectionVisibility', () => {
+  const range = { startTime: new Date(1_400), endTime: new Date(1_600) }
+
+  it('has nothing to report without a selection', () => {
+    expect(selectionVisibility(null, null)).toBe('none')
+  })
+
+  it('shows every selection at full extent', () => {
+    expect(selectionVisibility(range, null)).toBe('visible')
+  })
+
+  it('tells whether the window shows all, part or none of it', () => {
+    expect(
+      selectionVisibility(range, { startValue: 1_300, endValue: 1_700 })
+    ).toBe('visible')
+    expect(
+      selectionVisibility(range, { startValue: 1_500, endValue: 1_700 })
+    ).toBe('partial')
+    expect(
+      selectionVisibility(range, { startValue: 1_700, endValue: 1_900 })
+    ).toBe('hidden')
   })
 })

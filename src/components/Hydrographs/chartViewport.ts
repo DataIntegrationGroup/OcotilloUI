@@ -55,6 +55,124 @@ export const readZoomWindow = (option: unknown): ZoomWindow => {
   }
 }
 
+/** The span the time axis covers when fully zoomed out, in epoch ms. */
+export interface TimeExtent {
+  min: number
+  max: number
+}
+
+/**
+ * A zoom window pinned to instants on the time axis, in epoch ms. `null`
+ * wherever one is expected means the chart shows its full extent.
+ */
+export interface TimeWindow {
+  startValue: number
+  endValue: number
+}
+
+/**
+ * What a `datazoom` event carries. Wheel, drag and slider zooms report
+ * percentages, sometimes wrapped in a batch; a dispatched window reports
+ * whichever of percentages or values it was dispatched with.
+ */
+export interface DataZoomEventParams {
+  start?: number
+  end?: number
+  startValue?: number
+  endValue?: number
+  batch?: DataZoomEventParams[]
+}
+
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value)
+
+/**
+ * Clamps a window to the extent. Anything that reaches both ends collapses to
+ * `null`, so "showing everything" has one representation and keeps tracking
+ * the full extent as data is added.
+ */
+export const clampTimeWindow = (
+  view: TimeWindow | null,
+  extent: TimeExtent
+): TimeWindow | null => {
+  if (!view) return null
+  const startValue = Math.max(
+    extent.min,
+    Math.min(view.startValue, view.endValue)
+  )
+  const endValue = Math.min(
+    extent.max,
+    Math.max(view.startValue, view.endValue)
+  )
+  if (startValue <= extent.min && endValue >= extent.max) return null
+  // Entirely off the axis — nothing left of it to keep.
+  if (endValue <= startValue) return null
+  return { startValue, endValue }
+}
+
+/**
+ * Converts a `datazoom` event into the time window it left the chart at.
+ * Percentages are resolved against `extent`, which must be the same extent
+ * the chart's x axes use. Returns `undefined` when the event describes no
+ * window, so the caller can keep what it had.
+ */
+export const timeWindowFromZoomEvent = (
+  params: DataZoomEventParams,
+  extent: TimeExtent
+): TimeWindow | null | undefined => {
+  const payload = params.batch?.[0] ?? params
+  const span = extent.max - extent.min
+
+  const resolve = (percent: unknown, value: unknown) => {
+    if (isFiniteNumber(value)) return value
+    if (isFiniteNumber(percent)) return extent.min + (span * percent) / 100
+    return undefined
+  }
+
+  const startValue = resolve(payload.start, payload.startValue)
+  const endValue = resolve(payload.end, payload.endValue)
+  if (startValue === undefined || endValue === undefined) return undefined
+
+  return clampTimeWindow({ startValue, endValue }, extent)
+}
+
+/**
+ * The window "Zoom to selection" frames: the selection plus a margin each
+ * side, so its edges and the brush handles sit inside the plot rather than
+ * on its frame where they are easy to miss.
+ */
+export const padTimeWindow = (
+  range: { startTime: Date; endTime: Date },
+  extent: TimeExtent | null,
+  marginFraction = 0.05
+): TimeWindow => {
+  const start = range.startTime.getTime()
+  const end = range.endTime.getTime()
+  const margin = (end - start) * marginFraction
+  const padded = { startValue: start - margin, endValue: end + margin }
+  if (!extent) return padded
+  return {
+    startValue: Math.max(extent.min, padded.startValue),
+    endValue: Math.min(extent.max, padded.endValue),
+  }
+}
+
+export type SelectionVisibility = 'none' | 'visible' | 'partial' | 'hidden'
+
+/** How much of the selected range the current zoom window shows. */
+export const selectionVisibility = (
+  range: { startTime: Date; endTime: Date } | null,
+  view: TimeWindow | null
+): SelectionVisibility => {
+  if (!range) return 'none'
+  if (!view) return 'visible'
+  const start = range.startTime.getTime()
+  const end = range.endTime.getTime()
+  if (end < view.startValue || start > view.endValue) return 'hidden'
+  if (start < view.startValue || end > view.endValue) return 'partial'
+  return 'visible'
+}
+
 /**
  * Whether a wheel event over the chart should zoom it rather than scroll the
  * page. Ctrl is also what a trackpad pinch reports, so pinch-to-zoom keeps
