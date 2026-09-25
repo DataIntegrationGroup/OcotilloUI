@@ -190,7 +190,7 @@ describe('ChemistryCard', () => {
 
     await user.click(screen.getByRole('combobox', { name: 'View' }))
     await user.click(
-      screen.getByRole('option', { name: 'Cross-tab for all views' })
+      screen.getByRole('option', { name: 'Cross-tab' })
     )
 
     expect(screen.getByTestId('row-count')).toHaveTextContent('2')
@@ -248,7 +248,7 @@ describe('ChemistryCard', () => {
     const user = userEvent.setup()
     await user.click(screen.getByRole('combobox', { name: 'View' }))
     await user.click(
-      screen.getByRole('option', { name: 'Cross-tab for all views' })
+      screen.getByRole('option', { name: 'Cross-tab' })
     )
 
     expect(screen.getByTestId('column-headers')).toHaveTextContent(
@@ -344,7 +344,7 @@ describe('ChemistryCard', () => {
 
     await user.click(screen.getByRole('combobox', { name: 'View' }))
     await user.click(
-      screen.getByRole('option', { name: 'Cross-tab for all views' })
+      screen.getByRole('option', { name: 'Cross-tab' })
     )
 
     expect(screen.getByTestId('column-headers')).toHaveTextContent(
@@ -417,7 +417,7 @@ describe('ChemistryCard', () => {
     await user.keyboard('{Escape}')
     await user.click(screen.getByRole('combobox', { name: 'View' }))
     await user.click(
-      screen.getByRole('option', { name: 'Cross-tab for all views' })
+      screen.getByRole('option', { name: 'Cross-tab' })
     )
 
     expect(screen.getByTestId('row-ids')).toHaveTextContent('1,2')
