@@ -252,7 +252,7 @@ describe('ChemistryCard', () => {
     )
 
     expect(screen.getByTestId('column-headers')).toHaveTextContent(
-      'Sample,Sample Collection Date,Dissolved Oxygen,ORP / Redox,pH,Specific Conductance (uS/cm),Temperature (deg C),Sampling Event Note'
+      'Sample,Sample Collection Date,Dissolved Oxygen,ORP / Redox,pH,Specific Conductance,Temperature,Sampling Event Note'
     )
   })
 
@@ -348,7 +348,7 @@ describe('ChemistryCard', () => {
     )
 
     expect(screen.getByTestId('column-headers')).toHaveTextContent(
-      'field_parameters result (mg/L)'
+      'field_parameters result'
     )
     expect(screen.getByTestId('rendered-cells')).toHaveTextContent('2')
     expect(screen.getByTestId('rendered-cells')).not.toHaveTextContent('mg/L')
@@ -392,7 +392,7 @@ describe('ChemistryCard', () => {
     await user.click(screen.getByRole('tab', { name: 'General Chemistry' }))
 
     expect(screen.getByTestId('column-headers')).toHaveTextContent(
-      'Sample,Sample Collection Date,Arsenic (mg/L),Sulfate (mg/L),Sampling Event Note'
+      'Sample,Sample Collection Date,Arsenic,Sulfate,Sampling Event Note'
     )
   })
 
@@ -671,7 +671,7 @@ describe('ChemistryCard', () => {
     await user.click(screen.getByRole('tab', { name: 'General Chemistry' }))
 
     expect(screen.getByTestId('column-headers')).toHaveTextContent(
-      'Tin (mg/L)'
+      'Tin'
     )
     expect(screen.getByTestId('column-headers')).not.toHaveTextContent(
       '< (mg/L)'

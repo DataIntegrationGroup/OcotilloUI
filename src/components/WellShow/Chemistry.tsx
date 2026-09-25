@@ -65,7 +65,7 @@ type CrosstabGridRow = ChemistryDisplayCrosstabRow & {
 const EMPTY_CROSSTAB_ROWS: CrosstabGridRow[] = [];
 const EMPTY_RESULTS: ChemistryDisplayResult[] = [];
 
-const formatValue = (value: unknown) => {
+const formatValue = (value: unknown): string => {
   if (value === null || value === undefined || value === "") return "-";
   return String(value);
 };
@@ -99,11 +99,28 @@ const renderResultValue = (result?: ChemistryDisplayResult) => {
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-      <Badge>ND</Badge>
+      <Badge variant="outline">ND</Badge>
       <Typography variant="body2">&lt; {formatResultValue(result)}</Typography>
     </Box>
   );
 };
+
+const renderParameterHeader = (label: string, unit?: string | null) => (
+  <Stack spacing={0} sx={{ lineHeight: 1.2 }}>
+    <Typography variant="body2" fontWeight={600}>
+      {label}
+    </Typography>
+    {unit ? (
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ fontSize: "0.65rem" }}
+      >
+        {unit}
+      </Typography>
+    ) : null}
+  </Stack>
+);
 
 const normalizeParameterName = (value: string) =>
   value
@@ -641,9 +658,13 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
     const parameterColumns: GridColDef<CrosstabGridRow>[] =
       orderedCrosstabColumns.map((column) => ({
         field: `parameter_${column.parameter_key}`,
-        headerName: `${column.parameter_name ?? column.symbol ?? column.parameter_key}${
-          column.unit ? ` (${column.unit})` : ""
-        }`,
+        headerName:
+          column.parameter_name ?? column.symbol ?? column.parameter_key,
+        renderHeader: () =>
+          renderParameterHeader(
+            column.parameter_name ?? column.symbol ?? column.parameter_key,
+            column.unit,
+          ),
         minWidth: 150,
         sortable: restrictAnalysisColumns ? false : undefined,
         filterable: restrictAnalysisColumns ? false : undefined,
@@ -881,6 +902,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
             {effectiveViewMode === "crosstab" ? (
               <DataGrid
                 rowSelection={false}
+                columnHeaderHeight={52}
                 rowHeight={settings.rowHeight}
                 rows={crosstabRows}
                 columns={crosstabColumns}
