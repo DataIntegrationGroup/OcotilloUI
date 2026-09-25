@@ -52,16 +52,20 @@ import {
   buildCsvFromMeasurements,
   calculateSnapOffset,
   convertWaterHeadToDepthToWater,
+  describeSensorDepthAnchors,
   detectOverpressureClipping,
   interpolateSpuriousReflections,
   normalizePointId,
   parseObservationTimestamp,
   removeOffsetsAndZeros,
   removeSpuriousReflections,
+  summarizeSeriesChange,
   type ReflectionDetectionMethod,
   type HydrographPoint,
   type HydrographRange,
   type ParsedHydrographUpload,
+  type SensorDepthAnchorBin,
+  type SeriesChangeSummary,
 } from './hydrographCorrection'
 import {
   DEFAULT_HYDROGRAPH_UI_MODE,
@@ -582,6 +586,146 @@ const WorkbenchSection = ({
   </Accordion>
 )
 
+const formatSignedFeet = (value: number) =>
+  `${value > 0 ? '+' : ''}${value.toFixed(2)} ft`
+
+// Listing every interval would swamp the controls on a multi-year record;
+// the first few show the pattern and the count covers the rest.
+const MAX_PREVIEW_BINS = 5
+
+// Staged "Correct drift" change: says what applying it recalculates and
+// what it throws away, while the chart draws the recalculated trace.
+const DriftCorrectionPreview = ({
+  enabling,
+  preview,
+  onApply,
+  onCancel,
+}: {
+  enabling: boolean
+  preview: {
+    measurements: HydrographPoint[]
+    change: SeriesChangeSummary | null
+    rampedBins: SensorDepthAnchorBin[]
+    heldBins: SensorDepthAnchorBin[]
+    discardedEdits: string[]
+    error: string | null
+  }
+  onApply: () => void
+  onCancel: () => void
+}) => {
+  const { change, rampedBins, heldBins, discardedEdits, error } = preview
+
+  return (
+    <Alert
+      severity={error ? 'error' : 'warning'}
+      variant="outlined"
+      data-testid="drift-correction-preview"
+    >
+      <Stack spacing={0.75}>
+        <Typography variant="subtitle2">
+          Preview: drift correction {enabling ? 'on' : 'off'}
+        </Typography>
+        {error ? (
+          <Typography variant="body2">{error}</Typography>
+        ) : (
+          <>
+            <Typography variant="body2">
+              Recalculates depth to water for all {preview.measurements.length}{' '}
+              readings from the uploaded water head. The dashed preview trace on
+              the chart shows the result.
+            </Typography>
+            {change ? (
+              <Typography variant="body2">
+                {change.changedCount > 0
+                  ? `${change.changedCount} readings move from the current result, by up to ${change.maxAbsChange.toFixed(2)} ft${change.maxChangeTime ? ` (${change.maxChangeTime.toLocaleString()})` : ''}.`
+                  : 'No reading moves from the current result.'}
+                {change.addedCount > 0
+                  ? ` ${change.addedCount} readings removed by earlier edits come back.`
+                  : ''}
+              </Typography>
+            ) : null}
+            {enabling && rampedBins.length > 0 ? (
+              <>
+                <Typography variant="body2">
+                  Sensor depth ramps between manuals:
+                </Typography>
+                <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                  {rampedBins.slice(0, MAX_PREVIEW_BINS).map((bin) => (
+                    <Typography
+                      component="li"
+                      variant="caption"
+                      key={bin.start.toISOString()}
+                    >
+                      {bin.start.toLocaleDateString()} to{' '}
+                      {bin.end.toLocaleDateString()}:{' '}
+                      {bin.startSensorDepth?.toFixed(2)} to{' '}
+                      {bin.endSensorDepth?.toFixed(2)} ft (drift{' '}
+                      {formatSignedFeet(bin.drift ?? 0)})
+                    </Typography>
+                  ))}
+                </Box>
+                {rampedBins.length > MAX_PREVIEW_BINS ? (
+                  <Typography variant="caption">
+                    and {rampedBins.length - MAX_PREVIEW_BINS} more intervals.
+                  </Typography>
+                ) : null}
+              </>
+            ) : null}
+            {enabling && rampedBins.length === 0 ? (
+              <Typography variant="body2">
+                No interval has a manual observation inside the record at both
+                ends, so there is no drift to correct.
+              </Typography>
+            ) : null}
+            {enabling && heldBins.length > 0 ? (
+              <Typography variant="body2">
+                {heldBins.length} interval
+                {heldBins.length === 1 ? ' has' : 's have'} a manual outside the
+                logged record and stay{heldBins.length === 1 ? 's' : ''}{' '}
+                constant.
+              </Typography>
+            ) : null}
+            <Typography variant="body2">
+              {discardedEdits.length > 0
+                ? `Applying discards ${discardedEdits.length} manual edit${discardedEdits.length === 1 ? '' : 's'}:`
+                : 'No manual edits to discard.'}
+            </Typography>
+            {discardedEdits.length > 0 ? (
+              <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                {discardedEdits.map((edit, index) => (
+                  <Typography
+                    component="li"
+                    variant="caption"
+                    // Log entries can repeat verbatim; position keeps keys
+                    // unique in this append-only list.
+                    key={index}
+                  >
+                    {edit}
+                  </Typography>
+                ))}
+              </Box>
+            ) : null}
+          </>
+        )}
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant="contained"
+            color="warning"
+            onClick={onApply}
+            disabled={Boolean(error)}
+          >
+            Apply
+          </Button>
+          <Button size="small" onClick={onCancel}>
+            Cancel
+          </Button>
+        </Stack>
+      </Stack>
+    </Alert>
+  )
+}
+
 export const OcotilloHydrographCorrectionWorkbench = ({
   thingName,
   manualObservations,
@@ -654,6 +798,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [correctionLog, setCorrectionLog] = useState<string[]>([])
   const [isPublishing, setIsPublishing] = useState(false)
   const [correctDrift, setCorrectDrift] = useState(false)
+  // Drift setting the user has toggled to but not yet applied. Applying
+  // re-derives the working series from the upload, so the change is staged
+  // and previewed first rather than taking effect on the checkbox click.
+  const [pendingCorrectDrift, setPendingCorrectDrift] = useState<
+    boolean | null
+  >(null)
   const [error, setError] = useState<string | null>(null)
   const [qualityWarnings, setQualityWarnings] = useState<string[]>([])
   const [fileName, setFileName] = useState<string | null>(initialFileName ?? null)
@@ -905,6 +1055,65 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     [correctDrift]
   )
 
+  // What applying the staged drift setting would do: the recalculated
+  // series (drawn on the chart), how far it moves from the current result,
+  // the sensor-depth anchors it ramps between, and the manual edits a
+  // re-derive throws away.
+  const driftPreview = useMemo(() => {
+    if (pendingCorrectDrift === null || uploaded?.valueKind !== 'water_head') {
+      return null
+    }
+
+    try {
+      const measurements = convertWaterHeadToDepthToWater({
+        measurements: uploaded.measurements,
+        manualPoints,
+        correctDrift: pendingCorrectDrift,
+      })
+      const bins = describeSensorDepthAnchors(
+        uploaded.measurements,
+        manualPoints
+      )
+      return {
+        measurements,
+        change: summarizeSeriesChange(correctedMeasurements, measurements),
+        rampedBins: bins.filter((bin) => bin.drift !== null),
+        heldBins: bins.filter((bin) => bin.drift === null),
+        discardedEdits: correctionLog.slice(
+          baselineCorrectionLog(uploaded).length
+        ),
+        error: null,
+      }
+    } catch (previewError) {
+      return {
+        measurements: [],
+        change: null,
+        rampedBins: [],
+        heldBins: [],
+        discardedEdits: [],
+        error:
+          previewError instanceof Error
+            ? previewError.message
+            : 'Unable to preview the drift correction.',
+      }
+    }
+  }, [
+    baselineCorrectionLog,
+    correctedMeasurements,
+    correctionLog,
+    manualPoints,
+    pendingCorrectDrift,
+    uploaded,
+  ])
+
+  const applyDriftPreview = () => {
+    if (pendingCorrectDrift === null) return
+    // The derive effect picks up the new setting and rebuilds the working
+    // series and correction log from the upload.
+    setCorrectDrift(pendingCorrectDrift)
+    setPendingCorrectDrift(null)
+  }
+
   const selectedRangeSuffix = () =>
     selectedRange
       ? `, ${selectedRange.startTime.toISOString()} to ${selectedRange.endTime.toISOString()}`
@@ -912,6 +1121,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
   useEffect(() => {
     setUploaded(initialUpload ?? null)
+    setPendingCorrectDrift(null)
     setFileName(initialFileName ?? null)
     // Written inline rather than through applySelectedRange so this effect
     // does not take a dependency that changes every render.
@@ -1177,6 +1387,23 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         lineStyle: { color: theme.palette.success.main, width: 3 },
         itemStyle: { color: theme.palette.success.main },
       },
+      {
+        name: 'Drift correction preview',
+        type: 'line',
+        showSymbol: false,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: (driftPreview?.measurements ?? []).map((point) => [
+          point.time,
+          point.value,
+        ]),
+        lineStyle: {
+          color: theme.palette.warning.main,
+          width: 2,
+          type: 'dashed',
+        },
+        itemStyle: { color: theme.palette.warning.main },
+      },
     ]
 
     // Empty series stay in the option but not in the legend, which would
@@ -1345,6 +1572,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     chartTextStyles,
     correctedMeasurements,
     deleteRange,
+    driftPreview,
     headPoints,
     highlightedManualPoint,
     manualPoints,
@@ -1618,6 +1846,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   // baseline conversion through the effect above.
   const resetCorrections = () => {
     setCorrectDrift(false)
+    setPendingCorrectDrift(null)
     setCorrectedMeasurements(rawUploadedMeasurements)
     setCorrectionLog(baselineCorrectionLog(uploaded))
     clearBrushSelection()
@@ -1853,20 +2082,38 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                           control={
                             <Checkbox
                               size="small"
-                              checked={correctDrift}
+                              checked={pendingCorrectDrift ?? correctDrift}
                               onChange={(event) =>
-                                setCorrectDrift(event.target.checked)
+                                setPendingCorrectDrift(
+                                  event.target.checked === correctDrift
+                                    ? null
+                                    : event.target.checked
+                                )
                               }
                             />
                           }
                           label="Correct drift"
                         />
                         <Typography variant="caption" color="text.secondary">
-                          Water head is converted to depth to water using
-                          manual observations as sensor-depth anchors. Drift
-                          correction interpolates the sensor depth between
-                          anchors. Recomputing discards manual edits.
+                          Depth to water is sensor depth minus water head. The
+                          sensor depth is anchored at each manual observation
+                          (manual depth plus the head at that time). Off, each
+                          interval between two manuals uses the sensor depth
+                          at its closing manual. On, the sensor depth ramps
+                          linearly between the two manuals, so the trace
+                          passes through both. An interval with a manual
+                          outside the logged record stays constant either way.
+                          Toggling previews the result first; applying rebuilds
+                          the series from the upload.
                         </Typography>
+                        {driftPreview ? (
+                          <DriftCorrectionPreview
+                            enabling={pendingCorrectDrift === true}
+                            preview={driftPreview}
+                            onApply={applyDriftPreview}
+                            onCancel={() => setPendingCorrectDrift(null)}
+                          />
+                        ) : null}
                       </>
                     ) : null}
                     {showThresholdFields ? (
