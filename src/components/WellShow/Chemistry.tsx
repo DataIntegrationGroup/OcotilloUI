@@ -933,6 +933,22 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 }}
               />
             )}
+            {effectiveViewMode === "crosstab" &&
+            CROSSTAB_ONLY_TABS.has(activeTab) ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.75,
+                  mt: 1,
+                }}
+              >
+                <Badge variant="outline">ND</Badge>
+                <Typography variant="body2" color="text.secondary">
+                  Not detected
+                </Typography>
+              </Box>
+            ) : null}
           </>
         )}
       </Box>

@@ -627,7 +627,7 @@ describe('ChemistryCard', () => {
 
     render(<ChemistryCard thingId={42} />)
 
-    expect(screen.getByText('ND')).toBeInTheDocument()
+    expect(screen.getAllByText('ND').length).toBeGreaterThan(0)
     expect(screen.getByText('< 0.2')).toBeInTheDocument()
   })
 
@@ -676,7 +676,7 @@ describe('ChemistryCard', () => {
     expect(screen.getByTestId('column-headers')).not.toHaveTextContent(
       '< (mg/L)'
     )
-    expect(screen.getByText('ND')).toBeInTheDocument()
+    expect(screen.getAllByText('ND').length).toBeGreaterThan(0)
     expect(screen.getByText('< 0.2')).toBeInTheDocument()
   })
 })
