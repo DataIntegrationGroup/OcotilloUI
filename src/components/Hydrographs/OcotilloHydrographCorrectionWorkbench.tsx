@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import ReactECharts from 'echarts-for-react'
 import {
   Accordion,
@@ -77,10 +84,18 @@ import {
   type HydrographUiMode,
 } from './hydrographUiMode'
 import {
+  clampTimeWindow,
+  type DataZoomEventParams,
   FULL_ZOOM_WINDOW,
+  padTimeWindow,
   passPlainWheelToPage,
   readZoomWindow,
   scaleZoomWindow,
+  type SelectionVisibility,
+  selectionVisibility,
+  type TimeExtent,
+  type TimeWindow,
+  timeWindowFromZoomEvent,
   useScrollportHeight,
 } from './chartViewport'
 import {
@@ -206,6 +221,15 @@ const RESIDUAL_SERIES_NAMES = [
 
 // Zoom-button step: each press halves or doubles the visible span.
 const ZOOM_STEP = 2
+
+// Appended to the selection chip. Every edit is scoped to the selection, so
+// losing sight of it behind a zoom is worth calling out.
+const SELECTION_VIEW_NOTE: Record<SelectionVisibility, string> = {
+  none: '',
+  visible: '',
+  partial: ' (partly out of view)',
+  hidden: ' (out of view)',
+}
 
 /** The subset of an ECharts tooltip callback param this chart formats. */
 interface TooltipParam {
@@ -659,6 +683,18 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   // Mirror of the brushed selection, so the chart event handlers can compare
   // against it without closing over changing state.
   const selectedRangeRef = useRef<HydrographRange | null>(null)
+  // The zoom window as instants rather than percentages; see the layout
+  // effect after handleDataZoom. `null` is the full extent.
+  const zoomWindowRef = useRef<TimeWindow | null>(null)
+  // The upload the zoom was last reset for.
+  const zoomedUploadRef = useRef<ParsedHydrographUpload | null | undefined>(
+    undefined
+  )
+  const [isZoomed, setIsZoomed] = useState(false)
+  // How much of the selection the zoom window shows, so the toolbar can say
+  // when the range every edit applies to has been zoomed out of view.
+  const [selectionView, setSelectionView] =
+    useState<SelectionVisibility>('none')
   const [selectedManualOption, setSelectedManualOption] =
     useState<ManualOption | null>(null)
   const [shiftAmount, setShiftAmount] = useState<number>(0.1)
@@ -944,14 +980,22 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     // does not take a dependency that changes every render.
     selectedRangeRef.current = null
     setSelectedRange(null)
+    setSelectionView('none')
     setSelectedManualOption(null)
     // Merge keeps the zoom window across every other option change, which is
     // the point of it. A new upload is the one case that has to opt out: it
     // spans a different period, so the previous window would drop the user
-    // somewhere arbitrary in the new trace.
-    chartRef.current
-      ?.getEchartsInstance()
-      ?.dispatchAction({ type: 'dataZoom', start: 0, end: 100 })
+    // somewhere arbitrary in the new trace. This effect also re-runs when the
+    // manual measurements or the drift toggle change, and those must not
+    // throw away the view the user zoomed to.
+    if (zoomedUploadRef.current !== initialUpload) {
+      zoomedUploadRef.current = initialUpload
+      zoomWindowRef.current = null
+      setIsZoomed(false)
+      chartRef.current
+        ?.getEchartsInstance()
+        ?.dispatchAction({ type: 'dataZoom', ...FULL_ZOOM_WINDOW })
+    }
 
     if (!initialUpload) {
       setRawUploadedMeasurements([])
@@ -1073,6 +1117,53 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       CHART_AXIS_FOOTER_HEIGHT,
     [shownPanels]
   )
+
+  // Every panel must span the same instants, not each series' own extent.
+  // The head record usually covers one deployment while the DTW panel also
+  // carries years of stored observations, so without a shared domain the
+  // head trace would stretch across the full width and imply coverage it
+  // does not have.
+  //
+  // The extent is set explicitly even with a single panel, because the zoom
+  // tracking below resolves percentages against it and has to agree with
+  // what the axes actually use.
+  const timeAxisExtent = useMemo(() => {
+    const domain = [
+      headPoints ?? [],
+      manualPoints,
+      storedTransducerPoints,
+      rawUploadedMeasurements,
+      correctedMeasurements,
+    ]
+      .flat()
+      .reduce<TimeExtent | null>((current, point) => {
+        const time = point.time.getTime()
+        if (!current) return { min: time, max: time }
+        return {
+          min: Math.min(current.min, time),
+          max: Math.max(current.max, time),
+        }
+      }, null)
+
+    if (!domain) return null
+    if (shownPanels.length < 2) return domain
+
+    const tick = chooseSharedTimeTick(domain.max - domain.min)
+    return tick
+      ? {
+          min: snapTimeDomainStart(domain.min, tick),
+          max: domain.max,
+          interval: tick,
+        }
+      : domain
+  }, [
+    correctedMeasurements,
+    headPoints,
+    manualPoints,
+    rawUploadedMeasurements,
+    shownPanels.length,
+    storedTransducerPoints,
+  ])
 
   const chartOption = useMemo(() => {
     const lastShownIndex = CHART_PANEL_ORDER.reduce(
@@ -1211,45 +1302,6 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       .filter((entry) => (entry.data as unknown[]).length > 0)
       .map((entry) => entry.name)
 
-    // Every panel must span the same instants, not each series' own extent.
-    // The head record usually covers one deployment while the DTW panel also
-    // carries years of stored observations, so without a shared domain the
-    // head trace would stretch across the full width and imply coverage it
-    // does not have.
-    const sharedTimeDomain =
-      shownPanels.length > 1
-        ? [
-            headPoints ?? [],
-            manualPoints,
-            storedTransducerPoints,
-            rawUploadedMeasurements,
-            correctedMeasurements,
-          ]
-            .flat()
-            .reduce<{ min: number; max: number } | null>((domain, point) => {
-              const time = point.time.getTime()
-              if (!domain) return { min: time, max: time }
-              return {
-                min: Math.min(domain.min, time),
-                max: Math.max(domain.max, time),
-              }
-            }, null)
-        : null
-
-    const sharedTick = sharedTimeDomain
-      ? chooseSharedTimeTick(sharedTimeDomain.max - sharedTimeDomain.min)
-      : null
-
-    const sharedExtent = sharedTimeDomain
-      ? {
-          min: sharedTick
-            ? snapTimeDomainStart(sharedTimeDomain.min, sharedTick)
-            : sharedTimeDomain.min,
-          max: sharedTimeDomain.max,
-          ...(sharedTick ? { interval: sharedTick } : {}),
-        }
-      : {}
-
     const panelYAxis: Record<ChartPanel, Record<string, unknown>> = {
       head: {
         scale: true,
@@ -1329,7 +1381,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         type: 'time',
         gridIndex: index,
         show: visiblePanels[panel],
-        ...sharedExtent,
+        ...(timeAxisExtent ?? {}),
         ...chartTextStyles.xAxis,
         // Only the bottom visible panel carries labels; the ones above would
         // just repeat them.
@@ -1355,10 +1407,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     manualPoints,
     rawUploadedMeasurements,
     residuals,
-    shownPanels.length,
     showTooltip,
     storedTransducerPoints,
     theme,
+    timeAxisExtent,
     visiblePanels,
   ])
 
@@ -1471,7 +1523,42 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     // current selection without being re-created on every change.
     selectedRangeRef.current = range
     setSelectedRange(range)
+    setSelectionView(selectionVisibility(range, zoomWindowRef.current))
   }
+
+  const recordZoomWindow = (view: TimeWindow | null) => {
+    zoomWindowRef.current = view
+    setIsZoomed(view !== null)
+    setSelectionView(selectionVisibility(selectedRangeRef.current, view))
+  }
+
+  const handleDataZoom = (params: DataZoomEventParams) => {
+    if (!timeAxisExtent) return
+    const view = timeWindowFromZoomEvent(params, timeAxisExtent)
+    if (view !== undefined) recordZoomWindow(view)
+  }
+
+  // ECharts holds a wheel, drag or slider zoom as a percentage of the axis
+  // extent. Merge keeps that percentage across option updates, so any change
+  // that moved the extent — stored data arriving after the upload, a
+  // deletion, a correction past either end — slid the view onto a different
+  // period, often leaving only part of the intended range on screen. Putting
+  // the tracked instants back after each extent change keeps the view on the
+  // same stretch of time. A layout effect runs after echarts-for-react has
+  // applied the new option but before the browser paints the drifted window.
+  //
+  // At full extent there is nothing to restore: 0–100% already follows the
+  // extent as it grows.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs only when the extent changes; the window is read from its ref
+  useLayoutEffect(() => {
+    const view = zoomWindowRef.current
+    if (!timeAxisExtent || !view) return
+    const clamped = clampTimeWindow(view, timeAxisExtent)
+    chartRef.current
+      ?.getEchartsInstance()
+      ?.dispatchAction({ type: 'dataZoom', ...(clamped ?? FULL_ZOOM_WINDOW) })
+    recordZoomWindow(clamped)
+  }, [timeAxisExtent])
 
   // Clearing from outside the chart has to take the brush overlay with it,
   // otherwise the shaded band survives on a chart that no longer has a
@@ -1538,15 +1625,18 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     if (!selectedRange) return
     chartRef.current?.getEchartsInstance()?.dispatchAction({
       type: 'dataZoom',
-      startValue: selectedRange.startTime.getTime(),
-      endValue: selectedRange.endTime.getTime(),
+      ...padTimeWindow(selectedRange, timeAxisExtent),
     })
   }
 
+  // Reset always lands on one documented view: the full time extent of every
+  // series on the chart — the upload, stored transducer data and manual
+  // measurements.
   const resetZoom = () => {
     chartRef.current
       ?.getEchartsInstance()
       ?.dispatchAction({ type: 'dataZoom', ...FULL_ZOOM_WINDOW })
+    recordZoomWindow(null)
   }
 
   const saveChartImage = () => {
@@ -2350,7 +2440,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       <Chip
                         color="secondary"
                         size="small"
-                        label={`Selection: ${selectedRange.startTime.toLocaleString()} to ${selectedRange.endTime.toLocaleString()}`}
+                        label={`Selection: ${selectedRange.startTime.toLocaleString()} to ${selectedRange.endTime.toLocaleString()}${SELECTION_VIEW_NOTE[selectionView]}`}
                         onDelete={clearBrushSelection}
                       />
                     ) : (
@@ -2391,11 +2481,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         </IconButton>
                       </span>
                     </Tooltip>
-                    <Tooltip title="Show the full time range">
+                    <Tooltip title="Reset zoom: show the full time range of every series on the chart">
                       <IconButton
                         size="small"
                         aria-label="Reset zoom"
                         onClick={resetZoom}
+                        color={isZoomed ? 'primary' : 'default'}
                       >
                         <ZoomOutMap fontSize="small" />
                       </IconButton>
@@ -2445,6 +2536,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       style={{ width: '100%', height: '100%' }}
                       onEvents={{
                         brushSelected: handleBrushSelected,
+                        datazoom: handleDataZoom,
                         click: handleChartClick,
                       }}
                     />
