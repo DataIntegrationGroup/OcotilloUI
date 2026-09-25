@@ -44,10 +44,10 @@ export type StandardFilter =
 export type ChemistryViewMode = "current" | "crosstab";
 
 export const CHEMISTRY_PARAMETER_NAME_MAP: Record<string, string> = {
-  "Deuterium:Hydrogen ratio": "δD:H",
-  "18O:16O ratio": "¹⁸O:¹⁶O",
-  "13C:12C ratio": "¹³C:¹²C",
-  "14C content, pmc": "¹⁴C content, pmc",
+  "Deuterium:Hydrogen ratio": "δD",
+  "18O:16O ratio": "δ¹⁸O",
+  "13C:12C ratio": "δ¹³C",
+  "14C content, pmc": "¹⁴C content",
   "delta O18 sulfate": "δ¹⁸O-SO₄",
   "Sulfate 34 isotope ratio": "δ³⁴S-SO₄",
 };

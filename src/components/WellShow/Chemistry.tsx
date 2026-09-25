@@ -551,7 +551,11 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
         minWidth: 110,
         renderCell: (params) => renderResultValue(params.row),
       },
-      { field: "unit", headerName: "Unit", minWidth: 90 },
+      {
+        field: "unit",
+        headerName: "Unit",
+        minWidth: 90,
+      },
       {
         field: "primary_mcl",
         headerName: "EPA primary MCL",
