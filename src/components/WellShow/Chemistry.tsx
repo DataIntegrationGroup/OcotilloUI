@@ -4,9 +4,18 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { RotateCcw } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -314,14 +323,23 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
   >([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [dateWarning, setDateWarning] = useState("");
   const [standardFilter, setStandardFilter] = useState<StandardFilter>("all");
   const [viewMode, setViewMode] = useState<ChemistryViewMode>("current");
   const [activeTab, setActiveTab] =
     useState<ChemistryDisplayTabKey>("field_parameters");
-  const dateBoundsRef = useRef({ thingId, oldestSampleDate: "" });
+  const dateBoundsRef = useRef({
+    thingId,
+    oldestSampleDate: "",
+    newestSampleDate: "",
+  });
 
   if (dateBoundsRef.current.thingId !== thingId) {
-    dateBoundsRef.current = { thingId, oldestSampleDate: "" };
+    dateBoundsRef.current = {
+      thingId,
+      oldestSampleDate: "",
+      newestSampleDate: "",
+    };
   }
 
   const chemistryQuery = useQuery({
@@ -379,42 +397,89 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
   const oldestVisibleSampleDate = collectionDateForInput(
     samples[0]?.collection_date,
   );
-  if (
-    !startDate &&
-    !endDate &&
-    oldestVisibleSampleDate &&
-    (!dateBoundsRef.current.oldestSampleDate ||
-      oldestVisibleSampleDate < dateBoundsRef.current.oldestSampleDate)
-  ) {
-    dateBoundsRef.current.oldestSampleDate = oldestVisibleSampleDate;
+  const newestVisibleSampleDate = collectionDateForInput(
+    samples[samples.length - 1]?.collection_date,
+  );
+  if (!startDate && !endDate) {
+    if (
+      oldestVisibleSampleDate &&
+      (!dateBoundsRef.current.oldestSampleDate ||
+        oldestVisibleSampleDate < dateBoundsRef.current.oldestSampleDate)
+    ) {
+      dateBoundsRef.current.oldestSampleDate = oldestVisibleSampleDate;
+    }
+    if (
+      newestVisibleSampleDate &&
+      (!dateBoundsRef.current.newestSampleDate ||
+        newestVisibleSampleDate > dateBoundsRef.current.newestSampleDate)
+    ) {
+      dateBoundsRef.current.newestSampleDate = newestVisibleSampleDate;
+    }
   }
   const oldestSampleDate = dateBoundsRef.current.oldestSampleDate;
-  const today = formatDateForInput(new Date());
-  const startDateMaximum = endDate && endDate < today ? endDate : today;
+  const newestSampleDate = dateBoundsRef.current.newestSampleDate;
+  const startDateMaximum = endDate || newestSampleDate;
   const endDateMinimum = startDate || oldestSampleDate;
 
-  const handleStartDateChange = (value: string) => {
+  useEffect(() => {
     if (
-      value &&
-      ((oldestSampleDate && value < oldestSampleDate) ||
-        value > today ||
-        (endDate && value > endDate))
+      !isLoading &&
+      Boolean(startDate || endDate) &&
+      chemistry &&
+      chemistry.samples.length === 0
     ) {
+      setStartDate("");
+      setEndDate("");
+      setDateWarning("Invalid date combination");
+    }
+  }, [chemistry, endDate, isLoading, startDate]);
+
+  const clearInvalidDateRange = () => {
+    setStartDate("");
+    setEndDate("");
+    setDateWarning("Invalid date combination");
+  };
+
+  const handleStartDateChange = (value: string) => {
+    if (!value) {
+      setStartDate("");
+      setDateWarning("");
+      return;
+    }
+
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
+      value < oldestSampleDate ||
+      value > newestSampleDate ||
+      (endDate && value > endDate)
+    ) {
+      clearInvalidDateRange();
       return;
     }
 
     setStartDate(value);
+    setDateWarning("");
   };
 
   const handleEndDateChange = (value: string) => {
+    if (!value) {
+      setEndDate("");
+      setDateWarning("");
+      return;
+    }
+
     if (
-      value &&
-      ((endDateMinimum && value < endDateMinimum) || value > today)
+      !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
+      value < oldestSampleDate ||
+      value > newestSampleDate ||
+      (startDate && value < startDate)
     ) {
+      clearInvalidDateRange();
       return;
     }
 
     setEndDate(value);
+    setDateWarning("");
   };
   const selectedSampleId = Number(
     selectedSampleInfoId || samples[samples.length - 1]?.id,
@@ -729,6 +794,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
     setSelectedCrosstabSampleIds([]);
     setStartDate("");
     setEndDate("");
+    setDateWarning("");
     setStandardFilter("all");
     setViewMode("current");
     setActiveTab("field_parameters");
@@ -826,7 +892,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
               type="date"
               value={startDate}
               min={oldestSampleDate || undefined}
-              max={startDateMaximum}
+              max={startDateMaximum || undefined}
               onChange={(event) => handleStartDateChange(event.target.value)}
               disabled={controlsDisabled}
             />
@@ -838,7 +904,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
               type="date"
               value={endDate}
               min={endDateMinimum || undefined}
-              max={today}
+              max={newestSampleDate || undefined}
               onChange={(event) => handleEndDateChange(event.target.value)}
               disabled={controlsDisabled}
             />
@@ -888,6 +954,25 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
             </div>
           ) : null}
         </div>
+        <AlertDialog
+          open={Boolean(dateWarning)}
+          onOpenChange={(open) => {
+            if (!open) setDateWarning("");
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{dateWarning}</AlertDialogTitle>
+              <AlertDialogDescription>
+                Use dates between the oldest and newest samples. From must be
+                on or before To.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction>Close</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {noDisplayData ? (
           <Typography color="text.secondary" sx={{ py: 2 }} textAlign="center">
