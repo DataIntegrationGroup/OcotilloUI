@@ -904,14 +904,10 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 rowSelection={false}
                 columnHeaderHeight={52}
                 rowHeight={settings.rowHeight}
+                autoHeight
+                hideFooter
                 rows={crosstabRows}
                 columns={crosstabColumns}
-                pageSizeOptions={[25, 50, 100]}
-                initialState={{
-                  pagination: {
-                    paginationModel: { pageSize: 25, page: 0 },
-                  },
-                }}
                 loading={isLoading}
                 sx={{
                   border: "none",
@@ -924,14 +920,10 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
               <DataGrid
                 rowSelection={false}
                 rowHeight={settings.rowHeight}
+                autoHeight
+                hideFooter
                 rows={filteredCurrentRows}
                 columns={currentGridColumns}
-                pageSizeOptions={[25, 50, 100]}
-                initialState={{
-                  pagination: {
-                    paginationModel: { pageSize: 25, page: 0 },
-                  },
-                }}
                 loading={isLoading}
                 sx={{
                   border: "none",
