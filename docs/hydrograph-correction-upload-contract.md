@@ -169,9 +169,13 @@ Individual observations are not echoed back (the client already has them);
   via `ocotilloDataProvider`.
 - Publishing is disabled in demo mode and until a well is resolved
   (`thing_id` required).
-- On 409, the UI shows the overlapping block spans and offers an explicit
-  "Replace existing block(s)" confirmation before retrying with
-  `replace_overlapping=true`.
+- On 409, the UI shows the overlapping block spans (read from
+  `detail[].input.overlapping_blocks`) and lets the user choose:
+  - **Overwrite existing points** retries with `replace_overlapping=true`.
+  - **Ignore already published points** drops the incoming points inside the
+    overlapping spans (bounds inclusive) and publishes each remaining
+    contiguous run as its own block without the flag. Runs are separate
+    requests, so a failure part-way reports which blocks were published.
 - On success, the stored-transducer series is refetched so the new block
   appears on the chart and in the data table.
 
