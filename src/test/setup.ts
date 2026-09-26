@@ -4,6 +4,13 @@ import { checkMockServerHealth } from './mock-server'
 import { ocotilloDataProvider } from '@/providers/ocotillo-data-provider'
 
 process.env.NODE_ENV = 'test'
+
+if (typeof Element !== 'undefined') {
+  Element.prototype.hasPointerCapture ??= () => false
+  Element.prototype.setPointerCapture ??= () => undefined
+  Element.prototype.releasePointerCapture ??= () => undefined
+  Element.prototype.scrollIntoView ??= () => undefined
+}
   
   // Mock the authentication provider (for node api contract tests)
   vi.mock('@/providers/authentik-provider', () => ({

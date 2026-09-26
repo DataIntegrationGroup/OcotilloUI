@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockedUseList = vi.fn()
@@ -85,6 +85,7 @@ vi.mock('@/components', () => {
     OSEPODInfoCard: () => <Stub name="osepod" />,
     WellPDFActionsButton: () => <Stub name="pdf-actions" />,
     WellScreensCard: () => <Stub name="screens" />,
+    ChemistryCard: () => <Stub name="chemistry" />,
     EquipmentCard: () => <Stub name="equipment" />,
     NotesAccordion: () => <Stub name="notes" />,
     ConstructionInfoCard: () => <Stub name="construction" />,
@@ -173,5 +174,20 @@ describe('WellShow data loading', () => {
     ).toBe(true)
 
     expect(mockedUseWellDetails).toHaveBeenCalledWith(undefined)
+  })
+
+  it('places chemistry between well screens and alternate ids', () => {
+    render(<WellShow />)
+
+    const screens = screen.getByText('screens')
+    const chemistry = screen.getByText('chemistry')
+    const ids = screen.getByText('ids')
+
+    expect(screens.compareDocumentPosition(chemistry)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    )
+    expect(chemistry.compareDocumentPosition(ids)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    )
   })
 })
