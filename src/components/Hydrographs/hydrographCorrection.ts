@@ -1084,6 +1084,123 @@ export const convertWaterHeadToDepthToWater = ({
 
 }
 
+// One interval between consecutive manual observations, as the water-head
+// conversion sees it: the sensor depth each end anchors to, and the drift
+// between them. Explains to the user what "Correct drift" will recalculate
+// before they apply it. An end that falls outside the logged record has no
+// head to anchor on, so its sensor depth and the drift are null; the
+// conversion then holds the bin constant rather than ramping it.
+export interface SensorDepthAnchorBin {
+  start: Date
+  end: Date
+  startSensorDepth: number | null
+  endSensorDepth: number | null
+  drift: number | null
+  readingCount: number
+}
+
+export const describeSensorDepthAnchors = (
+  measurements: HydrographPoint[],
+  manualPoints: HydrographPoint[]
+): SensorDepthAnchorBin[] => {
+  // A single manual has no interval to ramp across.
+  if (manualPoints.length < 2) return []
+
+  // Same filtering and ordering as convertWaterHeadToDepthToWater, so the
+  // anchors reported here are the ones the conversion uses.
+  const sorted = measurements
+    .filter((point) => point.value !== 0)
+    .sort((a, b) => toUnixTime(a.time) - toUnixTime(b.time))
+  const manual = [...manualPoints].sort(
+    (a, b) => toUnixTime(a.time) - toUnixTime(b.time)
+  )
+
+  const bins: SensorDepthAnchorBin[] = []
+  for (let i = 0; i < manual.length - 1; i += 1) {
+    const m0 = manual[i]
+    const m1 = manual[i + 1]
+    const t0 = toUnixTime(m0.time)
+    const t1 = toUnixTime(m1.time)
+    const readingCount = sorted.filter((point) => {
+      const t = toUnixTime(point.time)
+      return t >= t0 && t < t1
+    }).length
+    if (readingCount === 0) continue
+
+    const head0 = interpolateSeriesValueAt(sorted, m0.time)
+    const head1 = interpolateSeriesValueAt(sorted, m1.time)
+    const l0 = head0 === null ? null : Number((m0.value + head0).toFixed(4))
+    const l1 = head1 === null ? null : Number((m1.value + head1).toFixed(4))
+
+    bins.push({
+      start: m0.time,
+      end: m1.time,
+      startSensorDepth: l0,
+      endSensorDepth: l1,
+      drift: l0 !== null && l1 !== null ? Number((l1 - l0).toFixed(4)) : null,
+      readingCount,
+    })
+  }
+
+  return bins
+}
+
+// How far a candidate series moves from the current one, matched reading by
+// reading on timestamp. Used to preview a recalculation before it replaces
+// the working series. Readings only in one of the two series are counted
+// separately, since they have no value to compare.
+export interface SeriesChangeSummary {
+  changedCount: number
+  maxAbsChange: number
+  maxChangeTime: Date | null
+  addedCount: number
+  removedCount: number
+}
+
+export const summarizeSeriesChange = (
+  current: HydrographPoint[],
+  next: HydrographPoint[],
+  { tolerance = 0.0001 }: { tolerance?: number } = {}
+): SeriesChangeSummary => {
+  const currentByTime = new Map(
+    current.map((point) => [toUnixTime(point.time), point.value])
+  )
+  const nextTimes = new Set<number>()
+
+  let changedCount = 0
+  let maxAbsChange = 0
+  let maxChangeTime: Date | null = null
+  let addedCount = 0
+
+  for (const point of next) {
+    const time = toUnixTime(point.time)
+    nextTimes.add(time)
+    const before = currentByTime.get(time)
+    if (before === undefined) {
+      addedCount += 1
+      continue
+    }
+    const change = Math.abs(point.value - before)
+    if (change > tolerance) changedCount += 1
+    if (change > maxAbsChange) {
+      maxAbsChange = change
+      maxChangeTime = point.time
+    }
+  }
+
+  const removedCount = [...currentByTime.keys()].filter(
+    (time) => !nextTimes.has(time)
+  ).length
+
+  return {
+    changedCount,
+    maxAbsChange: Number(maxAbsChange.toFixed(4)),
+    maxChangeTime: changedCount > 0 ? maxChangeTime : null,
+    addedCount,
+    removedCount,
+  }
+}
+
 const OFFSET_WINDOW_HALF_WIDTH = 5
 
 // "Remove Offsets/Zeros": drop zero readings (sensor out of water) and
