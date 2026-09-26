@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import axios from 'axios'
 import { useCan, useInvalidate } from '@refinedev/core'
 import { useQuery } from '@tanstack/react-query'
@@ -40,7 +40,15 @@ import {
 } from './DiverHubIngestDialog'
 import { IObservation, IWell } from '@/interfaces/ocotillo'
 import { fetchAllOcotilloPages } from '@/utils/ocotilloPaging'
-import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
+import type {
+  ReviewStatus,
+  ReviewTransducerBlock,
+  TransducerObservationDetailResponse,
+  TransducerObservationWithBlockResponse,
+  UpdateTransducerObservation,
+} from '@/generated/types.gen'
+import type { StoredReadingActions } from '@/components/Hydrographs/StoredReadingEditor'
+import { summarizeStoredBlocks } from '@/components/Hydrographs/storedBlocks'
 import {
   OcotilloHydrographCorrectionWorkbench,
   type HydrographDeleteResult,
@@ -123,6 +131,26 @@ const INGEST_KINDS: IngestKind[] = ['wellntel', 'diverhub']
 const EMPTY_MANUAL_ROWS: IObservation[] = []
 const EMPTY_TRANSDUCER_ROWS: TransducerObservationWithBlockResponse[] = []
 
+/**
+ * The message worth showing from a failed API call. The transducer routes
+ * answer 404/409/422 with `detail: [{ msg }]`, which says exactly what was
+ * wrong (a changed value with no note, an unknown block); a 403 means the
+ * account lacks AMP.Admin.
+ */
+const apiErrorMessage = (error: unknown, fallback: string): string => {
+  if (axios.isAxiosError(error)) {
+    if (error.response?.status === 403) {
+      return 'Your account is not permitted to change stored transducer data.'
+    }
+    const detail = error.response?.data?.detail
+    if (Array.isArray(detail) && typeof detail[0]?.msg === 'string') {
+      return detail[0].msg
+    }
+    if (typeof detail === 'string') return detail
+  }
+  return error instanceof Error ? error.message : fallback
+}
+
 const INGEST_LABELS: Record<IngestKind, string> = {
   wellntel: 'Ingest Wellntel',
   diverhub: 'Ingest Diver-HUB',
@@ -186,6 +214,20 @@ export const HydrographCorrectionPage = () => {
   })
   const canDeleteStoredData = Boolean(deleteAccess?.can)
 
+  // Publishing, reviewing, and editing stored readings all write to Ocotillo
+  // and are AMP.Admin on the API, so they share the admin tier here. Editors
+  // keep the page: they can still correct a file and download the result.
+  const { data: publishAccess } = useCan({
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'create',
+  })
+  const canPublish = Boolean(publishAccess?.can)
+  const { data: editAccess } = useCan({
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'edit',
+  })
+  const canEditStoredData = Boolean(editAccess?.can)
+
   const { autocompleteProps } = useAutocomplete<IWell>({
     resource: 'thing',
     dataProviderName: 'ocotillo',
@@ -237,6 +279,21 @@ export const HydrographCorrectionPage = () => {
   const transducerRows =
     wellSeriesQuery.data?.transducerRows ?? EMPTY_TRANSDUCER_ROWS
   const isLoading = wellSeriesQuery.isLoading
+
+  const storedBlocks = useMemo(
+    () => summarizeStoredBlocks(transducerRows),
+    [transducerRows]
+  )
+
+  const transducerObservations = useMemo(
+    () =>
+      transducerRows.map(({ observation }) => ({
+        id: observation.id,
+        observation_datetime: observation.observation_datetime,
+        value: observation.value,
+      })),
+    [transducerRows]
+  )
 
   // Shares the well-details cache with the well show page.
   const { query: wellDetailsQuery } = useWellDetails(selectedWell?.id)
@@ -452,11 +509,13 @@ export const HydrographCorrectionPage = () => {
       applyPublishSuccess(await postCorrectedBlock(args, false), args)
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 409) {
-        const body = error.response.data ?? {}
-        const blockIds: number[] =
-          body.overlapping_block_ids ??
-          body.detail?.overlapping_block_ids ??
-          []
+        // The API names the collisions in
+        // detail[0].input.overlapping_blocks, each with its id.
+        const overlapping: Array<{ id?: number }> =
+          error.response.data?.detail?.[0]?.input?.overlapping_blocks ?? []
+        const blockIds = overlapping
+          .map((block) => block.id)
+          .filter((id): id is number => typeof id === 'number')
         setPendingOverlap({ blockIds, args })
         return
       }
@@ -515,6 +574,94 @@ export const HydrographCorrectionPage = () => {
       throw error
     }
   }
+
+  // Stored data changed: refetch the series the chart and review pane read.
+  // Behind a ref because the query object is new on every render -- a callback
+  // depending on it would rebuild the reading actions each render and send the
+  // editor's load effect round again.
+  const refreshStoredSeriesRef = useRef<() => Promise<unknown>>(async () => {})
+  refreshStoredSeriesRef.current = async () => {
+    invalidate({
+      resource: 'observation/transducer-groundwater-level',
+      dataProviderName: 'ocotillo',
+      invalidates: ['list'],
+    })
+    await wellSeriesQuery.refetch()
+  }
+  const refreshStoredSeries = useCallback(
+    () => refreshStoredSeriesRef.current(),
+    []
+  )
+
+  // PATCH /observation/transducer-groundwater-level/block/{id}. Approving a
+  // block approves every reading in it; "not reviewed" returns them to
+  // provisional. One request per block, so a series is never half approved.
+  const handleReviewBlock = async (
+    blockId: number,
+    reviewStatus: ReviewStatus
+  ) => {
+    try {
+      const payload: ReviewTransducerBlock = { review_status: reviewStatus }
+      await ocotilloDataProvider.custom!({
+        url: `observation/transducer-groundwater-level/block/${blockId}`,
+        method: 'patch',
+        payload,
+      })
+    } catch (error) {
+      throw new Error(apiErrorMessage(error, 'Updating the block failed.'))
+    }
+    await refreshStoredSeries()
+  }
+
+  // GET/PATCH/DELETE /observation/transducer-groundwater-level/{id}. Memoized
+  // so the editor's load effect does not refire on every render.
+  const storedReadingActions = useMemo<StoredReadingActions | undefined>(() => {
+    if (!selectedWell) return undefined
+    const url = (observationId: number) =>
+      `observation/transducer-groundwater-level/${observationId}`
+
+    return {
+      load: async (observationId) => {
+        try {
+          const { data } = await ocotilloDataProvider.custom!({
+            url: url(observationId),
+            method: 'get',
+          })
+          return data as TransducerObservationDetailResponse
+        } catch (error) {
+          throw new Error(apiErrorMessage(error, 'Unable to load the reading.'))
+        }
+      },
+      update: async (observationId, patch: UpdateTransducerObservation) => {
+        let updated: TransducerObservationDetailResponse
+        try {
+          const { data } = await ocotilloDataProvider.custom!({
+            url: url(observationId),
+            method: 'patch',
+            payload: patch,
+          })
+          updated = data as TransducerObservationDetailResponse
+        } catch (error) {
+          throw new Error(apiErrorMessage(error, 'Saving the reading failed.'))
+        }
+        await refreshStoredSeries()
+        return updated
+      },
+      remove: async (observationId) => {
+        try {
+          await ocotilloDataProvider.custom!({
+            url: url(observationId),
+            method: 'delete',
+          })
+        } catch (error) {
+          throw new Error(
+            apiErrorMessage(error, 'Deleting the reading failed.')
+          )
+        }
+        await refreshStoredSeries()
+      },
+    }
+  }, [selectedWell, refreshStoredSeries])
 
   const confirmReplaceOverlap = async () => {
     if (!pendingOverlap) return
@@ -889,16 +1036,17 @@ export const HydrographCorrectionPage = () => {
           <OcotilloHydrographCorrectionWorkbench
             thingName={selectedWell.name}
             manualObservations={manualObservations}
-            transducerObservations={transducerRows.map(({ observation }) => ({
-              observation_datetime: observation.observation_datetime,
-              value: observation.value,
-            }))}
+            transducerObservations={transducerObservations}
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
-            onPublish={handlePublish}
+            onPublish={canPublish ? handlePublish : undefined}
             onDeleteStoredRange={
               canDeleteStoredData ? handleDeleteStoredRange : undefined
             }
+            storedBlocks={storedBlocks}
+            onReviewBlock={canEditStoredData ? handleReviewBlock : undefined}
+            storedReadingActions={storedReadingActions}
+            canEditStoredReadings={canEditStoredData}
             mode={mode}
             wellMetadata={wellMetadata}
             sensorDeployments={sensorDeployments}
