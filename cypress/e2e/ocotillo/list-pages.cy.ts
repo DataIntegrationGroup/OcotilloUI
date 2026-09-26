@@ -32,13 +32,15 @@ describe('Ocotillo List Pages', () => {
       .contains(/export/i)
       .should('be.visible')
 
-    cy.contains('[role="columnheader"]', 'Name').should('be.visible')
-    cy.contains('[role="columnheader"]', 'Site name').should('be.visible')
-    cy.contains('[role="columnheader"]', 'Monitoring').should('be.visible')
-    cy.contains('[role="columnheader"]', 'Well Status').should('be.visible')
+    // Native table semantics: the shadcn table renders th/tr rather than the
+    // DataGrid's explicit role attributes.
+    cy.contains('th', 'Name').should('be.visible')
+    cy.contains('th', 'Site name').should('be.visible')
+    cy.contains('th', 'Monitoring').should('be.visible')
+    cy.contains('th', 'Well Status').should('be.visible')
 
-    cy.contains('[role="row"]', wellOne.name).should('be.visible')
-    cy.contains('[role="row"]', wellTwo.name).should('be.visible')
+    cy.contains('tr', wellOne.name).should('be.visible')
+    cy.contains('tr', wellTwo.name).should('be.visible')
     cy.contains(projectAlpha.name).should('be.visible')
   })
 
@@ -71,16 +73,14 @@ describe('Ocotillo List Pages', () => {
 
     cy.contains('h3', /contacts & owners/i).should('be.visible')
 
-    cy.contains('[role="columnheader"]', 'Name').should('be.visible')
-    cy.contains('[role="columnheader"]', 'Organization').should('be.visible')
-    cy.contains('[role="columnheader"]', 'Role').should('be.visible')
-    cy.contains('[role="columnheader"]', 'Contact Type').should('be.visible')
-    cy.contains('[role="columnheader"]', 'Associated Sites').should(
-      'be.visible'
-    )
+    cy.contains('th', 'Name').should('be.visible')
+    cy.contains('th', 'Organization').should('be.visible')
+    cy.contains('th', 'Role').should('be.visible')
+    cy.contains('th', 'Contact Type').should('be.visible')
+    cy.contains('th', 'Associated Sites').should('be.visible')
 
-    cy.contains('[role="row"]', 'Alex Contact').should('be.visible')
-    cy.contains('[role="row"]', 'Jordan Manager').should('be.visible')
+    cy.contains('tr', 'Alex Contact').should('be.visible')
+    cy.contains('tr', 'Jordan Manager').should('be.visible')
     cy.contains(wellOne.name).should('be.visible')
   })
 })
