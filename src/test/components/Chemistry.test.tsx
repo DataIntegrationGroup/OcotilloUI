@@ -677,4 +677,132 @@ describe('ChemistryCard', () => {
     expect(screen.getAllByText('ND').length).toBeGreaterThan(0)
     expect(screen.getByText('< 0.2')).toBeInTheDocument()
   })
+
+  it.each([
+    'above_mcl',
+    'above_smcl',
+  ])('highlights %s EPA exceedances in bold red text', async (status) => {
+    mockedUseQuery.mockReturnValue({
+      data: {
+        ...chemistryResponse,
+        samples: [chemistryResponse.samples[0]],
+        general_chemistry: {
+          results: [
+            {
+              id: 'exceedance-result',
+              sample_info_id: 2,
+              source: 'major' as const,
+              parameter_key: 'arsenic',
+              parameter_name: 'Arsenic',
+              value: 2,
+              unit: 'mg/L',
+              standard: {
+                status: status as 'above_mcl' | 'above_smcl',
+                label: 'Exceeds',
+                primary_mcl: 1,
+                secondary_smcl: 1,
+                unit: 'mg/L',
+              },
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    const user = userEvent.setup()
+    render(<ChemistryCard thingId={42} />)
+    await user.click(screen.getByRole('tab', { name: 'General Chemistry' }))
+
+    expect(
+      screen
+        .getByTestId('rendered-cells')
+        .querySelector('[data-epa-exceedance="true"]'),
+    ).not.toBeNull()
+  })
+
+  it('does not highlight chemistry values without an EPA exceedance', async () => {
+    mockedUseQuery.mockReturnValue({
+      data: {
+        ...chemistryResponse,
+        samples: [chemistryResponse.samples[0]],
+        general_chemistry: {
+          results: [
+            {
+              id: 'within-standard-result',
+              sample_info_id: 2,
+              source: 'major' as const,
+              parameter_key: 'arsenic',
+              parameter_name: 'Arsenic',
+              value: 2,
+              unit: 'mg/L',
+              standard: {
+                status: 'within_smcl' as const,
+                label: 'Within SMCL',
+                secondary_smcl: 3,
+                unit: 'mg/L',
+              },
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    const user = userEvent.setup()
+    render(<ChemistryCard thingId={42} />)
+    await user.click(screen.getByRole('tab', { name: 'General Chemistry' }))
+
+    expect(
+      screen
+        .getByTestId('rendered-cells')
+        .querySelector('[data-epa-exceedance="true"]'),
+    ).toBeNull()
+  })
+
+  it('does not highlight non-detect results even with an exceedance status', async () => {
+    mockedUseQuery.mockReturnValue({
+      data: {
+        ...chemistryResponse,
+        samples: [chemistryResponse.samples[0]],
+        general_chemistry: {
+          results: [
+            {
+              id: 'non-detect-exceedance-result',
+              sample_info_id: 2,
+              source: 'major' as const,
+              parameter_key: 'arsenic',
+              parameter_name: 'Arsenic',
+              symbol: '<',
+              value: 2,
+              unit: 'mg/L',
+              standard: {
+                status: 'above_mcl' as const,
+                label: 'Exceeds',
+                primary_mcl: 1,
+                unit: 'mg/L',
+              },
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      isPending: false,
+      error: null,
+    })
+
+    const user = userEvent.setup()
+    render(<ChemistryCard thingId={42} />)
+    await user.click(screen.getByRole('tab', { name: 'General Chemistry' }))
+
+    expect(
+      screen
+        .getByTestId('rendered-cells')
+        .querySelector('[data-epa-exceedance="true"]'),
+    ).toBeNull()
+  })
 })

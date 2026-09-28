@@ -99,6 +99,25 @@ const isNonDetectResult = (result?: ChemistryDisplayResult) => {
   return result.symbol?.trim() === "<";
 };
 
+const isEPAExceedance = (result?: ChemistryDisplayResult) => {
+  if (!result || isNonDetectResult(result) || result.value == null) return false;
+
+  const status = result?.standard?.status;
+  const standardValue =
+    status === "above_mcl"
+      ? result.standard?.primary_mcl
+      : status === "above_smcl"
+        ? result.standard?.secondary_smcl
+        : null;
+  const numericStandardValue = Number(standardValue);
+
+  return (
+    (status === "above_mcl" || status === "above_smcl") &&
+    Number.isFinite(numericStandardValue) &&
+    result.value > numericStandardValue
+  );
+};
+
 const displayParameterName = (
   result: Pick<ChemistryDisplayResult, "parameter_name" | "analyte">,
 ) => {
@@ -109,10 +128,31 @@ const displayParameterName = (
 };
 
 const renderResultValue = (result?: ChemistryDisplayResult) => {
-  if (!isNonDetectResult(result)) return formatResultValue(result);
+  if (!isNonDetectResult(result)) {
+    return isEPAExceedance(result) ? (
+      <Box
+        component="span"
+        data-epa-exceedance="true"
+        sx={{ color: "error.main", fontWeight: "bold" }}
+      >
+        {formatResultValue(result)}
+      </Box>
+    ) : (
+      formatResultValue(result)
+    );
+  }
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 0.75,
+        ...(isEPAExceedance(result)
+          ? { color: "error.main", fontWeight: "bold" }
+          : {}),
+      }}
+    >
       <Badge variant="outline">ND</Badge>
       <Typography variant="body2" fontFamily="monospace">
         &lt; {formatResultValue(result)}
