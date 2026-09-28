@@ -14,9 +14,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Menu,
   MenuItem,
   Paper,
+  Radio,
+  RadioGroup,
   Skeleton,
   Stack,
   TextField,
@@ -50,6 +53,9 @@ import {
 } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
 import { useWellDetails } from '@/hooks/useWellDetails'
 import { buildManualObservationFieldMetadata } from '@/utils/manualObservationFieldMetadata'
+import { findGroundwaterLevelParameterId } from '@/utils/groundwaterLevelParameter'
+import { getApiErrorMessage } from '@/utils/apiErrorMessage'
+import { findCoveringDeployments } from '@/utils/coveringDeployments'
 import {
   buildSensorDeploymentRows,
   type DeploymentLike,
@@ -169,7 +175,15 @@ export const HydrographCorrectionPage = () => {
   const [pendingOverlap, setPendingOverlap] = useState<{
     blockIds: number[]
     args: HydrographPublishArgs
+    deploymentId: number | undefined
   } | null>(null)
+  const [pendingDeploymentChoice, setPendingDeploymentChoice] = useState<{
+    candidates: DeploymentLike[]
+    args: HydrographPublishArgs
+  } | null>(null)
+  const [chosenDeploymentId, setChosenDeploymentId] = useState<number | null>(
+    null
+  )
   const dtwParameterIdRef = useRef<number | null>(null)
   const invalidate = useInvalidate()
   const { mode, setMode } = useHydrographUiMode()
@@ -360,46 +374,61 @@ export const HydrographCorrectionPage = () => {
     await resolveWellFromUpload(parsed)
   }
 
-  // Resolve the depth-to-water parameter id from the lexicon at runtime
-  // (upload-contract open question #1 — this avoids a hardcoded id).
+  // Resolve the groundwater-level Parameter id at runtime (upload-contract
+  // open question #1 — this avoids a hardcoded id). The block route checks
+  // parameter_id against its Parameter row, so a lexicon term id is rejected.
+  // Read it off the selected well's series first; a well with no stored
+  // readings falls back to any groundwater-level observation.
   const resolveDtwParameterId = async () => {
     if (dtwParameterIdRef.current !== null) return dtwParameterIdRef.current
 
-    const fetchTerms = async (category?: string) => {
-      const response = await ocotilloDataProvider.getList({
-        resource: 'lexicon/term',
-        pagination: { currentPage: 1, pageSize: 500 },
-        meta: { params: category ? { category } : {} },
+    let parameterId = findGroundwaterLevelParameterId({
+      transducerRows,
+      manualRows,
+    })
+    if (parameterId === null) {
+      const [manualSample, transducerSample] = await Promise.all(
+        [
+          'observation/groundwater-level',
+          'observation/transducer-groundwater-level',
+        ].map((resource) =>
+          ocotilloDataProvider
+            .getList({
+              resource,
+              pagination: { currentPage: 1, pageSize: 1 },
+            })
+            .then((response) => response.data)
+            .catch(() => [])
+        )
+      )
+      parameterId = findGroundwaterLevelParameterId({
+        transducerRows:
+          transducerSample as TransducerObservationWithBlockResponse[],
+        manualRows: manualSample as IObservation[],
       })
-      return response.data as Array<{ id: number; term: string }>
     }
-    const findDtw = (terms: Array<{ id: number; term: string }>) =>
-      terms.find((item) =>
-        /depth\s*to\s*water.*(bgs|below\s*ground)/i.test(item.term)
-      ) ?? terms.find((item) => /depth\s*to\s*water/i.test(item.term))
-
-    let match = findDtw(await fetchTerms('parameter').catch(() => []))
-    if (!match) match = findDtw(await fetchTerms())
-    if (!match) {
+    if (parameterId === null) {
       throw new Error(
-        'Could not resolve the depth-to-water parameter from the lexicon.'
+        'Could not resolve the groundwater level parameter from existing observations.'
       )
     }
 
-    dtwParameterIdRef.current = match.id
-    return match.id
+    dtwParameterIdRef.current = parameterId
+    return parameterId
   }
 
   // POST per docs/hydrograph-correction-upload-contract.md.
   const postCorrectedBlock = async (
     args: HydrographPublishArgs,
-    replaceOverlapping: boolean
+    replaceOverlapping: boolean,
+    deploymentId: number | undefined
   ) => {
     if (!selectedWell) throw new Error('No well is selected.')
 
     const parameterId = await resolveDtwParameterId()
     const payload = {
       thing_id: selectedWell.id,
+      ...(deploymentId !== undefined ? { deployment_id: deploymentId } : {}),
       parameter_id: parameterId,
       release_status: 'provisional',
       review_status: 'not reviewed',
@@ -444,12 +473,38 @@ export const HydrographCorrectionPage = () => {
     })
   }
 
-  const handlePublish = async (args: HydrographPublishArgs) => {
+  // The API resolves the deployment from the block span when none is sent,
+  // and refuses when several deployments cover it -- two sensors could have
+  // recorded the file (BDMS-1294). Resolve it here first so a single match is
+  // sent explicitly and several are put to the user.
+  const handlePublish = async (
+    args: HydrographPublishArgs,
+    chosenDeployment?: number
+  ) => {
     setPublishSuccess(null)
     setPublishError(null)
 
+    let deploymentId = chosenDeployment
+    if (deploymentId === undefined && args.measurements.length > 0) {
+      const times = args.measurements.map((m) => m.time.getTime())
+      const covering = findCoveringDeployments(
+        (wellDetailsQuery.data?.deployments ?? []) as DeploymentLike[],
+        new Date(Math.min(...times)),
+        new Date(Math.max(...times))
+      )
+      if (covering.length > 1) {
+        setChosenDeploymentId(null)
+        setPendingDeploymentChoice({ candidates: covering, args })
+        return
+      }
+      if (covering.length === 1) deploymentId = covering[0].id as number
+    }
+
     try {
-      applyPublishSuccess(await postCorrectedBlock(args, false), args)
+      applyPublishSuccess(
+        await postCorrectedBlock(args, false, deploymentId),
+        args
+      )
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 409) {
         const body = error.response.data ?? {}
@@ -457,7 +512,7 @@ export const HydrographCorrectionPage = () => {
           body.overlapping_block_ids ??
           body.detail?.overlapping_block_ids ??
           []
-        setPendingOverlap({ blockIds, args })
+        setPendingOverlap({ blockIds, args, deploymentId })
         return
       }
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -466,9 +521,7 @@ export const HydrographCorrectionPage = () => {
         )
         return
       }
-      setPublishError(
-        error instanceof Error ? error.message : 'Publishing failed.'
-      )
+      setPublishError(getApiErrorMessage(error, 'Publishing failed.'))
     }
   }
 
@@ -518,15 +571,41 @@ export const HydrographCorrectionPage = () => {
 
   const confirmReplaceOverlap = async () => {
     if (!pendingOverlap) return
-    const { args } = pendingOverlap
+    const { args, deploymentId } = pendingOverlap
     setPendingOverlap(null)
 
     try {
-      applyPublishSuccess(await postCorrectedBlock(args, true), args)
-    } catch (error) {
-      setPublishError(
-        error instanceof Error ? error.message : 'Publishing failed.'
+      applyPublishSuccess(
+        await postCorrectedBlock(args, true, deploymentId),
+        args
       )
+    } catch (error) {
+      setPublishError(getApiErrorMessage(error, 'Publishing failed.'))
+    }
+  }
+
+  const confirmDeploymentChoice = () => {
+    if (!pendingDeploymentChoice || chosenDeploymentId === null) return
+    const { args } = pendingDeploymentChoice
+    setPendingDeploymentChoice(null)
+    void handlePublish(args, chosenDeploymentId)
+  }
+
+  const describeDeployment = (deployment: DeploymentLike) => {
+    const sensor = deployment.sensor
+    const label =
+      [
+        sensor?.name,
+        sensor?.model,
+        sensor?.serial_no && `S/N ${sensor.serial_no}`,
+      ]
+        .filter(Boolean)
+        .join(' · ') || 'Unnamed sensor'
+    const installed = deployment.installation_date?.slice(0, 10) ?? 'unknown'
+    const removed = deployment.removal_date?.slice(0, 10) ?? 'still installed'
+    return {
+      primary: `Deployment ${deployment.id} — ${label}`,
+      secondary: `Installed ${installed}, removed ${removed}`,
     }
   }
 
@@ -930,6 +1009,61 @@ export const HydrographCorrectionPage = () => {
           <Button onClick={() => setPendingOverlap(null)}>Cancel</Button>
           <Button color="error" variant="contained" onClick={confirmReplaceOverlap}>
             Replace Existing Blocks
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(pendingDeploymentChoice)}
+        onClose={() => setPendingDeploymentChoice(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Which deployment recorded this file?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            {pendingDeploymentChoice?.candidates.length} deployments on this
+            well were installed for the whole span of the corrected series.
+            Choose the one whose sensor produced the file.
+          </Typography>
+          <RadioGroup
+            value={
+              chosenDeploymentId === null ? '' : String(chosenDeploymentId)
+            }
+            onChange={(event) =>
+              setChosenDeploymentId(Number(event.target.value))
+            }
+          >
+            {pendingDeploymentChoice?.candidates.map((deployment) => {
+              const { primary, secondary } = describeDeployment(deployment)
+              return (
+                <FormControlLabel
+                  key={deployment.id}
+                  value={String(deployment.id)}
+                  control={<Radio />}
+                  label={
+                    <Box>
+                      <Typography variant="body2">{primary}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {secondary}
+                      </Typography>
+                    </Box>
+                  }
+                />
+              )
+            })}
+          </RadioGroup>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingDeploymentChoice(null)}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={chosenDeploymentId === null}
+            onClick={confirmDeploymentChoice}
+          >
+            Publish to Deployment
           </Button>
         </DialogActions>
       </Dialog>
