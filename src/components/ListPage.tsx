@@ -18,7 +18,7 @@ import {
   MuiEvent,
 } from '@mui/x-data-grid'
 import { settings } from '@/settings'
-import React, { useMemo, useState } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router'
 import {
   CanAccess,
@@ -35,10 +35,12 @@ import {
 } from '@/components/OcotilloPageHeader'
 
 /**
- * Standard layout for Ocotillo list pages: title, optional description, search
- * bar, record count, and MUI DataGrid with shared toolbar. Wells and Projects
- * both use this component; page files supply columns, dataGridProps, and any
- * page-specific header buttons or row navigation.
+ * Standard layout for Ocotillo list pages: title, optional description, record
+ * count, and MUI DataGrid with shared toolbar. Wells and Projects both use this
+ * component; page files supply columns, dataGridProps, and any page-specific
+ * header buttons or row navigation. Lists that opt into searchMode="server"
+ * also get a search input; everything else filters via the DataGrid's Filters
+ * toolbar button.
  */
 
 // Shows a dismissible chip for each active column filter.
@@ -238,9 +240,9 @@ export const ListPage: React.FC<ListPageProps> = ({
   }
 
   const navigate = useNavigate()
-  const [localQuickFilter, setLocalQuickFilter] = useState('')
-  const quickFilter =
-    searchMode === 'server' ? (searchValue ?? '') : localQuickFilter
+  // Only server-search lists get a search input; client-side filtering is the
+  // DataGrid's Filters toolbar button.
+  const isServerSearch = searchMode === 'server'
 
   const { show } = useNavigation()
   const { resource } = useResourceParams()
@@ -275,38 +277,7 @@ export const ListPage: React.FC<ListPageProps> = ({
   const rowCount = dataGridProps.rowCount as number | undefined
   const { rows: allRows, ...restDataGridProps } = dataGridProps
 
-  const getSearchableCellValue = (row: any, col: GridColDef<any>) => {
-    const raw = row[col.field]
-
-    if (raw == null) return ''
-    if (Array.isArray(raw)) return raw.map((v) => String(v)).join(', ')
-    if (typeof raw === 'object') return JSON.stringify(raw)
-    return String(raw)
-  }
-
-  const filteredRows = useMemo(() => {
-    if (searchMode === 'server') {
-      return allRows ?? []
-    }
-
-    if (!quickFilter || !allRows) return allRows ?? []
-
-    const needle = quickFilter.toLowerCase().trim()
-
-    return allRows.filter((row: any) =>
-      columns.some((col) =>
-        getSearchableCellValue(row, col).toLowerCase().includes(needle)
-      )
-    )
-  }, [allRows, quickFilter, columns, searchMode])
-
-  const handleSearchChange = (value: string) => {
-    if (searchMode === 'server') {
-      onSearchChange?.(value)
-    } else {
-      setLocalQuickFilter(value)
-    }
-  }
+  const rows = allRows ?? []
 
   const toolbarConfig = {
     hideExport: restDataGridProps.paginationMode === 'server',
@@ -398,52 +369,45 @@ export const ListPage: React.FC<ListPageProps> = ({
       >
         {children}
 
-        {/* Search bar and record count sit outside the DataGrid to preserve input focus */}
+        {/* Server search bar and record count sit outside the DataGrid to preserve input focus */}
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: isServerSearch ? 'space-between' : 'flex-end',
             px: 0,
             pb: 1.5,
           }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 1,
-              px: 1,
-              py: 0.25,
-              width: 400,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <SearchIcon
-              sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }}
-            />
-            <InputBase
-              value={quickFilter}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder={
-                searchPlaceholder ??
-                (searchMode === 'server'
-                  ? 'Search all records...'
-                  : 'Filter this page...')
-              }
-              sx={{ fontSize: 14, flex: 1 }}
-              inputProps={{
-                'aria-label':
-                  searchAriaLabel ??
-                  (searchMode === 'server'
-                    ? 'Search all records'
-                    : 'Filter rows on this page'),
+          {isServerSearch && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+                px: 1,
+                py: 0.25,
+                width: 400,
+                bgcolor: 'background.paper',
               }}
-            />
-          </Box>
+            >
+              <SearchIcon
+                sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }}
+              />
+              <InputBase
+                value={searchValue ?? ''}
+                onChange={(e) => onSearchChange?.(e.target.value)}
+                placeholder={searchPlaceholder ?? 'Search all records...'}
+                sx={{ fontSize: 14, flex: 1 }}
+                inputProps={{
+                  'aria-label': searchAriaLabel ?? 'Search all records',
+                }}
+              />
+            </Box>
+          )}
           {rowCount !== undefined && rowCount > 0 && (
             <Typography variant="caption" color="text.secondary">
               {rowCount.toLocaleString()} total records
@@ -454,7 +418,7 @@ export const ListPage: React.FC<ListPageProps> = ({
         {/* Refine sets filterDebounceMs to 0 for server-side grids; restore MUI debounce so toolbar column filters keep input focus while typing. */}
         <DataGrid
           {...restDataGridProps}
-          rows={filteredRows}
+          rows={rows}
           filterDebounceMs={
             restDataGridProps.filterMode === 'server'
               ? 700
