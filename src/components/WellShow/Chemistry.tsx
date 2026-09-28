@@ -114,7 +114,9 @@ const renderResultValue = (result?: ChemistryDisplayResult) => {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
       <Badge variant="outline">ND</Badge>
-      <Typography variant="body2">&lt; {formatResultValue(result)}</Typography>
+      <Typography variant="body2" fontFamily="monospace">
+        &lt; {formatResultValue(result)}
+      </Typography>
     </Box>
   );
 };
@@ -748,7 +750,7 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
             column.parameter_name ?? column.symbol ?? column.parameter_key,
             column.unit,
           ),
-        minWidth: 150,
+        minWidth: 175,
         sortable: restrictAnalysisColumns ? false : undefined,
         filterable: restrictAnalysisColumns ? false : undefined,
         renderCell: (params) => {
@@ -765,28 +767,31 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
       }));
 
     return [
-      { field: "sample_label", headerName: "Sample", minWidth: 170 },
+      {
+        field: "sample_label",
+        headerName: "Sample",
+        renderHeader: () => renderParameterHeader("Sample"),
+        minWidth: 125,
+      },
       {
         field: "collection_date",
         headerName: "Sample Collection Date",
-        minWidth: 170,
+        renderHeader: () => renderParameterHeader("Sample Collection Date"),
+        minWidth: 175,
         valueFormatter: (value) => formatChemistryDate(value),
       },
       ...parameterColumns,
       {
         field: "sample_notes",
         headerName: "Sampling Event Note",
-        minWidth: 240,
+        renderHeader: () => renderParameterHeader("Sampling Event Note"),
+        minWidth: 250,
         flex: 1,
         sortable: restrictAnalysisColumns ? false : undefined,
         filterable: restrictAnalysisColumns ? false : undefined,
       },
     ];
   }, [activeTab, activeTabData, filteredCrosstabColumns]);
-
-  if (!thingId) {
-    return null;
-  }
 
   const resetFilters = () => {
     setSelectedSampleInfoId("");
@@ -804,6 +809,10 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
   const currentGridColumns = showStandardsTable
     ? standardsColumns
     : currentColumns;
+
+  if (!thingId) {
+    return null;
+  }
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: "hidden" }}>
@@ -1047,7 +1056,6 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
             {effectiveViewMode === "crosstab" ? (
               <DataGrid
                 rowSelection={false}
-                columnHeaderHeight={52}
                 rowHeight={settings.rowHeight}
                 autoHeight
                 hideFooter
@@ -1056,6 +1064,9 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 loading={isLoading}
                 sx={{
                   border: "none",
+                  "& .MuiDataGrid-columnHeaderTitleContainer": {
+                    alignItems: "flex-start",
+                  },
                   "& .MuiDataGrid-cell": {
                     borderBottom: "1px solid #f0f0f0",
                   },
@@ -1072,6 +1083,9 @@ export const ChemistryCard = ({ thingId }: ChemistryCardProps) => {
                 loading={isLoading}
                 sx={{
                   border: "none",
+                  "& .MuiDataGrid-columnHeaderTitleContainer": {
+                    alignItems: "flex-start",
+                  },
                   "& .MuiDataGrid-cell": {
                     borderBottom: "1px solid #f0f0f0",
                   },
