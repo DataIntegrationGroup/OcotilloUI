@@ -191,8 +191,37 @@ const specialResourceExpectations: Array<{
     expected: true,
   },
   {
-    // Correcting and publishing is an editor task; deleting stored
-    // transducer observations is not.
+    // Editors correct a file in the workbench; everything that writes to
+    // Ocotillo is AMP.Admin on the API, so it is admin here too.
+    name: 'AMP editor cannot publish a hydrograph block',
+    groups: ['AMP.Editor'],
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'create',
+    expected: false,
+  },
+  {
+    name: 'AMP admin can publish a hydrograph block',
+    groups: ['AMP.Admin'],
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'create',
+    expected: true,
+  },
+  {
+    // Approving a block or editing a stored reading.
+    name: 'AMP editor cannot review or edit hydrograph stored data',
+    groups: ['AMP.Editor'],
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'edit',
+    expected: false,
+  },
+  {
+    name: 'AMP admin can review and edit hydrograph stored data',
+    groups: ['AMP.Admin'],
+    resource: 'ocotillo.hydrograph-correction',
+    action: 'edit',
+    expected: true,
+  },
+  {
     name: 'AMP editor cannot delete ocotillo hydrograph stored data',
     groups: ['AMP.Editor'],
     resource: 'ocotillo.hydrograph-correction',

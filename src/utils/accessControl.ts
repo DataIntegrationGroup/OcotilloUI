@@ -103,11 +103,16 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     delete: adminRoles,
     manage: adminRoles,
   },
-  // Editors correct and publish hydrographs. Deleting stored transducer
-  // observations is irreversible, so it stays a tier above page access.
+  // Editors open the workbench, correct a file, and download the result.
+  // Everything that writes to Ocotillo -- publishing (create), approving a
+  // block or editing a stored reading (edit), and deleting (delete) -- is
+  // AMP.Admin on the API, so it is admin here too; offering an editor those
+  // buttons would only earn them a 403.
   'ocotillo.hydrograph-correction': {
     list: editorRoles,
     show: editorRoles,
+    create: adminRoles,
+    edit: adminRoles,
     delete: adminRoles,
   },
   'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
