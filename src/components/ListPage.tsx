@@ -1,25 +1,22 @@
-import { ExportButton, List } from '@refinedev/mui'
-import { AppBreadcrumb } from '@/components/AppBreadcrumb'
+import SearchIcon from '@mui/icons-material/Search'
+import { Box, Chip, InputBase, Stack, Typography } from '@mui/material'
 import {
   DataGrid,
+  GridColDef,
+  GridFilterItem,
+  GridRowParams,
   GridToolbarColumnsButton,
-  GridToolbarFilterButton,
   GridToolbarContainer,
   GridToolbarDensitySelector,
   GridToolbarExport,
-  gridFilterActiveItemsSelector,
+  GridToolbarFilterButton,
   gridColumnLookupSelector,
+  gridFilterActiveItemsSelector,
   gridFilterModelSelector,
-  GridFilterItem,
+  MuiEvent,
   useGridApiContext,
   useGridSelector,
-  GridColDef,
-  GridRowParams,
-  MuiEvent,
 } from '@mui/x-data-grid'
-import { settings } from '@/settings'
-import React from 'react'
-import { useNavigate } from 'react-router'
 import {
   CanAccess,
   useExport,
@@ -27,12 +24,19 @@ import {
   useNavigation,
   useResourceParams,
 } from '@refinedev/core'
-import { Box, Chip, InputBase, Stack, Typography } from '@mui/material'
-import SearchIcon from '@mui/icons-material/Search'
+import { ExportButton, List } from '@refinedev/mui'
+import React from 'react'
+import { useNavigate } from 'react-router'
+import { AppBreadcrumb } from '@/components/AppBreadcrumb'
+import {
+  isNewWindowClick,
+  openInNewWindow,
+} from '@/components/DataTable/rowNavigation'
 import {
   ocotilloCardHeaderProps,
   ocotilloPageTitleTypographySx,
 } from '@/components/OcotilloPageHeader'
+import { settings } from '@/settings'
 
 /**
  * Standard layout for Ocotillo list pages: title, optional description, record
@@ -158,25 +162,9 @@ function ListPageToolbar({
   )
 }
 
-/**
- * DataGrid rows are not anchors, so modifier clicks would otherwise navigate in
- * place. Treat the browser conventions for "open elsewhere" as new-window intent.
- */
-export function isNewWindowClick(event: {
-  ctrlKey?: boolean
-  metaKey?: boolean
-  button?: number
-}): boolean {
-  // Shift is left alone: the DataGrid uses it for row range selection.
-  return Boolean(event.ctrlKey || event.metaKey || event.button === 1)
-}
-
-export function openInNewWindow(href: string) {
-  // Router paths are basename-relative; window.open is not.
-  const target = href.startsWith('/') ? `${settings.urlprefix}${href}` : href
-  const opened = window.open(target, '_blank', 'noopener,noreferrer')
-  if (opened) opened.opener = null
-}
+// Row navigation helpers now live with the DataTable so both table
+// implementations share them; re-exported here for existing importers.
+export { isNewWindowClick, openInNewWindow }
 
 type ListPageProps = {
   title?: string

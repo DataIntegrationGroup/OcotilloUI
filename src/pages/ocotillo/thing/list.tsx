@@ -1,30 +1,35 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router'
+import { GridColDef } from '@mui/x-data-grid'
 import {
+  type CrudFilter,
   useExport,
   useGo,
-  useLink,
   useOne,
-  type CrudFilter,
+  useTable,
 } from '@refinedev/core'
 import { useDataGrid } from '@refinedev/mui'
-import { GridColDef } from '@mui/x-data-grid'
+import { getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import { Download, FileText, Loader2, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router'
 import {
   captureEvent,
   consumeWellsProjectFilterSource,
-  setWellsProjectFilterSource,
 } from '@/analytics/posthog'
-import { Download, ExternalLink, FileText, Loader2, X } from 'lucide-react'
+import {
+  DataTable,
+  DataTablePagination,
+  DataTableToolbar,
+  useRefineDataTable,
+} from '@/components/DataTable'
+import { ListPage } from '@/components/ListPage'
+import { ListPageShell } from '@/components/ListPageShell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ListPage } from '@/components/ListPage'
-import { useListPageDataGridAnalytics } from '@/hooks'
 import { ISpring, IWell } from '@/interfaces/ocotillo'
 import { IGroup } from '@/interfaces/ocotillo/IGroup'
-import { displayWellSiteName, formatAppDate, formatAppDateTime } from '@/utils'
-import { getContactDisplayName } from '@/utils/contactDisplayName'
+import { useWellListColumns } from '@/pages/ocotillo/thing/wellListColumns'
+import { formatAppDateTime } from '@/utils'
 import { buildWellShowPath } from '@/utils/wellPublicUrls'
-import { WellListColumnLabels } from '@/well-list/wellListColumnLabels'
 
 export const SpringList: React.FC = () => {
   const { dataGridProps } = useDataGrid<ISpring>({
@@ -75,7 +80,13 @@ export const SpringList: React.FC = () => {
   )
 }
 
-/** Standard ListPage template for Ocotillo resource lists. Copy for new list pages. */
+const WELLS_PAGE_SIZE = 50
+
+/**
+ * Wells list. Uses the shadcn DataTable over Refine's `useTable`: paging,
+ * sorting and column filtering all run server side, so the toolbar controls
+ * describe the whole collection rather than the loaded page.
+ */
 export const WellList: React.FC = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -129,11 +140,16 @@ export const WellList: React.FC = () => {
     }
   }, [search])
 
-  const { dataGridProps, setFilters } = useDataGrid<IWell>({
+  const refineTable = useTable<IWell>({
     resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
     filters: {
       permanent: projectFilters,
+    },
+    // Most recently added records first. The API exposes no update timestamp
+    // on wells, so `created_at` is the closest thing to "last updated".
+    sorters: {
+      initial: [{ field: 'created_at', order: 'desc' }],
     },
     meta: {
       params: {
@@ -141,33 +157,45 @@ export const WellList: React.FC = () => {
         ...(search ? { name_contains: search } : {}),
       },
     },
-    pagination: { pageSize: 50 },
+    pagination: { pageSize: WELLS_PAGE_SIZE },
   })
 
-  const onFilterModelChangeRef = useRef<
-    typeof dataGridProps.onFilterModelChange | undefined
-  >(undefined)
+  const { setFilters, setCurrentPage, tableQuery, result } = refineTable
+
+  // A new search describes a different collection, so start at its first page.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: search is the trigger
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, setCurrentPage])
+
   const prevProjectIdRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    onFilterModelChangeRef.current = dataGridProps.onFilterModelChange
-  }, [dataGridProps.onFilterModelChange])
-
-  // Refine hides permanent filters from the DataGrid filterModel. When the URL
-  // project filter is removed, stale groups filters remain in muiCrudFilters
-  // and surface as a grid chip unless we reset both Refine and grid state.
+  // Refine seeds its filter state with the permanent filters. Dropping the URL
+  // project filter therefore leaves a stale `groups` filter behind unless the
+  // state is reset alongside it.
   useEffect(() => {
     if (prevProjectIdRef.current && !projectId) {
       setFilters([], 'replace')
-      onFilterModelChangeRef.current?.({ items: [] })
     }
     prevProjectIdRef.current = projectId
   }, [projectId, setFilters])
 
-  const dataGridPropsWithAnalytics = useListPageDataGridAnalytics(
-    dataGridProps,
-    'wells'
-  )
+  const columns = useWellListColumns()
+
+  const tableOptions = useRefineDataTable<IWell>({
+    refineTable,
+    columns,
+    permanentFilters: projectFilters,
+    analyticsPrefix: 'wells',
+  })
+
+  const table = useReactTable({
+    data: result.data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (well) => String(well.id),
+    ...tableOptions,
+  })
 
   const { triggerExport, isLoading: exportIsLoading } = useExport({
     resource: 'thing',
@@ -182,375 +210,89 @@ export const WellList: React.FC = () => {
     },
   })
 
-  const Link = useLink()
-
-  const columns = useMemo<GridColDef<IWell>[]>(
-    () => [
-      {
-        field: 'open_in_new_window',
-        headerName: '',
-        description:
-          'Open this well detail page in a new browser window so several wells can stay open at once.',
-        width: 52,
-        sortable: false,
-        filterable: false,
-        hideable: false,
-        disableColumnMenu: true,
-        disableExport: true,
-        align: 'center',
-        headerAlign: 'center',
-        // Drop the default cell padding so the link can cover the full cell.
-        cellClassName: 'relative !p-0',
-        // The link fills the whole cell so the entire column is the hit target,
-        // not just the icon glyph.
-        renderCell: (params) => (
-          <RouterLink
-            to={buildWellShowPath(params.row.id)}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Open ${params.row.name ?? 'well'} in a new window`}
-            title="Open in new window"
-            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.stopPropagation()
-              captureEvent('wells_opened_new_window', {
-                well_id: params.row.id,
-              })
-            }}
-            className="absolute inset-0 flex items-center justify-center text-muted-foreground hover:bg-primary/5 hover:text-primary"
-          >
-            <ExternalLink className="size-4" />
-          </RouterLink>
-        ),
-      },
-      {
-        field: 'name',
-        headerName: WellListColumnLabels.name,
-        description:
-          'Official well identifier used in bureau records (for example county prefix and local ID).',
-        type: 'string',
-        minWidth: 100,
-        flex: 1,
-      },
-      {
-        field: 'site_name',
-        headerName: WellListColumnLabels.siteName,
-        description:
-          'Name of the monitoring site or facility associated with this well when one is recorded (NMBGMR alternate ID when present).',
-        type: 'string',
-        minWidth: 140,
-        flex: 0.9,
-        valueGetter: (_: unknown, row: IWell) => displayWellSiteName(row),
-      },
-      {
-        field: 'monitoring_status',
-        headerName: WellListColumnLabels.monitoring,
-        description:
-          'Whether the well is actively monitored or how monitoring is categorized in the current record.',
-        type: 'string',
-        width: 160,
-      },
-      {
-        field: 'created_at',
-        headerName: WellListColumnLabels.createdAt,
-        description:
-          'Calendar date when this well record was first added to Ocotillo.',
-        width: 130,
-        valueGetter: (v: string) => formatAppDate(v),
-      },
-      {
-        field: 'well_status',
-        headerName: WellListColumnLabels.wellStatus,
-        description: 'Operational or administrative status of the well.',
-        type: 'string',
-        width: 150,
-      },
-      {
-        field: 'thing_type',
-        headerName: WellListColumnLabels.type,
-        description:
-          'Infrastructure type from the controlled vocabulary (for example water well or geothermal well).',
-        type: 'string',
-        width: 130,
-      },
-      {
-        field: 'aquifers',
-        headerName: WellListColumnLabels.aquifers,
-        description:
-          'Aquifer systems linked to this well, summarized from association data. Sort uses the first aquifer name alphabetically among linked systems.',
-        minWidth: 180,
-        flex: 1,
-        valueGetter: (_: unknown, row: IWell) =>
-          row.aquifers
-            ?.map(
-              (a: { aquifer_system: string; aquifer_types: string[] }) =>
-                a.aquifer_system
-            )
-            .join(', ') ?? '',
-      },
-      {
-        field: 'groups',
-        headerName: WellListColumnLabels.projects,
-        description:
-          'Projects linked to this well. A well may belong to more than one. Filter matches any linked project name. Sort uses the alphabetically first project name.',
-        type: 'string',
-        minWidth: 180,
-        flex: 1,
-        valueGetter: (_: unknown, row: IWell) =>
-          row.groups?.map((group) => group.name).join(', ') ?? '',
-        renderCell: (params) => {
-          const groups = params.row.groups ?? []
-          return (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-              }}
-            >
-              {groups.map((group, idx) => (
-                <span key={group.id}>
-                  {idx > 0 && ', '}
-                  <RouterLink
-                    to={`/ocotillo/well?projectId=${group.id}`}
-                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                      e.stopPropagation()
-                      setWellsProjectFilterSource('wells_column')
-                      captureEvent('wells_project_link_clicked', {
-                        project_id: group.id,
-                        project_name: group.name,
-                      })
-                    }}
-                    className="text-primary hover:underline no-underline"
-                  >
-                    {group.name}
-                  </RouterLink>
-                </span>
-              ))}
-            </div>
-          )
-        },
-      },
-      {
-        field: 'release_status',
-        headerName: WellListColumnLabels.releaseStatus,
-        description:
-          'Whether the record is released for public viewing under data release rules.',
-        type: 'string',
-        width: 130,
-      },
-      {
-        field: 'well_depth',
-        headerName: WellListColumnLabels.wellDepthFt,
-        description:
-          'Completed well depth from ground surface to bottom of the well in feet.',
-        type: 'number',
-        width: 130,
-        align: 'right',
-        headerAlign: 'right',
-      },
-      {
-        field: 'hole_depth',
-        headerName: WellListColumnLabels.holeDepthFt,
-        description:
-          'Total drilled hole depth from ground surface to bottom of the borehole in feet.',
-        type: 'number',
-        width: 130,
-        align: 'right',
-        headerAlign: 'right',
-      },
-      {
-        field: 'first_visit_date',
-        headerName: WellListColumnLabels.firstVisit,
-        description:
-          'Date of the bureau first recorded visit to this well when available.',
-        width: 130,
-        valueGetter: (v: string) => formatAppDate(v),
-      },
-      {
-        field: 'contacts',
-        headerName: WellListColumnLabels.contacts,
-        description:
-          'People or organizations linked to this well; open a contact from the link. Sort uses the alphabetically first linked contact name.',
-        minWidth: 180,
-        flex: 1,
-        valueGetter: (_: unknown, row: IWell) =>
-          row.contacts?.map((c) => getContactDisplayName(c)).join(', ') ?? '',
-        renderCell: (params) => {
-          const contacts = params.row.contacts ?? []
-          return (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-              }}
-            >
-              {contacts.map((contact, idx) => (
-                <span key={contact?.id ?? idx}>
-                  {idx > 0 && ', '}
-                  {contact?.id != null ? (
-                    <Link
-                      go={{
-                        to: {
-                          resource: 'ocotillo.contact',
-                          action: 'show',
-                          id: contact.id,
-                        },
-                      }}
-                      onClick={(e: React.MouseEvent<HTMLAnchorElement>) =>
-                        e.stopPropagation()
-                      }
-                    >
-                      {getContactDisplayName(contact)}
-                    </Link>
-                  ) : (
-                    getContactDisplayName(contact)
-                  )}
-                </span>
-              ))}
-            </div>
-          )
-        },
-      },
-      {
-        field: 'well_completion_date',
-        headerName: WellListColumnLabels.completed,
-        description: 'Reported date the well construction was completed.',
-        width: 130,
-        valueGetter: (v: string) => formatAppDate(v),
-      },
-      {
-        field: 'well_driller_name',
-        headerName: WellListColumnLabels.driller,
-        description:
-          'Drilling company name when it was recorded for this well.',
-        type: 'string',
-        minWidth: 150,
-        flex: 1,
-      },
-      {
-        field: 'latitude',
-        headerName: WellListColumnLabels.latitude,
-        description:
-          'Latitude of the current mapped location in decimal degrees (WGS84).',
-        type: 'number',
-        width: 110,
-        sortable: false,
-        align: 'right',
-        headerAlign: 'right',
-        valueGetter: (_: unknown, row: IWell) =>
-          row.current_location?.geometry?.coordinates[1] ?? null,
-      },
-      {
-        field: 'longitude',
-        headerName: WellListColumnLabels.longitude,
-        description:
-          'Longitude of the current mapped location in decimal degrees (WGS84).',
-        type: 'number',
-        width: 110,
-        sortable: false,
-        align: 'right',
-        headerAlign: 'right',
-        valueGetter: (_: unknown, row: IWell) =>
-          row.current_location?.geometry?.coordinates[0] ?? null,
-      },
-      {
-        field: 'alternate_ids',
-        headerName: WellListColumnLabels.alternateIds,
-        description:
-          'Identifiers from other agencies or programs that cross reference this well.',
-        minWidth: 160,
-        flex: 1,
-        sortable: false,
-        valueGetter: (_: unknown, row: IWell) =>
-          row.alternate_ids
-            ?.map((a) => `${a.alternate_organization}: ${a.alternate_id}`)
-            .join(', ') ?? '',
-      },
-    ],
-    []
-  )
-
   const go = useGo()
 
-  const customHeaderButtons = () => {
-    return (
-      <>
+  const headerButtons = (
+    <>
+      <Button
+        variant="outline"
+        className="border-primary bg-background text-primary hover:bg-primary/5 hover:text-primary"
+        onClick={() => {
+          captureEvent('wells_batch_field_sheets')
+          go({ to: '/ocotillo/well/batch-export', type: 'push' })
+        }}
+      >
+        <FileText />
+        Batch Field Sheets
+      </Button>
+      <Button
+        disabled={exportIsLoading}
+        onClick={() => {
+          captureEvent('wells_exported', { search_active: Boolean(search) })
+          triggerExport()
+        }}
+      >
+        {exportIsLoading ? <Loader2 className="animate-spin" /> : <Download />}
+        Export
+      </Button>
+    </>
+  )
+
+  const projectChip = projectId ? (
+    <Badge variant="filter" className="h-7 gap-1 py-0 pl-2.5 pr-1" asChild>
+      <div role="status" className="inline-flex items-center">
+        <span>Project: {projectName ?? projectId}</span>
         <Button
-          variant="outline"
-          className="border-primary bg-background text-primary hover:bg-primary/5 hover:text-primary"
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          className="size-5 rounded-full text-primary/70 hover:bg-primary/10 hover:text-primary"
+          aria-label="Clear project filter"
           onClick={() => {
-            captureEvent('wells_batch_field_sheets')
-            go({ to: '/ocotillo/well/batch-export', type: 'push' })
+            captureEvent('wells_project_filter_cleared', {
+              project_id: projectId,
+              project_name: projectName,
+            })
+            navigate('/ocotillo/well')
           }}
         >
-          <FileText />
-          Batch Field Sheets
+          <X />
         </Button>
-        <Button
-          disabled={exportIsLoading}
-          onClick={() => {
-            captureEvent('wells_exported', { search_active: Boolean(search) })
-            triggerExport()
-          }}
-        >
-          {exportIsLoading ? (
-            <Loader2 className="animate-spin" />
-          ) : (
-            <Download />
-          )}
-          Export
-        </Button>
-      </>
-    )
-  }
+      </div>
+    </Badge>
+  ) : null
 
   return (
-    <ListPage
+    <ListPageShell
       title="Wells"
-      columns={columns}
-      dataGridProps={dataGridPropsWithAnalytics}
-      getRowId={(row) => row.id}
-      headerButtons={customHeaderButtons}
-      searchMode="server"
-      searchValue={searchInput}
-      onSearchChange={setSearchInput}
-      searchPlaceholder="Search by well name"
-      searchAriaLabel="Search wells by well name"
-      onRowClick={(params) =>
-        captureEvent('wells_row_clicked', { well_id: params.id })
-      }
       accessResource="ocotillo.thing-well"
+      headerButtons={headerButtons}
     >
-      {projectId ? (
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <Badge
-            variant="filter"
-            className="h-7 gap-1 py-0 pl-2.5 pr-1"
-            asChild
-          >
-            <div role="status" className="inline-flex items-center">
-              <span>Project: {projectName ?? projectId}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                className="size-5 rounded-full text-primary/70 hover:bg-primary/10 hover:text-primary"
-                aria-label="Clear project filter"
-                onClick={() => {
-                  captureEvent('wells_project_filter_cleared', {
-                    project_id: projectId,
-                    project_name: projectName,
-                  })
-                  navigate('/ocotillo/well')
-                }}
-              >
-                <X />
-              </Button>
-            </div>
-          </Badge>
-        </div>
-      ) : null}
-    </ListPage>
+      <DataTableToolbar
+        table={table}
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        searchPlaceholder="Search by well name"
+        searchAriaLabel="Search wells by well name"
+        leadingChips={projectChip}
+        summary={
+          result.total !== undefined
+            ? `${result.total.toLocaleString()} total records`
+            : undefined
+        }
+      />
+
+      <DataTable
+        table={table}
+        isLoading={tableQuery.isLoading}
+        emptyMessage="No wells match these filters."
+        rowHref={(well) => buildWellShowPath(well.id)}
+        onRowClick={(well) =>
+          captureEvent('wells_row_clicked', { well_id: well.id })
+        }
+      />
+
+      <DataTablePagination table={table} />
+    </ListPageShell>
   )
 }
