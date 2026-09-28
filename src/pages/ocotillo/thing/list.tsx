@@ -197,13 +197,16 @@ export const WellList: React.FC = () => {
     ...tableOptions,
   })
 
+  // Export describes the same collection the table does: same resource, same
+  // project filter, same search. Without the filters the export ignores the
+  // `?projectId=` scope and pulls every well.
   const { triggerExport, isLoading: exportIsLoading } = useExport({
-    resource: 'thing',
+    resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
     pageSize: 500,
+    filters: projectFilters,
     meta: {
       params: {
-        thing_type: ['water well', 'geothermal well'],
         include_contacts: true,
         ...(search ? { name_contains: search } : {}),
       },
@@ -228,7 +231,10 @@ export const WellList: React.FC = () => {
       <Button
         disabled={exportIsLoading}
         onClick={() => {
-          captureEvent('wells_exported', { search_active: Boolean(search) })
+          captureEvent('wells_exported', {
+            search_active: Boolean(search),
+            ...(projectId ? { project_id: projectId } : {}),
+          })
           triggerExport()
         }}
       >
