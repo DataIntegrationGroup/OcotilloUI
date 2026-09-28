@@ -51,6 +51,7 @@ import {
 import { useWellDetails } from '@/hooks/useWellDetails'
 import { buildManualObservationFieldMetadata } from '@/utils/manualObservationFieldMetadata'
 import { findGroundwaterLevelParameterId } from '@/utils/groundwaterLevelParameter'
+import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import {
   buildSensorDeploymentRows,
   type DeploymentLike,
@@ -480,9 +481,7 @@ export const HydrographCorrectionPage = () => {
         )
         return
       }
-      setPublishError(
-        error instanceof Error ? error.message : 'Publishing failed.'
-      )
+      setPublishError(getApiErrorMessage(error, 'Publishing failed.'))
     }
   }
 
@@ -538,9 +537,7 @@ export const HydrographCorrectionPage = () => {
     try {
       applyPublishSuccess(await postCorrectedBlock(args, true), args)
     } catch (error) {
-      setPublishError(
-        error instanceof Error ? error.message : 'Publishing failed.'
-      )
+      setPublishError(getApiErrorMessage(error, 'Publishing failed.'))
     }
   }
 
