@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { OcotilloHydrographCorrectionWorkbench } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
@@ -10,7 +10,28 @@ const chartInstance = {
   getOption: vi.fn(() => ({ dataZoom: [{ start: 0, end: 100 }] })),
   getDataURL: vi.fn(() => 'data:image/png;base64,'),
   resize: vi.fn(),
+  // The DTW panel (grid 1) spans pixel rows 100-500 of the surface; time
+  // runs a day a pixel from DAY_ONE and depth a foot a pixel from row 100.
+  containPixel: vi.fn(
+    ({ gridIndex }: { gridIndex: number }, [, y]: number[]) =>
+      gridIndex === 1 && y >= 100 && y <= 500
+  ),
+  convertFromPixel: vi.fn((_: unknown, [x, y]: number[]) => [
+    day(x),
+    y - 100,
+  ]),
 }
+
+interface YAxisOption {
+  min?: number | null
+  max?: number | null
+}
+
+// The option the workbench last handed the chart.
+let chartOption: { yAxis?: YAxisOption[] } = {}
+
+// Presses that reach the chart surface, where zrender would start a pan.
+const chartPresses = vi.fn()
 
 type ChartEventHandler = (params: unknown) => void
 
@@ -25,8 +46,13 @@ const emitChartEvent = (name: string, params: unknown) =>
 // ECharts needs a canvas jsdom does not have. The stand-in exposes the same
 // instance handle and a surface that, like zrender, cancels every wheel.
 vi.mock('echarts-for-react', () => ({
-  default: forwardRef((props: { onEvents?: typeof chartEvents }, ref) => {
+  default: forwardRef(
+    (
+      props: { onEvents?: typeof chartEvents; option?: typeof chartOption },
+      ref
+    ) => {
     chartEvents = props.onEvents ?? {}
+    chartOption = props.option ?? {}
     const canvasRef = useRef<HTMLDivElement>(null)
     useImperativeHandle(ref, () => ({
       getEchartsInstance: () => chartInstance,
@@ -36,10 +62,15 @@ vi.mock('echarts-for-react', () => ({
       const canvas = canvasRef.current
       const cancel = (event: Event) => event.preventDefault()
       canvas?.addEventListener('wheel', cancel, { passive: false })
-      return () => canvas?.removeEventListener('wheel', cancel)
+      canvas?.addEventListener('mousedown', chartPresses)
+      return () => {
+        canvas?.removeEventListener('wheel', cancel)
+        canvas?.removeEventListener('mousedown', chartPresses)
+      }
     }, [])
     return <div ref={canvasRef} data-testid="chart-canvas" />
-  }),
+    }
+  ),
 }))
 
 const renderWorkbench = () =>
@@ -232,5 +263,117 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
       end: 100,
     })
     expect(screen.queryByText(/out of view/)).toBeNull()
+  })
+
+  // Drags from one surface pixel to another. jsdom lays nothing out, so a
+  // client position is a position on the chart surface.
+  const dragOnChart = (
+    from: { x: number; y: number },
+    to: { x: number; y: number }
+  ) => {
+    const canvas = screen.getByTestId('chart-canvas')
+    fireEvent.mouseDown(canvas, { button: 0, clientX: from.x, clientY: from.y })
+    fireEvent.mouseMove(window, { clientX: to.x, clientY: to.y })
+    fireEvent.mouseUp(window, { clientX: to.x, clientY: to.y })
+  }
+
+  it('zooms to a box dragged on the chart without touching the selection', async () => {
+    const user = userEvent.setup()
+    render(workbenchWithReadings(11))
+    emitChartEvent('brushSelected', {
+      batch: [{ areas: [{ coordRange: [day(5), day(7)] }] }],
+    })
+    const selectionChip = screen.getByText(/^Selection: /).textContent
+
+    const zoomBox = screen.getByRole('button', { name: 'Zoom box' })
+    await user.click(zoomBox)
+    expect(zoomBox.getAttribute('aria-pressed')).toBe('true')
+    chartInstance.dispatchAction.mockClear()
+
+    // Days 2-6, 20-60 ft down the DTW panel, drawn right to left.
+    dragOnChart({ x: 6, y: 160 }, { x: 2, y: 120 })
+
+    expect(chartPresses).not.toHaveBeenCalled()
+    expect(chartInstance.dispatchAction).toHaveBeenCalledTimes(1)
+    expect(chartInstance.dispatchAction).toHaveBeenCalledWith({
+      type: 'dataZoom',
+      startValue: day(2),
+      endValue: day(6),
+    })
+    expect(chartOption.yAxis?.[1]).toMatchObject({ min: 20, max: 60 })
+    expect(screen.getByText(/^Selection: /).textContent).toBe(selectionChip)
+  })
+
+  it('draws the zoom box while it is dragged', async () => {
+    const user = userEvent.setup()
+    render(workbenchWithReadings(11))
+    await user.click(screen.getByRole('button', { name: 'Zoom box' }))
+    const canvas = screen.getByTestId('chart-canvas')
+
+    fireEvent.mouseDown(canvas, { button: 0, clientX: 2, clientY: 120 })
+    fireEvent.mouseMove(window, { clientX: 6, clientY: 160 })
+    expect(screen.getByTestId('zoom-box')).toBeTruthy()
+
+    fireEvent.mouseUp(window, { clientX: 6, clientY: 160 })
+    expect(screen.queryByTestId('zoom-box')).toBeNull()
+  })
+
+  it('leaves the chart to pan once the zoom box is switched off', async () => {
+    const user = userEvent.setup()
+    render(workbenchWithReadings(11))
+    const zoomBox = screen.getByRole('button', { name: 'Zoom box' })
+    await user.click(zoomBox)
+    await user.click(zoomBox)
+    chartInstance.dispatchAction.mockClear()
+
+    dragOnChart({ x: 2, y: 120 }, { x: 6, y: 160 })
+
+    expect(chartPresses).toHaveBeenCalled()
+    expect(chartInstance.dispatchAction).not.toHaveBeenCalled()
+  })
+
+  it('switches between selecting and the zoom box', async () => {
+    const user = userEvent.setup()
+    render(workbenchWithReadings(11))
+    const selectRange = screen.getByRole('button', { name: 'Select range' })
+    const zoomBox = screen.getByRole('button', { name: 'Zoom box' })
+
+    await user.click(selectRange)
+    await user.click(zoomBox)
+
+    // The brush hands the cursor back so a drag draws the box, not a range.
+    expect(chartInstance.dispatchAction).toHaveBeenLastCalledWith({
+      type: 'takeGlobalCursor',
+      key: 'brush',
+      brushOption: { brushType: false, brushMode: 'single' },
+    })
+    expect(selectRange.getAttribute('aria-pressed')).toBe('false')
+    expect(zoomBox.getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('releases a pinned value axis on reset', async () => {
+    const user = userEvent.setup()
+    render(workbenchWithReadings(11))
+    await user.click(screen.getByRole('button', { name: 'Zoom box' }))
+    dragOnChart({ x: 2, y: 120 }, { x: 6, y: 160 })
+
+    await user.click(screen.getByRole('button', { name: 'Reset zoom' }))
+
+    expect(chartOption.yAxis?.[1]).toMatchObject({ min: null, max: null })
+  })
+
+  it('keeps Ctrl+wheel off the plot from zooming the page', () => {
+    renderWorkbench()
+    const toolbar = screen.getByRole('toolbar', { name: 'Chart tools' })
+    const event = new WheelEvent('wheel', {
+      deltaY: 100,
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+
+    toolbar.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(true)
   })
 })

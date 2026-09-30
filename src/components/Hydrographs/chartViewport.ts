@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 
 /** A dataZoom window, as percentages of the full time extent. */
 export interface ZoomWindow {
@@ -204,6 +204,189 @@ export const passPlainWheelToPage = (container: HTMLElement) => {
       container.removeEventListener(name, handleWheel, { capture: true })
     }
   }
+}
+
+/**
+ * Ctrl+wheel over the chart card but off the plot itself — the toolbar, the
+ * axis labels, the legend, the slider — reached the browser and zoomed the
+ * whole page, which is easy to do by accident while zooming the chart.
+ * Cancelling it anywhere inside `container` keeps Ctrl+wheel meaning "zoom
+ * the chart". Over the plot the chart has already cancelled it and zoomed.
+ *
+ * Returns the cleanup that removes the listener.
+ */
+export const keepCtrlWheelOffPage = (container: HTMLElement) => {
+  const handleWheel = (event: WheelEvent) => {
+    if (isChartZoomWheel(event)) event.preventDefault()
+  }
+  // Not passive, or preventDefault is ignored.
+  container.addEventListener('wheel', handleWheel, { passive: false })
+  return () => container.removeEventListener('wheel', handleWheel)
+}
+
+/** A point on the chart surface, in pixels from its top left corner. */
+export interface ChartPixel {
+  x: number
+  y: number
+}
+
+/** The two instance methods a zoom box needs, so tests can stand them in. */
+export interface ZoomBoxChart {
+  containPixel: (finder: { gridIndex: number }, value: number[]) => boolean
+  convertFromPixel: (
+    finder: { gridIndex: number },
+    value: number[]
+  ) => number[] | number
+}
+
+/** A value axis range, in the axis' own units. */
+export interface ValueRange {
+  min: number
+  max: number
+}
+
+/** What a finished zoom box asks the chart to show. */
+export interface ZoomBox {
+  time: TimeWindow
+  /** The panel the box was drawn in. */
+  gridIndex: number
+  /** `null` when the box was too flat to mean a value range. */
+  value: ValueRange | null
+}
+
+// Anything smaller is a click or a slip of the mouse, not a box.
+export const MIN_ZOOM_BOX_PX = 6
+
+/**
+ * Turns a box dragged on the chart into the window to zoom to. The time range
+ * comes from the box's width and applies to every panel; the value range
+ * comes from its height and applies to the panel it started in. A box too
+ * flat to mean a value range zooms time only. Returns `null` for a box that
+ * started off every panel or is too narrow to mean anything.
+ */
+export const resolveZoomBox = (
+  start: ChartPixel,
+  end: ChartPixel,
+  chart: ZoomBoxChart,
+  gridCount: number
+): ZoomBox | null => {
+  if (Math.abs(end.x - start.x) < MIN_ZOOM_BOX_PX) return null
+
+  let gridIndex = -1
+  for (let index = 0; index < gridCount; index += 1) {
+    if (chart.containPixel({ gridIndex: index }, [start.x, start.y])) {
+      gridIndex = index
+      break
+    }
+  }
+  if (gridIndex < 0) return null
+
+  const toData = (pixel: ChartPixel) => {
+    const value = chart.convertFromPixel({ gridIndex }, [pixel.x, pixel.y])
+    return Array.isArray(value) ? value : [Number.NaN, Number.NaN]
+  }
+  const [startTime, startValue] = toData(start)
+  const [endTime, endValue] = toData(end)
+  if (!isFiniteNumber(startTime) || !isFiniteNumber(endTime)) return null
+
+  const isTall = Math.abs(end.y - start.y) >= MIN_ZOOM_BOX_PX
+  const value =
+    isTall && isFiniteNumber(startValue) && isFiniteNumber(endValue)
+      ? {
+          min: Math.min(startValue, endValue),
+          max: Math.max(startValue, endValue),
+        }
+      : null
+
+  return {
+    time: {
+      startValue: Math.min(startTime, endTime),
+      endValue: Math.max(startTime, endTime),
+    },
+    gridIndex,
+    value,
+  }
+}
+
+/** The box being dragged, as a rectangle on the chart surface. */
+export interface ZoomBoxRect {
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
+const rectBetween = (a: ChartPixel, b: ChartPixel): ZoomBoxRect => ({
+  left: Math.min(a.x, b.x),
+  top: Math.min(a.y, b.y),
+  width: Math.abs(b.x - a.x),
+  height: Math.abs(b.y - a.y),
+})
+
+/**
+ * Lets the user drag a zoom box on the chart while `active`. The press is
+ * caught on the way down, before the chart sees it, so the drag neither pans
+ * nor paints over the brushed selection; the wheel is left alone so Ctrl+wheel
+ * keeps zooming. Returns the box to draw while the drag is under way.
+ */
+export const useZoomBoxDrag = (
+  ref: RefObject<HTMLElement | null>,
+  active: boolean,
+  onComplete: (start: ChartPixel, end: ChartPixel) => void
+) => {
+  const [rect, setRect] = useState<ZoomBoxRect | null>(null)
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
+
+  useEffect(() => {
+    const container = ref.current
+    if (!container || !active) return
+
+    let origin: ChartPixel | null = null
+    const toPixel = (event: MouseEvent): ChartPixel => {
+      const bounds = container.getBoundingClientRect()
+      return { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
+    }
+
+    const handleMove = (event: MouseEvent) => {
+      if (origin) setRect(rectBetween(origin, toPixel(event)))
+    }
+    const handleUp = (event: MouseEvent) => {
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('mouseup', handleUp)
+      const start = origin
+      origin = null
+      setRect(null)
+      if (start) onCompleteRef.current(start, toPixel(event))
+    }
+    const handleDown = (event: MouseEvent) => {
+      if (event.button !== 0) return
+      origin = toPixel(event)
+      window.addEventListener('mousemove', handleMove)
+      window.addEventListener('mouseup', handleUp)
+    }
+    // zrender listens for pointer or mouse events depending on the browser;
+    // keeping both presses from it stops the inside zoom starting a pan, and
+    // keeping the click stops a box that ends on a point from picking it.
+    const keepFromChart = (event: Event) => event.stopPropagation()
+    const keptEvents = ['pointerdown', 'mousedown', 'click']
+
+    for (const name of keptEvents) {
+      container.addEventListener(name, keepFromChart, { capture: true })
+    }
+    container.addEventListener('mousedown', handleDown, { capture: true })
+    return () => {
+      for (const name of keptEvents) {
+        container.removeEventListener(name, keepFromChart, { capture: true })
+      }
+      container.removeEventListener('mousedown', handleDown, { capture: true })
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('mouseup', handleUp)
+      setRect(null)
+    }
+  }, [active, ref])
+
+  return rect
 }
 
 const findScrollParent = (element: HTMLElement | null): HTMLElement | null => {
