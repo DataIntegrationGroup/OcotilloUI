@@ -789,6 +789,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   initialUpload,
   initialFileName,
   onPublish,
+  publishInProgress = false,
   onDeleteStoredRange,
   mode = DEFAULT_HYDROGRAPH_UI_MODE,
   wellMetadata,
@@ -800,6 +801,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   initialUpload?: ParsedHydrographUpload | null
   initialFileName?: string | null
   onPublish?: (args: HydrographPublishArgs) => Promise<void>
+  /**
+   * A publish the caller is still writing after `onPublish` has returned —
+   * one resumed from its overlap or deployment dialog.
+   */
+  publishInProgress?: boolean
   /**
    * Permanently deletes the stored transducer observations inside the range.
    * Omitted when the session has no bound well, or when the signed-in user
@@ -2632,10 +2638,15 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       disabled={
                         !onPublish ||
                         correctedMeasurements.length === 0 ||
-                        isPublishing
+                        isPublishing ||
+                        publishInProgress
                       }
                     >
-                      {isPublishing ? 'Publishing...' : 'Publish to Ocotillo'}
+                      {isPublishing || publishInProgress
+                        ? 'Publishing...'
+                        : thingName
+                          ? `Publish ${thingName} to Ocotillo`
+                          : 'Publish to Ocotillo'}
                     </Button>
                     {!onPublish ? (
                       <Typography variant="caption" color="text.secondary">
@@ -2736,6 +2747,14 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       borderColor: 'divider',
                     }}
                   >
+                    {/* The well rides in the pinned toolbar so it stays in
+                        view while selecting, correcting and zooming. */}
+                    <Chip
+                      size="small"
+                      color="primary"
+                      label={`Well: ${thingName || 'Unknown'}`}
+                      sx={{ fontWeight: 600 }}
+                    />
                     <Tooltip title="Drag on the chart to select a time range">
                       <ToggleButton
                         value="brush"
@@ -2942,7 +2961,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         fullWidth
       >
         <DialogTitle color="error.main">
-          Delete stored transducer data?
+          Delete stored transducer data from {thingName || 'this well'}?
         </DialogTitle>
         <DialogContent>
           <Stack spacing={1.5}>

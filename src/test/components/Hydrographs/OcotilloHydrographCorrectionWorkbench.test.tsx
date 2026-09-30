@@ -377,4 +377,38 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
 
     expect(event.defaultPrevented).toBe(true)
   })
+
+  it('keeps the well in the pinned chart tools', () => {
+    renderWorkbench()
+    const toolbar = screen.getByRole('toolbar', { name: 'Chart tools' })
+    expect(toolbar.textContent).toContain('Well: TEST-0001')
+  })
+
+  it('names the well on the publish button', () => {
+    render(
+      <OcotilloHydrographCorrectionWorkbench
+        thingName="TEST-0001"
+        manualObservations={[]}
+        transducerObservations={[]}
+        onPublish={vi.fn(async () => {})}
+      />
+    )
+    expect(
+      screen.getByRole('button', { name: 'Publish TEST-0001 to Ocotillo' })
+    ).toBeTruthy()
+  })
+
+  it('holds the publish button while the caller is still publishing', () => {
+    render(
+      <OcotilloHydrographCorrectionWorkbench
+        thingName="TEST-0001"
+        manualObservations={[]}
+        transducerObservations={[]}
+        onPublish={vi.fn(async () => {})}
+        publishInProgress
+      />
+    )
+    const button = screen.getByRole('button', { name: 'Publishing...' })
+    expect((button as HTMLButtonElement).disabled).toBe(true)
+  })
 })
