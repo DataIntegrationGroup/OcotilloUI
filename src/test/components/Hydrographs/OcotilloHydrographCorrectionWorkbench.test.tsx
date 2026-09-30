@@ -11,13 +11,13 @@ const chartInstance = {
   getDataURL: vi.fn(() => 'data:image/png;base64,'),
   resize: vi.fn(),
   // The DTW panel (grid 1) spans pixel rows 100-500 of the surface; time
-  // runs a day a pixel from DAY_ONE and depth a foot a pixel from row 100.
+  // runs a day every 10px from DAY_ONE and depth a foot a pixel from row 100.
   containPixel: vi.fn(
     ({ gridIndex }: { gridIndex: number }, [, y]: number[]) =>
       gridIndex === 1 && y >= 100 && y <= 500
   ),
   convertFromPixel: vi.fn((_: unknown, [x, y]: number[]) => [
-    day(x),
+    day(x / 10),
     y - 100,
   ]),
 }
@@ -291,7 +291,7 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
     chartInstance.dispatchAction.mockClear()
 
     // Days 2-6, 20-60 ft down the DTW panel, drawn right to left.
-    dragOnChart({ x: 6, y: 160 }, { x: 2, y: 120 })
+    dragOnChart({ x: 60, y: 160 }, { x: 20, y: 120 })
 
     expect(chartPresses).not.toHaveBeenCalled()
     expect(chartInstance.dispatchAction).toHaveBeenCalledTimes(1)
@@ -310,11 +310,11 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
     await user.click(screen.getByRole('button', { name: 'Zoom box' }))
     const canvas = screen.getByTestId('chart-canvas')
 
-    fireEvent.mouseDown(canvas, { button: 0, clientX: 2, clientY: 120 })
-    fireEvent.mouseMove(window, { clientX: 6, clientY: 160 })
+    fireEvent.mouseDown(canvas, { button: 0, clientX: 20, clientY: 120 })
+    fireEvent.mouseMove(window, { clientX: 60, clientY: 160 })
     expect(screen.getByTestId('zoom-box')).toBeTruthy()
 
-    fireEvent.mouseUp(window, { clientX: 6, clientY: 160 })
+    fireEvent.mouseUp(window, { clientX: 60, clientY: 160 })
     expect(screen.queryByTestId('zoom-box')).toBeNull()
   })
 
@@ -326,7 +326,7 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
     await user.click(zoomBox)
     chartInstance.dispatchAction.mockClear()
 
-    dragOnChart({ x: 2, y: 120 }, { x: 6, y: 160 })
+    dragOnChart({ x: 20, y: 120 }, { x: 60, y: 160 })
 
     expect(chartPresses).toHaveBeenCalled()
     expect(chartInstance.dispatchAction).not.toHaveBeenCalled()
@@ -355,7 +355,8 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
     const user = userEvent.setup()
     render(workbenchWithReadings(11))
     await user.click(screen.getByRole('button', { name: 'Zoom box' }))
-    dragOnChart({ x: 2, y: 120 }, { x: 6, y: 160 })
+    dragOnChart({ x: 20, y: 120 }, { x: 60, y: 160 })
+    expect(chartOption.yAxis?.[1]).toMatchObject({ min: 20, max: 60 })
 
     await user.click(screen.getByRole('button', { name: 'Reset zoom' }))
 
