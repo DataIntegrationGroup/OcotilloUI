@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import {
+  brushedTimeRange,
   clampTimeWindow,
   FULL_ZOOM_WINDOW,
   keepCtrlWheelOffPage,
@@ -300,5 +301,45 @@ describe('resolveZoomBox', () => {
 
   it('ignores a box started off every panel', () => {
     expect(resolveZoomBox({ x: 20, y: 110 }, { x: 60, y: 150 }, chart, 2)).toBeNull()
+  })
+})
+
+describe('brushedTimeRange', () => {
+  // A chart zoomed to 400-1,000 ms across pixels 0-600: a millisecond a
+  // pixel, starting at 400.
+  const pixelToTime = (pixel: number) => 400 + pixel
+
+  const range = (start: number, end: number) => ({
+    startTime: new Date(start),
+    endTime: new Date(end),
+  })
+
+  it('takes a band inside the window as reported', () => {
+    expect(brushedTimeRange([500, 700], [100, 300], pixelToTime, null)).toEqual(
+      range(500, 700)
+    )
+  })
+
+  it('recovers an edge ECharts clamped to the visible window', () => {
+    // The band starts 100px left of the plot, at 300 ms, but ECharts reports
+    // the edge of the window.
+    expect(brushedTimeRange([400, 700], [-100, 300], pixelToTime, null)).toEqual(
+      range(300, 700)
+    )
+  })
+
+  it('keeps an off-screen edge where it was when it has not moved', () => {
+    expect(
+      brushedTimeRange([400, 700], [-100.4, 300], pixelToTime, range(300, 650))
+    ).toEqual(range(300, 700))
+  })
+
+  it('falls back to the reported range without pixels to go on', () => {
+    expect(brushedTimeRange([400, 700], undefined, pixelToTime, null)).toEqual(
+      range(400, 700)
+    )
+    expect(
+      brushedTimeRange([400, 700], [-100, 300], () => undefined, null)
+    ).toEqual(range(400, 700))
   })
 })
