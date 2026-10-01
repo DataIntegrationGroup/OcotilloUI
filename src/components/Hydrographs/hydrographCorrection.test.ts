@@ -981,6 +981,9 @@ END OF DATA`)
       changedCount: 2,
       maxAbsChange: 1.8,
       maxChangeTime: new Date('2025-01-01T00:00:00Z'),
+      // The closing manual's reading already sat on its anchor.
+      firstChangeTime: new Date('2025-01-01T00:00:00Z'),
+      lastChangeTime: new Date('2025-01-02T00:00:00Z'),
       addedCount: 0,
       removedCount: 0,
     })
@@ -1003,6 +1006,8 @@ END OF DATA`)
       changedCount: 0,
       maxAbsChange: 0,
       maxChangeTime: null,
+      firstChangeTime: null,
+      lastChangeTime: null,
       addedCount: 1,
       removedCount: 1,
     })
