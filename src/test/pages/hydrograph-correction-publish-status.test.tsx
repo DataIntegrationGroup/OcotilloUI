@@ -67,4 +67,29 @@ describe('PublishStatusNotice', () => {
     expect(onDismissSuccess).toHaveBeenCalledTimes(1)
     expect(onDismissError).toHaveBeenCalledTimes(1)
   })
+
+  it('shows a file being read from the moment it is picked', () => {
+    renderNotice({ upload: { fileName: 'WL-0001.xlsx', stage: 'reading' } })
+
+    const status = screen.getByRole('status')
+    expect(status.textContent).toContain('Loading WL-0001.xlsx')
+    expect(status.textContent).toContain('Reading and parsing the file.')
+    expect(
+      screen.getByRole('progressbar', { name: 'Loading WL-0001.xlsx' })
+    ).toBeTruthy()
+  })
+
+  it('names the well while it is looked up', () => {
+    renderNotice({
+      upload: {
+        fileName: 'WL-0001.xlsx',
+        stage: 'resolving',
+        pointId: 'WL-0001',
+      },
+    })
+    expect(screen.getByRole('status').textContent).toContain(
+      'Finding well WL-0001 in Ocotillo.'
+    )
+  })
 })
+
