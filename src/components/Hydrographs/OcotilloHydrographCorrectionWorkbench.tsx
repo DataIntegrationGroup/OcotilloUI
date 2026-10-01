@@ -109,6 +109,7 @@ import {
   useZoomBoxDrag,
   type ValueRange,
 } from './chartViewport'
+import { MAX_POINTS_PER_BLOCK } from './publishOverlap'
 import {
   formatCollector,
   type ManualObservationFieldMetadata,
@@ -2652,6 +2653,18 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       <Typography variant="caption" color="text.secondary">
                         Publishing requires a resolved Ocotillo well and is
                         disabled in demo mode.
+                      </Typography>
+                    ) : null}
+                    {onPublish &&
+                    correctedMeasurements.length > MAX_POINTS_PER_BLOCK ? (
+                      <Typography variant="caption" color="text.secondary">
+                        {correctedMeasurements.length.toLocaleString()} points
+                        publish as{' '}
+                        {Math.ceil(
+                          correctedMeasurements.length / MAX_POINTS_PER_BLOCK
+                        )}{' '}
+                        consecutive blocks of up to{' '}
+                        {MAX_POINTS_PER_BLOCK.toLocaleString()}.
                       </Typography>
                     ) : null}
                     <Typography variant="caption" color="text.secondary">
