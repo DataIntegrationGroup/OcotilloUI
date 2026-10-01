@@ -1640,15 +1640,3 @@ export const calculateSnapOffset = ({
     anchorValue: nearest.value,
   }
 }
-
-export const buildCsvFromMeasurements = (measurements: HydrographPoint[]) => {
-  const rows = [
-    ['observation_datetime', 'value'],
-    ...measurements.map((measurement) => [
-      measurement.time.toISOString(),
-      measurement.value.toString(),
-    ]),
-  ]
-
-  return rows.map((row) => row.join(',')).join('\n')
-}
