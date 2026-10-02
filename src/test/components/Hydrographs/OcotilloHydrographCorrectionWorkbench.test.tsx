@@ -129,6 +129,23 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
     expect(screen.getByText('Selection: entire uploaded trace')).toBeTruthy()
   })
 
+  // Corrected data leaves the workbench by publishing; a complete
+  // time-series download belongs on the Well Details page (BDMS-1297).
+  it('offers no CSV export of the corrected trace', () => {
+    render(
+      <OcotilloHydrographCorrectionWorkbench
+        thingName="TEST-0001"
+        manualObservations={[]}
+        transducerObservations={dailyReadings(3)}
+        onPublish={vi.fn(async () => {})}
+      />
+    )
+    expect(screen.queryByRole('button', { name: /csv/i })).toBeNull()
+    expect(
+      screen.getByRole('button', { name: 'Publish TEST-0001 to Ocotillo' })
+    ).toBeTruthy()
+  })
+
   it('toggles range selection on the chart', async () => {
     const user = userEvent.setup()
     renderWorkbench()

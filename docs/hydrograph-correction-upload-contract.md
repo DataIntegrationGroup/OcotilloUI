@@ -11,7 +11,9 @@ The workbench (`/ocotillo/hydrograph-correction`) ingests a raw logger file
 converts water head to depth to water below ground surface (ft bgs) using
 manual observations as sensor-depth anchors, and lets the user apply
 corrections (offset/zero cleanup, shifts, snaps, drift correction). The output
-is a corrected time series that today can only be downloaded as CSV.
+is a corrected time series. Publishing is the only way it leaves the workbench:
+the earlier corrector CSV download was removed (BDMS-1297), and a complete
+time-series download belongs on the Well Details page (BDMS-1302).
 
 The Ocotillo API already models stored transducer data as **observation
 blocks**:
@@ -183,7 +185,7 @@ Individual observations are not echoed back (the client already has them);
 
 ## UI integration plan
 
-- The workbench gains a **Publish to Ocotillo** action (next to Download CSV)
+- The workbench gains a **Publish to Ocotillo** action
   that maps `correctedMeasurements` to `measurements`, fills `provenance`
   from the session (file name, value kind, applied operations), and posts
   via `ocotilloDataProvider`.

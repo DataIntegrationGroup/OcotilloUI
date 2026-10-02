@@ -66,7 +66,6 @@ import {
 import {
   applyOffsetToRange,
   assessDriftAtManualObservations,
-  buildCsvFromMeasurements,
   calculateSnapOffset,
   convertWaterHeadToDepthToWater,
   describeSensorDepthAnchors,
@@ -2156,19 +2155,6 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     }
   }
 
-  const downloadCorrectedCsv = () => {
-    if (correctedMeasurements.length === 0) return
-
-    const csv = buildCsvFromMeasurements(correctedMeasurements)
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = `${normalizePointId(parsedPointId || thingName || 'hydrograph')}_corrected.csv`
-    anchor.click()
-    URL.revokeObjectURL(url)
-  }
-
   return (
     // Clip rather than hide: `hidden` makes the Paper a scroll container,
     // which would pin the sticky chart toolbar and controls to it instead of
@@ -2641,15 +2627,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                 <WorkbenchSection title="Output" defaultExpanded>
                     {/* Reset to Original lives in the header, next to the
                         selection chip — a destructive discard does not belong
-                        beside the publish action. */}
-                    <Button
-                      variant="text"
-                      size="small"
-                      onClick={downloadCorrectedCsv}
-                      disabled={correctedMeasurements.length === 0}
-                    >
-                      Download CSV
-                    </Button>
+                        beside the publish action. Corrected data leaves the
+                        workbench by publishing; there is deliberately no CSV
+                        export here (BDMS-1297). */}
                     <Button
                       variant="contained"
                       size="small"
