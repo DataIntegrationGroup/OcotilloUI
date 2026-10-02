@@ -377,4 +377,19 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
 
     expect(event.defaultPrevented).toBe(true)
   })
+
+  it('keeps Ctrl+wheel off the chart card from zooming the page', () => {
+    renderWorkbench()
+    const heading = screen.getByText('Hydrograph Correction Workspace')
+    const event = new WheelEvent('wheel', {
+      deltaY: 100,
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+
+    heading.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(true)
+  })
 })

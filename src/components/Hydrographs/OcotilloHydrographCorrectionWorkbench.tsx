@@ -815,7 +815,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const theme = useTheme()
   const chartRef = useRef<ReactECharts>(null)
   const chartContainerRef = useRef<HTMLDivElement>(null)
-  const chartCardRef = useRef<HTMLDivElement>(null)
+  const workspaceRef = useRef<HTMLDivElement>(null)
   const splitRef = useRef<HTMLDivElement>(null)
   const resizeStateRef = useRef<{ startX: number; startWidth: number } | null>(
     null
@@ -1000,10 +1000,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     return passPlainWheelToPage(element)
   }, [])
 
-  // Ctrl+wheel anywhere on the chart card zooms the chart or nothing, never
-  // the page.
+  // Ctrl+wheel anywhere in the workspace — the controls panel and everything
+  // around the chart card included — zooms the chart or nothing, never the
+  // page.
   useEffect(() => {
-    const element = chartCardRef.current
+    const element = workspaceRef.current
     if (!element) return
     return keepCtrlWheelOffPage(element)
   }, [])
@@ -2151,7 +2152,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     // Clip rather than hide: `hidden` makes the Paper a scroll container,
     // which would pin the sticky chart toolbar and controls to it instead of
     // to the page.
-    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'clip' }}>
+    <Paper
+      ref={workspaceRef}
+      elevation={2}
+      sx={{ borderRadius: 2, overflow: 'clip' }}
+    >
       <Box
         sx={{
           px: 2,
@@ -2705,7 +2710,6 @@ export const OcotilloHydrographCorrectionWorkbench = ({
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Stack spacing={1.5}>
                 <Paper
-                  ref={chartCardRef}
                   variant="outlined"
                   sx={{
                     p: 1.5,

@@ -207,9 +207,10 @@ export const passPlainWheelToPage = (container: HTMLElement) => {
 }
 
 /**
- * Ctrl+wheel over the chart card but off the plot itself — the toolbar, the
- * axis labels, the legend, the slider — reached the browser and zoomed the
- * whole page, which is easy to do by accident while zooming the chart.
+ * Ctrl+wheel in the workspace but off the plot itself — the toolbar, the axis
+ * labels, the legend, the slider, the controls panel — reached the browser and
+ * zoomed the whole page, which is easy to do by accident while zooming the
+ * chart.
  * Cancelling it anywhere inside `container` keeps Ctrl+wheel meaning "zoom
  * the chart". Over the plot the chart has already cancelled it and zoomed.
  *
