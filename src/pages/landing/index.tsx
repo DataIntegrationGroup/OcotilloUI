@@ -79,14 +79,14 @@ export const LandingPage = () => {
           }}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-200">
-            A clearer view of the water system
+            Lorem ipsum dolor sit amet
           </p>
           <h1 className="mt-3 max-w-3xl font-heading text-5xl font-bold leading-tight tracking-[-0.04em] sm:text-6xl">
-            Explore the data beneath the map.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-white/90">
-            Find the well, spring, sample, or trend that answers the question in
-            front of you.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+            eiusmod tempor incididunt ut labore et dolore magna aliqua.
           </p>
           <Button asChild size="lg" className="mt-6">
             <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
@@ -196,34 +196,34 @@ export const LandingPage = () => {
         <section id="how" className="py-8 sm:py-16">
           <div className="max-w-2xl pb-8">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-              A clearer path through the data
+              Lorem ipsum dolor sit amet
             </p>
             <h2 className="mt-2 font-heading text-3xl font-bold tracking-tight">
-              From the first question to the field decision.
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
             </h2>
             <p className="mt-3 text-base text-muted-foreground">
-              Keep the map, the record, and the evidence together as the work
-              moves from exploration to a defensible answer.
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua.
             </p>
           </div>
           <div className="space-y-10">
             <ShowcaseRow
-              eyebrow="01 · Find the place"
-              title="Start with the question, not a blank map."
-              description="Search by well, county, aquifer, or site name and quickly see which records can help answer the question in front of you."
+              eyebrow="01 · Lorem ipsum"
+              title="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
               visual={<MapPreview />}
             />
             <ShowcaseRow
               reverse
-              eyebrow="02 · Keep the evidence"
-              title="See the record behind every point."
-              description="Move from a location to the measurements, sample history, and field context that make the record useful to the whole team."
+              eyebrow="02 · Lorem ipsum"
+              title="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
               visual={<TablePreview />}
             />
             <ShowcaseRow
-              eyebrow="03 · Share the signal"
-              title="Turn field observations into shared context."
-              description="Compare trends, prepare a clear handoff, and bring the same trustworthy view into the tools your team already uses."
+              eyebrow="03 · Lorem ipsum"
+              title="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
               visual={<ChartPreview />}
             />
           </div>
@@ -259,10 +259,11 @@ export const LandingPage = () => {
         <section className="mb-8 flex flex-col items-start justify-between gap-5 rounded-xl border border-primary/25 bg-primary/10 p-7 sm:flex-row sm:items-center">
           <div>
             <h2 className="font-heading text-2xl font-semibold">
-              Ready to make the next question easier?
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit?
             </h2>
             <p className="mt-1 text-muted-foreground">
-              Start building a clearer view of New Mexico water data.
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod.
             </p>
           </div>
           <Button asChild size="lg">
