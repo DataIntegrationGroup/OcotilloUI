@@ -90,6 +90,7 @@ import {
   type HydrographUiMode,
 } from './hydrographUiMode'
 import {
+  brushedTimeRange,
   clampTimeWindow,
   type ChartPixel,
   type DataZoomEventParams,
@@ -1844,7 +1845,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   }
 
   const handleBrushSelected = (params: {
-    batch?: Array<{ areas?: Array<{ coordRange?: [number, number] }> }>
+    batch?: Array<{
+      areas?: Array<{ coordRange?: [number, number]; range?: number[] }>
+    }>
   }) => {
     const area = params.batch?.[0]?.areas?.[0]
     const coordRange = area?.coordRange
@@ -1854,9 +1857,20 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       return
     }
 
-    const startTime = new Date(coordRange[0])
-    const endTime = new Date(coordRange[1])
     const current = selectedRangeRef.current
+    // Every x axis shares one pixel mapping; the DTW panel is always shown.
+    const pixelToTime = (pixel: number) => {
+      const time = chartRef.current
+        ?.getEchartsInstance()
+        ?.convertFromPixel({ xAxisIndex: GRID_INDEX.dtw }, pixel)
+      return typeof time === 'number' ? time : undefined
+    }
+    const { startTime, endTime } = brushedTimeRange(
+      coordRange,
+      area?.range,
+      pixelToTime,
+      current
+    )
 
     // Identical ranges are dropped: ECharts re-emits the selection whenever
     // the brush layer redraws, and a fresh object each time would re-render

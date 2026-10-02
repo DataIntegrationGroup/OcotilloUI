@@ -16,10 +16,10 @@ const chartInstance = {
     ({ gridIndex }: { gridIndex: number }, [, y]: number[]) =>
       gridIndex === 1 && y >= 100 && y <= 500
   ),
-  convertFromPixel: vi.fn((_: unknown, [x, y]: number[]) => [
-    day(x / 10),
-    y - 100,
-  ]),
+  // A bare number is a single axis: the time at that x pixel.
+  convertFromPixel: vi.fn((_: unknown, value: number | number[]) =>
+    Array.isArray(value) ? [day(value[0] / 10), value[1] - 100] : day(value / 10)
+  ),
 }
 
 interface YAxisOption {
@@ -425,5 +425,24 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
     )
     const button = screen.getByRole('button', { name: 'Publishing...' })
     expect((button as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('keeps the whole selection when it is moved while zoomed in', () => {
+    render(workbenchWithReadings(11))
+    emitChartEvent('brushSelected', {
+      batch: [{ areas: [{ coordRange: [day(2), day(7)] }] }],
+    })
+    const selection = screen.getByText(/^Selection: /).textContent
+
+    // Zoom to days 4-10, then nudge the band. ECharts reports its start
+    // clamped to the window, though the band still reaches back to day 2.
+    emitChartEvent('datazoom', { start: 40, end: 100 })
+    emitChartEvent('brushSelected', {
+      batch: [{ areas: [{ coordRange: [day(4), day(7)], range: [20, 70] }] }],
+    })
+
+    expect(screen.getByText(/^Selection: /).textContent).toBe(
+      `${selection} (partly out of view)`
+    )
   })
 })

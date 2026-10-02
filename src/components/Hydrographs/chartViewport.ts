@@ -174,6 +174,60 @@ export const selectionVisibility = (
 }
 
 /**
+ * The time range a brushed band covers. When the band is dragged or resized
+ * while the chart is zoomed in, ECharts converts it back to times clamped to
+ * the visible window, so the selection silently shrank to whatever was on
+ * screen and every edit scoped to it — a shift included — missed the rest.
+ * The band's pixel range is not clamped, so an edge clamped away from it is
+ * recovered from the pixels instead.
+ *
+ * An edge only counts as clamped when the two disagree by more than a pixel;
+ * otherwise `coordRange` is kept as is, so redraws never nudge the bounds. A
+ * clamped edge within a pixel of the current selection keeps the current
+ * instant, for the same reason: it is off screen, so the user cannot have
+ * moved it by less than that.
+ */
+export const brushedTimeRange = (
+  coordRange: readonly [number, number],
+  pixelRange: readonly number[] | undefined,
+  pixelToTime: (pixel: number) => number | undefined,
+  current: { startTime: Date; endTime: Date } | null
+): { startTime: Date; endTime: Date } => {
+  const fromCoordRange = () => ({
+    startTime: new Date(coordRange[0]),
+    endTime: new Date(coordRange[1]),
+  })
+  if (!pixelRange || pixelRange.length !== 2) return fromCoordRange()
+  const [startPixel, endPixel] = pixelRange
+  if (startPixel === endPixel) return fromCoordRange()
+
+  const startAt = pixelToTime(startPixel)
+  const endAt = pixelToTime(endPixel)
+  if (!isFiniteNumber(startAt) || !isFiniteNumber(endAt)) {
+    return fromCoordRange()
+  }
+
+  const msPerPixel = Math.abs(endAt - startAt) / Math.abs(endPixel - startPixel)
+  const unclamped = [Math.min(startAt, endAt), Math.max(startAt, endAt)]
+  const currentEdges = current
+    ? [current.startTime.getTime(), current.endTime.getTime()]
+    : null
+
+  const edge = (index: 0 | 1) => {
+    const reported = coordRange[index]
+    const recovered = unclamped[index]
+    if (Math.abs(recovered - reported) <= msPerPixel) return reported
+    const kept = currentEdges?.[index]
+    if (kept !== undefined && Math.abs(kept - recovered) <= msPerPixel) {
+      return kept
+    }
+    return Math.round(recovered)
+  }
+
+  return { startTime: new Date(edge(0)), endTime: new Date(edge(1)) }
+}
+
+/**
  * Whether a wheel event over the chart should zoom it rather than scroll the
  * page. Ctrl is also what a trackpad pinch reports, so pinch-to-zoom keeps
  * working without a modifier.
