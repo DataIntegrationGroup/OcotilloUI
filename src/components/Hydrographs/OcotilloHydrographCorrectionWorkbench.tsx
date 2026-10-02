@@ -11,6 +11,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  alpha,
   Alert,
   Box,
   Button,
@@ -48,6 +49,7 @@ import {
   CleaningServices,
   Clear,
   CloudUpload,
+  CropFree,
   DeleteForever,
   DeleteOutline,
   ExpandMore,
@@ -91,11 +93,14 @@ import {
 } from './hydrographUiMode'
 import {
   clampTimeWindow,
+  type ChartPixel,
   type DataZoomEventParams,
   FULL_ZOOM_WINDOW,
+  keepCtrlWheelOffPage,
   padTimeWindow,
   passPlainWheelToPage,
   readZoomWindow,
+  resolveZoomBox,
   scaleZoomWindow,
   type SelectionVisibility,
   selectionVisibility,
@@ -103,6 +108,8 @@ import {
   type TimeWindow,
   timeWindowFromZoomEvent,
   useScrollportHeight,
+  useZoomBoxDrag,
+  type ValueRange,
 } from './chartViewport'
 import {
   formatCollector,
@@ -227,6 +234,15 @@ const RESIDUAL_SERIES_NAMES = [
 
 // Zoom-button step: each press halves or doubles the visible span.
 const ZOOM_STEP = 2
+
+type ChartDragMode = 'pan' | 'select' | 'zoomBox'
+
+// The toolbar hint for what a drag on the chart does right now.
+const DRAG_MODE_HINT: Record<ChartDragMode, string> = {
+  pan: 'Drag to pan',
+  select: 'Drag to select a range',
+  zoomBox: 'Drag a box to zoom to it',
+}
 
 // Appended to the selection chip. Every edit is scoped to the selection, so
 // losing sight of it behind a zoom is worth calling out.
@@ -775,6 +791,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   initialUpload,
   initialFileName,
   onPublish,
+  publishInProgress = false,
   onDeleteStoredRange,
   mode = DEFAULT_HYDROGRAPH_UI_MODE,
   wellMetadata,
@@ -786,6 +803,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   initialUpload?: ParsedHydrographUpload | null
   initialFileName?: string | null
   onPublish?: (args: HydrographPublishArgs) => Promise<void>
+  /**
+   * A publish the caller is still writing after `onPublish` has returned —
+   * one resumed from its overlap or deployment dialog.
+   */
+  publishInProgress?: boolean
   /**
    * Permanently deletes the stored transducer observations inside the range.
    * Omitted when the session has no bound well, or when the signed-in user
@@ -801,6 +823,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const theme = useTheme()
   const chartRef = useRef<ReactECharts>(null)
   const chartContainerRef = useRef<HTMLDivElement>(null)
+  const workspaceRef = useRef<HTMLDivElement>(null)
   const splitRef = useRef<HTMLDivElement>(null)
   const resizeStateRef = useRef<{ startX: number; startWidth: number } | null>(
     null
@@ -808,8 +831,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [controlsWidth, setControlsWidth] = useState(DEFAULT_CONTROLS_WIDTH)
   const [controlsCollapsed, setControlsCollapsed] = useState(false)
   const [showTooltip, setShowTooltip] = useState(true)
-  // Whether dragging on the chart paints a selection (on) or pans (off).
-  const [isBrushActive, setIsBrushActive] = useState(false)
+  // What dragging on the chart does: pan the view, paint a selection, or
+  // draw a box to zoom to.
+  const [dragMode, setDragMode] = useState<ChartDragMode>('pan')
   const scrollportHeight = useScrollportHeight(splitRef)
 
   const [uploaded, setUploaded] = useState<ParsedHydrographUpload | null>(
@@ -837,6 +861,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     undefined
   )
   const [isZoomed, setIsZoomed] = useState(false)
+  // Value axis ranges a zoom box pinned, by panel. A pinned axis holds still
+  // while the time window moves, so it cannot refit around an erroneous
+  // reading that scrolls into view. Unpinned axes fit the visible data.
+  const [valueWindows, setValueWindows] = useState<
+    Partial<Record<ChartPanel, ValueRange>>
+  >({})
   // How much of the selection the zoom window shows, so the toolbar can say
   // when the range every edit applies to has been zoomed out of view.
   const [selectionView, setSelectionView] =
@@ -986,6 +1016,15 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     const element = chartContainerRef.current
     if (!element) return
     return passPlainWheelToPage(element)
+  }, [])
+
+  // Ctrl+wheel anywhere in the workspace — the controls panel and everything
+  // around the chart card included — zooms the chart or nothing, never the
+  // page.
+  useEffect(() => {
+    const element = workspaceRef.current
+    if (!element) return
+    return keepCtrlWheelOffPage(element)
   }, [])
 
   // Dropping to a mode that hides a toggle must also disable it, otherwise a
@@ -1232,6 +1271,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       zoomedUploadRef.current = initialUpload
       zoomWindowRef.current = null
       setIsZoomed(false)
+      setValueWindows({})
       chartRef.current
         ?.getEchartsInstance()
         ?.dispatchAction({ type: 'dataZoom', ...FULL_ZOOM_WINDOW })
@@ -1651,6 +1691,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         nameLocation: 'center',
         nameGap: 74,
         ...panelYAxis[panel],
+        // Null rather than absent, so a merge drops a pin that was released.
+        min: valueWindows[panel]?.min ?? null,
+        max: valueWindows[panel]?.max ?? null,
         ...chartTextStyles.yAxis,
       })),
       series,
@@ -1669,6 +1712,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     storedTransducerPoints,
     theme,
     timeAxisExtent,
+    valueWindows,
     visiblePanels,
   ])
 
@@ -1857,17 +1901,45 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     applySelectedRange({ startTime, endTime })
   }
 
-  // Toggles between painting a selection and panning. The brush takes the
-  // chart's global cursor, which inside zoom yields to while it is held.
-  const toggleBrush = () => {
-    const next = !isBrushActive
-    chartRef.current?.getEchartsInstance()?.dispatchAction({
-      type: 'takeGlobalCursor',
-      key: 'brush',
-      brushOption: { brushType: next ? 'lineX' : false, brushMode: 'single' },
-    })
-    setIsBrushActive(next)
+  // Each mode button toggles between itself and panning. The brush takes the
+  // chart's global cursor, which inside zoom yields to while it is held; the
+  // zoom box works outside the chart, so it hands the cursor back.
+  const toggleDragMode = (mode: Exclude<ChartDragMode, 'pan'>) => {
+    const next: ChartDragMode = dragMode === mode ? 'pan' : mode
+    if ((next === 'select') !== (dragMode === 'select')) {
+      chartRef.current?.getEchartsInstance()?.dispatchAction({
+        type: 'takeGlobalCursor',
+        key: 'brush',
+        brushOption: {
+          brushType: next === 'select' ? 'lineX' : false,
+          brushMode: 'single',
+        },
+      })
+    }
+    setDragMode(next)
   }
+
+  // The box sets the time window for every panel and, when it has height,
+  // pins the value axis of the panel it was drawn in. The brushed selection
+  // is left exactly as it was.
+  const zoomToBox = (start: ChartPixel, end: ChartPixel) => {
+    const chart = chartRef.current?.getEchartsInstance()
+    if (!chart) return
+    const box = resolveZoomBox(start, end, chart, CHART_PANEL_ORDER.length)
+    if (!box) return
+    chart.dispatchAction({ type: 'dataZoom', ...box.time })
+    const value = box.value
+    if (value) {
+      const panel = CHART_PANEL_ORDER[box.gridIndex]
+      setValueWindows((current) => ({ ...current, [panel]: value }))
+    }
+  }
+
+  const zoomBoxRect = useZoomBoxDrag(
+    chartContainerRef,
+    dragMode === 'zoomBox',
+    zoomToBox
+  )
 
   const zoomBy = (factor: number) => {
     const chart = chartRef.current?.getEchartsInstance()
@@ -1889,12 +1961,13 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
   // Reset always lands on one documented view: the full time extent of every
   // series on the chart — the upload, stored transducer data and manual
-  // measurements.
+  // measurements — with every value axis fitted to its data again.
   const resetZoom = () => {
     chartRef.current
       ?.getEchartsInstance()
       ?.dispatchAction({ type: 'dataZoom', ...FULL_ZOOM_WINDOW })
     recordZoomWindow(null)
+    setValueWindows({})
   }
 
   const saveChartImage = () => {
@@ -2133,7 +2206,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     // Clip rather than hide: `hidden` makes the Paper a scroll container,
     // which would pin the sticky chart toolbar and controls to it instead of
     // to the page.
-    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'clip' }}>
+    <Paper
+      ref={workspaceRef}
+      elevation={2}
+      sx={{ borderRadius: 2, overflow: 'clip' }}
+    >
       <Box
         sx={{
           px: 2,
@@ -2644,10 +2721,15 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       disabled={
                         !onPublish ||
                         correctedMeasurements.length === 0 ||
-                        isPublishing
+                        isPublishing ||
+                        publishInProgress
                       }
                     >
-                      {isPublishing ? 'Publishing...' : 'Publish to Ocotillo'}
+                      {isPublishing || publishInProgress
+                        ? 'Publishing...'
+                        : thingName
+                          ? `Publish ${thingName} to Ocotillo`
+                          : 'Publish to Ocotillo'}
                     </Button>
                     {!onPublish ? (
                       <Typography variant="caption" color="text.secondary">
@@ -2747,15 +2829,34 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       borderColor: 'divider',
                     }}
                   >
+                    {/* The well rides in the pinned toolbar so it stays in
+                        view while selecting, correcting and zooming. */}
+                    <Chip
+                      size="small"
+                      color="primary"
+                      label={`Well: ${thingName || 'Unknown'}`}
+                      sx={{ fontWeight: 600 }}
+                    />
                     <Tooltip title="Drag on the chart to select a time range">
                       <ToggleButton
                         value="brush"
                         size="small"
-                        selected={isBrushActive}
-                        onChange={toggleBrush}
+                        selected={dragMode === 'select'}
+                        onChange={() => toggleDragMode('select')}
                         aria-label="Select range"
                       >
                         <HighlightAlt fontSize="small" />
+                      </ToggleButton>
+                    </Tooltip>
+                    <Tooltip title="Drag a box on the chart to zoom to it. Its width sets the time range; its height fixes the value axis of the panel it is drawn in. The selection is not changed.">
+                      <ToggleButton
+                        value="zoomBox"
+                        size="small"
+                        selected={dragMode === 'zoomBox'}
+                        onChange={() => toggleDragMode('zoomBox')}
+                        aria-label="Zoom box"
+                      >
+                        <CropFree fontSize="small" />
                       </ToggleButton>
                     </Tooltip>
                     {/* The brushed range scopes every edit, so it rides in
@@ -2806,12 +2907,16 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         </IconButton>
                       </span>
                     </Tooltip>
-                    <Tooltip title="Reset zoom: show the full time range of every series on the chart">
+                    <Tooltip title="Reset zoom: show the full time range of every series on the chart and fit each value axis to its data">
                       <IconButton
                         size="small"
                         aria-label="Reset zoom"
                         onClick={resetZoom}
-                        color={isZoomed ? 'primary' : 'default'}
+                        color={
+                          isZoomed || Object.keys(valueWindows).length > 0
+                            ? 'primary'
+                            : 'default'
+                        }
                       >
                         <ZoomOutMap fontSize="small" />
                       </IconButton>
@@ -2846,14 +2951,22 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       color="text.secondary"
                       sx={{ ml: 'auto', pl: 1 }}
                     >
-                      Ctrl + scroll or pinch to zoom · drag to pan
+                      {DRAG_MODE_HINT[dragMode]} · Ctrl + scroll or pinch to
+                      zoom
                     </Typography>
                   </Stack>
                   <Box
                     ref={chartContainerRef}
                     // Height follows the stacked panels so each one keeps its
                     // designed size instead of being squeezed.
-                    sx={{ height: chartHeight }}
+                    sx={{
+                      position: 'relative',
+                      height: chartHeight,
+                      // zrender sets its own cursor inline on its surface.
+                      ...(dragMode === 'zoomBox'
+                        ? { '&, & *': { cursor: 'crosshair !important' } }
+                        : {}),
+                    }}
                   >
                     <ReactECharts
                       ref={chartRef}
@@ -2865,6 +2978,19 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         click: handleChartClick,
                       }}
                     />
+                    {zoomBoxRect ? (
+                      <Box
+                        data-testid="zoom-box"
+                        sx={{
+                          position: 'absolute',
+                          ...zoomBoxRect,
+                          pointerEvents: 'none',
+                          border: 1,
+                          borderColor: 'primary.main',
+                          bgcolor: alpha(theme.palette.primary.main, 0.12),
+                        }}
+                      />
+                    ) : null}
                   </Box>
                 </Paper>
               </Stack>
@@ -2955,7 +3081,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         fullWidth
       >
         <DialogTitle color="error.main">
-          Delete stored transducer data?
+          Delete stored transducer data from {thingName || 'this well'}?
         </DialogTitle>
         <DialogContent>
           <Stack spacing={1.5}>
