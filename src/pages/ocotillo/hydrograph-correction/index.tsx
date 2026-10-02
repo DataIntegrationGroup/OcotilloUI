@@ -41,6 +41,7 @@ import {
   type PublishProgress,
   type PublishResult,
   PublishStatusNotice,
+  type UploadProgress,
 } from './PublishStatusNotice'
 import {
   DiverHubIngestDialog,
@@ -220,6 +221,11 @@ export const HydrographCorrectionPage = () => {
   // button no longer tracks.
   const [publishProgress, setPublishProgress] =
     useState<PublishProgress | null>(null)
+  // Set from the moment a transducer file is picked until its well is
+  // resolved; parsing a large workbook can take a while.
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(
+    null
+  )
   const [pendingOverlap, setPendingOverlap] = useState<{
     blocks: PublishedBlockSpan[]
     args: HydrographPublishArgs
@@ -864,10 +870,20 @@ export const HydrographCorrectionPage = () => {
   const handleInitialUpload = async (file?: File) => {
     if (!file) return
 
+    // Reading the file is asynchronous, which gives the notice a chance to
+    // render before the synchronous parse blocks the main thread.
+    setUploadProgress({ fileName: file.name, stage: 'reading' })
     try {
       const parsed = file.name.toLowerCase().endsWith('.xlsx')
         ? parseHydrographWorkbookUpload(await file.arrayBuffer(), file.name)
         : parseHydrographUpload(await file.text(), file.name)
+      if (parsed.pointId) {
+        setUploadProgress({
+          fileName: file.name,
+          stage: 'resolving',
+          pointId: parsed.pointId,
+        })
+      }
       await applyParsedUpload(parsed, file.name)
     } catch (error) {
       setParsedUpload(null)
@@ -878,6 +894,8 @@ export const HydrographCorrectionPage = () => {
           ? error.message
           : 'Unable to parse the uploaded file.'
       )
+    } finally {
+      setUploadProgress(null)
     }
   }
 
@@ -1164,6 +1182,7 @@ export const HydrographCorrectionPage = () => {
       </Stack>
 
       <PublishStatusNotice
+        upload={uploadProgress}
         progress={publishProgress}
         success={
           publishSuccess
