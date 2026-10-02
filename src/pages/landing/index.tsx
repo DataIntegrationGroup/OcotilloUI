@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Link as RouterLink } from 'react-router'
+import { LandingTopbar } from '@/components/LandingTopbar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -69,40 +69,9 @@ export const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-[1536px] items-center justify-between px-4 sm:px-8">
-          <RouterLink
-            to="/"
-            className="font-heading text-base font-extrabold uppercase tracking-[0.2em]"
-          >
-            Ocotillo
-          </RouterLink>
-          <nav className="flex items-center gap-1 sm:gap-3">
-            <a
-              href="#explore"
-              className="hidden px-2 text-sm text-muted-foreground hover:text-foreground sm:inline"
-            >
-              Explore
-            </a>
-            <a
-              href="#how"
-              className="hidden px-2 text-sm text-muted-foreground hover:text-foreground sm:inline"
-            >
-              How it works
-            </a>
-            <Button asChild variant="outline" size="sm">
-              <RouterLink to="/login">Log in</RouterLink>
-            </Button>
-            <Button asChild size="sm">
-              <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
-                Sign up
-              </a>
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <LandingTopbar />
 
-      <main className="mx-auto max-w-[1536px] px-4 sm:px-8">
+      <main className="mx-auto max-w-[1536px] px-4 pt-4 sm:px-8">
         <section
           className="flex min-h-[390px] flex-col items-center justify-center rounded-b-sm bg-cover bg-center px-7 py-16 text-center text-white sm:px-14"
           style={{
