@@ -7,6 +7,7 @@ import { Callback, Login } from '@/components/Auth'
 import { ContentPage } from '@/pages/content'
 import { TypographyPage } from '@/pages/example/TypographyPage'
 import { Home } from '@/pages/home'
+import { LandingPage } from '@/pages/landing'
 import { SettingsPage } from '@/pages/settings'
 import { GeothermalRoutes, OcotilloRoutes, ST2Routes } from '@/routes'
 import { settings } from '@/settings'
@@ -15,6 +16,7 @@ const App: React.FC = () => (
   <BrowserRouter basename={settings.urlprefix}>
     <AppProviders>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route
           path="/analytics-disclosure"
           element={
@@ -48,7 +50,6 @@ const App: React.FC = () => (
             </Authenticated>
           }
         >
-          <Route index element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route
             path="/about"
