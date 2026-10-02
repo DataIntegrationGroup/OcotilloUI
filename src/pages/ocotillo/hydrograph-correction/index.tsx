@@ -70,12 +70,17 @@ import {
   normalizePointId,
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
+  type HydrographPoint,
   type HydrographRange,
   ParsedHydrographUpload,
 } from '@/components/Hydrographs/hydrographCorrection'
 import {
+  MAX_POINTS_PER_BLOCK,
   parseOverlapConflict,
+  publishInBatches,
+  type PublishTally,
   splitAroundPublishedBlocks,
+  type PublishedBlockResult,
   type PublishedBlockSpan,
   type PublishOverlapMode,
 } from '@/components/Hydrographs/publishOverlap'
@@ -219,6 +224,9 @@ export const HydrographCorrectionPage = () => {
     blocks: PublishedBlockSpan[]
     args: HydrographPublishArgs
     deploymentId: number | undefined
+    // What earlier batches of the same publish already wrote; `args` then
+    // holds only the points still to go.
+    published: PublishTally
   } | null>(null)
   const [pendingDeploymentChoice, setPendingDeploymentChoice] = useState<{
     candidates: DeploymentLike[]
@@ -497,7 +505,7 @@ export const HydrographCorrectionPage = () => {
       method: 'post',
       payload,
     })
-    return data as { block?: { id?: number }; observation_count?: number }
+    return data as PublishedBlockResult
   }
 
   const publishingWellName = selectedWell?.name ?? 'the selected well'
@@ -512,16 +520,55 @@ export const HydrographCorrectionPage = () => {
       invalidates: ['list'],
     })
 
-  const applyPublishSuccess = (
-    data: { block?: { id?: number }; observation_count?: number },
-    args: HydrographPublishArgs
-  ) => {
+  // Writes the runs as consecutive blocks of at most MAX_POINTS_PER_BLOCK
+  // points each, keeping the pinned notice on which batch is being written.
+  const writeBatches = (
+    args: HydrographPublishArgs,
+    runs: readonly HydrographPoint[][],
+    replaceOverlapping: boolean,
+    deploymentId: number | undefined,
+    tally: PublishTally
+  ) =>
+    publishInBatches(
+      runs,
+      (batch) =>
+        postCorrectedBlock(
+          { ...args, measurements: batch },
+          replaceOverlapping,
+          deploymentId
+        ),
+      tally,
+      (index, total) =>
+        setPublishProgress({
+          wellName: publishingWellName,
+          ...(total > 1
+            ? {
+                detail: `Writing batch ${index + 1} of ${total} (up to ${MAX_POINTS_PER_BLOCK.toLocaleString()} points each). This can take several minutes; keep this tab open.`,
+              }
+            : {}),
+        })
+    )
+
+  const finishPublish = (tally: PublishTally, skippedCount: number) => {
     setPublishSuccess({
-      blockIds: data.block?.id != null ? [data.block.id] : [],
-      count: data.observation_count ?? args.measurements.length,
-      skippedCount: 0,
+      blockIds: tally.blockIds,
+      count: tally.count,
+      skippedCount,
       wellName: selectedWell?.name ?? '',
     })
+    if (tally.count > 0) invalidateStoredSeries()
+  }
+
+  // Earlier batches stay published when a later one fails, so the message
+  // says exactly what was written before it stopped.
+  const failPartway = (tally: PublishTally, reason: string) => {
+    if (tally.count === 0) {
+      failPublish(reason)
+      return
+    }
+    failPublish(
+      `Published ${tally.count} observations (${tally.blockIds.length === 1 ? 'block' : 'blocks'} ${tally.blockIds.join(', ')}) before stopping: ${reason}`
+    )
     invalidateStoredSeries()
   }
 
@@ -552,30 +599,46 @@ export const HydrographCorrectionPage = () => {
       if (covering.length === 1) deploymentId = covering[0].id as number
     }
 
+    const tally: PublishTally = { blockIds: [], count: 0 }
     setPublishProgress({ wellName: publishingWellName })
     try {
-      applyPublishSuccess(
-        await postCorrectedBlock(args, false, deploymentId),
-        args
+      const result = await writeBatches(
+        args,
+        [args.measurements],
+        false,
+        deploymentId,
+        tally
       )
-    } catch (error) {
+      if (result.ok) {
+        finishPublish(tally, 0)
+        return
+      }
+
+      const { error, remaining } = result
       if (axios.isAxiosError(error) && error.response?.status === 409) {
-        // Nothing was written: the server checks for overlap before any
-        // insert, so the user can still choose how to resolve it.
+        // Nothing in the rejected batch was written: the server checks for
+        // overlap before any insert. Earlier batches did not overlap and
+        // stay published; the choice is put to the user for the rest.
+        if (tally.count > 0) invalidateStoredSeries()
         setPendingOverlap({
           blocks: parseOverlapConflict(error.response.data),
-          args,
+          args: { ...args, measurements: remaining },
           deploymentId,
+          published: tally,
         })
         return
       }
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
+      if (
+        tally.count === 0 &&
+        axios.isAxiosError(error) &&
+        error.response?.status === 404
+      ) {
         failPublish(
           'The transducer block upload endpoint is not available yet — see docs/hydrograph-correction-upload-contract.md.'
         )
         return
       }
-      failPublish(getApiErrorMessage(error, 'Publishing failed.'))
+      failPartway(tally, getApiErrorMessage(error, 'Publishing failed.'))
     } finally {
       setPublishProgress(null)
     }
@@ -627,79 +690,76 @@ export const HydrographCorrectionPage = () => {
 
   // Publishes only the points outside the already-published blocks. What is
   // left can sit on both sides of a published block, and one block may not
-  // span another, so each contiguous run is published as its own block.
+  // span another, so each contiguous run is published as its own block (or
+  // several, when a run is longer than one request takes).
   const publishIgnoringOverlap = async (
     args: HydrographPublishArgs,
     blocks: PublishedBlockSpan[],
-    deploymentId: number | undefined
+    deploymentId: number | undefined,
+    tally: PublishTally
   ) => {
     const { runs, skippedCount } = splitAroundPublishedBlocks(
       args.measurements,
       blocks
     )
-    const blockIds: number[] = []
-    let count = 0
 
+    setPublishProgress({ wellName: publishingWellName })
     try {
-      for (const [index, run] of runs.entries()) {
-        setPublishProgress({
-          wellName: publishingWellName,
-          ...(runs.length > 1
-            ? {
-                detail: `Writing block ${index + 1} of ${runs.length}. This can take several minutes; keep this tab open.`,
-              }
-            : {}),
-        })
-        const data = await postCorrectedBlock(
-          { ...args, measurements: run },
-          false,
-          deploymentId
-        )
-        if (data.block?.id != null) blockIds.push(data.block.id)
-        count += data.observation_count ?? run.length
+      const result = await writeBatches(args, runs, false, deploymentId, tally)
+      if (result.ok) {
+        finishPublish(tally, skippedCount)
+        return
       }
-    } catch (error) {
       // A 409 here means the stored series changed after the overlap was
       // detected, or unblocked readings sit in the gap; the server says which.
-      const reason = getApiErrorMessage(error, 'publishing failed')
-      failPublish(
-        blockIds.length > 0
-          ? `Published ${blockIds.length} of ${runs.length} blocks (${blockIds.join(', ')}) before stopping: ${reason}.`
-          : `Publishing failed: ${reason}.`
-      )
-      if (blockIds.length > 0) invalidateStoredSeries()
-      return
+      failPartway(tally, getApiErrorMessage(result.error, 'Publishing failed.'))
     } finally {
       setPublishProgress(null)
     }
+  }
 
-    setPublishSuccess({
-      blockIds,
-      count,
-      skippedCount,
-      wellName: selectedWell?.name ?? '',
-    })
-    if (blockIds.length > 0) invalidateStoredSeries()
+  // Backing out still has to report any batches written before the overlap,
+  // or they would be published without a word.
+  const cancelOverlap = () => {
+    const published = pendingOverlap?.published
+    setPendingOverlap(null)
+    if (published && published.count > 0) {
+      failPartway(
+        published,
+        'the rest overlaps data already published and was not written.'
+      )
+    }
   }
 
   const resolveOverlap = async (overlapMode: PublishOverlapMode) => {
     if (!pendingOverlap) return
-    const { args, blocks, deploymentId } = pendingOverlap
+    const { args, blocks, deploymentId, published } = pendingOverlap
     setPendingOverlap(null)
+    // Carry on the tally of any batches written before the overlap.
+    const tally: PublishTally = {
+      blockIds: [...published.blockIds],
+      count: published.count,
+    }
 
     if (overlapMode === 'ignore') {
-      await publishIgnoringOverlap(args, blocks, deploymentId)
+      await publishIgnoringOverlap(args, blocks, deploymentId, tally)
       return
     }
 
     setPublishProgress({ wellName: publishingWellName })
     try {
-      applyPublishSuccess(
-        await postCorrectedBlock(args, true, deploymentId),
-        args
+      const result = await writeBatches(
+        args,
+        [args.measurements],
+        true,
+        deploymentId,
+        tally
       )
-    } catch (error) {
-      failPublish(getApiErrorMessage(error, 'Publishing failed.'))
+      if (result.ok) {
+        finishPublish(tally, 0)
+        return
+      }
+      failPartway(tally, getApiErrorMessage(result.error, 'Publishing failed.'))
     } finally {
       setPublishProgress(null)
     }
@@ -1120,7 +1180,7 @@ export const HydrographCorrectionPage = () => {
 
       <Dialog
         open={Boolean(pendingOverlap)}
-        onClose={() => setPendingOverlap(null)}
+        onClose={cancelOverlap}
         maxWidth="sm"
         fullWidth
       >
@@ -1129,8 +1189,10 @@ export const HydrographCorrectionPage = () => {
           <Stack spacing={1.5}>
             <Typography variant="body2">
               The corrected series overlaps data already published to{' '}
-              <strong>{publishingWellName}</strong>. Nothing has been written
-              yet.
+              <strong>{publishingWellName}</strong>.{' '}
+              {pendingOverlap?.published.count
+                ? `${pendingOverlap.published.count} observations from earlier batches were already published and stay published; the choice below applies to the remaining ${pendingOverlap.args.measurements.length}.`
+                : 'Nothing has been written yet.'}
             </Typography>
             {pendingOverlap?.blocks.length ? (
               <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
@@ -1149,8 +1211,9 @@ export const HydrographCorrectionPage = () => {
             )}
             <Typography variant="body2">
               <strong>Overwrite existing points</strong> deletes those blocks
-              and their observations, then publishes the full corrected series,
-              in one transaction.
+              and their observations, then publishes the corrected series, in
+              one transaction per batch of up to{' '}
+              {MAX_POINTS_PER_BLOCK.toLocaleString()} points.
             </Typography>
             <Typography variant="body2">
               <strong>Ignore already published points</strong> keeps the stored
@@ -1163,7 +1226,7 @@ export const HydrographCorrectionPage = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPendingOverlap(null)}>Cancel</Button>
+          <Button onClick={cancelOverlap}>Cancel</Button>
           <Button
             variant="outlined"
             disabled={!pendingOverlap?.blocks.length}

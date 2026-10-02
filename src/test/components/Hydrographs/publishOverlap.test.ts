@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
+  chunkMeasurements,
+  MAX_POINTS_PER_BLOCK,
   parseOverlapConflict,
+  publishInBatches,
+  type PublishTally,
   splitAroundPublishedBlocks,
   type PublishedBlockSpan,
 } from '@/components/Hydrographs/publishOverlap'
@@ -132,3 +136,108 @@ describe('splitAroundPublishedBlocks', () => {
     ).toEqual({ runs: [], skippedCount: 2 })
   })
 })
+
+describe('chunkMeasurements', () => {
+  // One reading a minute from midnight UTC.
+  const minutes = (count: number) =>
+    Array.from({ length: count }, (_, index) => ({
+      time: new Date(Date.UTC(2024, 0, 1, 0, index)),
+      value: 10,
+    }))
+
+  it('caps each publish request at 5,000 points', () => {
+    expect(MAX_POINTS_PER_BLOCK).toBe(5000)
+    const batches = chunkMeasurements(minutes(12_001))
+    expect(batches.map((batch) => batch.length)).toEqual([5000, 5000, 2001])
+  })
+
+  it('keeps a series that fits as one batch', () => {
+    expect(chunkMeasurements(minutes(5000))).toHaveLength(1)
+  })
+
+  it('writes batches in time order without losing or repeating a point', () => {
+    const series = minutes(7).reverse()
+    const batches = chunkMeasurements(series, 3)
+    expect(batches.flat().map((p) => p.time.getTime())).toEqual(
+      minutes(7).map((p) => p.time.getTime())
+    )
+  })
+
+  it('never splits readings that share a timestamp across two blocks', () => {
+    const series = [
+      point('2024-01-01T00:00:00Z'),
+      point('2024-01-01T00:01:00Z'),
+      point('2024-01-01T00:01:00Z', 11),
+      point('2024-01-01T00:02:00Z'),
+    ]
+    expect(chunkMeasurements(series, 2).map((batch) => batch.length)).toEqual([
+      3, 1,
+    ])
+  })
+
+  it('has nothing to write for an empty series', () => {
+    expect(chunkMeasurements([])).toEqual([])
+  })
+})
+
+describe('publishInBatches', () => {
+  const series = (count: number) =>
+    Array.from({ length: count }, (_, index) => ({
+      time: new Date(Date.UTC(2024, 0, 1, 0, index)),
+      value: 10,
+    }))
+
+  const emptyTally = (): PublishTally => ({ blockIds: [], count: 0 })
+
+  it('writes every batch as its own block and tallies them', async () => {
+    let nextId = 100
+    const post = vi.fn(async (batch: unknown[]) => ({
+      block: { id: nextId++ },
+      observation_count: batch.length,
+    }))
+    const onBatch = vi.fn()
+    const tally = emptyTally()
+
+    const result = await publishInBatches([series(7)], post, tally, onBatch, 3)
+
+    expect(result).toEqual({ ok: true })
+    expect(post.mock.calls.map(([batch]) => batch.length)).toEqual([3, 3, 1])
+    expect(onBatch.mock.calls).toEqual([
+      [0, 3],
+      [1, 3],
+      [2, 3],
+    ])
+    expect(tally).toEqual({ blockIds: [100, 101, 102], count: 7 })
+  })
+
+  it('splits each run on its own, never joining two runs into one block', async () => {
+    const post = vi.fn(async (batch: unknown[]) => ({
+      observation_count: batch.length,
+    }))
+
+    await publishInBatches([series(4), series(2)], post, emptyTally(), undefined, 3)
+
+    expect(post.mock.calls.map(([batch]) => batch.length)).toEqual([3, 1, 2])
+  })
+
+  it('stops at the first failure and hands back what was not written', async () => {
+    const conflict = new Error('409')
+    const post = vi
+      .fn()
+      .mockResolvedValueOnce({ block: { id: 1 }, observation_count: 3 })
+      .mockRejectedValueOnce(conflict)
+    const tally = emptyTally()
+    const points = series(7)
+
+    const result = await publishInBatches([points], post, tally, undefined, 3)
+
+    expect(post).toHaveBeenCalledTimes(2)
+    expect(tally).toEqual({ blockIds: [1], count: 3 })
+    expect(result).toEqual({
+      ok: false,
+      error: conflict,
+      remaining: points.slice(3),
+    })
+  })
+})
+

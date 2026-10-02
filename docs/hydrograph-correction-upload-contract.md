@@ -115,12 +115,32 @@ Authorization: Bearer <OAuth2 access token>   (same OAuth2AuthorizationCodeBeare
   deletion). The UI always makes the first request without the flag and
   surfaces the conflict to the user before retrying.
 
+### Client batching
+
+A single ~47,000-point block ran for several minutes and then failed with a
+network error (BDMS-1406), so the workbench never sends more than
+`MAX_POINTS_PER_BLOCK` = **5,000** measurements in one request. A longer
+corrected series is written as consecutive blocks of up to 5,000 points, in
+time order, one request each:
+
+- Readings that share a timestamp stay in the same batch, so adjacent blocks
+  never meet at one instant (block spans are closed, so they would overlap).
+- Each batch is its own transaction. If one fails, the earlier batches stay
+  published, and the UI reports how many observations and which blocks were
+  written before it stopped.
+- If a later batch hits an overlap (409), the overlap choice is offered for the
+  points not yet written; the earlier batches count toward the final result.
+- `replace_overlapping=true` is sent per batch, so "overwrite" replaces
+  existing blocks one batch at a time rather than in a single transaction.
+- A chunked series becomes several blocks, so reviewing it means approving
+  each block.
+
 ### Validation rules (422 on violation)
 
 | Rule | Detail |
 |---|---|
 | Non-empty | `measurements` must contain at least 1 row |
-| Batch cap | ≤ 100,000 rows per request (one request per logger file is expected; a 90-day 6-hour file is 360 rows) |
+| Batch cap | ≤ 100,000 rows per request server-side. The workbench sends at most **5,000** per request (see [Client batching](#client-batching)) |
 | Timestamps | ISO 8601 with explicit offset; strictly increasing (no duplicates) |
 | Values | finite numbers; ft bgs; server may enforce a plausibility range per well (e.g. non-negative, less than well depth when known) |
 | Enums | `release_status`, `review_status` must be valid enum members |
