@@ -1153,6 +1153,10 @@ export interface SeriesChangeSummary {
   changedCount: number
   maxAbsChange: number
   maxChangeTime: Date | null
+  // The span the changed readings cover, so the affected part of the record
+  // can be named and shown. Null when nothing changed.
+  firstChangeTime: Date | null
+  lastChangeTime: Date | null
   addedCount: number
   removedCount: number
 }
@@ -1170,6 +1174,8 @@ export const summarizeSeriesChange = (
   let changedCount = 0
   let maxAbsChange = 0
   let maxChangeTime: Date | null = null
+  let firstChangeTime: Date | null = null
+  let lastChangeTime: Date | null = null
   let addedCount = 0
 
   for (const point of next) {
@@ -1181,7 +1187,15 @@ export const summarizeSeriesChange = (
       continue
     }
     const change = Math.abs(point.value - before)
-    if (change > tolerance) changedCount += 1
+    if (change > tolerance) {
+      changedCount += 1
+      if (!firstChangeTime || point.time < firstChangeTime) {
+        firstChangeTime = point.time
+      }
+      if (!lastChangeTime || point.time > lastChangeTime) {
+        lastChangeTime = point.time
+      }
+    }
     if (change > maxAbsChange) {
       maxAbsChange = change
       maxChangeTime = point.time
@@ -1196,6 +1210,8 @@ export const summarizeSeriesChange = (
     changedCount,
     maxAbsChange: Number(maxAbsChange.toFixed(4)),
     maxChangeTime: changedCount > 0 ? maxChangeTime : null,
+    firstChangeTime,
+    lastChangeTime,
     addedCount,
     removedCount,
   }

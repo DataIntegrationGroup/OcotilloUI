@@ -645,6 +645,10 @@ const WorkbenchSection = ({
 const formatSignedFeet = (value: number) =>
   `${value > 0 ? '+' : ''}${value.toFixed(2)} ft`
 
+// The span a recalculation changes, for the preview and the outcome notice.
+const describeChangeSpan = (change: SeriesChangeSummary) =>
+  `${change.firstChangeTime?.toLocaleString() ?? ''} to ${change.lastChangeTime?.toLocaleString() ?? ''}`
+
 // Listing every interval would swamp the controls on a multi-year record;
 // the first few show the pattern and the count covers the rest.
 const MAX_PREVIEW_BINS = 5
@@ -698,6 +702,12 @@ const DriftCorrectionPreview = ({
                 {change.addedCount > 0
                   ? ` ${change.addedCount} readings removed by earlier edits come back.`
                   : ''}
+              </Typography>
+            ) : null}
+            {change?.firstChangeTime && change.lastChangeTime ? (
+              <Typography variant="body2">
+                Affected range: {describeChangeSpan(change)}, shaded on the
+                chart.
               </Typography>
             ) : null}
             {enabling && rampedBins.length > 0 ? (
@@ -777,6 +787,61 @@ const DriftCorrectionPreview = ({
             Cancel
           </Button>
         </Stack>
+      </Stack>
+    </Alert>
+  )
+}
+
+// What applying a drift setting did, kept on screen after the preview closes
+// so there is no doubt whether the data changed.
+interface DriftCorrectionOutcomeState {
+  enabled: boolean
+  readingCount: number
+  change: SeriesChangeSummary | null
+  // Whether any interval had a manual inside the record at both ends; with
+  // none there is nothing to ramp between, so turning drift on moves nothing.
+  hadRampedInterval: boolean
+}
+
+const DriftCorrectionOutcome = ({
+  outcome,
+  onDismiss,
+}: {
+  outcome: DriftCorrectionOutcomeState
+  onDismiss: () => void
+}) => {
+  const { enabled, readingCount, change, hadRampedInterval } = outcome
+  const changed = (change?.changedCount ?? 0) > 0
+
+  return (
+    <Alert
+      severity={changed ? 'success' : 'info'}
+      variant="outlined"
+      onClose={onDismiss}
+      data-testid="drift-correction-outcome"
+    >
+      <Stack spacing={0.5}>
+        <Typography variant="subtitle2">
+          Drift correction {enabled ? 'on' : 'off'}:{' '}
+          {changed ? 'applied' : 'applied, no readings changed'}
+        </Typography>
+        {changed && change ? (
+          <Typography variant="body2">
+            {change.changedCount} of {readingCount} readings moved, by up to{' '}
+            {change.maxAbsChange.toFixed(2)} ft, from{' '}
+            {describeChangeSpan(change)}.{' '}
+            {enabled
+              ? 'Each interval now ramps between its two manual measurements, so the trace passes through both.'
+              : 'Each interval is back on the sensor depth at its closing manual measurement.'}
+          </Typography>
+        ) : (
+          <Typography variant="body2">
+            The series was recalculated and came out the same.{' '}
+            {enabled && !hadRampedInterval
+              ? 'No interval has a manual measurement inside the record at both ends, so there is no drift to correct.'
+              : 'The sensor depth is the same at both ends of every interval.'}
+          </Typography>
+        )}
       </Stack>
     </Alert>
   )
@@ -889,6 +954,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [pendingCorrectDrift, setPendingCorrectDrift] = useState<
     boolean | null
   >(null)
+  // The result of the last drift setting applied, until dismissed or
+  // superseded.
+  const [driftOutcome, setDriftOutcome] =
+    useState<DriftCorrectionOutcomeState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [qualityWarnings, setQualityWarnings] = useState<string[]>([])
   const [fileName, setFileName] = useState<string | null>(initialFileName ?? null)
@@ -1210,6 +1279,16 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
   const applyDriftPreview = () => {
     if (pendingCorrectDrift === null) return
+    // The preview already measured the candidate against the working series,
+    // which is exactly what applying replaces it with.
+    if (driftPreview && !driftPreview.error) {
+      setDriftOutcome({
+        enabled: pendingCorrectDrift,
+        readingCount: driftPreview.measurements.length,
+        change: driftPreview.change,
+        hadRampedInterval: driftPreview.rampedBins.length > 0,
+      })
+    }
     // The derive effect picks up the new setting and rebuilds the working
     // series and correction log from the upload.
     setCorrectDrift(pendingCorrectDrift)
@@ -1242,6 +1321,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       zoomWindowRef.current = null
       setIsZoomed(false)
       setValueWindows({})
+      setDriftOutcome(null)
       chartRef.current
         ?.getEchartsInstance()
         ?.dispatchAction({ type: 'dataZoom', ...FULL_ZOOM_WINDOW })
@@ -1560,6 +1640,21 @@ export const OcotilloHydrographCorrectionWorkbench = ({
           type: 'dashed',
         },
         itemStyle: { color: theme.palette.warning.main },
+        // Shades the span the staged change would move.
+        markArea: {
+          silent: true,
+          itemStyle: { color: alpha(theme.palette.warning.main, 0.1) },
+          data:
+            driftPreview?.change?.firstChangeTime &&
+            driftPreview.change.lastChangeTime
+              ? [
+                  [
+                    { xAxis: driftPreview.change.firstChangeTime },
+                    { xAxis: driftPreview.change.lastChangeTime },
+                  ],
+                ]
+              : [],
+        },
       },
     ]
 
@@ -2060,6 +2155,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const resetCorrections = () => {
     setCorrectDrift(false)
     setPendingCorrectDrift(null)
+    setDriftOutcome(null)
     setCorrectedMeasurements(rawUploadedMeasurements)
     setCorrectionLog(baselineCorrectionLog(uploaded))
     clearBrushSelection()
@@ -2304,13 +2400,16 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                             <Checkbox
                               size="small"
                               checked={pendingCorrectDrift ?? correctDrift}
-                              onChange={(event) =>
+                              onChange={(event) => {
+                                // A new staged change supersedes the last
+                                // outcome.
+                                setDriftOutcome(null)
                                 setPendingCorrectDrift(
                                   event.target.checked === correctDrift
                                     ? null
                                     : event.target.checked
                                 )
-                              }
+                              }}
                             />
                           }
                           label="Correct drift"
@@ -2333,6 +2432,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                             preview={driftPreview}
                             onApply={applyDriftPreview}
                             onCancel={() => setPendingCorrectDrift(null)}
+                          />
+                        ) : null}
+                        {driftOutcome ? (
+                          <DriftCorrectionOutcome
+                            outcome={driftOutcome}
+                            onDismiss={() => setDriftOutcome(null)}
                           />
                         ) : null}
                       </>
