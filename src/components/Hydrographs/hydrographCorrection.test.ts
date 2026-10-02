@@ -15,6 +15,7 @@ import {
   parseHydrographUpload,
   parseHydrographWorkbookUpload,
   removeOffsetsAndZeros,
+  removeReadingsInRange,
   removeSpuriousReflections,
   summarizeSeriesChange,
 } from './hydrographCorrection'
@@ -1006,5 +1007,41 @@ END OF DATA`)
       addedCount: 1,
       removedCount: 1,
     })
+  })
+
+  it('deletes the readings inside a range, bounds included', () => {
+    const day = (n: number, value: number) => ({
+      time: new Date(Date.UTC(2025, 0, n)),
+      value,
+    })
+    const measurements = [
+      day(1, 42),
+      day(2, 99),
+      day(3, 98),
+      day(4, 42.1),
+    ]
+
+    const kept = removeReadingsInRange(measurements, {
+      startTime: new Date(Date.UTC(2025, 0, 2)),
+      endTime: new Date(Date.UTC(2025, 0, 3)),
+    })
+
+    expect(kept.map((point) => point.value)).toEqual([42, 42.1])
+    // The input is left alone so Reset to Original can restore it.
+    expect(measurements).toHaveLength(4)
+  })
+
+  it('deletes nothing when the range holds no reading', () => {
+    const measurements = [
+      { time: new Date(Date.UTC(2025, 0, 1)), value: 42 },
+      { time: new Date(Date.UTC(2025, 0, 5)), value: 42.1 },
+    ]
+
+    expect(
+      removeReadingsInRange(measurements, {
+        startTime: new Date(Date.UTC(2025, 0, 2)),
+        endTime: new Date(Date.UTC(2025, 0, 3)),
+      })
+    ).toEqual(measurements)
   })
 })

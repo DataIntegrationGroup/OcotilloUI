@@ -1560,6 +1560,16 @@ export const interpolateSpuriousReflections = (
   })
 }
 
+// Manual deletion: drop every reading inside the range, for bad data no
+// detector recognizes (sensor out of the well, a logger fault). The range is
+// required — unlike the other edits there is no whole-trace form, so a
+// missing selection can never empty the series.
+export const removeReadingsInRange = (
+  measurements: HydrographPoint[],
+  range: HydrographRange
+): HydrographPoint[] =>
+  measurements.filter((point) => !includesTime(point.time, range))
+
 export const applyOffsetToRange = (
   measurements: HydrographPoint[],
   offset: number,

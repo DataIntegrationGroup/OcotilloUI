@@ -49,6 +49,7 @@ import {
   Clear,
   CloudUpload,
   DeleteForever,
+  DeleteOutline,
   ExpandMore,
   FitScreen,
   HighlightAlt,
@@ -73,6 +74,7 @@ import {
   normalizePointId,
   parseObservationTimestamp,
   removeOffsetsAndZeros,
+  removeReadingsInRange,
   removeSpuriousReflections,
   summarizeSeriesChange,
   type ReflectionDetectionMethod,
@@ -874,6 +876,16 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null)
 
+  // Deleting brushed readings from the working series. Local and undone by
+  // Reset to Original, so a plain confirmation is enough — unlike the typed
+  // one guarding stored data below.
+  const [isRemoveReadingsDialogOpen, setIsRemoveReadingsDialogOpen] =
+    useState(false)
+  // What the last deletion removed, until dismissed or superseded.
+  const [removeReadingsOutcome, setRemoveReadingsOutcome] = useState<
+    string | null
+  >(null)
+
   // Progressive disclosure. Simple mode is the pressure-transducer workflow
   // only, so the acoustic-logger tooling (reflections) and its tuning knobs
   // are gated behind the higher modes.
@@ -1177,6 +1189,22 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     setPendingCorrectDrift(null)
   }
 
+  // How many working readings the brushed selection would delete, counted
+  // with the same helper that removes them so the prompt cannot disagree
+  // with the result.
+  const selectedReadingCount = useMemo(
+    () =>
+      selectedRange
+        ? correctedMeasurements.length -
+          removeReadingsInRange(correctedMeasurements, selectedRange).length
+        : 0,
+    [correctedMeasurements, selectedRange]
+  )
+  // Deleting every reading would leave nothing to correct or publish.
+  const selectionCoversEveryReading =
+    selectedReadingCount > 0 &&
+    selectedReadingCount === correctedMeasurements.length
+
   const selectedRangeSuffix = () =>
     selectedRange
       ? `, ${selectedRange.startTime.toISOString()} to ${selectedRange.endTime.toISOString()}`
@@ -1185,6 +1213,8 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   useEffect(() => {
     setUploaded(initialUpload ?? null)
     setPendingCorrectDrift(null)
+    setIsRemoveReadingsDialogOpen(false)
+    setRemoveReadingsOutcome(null)
     setFileName(initialFileName ?? null)
     // Written inline rather than through applySelectedRange so this effect
     // does not take a dependency that changes every render.
@@ -1923,6 +1953,23 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     ])
   }
 
+  const confirmRemoveSelectedReadings = () => {
+    setIsRemoveReadingsDialogOpen(false)
+    if (!selectedRange || selectedReadingCount === 0) return
+
+    const remaining = correctedMeasurements.length - selectedReadingCount
+    setCorrectedMeasurements((current) =>
+      removeReadingsInRange(current, selectedRange)
+    )
+    setCorrectionLog((log) => [
+      ...log,
+      `delete_readings (${selectedReadingCount} readings${selectedRangeSuffix()})`,
+    ])
+    setRemoveReadingsOutcome(
+      `Deleted ${selectedReadingCount} reading${selectedReadingCount === 1 ? '' : 's'} between ${selectedRange.startTime.toLocaleString()} and ${selectedRange.endTime.toLocaleString()}. ${remaining} remain${remaining === 1 ? 's' : ''} to publish; the dashed raw trace still shows what was removed.`
+    )
+  }
+
   const cleanSpuriousReflections = () => {
     if (correctedMeasurements.length === 0) return
 
@@ -1989,6 +2036,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     setPendingCorrectDrift(null)
     setCorrectedMeasurements(rawUploadedMeasurements)
     setCorrectionLog(baselineCorrectionLog(uploaded))
+    setRemoveReadingsOutcome(null)
     clearBrushSelection()
     setSelectedManualOption(null)
     setError(null)
@@ -2286,6 +2334,36 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       around it and the trace after it is re-leveled. Zero
                       readings (sensor out of water) are dropped.
                     </Typography>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      startIcon={<DeleteOutline />}
+                      onClick={() => setIsRemoveReadingsDialogOpen(true)}
+                      disabled={
+                        selectedReadingCount === 0 ||
+                        selectionCoversEveryReading
+                      }
+                    >
+                      Delete Selected Readings...
+                    </Button>
+                    <Typography variant="caption" color="text.secondary">
+                      {!selectedRange
+                        ? 'Select a range on the chart to delete the invalid readings inside it before correcting and publishing.'
+                        : selectionCoversEveryReading
+                          ? 'The selection covers every reading. Narrow it — deleting them all would leave nothing to publish.'
+                          : `${selectedReadingCount} of ${correctedMeasurements.length} readings fall inside the selection. Deleting removes them from this session only; Reset to Original restores them.`}
+                    </Typography>
+                    {removeReadingsOutcome ? (
+                      <Alert
+                        severity="success"
+                        variant="outlined"
+                        onClose={() => setRemoveReadingsOutcome(null)}
+                        data-testid="remove-readings-outcome"
+                      >
+                        {removeReadingsOutcome}
+                      </Alert>
+                    ) : null}
                     {showReflectionTools ? (
                       <>
                         <TextField
@@ -2831,6 +2909,44 @@ export const OcotilloHydrographCorrectionWorkbench = ({
           </Typography>
         </Stack>
       </Box>
+
+      <Dialog
+        open={isRemoveReadingsDialogOpen}
+        onClose={() => setIsRemoveReadingsDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete selected readings?</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5}>
+            <Typography variant="body2">
+              This deletes {selectedReadingCount} of{' '}
+              {correctedMeasurements.length} readings from the corrected trace,
+              between {selectedRange?.startTime.toLocaleString() ?? '—'} and{' '}
+              {selectedRange?.endTime.toLocaleString() ?? '—'}. They will not
+              be published.
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              The uploaded file and data already stored in Ocotillo are not
+              changed. Reset to Original restores the readings.
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsRemoveReadingsDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            startIcon={<DeleteOutline />}
+            onClick={confirmRemoveSelectedReadings}
+          >
+            Delete {selectedReadingCount} Reading
+            {selectedReadingCount === 1 ? '' : 's'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={isDeleteDialogOpen}

@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { OcotilloHydrographCorrectionWorkbench } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
+import type { ParsedHydrographUpload } from '@/components/Hydrographs/hydrographCorrection'
 
 const chartInstance = {
   dispatchAction: vi.fn(),
@@ -232,5 +233,133 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
       end: 100,
     })
     expect(screen.queryByText(/out of view/)).toBeNull()
+  })
+})
+
+describe('OcotilloHydrographCorrectionWorkbench deleting selected readings', () => {
+  // Five daily readings; the two in the middle are sensor-out-of-well junk.
+  const upload: ParsedHydrographUpload = {
+    pointId: 'TEST-0001',
+    detectedDelimiter: ',',
+    detectedValueColumn: 'Depth To Water',
+    detectedTimeColumn: 'Date Time',
+    valueKind: 'depth_to_water',
+    measurements: [42, 99, 98, 42.1, 42.2].map((value, index) => ({
+      time: new Date(day(index)),
+      value,
+    })),
+  }
+
+  const renderWithUpload = async () => {
+    const user = userEvent.setup()
+    const onPublish = vi.fn().mockResolvedValue(undefined)
+    render(
+      <OcotilloHydrographCorrectionWorkbench
+        thingName="TEST-0001"
+        manualObservations={[]}
+        transducerObservations={[]}
+        initialUpload={upload}
+        initialFileName="test.csv"
+        onPublish={onPublish}
+      />
+    )
+    await user.click(screen.getByText('Clean'))
+    return { user, onPublish }
+  }
+
+  const selectDays = (start: number, end: number) =>
+    emitChartEvent('brushSelected', {
+      batch: [{ areas: [{ coordRange: [day(start), day(end)] }] }],
+    })
+
+  const deleteButton = () =>
+    screen.getByRole('button', { name: 'Delete Selected Readings...' })
+
+  // The dialog hides the rest of the page from the accessibility tree until
+  // its exit transition finishes.
+  const dialogClosed = () =>
+    waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('needs a selection before anything can be deleted', async () => {
+    await renderWithUpload()
+
+    expect(deleteButton()).toHaveProperty('disabled', true)
+  })
+
+  it('refuses a selection that covers every reading', async () => {
+    await renderWithUpload()
+    selectDays(0, 4)
+
+    expect(deleteButton()).toHaveProperty('disabled', true)
+    expect(screen.getByText(/covers every reading/)).toBeTruthy()
+  })
+
+  it('keeps the readings when the prompt is cancelled', async () => {
+    const { user, onPublish } = await renderWithUpload()
+    selectDays(1, 2)
+
+    await user.click(deleteButton())
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText(/deletes 2 of 5 readings/)).toBeTruthy()
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    await dialogClosed()
+
+    expect(screen.queryByTestId('remove-readings-outcome')).toBeNull()
+    await user.click(
+      screen.getByRole('button', { name: 'Publish to Ocotillo' })
+    )
+    expect(onPublish.mock.calls[0][0].measurements).toHaveLength(5)
+  })
+
+  it('deletes after confirmation, reports the result, and publishes the rest', async () => {
+    const { user, onPublish } = await renderWithUpload()
+    selectDays(1, 2)
+
+    await user.click(deleteButton())
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', {
+        name: 'Delete 2 Readings',
+      })
+    )
+    await dialogClosed()
+
+    expect(screen.getByTestId('remove-readings-outcome').textContent).toMatch(
+      /^Deleted 2 readings between .* 3 remain to publish/
+    )
+
+    await user.click(
+      screen.getByRole('button', { name: 'Publish to Ocotillo' })
+    )
+    const published = onPublish.mock.calls[0][0]
+    expect(
+      published.measurements.map((point: { value: number }) => point.value)
+    ).toEqual([42, 42.1, 42.2])
+    expect(published.corrections.at(-1)).toMatch(
+      /^delete_readings \(2 readings, /
+    )
+  })
+
+  it('restores deleted readings on reset', async () => {
+    const { user, onPublish } = await renderWithUpload()
+    selectDays(1, 2)
+    await user.click(deleteButton())
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', {
+        name: 'Delete 2 Readings',
+      })
+    )
+    await dialogClosed()
+
+    await user.click(screen.getByRole('button', { name: /Reset to Original/ }))
+
+    expect(screen.queryByTestId('remove-readings-outcome')).toBeNull()
+    await user.click(
+      screen.getByRole('button', { name: 'Publish to Ocotillo' })
+    )
+    expect(onPublish.mock.calls[0][0].measurements).toHaveLength(5)
   })
 })
