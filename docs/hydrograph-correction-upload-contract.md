@@ -71,6 +71,7 @@ Authorization: Bearer <OAuth2 access token>   (same OAuth2AuthorizationCodeBeare
     "corrections": [
       "convert_water_head (drift corrected)",
       "remove_offsets_zeros (threshold 0.25)",
+      "delete_readings (14 readings, 2025-02-20T00:00:00Z to 2025-02-23T12:00:00Z)",
       "shift (-1.25 ft, 2025-03-16T00:00:00Z to 2025-04-15T00:00:00Z)",
       "snap_to_manual (+0.42 ft to 2025-02-11T17:00:00Z, interpolated at the measurement time, collected by Joseph Beman (NMBGMR))"
     ],
