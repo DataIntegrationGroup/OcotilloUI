@@ -289,9 +289,7 @@ const ShowcaseRow = ({
   visual: ReactNode
   reverse?: boolean
 }) => (
-  <article
-    className={`grid items-center gap-8 border-t pt-10 lg:grid-cols-[0.9fr_1.1fr] ${reverse ? 'lg:grid-cols-[1.1fr_0.9fr]' : ''}`}
-  >
+  <article className="grid items-center gap-8 border-t pt-10 lg:grid-cols-2">
     <div className={reverse ? 'lg:order-2' : ''}>
       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
         {eyebrow}
@@ -308,82 +306,22 @@ const ShowcaseRow = ({
 )
 
 const PreviewWindow = ({ children }: { children: ReactNode }) => (
-  <div className="overflow-hidden rounded-lg border bg-card shadow-lg shadow-foreground/5">
-    <div className="flex h-7 items-center gap-1 border-b bg-muted px-3">
-      <i className="size-1.5 rounded-full bg-border" />
-      <i className="size-1.5 rounded-full bg-border" />
-      <i className="size-1.5 rounded-full bg-border" />
-    </div>
+  <div className="aspect-square w-full overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5">
     {children}
   </div>
 )
 const MapPreview = () => (
   <PreviewWindow>
-    <div className="grid h-56 gap-3 p-3 sm:grid-cols-[1.1fr_0.9fr]">
-      <div className="relative rounded-md bg-primary/10">
-        <i className="absolute left-1/4 top-1/3 size-3 rounded-full border-2 border-card bg-primary" />
-        <i className="absolute left-3/5 top-3/5 size-3 rounded-full border-2 border-card bg-bloom" />
-        <i className="absolute right-1/5 top-1/4 size-3 rounded-full border-2 border-card bg-primary" />
-      </div>
-      <div className="space-y-2">
-        <div className="h-2 w-3/4 rounded bg-foreground" />
-        <div className="h-1.5 w-11/12 rounded bg-border" />
-        <div className="h-1.5 w-3/5 rounded bg-border" />
-        <div className="rounded border p-2">
-          <strong className="block text-xs">WL-0433</strong>
-          <span className="text-[9px] text-muted-foreground">
-            Santa Ana Seep Spring
-          </span>
-        </div>
-        <div className="rounded border p-2">
-          <strong className="block text-xs">WL-1187</strong>
-          <span className="text-[9px] text-muted-foreground">
-            Corrales monitoring well
-          </span>
-        </div>
-      </div>
-    </div>
+    <img alt="" className="size-full object-cover" />
   </PreviewWindow>
 )
 const TablePreview = () => (
   <PreviewWindow>
-    <div className="space-y-1 p-4 text-[10px] text-muted-foreground">
-      {[
-        ['Parameter', 'Result', 'Unit'],
-        ['Water level', '42.6', 'ft'],
-        ['Specific conductance', '618', 'µS/cm'],
-        ['Temperature', '18.4', '°C'],
-        ['Sample date', '05/15/26', 'local'],
-      ].map((row, index) => (
-        <div
-          key={row[0]}
-          className={`grid grid-cols-[1.2fr_0.8fr_0.7fr] gap-2 border-b py-2 ${index === 0 ? 'font-semibold text-foreground' : ''}`}
-        >
-          {row.map((cell) => (
-            <span key={cell}>{cell}</span>
-          ))}
-        </div>
-      ))}
-    </div>
+    <img alt="" className="size-full object-cover" />
   </PreviewWindow>
 )
 const ChartPreview = () => (
   <PreviewWindow>
-    <div className="p-4">
-      <div className="h-2 w-3/5 rounded bg-foreground" />
-      <div className="mt-3 flex h-36 items-end gap-3 border-b bg-[repeating-linear-gradient(to_bottom,transparent_0_35px,hsl(var(--border))_36px_37px)] px-5 pt-4">
-        {['h-2/5', 'h-2/3', 'h-[88%]', 'h-1/2', 'h-3/4'].map(
-          (height, index) => (
-            <i
-              key={index}
-              className={`flex-1 rounded-t bg-primary ${height} ${index === 4 ? 'bg-bloom' : ''}`}
-            />
-          )
-        )}
-      </div>
-      <p className="mt-2 text-[10px] text-muted-foreground">
-        Water level trend · Santa Ana Seep Spring
-      </p>
-    </div>
+    <img alt="" className="size-full object-cover" />
   </PreviewWindow>
 )
