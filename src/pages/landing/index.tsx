@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { LandingTopbar } from '@/components/LandingTopbar'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -18,32 +17,29 @@ import {
 } from '@/components/ui/collapsible'
 import { AUTHENTIK_SIGNUP_URL } from '@/config/auth'
 import ocotilloImage from '@/img/ocotillo.jpeg'
+import waterWellImage from '@/img/ogs-water-well.svg'
+import ampImage from '@/img/ogs-amp-project-areas.svg'
+import waterElevationImage from '@/img/ogs-water-elevation.svg'
 
-const records = [
-  [
-    'WL-0433',
-    'Santa Ana Seep Spring',
-    'sampled May 15, 2026',
-    'Current',
-    'filterEmerald',
-    'Santa Fe Group aquifer · 35.4421° N, 106.8273° W',
-  ],
-  [
-    'WL-1187',
-    'Corrales monitoring well',
-    'sampled Apr 29, 2026',
-    'Review',
-    'secondary',
-    'Rio Grande basin · 35.2328° N, 106.6064° W',
-  ],
-  [
-    'WL-0902',
-    'Rio Rancho well',
-    'sampled May 03, 2026',
-    'Sampled',
-    'filter',
-    'Santa Fe Group aquifer · 35.2697° N, 106.7486° W',
-  ],
+const layers = [
+  {
+    id: 'water-well',
+    name: 'Water Well Field Operation',
+    image: waterWellImage,
+    alt: 'Water Well Field Operation QGIS screenshot placeholder',
+  },
+  {
+    id: 'amp-project-areas',
+    name: 'AMP project areas',
+    image: ampImage,
+    alt: 'AMP project areas QGIS screenshot placeholder',
+  },
+  {
+    id: 'water-elevation',
+    name: 'Water elevation',
+    image: waterElevationImage,
+    alt: 'Water elevation QGIS screenshot placeholder',
+  },
 ] as const
 
 const features = [
@@ -75,11 +71,9 @@ const faqs = [
 ] as const
 
 export const LandingPage = () => {
-  const [selectedRecordId, setSelectedRecordId] = useState<string>(
-    records[0][0]
-  )
-  const selectedRecord =
-    records.find(([id]) => id === selectedRecordId) ?? records[0]
+  const [selectedLayerId, setSelectedLayerId] = useState<string>(layers[0].id)
+  const selectedLayer =
+    layers.find(({ id }) => id === selectedLayerId) ?? layers[0]
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -115,92 +109,46 @@ export const LandingPage = () => {
         >
           <div className="lg:col-span-2">
             <h2 className="font-heading text-3xl font-bold tracking-tight">
-              Explore connected records
+              Explore OGS layers
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Explore connected monitoring layers and nearby well records in one
-              place.
+              Explore connected OGS layers in QGIS.
             </p>
           </div>
           <Card className="overflow-hidden bg-brand-50 p-0">
-            <div className="flex items-center gap-2 border-b bg-card p-3">
-              <Badge variant="filter">184 points</Badge>
-              <Button variant="outline" size="xs">
-                All counties
-              </Button>
-              <Button variant="outline" size="xs">
-                All types
-              </Button>
-            </div>
-            <div className="relative h-[390px] overflow-hidden bg-[radial-gradient(ellipse_at_52%_35%,hsl(var(--brand-200)/.75),transparent_48%),linear-gradient(145deg,hsl(var(--sand)),hsl(var(--brand-100)))]">
-              <div className="absolute left-1/2 top-[-30px] h-[470px] w-2.5 rotate-[17deg] rounded-full bg-primary/60" />
-              {[
-                ['left-[26%] top-[33%]', '1'],
-                ['left-[57%] top-[22%] bg-bloom', '2'],
-                ['left-[69%] top-[58%]', '3'],
-                ['left-[38%] top-[72%] bg-success', '4'],
-              ].map(([position, label]) => (
-                <button
-                  key={label}
-                  type="button"
-                  aria-label={`Map point ${label}`}
-                  className={`absolute ${position} z-10 flex size-6 -rotate-45 items-center justify-center rounded-full rounded-bl-none border-[3px] border-white bg-primary text-[10px] text-white shadow`}
-                  onClick={() =>
-                    setSelectedRecordId(
-                      records[(Number(label) - 1) % records.length][0]
-                    )
-                  }
-                >
-                  <span className="rotate-45">{label}</span>
-                </button>
-              ))}
-              <div className="absolute bottom-3 left-3 rounded-md border bg-card px-3 py-2 text-[11px] shadow-sm">
-                <span className="mr-1 inline-block size-2 rounded-full bg-primary" />{' '}
-                Monitoring point{' '}
-                <span className="mx-2 inline-block size-2 rounded-full bg-bloom" />{' '}
-                Review needed
-              </div>
-            </div>
+            <img
+              src={selectedLayer.image}
+              alt={selectedLayer.alt}
+              className="h-[390px] w-full object-contain"
+            />
           </Card>
           <Card className="p-5">
             <CardHeader className="p-0">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-                Sample workspace
+                Layer preview
               </p>
               <CardTitle className="font-heading text-2xl">
-                Nearby records
+                Available layers
               </CardTitle>
-              <CardDescription>
-                Sandoval County · Rio Grande basin
-              </CardDescription>
+              <CardDescription>Preview OGS layers in QGIS</CardDescription>
             </CardHeader>
             <CardContent className="mt-5 space-y-2 p-0">
-              {records.map((record) => (
+              {layers.map((layer) => (
                 <button
-                  key={record[0]}
+                  key={layer.id}
                   type="button"
-                  className={`w-full rounded-md border p-3 text-left transition-colors hover:border-primary hover:bg-primary/5 ${selectedRecord[0] === record[0] ? 'border-primary bg-primary/5' : 'border-border'}`}
-                  onClick={() => setSelectedRecordId(record[0])}
+                  aria-pressed={selectedLayer.id === layer.id}
+                  className={`w-full rounded-md border p-3 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selectedLayer.id === layer.id ? 'border-primary bg-primary/5' : 'border-border'}`}
+                  onClick={() => setSelectedLayerId(layer.id)}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <strong className="font-heading text-sm">
-                      {record[0]}
-                    </strong>
-                    <Badge variant={record[4]}>{record[3]}</Badge>
-                  </div>
-                  <small className="mt-1 block text-xs text-muted-foreground">
-                    {record[1]} · {record[2]}
-                  </small>
+                  <strong className="font-heading text-sm">{layer.name}</strong>
                 </button>
               ))}
-              <div className="border-t pt-4 text-xs">
-                <span className="text-muted-foreground">Selected record</span>
+              <div className="border-t pt-4 text-xs" aria-live="polite">
+                <span className="text-muted-foreground">Selected layer</span>
                 <strong className="mt-1 block font-heading text-xl">
-                  {selectedRecord[0]}
+                  {selectedLayer.name}
                 </strong>
-                <span className="text-muted-foreground">
-                  {selectedRecord[5]}
-                </span>
               </div>
             </CardContent>
           </Card>
