@@ -110,10 +110,10 @@ export const LandingPage = () => {
         >
           <div className="lg:col-span-2">
             <h2 className="font-heading text-3xl font-bold tracking-tight">
-              Explore OGS layers
+              OGS layers
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Explore connected OGS layers in QGIS.
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
             </p>
           </div>
           <Card className="overflow-hidden bg-brand-50 p-0">
@@ -129,9 +129,11 @@ export const LandingPage = () => {
                 Layer preview
               </p>
               <CardTitle className="font-heading text-2xl">
-                Available layers
+                Lorem ipsum dolor sit amet
               </CardTitle>
-              <CardDescription>Preview OGS layers in QGIS</CardDescription>
+              <CardDescription>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              </CardDescription>
             </CardHeader>
             <CardContent className="mt-5 space-y-2 p-0">
               {layers.map((layer) => (
@@ -145,27 +147,25 @@ export const LandingPage = () => {
                   <strong className="font-heading text-sm">{layer.name}</strong>
                 </button>
               ))}
-              <div className="border-t pt-4 text-xs" aria-live="polite">
-                <span className="text-muted-foreground">Selected layer</span>
-                <strong className="mt-1 block font-heading text-xl">
-                  {selectedLayer.name}
-                </strong>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+                eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              </p>
+              <nav
+                aria-label="OGS layer resources"
+                className="flex flex-wrap gap-3 pt-2"
+              >
+                <Button asChild variant="outline">
+                  <RouterLink to="/ogcapi">How to connect to ArcGIS</RouterLink>
+                </Button>
+                <Button asChild variant="outline">
+                  <RouterLink to="/ocotillo/collections">
+                    Browse public datasets
+                  </RouterLink>
+                </Button>
+              </nav>
             </CardContent>
           </Card>
-          <nav
-            aria-label="OGS layer resources"
-            className="flex flex-wrap gap-3 lg:col-span-2"
-          >
-            <Button asChild variant="outline">
-              <RouterLink to="/ogcapi">How to connect to ArcGIS</RouterLink>
-            </Button>
-            <Button asChild variant="outline">
-              <RouterLink to="/ocotillo/collections">
-                Browse public datasets
-              </RouterLink>
-            </Button>
-          </nav>
         </section>
 
         <Separator />
