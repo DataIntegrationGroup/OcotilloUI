@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
+import { Link as RouterLink } from 'react-router'
 import { LandingTopbar } from '@/components/LandingTopbar'
 import { Button } from '@/components/ui/button'
 import {
@@ -152,6 +153,19 @@ export const LandingPage = () => {
               </div>
             </CardContent>
           </Card>
+          <nav
+            aria-label="OGS layer resources"
+            className="flex flex-wrap gap-3 lg:col-span-2"
+          >
+            <Button asChild variant="outline">
+              <RouterLink to="/ogcapi">How to connect to ArcGIS</RouterLink>
+            </Button>
+            <Button asChild variant="outline">
+              <RouterLink to="/ocotillo/collections">
+                Browse public datasets
+              </RouterLink>
+            </Button>
+          </nav>
         </section>
 
         <Separator />
