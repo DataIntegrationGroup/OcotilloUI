@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { LandingTopbar } from '@/components/LandingTopbar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -10,6 +11,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { AUTHENTIK_SIGNUP_URL } from '@/config/auth'
 import ocotilloImage from '@/img/ocotillo.jpeg'
 
@@ -58,6 +64,14 @@ const features = [
     'Generate field compilation sheets for groups of wells.',
   ],
   ['?', 'Connect to GIS', 'Connect Ocotillo to ArcGIS Pro or QGIS.'],
+] as const
+
+const faqs = [
+  'Lorem ipsum dolor sit amet?',
+  'Consectetur adipiscing elit, sed do eiusmod tempor?',
+  'Ut enim ad minim veniam, quis nostrud exercitation?',
+  'Duis aute irure dolor in reprehenderit in voluptate?',
+  'Excepteur sint occaecat cupidatat non proident?',
 ] as const
 
 export const LandingPage = () => {
@@ -227,6 +241,58 @@ export const LandingPage = () => {
               visual={<ChartPreview />}
             />
           </div>
+        </section>
+
+        <Separator />
+        <section
+          id="faqs"
+          aria-labelledby="faqs-heading"
+          className="grid gap-8 py-8 sm:py-16 lg:grid-cols-[0.75fr_1.25fr]"
+        >
+          <div className="max-w-md">
+            <h2
+              id="faqs-heading"
+              className="font-heading text-3xl font-bold tracking-tight"
+            >
+              FAQs
+            </h2>
+            <p className="mt-3 text-base text-muted-foreground">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </p>
+            <Button asChild variant="outline" className="mt-5">
+              <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
+                Lorem ipsum
+              </a>
+            </Button>
+          </div>
+          <Card className="gap-0 overflow-hidden p-0">
+            <CardContent className="divide-y p-0">
+              {faqs.map((question) => (
+                <Collapsible key={question}>
+                  <h3>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="group h-auto w-full justify-between gap-4 rounded-none px-5 py-5 text-left whitespace-normal"
+                      >
+                        <span className="font-heading text-base font-semibold">
+                          {question}
+                        </span>
+                        <ChevronDown className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </h3>
+                  <CollapsibleContent className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+                    sed do eiusmod tempor incididunt ut labore et dolore magna
+                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+                    ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
+            </CardContent>
+          </Card>
         </section>
 
         <Separator />
