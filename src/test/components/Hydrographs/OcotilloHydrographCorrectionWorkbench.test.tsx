@@ -436,6 +436,51 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
   })
 })
 
+describe('OcotilloHydrographCorrectionWorkbench automated cleaning (hidden)', () => {
+  it('hides the automated Clean tools but keeps manual deletion', async () => {
+    const user = userEvent.setup()
+    render(
+      <OcotilloHydrographCorrectionWorkbench
+        thingName="TEST-0001"
+        manualObservations={[]}
+        transducerObservations={[]}
+        initialUpload={{
+          pointId: 'TEST-0001',
+          detectedDelimiter: ',',
+          detectedValueColumn: 'Water Head',
+          detectedTimeColumn: 'Date Time',
+          valueKind: 'water_head',
+          measurements: [1, 2, 3].map((value, index) => ({
+            time: new Date(day(index)),
+            value,
+          })),
+        }}
+        initialFileName="test.csv"
+      />
+    )
+
+    expect(screen.queryByText('Clean')).toBeNull()
+    await user.click(screen.getByText('Delete Readings'))
+
+    expect(screen.queryByLabelText('Correct drift')).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: 'Remove Offsets/Zeros' })
+    ).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: /Reflections/ })
+    ).toBeNull()
+    expect(
+      screen.getByRole('button', { name: 'Delete Selected Readings...' })
+    ).toBeTruthy()
+
+    // Manual tools are untouched.
+    for (const title of ['Shift', 'Snap']) {
+      expect(screen.getByText(title)).toBeTruthy()
+    }
+    expect(screen.getByRole('button', { name: 'Zoom in' })).toBeTruthy()
+  })
+})
+
 describe('OcotilloHydrographCorrectionWorkbench deleting selected readings', () => {
   // Five daily readings; the two in the middle are sensor-out-of-well junk.
   const upload: ParsedHydrographUpload = {
@@ -463,7 +508,7 @@ describe('OcotilloHydrographCorrectionWorkbench deleting selected readings', () 
         onPublish={onPublish}
       />
     )
-    await user.click(screen.getByText('Clean'))
+    await user.click(screen.getByText('Delete Readings'))
     return { user, onPublish }
   }
 

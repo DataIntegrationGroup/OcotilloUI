@@ -89,6 +89,7 @@ import {
 import {
   DEFAULT_HYDROGRAPH_UI_MODE,
   isAtLeastMode,
+  SHOW_AUTOMATED_CLEAN,
   type HydrographUiMode,
 } from './hydrographUiMode'
 import {
@@ -988,8 +989,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   // Progressive disclosure. Simple mode is the pressure-transducer workflow
   // only, so the acoustic-logger tooling (reflections) and its tuning knobs
   // are gated behind the higher modes.
-  const showReflectionTools = isAtLeastMode(mode, 'intermediate')
-  const showThresholdFields = isAtLeastMode(mode, 'intermediate')
+  const showReflectionTools =
+    SHOW_AUTOMATED_CLEAN && isAtLeastMode(mode, 'intermediate')
+  const showThresholdFields =
+    SHOW_AUTOMATED_CLEAN && isAtLeastMode(mode, 'intermediate')
   const showDataTable = isAtLeastMode(mode, 'intermediate')
   const showReflectionTuning = isAtLeastMode(mode, 'advanced')
 
@@ -2440,8 +2443,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     )}
                 </WorkbenchSection>
 
-                <WorkbenchSection title="Clean">
-                    {uploaded?.valueKind === 'water_head' ? (
+                <WorkbenchSection
+                  title={SHOW_AUTOMATED_CLEAN ? 'Clean' : 'Delete Readings'}
+                >
+                    {SHOW_AUTOMATED_CLEAN && uploaded?.valueKind === 'water_head' ? (
                       <>
                         <FormControlLabel
                           control={
@@ -2501,21 +2506,26 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         }
                       />
                     ) : null}
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<CleaningServices />}
-                      onClick={cleanOffsetsAndZeros}
-                      disabled={correctedMeasurements.length === 0}
-                    >
-                      Remove Offsets/Zeros
-                    </Button>
-                    <Typography variant="caption" color="text.secondary">
-                      Offsets are sustained level shifts (sensor repositioning
-                      or cable slip): each step is detected from the medians
-                      around it and the trace after it is re-leveled. Zero
-                      readings (sensor out of water) are dropped.
-                    </Typography>
+                    {SHOW_AUTOMATED_CLEAN ? (
+                      <>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<CleaningServices />}
+                          onClick={cleanOffsetsAndZeros}
+                          disabled={correctedMeasurements.length === 0}
+                        >
+                          Remove Offsets/Zeros
+                        </Button>
+                        <Typography variant="caption" color="text.secondary">
+                          Offsets are sustained level shifts (sensor
+                          repositioning or cable slip): each step is detected
+                          from the medians around it and the trace after it is
+                          re-leveled. Zero readings (sensor out of water) are
+                          dropped.
+                        </Typography>
+                      </>
+                    ) : null}
                     <Button
                       variant="outlined"
                       color="error"

@@ -7,6 +7,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { OcotilloHydrographCorrectionWorkbench } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
 import type { ParsedHydrographUpload } from '@/components/Hydrographs/hydrographCorrection'
 
+// The automated Clean tools are hidden in the app (BDMS-1443) but the code
+// stays; these tests cover it with the tools switched back on.
+vi.mock('@/components/Hydrographs/hydrographUiMode', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/components/Hydrographs/hydrographUiMode')
+  >()),
+  SHOW_AUTOMATED_CLEAN: true,
+}))
+
 // ECharts needs a real canvas. The stub keeps the latest option so the tests
 // can read the series the workbench would draw.
 const { chartOptions } = vi.hoisted(() => ({
