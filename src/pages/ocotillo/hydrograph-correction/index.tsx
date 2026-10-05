@@ -38,6 +38,11 @@ import {
   type WellntelIngestResult,
 } from './WellntelIngestDialog'
 import {
+  type PublishProgress,
+  type PublishResult,
+  PublishStatusNotice,
+} from './PublishStatusNotice'
+import {
   DiverHubIngestDialog,
   type DiverHubIngestResult,
 } from './DiverHubIngestDialog'
@@ -149,6 +154,35 @@ const INGEST_DEMO_MANUAL_OBSERVATIONS: Partial<
   diver: INGEST_DIVER_MANUAL_OBSERVATIONS,
 }
 
+interface PublishSuccess {
+  blockIds: number[]
+  count: number
+  skippedCount: number
+  wellName: string
+}
+
+const describePublishSuccess = ({
+  blockIds,
+  count,
+  skippedCount,
+}: PublishSuccess) => {
+  const written =
+    count > 0
+      ? `Published ${count} corrected observations${
+          blockIds.length > 0
+            ? ` (${blockIds.length === 1 ? 'block' : 'blocks'} ${blockIds.join(', ')})`
+            : ''
+        }.`
+      : 'Nothing new to publish.'
+  const ignored =
+    skippedCount > 0
+      ? ` Ignored ${skippedCount} already-published ${
+          skippedCount === 1 ? 'observation' : 'observations'
+        }.`
+      : ''
+  return written + ignored
+}
+
 export const HydrographCorrectionPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedWell, setSelectedWell] = useState<IWell | null>(null)
@@ -172,13 +206,15 @@ export const HydrographCorrectionPage = () => {
   const [ingestMenuAnchor, setIngestMenuAnchor] =
     useState<HTMLElement | null>(null)
   const [ingestedWellName, setIngestedWellName] = useState<string | null>(null)
-  const [publishSuccess, setPublishSuccess] = useState<{
-    blockIds: number[]
-    count: number
-    skippedCount: number
-    wellName: string
-  } | null>(null)
-  const [publishError, setPublishError] = useState<string | null>(null)
+  const [publishSuccess, setPublishSuccess] = useState<PublishSuccess | null>(
+    null
+  )
+  const [publishError, setPublishError] = useState<PublishResult | null>(null)
+  // Set for as long as a publish request is in flight, including the ones
+  // sent after the overlap or deployment dialogs, which the workbench's own
+  // button no longer tracks.
+  const [publishProgress, setPublishProgress] =
+    useState<PublishProgress | null>(null)
   const [pendingOverlap, setPendingOverlap] = useState<{
     blocks: PublishedBlockSpan[]
     args: HydrographPublishArgs
@@ -464,6 +500,11 @@ export const HydrographCorrectionPage = () => {
     return data as { block?: { id?: number }; observation_count?: number }
   }
 
+  const publishingWellName = selectedWell?.name ?? 'the selected well'
+
+  const failPublish = (message: string) =>
+    setPublishError({ wellName: publishingWellName, message })
+
   const invalidateStoredSeries = () =>
     invalidate({
       resource: 'observation/transducer-groundwater-level',
@@ -511,6 +552,7 @@ export const HydrographCorrectionPage = () => {
       if (covering.length === 1) deploymentId = covering[0].id as number
     }
 
+    setPublishProgress({ wellName: publishingWellName })
     try {
       applyPublishSuccess(
         await postCorrectedBlock(args, false, deploymentId),
@@ -528,12 +570,14 @@ export const HydrographCorrectionPage = () => {
         return
       }
       if (axios.isAxiosError(error) && error.response?.status === 404) {
-        setPublishError(
+        failPublish(
           'The transducer block upload endpoint is not available yet — see docs/hydrograph-correction-upload-contract.md.'
         )
         return
       }
-      setPublishError(getApiErrorMessage(error, 'Publishing failed.'))
+      failPublish(getApiErrorMessage(error, 'Publishing failed.'))
+    } finally {
+      setPublishProgress(null)
     }
   }
 
@@ -597,7 +641,15 @@ export const HydrographCorrectionPage = () => {
     let count = 0
 
     try {
-      for (const run of runs) {
+      for (const [index, run] of runs.entries()) {
+        setPublishProgress({
+          wellName: publishingWellName,
+          ...(runs.length > 1
+            ? {
+                detail: `Writing block ${index + 1} of ${runs.length}. This can take several minutes; keep this tab open.`,
+              }
+            : {}),
+        })
         const data = await postCorrectedBlock(
           { ...args, measurements: run },
           false,
@@ -610,13 +662,15 @@ export const HydrographCorrectionPage = () => {
       // A 409 here means the stored series changed after the overlap was
       // detected, or unblocked readings sit in the gap; the server says which.
       const reason = getApiErrorMessage(error, 'publishing failed')
-      setPublishError(
+      failPublish(
         blockIds.length > 0
           ? `Published ${blockIds.length} of ${runs.length} blocks (${blockIds.join(', ')}) before stopping: ${reason}.`
           : `Publishing failed: ${reason}.`
       )
       if (blockIds.length > 0) invalidateStoredSeries()
       return
+    } finally {
+      setPublishProgress(null)
     }
 
     setPublishSuccess({
@@ -638,13 +692,16 @@ export const HydrographCorrectionPage = () => {
       return
     }
 
+    setPublishProgress({ wellName: publishingWellName })
     try {
       applyPublishSuccess(
         await postCorrectedBlock(args, true, deploymentId),
         args
       )
     } catch (error) {
-      setPublishError(getApiErrorMessage(error, 'Publishing failed.'))
+      failPublish(getApiErrorMessage(error, 'Publishing failed.'))
+    } finally {
+      setPublishProgress(null)
     }
   }
 
@@ -997,30 +1054,6 @@ export const HydrographCorrectionPage = () => {
           </Box>
         </Paper>
 
-        {publishSuccess ? (
-          <Alert severity="success" onClose={() => setPublishSuccess(null)}>
-            {publishSuccess.count > 0
-              ? `Published ${publishSuccess.count} corrected observations${
-                  publishSuccess.blockIds.length > 0
-                    ? ` (${publishSuccess.blockIds.length === 1 ? 'block' : 'blocks'} ${publishSuccess.blockIds.join(', ')})`
-                    : ''
-                } to ${publishSuccess.wellName}.`
-              : `Nothing new to publish to ${publishSuccess.wellName}.`}
-            {publishSuccess.skippedCount > 0
-              ? ` Ignored ${publishSuccess.skippedCount} already-published ${
-                  publishSuccess.skippedCount === 1
-                    ? 'observation'
-                    : 'observations'
-                }.`
-              : ''}
-          </Alert>
-        ) : null}
-        {publishError ? (
-          <Alert severity="error" onClose={() => setPublishError(null)}>
-            {publishError}
-          </Alert>
-        ) : null}
-
         {!parsedUpload ? (
           <Alert severity="info">
             Upload a transducer file to begin. If the file contains `thing.name`
@@ -1059,6 +1092,7 @@ export const HydrographCorrectionPage = () => {
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
             onPublish={handlePublish}
+            publishInProgress={publishProgress !== null}
             onDeleteStoredRange={
               canDeleteStoredData ? handleDeleteStoredRange : undefined
             }
@@ -1069,18 +1103,34 @@ export const HydrographCorrectionPage = () => {
         )}
       </Stack>
 
+      <PublishStatusNotice
+        progress={publishProgress}
+        success={
+          publishSuccess
+            ? {
+                wellName: publishSuccess.wellName,
+                message: describePublishSuccess(publishSuccess),
+              }
+            : null
+        }
+        error={publishError}
+        onDismissSuccess={() => setPublishSuccess(null)}
+        onDismissError={() => setPublishError(null)}
+      />
+
       <Dialog
         open={Boolean(pendingOverlap)}
         onClose={() => setPendingOverlap(null)}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Overlaps published data</DialogTitle>
+        <DialogTitle>Overlaps published data for {publishingWellName}</DialogTitle>
         <DialogContent>
           <Stack spacing={1.5}>
             <Typography variant="body2">
-              The corrected series overlaps data already published to this well.
-              Nothing has been written yet.
+              The corrected series overlaps data already published to{' '}
+              <strong>{publishingWellName}</strong>. Nothing has been written
+              yet.
             </Typography>
             {pendingOverlap?.blocks.length ? (
               <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
@@ -1137,11 +1187,13 @@ export const HydrographCorrectionPage = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Which deployment recorded this file?</DialogTitle>
+        <DialogTitle>
+          Which deployment at {publishingWellName} recorded this file?
+        </DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            {pendingDeploymentChoice?.candidates.length} deployments on this
-            well were installed for the whole span of the corrected series.
+            {pendingDeploymentChoice?.candidates.length} deployments on{' '}
+            <strong>{publishingWellName}</strong> were installed for the whole span of the corrected series.
             Choose the one whose sensor produced the file.
           </Typography>
           <RadioGroup

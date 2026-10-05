@@ -3,12 +3,15 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   clampTimeWindow,
   FULL_ZOOM_WINDOW,
+  keepCtrlWheelOffPage,
   padTimeWindow,
   passPlainWheelToPage,
   readZoomWindow,
+  resolveZoomBox,
   scaleZoomWindow,
   selectionVisibility,
   timeWindowFromZoomEvent,
+  type ZoomBoxChart,
 } from '@/components/Hydrographs/chartViewport'
 
 describe('scaleZoomWindow', () => {
@@ -207,5 +210,95 @@ describe('selectionVisibility', () => {
     expect(
       selectionVisibility(range, { startValue: 1_700, endValue: 1_900 })
     ).toBe('hidden')
+  })
+})
+
+describe('keepCtrlWheelOffPage', () => {
+  const wheel = (ctrlKey: boolean) =>
+    new WheelEvent('wheel', {
+      deltaY: 100,
+      ctrlKey,
+      bubbles: true,
+      cancelable: true,
+    })
+
+  const setup = () => {
+    const card = document.createElement('div')
+    // An axis label, legend or toolbar button: nothing there zooms the chart.
+    const offPlot = document.createElement('div')
+    card.appendChild(offPlot)
+    document.body.appendChild(card)
+    return { offPlot, cleanup: keepCtrlWheelOffPage(card) }
+  }
+
+  it('keeps Ctrl+wheel off the chart plot from zooming the page', () => {
+    const { offPlot, cleanup } = setup()
+    const event = wheel(true)
+
+    offPlot.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(true)
+    cleanup()
+  })
+
+  it('leaves a plain wheel to scroll the page', () => {
+    const { offPlot, cleanup } = setup()
+    const event = wheel(false)
+
+    offPlot.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(false)
+    cleanup()
+  })
+
+  it('stops guarding once cleaned up', () => {
+    const { offPlot, cleanup } = setup()
+    cleanup()
+    const event = wheel(true)
+
+    offPlot.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(false)
+  })
+})
+
+describe('resolveZoomBox', () => {
+  // Two stacked 100px panels, 0-100 and 120-220 down the surface. Time runs
+  // 10 units a pixel from x = 0; each panel's value is its pixel row.
+  const panels = [
+    { top: 0, bottom: 100 },
+    { top: 120, bottom: 220 },
+  ]
+  const chart: ZoomBoxChart = {
+    containPixel: ({ gridIndex }, [, y]) =>
+      y >= panels[gridIndex].top && y <= panels[gridIndex].bottom,
+    convertFromPixel: ({ gridIndex }, [x, y]) => [
+      x * 10,
+      y - panels[gridIndex].top,
+    ],
+  }
+
+  it('zooms time to the width and the panel it was drawn in to the height', () => {
+    expect(resolveZoomBox({ x: 50, y: 150 }, { x: 20, y: 130 }, chart, 2)).toEqual(
+      {
+        time: { startValue: 200, endValue: 500 },
+        gridIndex: 1,
+        value: { min: 10, max: 30 },
+      }
+    )
+  })
+
+  it('zooms time only for a box too flat to mean a value range', () => {
+    expect(
+      resolveZoomBox({ x: 20, y: 40 }, { x: 60, y: 42 }, chart, 2)
+    ).toMatchObject({ gridIndex: 0, value: null })
+  })
+
+  it('ignores a box too narrow to mean a time range', () => {
+    expect(resolveZoomBox({ x: 20, y: 10 }, { x: 22, y: 90 }, chart, 2)).toBeNull()
+  })
+
+  it('ignores a box started off every panel', () => {
+    expect(resolveZoomBox({ x: 20, y: 110 }, { x: 60, y: 150 }, chart, 2)).toBeNull()
   })
 })
