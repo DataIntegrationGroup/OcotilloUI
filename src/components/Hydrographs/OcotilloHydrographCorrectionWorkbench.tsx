@@ -97,7 +97,7 @@ import {
   type ChartPixel,
   type DataZoomEventParams,
   FULL_ZOOM_WINDOW,
-  keepCtrlWheelOffPage,
+  keepZoomWheelOffPage,
   padTimeWindow,
   passPlainWheelToPage,
   readZoomWindow,
@@ -1082,21 +1082,20 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     }
   }, [])
 
-  // Plain wheel over the chart scrolls the page; Ctrl+wheel or a trackpad
-  // pinch zooms it.
+  // Plain wheel over the chart scrolls the page; Shift+wheel zooms it.
   useEffect(() => {
     const element = chartContainerRef.current
     if (!element) return
     return passPlainWheelToPage(element)
   }, [])
 
-  // Ctrl+wheel anywhere in the workspace — the controls panel and everything
-  // around the chart card included — zooms the chart or nothing, never the
-  // page.
+  // Shift+wheel anywhere in the workspace — the controls panel and everything
+  // around the chart card included — zooms the chart or nothing, never scrolls
+  // the page sideways.
   useEffect(() => {
     const element = workspaceRef.current
     if (!element) return
-    return keepCtrlWheelOffPage(element)
+    return keepZoomWheelOffPage(element)
   }, [])
 
   // Dropping to a mode that hides a toggle must also disable it, otherwise a
@@ -3066,8 +3065,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       color="text.secondary"
                       sx={{ ml: 'auto', pl: 1 }}
                     >
-                      {DRAG_MODE_HINT[dragMode]} · Ctrl + scroll or pinch to
-                      zoom
+                      {DRAG_MODE_HINT[dragMode]} · Shift + scroll to zoom
                     </Typography>
                   </Stack>
                   <Box

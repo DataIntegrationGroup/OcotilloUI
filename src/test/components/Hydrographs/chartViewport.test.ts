@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   clampTimeWindow,
   FULL_ZOOM_WINDOW,
-  keepCtrlWheelOffPage,
+  keepZoomWheelOffPage,
   padTimeWindow,
   passPlainWheelToPage,
   readZoomWindow,
@@ -86,19 +86,35 @@ describe('passPlainWheelToPage', () => {
     cleanup()
   })
 
-  it('lets Ctrl+wheel (and trackpad pinch) through to zoom the chart', () => {
+  it('lets Shift+wheel through to zoom the chart', () => {
     const { canvas, chartWheel, cleanup } = setup()
 
     canvas.dispatchEvent(
       new WheelEvent('wheel', {
         deltaY: 100,
-        ctrlKey: true,
+        shiftKey: true,
         bubbles: true,
         cancelable: true,
       })
     )
 
     expect(chartWheel).toHaveBeenCalledTimes(1)
+    cleanup()
+  })
+
+  it('no longer lets Ctrl+wheel (or a trackpad pinch) zoom the chart', () => {
+    const { canvas, chartWheel, cleanup } = setup()
+    const event = new WheelEvent('wheel', {
+      deltaY: 100,
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+
+    canvas.dispatchEvent(event)
+
+    expect(chartWheel).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
     cleanup()
   })
 
@@ -213,11 +229,11 @@ describe('selectionVisibility', () => {
   })
 })
 
-describe('keepCtrlWheelOffPage', () => {
-  const wheel = (ctrlKey: boolean) =>
+describe('keepZoomWheelOffPage', () => {
+  const wheel = (modifier: 'shiftKey' | 'ctrlKey' | null) =>
     new WheelEvent('wheel', {
       deltaY: 100,
-      ctrlKey,
+      ...(modifier ? { [modifier]: true } : {}),
       bubbles: true,
       cancelable: true,
     })
@@ -228,12 +244,12 @@ describe('keepCtrlWheelOffPage', () => {
     const offPlot = document.createElement('div')
     card.appendChild(offPlot)
     document.body.appendChild(card)
-    return { offPlot, cleanup: keepCtrlWheelOffPage(card) }
+    return { offPlot, cleanup: keepZoomWheelOffPage(card) }
   }
 
-  it('keeps Ctrl+wheel off the chart plot from zooming the page', () => {
+  it('keeps Shift+wheel off the chart plot from scrolling the page', () => {
     const { offPlot, cleanup } = setup()
-    const event = wheel(true)
+    const event = wheel('shiftKey')
 
     offPlot.dispatchEvent(event)
 
@@ -241,9 +257,19 @@ describe('keepCtrlWheelOffPage', () => {
     cleanup()
   })
 
+  it('leaves Ctrl+wheel to the browser', () => {
+    const { offPlot, cleanup } = setup()
+    const event = wheel('ctrlKey')
+
+    offPlot.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(false)
+    cleanup()
+  })
+
   it('leaves a plain wheel to scroll the page', () => {
     const { offPlot, cleanup } = setup()
-    const event = wheel(false)
+    const event = wheel(null)
 
     offPlot.dispatchEvent(event)
 
@@ -254,7 +280,7 @@ describe('keepCtrlWheelOffPage', () => {
   it('stops guarding once cleaned up', () => {
     const { offPlot, cleanup } = setup()
     cleanup()
-    const event = wheel(true)
+    const event = wheel('shiftKey')
 
     offPlot.dispatchEvent(event)
 

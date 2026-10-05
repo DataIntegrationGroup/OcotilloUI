@@ -192,12 +192,22 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
 
     const zoom = new WheelEvent('wheel', {
       deltaY: 100,
-      ctrlKey: true,
+      shiftKey: true,
       bubbles: true,
       cancelable: true,
     })
     canvas.dispatchEvent(zoom)
     expect(zoom.defaultPrevented).toBe(true)
+
+    // Ctrl+wheel is no longer a chart gesture: the chart never sees it.
+    const ctrl = new WheelEvent('wheel', {
+      deltaY: 100,
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+    canvas.dispatchEvent(ctrl)
+    expect(ctrl.defaultPrevented).toBe(false)
   })
 
   it('keeps a zoomed view on the same period when the data extent grows', () => {
@@ -371,12 +381,12 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
     expect(chartOption.yAxis?.[1]).toMatchObject({ min: null, max: null })
   })
 
-  it('keeps Ctrl+wheel off the plot from zooming the page', () => {
+  it('keeps Shift+wheel off the toolbar from scrolling the page', () => {
     renderWorkbench()
     const toolbar = screen.getByRole('toolbar', { name: 'Chart tools' })
     const event = new WheelEvent('wheel', {
       deltaY: 100,
-      ctrlKey: true,
+      shiftKey: true,
       bubbles: true,
       cancelable: true,
     })
@@ -386,12 +396,12 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
     expect(event.defaultPrevented).toBe(true)
   })
 
-  it('keeps Ctrl+wheel off the chart card from zooming the page', () => {
+  it('keeps Shift+wheel off the chart card from scrolling the page', () => {
     renderWorkbench()
     const heading = screen.getByText('HydroSync Workspace')
     const event = new WheelEvent('wheel', {
       deltaY: 100,
-      ctrlKey: true,
+      shiftKey: true,
       bubbles: true,
       cancelable: true,
     })
