@@ -388,7 +388,7 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
 
   it('keeps Ctrl+wheel off the chart card from zooming the page', () => {
     renderWorkbench()
-    const heading = screen.getByText('Hydrograph Correction Workspace')
+    const heading = screen.getByText('HydroSync Workspace')
     const event = new WheelEvent('wheel', {
       deltaY: 100,
       ctrlKey: true,
