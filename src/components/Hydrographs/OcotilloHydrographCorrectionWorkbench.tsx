@@ -2099,7 +2099,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       >
         <Box>
           <Typography variant="body1" fontWeight="bold">
-            Hydrograph Correction Workspace
+            HydroSync Workspace
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Upload a logger file, compare it with Ocotillo measurements, and
