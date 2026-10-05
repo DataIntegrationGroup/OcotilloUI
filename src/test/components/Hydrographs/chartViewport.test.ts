@@ -280,7 +280,7 @@ describe('keepZoomWheelOffPage', () => {
   it('stops guarding once cleaned up', () => {
     const { offPlot, cleanup } = setup()
     cleanup()
-    const event = wheel(true)
+    const event = wheel('shiftKey')
 
     offPlot.dispatchEvent(event)
 
