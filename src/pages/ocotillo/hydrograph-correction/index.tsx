@@ -866,7 +866,7 @@ export const HydrographCorrectionPage = () => {
           alignItems={{ xs: 'stretch', md: 'flex-start' }}
         >
           <Stack spacing={0.5}>
-            <OcotilloPageTitle title="Hydrograph Correction" />
+            <OcotilloPageTitle title="HydroSync" />
             <Typography variant="body2" color="text.secondary">
               Upload a transducer file first. Ocotillo will try to extract
               thing.name from the file and resolve the well automatically.
