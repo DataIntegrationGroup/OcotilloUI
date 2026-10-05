@@ -175,11 +175,13 @@ export const selectionVisibility = (
 
 /**
  * Whether a wheel event over the chart should zoom it rather than scroll the
- * page. Ctrl is also what a trackpad pinch reports, so pinch-to-zoom keeps
- * working without a modifier.
+ * page. Shift has no browser action of its own on a vertical wheel, unlike
+ * Ctrl, which zooms the whole window whenever the pointer drifts off the
+ * plot. Ctrl+wheel (and a trackpad pinch, which reports as Ctrl+wheel) is
+ * left to the browser.
  */
-export const isChartZoomWheel = (event: Pick<WheelEvent, 'ctrlKey'>) =>
-  event.ctrlKey
+export const isChartZoomWheel = (event: Pick<WheelEvent, 'shiftKey'>) =>
+  event.shiftKey
 
 /**
  * ECharts' inside zoom cancels every wheel event over a grid, even with
@@ -207,16 +209,16 @@ export const passPlainWheelToPage = (container: HTMLElement) => {
 }
 
 /**
- * Ctrl+wheel in the workspace but off the plot itself — the toolbar, the axis
+ * Shift+wheel in the workspace but off the plot itself — the toolbar, the axis
  * labels, the legend, the slider, the controls panel — reached the browser and
- * zoomed the whole page, which is easy to do by accident while zooming the
- * chart.
- * Cancelling it anywhere inside `container` keeps Ctrl+wheel meaning "zoom
+ * scrolled the page sideways, which is easy to do by accident while zooming
+ * the chart.
+ * Cancelling it anywhere inside `container` keeps Shift+wheel meaning "zoom
  * the chart". Over the plot the chart has already cancelled it and zoomed.
  *
  * Returns the cleanup that removes the listener.
  */
-export const keepCtrlWheelOffPage = (container: HTMLElement) => {
+export const keepZoomWheelOffPage = (container: HTMLElement) => {
   const handleWheel = (event: WheelEvent) => {
     if (isChartZoomWheel(event)) event.preventDefault()
   }
@@ -327,7 +329,7 @@ const rectBetween = (a: ChartPixel, b: ChartPixel): ZoomBoxRect => ({
 /**
  * Lets the user drag a zoom box on the chart while `active`. The press is
  * caught on the way down, before the chart sees it, so the drag neither pans
- * nor paints over the brushed selection; the wheel is left alone so Ctrl+wheel
+ * nor paints over the brushed selection; the wheel is left alone so Shift+wheel
  * keeps zooming. Returns the box to draw while the drag is under way.
  */
 export const useZoomBoxDrag = (
