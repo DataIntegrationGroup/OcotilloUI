@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   clampTimeWindow,
   FULL_ZOOM_WINDOW,
+  formatAxisTick,
   keepZoomWheelOffPage,
   MIN_VALUE_SPAN,
   padTimeWindow,
@@ -470,5 +471,33 @@ describe('resolveValueWheelTarget', () => {
     expect(
       resolveValueWheelTarget({ x: 50, y: 60 }, bands, lost, PLOT_LEFT)
     ).toBeNull()
+  })
+})
+
+describe('formatAxisTick', () => {
+  it('rounds to at most two decimal places', () => {
+    expect(formatAxisTick(44.12345678)).toBe('44.12')
+    expect(formatAxisTick(44.126)).toBe('44.13')
+    expect(formatAxisTick(-0.456)).toBe('-0.46')
+  })
+
+  it('does not pad a short number', () => {
+    expect(formatAxisTick(45)).toBe('45')
+    expect(formatAxisTick(44.1)).toBe('44.1')
+    expect(formatAxisTick(0)).toBe('0')
+  })
+
+  it('leaves large values whole', () => {
+    expect(formatAxisTick(4503.6)).toBe('4503.6')
+    expect(formatAxisTick(208.4)).toBe('208.4')
+  })
+
+  it('never prints a negative zero', () => {
+    expect(formatAxisTick(-0.001)).toBe('0')
+  })
+
+  it('prints nothing for a value that is not a number', () => {
+    expect(formatAxisTick(Number.NaN)).toBe('')
+    expect(formatAxisTick(Number.POSITIVE_INFINITY)).toBe('')
   })
 })

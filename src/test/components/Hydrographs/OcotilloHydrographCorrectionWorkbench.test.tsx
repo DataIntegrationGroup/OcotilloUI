@@ -33,6 +33,7 @@ const chartInstance = {
 interface YAxisOption {
   min?: number | null
   max?: number | null
+  axisLabel?: { formatter?: (value: number) => string }
 }
 
 // The option the workbench last handed the chart.
@@ -415,6 +416,29 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
       (axis?.max ?? 0) - (axis?.min ?? 0)
     expect(span(chartOption.yAxis?.[1])).toBeCloseTo(
       span(zoomedIn) * Math.exp(0.2)
+    )
+  })
+
+  it('caps every value axis label at two decimal places', () => {
+    render(workbenchWithReadings(11))
+    // Zoom in on the DTW panel so its ends land on awkward numbers.
+    wheelOnChart({ x: 50, y: 226 }, { deltaY: -100, shiftKey: true })
+
+    const axes = chartOption.yAxis ?? []
+    expect(axes.length).toBeGreaterThan(0)
+    for (const axis of axes) {
+      const format = axis.axisLabel?.formatter
+      expect(format).toBeTypeOf('function')
+      expect(format?.(44.12345678)).toBe('44.12')
+      expect(format?.(45)).toBe('45')
+    }
+    // The pinned ends are numbers like these, and print short.
+    const pinned = chartOption.yAxis?.[1]
+    expect(pinned?.axisLabel?.formatter?.(pinned?.min as number)).toMatch(
+      /^-?\d+(\.\d{1,2})?$/
+    )
+    expect(pinned?.axisLabel?.formatter?.(pinned?.max as number)).toMatch(
+      /^-?\d+(\.\d{1,2})?$/
     )
   })
 

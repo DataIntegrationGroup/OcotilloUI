@@ -98,6 +98,7 @@ import {
   type ChartPixel,
   type DataZoomEventParams,
   FULL_ZOOM_WINDOW,
+  formatAxisTick,
   isChartZoomWheel,
   keepZoomWheelOffPage,
   padTimeWindow,
@@ -1462,7 +1463,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         splitLine: { show: true, lineStyle: { color: theme.palette.divider } },
       },
       yAxis: {
-        axisLabel: { color: theme.palette.text.secondary },
+        axisLabel: {
+          color: theme.palette.text.secondary,
+          // The ends of a zoomed or pinned axis are wherever the pointer
+          // landed, so cap every label at two decimals.
+          formatter: formatAxisTick,
+        },
         nameTextStyle: {
           color: theme.palette.text.secondary,
           padding: [0, 0, 0, 6],

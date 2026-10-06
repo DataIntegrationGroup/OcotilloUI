@@ -382,6 +382,14 @@ export const valueZoomFactorFromWheel = (
   )
 }
 
+/**
+ * A value axis tick label, to at most two decimal places and no padding: 44.1
+ * stays 44.1, 45 stays 45. A zoomed or pinned axis ends on whatever the pointer
+ * landed on -- 44.12345678 -- which says more than a reading can.
+ */
+export const formatAxisTick = (value: number): string =>
+  Number.isFinite(value) ? String(Number(value.toFixed(2))) : ''
+
 /** What a wheel over a panel's axis labels is zooming. */
 export interface ValueWheelTarget {
   gridIndex: number
