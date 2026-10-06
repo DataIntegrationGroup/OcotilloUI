@@ -209,11 +209,8 @@ export const LandingPage = () => {
                 className="mt-auto flex flex-wrap gap-3 pt-5"
               >
                 <Button asChild variant="outline">
-                  <RouterLink to="/ogcapi">How to connect to ArcGIS</RouterLink>
-                </Button>
-                <Button asChild variant="outline">
-                  <RouterLink to="/ocotillo/collections">
-                    Browse public datasets
+                  <RouterLink to="/ogcapi">
+                    How to connect to Desktop GIS
                   </RouterLink>
                 </Button>
               </nav>

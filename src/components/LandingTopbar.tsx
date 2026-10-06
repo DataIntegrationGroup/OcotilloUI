@@ -1,19 +1,19 @@
-import { DarkModeOutlined, LightModeOutlined } from '@mui/icons-material'
-import { useContext } from 'react'
-import { Link as RouterLink } from 'react-router'
-import { Button } from '@/components/ui/button'
+import { DarkModeOutlined, LightModeOutlined } from "@mui/icons-material";
+import { useContext } from "react";
+import { Link as RouterLink } from "react-router";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { AUTHENTIK_SIGNUP_URL } from '@/config/auth'
-import { ColorModeContext } from '@/contexts'
+} from "@/components/ui/tooltip";
+import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
+import { ColorModeContext } from "@/contexts";
 
 export const LandingTopbar = () => {
-  const { mode, setMode } = useContext(ColorModeContext)
+  const { mode, setMode } = useContext(ColorModeContext);
   const toggleLabel =
-    mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+    mode === "dark" ? "Switch to light mode" : "Switch to dark mode";
 
   return (
     <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
@@ -33,11 +33,7 @@ export const LandingTopbar = () => {
                 onClick={() => setMode()}
                 aria-label={toggleLabel}
               >
-                {mode === 'dark' ? (
-                  <LightModeOutlined />
-                ) : (
-                  <DarkModeOutlined />
-                )}
+                {mode === "dark" ? <LightModeOutlined /> : <DarkModeOutlined />}
               </Button>
             </TooltipTrigger>
             <TooltipContent>{toggleLabel}</TooltipContent>
@@ -53,5 +49,5 @@ export const LandingTopbar = () => {
         </nav>
       </div>
     </header>
-  )
-}
+  );
+};
