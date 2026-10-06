@@ -60,6 +60,7 @@ export const ChemistryReportExport = () => {
     well,
     contacts,
     observations,
+    standards,
     waterLevels,
     continuous,
     isLoading,
@@ -96,6 +97,7 @@ export const ChemistryReportExport = () => {
           well={well}
           contacts={contacts}
           observations={observations}
+          standards={standards}
           waterLevels={waterLevels}
           continuous={continuous}
           year={year}
@@ -184,6 +186,7 @@ export const ChemistryReportExport = () => {
               well={well}
               contacts={contacts}
               observations={observations}
+              standards={standards}
               waterLevels={waterLevels}
               continuous={continuous}
               year={year}

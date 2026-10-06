@@ -1,6 +1,7 @@
 import {
   compareToStandard,
   type DrinkingWaterStandard,
+  type DrinkingWaterStandards,
   type StandardKind,
 } from '@/constants/drinkingWaterStandards'
 import type {
@@ -136,12 +137,14 @@ const latestExceedances = (
   ).rows.filter((row) => row.exceeds)
 
 export const summarizeChemistry = (
-  observations: readonly ChemistryResult[]
+  observations: readonly ChemistryResult[],
+  standards: DrinkingWaterStandards
 ): ChemistryReportSummary => {
   const rows: ChemistryResultRow[] = observations.map((observation) => {
     const parameterName = observation.parameter_name || 'Unknown'
     const unit = observation.unit ?? null
     const { standard, exceeds } = compareToStandard(
+      standards,
       parameterName,
       observation.value,
       unit

@@ -3,6 +3,7 @@ import { Image, Page, Text, View } from '@react-pdf/renderer'
 // bundled URL would make the render depend on a fetch completing first.
 import nmbgmrLogo from '@/img/NMBGMR.png?inline'
 import { useMemo } from 'react'
+import type { DrinkingWaterStandards } from '@/constants/drinkingWaterStandards'
 import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import {
@@ -68,6 +69,8 @@ type ChemistryReportPdfProps = {
   well?: IWell
   contacts?: readonly IContact[]
   observations: readonly ChemistryResult[]
+  /** Drinking water standards from the API's regulatory limits. */
+  standards: DrinkingWaterStandards
   waterLevels?: readonly WaterLevelReading[]
   /** The well's logger record, or null/omitted when it has none. */
   continuous?: ContinuousWaterLevelSummary | null
@@ -664,6 +667,7 @@ export const ChemistryReportPdf = ({
   well,
   contacts = [],
   observations,
+  standards,
   waterLevels = [],
   continuous = null,
   year,
@@ -671,8 +675,8 @@ export const ChemistryReportPdf = ({
   qrCodeDataUrl,
 }: ChemistryReportPdfProps) => {
   const summary = useMemo(
-    () => summarizeChemistry(observations),
-    [observations]
+    () => summarizeChemistry(observations, standards),
+    [observations, standards]
   )
   const fieldTable = useMemo(
     () => pivotFieldParameters(summary.fieldParameters),

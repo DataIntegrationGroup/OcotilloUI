@@ -1,4 +1,4 @@
-import type { ParameterName } from '@/generated/types.gen'
+import type { RegulatoryLimitResponse } from '@/generated/types.gen'
 
 /**
  * Federal drinking water standards used to flag owner-facing chemistry
@@ -8,9 +8,10 @@ import type { ParameterName } from '@/generated/types.gen'
  * - SMCL (Secondary MCL) is a non-enforceable taste, odor, or staining
  *   guideline.
  *
- * Values are EPA National Primary/Secondary Drinking Water Regulations, in
- * mg/L unless noted. Parameters absent from this table are reported without a
- * comparison rather than being reported as passing.
+ * The values come from the API's `regulatory_limit` table rather than living
+ * here, so a limit that changes is corrected once, in the database, instead of
+ * in every client that prints it. Parameters with no MCL or SMCL on file are
+ * reported without a comparison rather than being reported as passing.
  */
 export type StandardKind = 'MCL' | 'SMCL'
 
@@ -19,44 +20,56 @@ export type DrinkingWaterStandard = {
   /** Threshold in `unit`. A result strictly above this is an exceedance. */
   limit: number
   unit: string
+  /** The agency that issued the limit, e.g. `EPA`. */
+  source: string
 }
 
-export const DRINKING_WATER_STANDARDS: Partial<
-  Record<ParameterName, DrinkingWaterStandard>
-> = {
-  Arsenic: { kind: 'MCL', limit: 0.01, unit: 'mg/L' },
-  Barium: { kind: 'MCL', limit: 2, unit: 'mg/L' },
-  Antimony: { kind: 'MCL', limit: 0.006, unit: 'mg/L' },
-  Beryllium: { kind: 'MCL', limit: 0.004, unit: 'mg/L' },
-  Cadmium: { kind: 'MCL', limit: 0.005, unit: 'mg/L' },
-  Chromium: { kind: 'MCL', limit: 0.1, unit: 'mg/L' },
-  Cyanide: { kind: 'MCL', limit: 0.2, unit: 'mg/L' },
-  Fluoride: { kind: 'MCL', limit: 4, unit: 'mg/L' },
-  Mercury: { kind: 'MCL', limit: 0.002, unit: 'mg/L' },
-  'Nitrate (as N)': { kind: 'MCL', limit: 10, unit: 'mg/L' },
-  'Nitrite (as N)': { kind: 'MCL', limit: 1, unit: 'mg/L' },
-  Selenium: { kind: 'MCL', limit: 0.05, unit: 'mg/L' },
-  Thallium: { kind: 'MCL', limit: 0.002, unit: 'mg/L' },
-  Lead: { kind: 'MCL', limit: 0.015, unit: 'mg/L' },
-  'Uranium (total, by ICP-MS)': { kind: 'MCL', limit: 0.03, unit: 'mg/L' },
+/** Standards keyed by parameter name, as chemistry results carry it. */
+export type DrinkingWaterStandards = ReadonlyMap<string, DrinkingWaterStandard>
 
-  Aluminum: { kind: 'SMCL', limit: 0.2, unit: 'mg/L' },
-  Chloride: { kind: 'SMCL', limit: 250, unit: 'mg/L' },
-  Copper: { kind: 'SMCL', limit: 1, unit: 'mg/L' },
-  Iron: { kind: 'SMCL', limit: 0.3, unit: 'mg/L' },
-  Manganese: { kind: 'SMCL', limit: 0.05, unit: 'mg/L' },
-  Silver: { kind: 'SMCL', limit: 0.1, unit: 'mg/L' },
-  Sulfate: { kind: 'SMCL', limit: 250, unit: 'mg/L' },
-  'Total Dissolved Solids': { kind: 'SMCL', limit: 500, unit: 'mg/L' },
-  Zinc: { kind: 'SMCL', limit: 5, unit: 'mg/L' },
+export const NO_DRINKING_WATER_STANDARDS: DrinkingWaterStandards = new Map()
+
+const isStandardKind = (value: unknown): value is StandardKind =>
+  value === 'MCL' || value === 'SMCL'
+
+/**
+ * Reduces the API's regulatory limits to one drinking water standard per
+ * parameter.
+ *
+ * Only MCLs and SMCLs are kept: the table also holds groundwater quality
+ * standards and laboratory reporting limits, which are not drinking water
+ * standards and must not be printed as one. Where a parameter has both an MCL
+ * and an SMCL, the MCL wins -- the report has one standard per row, and the
+ * enforceable health limit is the one a reader has to see.
+ */
+export const toDrinkingWaterStandards = (
+  limits: readonly RegulatoryLimitResponse[]
+): DrinkingWaterStandards => {
+  const standards = new Map<string, DrinkingWaterStandard>()
+
+  for (const limit of limits) {
+    if (!isStandardKind(limit.limit_type)) continue
+
+    const parameterName = limit.parameter.parameter_name
+    const existing = standards.get(parameterName)
+    if (existing?.kind === 'MCL' && limit.limit_type === 'SMCL') continue
+
+    standards.set(parameterName, {
+      kind: limit.limit_type,
+      limit: limit.limit_value,
+      unit: limit.limit_unit,
+      source: limit.limit_source,
+    })
+  }
+
+  return standards
 }
 
 export const getDrinkingWaterStandard = (
+  standards: DrinkingWaterStandards,
   parameterName?: string | null
 ): DrinkingWaterStandard | undefined =>
-  parameterName
-    ? DRINKING_WATER_STANDARDS[parameterName as ParameterName]
-    : undefined
+  parameterName ? standards.get(parameterName) : undefined
 
 export type StandardComparison = {
   standard?: DrinkingWaterStandard
@@ -70,11 +83,12 @@ export type StandardComparison = {
  * so a mg/L limit is never silently applied to a µg/L number.
  */
 export const compareToStandard = (
+  standards: DrinkingWaterStandards,
   parameterName: string | null | undefined,
   value: number | null | undefined,
   unit: string | null | undefined
 ): StandardComparison => {
-  const standard = getDrinkingWaterStandard(parameterName)
+  const standard = getDrinkingWaterStandard(standards, parameterName)
 
   if (!standard || value == null || Number.isNaN(value)) {
     return { standard, exceeds: false }

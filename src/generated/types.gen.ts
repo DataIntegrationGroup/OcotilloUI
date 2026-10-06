@@ -51,6 +51,44 @@ export type AddressResponse = {
 };
 
 /**
+ * ApiKeyResponse
+ */
+export type ApiKeyResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Token Preview
+     */
+    token_preview: string;
+    /**
+     * Scope
+     */
+    scope: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Last Used At
+     */
+    last_used_at?: string | null;
+    /**
+     * Revoked At
+     */
+    revoked_at?: string | null;
+};
+
+/**
  * AssetAssociationResponse
  */
 export type AssetAssociationResponse = {
@@ -243,6 +281,26 @@ export type ContactResponse = {
 };
 
 /**
+ * CorrectedMeasurement
+ *
+ * One reading of the corrected series, in feet below ground surface.
+ */
+export type CorrectedMeasurement = {
+    /**
+     * Observation Datetime
+     */
+    observation_datetime: string;
+    /**
+     * Value
+     */
+    value: number;
+    /**
+     * Note
+     */
+    note?: string | null;
+};
+
+/**
  * CreateAddress
  *
  * Schema for creating an address.
@@ -278,6 +336,24 @@ export type CreateAddress = {
      */
     country?: string;
     address_type?: AddressType;
+};
+
+/**
+ * CreateApiKey
+ */
+export type CreateApiKey = {
+    /**
+     * Name
+     *
+     * A name you will recognize later, so you know what to revoke.
+     */
+    name: string;
+    /**
+     * Lifetime Days
+     *
+     * How long the key should live, in days. Defaults to 365, which is also the maximum -- a longer request is clamped rather than rejected.
+     */
+    lifetime_days?: number | null;
 };
 
 /**
@@ -430,6 +506,7 @@ export type CreateGroup = {
      * Parent Group Id
      */
     parent_group_id?: number | null;
+    group_type?: GroupType | null;
     release_status?: ReleaseStatus;
     /**
      * Name
@@ -821,7 +898,7 @@ export type CreateWell = {
      * Well Purposes
      */
     well_purposes?: Array<WellPurpose> | null;
-    well_depth_source?: OriginType | null;
+    well_depth_source?: SourceType | null;
     /**
      * Well Casing Diameter
      *
@@ -913,6 +990,31 @@ export type CreateWellScreen = {
      * Screen Description
      */
     screen_description?: string | null;
+};
+
+/**
+ * DeletedTransducerObservationsResponse
+ *
+ * What a range or single-reading delete removed. ``updated_block_ids`` are
+ * blocks that kept some readings and had their span narrowed to the survivors.
+ */
+export type DeletedTransducerObservationsResponse = {
+    /**
+     * Deleted Observation Count
+     */
+    deleted_observation_count: number;
+    /**
+     * Deleted Block Ids
+     */
+    deleted_block_ids: Array<number>;
+    /**
+     * Updated Block Ids
+     */
+    updated_block_ids: Array<number>;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
 };
 
 /**
@@ -1196,7 +1298,7 @@ export type GeoJsonProperties = {
      * Quad Name
      */
     quad_name?: string | null;
-    utm_coordinates?: GeoJsonutmCoordinates;
+    utm_coordinates?: GeoJsonutmCoordinates | null;
     /**
      * Notes
      */
@@ -1234,7 +1336,7 @@ export type GeoJsonutmCoordinates = {
     /**
      * Utm Zone
      */
-    utm_zone?: string;
+    utm_zone: string;
     /**
      * Horizontal Datum
      */
@@ -1593,6 +1695,53 @@ export type MonitoringFrequencyResponse = {
      * End Date
      */
     end_date: string | null;
+};
+
+/**
+ * NewApiKeyResponse
+ *
+ * The create response, and the only one that ever carries `token`.
+ *
+ * Nothing re-reads it: the digest is all that is stored, so a client that
+ * loses this response has to issue a new key.
+ */
+export type NewApiKeyResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Token Preview
+     */
+    token_preview: string;
+    /**
+     * Scope
+     */
+    scope: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Last Used At
+     */
+    last_used_at?: string | null;
+    /**
+     * Revoked At
+     */
+    revoked_at?: string | null;
+    /**
+     * Token
+     */
+    token: string;
 };
 
 /**
@@ -2042,6 +2191,32 @@ export type PagePhoneResponse = {
 };
 
 /**
+ * Page[RegulatoryLimitResponse]
+ */
+export type PageRegulatoryLimitResponse = {
+    /**
+     * Items
+     */
+    items: Array<RegulatoryLimitResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
+
+/**
  * Page[SampleResponse]
  */
 export type PageSampleResponse = {
@@ -2205,6 +2380,32 @@ export type PageWaterChemistryObservationResponse = {
      * Items
      */
     items: Array<WaterChemistryObservationResponse>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+};
+
+/**
+ * Page[WaterChemistryResultResponse]
+ */
+export type PageWaterChemistryResultResponse = {
+    /**
+     * Items
+     */
+    items: Array<WaterChemistryResultResponse>;
     /**
      * Total
      */
@@ -2418,6 +2619,101 @@ export type PublicationResponse = {
 };
 
 /**
+ * PublishTransducerBlock
+ *
+ * A whole corrected file: one block plus every reading in it.
+ */
+export type PublishTransducerBlock = {
+    release_status?: ReleaseStatus;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    /**
+     * Deployment Id
+     */
+    deployment_id?: number | null;
+    /**
+     * Parameter Id
+     */
+    parameter_id: number;
+    review_status?: ReviewStatus;
+    provenance: TransducerBlockProvenance;
+    /**
+     * Measurements
+     */
+    measurements: Array<CorrectedMeasurement>;
+};
+
+/**
+ * PublishedTransducerBlockResponse
+ *
+ * Mirrors the read shape so the client can merge a publish straight into a
+ * ``GET /observation/transducer-groundwater-level`` result set. The
+ * observations are not echoed -- the client just sent them; the count is what
+ * it cannot know.
+ */
+export type PublishedTransducerBlockResponse = {
+    block: TransducerObservationBlockResponse;
+    /**
+     * Observation Count
+     */
+    observation_count: number;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    /**
+     * Deployment Id
+     */
+    deployment_id: number;
+};
+
+/**
+ * RegulatoryLimitResponse
+ *
+ * One citable limit for one parameter.
+ *
+ * The parameter is nested rather than left as a bare id: a consumer reading a
+ * chemistry result has an analyte *name* from the lexicon (see
+ * api/chemisty.py), not a parameter id, and a list of limits with only ids in
+ * it cannot be matched against results without a second round trip.
+ *
+ * ``limit_source`` is a plain string, unlike the other three lexicon-backed
+ * columns. It is a foreign key to lexicon_term like they are, but no single
+ * lexicon category collects the issuing agencies: 'EPA' and 'NMED' are both
+ * `organization` terms, alongside 300 well owners and drillers. There is no
+ * category to build an enum from, and building one from `organization` would
+ * advertise every landowner as a source of regulatory limits.
+ */
+export type RegulatoryLimitResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    release_status: ReleaseStatus;
+    /**
+     * Parameter Id
+     */
+    parameter_id: number;
+    parameter: ParameterResponse;
+    /**
+     * Limit Source
+     */
+    limit_source: string;
+    /**
+     * Limit Value
+     */
+    limit_value: number;
+    limit_unit: Unit;
+    limit_type: LimitType | null;
+};
+
+/**
  * ResourceNotFoundResponse
  */
 export type ResourceNotFoundResponse = {
@@ -2425,6 +2721,34 @@ export type ResourceNotFoundResponse = {
      * Detail
      */
     detail: string;
+};
+
+/**
+ * ReviewTransducerBlock
+ *
+ * Move a published block through review. Its readings' ``data_maturity``
+ * follows: ``approved`` makes them approved, ``not reviewed`` puts them back
+ * to provisional. Nothing else about the block changes here.
+ */
+export type ReviewTransducerBlock = {
+    review_status: ReviewStatus;
+};
+
+/**
+ * ReviewedTransducerBlockResponse
+ *
+ * The block after review, and how many readings moved with it.
+ */
+export type ReviewedTransducerBlockResponse = {
+    block: TransducerObservationBlockResponse;
+    /**
+     * Data Maturity
+     */
+    data_maturity: string;
+    /**
+     * Updated Observation Count
+     */
+    updated_observation_count: number;
 };
 
 /**
@@ -2547,7 +2871,7 @@ export type SpringResponse = {
      * Thing Type
      */
     thing_type: string;
-    current_location: LocationGeoJsonResponse;
+    current_location?: LocationGeoJsonResponse | null;
     /**
      * First Visit Date
      */
@@ -2639,7 +2963,7 @@ export type ThingResponse = {
      * Thing Type
      */
     thing_type: string;
-    current_location: LocationGeoJsonResponse;
+    current_location?: LocationGeoJsonResponse | null;
     /**
      * First Visit Date
      */
@@ -2830,6 +3154,30 @@ export type ThingResponseForContact = {
 };
 
 /**
+ * TransducerBlockProvenance
+ *
+ * Where a corrected series came from and what was done to it.
+ */
+export type TransducerBlockProvenance = {
+    /**
+     * Source File
+     */
+    source_file: string;
+    /**
+     * Source Kind
+     */
+    source_kind?: 'water_head' | 'depth_to_water' | null;
+    /**
+     * Corrections
+     */
+    corrections?: Array<string>;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
+
+/**
  * TransducerObservationBlockResponse
  */
 export type TransducerObservationBlockResponse = {
@@ -2855,6 +3203,40 @@ export type TransducerObservationBlockResponse = {
      * Parameter Id
      */
     parameter_id: number;
+    /**
+     * Source File
+     */
+    source_file?: string | null;
+    /**
+     * Source Kind
+     */
+    source_kind?: string | null;
+    /**
+     * Corrections
+     */
+    corrections?: Array<string> | null;
+    /**
+     * Comment
+     */
+    comment?: string | null;
+};
+
+/**
+ * TransducerObservationDetailResponse
+ *
+ * One reading, the block covering it, and the well it is on.
+ *
+ * ``block`` is None for a reading no block covers -- one a hand-deleted block
+ * left behind. The list pairs every row with a block and so never shows
+ * those; addressed by id, hiding it would misreport a row that still exists.
+ */
+export type TransducerObservationDetailResponse = {
+    observation: TransducerObservationResponse;
+    block: TransducerObservationBlockResponse | null;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
 };
 
 /**
@@ -2886,6 +3268,11 @@ export type TransducerObservationResponse = {
      * Deployment Id
      */
     deployment_id: number;
+    /**
+     * Note
+     */
+    note?: string | null;
+    data_maturity: DataMaturity | null;
 };
 
 /**
@@ -2932,6 +3319,19 @@ export type UpdateAddress = {
      */
     country?: string | null;
     address_type?: AddressType | null;
+};
+
+/**
+ * UpdateApiKey
+ *
+ * The name is the only mutable field. A credential's scope, owner, and
+ * expiry are fixed at creation; changing any of them is issuing a new key.
+ */
+export type UpdateApiKey = {
+    /**
+     * Name
+     */
+    name: string;
 };
 
 /**
@@ -3045,6 +3445,7 @@ export type UpdateGroup = {
      * Parent Group Id
      */
     parent_group_id?: number | null;
+    group_type?: GroupType | null;
     release_status?: ReleaseStatus | null;
     /**
      * Name
@@ -3277,6 +3678,29 @@ export type UpdateThingIdLink = {
 };
 
 /**
+ * UpdateTransducerObservation
+ *
+ * What may change on a stored reading.
+ *
+ * ``observation_datetime``, ``deployment_id``, and ``parameter_id`` are
+ * deliberately absent, and ``extra="forbid"`` makes sending one a 422 rather
+ * than a silent no-op. Only time ties a reading to its block, so moving one
+ * would orphan it or slide it under another block. Delete and republish.
+ */
+export type UpdateTransducerObservation = {
+    release_status?: ReleaseStatus | null;
+    /**
+     * Value
+     */
+    value?: number | null;
+    /**
+     * Note
+     */
+    note?: string | null;
+    data_maturity?: DataMaturity | null;
+};
+
+/**
  * UpdateWaterChemistryObservation
  */
 export type UpdateWaterChemistryObservation = {
@@ -3453,6 +3877,123 @@ export type WaterChemistryObservationResponse = {
      * Nma Data Quality
      */
     nma_data_quality?: string | null;
+};
+
+/**
+ * WaterChemistryResultResponse
+ *
+ * One legacy chemistry analyte result.
+ *
+ * Not a `BaseResponseModel`: the row comes from a view over the legacy NMA
+ * tables, so it has a text id rather than an integer one and carries no
+ * `created_at` of its own.
+ */
+export type WaterChemistryResultResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Thing Id
+     */
+    thing_id: number;
+    /**
+     * Station Name
+     */
+    station_name?: string | null;
+    /**
+     * Sample Id
+     */
+    sample_id?: number | null;
+    /**
+     * Parameter Name
+     */
+    parameter_name: string;
+    /**
+     * Value
+     */
+    value?: number | null;
+    /**
+     * Unit
+     */
+    unit?: string | null;
+    /**
+     * Source
+     */
+    source?: 'major' | 'minor' | 'radionuclide' | 'field' | null;
+    /**
+     * Parameter Key
+     */
+    parameter_key?: string | null;
+    /**
+     * Analyte
+     */
+    analyte?: string | null;
+    /**
+     * Symbol
+     */
+    symbol?: string | null;
+    /**
+     * Uncertainty
+     */
+    uncertainty?: number | null;
+    /**
+     * Analysis Method
+     */
+    analysis_method?: string | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Analyses Agency
+     */
+    analyses_agency?: string | null;
+    standard?: WaterChemistryResultStandardResponse | null;
+    /**
+     * Observation Datetime
+     */
+    observation_datetime: string | null;
+    /**
+     * Analysis Date
+     */
+    analysis_date?: string | null;
+    /**
+     * Result Kind
+     */
+    result_kind?: 'major' | 'minor' | 'radionuclide' | 'field' | 'unknown';
+};
+
+/**
+ * WaterChemistryResultStandardResponse
+ *
+ * Drinking-water standard comparison for a chemistry result.
+ */
+export type WaterChemistryResultStandardResponse = {
+    /**
+     * Status
+     */
+    status: 'above_mcl' | 'above_smcl' | 'below_mcl' | 'below_smcl' | 'within_smcl' | 'no_limit' | 'not_compared';
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Primary Mcl
+     */
+    primary_mcl?: number | null;
+    /**
+     * Secondary Smcl
+     */
+    secondary_smcl?: number | string | null;
+    /**
+     * Unit
+     */
+    unit?: string | null;
+    /**
+     * Basis
+     */
+    basis?: string | null;
 };
 
 /**
@@ -3731,7 +4272,7 @@ export type WellResponse = {
      * Thing Type
      */
     thing_type: string;
-    current_location: LocationGeoJsonResponse;
+    current_location?: LocationGeoJsonResponse | null;
     /**
      * First Visit Date
      */
@@ -4050,6 +4591,11 @@ export type ContactType = 'Primary' | 'Secondary' | 'Field Event Participant';
 export type CoordinateMethod = 'Unknown' | 'Differentially corrected GPS' | 'Survey-grade global positioning system (SGPS)' | 'GPS, uncorrected' | 'Interpolated from map' | 'Interpolated from DEM' | 'Reported' | 'Transit, theodolite, or other survey method';
 
 /**
+ * data_maturity
+ */
+export type DataMaturity = 'approved' | 'provisional' | 'in review';
+
+/**
  * elevation_method
  */
 export type ElevationMethod = 'Altimeter' | 'Differentially corrected GPS' | 'Survey-grade GPS' | 'Global positioning system (GPS)' | 'LiDAR DEM' | 'Level or other survey method' | 'Interpolated from topographic map' | 'Interpolated from digital elevation model (DEM)' | 'Reported' | 'Survey-grade Global Navigation Satellite Sys, Lvl1' | 'USGS National Elevation Dataset (NED)' | 'Unknown';
@@ -4070,6 +4616,11 @@ export type FormationCode = '000EXRV' | '000IRSV' | '050QUAL' | '100QBAS' | '110
 export type GroupType = 'Monitoring Plan' | 'Geographic Area' | 'Historical';
 
 /**
+ * limit_type
+ */
+export type LimitType = 'MCL' | 'SMCL' | 'GWQS' | 'MRL' | 'PQL' | 'MDL' | 'RL';
+
+/**
  * monitoring_frequency
  */
 export type MonitoringFrequency = 'Monthly' | 'Bimonthly' | 'Bimonthly reported' | 'Quarterly' | 'Biannual' | 'Annual' | 'Decadal' | 'Event-based';
@@ -4082,12 +4633,7 @@ export type NoteType = 'Access' | 'Directions' | 'Communication' | 'Construction
 /**
  * organization
  */
-export type Organization = 'Unknown' | 'City of Aztec' | 'Daybreak Investments' | 'Vallecitos HOA' | 'SFC, Santa Fe Animal Shelter' | 'El Guicu Ditch Association' | 'Santa Fe Municipal Airport' | 'Uluru Development' | "AllSup's Convenience Stores" | 'Santa Fe Downs Resort' | 'City of Truth or Consequences, WWTP' | 'Riverbend Hotsprings' | 'Armendaris Ranch' | 'El Paso Water' | 'BLM, Socorro Field Office' | 'USFWS' | 'Sile MDWCA' | 'Pena Blanca Water & Sanitation District' | 'Town of Questa' | 'Town of Cerro' | 'Cerro MDWCA' | 'Farr Cattle Company' | 'Carrizozo Orchard' | 'White Oaks Pottery' | 'USFS, Kiowa Grasslands' | 'Cloud Country West Subdivision' | 'Chama West WUA' | 'El Rito Regional Water and Waste Water Association' | 'El Rito MDWCA' | 'West Rim MDWUA' | 'Village of Willard' | 'Quemado Municipal Water & SWA' | 'Coyote Creek MDWUA' | 'Lamy MDWCA' | 'La Joya CWDA' | 'NM Firefighters Training Academy' | 'Cebolleta Land Grant' | 'Madrid Water Co-op' | 'Sun Valley Water and Sanitation' | 'Bluewater Lake MDWCA' | 'Bluewater Acres Domestic WUA' | 'Lybrook MDWCA' | 'New Mexico Museum of Natural History' | 'Hillsboro MDWCA' | 'Tyrone MDWCA' | 'Santa Clara Water System' | 'Casas Adobes MDWCA' | 'Lake Roberts WUA' | 'El Creston MDWCA' | 'Reserve Municipality Water Works' | 'Town of Estancia' | 'Pie Town MDWCA' | 'Roosevelt SWCD' | 'Otis MDWCA' | 'White Cliffs MDWUA' | 'Vista Linda Water Co-op' | 'Anasazi Trails Water Co-op' | 'Canon MDWCA' | 'Placitas Trails Water Co-op' | 'BLM, Roswell Office' | 'Forked Lightning Ranch' | 'Cottonwood RWA' | 'Pinon Ridge WUA' | 'McSherry Farms' | 'Agua Sana WUA' | 'Chamita MDWCA' | 'W Spear-bar Ranch' | 'Village of Capitan' | 'Brazos MDWCA' | 'Alto Alps HOA' | 'Chiricahua Desert Museum' | 'Bike Ranch' | 'Hachita MDWCA' | 'Carrizozo Municipal Water' | 'Dunhill Ranch' | 'Santa Fe Conservation Trust' | 'NMSU' | 'USGS' | 'TWDB' | 'NMED' | 'NMOSE' | 'NMBGMR' | 'Bernalillo County' | 'BLM' | 'BLM Taos Office' | 'SFC' | 'SFC, Fire Facilities' | 'SFC, Utilities Dept.' | 'SFC, Valle Vista Water Utility, Inc.' | 'City of Santa Fe' | 'City of Santa Fe WWTP' | 'City of Santa Fe, Municipal Recreation Complex' | 'City of Santa Fe, Sangre de Cristo Water Co.' | 'NMISC' | 'PVACD' | 'Bayard' | 'SNL' | 'USFS' | 'NMT' | 'NPS' | 'NMRWA' | 'NMDOT' | 'Taos SWCD' | 'Otero SWCD' | 'Northeastern SWCD' | 'CDWR' | 'Pendaries Village' | 'A&T Pump & Well Service, LLC' | 'A. G. Wassenaar, Inc' | 'AMEC' | 'Balleau Groundwater, Inc' | 'CDM Smith' | 'CH2M Hill' | 'Corbin Consulting, Inc' | 'Chevron' | 'Daniel B. Stephens & Associates, Inc' | 'EnecoTech' | 'Faith Engineering, Inc' | 'Foster Well Service, Inc' | 'Glorieta Geoscience, Inc' | 'Golder Associates, Inc' | "Hathorn's Well Service, Inc" | 'Hydroscience Associates, Inc' | 'IC Tech, Inc' | 'John Shomaker & Associates, Inc' | 'Kuckleman Pump Service' | 'Los Golondrinas' | 'Minton Engineers' | 'MJDarrconsult, Inc' | 'Puerta del Canon Ranch' | 'Rodgers & Company, Inc' | 'San Pedro Creek Estates HOA' | 'Statewide Drilling, Inc' | 'Tec Drilling Limited' | 'Tetra Tech, Inc' | 'Thompson Drilling, Inc' | 'Witcher & Associates' | 'Zeigler Geologic Consulting, LLC' | 'Sandia Well Service, Inc' | 'San Marcos Association' | 'URS' | 'Vista del Oro' | 'Abeyta Engineering, Inc' | 'Adobe Ranch' | 'Agua Fria Community Water Association' | 'Apache Gap Ranch' | 'Aspendale Mountain Retreat' | 'Augustin Plains Ranch LLC' | 'B & B Cattle Co' | 'Berridge Distributing Company' | "Bishop's Lodge" | 'Bonanza Creek Ranch' | 'Bug Scuffle Water Association' | 'Wehinahpay Mountain Camp' | 'Campbell Ranch' | 'Capitol Ford Santa Fe' | 'Cemex, Inc' | 'Cerro Community Center' | 'Santa Fe Jewish Center' | 'Chupadero MDWCA' | 'Cielo Lumbre HOA' | 'Circle Cross Ranch' | 'City of Alamogordo' | 'City of Portales, Public Works Dept.' | 'City of Socorro' | 'Commonwealth Conservancy' | 'Costilla MDWCA' | 'Country Club Garden Mobile Home Park' | 'Crossroads Cattle Co., Ltd' | 'Double H Ranch' | 'E.A. Meadows East' | 'El Camino Realty, Inc' | 'Eldorado Area Water & Sanitation District' | 'Bourbon Grill at El Gancho' | 'El Prado HOA' | 'El Rancho de las Golondrinas' | 'El Rito Canyon MDWCA' | 'Encantado Enterprises' | 'Estrella Concepts LLC' | 'Sixteen Springs Fire Department' | 'Fire Water Lodge' | 'Ford County Land & Cattle Company, Inc' | 'Friendly Construction, Inc' | 'Hacienda Del Cerezo' | 'Hefker Vega Ranch' | 'High Nogal Ranch' | 'Holloman Air Force Base' | 'Hyde Park Estates MDWCA' | 'Desert Village RV & Mobile Home Park' | 'K. Schmitt Trust' | 'La Cienega MDWCA' | 'La Vista HOA' | 'Land Ventures LLC' | 'Las Lagunitas' | 'Las Lagunitas HOA' | 'Lightning Dock Zanskar' | 'Living World Ministries' | 'Los Atrevidos, Inc' | 'Los Prados HOA' | 'Malaga MDWCA & SWA' | 'Mangas Outfitters' | 'Medina Gravel Pit' | 'Mendenhall Trading Co' | 'Mesa Verde Ranch' | 'NMDGF' | 'NMSU College of Agriculture' | 'Naiche Development' | 'NRAO' | 'NMSA' | 'Nogal MDWCA' | 'O Bar O Ranch' | 'OMI Wastewater Treatment Plant' | 'Old Road Ranch Pardners Ltd' | 'PNM Service Center' | 'Peace Tabernacle Church' | 'Pecos Trail Inn' | 'Pelican Spa' | 'Pistachio Tree Ranch' | 'Rancho Encantado' | 'Rancho San Lucas' | 'Rancho San Marcos' | 'Rancho Viejo Partnership' | 'Ranney Ranch' | 'Rio En Medio MDWCA' | 'San Acacia MDWCA' | 'San Juan Residences' | 'Sangre de Cristo Estates' | 'Santa Fe Community College' | 'Sangre de Cristo Center' | 'Santa Fe Horse Park' | 'Santa Fe Opera' | 'Santa Fe Waldorf School' | 'Shidoni Foundry and Gallery' | 'Sierra Grande Lodge' | 'Sierra Vista Retirement Community' | 'Slash Triangle Ranch' | 'Spanish Stirrup Rockshop' | 'Sparrowhawk Farm' | 'Stagecoach Motel' | 'State of New Mexico' | 'Stephenson Ranch' | 'Sun Broadcasting Network' | 'Tano Rd LLC' | 'UNM-Taos' | 'Tee Pee Ranch/Tee Pee Subdivision' | 'Tent Rock, Inc' | 'Tesuque MDWCA' | 'The Great Cloud Zen Center' | 'Three Rivers Ranch' | 'Timberon Water and Sanitation District' | 'Town of Magdalena' | 'Town of Taos' | 'Town of Taos, National Guard Armory' | 'Trinity Ranch' | 'Tularosa Basin National Desalination Research Facility' | 'Turquoise Trail Charter School' | 'US Bureau of Indian Affairs, Santa Fe Indian School' | 'USFS, Carson NF, Taos Office' | 'USFS, Cibola NF, Magdalena Ranger District' | "USFS, Cibola NF, Supervisor's Office" | 'USFS, Santa Fe NF, Espanola Ranger District' | 'Ute Mountain Farms' | 'VA Hospital' | 'Velte' | 'Vereda Serena Property' | 'Village of Corona' | 'Village of Floyd' | 'Village of Melrose' | 'Village of Vaughn' | 'Vista Land Company' | 'Vista Redonda MDWCA' | 'Vista de Oro de Placitas Water Users Coop' | 'Walker Ranch' | 'Wild & Woolley Trailer Ranch' | 'Winter Brothers' | 'Yates Petroleum Corporation' | 'Zamora Accounting Services' | 'Agua Sana MWCD' | 'Canada Los Alamos MDWCA' | 'Canjilon Mutual Domestic Water System' | 'Cebolla Mutual Domestic' | 'Chihuahuan Desert Rangeland Research Center (CDRRC)' | 'East Rio Arriba SWCD' | 'El Prado Municipal Water' | 'Hachita Mutual Domestic' | 'Jornada Experimental Range (JER)' | 'La Canada Way HOA' | 'Los Ojos Mutual Domestic' | 'The Nature Conservancy (TNC)' | 'Smith Ranch LLC' | 'Santa Ana Pueblo Department of Natural Resources' | 'Village of Hope' | 'WSP' | 'Zia Pueblo' | 'Our Lady of Guadalupe (OLG)' | 'PLSS';
-
-/**
- * origin_type
- */
-export type OriginType = 'Reported by another agency' | "From driller's log or well report" | 'Private geologist, consultant or univ associate' | 'Interpreted fr geophys logs by source agency' | 'Memory of owner, operator, driller' | 'Measured by source agency' | 'Reported by owner of well' | 'Reported by person other than driller owner agency' | 'Measured by NMBGMR staff' | 'Other' | 'Data Portal';
+export type Organization = 'Unknown' | 'A&T Pump & Well Service, LLC' | 'A. G. Wassenaar, Inc' | 'Abeyta Engineering, Inc' | 'Adobe Ranch' | 'Agua Fria Community Water Association' | 'Agua Sana MWCD' | 'Agua Sana WUA' | "AllSup's Convenience Stores" | 'Alto Alps HOA' | 'AMEC' | 'Anasazi Trails Water Co-op' | 'Apache Gap Ranch' | 'Armendaris Ranch' | 'Aspendale Mountain Retreat' | 'Augustin Plains Ranch LLC' | 'B & B Cattle Co' | 'Balleau Groundwater, Inc' | 'Bayard' | 'Bernalillo County' | 'Berridge Distributing Company' | 'Bike Ranch' | "Bishop's Lodge" | 'BLM' | 'BLM Taos Office' | 'BLM, Roswell Office' | 'BLM, Socorro Field Office' | 'Bluewater Acres Domestic WUA' | 'Bluewater Lake MDWCA' | 'Bonanza Creek Ranch' | 'Bourbon Grill at El Gancho' | 'Brazos MDWCA' | 'Bug Scuffle Water Association' | 'Campbell Ranch' | 'Canada Los Alamos MDWCA' | 'Canjilon Mutual Domestic Water System' | 'Canon MDWCA' | 'Capitol Ford Santa Fe' | 'Carrizozo Municipal Water' | 'Carrizozo Orchard' | 'Casas Adobes MDWCA' | 'CDM Smith' | 'CDWR' | 'Cebolla Mutual Domestic' | 'Cebolleta Land Grant' | 'Cemex, Inc' | 'Cerro Community Center' | 'Cerro MDWCA' | 'CH2M Hill' | 'Chama West WUA' | 'Chamita MDWCA' | 'Chevron' | 'Chihuahuan Desert Rangeland Research Center (CDRRC)' | 'Chiricahua Desert Museum' | 'Chupadero MDWCA' | 'Cielo Lumbre HOA' | 'Circle Cross Ranch' | 'City of Alamogordo' | 'City of Aztec' | 'City of Portales, Public Works Dept.' | 'City of Santa Fe' | 'City of Santa Fe WWTP' | 'City of Santa Fe, Municipal Recreation Complex' | 'City of Santa Fe, Sangre de Cristo Water Co.' | 'City of Socorro' | 'City of Truth or Consequences, WWTP' | 'Cloud Country West Subdivision' | 'Commonwealth Conservancy' | 'Corbin Consulting, Inc' | 'Costilla MDWCA' | 'Cottonwood RWA' | 'Country Club Garden Mobile Home Park' | 'Coyote Creek MDWUA' | 'Crossroads Cattle Co., Ltd' | 'Daniel B. Stephens & Associates, Inc' | 'Daybreak Investments' | 'Desert Village RV & Mobile Home Park' | 'Double H Ranch' | 'Dunhill Ranch' | 'E.A. Meadows East' | 'East Rio Arriba SWCD' | 'El Camino Realty, Inc' | 'El Creston MDWCA' | 'El Guicu Ditch Association' | 'El Paso Water' | 'El Prado HOA' | 'El Prado Municipal Water' | 'El Rancho de las Golondrinas' | 'El Rito Canyon MDWCA' | 'El Rito MDWCA' | 'El Rito Regional Water and Waste Water Association' | 'Eldorado Area Water & Sanitation District' | 'Encantado Enterprises' | 'EnecoTech' | 'EPA' | 'Estrella Concepts LLC' | 'Faith Engineering, Inc' | 'Farr Cattle Company' | 'Fire Water Lodge' | 'Ford County Land & Cattle Company, Inc' | 'Forked Lightning Ranch' | 'Foster Well Service, Inc' | 'Friendly Construction, Inc' | 'Glorieta Geoscience, Inc' | 'Golder Associates, Inc' | 'Hachita MDWCA' | 'Hachita Mutual Domestic' | 'Hacienda Del Cerezo' | "Hathorn's Well Service, Inc" | 'Hefker Vega Ranch' | 'High Nogal Ranch' | 'Hillsboro MDWCA' | 'Hilton Ranch' | 'Holloman Air Force Base' | 'Hyde Park Estates MDWCA' | 'Hydroscience Associates, Inc' | 'IC Tech, Inc' | 'John Shomaker & Associates, Inc' | 'Jornada Experimental Range (JER)' | 'K. Schmitt Trust' | 'Kuckleman Pump Service' | 'La Canada Way HOA' | 'La Cienega MDWCA' | 'La Joya CWDA' | 'La Puerta HOA' | 'La Vista HOA' | 'Lake Roberts WUA' | 'Lamy MDWCA' | 'Land Ventures LLC' | 'Las Brisas HOA' | 'Las Lagunitas' | 'Las Lagunitas HOA' | 'Lightning Dock Zanskar' | 'Living World Ministries' | 'Los Atrevidos, Inc' | 'Los Golondrinas' | 'Los Ojos Mutual Domestic' | 'Los Prados HOA' | 'Lower Rio Grande Public Water Works Authority' | 'Lybrook MDWCA' | 'Madrid Water Co-op' | 'Malaga MDWCA & SWA' | 'Mangas Outfitters' | 'McSherry Farms' | 'Medina Gravel Pit' | 'Mendenhall Trading Co' | 'Mesa Verde Ranch' | 'Minton Engineers' | 'MJDarrconsult, Inc' | 'Naiche Development' | 'New Mexico Museum of Natural History' | 'NM Firefighters Training Academy' | 'NMBGMR' | 'NMDGF' | 'NMDOT' | 'NMED' | 'NMISC' | 'NMOSE' | 'NMRWA' | 'NMSA' | 'NMSU' | 'NMSU College of Agriculture' | 'NMT' | 'Nogal MDWCA' | 'Northeastern SWCD' | 'Northwest New Mexico Utility Authority' | 'NPS' | 'NRAO' | 'O Bar O Ranch' | 'Old Road Ranch Pardners Ltd' | 'OMI Wastewater Treatment Plant' | 'Otero SWCD' | 'Otis MDWCA' | 'Our Lady of Guadalupe (OLG)' | 'Peace Tabernacle Church' | 'Pecos Trail Inn' | 'Pelican Spa' | 'Pena Blanca Water & Sanitation District' | 'Pendaries Village' | 'Pie Town MDWCA' | 'Pinon Ridge WUA' | 'Pistachio Tree Ranch' | 'Placitas Trails Water Co-op' | 'PLSS' | 'PNM Service Center' | 'Puerta del Canon Ranch' | 'PVACD' | 'Quemado Municipal Water & SWA' | 'Rancho Encantado' | 'Rancho San Lucas' | 'Rancho San Marcos' | 'Rancho Viejo Partnership' | 'Ranney Ranch' | 'Reserve Municipality Water Works' | 'Rio En Medio MDWCA' | 'Riverbend Hotsprings' | 'Rodgers & Company, Inc' | 'Roosevelt SWCD' | 'San Acacia MDWCA' | 'San Juan Residences' | 'San Marcos Association' | 'San Pedro Creek Estates HOA' | 'Sandia Well Service, Inc' | 'Sangre de Cristo Center' | 'Sangre de Cristo Estates' | 'Santa Ana Pueblo Department of Natural Resources' | 'Santa Clara Water System' | 'Santa Fe Community College' | 'Santa Fe Conservation Trust' | 'Santa Fe Downs Resort' | 'Santa Fe Horse Park' | 'Santa Fe Jewish Center' | 'Santa Fe Municipal Airport' | 'Santa Fe Opera' | 'Santa Fe Waldorf School' | 'SFC' | 'SFC, Fire Facilities' | 'SFC, Santa Fe Animal Shelter' | 'SFC, Utilities Dept.' | 'SFC, Valle Vista Water Utility, Inc.' | 'Shidoni Foundry and Gallery' | 'Sierra Grande Lodge' | 'Sierra Vista Retirement Community' | 'Sile MDWCA' | 'Sixteen Springs Fire Department' | 'Slash Triangle Ranch' | 'Smith Ranch LLC' | 'SNL' | 'Spanish Stirrup Rockshop' | 'Sparrowhawk Farm' | 'Stagecoach Motel' | 'State of New Mexico' | 'Statewide Drilling, Inc' | 'Stephenson Ranch' | 'Sun Broadcasting Network' | 'Sun Valley Water and Sanitation' | 'Tano Rd LLC' | 'Taos SWCD' | 'Tec Drilling Limited' | 'Tee Pee Ranch/Tee Pee Subdivision' | 'Tent Rock, Inc' | 'Tesuque MDWCA' | 'Tetra Tech, Inc' | 'The Great Cloud Zen Center' | 'The Nature Conservancy (TNC)' | 'Thompson Drilling, Inc' | 'Three Rivers Ranch' | 'Timberon Water and Sanitation District' | 'Town of Cerro' | 'Town of Estancia' | 'Town of Magdalena' | 'Town of Questa' | 'Town of Taos' | 'Town of Taos, National Guard Armory' | 'Trinity Ranch' | 'Tularosa Basin National Desalination Research Facility' | 'Turquoise Trail Charter School' | 'TWDB' | 'Tyrone MDWCA' | 'Uluru Development' | 'UNM-Taos' | 'URS' | 'US Bureau of Indian Affairs, Santa Fe Indian School' | 'USFS' | 'USFS, Carson NF, Taos Office' | 'USFS, Cibola NF, Magdalena Ranger District' | "USFS, Cibola NF, Supervisor's Office" | 'USFS, Kiowa Grasslands' | 'USFS, Santa Fe NF, Espanola Ranger District' | 'USFWS' | 'USGS' | 'Ute Mountain Farms' | 'VA Hospital' | 'Vallecitos HOA' | 'Velte' | 'Vereda Serena Property' | 'Village of Capitan' | 'Village of Corona' | 'Village of Floyd' | 'Village of Hope' | 'Village of Melrose' | 'Village of Vaughn' | 'Village of Willard' | 'Vista de Oro de Placitas Water Users Coop' | 'Vista del Oro' | 'Vista Land Company' | 'Vista Linda Water Co-op' | 'Vista Redonda MDWCA' | 'W Spear-bar Ranch' | 'Walker Ranch' | 'Wehinahpay Mountain Camp' | 'West Rim MDWUA' | 'White Cliffs MDWUA' | 'White Oaks Pottery' | 'Wild & Woolley Trailer Ranch' | 'Winter Brothers' | 'Witcher & Associates' | 'WSP' | 'Yates Petroleum Corporation' | 'Zamora Accounting Services' | 'Zeigler Geologic Consulting, LLC' | 'Zia Pueblo';
 
 /**
  * parameter_name
@@ -4191,6 +4737,11 @@ export type ScreenType = 'PVC' | 'Steel' | 'Concrete';
 export type SensorType = 'DiverLink' | 'Diver Cable' | 'Pressure Transducer' | 'Data Logger' | 'Barometer' | 'Acoustic Sounder' | 'Precip Collector' | 'Camera' | 'Soil Moisture Sensor' | 'Tipping Bucket' | 'Weather Station' | 'Weir' | 'Snow Lysimeter' | 'Lysimeter';
 
 /**
+ * source_type
+ */
+export type SourceType = 'Reported by another agency' | "From driller's log or well report" | 'Private geologist, consultant or univ associate' | 'Interpreted fr geophys logs by source agency' | 'Memory of owner, operator, driller' | 'Measured by source agency' | 'Reported by owner of well' | 'Reported by person other than driller owner agency' | 'Measured by NMBGMR staff' | 'Other' | 'Data Portal';
+
+/**
  * spring_type
  */
 export type SpringType = 'Artesian' | 'Ephemeral' | 'Perennial' | 'Thermal' | 'Mineral';
@@ -4290,7 +4841,7 @@ export type ListAssetsAssetGetData = {
         /**
          * Thing Id
          */
-        thing_id?: number;
+        thing_id?: number | null;
         /**
          * Page
          *
@@ -4341,9 +4892,11 @@ export type AddAssetAssetPostError = AddAssetAssetPostErrors[keyof AddAssetAsset
 
 export type AddAssetAssetPostResponses = {
     /**
+     * Response Add Asset Asset Post
+     *
      * Successful Response
      */
-    201: AssetResponse;
+    201: AssetResponse | null;
 };
 
 export type AddAssetAssetPostResponse = AddAssetAssetPostResponses[keyof AddAssetAssetPostResponses];
@@ -4531,6 +5084,165 @@ export type RemoveAssetAssetAssetIdRemoveDeleteResponses = {
 };
 
 export type RemoveAssetAssetAssetIdRemoveDeleteResponse = RemoveAssetAssetAssetIdRemoveDeleteResponses[keyof RemoveAssetAssetAssetIdRemoveDeleteResponses];
+
+export type GetApiKeysApiKeyGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api_key';
+};
+
+export type GetApiKeysApiKeyGetResponses = {
+    /**
+     * Response Get Api Keys Api Key Get
+     *
+     * Successful Response
+     */
+    200: Array<ApiKeyResponse>;
+};
+
+export type GetApiKeysApiKeyGetResponse = GetApiKeysApiKeyGetResponses[keyof GetApiKeysApiKeyGetResponses];
+
+export type CreateApiKeyApiKeyPostData = {
+    body: CreateApiKey;
+    path?: never;
+    query?: never;
+    url: '/api_key';
+};
+
+export type CreateApiKeyApiKeyPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateApiKeyApiKeyPostError = CreateApiKeyApiKeyPostErrors[keyof CreateApiKeyApiKeyPostErrors];
+
+export type CreateApiKeyApiKeyPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: NewApiKeyResponse;
+};
+
+export type CreateApiKeyApiKeyPostResponse = CreateApiKeyApiKeyPostResponses[keyof CreateApiKeyApiKeyPostResponses];
+
+export type RevokeApiKeyApiKeyApiKeyIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Api Key Id
+         */
+        api_key_id: number;
+    };
+    query?: never;
+    url: '/api_key/{api_key_id}';
+};
+
+export type RevokeApiKeyApiKeyApiKeyIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RevokeApiKeyApiKeyApiKeyIdDeleteError = RevokeApiKeyApiKeyApiKeyIdDeleteErrors[keyof RevokeApiKeyApiKeyApiKeyIdDeleteErrors];
+
+export type RevokeApiKeyApiKeyApiKeyIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type RevokeApiKeyApiKeyApiKeyIdDeleteResponse = RevokeApiKeyApiKeyApiKeyIdDeleteResponses[keyof RevokeApiKeyApiKeyApiKeyIdDeleteResponses];
+
+export type UpdateApiKeyApiKeyApiKeyIdPatchData = {
+    body: UpdateApiKey;
+    path: {
+        /**
+         * Api Key Id
+         */
+        api_key_id: number;
+    };
+    query?: never;
+    url: '/api_key/{api_key_id}';
+};
+
+export type UpdateApiKeyApiKeyApiKeyIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateApiKeyApiKeyApiKeyIdPatchError = UpdateApiKeyApiKeyApiKeyIdPatchErrors[keyof UpdateApiKeyApiKeyApiKeyIdPatchErrors];
+
+export type UpdateApiKeyApiKeyApiKeyIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiKeyResponse;
+};
+
+export type UpdateApiKeyApiKeyApiKeyIdPatchResponse = UpdateApiKeyApiKeyApiKeyIdPatchResponses[keyof UpdateApiKeyApiKeyApiKeyIdPatchResponses];
+
+export type GetWaterChemistryResultsChemistryResultsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Thing Id
+         */
+        thing_id?: number | null;
+        /**
+         * Start Time
+         */
+        start_time?: string | null;
+        /**
+         * End Time
+         */
+        end_time?: string | null;
+        /**
+         * Sort
+         */
+        sort?: string | null;
+        /**
+         * Order
+         */
+        order?: string | null;
+        /**
+         * Page
+         *
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/chemistry/results';
+};
+
+export type GetWaterChemistryResultsChemistryResultsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWaterChemistryResultsChemistryResultsGetError = GetWaterChemistryResultsChemistryResultsGetErrors[keyof GetWaterChemistryResultsChemistryResultsGetErrors];
+
+export type GetWaterChemistryResultsChemistryResultsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageWaterChemistryResultResponse;
+};
+
+export type GetWaterChemistryResultsChemistryResultsGetResponse = GetWaterChemistryResultsChemistryResultsGetResponses[keyof GetWaterChemistryResultsChemistryResultsGetResponses];
 
 export type GetAuthorPublicationsAuthorAuthorIdPublicationsGetData = {
     body?: never;
@@ -5396,6 +6108,136 @@ export type GetProjectAreaGeospatialProjectAreaGroupIdGetResponses = {
 };
 
 export type GetProjectAreaGeospatialProjectAreaGroupIdGetResponse = GetProjectAreaGeospatialProjectAreaGroupIdGetResponses[keyof GetProjectAreaGeospatialProjectAreaGroupIdGetResponses];
+
+export type QgisConnectionsGisQgisConnectionsXmlGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/gis/qgis/connections.xml';
+};
+
+export type QgisConnectionsGisQgisConnectionsXmlGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: string;
+};
+
+export type QgisConnectionsGisQgisConnectionsXmlGetResponse = QgisConnectionsGisQgisConnectionsXmlGetResponses[keyof QgisConnectionsGisQgisConnectionsXmlGetResponses];
+
+export type QgisConnectionsInternalGisQgisConnectionsInternalXmlGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/gis/qgis/connections-internal.xml';
+};
+
+export type QgisConnectionsInternalGisQgisConnectionsInternalXmlGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: string;
+};
+
+export type QgisConnectionsInternalGisQgisConnectionsInternalXmlGetResponse = QgisConnectionsInternalGisQgisConnectionsInternalXmlGetResponses[keyof QgisConnectionsInternalGisQgisConnectionsInternalXmlGetResponses];
+
+export type QgisLayerGisQgisLayersLayerIdQlrGetData = {
+    body?: never;
+    path: {
+        /**
+         * Layer Id
+         */
+        layer_id: string;
+    };
+    query?: never;
+    url: '/gis/qgis/layers/{layer_id}.qlr';
+};
+
+export type QgisLayerGisQgisLayersLayerIdQlrGetErrors = {
+    /**
+     * No curated layer with that id.
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type QgisLayerGisQgisLayersLayerIdQlrGetError = QgisLayerGisQgisLayersLayerIdQlrGetErrors[keyof QgisLayerGisQgisLayersLayerIdQlrGetErrors];
+
+export type QgisLayerGisQgisLayersLayerIdQlrGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: string;
+};
+
+export type QgisLayerGisQgisLayersLayerIdQlrGetResponse = QgisLayerGisQgisLayersLayerIdQlrGetResponses[keyof QgisLayerGisQgisLayersLayerIdQlrGetResponses];
+
+export type ArcgisLayerGisArcgisLayersLayerIdLyrxGetData = {
+    body?: never;
+    path: {
+        /**
+         * Layer Id
+         */
+        layer_id: string;
+    };
+    query?: never;
+    url: '/gis/arcgis/layers/{layer_id}.lyrx';
+};
+
+export type ArcgisLayerGisArcgisLayersLayerIdLyrxGetErrors = {
+    /**
+     * No curated layer with that id.
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ArcgisLayerGisArcgisLayersLayerIdLyrxGetError = ArcgisLayerGisArcgisLayersLayerIdLyrxGetErrors[keyof ArcgisLayerGisArcgisLayersLayerIdLyrxGetErrors];
+
+export type ArcgisLayerGisArcgisLayersLayerIdLyrxGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: string;
+};
+
+export type ArcgisLayerGisArcgisLayersLayerIdLyrxGetResponse = ArcgisLayerGisArcgisLayersLayerIdLyrxGetResponses[keyof ArcgisLayerGisArcgisLayersLayerIdLyrxGetResponses];
+
+export type GisIndexGisGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * F
+         */
+        f?: string | null;
+    };
+    url: '/gis';
+};
+
+export type GisIndexGisGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GisIndexGisGetError = GisIndexGisGetErrors[keyof GisIndexGisGetErrors];
+
+export type GisIndexGisGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: string;
+};
+
+export type GisIndexGisGetResponse = GisIndexGisGetResponses[keyof GisIndexGisGetResponses];
 
 export type GetGroupsGroupGetData = {
     body?: never;
@@ -6482,6 +7324,36 @@ export type AddWaterChemistryObservationObservationWaterChemistryPostResponses =
 
 export type AddWaterChemistryObservationObservationWaterChemistryPostResponse = AddWaterChemistryObservationObservationWaterChemistryPostResponses[keyof AddWaterChemistryObservationObservationWaterChemistryPostResponses];
 
+export type PublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostData = {
+    body: PublishTransducerBlock;
+    path?: never;
+    query?: {
+        /**
+         * Replace Overlapping
+         */
+        replace_overlapping?: boolean;
+    };
+    url: '/observation/transducer-groundwater-level/block';
+};
+
+export type PublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostError = PublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostErrors[keyof PublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostErrors];
+
+export type PublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: PublishedTransducerBlockResponse;
+};
+
+export type PublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostResponse = PublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostResponses[keyof PublishTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockPostResponses];
+
 export type BulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostData = {
     body: BodyBulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost;
     path?: never;
@@ -6506,6 +7378,126 @@ export type BulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPost
 };
 
 export type BulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostResponse = BulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostResponses[keyof BulkUploadGroundwaterLevelsObservationGroundwaterLevelBulkUploadPostResponses];
+
+export type ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchData = {
+    body: ReviewTransducerBlock;
+    path: {
+        /**
+         * Block Id
+         */
+        block_id: number;
+    };
+    query?: never;
+    url: '/observation/transducer-groundwater-level/block/{block_id}';
+};
+
+export type ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchError = ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchErrors[keyof ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchErrors];
+
+export type ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewedTransducerBlockResponse;
+};
+
+export type ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchResponse = ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchResponses[keyof ReviewTransducerGroundwaterLevelBlockObservationTransducerGroundwaterLevelBlockBlockIdPatchResponses];
+
+export type DeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Observation Id
+         */
+        observation_id: number;
+    };
+    query?: never;
+    url: '/observation/transducer-groundwater-level/{observation_id}';
+};
+
+export type DeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteError = DeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteErrors[keyof DeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteErrors];
+
+export type DeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: DeletedTransducerObservationsResponse;
+};
+
+export type DeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteResponse = DeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteResponses[keyof DeleteTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdDeleteResponses];
+
+export type GetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Observation Id
+         */
+        observation_id: number;
+    };
+    query?: never;
+    url: '/observation/transducer-groundwater-level/{observation_id}';
+};
+
+export type GetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetError = GetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetErrors[keyof GetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetErrors];
+
+export type GetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: TransducerObservationDetailResponse;
+};
+
+export type GetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetResponse = GetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetResponses[keyof GetTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdGetResponses];
+
+export type UpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchData = {
+    body: UpdateTransducerObservation;
+    path: {
+        /**
+         * Observation Id
+         */
+        observation_id: number;
+    };
+    query?: never;
+    url: '/observation/transducer-groundwater-level/{observation_id}';
+};
+
+export type UpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchError = UpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchErrors[keyof UpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchErrors];
+
+export type UpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: TransducerObservationDetailResponse;
+};
+
+export type UpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchResponse = UpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchResponses[keyof UpdateTransducerGroundwaterLevelObservationObservationTransducerGroundwaterLevelObservationIdPatchResponses];
 
 export type GetGroundwaterLevelObservationByIdObservationGroundwaterLevelObservationIdGetData = {
     body?: never;
@@ -6627,6 +7619,44 @@ export type UpdateWaterChemistryObservationObservationWaterChemistryObservationI
 
 export type UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponse = UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses[keyof UpdateWaterChemistryObservationObservationWaterChemistryObservationIdPatchResponses];
 
+export type DeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Thing Id
+         */
+        thing_id: number;
+        /**
+         * Start Time
+         */
+        start_time: string;
+        /**
+         * End Time
+         */
+        end_time: string;
+    };
+    url: '/observation/transducer-groundwater-level';
+};
+
+export type DeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteError = DeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteErrors[keyof DeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteErrors];
+
+export type DeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: DeletedTransducerObservationsResponse;
+};
+
+export type DeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteResponse = DeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteResponses[keyof DeleteTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelDeleteResponses];
+
 export type GetTransducerGroundwaterLevelObservationsObservationTransducerGroundwaterLevelGetData = {
     body?: never;
     path?: never;
@@ -6643,6 +7673,14 @@ export type GetTransducerGroundwaterLevelObservationsObservationTransducerGround
          * End Time
          */
         end_time?: string | null;
+        /**
+         * Sort
+         */
+        sort?: string | null;
+        /**
+         * Order
+         */
+        order?: string | null;
         /**
          * Page
          *
@@ -6827,6 +7865,100 @@ export type PostPublicationPublicationAddPostResponses = {
 };
 
 export type PostPublicationPublicationAddPostResponse = PostPublicationPublicationAddPostResponses[keyof PostPublicationPublicationAddPostResponses];
+
+export type GetRegulatoryLimitsRegulatoryLimitGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Parameter Id
+         */
+        parameter_id?: number | null;
+        /**
+         * Parameter Name
+         */
+        parameter_name?: string | null;
+        /**
+         * Limit Source
+         */
+        limit_source?: string | null;
+        /**
+         * Limit Type
+         */
+        limit_type?: string | null;
+        /**
+         * Sort
+         */
+        sort?: string | null;
+        /**
+         * Order
+         */
+        order?: string | null;
+        /**
+         * Filter
+         */
+        filter?: Array<string> | null;
+        /**
+         * Page
+         *
+         * Page number
+         */
+        page?: number;
+        /**
+         * Size
+         */
+        size?: number;
+    };
+    url: '/regulatory_limit';
+};
+
+export type GetRegulatoryLimitsRegulatoryLimitGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetRegulatoryLimitsRegulatoryLimitGetError = GetRegulatoryLimitsRegulatoryLimitGetErrors[keyof GetRegulatoryLimitsRegulatoryLimitGetErrors];
+
+export type GetRegulatoryLimitsRegulatoryLimitGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageRegulatoryLimitResponse;
+};
+
+export type GetRegulatoryLimitsRegulatoryLimitGetResponse = GetRegulatoryLimitsRegulatoryLimitGetResponses[keyof GetRegulatoryLimitsRegulatoryLimitGetResponses];
+
+export type GetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Regulatory Limit Id
+         */
+        regulatory_limit_id: number;
+    };
+    query?: never;
+    url: '/regulatory_limit/{regulatory_limit_id}';
+};
+
+export type GetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetError = GetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetErrors[keyof GetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetErrors];
+
+export type GetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: RegulatoryLimitResponse;
+};
+
+export type GetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetResponse = GetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetResponses[keyof GetRegulatoryLimitRegulatoryLimitRegulatoryLimitIdGetResponses];
 
 export type GetSamplesSampleGetData = {
     body?: never;
@@ -8297,12 +9429,7 @@ export type ReadNgwmnLithologyNgwmnLithologyPointidGetResponses = {
 export type CreateFeedbackFeedbackPostData = {
     body: FeedbackCreate;
     path?: never;
-    query?: {
-        /**
-         *  User
-         */
-        _user?: unknown;
-    };
+    query?: never;
     url: '/feedback';
 };
 
