@@ -61,10 +61,6 @@ const GEOTHERMAL_ROUTABLE = [
   'geothermal.geothermal_wells',
 ]
 
-// AMP.Staging is an opt-in flag group, not a rung on the AMP ladder. Nothing
-// else grants these resources — AMP.Admin included.
-const STAGING_ONLY_ROUTABLE = ['ocotillo.chemistry-report']
-
 const expectedAccessByScenario: Scenario[] = [
   {
     name: 'anonymous',
@@ -92,6 +88,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.thing-well',
       'ocotillo.contact',
       'ocotillo.hydrograph-correction',
+      'ocotillo.chemistry-report',
       'ocotillo.asset-unassociated',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
@@ -100,27 +97,17 @@ const expectedAccessByScenario: Scenario[] = [
   {
     name: 'AMP.Admin',
     groups: ['AMP.Admin'],
-    // AMP.Admin owns the water portal, not geothermal — and not the
-    // staging-flagged resources, which need the AMP.Staging group explicitly.
-    allowedResources: routableResources
-      .map((resource) => resource.name)
-      .filter(
-        (name) =>
-          !name.startsWith('geothermal.') &&
-          !STAGING_ONLY_ROUTABLE.includes(name)
-      ),
-  },
-  {
-    name: 'AMP.Staging',
-    groups: ['AMP.Staging'],
-    allowedResources: [...STAGING_ONLY_ROUTABLE],
-  },
-  {
-    name: 'AMP.Admin + AMP.Staging',
-    groups: ['AMP.Admin', 'AMP.Staging'],
+    // AMP.Admin owns the water portal, not geothermal.
     allowedResources: routableResources
       .map((resource) => resource.name)
       .filter((name) => !name.startsWith('geothermal.')),
+  },
+  {
+    // The group grants nothing on its own now that the chemistry report is an
+    // editor surface.
+    name: 'AMP.Staging',
+    groups: ['AMP.Staging'],
+    allowedResources: [],
   },
   {
     name: 'Geothermal.Viewer',
@@ -520,7 +507,9 @@ describe('capability groups', () => {
 
   it('gates the internal OGC catalogue on the same group', () => {
     expect(getAccessCapabilities(groups).canViewOgcInternal).toBe(true)
-    expect(getAccessCapabilities(['OGC.Internal']).canViewOgcInternal).toBe(true)
+    expect(getAccessCapabilities(['OGC.Internal']).canViewOgcInternal).toBe(
+      true
+    )
     // An AMP admin is not automatically cleared for the internal mount.
     expect(getAccessCapabilities(['AMP.Admin']).canViewOgcInternal).toBe(false)
     expect(getAccessCapabilities([]).canViewOgcInternal).toBe(false)
