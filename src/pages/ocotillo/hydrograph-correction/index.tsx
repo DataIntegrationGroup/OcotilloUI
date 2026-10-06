@@ -41,6 +41,13 @@ import {
   type PublishResult,
   PublishStatusNotice,
 } from './PublishStatusNotice'
+import {
+  DELETE_STAGE,
+  REFRESH_STAGE,
+  type UploadEvent,
+  uploadFraction,
+  uploadingProgress,
+} from './publishProgress'
 import { useWellSeries } from './useWellSeries'
 import {
   DiverHubIngestDialog,
@@ -431,7 +438,8 @@ export const HydrographCorrectionPage = () => {
   const postCorrectedBlock = async (
     args: HydrographPublishArgs,
     replaceOverlapping: boolean,
-    deploymentId: number | undefined
+    deploymentId: number | undefined,
+    onUpload?: (event: UploadEvent) => void
   ) => {
     if (!selectedWell) throw new Error('No well is selected.')
 
@@ -463,6 +471,7 @@ export const HydrographCorrectionPage = () => {
       url,
       method: 'post',
       payload,
+      ...(onUpload ? { meta: { onUploadProgress: onUpload } } : {}),
     })
     return data as { block?: { id?: number }; observation_count?: number }
   }
@@ -472,7 +481,19 @@ export const HydrographCorrectionPage = () => {
   const failPublish = (message: string) =>
     setPublishError({ wellName: publishingWellName, message })
 
-  const applyPublishSuccess = (
+  // What the page shows between the server confirming a write and the chart
+  // showing it: refetching a long series is not instant. A refresh that fails
+  // must not turn a publish that succeeded into a failure.
+  const refreshChartAfterWrite = async (operation?: 'delete') => {
+    setPublishProgress({
+      wellName: publishingWellName,
+      ...(operation ? { operation } : {}),
+      stage: REFRESH_STAGE,
+    })
+    await invalidateStoredSeries().catch(() => undefined)
+  }
+
+  const applyPublishSuccess = async (
     data: { block?: { id?: number }; observation_count?: number },
     args: HydrographPublishArgs
   ) => {
@@ -482,7 +503,7 @@ export const HydrographCorrectionPage = () => {
       skippedCount: 0,
       wellName: selectedWell?.name ?? '',
     })
-    invalidateStoredSeries()
+    await refreshChartAfterWrite()
   }
 
   // The API resolves the deployment from the block span when none is sent,
@@ -512,10 +533,13 @@ export const HydrographCorrectionPage = () => {
       if (covering.length === 1) deploymentId = covering[0].id as number
     }
 
-    setPublishProgress({ wellName: publishingWellName })
+    const base = { wellName: publishingWellName }
+    setPublishProgress(uploadingProgress(base, 0))
     try {
-      applyPublishSuccess(
-        await postCorrectedBlock(args, false, deploymentId),
+      await applyPublishSuccess(
+        await postCorrectedBlock(args, false, deploymentId, (event) =>
+          setPublishProgress(uploadingProgress(base, uploadFraction(event)))
+        ),
         args
       )
     } catch (error) {
@@ -555,13 +579,18 @@ export const HydrographCorrectionPage = () => {
       end_time: range.endTime.toISOString(),
     })
 
+    setPublishProgress({
+      wellName: publishingWellName,
+      operation: 'delete',
+      stage: DELETE_STAGE,
+    })
     try {
       const { data } = await ocotilloDataProvider.custom!({
         url: `observation/transducer-groundwater-level?${params.toString()}`,
         method: 'delete',
       })
 
-      await invalidateStoredSeries()
+      await refreshChartAfterWrite('delete')
 
       const body = data as { deleted_observation_count?: number } | null
       return { deletedCount: body?.deleted_observation_count ?? 0 }
@@ -577,6 +606,8 @@ export const HydrographCorrectionPage = () => {
         )
       }
       throw error
+    } finally {
+      setPublishProgress(null)
     }
   }
 
@@ -597,22 +628,31 @@ export const HydrographCorrectionPage = () => {
 
     try {
       for (const [index, run] of runs.entries()) {
-        setPublishProgress({
+        const base = {
           wellName: publishingWellName,
           ...(runs.length > 1
-            ? {
-                detail: `Writing block ${index + 1} of ${runs.length}. This can take several minutes; keep this tab open.`,
-              }
+            ? { step: { current: index + 1, total: runs.length } }
             : {}),
-        })
+        }
+        setPublishProgress(uploadingProgress(base, 0))
         const data = await postCorrectedBlock(
           { ...args, measurements: run },
           false,
-          deploymentId
+          deploymentId,
+          (event) =>
+            setPublishProgress(uploadingProgress(base, uploadFraction(event)))
         )
         if (data.block?.id != null) blockIds.push(data.block.id)
         count += data.observation_count ?? run.length
       }
+
+      setPublishSuccess({
+        blockIds,
+        count,
+        skippedCount,
+        wellName: selectedWell?.name ?? '',
+      })
+      if (blockIds.length > 0) await refreshChartAfterWrite()
     } catch (error) {
       // A 409 here means the stored series changed after the overlap was
       // detected, or unblocked readings sit in the gap; the server says which.
@@ -627,14 +667,6 @@ export const HydrographCorrectionPage = () => {
     } finally {
       setPublishProgress(null)
     }
-
-    setPublishSuccess({
-      blockIds,
-      count,
-      skippedCount,
-      wellName: selectedWell?.name ?? '',
-    })
-    if (blockIds.length > 0) invalidateStoredSeries()
   }
 
   const resolveOverlap = async (overlapMode: PublishOverlapMode) => {
@@ -647,10 +679,13 @@ export const HydrographCorrectionPage = () => {
       return
     }
 
-    setPublishProgress({ wellName: publishingWellName })
+    const base = { wellName: publishingWellName }
+    setPublishProgress(uploadingProgress(base, 0))
     try {
-      applyPublishSuccess(
-        await postCorrectedBlock(args, true, deploymentId),
+      await applyPublishSuccess(
+        await postCorrectedBlock(args, true, deploymentId, (event) =>
+          setPublishProgress(uploadingProgress(base, uploadFraction(event)))
+        ),
         args
       )
     } catch (error) {
@@ -1047,7 +1082,9 @@ export const HydrographCorrectionPage = () => {
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
             onPublish={handlePublish}
-            publishInProgress={publishProgress !== null}
+            publishInProgress={
+              publishProgress !== null && publishProgress.operation !== 'delete'
+            }
             onDeleteStoredRange={
               canDeleteStoredData ? handleDeleteStoredRange : undefined
             }

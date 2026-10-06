@@ -49,6 +49,86 @@ describe('PublishStatusNotice', () => {
     )
   })
 
+  it('runs the bar without a figure when it has none to give', () => {
+    renderNotice({ progress: { wellName: 'WL-0001' } })
+
+    const bar = screen.getByRole('progressbar', {
+      name: 'Publishing to WL-0001',
+    })
+    expect(bar.getAttribute('aria-valuenow')).toBeNull()
+  })
+
+  it('fills the bar and says the stage and percentage while uploading', () => {
+    renderNotice({
+      progress: { wellName: 'WL-0001', stage: 'Uploading', percent: 62.4 },
+    })
+
+    const bar = screen.getByRole('progressbar', {
+      name: 'Publishing to WL-0001',
+    })
+    // MUI rounds the value it reports.
+    expect(bar.getAttribute('aria-valuenow')).toBe('62')
+    expect(screen.getByRole('status').textContent).toContain(
+      'Uploading · 62% complete'
+    )
+  })
+
+  it('names the block when several are being written', () => {
+    renderNotice({
+      progress: {
+        wellName: 'WL-0001',
+        step: { current: 2, total: 3 },
+        stage: 'Uploading',
+        percent: 47,
+      },
+    })
+
+    expect(screen.getByRole('status').textContent).toContain(
+      'Block 2 of 3 · Uploading · 47% complete'
+    )
+  })
+
+  it('names a stage that has no percentage, and leaves the bar open', () => {
+    renderNotice({
+      progress: { wellName: 'WL-0001', stage: 'Saving on the server' },
+    })
+
+    const status = screen.getByRole('status')
+    expect(status.textContent).toContain('Saving on the server')
+    expect(status.textContent).not.toContain('%')
+    expect(
+      screen
+        .getByRole('progressbar', { name: 'Publishing to WL-0001' })
+        .getAttribute('aria-valuenow')
+    ).toBeNull()
+  })
+
+  it('says it is deleting, not publishing, for a delete', () => {
+    renderNotice({
+      progress: {
+        wellName: 'WL-0001',
+        operation: 'delete',
+        stage: 'Deleting readings on the server',
+      },
+    })
+
+    const status = screen.getByRole('status')
+    expect(status.textContent).toContain('Deleting from WL-0001')
+    expect(status.textContent).toContain('Deleting readings on the server')
+    expect(status.textContent).not.toContain('Publishing')
+    expect(
+      screen.getByRole('progressbar', { name: 'Deleting from WL-0001' })
+    ).toBeTruthy()
+  })
+
+  it('explains a delete in its own words when it has no stage yet', () => {
+    renderNotice({ progress: { wellName: 'WL-0001', operation: 'delete' } })
+
+    expect(screen.getByRole('status').textContent).toContain(
+      'Removing the stored readings'
+    )
+  })
+
   it('keeps the outcome up, naming the well, until it is dismissed', async () => {
     const user = userEvent.setup()
     const { onDismissSuccess, onDismissError } = renderNotice({
