@@ -322,6 +322,119 @@ describe('OcotilloHydrographCorrectionWorkbench chart tools', () => {
     expect(screen.getByText(/^Selection: /).textContent).toBe(selectionChip)
   })
 
+  it('zooms only the value axis of the panel a vertical drag is in', async () => {
+    const user = userEvent.setup()
+    render(workbenchWithReadings(11))
+    emitChartEvent('brushSelected', {
+      batch: [{ areas: [{ coordRange: [day(5), day(7)] }] }],
+    })
+    const selectionChip = screen.getByText(/^Selection: /).textContent
+
+    const zoomValue = screen.getByRole('button', { name: 'Zoom value axis' })
+    await user.click(zoomValue)
+    expect(zoomValue.getAttribute('aria-pressed')).toBe('true')
+    chartInstance.dispatchAction.mockClear()
+
+    // 20-60 ft down the DTW panel, drawn upward, with no width to speak of.
+    dragOnChart({ x: 60, y: 160 }, { x: 60, y: 120 })
+
+    expect(chartPresses).not.toHaveBeenCalled()
+    expect(chartInstance.dispatchAction).not.toHaveBeenCalled()
+    expect(chartOption.yAxis?.[1]).toMatchObject({ min: 20, max: 60 })
+    expect(screen.getByText(/^Selection: /).textContent).toBe(selectionChip)
+    // Reset still clears the pin, like any other zoom.
+    await user.click(screen.getByRole('button', { name: 'Reset zoom' }))
+    expect(chartOption.yAxis?.[1]).toMatchObject({ min: null, max: null })
+  })
+
+  it('draws a band across the chart while a vertical drag is under way', async () => {
+    const user = userEvent.setup()
+    render(workbenchWithReadings(11))
+    await user.click(screen.getByRole('button', { name: 'Zoom value axis' }))
+    const canvas = screen.getByTestId('chart-canvas')
+
+    fireEvent.mouseDown(canvas, { button: 0, clientX: 60, clientY: 120 })
+    fireEvent.mouseMove(window, { clientX: 61, clientY: 160 })
+    const band = screen.getByTestId('zoom-box')
+    // The band spans the chart's width at the dragged heights; `sx` writes a
+    // class, so read the computed style.
+    const style = getComputedStyle(band)
+    expect(style.left).toBe('0px')
+    expect(style.top).toBe('120px')
+    expect(style.height).toBe('40px')
+
+    fireEvent.mouseUp(window, { clientX: 61, clientY: 160 })
+    expect(screen.queryByTestId('zoom-box')).toBeNull()
+  })
+
+  // The DTW panel is the only one drawn here, so it fills the surface from
+  // y = 16 to y = 436; the stand-in chart maps a pixel row y to a value of
+  // y - 100, so the axis shows -84 to 336 and y = 226 reads 126.
+  const wheelOnChart = (
+    at: { x: number; y: number },
+    init: { deltaY: number; shiftKey?: boolean }
+  ) => {
+    const event = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      clientX: at.x,
+      clientY: at.y,
+      ...init,
+    })
+    act(() => {
+      screen.getByTestId('chart-canvas').dispatchEvent(event)
+    })
+    return event
+  }
+
+  it('zooms values around the reading under a Shift + wheel over the axis labels', () => {
+    render(workbenchWithReadings(11))
+    chartInstance.dispatchAction.mockClear()
+
+    const event = wheelOnChart(
+      { x: 50, y: 226 },
+      { deltaY: -100, shiftKey: true }
+    )
+
+    // Zoomed in by exp(-0.2), with the value under the pointer held still.
+    const factor = Math.exp(-0.2)
+    expect(chartOption.yAxis?.[1].min).toBeCloseTo(126 - (126 + 84) * factor)
+    expect(chartOption.yAxis?.[1].max).toBeCloseTo(126 + (336 - 126) * factor)
+    expect(event.defaultPrevented).toBe(true)
+    // The time window is not touched.
+    expect(chartInstance.dispatchAction).not.toHaveBeenCalled()
+  })
+
+  it('zooms back out in steps, from the pin the last step left', () => {
+    render(workbenchWithReadings(11))
+    wheelOnChart({ x: 50, y: 226 }, { deltaY: -100, shiftKey: true })
+    const zoomedIn = { ...chartOption.yAxis?.[1] }
+    wheelOnChart({ x: 50, y: 226 }, { deltaY: 100, shiftKey: true })
+
+    const span = (axis?: { min?: number | null; max?: number | null }) =>
+      (axis?.max ?? 0) - (axis?.min ?? 0)
+    expect(span(chartOption.yAxis?.[1])).toBeCloseTo(
+      span(zoomedIn) * Math.exp(0.2)
+    )
+  })
+
+  it('leaves a plain wheel over the axis labels to scroll the page', () => {
+    render(workbenchWithReadings(11))
+
+    const event = wheelOnChart({ x: 50, y: 226 }, { deltaY: -100 })
+
+    expect(chartOption.yAxis?.[1]).toMatchObject({ min: null, max: null })
+    expect(event.defaultPrevented).toBe(false)
+  })
+
+  it('leaves Shift + wheel over the plot to zoom time, not values', () => {
+    render(workbenchWithReadings(11))
+
+    wheelOnChart({ x: 300, y: 226 }, { deltaY: -100, shiftKey: true })
+
+    expect(chartOption.yAxis?.[1]).toMatchObject({ min: null, max: null })
+  })
+
   it('draws the zoom box while it is dragged', async () => {
     const user = userEvent.setup()
     render(workbenchWithReadings(11))
