@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useContext, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { Link as RouterLink } from "react-router";
 import { LandingTopbar } from "@/components/LandingTopbar";
@@ -21,6 +21,15 @@ import ocotilloImage from "@/img/ocotillo.jpeg";
 import waterWellImage from "@/img/ogs-water-well.svg";
 import ampImage from "@/img/ogs-amp-project-areas.svg";
 import waterElevationImage from "@/img/ogs-water-elevation.svg";
+import authDarkImage from "@/img/auth-dark.png";
+import authLightImage from "@/img/auth-light.png";
+import mapDarkImage from "@/img/map-dark.png";
+import mapLightImage from "@/img/map-light.png";
+import sensorCorrectorDarkImage from "@/img/sensorcorrector-dark.png";
+import sensorCorrectorLightImage from "@/img/sensorcorrector-light.png";
+import wellDetailDarkImage from "@/img/welldetail-dark.png";
+import wellDetailLightImage from "@/img/welldetail-light.png";
+import { ColorModeContext } from "@/contexts";
 
 const layers = [
   {
@@ -238,27 +247,51 @@ export const LandingPage = () => {
               eyebrow="01"
               title="Interactive Mapping & Visual Exploration"
               description="Address/place search and contextual navigation."
-              visual={<MapPreview />}
+              visual={
+                <ShowcaseImage
+                  lightImage={mapLightImage}
+                  darkImage={mapDarkImage}
+                  alt="Ocotillo interactive mapping and visual exploration"
+                />
+              }
             />
             <ShowcaseRow
               reverse
               eyebrow="02"
               title="Comprehensive Well & Site Details"
               description="Direct file and photo attachments, integrated source cross-referencing, and project and boundary views. "
-              visual={<TablePreview />}
+              visual={
+                <ShowcaseImage
+                  lightImage={wellDetailLightImage}
+                  darkImage={wellDetailDarkImage}
+                  alt="Ocotillo comprehensive well and site details"
+                />
+              }
             />
             <ShowcaseRow
               eyebrow="03 · Beta"
               title="Continuous Sensor Data Correction"
               description="Interactive time-series QA/QC with visual editing tools."
-              visual={<ChartPreview />}
+              visual={
+                <ShowcaseImage
+                  lightImage={sensorCorrectorLightImage}
+                  darkImage={sensorCorrectorDarkImage}
+                  alt="Ocotillo continuous sensor data correction"
+                />
+              }
             />
             <ShowcaseRow
               reverse
               eyebrow="04 · In active development"
               title="Secure, Role-Aware Collaboration & Access"
               description="Separate data catalogs for public and internal data sets, in-app editing for Contacts and Projects."
-              visual={<TablePreview />}
+              visual={
+                <ShowcaseImage
+                  lightImage={authLightImage}
+                  darkImage={authDarkImage}
+                  alt="Ocotillo secure, role-aware collaboration and access"
+                />
+              }
             />
           </div>
         </section>
@@ -395,18 +428,25 @@ const PreviewWindow = ({ children }: { children: ReactNode }) => (
     {children}
   </div>
 );
-const MapPreview = () => (
-  <PreviewWindow>
-    <img alt="" className="size-full object-cover" />
-  </PreviewWindow>
-);
-const TablePreview = () => (
-  <PreviewWindow>
-    <img alt="" className="size-full object-cover" />
-  </PreviewWindow>
-);
-const ChartPreview = () => (
-  <PreviewWindow>
-    <img alt="" className="size-full object-cover" />
-  </PreviewWindow>
-);
+
+const ShowcaseImage = ({
+  lightImage,
+  darkImage,
+  alt,
+}: {
+  lightImage: string;
+  darkImage: string;
+  alt: string;
+}) => {
+  const { mode } = useContext(ColorModeContext);
+
+  return (
+    <PreviewWindow>
+      <img
+        src={mode === "dark" ? darkImage : lightImage}
+        alt={alt}
+        className="size-full rounded-[2px] border border-foreground/30 object-fill"
+      />
+    </PreviewWindow>
+  );
+};
