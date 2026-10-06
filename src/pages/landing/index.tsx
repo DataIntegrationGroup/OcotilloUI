@@ -179,19 +179,20 @@ export const LandingPage = () => {
               className="h-[390px] w-full object-contain"
             />
           </Card>
-          <Card className="p-5">
+          <Card className="flex h-full flex-col p-5">
             <CardHeader className="p-0">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
                 Layer preview
               </p>
               <CardTitle className="font-heading text-2xl">
-                Lorem ipsum dolor sit amet
+                OGS layers in QGIS
               </CardTitle>
               <CardDescription>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                These previews show screenshots of the highlighted OGS layer
+                displayed in QGIS.
               </CardDescription>
             </CardHeader>
-            <CardContent className="mt-5 space-y-2 p-0">
+            <CardContent className="mt-5 flex flex-1 flex-col space-y-2 p-0">
               {layers.map((layer) => (
                 <button
                   key={layer.id}
@@ -203,13 +204,9 @@ export const LandingPage = () => {
                   <strong className="font-heading text-sm">{layer.name}</strong>
                 </button>
               ))}
-              <p className="text-sm text-muted-foreground">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              </p>
               <nav
                 aria-label="OGS layer resources"
-                className="flex flex-wrap gap-3 pt-2"
+                className="mt-auto flex flex-wrap gap-3 pt-5"
               >
                 <Button asChild variant="outline">
                   <RouterLink to="/ogcapi">How to connect to ArcGIS</RouterLink>
@@ -234,10 +231,11 @@ export const LandingPage = () => {
               Individual Feature Highlights
             </h2>
             <p className="mt-3 text-base text-muted-foreground">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              Explore the core tools that make it easier to discover,
+              understand, and work with the Bureau of Geology’s data.
             </p>
           </div>
+
           <div className="space-y-10">
             <ShowcaseRow
               eyebrow="01"
