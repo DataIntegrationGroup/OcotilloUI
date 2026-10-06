@@ -34,13 +34,32 @@ const observation = (
     result_kind: 'major',
   }) as ChemistryResult
 
+/** The hook reads one row from each endpoint; answer them by resource. */
+const mockLists = ({
+  chemistry = [],
+  waterLevels = [],
+}: {
+  chemistry?: unknown[]
+  waterLevels?: unknown[]
+} = {}) => {
+  mockedUseList.mockImplementation((args: { resource: string }) => ({
+    result: {
+      data: args.resource === 'chemistry/results' ? chemistry : waterLevels,
+    },
+    query: { isLoading: false },
+  }))
+}
+
+const reading = (observation_datetime: string) => ({
+  id: 1,
+  observation_datetime,
+  depth_to_water_bgs: 208.4,
+})
+
 describe('useWellChemistryReport', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockedUseList.mockReturnValue({
-      result: { data: [] },
-      query: { isLoading: false },
-    })
+    mockLists()
   })
 
   it('asks for only the newest sample, newest first', () => {
@@ -57,6 +76,19 @@ describe('useWellChemistryReport', () => {
     )
   })
 
+  it('asks for the newest water level reading too', () => {
+    renderHook(() => useWellChemistryReport({ thingId: 7834 }))
+
+    expect(mockedUseList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: 'observation/groundwater-level',
+        pagination: { currentPage: 1, pageSize: 1, mode: 'server' },
+        sorters: [{ field: 'observation_datetime', order: 'desc' }],
+        meta: { params: { thing_id: 7834 } },
+      })
+    )
+  })
+
   it('stays idle until the report is on offer', () => {
     renderHook(() => useWellChemistryReport({ thingId: 7834, enabled: false }))
 
@@ -67,37 +99,56 @@ describe('useWellChemistryReport', () => {
     )
   })
 
-  it('reports on the most recent sampled year, not the current one', () => {
-    mockedUseList.mockReturnValue({
-      result: { data: [observation(9, 'Arsenic', '2024-05-15T00:00:00Z')] },
-      query: { isLoading: false },
+  it('takes the reporting year from the water levels, which is what it scopes', () => {
+    // Sampled once, seven years ago, and measured since. Reading the year off
+    // the chemistry would print a 2019 water level section for a well that has
+    // been measured every year since.
+    mockLists({
+      chemistry: [observation(9, 'Arsenic', '2019-04-09T00:00:00Z')],
+      waterLevels: [reading('2026-09-02T00:00:00Z')],
     })
 
     const { result } = renderHook(() =>
       useWellChemistryReport({ thingId: 7834 })
     )
 
-    expect(result.current.reportYear).toBe(2024)
-    expect(result.current.latestSampledYear).toBe(2024)
+    expect(result.current.reportYear).toBe(2026)
+    expect(result.current.latestMeasuredYear).toBe(2026)
+    // The chemistry year is still reported, and still gates the menu option.
+    expect(result.current.latestSampledYear).toBe(2019)
     expect(result.current.hasChemistry).toBe(true)
   })
 
-  it('falls back to the current year when the well has never been sampled', () => {
-    // Reporting "no results" for this year beats having no year to offer.
+  it('falls back to the current year when the well has never been measured', () => {
+    // No year would print a populated water level section, so the current one
+    // is as good as any.
+    mockLists({
+      chemistry: [observation(9, 'Arsenic', '2024-05-15T00:00:00Z')],
+    })
+
     const { result } = renderHook(() =>
       useWellChemistryReport({ thingId: 7834 })
     )
 
     expect(result.current.reportYear).toBe(new Date().getFullYear())
+    expect(result.current.latestMeasuredYear).toBeNull()
+    expect(result.current.latestSampledYear).toBe(2024)
+  })
+
+  it('reports no chemistry when the well has never been sampled', () => {
+    const { result } = renderHook(() =>
+      useWellChemistryReport({ thingId: 7834 })
+    )
+
     expect(result.current.latestSampledYear).toBeNull()
     expect(result.current.hasChemistry).toBe(false)
   })
 
-  it('pulls the year as a calendar window, sorted for the report', async () => {
+  it('pulls the whole record, unwindowed, sorted for the report', async () => {
     mockedGetList.mockResolvedValue({
       data: [
         observation(2, 'Zinc', '2024-05-15T00:00:00Z'),
-        observation(1, 'Arsenic', '2024-05-15T00:00:00Z'),
+        observation(1, 'Arsenic', '2019-04-09T00:00:00Z'),
       ],
       total: 2,
     })
@@ -105,18 +156,15 @@ describe('useWellChemistryReport', () => {
     const { result } = renderHook(() =>
       useWellChemistryReport({ thingId: 7834 })
     )
-    const observations = await result.current.fetchYearObservations(2024)
+    const observations = await result.current.fetchObservations()
 
+    // No start_time or end_time: most wells carry a single chemistry record,
+    // so windowing it to the reporting year emptied the report more often
+    // than it scoped it.
     expect(mockedGetList).toHaveBeenCalledWith(
       expect.objectContaining({
         resource: 'chemistry/results',
-        meta: {
-          params: {
-            thing_id: 7834,
-            start_time: '2024-01-01T00:00:00',
-            end_time: '2025-01-01T00:00:00',
-          },
-        },
+        meta: { params: { thing_id: 7834 } },
       })
     )
     expect(observations.map((row) => row.parameter_name)).toEqual([
@@ -125,7 +173,7 @@ describe('useWellChemistryReport', () => {
     ])
   })
 
-  it('keeps paging until every result for the year is collected', async () => {
+  it('keeps paging until every result is collected', async () => {
     mockedGetList
       .mockResolvedValueOnce({
         data: [observation(1, 'Arsenic', '2024-05-15T00:00:00Z')],
@@ -139,7 +187,7 @@ describe('useWellChemistryReport', () => {
     const { result } = renderHook(() =>
       useWellChemistryReport({ thingId: 7834 })
     )
-    const observations = await result.current.fetchYearObservations(2024)
+    const observations = await result.current.fetchObservations()
 
     expect(mockedGetList).toHaveBeenCalledTimes(2)
     expect(observations).toHaveLength(2)
@@ -152,7 +200,7 @@ describe('useWellChemistryReport', () => {
     const { result } = renderHook(() =>
       useWellChemistryReport({ thingId: 7834 })
     )
-    const observations = await result.current.fetchYearObservations(2024)
+    const observations = await result.current.fetchObservations()
 
     expect(mockedGetList).toHaveBeenCalledTimes(1)
     expect(observations).toEqual([])

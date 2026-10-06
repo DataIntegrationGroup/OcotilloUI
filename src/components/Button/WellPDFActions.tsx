@@ -4,7 +4,10 @@ import { DownloadIcon, EyeIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { WellPDF } from '@/components'
-import { downloadChemistryReport } from '@/components/pdf/chemistry'
+import {
+  CHEMISTRY_REPORT_DEFAULT_SECTIONS,
+  downloadChemistryReport,
+} from '@/components/pdf/chemistry'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -79,7 +82,7 @@ export const WellPDFActionsButton = ({
     reportYear,
     hasChemistry,
     isLoading: isChemistryLoading,
-    fetchYearObservations,
+    fetchObservations,
     fetchWaterLevels,
     fetchContinuous,
   } = useWellChemistryReport({
@@ -169,16 +172,26 @@ export const WellPDFActionsButton = ({
         | undefined
     )?.elevation
 
-    const [yearObservations, waterLevels, continuous] = await Promise.all([
-      fetchYearObservations(year),
-      fetchWaterLevels(year, { elevationFt }),
-      fetchContinuous(year),
+    // Not named `observations`: the component already takes a prop by that
+    // name, holding the field sheet's observations rather than chemistry.
+    // The well page generates with the report's default sections, so a
+    // section switched off there is not worth its requests. The exporter,
+    // where any of them can be switched back on, fetches its own.
+    const [chemistry, waterLevels, continuous] = await Promise.all([
+      // The whole chemistry record; the year scopes the water levels only.
+      fetchObservations(),
+      CHEMISTRY_REPORT_DEFAULT_SECTIONS.waterLevels
+        ? fetchWaterLevels(year, { elevationFt })
+        : [],
+      CHEMISTRY_REPORT_DEFAULT_SECTIONS.continuousMonitoring
+        ? fetchContinuous(year)
+        : null,
     ])
 
     return downloadChemistryReport({
       well,
       contacts,
-      observations: yearObservations,
+      observations: chemistry,
       waterLevels,
       continuous,
       year,
@@ -196,7 +209,7 @@ export const WellPDFActionsButton = ({
 
       notify?.({
         message: isChemistry
-          ? `Chemistry report generated for ${reportYear}`
+          ? 'Chemistry report generated'
           : 'PDF generated successfully',
         type: 'success',
         description: filename,
@@ -217,7 +230,8 @@ export const WellPDFActionsButton = ({
   const downloadTooltip = isGenerating
     ? 'Generating…'
     : isChemistry
-      ? `Download chemistry report for ${reportYear}`
+      ? // The chemistry is the whole record; the year is the water levels'.
+        `Download chemistry report, with ${reportYear} water levels`
       : 'Download field sheet'
 
   return (

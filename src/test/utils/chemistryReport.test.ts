@@ -4,7 +4,6 @@ import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import {
   buildChemistryReportFilename,
   chemistryReportYearOf,
-  chemistryReportYearParams,
   formatLevelChange,
   formatResultValue,
   inclusiveEndYearParams,
@@ -185,14 +184,13 @@ describe('buildChemistryReportFilename', () => {
       'chemistry-report-well-unknown-2026.pdf'
     )
   })
-})
 
-describe('chemistryReportYearParams', () => {
-  it('covers the calendar year without spilling into the next one', () => {
-    expect(chemistryReportYearParams(2026)).toEqual({
-      start_time: '2026-01-01T00:00:00',
-      end_time: '2027-01-01T00:00:00',
-    })
+  it('leaves the year off when the report carries none', () => {
+    // The year is the water levels'; with those sections off it would imply
+    // the chemistry inside belonged to it.
+    expect(
+      buildChemistryReportFilename({ id: 1187, name: 'WL-1187' }, null)
+    ).toBe('chemistry-report-WL-1187.pdf')
   })
 })
 
@@ -285,7 +283,7 @@ describe('resultStatus', () => {
           standard: { kind: 'SMCL', limit: 0.3, unit: 'mg/L' },
         })
       )
-    ).toEqual({ kind: 'above-smcl', label: 'Above SMCL' })
+    ).toEqual({ kind: 'above-smcl', label: 'Above recommended range' })
   })
 
   it('reports a missing value as not detected rather than as passing', () => {

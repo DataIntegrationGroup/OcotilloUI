@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  CHEMISTRY_RESOURCE,
+  fetchAllChemistry,
   fetchContinuousWaterLevels,
   fetchReportWaterLevels,
   TRANSDUCER_RESOURCE,
@@ -14,6 +16,57 @@ const provider = { getList } as unknown as Parameters<
 const logged = (observation_datetime: string, value: number) => ({
   observation: { observation_datetime, value },
   block: { review_status: 'approved' },
+})
+
+describe('fetchAllChemistry', () => {
+  beforeEach(() => {
+    getList.mockReset()
+  })
+
+  it('asks for the whole record rather than a year of it', async () => {
+    getList.mockResolvedValue({ data: [], total: 0 })
+
+    await fetchAllChemistry(provider, 1443)
+
+    const [call] = getList.mock.calls.map(([first]) => first)
+    expect(call).toMatchObject({
+      resource: CHEMISTRY_RESOURCE,
+      meta: { params: { thing_id: 1443 } },
+    })
+    // Most wells carry a single chemistry record, often years old, so a year
+    // window emptied the report more often than it scoped it.
+    expect(call.meta.params).not.toHaveProperty('start_time')
+    expect(call.meta.params).not.toHaveProperty('end_time')
+  })
+
+  it('pages until the total is reached, oldest sample first', async () => {
+    getList
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: 'b',
+            parameter_name: 'Zinc',
+            observation_datetime: '2024-05-15T00:00:00Z',
+          },
+        ],
+        total: 2,
+      })
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: 'a',
+            parameter_name: 'Arsenic',
+            observation_datetime: '2019-04-09T00:00:00Z',
+          },
+        ],
+        total: 2,
+      })
+
+    const results = await fetchAllChemistry(provider, 1443)
+
+    expect(getList).toHaveBeenCalledTimes(2)
+    expect(results.map((row) => row.id)).toEqual(['a', 'b'])
+  })
 })
 
 describe('fetchReportWaterLevels', () => {

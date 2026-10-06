@@ -1,21 +1,16 @@
 import {
   Alert,
-  Autocomplete,
   Box,
   Checkbox,
   FormControlLabel,
-  MenuItem,
   Paper,
   Skeleton,
-  Stack,
-  TextField,
   Typography,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { PDFViewer } from '@react-pdf/renderer'
 import { useOne } from '@refinedev/core'
-import { useAutocomplete } from '@refinedev/mui'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { ChemistryReportDownloadButton } from '@/components/Button'
 import { OcotilloPageTitle } from '@/components/OcotilloPageHeader'
@@ -26,36 +21,30 @@ import {
   type ChemistryReportSections,
   buildWeaverQrDataUrl,
 } from '@/components/pdf/chemistry'
-import { useChemistryReportData, useDebounce } from '@/hooks'
+import { useChemistryReportData } from '@/hooks'
 import type { IWell } from '@/interfaces/ocotillo'
-
-/**
- * Reporting periods offered in the picker: this year and the four before it,
- * plus whatever year was linked to. A well last sampled outside that window
- * still has to be selectable, or arriving from its details page would land on
- * a year the picker cannot show.
- */
-const buildYearOptions = (linkedYear?: number): number[] => {
-  const current = new Date().getFullYear()
-  const years = Array.from({ length: 5 }, (_, index) => current - index)
-  if (linkedYear && !years.includes(linkedYear)) years.push(linkedYear)
-  return years.sort((a, b) => b - a)
-}
 
 const parseYearParam = (value: string | null): number | undefined => {
   const parsed = Number(value)
   return Number.isInteger(parsed) && parsed > 1900 ? parsed : undefined
 }
 
+/**
+ * Previews one well's report and hands it over as a PDF.
+ *
+ * The well and the reporting year come from the link that got here -- the
+ * report option on a well's details page -- rather than from pickers. That
+ * page already knows which well is being looked at, and it works out the year
+ * from the well's own record, so choosing either again here could only
+ * disagree with it. The only thing left to decide is which sections to
+ * include.
+ */
 export const ChemistryReportExport = () => {
-  // The well details page links here with the report it wants already chosen.
   const [searchParams] = useSearchParams()
   const linkedThingId = searchParams.get('thing_id')
-  const linkedYear = parseYearParam(searchParams.get('year'))
-
-  const yearOptions = useMemo(() => buildYearOptions(linkedYear), [linkedYear])
-  const [selectedWell, setSelectedWell] = useState<IWell | null>(null)
-  const [year, setYear] = useState<number>(linkedYear ?? yearOptions[0])
+  // Scopes the water levels only; the chemistry is the well's whole record.
+  const year =
+    parseYearParam(searchParams.get('year')) ?? new Date().getFullYear()
 
   const { result: linkedWell } = useOne<IWell>({
     resource: 'thing-well',
@@ -63,30 +52,9 @@ export const ChemistryReportExport = () => {
     queryOptions: { enabled: Boolean(linkedThingId) },
   })
 
-  useEffect(() => {
-    // Only seeds the picker — once the user changes it, this stops applying.
-    if (linkedWell && !selectedWell) setSelectedWell(linkedWell as IWell)
-  }, [linkedWell, selectedWell])
   const [sections, setSections] = useState<ChemistryReportSections>(
     CHEMISTRY_REPORT_DEFAULT_SECTIONS
   )
-
-  const [wellSearch, setWellSearch] = useState('')
-  const debouncedWellSearch = useDebounce(wellSearch, 300)
-
-  // The API filters wells by the `name_contains` query param rather than by a
-  // Refine filter, so the search term is threaded through meta.params — the
-  // same shape the Wells list uses.
-  const { autocompleteProps } = useAutocomplete<IWell>({
-    resource: 'thing/water-well',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        include_contacts: true,
-        ...(debouncedWellSearch ? { name_contains: debouncedWellSearch } : {}),
-      },
-    },
-  })
 
   const {
     well,
@@ -96,7 +64,7 @@ export const ChemistryReportExport = () => {
     continuous,
     isLoading,
     isError,
-  } = useChemistryReportData({ thingId: selectedWell?.id, year })
+  } = useChemistryReportData({ thingId: linkedThingId ?? undefined, year })
 
   const toggleSection = (key: keyof ChemistryReportSections) =>
     setSections((previous) => ({ ...previous, [key]: !previous[key] }))
@@ -114,11 +82,16 @@ export const ChemistryReportExport = () => {
     }
   }, [well?.name])
 
-  const isReady = Boolean(selectedWell) && !isLoading && !isError
+  const isReady = Boolean(linkedThingId) && !isLoading && !isError
+  const wellLabel = (linkedWell as IWell | undefined)?.name ?? well?.name
 
   return (
     <Box>
-      <OcotilloPageTitle title="Chemistry Report Exporter">
+      <OcotilloPageTitle
+        title={
+          wellLabel ? `Chemistry Report — ${wellLabel}` : 'Chemistry Report'
+        }
+      >
         <ChemistryReportDownloadButton
           well={well}
           contacts={contacts}
@@ -132,74 +105,45 @@ export const ChemistryReportExport = () => {
       </OcotilloPageTitle>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Generate an owner-facing annual water quality report for a single well.
-        Multi-well runs, delivery, and scheduling are not implemented yet.
+        {`An owner-facing water quality report: the well's whole chemistry record, with water level measurements for ${year}. Multi-well runs, delivery, and scheduling are not implemented yet.`}
       </Typography>
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 5 }}>
-            <Autocomplete
-              {...autocompleteProps}
-              value={selectedWell}
-              onChange={(_, newValue) => setSelectedWell(newValue)}
-              getOptionKey={(option) => option.id}
-              getOptionLabel={(option) => `${option.name} (${option.id})`}
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              inputValue={wellSearch}
-              onInputChange={(_, newInput) => setWellSearch(newInput)}
-              filterOptions={(options) => options}
-              renderInput={(params) => (
-                <TextField {...params} label="Well" size="small" />
-              )}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label="Reporting year"
-              value={year}
-              onChange={(event) => setYear(Number(event.target.value))}
-            >
-              {yearOptions.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {`Calendar year ${option}`}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Stack>
-              <Typography variant="caption" color="text.secondary">
-                Sections
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
-                {(
-                  Object.keys(
-                    CHEMISTRY_REPORT_SECTION_LABELS
-                  ) as (keyof ChemistryReportSections)[]
-                ).map((key) => (
-                  <FormControlLabel
-                    key={key}
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={sections[key]}
-                        onChange={() => toggleSection(key)}
-                      />
-                    }
-                    label={
-                      <Typography variant="body2">
-                        {CHEMISTRY_REPORT_SECTION_LABELS[key]}
-                      </Typography>
-                    }
+        <Typography
+          variant="overline"
+          color="text.secondary"
+          component="div"
+          sx={{ mb: 0.5 }}
+        >
+          Sections
+        </Typography>
+        {/* One column on a phone, two on a tablet, four on a desktop, so the
+            labels stay on one line each instead of wrapping into a block of
+            checkboxes that is hard to scan. */}
+        <Grid container columnSpacing={2}>
+          {(
+            Object.keys(
+              CHEMISTRY_REPORT_SECTION_LABELS
+            ) as (keyof ChemistryReportSections)[]
+          ).map((key) => (
+            <Grid key={key} size={{ xs: 12, sm: 6, md: 3 }}>
+              <FormControlLabel
+                sx={{ width: '100%' }}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={sections[key]}
+                    onChange={() => toggleSection(key)}
                   />
-                ))}
-              </Box>
-            </Stack>
-          </Grid>
+                }
+                label={
+                  <Typography variant="body2">
+                    {CHEMISTRY_REPORT_SECTION_LABELS[key]}
+                  </Typography>
+                }
+              />
+            </Grid>
+          ))}
         </Grid>
       </Paper>
 
@@ -209,14 +153,14 @@ export const ChemistryReportExport = () => {
         </Alert>
       ) : null}
 
-      {selectedWell && !isLoading && observations.length === 0 ? (
+      {linkedThingId && !isLoading && observations.length === 0 ? (
         <Alert severity="info" sx={{ mb: 2 }}>
-          {`No water chemistry is on file for ${selectedWell.name} in ${year}. The report still generates, marked as having no results.`}
+          {`No water chemistry is on file for ${wellLabel ?? 'this well'}. The report still generates, marked as having no results.`}
         </Alert>
       ) : null}
 
       <Box sx={{ width: '100%', height: '80vh' }}>
-        {!selectedWell ? (
+        {!linkedThingId ? (
           <Paper
             variant="outlined"
             sx={{
@@ -224,10 +168,12 @@ export const ChemistryReportExport = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              p: 3,
             }}
           >
-            <Typography color="text.secondary">
-              Select a well to preview its report.
+            <Typography color="text.secondary" align="center">
+              Open a well, then choose Chemistry report from its PDF menu to
+              preview it here.
             </Typography>
           </Paper>
         ) : isLoading ? (

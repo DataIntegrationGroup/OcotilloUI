@@ -1,6 +1,7 @@
 import {
   compareToStandard,
   type DrinkingWaterStandard,
+  type StandardKind,
 } from '@/constants/drinkingWaterStandards'
 import type {
   ChemistryResult,
@@ -41,26 +42,17 @@ export type ChemistryReportSummary = {
 }
 
 /**
- * Page size used when pulling one well's chemistry for one reporting year. A
- * year of results for a single well is small; the ceiling only exists so a
- * well with an unusually long parameter list is not silently truncated.
+ * Page size used when pulling one well's chemistry. A single well's record is
+ * small; the ceiling only exists so a well with an unusually long parameter
+ * list is not silently truncated.
  */
 export const CHEMISTRY_REPORT_PAGE_SIZE = 500
 
 /**
- * The API's start_time/end_time window is inclusive of the start and exclusive
- * of the end, so a calendar year runs from Jan 1 to Jan 1 of the next year.
- */
-export const chemistryReportYearParams = (year: number) => ({
-  start_time: `${year}-01-01T00:00:00`,
-  end_time: `${year + 1}-01-01T00:00:00`,
-})
-
-/**
- * The same calendar year for the groundwater level endpoints, whose end_time
- * is inclusive (`<=`) rather than exclusive. Ending on Jan 1 there would pull a
- * reading logged at midnight on New Year's Day -- which an hourly logger
- * always has -- into the year before.
+ * A calendar year for the groundwater level endpoints, whose end_time is
+ * inclusive (`<=`) rather than exclusive. Ending on Jan 1 would pull a reading
+ * logged at midnight on New Year's Day -- which an hourly logger always has --
+ * into the year before.
  */
 export const inclusiveEndYearParams = (year: number) => ({
   start_time: `${year}-01-01T00:00:00`,
@@ -68,10 +60,9 @@ export const inclusiveEndYearParams = (year: number) => ({
 })
 
 /**
- * The calendar year a sample belongs to, read in UTC to match the window
- * `chemistryReportYearParams` builds. Reading it locally would file a sample
- * collected Jan 01 under the previous year anywhere west of Greenwich, and the
- * report for that year would then come back empty.
+ * The calendar year a sample belongs to, read in UTC to match the windows the
+ * API is queried with. Reading it locally would file a sample collected Jan 01
+ * under the previous year anywhere west of Greenwich.
  */
 export const chemistryReportYearOf = (value?: string | null): number | null => {
   if (!value) return null
@@ -127,6 +118,23 @@ const sampleKeyOf = (observation: ChemistryResult): string =>
     ? `sample-${observation.sample_id}`
     : `date-${observation.observation_datetime.slice(0, 10)}`
 
+/**
+ * The parameters currently above a limit of the given kind, one row each,
+ * carrying that parameter's most recent result.
+ *
+ * Reads the newest result per parameter rather than every result, so a
+ * parameter that was above a limit at an earlier sample and is below it now is
+ * not reported as an exceedance, and one that has stayed above is reported
+ * once.
+ */
+const latestExceedances = (
+  rows: readonly ChemistryResultRow[],
+  kind: StandardKind
+): ChemistryResultRow[] =>
+  latestResultPerParameter(
+    rows.filter((row) => row.standard?.kind === kind)
+  ).rows.filter((row) => row.exceeds)
+
 export const summarizeChemistry = (
   observations: readonly ChemistryResult[]
 ): ChemistryReportSummary => {
@@ -166,27 +174,33 @@ export const summarizeChemistry = (
     comparedCount: new Set(
       rows.filter((row) => row.standard).map((row) => row.parameterName)
     ).size,
-    mclExceedances: rows.filter(
-      (row) => row.exceeds && row.standard?.kind === 'MCL'
-    ),
-    smclExceedances: rows.filter(
-      (row) => row.exceeds && row.standard?.kind === 'SMCL'
-    ),
+    // Counted per parameter at its most recent result, matching the table --
+    // never per result. A well sampled twice would otherwise report a single
+    // persistent exceedance as two, and name the parameter twice in the
+    // callout. Now that the report carries a well's whole chemistry record
+    // rather than one year of it, repeat sampling is the normal case.
+    mclExceedances: latestExceedances(rows, 'MCL'),
+    smclExceedances: latestExceedances(rows, 'SMCL'),
   }
 }
 
 /**
- * `WL-1187 Vigil Ranch Well` → `chemistry-report-WL-1187-2026.pdf`
+ * `WL-1187 Vigil Ranch Well` → `chemistry-report-WL-1187-2026.pdf`, or
+ * `chemistry-report-WL-1187.pdf` when the report carries no year.
+ *
+ * The year is the water levels' and is dropped with them: a file named for a
+ * year whose only year-scoped section was switched off would sort and read as
+ * though the chemistry inside it belonged to that year.
  */
 export const buildChemistryReportFilename = (
   well: Pick<IWell, 'id' | 'name'> | undefined,
-  year: number
+  year?: number | null
 ): string => {
   const slug = (well?.name ?? `well-${well?.id ?? 'unknown'}`)
     .trim()
     .replace(/\s+/g, '-')
     .replace(/[^A-Za-z0-9._-]/g, '')
-  return `chemistry-report-${slug}-${year}.pdf`
+  return `chemistry-report-${slug}${year == null ? '' : `-${year}`}.pdf`
 }
 
 /**
@@ -196,7 +210,7 @@ export const buildChemistryReportFilename = (
  */
 export type ChemistryStatus =
   | { kind: 'above-mcl'; label: 'Above limit' }
-  | { kind: 'above-smcl'; label: 'Above SMCL' }
+  | { kind: 'above-smcl'; label: 'Above recommended range' }
   | { kind: 'below'; label: 'Below limit' }
   | { kind: 'not-detected'; label: 'Not detected' }
   | { kind: 'classification'; label: string }
@@ -228,15 +242,34 @@ export const resultStatus = (row: ChemistryResultRow): ChemistryStatus => {
   if (row.exceeds) {
     return row.standard.kind === 'MCL'
       ? { kind: 'above-mcl', label: 'Above limit' }
-      : { kind: 'above-smcl', label: 'Above SMCL' }
+      : { kind: 'above-smcl', label: 'Above recommended range' }
   }
 
   return { kind: 'below', label: 'Below limit' }
 }
 
-/** `0.010 mg/L` for a row's limit, or a dash when it has no standard. */
-export const formatStandardLimit = (row: ChemistryResultRow): string =>
-  row.standard ? String(row.standard.limit) : 'no standard'
+/**
+ * A row's limit under one kind of standard, or a dash when that kind does not
+ * apply to it. The report gives the MCL and the SMCL their own columns rather
+ * than one "standard" column beside a "type" column: a reader who misses the
+ * abbreviations at the foot of the report cannot tell an enforceable health
+ * limit from a taste guideline when both are printed under one heading.
+ */
+export const standardLimitFor = (
+  row: ChemistryResultRow,
+  kind: StandardKind
+): string => (row.standard?.kind === kind ? String(row.standard.limit) : '—')
+
+/**
+ * Where a result sits against its own limit, as a fraction of it. 1 is exactly
+ * at the limit, 0.5 is half of it. Null when there is nothing to compare --
+ * no standard, no result, or a limit of zero, which would divide by nothing.
+ */
+export const resultAgainstLimit = (row: ChemistryResultRow): number | null => {
+  const limit = row.standard?.limit
+  if (limit == null || limit <= 0 || row.value == null) return null
+  return row.value / limit
+}
 
 /**
  * Field parameters as one row per parameter with a column per sample date,
