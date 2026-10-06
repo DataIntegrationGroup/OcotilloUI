@@ -64,11 +64,61 @@ const features = [
 ] as const;
 
 const faqs = [
-  "Lorem ipsum dolor sit amet?",
-  "Consectetur adipiscing elit, sed do eiusmod tempor?",
-  "Ut enim ad minim veniam, quis nostrud exercitation?",
-  "Duis aute irure dolor in reprehenderit in voluptate?",
-  "Excepteur sint occaecat cupidatat non proident?",
+  {
+    question: "What is Ocotillo?",
+    answer: (
+      <>
+        Ocotillo is an application developed by the Data Services Team at the
+        New Mexico Bureau of Geology and Mineral Resources to manage and share
+        the Bureau of Geology’s non-cartographic research data. Supported by
+        state funding, Ocotillo was developed to make the Bureau of Geology’s
+        data more findable for our research scientists. Ocotillo supports the
+        goals of the New Mexico Water Data Initiative by storing and serving the
+        Bureau of Geology’s water and subsurface data.
+      </>
+    ),
+  },
+  {
+    question: "Who is Ocotillo for?",
+    answer: (
+      <>
+        Any employee of the New Mexico Bureau of Geology and Mineral Resources
+        can have credentials to use Ocotillo by{" "}
+        <a
+          className="text-primary underline underline-offset-2"
+          href={AUTHENTIK_SIGNUP_URL}
+          target="_blank"
+          rel="noreferrer"
+        >
+          clicking here to sign up
+        </a>
+        .
+      </>
+    ),
+  },
+  {
+    question: "Looking for open data?",
+    answer: (
+      <>
+        Ocotillo serves data to our public applications too! If you aren’t a
+        Bureau of Geology employee, use our applications{" "}
+        <a
+          className="text-primary underline underline-offset-2"
+          href="https://weaver.newmexicowaterdata.org/"
+        >
+          Weaver
+        </a>{" "}
+        or our{" "}
+        <a
+          className="text-primary underline underline-offset-2"
+          href="/ocotillo/collections"
+        >
+          public APIs
+        </a>
+        .
+      </>
+    ),
+  },
 ] as const;
 
 export const LandingPage = () => {
@@ -231,19 +281,10 @@ export const LandingPage = () => {
             >
               FAQs
             </h2>
-            <p className="mt-3 text-base text-muted-foreground">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            </p>
-            <Button asChild variant="outline" className="mt-5">
-              <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
-                Lorem ipsum
-              </a>
-            </Button>
           </div>
           <Card className="gap-0 overflow-hidden p-0">
             <CardContent className="divide-y p-0">
-              {faqs.map((question) => (
+              {faqs.map(({ question, answer }) => (
                 <Collapsible key={question}>
                   <h3>
                     <CollapsibleTrigger asChild>
@@ -259,10 +300,7 @@ export const LandingPage = () => {
                     </CollapsibleTrigger>
                   </h3>
                   <CollapsibleContent className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                    do eiusmod tempor incididunt ut labore et dolore magna
-                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-                    ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    {answer}
                   </CollapsibleContent>
                 </Collapsible>
               ))}
