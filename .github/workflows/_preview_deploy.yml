@@ -126,13 +126,6 @@ jobs:
           echo "Frontend service: preview-$SANITIZED"
           echo "Backend mode:     ${{ inputs.backend }}"
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: npm
-          cache-dependency-path: package-lock.json
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -325,35 +318,42 @@ jobs:
           echo "VITE_PUBLIC_POSTHOG_KEY=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_KEY --project="$GCP_PROJECT_ID")" >> "$GITHUB_ENV"
           echo "VITE_PUBLIC_POSTHOG_HOST=$(gcloud secrets versions access latest --secret=VITE_PUBLIC_POSTHOG_HOST --project="$GCP_PROJECT_ID")" >> "$GITHUB_ENV"
 
+      # The docker-container driver is what lets the build below export its
+      # layer cache to the registry; the default docker driver cannot. Set up
+      # here, after the API image step, because an active container builder
+      # stops plain `docker build` from loading into the local daemon and the
+      # API step's `docker push` would then find nothing to push.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # The whole install and build happens inside the Dockerfile, so the
+      # runner does no npm work of its own. Typecheck and a production build
+      # already run on every PR in the Lint and PR Build Test workflows.
+      #
+      # Layer cache lives in Artifact Registry under one tag shared by every
+      # preview, so the npm ci layer is reused across PRs whenever
+      # package-lock.json is unchanged. A GHA cache would not be: caches
+      # written from one PR ref are invisible to another. Teardown deletes
+      # per-service images only, so it leaves this tag alone.
       - name: Build and push
-        env:
-          IMAGE_TAG: ${{ github.sha }}
-          NODE_OPTIONS: --max-old-space-size=6144
-          VITE_POSTHOG_KEY: ${{ env.VITE_PUBLIC_POSTHOG_KEY }}
-          VITE_POSTHOG_HOST: ${{ env.VITE_PUBLIC_POSTHOG_HOST }}
-          VITE_APP_ENV: preview
-          VITE_APP_VERSION: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-
-          npm ci
-          npx tsc
-          npx vite build --mode development
-
-          docker build \
-            --build-arg MODE=development \
-            --build-arg VITE_APP_TITLE="Ocotillo Preview" \
-            --build-arg VITE_BASE_URL="/" \
-            --build-arg VITE_AUTHENTIK_CLIENT_ID=${{ vars.VITE_AUTHENTIK_CLIENT_ID }} \
-            --build-arg VITE_AUTHENTIK_URL=${{ vars.VITE_AUTHENTIK_URL }} \
-            --build-arg VITE_OCOTILLO_API_URL="$API_URL" \
-            --build-arg VITE_PUBLIC_POSTHOG_KEY=${{ env.VITE_PUBLIC_POSTHOG_KEY }} \
-            --build-arg VITE_PUBLIC_POSTHOG_HOST=${{ env.VITE_PUBLIC_POSTHOG_HOST }} \
-            --build-arg VITE_APP_ENV=preview \
-            --build-arg VITE_APP_VERSION=${{ github.sha }} \
-            -t "$AR_REPO/${SERVICE_NAME}:$IMAGE_TAG" .
-
-          docker push "$AR_REPO/${SERVICE_NAME}:$IMAGE_TAG"
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.AR_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.AR_REPO }}/preview-ui-buildcache:latest
+          cache-to: type=registry,ref=${{ env.AR_REPO }}/preview-ui-buildcache:latest,mode=max
+          build-args: |
+            MODE=development
+            VITE_APP_TITLE=Ocotillo Preview
+            VITE_BASE_URL=/
+            VITE_AUTHENTIK_CLIENT_ID=${{ vars.VITE_AUTHENTIK_CLIENT_ID }}
+            VITE_AUTHENTIK_URL=${{ vars.VITE_AUTHENTIK_URL }}
+            VITE_OCOTILLO_API_URL=${{ env.API_URL }}
+            VITE_PUBLIC_POSTHOG_KEY=${{ env.VITE_PUBLIC_POSTHOG_KEY }}
+            VITE_PUBLIC_POSTHOG_HOST=${{ env.VITE_PUBLIC_POSTHOG_HOST }}
+            VITE_APP_ENV=preview
+            VITE_APP_VERSION=${{ github.sha }}
 
       - name: Deploy to Cloud Run
         env:

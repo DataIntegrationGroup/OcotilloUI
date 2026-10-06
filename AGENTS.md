@@ -153,7 +153,7 @@ gh workflow run CD_staging.yml --repo DataIntegrationGroup/OcotilloUI --ref stag
 
 `CD_production.yml` is push-only — a production redeploy currently requires a new commit on `production`.
 
-PR checks: Lint, Vitest, Cypress, and PR Build Test all run on `pull_request`.
+PR checks: Lint, Vitest, Cypress, PR Build Test, and PR Title all run on `pull_request`. PR Title fails unless the title contains a Jira key like `BDMS-1234`. For a PR with no ticket, such as a release, add the `skip-bdms-check` label.
 
 ## Secrets and environment
 
