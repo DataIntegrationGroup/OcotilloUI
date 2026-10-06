@@ -150,7 +150,7 @@ export const RESOURCE_NAV: NavItem[] = [
     roles: adminOnly,
   },
   {
-    label: 'Hydrograph Correction',
+    label: 'HydroSync',
     href: '/ocotillo/hydrograph-correction',
     icon: LineChart,
     resource: 'ocotillo.hydrograph-correction',

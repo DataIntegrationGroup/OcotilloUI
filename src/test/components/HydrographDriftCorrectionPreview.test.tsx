@@ -7,6 +7,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { OcotilloHydrographCorrectionWorkbench } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
 import type { ParsedHydrographUpload } from '@/components/Hydrographs/hydrographCorrection'
 
+// The automated Clean tools are hidden in the app (BDMS-1443) but the code
+// stays; these tests cover it with the tools switched back on.
+vi.mock('@/components/Hydrographs/hydrographUiMode', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/components/Hydrographs/hydrographUiMode')
+  >()),
+  SHOW_AUTOMATED_CLEAN: true,
+}))
+
 // ECharts needs a real canvas. The stub keeps the latest option so the tests
 // can read the series the workbench would draw.
 const { chartOptions } = vi.hoisted(() => ({
@@ -52,13 +61,13 @@ const manualObservations = [
   { observation_datetime: '2025-01-03T00:00:00Z', depth_to_water_bgs: 52 },
 ]
 
-const renderWorkbench = async () => {
+const renderWorkbench = async (manuals = manualObservations) => {
   const user = userEvent.setup()
   render(
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <OcotilloHydrographCorrectionWorkbench
         thingName="TEST-0001"
-        manualObservations={manualObservations}
+        manualObservations={manuals}
         transducerObservations={[]}
         initialUpload={upload}
         initialFileName="test.csv"
@@ -148,4 +157,90 @@ describe('drift correction preview', () => {
 
     expect(screen.queryByTestId('drift-correction-preview')).toBeNull()
   })
+
+  it('names the range the staged change would move', async () => {
+    const user = await renderWorkbench()
+
+    await user.click(screen.getByLabelText('Correct drift'))
+
+    // The reading on the closing manual already sits on its anchor, so the
+    // change covers the first two readings only.
+    const first = new Date('2025-01-01T00:00:00Z').toLocaleString()
+    const last = new Date('2025-01-02T00:00:00Z').toLocaleString()
+    expect(
+      within(screen.getByTestId('drift-correction-preview')).getByText(
+        `Affected range: ${first} to ${last}, shaded on the chart.`
+      )
+    ).toBeInTheDocument()
+  })
 })
+
+describe('drift correction outcome', () => {
+  it('confirms what applying changed', async () => {
+    const user = await renderWorkbench()
+    expect(screen.queryByTestId('drift-correction-outcome')).toBeNull()
+
+    await user.click(screen.getByLabelText('Correct drift'))
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    const outcome = screen.getByTestId('drift-correction-outcome')
+    expect(
+      within(outcome).getByText('Drift correction on: applied')
+    ).toBeInTheDocument()
+    expect(
+      within(outcome).getByText(/2 of 3 readings moved, by up to 1\.80 ft/)
+    ).toBeInTheDocument()
+  })
+
+  it('says so when applying changed nothing', async () => {
+    // One manual gives a constant sensor depth: nothing to ramp between.
+    const user = await renderWorkbench([manualObservations[0]])
+
+    await user.click(screen.getByLabelText('Correct drift'))
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    const outcome = screen.getByTestId('drift-correction-outcome')
+    expect(
+      within(outcome).getByText(
+        'Drift correction on: applied, no readings changed'
+      )
+    ).toBeInTheDocument()
+    expect(
+      within(outcome).getByText(/there is no drift to correct/)
+    ).toBeInTheDocument()
+  })
+
+  it('reports turning drift correction back off', async () => {
+    const user = await renderWorkbench()
+    await user.click(screen.getByLabelText('Correct drift'))
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    await user.click(screen.getByLabelText('Correct drift'))
+    // Staging the next change clears the last outcome.
+    expect(screen.queryByTestId('drift-correction-outcome')).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    expect(
+      within(screen.getByTestId('drift-correction-outcome')).getByText(
+        'Drift correction off: applied'
+      )
+    ).toBeInTheDocument()
+    expect(seriesValues('Uploaded corrected')).toEqual([51.8, 51.3, 52])
+  })
+
+  it('stays until dismissed', async () => {
+    const user = await renderWorkbench()
+    await user.click(screen.getByLabelText('Correct drift'))
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    await user.click(
+      within(screen.getByTestId('drift-correction-outcome')).getByRole(
+        'button',
+        { name: 'Close' }
+      )
+    )
+
+    expect(screen.queryByTestId('drift-correction-outcome')).toBeNull()
+  })
+})
+
