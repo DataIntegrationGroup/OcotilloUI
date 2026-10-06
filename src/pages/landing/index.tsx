@@ -18,9 +18,9 @@ import {
 } from "@/components/ui/collapsible";
 import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
 import ocotilloImage from "@/img/ocotillo.jpeg";
-import waterWellImage from "@/img/ogs-water-well.svg";
-import ampImage from "@/img/ogs-amp-project-areas.svg";
-import waterElevationImage from "@/img/ogs-water-elevation.svg";
+import waterWellImage from "@/img/ogs-water-well.png";
+import ampImage from "@/img/ogs-amp-project-areas.png";
+import waterElevationImage from "@/img/ogs-water-elevation.png";
 import authDarkImage from "@/img/auth-dark.png";
 import authLightImage from "@/img/auth-light.png";
 import mapDarkImage from "@/img/map-dark.png";
@@ -181,11 +181,11 @@ export const LandingPage = () => {
               directly into GIS attributes.
             </p>
           </div>
-          <Card className="overflow-hidden bg-brand-50 p-0">
+          <Card className="h-full overflow-hidden bg-brand-50 p-0">
             <img
               src={selectedLayer.image}
               alt={selectedLayer.alt}
-              className="h-[390px] w-full object-contain"
+              className="h-full w-full object-contain"
             />
           </Card>
           <Card className="flex h-full flex-col p-5">
