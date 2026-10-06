@@ -15,6 +15,7 @@ const mockedNotify = vi.fn()
 const mockedDownloadChemistryReport = vi.fn()
 const mockedFetchYearObservations = vi.fn()
 const mockedFetchWaterLevels = vi.fn()
+const mockedFetchContinuous = vi.fn()
 const mockedUseAccessCapabilities = vi.fn()
 const mockedUseWellChemistryReport = vi.fn()
 const mockedToBlob = vi.fn()
@@ -146,6 +147,7 @@ describe('WellPDFActionsButton report type select', () => {
     mockedFetchWaterLevels.mockResolvedValue([
       { key: '1', measuredOn: '2024-05-15T00:00:00Z', depthToWaterFt: 9.4 },
     ])
+    mockedFetchContinuous.mockResolvedValue({ recordsInYear: 1107 })
     mockedUseAccessCapabilities.mockReturnValue({
       isLoading: false,
       canManageAmp: true,
@@ -159,6 +161,7 @@ describe('WellPDFActionsButton report type select', () => {
       isLoading: false,
       fetchYearObservations: mockedFetchYearObservations,
       fetchWaterLevels: mockedFetchWaterLevels,
+      fetchContinuous: mockedFetchContinuous,
     })
   })
 
@@ -247,6 +250,11 @@ describe('WellPDFActionsButton report type select', () => {
     expect(
       mockedDownloadChemistryReport.mock.calls[0][0].waterLevels
     ).toHaveLength(1)
+    // So is the logger summary, which rides along whole.
+    expect(mockedFetchContinuous).toHaveBeenCalledWith(2024)
+    expect(
+      mockedDownloadChemistryReport.mock.calls[0][0].continuous
+    ).toMatchObject({ recordsInYear: 1107 })
     expect(mockedToBlob).not.toHaveBeenCalled()
   })
 
@@ -278,6 +286,7 @@ describe('WellPDFActionsButton report type select', () => {
       isLoading: false,
       fetchYearObservations: mockedFetchYearObservations,
       fetchWaterLevels: mockedFetchWaterLevels,
+      fetchContinuous: mockedFetchContinuous,
     })
     mockedFetchYearObservations.mockResolvedValue([])
 
@@ -313,6 +322,7 @@ describe('WellPDFActionsButton report type select', () => {
       isLoading: true,
       fetchYearObservations: mockedFetchYearObservations,
       fetchWaterLevels: mockedFetchWaterLevels,
+      fetchContinuous: mockedFetchContinuous,
     })
 
     renderGroup()
@@ -332,6 +342,7 @@ describe('WellPDFActionsButton report type select', () => {
       isLoading: true,
       fetchYearObservations: mockedFetchYearObservations,
       fetchWaterLevels: mockedFetchWaterLevels,
+      fetchContinuous: mockedFetchContinuous,
     })
 
     renderGroup()
