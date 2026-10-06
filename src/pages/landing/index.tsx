@@ -1,80 +1,80 @@
-import { useState, type ReactNode } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { Link as RouterLink } from 'react-router'
-import { LandingTopbar } from '@/components/LandingTopbar'
-import { Button } from '@/components/ui/button'
+import { useState, type ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
+import { Link as RouterLink } from "react-router";
+import { LandingTopbar } from "@/components/LandingTopbar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import { AUTHENTIK_SIGNUP_URL } from '@/config/auth'
-import ocotilloImage from '@/img/ocotillo.jpeg'
-import waterWellImage from '@/img/ogs-water-well.svg'
-import ampImage from '@/img/ogs-amp-project-areas.svg'
-import waterElevationImage from '@/img/ogs-water-elevation.svg'
+} from "@/components/ui/collapsible";
+import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
+import ocotilloImage from "@/img/ocotillo.jpeg";
+import waterWellImage from "@/img/ogs-water-well.svg";
+import ampImage from "@/img/ogs-amp-project-areas.svg";
+import waterElevationImage from "@/img/ogs-water-elevation.svg";
 
 const layers = [
   {
-    id: 'water-well',
-    name: 'Water Well Field Operation',
+    id: "water-well",
+    name: "Water Well Field Operation",
     image: waterWellImage,
-    alt: 'Water Well Field Operation QGIS screenshot placeholder',
+    alt: "Water Well Field Operation QGIS screenshot placeholder",
   },
   {
-    id: 'amp-project-areas',
-    name: 'AMP project areas',
+    id: "amp-project-areas",
+    name: "AMP project areas",
     image: ampImage,
-    alt: 'AMP project areas QGIS screenshot placeholder',
+    alt: "AMP project areas QGIS screenshot placeholder",
   },
   {
-    id: 'water-elevation',
-    name: 'Water elevation',
+    id: "water-elevation",
+    name: "Water elevation",
     image: waterElevationImage,
-    alt: 'Water elevation QGIS screenshot placeholder',
+    alt: "Water elevation QGIS screenshot placeholder",
   },
-] as const
+] as const;
 
 const features = [
   [
-    '♧',
-    'Browse wells on the map',
-    'Explore well locations and spatial data across New Mexico.',
+    "♧",
+    "Browse wells on the map",
+    "Explore well locations and spatial data across New Mexico.",
   ],
-  ['⌕', 'Search records', 'Find wells by ID, site name, or contact and owner.'],
+  ["⌕", "Search records", "Find wells by ID, site name, or contact and owner."],
   [
-    '▱',
-    'View well records',
-    'Review water levels, equipment, photos, and contacts.',
+    "▱",
+    "View well records",
+    "Review water levels, equipment, photos, and contacts.",
   ],
   [
-    '⇩',
-    'Batch export field compilations',
-    'Generate field compilation sheets for groups of wells.',
+    "⇩",
+    "Batch export field compilations",
+    "Generate field compilation sheets for groups of wells.",
   ],
-  ['?', 'Connect to GIS', 'Connect Ocotillo to ArcGIS Pro or QGIS.'],
-] as const
+  ["?", "Connect to GIS", "Connect Ocotillo to ArcGIS Pro or QGIS."],
+] as const;
 
 const faqs = [
-  'Lorem ipsum dolor sit amet?',
-  'Consectetur adipiscing elit, sed do eiusmod tempor?',
-  'Ut enim ad minim veniam, quis nostrud exercitation?',
-  'Duis aute irure dolor in reprehenderit in voluptate?',
-  'Excepteur sint occaecat cupidatat non proident?',
-] as const
+  "Lorem ipsum dolor sit amet?",
+  "Consectetur adipiscing elit, sed do eiusmod tempor?",
+  "Ut enim ad minim veniam, quis nostrud exercitation?",
+  "Duis aute irure dolor in reprehenderit in voluptate?",
+  "Excepteur sint occaecat cupidatat non proident?",
+] as const;
 
 export const LandingPage = () => {
-  const [selectedLayerId, setSelectedLayerId] = useState<string>(layers[0].id)
+  const [selectedLayerId, setSelectedLayerId] = useState<string>(layers[0].id);
   const selectedLayer =
-    layers.find(({ id }) => id === selectedLayerId) ?? layers[0]
+    layers.find(({ id }) => id === selectedLayerId) ?? layers[0];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -88,16 +88,20 @@ export const LandingPage = () => {
           }}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-200">
-            Lorem ipsum dolor sit amet
+            Ocotillo
           </p>
           <h1 className="mt-3 max-w-3xl font-heading text-5xl font-bold leading-tight tracking-[-0.04em] sm:text-6xl">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            The Bureau of Geology’s Research Data In One Place
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-white/90">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            Ocotillo is where you can find the New Mexico Bureau of Geology and
+            Mineral Resources’ research data.
           </p>
-          <Button asChild size="lg" className="mt-6">
+          <Button
+            asChild
+            size="lg"
+            className="mt-6 hover:bg-primary hover:scale-105"
+          >
             <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
               Create an account
             </a>
@@ -110,10 +114,12 @@ export const LandingPage = () => {
         >
           <div className="lg:col-span-2">
             <h2 className="font-heading text-3xl font-bold tracking-tight">
-              OGS layers
+              Live GIS Integration (OGC API Features)
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Connect directly from desktop GIS tools to Ocotillo’s live OGC API
+              endpoints. Discover detailed metadata and schemas that flow
+              directly into GIS attributes.
             </p>
           </div>
           <Card className="overflow-hidden bg-brand-50 p-0">
@@ -141,7 +147,7 @@ export const LandingPage = () => {
                   key={layer.id}
                   type="button"
                   aria-pressed={selectedLayer.id === layer.id}
-                  className={`w-full rounded-md border p-3 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selectedLayer.id === layer.id ? 'border-primary bg-primary/5' : 'border-border'}`}
+                  className={`w-full rounded-md border p-3 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selectedLayer.id === layer.id ? "border-primary bg-primary/5" : "border-border"}`}
                   onClick={() => setSelectedLayerId(layer.id)}
                 >
                   <strong className="font-heading text-sm">{layer.name}</strong>
@@ -172,10 +178,10 @@ export const LandingPage = () => {
         <section id="how" className="py-8 sm:py-16">
           <div className="max-w-2xl pb-8">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-              Lorem ipsum dolor sit amet
+              Showcase
             </p>
             <h2 className="mt-2 font-heading text-3xl font-bold tracking-tight">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Individual Feature Highlights
             </h2>
             <p className="mt-3 text-base text-muted-foreground">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
@@ -184,23 +190,30 @@ export const LandingPage = () => {
           </div>
           <div className="space-y-10">
             <ShowcaseRow
-              eyebrow="01 · Lorem ipsum"
-              title="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+              eyebrow="01"
+              title="Interactive Mapping & Visual Exploration"
+              description="Address/place search and contextual navigation."
               visual={<MapPreview />}
             />
             <ShowcaseRow
               reverse
-              eyebrow="02 · Lorem ipsum"
-              title="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+              eyebrow="02"
+              title="Comprehensive Well & Site Details"
+              description="Direct file and photo attachments, integrated source cross-referencing, and project and boundary views. "
               visual={<TablePreview />}
             />
             <ShowcaseRow
-              eyebrow="03 · Lorem ipsum"
-              title="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+              eyebrow="03 · Beta"
+              title="Continuous Sensor Data Correction"
+              description="Interactive time-series QA/QC with visual editing tools."
               visual={<ChartPreview />}
+            />
+            <ShowcaseRow
+              reverse
+              eyebrow="04 · In active development"
+              title="Secure, Role-Aware Collaboration & Access"
+              description="Separate data catalogs for public and internal data sets, in-app editing for Contacts and Projects."
+              visual={<TablePreview />}
             />
           </div>
         </section>
@@ -246,8 +259,8 @@ export const LandingPage = () => {
                     </CollapsibleTrigger>
                   </h3>
                   <CollapsibleContent className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                    sed do eiusmod tempor incididunt ut labore et dolore magna
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+                    do eiusmod tempor incididunt ut labore et dolore magna
                     aliqua. Ut enim ad minim veniam, quis nostrud exercitation
                     ullamco laboris nisi ut aliquip ex ea commodo consequat.
                   </CollapsibleContent>
@@ -287,14 +300,24 @@ export const LandingPage = () => {
         <section className="mb-8 flex flex-col items-start justify-between gap-5 rounded-xl border border-primary/25 bg-primary/10 p-7 sm:flex-row sm:items-center">
           <div>
             <h2 className="font-heading text-2xl font-semibold">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit?
+              See Where We Are Going
             </h2>
             <p className="mt-1 text-muted-foreground">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod.
+              Ocotillo is in active development. Interested in learning more
+              about what we are working on now and what’s up next? Check out the{" "}
+              <a
+                className="hover:underline text-primary font-semibold"
+                href="https://nmbgmr.atlassian.net/jira/discovery/share/views/e86251f8-f82f-496f-8aaf-0f50c9cf3e1a"
+                hrefLang="en-US"
+              >
+                Ocotillo Roadmap
+              </a>{" "}
+              (Include a screenshot of the roadmap as the image. Clicking the
+              image should take the user to the roadmap as well as the live
+              link)
             </p>
           </div>
-          <Button asChild size="lg">
+          <Button asChild size="lg" className="hover:scale-105">
             <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
               Create an account
             </a>
@@ -302,8 +325,8 @@ export const LandingPage = () => {
         </section>
       </main>
     </div>
-  )
-}
+  );
+};
 
 const ShowcaseRow = ({
   eyebrow,
@@ -312,14 +335,14 @@ const ShowcaseRow = ({
   visual,
   reverse = false,
 }: {
-  eyebrow: string
-  title: string
-  description: string
-  visual: ReactNode
-  reverse?: boolean
+  eyebrow: string;
+  title: string;
+  description: string;
+  visual: ReactNode;
+  reverse?: boolean;
 }) => (
   <article className="grid items-center gap-8 border-t pt-10 lg:grid-cols-2">
-    <div className={reverse ? 'lg:order-2' : ''}>
+    <div className={reverse ? "lg:order-2" : ""}>
       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
         {eyebrow}
       </p>
@@ -330,27 +353,27 @@ const ShowcaseRow = ({
         {description}
       </p>
     </div>
-    <div className={reverse ? 'lg:order-1' : ''}>{visual}</div>
+    <div className={reverse ? "lg:order-1" : ""}>{visual}</div>
   </article>
-)
+);
 
 const PreviewWindow = ({ children }: { children: ReactNode }) => (
   <div className="aspect-square w-full overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5">
     {children}
   </div>
-)
+);
 const MapPreview = () => (
   <PreviewWindow>
     <img alt="" className="size-full object-cover" />
   </PreviewWindow>
-)
+);
 const TablePreview = () => (
   <PreviewWindow>
     <img alt="" className="size-full object-cover" />
   </PreviewWindow>
-)
+);
 const ChartPreview = () => (
   <PreviewWindow>
     <img alt="" className="size-full object-cover" />
   </PreviewWindow>
-)
+);
