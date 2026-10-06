@@ -6,7 +6,7 @@ prompted-by: jirhiker
 
 # ADR 0005 — Y-axis-only zoom in the HydroSync workbench
 
-**Status:** Proposed
+**Status:** Accepted — recommendation A and B implemented in BDMS-1447
 **Ticket:** [BDMS-1447](https://nmbgmr.atlassian.net/browse/BDMS-1447) (HydroSync MVP, BDMS-1353)
 **Date:** 2026-10-06
 **Scope:** `OcotilloUI` only — `OcotilloHydrographCorrectionWorkbench.tsx` and
@@ -99,7 +99,7 @@ charts.
 - Cons: same narrow target as B with a weaker affordance. Can be added later on top
   of B's geometry if wanted.
 
-## Recommendation
+## Recommendation (implemented)
 
 Build **A and B together**, in that order:
 

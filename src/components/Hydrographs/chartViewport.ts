@@ -248,9 +248,13 @@ export interface ValueRange {
   max: number
 }
 
+/** Which axes a dragged box zooms: both, or the value axis alone. */
+export type ZoomBoxAxis = 'both' | 'y'
+
 /** What a finished zoom box asks the chart to show. */
 export interface ZoomBox {
-  time: TimeWindow
+  /** `null` for a value-only box, which leaves the time window alone. */
+  time: TimeWindow | null
   /** The panel the box was drawn in. */
   gridIndex: number
   /** `null` when the box was too flat to mean a value range. */
@@ -266,14 +270,21 @@ export const MIN_ZOOM_BOX_PX = 6
  * comes from its height and applies to the panel it started in. A box too
  * flat to mean a value range zooms time only. Returns `null` for a box that
  * started off every panel or is too narrow to mean anything.
+ *
+ * With `axis` set to `'y'` only the height counts: the width is ignored, the
+ * time window is left alone, and a box too flat to mean a value range is
+ * nothing at all.
  */
 export const resolveZoomBox = (
   start: ChartPixel,
   end: ChartPixel,
   chart: ZoomBoxChart,
-  gridCount: number
+  gridCount: number,
+  axis: ZoomBoxAxis = 'both'
 ): ZoomBox | null => {
-  if (Math.abs(end.x - start.x) < MIN_ZOOM_BOX_PX) return null
+  if (axis === 'both' && Math.abs(end.x - start.x) < MIN_ZOOM_BOX_PX) {
+    return null
+  }
 
   let gridIndex = -1
   for (let index = 0; index < gridCount; index += 1) {
@@ -290,7 +301,12 @@ export const resolveZoomBox = (
   }
   const [startTime, startValue] = toData(start)
   const [endTime, endValue] = toData(end)
-  if (!isFiniteNumber(startTime) || !isFiniteNumber(endTime)) return null
+  if (
+    axis === 'both' &&
+    (!isFiniteNumber(startTime) || !isFiniteNumber(endTime))
+  ) {
+    return null
+  }
 
   const isTall = Math.abs(end.y - start.y) >= MIN_ZOOM_BOX_PX
   const value =
@@ -301,6 +317,8 @@ export const resolveZoomBox = (
         }
       : null
 
+  if (axis === 'y') return value ? { time: null, gridIndex, value } : null
+
   return {
     time: {
       startValue: Math.min(startTime, endTime),
@@ -308,6 +326,120 @@ export const resolveZoomBox = (
     },
     gridIndex,
     value,
+  }
+}
+
+/** Where a panel sits on the chart surface, in pixels from the top. */
+export interface PanelBand {
+  top: number
+  /** Zero for a panel the upload does not use. */
+  height: number
+}
+
+// Past this the axis is a point, and a runaway scroll would collapse it.
+export const MIN_VALUE_SPAN = 1e-4
+
+/**
+ * The value range after zooming by `factor` (below 1 zooms in, above 1 out),
+ * keeping `anchor` at the same place on the axis -- so the reading under the
+ * pointer stays under the pointer. The span never drops below `minSpan`.
+ */
+export const scaleValueRange = (
+  range: ValueRange,
+  factor: number,
+  anchor: number,
+  minSpan: number = MIN_VALUE_SPAN
+): ValueRange => {
+  const span = range.max - range.min
+  if (!(span > 0) || !isFiniteNumber(factor) || !isFiniteNumber(anchor)) {
+    return range
+  }
+
+  const applied = Math.max(span * factor, minSpan) / span
+  return {
+    min: anchor - (anchor - range.min) * applied,
+    max: anchor + (range.max - anchor) * applied,
+  }
+}
+
+// How hard a wheel notch zooms: a 100-unit notch is about a fifth of the span.
+const WHEEL_VALUE_ZOOM_RATE = 0.002
+const MAX_WHEEL_VALUE_FACTOR = 2
+
+/**
+ * The span factor for one wheel event over an axis: scrolling up zooms in,
+ * down zooms out, like the plot. Some browsers report Shift + wheel as a
+ * horizontal delta, so that is read when the vertical one is zero.
+ */
+export const valueZoomFactorFromWheel = (
+  event: Pick<WheelEvent, 'deltaX' | 'deltaY'>
+) => {
+  const delta = event.deltaY !== 0 ? event.deltaY : event.deltaX
+  const factor = Math.exp(delta * WHEEL_VALUE_ZOOM_RATE)
+  return Math.min(
+    MAX_WHEEL_VALUE_FACTOR,
+    Math.max(1 / MAX_WHEEL_VALUE_FACTOR, factor)
+  )
+}
+
+/**
+ * A value axis tick label, to at most two decimal places and no padding: 44.1
+ * stays 44.1, 45 stays 45. A zoomed or pinned axis ends on whatever the pointer
+ * landed on -- 44.12345678 -- which says more than a reading can.
+ */
+export const formatAxisTick = (value: number): string =>
+  Number.isFinite(value) ? String(Number(value.toFixed(2))) : ''
+
+/** What a wheel over a panel's axis labels is zooming. */
+export interface ValueWheelTarget {
+  gridIndex: number
+  /** The value under the pointer. */
+  anchor: number
+  /** The range the panel shows now, pinned or fitted to its data. */
+  range: ValueRange
+}
+
+/**
+ * Finds the panel whose axis labels the pointer is over -- left of the plot,
+ * within a panel's height -- and the value range to zoom there. Returns `null`
+ * anywhere else, including over the plot, where the wheel zooms time.
+ *
+ * The labels are outside the grid, but the chart still maps a pixel there to a
+ * value, and the panel's top and bottom edges give the range it shows now
+ * without asking the chart for its fitted extent.
+ */
+export const resolveValueWheelTarget = (
+  pointer: ChartPixel,
+  bands: readonly PanelBand[],
+  chart: Pick<ZoomBoxChart, 'convertFromPixel'>,
+  plotLeft: number
+): ValueWheelTarget | null => {
+  if (pointer.x < 0 || pointer.x >= plotLeft) return null
+
+  const gridIndex = bands.findIndex(
+    (band) =>
+      band.height > 0 &&
+      pointer.y >= band.top &&
+      pointer.y <= band.top + band.height
+  )
+  if (gridIndex < 0) return null
+
+  const band = bands[gridIndex]
+  const valueAt = (y: number) => {
+    const point = chart.convertFromPixel({ gridIndex }, [plotLeft + 1, y])
+    return Array.isArray(point) ? point[1] : Number.NaN
+  }
+  const top = valueAt(band.top)
+  const bottom = valueAt(band.top + band.height)
+  const anchor = valueAt(pointer.y)
+  if (![top, bottom, anchor].every(isFiniteNumber) || top === bottom) {
+    return null
+  }
+
+  return {
+    gridIndex,
+    anchor,
+    range: { min: Math.min(top, bottom), max: Math.max(top, bottom) },
   }
 }
 
@@ -326,16 +458,31 @@ const rectBetween = (a: ChartPixel, b: ChartPixel): ZoomBoxRect => ({
   height: Math.abs(b.y - a.y),
 })
 
+// A value-only drag has no width to speak of, so it draws as a band across
+// the whole chart at the dragged heights.
+const bandBetween = (
+  a: ChartPixel,
+  b: ChartPixel,
+  width: number
+): ZoomBoxRect => ({
+  left: 0,
+  top: Math.min(a.y, b.y),
+  width,
+  height: Math.abs(b.y - a.y),
+})
+
 /**
  * Lets the user drag a zoom box on the chart while `active`. The press is
  * caught on the way down, before the chart sees it, so the drag neither pans
  * nor paints over the brushed selection; the wheel is left alone so Shift+wheel
- * keeps zooming. Returns the box to draw while the drag is under way.
+ * keeps zooming. Returns the box to draw while the drag is under way: with
+ * `axis` set to `'y'`, a band across the chart rather than a box.
  */
 export const useZoomBoxDrag = (
   ref: RefObject<HTMLElement | null>,
   active: boolean,
-  onComplete: (start: ChartPixel, end: ChartPixel) => void
+  onComplete: (start: ChartPixel, end: ChartPixel) => void,
+  axis: ZoomBoxAxis = 'both'
 ) => {
   const [rect, setRect] = useState<ZoomBoxRect | null>(null)
   const onCompleteRef = useRef(onComplete)
@@ -352,7 +499,13 @@ export const useZoomBoxDrag = (
     }
 
     const handleMove = (event: MouseEvent) => {
-      if (origin) setRect(rectBetween(origin, toPixel(event)))
+      if (!origin) return
+      const here = toPixel(event)
+      setRect(
+        axis === 'y'
+          ? bandBetween(origin, here, container.getBoundingClientRect().width)
+          : rectBetween(origin, here)
+      )
     }
     const handleUp = (event: MouseEvent) => {
       window.removeEventListener('mousemove', handleMove)
@@ -387,7 +540,7 @@ export const useZoomBoxDrag = (
       window.removeEventListener('mouseup', handleUp)
       setRect(null)
     }
-  }, [active, ref])
+  }, [active, axis, ref])
 
   return rect
 }

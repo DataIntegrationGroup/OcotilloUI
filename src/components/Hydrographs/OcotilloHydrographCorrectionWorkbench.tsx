@@ -50,6 +50,7 @@ import {
   Clear,
   CloudUpload,
   CropFree,
+  Height,
   DeleteForever,
   DeleteOutline,
   ExpandMore,
@@ -97,11 +98,16 @@ import {
   type ChartPixel,
   type DataZoomEventParams,
   FULL_ZOOM_WINDOW,
+  formatAxisTick,
+  isChartZoomWheel,
   keepZoomWheelOffPage,
   padTimeWindow,
+  type PanelBand,
   passPlainWheelToPage,
   readZoomWindow,
+  resolveValueWheelTarget,
   resolveZoomBox,
+  scaleValueRange,
   scaleZoomWindow,
   type SelectionVisibility,
   selectionVisibility,
@@ -111,6 +117,7 @@ import {
   useScrollportHeight,
   useZoomBoxDrag,
   type ValueRange,
+  valueZoomFactorFromWheel,
 } from './chartViewport'
 import {
   formatCollector,
@@ -224,6 +231,24 @@ type ChartPanel = keyof typeof CHART_PANEL_HEIGHTS
 // every edit, discarding the zoom window and the brushed selection with it.
 // Fixed positions make merge safe, and merge preserves both natively.
 const CHART_PANEL_ORDER = ['head', 'dtw', 'residual'] as const
+
+// Where the plot starts, in pixels from the left. Everything to its left is
+// the value axis labels, which also take the wheel for a value-only zoom.
+const CHART_GRID_LEFT = 100
+
+// Stack the panels top to bottom, each one a fixed height with a small gap, so
+// the whole column lines up on the shared axis at the bottom. A panel this
+// upload does not use keeps its slot at zero height, taking no space and no
+// gap.
+const layoutPanels = (visible: Record<ChartPanel, boolean>): PanelBand[] => {
+  let top = CHART_TOP_PADDING
+  return CHART_PANEL_ORDER.map((panel) => {
+    const height = visible[panel] ? CHART_PANEL_HEIGHTS[panel] : 0
+    const band = { top, height }
+    if (height > 0) top += height + CHART_PANEL_GAP
+    return band
+  })
+}
 const GRID_INDEX: Record<ChartPanel, number> = { head: 0, dtw: 1, residual: 2 }
 
 const RESIDUAL_STORED_SERIES = 'Residual: stored − manual'
@@ -236,13 +261,14 @@ const RESIDUAL_SERIES_NAMES = [
 // Zoom-button step: each press halves or doubles the visible span.
 const ZOOM_STEP = 2
 
-type ChartDragMode = 'pan' | 'select' | 'zoomBox'
+type ChartDragMode = 'pan' | 'select' | 'zoomBox' | 'zoomY'
 
 // The toolbar hint for what a drag on the chart does right now.
 const DRAG_MODE_HINT: Record<ChartDragMode, string> = {
   pan: 'Drag to pan',
   select: 'Drag to select a range',
   zoomBox: 'Drag a box to zoom to it',
+  zoomY: 'Drag up or down to zoom the value axis',
 }
 
 // Appended to the selection chip. Every edit is scoped to the selection, so
@@ -1437,7 +1463,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         splitLine: { show: true, lineStyle: { color: theme.palette.divider } },
       },
       yAxis: {
-        axisLabel: { color: theme.palette.text.secondary },
+        axisLabel: {
+          color: theme.palette.text.secondary,
+          // The ends of a zoomed or pinned axis are wherever the pointer
+          // landed, so cap every label at two decimals.
+          formatter: formatAxisTick,
+        },
         nameTextStyle: {
           color: theme.palette.text.secondary,
           padding: [0, 0, 0, 6],
@@ -1712,22 +1743,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       },
     }
 
-    // Stack the panels top to bottom, each one a fixed height with a small
-    // gap, so the whole column lines up on the shared axis at the bottom. A
-    // panel this upload does not use keeps its slot at zero height, taking no
-    // space and no gap.
-    let panelTop = CHART_TOP_PADDING
-    const grids = CHART_PANEL_ORDER.map((panel) => {
-      const height = visiblePanels[panel] ? CHART_PANEL_HEIGHTS[panel] : 0
-      const grid = {
-        left: 100,
-        right: CHART_LEGEND_GUTTER,
-        top: panelTop,
-        height,
-      }
-      if (height > 0) panelTop += height + CHART_PANEL_GAP
-      return grid
-    })
+    const grids = layoutPanels(visiblePanels).map(({ top, height }) => ({
+      left: CHART_GRID_LEFT,
+      right: CHART_LEGEND_GUTTER,
+      top,
+      height,
+    }))
 
     return {
       animation: false,
@@ -2017,14 +2038,22 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   }
 
   // The box sets the time window for every panel and, when it has height,
-  // pins the value axis of the panel it was drawn in. The brushed selection
-  // is left exactly as it was.
+  // pins the value axis of the panel it was drawn in; a value-only box pins
+  // the axis and leaves the time window alone. The brushed selection is left
+  // exactly as it was.
   const zoomToBox = (start: ChartPixel, end: ChartPixel) => {
     const chart = chartRef.current?.getEchartsInstance()
     if (!chart) return
-    const box = resolveZoomBox(start, end, chart, CHART_PANEL_ORDER.length)
+    const box = resolveZoomBox(
+      start,
+      end,
+      chart,
+      CHART_PANEL_ORDER.length,
+      dragMode === 'zoomY' ? 'y' : 'both'
+    )
     if (!box) return
-    chart.dispatchAction({ type: 'dataZoom', ...box.time })
+    // A value-only box has no time window, and the one on screen stays.
+    if (box.time) chart.dispatchAction({ type: 'dataZoom', ...box.time })
     const value = box.value
     if (value) {
       const panel = CHART_PANEL_ORDER[box.gridIndex]
@@ -2034,9 +2063,62 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
   const zoomBoxRect = useZoomBoxDrag(
     chartContainerRef,
-    dragMode === 'zoomBox',
-    zoomToBox
+    dragMode === 'zoomBox' || dragMode === 'zoomY',
+    zoomToBox,
+    dragMode === 'zoomY' ? 'y' : 'both'
   )
+
+  // Shift + wheel over a panel's axis labels zooms that panel's values around
+  // the reading under the pointer, leaving the time window alone. Over the
+  // plot the same gesture zooms time, so the labels read as "the axis under
+  // the pointer". The page never scrolls here: Shift + wheel is cancelled
+  // anywhere in the workspace.
+  const panelBands = useMemo(() => layoutPanels(visiblePanels), [visiblePanels])
+  useEffect(() => {
+    const element = chartContainerRef.current
+    if (!element) return
+
+    const handleWheel = (event: WheelEvent) => {
+      if (!isChartZoomWheel(event)) return
+      const chart = chartRef.current?.getEchartsInstance()
+      if (!chart) return
+
+      const bounds = element.getBoundingClientRect()
+      const target = resolveValueWheelTarget(
+        { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
+        panelBands,
+        chart,
+        CHART_GRID_LEFT
+      )
+      if (!target) return
+
+      event.preventDefault()
+      event.stopPropagation()
+      const factor = valueZoomFactorFromWheel(event)
+      if (factor === 1) return
+
+      const panel = CHART_PANEL_ORDER[target.gridIndex]
+      // Keep scaling the pin if there is one, so events that land before the
+      // chart has redrawn compound instead of repeating the same step.
+      setValueWindows((current) => ({
+        ...current,
+        [panel]: scaleValueRange(
+          current[panel] ?? target.range,
+          factor,
+          target.anchor
+        ),
+      }))
+    }
+
+    // Not passive, or preventDefault is ignored; capture, so the chart's own
+    // wheel handling never sees it.
+    element.addEventListener('wheel', handleWheel, {
+      passive: false,
+      capture: true,
+    })
+    return () =>
+      element.removeEventListener('wheel', handleWheel, { capture: true })
+  }, [panelBands])
 
   const zoomBy = (factor: number) => {
     const chart = chartRef.current?.getEchartsInstance()
@@ -2973,6 +3055,17 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         <CropFree fontSize="small" />
                       </ToggleButton>
                     </Tooltip>
+                    <Tooltip title="Drag up or down on a panel to zoom its value axis, for a closer look at the residuals. The time range and the selection are not changed. Shift + scroll over the axis labels does the same.">
+                      <ToggleButton
+                        value="zoomY"
+                        size="small"
+                        selected={dragMode === 'zoomY'}
+                        onChange={() => toggleDragMode('zoomY')}
+                        aria-label="Zoom value axis"
+                      >
+                        <Height fontSize="small" />
+                      </ToggleButton>
+                    </Tooltip>
                     {/* The brushed range scopes every edit, so it rides in
                         the pinned toolbar rather than the collapsible
                         detail panes. */}
@@ -3065,7 +3158,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       color="text.secondary"
                       sx={{ ml: 'auto', pl: 1 }}
                     >
-                      {DRAG_MODE_HINT[dragMode]} · Shift + scroll to zoom
+                      {DRAG_MODE_HINT[dragMode]} · Shift + scroll to zoom · Shift + scroll over the axis labels to zoom values
                     </Typography>
                   </Stack>
                   <Box
@@ -3078,6 +3171,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       // zrender sets its own cursor inline on its surface.
                       ...(dragMode === 'zoomBox'
                         ? { '&, & *': { cursor: 'crosshair !important' } }
+                        : {}),
+                      ...(dragMode === 'zoomY'
+                        ? { '&, & *': { cursor: 'row-resize !important' } }
                         : {}),
                     }}
                   >
