@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import axios from 'axios'
-import { useCan, useInvalidate } from '@refinedev/core'
-import { useQuery } from '@tanstack/react-query'
+import { useCan } from '@refinedev/core'
 import { Breadcrumb, useAutocomplete } from '@refinedev/mui'
 import {
   Alert,
@@ -42,12 +41,12 @@ import {
   type PublishResult,
   PublishStatusNotice,
 } from './PublishStatusNotice'
+import { useWellSeries } from './useWellSeries'
 import {
   DiverHubIngestDialog,
   type DiverHubIngestResult,
 } from './DiverHubIngestDialog'
 import { IObservation, IWell } from '@/interfaces/ocotillo'
-import { fetchAllOcotilloPages } from '@/utils/ocotilloPaging'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
   OcotilloHydrographCorrectionWorkbench,
@@ -228,7 +227,6 @@ export const HydrographCorrectionPage = () => {
     null
   )
   const dtwParameterIdRef = useRef<number | null>(null)
-  const invalidate = useInvalidate()
   const { mode, setMode } = useHydrographUiMode()
 
   // Simple mode is the plain pressure-transducer workflow: upload a file and
@@ -255,40 +253,9 @@ export const HydrographCorrectionPage = () => {
     ],
   })
 
-  // Both series are charted in full, so every page is fetched. A paginated
-  // list hook would cap the stored transducer trace at its first page —
-  // a few hours of readings against a year-long upload, which reads on the
-  // chart as "no stored data at all".
-  const wellSeriesQuery = useQuery({
-    queryKey: ['hydrograph-correction-well-series', selectedWell?.id ?? ''],
-    enabled: Boolean(selectedWell?.id),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    queryFn: async ({ queryKey, signal }) => {
-      const thingId = queryKey[1]
-      if (thingId === '' || thingId == null) {
-        return {
-          manualRows: [] as IObservation[],
-          transducerRows: [] as TransducerObservationWithBlockResponse[],
-        }
-      }
-
-      const [manualRows, transducerRows] = await Promise.all([
-        fetchAllOcotilloPages<IObservation>(
-          'observation/groundwater-level',
-          { thing_id: thingId },
-          { signal }
-        ),
-        fetchAllOcotilloPages<TransducerObservationWithBlockResponse>(
-          'observation/transducer-groundwater-level',
-          { thing_id: thingId },
-          { pageSize: 5000, signal }
-        ),
-      ])
-
-      return { manualRows, transducerRows }
-    },
-  })
+  const { wellSeriesQuery, invalidateStoredSeries } = useWellSeries(
+    selectedWell?.id
+  )
 
   const manualRows = wellSeriesQuery.data?.manualRows ?? EMPTY_MANUAL_ROWS
   const transducerRows =
@@ -505,13 +472,6 @@ export const HydrographCorrectionPage = () => {
   const failPublish = (message: string) =>
     setPublishError({ wellName: publishingWellName, message })
 
-  const invalidateStoredSeries = () =>
-    invalidate({
-      resource: 'observation/transducer-groundwater-level',
-      dataProviderName: 'ocotillo',
-      invalidates: ['list'],
-    })
-
   const applyPublishSuccess = (
     data: { block?: { id?: number }; observation_count?: number },
     args: HydrographPublishArgs
@@ -601,12 +561,7 @@ export const HydrographCorrectionPage = () => {
         method: 'delete',
       })
 
-      invalidate({
-        resource: 'observation/transducer-groundwater-level',
-        dataProviderName: 'ocotillo',
-        invalidates: ['list'],
-      })
-      await wellSeriesQuery.refetch()
+      await invalidateStoredSeries()
 
       const body = data as { deleted_observation_count?: number } | null
       return { deletedCount: body?.deleted_observation_count ?? 0 }
