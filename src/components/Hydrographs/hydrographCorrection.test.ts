@@ -6,6 +6,7 @@ import {
   assessDriftAtManualObservations,
   calculateSnapOffset,
   convertWaterHeadToDepthToWater,
+  describeSensorDepthAnchors,
   detectOverpressureClipping,
   extractPointIdFromText,
   interpolateSeriesValueAt,
@@ -15,6 +16,7 @@ import {
   parseHydrographWorkbookUpload,
   removeOffsetsAndZeros,
   removeSpuriousReflections,
+  summarizeSeriesChange,
 } from './hydrographCorrection'
 
 describe('hydrograph correction utilities', () => {
@@ -892,5 +894,117 @@ END OF DATA`)
     expect(parsed.detectedValueColumn).toContain('DTW')
     expect(parsed.measurements.length).toBeGreaterThan(300)
     expect(parsed.pointId).toBe('AR-0209')
+  })
+
+  it('describes the sensor-depth anchors drift correction ramps between', () => {
+    const measurements = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+      { time: new Date('2025-01-02T00:00:00Z'), value: 10.5 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 9.8 },
+    ]
+    const manualPoints = [
+      { time: new Date('2025-01-03T00:00:00Z'), value: 52 },
+      { time: new Date('2025-01-01T00:00:00Z'), value: 50 },
+    ]
+
+    // Same anchors as the conversion test above: L0 = 60, L1 = 61.8. The
+    // closing reading sits on the second manual, so it belongs to no bin.
+    expect(describeSensorDepthAnchors(measurements, manualPoints)).toEqual([
+      {
+        start: new Date('2025-01-01T00:00:00Z'),
+        end: new Date('2025-01-03T00:00:00Z'),
+        startSensorDepth: 60,
+        endSensorDepth: 61.8,
+        drift: 1.8,
+        readingCount: 2,
+      },
+    ])
+  })
+
+  it('leaves the drift unmeasured when a manual lies outside the record', () => {
+    const measurements = [
+      { time: new Date('2025-01-02T00:00:00Z'), value: 10 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 10.5 },
+    ]
+    const manualPoints = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 50 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 52 },
+    ]
+
+    const [bin] = describeSensorDepthAnchors(measurements, manualPoints)
+    expect(bin.startSensorDepth).toBeNull()
+    expect(bin.endSensorDepth).toBe(62.5)
+    expect(bin.drift).toBeNull()
+
+    // Which is why the conversion holds that bin constant either way.
+    const off = convertWaterHeadToDepthToWater({ measurements, manualPoints })
+    const on = convertWaterHeadToDepthToWater({
+      measurements,
+      manualPoints,
+      correctDrift: true,
+    })
+    expect(summarizeSeriesChange(off, on).changedCount).toBe(0)
+  })
+
+  it('has no anchor interval to describe with a single manual', () => {
+    expect(
+      describeSensorDepthAnchors(
+        [{ time: new Date('2025-01-01T00:00:00Z'), value: 10 }],
+        [{ time: new Date('2025-01-01T00:00:00Z'), value: 50 }]
+      )
+    ).toEqual([])
+  })
+
+  it('summarizes how far drift correction moves the converted series', () => {
+    const measurements = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 10 },
+      { time: new Date('2025-01-02T00:00:00Z'), value: 10.5 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 9.8 },
+    ]
+    const manualPoints = [
+      { time: new Date('2025-01-01T00:00:00Z'), value: 50 },
+      { time: new Date('2025-01-03T00:00:00Z'), value: 52 },
+    ]
+
+    // Off: every reading uses L1 = 61.8 -> [51.8, 51.3, 52].
+    // On: L ramps 60 -> 61.8 -> [50, 50.4, 52].
+    const summary = summarizeSeriesChange(
+      convertWaterHeadToDepthToWater({ measurements, manualPoints }),
+      convertWaterHeadToDepthToWater({
+        measurements,
+        manualPoints,
+        correctDrift: true,
+      })
+    )
+
+    expect(summary).toEqual({
+      changedCount: 2,
+      maxAbsChange: 1.8,
+      maxChangeTime: new Date('2025-01-01T00:00:00Z'),
+      addedCount: 0,
+      removedCount: 0,
+    })
+  })
+
+  it('counts readings present in only one series as added or removed', () => {
+    const t = (day: number) => new Date(`2025-01-0${day}T00:00:00Z`)
+    const summary = summarizeSeriesChange(
+      [
+        { time: t(1), value: 1 },
+        { time: t(2), value: 2 },
+      ],
+      [
+        { time: t(2), value: 2 },
+        { time: t(3), value: 3 },
+      ]
+    )
+
+    expect(summary).toEqual({
+      changedCount: 0,
+      maxAbsChange: 0,
+      maxChangeTime: null,
+      addedCount: 1,
+      removedCount: 1,
+    })
   })
 })
