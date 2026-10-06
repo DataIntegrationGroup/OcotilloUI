@@ -213,6 +213,29 @@ export const chemReportStyles = StyleSheet.create({
     borderBottomColor: CHEM_REPORT_COLORS.border,
     paddingVertical: 3.5,
   },
+  // One day's results, headed by the day. It carries the date the table used
+  // to repeat on every row, so it has to read as a heading rather than a row.
+  dateGroup: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+    marginTop: 8,
+    paddingHorizontal: 4,
+    paddingBottom: 3,
+    borderBottomWidth: 0.75,
+    borderBottomColor: CHEM_REPORT_COLORS.borderStrong,
+  },
+  dateGroupLabel: {
+    fontSize: 6.5,
+    color: CHEM_REPORT_COLORS.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  dateGroupDate: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: CHEM_REPORT_COLORS.teal,
+  },
   trZebra: { backgroundColor: CHEM_REPORT_COLORS.zebra },
   trDanger: { backgroundColor: CHEM_REPORT_COLORS.dangerTint },
   trWarning: { backgroundColor: CHEM_REPORT_COLORS.warningTint },
@@ -320,6 +343,12 @@ export const chemReportStyles = StyleSheet.create({
     fontStyle: 'italic',
     color: CHEM_REPORT_COLORS.muted,
     marginTop: 7,
+  },
+  // Said once, above the table it qualifies, where it cannot be missed.
+  disclaimer: {
+    fontSize: 7.5,
+    color: CHEM_REPORT_COLORS.muted,
+    marginBottom: 6,
   },
   emptyNote: { fontSize: 8, color: CHEM_REPORT_COLORS.muted },
 

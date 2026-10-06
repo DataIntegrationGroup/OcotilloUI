@@ -2,7 +2,7 @@ import { Image, Page, Text, View } from '@react-pdf/renderer'
 // Inlined as a data URI: react-pdf cannot read the GIF original, and a
 // bundled URL would make the render depend on a fetch completing first.
 import nmbgmrLogo from '@/img/NMBGMR.png?inline'
-import { useMemo } from 'react'
+import { Fragment, useMemo } from 'react'
 import type { DrinkingWaterStandards } from '@/constants/drinkingWaterStandards'
 import type { ChemistryResult } from '@/hooks/useChemistryReportData'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
@@ -15,6 +15,7 @@ import {
   formatLevelChange,
   formatReportDate,
   formatResultValue,
+  groupRowsBySampleDate,
   standardLimitFor,
   resultAgainstLimit,
   latestResultPerParameter,
@@ -238,6 +239,11 @@ const statusPillStyle = (kind: ChemistryStatus['kind']) => {
   }
 }
 
+// A line break chosen by hand: react-pdf hyphenates "recommended" mid-word
+// when it has to wrap at a width of its own choosing. Read back as one phrase.
+const pillLabel = (status: ChemistryStatus): string =>
+  status.kind === 'above-smcl' ? 'Exceeds EPA\nrecommended limit' : status.label
+
 const StatusPill = ({ status }: { status: ChemistryStatus }) => {
   if (status.kind === 'none') {
     return <Text style={s.pillText}>—</Text>
@@ -247,7 +253,7 @@ const StatusPill = ({ status }: { status: ChemistryStatus }) => {
 
   return (
     <View style={[s.pill, pillStyle]}>
-      <Text style={[s.pillText, pillStyle]}>{status.label}</Text>
+      <Text style={[s.pillText, pillStyle]}>{pillLabel(status)}</Text>
     </View>
   )
 }
@@ -255,8 +261,14 @@ const StatusPill = ({ status }: { status: ChemistryStatus }) => {
 const Legend = () => (
   <View style={s.legendRow}>
     {[
-      { color: c.dangerTint, label: 'Above a health limit (MCL)' },
-      { color: c.warningTint, label: 'Above a recommended range (SMCL)' },
+      {
+        color: c.dangerTint,
+        label: 'Exceeds EPA maximum contaminant level (MCL)',
+      },
+      {
+        color: c.warningTint,
+        label: 'Exceeds EPA drinking water recommended limits (SMCL)',
+      },
       { color: c.okTint, label: 'Within the limit' },
     ].map((item) => (
       <View key={item.label} style={s.legendItem}>
@@ -281,8 +293,8 @@ const BarLegend = () => (
         <View style={[s.barLimitTick, { left: '60%' }]} />
       </View>
       <Text style={s.legendText}>
-        Against the limit — the bar is your result, the notch is the limit for
-        that parameter.
+        Result compared to the limit — the bar is your result, the notch is the
+        limit for that parameter.
       </Text>
     </View>
   </View>
@@ -291,13 +303,12 @@ const BarLegend = () => (
 const CHEM_COLUMNS = {
   parameter: { flex: 2 },
   result: { flex: 1.25 },
-  mcl: { flex: 0.95 },
-  smcl: { flex: 0.95 },
-  // Wide enough that "Above recommended range" breaks at its space rather
+  mcl: { flex: 1.1 },
+  smcl: { flex: 1.1 },
+  // Wide enough that "Exceeds EPA recommended limit" breaks at a space rather
   // than being hyphenated mid-word.
-  status: { flex: 1.55 },
-  comparison: { flex: 1.55 },
-  measured: { flex: 1 },
+  status: { flex: 1.65 },
+  comparison: { flex: 1.65 },
 } as const
 
 /**
@@ -381,90 +392,102 @@ const ChemistryTable = ({
       {showStandards ? (
         <>
           <Text style={[s.thText, s.thTextTight, s.td, CHEM_COLUMNS.mcl]}>
-            Maximum contaminant level
+            {'Maximum\ncontaminant\nlevel'}
           </Text>
           <Text style={[s.thText, s.thTextTight, s.td, CHEM_COLUMNS.smcl]}>
-            Secondary maximum contaminant level
+            {'Secondary\nmaximum\ncontaminant\nlevel'}
           </Text>
           <Text style={[s.thText, s.td, CHEM_COLUMNS.status]}>Status</Text>
           <Text style={[s.thText, s.td, CHEM_COLUMNS.comparison]}>
-            Against the limit
+            Result compared to the limit
           </Text>
         </>
       ) : null}
-      <Text style={[s.thText, s.td, CHEM_COLUMNS.measured]}>Sampled</Text>
     </View>
 
-    {rows.map((row, index) => {
-      const status = resultStatus(row)
-      const rowTint =
-        status.kind === 'above-mcl'
-          ? [s.trDanger]
-          : status.kind === 'above-smcl'
-            ? [s.trWarning]
-            : index % 2 === 1
-              ? [s.trZebra]
-              : []
-
-      return (
-        <View key={row.key} style={[s.tr, ...rowTint]} wrap={false}>
-          <Text
-            style={[
-              s.td,
-              CHEM_COLUMNS.parameter,
-              ...(row.exceeds ? [s.tdStrong] : []),
-            ]}
-          >
-            {displayParameterName(row.parameterName)}
-          </Text>
-          {/* The unit rides with the value rather than taking a column of its
-              own, which is what the two limit columns are built out of. */}
-          <Text
-            style={[
-              s.td,
-              s.tdMono,
-              CHEM_COLUMNS.result,
-              ...(row.exceeds ? [s.tdStrong] : []),
-            ]}
-          >
-            {`${formatResultValue(row.value)}${row.value != null && row.unit ? ` ${row.unit}` : ''}`}
-          </Text>
-          {showStandards ? (
-            <>
-              <Text
-                style={[
-                  s.td,
-                  s.tdMono,
-                  CHEM_COLUMNS.mcl,
-                  ...(row.standard?.kind === 'MCL' ? [] : [s.tdNoStandard]),
-                ]}
-              >
-                {standardLimitFor(row, 'MCL')}
-              </Text>
-              <Text
-                style={[
-                  s.td,
-                  s.tdMono,
-                  CHEM_COLUMNS.smcl,
-                  ...(row.standard?.kind === 'SMCL' ? [] : [s.tdNoStandard]),
-                ]}
-              >
-                {standardLimitFor(row, 'SMCL')}
-              </Text>
-              <View style={[s.td, CHEM_COLUMNS.status]}>
-                <StatusPill status={status} />
-              </View>
-              <View style={[s.td, s.barCell, CHEM_COLUMNS.comparison]}>
-                <StandardBar row={row} status={status} />
-              </View>
-            </>
-          ) : null}
-          <Text style={[s.td, CHEM_COLUMNS.measured]}>
-            {formatReportDate(row.sampledOn)}
+    {groupRowsBySampleDate(rows).map((group) => (
+      <Fragment key={group.date}>
+        {/* The date is stated once per group, here, rather than on every row.
+            Kept with the rows after it, so a date is never left at the foot
+            of a page. */}
+        <View style={s.dateGroup} minPresenceAhead={40}>
+          <Text style={s.dateGroupLabel}>Sample date</Text>
+          <Text style={s.dateGroupDate}>
+            {formatReportDate(group.sampledOn)}
           </Text>
         </View>
-      )
-    })}
+        {group.rows.map((row, index) => {
+          const status = resultStatus(row)
+          const rowTint =
+            status.kind === 'above-mcl'
+              ? [s.trDanger]
+              : status.kind === 'above-smcl'
+                ? [s.trWarning]
+                : index % 2 === 1
+                  ? [s.trZebra]
+                  : []
+
+          return (
+            <View key={row.key} style={[s.tr, ...rowTint]} wrap={false}>
+              <Text
+                style={[
+                  s.td,
+                  CHEM_COLUMNS.parameter,
+                  ...(row.exceeds ? [s.tdStrong] : []),
+                ]}
+              >
+                {displayParameterName(row.parameterName)}
+              </Text>
+              {/* The unit rides with the value rather than taking a column of
+                  its own, which is what the two limit columns are built out
+                  of. */}
+              <Text
+                style={[
+                  s.td,
+                  s.tdMono,
+                  CHEM_COLUMNS.result,
+                  ...(row.exceeds ? [s.tdStrong] : []),
+                ]}
+              >
+                {`${formatResultValue(row.value)}${row.value != null && row.unit ? ` ${row.unit}` : ''}`}
+              </Text>
+              {showStandards ? (
+                <>
+                  <Text
+                    style={[
+                      s.td,
+                      s.tdMono,
+                      CHEM_COLUMNS.mcl,
+                      ...(row.standard?.kind === 'MCL' ? [] : [s.tdNoStandard]),
+                    ]}
+                  >
+                    {standardLimitFor(row, 'MCL')}
+                  </Text>
+                  <Text
+                    style={[
+                      s.td,
+                      s.tdMono,
+                      CHEM_COLUMNS.smcl,
+                      ...(row.standard?.kind === 'SMCL'
+                        ? []
+                        : [s.tdNoStandard]),
+                    ]}
+                  >
+                    {standardLimitFor(row, 'SMCL')}
+                  </Text>
+                  <View style={[s.td, CHEM_COLUMNS.status]}>
+                    <StatusPill status={status} />
+                  </View>
+                  <View style={[s.td, s.barCell, CHEM_COLUMNS.comparison]}>
+                    <StandardBar row={row} status={status} />
+                  </View>
+                </>
+              ) : null}
+            </View>
+          )
+        })}
+      </Fragment>
+    ))}
   </View>
 )
 
@@ -810,6 +833,41 @@ export const ChemistryReportPdf = ({
     (row) => row.parameterName === 'Ion Balance'
   )
 
+  const guideAboveTable = sections.chemistryResults && sections.howToRead
+
+  // The reader's guide. Placed above the chemistry table when there is one,
+  // since how many parameters the table runs to varies by well and a guide on
+  // a later page cannot be counted on to be near it.
+  const howToReadSection = sections.howToRead ? (
+    <View style={s.section}>
+      <SectionHead title="How to read this report" />
+      <View style={s.glossaryRow}>
+        <View style={s.glossaryColumn}>
+          {GLOSSARY_LEFT.map((entry) => (
+            <Text key={entry.term} style={s.glossaryEntry}>
+              <Text style={s.glossaryTerm}>{entry.term}</Text>
+              {` — ${entry.body}`}
+            </Text>
+          ))}
+        </View>
+        <View style={s.glossaryColumn}>
+          {glossaryRight.map((entry) => (
+            <Text key={entry.term} style={s.glossaryEntry}>
+              <Text style={s.glossaryTerm}>{entry.term}</Text>
+              {` — ${entry.body}`}
+            </Text>
+          ))}
+          <Text style={s.glossaryEntry}>
+            <Text style={s.glossaryTerm}>Questions, or want more data?</Text>
+            {
+              ' Email aquifermapping@nmt.edu. You can request the complete record for your well at any time.'
+            }
+          </Text>
+        </View>
+      </View>
+    </View>
+  ) : null
+
   return (
     <OcotilloDocument
       title={
@@ -907,7 +965,9 @@ export const ChemistryReportPdf = ({
                 // The note names which parameters are over; a count of zero
                 // has none to name, and "None" underneath a nought only says
                 // the same thing twice.
-                label: 'Above health limit',
+                // Broken by hand: in a stat this narrow, react-pdf hyphenates
+                // "contaminant" mid-word. Read back as one phrase.
+                label: 'Exceeds EPA\nmaximum\ncontaminant\nlevel',
                 value: summary.mclExceedances.length,
                 note: summary.mclExceedances
                   .map((row) => displayParameterName(row.parameterName))
@@ -915,7 +975,7 @@ export const ChemistryReportPdf = ({
                 tone: summary.mclExceedances.length ? 'danger' : undefined,
               },
               {
-                label: 'Above recommended range',
+                label: 'Exceeds EPA\ndrinking water\nrecommended\nlimits',
                 value: summary.smclExceedances.length,
                 note: summary.smclExceedances
                   .map((row) => displayParameterName(row.parameterName))
@@ -946,8 +1006,8 @@ export const ChemistryReportPdf = ({
           <View style={s.callout} wrap={false}>
             <Text style={s.calloutTitle}>
               {summary.mclExceedances.length === 1
-                ? 'One result was above a federal health limit'
-                : `${summary.mclExceedances.length} results were above a federal health limit`}
+                ? 'One result exceeds the EPA maximum contaminant level'
+                : `${summary.mclExceedances.length} results exceed the EPA maximum contaminant level`}
             </Text>
             {summary.mclExceedances.map((row) => (
               <Text key={`mcl-${row.key}`} style={s.calloutBody}>
@@ -971,7 +1031,7 @@ export const ChemistryReportPdf = ({
         {sections.standardsComparison && summary.smclExceedances.length > 0 ? (
           <View style={[s.callout, s.calloutWarn]} wrap={false}>
             <Text style={s.calloutTitle}>
-              {`${summary.smclExceedances.length} result${summary.smclExceedances.length === 1 ? '' : 's'} above a recommended range for taste, odor, or staining`}
+              {`${summary.smclExceedances.length} result${summary.smclExceedances.length === 1 ? '' : 's'} ${summary.smclExceedances.length === 1 ? 'exceeds' : 'exceed'} EPA drinking water recommended limits for taste, odor, or staining`}
             </Text>
             <Text style={s.calloutBody}>
               {summary.smclExceedances
@@ -1093,13 +1153,21 @@ export const ChemistryReportPdf = ({
                 travels with the rows rather than being left behind. */}
             {/* No date note: the table gives every row its own sampled date,
                 so a single date over the heading only competes with them. */}
+            {guideAboveTable ? <View break>{howToReadSection}</View> : null}
             <SectionHead
-              startsPage
+              startsPage={!guideAboveTable}
               title="Water chemistry &amp; drinking water standards"
             />
             <View style={s.section}>
               {reportable.rows.length ? (
                 <>
+                  {sections.standardsComparison ? (
+                    <Text style={s.disclaimer}>
+                      The drinking water limits in this report are set by the
+                      U.S. Environmental Protection Agency (EPA). They are
+                      guidance only.
+                    </Text>
+                  ) : null}
                   <ChemistryTable
                     rows={reportable.rows}
                     showStandards={sections.standardsComparison}
@@ -1119,7 +1187,7 @@ export const ChemistryReportPdf = ({
         ) : null}
 
         {/* ---- Sampling notes and glossary (page 3) ---- */}
-        {sections.samplingNotes || sections.howToRead ? (
+        {sections.samplingNotes || (sections.howToRead && !guideAboveTable) ? (
           <View break>
             {sections.samplingNotes && ionBalance.length ? (
               <View style={s.section}>
@@ -1183,37 +1251,7 @@ export const ChemistryReportPdf = ({
               </View>
             ) : null}
 
-            {sections.howToRead ? (
-              <View style={s.section}>
-                <SectionHead title="How to read this report" />
-                <View style={s.glossaryRow}>
-                  <View style={s.glossaryColumn}>
-                    {GLOSSARY_LEFT.map((entry) => (
-                      <Text key={entry.term} style={s.glossaryEntry}>
-                        <Text style={s.glossaryTerm}>{entry.term}</Text>
-                        {` — ${entry.body}`}
-                      </Text>
-                    ))}
-                  </View>
-                  <View style={s.glossaryColumn}>
-                    {glossaryRight.map((entry) => (
-                      <Text key={entry.term} style={s.glossaryEntry}>
-                        <Text style={s.glossaryTerm}>{entry.term}</Text>
-                        {` — ${entry.body}`}
-                      </Text>
-                    ))}
-                    <Text style={s.glossaryEntry}>
-                      <Text style={s.glossaryTerm}>
-                        Questions, or want more data?
-                      </Text>
-                      {
-                        ' Email aquifermapping@nmt.edu. You can request the complete record for your well at any time.'
-                      }
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ) : null}
+            {guideAboveTable ? null : howToReadSection}
           </View>
         ) : null}
 
