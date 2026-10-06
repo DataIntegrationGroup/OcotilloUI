@@ -2918,7 +2918,8 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         !onPublish ||
                         correctedMeasurements.length === 0 ||
                         isPublishing ||
-                        publishInProgress
+                        publishInProgress ||
+                        isDeleting
                       }
                     >
                       {isPublishing || publishInProgress
