@@ -4,9 +4,10 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router'
 import { AppProviders } from '@/AppProviders'
 import { AppShell } from '@/components/AppShell'
 import { Callback, Login } from '@/components/Auth'
-import { ContentPage } from '@/pages/content'
+import { ContentPage, PublicContentPage } from '@/pages/content'
 import { TypographyPage } from '@/pages/example/TypographyPage'
 import { Home } from '@/pages/home'
+import { LandingPage } from '@/pages/landing'
 import { SettingsPage } from '@/pages/settings'
 import { GeothermalRoutes, OcotilloRoutes, ST2Routes } from '@/routes'
 import { settings } from '@/settings'
@@ -15,12 +16,28 @@ const App: React.FC = () => (
   <BrowserRouter basename={settings.urlprefix}>
     <AppProviders>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route
+          path="/ogcapi"
+          element={
+            <Authenticated
+              key="ogcapi"
+              fallback={<PublicContentPage src="/content/ogcapi.md" />}
+            >
+              <AppShell />
+            </Authenticated>
+          }
+        >
+          <Route index element={<ContentPage src="/content/ogcapi.md" />} />
+        </Route>
         <Route
           path="/analytics-disclosure"
           element={
             <Authenticated
               key="analytics-disclosure"
-              fallback={<ContentPage src="/content/analytics-disclosure.md" />}
+              fallback={
+                <PublicContentPage src="/content/analytics-disclosure.md" />
+              }
             >
               <AppShell />
             </Authenticated>
@@ -48,7 +65,6 @@ const App: React.FC = () => (
             </Authenticated>
           }
         >
-          <Route index element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route
             path="/about"
@@ -57,10 +73,6 @@ const App: React.FC = () => (
           <Route
             path="/report-a-bug"
             element={<ContentPage src="/content/report-a-bug.md" />}
-          />
-          <Route
-            path="/ogcapi"
-            element={<ContentPage src="/content/ogcapi.md" />}
           />
           <Route path="/settings" element={<SettingsPage />} />
           {/* TEMPORARY: example specimen pages */}
