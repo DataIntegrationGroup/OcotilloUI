@@ -1,5 +1,4 @@
 import { useContext, useState, type ReactNode } from 'react'
-import { ChevronDown } from 'lucide-react'
 import { Link as RouterLink } from 'react-router'
 import { LandingTopbar } from '@/components/LandingTopbar'
 import { Button } from '@/components/ui/button'
@@ -11,11 +10,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import { AUTHENTIK_SIGNUP_URL } from '@/config/auth'
 import ocotilloImage from '@/img/ocotillo.jpeg'
 import waterWellImage from '@/img/ogs-water-well.png'
@@ -133,8 +127,9 @@ export const LandingPage = () => {
             The Bureau of Geology’s Research Data In One Place
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-white/90">
-            Ocotillo is where you can find the New Mexico Bureau of Geology and
-            Mineral Resources’ research data.
+            Ocotillo is for employees of the New Mexico Bureau of Geology and
+            Mineral Resources to find, manage, and share the Bureau’s research
+            data.
           </p>
           <Button
             asChild
@@ -145,6 +140,33 @@ export const LandingPage = () => {
               Request an account
             </a>
           </Button>
+        </section>
+
+        <section
+          id="faqs"
+          aria-labelledby="faqs-heading"
+          className="grid gap-8 py-8 sm:py-16"
+        >
+          <div className="max-w-md">
+            <h2
+              id="faqs-heading"
+              className="font-heading text-3xl font-bold tracking-tight"
+            >
+              FAQs
+            </h2>
+          </div>
+          <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+            {faqs.map(({ question, answer }) => (
+              <div key={question}>
+                <h3 className="font-heading text-lg font-semibold">
+                  {question}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {answer}
+                </p>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section
@@ -211,7 +233,6 @@ export const LandingPage = () => {
           </Card>
         </section>
 
-        <Separator />
         <section id="how" className="py-8 sm:py-16">
           <div className="max-w-2xl pb-8">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
@@ -280,46 +301,6 @@ export const LandingPage = () => {
           </div>
         </section>
 
-        <Separator />
-        <section
-          id="faqs"
-          aria-labelledby="faqs-heading"
-          className="grid gap-8 py-8 sm:py-16 lg:grid-cols-[0.75fr_1.25fr]"
-        >
-          <div className="max-w-md">
-            <h2
-              id="faqs-heading"
-              className="font-heading text-3xl font-bold tracking-tight"
-            >
-              FAQs
-            </h2>
-          </div>
-          <Card className="gap-0 overflow-hidden p-0">
-            <CardContent className="divide-y p-0">
-              {faqs.map(({ question, answer }) => (
-                <Collapsible key={question}>
-                  <h3>
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="group h-auto w-full justify-between gap-4 rounded-none px-5 py-5 text-left whitespace-normal"
-                      >
-                        <span className="font-heading text-base font-semibold">
-                          {question}
-                        </span>
-                        <ChevronDown className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
-                      </Button>
-                    </CollapsibleTrigger>
-                  </h3>
-                  <CollapsibleContent className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
-                    {answer}
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-            </CardContent>
-          </Card>
-        </section>
-
         <section className="mb-8 flex flex-col items-start justify-between gap-5 rounded-xl border border-primary/25 bg-primary/10 p-7 sm:flex-row sm:items-center">
           <div>
             <h2 className="font-heading text-2xl font-semibold">
@@ -381,7 +362,7 @@ const ShowcaseRow = ({
 )
 
 const PreviewWindow = ({ children }: { children: ReactNode }) => (
-  <div className="aspect-square w-full overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5">
+  <div className="aspect-[3/2] w-full overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5">
     {children}
   </div>
 )
