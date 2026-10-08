@@ -198,7 +198,8 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain('aquifermapping@nmt.edu')
+    expect(text).toContain('nmbg-waterlevel@nmt.edu')
+    expect(text).not.toContain('aquifermapping@nmt.edu')
     expect(text).not.toContain('835-5327')
     // The Drinking Water Bureau is still named as somewhere to turn after an
     // exceedance; only its number is gone.
@@ -216,11 +217,11 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain('exceeds the epa maximum contaminant level')
+    expect(text).toContain('exceeds the maximum contaminant level')
     expect(text).not.toContain('occurs naturally')
   })
 
-  it('calls a secondary exceedance an EPA recommended limit, not an SMCL', async () => {
+  it('calls a secondary exceedance a drinking water standard', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
         standards={TEST_STANDARDS}
@@ -236,10 +237,8 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain(
-      '1 result exceeds epa drinking water recommended limits'
-    )
-    expect(text).toContain('exceeds epa recommended limit')
+    expect(text).toContain('1 result exceeds drinking water standards')
+    expect(text).toContain('exceeds smcl')
     expect(text).not.toContain('above recommended range')
     expect(text).not.toContain('above smcl')
   })
@@ -420,12 +419,8 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain(
-      'one result exceeds the epa maximum contaminant level'
-    )
-    expect(text).not.toContain(
-      '2 results exceed the epa maximum contaminant level'
-    )
+    expect(text).toContain('one result exceeds the maximum contaminant level')
+    expect(text).not.toContain('2 results exceed the maximum contaminant level')
     // Named once in the stat, at its most recent value in the callout.
     expect(text).not.toContain('arsenic, arsenic')
     expect(text).toContain('0.011 mg/l (limit 0.01 mg/l, sampled may 15, 2026)')
@@ -455,8 +450,8 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     )
 
     // Neither callout: the parameter is back under its limit.
-    expect(text).not.toContain('exceeds the epa maximum contaminant level')
-    expect(text).not.toContain('exceed the epa maximum contaminant level')
+    expect(text).not.toContain('exceeds the maximum contaminant level')
+    expect(text).not.toContain('exceed the maximum contaminant level')
     expect(text).toContain('below limit')
   })
 
@@ -496,7 +491,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
 
     expect(text).toContain('1.2x the limit')
     expect(text).toContain('0.60x the limit')
-    expect(text).toContain('the bar is your result, the notch is the limit')
+    expect(text).toContain('the bar is your result, the notch is the mcl/smcl')
     // Comparison with other wells is out of scope for the report, and the
     // column plots nothing of the kind.
     expect(text).not.toContain('nearby')
@@ -574,8 +569,10 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain('exceeds epa maximum contaminant level')
-    expect(text).toContain('exceeds epa drinking water recommended limits')
+    expect(text).toContain('exceeds max contaminant level')
+    expect(text).toContain('based on epa standards')
+    expect(text).toContain('exceeds drinking water standards')
+    expect(text).toContain('based on epa standards for drinking water')
     // The note names which parameters are over; with none over there is
     // nothing to name, and "None" under a nought says it twice.
     expect(text).not.toContain('none')
@@ -757,7 +754,7 @@ describe('ChemistryReportPdf — BDMS-1440 corrections', () => {
       />
     )
 
-    expect(dense(text)).toContain(dense('result compared to the limit'))
+    expect(dense(text)).toContain(dense('result compared to the standard'))
     expect(dense(text)).not.toContain(dense('against the limit'))
   })
 
@@ -774,8 +771,8 @@ describe('ChemistryReportPdf — BDMS-1440 corrections', () => {
       />
     )
 
-    expect(text).toContain('exceeds epa mcl')
-    expect(text).toContain('exceeds epa recommended limit')
+    expect(text).toContain('exceeds mcl')
+    expect(text).toContain('exceeds smcl')
     expect(text).not.toContain('above limit')
     expect(text).not.toContain('above a health limit')
     expect(text).not.toContain('above a recommended range')
@@ -814,7 +811,7 @@ describe('ChemistryReportPdf — BDMS-1440 corrections', () => {
     expect(text).not.toContain('they are guidance only')
   })
 
-  it('puts How to read this report directly above the chemistry table', async () => {
+  it('closes page one with How to read this report', async () => {
     const pages = await renderReportPages(
       <ChemistryReportPdf
         standards={TEST_STANDARDS}
@@ -824,19 +821,35 @@ describe('ChemistryReportPdf — BDMS-1440 corrections', () => {
       />
     )
 
-    const heading = dense('water chemistry & drinking water standards')
     const guide = dense('how to read this report')
-    const tablePage = pages.findIndex((page) => dense(page).includes(heading))
-    expect(tablePage).toBeGreaterThanOrEqual(0)
+    const first = dense(pages[0])
+    // After the at-a-glance summary on the same page, and said only once.
+    expect(first).toContain(guide)
+    expect(first.indexOf(guide)).toBeGreaterThan(
+      first.indexOf(dense('at a glance'))
+    )
+    expect(pages.filter((page) => dense(page).includes(guide))).toHaveLength(1)
+    // The table starts on a later page.
+    expect(first).not.toContain(dense('water chemistry & drinking water'))
+  })
 
-    // On the page the table is on, ahead of it, so it is read first however
-    // many parameters the table runs to.
-    const onPage = dense(pages[tablePage])
-    expect(onPage).toContain(guide)
-    expect(onPage.indexOf(guide)).toBeLessThan(onPage.indexOf(heading))
-    // Said once: not repeated on a page after the table.
-    const mentions = pages.filter((page) => dense(page).includes(guide))
-    expect(mentions).toHaveLength(1)
+  it('describes the MCL and SMCL in the EPA’s terms, with a Disclaimer', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    const flat = dense(text)
+    expect(flat).toContain(dense('mcl (maximum contaminant level)'))
+    expect(flat).toContain(dense('epa action levels are included'))
+    expect(flat).toContain(dense('smcl (secondary maximum contaminant level)'))
+    expect(flat).toContain(dense('non-enforceable national secondary'))
+    expect(flat).toContain(dense('disclaimer'))
+    expect(flat).not.toContain(dense('limitations'))
   })
 
   it('still starts the chemistry table on its own page without the guide', async () => {

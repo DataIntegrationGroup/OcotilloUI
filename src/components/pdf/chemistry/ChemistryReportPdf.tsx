@@ -110,6 +110,8 @@ type StatEntry = {
   /** Null drops the stat from the row entirely; it is never printed as a dash. */
   value: string | number | null
   note: string
+  /** Attribution printed beneath the note, e.g. the source of a standard. */
+  footnote?: string
   tone?: 'danger' | 'warning'
 }
 
@@ -133,6 +135,7 @@ const Stat = ({
   label,
   value,
   note,
+  footnote,
   tone,
 }: StatEntry & { value: string | number }) => (
   <View style={s.stat}>
@@ -148,6 +151,7 @@ const Stat = ({
       {String(value)}
     </Text>
     <Text style={s.statNote}>{note}</Text>
+    {footnote ? <Text style={s.statNote}>{footnote}</Text> : null}
   </View>
 )
 
@@ -239,11 +243,6 @@ const statusPillStyle = (kind: ChemistryStatus['kind']) => {
   }
 }
 
-// A line break chosen by hand: react-pdf hyphenates "recommended" mid-word
-// when it has to wrap at a width of its own choosing. Read back as one phrase.
-const pillLabel = (status: ChemistryStatus): string =>
-  status.kind === 'above-smcl' ? 'Exceeds EPA\nrecommended limit' : status.label
-
 const StatusPill = ({ status }: { status: ChemistryStatus }) => {
   if (status.kind === 'none') {
     return <Text style={s.pillText}>—</Text>
@@ -253,7 +252,7 @@ const StatusPill = ({ status }: { status: ChemistryStatus }) => {
 
   return (
     <View style={[s.pill, pillStyle]}>
-      <Text style={[s.pillText, pillStyle]}>{pillLabel(status)}</Text>
+      <Text style={[s.pillText, pillStyle]}>{status.label}</Text>
     </View>
   )
 }
@@ -263,11 +262,11 @@ const Legend = () => (
     {[
       {
         color: c.dangerTint,
-        label: 'Exceeds EPA maximum contaminant level (MCL)',
+        label: 'Exceeds MCL (Maximum Contaminant Level)',
       },
       {
         color: c.warningTint,
-        label: 'Exceeds EPA drinking water recommended limits (SMCL)',
+        label: 'Exceeds SMCL (Secondary Maximum Contaminant Level)',
       },
       { color: c.okTint, label: 'Within the limit' },
     ].map((item) => (
@@ -294,7 +293,7 @@ const BarLegend = () => (
       </View>
       <Text style={s.legendText}>
         Result compared to the limit — the bar is your result, the notch is the
-        limit for that parameter.
+        MCL/SMCL for the parameter.
       </Text>
     </View>
   </View>
@@ -399,7 +398,7 @@ const ChemistryTable = ({
           </Text>
           <Text style={[s.thText, s.td, CHEM_COLUMNS.status]}>Status</Text>
           <Text style={[s.thText, s.td, CHEM_COLUMNS.comparison]}>
-            Result compared to the limit
+            Result compared to the standard
           </Text>
         </>
       ) : null}
@@ -656,11 +655,11 @@ const ContinuousSummary = ({
 const GLOSSARY_LEFT = [
   {
     term: 'MCL (Maximum Contaminant Level)',
-    body: 'an enforceable federal health-based limit for public water systems. Private wells are not regulated, but the limit is the best available yardstick.',
+    body: 'The US Environmental Protection Agency (EPA) sets National Primary Drinking Water Regulations, which include legally enforceable and recommended Maximum Contaminant Levels (MCLs) for public drinking water systems. While private wells are not subject to these regulations, these MCLs provide guidance on the suitability of the sampled water for human consumption. EPA action levels are included.',
   },
   {
-    term: 'SMCL (Secondary MCL)',
-    body: 'a non-health limit covering taste, odor, color, and staining. Exceeding it is a nuisance, not a health risk.',
+    term: 'SMCL (Secondary Maximum Contaminant Level)',
+    body: 'The US Environmental Protection Agency (EPA) has established non-enforceable National Secondary Drinking Water Regulations, which are guidelines to assist public water systems in managing their drinking water for aesthetic considerations. Concentrations in your water exceeding the secondary regulations may explain variations in taste, color, and odor.',
   },
   {
     term: 'ND (Not detected)',
@@ -681,7 +680,7 @@ const GLOSSARY_RIGHT = [
     body: 'measured downward from the ground surface. Water elevation is the same measurement expressed as height above sea level, so a falling water table shows as a larger depth and a smaller elevation.',
   },
   {
-    term: 'Limitations',
+    term: 'Disclaimer',
     body: 'results describe the water on the day it was sampled, at the point it was sampled. Water quality changes with season, pumping, and household plumbing. This report does not certify water as safe to drink.',
   },
 ]
@@ -833,13 +832,10 @@ export const ChemistryReportPdf = ({
     (row) => row.parameterName === 'Ion Balance'
   )
 
-  const guideAboveTable = sections.chemistryResults && sections.howToRead
-
-  // The reader's guide. Placed above the chemistry table when there is one,
-  // since how many parameters the table runs to varies by well and a guide on
-  // a later page cannot be counted on to be near it.
+  // The reader's guide. Closes page one: a chemistry report carries no water
+  // level table, so what precedes it is stable from well to well.
   const howToReadSection = sections.howToRead ? (
-    <View style={s.section}>
+    <View style={s.section} wrap={false}>
       <SectionHead title="How to read this report" />
       <View style={s.glossaryRow}>
         <View style={s.glossaryColumn}>
@@ -860,7 +856,7 @@ export const ChemistryReportPdf = ({
           <Text style={s.glossaryEntry}>
             <Text style={s.glossaryTerm}>Questions, or want more data?</Text>
             {
-              ' Email aquifermapping@nmt.edu. You can request the complete record for your well at any time.'
+              ' Email nmbg-waterlevel@nmt.edu. You can request the complete record for your well at any time.'
             }
           </Text>
         </View>
@@ -928,7 +924,7 @@ export const ChemistryReportPdf = ({
 
         <Text style={s.lede}>
           {[
-            'This report summarizes what is on file for your well: how the well is built, what the water was tested for, and how those results compare to drinking water standards.',
+            'This report summarizes what is on file for your well: how the well is built, what the water was tested for, and how those results compare to EPA drinking water standards.',
             'The chemistry is every result on record, however long ago it was sampled.',
             showsWaterLevels
               ? `The water level measurements cover ${year}.`
@@ -967,7 +963,8 @@ export const ChemistryReportPdf = ({
                 // the same thing twice.
                 // Broken by hand: in a stat this narrow, react-pdf hyphenates
                 // "contaminant" mid-word. Read back as one phrase.
-                label: 'Exceeds EPA\nmaximum\ncontaminant\nlevel',
+                label: 'Exceeds Max\nContaminant\nLevel',
+                footnote: 'Based on EPA Standards',
                 value: summary.mclExceedances.length,
                 note: summary.mclExceedances
                   .map((row) => displayParameterName(row.parameterName))
@@ -975,7 +972,8 @@ export const ChemistryReportPdf = ({
                 tone: summary.mclExceedances.length ? 'danger' : undefined,
               },
               {
-                label: 'Exceeds EPA\ndrinking water\nrecommended\nlimits',
+                label: 'Exceeds Drinking\nWater\nStandards',
+                footnote: 'Based On EPA Standards\nfor Drinking Water',
                 value: summary.smclExceedances.length,
                 note: summary.smclExceedances
                   .map((row) => displayParameterName(row.parameterName))
@@ -1006,8 +1004,8 @@ export const ChemistryReportPdf = ({
           <View style={s.callout} wrap={false}>
             <Text style={s.calloutTitle}>
               {summary.mclExceedances.length === 1
-                ? 'One result exceeds the EPA maximum contaminant level'
-                : `${summary.mclExceedances.length} results exceed the EPA maximum contaminant level`}
+                ? 'One result exceeds the maximum contaminant level (MCL)'
+                : `${summary.mclExceedances.length} results exceed the maximum contaminant level (MCL)`}
             </Text>
             {summary.mclExceedances.map((row) => (
               <Text key={`mcl-${row.key}`} style={s.calloutBody}>
@@ -1031,7 +1029,7 @@ export const ChemistryReportPdf = ({
         {sections.standardsComparison && summary.smclExceedances.length > 0 ? (
           <View style={[s.callout, s.calloutWarn]} wrap={false}>
             <Text style={s.calloutTitle}>
-              {`${summary.smclExceedances.length} result${summary.smclExceedances.length === 1 ? '' : 's'} ${summary.smclExceedances.length === 1 ? 'exceeds' : 'exceed'} EPA drinking water recommended limits for taste, odor, or staining`}
+              {`${summary.smclExceedances.length} result${summary.smclExceedances.length === 1 ? '' : 's'} ${summary.smclExceedances.length === 1 ? 'exceeds' : 'exceed'} drinking water standards (SMCL) for taste, odor, or color`}
             </Text>
             <Text style={s.calloutBody}>
               {summary.smclExceedances
@@ -1096,6 +1094,8 @@ export const ChemistryReportPdf = ({
           </View>
         ) : null}
 
+        {howToReadSection}
+
         {/* ---- Field parameters (page 2) ---- */}
         {sections.fieldParameters ? (
           <View style={s.section} break>
@@ -1153,9 +1153,8 @@ export const ChemistryReportPdf = ({
                 travels with the rows rather than being left behind. */}
             {/* No date note: the table gives every row its own sampled date,
                 so a single date over the heading only competes with them. */}
-            {guideAboveTable ? <View break>{howToReadSection}</View> : null}
             <SectionHead
-              startsPage={!guideAboveTable}
+              startsPage
               title="Water chemistry &amp; drinking water standards"
             />
             <View style={s.section}>
@@ -1187,7 +1186,7 @@ export const ChemistryReportPdf = ({
         ) : null}
 
         {/* ---- Sampling notes and glossary (page 3) ---- */}
-        {sections.samplingNotes || (sections.howToRead && !guideAboveTable) ? (
+        {sections.samplingNotes ? (
           <View break>
             {sections.samplingNotes && ionBalance.length ? (
               <View style={s.section}>
@@ -1250,14 +1249,12 @@ export const ChemistryReportPdf = ({
                 </Text>
               </View>
             ) : null}
-
-            {guideAboveTable ? null : howToReadSection}
           </View>
         ) : null}
 
         <View style={s.footer} fixed>
           <Text style={s.footerContact}>
-            {'Questions: aquifermapping@nmt.edu'}
+            {'Questions: nmbg-waterlevel@nmt.edu'}
           </Text>
           <Text
             style={s.footerText}

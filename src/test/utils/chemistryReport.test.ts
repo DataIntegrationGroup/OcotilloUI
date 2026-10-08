@@ -288,7 +288,7 @@ describe('resultStatus', () => {
           standard: { kind: 'MCL', limit: 0.01, unit: 'mg/L', source: 'EPA' },
         })
       )
-    ).toEqual({ kind: 'above-mcl', label: 'Exceeds EPA MCL' })
+    ).toEqual({ kind: 'above-mcl', label: 'Exceeds MCL' })
 
     expect(
       resultStatus(
@@ -300,7 +300,7 @@ describe('resultStatus', () => {
       )
     ).toEqual({
       kind: 'above-smcl',
-      label: 'Exceeds EPA recommended limit',
+      label: 'Exceeds SMCL',
     })
   })
 

@@ -212,8 +212,8 @@ export const buildChemistryReportFilename = (
  * comparison logic did not actually produce.
  */
 export type ChemistryStatus =
-  | { kind: 'above-mcl'; label: 'Exceeds EPA MCL' }
-  | { kind: 'above-smcl'; label: 'Exceeds EPA recommended limit' }
+  | { kind: 'above-mcl'; label: 'Exceeds MCL' }
+  | { kind: 'above-smcl'; label: 'Exceeds SMCL' }
   | { kind: 'below'; label: 'Below limit' }
   | { kind: 'not-detected'; label: 'Not detected' }
   | { kind: 'classification'; label: string }
@@ -244,8 +244,8 @@ export const resultStatus = (row: ChemistryResultRow): ChemistryStatus => {
 
   if (row.exceeds) {
     return row.standard.kind === 'MCL'
-      ? { kind: 'above-mcl', label: 'Exceeds EPA MCL' }
-      : { kind: 'above-smcl', label: 'Exceeds EPA recommended limit' }
+      ? { kind: 'above-mcl', label: 'Exceeds MCL' }
+      : { kind: 'above-smcl', label: 'Exceeds SMCL' }
   }
 
   return { kind: 'below', label: 'Below limit' }
