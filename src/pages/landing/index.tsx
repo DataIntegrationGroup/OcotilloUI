@@ -12,6 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
 import ocotilloImage from "@/img/ocotillo.jpeg";
+import roadmapImage from "@/img/ocotillo-roadmap.png";
 import waterWellImage from "@/img/ogs-water-well.png";
 import ampImage from "@/img/ogs-amp-project-areas.png";
 import waterElevationImage from "@/img/ogs-water-elevation.png";
@@ -319,17 +320,19 @@ export const LandingPage = () => {
               </p>
             </div>
             <a
-              className="relative block w-full shrink-0 overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="block w-full shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               href={OCOTILLO_ROADMAP_URL}
               target="_blank"
               rel="noreferrer"
               aria-label="Open the Ocotillo Roadmap"
             >
-              <iframe
-                src={OCOTILLO_ROADMAP_URL}
-                title="Ocotillo Roadmap"
-                className="pointer-events-none aspect-[3/2] w-full border-0"
-              />
+              <div className="w-full overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5">
+                <img
+                  src={roadmapImage}
+                  alt="Ocotillo roadmap preview"
+                  className="h-auto w-full object-contain"
+                />
+              </div>
             </a>
           </div>
           <Button asChild size="lg" className="hover:scale-105">
