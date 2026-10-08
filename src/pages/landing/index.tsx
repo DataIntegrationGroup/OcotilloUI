@@ -1,54 +1,57 @@
-import { useContext, useState, type ReactNode } from 'react'
-import { Link as RouterLink } from 'react-router'
-import { LandingTopbar } from '@/components/LandingTopbar'
-import { Button } from '@/components/ui/button'
+import { useContext, useState, type ReactNode } from "react";
+import { Link as RouterLink } from "react-router";
+import { LandingTopbar } from "@/components/LandingTopbar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { AUTHENTIK_SIGNUP_URL } from '@/config/auth'
-import ocotilloImage from '@/img/ocotillo.jpeg'
-import waterWellImage from '@/img/ogs-water-well.png'
-import ampImage from '@/img/ogs-amp-project-areas.png'
-import waterElevationImage from '@/img/ogs-water-elevation.png'
-import authDarkImage from '@/img/auth-dark.png'
-import authLightImage from '@/img/auth-light.png'
-import mapDarkImage from '@/img/map-dark.png'
-import mapLightImage from '@/img/map-light.png'
-import sensorCorrectorDarkImage from '@/img/sensorcorrector-dark.png'
-import sensorCorrectorLightImage from '@/img/sensorcorrector-light.png'
-import wellDetailDarkImage from '@/img/welldetail-dark.png'
-import wellDetailLightImage from '@/img/welldetail-light.png'
-import { ColorModeContext } from '@/contexts'
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
+import ocotilloImage from "@/img/ocotillo.jpeg";
+import waterWellImage from "@/img/ogs-water-well.png";
+import ampImage from "@/img/ogs-amp-project-areas.png";
+import waterElevationImage from "@/img/ogs-water-elevation.png";
+import authDarkImage from "@/img/auth-dark.png";
+import authLightImage from "@/img/auth-light.png";
+import mapDarkImage from "@/img/map-dark.png";
+import mapLightImage from "@/img/map-light.png";
+import sensorCorrectorDarkImage from "@/img/sensorcorrector-dark.png";
+import sensorCorrectorLightImage from "@/img/sensorcorrector-light.png";
+import wellDetailDarkImage from "@/img/welldetail-dark.png";
+import wellDetailLightImage from "@/img/welldetail-light.png";
+import { ColorModeContext } from "@/contexts";
+
+const OCOTILLO_ROADMAP_URL =
+  "https://nmbgmr.atlassian.net/jira/discovery/share/views/e86251f8-f82f-496f-8aaf-0f50c9cf3e1a";
 
 const layers = [
   {
-    id: 'water-well',
-    name: 'Groundwater Well Locations',
+    id: "water-well",
+    name: "Groundwater Well Locations",
     image: waterWellImage,
-    alt: 'Groundwater Well Locations QGIS screenshot placeholder',
+    alt: "Groundwater Well Locations QGIS screenshot placeholder",
   },
   {
-    id: 'amp-project-areas',
-    name: 'AMP project areas',
+    id: "amp-project-areas",
+    name: "AMP project areas",
     image: ampImage,
-    alt: 'AMP project areas QGIS screenshot placeholder',
+    alt: "AMP project areas QGIS screenshot placeholder",
   },
   {
-    id: 'water-elevation',
-    name: 'Water elevation',
+    id: "water-elevation",
+    name: "Water elevation",
     image: waterElevationImage,
-    alt: 'Water elevation QGIS screenshot placeholder',
+    alt: "Water elevation QGIS screenshot placeholder",
   },
-] as const
+] as const;
 
 const faqs = [
   {
-    question: 'What is Ocotillo?',
+    question: "What is Ocotillo?",
     answer: (
       <>
         Ocotillo is an application developed by the Data Services Team at the
@@ -62,11 +65,11 @@ const faqs = [
     ),
   },
   {
-    question: 'Who is Ocotillo for?',
+    question: "Who is Ocotillo for?",
     answer: (
       <>
         Any employee of the New Mexico Bureau of Geology and Mineral Resources
-        can have credentials to use Ocotillo by{' '}
+        can have credentials to use Ocotillo by{" "}
         <a
           className="text-primary underline underline-offset-2"
           href={AUTHENTIK_SIGNUP_URL}
@@ -80,18 +83,18 @@ const faqs = [
     ),
   },
   {
-    question: 'Looking for open data?',
+    question: "Looking for open data?",
     answer: (
       <>
         Ocotillo serves data to our public applications too! If you aren’t a
-        Bureau of Geology employee, use our applications{' '}
+        Bureau of Geology employee, use our applications{" "}
         <a
           className="text-primary underline underline-offset-2"
           href="https://weaver.newmexicowaterdata.org/"
         >
           Weaver
-        </a>{' '}
-        or our{' '}
+        </a>{" "}
+        or our{" "}
         <a
           className="text-primary underline underline-offset-2"
           href="/ocotillo/collections"
@@ -102,12 +105,12 @@ const faqs = [
       </>
     ),
   },
-] as const
+] as const;
 
 export const LandingPage = () => {
-  const [selectedLayerId, setSelectedLayerId] = useState<string>(layers[0].id)
+  const [selectedLayerId, setSelectedLayerId] = useState<string>(layers[0].id);
   const selectedLayer =
-    layers.find(({ id }) => id === selectedLayerId) ?? layers[0]
+    layers.find(({ id }) => id === selectedLayerId) ?? layers[0];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -147,14 +150,6 @@ export const LandingPage = () => {
           aria-labelledby="faqs-heading"
           className="grid gap-8 py-8 sm:py-16"
         >
-          <div className="max-w-md">
-            <h2
-              id="faqs-heading"
-              className="font-heading text-3xl font-bold tracking-tight"
-            >
-              FAQs
-            </h2>
-          </div>
           <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
             {faqs.map(({ question, answer }) => (
               <div key={question}>
@@ -213,7 +208,7 @@ export const LandingPage = () => {
                   key={layer.id}
                   type="button"
                   aria-pressed={selectedLayer.id === layer.id}
-                  className={`w-full rounded-md border p-3 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selectedLayer.id === layer.id ? 'border-primary bg-primary/5' : 'border-border'}`}
+                  className={`w-full rounded-md border p-3 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selectedLayer.id === layer.id ? "border-primary bg-primary/5" : "border-border"}`}
                   onClick={() => setSelectedLayerId(layer.id)}
                 >
                   <strong className="font-heading text-sm">{layer.name}</strong>
@@ -302,24 +297,40 @@ export const LandingPage = () => {
         </section>
 
         <section className="mb-8 flex flex-col items-start justify-between gap-5 rounded-xl border border-primary/25 bg-primary/10 p-7 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="font-heading text-2xl font-semibold">
-              See Where We Are Going
-            </h2>
-            <p className="mt-1 text-muted-foreground">
-              Ocotillo is in active development. Interested in learning more
-              about what we are working on now and what’s up next? Check out the{' '}
-              <a
-                className="hover:underline text-primary font-semibold"
-                href="https://nmbgmr.atlassian.net/jira/discovery/share/views/e86251f8-f82f-496f-8aaf-0f50c9cf3e1a"
-                hrefLang="en-US"
-              >
-                Ocotillo Roadmap
-              </a>{' '}
-              (Include a screenshot of the roadmap as the image. Clicking the
-              image should take the user to the roadmap as well as the live
-              link)
-            </p>
+          <div className="flex flex-col gap-2">
+            <div>
+              <h2 className="font-heading text-2xl font-semibold">
+                See Where We Are Going
+              </h2>
+              <p className="mt-1 text-muted-foreground">
+                Ocotillo is in active development. Interested in learning more
+                about what we are working on now and what’s up next? Check out
+                the{" "}
+                <a
+                  className="hover:underline text-primary font-semibold"
+                  href={OCOTILLO_ROADMAP_URL}
+                  hrefLang="en-US"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Ocotillo Roadmap
+                </a>
+                .
+              </p>
+            </div>
+            <a
+              className="relative block w-full shrink-0 overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              href={OCOTILLO_ROADMAP_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Open the Ocotillo Roadmap"
+            >
+              <iframe
+                src={OCOTILLO_ROADMAP_URL}
+                title="Ocotillo Roadmap"
+                className="pointer-events-none aspect-[3/2] w-full border-0"
+              />
+            </a>
           </div>
           <Button asChild size="lg" className="hover:scale-105">
             <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
@@ -329,8 +340,8 @@ export const LandingPage = () => {
         </section>
       </main>
     </div>
-  )
-}
+  );
+};
 
 const ShowcaseRow = ({
   eyebrow,
@@ -339,14 +350,14 @@ const ShowcaseRow = ({
   visual,
   reverse = false,
 }: {
-  eyebrow: string
-  title: string
-  description: string
-  visual: ReactNode
-  reverse?: boolean
+  eyebrow: string;
+  title: string;
+  description: string;
+  visual: ReactNode;
+  reverse?: boolean;
 }) => (
   <article className="grid items-center gap-8 border-t pt-10 lg:grid-cols-2">
-    <div className={reverse ? 'lg:order-2' : ''}>
+    <div className={reverse ? "lg:order-2" : ""}>
       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
         {eyebrow}
       </p>
@@ -357,34 +368,34 @@ const ShowcaseRow = ({
         {description}
       </p>
     </div>
-    <div className={reverse ? 'lg:order-1' : ''}>{visual}</div>
+    <div className={reverse ? "lg:order-1" : ""}>{visual}</div>
   </article>
-)
+);
 
 const PreviewWindow = ({ children }: { children: ReactNode }) => (
   <div className="aspect-[3/2] w-full overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5">
     {children}
   </div>
-)
+);
 
 const ShowcaseImage = ({
   lightImage,
   darkImage,
   alt,
 }: {
-  lightImage: string
-  darkImage: string
-  alt: string
+  lightImage: string;
+  darkImage: string;
+  alt: string;
 }) => {
-  const { mode } = useContext(ColorModeContext)
+  const { mode } = useContext(ColorModeContext);
 
   return (
     <PreviewWindow>
       <img
-        src={mode === 'dark' ? darkImage : lightImage}
+        src={mode === "dark" ? darkImage : lightImage}
         alt={alt}
         className="size-full rounded-[2px] border border-foreground/30 object-fill"
       />
     </PreviewWindow>
-  )
-}
+  );
+};
