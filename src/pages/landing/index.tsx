@@ -162,7 +162,7 @@ export const LandingPage = () => {
             className="mt-6 hover:bg-primary hover:scale-105"
           >
             <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
-              Create an account
+              Request an account
             </a>
           </Button>
         </section>
@@ -385,7 +385,7 @@ export const LandingPage = () => {
           </div>
           <Button asChild size="lg" className="hover:scale-105">
             <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
-              Create an account
+              Request an account
             </a>
           </Button>
         </section>
