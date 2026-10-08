@@ -70,16 +70,16 @@ const faqs = [
     answer: (
       <>
         Any employee of the New Mexico Bureau of Geology and Mineral Resources
-        can have credentials to use Ocotillo by{" "}
+        can have credentials to use Ocotillo by clicking{" "}
         <a
           className="text-primary underline underline-offset-2"
           href={AUTHENTIK_SIGNUP_URL}
           target="_blank"
           rel="noreferrer"
         >
-          clicking here to sign up
-        </a>
-        .
+          here
+        </a>{" "}
+        to sign up.
       </>
     ),
   },
