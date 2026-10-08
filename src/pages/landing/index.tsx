@@ -1,80 +1,60 @@
-import { useContext, useState, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
-import { Link as RouterLink } from "react-router";
-import { LandingTopbar } from "@/components/LandingTopbar";
-import { Button } from "@/components/ui/button";
+import { useContext, useState, type ReactNode } from 'react'
+import { ChevronDown } from 'lucide-react'
+import { Link as RouterLink } from 'react-router'
+import { LandingTopbar } from '@/components/LandingTopbar'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+} from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
-import ocotilloImage from "@/img/ocotillo.jpeg";
-import waterWellImage from "@/img/ogs-water-well.png";
-import ampImage from "@/img/ogs-amp-project-areas.png";
-import waterElevationImage from "@/img/ogs-water-elevation.png";
-import authDarkImage from "@/img/auth-dark.png";
-import authLightImage from "@/img/auth-light.png";
-import mapDarkImage from "@/img/map-dark.png";
-import mapLightImage from "@/img/map-light.png";
-import sensorCorrectorDarkImage from "@/img/sensorcorrector-dark.png";
-import sensorCorrectorLightImage from "@/img/sensorcorrector-light.png";
-import wellDetailDarkImage from "@/img/welldetail-dark.png";
-import wellDetailLightImage from "@/img/welldetail-light.png";
-import { ColorModeContext } from "@/contexts";
+} from '@/components/ui/collapsible'
+import { AUTHENTIK_SIGNUP_URL } from '@/config/auth'
+import ocotilloImage from '@/img/ocotillo.jpeg'
+import waterWellImage from '@/img/ogs-water-well.png'
+import ampImage from '@/img/ogs-amp-project-areas.png'
+import waterElevationImage from '@/img/ogs-water-elevation.png'
+import authDarkImage from '@/img/auth-dark.png'
+import authLightImage from '@/img/auth-light.png'
+import mapDarkImage from '@/img/map-dark.png'
+import mapLightImage from '@/img/map-light.png'
+import sensorCorrectorDarkImage from '@/img/sensorcorrector-dark.png'
+import sensorCorrectorLightImage from '@/img/sensorcorrector-light.png'
+import wellDetailDarkImage from '@/img/welldetail-dark.png'
+import wellDetailLightImage from '@/img/welldetail-light.png'
+import { ColorModeContext } from '@/contexts'
 
 const layers = [
   {
-    id: "water-well",
-    name: "Water Well Field Operation",
+    id: 'water-well',
+    name: 'Groundwater Well Locations',
     image: waterWellImage,
-    alt: "Water Well Field Operation QGIS screenshot placeholder",
+    alt: 'Groundwater Well Locations QGIS screenshot placeholder',
   },
   {
-    id: "amp-project-areas",
-    name: "AMP project areas",
+    id: 'amp-project-areas',
+    name: 'AMP project areas',
     image: ampImage,
-    alt: "AMP project areas QGIS screenshot placeholder",
+    alt: 'AMP project areas QGIS screenshot placeholder',
   },
   {
-    id: "water-elevation",
-    name: "Water elevation",
+    id: 'water-elevation',
+    name: 'Water elevation',
     image: waterElevationImage,
-    alt: "Water elevation QGIS screenshot placeholder",
+    alt: 'Water elevation QGIS screenshot placeholder',
   },
-] as const;
-
-const features = [
-  [
-    "♧",
-    "Browse wells on the map",
-    "Explore well locations and spatial data across New Mexico.",
-  ],
-  ["⌕", "Search records", "Find wells by ID, site name, or contact and owner."],
-  [
-    "▱",
-    "View well records",
-    "Review water levels, equipment, photos, and contacts.",
-  ],
-  [
-    "⇩",
-    "Batch export field compilations",
-    "Generate field compilation sheets for groups of wells.",
-  ],
-  ["?", "Connect to GIS", "Connect Ocotillo to ArcGIS Pro or QGIS."],
-] as const;
+] as const
 
 const faqs = [
   {
-    question: "What is Ocotillo?",
+    question: 'What is Ocotillo?',
     answer: (
       <>
         Ocotillo is an application developed by the Data Services Team at the
@@ -88,11 +68,11 @@ const faqs = [
     ),
   },
   {
-    question: "Who is Ocotillo for?",
+    question: 'Who is Ocotillo for?',
     answer: (
       <>
         Any employee of the New Mexico Bureau of Geology and Mineral Resources
-        can have credentials to use Ocotillo by{" "}
+        can have credentials to use Ocotillo by{' '}
         <a
           className="text-primary underline underline-offset-2"
           href={AUTHENTIK_SIGNUP_URL}
@@ -106,18 +86,18 @@ const faqs = [
     ),
   },
   {
-    question: "Looking for open data?",
+    question: 'Looking for open data?',
     answer: (
       <>
         Ocotillo serves data to our public applications too! If you aren’t a
-        Bureau of Geology employee, use our applications{" "}
+        Bureau of Geology employee, use our applications{' '}
         <a
           className="text-primary underline underline-offset-2"
           href="https://weaver.newmexicowaterdata.org/"
         >
           Weaver
-        </a>{" "}
-        or our{" "}
+        </a>{' '}
+        or our{' '}
         <a
           className="text-primary underline underline-offset-2"
           href="/ocotillo/collections"
@@ -128,12 +108,12 @@ const faqs = [
       </>
     ),
   },
-] as const;
+] as const
 
 export const LandingPage = () => {
-  const [selectedLayerId, setSelectedLayerId] = useState<string>(layers[0].id);
+  const [selectedLayerId, setSelectedLayerId] = useState<string>(layers[0].id)
   const selectedLayer =
-    layers.find(({ id }) => id === selectedLayerId) ?? layers[0];
+    layers.find(({ id }) => id === selectedLayerId) ?? layers[0]
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -176,9 +156,13 @@ export const LandingPage = () => {
               Live GIS Integration (OGC API Features)
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Connect directly from desktop GIS tools to Ocotillo’s live OGC API
-              endpoints. Discover detailed metadata and schemas that flow
-              directly into GIS attributes.
+              Connect QGIS, ArcGIS Pro, or other desktop GIS tools directly to
+              Ocotillo's live data services, with no downloading or re-exporting
+              files. Layers always reflect the latest data, and field names,
+              descriptions, and metadata come through automatically as GIS
+              attributes, so you can start analyzing right away. OGC API
+              Features is an open standard, so it works with any compatible GIS
+              software.
             </p>
           </div>
           <Card className="h-full overflow-hidden bg-brand-50 p-0">
@@ -194,7 +178,7 @@ export const LandingPage = () => {
                 Layer preview
               </p>
               <CardTitle className="font-heading text-2xl">
-                OGS layers in QGIS
+                OGC layers in QGIS
               </CardTitle>
               <CardDescription>
                 These previews show screenshots of the highlighted OGS layer
@@ -207,7 +191,7 @@ export const LandingPage = () => {
                   key={layer.id}
                   type="button"
                   aria-pressed={selectedLayer.id === layer.id}
-                  className={`w-full rounded-md border p-3 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selectedLayer.id === layer.id ? "border-primary bg-primary/5" : "border-border"}`}
+                  className={`w-full rounded-md border p-3 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selectedLayer.id === layer.id ? 'border-primary bg-primary/5' : 'border-border'}`}
                   onClick={() => setSelectedLayerId(layer.id)}
                 >
                   <strong className="font-heading text-sm">{layer.name}</strong>
@@ -246,7 +230,7 @@ export const LandingPage = () => {
             <ShowcaseRow
               eyebrow="01"
               title="Interactive Mapping & Visual Exploration"
-              description="Address/place search and contextual navigation."
+              description="Explore the Bureau's data on a map. Search by place, address, or ZIP code, switch base maps, and turn dataset layers on and off to see wells and other features across New Mexico. Draw a polygon or rectangle to focus on an area, and Ocotillo shows how many features are in view along with summary details for each, such as well depth and elevation. You can export what's visible as CSV or GeoJSON for use in your own analysis."
               visual={
                 <ShowcaseImage
                   lightImage={mapLightImage}
@@ -259,7 +243,7 @@ export const LandingPage = () => {
               reverse
               eyebrow="02"
               title="Comprehensive Well & Site Details"
-              description="Direct file and photo attachments, integrated source cross-referencing, and project and boundary views. "
+              description="Each well or site has a single record that brings together what's known about it. You'll find construction details like hole depth, well depth, and measuring point, along with a location map, owner and contact information, and category tags such as use type, public status, and river basin. Photos and files are attached directly to the record. Cross-references to related source records and project and boundary views show how a site fits into the Bureau's broader work. Records can be previewed or downloaded as a PDF, so field-ready summaries are easy to create and share."
               visual={
                 <ShowcaseImage
                   lightImage={wellDetailLightImage}
@@ -269,9 +253,9 @@ export const LandingPage = () => {
               }
             />
             <ShowcaseRow
-              eyebrow="03 · Beta"
-              title="Continuous Sensor Data Correction"
-              description="Interactive time-series QA/QC with visual editing tools."
+              eyebrow="03 · In active development"
+              title="HydroSync: Continuous Sensor Data Correction Tool"
+              description="HydroSync cleans up continuous water-level data from pressure transducers. Upload a transducer file and Ocotillo tries to identify the well automatically, with a well search as a fallback. A visual, interactive hydrograph then lets you correct the data instead of editing raw numbers. The Simple mode handles common fixes: converting water head, removing offsets and zeros, shifting the series, and snapping it to a manual measurement. Intermediate and Advanced modes are shown for more complex corrections."
               visual={
                 <ShowcaseImage
                   lightImage={sensorCorrectorLightImage}
@@ -284,7 +268,7 @@ export const LandingPage = () => {
               reverse
               eyebrow="04 · In active development"
               title="Secure, Role-Aware Collaboration & Access"
-              description="Separate data catalogs for public and internal data sets, in-app editing for Contacts and Projects."
+              description="Ocotillo separates public and internal data catalogs, so open data stays easy to find while internal datasets are limited to authorized staff. What each user can see or do depends on their role. Staff can also edit Contacts and Projects in the app instead of maintaining them in separate tools."
               visual={
                 <ShowcaseImage
                   lightImage={authLightImage}
@@ -336,33 +320,6 @@ export const LandingPage = () => {
           </Card>
         </section>
 
-        <Separator />
-        <section className="py-8 sm:py-16">
-          <div className="mb-7 max-w-2xl">
-            <h2 className="font-heading text-3xl font-bold tracking-tight">
-              What you can do now
-            </h2>
-            <p className="mt-2 text-base text-muted-foreground">
-              Bring the map, the record, and the field sheet into the same
-              conversation.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map(([icon, title, description]) => (
-              <Card key={title} className="min-h-48 p-5">
-                <CardContent className="p-0">
-                  <div className="mb-5 text-2xl text-primary">{icon}</div>
-                  <h3 className="font-heading text-lg font-semibold">
-                    {title}
-                  </h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
         <section className="mb-8 flex flex-col items-start justify-between gap-5 rounded-xl border border-primary/25 bg-primary/10 p-7 sm:flex-row sm:items-center">
           <div>
             <h2 className="font-heading text-2xl font-semibold">
@@ -370,14 +327,14 @@ export const LandingPage = () => {
             </h2>
             <p className="mt-1 text-muted-foreground">
               Ocotillo is in active development. Interested in learning more
-              about what we are working on now and what’s up next? Check out the{" "}
+              about what we are working on now and what’s up next? Check out the{' '}
               <a
                 className="hover:underline text-primary font-semibold"
                 href="https://nmbgmr.atlassian.net/jira/discovery/share/views/e86251f8-f82f-496f-8aaf-0f50c9cf3e1a"
                 hrefLang="en-US"
               >
                 Ocotillo Roadmap
-              </a>{" "}
+              </a>{' '}
               (Include a screenshot of the roadmap as the image. Clicking the
               image should take the user to the roadmap as well as the live
               link)
@@ -391,8 +348,8 @@ export const LandingPage = () => {
         </section>
       </main>
     </div>
-  );
-};
+  )
+}
 
 const ShowcaseRow = ({
   eyebrow,
@@ -401,14 +358,14 @@ const ShowcaseRow = ({
   visual,
   reverse = false,
 }: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  visual: ReactNode;
-  reverse?: boolean;
+  eyebrow: string
+  title: string
+  description: string
+  visual: ReactNode
+  reverse?: boolean
 }) => (
   <article className="grid items-center gap-8 border-t pt-10 lg:grid-cols-2">
-    <div className={reverse ? "lg:order-2" : ""}>
+    <div className={reverse ? 'lg:order-2' : ''}>
       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
         {eyebrow}
       </p>
@@ -419,34 +376,34 @@ const ShowcaseRow = ({
         {description}
       </p>
     </div>
-    <div className={reverse ? "lg:order-1" : ""}>{visual}</div>
+    <div className={reverse ? 'lg:order-1' : ''}>{visual}</div>
   </article>
-);
+)
 
 const PreviewWindow = ({ children }: { children: ReactNode }) => (
   <div className="aspect-square w-full overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5">
     {children}
   </div>
-);
+)
 
 const ShowcaseImage = ({
   lightImage,
   darkImage,
   alt,
 }: {
-  lightImage: string;
-  darkImage: string;
-  alt: string;
+  lightImage: string
+  darkImage: string
+  alt: string
 }) => {
-  const { mode } = useContext(ColorModeContext);
+  const { mode } = useContext(ColorModeContext)
 
   return (
     <PreviewWindow>
       <img
-        src={mode === "dark" ? darkImage : lightImage}
+        src={mode === 'dark' ? darkImage : lightImage}
         alt={alt}
         className="size-full rounded-[2px] border border-foreground/30 object-fill"
       />
     </PreviewWindow>
-  );
-};
+  )
+}
