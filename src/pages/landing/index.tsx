@@ -9,14 +9,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
 import ocotilloImage from "@/img/ocotillo.jpeg";
 import roadmapDarkImage from "@/img/ocotillo-roadmap-dark.png";
 import roadmapLightImage from "@/img/ocotillo-roadmap-light.png";
-import waterWellImage from "@/img/ogs-water-well.png";
-import ampImage from "@/img/ogs-amp-project-areas.png";
-import waterElevationImage from "@/img/ogs-water-elevation.png";
+import waterWellDarkImage from "@/img/ogs-water-well-dark.png";
+import waterWellLightImage from "@/img/ogs-water-well-light.png";
+import ampDarkImage from "@/img/ogs-amp-project-areas-dark.png";
+import ampLightImage from "@/img/ogs-amp-project-areas-light.png";
+import geothermalWellDarkImage from "@/img/ogs-geothermal-well-dark.png";
+import geothermalWellLightImage from "@/img/ogs-geothermal-well-light.png";
 import authDarkImage from "@/img/auth-dark.png";
 import authLightImage from "@/img/auth-light.png";
 import mapDarkImage from "@/img/map-dark.png";
@@ -34,20 +36,23 @@ const layers = [
   {
     id: "water-well",
     name: "Groundwater Well Locations",
-    image: waterWellImage,
+    lightImage: waterWellLightImage,
+    darkImage: waterWellDarkImage,
     alt: "Groundwater Well Locations QGIS screenshot placeholder",
   },
   {
     id: "amp-project-areas",
-    name: "AMP project areas",
-    image: ampImage,
-    alt: "AMP project areas QGIS screenshot placeholder",
+    name: "AMP Project Areas",
+    lightImage: ampLightImage,
+    darkImage: ampDarkImage,
+    alt: "AMP Project Areas QGIS screenshot placeholder",
   },
   {
     id: "water-elevation",
-    name: "Water elevation",
-    image: waterElevationImage,
-    alt: "Water elevation QGIS screenshot placeholder",
+    name: "Geothermal Well Locations",
+    lightImage: geothermalWellLightImage,
+    darkImage: geothermalWellDarkImage,
+    alt: "Geothermal Well Locations QGIS screenshot placeholder",
   },
 ] as const;
 
@@ -187,7 +192,11 @@ export const LandingPage = () => {
           </div>
           <Card className="h-full overflow-hidden bg-brand-50 p-0">
             <img
-              src={selectedLayer.image}
+              src={
+                mode === "dark"
+                  ? selectedLayer.darkImage
+                  : selectedLayer.lightImage
+              }
               alt={selectedLayer.alt}
               className="h-full w-full object-contain"
             />
