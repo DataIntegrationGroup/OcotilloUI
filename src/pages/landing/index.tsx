@@ -12,7 +12,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
 import ocotilloImage from "@/img/ocotillo.jpeg";
-import roadmapImage from "@/img/ocotillo-roadmap.png";
+import roadmapDarkImage from "@/img/ocotillo-roadmap-dark.png";
+import roadmapLightImage from "@/img/ocotillo-roadmap-light.png";
 import waterWellImage from "@/img/ogs-water-well.png";
 import ampImage from "@/img/ogs-amp-project-areas.png";
 import waterElevationImage from "@/img/ogs-water-elevation.png";
@@ -109,6 +110,7 @@ const faqs = [
 ] as const;
 
 export const LandingPage = () => {
+  const { mode } = useContext(ColorModeContext);
   const [selectedLayerId, setSelectedLayerId] = useState<string>(layers[0].id);
   const selectedLayer =
     layers.find(({ id }) => id === selectedLayerId) ?? layers[0];
@@ -328,7 +330,7 @@ export const LandingPage = () => {
             >
               <div className="w-full overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5">
                 <img
-                  src={roadmapImage}
+                  src={mode === "dark" ? roadmapDarkImage : roadmapLightImage}
                   alt="Ocotillo roadmap preview"
                   className="h-auto w-full object-contain"
                 />
