@@ -880,7 +880,7 @@ describe('ChemistryReportPdf — BDMS-1440 corrections', () => {
     const text = await renderReportText(
       <ChemistryReportPdf
         standards={TEST_STANDARDS}
-        well={makeWell()}
+        well={makeWell({ well_depth_source: 'Driller log' } as Partial<IWell>)}
         observations={grouped}
         year={2026}
       />
@@ -888,6 +888,8 @@ describe('ChemistryReportPdf — BDMS-1440 corrections', () => {
 
     const flat = dense(text)
     expect(flat).not.toContain(dense('county'))
+    // The depth source is not printed beside the section heading.
+    expect(flat).not.toContain(dense('driller log'))
     expect(flat).not.toContain(dense('socorro'))
     // One field for the coordinates, not one each.
     expect(flat).toContain(dense('latitude, longitude 34.1234° n, 106.9412° w'))

@@ -1076,10 +1076,7 @@ export const ChemistryReportPdf = ({
         {/* ---- Well information ---- */}
         {sections.wellInformation ? (
           <View style={s.section}>
-            <SectionHead
-              title="Well information &amp; construction"
-              note={well?.well_depth_source ?? undefined}
-            />
+            <SectionHead title="Well information &amp; construction" />
             {hasWellFacts ? <KvGrid entries={wellFacts} /> : null}
             {hasWellFacts ? null : (
               <Text style={s.emptyNote}>
