@@ -90,16 +90,16 @@ export const chemReportStyles = StyleSheet.create({
     marginTop: 3,
     textAlign: 'center',
   },
-  ownerBlock: { marginTop: 12 },
+  ownerBlock: { marginTop: 8 },
   ownerName: { fontWeight: 'bold' },
   ownerMeta: { fontSize: 7.5, color: CHEM_REPORT_COLORS.muted, marginTop: 2 },
   mastheadRule: {
     borderBottomWidth: 0.75,
     borderBottomColor: CHEM_REPORT_COLORS.borderStrong,
-    marginTop: 14,
-    marginBottom: 14,
+    marginTop: 10,
+    marginBottom: 10,
   },
-  lede: { marginBottom: 16 },
+  lede: { marginBottom: 12 },
 
   // ---- Section headings ---------------------------------------------------
   section: { marginBottom: 13 },
@@ -142,15 +142,20 @@ export const chemReportStyles = StyleSheet.create({
   statValueDanger: { color: CHEM_REPORT_COLORS.danger },
   statValueWarning: { color: CHEM_REPORT_COLORS.warning },
   statNote: { fontSize: 7, color: CHEM_REPORT_COLORS.muted, marginTop: 4 },
+  statFootnotes: {
+    fontSize: 6.5,
+    color: CHEM_REPORT_COLORS.muted,
+    marginTop: 4,
+  },
 
   // ---- Callouts -----------------------------------------------------------
   callout: {
     borderLeftWidth: 2.5,
     borderLeftColor: CHEM_REPORT_COLORS.danger,
     backgroundColor: CHEM_REPORT_COLORS.dangerTint,
-    paddingVertical: 9,
+    paddingVertical: 7,
     paddingHorizontal: 11,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   calloutWarn: {
     borderLeftColor: CHEM_REPORT_COLORS.warning,
@@ -160,9 +165,9 @@ export const chemReportStyles = StyleSheet.create({
     borderLeftColor: CHEM_REPORT_COLORS.teal,
     backgroundColor: CHEM_REPORT_COLORS.infoTint,
   },
-  calloutTitle: { fontWeight: 'bold', marginBottom: 5 },
+  calloutTitle: { fontWeight: 'bold', marginBottom: 4 },
   calloutBody: {},
-  calloutBullet: { marginTop: 4, paddingLeft: 10 },
+  calloutBullet: { marginTop: 3, paddingLeft: 10 },
 
   // ---- Key/value grid ----------------------------------------------------
   kvTable: {
@@ -178,7 +183,7 @@ export const chemReportStyles = StyleSheet.create({
   kvRowLast: { borderBottomWidth: 0 },
   kvCell: {
     flex: 1,
-    paddingVertical: 7,
+    paddingVertical: 5,
     paddingHorizontal: 9,
     borderRightWidth: 0.75,
     borderRightColor: CHEM_REPORT_COLORS.border,
@@ -373,7 +378,9 @@ export const chemReportStyles = StyleSheet.create({
   // ---- Two-column glossary ----------------------------------------------
   glossaryRow: { flexDirection: 'row', gap: 18 },
   glossaryColumn: { flex: 1 },
-  glossaryEntry: { marginBottom: 6 },
+  // A step below body size: the guide closes page one and has to fit beneath
+  // however many exceedance callouts precede it.
+  glossaryEntry: { fontSize: 7.5, marginBottom: 5 },
   glossaryTerm: { fontWeight: 'bold' },
 
   // ---- Footer -------------------------------------------------------------

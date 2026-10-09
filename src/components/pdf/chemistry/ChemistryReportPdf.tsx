@@ -110,8 +110,6 @@ type StatEntry = {
   /** Null drops the stat from the row entirely; it is never printed as a dash. */
   value: string | number | null
   note: string
-  /** Attribution printed beneath the note, e.g. the source of a standard. */
-  footnote?: string
   tone?: 'danger' | 'warning'
 }
 
@@ -133,13 +131,17 @@ const statValueFontSize = (value: string): number => {
 
 const Stat = ({
   label,
+  labelLines,
   value,
   note,
-  footnote,
   tone,
-}: StatEntry & { value: string | number }) => (
+}: StatEntry & { value: string | number; labelLines: number }) => (
   <View style={s.stat}>
-    <Text style={s.statLabel}>{label}</Text>
+    <Text
+      style={[s.statLabel, { minHeight: labelLines * STAT_LABEL_LINE_HEIGHT }]}
+    >
+      {label}
+    </Text>
     <Text
       style={[
         s.statValue,
@@ -151,9 +153,15 @@ const Stat = ({
       {String(value)}
     </Text>
     <Text style={s.statNote}>{note}</Text>
-    {footnote ? <Text style={s.statNote}>{footnote}</Text> : null}
   </View>
 )
+
+/**
+ * Height of one line of a stat label. Every label in a row is given room for
+ * as many lines as the longest one, so the values beneath them line up across
+ * the row however the labels break.
+ */
+const STAT_LABEL_LINE_HEIGHT = 7.6
 
 /**
  * A row of stats, minus the ones with nothing behind them. A stat printed as
@@ -168,10 +176,14 @@ const StatRow = ({ entries }: { entries: readonly StatEntry[] }) => {
   )
   if (!populated.length) return null
 
+  const labelLines = Math.max(
+    ...populated.map((entry) => entry.label.split('\n').length)
+  )
+
   return (
     <View style={s.statRow}>
       {populated.map((entry) => (
-        <Stat key={entry.label} {...entry} />
+        <Stat key={entry.label} {...entry} labelLines={labelLines} />
       ))}
     </View>
   )
@@ -652,6 +664,13 @@ const ContinuousSummary = ({
   )
 }
 
+/** Footnotes to the exceedance stats, naming whose standards they count against. */
+const EPA_MCL_NOTE = { marker: '¹', text: 'Based on EPA Standards' }
+const EPA_SMCL_NOTE = {
+  marker: '²',
+  text: 'Based On EPA Standards for Drinking Water',
+}
+
 const GLOSSARY_LEFT = [
   {
     term: 'MCL (Maximum Contaminant Level)',
@@ -661,6 +680,12 @@ const GLOSSARY_LEFT = [
     term: 'SMCL (Secondary Maximum Contaminant Level)',
     body: 'The US Environmental Protection Agency (EPA) has established non-enforceable National Secondary Drinking Water Regulations, which are guidelines to assist public water systems in managing their drinking water for aesthetic considerations. Concentrations in your water exceeding the secondary regulations may explain variations in taste, color, and odor.',
   },
+]
+
+/** Only meaningful alongside a water level section, which is where depths are printed. */
+const DEPTH_TERM = 'Depth to water'
+
+const GLOSSARY_RIGHT = [
   {
     term: 'ND (Not detected)',
     body: 'below what the instrument can measure. It does not mean the parameter is absent.',
@@ -669,12 +694,6 @@ const GLOSSARY_LEFT = [
     term: 'mg/L',
     body: 'milligrams per liter, roughly one part per million.',
   },
-]
-
-/** Only meaningful alongside a water level section, which is where depths are printed. */
-const DEPTH_TERM = 'Depth to water'
-
-const GLOSSARY_RIGHT = [
   {
     term: DEPTH_TERM,
     body: 'measured downward from the ground surface. Water elevation is the same measurement expressed as height above sea level, so a falling water table shows as a larger depth and a smaller elevation.',
@@ -963,8 +982,7 @@ export const ChemistryReportPdf = ({
                 // the same thing twice.
                 // Broken by hand: in a stat this narrow, react-pdf hyphenates
                 // "contaminant" mid-word. Read back as one phrase.
-                label: 'Exceeds Max\nContaminant\nLevel',
-                footnote: 'Based on EPA Standards',
+                label: `Exceeds Max\nContaminant Level${EPA_MCL_NOTE.marker}`,
                 value: summary.mclExceedances.length,
                 note: summary.mclExceedances
                   .map((row) => displayParameterName(row.parameterName))
@@ -972,8 +990,7 @@ export const ChemistryReportPdf = ({
                 tone: summary.mclExceedances.length ? 'danger' : undefined,
               },
               {
-                label: 'Exceeds Drinking\nWater\nStandards',
-                footnote: 'Based On EPA Standards\nfor Drinking Water',
+                label: `Exceeds Drinking\nWater Standards${EPA_SMCL_NOTE.marker}`,
                 value: summary.smclExceedances.length,
                 note: summary.smclExceedances
                   .map((row) => displayParameterName(row.parameterName))
@@ -997,6 +1014,11 @@ export const ChemistryReportPdf = ({
               },
             ]}
           />
+          <Text style={s.statFootnotes}>
+            {[EPA_MCL_NOTE, EPA_SMCL_NOTE]
+              .map((note) => `${note.marker} ${note.text}`)
+              .join('    ')}
+          </Text>
         </View>
 
         {/* ---- Exceedance callouts ---- */}

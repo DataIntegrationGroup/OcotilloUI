@@ -833,6 +833,56 @@ describe('ChemistryReportPdf — BDMS-1440 corrections', () => {
     expect(first).not.toContain(dense('water chemistry & drinking water'))
   })
 
+  it('keeps the guide on page one beside several exceedance callouts', async () => {
+    const pages = await renderReportPages(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={[
+          makeResult({ id: 'a', parameter_name: 'Arsenic', value: 0.014 }),
+          makeResult({ id: 'n', parameter_name: 'Nitrate (as N)', value: 12 }),
+          makeResult({
+            id: 'u',
+            parameter_name: 'Uranium (total, by ICP-MS)',
+            value: 0.05,
+          }),
+          makeResult({ id: 'i', parameter_name: 'Iron', value: 0.6 }),
+          makeResult({ id: 'm', parameter_name: 'Manganese', value: 0.2 }),
+          makeResult({ id: 's', parameter_name: 'Sulfate', value: 300 }),
+          makeResult({
+            id: 't',
+            parameter_name: 'Total Dissolved Solids',
+            value: 620,
+          }),
+        ]}
+        qrCodeDataUrl={PIXEL_PNG}
+        year={2026}
+      />
+    )
+
+    expect(dense(pages[0])).toContain(dense('how to read this report'))
+    expect(dense(pages[0])).toContain(dense('questions, or want more data?'))
+  })
+
+  it('footnotes the EPA source of the exceedance stats', async () => {
+    const pages = await renderReportPages(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    const first = dense(pages[0])
+    expect(first).toContain(dense('contaminant level¹'))
+    expect(first).toContain(dense('water standards²'))
+    expect(first).toContain(dense('¹ based on epa standards'))
+    expect(first).toContain(
+      dense('² based on epa standards for drinking water')
+    )
+  })
+
   it('describes the MCL and SMCL in the EPA’s terms, with a Disclaimer', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
