@@ -6,6 +6,7 @@ import {
   chemistryReportYearOf,
   formatLevelChange,
   formatResultValue,
+  groupRowsBySampleDate,
   inclusiveEndYearParams,
   latestResultPerParameter,
   pivotFieldParameters,
@@ -287,7 +288,7 @@ describe('resultStatus', () => {
           standard: { kind: 'MCL', limit: 0.01, unit: 'mg/L', source: 'EPA' },
         })
       )
-    ).toEqual({ kind: 'above-mcl', label: 'Above limit' })
+    ).toEqual({ kind: 'above-mcl', label: 'Exceeds MCL' })
 
     expect(
       resultStatus(
@@ -297,7 +298,10 @@ describe('resultStatus', () => {
           standard: { kind: 'SMCL', limit: 0.3, unit: 'mg/L', source: 'EPA' },
         })
       )
-    ).toEqual({ kind: 'above-smcl', label: 'Above recommended range' })
+    ).toEqual({
+      kind: 'above-smcl',
+      label: 'Exceeds SMCL',
+    })
   })
 
   it('reports a missing value as not detected rather than as passing', () => {
@@ -316,6 +320,61 @@ describe('resultStatus', () => {
 
   it('says nothing about a parameter with no standard', () => {
     expect(resultStatus(row({ parameterName: 'Strontium' })).kind).toBe('none')
+  })
+})
+
+describe('groupRowsBySampleDate', () => {
+  const row = (
+    key: string,
+    sampledOn: string,
+    parameterName = 'Arsenic'
+  ): ReturnType<typeof summarizeChemistry>['rows'][number] => ({
+    key,
+    parameterName,
+    resultKind: 'minor' as const,
+    value: 0.005,
+    unit: 'mg/L',
+    sampledOn,
+    sampleKey: `sample-${key}`,
+    exceeds: false,
+  })
+
+  it('groups rows by the day they were collected, newest day first', () => {
+    const groups = groupRowsBySampleDate([
+      row('feb', '2026-02-04T00:00:00Z'),
+      row('may', '2026-05-15T00:00:00Z'),
+      row('2024', '2024-09-12T00:00:00Z'),
+    ])
+
+    expect(groups.map((group) => group.date)).toEqual([
+      '2026-05-15',
+      '2026-02-04',
+      '2024-09-12',
+    ])
+  })
+
+  it('keeps the order rows arrive in within a day', () => {
+    // The caller puts exceedances first; grouping must not undo that.
+    const [group] = groupRowsBySampleDate([
+      row('b', '2026-05-15T00:00:00Z', 'Zinc'),
+      row('a', '2026-05-15T00:00:00Z', 'Arsenic'),
+    ])
+
+    expect(group.rows.map((r) => r.key)).toEqual(['b', 'a'])
+  })
+
+  it('puts two samples taken the same day under one heading', () => {
+    const groups = groupRowsBySampleDate([
+      row('a', '2026-05-15T08:00:00Z'),
+      row('b', '2026-05-15T14:30:00Z', 'Iron'),
+    ])
+
+    expect(groups).toHaveLength(1)
+    expect(groups[0].rows).toHaveLength(2)
+  })
+
+  it('has no groups for no rows', () => {
+    expect(groupRowsBySampleDate([])).toEqual([])
   })
 })
 

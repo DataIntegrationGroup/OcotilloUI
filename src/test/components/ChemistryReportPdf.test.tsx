@@ -198,7 +198,8 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain('aquifermapping@nmt.edu')
+    expect(text).toContain('nmbg-waterlevel@nmt.edu')
+    expect(text).not.toContain('aquifermapping@nmt.edu')
     expect(text).not.toContain('835-5327')
     // The Drinking Water Bureau is still named as somewhere to turn after an
     // exceedance; only its number is gone.
@@ -216,11 +217,11 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain('above a federal health limit')
+    expect(text).toContain('exceeds the maximum contaminant level')
     expect(text).not.toContain('occurs naturally')
   })
 
-  it('calls a secondary exceedance a recommended range, not an SMCL', async () => {
+  it('calls a secondary exceedance a drinking water standard', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
         standards={TEST_STANDARDS}
@@ -236,7 +237,9 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain('above recommended range')
+    expect(text).toContain('1 result exceeds drinking water standards')
+    expect(text).toContain('exceeds smcl')
+    expect(text).not.toContain('above recommended range')
     expect(text).not.toContain('above smcl')
   })
 
@@ -416,8 +419,8 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain('one result was above a federal health limit')
-    expect(text).not.toContain('2 results were above a federal health limit')
+    expect(text).toContain('one result exceeds the maximum contaminant level')
+    expect(text).not.toContain('2 results exceed the maximum contaminant level')
     // Named once in the stat, at its most recent value in the callout.
     expect(text).not.toContain('arsenic, arsenic')
     expect(text).toContain('0.011 mg/l (limit 0.01 mg/l, sampled may 15, 2026)')
@@ -446,7 +449,9 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).not.toContain('above a federal health limit')
+    // Neither callout: the parameter is back under its limit.
+    expect(text).not.toContain('exceeds the maximum contaminant level')
+    expect(text).not.toContain('exceed the maximum contaminant level')
     expect(text).toContain('below limit')
   })
 
@@ -486,7 +491,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
 
     expect(text).toContain('1.2x the limit')
     expect(text).toContain('0.60x the limit')
-    expect(text).toContain('the bar is your result, the notch is the limit')
+    expect(text).toContain('the bar is your result, the notch is the mcl/smcl')
     // Comparison with other wells is out of scope for the report, and the
     // column plots nothing of the kind.
     expect(text).not.toContain('nearby')
@@ -564,8 +569,10 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain('above health limit')
-    expect(text).toContain('above recommended range')
+    expect(text).toContain('exceeds max contaminant level')
+    expect(text).toContain('based on epa standards')
+    expect(text).toContain('exceeds drinking water standards')
+    expect(text).toContain('based on epa standards for drinking water')
     // The note names which parameters are over; with none over there is
     // nothing to name, and "None" under a nought says it twice.
     expect(text).not.toContain('none')
@@ -656,7 +663,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     expect(runs).toContain('207.8–210.4 ft')
   })
 
-  it('omits well facts that are not on file rather than printing a dash', async () => {
+  it('says a well fact is not on file rather than printing a dash', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
         standards={TEST_STANDARDS}
@@ -671,8 +678,310 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     )
 
     expect(text).toContain('nmbgmr well point id')
-    expect(text).not.toContain('total depth')
-    expect(text).not.toContain('casing diameter')
-    expect(text).not.toContain('site name')
+    expect(text).toContain('total depth not on file')
+    expect(text).toContain('casing diameter not on file')
+    expect(text).toContain('site name not on file')
+    expect(text).not.toContain('total depth —')
+  })
+})
+
+describe('ChemistryReportPdf — BDMS-1440 corrections', () => {
+  const grouped = [
+    // Two results the same day, none over a limit, so the only place the date
+    // can appear in the table is its group heading.
+    makeResult({
+      id: 'f',
+      sample_id: 901,
+      parameter_name: 'Fluoride',
+      value: 1.1,
+      observation_datetime: '2026-05-15T00:00:00Z',
+    }),
+    makeResult({
+      id: 'i',
+      sample_id: 901,
+      parameter_name: 'Iron',
+      value: 0.1,
+      observation_datetime: '2026-05-15T00:00:00Z',
+    }),
+    makeResult({
+      id: 'c',
+      sample_id: 902,
+      parameter_name: 'Chloride',
+      value: 40,
+      observation_datetime: '2026-02-04T00:00:00Z',
+    }),
+  ]
+
+  it('states each sample date once, as a heading over its results', async () => {
+    const runs = await renderReportRuns(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    // Two Fluoride and Iron rows, but the day is printed once.
+    expect(runs.filter((run) => run === 'May 15, 2026')).toHaveLength(1)
+    expect(runs.filter((run) => run === 'Feb 04, 2026')).toHaveLength(1)
+    // Newest day first.
+    expect(runs.indexOf('May 15, 2026')).toBeLessThan(
+      runs.indexOf('Feb 04, 2026')
+    )
+    expect(runs.some((run) => run.toLowerCase() === 'sample date')).toBe(true)
+  })
+
+  it('no longer carries a Sampled column, which the grouping makes redundant', async () => {
+    const runs = await renderReportRuns(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    expect(runs.some((run) => run.toLowerCase() === 'sampled')).toBe(false)
+  })
+
+  it('names the comparison column for what it shows', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    expect(dense(text)).toContain(dense('result compared to the standard'))
+    expect(dense(text)).not.toContain(dense('against the limit'))
+  })
+
+  it('words the status of a result the way the reviewers asked', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={[
+          makeResult({ id: 'a', parameter_name: 'Arsenic', value: 0.012 }),
+          makeResult({ id: 'b', parameter_name: 'Chloride', value: 310 }),
+        ]}
+        year={2026}
+      />
+    )
+
+    expect(text).toContain('exceeds mcl')
+    expect(text).toContain('exceeds smcl')
+    expect(text).not.toContain('above limit')
+    expect(text).not.toContain('above a health limit')
+    expect(text).not.toContain('above a recommended range')
+  })
+
+  it('says the limits are the EPA’s and are only guidance', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    expect(text).toContain(
+      'limits in this report are set by the u.s. environmental protection agency (epa)'
+    )
+    expect(text).toContain('they are guidance only')
+  })
+
+  it('leaves the disclaimer off when no limits are compared', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+        sections={{
+          ...CHEMISTRY_REPORT_DEFAULT_SECTIONS,
+          standardsComparison: false,
+        }}
+      />
+    )
+
+    expect(text).not.toContain('they are guidance only')
+  })
+
+  it('closes page one with How to read this report', async () => {
+    const pages = await renderReportPages(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    const guide = dense('how to read this report')
+    const first = dense(pages[0])
+    // After the at-a-glance summary on the same page, and said only once.
+    expect(first).toContain(guide)
+    expect(first.indexOf(guide)).toBeGreaterThan(
+      first.indexOf(dense('at a glance'))
+    )
+    expect(pages.filter((page) => dense(page).includes(guide))).toHaveLength(1)
+    // The table starts on a later page.
+    expect(first).not.toContain(dense('water chemistry & drinking water'))
+  })
+
+  it('keeps the guide on page one beside several exceedance callouts', async () => {
+    const pages = await renderReportPages(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell({
+          well_casing_depth: 360,
+          well_casing_depth_unit: 'ft',
+          well_completion_date: '1987-06-02',
+          well_driller_name: 'Rio Grande Drilling Co.',
+          aquifers: [{ aquifer_system: 'Santa Fe Group' }],
+          well_purposes: ['Domestic', 'Livestock'],
+          well_status: 'Active, pumping',
+          monitoring_status: 'Currently monitored',
+          measuring_point_description:
+            'Top of casing, north side, 1.2 ft above ground',
+        } as unknown as Partial<IWell>)}
+        observations={[
+          makeResult({ id: 'a', parameter_name: 'Arsenic', value: 0.014 }),
+          makeResult({ id: 'n', parameter_name: 'Nitrate (as N)', value: 12 }),
+          makeResult({
+            id: 'u',
+            parameter_name: 'Uranium (total, by ICP-MS)',
+            value: 0.05,
+          }),
+          makeResult({ id: 'i', parameter_name: 'Iron', value: 0.6 }),
+          makeResult({ id: 'm', parameter_name: 'Manganese', value: 0.2 }),
+          makeResult({ id: 's', parameter_name: 'Sulfate', value: 300 }),
+          makeResult({
+            id: 't',
+            parameter_name: 'Total Dissolved Solids',
+            value: 620,
+          }),
+        ]}
+        qrCodeDataUrl={PIXEL_PNG}
+        year={2026}
+      />
+    )
+
+    expect(dense(pages[0])).toContain(dense('how to read this report'))
+    expect(dense(pages[0])).toContain(dense('questions, or want more data?'))
+  })
+
+  it('lists every well information field, without the county', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell({ well_depth_source: 'Driller log' } as Partial<IWell>)}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    const flat = dense(text)
+    expect(flat).not.toContain(dense('county'))
+    // The depth source is not printed beside the section heading.
+    expect(flat).not.toContain(dense('driller log'))
+    expect(flat).not.toContain(dense('socorro'))
+    // One field for the coordinates, not one each.
+    expect(flat).toContain(dense('latitude, longitude 34.1234° n, 106.9412° w'))
+    // Fields the well has no value for keep their place.
+    for (const label of [
+      'ose permit',
+      'casing depth',
+      'completed',
+      'aquifer',
+      'primary use',
+      'well status',
+      'monitoring',
+      'measuring point',
+    ]) {
+      expect(flat).toContain(dense(`${label} not on file`))
+    }
+  })
+
+  it('footnotes the EPA source of the exceedance stats', async () => {
+    const pages = await renderReportPages(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    const first = dense(pages[0])
+    expect(first).toContain(dense('contaminant level¹'))
+    expect(first).toContain(dense('water standards²'))
+    expect(first).toContain(dense('¹ based on epa standards'))
+    expect(first).toContain(
+      dense('² based on epa standards for drinking water')
+    )
+  })
+
+  it('describes the MCL and SMCL in the EPA’s terms, with a Disclaimer', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    const flat = dense(text)
+    expect(flat).toContain(dense('mcl (maximum contaminant level)'))
+    expect(flat).toContain(dense('epa action levels are included'))
+    expect(flat).toContain(dense('smcl (secondary maximum contaminant level)'))
+    expect(flat).toContain(dense('non-enforceable national secondary'))
+    expect(flat).toContain(dense('disclaimer'))
+    expect(flat).not.toContain(dense('limitations'))
+  })
+
+  it('still starts the chemistry table on its own page without the guide', async () => {
+    const pages = await renderReportPages(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        waterLevels={[makeReading()]}
+        year={2026}
+        sections={{ ...CHEMISTRY_REPORT_DEFAULT_SECTIONS, howToRead: false }}
+      />
+    )
+
+    const tablePage = pages.findIndex((page) =>
+      dense(page).includes(dense('water chemistry & drinking water standards'))
+    )
+    expect(tablePage).toBeGreaterThan(0)
+    expect(dense(pages[tablePage])).not.toContain(dense('at a glance'))
+    expect(dense(pages[tablePage])).not.toContain(
+      dense('how to read this report')
+    )
+  })
+
+  it('keeps the guide in the report when there is no chemistry table', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+        sections={{
+          ...CHEMISTRY_REPORT_DEFAULT_SECTIONS,
+          chemistryResults: false,
+        }}
+      />
+    )
+
+    expect(dense(text)).toContain(dense('how to read this report'))
   })
 })

@@ -212,8 +212,8 @@ export const buildChemistryReportFilename = (
  * comparison logic did not actually produce.
  */
 export type ChemistryStatus =
-  | { kind: 'above-mcl'; label: 'Above limit' }
-  | { kind: 'above-smcl'; label: 'Above recommended range' }
+  | { kind: 'above-mcl'; label: 'Exceeds MCL' }
+  | { kind: 'above-smcl'; label: 'Exceeds SMCL' }
   | { kind: 'below'; label: 'Below limit' }
   | { kind: 'not-detected'; label: 'Not detected' }
   | { kind: 'classification'; label: string }
@@ -244,11 +244,43 @@ export const resultStatus = (row: ChemistryResultRow): ChemistryStatus => {
 
   if (row.exceeds) {
     return row.standard.kind === 'MCL'
-      ? { kind: 'above-mcl', label: 'Above limit' }
-      : { kind: 'above-smcl', label: 'Above recommended range' }
+      ? { kind: 'above-mcl', label: 'Exceeds MCL' }
+      : { kind: 'above-smcl', label: 'Exceeds SMCL' }
   }
 
   return { kind: 'below', label: 'Below limit' }
+}
+
+/** The results collected on one day, as the chemistry table groups them. */
+export type ChemistryDateGroup = {
+  /** The calendar day, `YYYY-MM-DD`. */
+  date: string
+  /** The first row's timestamp, for formatting the day. */
+  sampledOn: string
+  rows: ChemistryResultRow[]
+}
+
+/**
+ * Splits rows into one group per day they were collected, newest day first.
+ * Rows keep the order they came in within a day, so whatever put the
+ * exceedances first still does.
+ *
+ * Grouped by calendar day, as the field parameter table already is, rather
+ * than by sample: two samples taken the same day read as one group to the
+ * person looking at the page.
+ */
+export const groupRowsBySampleDate = (
+  rows: readonly ChemistryResultRow[]
+): ChemistryDateGroup[] => {
+  const groups = new Map<string, ChemistryDateGroup>()
+  for (const row of rows) {
+    const date = row.sampledOn.slice(0, 10)
+    const group = groups.get(date)
+    if (group) group.rows.push(row)
+    else groups.set(date, { date, sampledOn: row.sampledOn, rows: [row] })
+  }
+
+  return [...groups.values()].sort((a, b) => b.date.localeCompare(a.date))
 }
 
 /**

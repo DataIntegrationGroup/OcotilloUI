@@ -90,16 +90,16 @@ export const chemReportStyles = StyleSheet.create({
     marginTop: 3,
     textAlign: 'center',
   },
-  ownerBlock: { marginTop: 12 },
+  ownerBlock: { marginTop: 8 },
   ownerName: { fontWeight: 'bold' },
   ownerMeta: { fontSize: 7.5, color: CHEM_REPORT_COLORS.muted, marginTop: 2 },
   mastheadRule: {
     borderBottomWidth: 0.75,
     borderBottomColor: CHEM_REPORT_COLORS.borderStrong,
-    marginTop: 14,
-    marginBottom: 14,
+    marginTop: 10,
+    marginBottom: 10,
   },
-  lede: { marginBottom: 16 },
+  lede: { marginBottom: 12 },
 
   // ---- Section headings ---------------------------------------------------
   section: { marginBottom: 13 },
@@ -142,15 +142,20 @@ export const chemReportStyles = StyleSheet.create({
   statValueDanger: { color: CHEM_REPORT_COLORS.danger },
   statValueWarning: { color: CHEM_REPORT_COLORS.warning },
   statNote: { fontSize: 7, color: CHEM_REPORT_COLORS.muted, marginTop: 4 },
+  statFootnotes: {
+    fontSize: 6.5,
+    color: CHEM_REPORT_COLORS.muted,
+    marginTop: 4,
+  },
 
   // ---- Callouts -----------------------------------------------------------
   callout: {
     borderLeftWidth: 2.5,
     borderLeftColor: CHEM_REPORT_COLORS.danger,
     backgroundColor: CHEM_REPORT_COLORS.dangerTint,
-    paddingVertical: 9,
+    paddingVertical: 7,
     paddingHorizontal: 11,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   calloutWarn: {
     borderLeftColor: CHEM_REPORT_COLORS.warning,
@@ -160,9 +165,9 @@ export const chemReportStyles = StyleSheet.create({
     borderLeftColor: CHEM_REPORT_COLORS.teal,
     backgroundColor: CHEM_REPORT_COLORS.infoTint,
   },
-  calloutTitle: { fontWeight: 'bold', marginBottom: 5 },
+  calloutTitle: { fontWeight: 'bold', marginBottom: 4 },
   calloutBody: {},
-  calloutBullet: { marginTop: 4, paddingLeft: 10 },
+  calloutBullet: { marginTop: 3, paddingLeft: 10 },
 
   // ---- Key/value grid ----------------------------------------------------
   kvTable: {
@@ -178,19 +183,23 @@ export const chemReportStyles = StyleSheet.create({
   kvRowLast: { borderBottomWidth: 0 },
   kvCell: {
     flex: 1,
-    paddingVertical: 7,
-    paddingHorizontal: 9,
+    paddingVertical: 4,
+    paddingHorizontal: 7,
     borderRightWidth: 0.75,
     borderRightColor: CHEM_REPORT_COLORS.border,
   },
   kvCellLast: { borderRightWidth: 0 },
+  // Five fields to a row, so the label gives up some letter spacing to keep
+  // "NMBGMR well point ID" on one line, and the value steps down to fit a
+  // latitude and longitude side by side.
   kvLabel: {
-    fontSize: 6.5,
+    fontSize: 6.2,
     color: CHEM_REPORT_COLORS.muted,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.3,
   },
-  kvValue: { marginTop: 3 },
+  kvValue: { fontSize: 8, marginTop: 2 },
+  kvValueMissing: { color: CHEM_REPORT_COLORS.faint },
 
   // ---- Tables -------------------------------------------------------------
   table: { marginTop: 2 },
@@ -212,6 +221,29 @@ export const chemReportStyles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: CHEM_REPORT_COLORS.border,
     paddingVertical: 3.5,
+  },
+  // One day's results, headed by the day. It carries the date the table used
+  // to repeat on every row, so it has to read as a heading rather than a row.
+  dateGroup: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+    marginTop: 8,
+    paddingHorizontal: 4,
+    paddingBottom: 3,
+    borderBottomWidth: 0.75,
+    borderBottomColor: CHEM_REPORT_COLORS.borderStrong,
+  },
+  dateGroupLabel: {
+    fontSize: 6.5,
+    color: CHEM_REPORT_COLORS.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  dateGroupDate: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: CHEM_REPORT_COLORS.teal,
   },
   trZebra: { backgroundColor: CHEM_REPORT_COLORS.zebra },
   trDanger: { backgroundColor: CHEM_REPORT_COLORS.dangerTint },
@@ -321,6 +353,12 @@ export const chemReportStyles = StyleSheet.create({
     color: CHEM_REPORT_COLORS.muted,
     marginTop: 7,
   },
+  // Said once, above the table it qualifies, where it cannot be missed.
+  disclaimer: {
+    fontSize: 7.5,
+    color: CHEM_REPORT_COLORS.muted,
+    marginBottom: 6,
+  },
   emptyNote: { fontSize: 8, color: CHEM_REPORT_COLORS.muted },
 
   // ---- Placeholder for a chart the export cannot draw --------------------
@@ -344,7 +382,9 @@ export const chemReportStyles = StyleSheet.create({
   // ---- Two-column glossary ----------------------------------------------
   glossaryRow: { flexDirection: 'row', gap: 18 },
   glossaryColumn: { flex: 1 },
-  glossaryEntry: { marginBottom: 6 },
+  // A step below body size: the guide closes page one and has to fit beneath
+  // however many exceedance callouts precede it.
+  glossaryEntry: { fontSize: 7.5, marginBottom: 5 },
   glossaryTerm: { fontWeight: 'bold' },
 
   // ---- Footer -------------------------------------------------------------
