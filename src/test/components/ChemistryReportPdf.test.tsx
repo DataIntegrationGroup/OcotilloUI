@@ -663,7 +663,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     expect(runs).toContain('207.8–210.4 ft')
   })
 
-  it('omits well facts that are not on file rather than printing a dash', async () => {
+  it('says a well fact is not on file rather than printing a dash', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
         standards={TEST_STANDARDS}
@@ -678,9 +678,10 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     )
 
     expect(text).toContain('nmbgmr well point id')
-    expect(text).not.toContain('total depth')
-    expect(text).not.toContain('casing diameter')
-    expect(text).not.toContain('site name')
+    expect(text).toContain('total depth not on file')
+    expect(text).toContain('casing diameter not on file')
+    expect(text).toContain('site name not on file')
+    expect(text).not.toContain('total depth —')
   })
 })
 
@@ -837,7 +838,18 @@ describe('ChemistryReportPdf — BDMS-1440 corrections', () => {
     const pages = await renderReportPages(
       <ChemistryReportPdf
         standards={TEST_STANDARDS}
-        well={makeWell()}
+        well={makeWell({
+          well_casing_depth: 360,
+          well_casing_depth_unit: 'ft',
+          well_completion_date: '1987-06-02',
+          well_driller_name: 'Rio Grande Drilling Co.',
+          aquifers: [{ aquifer_system: 'Santa Fe Group' }],
+          well_purposes: ['Domestic', 'Livestock'],
+          well_status: 'Active, pumping',
+          monitoring_status: 'Currently monitored',
+          measuring_point_description:
+            'Top of casing, north side, 1.2 ft above ground',
+        } as unknown as Partial<IWell>)}
         observations={[
           makeResult({ id: 'a', parameter_name: 'Arsenic', value: 0.014 }),
           makeResult({ id: 'n', parameter_name: 'Nitrate (as N)', value: 12 }),
@@ -862,6 +874,36 @@ describe('ChemistryReportPdf — BDMS-1440 corrections', () => {
 
     expect(dense(pages[0])).toContain(dense('how to read this report'))
     expect(dense(pages[0])).toContain(dense('questions, or want more data?'))
+  })
+
+  it('lists every well information field, without the county', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={grouped}
+        year={2026}
+      />
+    )
+
+    const flat = dense(text)
+    expect(flat).not.toContain(dense('county'))
+    expect(flat).not.toContain(dense('socorro'))
+    // One field for the coordinates, not one each.
+    expect(flat).toContain(dense('latitude, longitude 34.1234° n, 106.9412° w'))
+    // Fields the well has no value for keep their place.
+    for (const label of [
+      'ose permit',
+      'casing depth',
+      'completed',
+      'aquifer',
+      'primary use',
+      'well status',
+      'monitoring',
+      'measuring point',
+    ]) {
+      expect(flat).toContain(dense(`${label} not on file`))
+    }
   })
 
   it('footnotes the EPA source of the exceedance stats', async () => {

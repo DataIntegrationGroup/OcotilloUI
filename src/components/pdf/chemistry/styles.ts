@@ -183,19 +183,23 @@ export const chemReportStyles = StyleSheet.create({
   kvRowLast: { borderBottomWidth: 0 },
   kvCell: {
     flex: 1,
-    paddingVertical: 5,
-    paddingHorizontal: 9,
+    paddingVertical: 4,
+    paddingHorizontal: 7,
     borderRightWidth: 0.75,
     borderRightColor: CHEM_REPORT_COLORS.border,
   },
   kvCellLast: { borderRightWidth: 0 },
+  // Five fields to a row, so the label gives up some letter spacing to keep
+  // "NMBGMR well point ID" on one line, and the value steps down to fit a
+  // latitude and longitude side by side.
   kvLabel: {
-    fontSize: 6.5,
+    fontSize: 6.2,
     color: CHEM_REPORT_COLORS.muted,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.3,
   },
-  kvValue: { marginTop: 3 },
+  kvValue: { fontSize: 8, marginTop: 2 },
+  kvValueMissing: { color: CHEM_REPORT_COLORS.faint },
 
   // ---- Tables -------------------------------------------------------------
   table: { marginTop: 2 },

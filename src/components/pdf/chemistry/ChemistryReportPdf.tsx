@@ -193,10 +193,11 @@ const StatRow = ({ entries }: { entries: readonly StatEntry[] }) => {
  * Four cells across, so a row of the grid is one line of the well's record.
  * Every entry given is printed; the caller decides what is worth showing.
  */
-type KvEntry = { label: string; value: string | number }
+/** A null value is printed as "Not on file" so every field keeps its place. */
+type KvEntry = { label: string; value: string | number | null }
 
 const KvGrid = ({ entries }: { entries: readonly KvEntry[] }) => {
-  const perRow = 4
+  const perRow = 5
   const rows: (typeof entries)[] = []
   for (let index = 0; index < entries.length; index += perRow) {
     rows.push(entries.slice(index, index + perRow))
@@ -229,7 +230,13 @@ const KvGrid = ({ entries }: { entries: readonly KvEntry[] }) => {
                 {entry ? (
                   <>
                     <Text style={s.kvLabel}>{entry.label}</Text>
-                    <Text style={s.kvValue}>{String(entry.value)}</Text>
+                    {entry.value == null ? (
+                      <Text style={[s.kvValue, s.kvValueMissing]}>
+                        Not on file
+                      </Text>
+                    ) : (
+                      <Text style={s.kvValue}>{String(entry.value)}</Text>
+                    )}
                   </>
                 ) : null}
               </View>
@@ -773,17 +780,13 @@ export const ChemistryReportPdf = ({
     [
       { label: 'NMBGMR well point ID', value: well?.name },
       { label: 'Site name', value: well?.site_name },
-      { label: 'County', value: locationProperties?.county },
       { label: 'OSE permit', value: osePermit },
       {
-        label: 'Latitude',
-        value: coordinates?.[1] ? `${coordinates[1].toFixed(4)}° N` : null,
-      },
-      {
-        label: 'Longitude',
-        value: coordinates?.[0]
-          ? `${Math.abs(coordinates[0]).toFixed(4)}° W`
-          : null,
+        label: 'Latitude, longitude',
+        value:
+          coordinates?.[0] && coordinates?.[1]
+            ? `${coordinates[1].toFixed(4)}° N, ${Math.abs(coordinates[0]).toFixed(4)}° W`
+            : null,
       },
       {
         label: 'Land surface elev.',
@@ -830,7 +833,11 @@ export const ChemistryReportPdf = ({
         value: well?.measuring_point_description,
       },
     ] as { label: string; value: string | number | null | undefined }[]
-  ).filter((fact): fact is KvEntry => fact.value != null && fact.value !== '')
+  ).map((fact) => ({
+    label: fact.label,
+    value: fact.value == null || fact.value === '' ? null : fact.value,
+  }))
+  const hasWellFacts = wellFacts.some((fact) => fact.value != null)
 
   // `year` scopes the water levels and nothing else, so every mention of it --
   // the masthead, the lede, the running footer, the PDF's own title -- belongs
@@ -1073,8 +1080,8 @@ export const ChemistryReportPdf = ({
               title="Well information &amp; construction"
               note={well?.well_depth_source ?? undefined}
             />
-            <KvGrid entries={wellFacts} />
-            {wellFacts.length ? null : (
+            {hasWellFacts ? <KvGrid entries={wellFacts} /> : null}
+            {hasWellFacts ? null : (
               <Text style={s.emptyNote}>
                 No construction details are on file for this well.
               </Text>
