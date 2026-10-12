@@ -158,9 +158,9 @@ export const LandingPage = () => {
           aria-labelledby="faqs-heading"
           className="grid gap-8 py-8 sm:py-16"
         >
-          <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
-            {faqs.map(({ question, answer }) => (
-              <div key={question}>
+          <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
+            {faqs.map(({ question, answer }, index) => (
+              <div key={question} className={index === 0 ? "lg:col-span-2" : ""}>
                 <h3 className="font-heading text-lg font-semibold">
                   {question}
                 </h3>
