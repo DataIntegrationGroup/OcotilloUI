@@ -951,7 +951,7 @@ export const ChemistryReportPdf = ({
         <Text style={s.lede}>
           {[
             'This report summarizes what is on file for your well: how the well is built, what the water was tested for, and how those results compare to EPA drinking water standards.',
-            'The chemistry is every result on record, however long ago it was sampled.',
+            'The chemistry is for the most recent result on record.',
             showsWaterLevels
               ? `The water level measurements cover ${year}.`
               : null,
@@ -1202,9 +1202,11 @@ export const ChemistryReportPdf = ({
                 </>
               ) : (
                 <Text style={s.emptyNote}>
-                  {hasSamples
-                    ? 'No laboratory results are on file for this well.'
-                    : 'No water chemistry has been collected at this well.'}
+                  {latest.rows.length
+                    ? `${latest.rows.length} result${latest.rows.length === 1 ? '' : 's'} on file; none has a drinking water standard.`
+                    : hasSamples
+                      ? 'No laboratory results are on file for this well.'
+                      : 'No water chemistry has been collected at this well.'}
                 </Text>
               )}
             </View>

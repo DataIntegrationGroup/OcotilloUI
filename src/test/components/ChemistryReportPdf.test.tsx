@@ -357,6 +357,25 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     expect(report).toContain('depth to water')
   })
 
+  it('says how many results are on file when none has a standard', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={[
+          makeResult({ id: 'r1', parameter_name: 'Lithium' }),
+          makeResult({ id: 'r2', parameter_name: 'Rubidium' }),
+        ]}
+        year={2026}
+      />
+    )
+
+    expect(text).toContain(
+      '2 results on file; none has a drinking water standard'
+    )
+    expect(text).not.toContain('no laboratory results are on file')
+  })
+
   it('scopes the year to the water levels, not to the chemistry', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf
@@ -373,7 +392,9 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     )
 
     expect(text).toContain('apr 09, 2019')
-    expect(text).toContain('the chemistry is every result on record')
+    expect(text).toContain(
+      'the chemistry is for the most recent result on record'
+    )
     expect(text).toContain('water level measurements cover 2026')
     expect(text).toContain('samples on record')
     expect(text).not.toContain('samples this year')
