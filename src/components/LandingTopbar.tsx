@@ -7,7 +7,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
 import { ColorModeContext } from "@/contexts";
 
 export const LandingTopbar = () => {
@@ -42,9 +41,7 @@ export const LandingTopbar = () => {
             <RouterLink to="/login">Log in</RouterLink>
           </Button>
           <Button asChild size="sm">
-            <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
-              Sign up
-            </a>
+            <RouterLink to="/signup">Sign up</RouterLink>
           </Button>
         </nav>
       </div>

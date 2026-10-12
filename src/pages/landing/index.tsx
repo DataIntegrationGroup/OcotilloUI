@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
 import { settings } from "@/settings";
 import ocotilloImage from "@/img/ocotillo.jpeg";
 import waterWellDarkImage from "@/img/ogs-water-well-dark.png";
@@ -92,9 +91,7 @@ const faqs = [
           size="xs"
           className="mx-1 align-baseline"
         >
-          <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
-            Sign up
-          </a>
+          <RouterLink to="/signup">Sign up</RouterLink>
         </Button>
       </>
     ),
@@ -162,9 +159,7 @@ export const LandingPage = () => {
             size="lg"
             className="mt-6 hover:bg-primary hover:scale-105"
           >
-            <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
-              Request an account
-            </a>
+            <RouterLink to="/signup">Request an account</RouterLink>
           </Button>
         </section>
 
@@ -374,9 +369,7 @@ export const LandingPage = () => {
             </a>
           </div>
           <Button asChild size="lg" className="hover:scale-105">
-            <a href={AUTHENTIK_SIGNUP_URL} target="_blank" rel="noreferrer">
-              Request an account
-            </a>
+            <RouterLink to="/signup">Request an account</RouterLink>
           </Button>
         </section>
         */}

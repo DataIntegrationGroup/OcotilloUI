@@ -11,12 +11,14 @@ import { LandingPage } from '@/pages/landing'
 import { SettingsPage } from '@/pages/settings'
 import { GeothermalRoutes, OcotilloRoutes, ST2Routes } from '@/routes'
 import { settings } from '@/settings'
+import { SignupPage } from '@/pages/signup'
 
 const App: React.FC = () => (
   <BrowserRouter basename={settings.urlprefix}>
     <AppProviders>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route
           path="/ogcapi"
           element={
