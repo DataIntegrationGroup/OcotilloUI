@@ -1,64 +1,73 @@
-import { useContext, useState, type ReactNode } from 'react'
-import { Link as RouterLink } from 'react-router'
-import { LandingTopbar } from '@/components/LandingTopbar'
-import { Button } from '@/components/ui/button'
+import { useContext, useState, type ReactNode } from "react";
+import { Link as RouterLink } from "react-router";
+import { LandingTopbar } from "@/components/LandingTopbar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { AUTHENTIK_SIGNUP_URL } from '@/config/auth'
-import ocotilloImage from '@/img/ocotillo.jpeg'
-import roadmapDarkImage from '@/img/ocotillo-roadmap-dark.png'
-import roadmapLightImage from '@/img/ocotillo-roadmap-light.png'
-import waterWellDarkImage from '@/img/ogs-water-well-dark.png'
-import waterWellLightImage from '@/img/ogs-water-well-light.png'
-import ampDarkImage from '@/img/ogs-amp-project-areas-dark.png'
-import ampLightImage from '@/img/ogs-amp-project-areas-light.png'
-import geothermalWellDarkImage from '@/img/ogs-geothermal-well-dark.png'
-import geothermalWellLightImage from '@/img/ogs-geothermal-well-light.png'
-import authDarkImage from '@/img/auth-dark.png'
-import authLightImage from '@/img/auth-light.png'
-import mapDarkImage from '@/img/map-dark.png'
-import mapLightImage from '@/img/map-light.png'
-import sensorCorrectorDarkImage from '@/img/sensorcorrector-dark.png'
-import sensorCorrectorLightImage from '@/img/sensorcorrector-light.png'
-import wellDetailDarkImage from '@/img/welldetail-dark.png'
-import wellDetailLightImage from '@/img/welldetail-light.png'
-import { ColorModeContext } from '@/contexts'
+} from "@/components/ui/card";
+import { AUTHENTIK_SIGNUP_URL } from "@/config/auth";
+import { settings } from "@/settings";
+import ocotilloImage from "@/img/ocotillo.jpeg";
+import waterWellDarkImage from "@/img/ogs-water-well-dark.png";
+import waterWellLightImage from "@/img/ogs-water-well-light.png";
+import ampDarkImage from "@/img/ogs-amp-project-areas-dark.png";
+import ampLightImage from "@/img/ogs-amp-project-areas-light.png";
+import geothermalWellDarkImage from "@/img/ogs-geothermal-well-dark.png";
+import geothermalWellLightImage from "@/img/ogs-geothermal-well-light.png";
+import authDarkImage from "@/img/auth-dark.png";
+import authLightImage from "@/img/auth-light.png";
+import mapDarkImage from "@/img/map-dark.png";
+import mapLightImage from "@/img/map-light.png";
+import sensorCorrectorDarkImage from "@/img/sensorcorrector-dark.png";
+import sensorCorrectorLightImage from "@/img/sensorcorrector-light.png";
+import wellDetailDarkImage from "@/img/welldetail-dark.png";
+import wellDetailLightImage from "@/img/welldetail-light.png";
+import { ColorModeContext } from "@/contexts";
 
-const OCOTILLO_ROADMAP_URL =
-  'https://nmbgmr.atlassian.net/jira/discovery/share/views/e86251f8-f82f-496f-8aaf-0f50c9cf3e1a'
+//
+// From Liz
+// "Love the roadmap, but I might want to use a different view for
+// this context. Let me play with that a bit, we can hide that
+// section for now."
+//
+// 2026-10-08
+//
+// import roadmapDarkImage from "@/img/ocotillo-roadmap-dark.png";
+// import roadmapLightImage from "@/img/ocotillo-roadmap-light.png";
+// const OCOTILLO_ROADMAP_URL =
+//   "https://nmbgmr.atlassian.net/jira/discovery/share/views/e86251f8-f82f-496f-8aaf-0f50c9cf3e1a";
 
 const layers = [
   {
-    id: 'water-well',
-    name: 'Groundwater Well Locations',
+    id: "water-well",
+    name: "Groundwater Well Locations",
     lightImage: waterWellLightImage,
     darkImage: waterWellDarkImage,
-    alt: 'Groundwater Well Locations QGIS screenshot placeholder',
+    alt: "Groundwater Well Locations QGIS screenshot placeholder",
   },
   {
-    id: 'amp-project-areas',
-    name: 'AMP Project Areas',
+    id: "amp-project-areas",
+    name: "AMP Project Areas",
     lightImage: ampLightImage,
     darkImage: ampDarkImage,
-    alt: 'AMP Project Areas QGIS screenshot placeholder',
+    alt: "AMP Project Areas QGIS screenshot placeholder",
   },
   {
-    id: 'water-elevation',
-    name: 'Geothermal Well Locations',
+    id: "water-elevation",
+    name: "Geothermal Well Locations",
     lightImage: geothermalWellLightImage,
     darkImage: geothermalWellDarkImage,
-    alt: 'Geothermal Well Locations QGIS screenshot placeholder',
+    alt: "Geothermal Well Locations QGIS screenshot placeholder",
   },
-] as const
+] as const;
 
 const faqs = [
   {
-    question: 'What is Ocotillo?',
+    question: "What is Ocotillo?",
     answer: (
       <>
         Ocotillo is an application developed by the Data Services Team at the
@@ -72,11 +81,11 @@ const faqs = [
     ),
   },
   {
-    question: 'Who is Ocotillo for?',
+    question: "Who is Ocotillo for?",
     answer: (
       <>
         Any employee of the New Mexico Bureau of Geology and Mineral Resources
-        can have credentials to use Ocotillo by clicking{' '}
+        can have credentials to use Ocotillo by clicking{" "}
         <Button
           asChild
           variant="default"
@@ -91,11 +100,11 @@ const faqs = [
     ),
   },
   {
-    question: 'Looking for open data?',
+    question: "Looking for open data?",
     answer: (
       <>
         Ocotillo serves data to our public applications too! If you aren’t a
-        Bureau of Geology employee, use our applications{' '}
+        Bureau of Geology employee, use our applications{" "}
         <Button
           asChild
           variant="outline"
@@ -103,26 +112,28 @@ const faqs = [
           className="mx-1 align-baseline"
         >
           <a href="https://weaver.newmexicowaterdata.org/">Weaver</a>
-        </Button>{' '}
-        or our{' '}
+        </Button>{" "}
+        or our{" "}
         <Button
           asChild
           variant="default"
           size="xs"
           className="mx-1 align-baseline"
         >
-          <a href="/ocotillo/collections">Public APIs</a>
+          <a href={`${settings.ocotillo_api_url}/ogcapi/collections`}>
+            Public APIs
+          </a>
         </Button>
       </>
     ),
   },
-] as const
+] as const;
 
 export const LandingPage = () => {
-  const { mode } = useContext(ColorModeContext)
-  const [selectedLayerId, setSelectedLayerId] = useState<string>(layers[0].id)
+  const { mode } = useContext(ColorModeContext);
+  const [selectedLayerId, setSelectedLayerId] = useState<string>(layers[0].id);
   const selectedLayer =
-    layers.find(({ id }) => id === selectedLayerId) ?? layers[0]
+    layers.find(({ id }) => id === selectedLayerId) ?? layers[0];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -166,7 +177,7 @@ export const LandingPage = () => {
             {faqs.map(({ question, answer }, index) => (
               <div
                 key={question}
-                className={index === 0 ? 'lg:col-span-2' : ''}
+                className={index === 0 ? "lg:col-span-2" : ""}
               >
                 <h3 className="font-heading text-lg font-semibold">
                   {question}
@@ -200,7 +211,7 @@ export const LandingPage = () => {
           <Card className="h-full overflow-hidden bg-brand-50 p-0">
             <img
               src={
-                mode === 'dark'
+                mode === "dark"
                   ? selectedLayer.darkImage
                   : selectedLayer.lightImage
               }
@@ -217,7 +228,7 @@ export const LandingPage = () => {
                 OGC layers in QGIS
               </CardTitle>
               <CardDescription>
-                These previews show screenshots of the highlighted OGS layer
+                These previews show screenshots of the highlighted OGC layer
                 displayed in QGIS.
               </CardDescription>
             </CardHeader>
@@ -227,7 +238,7 @@ export const LandingPage = () => {
                   key={layer.id}
                   type="button"
                   aria-pressed={selectedLayer.id === layer.id}
-                  className={`w-full rounded-md border p-3 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selectedLayer.id === layer.id ? 'border-primary bg-primary/5' : 'border-border'}`}
+                  className={`w-full rounded-md border p-3 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selectedLayer.id === layer.id ? "border-primary bg-primary/5" : "border-border"}`}
                   onClick={() => setSelectedLayerId(layer.id)}
                 >
                   <strong className="font-heading text-sm">{layer.name}</strong>
@@ -315,6 +326,15 @@ export const LandingPage = () => {
           </div>
         </section>
 
+        {/*
+        //
+        // From Liz
+        // "Love the roadmap, but I might want to use a different view for
+        // this context. Let me play with that a bit, we can hide that
+        // section for now."
+        //
+        // 2026-10-08 
+        // 
         <section className="mb-8 flex flex-col items-start justify-between gap-5 rounded-xl border border-primary/25 bg-primary/10 p-7 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-2">
             <div>
@@ -324,7 +344,7 @@ export const LandingPage = () => {
               <p className="mt-1 text-muted-foreground">
                 Ocotillo is in active development. Interested in learning more
                 about what we are working on now and what’s up next? Check out
-                the{' '}
+                the{" "}
                 <a
                   className="hover:underline text-primary font-semibold"
                   href={OCOTILLO_ROADMAP_URL}
@@ -346,7 +366,7 @@ export const LandingPage = () => {
             >
               <div className="w-full overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5">
                 <img
-                  src={mode === 'dark' ? roadmapDarkImage : roadmapLightImage}
+                  src={mode === "dark" ? roadmapDarkImage : roadmapLightImage}
                   alt="Ocotillo roadmap preview"
                   className="h-auto w-full object-contain"
                 />
@@ -359,10 +379,11 @@ export const LandingPage = () => {
             </a>
           </Button>
         </section>
+        */}
       </main>
     </div>
-  )
-}
+  );
+};
 
 const ShowcaseRow = ({
   eyebrow,
@@ -371,14 +392,14 @@ const ShowcaseRow = ({
   visual,
   reverse = false,
 }: {
-  eyebrow: string
-  title: string
-  description: string
-  visual: ReactNode
-  reverse?: boolean
+  eyebrow: string;
+  title: string;
+  description: string;
+  visual: ReactNode;
+  reverse?: boolean;
 }) => (
   <article className="grid items-center gap-8 border-t pt-10 lg:grid-cols-2">
-    <div className={reverse ? 'lg:order-2' : ''}>
+    <div className={reverse ? "lg:order-2" : ""}>
       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
         {eyebrow}
       </p>
@@ -389,34 +410,34 @@ const ShowcaseRow = ({
         {description}
       </p>
     </div>
-    <div className={reverse ? 'lg:order-1' : ''}>{visual}</div>
+    <div className={reverse ? "lg:order-1" : ""}>{visual}</div>
   </article>
-)
+);
 
 const PreviewWindow = ({ children }: { children: ReactNode }) => (
   <div className="aspect-[3/2] w-full overflow-hidden rounded-lg border bg-muted shadow-lg shadow-foreground/5">
     {children}
   </div>
-)
+);
 
 const ShowcaseImage = ({
   lightImage,
   darkImage,
   alt,
 }: {
-  lightImage: string
-  darkImage: string
-  alt: string
+  lightImage: string;
+  darkImage: string;
+  alt: string;
 }) => {
-  const { mode } = useContext(ColorModeContext)
+  const { mode } = useContext(ColorModeContext);
 
   return (
     <PreviewWindow>
       <img
-        src={mode === 'dark' ? darkImage : lightImage}
+        src={mode === "dark" ? darkImage : lightImage}
         alt={alt}
         className="size-full rounded-[2px] border border-foreground/30 object-fill"
       />
     </PreviewWindow>
-  )
-}
+  );
+};
