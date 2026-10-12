@@ -1,6 +1,10 @@
 export const AUTHENTIK_URL =
   import.meta.env.VITE_AUTHENTIK_URL || 'http://localhost:8000/'
 
+export const AUTHENTIK_SIGNUP_URL =
+  import.meta.env.VITE_AUTHENTIK_SIGNUP_URL ||
+  new URL('if/flow/signup/', `${AUTHENTIK_URL.replace(/\/+$/, '')}/`).toString()
+
 export const buildAuthentikUrl = (
   path: string,
   baseUrl = AUTHENTIK_URL

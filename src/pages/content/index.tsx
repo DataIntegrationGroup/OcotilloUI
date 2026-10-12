@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
+import React, { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import {
   Alert,
   Box,
@@ -11,46 +11,47 @@ import {
   Tooltip,
   Stack,
   Chip,
-} from '@mui/material'
-import { ContentCopy } from '@mui/icons-material'
-import { Components } from 'react-markdown'
-import { settings } from '@/settings'
+} from "@mui/material";
+import { ContentCopy } from "@mui/icons-material";
+import { Components } from "react-markdown";
+import { LandingTopbar } from "@/components/LandingTopbar";
+import { settings } from "@/settings";
 
 export type FrontMatter = {
-  title?: string
-  deck?: string
-  date?: string
-}
+  title?: string;
+  deck?: string;
+  date?: string;
+};
 
 type ContentPageProps = {
-  src: string
-}
+  src: string;
+};
 
 export function parseFrontmatter(text: string): {
-  data: FrontMatter
-  content: string
+  data: FrontMatter;
+  content: string;
 } {
-  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/)
-  if (!match) return { data: {}, content: text }
+  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) return { data: {}, content: text };
 
-  const yaml = match[1]
-  const content = match[2]
-  const data: FrontMatter = {}
+  const yaml = match[1];
+  const content = match[2];
+  const data: FrontMatter = {};
 
-  for (const line of yaml.split('\n')) {
-    const colonIdx = line.indexOf(':')
-    if (colonIdx === -1) continue
-    const key = line.slice(0, colonIdx).trim()
+  for (const line of yaml.split("\n")) {
+    const colonIdx = line.indexOf(":");
+    if (colonIdx === -1) continue;
+    const key = line.slice(0, colonIdx).trim();
     const value = line
       .slice(colonIdx + 1)
       .trim()
-      .replace(/^["']|["']$/g, '')
-    if (key === 'title' || key === 'deck' || key === 'date') {
-      data[key] = value
+      .replace(/^["']|["']$/g, "");
+    if (key === "title" || key === "deck" || key === "date") {
+      data[key] = value;
     }
   }
 
-  return { data, content }
+  return { data, content };
 }
 
 export const markdownComponents: Components = {
@@ -65,7 +66,7 @@ export const markdownComponents: Components = {
     </Typography>
   ),
   p: ({ children }) => (
-    <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
+    <Typography variant="body1" sx={{ mb: 2, color: "text.secondary" }}>
       {children}
     </Typography>
   ),
@@ -78,34 +79,34 @@ export const markdownComponents: Components = {
     const text = React.Children.toArray(children)
       .map((child) => {
         if (React.isValidElement(child)) {
-          return React.Children.toArray(child.props.children).join('')
+          return React.Children.toArray(child.props.children).join("");
         }
 
-        return String(child)
+        return String(child);
       })
-      .join('')
-      .trim()
+      .join("")
+      .trim();
 
     const alertMatch = text.match(
-      /^\[!(WARNING|INFO|ERROR|SUCCESS)\]\s*([\s\S]*)$/i
-    )
+      /^\[!(WARNING|INFO|ERROR|SUCCESS)\]\s*([\s\S]*)$/i,
+    );
 
     if (alertMatch) {
       const severityMap = {
-        WARNING: 'warning',
-        INFO: 'info',
-        ERROR: 'error',
-        SUCCESS: 'success',
-      } as const
+        WARNING: "warning",
+        INFO: "info",
+        ERROR: "error",
+        SUCCESS: "success",
+      } as const;
 
-      const alertType = alertMatch[1].toUpperCase() as keyof typeof severityMap
-      const alertBody = alertMatch[2].trim()
+      const alertType = alertMatch[1].toUpperCase() as keyof typeof severityMap;
+      const alertBody = alertMatch[2].trim();
 
       return (
         <Alert severity={severityMap[alertType]} sx={{ my: 3 }}>
           {alertBody}
         </Alert>
-      )
+      );
     }
 
     return (
@@ -113,47 +114,47 @@ export const markdownComponents: Components = {
         component="blockquote"
         sx={{
           borderLeft: 4,
-          borderColor: 'divider',
+          borderColor: "divider",
           pl: 2,
           my: 3,
-          color: 'text.secondary',
-          fontStyle: 'italic',
+          color: "text.secondary",
+          fontStyle: "italic",
         }}
       >
         {children}
       </Box>
-    )
+    );
   },
   code: ({ children, className }) => {
-    const value = String(children).replace(/\n$/, '')
+    const value = String(children).replace(/\n$/, "");
 
     if (className) {
-      return <CopyCodeBlock value={value} />
+      return <CopyCodeBlock value={value} />;
     }
 
     return (
-      <Typography component="code" sx={{ bgcolor: 'action.hover', px: 0.5 }}>
+      <Typography component="code" sx={{ bgcolor: "action.hover", px: 0.5 }}>
         {children}
       </Typography>
-    )
+    );
   },
   ul: ({ children, node }) => {
     const getListItemText = (listItem: any): string => {
       return (
         listItem?.children
-          ?.map((child: any) => child.value ?? '')
-          ?.join('')
-          ?.trim() ?? ''
-      )
-    }
+          ?.map((child: any) => child.value ?? "")
+          ?.join("")
+          ?.trim() ?? ""
+      );
+    };
 
     const listItems =
       node?.children?.filter(
-        (child: any) => child.type === 'element' && child.tagName === 'li'
-      ) ?? []
-    const firstItemText = getListItemText(listItems[0])
+        (child: any) => child.type === "element" && child.tagName === "li",
+      ) ?? [];
+    const firstItemText = getListItemText(listItems[0]);
 
-    if (firstItemText === '[!CHIPS]') {
+    if (firstItemText === "[!CHIPS]") {
       return (
         <Stack
           direction="row"
@@ -163,7 +164,7 @@ export const markdownComponents: Components = {
           sx={{ mb: 2 }}
         >
           {listItems.slice(1).map((item: any, index: number) => {
-            const label = getListItemText(item)
+            const label = getListItemText(item);
 
             return (
               <Chip
@@ -172,17 +173,17 @@ export const markdownComponents: Components = {
                 variant="outlined"
                 color="default"
               />
-            )
+            );
           })}
         </Stack>
-      )
+      );
     }
 
     return (
       <Box component="ul" sx={{ pl: 3, mb: 2 }}>
         {children}
       </Box>
-    )
+    );
   },
   ol: ({ children }) => (
     <Box component="ol" sx={{ pl: 3, mb: 2 }}>
@@ -193,7 +194,7 @@ export const markdownComponents: Components = {
     <Typography
       component="li"
       variant="body1"
-      sx={{ mb: 0.75, color: 'text.secondary' }}
+      sx={{ mb: 0.75, color: "text.secondary" }}
     >
       {children}
     </Typography>
@@ -203,16 +204,16 @@ export const markdownComponents: Components = {
       component="img"
       src={src}
       alt={alt}
-      sx={{ maxWidth: '100%', borderRadius: 1, my: 2, display: 'block' }}
+      sx={{ maxWidth: "100%", borderRadius: 1, my: 2, display: "block" }}
     />
   ),
   hr: () => <Divider sx={{ my: 3 }} />,
-}
+};
 
 type MarkdownPageProps = {
-  frontmatter: FrontMatter
-  body: string
-}
+  frontmatter: FrontMatter;
+  body: string;
+};
 
 export const MarkdownPage: React.FC<MarkdownPageProps> = ({
   frontmatter,
@@ -221,19 +222,19 @@ export const MarkdownPage: React.FC<MarkdownPageProps> = ({
   return (
     <Box
       sx={{
-        minHeight: '100%',
-        bgcolor: 'background.wrapper',
+        minHeight: "100%",
+        bgcolor: "background.wrapper",
         borderRadius: 1,
         py: 4,
       }}
     >
-      <Box sx={{ maxWidth: '96ch', px: { xs: 2, md: 4 } }}>
+      <Box sx={{ maxWidth: "96ch", px: { xs: 2, md: 4 } }}>
         {frontmatter.title && (
           <Typography
             variant="h1"
             fontFamily="Outfit Variable"
             fontWeight={700}
-            sx={{ mb: 1, fontSize: '2.2rem' }}
+            sx={{ mb: 1, fontSize: "2.2rem" }}
           >
             {frontmatter.title}
           </Typography>
@@ -244,9 +245,9 @@ export const MarkdownPage: React.FC<MarkdownPageProps> = ({
             fontWeight={200}
             variant="deck"
             sx={{
-              display: 'block',
+              display: "block",
               mb: frontmatter.date ? 1 : 3,
-              color: 'text.secondary',
+              color: "text.secondary",
             }}
           >
             {frontmatter.deck}
@@ -255,36 +256,36 @@ export const MarkdownPage: React.FC<MarkdownPageProps> = ({
         {frontmatter.date && (
           <Typography
             variant="caption"
-            sx={{ display: 'block', mb: 3, color: 'text.disabled' }}
+            sx={{ display: "block", mb: 3, color: "text.disabled" }}
           >
-            {new Date(frontmatter.date).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
+            {new Date(frontmatter.date).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             })}
           </Typography>
         )}
       </Box>
-      <Box sx={{ maxWidth: '80ch', px: { xs: 2, md: 4 }, py: 0 }}>
+      <Box sx={{ maxWidth: "80ch", px: { xs: 2, md: 4 }, py: 0 }}>
         <ReactMarkdown components={markdownComponents}>{body}</ReactMarkdown>
       </Box>
     </Box>
-  )
-}
+  );
+};
 
 export const ContentPage: React.FC<ContentPageProps> = ({ src }) => {
-  const [frontmatter, setFrontmatter] = useState<FrontMatter>({})
-  const [body, setBody] = useState<string>('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [frontmatter, setFrontmatter] = useState<FrontMatter>({});
+  const [body, setBody] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     fetch(src)
       .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load ${src}`)
-        return res.text()
+        if (!res.ok) throw new Error(`Failed to load ${src}`);
+        return res.text();
       })
       .then((text) => {
         // Replace template placeholders like {{ key }} in the markdown text
@@ -297,60 +298,75 @@ export const ContentPage: React.FC<ContentPageProps> = ({ src }) => {
         const hydratedText = text.replace(
           /{{\s*([\w]+)\s*}}/g,
           (_, key: string) => {
-            const value = (settings as Record<string, any>)[key]
+            const value = (settings as Record<string, any>)[key];
 
-            if (typeof value === 'string') {
-              return value.replace(/\/+$/, '')
+            if (typeof value === "string") {
+              return value.replace(/\/+$/, "");
             }
 
             // if key not found or not string → reinsert key name
-            return `{{ ${key} }}`
-          }
-        )
+            return `{{ ${key} }}`;
+          },
+        );
 
-        const parsed = parseFrontmatter(hydratedText)
-        setFrontmatter(parsed.data)
-        setBody(parsed.content)
+        const parsed = parseFrontmatter(hydratedText);
+        setFrontmatter(parsed.data);
+        setBody(parsed.content);
       })
       .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [src])
+      .finally(() => setLoading(false));
+  }, [src]);
 
   if (loading) {
     return (
       <Box
         sx={{
-          minHeight: '100%',
-          bgcolor: 'background.wrapper',
-          display: 'flex',
-          justifyContent: 'center',
+          minHeight: "100%",
+          bgcolor: "background.wrapper",
+          display: "flex",
+          justifyContent: "center",
           pt: 8,
           borderRadius: 1,
         }}
       >
         <CircularProgress />
       </Box>
-    )
+    );
   }
 
   if (error) {
     return (
-      <Box sx={{ minHeight: '100%', bgcolor: 'background.wrapper', p: 4 }}>
+      <Box sx={{ minHeight: "100%", bgcolor: "background.wrapper", p: 4 }}>
         <Typography color="error">{error}</Typography>
       </Box>
-    )
+    );
   }
 
-  return <MarkdownPage frontmatter={frontmatter} body={body} />
-}
+  return <MarkdownPage frontmatter={frontmatter} body={body} />;
+};
+
+export const PublicContentPage: React.FC<ContentPageProps> = ({ src }) => (
+  <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+    <LandingTopbar />
+    <Box
+      sx={{
+        maxWidth: 1536,
+        mx: "auto",
+        pt: 2,
+      }}
+    >
+      <ContentPage src={src} />
+    </Box>
+  </Box>
+);
 
 const CopyCodeBlock = ({ value }: { value: string }) => {
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(value)
-  }
+    await navigator.clipboard.writeText(value);
+  };
 
   return (
-    <Box sx={{ position: 'relative', mb: 2 }}>
+    <Box sx={{ position: "relative", mb: 2 }}>
       <Typography
         component="code"
         variant="body2"
@@ -359,10 +375,10 @@ const CopyCodeBlock = ({ value }: { value: string }) => {
           py: 1.25,
           pr: 6,
           borderRadius: 1,
-          bgcolor: 'action.hover',
-          overflowWrap: 'anywhere',
-          display: 'block',
-          color: 'text.primary',
+          bgcolor: "action.hover",
+          overflowWrap: "anywhere",
+          display: "block",
+          color: "text.primary",
         }}
       >
         {value}
@@ -373,7 +389,7 @@ const CopyCodeBlock = ({ value }: { value: string }) => {
           size="small"
           onClick={handleCopy}
           sx={{
-            position: 'absolute',
+            position: "absolute",
             top: 6,
             right: 6,
           }}
@@ -383,5 +399,5 @@ const CopyCodeBlock = ({ value }: { value: string }) => {
         </IconButton>
       </Tooltip>
     </Box>
-  )
-}
+  );
+};
