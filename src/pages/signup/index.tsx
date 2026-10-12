@@ -13,8 +13,9 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { settings } from '@/settings'
 
-const SIGNUP_RECIPIENT = 'nmbg-ocotillo@nmt.edu'
+const SIGNUP_RECIPIENT = settings.signup_recipient
 
 export const buildSignupMailtoUrl = (name: string, email: string): string => {
   const subject = 'Ocotillo account request'
