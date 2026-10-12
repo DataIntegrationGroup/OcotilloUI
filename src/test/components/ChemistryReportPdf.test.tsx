@@ -198,7 +198,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
       />
     )
 
-    expect(text).toContain('nmbg-waterlevel@nmt.edu')
+    expect(text).toContain('nmbg-waterlevels@nmt.edu')
     expect(text).not.toContain('aquifermapping@nmt.edu')
     expect(text).not.toContain('835-5327')
     // The Drinking Water Bureau is still named as somewhere to turn after an

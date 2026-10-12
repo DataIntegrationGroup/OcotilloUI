@@ -882,7 +882,7 @@ export const ChemistryReportPdf = ({
           <Text style={s.glossaryEntry}>
             <Text style={s.glossaryTerm}>Questions, or want more data?</Text>
             {
-              ' Email nmbg-waterlevel@nmt.edu. You can request the complete record for your well at any time.'
+              ' Email nmbg-waterlevels@nmt.edu. You can request the complete record for your well at any time.'
             }
           </Text>
         </View>
@@ -1282,7 +1282,7 @@ export const ChemistryReportPdf = ({
 
         <View style={s.footer} fixed>
           <Text style={s.footerContact}>
-            {'Questions: nmbg-waterlevel@nmt.edu'}
+            {'Questions: nmbg-waterlevels@nmt.edu'}
           </Text>
           <Text
             style={s.footerText}
