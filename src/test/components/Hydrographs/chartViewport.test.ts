@@ -3,12 +3,20 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   clampTimeWindow,
   FULL_ZOOM_WINDOW,
+  formatAxisTick,
+  keepZoomWheelOffPage,
+  MIN_VALUE_SPAN,
   padTimeWindow,
   passPlainWheelToPage,
   readZoomWindow,
+  resolveValueWheelTarget,
+  resolveZoomBox,
+  scaleValueRange,
   scaleZoomWindow,
   selectionVisibility,
   timeWindowFromZoomEvent,
+  valueZoomFactorFromWheel,
+  type ZoomBoxChart,
 } from '@/components/Hydrographs/chartViewport'
 
 describe('scaleZoomWindow', () => {
@@ -83,19 +91,35 @@ describe('passPlainWheelToPage', () => {
     cleanup()
   })
 
-  it('lets Ctrl+wheel (and trackpad pinch) through to zoom the chart', () => {
+  it('lets Shift+wheel through to zoom the chart', () => {
     const { canvas, chartWheel, cleanup } = setup()
 
     canvas.dispatchEvent(
       new WheelEvent('wheel', {
         deltaY: 100,
-        ctrlKey: true,
+        shiftKey: true,
         bubbles: true,
         cancelable: true,
       })
     )
 
     expect(chartWheel).toHaveBeenCalledTimes(1)
+    cleanup()
+  })
+
+  it('no longer lets Ctrl+wheel (or a trackpad pinch) zoom the chart', () => {
+    const { canvas, chartWheel, cleanup } = setup()
+    const event = new WheelEvent('wheel', {
+      deltaY: 100,
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+
+    canvas.dispatchEvent(event)
+
+    expect(chartWheel).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
     cleanup()
   })
 
@@ -207,5 +231,273 @@ describe('selectionVisibility', () => {
     expect(
       selectionVisibility(range, { startValue: 1_700, endValue: 1_900 })
     ).toBe('hidden')
+  })
+})
+
+describe('keepZoomWheelOffPage', () => {
+  const wheel = (modifier: 'shiftKey' | 'ctrlKey' | null) =>
+    new WheelEvent('wheel', {
+      deltaY: 100,
+      ...(modifier ? { [modifier]: true } : {}),
+      bubbles: true,
+      cancelable: true,
+    })
+
+  const setup = () => {
+    const card = document.createElement('div')
+    // An axis label, legend or toolbar button: nothing there zooms the chart.
+    const offPlot = document.createElement('div')
+    card.appendChild(offPlot)
+    document.body.appendChild(card)
+    return { offPlot, cleanup: keepZoomWheelOffPage(card) }
+  }
+
+  it('keeps Shift+wheel off the chart plot from scrolling the page', () => {
+    const { offPlot, cleanup } = setup()
+    const event = wheel('shiftKey')
+
+    offPlot.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(true)
+    cleanup()
+  })
+
+  it('leaves Ctrl+wheel to the browser', () => {
+    const { offPlot, cleanup } = setup()
+    const event = wheel('ctrlKey')
+
+    offPlot.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(false)
+    cleanup()
+  })
+
+  it('leaves a plain wheel to scroll the page', () => {
+    const { offPlot, cleanup } = setup()
+    const event = wheel(null)
+
+    offPlot.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(false)
+    cleanup()
+  })
+
+  it('stops guarding once cleaned up', () => {
+    const { offPlot, cleanup } = setup()
+    cleanup()
+    const event = wheel('shiftKey')
+
+    offPlot.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(false)
+  })
+})
+
+describe('resolveZoomBox', () => {
+  // Two stacked 100px panels, 0-100 and 120-220 down the surface. Time runs
+  // 10 units a pixel from x = 0; each panel's value is its pixel row.
+  const panels = [
+    { top: 0, bottom: 100 },
+    { top: 120, bottom: 220 },
+  ]
+  const chart: ZoomBoxChart = {
+    containPixel: ({ gridIndex }, [, y]) =>
+      y >= panels[gridIndex].top && y <= panels[gridIndex].bottom,
+    convertFromPixel: ({ gridIndex }, [x, y]) => [
+      x * 10,
+      y - panels[gridIndex].top,
+    ],
+  }
+
+  it('zooms time to the width and the panel it was drawn in to the height', () => {
+    expect(resolveZoomBox({ x: 50, y: 150 }, { x: 20, y: 130 }, chart, 2)).toEqual(
+      {
+        time: { startValue: 200, endValue: 500 },
+        gridIndex: 1,
+        value: { min: 10, max: 30 },
+      }
+    )
+  })
+
+  it('zooms time only for a box too flat to mean a value range', () => {
+    expect(
+      resolveZoomBox({ x: 20, y: 40 }, { x: 60, y: 42 }, chart, 2)
+    ).toMatchObject({ gridIndex: 0, value: null })
+  })
+
+  it('ignores a box too narrow to mean a time range', () => {
+    expect(resolveZoomBox({ x: 20, y: 10 }, { x: 22, y: 90 }, chart, 2)).toBeNull()
+  })
+
+  it('ignores a box started off every panel', () => {
+    expect(resolveZoomBox({ x: 20, y: 110 }, { x: 60, y: 150 }, chart, 2)).toBeNull()
+  })
+})
+
+describe('resolveZoomBox on the value axis alone', () => {
+  // One 100px panel, 0-100 down the surface; value is the pixel row.
+  const chart: ZoomBoxChart = {
+    containPixel: (_finder, [, y]) => y >= 0 && y <= 100,
+    convertFromPixel: (_finder, [x, y]) => [x * 10, y],
+  }
+
+  it('takes the value range and leaves the time window alone', () => {
+    expect(
+      resolveZoomBox({ x: 40, y: 80 }, { x: 40, y: 20 }, chart, 1, 'y')
+    ).toEqual({ time: null, gridIndex: 0, value: { min: 20, max: 80 } })
+  })
+
+  it('does not need any width', () => {
+    expect(
+      resolveZoomBox({ x: 40, y: 20 }, { x: 40, y: 80 }, chart, 1, 'both')
+    ).toBeNull()
+    expect(
+      resolveZoomBox({ x: 40, y: 20 }, { x: 40, y: 80 }, chart, 1, 'y')
+    ).not.toBeNull()
+  })
+
+  it('is nothing at all when the box is too flat to mean a range', () => {
+    expect(
+      resolveZoomBox({ x: 10, y: 50 }, { x: 90, y: 52 }, chart, 1, 'y')
+    ).toBeNull()
+  })
+
+  it('ignores a drag started off every panel', () => {
+    expect(
+      resolveZoomBox({ x: 40, y: 150 }, { x: 40, y: 20 }, chart, 1, 'y')
+    ).toBeNull()
+  })
+})
+
+describe('scaleValueRange', () => {
+  it('zooms in around the anchor, which keeps its place on the axis', () => {
+    // The anchor sits a quarter of the way up the range and stays there.
+    const next = scaleValueRange({ min: 0, max: 100 }, 0.5, 25)
+    expect(next).toEqual({ min: 12.5, max: 62.5 })
+    expect((25 - next.min) / (next.max - next.min)).toBe(0.25)
+  })
+
+  it('zooms out the same way', () => {
+    expect(scaleValueRange({ min: 40, max: 50 }, 2, 45)).toEqual({
+      min: 35,
+      max: 55,
+    })
+  })
+
+  it('never collapses the axis below the minimum span', () => {
+    const next = scaleValueRange({ min: 0, max: 1 }, 1e-9, 0.5)
+    expect(next.max - next.min).toBeCloseTo(MIN_VALUE_SPAN)
+    expect((0.5 - next.min) / (next.max - next.min)).toBeCloseTo(0.5)
+  })
+
+  it('leaves a range it cannot scale as it is', () => {
+    const flat = { min: 3, max: 3 }
+    expect(scaleValueRange(flat, 0.5, 3)).toBe(flat)
+    expect(scaleValueRange({ min: 0, max: 1 }, Number.NaN, 0.5)).toEqual({
+      min: 0,
+      max: 1,
+    })
+  })
+})
+
+describe('valueZoomFactorFromWheel', () => {
+  it('zooms in scrolling up and out scrolling down', () => {
+    const up = valueZoomFactorFromWheel({ deltaX: 0, deltaY: -100 })
+    const down = valueZoomFactorFromWheel({ deltaX: 0, deltaY: 100 })
+    expect(up).toBeLessThan(1)
+    expect(down).toBeGreaterThan(1)
+  })
+
+  it('reads the horizontal delta when Shift turned the wheel sideways', () => {
+    const sideways = valueZoomFactorFromWheel({ deltaX: -100, deltaY: 0 })
+    expect(sideways).toBeLessThan(1)
+  })
+
+  it('is a no-op for a wheel that did not move', () => {
+    expect(valueZoomFactorFromWheel({ deltaX: 0, deltaY: 0 })).toBe(1)
+  })
+
+  it('caps one event so a hard flick cannot jump the axis', () => {
+    expect(valueZoomFactorFromWheel({ deltaX: 0, deltaY: 100000 })).toBe(2)
+    expect(valueZoomFactorFromWheel({ deltaX: 0, deltaY: -100000 })).toBe(0.5)
+  })
+})
+
+describe('resolveValueWheelTarget', () => {
+  // The plot starts at x = 100. The second panel runs 20-100 down the surface
+  // and its axis is inverted, like depth to water: 0 at the bottom, 80 at the
+  // top. The first panel is unused.
+  const PLOT_LEFT = 100
+  const bands = [
+    { top: 20, height: 0 },
+    { top: 20, height: 80 },
+  ]
+  const chart = {
+    convertFromPixel: (_finder: unknown, [, y]: number[]) => [0, 100 - y],
+  }
+
+  it('finds the panel under the axis labels and the value under the pointer', () => {
+    expect(
+      resolveValueWheelTarget({ x: 50, y: 60 }, bands, chart, PLOT_LEFT)
+    ).toEqual({ gridIndex: 1, anchor: 40, range: { min: 0, max: 80 } })
+  })
+
+  it('reads the range from the panel edges whichever way the axis runs', () => {
+    const upright = {
+      convertFromPixel: (_f: unknown, [, y]: number[]) => [0, y],
+    }
+    expect(
+      resolveValueWheelTarget({ x: 50, y: 60 }, bands, upright, PLOT_LEFT)
+    ).toMatchObject({ range: { min: 20, max: 100 }, anchor: 60 })
+  })
+
+  it('is nothing over the plot, where the wheel zooms time', () => {
+    expect(
+      resolveValueWheelTarget({ x: 300, y: 60 }, bands, chart, PLOT_LEFT)
+    ).toBeNull()
+  })
+
+  it('is nothing between panels or past the left edge', () => {
+    expect(
+      resolveValueWheelTarget({ x: 50, y: 10 }, bands, chart, PLOT_LEFT)
+    ).toBeNull()
+    expect(
+      resolveValueWheelTarget({ x: -5, y: 60 }, bands, chart, PLOT_LEFT)
+    ).toBeNull()
+  })
+
+  it('is nothing when the chart cannot map the pixel to a value', () => {
+    const lost = { convertFromPixel: () => Number.NaN }
+    expect(
+      resolveValueWheelTarget({ x: 50, y: 60 }, bands, lost, PLOT_LEFT)
+    ).toBeNull()
+  })
+})
+
+describe('formatAxisTick', () => {
+  it('rounds to at most two decimal places', () => {
+    expect(formatAxisTick(44.12345678)).toBe('44.12')
+    expect(formatAxisTick(44.126)).toBe('44.13')
+    expect(formatAxisTick(-0.456)).toBe('-0.46')
+  })
+
+  it('does not pad a short number', () => {
+    expect(formatAxisTick(45)).toBe('45')
+    expect(formatAxisTick(44.1)).toBe('44.1')
+    expect(formatAxisTick(0)).toBe('0')
+  })
+
+  it('leaves large values whole', () => {
+    expect(formatAxisTick(4503.6)).toBe('4503.6')
+    expect(formatAxisTick(208.4)).toBe('208.4')
+  })
+
+  it('never prints a negative zero', () => {
+    expect(formatAxisTick(-0.001)).toBe('0')
+  })
+
+  it('prints nothing for a value that is not a number', () => {
+    expect(formatAxisTick(Number.NaN)).toBe('')
+    expect(formatAxisTick(Number.POSITIVE_INFINITY)).toBe('')
   })
 })

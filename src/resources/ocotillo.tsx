@@ -331,7 +331,7 @@ const ocotillo = [
     name: 'hydrograph-correction',
     list: '/ocotillo/hydrograph-correction',
     meta: {
-      label: 'Hydrograph Correction',
+      label: 'HydroSync',
       icon: <Timeline />,
     },
   },

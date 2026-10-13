@@ -14,3 +14,4 @@
 | [0002](0002-well-id-minting-service.md) | Well ID Minting Service | Draft |
 | [0003](0003-offline-well-viewing.md) | Offline Well Viewing | Draft |
 | [0004](0004-offline-field-data-capture.md) | Offline Field Data Capture | Draft |
+| [0005](0005-hydrograph-y-axis-only-zoom.md) | Y-axis-only zoom in the HydroSync workbench | Accepted |

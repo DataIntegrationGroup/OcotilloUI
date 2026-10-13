@@ -1,6 +1,6 @@
 ---
 generated-by: claude-opus-5-5
-generated-on: 2026-09-24
+generated-on: 2026-10-01
 prompted-by: jakeross
 ---
 
@@ -76,6 +76,27 @@ manual edits. Now:
    trace next to the current "Uploaded corrected" trace.
 4. **Apply** re-derives with the new setting. **Cancel**, toggling back, or
    **Reset** drops the preview.
+
+## UI changes in BDMS-1409
+
+The preview said how many readings would move but not where, and once
+**Apply** was pressed it closed without a word, so there was no way to tell
+whether the data had changed. Now:
+
+1. The preview names the **affected range**: the first and last reading the
+   change would move. The same span is shaded on the chart behind the dashed
+   preview trace.
+2. Applying leaves an **outcome notice** in the Clean section until it is
+   dismissed, the setting is toggled again, the corrections are reset, or a
+   new file is loaded. It says which way the setting went and either
+   - how many of the readings moved, by how much at most, and over what
+     range; or
+   - that the series was recalculated and came out the same, and why: no
+     interval has a manual inside the record at both ends, or the sensor
+     depth is equal at both ends of every interval.
+
+The algorithm is unchanged; see [Current behavior](#current-behavior) for
+the precise definition.
 
 ## Assessment: anchor-based interpolation as an enhancement
 
