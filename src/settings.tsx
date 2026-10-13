@@ -21,6 +21,8 @@ const ocotillo_api_url =
       : import.meta.env.VITE_OCOTILLO_API_URL || 'http://localhost:8000'
 
 export const settings = {
+  signup_recipient:
+    import.meta.env.VITE_SIGNUP_RECIPIENT || 'ocotillo-nmbg@nmt.edu',
   rowHeight: 27,
   filterDebounceMs: 1000,
   urlprefix: import.meta.env.VITE_URLPREFIX || '',
