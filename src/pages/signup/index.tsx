@@ -1,100 +1,101 @@
-import CheckIcon from '@mui/icons-material/Check'
-import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import { FormEvent, useEffect, useRef, useState } from 'react'
-import { Link as RouterLink } from 'react-router'
-import { LandingTopbar } from '@/components/LandingTopbar'
-import { Button } from '@/components/ui/button'
+import CheckIcon from "@mui/icons-material/Check";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { Link as RouterLink } from "react-router";
+import { LandingTopbar } from "@/components/LandingTopbar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
+  CardFooter,
   CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { settings } from '@/settings'
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { settings } from "@/settings";
 
-const SIGNUP_RECIPIENT = settings.signup_recipient
+const SIGNUP_RECIPIENT = settings.signup_recipient;
 
 export const buildSignupMailtoUrl = (name: string, email: string): string => {
-  const subject = 'Ocotillo account request'
-  const body = [`Name: ${name}`, `Work email: ${email}`].join('\n')
+  const subject = "Ocotillo account request";
+  const body = [`Name: ${name}`, `Work email: ${email}`].join("\n");
 
-  return `mailto:${SIGNUP_RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-}
+  return `mailto:${SIGNUP_RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+};
 
 export const buildSignupGmailUrl = (name: string, email: string): string => {
-  const mailto = new URL(buildSignupMailtoUrl(name, email))
+  const mailto = new URL(buildSignupMailtoUrl(name, email));
   const params = new URLSearchParams({
-    view: 'cm',
-    fs: '1',
+    view: "cm",
+    fs: "1",
     to: SIGNUP_RECIPIENT,
-    su: mailto.searchParams.get('subject') ?? '',
-    body: mailto.searchParams.get('body') ?? '',
-  })
+    su: mailto.searchParams.get("subject") ?? "",
+    body: mailto.searchParams.get("body") ?? "",
+  });
 
-  return `https://mail.google.com/mail/?${params}`
-}
+  return `https://mail.google.com/mail/?${params}`;
+};
 
 export const isNmtWorkEmail = (email: string) =>
-  /^[^\s@]+@nmt\.edu$/i.test(email.trim())
+  /^[^\s@]+@nmt\.edu$/i.test(email.trim());
 
 export const SignupPage = () => {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [emailError, setEmailError] = useState('')
-  const [nameError, setNameError] = useState('')
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [nameError, setNameError] = useState("");
   const [request, setRequest] = useState<{
-    name: string
-    email: string
-  } | null>(null)
-  const [copyStatus, setCopyStatus] = useState('')
-  const [copied, setCopied] = useState(false)
-  const copyTimer = useRef<ReturnType<typeof setTimeout>>()
+    name: string;
+    email: string;
+  } | null>(null);
+  const [copyStatus, setCopyStatus] = useState("");
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => () => clearTimeout(copyTimer.current), [])
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
 
   const clearRequest = () => {
-    setRequest(null)
-    setCopyStatus('')
-    setCopied(false)
-    clearTimeout(copyTimer.current)
-  }
+    setRequest(null);
+    setCopyStatus("");
+    setCopied(false);
+    clearTimeout(copyTimer.current);
+  };
 
   const copyEmail = async () => {
     try {
-      await navigator.clipboard.writeText(SIGNUP_RECIPIENT)
-      clearTimeout(copyTimer.current)
-      setCopied(true)
-      setCopyStatus('Email address copied.')
+      await navigator.clipboard.writeText(SIGNUP_RECIPIENT);
+      clearTimeout(copyTimer.current);
+      setCopied(true);
+      setCopyStatus("Email address copied.");
       copyTimer.current = setTimeout(() => {
-        setCopied(false)
-        setCopyStatus('')
-      }, 1500)
+        setCopied(false);
+        setCopyStatus("");
+      }, 1500);
     } catch {
-      clearTimeout(copyTimer.current)
-      setCopied(false)
-      setCopyStatus('Unable to copy. Select and copy the email address above.')
+      clearTimeout(copyTimer.current);
+      setCopied(false);
+      setCopyStatus("Unable to copy. Select and copy the email address above.");
     }
-  }
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const trimmedName = name.trim()
-    const trimmedEmail = email.trim()
+    event.preventDefault();
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
 
-    clearRequest()
-    setNameError(trimmedName ? '' : 'Enter your full name.')
+    clearRequest();
+    setNameError(trimmedName ? "" : "Enter your full name.");
     if (!isNmtWorkEmail(trimmedEmail)) {
-      setEmailError('Use your NMT work email ending in @nmt.edu.')
-      return
+      setEmailError("Use your NMT work email ending in @nmt.edu.");
+      return;
     }
 
-    setEmailError('')
-    if (!trimmedName) return
-    setRequest({ name: trimmedName, email: trimmedEmail })
-  }
+    setEmailError("");
+    if (!trimmedName) return;
+    setRequest({ name: trimmedName, email: trimmedEmail });
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -121,12 +122,12 @@ export const SignupPage = () => {
                   autoComplete="name"
                   required
                   value={name}
-                  aria-invalid={nameError ? 'true' : undefined}
-                  aria-describedby={nameError ? 'signup-name-error' : undefined}
+                  aria-invalid={nameError ? "true" : undefined}
+                  aria-describedby={nameError ? "signup-name-error" : undefined}
                   onChange={(event) => {
-                    setName(event.target.value)
-                    setNameError('')
-                    clearRequest()
+                    setName(event.target.value);
+                    setNameError("");
+                    clearRequest();
                   }}
                 />
                 {nameError && (
@@ -147,15 +148,15 @@ export const SignupPage = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  aria-invalid={emailError ? 'true' : undefined}
+                  aria-invalid={emailError ? "true" : undefined}
                   aria-describedby={
-                    emailError ? 'signup-email-error' : undefined
+                    emailError ? "signup-email-error" : undefined
                   }
                   value={email}
                   onChange={(event) => {
-                    setEmail(event.target.value)
-                    clearRequest()
-                    if (emailError) setEmailError('')
+                    setEmail(event.target.value);
+                    clearRequest();
+                    if (emailError) setEmailError("");
                   }}
                 />
                 {emailError ? (
@@ -204,42 +205,40 @@ export const SignupPage = () => {
                     </a>
                   </Button>
                 </div>
-                <div className="grid min-w-0 gap-2 text-sm">
-                  <p className="text-muted-foreground">
-                    Or email the Ocotillo team directly:
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <code className="break-all rounded bg-muted px-3 py-1">
-                      {SIGNUP_RECIPIENT}
-                    </code>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      aria-label={
-                        copied ? 'Email address copied' : 'Copy email address'
-                      }
-                      title={
-                        copied ? 'Email address copied' : 'Copy email address'
-                      }
-                      onClick={copyEmail}
-                    >
-                      {copied ? (
-                        <CheckIcon fontSize="small" />
-                      ) : (
-                        <ContentCopyIcon fontSize="small" />
-                      )}
-                    </Button>
-                    <p role="status" className="text-sm text-muted-foreground">
-                      {copyStatus}
-                    </p>
-                  </div>
-                </div>
               </section>
             )}
           </CardContent>
+          <CardFooter className="grid min-w-0 gap-2 text-sm pt-6">
+            <p className="text-muted-foreground">
+              Or email the Ocotillo team directly:
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <code className="break-all rounded bg-muted px-3 py-1">
+                {SIGNUP_RECIPIENT}
+              </code>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={
+                  copied ? "Email address copied" : "Copy email address"
+                }
+                title={copied ? "Email address copied" : "Copy email address"}
+                onClick={copyEmail}
+              >
+                {copied ? (
+                  <CheckIcon fontSize="small" />
+                ) : (
+                  <ContentCopyIcon fontSize="small" />
+                )}
+              </Button>
+              <p role="status" className="text-sm text-muted-foreground">
+                {copyStatus}
+              </p>
+            </div>
+          </CardFooter>
         </Card>
       </main>
     </div>
-  )
-}
+  );
+};

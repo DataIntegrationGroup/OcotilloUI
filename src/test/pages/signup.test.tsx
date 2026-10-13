@@ -14,7 +14,7 @@ describe('signup request', () => {
 
   it('builds a prefilled request email', () => {
     expect(buildSignupMailtoUrl('Ada Lovelace', 'ada@nmt.edu')).toBe(
-      'mailto:nmbg-ocotillo@nmt.edu?subject=Ocotillo%20account%20request&body=Name%3A%20Ada%20Lovelace%0AWork%20email%3A%20ada%40nmt.edu'
+      'mailto:ocotillo-nmbg@nmt.edu?subject=Ocotillo%20account%20request&body=Name%3A%20Ada%20Lovelace%0AWork%20email%3A%20ada%40nmt.edu'
     )
   })
 })
