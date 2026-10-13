@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /$
+Allow: /ogcapi
+Allow: /ogcapi/
+Allow: /ogcapi/*
+Allow: /analytics-disclosure
+Allow: /about
+Disallow: /
