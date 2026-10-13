@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildSignupGmailUrl,
   buildSignupMailtoUrl,
   isNmtWorkEmail,
 } from '@/pages/signup'
@@ -15,6 +16,12 @@ describe('signup request', () => {
   it('builds a prefilled request email', () => {
     expect(buildSignupMailtoUrl('Ada Lovelace', 'ada@nmt.edu')).toBe(
       'mailto:ocotillo-nmbg@nmt.edu?subject=Ocotillo%20account%20request&body=Name%3A%20Ada%20Lovelace%0AWork%20email%3A%20ada%40nmt.edu'
+    )
+  })
+
+  it('builds a prefilled Gmail compose URL', () => {
+    expect(buildSignupGmailUrl('Ada Lovelace', 'ada@nmt.edu')).toBe(
+      'https://mail.google.com/mail/u/0/?view=cm&fs=1&to=ocotillo-nmbg%40nmt.edu&su=Ocotillo+account+request&body=Name%3A+Ada+Lovelace%0AWork+email%3A+ada%40nmt.edu'
     )
   })
 })

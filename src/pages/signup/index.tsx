@@ -1,7 +1,8 @@
 import CheckIcon from "@mui/icons-material/Check";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Link as RouterLink } from "react-router";
 import { LandingTopbar } from "@/components/LandingTopbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +36,7 @@ export const buildSignupGmailUrl = (name: string, email: string): string => {
     body: mailto.searchParams.get("body") ?? "",
   });
 
-  return `https://mail.google.com/mail/?${params}`;
+  return `https://mail.google.com/mail/u/0/?${params}`;
 };
 
 export const isNmtWorkEmail = (email: string) =>
@@ -103,17 +104,20 @@ export const SignupPage = () => {
 
       <main className="mx-auto flex max-w-2xl justify-center px-4 py-12 sm:px-8 sm:py-20">
         <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="font-heading text-2xl">
+          <CardHeader className="grid  gap-x-3 gap-y-1">
+            <CardTitle className="font-heading text-3xl">
               Request an Ocotillo account
             </CardTitle>
             <CardDescription>
-              Complete the form to prepare an email request to the Ocotillo
-              team. This is available to NMT work email holders.
+              Get access to the Ocotillo platform
             </CardDescription>
+            <p className="pt-4">
+              Enter your NMT information below. We'll prepare an account request
+              email for you to send to the Ocotillo team.
+            </p>
           </CardHeader>
           <CardContent>
-            <form className="grid gap-5" onSubmit={handleSubmit}>
+            <form className="grid gap-5 py-4" onSubmit={handleSubmit}>
               <div className="grid gap-2">
                 <Label htmlFor="signup-name">Full name</Label>
                 <Input
@@ -167,27 +171,36 @@ export const SignupPage = () => {
                     {emailError}
                   </p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Your address must end in @nmt.edu.
+                  <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <InfoOutlinedIcon aria-hidden="true" fontSize="inherit" />
+                    Use your @nmt.edu email address
                   </p>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="submit">Open email request</Button>
-                <Button asChild variant="outline" className="ml-auto">
-                  <RouterLink to="/">Back to Ocotillo</RouterLink>
+              <div className="grid gap-2">
+                <Button
+                  type="submit"
+                  disabled={Boolean(request)}
+                  className="w-full"
+                >
+                  Continue to email
+                  <ArrowForwardIcon aria-hidden="true" />
                 </Button>
+                <p className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+                  <InfoOutlinedIcon aria-hidden="true" fontSize="inherit" />
+                  You'll review the email before sending it.
+                </p>
               </div>
             </form>
             {request && (
               <section
                 aria-label="Email request options"
-                className="mt-6 grid min-w-0 gap-4 border-t pt-6"
+                className="mt-6 grid min-w-0 gap-4 border-t pt-10"
               >
                 <p role="status" className="text-sm text-muted-foreground">
-                  Your request is ready. Choose an email app, then send the
-                  prefilled email from that app.
+                  Choose an email app, then send the prefilled email from that
+                  app.
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button asChild>
@@ -196,43 +209,49 @@ export const SignupPage = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Send via Gmail
+                      Gmail
                     </a>
                   </Button>
                   <Button asChild variant="outline" className="ml-auto">
                     <a href={buildSignupMailtoUrl(request.name, request.email)}>
-                      Send email with default client
+                      Default client
                     </a>
                   </Button>
                 </div>
               </section>
             )}
           </CardContent>
-          <CardFooter className="grid min-w-0 gap-2 text-sm pt-6">
-            <p className="text-muted-foreground">
-              Or email the Ocotillo team directly:
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <code className="break-all rounded bg-muted px-3 py-1">
+          <CardFooter className="flex min-w-0 flex-wrap items-center justify-between gap-4 border-t border-border bg-background text-sm text-foreground dark:border-white/10 dark:bg-[#080808] dark:text-white sm:px-6">
+            <div className="min-w-0">
+              <p className="font-medium">Need help? Email the team directly.</p>
+              <a
+                className="mt-1 block truncate text-muted-foreground transition-colors hover:text-foreground dark:text-white/65 dark:hover:text-white"
+                href={`mailto:${SIGNUP_RECIPIENT}`}
+              >
                 {SIGNUP_RECIPIENT}
-              </code>
+              </a>
+            </div>
+            <div className="flex min-w-0 items-center gap-3">
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
+                className="h-8 w-fit max-w-full cursor-pointer gap-1 rounded-full border-border bg-transparent px-3 font-normal text-foreground shadow-none hover:bg-muted hover:text-foreground dark:border-white/25 dark:text-white dark:hover:bg-white/10 dark:hover:text-white"
                 aria-label={
-                  copied ? "Email address copied" : "Copy email address"
+                  copied
+                    ? `Email address copied: ${SIGNUP_RECIPIENT}`
+                    : `Copy email address: ${SIGNUP_RECIPIENT}`
                 }
-                title={copied ? "Email address copied" : "Copy email address"}
+                title="Copy email address"
                 onClick={copyEmail}
               >
                 {copied ? (
-                  <CheckIcon fontSize="small" />
+                  <CheckIcon fontSize="inherit" />
                 ) : (
-                  <ContentCopyIcon fontSize="small" />
+                  <ContentCopyIcon fontSize="inherit" />
                 )}
+                <span>{copied ? "Copied" : "Copy email"}</span>
               </Button>
-              <p role="status" className="text-sm text-muted-foreground">
+              <p role="status" className="sr-only">
                 {copyStatus}
               </p>
             </div>
