@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import { ContentCopy } from '@mui/icons-material'
 import { Components } from 'react-markdown'
+import { LandingTopbar } from '@/components/LandingTopbar'
 import { settings } from '@/settings'
 import { getContentByHref } from '@/utils/contentModules'
 
@@ -308,6 +309,21 @@ export const ContentPage: React.FC<ContentPageProps> = ({ src }) => {
 
   return <MarkdownPage frontmatter={page.data} body={page.content} />
 }
+
+export const PublicContentPage: React.FC<ContentPageProps> = ({ src }) => (
+  <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <LandingTopbar />
+    <Box
+      sx={{
+        maxWidth: 1536,
+        mx: 'auto',
+        pt: 2,
+      }}
+    >
+      <ContentPage src={src} />
+    </Box>
+  </Box>
+)
 
 const CopyCodeBlock = ({ value }: { value: string }) => {
   const handleCopy = async () => {
