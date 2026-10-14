@@ -376,6 +376,25 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     expect(text).not.toContain('no laboratory results are on file')
   })
 
+  it('still says none has a standard when only hardness is tabled', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={[
+          makeResult({ id: 'r1', parameter_name: 'Hardness (CaCO3)' }),
+          makeResult({ id: 'r2', parameter_name: 'Lithium' }),
+        ]}
+        year={2026}
+      />
+    )
+
+    expect(text).toContain(
+      '2 results on file; none has a drinking water standard'
+    )
+    expect(text).not.toContain('are set by the u.s. environmental protection')
+  })
+
   it('scopes the year to the water levels, not to the chemistry', async () => {
     const text = await renderReportText(
       <ChemistryReportPdf

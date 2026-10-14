@@ -854,6 +854,11 @@ export const ChemistryReportPdf = ({
 
   const wellLabel = well?.name ?? 'Unknown well'
   const hasSamples = summary.rows.length > 0
+  // Hardness is tabled without a standard, so an empty table is not the only
+  // way a well can have nothing to compare: say so whenever no result has one.
+  const noneHasStandard =
+    latest.rows.length > 0 && !latest.rows.some((row) => row.standard)
+  const noStandardNote = `${latest.rows.length} result${latest.rows.length === 1 ? '' : 's'} on file; none has a drinking water standard.`
   const ionBalance = summary.rows.filter(
     (row) => row.parameterName === 'Ion Balance'
   )
@@ -1186,7 +1191,10 @@ export const ChemistryReportPdf = ({
             <View style={s.section}>
               {reportable.rows.length ? (
                 <>
-                  {sections.standardsComparison ? (
+                  {noneHasStandard ? (
+                    <Text style={s.emptyNote}>{noStandardNote}</Text>
+                  ) : null}
+                  {sections.standardsComparison && !noneHasStandard ? (
                     <Text style={s.disclaimer}>
                       The drinking water limits in this report are set by the
                       U.S. Environmental Protection Agency (EPA). They are
@@ -1202,8 +1210,8 @@ export const ChemistryReportPdf = ({
                 </>
               ) : (
                 <Text style={s.emptyNote}>
-                  {latest.rows.length
-                    ? `${latest.rows.length} result${latest.rows.length === 1 ? '' : 's'} on file; none has a drinking water standard.`
+                  {noneHasStandard
+                    ? noStandardNote
                     : hasSamples
                       ? 'No laboratory results are on file for this well.'
                       : 'No water chemistry has been collected at this well.'}
