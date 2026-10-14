@@ -64,6 +64,7 @@ import {
   getDistinctMapPoints,
   getMapPointBounds,
 } from '@/utils/mapPointInteraction'
+import { queryRenderedFeaturesSafely } from '@/utils/queryRenderedFeaturesSafely'
 import type { GeocodeResult } from '@/utils/geocode'
 
 function localDateStampForExport(): string {
@@ -388,7 +389,7 @@ export const MapView: React.FC = () => {
         return
       }
 
-      const renderedFeatures = map.queryRenderedFeatures(undefined, {
+      const renderedFeatures = queryRenderedFeaturesSafely(map, undefined, {
         layers: renderedLayerIds,
       })
 
