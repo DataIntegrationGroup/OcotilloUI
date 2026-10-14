@@ -854,11 +854,17 @@ export const ChemistryReportPdf = ({
 
   const wellLabel = well?.name ?? 'Unknown well'
   const hasSamples = summary.rows.length > 0
-  // Hardness is tabled without a standard, so an empty table is not the only
-  // way a well can have nothing to compare: say so whenever no result has one.
+  // Every result at its most recent value, field readings included: a well
+  // whose only result is a field reading has no lab results to table, and
+  // hardness is tabled without a standard, so an empty table is not the only
+  // way a well can have nothing to compare. Say so whenever no result has one.
+  const latestAll = latestResultPerParameter(summary.rows).rows
   const noneHasStandard =
-    latest.rows.length > 0 && !latest.rows.some((row) => row.standard)
-  const noStandardNote = `${latest.rows.length} result${latest.rows.length === 1 ? '' : 's'} on file; none has a drinking water standard.`
+    latestAll.length > 0 && !latestAll.some((row) => row.standard)
+  const noStandardNote =
+    latestAll.length === 1
+      ? '1 result is on file; none has a drinking water standard.'
+      : `${latestAll.length} results are on file; none has a drinking water standard.`
   const ionBalance = summary.rows.filter(
     (row) => row.parameterName === 'Ion Balance'
   )

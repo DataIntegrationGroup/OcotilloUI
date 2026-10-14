@@ -371,7 +371,7 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     )
 
     expect(text).toContain(
-      '2 results on file; none has a drinking water standard'
+      '2 results are on file; none has a drinking water standard'
     )
     expect(text).not.toContain('no laboratory results are on file')
   })
@@ -390,9 +390,33 @@ describe('ChemistryReportPdf — reviewer comments', () => {
     )
 
     expect(text).toContain(
-      '2 results on file; none has a drinking water standard'
+      '2 results are on file; none has a drinking water standard'
     )
     expect(text).not.toContain('are set by the u.s. environmental protection')
+  })
+
+  it('counts a field reading when it is the only result on file', async () => {
+    const text = await renderReportText(
+      <ChemistryReportPdf
+        standards={TEST_STANDARDS}
+        well={makeWell()}
+        observations={[
+          makeResult({
+            id: 'r1',
+            parameter_name: 'Temperature',
+            unit: 'deg C',
+            value: 18.2,
+            result_kind: 'field',
+          }),
+        ]}
+        year={2026}
+      />
+    )
+
+    expect(text).toContain(
+      '1 result is on file; none has a drinking water standard'
+    )
+    expect(text).not.toContain('no laboratory results are on file')
   })
 
   it('scopes the year to the water levels, not to the chemistry', async () => {
