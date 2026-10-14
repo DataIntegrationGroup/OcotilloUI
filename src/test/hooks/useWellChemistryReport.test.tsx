@@ -1,0 +1,208 @@
+// @vitest-environment jsdom
+import { renderHook } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ChemistryResult } from '@/hooks/useChemistryReportData'
+
+const mockedUseList = vi.fn()
+const mockedGetList = vi.fn()
+
+vi.mock('@refinedev/core', async () => {
+  const actual =
+    await vi.importActual<typeof import('@refinedev/core')>('@refinedev/core')
+
+  return {
+    ...actual,
+    useList: (args?: unknown) => mockedUseList(args),
+    useDataProvider: () => () => ({ getList: mockedGetList }),
+  }
+})
+
+import { useWellChemistryReport } from '@/hooks/useWellChemistryReport'
+
+const observation = (
+  id: number,
+  parameterName: string,
+  observation_datetime: string
+) =>
+  ({
+    id: `maj-${id}`,
+    thing_id: 7834,
+    parameter_name: parameterName,
+    observation_datetime,
+    value: 1,
+    unit: 'mg/L',
+    result_kind: 'major',
+  }) as ChemistryResult
+
+/** The hook reads one row from each endpoint; answer them by resource. */
+const mockLists = ({
+  chemistry = [],
+  waterLevels = [],
+}: {
+  chemistry?: unknown[]
+  waterLevels?: unknown[]
+} = {}) => {
+  mockedUseList.mockImplementation((args: { resource: string }) => ({
+    result: {
+      data: args.resource === 'chemistry/results' ? chemistry : waterLevels,
+    },
+    query: { isLoading: false },
+  }))
+}
+
+const reading = (observation_datetime: string) => ({
+  id: 1,
+  observation_datetime,
+  depth_to_water_bgs: 208.4,
+})
+
+describe('useWellChemistryReport', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockLists()
+  })
+
+  it('asks for only the newest sample, newest first', () => {
+    renderHook(() => useWellChemistryReport({ thingId: 7834 }))
+
+    expect(mockedUseList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: 'chemistry/results',
+        pagination: { currentPage: 1, pageSize: 1, mode: 'server' },
+        sorters: [{ field: 'observation_datetime', order: 'desc' }],
+        meta: { params: { thing_id: 7834 } },
+        queryOptions: expect.objectContaining({ enabled: true }),
+      })
+    )
+  })
+
+  it('asks for the newest water level reading too', () => {
+    renderHook(() => useWellChemistryReport({ thingId: 7834 }))
+
+    expect(mockedUseList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: 'observation/groundwater-level',
+        pagination: { currentPage: 1, pageSize: 1, mode: 'server' },
+        sorters: [{ field: 'observation_datetime', order: 'desc' }],
+        meta: { params: { thing_id: 7834 } },
+      })
+    )
+  })
+
+  it('stays idle until the report is on offer', () => {
+    renderHook(() => useWellChemistryReport({ thingId: 7834, enabled: false }))
+
+    expect(mockedUseList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryOptions: expect.objectContaining({ enabled: false }),
+      })
+    )
+  })
+
+  it('takes the reporting year from the water levels, which is what it scopes', () => {
+    // Sampled once, seven years ago, and measured since. Reading the year off
+    // the chemistry would print a 2019 water level section for a well that has
+    // been measured every year since.
+    mockLists({
+      chemistry: [observation(9, 'Arsenic', '2019-04-09T00:00:00Z')],
+      waterLevels: [reading('2026-09-02T00:00:00Z')],
+    })
+
+    const { result } = renderHook(() =>
+      useWellChemistryReport({ thingId: 7834 })
+    )
+
+    expect(result.current.reportYear).toBe(2026)
+    expect(result.current.latestMeasuredYear).toBe(2026)
+    // The chemistry year is still reported, and still gates the menu option.
+    expect(result.current.latestSampledYear).toBe(2019)
+    expect(result.current.hasChemistry).toBe(true)
+  })
+
+  it('falls back to the current year when the well has never been measured', () => {
+    // No year would print a populated water level section, so the current one
+    // is as good as any.
+    mockLists({
+      chemistry: [observation(9, 'Arsenic', '2024-05-15T00:00:00Z')],
+    })
+
+    const { result } = renderHook(() =>
+      useWellChemistryReport({ thingId: 7834 })
+    )
+
+    expect(result.current.reportYear).toBe(new Date().getFullYear())
+    expect(result.current.latestMeasuredYear).toBeNull()
+    expect(result.current.latestSampledYear).toBe(2024)
+  })
+
+  it('reports no chemistry when the well has never been sampled', () => {
+    const { result } = renderHook(() =>
+      useWellChemistryReport({ thingId: 7834 })
+    )
+
+    expect(result.current.latestSampledYear).toBeNull()
+    expect(result.current.hasChemistry).toBe(false)
+  })
+
+  it('pulls the whole record, unwindowed, sorted for the report', async () => {
+    mockedGetList.mockResolvedValue({
+      data: [
+        observation(2, 'Zinc', '2024-05-15T00:00:00Z'),
+        observation(1, 'Arsenic', '2019-04-09T00:00:00Z'),
+      ],
+      total: 2,
+    })
+
+    const { result } = renderHook(() =>
+      useWellChemistryReport({ thingId: 7834 })
+    )
+    const observations = await result.current.fetchObservations()
+
+    // No start_time or end_time: most wells carry a single chemistry record,
+    // so windowing it to the reporting year emptied the report more often
+    // than it scoped it.
+    expect(mockedGetList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: 'chemistry/results',
+        meta: { params: { thing_id: 7834 } },
+      })
+    )
+    expect(observations.map((row) => row.parameter_name)).toEqual([
+      'Arsenic',
+      'Zinc',
+    ])
+  })
+
+  it('keeps paging until every result is collected', async () => {
+    mockedGetList
+      .mockResolvedValueOnce({
+        data: [observation(1, 'Arsenic', '2024-05-15T00:00:00Z')],
+        total: 2,
+      })
+      .mockResolvedValueOnce({
+        data: [observation(2, 'Zinc', '2024-05-15T00:00:00Z')],
+        total: 2,
+      })
+
+    const { result } = renderHook(() =>
+      useWellChemistryReport({ thingId: 7834 })
+    )
+    const observations = await result.current.fetchObservations()
+
+    expect(mockedGetList).toHaveBeenCalledTimes(2)
+    expect(observations).toHaveLength(2)
+  })
+
+  it('stops rather than looping when a page comes back short of its total', async () => {
+    // A total that never gets reached would otherwise page forever.
+    mockedGetList.mockResolvedValue({ data: [], total: 99 })
+
+    const { result } = renderHook(() =>
+      useWellChemistryReport({ thingId: 7834 })
+    )
+    const observations = await result.current.fetchObservations()
+
+    expect(mockedGetList).toHaveBeenCalledTimes(1)
+    expect(observations).toEqual([])
+  })
+})

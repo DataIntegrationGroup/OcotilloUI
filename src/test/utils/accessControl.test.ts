@@ -41,6 +41,7 @@ const expectedRegisteredRoutableResources = [
   'geothermal.dashboard',
   'geothermal.geothermal_wells',
   'ocotillo.asset-unassociated',
+  'ocotillo.chemistry-report',
   'ocotillo.collections',
   'ocotillo.contact',
   'ocotillo.hydrograph-correction',
@@ -87,6 +88,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.thing-well',
       'ocotillo.contact',
       'ocotillo.hydrograph-correction',
+      'ocotillo.chemistry-report',
       'ocotillo.asset-unassociated',
       'ocotillo.thing-well-batch-export',
       'ocotillo.thing-well-projects',
@@ -99,6 +101,13 @@ const expectedAccessByScenario: Scenario[] = [
     allowedResources: routableResources
       .map((resource) => resource.name)
       .filter((name) => !name.startsWith('geothermal.')),
+  },
+  {
+    // The group grants nothing on its own now that the chemistry report is an
+    // editor surface.
+    name: 'AMP.Staging',
+    groups: ['AMP.Staging'],
+    allowedResources: [],
   },
   {
     name: 'Geothermal.Viewer',
@@ -498,7 +507,9 @@ describe('capability groups', () => {
 
   it('gates the internal OGC catalogue on the same group', () => {
     expect(getAccessCapabilities(groups).canViewOgcInternal).toBe(true)
-    expect(getAccessCapabilities(['OGC.Internal']).canViewOgcInternal).toBe(true)
+    expect(getAccessCapabilities(['OGC.Internal']).canViewOgcInternal).toBe(
+      true
+    )
     // An AMP admin is not automatically cleared for the internal mount.
     expect(getAccessCapabilities(['AMP.Admin']).canViewOgcInternal).toBe(false)
     expect(getAccessCapabilities([]).canViewOgcInternal).toBe(false)
