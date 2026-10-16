@@ -1,10 +1,10 @@
-# NMBGMR Ocotillo
+# NMBGMR Ocotillo UI
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE) [![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](#)
 
 Admin dashboard application for managing and visualizing data for the New Mexico Bureau of Geology & Mineral Resources (
 NMBGMR). Built with React, TypeScript, and Refine.dev, it provides an intuitive interface to interact with various
-NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
+NMBGMR data sources, including OcotilloDB, ST2 data, Pychron, and legacy NM_Aquifer and NM_Wells databases.
 
 ## Table of Contents
 
@@ -49,8 +49,8 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/DataIntegrationGroup/NMBGMRDataManager.git
-   cd NMBGMRDataManager
+   git clone https://github.com/DataIntegrationGroup/OcotilloUI.git
+   cd OcotilloUI
    ```
 2. Install dependencies:
    ```bash
@@ -60,11 +60,15 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
    ```bash
    cp .env.development.example .env.development
    ```
-4. Update the `.env.*` files with your API URLs, tokens, and Authentik credentials.
+4. Update the `.env.*` files with your API URLs, tokens, and Authentik credentials:
+   - If `VITE_OCOTILLO_API_URL` is left blank it defaults to `http://localhost:8000`, which is the default URL and port for the OcotilloAPI app if you follow the directions for its setup. If you change the port when spinning up the app then you need to adjust `VITE_OCOTILLO_API_URL` accordingly.
 5. Run the development server:
    ```bash
    npm run dev
    ```
+   - When developing locally it is recommended that you host and run OcotilloAPI and a database locally. To do this follow the setup instructions for [OcotilloAPI](https://github.com/DataIntegrationGroup/OcotilloAPI). Reach out to fellow Data Services team members if you need assistance or have questions.
+   - If you want to see data in the app during development make sure to seed the development database with staging data. This is described in the [Installation & Setup section](https://github.com/DataIntegrationGroup/OcotilloAPI/tree/BDMS-1485-update-local-environment-setup-files#installation--setup) of OcotilloAPI's README.
+   
    The app will be available at `http://localhost:5173`.
 
 ## Notable Well IDs
