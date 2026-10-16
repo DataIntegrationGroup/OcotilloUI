@@ -1,10 +1,10 @@
-# NMBGMR Ocotillo
+# NMBGMR Ocotillo UI
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE) [![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](#)
 
-Admin dashboard application for managing and visualizing data for the New Mexico Bureau of Geology & Mineral Resources (
-NMBGMR). Built with React, TypeScript, and Refine.dev, it provides an intuitive interface to interact with various
-NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
+Admin dashboard application for managing and visualizing data for the New Mexico Bureau of Geology & Mineral Resources 
+(NMBGMR). Built with React, TypeScript, and Refine.dev, it provides an intuitive interface to interact with various
+NMBGMR data sources, including Ocotillo, ST2 data, Pychron, and legacy NM_Aquifer and NM_Wells databases.
 
 ## Table of Contents
 
@@ -49,8 +49,8 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/DataIntegrationGroup/NMBGMRDataManager.git
-   cd NMBGMRDataManager
+   git clone https://github.com/DataIntegrationGroup/OcotilloUI.git
+   cd OcotilloUI
    ```
 2. Install dependencies:
    ```bash
@@ -60,12 +60,34 @@ NMBGMR data sources, including NM aquifer, Pychron, NM wells, and ST2 data.
    ```bash
    cp .env.development.example .env.development
    ```
-4. Update the `.env.*` files with your API URLs, tokens, and Authentik credentials.
+4. Update the `.env.*` files with your API URLs, tokens, and Authentik credentials:
+   - Contact Data Services team members and leaders to obtain secrets
 5. Run the development server:
    ```bash
    npm run dev
    ```
+   - When developing locally it is recommended that you host and run OcotilloAPI and a database locally. To do this follow the setup instructions for [OcotilloAPI](https://github.com/DataIntegrationGroup/OcotilloAPI). Reach out to fellow Data Services team members if you need assistance or have questions.
+   - If you want to see data in the app during development make sure to seed the development database with staging data. This is described in the [Installation & Setup section](https://github.com/DataIntegrationGroup/OcotilloAPI/tree/BDMS-1485-update-local-environment-setup-files#installation--setup) of OcotilloAPI's README.
+   
    The app will be available at `http://localhost:5173`.
+
+## Configuration
+
+This application uses Vite environment variables. You must define the following variables in `.env.development`:
+
+```bash
+VITE_APP_TITLE="Ocotillo (Dev)"
+VITE_NMBGMR_AMP_API_URL="https://your-amp-development-api-url"
+VITE_OCOTILLO_API_URL="https://your-ocotillo-development-api-url"
+VITE_REFINE_PROJECT_ID="your-refine-project-id"
+VITE_POSTHOG_KEY="your-posthog-project-api-key"
+VITE_AUTHENTIK_CLIENT_ID="your-authentik-client-id"
+```
+
+**Note**
+- If you plan to develop against a locally hosted version of an API, change your API Urls accoringly
+   - If the `VITE_OCOTILLO_API_URL` environment variable is left blank it defaults to `http://localhost:8000`, which is the default URL and port for the [OcotilloAPI](https://github.com/DataIntegrationGroup/OcotilloAPI) app. If you change the port when spinning up the app then you need to adjust `VITE_OCOTILLO_API_URL` accordingly.
+   - If the `VITE_NMBGMR_AMP_API_URL` environment variable is left blank it defaults to `http://localhost:8009`.
 
 ## Notable Well IDs
 
@@ -76,23 +98,6 @@ The following wells contain a full, rich set of information and are useful for t
 - QU-050
 - QU-054
 - TB-0203
-
-## Configuration
-
-This application uses Vite environment variables. The following variables are required in `.env.development`:
-
-```bash
-VITE_APP_TITLE="Ocotillo (Dev)"
-VITE_NMBGMR_AMP_API_URL="https://your-amp-development-api-url"
-VITE_OCOTILLO_API_URL="https://your-ocotillo-development-api-url"
-VITE_REFINE_PROJECT_ID="your-refine-project-id"
-VITE_POSTHOG_KEY="your-posthog-project-api-key"
-VITE_POSTHOG_HOST="https://us.i.posthog.com"
-VITE_AUTHENTIK_CLIENT_ID="your-authentik-client-id"
-VITE_AUTHENTIK_URL="https://your-authentik-domain"
-VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"
-```
-- If you plan to develop against a locally hosted version of an API, change your API Urls accoringly
 
 ## Scripts/Commands - Dev and Build
 
@@ -180,7 +185,7 @@ npm run start
 
 Deploy the contents of the `dist/` folder to any static hosting provider (e.g. GCP). Ensure environment variables are configured on the hosting platform.
 
-For throwaway review deployments off any branch — including ones that spin up their own API and database — see [docs/preview-deployments.md](docs/preview-deployments.md).
+For throwaway preview deployments off any branch — including ones that spin up their own API and database — see [docs/preview-deployments.md](docs/preview-deployments.md).
 
 ## License
 
