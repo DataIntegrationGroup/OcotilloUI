@@ -68,7 +68,6 @@ NMBGMR data sources, including Ocotillo, ST2 data, Pychron, and legacy NM_Aquife
    ```
    - When developing locally it is recommended that you host and run OcotilloAPI and a database locally. To do this follow the setup instructions for [OcotilloAPI](https://github.com/DataIntegrationGroup/OcotilloAPI). Reach out to fellow Data Services team members if you need assistance or have questions.
    - If you want to see data in the app during development make sure to seed the development database with staging data. This is described in the [Installation & Setup section](https://github.com/DataIntegrationGroup/OcotilloAPI/tree/BDMS-1485-update-local-environment-setup-files#installation--setup) of OcotilloAPI's README.
-   - If the `VITE_OCOTILLO_API_URL` environment variable is left blank it defaults to `http://localhost:8000`, which is the default URL and port for the [OcotilloAPI](https://github.com/DataIntegrationGroup/OcotilloAPI) app. If you change the port when spinning up the app then you need to adjust `VITE_OCOTILLO_API_URL` accordingly.
    
    The app will be available at `http://localhost:5173`.
 
@@ -82,12 +81,11 @@ VITE_NMBGMR_AMP_API_URL="https://your-amp-development-api-url"
 VITE_OCOTILLO_API_URL="https://your-ocotillo-development-api-url"
 VITE_REFINE_PROJECT_ID="your-refine-project-id"
 VITE_POSTHOG_KEY="your-posthog-project-api-key"
-VITE_POSTHOG_HOST="https://us.i.posthog.com"
 VITE_AUTHENTIK_CLIENT_ID="your-authentik-client-id"
 VITE_AUTHENTIK_URL="https://your-authentik-domain"
-VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"
 ```
 - If you plan to develop against a locally hosted version of an API, change your API Urls accoringly
+   - If the `VITE_OCOTILLO_API_URL` environment variable is left blank it defaults to `http://localhost:8000`, which is the default URL and port for the [OcotilloAPI](https://github.com/DataIntegrationGroup/OcotilloAPI) app. If you change the port when spinning up the app then you need to adjust `VITE_OCOTILLO_API_URL` accordingly.
 
 ## Notable Well IDs
 
