@@ -185,7 +185,7 @@ npm run start
 
 Deploy the contents of the `dist/` folder to any static hosting provider (e.g. GCP). Ensure environment variables are configured on the hosting platform.
 
-For throwaway review deployments off any branch — including ones that spin up their own API and database — see [docs/preview-deployments.md](docs/preview-deployments.md).
+For throwaway preview deployments off any branch — including ones that spin up their own API and database — see [docs/preview-deployments.md](docs/preview-deployments.md).
 
 ## License
 
