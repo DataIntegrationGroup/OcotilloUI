@@ -61,6 +61,7 @@ NMBGMR data sources, including OcotilloDB, ST2 data, Pychron, and legacy NM_Aqui
    cp .env.development.example .env.development
    ```
 4. Update the `.env.*` files with your API URLs, tokens, and Authentik credentials:
+   - Contact Data Services team members and leaders to obtain secrets
    - If `VITE_OCOTILLO_API_URL` is left blank it defaults to `http://localhost:8000`, which is the default URL and port for the OcotilloAPI app if you follow the directions for its setup. If you change the port when spinning up the app then you need to adjust `VITE_OCOTILLO_API_URL` accordingly.
 5. Run the development server:
    ```bash
