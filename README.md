@@ -72,16 +72,6 @@ NMBGMR data sources, including Ocotillo, ST2 data, Pychron, and legacy NM_Aquife
    
    The app will be available at `http://localhost:5173`.
 
-## Notable Well IDs
-
-The following wells contain a full, rich set of information and are useful for testing the Well Show page and related UI:
-
-- AR-0025
-- HS-038
-- QU-050
-- QU-054
-- TB-0203
-
 ## Configuration
 
 This application uses Vite environment variables. The following variables are required in `.env.development`:
@@ -98,6 +88,16 @@ VITE_AUTHENTIK_URL="https://your-authentik-domain"
 VITE_AUTHENTIK_REDIRECT_URI="https://your-athentik-redirect"
 ```
 - If you plan to develop against a locally hosted version of an API, change your API Urls accoringly
+
+## Notable Well IDs
+
+The following wells contain a full, rich set of information and are useful for testing the Well Show page and related UI:
+
+- AR-0025
+- HS-038
+- QU-050
+- QU-054
+- TB-0203
 
 ## Scripts/Commands - Dev and Build
 
