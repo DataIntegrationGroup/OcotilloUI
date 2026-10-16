@@ -73,7 +73,7 @@ NMBGMR data sources, including Ocotillo, ST2 data, Pychron, and legacy NM_Aquife
 
 ## Configuration
 
-This application uses Vite environment variables. The following variables are required in `.env.development`:
+This application uses Vite environment variables. You must define the following variables in `.env.development`:
 
 ```bash
 VITE_APP_TITLE="Ocotillo (Dev)"
@@ -82,10 +82,12 @@ VITE_OCOTILLO_API_URL="https://your-ocotillo-development-api-url"
 VITE_REFINE_PROJECT_ID="your-refine-project-id"
 VITE_POSTHOG_KEY="your-posthog-project-api-key"
 VITE_AUTHENTIK_CLIENT_ID="your-authentik-client-id"
-VITE_AUTHENTIK_URL="https://your-authentik-domain"
 ```
+
+**Note**
 - If you plan to develop against a locally hosted version of an API, change your API Urls accoringly
    - If the `VITE_OCOTILLO_API_URL` environment variable is left blank it defaults to `http://localhost:8000`, which is the default URL and port for the [OcotilloAPI](https://github.com/DataIntegrationGroup/OcotilloAPI) app. If you change the port when spinning up the app then you need to adjust `VITE_OCOTILLO_API_URL` accordingly.
+   - If the `VITE_NMBGMR_AMP_API_URL` environment variable is left blank it defaults to `http://localhost:8009`.
 
 ## Notable Well IDs
 
