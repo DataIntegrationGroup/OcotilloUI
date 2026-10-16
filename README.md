@@ -62,13 +62,13 @@ NMBGMR data sources, including Ocotillo, ST2 data, Pychron, and legacy NM_Aquife
    ```
 4. Update the `.env.*` files with your API URLs, tokens, and Authentik credentials:
    - Contact Data Services team members and leaders to obtain secrets
-   - If `VITE_OCOTILLO_API_URL` is left blank it defaults to `http://localhost:8000`, which is the default URL and port for the OcotilloAPI app if you follow the directions for its setup. If you change the port when spinning up the app then you need to adjust `VITE_OCOTILLO_API_URL` accordingly.
 5. Run the development server:
    ```bash
    npm run dev
    ```
    - When developing locally it is recommended that you host and run OcotilloAPI and a database locally. To do this follow the setup instructions for [OcotilloAPI](https://github.com/DataIntegrationGroup/OcotilloAPI). Reach out to fellow Data Services team members if you need assistance or have questions.
    - If you want to see data in the app during development make sure to seed the development database with staging data. This is described in the [Installation & Setup section](https://github.com/DataIntegrationGroup/OcotilloAPI/tree/BDMS-1485-update-local-environment-setup-files#installation--setup) of OcotilloAPI's README.
+   - If the `VITE_OCOTILLO_API_URL` environment variable is left blank it defaults to `http://localhost:8000`, which is the default URL and port for the [OcotilloAPI](https://github.com/DataIntegrationGroup/OcotilloAPI) app. If you change the port when spinning up the app then you need to adjust `VITE_OCOTILLO_API_URL` accordingly.
    
    The app will be available at `http://localhost:5173`.
 
