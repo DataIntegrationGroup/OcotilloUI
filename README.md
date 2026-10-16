@@ -4,7 +4,7 @@
 
 Admin dashboard application for managing and visualizing data for the New Mexico Bureau of Geology & Mineral Resources 
 (NMBGMR). Built with React, TypeScript, and Refine.dev, it provides an intuitive interface to interact with various
-NMBGMR data sources, including OcotilloDB, ST2 data, Pychron, and legacy NM_Aquifer and NM_Wells databases.
+NMBGMR data sources, including Ocotillo, ST2 data, Pychron, and legacy NM_Aquifer and NM_Wells databases.
 
 ## Table of Contents
 
