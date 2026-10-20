@@ -19,6 +19,11 @@ import {
   sanitizeContacts,
 } from '@/utils'
 import { formatContactPhones } from './fieldCompilationPhoneFormatter'
+import {
+  FIELD_SHEET_NOTE_LINES,
+  FIELD_SHEET_RULED_LINES,
+  fieldSheetSlotPlan,
+} from './fieldSheetPageLayout'
 
 export const scaleForDensity = (
   comfortable: number,
@@ -180,6 +185,9 @@ export const createFieldCompilationStyles = (
     imageWrap: {
       width: '50%',
     },
+    imageWrapFull: {
+      width: '100%',
+    },
     image: {
       width: '100%',
       height: 140,
@@ -202,6 +210,11 @@ export const createFieldCompilationStyles = (
       borderBottomWidth: 1,
       borderBottomColor: '#f3f4f6',
       height: 16,
+    },
+    ruledSlot: {
+      borderWidth: 1,
+      borderColor: '#e5e7eb',
+      marginBottom: 8,
     },
     emptyImageState: {
       borderWidth: 1,
@@ -383,16 +396,17 @@ type TableColumn<T> = {
   width: string
 }
 
-const renderValue = (value: unknown) => {
-  if (value == null || value === '') return '-'
+const renderValue = (value: unknown, empty = '-') => {
+  if (value == null || value === '') return empty
   return String(value)
 }
 
 const formatNumeric = (
   value: number | null | undefined,
-  fractionDigits = 2
+  fractionDigits = 2,
+  empty = '-'
 ): string => {
-  if (value == null || Number.isNaN(value)) return '-'
+  if (value == null || Number.isNaN(value)) return empty
   return value.toFixed(fractionDigits)
 }
 
@@ -627,6 +641,10 @@ const FieldCompilationNotesPage = ({
   sampleMethodsBySampleId,
   includeConfidentialContacts,
   density = 'standard',
+  showDate = true,
+  emptyPlaceholder = '-',
+  notesPlacement = 'column',
+  firstPageOnly = false,
 }: {
   well: IWell
   contacts: IContact[]
@@ -637,6 +655,10 @@ const FieldCompilationNotesPage = ({
   sampleMethodsBySampleId: Record<number, string>
   includeConfidentialContacts: boolean
   density?: IPdfDensity
+  showDate?: boolean
+  emptyPlaceholder?: string
+  notesPlacement?: 'column' | 'top'
+  firstPageOnly?: boolean
 }) => {
   const styles = useMemo(() => createFieldCompilationStyles(density), [density])
 
@@ -669,6 +691,15 @@ const FieldCompilationNotesPage = ({
   const { easting, northing } =
     well.current_location?.properties?.utm_coordinates ?? {}
   const exportDate = formatAppDate(new Date().toISOString())
+  // Page 1 prints empty fields on the mock-up; '-' would read as data.
+  const show = (value: unknown) => renderValue(value, emptyPlaceholder)
+  const num = (value: number | null | undefined, fractionDigits = 2) =>
+    formatNumeric(value, fractionDigits, emptyPlaceholder)
+  const slotPlan = fieldSheetSlotPlan(imageAssets.length)
+  const ruledLines = (keyPrefix: string, count: number) =>
+    Array.from({ length: count }).map((_, index) => (
+      <View key={`${keyPrefix}-line-${index}`} style={styles.notePadLine} />
+    ))
   const siteNoteItems = [...(well.site_notes ?? well.notes ?? [])]
     .filter(Boolean)
     .map((note) => ({
@@ -697,17 +728,25 @@ const FieldCompilationNotesPage = ({
   return (
     <>
       <Page size="LETTER" style={styles.page}>
-        <Text style={styles.pageDate}>{exportDate}</Text>
+        {showDate ? <Text style={styles.pageDate}>{exportDate}</Text> : null}
         <View style={styles.header}>
           <Text style={styles.title}>Field Compilation Notes</Text>
         </View>
         <View style={styles.content}>
           <View style={styles.leftColumn}>
+            {notesPlacement === 'top' ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Field Notes</Text>
+                <View style={styles.notePad}>
+                  {ruledLines('top', FIELD_SHEET_NOTE_LINES)}
+                </View>
+              </View>
+            ) : null}
             <View style={styles.topGrid}>
               <View style={styles.topGridColumn}>
                 <Text style={styles.line}>
                   <Text style={styles.label}>Point ID: </Text>
-                  {renderValue(well.name)}
+                  {show(well.name)}
                 </Text>
                 <Text style={styles.line}>
                   <Text style={styles.label}>Site Name: </Text>
@@ -717,11 +756,11 @@ const FieldCompilationNotesPage = ({
               <View style={styles.topGridColumn}>
                 <Text style={styles.line}>
                   <Text style={styles.label}>Easting: </Text>
-                  {easting != null ? formatNumeric(easting, 0) : '-'}
+                  {num(easting, 0)}
                 </Text>
                 <Text style={styles.line}>
                   <Text style={styles.label}>Northing: </Text>
-                  {northing != null ? formatNumeric(northing, 0) : '-'}
+                  {num(northing, 0)}
                 </Text>
               </View>
             </View>
@@ -731,13 +770,13 @@ const FieldCompilationNotesPage = ({
                 <View style={styles.contactColumn}>
                   <Text style={styles.line}>
                     <Text style={styles.label}>Primary Contact: </Text>
-                    {renderValue(primaryContact?.name)}
+                    {show(primaryContact?.name)}
                   </Text>
                 </View>
                 <View style={styles.contactColumn}>
                   <Text style={styles.line}>
                     <Text style={styles.label}>Secondary Contact: </Text>
-                    {renderValue(secondaryContact?.name)}
+                    {show(secondaryContact?.name)}
                   </Text>
                 </View>
               </View>
@@ -784,7 +823,9 @@ const FieldCompilationNotesPage = ({
             <NoteSection
               styles={styles}
               title="Measuring Point Description"
-              value={well.measuring_point_description?.trim() || '-'}
+              value={
+                well.measuring_point_description?.trim() || emptyPlaceholder
+              }
             />
 
             <View style={styles.section}>
@@ -792,17 +833,13 @@ const FieldCompilationNotesPage = ({
                 <View style={styles.metricCell}>
                   <Text style={styles.line}>
                     <Text style={styles.label}>MP Height: </Text>
-                    {well.measuring_point_height != null
-                      ? `${formatNumeric(well.measuring_point_height)} ${well.measuring_point_height_unit ?? ''}`.trim()
-                      : '-'}
+                    {`${num(well.measuring_point_height)} ${well.measuring_point_height_unit ?? ''}`.trim()}
                   </Text>
                 </View>
                 <View style={styles.metricCell}>
                   <Text style={styles.line}>
                     <Text style={styles.label}>Well Depth: </Text>
-                    {well.well_depth != null
-                      ? `${formatNumeric(well.well_depth)} ${well.well_depth_unit ?? ''}`.trim()
-                      : '-'}
+                    {`${num(well.well_depth)} ${well.well_depth_unit ?? ''}`.trim()}
                   </Text>
                 </View>
               </View>
@@ -862,130 +899,148 @@ const FieldCompilationNotesPage = ({
           </View>
 
           <View style={styles.rightColumn}>
-            {imageAssets.length > 0 ? (
-              imageAssets.map((asset: any) => (
+            {imageAssets.slice(0, slotPlan.photos).map((asset: any) => (
+              <View
+                key={asset.id ?? asset.signed_url}
+                style={styles.imageNoteRow}
+              >
                 <View
-                  key={asset.id ?? asset.signed_url}
-                  style={styles.imageNoteRow}
-                >
-                  <View style={styles.imageWrap}>
-                    <Image src={asset.signed_url} style={styles.image} />
-                    <Text style={styles.imageLabel}>
-                      {asset.label || asset.name || ''}
-                    </Text>
-                  </View>
-                  <View style={styles.notePad}>
-                    {Array.from({ length: 8 }).map((_, index) => (
-                      <View key={index} style={styles.notePadLine} />
-                    ))}
-                  </View>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.emptyImageState}>
-                No site images available.
-              </Text>
-            )}
-          </View>
-        </View>
-      </Page>
-
-      <Page size="LETTER" style={styles.page}>
-        <Text style={styles.pageDate}>{exportDate}</Text>
-        <Text style={styles.pageTitle}>General Field Notes: {well.name}</Text>
-        <View style={styles.cutMethodBox}>
-          <Text style={styles.cutMethodEquation}>
-            HOLD - CUT = Depth to Water (below MP)
-          </Text>
-          <Text style={styles.cutMethodHint}>
-            Cut method field entry for steel-tape measurements. Record HOLD,
-            record CUT, then subtract CUT from HOLD to get depth to water below
-            the measuring point (MP).
-          </Text>
-          <View style={styles.cutMethodTable}>
-            <View style={styles.cutMethodTableRow}>
-              <Text style={styles.cutMethodTableLabelCell}>Field</Text>
-              {cutMethodColumns.map((column, index) => (
-                <Text
-                  key={column}
                   style={[
-                    styles.cutMethodTableHeaderCell,
-                    ...(index === cutMethodColumns.length - 1
-                      ? [styles.cutMethodTableValueCellLast]
-                      : []),
+                    styles.imageWrap,
+                    ...(notesPlacement === 'top' ? [styles.imageWrapFull] : []),
                   ]}
                 >
-                  {column}
-                </Text>
-              ))}
-            </View>
-            {cutMethodRows.map((rowLabel, rowIndex) => (
-              <View
-                key={rowLabel}
-                style={[
-                  styles.cutMethodTableRow,
-                  ...(rowIndex === cutMethodRows.length - 1
-                    ? [styles.cutMethodTableRowLast]
-                    : []),
-                ]}
-              >
-                <Text style={styles.cutMethodTableLabelCell}>{rowLabel}</Text>
-                {cutMethodColumns.map((column, index) => (
-                  <View
-                    key={`${rowLabel}-${column}`}
-                    style={[
-                      styles.cutMethodTableValueCell,
-                      ...(index === cutMethodColumns.length - 1
-                        ? [styles.cutMethodTableValueCellLast]
-                        : []),
-                    ]}
-                  >
-                    <View style={styles.fillLine} />
+                  <Image src={asset.signed_url} style={styles.image} />
+                  <Text style={styles.imageLabel}>
+                    {asset.label || asset.name || ''}
+                  </Text>
+                </View>
+                {notesPlacement === 'column' ? (
+                  <View style={styles.notePad}>
+                    {ruledLines('photo', FIELD_SHEET_NOTE_LINES)}
                   </View>
-                ))}
+                ) : null}
+              </View>
+            ))}
+            {Array.from({ length: slotPlan.ruled }).map((_, index) => (
+              <View key={`ruled-${index}`} style={styles.ruledSlot}>
+                {ruledLines(`ruled-${index}`, FIELD_SHEET_RULED_LINES)}
               </View>
             ))}
           </View>
         </View>
-        <Text style={styles.sectionTitle}>General Field Notes</Text>
-        <View style={styles.notesPad}>
-          {Array.from({ length: 20 }).map((_, index) => (
-            <View
-              key={`general-note-line-${index}`}
-              style={styles.notesPadLine}
+      </Page>
+
+      {firstPageOnly ? null : (
+        <>
+          <Page size="LETTER" style={styles.page}>
+            {showDate ? (
+              <Text style={styles.pageDate}>{exportDate}</Text>
+            ) : null}
+            <Text style={styles.pageTitle}>
+              General Field Notes: {well.name}
+            </Text>
+            <View style={styles.cutMethodBox}>
+              <Text style={styles.cutMethodEquation}>
+                HOLD - CUT = Depth to Water (below MP)
+              </Text>
+              <Text style={styles.cutMethodHint}>
+                Cut method field entry for steel-tape measurements. Record HOLD,
+                record CUT, then subtract CUT from HOLD to get depth to water
+                below the measuring point (MP).
+              </Text>
+              <View style={styles.cutMethodTable}>
+                <View style={styles.cutMethodTableRow}>
+                  <Text style={styles.cutMethodTableLabelCell}>Field</Text>
+                  {cutMethodColumns.map((column, index) => (
+                    <Text
+                      key={column}
+                      style={[
+                        styles.cutMethodTableHeaderCell,
+                        ...(index === cutMethodColumns.length - 1
+                          ? [styles.cutMethodTableValueCellLast]
+                          : []),
+                      ]}
+                    >
+                      {column}
+                    </Text>
+                  ))}
+                </View>
+                {cutMethodRows.map((rowLabel, rowIndex) => (
+                  <View
+                    key={rowLabel}
+                    style={[
+                      styles.cutMethodTableRow,
+                      ...(rowIndex === cutMethodRows.length - 1
+                        ? [styles.cutMethodTableRowLast]
+                        : []),
+                    ]}
+                  >
+                    <Text style={styles.cutMethodTableLabelCell}>
+                      {rowLabel}
+                    </Text>
+                    {cutMethodColumns.map((column, index) => (
+                      <View
+                        key={`${rowLabel}-${column}`}
+                        style={[
+                          styles.cutMethodTableValueCell,
+                          ...(index === cutMethodColumns.length - 1
+                            ? [styles.cutMethodTableValueCellLast]
+                            : []),
+                        ]}
+                      >
+                        <View style={styles.fillLine} />
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            </View>
+            <Text style={styles.sectionTitle}>General Field Notes</Text>
+            <View style={styles.notesPad}>
+              {Array.from({ length: 20 }).map((_, index) => (
+                <View
+                  key={`general-note-line-${index}`}
+                  style={styles.notesPadLine}
+                />
+              ))}
+            </View>
+          </Page>
+
+          <Page size="LETTER" style={styles.page}>
+            {showDate ? (
+              <Text style={styles.pageDate}>{exportDate}</Text>
+            ) : null}
+            <Text style={styles.pageTitle}>
+              Hydrograph and Manual Measurements: {well.name}
+            </Text>
+            {hydrographImage ? (
+              <Image src={hydrographImage} style={styles.hydrographImage} />
+            ) : (
+              <Text style={styles.hydrographEmptyState}>
+                Hydrograph unavailable for this well.
+              </Text>
+            )}
+            <PdfTable
+              styles={styles}
+              title="Manual Measurements"
+              columns={manualMeasurementColumns}
+              rows={manualMeasurements}
             />
-          ))}
-        </View>
-      </Page>
+          </Page>
 
-      <Page size="LETTER" style={styles.page}>
-        <Text style={styles.pageDate}>{exportDate}</Text>
-        <Text style={styles.pageTitle}>
-          Hydrograph and Manual Measurements: {well.name}
-        </Text>
-        {hydrographImage ? (
-          <Image src={hydrographImage} style={styles.hydrographImage} />
-        ) : (
-          <Text style={styles.hydrographEmptyState}>
-            Hydrograph unavailable for this well.
-          </Text>
-        )}
-        <PdfTable
-          styles={styles}
-          title="Manual Measurements"
-          columns={manualMeasurementColumns}
-          rows={manualMeasurements}
-        />
-      </Page>
-
-      <Page size="LETTER" style={styles.page}>
-        <Text style={styles.pageDate}>{exportDate}</Text>
-        <View style={styles.blankPageBody}>
-          <Text style={styles.blankPageText}>
-            This page is intentionally left blank
-          </Text>
-        </View>
-      </Page>
+          <Page size="LETTER" style={styles.page}>
+            {showDate ? (
+              <Text style={styles.pageDate}>{exportDate}</Text>
+            ) : null}
+            <View style={styles.blankPageBody}>
+              <Text style={styles.blankPageText}>
+                This page is intentionally left blank
+              </Text>
+            </View>
+          </Page>
+        </>
+      )}
     </>
   )
 }
@@ -1001,6 +1056,10 @@ export const FieldCompilationNotesPdf = ({
   includeConfidentialContacts = true,
   standalone = true,
   density = 'standard',
+  showDate = true,
+  emptyPlaceholder = '-',
+  notesPlacement = 'column',
+  firstPageOnly = false,
 }: {
   well: IWell
   contacts: IContact[]
@@ -1012,6 +1071,10 @@ export const FieldCompilationNotesPdf = ({
   includeConfidentialContacts?: boolean
   standalone?: boolean
   density?: IPdfDensity
+  showDate?: boolean
+  emptyPlaceholder?: string
+  notesPlacement?: 'column' | 'top'
+  firstPageOnly?: boolean
 }) => {
   const pages = (
     <FieldCompilationNotesPage
@@ -1024,6 +1087,10 @@ export const FieldCompilationNotesPdf = ({
       sampleMethodsBySampleId={sampleMethodsBySampleId}
       includeConfidentialContacts={includeConfidentialContacts}
       density={density}
+      showDate={showDate}
+      emptyPlaceholder={emptyPlaceholder}
+      notesPlacement={notesPlacement}
+      firstPageOnly={firstPageOnly}
     />
   )
 
