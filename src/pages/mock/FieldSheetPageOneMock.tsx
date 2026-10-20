@@ -9,7 +9,6 @@ import { PDFViewer } from '@react-pdf/renderer'
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { FieldCompilationNotesPdf } from '@/components'
-import type { IPdfDensity } from '@/interfaces'
 import {
   buildFieldSheetPageOneFixture,
   FIXTURE_PHOTO_COUNTS,
@@ -23,17 +22,16 @@ import {
  * this page stops building (AC6). Every reviewer question is a query parameter so
  * a comment can carry a URL:
  *
- *   /mock/field-sheet/page-1?density=compact&photos=5&notes=column
+ *   /mock/field-sheet/page-1?photos=5&notes=column
  *
- * `density` is the BDMS-1503 mechanism the page draws through; `photos` selects
- * one of the four fixtures (0/1/3/5); `notes` is Q5 answered by looking.
+ * `photos` selects one of the four fixtures (0/1/3/5); `notes` is Q5 answered by
+ * looking. There is deliberately no density control and no density parameter: the
+ * 2026-10-20 ruling gives the sheet one type scale, so this page passes no `density`
+ * prop and prints at the template's own scale (9 pt body — the dense leg of the old
+ * table, AC2). The batch template renders at that same scale, and one scale is what
+ * the sheet is supposed to have.
  */
-const DENSITIES: readonly IPdfDensity[] = ['comfortable', 'standard', 'compact']
-
 type NotesPlacement = 'column' | 'top'
-
-const readDensity = (raw: string | null): IPdfDensity =>
-  DENSITIES.includes(raw as IPdfDensity) ? (raw as IPdfDensity) : 'standard'
 
 const readPhotos = (raw: string | null): number => {
   const value = Number(raw)
@@ -50,7 +48,6 @@ const readNotes = (raw: string | null): NotesPlacement =>
 
 export const FieldSheetPageOneMock = () => {
   const [params, setParams] = useSearchParams()
-  const density = readDensity(params.get('density'))
   const photos = readPhotos(params.get('photos'))
   const notes = readNotes(params.get('notes'))
 
@@ -81,24 +78,6 @@ export const FieldSheetPageOneMock = () => {
         spacing={3}
         sx={{ flexWrap: 'wrap', gap: 2, mb: 2, alignItems: 'center' }}
       >
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Typography variant="caption" color="text.secondary">
-            Density
-          </Typography>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={density}
-            onChange={(_, value) => value && setParam('density', value)}
-          >
-            {DENSITIES.map((option) => (
-              <ToggleButton key={option} value={option}>
-                {option}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-        </Stack>
-
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Typography variant="caption" color="text.secondary">
             Photos
@@ -147,7 +126,6 @@ export const FieldSheetPageOneMock = () => {
             sensorDeployments={fixture.sensorDeployments}
             hydrographImage={fixture.hydrographImage}
             sampleMethodsBySampleId={fixture.sampleMethodsBySampleId}
-            density={density}
             showDate={false}
             emptyPlaceholder=" "
             notesPlacement={notes}
