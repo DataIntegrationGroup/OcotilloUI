@@ -9,6 +9,7 @@ import { TypographyPage } from '@/pages/example/TypographyPage'
 import { Home } from '@/pages/home'
 import { LandingPage } from '@/pages/landing'
 import { FieldSheetPageOneMock } from '@/pages/mock/FieldSheetPageOneMock'
+import { FieldSheetPageTwoMock } from '@/pages/mock/FieldSheetPageTwoMock'
 import { SettingsPage } from '@/pages/settings'
 import { SignupPage } from '@/pages/signup'
 import { GeothermalRoutes, OcotilloRoutes, ST2Routes } from '@/routes'
@@ -84,6 +85,12 @@ const App: React.FC = () => (
             <Route
               path="/mock/field-sheet/page-1"
               element={<FieldSheetPageOneMock />}
+            />
+          ) : null}
+          {import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview' ? (
+            <Route
+              path="/mock/field-sheet/page-2"
+              element={<FieldSheetPageTwoMock />}
             />
           ) : null}
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
