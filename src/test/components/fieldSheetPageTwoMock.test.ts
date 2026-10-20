@@ -1,0 +1,121 @@
+import { Document, pdf } from '@react-pdf/renderer'
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
+import { createElement } from 'react'
+import { describe, expect, it } from 'vitest'
+import { FieldSheetPageTwo } from '@/components/pdf/FieldSheetPageTwo'
+import { buildFieldSheetPageTwoFixture } from '@/mock/fieldSheetPageTwo.fixture'
+
+/**
+ * Page 2 of the BDMS-1507 sheet, rendered the way the review route renders it:
+ * fixture only. Both OSE variants are checked — the OSE cell prints when present
+ * and disappears entirely when `withOse` is false.
+ */
+const renderPageTwo = async ({ withOse }: { withOse: boolean }) => {
+  const fixture = buildFieldSheetPageTwoFixture({ withOse })
+  const blob = await pdf(
+    createElement(
+      Document,
+      null,
+      createElement(FieldSheetPageTwo, { ...fixture })
+    ) as any
+  ).toBlob()
+
+  const data = new Uint8Array(await blob.arrayBuffer())
+  const document = await pdfjsLib.getDocument({ data }).promise
+  const pages: string[] = []
+
+  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber++) {
+    const page = await document.getPage(pageNumber)
+    const textContent = await page.getTextContent()
+    pages.push(textContent.items.map((item: any) => item.str).join(''))
+  }
+
+  return { pageCount: document.numPages, text: pages.join('\n') }
+}
+
+describe('field sheet page 2 mock-up', () => {
+  it('renders to at least one full page of text', async () => {
+    const { pageCount, text } = await renderPageTwo({ withOse: true })
+
+    expect(pageCount).toBeGreaterThanOrEqual(1)
+    expect(text.length).toBeGreaterThan(0)
+  })
+
+  it('prints the header, subtitle and info labels (OSE present)', async () => {
+    const { text } = await renderPageTwo({ withOse: true })
+
+    expect(text).toContain('Your Well: Reserve Well 4')
+    expect(text).toContain('Healy Collaborative Groundwater Monitoring Network')
+    expect(text).toContain('Site Name:')
+    expect(text).toContain('Point ID:')
+    expect(text).toContain('Well Depth:')
+    expect(text).toContain('OSE #:')
+    expect(text).toContain('2024-NMT-0085')
+  })
+
+  it('omits the OSE cell entirely when withOse is false', async () => {
+    const { text } = await renderPageTwo({ withOse: false })
+
+    expect(text).not.toContain('OSE #:')
+    expect(text).not.toContain('2024-NMT-0085')
+  })
+
+  it('prints the hydrograph reserved block, no chart', async () => {
+    const { text } = await renderPageTwo({ withOse: true })
+
+    expect(text).toContain('reserved block')
+  })
+
+  it('prints the four table headers and the `-` empty convention', async () => {
+    const { text } = await renderPageTwo({ withOse: true })
+
+    expect(text).toContain('Date')
+    expect(text).toContain('DTW (ft)')
+    expect(text).toContain('MP Ht (ft)')
+    expect(text).toContain('Level Status')
+    // Two of the five rows have no level status; they print `-`.
+    expect(text).toContain('-')
+  })
+
+  it('prints all five measurement rows newest first', async () => {
+    const { text } = await renderPageTwo({ withOse: true })
+
+    expect(text).toContain('Dec 23, 2025')
+    expect(text).toContain('Jun 6, 2024')
+    expect(text).toContain('Jun 15, 2023')
+    expect(text).toContain('May 18, 2022')
+    expect(text).toContain('Jun 23, 2021')
+    expect(text).toContain('Water level not affected')
+    expect(text).toContain('Site was pumped recently')
+  })
+
+  it('prints the hand-writable write-in area (value not printed)', async () => {
+    const { text } = await renderPageTwo({ withOse: true })
+
+    expect(text).toContain("Today's Measurement")
+    expect(text).toContain('Your water level measured on this visit:')
+    expect(text).toContain('Date:')
+    expect(text).toContain('Depth to water (DTW):')
+    expect(text).toContain('ft')
+  })
+
+  it('prints the footer: QR placeholder, link and contact', async () => {
+    const { text } = await renderPageTwo({ withOse: true })
+
+    expect(text).toContain('[QR Code]')
+    expect(text).toContain('View your well data online:')
+    expect(text).toContain('weaver.newmexicowaterdata.org')
+    expect(text).toContain('location/')
+    expect(text).toContain('WL-0085')
+    expect(text).toContain('For questions:')
+    expect(text).toContain('nmbg-waterlevels@nmt.edu')
+  })
+
+  it('prints the staff line with data, not a literal', async () => {
+    const { text } = await renderPageTwo({ withOse: true })
+
+    expect(text).toContain(
+      'Visited by: Ethan Mamer | ethan.mamer@nmt.edu | (575) 555-0142'
+    )
+  })
+})
