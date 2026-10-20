@@ -9,6 +9,7 @@ import { useAccessCapabilities } from '@/hooks'
 import { IPdfOptions } from '@/interfaces'
 import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
+import { sampleMethodsBySampleId } from '@/utils/sampleMethods'
 
 export const WellPDFDownloadButton = ({
   well,
@@ -62,6 +63,7 @@ export const WellPDFDownloadButton = ({
           includeConfidentialContacts={canViewConfidential}
           hydrographImage={hydrographImage}
           density={opts?.density ?? 'standard'}
+          sampleMethodsBySampleId={sampleMethodsBySampleId(sample)}
         />
       ).toBlob()
 

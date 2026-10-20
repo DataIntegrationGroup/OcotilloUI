@@ -26,6 +26,7 @@ import { useAccessCapabilities, useWellChemistryReport } from '@/hooks'
 import { IPdfOptions } from '@/interfaces'
 import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
+import { sampleMethodsBySampleId } from '@/utils/sampleMethods'
 
 /** The kinds of PDF the well details page can produce. */
 export type WellReportType = 'field-sheet' | 'chemistry-report'
@@ -151,6 +152,7 @@ export const WellPDFActionsButton = ({
         includeConfidentialContacts={canViewConfidential}
         hydrographImage={hydrographImage}
         density={opts?.density ?? 'standard'}
+        sampleMethodsBySampleId={sampleMethodsBySampleId(sample)}
       />
     ).toBlob()
 

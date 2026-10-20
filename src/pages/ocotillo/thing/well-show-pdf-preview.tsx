@@ -41,6 +41,7 @@ import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
 import { IWell } from '@/interfaces/ocotillo'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { getLabelFromOptionalPdfFieldKey } from '@/utils'
+import { sampleMethodsBySampleId } from '@/utils/sampleMethods'
 
 const densityIcons = {
   compact: <ViewHeadline fontSize="small" />,
@@ -405,6 +406,7 @@ export const WellShowPdfPreview = () => {
                 hydrographImage={hydrographImage}
                 includeConfidentialContacts={canViewConfidential}
                 density={currentOptions?.density ?? 'standard'}
+                sampleMethodsBySampleId={sampleMethodsBySampleId(sample)}
               />
             </PDFViewer>
           </Box>
