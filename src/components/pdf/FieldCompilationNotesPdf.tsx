@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import {
   Document,
   Image,
@@ -8,6 +7,9 @@ import {
   View,
 } from '@react-pdf/renderer'
 import type { BaseRecord } from '@refinedev/core'
+import { useMemo } from 'react'
+import { usePrimaryAndSecondaryContact } from '@/hooks/usePrimaryAndSecondaryContact'
+import type { IPdfDensity } from '@/interfaces'
 import type { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
 import type { SensorDeploymentRow } from '@/utils'
 import {
@@ -16,299 +18,321 @@ import {
   formatAppDate,
   sanitizeContacts,
 } from '@/utils'
-import { usePrimaryAndSecondaryContact } from '@/hooks/usePrimaryAndSecondaryContact'
 import { formatContactPhones } from './fieldCompilationPhoneFormatter'
 
-const styles = StyleSheet.create({
-  page: {
-    paddingTop: 16,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    backgroundColor: '#ffffff',
-    fontSize: 9,
-    color: '#111827',
-  },
-  pageDate: {
-    position: 'absolute',
-    top: 16,
-    right: 20,
-    fontSize: 9,
-    color: '#111827',
-  },
-  header: {
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#d1d5db',
-    paddingBottom: 6,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: 700,
-    textAlign: 'center',
-  },
-  headerDate: {
-    fontSize: 9,
-    textAlign: 'right',
-    marginTop: 3,
-  },
-  content: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  leftColumn: {
-    width: '57%',
-    paddingRight: 2,
-  },
-  rightColumn: {
-    width: '43%',
-  },
-  section: {
-    marginBottom: 7,
-  },
-  topGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginBottom: 7,
-  },
-  topGridColumn: {
-    flex: 1,
-  },
-  line: {
-    marginBottom: 1,
-  },
-  label: {
-    fontWeight: 700,
-  },
-  contactsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 3,
-  },
-  contactColumn: {
-    flex: 1,
-  },
-  contactDetails: {
-    marginTop: 3,
-  },
-  sectionTitle: {
-    fontSize: 9,
-    fontWeight: 700,
-    marginBottom: 2,
-  },
-  noteText: {
-    lineHeight: 1.15,
-  },
-  metricRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 2,
-  },
-  metricCell: {
-    flex: 1,
-  },
-  table: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#f3f4f6',
-    borderBottomWidth: 1,
-    borderBottomColor: '#d1d5db',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  tableRowLast: {
-    borderBottomWidth: 0,
-  },
-  cell: {
-    paddingVertical: 3,
-    paddingHorizontal: 3,
-    fontSize: 9,
-    lineHeight: 1.1,
-  },
-  cellHeader: {
-    fontWeight: 700,
-    fontSize: 9,
-    paddingVertical: 3,
-    paddingHorizontal: 3,
-  },
-  compactCell: {
-    fontSize: 7.5,
-    lineHeight: 1.05,
-    paddingVertical: 2,
-    paddingHorizontal: 2,
-  },
-  compactCellHeader: {
-    fontSize: 7.5,
-    paddingVertical: 2,
-    paddingHorizontal: 2,
-  },
-  imageNoteRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginBottom: 8,
-    alignItems: 'stretch',
-  },
-  imageWrap: {
-    width: '50%',
-  },
-  image: {
-    width: '100%',
-    height: 140,
-    objectFit: 'cover',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-  },
-  imageLabel: {
-    marginTop: 2,
-    fontSize: 7,
-    color: '#4b5563',
-  },
-  notePad: {
-    width: '50%',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    backgroundColor: '#ffffff',
-  },
-  notePadLine: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-    height: 16,
-  },
-  emptyImageState: {
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#d1d5db',
-    padding: 12,
-    textAlign: 'center',
-    color: '#6b7280',
-    fontSize: 9,
-  },
-  pageTitle: {
-    fontSize: 12,
-    fontWeight: 700,
-    marginBottom: 6,
-  },
-  hydrographImage: {
-    width: '100%',
-    height: 250,
-    objectFit: 'contain',
-    marginBottom: 8,
-    maxWidth: '100%',
-  },
-  hydrographEmptyState: {
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#d1d5db',
-    padding: 16,
-    textAlign: 'center',
-    color: '#6b7280',
-    marginBottom: 12,
-  },
-  cutMethodBox: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    padding: 10,
-    marginBottom: 12,
-  },
-  cutMethodEquation: {
-    fontSize: 11,
-    fontWeight: 700,
-    marginBottom: 8,
-  },
-  cutMethodHint: {
-    fontSize: 8,
-    color: '#4b5563',
-    marginBottom: 8,
-    lineHeight: 1.2,
-  },
-  cutMethodRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 8,
-  },
-  cutMethodField: {
-    flex: 1,
-  },
-  cutMethodLabel: {
-    fontSize: 8,
-    fontWeight: 700,
-    marginBottom: 3,
-  },
-  fillLine: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#6b7280',
-    height: 16,
-  },
-  cutMethodTable: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    marginTop: 4,
-  },
-  cutMethodTableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  cutMethodTableRowLast: {
-    borderBottomWidth: 0,
-  },
-  cutMethodTableLabelCell: {
-    width: '22%',
-    paddingVertical: 6,
-    paddingHorizontal: 6,
-    fontSize: 8,
-    fontWeight: 700,
-    borderRightWidth: 1,
-    borderRightColor: '#e5e7eb',
-  },
-  cutMethodTableValueCell: {
-    width: '15.6%',
-    paddingTop: 4,
-    paddingHorizontal: 4,
-    paddingBottom: 0,
-    borderRightWidth: 1,
-    borderRightColor: '#e5e7eb',
-  },
-  cutMethodTableValueCellLast: {
-    borderRightWidth: 0,
-  },
-  cutMethodTableHeaderCell: {
-    width: '15.6%',
-    paddingVertical: 5,
-    paddingHorizontal: 4,
-    fontSize: 8,
-    fontWeight: 700,
-    textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#e5e7eb',
-  },
-  notesPad: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    paddingTop: 2,
-  },
-  notesPadLine: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    height: 20,
-  },
-  blankPageBody: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  blankPageText: {
-    fontSize: 12,
-    color: '#111827',
-    textAlign: 'center',
-  },
-})
+export const scaleForDensity = (
+  comfortable: number,
+  standard: number,
+  compact: number,
+  density: IPdfDensity = 'standard'
+) =>
+  density === 'compact'
+    ? compact
+    : density === 'comfortable'
+      ? comfortable
+      : standard
+
+export type FieldCompilationStyles = ReturnType<
+  typeof createFieldCompilationStyles
+>
+
+export const createFieldCompilationStyles = (
+  density: IPdfDensity = 'standard'
+) => {
+  const scale = (c: number, st: number, k: number) =>
+    scaleForDensity(c, st, k, density)
+
+  return StyleSheet.create({
+    page: {
+      paddingTop: scale(18, 16, 12),
+      paddingBottom: scale(18, 16, 12),
+      paddingHorizontal: scale(22, 20, 14),
+      backgroundColor: '#ffffff',
+      fontSize: scale(9.5, 9, 8.5),
+      color: '#111827',
+    },
+    pageDate: {
+      position: 'absolute',
+      top: 16,
+      right: 20,
+      fontSize: scale(9.5, 9, 8.5),
+      color: '#111827',
+    },
+    header: {
+      marginBottom: scale(10, 8, 6),
+      borderBottomWidth: 1,
+      borderBottomColor: '#d1d5db',
+      paddingBottom: 6,
+    },
+    title: {
+      fontSize: 15,
+      fontWeight: 700,
+      textAlign: 'center',
+    },
+    headerDate: {
+      fontSize: 9,
+      textAlign: 'right',
+      marginTop: 3,
+    },
+    content: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    leftColumn: {
+      width: '57%',
+      paddingRight: 2,
+    },
+    rightColumn: {
+      width: '43%',
+    },
+    section: {
+      marginBottom: scale(9, 7, 5),
+    },
+    topGrid: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 8,
+      marginBottom: 7,
+    },
+    topGridColumn: {
+      flex: 1,
+    },
+    line: {
+      marginBottom: 1,
+    },
+    label: {
+      fontWeight: 700,
+    },
+    contactsRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 3,
+    },
+    contactColumn: {
+      flex: 1,
+    },
+    contactDetails: {
+      marginTop: 3,
+    },
+    sectionTitle: {
+      fontSize: 9,
+      fontWeight: 700,
+      marginBottom: 2,
+    },
+    noteText: {
+      lineHeight: 1.15,
+    },
+    metricRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginTop: 2,
+    },
+    metricCell: {
+      flex: 1,
+    },
+    table: {
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      backgroundColor: '#f3f4f6',
+      borderBottomWidth: 1,
+      borderBottomColor: '#d1d5db',
+    },
+    tableRow: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: '#e5e7eb',
+    },
+    tableRowLast: {
+      borderBottomWidth: 0,
+    },
+    cell: {
+      paddingVertical: 3,
+      paddingHorizontal: 3,
+      fontSize: 9,
+      lineHeight: 1.1,
+    },
+    cellHeader: {
+      fontWeight: 700,
+      fontSize: 9,
+      paddingVertical: 3,
+      paddingHorizontal: 3,
+    },
+    compactCell: {
+      fontSize: 7.5,
+      lineHeight: 1.05,
+      paddingVertical: 2,
+      paddingHorizontal: 2,
+    },
+    compactCellHeader: {
+      fontSize: 7.5,
+      paddingVertical: 2,
+      paddingHorizontal: 2,
+    },
+    imageNoteRow: {
+      flexDirection: 'row',
+      gap: 6,
+      marginBottom: 8,
+      alignItems: 'stretch',
+    },
+    imageWrap: {
+      width: '50%',
+    },
+    image: {
+      width: '100%',
+      height: 140,
+      objectFit: 'cover',
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+    },
+    imageLabel: {
+      marginTop: 2,
+      fontSize: 7,
+      color: '#4b5563',
+    },
+    notePad: {
+      width: '50%',
+      borderWidth: 1,
+      borderColor: '#e5e7eb',
+      backgroundColor: '#ffffff',
+    },
+    notePadLine: {
+      borderBottomWidth: 1,
+      borderBottomColor: '#f3f4f6',
+      height: 16,
+    },
+    emptyImageState: {
+      borderWidth: 1,
+      borderStyle: 'dashed',
+      borderColor: '#d1d5db',
+      padding: 12,
+      textAlign: 'center',
+      color: '#6b7280',
+      fontSize: 9,
+    },
+    pageTitle: {
+      fontSize: 12,
+      fontWeight: 700,
+      marginBottom: 6,
+    },
+    hydrographImage: {
+      width: '100%',
+      height: 250,
+      objectFit: 'contain',
+      marginBottom: 8,
+      maxWidth: '100%',
+    },
+    hydrographEmptyState: {
+      borderWidth: 1,
+      borderStyle: 'dashed',
+      borderColor: '#d1d5db',
+      padding: 16,
+      textAlign: 'center',
+      color: '#6b7280',
+      marginBottom: 12,
+    },
+    cutMethodBox: {
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+      padding: 10,
+      marginBottom: 12,
+    },
+    cutMethodEquation: {
+      fontSize: 11,
+      fontWeight: 700,
+      marginBottom: 8,
+    },
+    cutMethodHint: {
+      fontSize: 8,
+      color: '#4b5563',
+      marginBottom: 8,
+      lineHeight: 1.2,
+    },
+    cutMethodRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 8,
+    },
+    cutMethodField: {
+      flex: 1,
+    },
+    cutMethodLabel: {
+      fontSize: 8,
+      fontWeight: 700,
+      marginBottom: 3,
+    },
+    fillLine: {
+      borderBottomWidth: 1,
+      borderBottomColor: '#6b7280',
+      height: 16,
+    },
+    cutMethodTable: {
+      borderWidth: 1,
+      borderColor: '#e5e7eb',
+      marginTop: 4,
+    },
+    cutMethodTableRow: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: '#e5e7eb',
+    },
+    cutMethodTableRowLast: {
+      borderBottomWidth: 0,
+    },
+    cutMethodTableLabelCell: {
+      width: '22%',
+      paddingVertical: 6,
+      paddingHorizontal: 6,
+      fontSize: 8,
+      fontWeight: 700,
+      borderRightWidth: 1,
+      borderRightColor: '#e5e7eb',
+    },
+    cutMethodTableValueCell: {
+      width: '15.6%',
+      paddingTop: 4,
+      paddingHorizontal: 4,
+      paddingBottom: 0,
+      borderRightWidth: 1,
+      borderRightColor: '#e5e7eb',
+    },
+    cutMethodTableValueCellLast: {
+      borderRightWidth: 0,
+    },
+    cutMethodTableHeaderCell: {
+      width: '15.6%',
+      paddingVertical: 5,
+      paddingHorizontal: 4,
+      fontSize: 8,
+      fontWeight: 700,
+      textAlign: 'center',
+      borderRightWidth: 1,
+      borderRightColor: '#e5e7eb',
+    },
+    notesPad: {
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+      paddingTop: 2,
+    },
+    notesPadLine: {
+      borderBottomWidth: 1,
+      borderBottomColor: '#e5e7eb',
+      height: 20,
+    },
+    blankPageBody: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    blankPageText: {
+      fontSize: 12,
+      color: '#111827',
+      textAlign: 'center',
+    },
+  })
+}
 
 const lastMeasurementsColumns = [
   { key: 'date', label: 'Date', width: '20%' },
@@ -384,7 +408,9 @@ const siteNameFromAlternateIds = (well: IWell): string => {
 }
 
 const notesToText = (
-  notes: Array<{ content?: string | null; created_at?: string | null } | null | undefined>,
+  notes: Array<
+    { content?: string | null; created_at?: string | null } | null | undefined
+  >,
   options?: {
     sortByCreatedAt?: boolean
     compact?: boolean
@@ -399,9 +425,7 @@ const notesToText = (
       return aTime - bTime
     })
     .map((note) =>
-      note?.content
-        ?.replace(/\s+/g, options?.compact ? ' ' : ' ')
-        .trim()
+      note?.content?.replace(/\s+/g, options?.compact ? ' ' : ' ').trim()
     )
     .filter((value): value is string => Boolean(value))
 
@@ -489,10 +513,13 @@ const lastMeasurementsRows = (
         (observation.sample_id != null
           ? sampleMethodsBySampleId[observation.sample_id]
           : null) ?? '-',
-      status: observation.groundwater_level_reason ?? observation.level_status ?? '-',
+      status:
+        observation.groundwater_level_reason ?? observation.level_status ?? '-',
     }))
 
-const manualMeasurementRows = (observations: readonly Partial<IObservation>[]) =>
+const manualMeasurementRows = (
+  observations: readonly Partial<IObservation>[]
+) =>
   [...observations]
     .filter((observation) => observation.observation_datetime)
     .sort(
@@ -511,7 +538,8 @@ const manualMeasurementRows = (observations: readonly Partial<IObservation>[]) =
         observation.measuring_point_height != null
           ? formatNumeric(observation.measuring_point_height)
           : '-',
-      status: observation.groundwater_level_reason ?? observation.level_status ?? '-',
+      status:
+        observation.groundwater_level_reason ?? observation.level_status ?? '-',
     }))
 
 const PdfTable = <T extends Record<string, unknown>>({
@@ -519,11 +547,13 @@ const PdfTable = <T extends Record<string, unknown>>({
   columns,
   rows,
   compact = false,
+  styles,
 }: {
   title: string
   columns: readonly TableColumn<T>[]
   rows: T[]
   compact?: boolean
+  styles: FieldCompilationStyles
 }) => (
   <View style={styles.section}>
     <Text style={styles.sectionTitle}>{title}</Text>
@@ -542,30 +572,32 @@ const PdfTable = <T extends Record<string, unknown>>({
           </Text>
         ))}
       </View>
-      {(rows.length > 0 ? rows : [Object.create(null) as T]).map((row, rowIndex, arr) => (
-        <View
-          key={rowIndex}
-          style={[
-            styles.tableRow,
-            ...(rowIndex === arr.length - 1 ? [styles.tableRowLast] : []),
-          ]}
-        >
-          {columns.map((column) => (
-            <Text
-              key={column.label}
-              style={[
-                styles.cell,
-                ...(compact ? [styles.compactCell] : []),
-                { width: column.width },
-              ]}
-            >
-              {rows.length > 0
-                ? renderValue(row[column.key as keyof T])
-                : '-'}
-            </Text>
-          ))}
-        </View>
-      ))}
+      {(rows.length > 0 ? rows : [Object.create(null) as T]).map(
+        (row, rowIndex, arr) => (
+          <View
+            key={rowIndex}
+            style={[
+              styles.tableRow,
+              ...(rowIndex === arr.length - 1 ? [styles.tableRowLast] : []),
+            ]}
+          >
+            {columns.map((column) => (
+              <Text
+                key={column.label}
+                style={[
+                  styles.cell,
+                  ...(compact ? [styles.compactCell] : []),
+                  { width: column.width },
+                ]}
+              >
+                {rows.length > 0
+                  ? renderValue(row[column.key as keyof T])
+                  : '-'}
+              </Text>
+            ))}
+          </View>
+        )
+      )}
     </View>
   </View>
 )
@@ -573,9 +605,11 @@ const PdfTable = <T extends Record<string, unknown>>({
 const NoteSection = ({
   title,
   value,
+  styles,
 }: {
   title: string
   value: string
+  styles: FieldCompilationStyles
 }) => (
   <View style={styles.section}>
     <Text style={styles.sectionTitle}>{title}</Text>
@@ -592,6 +626,7 @@ const FieldCompilationNotesPage = ({
   hydrographImage,
   sampleMethodsBySampleId,
   includeConfidentialContacts,
+  density = 'standard',
 }: {
   well: IWell
   contacts: IContact[]
@@ -601,7 +636,10 @@ const FieldCompilationNotesPage = ({
   hydrographImage?: string | null
   sampleMethodsBySampleId: Record<number, string>
   includeConfidentialContacts: boolean
+  density?: IPdfDensity
 }) => {
+  const styles = useMemo(() => createFieldCompilationStyles(density), [density])
+
   const visibleContacts = useMemo(
     () => sanitizeContacts(contacts, includeConfidentialContacts),
     [contacts, includeConfidentialContacts]
@@ -705,7 +743,9 @@ const FieldCompilationNotesPage = ({
               </View>
               <View style={styles.contactsRow}>
                 <View style={[styles.contactColumn, styles.contactDetails]}>
-                  <Text style={styles.line}>{contactAddress(primaryContact)}</Text>
+                  <Text style={styles.line}>
+                    {contactAddress(primaryContact)}
+                  </Text>
                   <Text style={styles.line}>
                     <Text style={styles.label}>Phone: </Text>
                     {formatContactPhones(primaryContact)}
@@ -731,12 +771,18 @@ const FieldCompilationNotesPage = ({
               </View>
             </View>
 
-            <NoteSection title="Location Notes" value={locationNotesText(well)} />
             <NoteSection
+              styles={styles}
+              title="Location Notes"
+              value={locationNotesText(well)}
+            />
+            <NoteSection
+              styles={styles}
               title="Measurement Notes"
               value={notesToText(well.measuring_notes ?? [])}
             />
             <NoteSection
+              styles={styles}
               title="Measuring Point Description"
               value={well.measuring_point_description?.trim() || '-'}
             />
@@ -763,12 +809,14 @@ const FieldCompilationNotesPage = ({
             </View>
 
             <PdfTable
+              styles={styles}
               title="Last Measurements"
               columns={lastMeasurementsColumns}
               rows={measurements}
               compact
             />
             <PdfTable
+              styles={styles}
               title="Equipment"
               columns={equipmentColumns}
               rows={sensorDeployments
@@ -791,18 +839,21 @@ const FieldCompilationNotesPage = ({
                     row.hanging_cable_length != null
                       ? String(row.hanging_cable_length)
                       : '-',
-                  recording_interval_display: row.recording_interval_display ?? '-',
+                  recording_interval_display:
+                    row.recording_interval_display ?? '-',
                   datetime_installed: formatAppDate(row.datetime_installed),
                 }))}
               compact
             />
             <PdfTable
+              styles={styles}
               title="Equipment Notes"
               columns={equipmentNoteColumns}
               rows={equipmentNoteRows(sensorDeployments)}
               compact
             />
             <PdfTable
+              styles={styles}
               title="Site Notes"
               columns={siteNoteColumns}
               rows={siteNoteItems}
@@ -831,7 +882,9 @@ const FieldCompilationNotesPage = ({
                 </View>
               ))
             ) : (
-              <Text style={styles.emptyImageState}>No site images available.</Text>
+              <Text style={styles.emptyImageState}>
+                No site images available.
+              </Text>
             )}
           </View>
         </View>
@@ -846,8 +899,8 @@ const FieldCompilationNotesPage = ({
           </Text>
           <Text style={styles.cutMethodHint}>
             Cut method field entry for steel-tape measurements. Record HOLD,
-            record CUT, then subtract CUT from HOLD to get depth to water
-            below the measuring point (MP).
+            record CUT, then subtract CUT from HOLD to get depth to water below
+            the measuring point (MP).
           </Text>
           <View style={styles.cutMethodTable}>
             <View style={styles.cutMethodTableRow}>
@@ -897,7 +950,10 @@ const FieldCompilationNotesPage = ({
         <Text style={styles.sectionTitle}>General Field Notes</Text>
         <View style={styles.notesPad}>
           {Array.from({ length: 20 }).map((_, index) => (
-            <View key={`general-note-line-${index}`} style={styles.notesPadLine} />
+            <View
+              key={`general-note-line-${index}`}
+              style={styles.notesPadLine}
+            />
           ))}
         </View>
       </Page>
@@ -915,6 +971,7 @@ const FieldCompilationNotesPage = ({
           </Text>
         )}
         <PdfTable
+          styles={styles}
           title="Manual Measurements"
           columns={manualMeasurementColumns}
           rows={manualMeasurements}
@@ -943,6 +1000,7 @@ export const FieldCompilationNotesPdf = ({
   sampleMethodsBySampleId = {},
   includeConfidentialContacts = true,
   standalone = true,
+  density = 'standard',
 }: {
   well: IWell
   contacts: IContact[]
@@ -953,6 +1011,7 @@ export const FieldCompilationNotesPdf = ({
   sampleMethodsBySampleId?: Record<number, string>
   includeConfidentialContacts?: boolean
   standalone?: boolean
+  density?: IPdfDensity
 }) => {
   const pages = (
     <FieldCompilationNotesPage
@@ -964,6 +1023,7 @@ export const FieldCompilationNotesPdf = ({
       hydrographImage={hydrographImage}
       sampleMethodsBySampleId={sampleMethodsBySampleId}
       includeConfidentialContacts={includeConfidentialContacts}
+      density={density}
     />
   )
 

@@ -1,11 +1,14 @@
-import { createElement } from 'react'
 import { pdf } from '@react-pdf/renderer'
-import { describe, expect, it } from 'vitest'
 import { inflate } from 'pako'
-import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
-import type { IContact, IWell } from '@/interfaces/ocotillo'
-import { formatContactPhones } from '@/components/pdf/fieldCompilationPhoneFormatter'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
+import { createElement } from 'react'
+import { describe, expect, it } from 'vitest'
+import {
+  FieldCompilationNotesPdf,
+  scaleForDensity,
+} from '@/components/pdf/FieldCompilationNotesPdf'
+import { formatContactPhones } from '@/components/pdf/fieldCompilationPhoneFormatter'
+import type { IContact, IWell } from '@/interfaces/ocotillo'
 
 const makeContact = (phones: NonNullable<IContact['phones']>): IContact =>
   ({
@@ -188,5 +191,14 @@ describe('FieldCompilationNotesPdf', () => {
     expect(pages[1]).toContain('General Field Notes: Well-1')
     expect(pages[2]).toContain('Hydrograph unavailable for this well')
     expect(pages[3]).toContain('This page is intentionally left blank')
+  })
+})
+
+describe('scaleForDensity', () => {
+  it('orders compact < standard < comfortable and defaults to standard', () => {
+    expect(scaleForDensity(20, 16, 12, 'compact')).toBe(12)
+    expect(scaleForDensity(20, 16, 12, 'standard')).toBe(16)
+    expect(scaleForDensity(20, 16, 12, 'comfortable')).toBe(20)
+    expect(scaleForDensity(20, 16, 12)).toBe(16)
   })
 })
