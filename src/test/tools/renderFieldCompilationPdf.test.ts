@@ -51,7 +51,9 @@ const makeWell = (): IWell =>
     },
     site_notes: [note(2, 'Site Notes (legacy)', 'Dogs on property. Call ahead.', '2026-04-02')],
     notes: [],
-    measuring_notes: [note(3, 'Maintenance', 'Casing cap replaced.')],
+    measuring_notes: [
+      note(3, 'Maintenance', 'Casing cap replaced.', '2026-04-02T00:00:00Z'),
+    ],
     measuring_point_description: 'Top of casing',
     measuring_point_height: 1.2,
     measuring_point_height_unit: 'ft',
