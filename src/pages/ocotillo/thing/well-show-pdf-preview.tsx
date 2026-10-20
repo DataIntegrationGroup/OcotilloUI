@@ -1,4 +1,10 @@
 import {
+  ExpandMore,
+  TableRows,
+  ViewHeadline,
+  ViewStream,
+} from '@mui/icons-material'
+import {
   Accordion,
   AccordionActions,
   AccordionDetails,
@@ -12,35 +18,29 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
-import { Show } from '@refinedev/mui'
-import { useParams } from 'react-router'
-import {
-  ExpandMore,
-  TableRows,
-  ViewHeadline,
-  ViewStream,
-} from '@mui/icons-material'
 import { PDFViewer } from '@react-pdf/renderer'
+import { Show } from '@refinedev/mui'
+import { useForm } from '@refinedev/react-hook-form'
+import { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'react-router'
 import {
   ControlledCheckbox,
   ControlledRadioFormSelection,
+  FieldCompilationNotesPdf,
   HydrographPngExporter,
-  WellPDF,
   WellPDFDownloadButton,
   WellShowTitle,
 } from '@/components'
-import { useEffect, useMemo, useState } from 'react'
-import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
-import { useForm } from '@refinedev/react-hook-form'
+import {
+  OcotilloHeaderButtons,
+  ocotilloCardHeaderProps,
+} from '@/components/OcotilloPageHeader'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
-import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
+import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
 import { IWell } from '@/interfaces/ocotillo'
 import { IHydrographDatasource } from '@/interfaces/st2'
-import {
-  ocotilloCardHeaderProps,
-  OcotilloHeaderButtons,
-} from '@/components/OcotilloPageHeader'
+import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 
 const densityIcons = {
   compact: <ViewHeadline fontSize="small" />,
@@ -396,16 +396,15 @@ export const WellShowPdfPreview = () => {
             }}
           >
             <PDFViewer width="100%" height="100%">
-              <WellPDF
+              <FieldCompilationNotesPdf
                 well={viewWell}
-                sample={sample}
                 assets={assets}
                 contacts={contacts}
                 observations={observations}
                 sensorDeployments={sensorDeployments}
-                options={currentOptions}
                 hydrographImage={hydrographImage}
                 includeConfidentialContacts={canViewConfidential}
+                density={currentOptions?.density ?? 'standard'}
               />
             </PDFViewer>
           </Box>

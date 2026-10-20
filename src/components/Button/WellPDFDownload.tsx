@@ -1,14 +1,14 @@
-import { useState } from 'react'
-import { BaseRecord, useNotification } from '@refinedev/core'
-import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
-import { WellPDF } from '@/components'
-import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
 import { pdf } from '@react-pdf/renderer'
+import { BaseRecord, useNotification } from '@refinedev/core'
 import { DownloadIcon } from 'lucide-react'
+import { useState } from 'react'
+import { FieldCompilationNotesPdf } from '@/components'
 import { Button } from '@/components/ui/button'
-import { IPdfOptions } from '@/interfaces'
 import { PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { useAccessCapabilities } from '@/hooks'
+import { IPdfOptions } from '@/interfaces'
+import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
+import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
 
 export const WellPDFDownloadButton = ({
   well,
@@ -53,16 +53,15 @@ export const WellPDFDownloadButton = ({
       const filename = buildPdfFilename(well)
 
       const blob = await pdf(
-        <WellPDF
+        <FieldCompilationNotesPdf
           well={well}
-          sample={sample}
           assets={assets}
           contacts={contacts}
           observations={observations}
           sensorDeployments={sensorDeployments}
           includeConfidentialContacts={canViewConfidential}
-          options={opts}
           hydrographImage={hydrographImage}
+          density={opts?.density ?? 'standard'}
         />
       ).toBlob()
 
