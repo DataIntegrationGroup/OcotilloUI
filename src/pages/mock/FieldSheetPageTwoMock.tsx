@@ -1,5 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material'
-import { PDFViewer } from '@react-pdf/renderer'
+import { Document, PDFViewer } from '@react-pdf/renderer'
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { FieldSheetPageTwo } from '@/components/pdf/FieldSheetPageTwo'
@@ -24,7 +24,10 @@ export const FieldSheetPageTwoMock = () => {
   const [params] = useSearchParams()
   const withOse = readOse(params.get('ose'))
 
-  const fixture = useMemo(() => buildFieldSheetPageTwoFixture({ withOse }), [withOse])
+  const fixture = useMemo(
+    () => buildFieldSheetPageTwoFixture({ withOse }),
+    [withOse]
+  )
 
   return (
     <Box sx={{ p: 2 }}>
@@ -40,7 +43,9 @@ export const FieldSheetPageTwoMock = () => {
         sx={{ height: 'calc(100vh - 240px)', minHeight: 480, width: '100%' }}
       >
         <PDFViewer width="100%" height="100%">
-          <FieldSheetPageTwo {...fixture} />
+          <Document>
+            <FieldSheetPageTwo {...fixture} />
+          </Document>
         </PDFViewer>
       </Box>
     </Box>
