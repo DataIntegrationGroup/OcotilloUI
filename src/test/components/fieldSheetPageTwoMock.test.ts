@@ -60,21 +60,22 @@ describe('field sheet page 2 mock-up', () => {
     expect(text).not.toContain('2024-NMT-0085')
   })
 
-  it('prints the hydrograph reserved block, no chart', async () => {
+  it('prints the dated hydrograph caption from the readings', async () => {
     const { text } = await renderPageTwo({ withOse: true })
 
-    expect(text).toContain('reserved block')
+    expect(text).toContain('Depth to Water')
+    expect(text).toContain('2021 – 2025')
   })
 
-  it('prints the four table headers and the `-` empty convention', async () => {
+  it('prints the four table headers and the em dash empty convention', async () => {
     const { text } = await renderPageTwo({ withOse: true })
 
     expect(text).toContain('Date')
     expect(text).toContain('DTW (ft)')
     expect(text).toContain('MP Ht (ft)')
     expect(text).toContain('Level Status')
-    // Two of the five rows have no level status; they print `-`.
-    expect(text).toContain('-')
+    // Two of the five rows have no level status; they print an em dash.
+    expect(text).toContain('—')
   })
 
   it('prints all five measurement rows newest first', async () => {
@@ -95,7 +96,7 @@ describe('field sheet page 2 mock-up', () => {
     expect(text).toContain("Today's Measurement")
     expect(text).toContain('Your water level measured on this visit:')
     expect(text).toContain('Date:')
-    expect(text).toContain('Depth to water (DTW):')
+    expect(text).toContain('Depth to water (ft):')
     expect(text).toContain('ft')
   })
 

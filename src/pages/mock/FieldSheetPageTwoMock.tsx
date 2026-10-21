@@ -1,9 +1,10 @@
 import { Box, Stack, Typography } from '@mui/material'
 import { Document, PDFViewer } from '@react-pdf/renderer'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { FieldSheetPageTwo } from '@/components/pdf/FieldSheetPageTwo'
 import { buildFieldSheetPageTwoFixture } from '@/mock/fieldSheetPageTwo.fixture'
+import { buildWeaverQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
 
 /**
  * Owner leave-behind (page 2) — BDMS-1507.
@@ -15,7 +16,9 @@ import { buildFieldSheetPageTwoFixture } from '@/mock/fieldSheetPageTwo.fixture'
  *   /mock/field-sheet/page-2?ose=0
  *
  * `ose=0` renders the no-OSE variant (the `OSE #:` cell omitted). There is no
- * density step — Rob ruled on 2026-10-20 that density is not a feature.
+ * density step — Rob ruled on 2026-10-20 that density is not a feature. The QR
+ * code, though, is built for real here (a data URL) and fed via `qrDataUrl`, so
+ * the review sees exactly what prints in the footer.
  */
 
 const readOse = (raw: string | null): boolean => raw !== '0'
@@ -28,6 +31,19 @@ export const FieldSheetPageTwoMock = () => {
     () => buildFieldSheetPageTwoFixture({ withOse }),
     [withOse]
   )
+
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  useEffect(() => {
+    let active = true
+
+    buildWeaverQrDataUrl(fixture.pointId).then((url) => {
+      if (active) setQrDataUrl(url)
+    })
+
+    return () => {
+      active = false
+    }
+  }, [fixture.pointId])
 
   return (
     <Box sx={{ p: 2 }}>
@@ -44,7 +60,7 @@ export const FieldSheetPageTwoMock = () => {
       >
         <PDFViewer width="100%" height="100%">
           <Document>
-            <FieldSheetPageTwo {...fixture} />
+            <FieldSheetPageTwo {...fixture} qrDataUrl={qrDataUrl ?? undefined} />
           </Document>
         </PDFViewer>
       </Box>
