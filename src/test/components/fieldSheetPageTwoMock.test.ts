@@ -119,3 +119,22 @@ describe('field sheet page 2 mock-up', () => {
     )
   })
 })
+
+/**
+ * The review route must supply the <Document> the PDFViewer needs. Page 2 is a
+ * bare <Page>, unlike FieldCompilationNotesPdf which is self-documenting — so
+ * without this wrapper the route renders an empty viewer. Added 2026-10-20
+ * after page 2 shipped blank on the preview while page 1 rendered.
+ */
+describe('field sheet page 2 review route', () => {
+  it('wraps the page in a Document inside PDFViewer', async () => {
+    const { readFileSync } = await import('node:fs')
+    const src = readFileSync(
+      new URL('../../pages/mock/FieldSheetPageTwoMock.tsx', import.meta.url),
+      'utf8'
+    )
+    const viewer = src.slice(src.indexOf('<PDFViewer'))
+    expect(viewer).toMatch(/<PDFViewer[^>]*>\s*<Document>/)
+    expect(viewer).toMatch(/<\/Document>\s*<\/PDFViewer>/)
+  })
+})
