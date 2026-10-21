@@ -1,6 +1,18 @@
 import { Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
 
+import { PageFooter } from '@/components/pdf/layout'
 import { buildWeaverLocationUrl } from '@/utils/wellPublicUrls'
+
+/**
+ * react-pdf ignores `bottom` on an absolutely positioned child of this page
+ * (verified 2026-10-21: `bottom: 14` printed nothing, `top` prints), so the
+ * footer is anchored from the top. LETTER is 792 pt tall with 28 pt page
+ * padding; 762 = 792 - 28 - 2 puts the 9 pt line in the bottom margin band,
+ * entirely on-page.
+ */
+const LETTER_HEIGHT = 792
+const PAGE_PADDING = 28
+const FOOTER_TOP = LETTER_HEIGHT - PAGE_PADDING - 2
 
 /**
  * Field sheet page 2 — owner leave-behind (BDMS-1507).
@@ -209,6 +221,15 @@ export const FieldSheetPageTwo = ({
     <Text style={styles.staffLine}>
       Visited by: {staffName} | {staffEmail} | {staffPhone}
     </Text>
+
+    {/* Footer: `Well ID: <point id> | Page n` (ALIGNMENT A12). */}
+    <PageFooter
+      wellId={pointId}
+      styles={{
+        footer: styles.pageFooter,
+        footerText: styles.pageFooterText,
+      }}
+    />
   </Page>
 )
 
@@ -411,5 +432,17 @@ const styles = StyleSheet.create({
     borderTopColor: '#ddd',
     fontSize: 8,
     color: secondary,
+  },
+  // Anchored from the top — see FOOTER_TOP.
+  pageFooter: {
+    position: 'absolute',
+    top: FOOTER_TOP,
+    left: 0,
+    right: 0,
+  },
+  pageFooterText: {
+    fontSize: 9,
+    color: secondary,
+    textAlign: 'center' as const,
   },
 })
