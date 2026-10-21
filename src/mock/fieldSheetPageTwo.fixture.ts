@@ -59,9 +59,19 @@ const buildWithoutOse = (): FieldSheetPageTwoData => {
 /**
  * Build the page-2 owner sheet data. `withOse` selects whether the optional
  * OSE number is present so the grid can omit its cell when there is none.
+ * `qrDataUrl`, when supplied, makes the QR block render a code; omit it to keep
+ * the `[QR Code]` placeholder (the default the tests and mock route use).
  */
 export const buildFieldSheetPageTwoFixture = ({
   withOse,
+  qrDataUrl,
 }: {
   withOse: boolean
-}): FieldSheetPageTwoData => (withOse ? buildWithOse() : buildWithoutOse())
+  qrDataUrl?: string
+}): FieldSheetPageTwoData => {
+  const data = withOse ? buildWithOse() : buildWithoutOse()
+
+  return qrDataUrl === undefined
+    ? data
+    : { ...data, qrDataUrl }
+}

@@ -1,4 +1,6 @@
-import { Page, StyleSheet, Text, View } from '@react-pdf/renderer'
+import { Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
+
+import { buildWeaverLocationUrl } from '@/utils/wellPublicUrls'
 
 /**
  * Field sheet page 2 — owner leave-behind (BDMS-1507).
@@ -23,6 +25,8 @@ export type FieldSheetPageTwoData = {
   /** Present only when the well has one; its grid cell is omitted otherwise. */
   oseNumber?: string
   measurements: FieldSheetPageTwoMeasurement[]
+  /** Data URL for the QR block; when absent the block keeps its placeholder. */
+  qrDataUrl?: string
   staffName: string
   staffEmail: string
   staffPhone: string
@@ -38,12 +42,31 @@ const panel = '#f5f8fc'
 /** Feet print with two decimals; a measurement of 35.1 is 35.10 on paper. */
 const feet = (value: number): string => value.toFixed(2)
 
+/** The printed link, from the one builder; scheme dropped for print. */
+const printedLocationUrl = (pointId: string): string =>
+  (buildWeaverLocationUrl(pointId) ?? '').replace(/^https?:\/\//, '')
+
+/**
+ * `2018 – 2026` style span for the hydrograph caption, from the dates actually
+ * printed in the table below it. Empty when there is nothing to span.
+ */
+const yearRange = (measurements: FieldSheetPageTwoMeasurement[]): string => {
+  const years = measurements
+    .map((m) => Number(/(\d{4})/.exec(m.date)?.[1]))
+    .filter((year) => Number.isFinite(year))
+  if (years.length === 0) return ''
+  const first = Math.min(...years)
+  const last = Math.max(...years)
+  return first === last ? `${first}` : `${first} – ${last}`
+}
+
 export const FieldSheetPageTwo = ({
   siteName,
   pointId,
   wellDepthFt,
   oseNumber,
   measurements,
+  qrDataUrl,
   staffName,
   staffEmail,
   staffPhone,
@@ -97,10 +120,12 @@ export const FieldSheetPageTwo = ({
       </View>
     </View>
 
-    {/* 3. Hydrograph — reserved block, no chart */}
+    {/* 3. Hydrograph — the mock-up labels this with the series it will hold;
+        the date span comes from the readings printed below it, not a fixed
+        range, and nothing at all prints when there are no readings. */}
     <View style={styles.hydrograph}>
       <Text style={styles.hydrographCaption}>
-        Hydrograph (reserved block — chart pending)
+        {`Depth to Water${yearRange(measurements) ? ` · ${yearRange(measurements)}` : ''}`}
       </Text>
     </View>
 
@@ -134,7 +159,8 @@ export const FieldSheetPageTwo = ({
               {feet(m.mpHeightFt)}
             </Text>
             <Text style={[styles.cell, styles.wideCell]}>
-              {m.levelStatus || '-'}
+              {/* Empty reading status prints an em dash, never a hyphen. */}
+              {m.levelStatus || '—'}
             </Text>
           </View>
         )
@@ -149,7 +175,8 @@ export const FieldSheetPageTwo = ({
       </Text>
       <View style={styles.measurementRule}>
         <Text style={styles.ruleLabel}>Date:</Text>
-        <Text style={styles.ruleLabel}>Depth to water (DTW):</Text>
+        {/* Owner-facing wording: plain English, not the internal "DTW" tag. */}
+        <Text style={styles.ruleLabel}>Depth to water (ft):</Text>
         <Text style={styles.ruleFt}>ft</Text>
       </View>
     </View>
@@ -158,13 +185,18 @@ export const FieldSheetPageTwo = ({
     <View style={styles.footer}>
       <View style={styles.footerLeft}>
         <View style={styles.qrBlock}>
-          <Text style={styles.qrCaption}>[QR Code]</Text>
+          {qrDataUrl ? (
+            <Image src={qrDataUrl} style={styles.qrImage} />
+          ) : (
+            <Text style={styles.qrCaption}>[QR Code]</Text>
+          )}
         </View>
         <View style={styles.linkRow}>
-          <Text style={styles.linkLabel}>View your well data online: </Text>
-          <Text style={styles.linkUrl}>{'weaver.newmexicowaterdata.org'}</Text>
-          <Text style={styles.linkUrl}>{'/location/'}</Text>
-          <Text style={styles.linkUrl}>{pointId}</Text>
+          {/* Plain-English lead-in for the printed link; a printed URL is read, not clicked. */}
+          <Text style={styles.linkLabel}>View your well data online:</Text>
+          {/* The printed link comes from one builder; the hard-coded host is
+              gone. Scheme is dropped because a printed URL is read, not clicked. */}
+          <Text style={styles.linkUrl}>{printedLocationUrl(pointId)}</Text>
         </View>
       </View>
       <View style={styles.footerRight}>
@@ -352,6 +384,7 @@ const styles = StyleSheet.create({
     fontSize: 7,
     textAlign: 'center',
   },
+  qrImage: { width: 68, height: 68, margin: 1 },
   linkRow: {
     marginTop: 6,
     flexDirection: 'row',
