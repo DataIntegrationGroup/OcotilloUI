@@ -19,6 +19,7 @@ import {
   sanitizeContacts,
 } from '@/utils'
 import { formatContactPhones } from './fieldCompilationPhoneFormatter'
+import { PageFooter } from './layout/PageFooter'
 import {
   FIELD_SHEET_NOTE_LINES,
   FIELD_SHEET_RULED_LINES,
@@ -62,6 +63,16 @@ export const createFieldCompilationStyles = (
       right: 20,
       fontSize: scale(9.5, 9, 8.5),
       color: '#111827',
+    },
+    footer: {
+      position: 'absolute',
+      bottom: scale(12, 10, 8),
+      left: scale(22, 20, 14),
+      right: scale(22, 20, 14),
+    },
+    footerText: {
+      fontSize: scale(8, 7.5, 7),
+      color: '#6b7280',
     },
     header: {
       marginBottom: scale(10, 8, 6),
@@ -211,6 +222,13 @@ export const createFieldCompilationStyles = (
       borderBottomColor: '#f3f4f6',
       height: 16,
     },
+    preVisitPad: {
+      width: '100%',
+      paddingTop: scale(6, 5, 4),
+      paddingBottom: scale(6, 5, 4),
+      paddingLeft: scale(6, 5, 4),
+      paddingRight: scale(6, 5, 4),
+    },
     ruledSlot: {
       borderWidth: 1,
       borderColor: '#e5e7eb',
@@ -348,20 +366,26 @@ export const createFieldCompilationStyles = (
 }
 
 const lastMeasurementsColumns = [
-  { key: 'date', label: 'Date', width: '20%' },
-  { key: 'dtw', label: 'DTW (ft)', width: '20%' },
-  { key: 'mpHeight', label: 'MP Ht (ft)', width: '14%' },
-  { key: 'method', label: 'Method', width: '18%' },
-  { key: 'status', label: 'Level Status', width: '28%' },
+  { key: 'date', label: 'Date', width: '16.67%' },
+  { key: 'dtw', label: 'DTW (ft)', width: '16.67%' },
+  { key: 'mpHeight', label: 'MP Ht (ft)', width: '16.67%' },
+  { key: 'method', label: 'Method', width: '16.67%' },
+  { key: 'status', label: 'Level Status', width: '16.67%' },
+  // ALIGNMENT A7: the mock-up carries STAFF. No per-reading staff field
+  // exists in the data model, so it prints the empty placeholder until one
+  // does — the column is the argument for collecting it.
+  { key: 'staff', label: 'Staff', width: '16.67%' },
 ] as const
 
 const equipmentColumns = [
-  { key: 'sensor_type', label: 'Equipment Type', width: '20%' },
-  { key: 'sensor_model', label: 'Model', width: '14%' },
-  { key: 'serial_no', label: 'Serial No', width: '16%' },
-  { key: 'hanging_cable_length', label: 'Cable Length', width: '14%' },
-  { key: 'recording_interval_display', label: 'Rec Interval', width: '16%' },
-  { key: 'datetime_installed', label: 'Installed', width: '20%' },
+  { key: 'sensor_type', label: 'Equipment Type', width: '14.29%' },
+  { key: 'sensor_model', label: 'Model', width: '14.29%' },
+  { key: 'serial_no', label: 'Serial No', width: '14.29%' },
+  { key: 'hanging_cable_length', label: 'Cable Length', width: '14.29%' },
+  { key: 'recording_interval_display', label: 'Rec Interval', width: '14.29%' },
+  { key: 'datetime_installed', label: 'Installed', width: '14.29%' },
+  // ALIGNMENT A8: notes join the row instead of a second table.
+  { key: 'notes', label: 'Notes', width: '14.29%' },
 ] as const
 
 const manualMeasurementColumns = [
@@ -374,10 +398,6 @@ const manualMeasurementColumns = [
 const siteNoteColumns = [
   { key: 'date', label: 'Date', width: '20%' },
   { key: 'note', label: 'Note', width: '80%' },
-] as const
-
-const equipmentNoteColumns = [
-  { key: 'note', label: 'Note', width: '100%' },
 ] as const
 
 const cutMethodColumns = ['M1', 'M2', 'M3', 'M4', 'M5'] as const
@@ -483,18 +503,6 @@ const equipmentNotesText = (rows: SensorDeploymentRow[]) => {
   return notes.length > 0 ? Array.from(new Set(notes)).join('\n') : '-'
 }
 
-const equipmentNoteRows = (rows: SensorDeploymentRow[]) => {
-  const notes = rows
-    .map((row) => row.notes?.trim())
-    .filter((note): note is string => Boolean(note && note !== '-'))
-
-  const uniqueNotes = Array.from(new Set(notes))
-
-  return uniqueNotes.length > 0
-    ? uniqueNotes.map((note) => ({ note }))
-    : [{ note: '-' }]
-}
-
 const splitSiteNote = (content?: string | null) => {
   const normalized = content?.replace(/\s+/g, ' ').trim() ?? ''
   if (!normalized) return null
@@ -543,6 +551,7 @@ const lastMeasurementsRows = (
           : null) ?? '-',
       status:
         observation.groundwater_level_reason ?? observation.level_status ?? '-',
+      staff: '-',
     }))
 
 const manualMeasurementRows = (
@@ -568,6 +577,7 @@ const manualMeasurementRows = (
           : '-',
       status:
         observation.groundwater_level_reason ?? observation.level_status ?? '-',
+      staff: '-',
     }))
 
 const PdfTable = <T extends Record<string, unknown>>({
@@ -744,6 +754,7 @@ const FieldCompilationNotesPage = ({
   return (
     <>
       <Page size="LETTER" style={styles.page}>
+        <PageFooter wellId={well.name} styles={styles} />
         {showDate ? <Text style={styles.pageDate}>{exportDate}</Text> : null}
         <View style={styles.header}>
           <Text style={styles.title}>Field Compilation Notes</Text>
@@ -799,6 +810,7 @@ const FieldCompilationNotesPage = ({
               <View style={styles.contactsRow}>
                 <View style={[styles.contactColumn, styles.contactDetails]}>
                   <Text style={styles.line}>
+                    <Text style={styles.label}>Address: </Text>
                     {contactAddress(primaryContact)}
                   </Text>
                   <Text style={styles.line}>
@@ -812,6 +824,7 @@ const FieldCompilationNotesPage = ({
                 </View>
                 <View style={[styles.contactColumn, styles.contactDetails]}>
                   <Text style={styles.line}>
+                    <Text style={styles.label}>Address: </Text>
                     {contactAddress(secondaryContact)}
                   </Text>
                   <Text style={styles.line}>
@@ -846,7 +859,7 @@ const FieldCompilationNotesPage = ({
             />
             <NoteSection
               styles={styles}
-              title="Measuring Point Description"
+              title="MP Description"
               value={
                 well.measuring_point_description?.trim() || emptyPlaceholder
               }
@@ -869,6 +882,16 @@ const FieldCompilationNotesPage = ({
               </View>
             </View>
 
+            {/* ALIGNMENT A5: a labelled write-on box the field hand fills in
+                before taking the reading. Ruled, not text — nothing prints
+                here from the database. */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Pre-visit Notes</Text>
+              <View style={styles.preVisitPad}>
+                {ruledLines('previsit', 3)}
+              </View>
+            </View>
+
             <PdfTable
               styles={styles}
               title="Last Measurements"
@@ -878,7 +901,7 @@ const FieldCompilationNotesPage = ({
             />
             <PdfTable
               styles={styles}
-              title="Equipment"
+              title="Installed Equipment"
               columns={equipmentColumns}
               rows={sensorDeployments
                 .slice()
@@ -903,14 +926,8 @@ const FieldCompilationNotesPage = ({
                   recording_interval_display:
                     row.recording_interval_display ?? '-',
                   datetime_installed: formatAppDate(row.datetime_installed),
+                  notes: row.notes?.trim() || '-',
                 }))}
-              compact
-            />
-            <PdfTable
-              styles={styles}
-              title="Equipment Notes"
-              columns={equipmentNoteColumns}
-              rows={equipmentNoteRows(sensorDeployments)}
               compact
             />
             <PdfTable
