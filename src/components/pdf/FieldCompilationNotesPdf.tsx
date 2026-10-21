@@ -455,6 +455,20 @@ const locationNotesText = (well: IWell) =>
     )
   )
 
+/**
+ * Direction notes region value (BDMS-1509). The data source is still open
+ * (Q17), so this never parses or infers a direction from any other field — it
+ * only forwards what the caller supplied, and collapses anything undefined,
+ * null, or blank to an empty string. That keeps the label printing with nothing
+ * beneath it (empty, not missing) and never returns a placeholder like 'N/A'
+ * or '-'. Exported for tests and other display-only callers.
+ */
+export const directionNotesValue = (directionNotes?: string | null): string => {
+  if (!directionNotes) return ''
+  const trimmed = directionNotes.trim()
+  return trimmed === '' ? '' : trimmed
+}
+
 const contactEmail = (contact?: IContact) => contact?.emails?.[0]?.email ?? '-'
 
 const contactAddress = (contact?: IContact) => {
@@ -645,6 +659,7 @@ const FieldCompilationNotesPage = ({
   emptyPlaceholder = '-',
   notesPlacement = 'column',
   firstPageOnly = false,
+  directionNotes = '',
 }: {
   well: IWell
   contacts: IContact[]
@@ -658,6 +673,7 @@ const FieldCompilationNotesPage = ({
   showDate?: boolean
   emptyPlaceholder?: string
   notesPlacement?: 'column' | 'top'
+  directionNotes?: string
   firstPageOnly?: boolean
 }) => {
   const styles = useMemo(() => createFieldCompilationStyles(density), [density])
@@ -814,6 +830,14 @@ const FieldCompilationNotesPage = ({
               styles={styles}
               title="Location Notes"
               value={locationNotesText(well)}
+            />
+            {/* Source open (BDMS-1509 Q17): display only. No parsing, no
+                inference — the string is supplied by the caller and never
+                derived from any other well field. */}
+            <NoteSection
+              styles={styles}
+              title="Direction notes"
+              value={directionNotesValue(directionNotes)}
             />
             <NoteSection
               styles={styles}
@@ -1060,6 +1084,7 @@ export const FieldCompilationNotesPdf = ({
   emptyPlaceholder = '-',
   notesPlacement = 'column',
   firstPageOnly = false,
+  directionNotes = '',
 }: {
   well: IWell
   contacts: IContact[]
@@ -1074,6 +1099,7 @@ export const FieldCompilationNotesPdf = ({
   showDate?: boolean
   emptyPlaceholder?: string
   notesPlacement?: 'column' | 'top'
+  directionNotes?: string
   firstPageOnly?: boolean
 }) => {
   const pages = (
@@ -1091,6 +1117,7 @@ export const FieldCompilationNotesPdf = ({
       emptyPlaceholder={emptyPlaceholder}
       notesPlacement={notesPlacement}
       firstPageOnly={firstPageOnly}
+      directionNotes={directionNotes}
     />
   )
 
