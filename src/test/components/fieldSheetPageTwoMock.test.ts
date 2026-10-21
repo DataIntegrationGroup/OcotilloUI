@@ -112,6 +112,14 @@ describe('field sheet page 2 mock-up', () => {
     expect(text).toContain('nmbg-waterlevels@nmt.edu')
   })
 
+  it('prints the page footer with the point id and page number', async () => {
+    const { text } = await renderPageTwo({ withOse: true })
+
+    // ALIGNMENT A12. Guards the absolute-position regressions found 2026-10-21:
+    // `bottom` is ignored by react-pdf here and the footer silently vanished.
+    expect(text).toMatch(/Well ID: WL-0085 \| Page \d+/)
+  })
+
   it('prints the staff line with data, not a literal', async () => {
     const { text } = await renderPageTwo({ withOse: true })
 
