@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Checklist,
+  ContentPaste,
+  DeleteOutline,
+  FactCheck,
+  FileDownload,
+  Search,
+} from '@mui/icons-material'
 import {
   Alert,
   Autocomplete,
@@ -13,17 +20,29 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import {
-  Checklist,
-  ContentPaste,
-  DeleteOutline,
-  FileDownload,
-  FactCheck,
-  Search,
-} from '@mui/icons-material'
+import { pdf } from '@react-pdf/renderer'
 import { BaseRecord, useDataProvider, useNotification } from '@refinedev/core'
 import { List, useAutocomplete } from '@refinedev/mui'
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import {
+  FieldCompilationNotesPdf,
+  HydrographPngExporter,
+  OcotilloDocument,
+} from '@/components'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
+import type {
+  FieldSheetPageTwoData,
+  FieldSheetPageTwoMeasurement,
+} from '@/components/pdf/FieldSheetPageTwo'
+import { FieldSheetPageTwo } from '@/components/pdf/FieldSheetPageTwo'
+import { useAccessCapabilities } from '@/hooks'
 import {
   IObservation,
   ISample,
@@ -32,27 +51,22 @@ import {
   WellBundle,
   WellChipState,
 } from '@/interfaces/ocotillo'
+import type { IHydrographDatasource } from '@/interfaces/st2'
 import {
-  FieldCompilationNotesPdf,
-  HydrographPngExporter,
-  OcotilloDocument,
-} from '@/components'
-import { pdf } from '@react-pdf/renderer'
-import {
-  type DeploymentLike,
-  type SensorLike,
   buildBatchFilename,
   buildSensorDeploymentRows,
   buildWellLookup,
   compactLookupKey,
+  type DeploymentLike,
   normalizeLookupKey,
+  pagesForWell,
   parseIds,
+  type SensorLike,
   safeFilenamePrefix,
 } from '@/utils'
-import { useAccessCapabilities } from '@/hooks'
-import type { IHydrographDatasource } from '@/interfaces/st2'
 import { BatchRouteMap } from './components/BatchRouteMap'
 import { ExportDialog } from './components/ExportDialog'
+
 const TOKEN_RESOLVE_CONCURRENCY = 5
 const TOKEN_RESOLVE_PAGE_SIZE = 200
 const TOKEN_RESOLVE_MAX_PAGES = 20
@@ -96,7 +110,8 @@ export const WellBatchExport = () => {
   const { canViewConfidential } = useAccessCapabilities()
   const dataProvider = useDataProvider()
   const ocotilloDataProvider = dataProvider('ocotillo')
-  const { autocompleteProps: searchAutocompleteProps } = useAutocomplete<IWell>({
+  const { autocompleteProps: searchAutocompleteProps } = useAutocomplete<IWell>(
+    {
     resource: 'thing/water-well',
     dataProviderName: 'ocotillo',
     onSearch: (value) => [
@@ -106,7 +121,8 @@ export const WellBatchExport = () => {
         value,
       },
     ],
-  })
+    }
+  )
 
   const [allWells, setAllWells] = useState<IWell[]>([])
   const [pasteValue, setPasteValue] = useState('')
@@ -123,6 +139,9 @@ export const WellBatchExport = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [progress, setProgress] = useState(0)
   const [filename, setFilename] = useState(buildBatchFilename())
+  // Q16 / Liz's two-page ruling: page 2 (the owner leave-behind) is ON by
+  // default; off only drops page 2 per this run, never rewrites other pages.
+  const [includeOwnerPage, setIncludeOwnerPage] = useState(true)
   const [hydrographBundles, setHydrographBundles] = useState<WellBundle[]>([])
   const [hydrographImagesByWellId, setHydrographImagesByWellId] = useState<
     Record<number, string>
@@ -261,7 +280,9 @@ export const WellBatchExport = () => {
   const resolvedIds = useMemo(
     () =>
       chips
-        .filter((chip) => chip.status === 'resolved' && chip.wellId !== undefined)
+        .filter(
+          (chip) => chip.status === 'resolved' && chip.wellId !== undefined
+        )
         .map((chip) => chip.wellId as number),
     [chips]
   )
@@ -269,7 +290,9 @@ export const WellBatchExport = () => {
   const resolvedSelections = useMemo(
     () =>
       chips
-        .filter((chip) => chip.status === 'resolved' && chip.wellId !== undefined)
+        .filter(
+          (chip) => chip.status === 'resolved' && chip.wellId !== undefined
+        )
         .map((chip) => {
           const id = chip.wellId as number
           return {
@@ -290,7 +313,8 @@ export const WellBatchExport = () => {
     () =>
       resolvedIds
         .map(
-          (id) => mapWellsById[id] ?? bundlesByWellId[id]?.well ?? wellsById.get(id)
+          (id) =>
+            mapWellsById[id] ?? bundlesByWellId[id]?.well ?? wellsById.get(id)
         )
         .filter(Boolean) as IWell[],
     [resolvedIds, mapWellsById, bundlesByWellId, wellsById]
@@ -313,7 +337,9 @@ export const WellBatchExport = () => {
       })
       const wellDetails = detailsResult.data
 
-      const fetchThingResource = async <T extends BaseRecord>(resource: string) => {
+      const fetchThingResource = async <T extends BaseRecord>(
+        resource: string
+      ) => {
         let page = 1
         const rows: T[] = []
 
@@ -349,12 +375,12 @@ export const WellBatchExport = () => {
           console.warn(`Failed to load assets for well ${wellId}`, error)
           return [] as BaseRecord[]
         }),
-        fetchThingResource<Partial<IObservation>>('observation/groundwater-level').catch(
-          (error) => {
+        fetchThingResource<Partial<IObservation>>(
+          'observation/groundwater-level'
+        ).catch((error) => {
             console.warn(`Failed to load observations for well ${wellId}`, error)
             return [] as Partial<IObservation>[]
-          }
-        ),
+        }),
       ])
 
       const sampleIds = Array.from(
@@ -368,7 +394,9 @@ export const WellBatchExport = () => {
             )
             .slice(0, 2)
             .map((observation) => observation.sample_id)
-            .filter((sampleId): sampleId is number => typeof sampleId === 'number')
+            .filter(
+              (sampleId): sampleId is number => typeof sampleId === 'number'
+            )
         )
       )
 
@@ -477,7 +505,9 @@ export const WellBatchExport = () => {
       let changed = false
       const selectedIds = new Set(
         prev
-          .filter((chip) => chip.status === 'resolved' && chip.wellId !== undefined)
+          .filter(
+            (chip) => chip.status === 'resolved' && chip.wellId !== undefined
+          )
           .map((chip) => chip.wellId as number)
       )
 
@@ -500,7 +530,8 @@ export const WellBatchExport = () => {
     })
   }, [allWells, resolveWellFromToken])
 
-  const processPaste = useCallback(async (rawValue = pasteValue) => {
+  const processPaste = useCallback(
+    async (rawValue = pasteValue) => {
     const tokens = parseIds(rawValue)
     if (tokens.length === 0) return
 
@@ -513,24 +544,34 @@ export const WellBatchExport = () => {
           const fromCache = resolveWellFromToken(token)
           const match =
             fromCache ??
-            (await resolveTokenByApi(token).catch((error): IWell | undefined => {
+              (await resolveTokenByApi(token).catch(
+                (error): IWell | undefined => {
               console.warn(`Token resolution failed for "${token}"`, error)
               return undefined
-            }))
+                }
+              ))
           return { token, match }
         }
       )
 
-      upsertWells(tokenMatches.map((entry) => entry.match).filter(Boolean) as IWell[])
+        upsertWells(
+          tokenMatches.map((entry) => entry.match).filter(Boolean) as IWell[]
+        )
       const matchedByToken = new Map<string, IWell | undefined>(
-        tokenMatches.map((entry) => [normalizeLookupKey(entry.token), entry.match])
+          tokenMatches.map((entry) => [
+            normalizeLookupKey(entry.token),
+            entry.match,
+          ])
       )
 
       setChips((prev) => {
         const next = [...prev]
         const selectedWellIds = new Set(
           next
-            .filter((chip) => chip.status === 'resolved' && chip.wellId !== undefined)
+              .filter(
+                (chip) =>
+                  chip.status === 'resolved' && chip.wellId !== undefined
+              )
             .map((chip) => chip.wellId as number)
         )
 
@@ -586,14 +627,16 @@ export const WellBatchExport = () => {
     } finally {
       setIsResolvingIds(false)
     }
-  }, [
+    },
+    [
     mapWithConcurrency,
     notify,
     pasteValue,
     resolveTokenByApi,
     resolveWellFromToken,
     upsertWells,
-  ])
+    ]
+  )
 
   const addFromSearch = (well: IWell | null) => {
     if (!well) return
@@ -615,6 +658,40 @@ export const WellBatchExport = () => {
 
   const generateBatch = async () => {
     if (resolvedIds.length === 0) return
+
+    // Map a prepared bundle to the page-2 data shape. Reads only existing
+    // well / observation fields (no invented backend field); layout of the
+    // printed page itself is owned by BDMS-1507 and lives in FieldSheetPageTwo.
+    const buildOwnerPageData = (bundle: WellBundle): FieldSheetPageTwoData => {
+      const well = bundle.well
+      const rawRows = [...(bundle.observations ?? [])].map((o) => ({
+        date: o.observation_datetime
+          ? new Date(o.observation_datetime).toLocaleDateString()
+          : '',
+        dtwFt:
+          typeof o.depth_to_water_bgs === 'number' ? o.depth_to_water_bgs : 0,
+        mpHeightFt:
+          typeof o.measuring_point_height === 'number'
+            ? o.measuring_point_height
+            : 0,
+        levelStatus: o.level_status ?? undefined,
+      })) as FieldSheetPageTwoMeasurement[]
+      const rows = rawRows.filter((row) => row.dtwFt > 0)
+
+      const contactName =
+        bundle.contacts?.find((c) => Boolean(c?.name))?.name ?? '-'
+
+      return {
+        siteName: String(well.site_name ?? well.name ?? ''),
+        pointId: `Well ${well.id}`,
+        wellDepthFt:
+          typeof well.well_depth === 'number' ? String(well.well_depth) : '',
+        measurements: rows,
+        staffName: contactName,
+        staffEmail: '',
+        staffPhone: '',
+      }
+    }
 
     setIsGenerating(true)
     setProgress(0)
@@ -773,8 +850,17 @@ export const WellBatchExport = () => {
           subject="Batch Well Field Data Report"
         >
           {bundlesForExport.map((bundle) => (
+            <Fragment key={bundle.well.id}>
+              {pagesForWell(bundle.well, includeOwnerPage).map(
+                (page, pageIndex) =>
+                  page === 'owner-leavebehind' ? (
+                    <FieldSheetPageTwo
+                      key={`owner-${bundle.well.id}-${pageIndex}`}
+                      {...buildOwnerPageData(bundle)}
+                    />
+                  ) : (
             <FieldCompilationNotesPdf
-              key={bundle.well.id}
+                      key={`field-${bundle.well.id}-${pageIndex}`}
               well={bundle.well}
               contacts={bundle.contacts}
               assets={bundle.assets}
@@ -785,6 +871,9 @@ export const WellBatchExport = () => {
               standalone={false}
               includeConfidentialContacts={canViewConfidential}
             />
+                  )
+              )}
+            </Fragment>
           ))}
         </OcotilloDocument>
       ).toBlob()
@@ -822,8 +911,12 @@ export const WellBatchExport = () => {
           <Typography variant="h3" fontWeight={700}>
             Field Sheets
           </Typography>
-          <Typography variant="body1" sx={{ maxWidth: '85ch', mt: 0.5, color: 'text.secondary' }}>
-            Paste well names, search wells, and generate field sheet PDFs in one run.
+          <Typography
+            variant="body1"
+            sx={{ maxWidth: '85ch', mt: 0.5, color: 'text.secondary' }}
+          >
+            Paste well names, search wells, and generate field sheet PDFs in one
+            run.
           </Typography>
         </Box>
       }
@@ -954,9 +1047,7 @@ export const WellBatchExport = () => {
                 onChange={(_, value: any) => addFromSearch(value)}
                 renderOption={(props, option: any) => (
                   <Box component="li" {...props} sx={{ gap: 1.5 }}>
-                    <Typography variant="body2">
-                      {option.name}
-                    </Typography>
+                    <Typography variant="body2">{option.name}</Typography>
                   </Box>
                 )}
                 renderInput={(params) => (
@@ -988,7 +1079,11 @@ export const WellBatchExport = () => {
                 Selected Wells
               </Typography>
               {chips.length > 0 && (
-                <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ ml: 0.5 }}
+                >
                   {resolvedIds.length} resolved{unresolvedLabel}
                 </Typography>
               )}
@@ -1001,7 +1096,10 @@ export const WellBatchExport = () => {
                 sx={{ mx: 2, mt: 2, fontSize: '0.8rem', borderRadius: 1 }}
               >
                 {errorChips.length} name{errorChips.length > 1 ? 's' : ''} not
-                found: <strong>{errorChips.map((chip) => chip.query).join(', ')}</strong>
+                found:{' '}
+                <strong>
+                  {errorChips.map((chip) => chip.query).join(', ')}
+                </strong>
               </Alert>
             )}
 
@@ -1023,17 +1121,22 @@ export const WellBatchExport = () => {
                       key={chip.query}
                       label={
                         chip.status === 'resolved'
-                          ? (wellsById.get(chip.wellId as number)?.name ?? chip.query)
+                          ? (wellsById.get(chip.wellId as number)?.name ??
+                            chip.query)
                           : `${chip.query} · not found`
                       }
                       onDelete={() => removeChip(chip.query)}
                       size="small"
                       sx={{
-                        bgcolor: chip.status === 'error' ? '#fdf2f2' : '#eaf0f6',
+                        bgcolor:
+                          chip.status === 'error' ? '#fdf2f2' : '#eaf0f6',
                         border: `1px solid ${
                           chip.status === 'error' ? '#f1a9a0' : '#aec6e0'
                         }`,
-                        color: chip.status === 'error' ? 'error.main' : 'primary.main',
+                        color:
+                          chip.status === 'error'
+                            ? 'error.main'
+                            : 'primary.main',
                       }}
                     />
                   ))}
@@ -1055,7 +1158,11 @@ export const WellBatchExport = () => {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="caption" color="text.secondary" fontStyle="italic">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontStyle="italic"
+                    >
                       {resolvedIds.length} ready for export
                     </Typography>
                     <Tooltip title="Clear all">
@@ -1079,10 +1186,7 @@ export const WellBatchExport = () => {
                       py: 0.25,
                       fontSize: '0.75rem',
                     }}
-                    disabled={
-                      resolvedIds.length === 0 ||
-                      isGenerating
-                    }
+                    disabled={resolvedIds.length === 0 || isGenerating}
                     onClick={() => setExportOpen(true)}
                     startIcon={<FileDownload />}
                   >
@@ -1113,6 +1217,8 @@ export const WellBatchExport = () => {
         resolvedCount={resolvedIds.length}
         filename={filename}
         setFilename={setFilename}
+        ownerPageOn={includeOwnerPage}
+        setOwnerPageOn={setIncludeOwnerPage}
       />
     </List>
   )
