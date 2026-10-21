@@ -1,0 +1,19 @@
+# Keep the build context to source only. The Dockerfile runs its own npm ci
+# on Alpine; a host node_modules copied over it would mix glibc native
+# binaries (rollup, esbuild, lightningcss) into a musl image.
+node_modules
+dist
+coverage
+.git
+.github
+.claude
+cypress
+*.log
+
+# google-github-actions/auth writes the service-account key into the
+# workspace root. The builder stage is exported to the registry layer cache
+# (mode=max), so anything copied into it is published there.
+gha-creds-*.json
+.env
+.env.*
+!.env.*.example

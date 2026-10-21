@@ -47,6 +47,14 @@ export const ENABLED_HYDROGRAPH_UI_MODES: readonly HydrographUiMode[] = [
 export const isHydrographUiModeEnabled = (mode: HydrographUiMode) =>
   ENABLED_HYDROGRAPH_UI_MODES.includes(mode)
 
+// The automated Clean tools (Correct drift, Remove Offsets/Zeros, reflection
+// removal and their tuning fields) are hidden for now: they do not match the
+// hydrogeologist workflow, which prefers manual shift and snap, and they
+// caused confusion. The code stays in place so they can come back once the
+// specific problem types are cataloged — set this to true to restore them.
+// Manually deleting selected readings is not an automated tool and stays.
+export const SHOW_AUTOMATED_CLEAN = false
+
 /** True when `mode` exposes at least as much as `minimum`. */
 export const isAtLeastMode = (
   mode: HydrographUiMode,

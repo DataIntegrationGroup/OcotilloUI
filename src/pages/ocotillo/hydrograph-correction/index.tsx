@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import axios from 'axios'
-import { useCan, useInvalidate } from '@refinedev/core'
-import { useQuery } from '@tanstack/react-query'
+import { useCan } from '@refinedev/core'
 import { Breadcrumb, useAutocomplete } from '@refinedev/mui'
 import {
   Alert,
@@ -14,9 +13,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Menu,
   MenuItem,
   Paper,
+  Radio,
+  RadioGroup,
   Skeleton,
   Stack,
   TextField,
@@ -35,11 +37,23 @@ import {
   type WellntelIngestResult,
 } from './WellntelIngestDialog'
 import {
+  type PublishProgress,
+  type PublishResult,
+  PublishStatusNotice,
+} from './PublishStatusNotice'
+import {
+  DELETE_STAGE,
+  REFRESH_STAGE,
+  type UploadEvent,
+  uploadFraction,
+  uploadingProgress,
+} from './publishProgress'
+import { useWellSeries } from './useWellSeries'
+import {
   DiverHubIngestDialog,
   type DiverHubIngestResult,
 } from './DiverHubIngestDialog'
 import { IObservation, IWell } from '@/interfaces/ocotillo'
-import { fetchAllOcotilloPages } from '@/utils/ocotilloPaging'
 import { TransducerObservationWithBlockResponse } from '@/generated/types.gen'
 import {
   OcotilloHydrographCorrectionWorkbench,
@@ -50,6 +64,9 @@ import {
 } from '@/components/Hydrographs/OcotilloHydrographCorrectionWorkbench'
 import { useWellDetails } from '@/hooks/useWellDetails'
 import { buildManualObservationFieldMetadata } from '@/utils/manualObservationFieldMetadata'
+import { findGroundwaterLevelParameterId } from '@/utils/groundwaterLevelParameter'
+import { getApiErrorMessage } from '@/utils/apiErrorMessage'
+import { findCoveringDeployments } from '@/utils/coveringDeployments'
 import {
   buildSensorDeploymentRows,
   type DeploymentLike,
@@ -62,6 +79,12 @@ import {
   type HydrographRange,
   ParsedHydrographUpload,
 } from '@/components/Hydrographs/hydrographCorrection'
+import {
+  parseOverlapConflict,
+  splitAroundPublishedBlocks,
+  type PublishedBlockSpan,
+  type PublishOverlapMode,
+} from '@/components/Hydrographs/publishOverlap'
 import { HydrographUiModeToggle } from '@/components/Hydrographs/HydrographUiModeToggle'
 import {
   isAtLeastMode,
@@ -137,6 +160,35 @@ const INGEST_DEMO_MANUAL_OBSERVATIONS: Partial<
   diver: INGEST_DIVER_MANUAL_OBSERVATIONS,
 }
 
+interface PublishSuccess {
+  blockIds: number[]
+  count: number
+  skippedCount: number
+  wellName: string
+}
+
+const describePublishSuccess = ({
+  blockIds,
+  count,
+  skippedCount,
+}: PublishSuccess) => {
+  const written =
+    count > 0
+      ? `Published ${count} corrected observations${
+          blockIds.length > 0
+            ? ` (${blockIds.length === 1 ? 'block' : 'blocks'} ${blockIds.join(', ')})`
+            : ''
+        }.`
+      : 'Nothing new to publish.'
+  const ignored =
+    skippedCount > 0
+      ? ` Ignored ${skippedCount} already-published ${
+          skippedCount === 1 ? 'observation' : 'observations'
+        }.`
+      : ''
+  return written + ignored
+}
+
 export const HydrographCorrectionPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedWell, setSelectedWell] = useState<IWell | null>(null)
@@ -160,18 +212,28 @@ export const HydrographCorrectionPage = () => {
   const [ingestMenuAnchor, setIngestMenuAnchor] =
     useState<HTMLElement | null>(null)
   const [ingestedWellName, setIngestedWellName] = useState<string | null>(null)
-  const [publishSuccess, setPublishSuccess] = useState<{
-    blockId: number | null
-    count: number
-    wellName: string
-  } | null>(null)
-  const [publishError, setPublishError] = useState<string | null>(null)
+  const [publishSuccess, setPublishSuccess] = useState<PublishSuccess | null>(
+    null
+  )
+  const [publishError, setPublishError] = useState<PublishResult | null>(null)
+  // Set for as long as a publish request is in flight, including the ones
+  // sent after the overlap or deployment dialogs, which the workbench's own
+  // button no longer tracks.
+  const [publishProgress, setPublishProgress] =
+    useState<PublishProgress | null>(null)
   const [pendingOverlap, setPendingOverlap] = useState<{
-    blockIds: number[]
+    blocks: PublishedBlockSpan[]
+    args: HydrographPublishArgs
+    deploymentId: number | undefined
+  } | null>(null)
+  const [pendingDeploymentChoice, setPendingDeploymentChoice] = useState<{
+    candidates: DeploymentLike[]
     args: HydrographPublishArgs
   } | null>(null)
+  const [chosenDeploymentId, setChosenDeploymentId] = useState<number | null>(
+    null
+  )
   const dtwParameterIdRef = useRef<number | null>(null)
-  const invalidate = useInvalidate()
   const { mode, setMode } = useHydrographUiMode()
 
   // Simple mode is the plain pressure-transducer workflow: upload a file and
@@ -198,40 +260,9 @@ export const HydrographCorrectionPage = () => {
     ],
   })
 
-  // Both series are charted in full, so every page is fetched. A paginated
-  // list hook would cap the stored transducer trace at its first page —
-  // a few hours of readings against a year-long upload, which reads on the
-  // chart as "no stored data at all".
-  const wellSeriesQuery = useQuery({
-    queryKey: ['hydrograph-correction-well-series', selectedWell?.id ?? ''],
-    enabled: Boolean(selectedWell?.id),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    queryFn: async ({ queryKey, signal }) => {
-      const thingId = queryKey[1]
-      if (thingId === '' || thingId == null) {
-        return {
-          manualRows: [] as IObservation[],
-          transducerRows: [] as TransducerObservationWithBlockResponse[],
-        }
-      }
-
-      const [manualRows, transducerRows] = await Promise.all([
-        fetchAllOcotilloPages<IObservation>(
-          'observation/groundwater-level',
-          { thing_id: thingId },
-          { signal }
-        ),
-        fetchAllOcotilloPages<TransducerObservationWithBlockResponse>(
-          'observation/transducer-groundwater-level',
-          { thing_id: thingId },
-          { pageSize: 5000, signal }
-        ),
-      ])
-
-      return { manualRows, transducerRows }
-    },
-  })
+  const { wellSeriesQuery, invalidateStoredSeries } = useWellSeries(
+    selectedWell?.id
+  )
 
   const manualRows = wellSeriesQuery.data?.manualRows ?? EMPTY_MANUAL_ROWS
   const transducerRows =
@@ -360,46 +391,62 @@ export const HydrographCorrectionPage = () => {
     await resolveWellFromUpload(parsed)
   }
 
-  // Resolve the depth-to-water parameter id from the lexicon at runtime
-  // (upload-contract open question #1 — this avoids a hardcoded id).
+  // Resolve the groundwater-level Parameter id at runtime (upload-contract
+  // open question #1 — this avoids a hardcoded id). The block route checks
+  // parameter_id against its Parameter row, so a lexicon term id is rejected.
+  // Read it off the selected well's series first; a well with no stored
+  // readings falls back to any groundwater-level observation.
   const resolveDtwParameterId = async () => {
     if (dtwParameterIdRef.current !== null) return dtwParameterIdRef.current
 
-    const fetchTerms = async (category?: string) => {
-      const response = await ocotilloDataProvider.getList({
-        resource: 'lexicon/term',
-        pagination: { currentPage: 1, pageSize: 500 },
-        meta: { params: category ? { category } : {} },
+    let parameterId = findGroundwaterLevelParameterId({
+      transducerRows,
+      manualRows,
+    })
+    if (parameterId === null) {
+      const [manualSample, transducerSample] = await Promise.all(
+        [
+          'observation/groundwater-level',
+          'observation/transducer-groundwater-level',
+        ].map((resource) =>
+          ocotilloDataProvider
+            .getList({
+              resource,
+              pagination: { currentPage: 1, pageSize: 1 },
+            })
+            .then((response) => response.data)
+            .catch(() => [])
+        )
+      )
+      parameterId = findGroundwaterLevelParameterId({
+        transducerRows:
+          transducerSample as TransducerObservationWithBlockResponse[],
+        manualRows: manualSample as IObservation[],
       })
-      return response.data as Array<{ id: number; term: string }>
     }
-    const findDtw = (terms: Array<{ id: number; term: string }>) =>
-      terms.find((item) =>
-        /depth\s*to\s*water.*(bgs|below\s*ground)/i.test(item.term)
-      ) ?? terms.find((item) => /depth\s*to\s*water/i.test(item.term))
-
-    let match = findDtw(await fetchTerms('parameter').catch(() => []))
-    if (!match) match = findDtw(await fetchTerms())
-    if (!match) {
+    if (parameterId === null) {
       throw new Error(
-        'Could not resolve the depth-to-water parameter from the lexicon.'
+        'Could not resolve the groundwater level parameter from existing observations.'
       )
     }
 
-    dtwParameterIdRef.current = match.id
-    return match.id
+    dtwParameterIdRef.current = parameterId
+    return parameterId
   }
 
   // POST per docs/hydrograph-correction-upload-contract.md.
   const postCorrectedBlock = async (
     args: HydrographPublishArgs,
-    replaceOverlapping: boolean
+    replaceOverlapping: boolean,
+    deploymentId: number | undefined,
+    onUpload?: (event: UploadEvent) => void
   ) => {
     if (!selectedWell) throw new Error('No well is selected.')
 
     const parameterId = await resolveDtwParameterId()
     const payload = {
       thing_id: selectedWell.id,
+      ...(deploymentId !== undefined ? { deployment_id: deploymentId } : {}),
       parameter_id: parameterId,
       release_status: 'provisional',
       review_status: 'not reviewed',
@@ -424,51 +471,97 @@ export const HydrographCorrectionPage = () => {
       url,
       method: 'post',
       payload,
+      ...(onUpload ? { meta: { onUploadProgress: onUpload } } : {}),
     })
     return data as { block?: { id?: number }; observation_count?: number }
   }
 
-  const applyPublishSuccess = (
+  const publishingWellName = selectedWell?.name ?? 'the selected well'
+
+  const failPublish = (message: string) =>
+    setPublishError({ wellName: publishingWellName, message })
+
+  // What the page shows between the server confirming a write and the chart
+  // showing it: refetching a long series is not instant. A refresh that fails
+  // must not turn a publish that succeeded into a failure.
+  const refreshChartAfterWrite = async (operation?: 'delete') => {
+    setPublishProgress({
+      wellName: publishingWellName,
+      ...(operation ? { operation } : {}),
+      stage: REFRESH_STAGE,
+    })
+    await invalidateStoredSeries().catch(() => undefined)
+  }
+
+  const applyPublishSuccess = async (
     data: { block?: { id?: number }; observation_count?: number },
     args: HydrographPublishArgs
   ) => {
     setPublishSuccess({
-      blockId: data.block?.id ?? null,
+      blockIds: data.block?.id != null ? [data.block.id] : [],
       count: data.observation_count ?? args.measurements.length,
+      skippedCount: 0,
       wellName: selectedWell?.name ?? '',
     })
-    invalidate({
-      resource: 'observation/transducer-groundwater-level',
-      dataProviderName: 'ocotillo',
-      invalidates: ['list'],
-    })
+    await refreshChartAfterWrite()
   }
 
-  const handlePublish = async (args: HydrographPublishArgs) => {
+  // The API resolves the deployment from the block span when none is sent,
+  // and refuses when several deployments cover it -- two sensors could have
+  // recorded the file (BDMS-1294). Resolve it here first so a single match is
+  // sent explicitly and several are put to the user.
+  const handlePublish = async (
+    args: HydrographPublishArgs,
+    chosenDeployment?: number
+  ) => {
     setPublishSuccess(null)
     setPublishError(null)
 
+    let deploymentId = chosenDeployment
+    if (deploymentId === undefined && args.measurements.length > 0) {
+      const times = args.measurements.map((m) => m.time.getTime())
+      const covering = findCoveringDeployments(
+        (wellDetailsQuery.data?.deployments ?? []) as DeploymentLike[],
+        new Date(Math.min(...times)),
+        new Date(Math.max(...times))
+      )
+      if (covering.length > 1) {
+        setChosenDeploymentId(null)
+        setPendingDeploymentChoice({ candidates: covering, args })
+        return
+      }
+      if (covering.length === 1) deploymentId = covering[0].id as number
+    }
+
+    const base = { wellName: publishingWellName }
+    setPublishProgress(uploadingProgress(base, 0))
     try {
-      applyPublishSuccess(await postCorrectedBlock(args, false), args)
+      await applyPublishSuccess(
+        await postCorrectedBlock(args, false, deploymentId, (event) =>
+          setPublishProgress(uploadingProgress(base, uploadFraction(event)))
+        ),
+        args
+      )
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 409) {
-        const body = error.response.data ?? {}
-        const blockIds: number[] =
-          body.overlapping_block_ids ??
-          body.detail?.overlapping_block_ids ??
-          []
-        setPendingOverlap({ blockIds, args })
+        // Nothing was written: the server checks for overlap before any
+        // insert, so the user can still choose how to resolve it.
+        setPendingOverlap({
+          blocks: parseOverlapConflict(error.response.data),
+          args,
+          deploymentId,
+        })
         return
       }
       if (axios.isAxiosError(error) && error.response?.status === 404) {
-        setPublishError(
+        failPublish(
           'The transducer block upload endpoint is not available yet — see docs/hydrograph-correction-upload-contract.md.'
         )
         return
       }
-      setPublishError(
-        error instanceof Error ? error.message : 'Publishing failed.'
-      )
+      failPublish(getApiErrorMessage(error, 'Publishing failed.'))
+    } finally {
+      setPublishProgress(null)
     }
   }
 
@@ -486,18 +579,18 @@ export const HydrographCorrectionPage = () => {
       end_time: range.endTime.toISOString(),
     })
 
+    setPublishProgress({
+      wellName: publishingWellName,
+      operation: 'delete',
+      stage: DELETE_STAGE,
+    })
     try {
       const { data } = await ocotilloDataProvider.custom!({
         url: `observation/transducer-groundwater-level?${params.toString()}`,
         method: 'delete',
       })
 
-      invalidate({
-        resource: 'observation/transducer-groundwater-level',
-        dataProviderName: 'ocotillo',
-        invalidates: ['list'],
-      })
-      await wellSeriesQuery.refetch()
+      await refreshChartAfterWrite('delete')
 
       const body = data as { deleted_observation_count?: number } | null
       return { deletedCount: body?.deleted_observation_count ?? 0 }
@@ -513,22 +606,130 @@ export const HydrographCorrectionPage = () => {
         )
       }
       throw error
+    } finally {
+      setPublishProgress(null)
     }
   }
 
-  const confirmReplaceOverlap = async () => {
-    if (!pendingOverlap) return
-    const { args } = pendingOverlap
-    setPendingOverlap(null)
+  // Publishes only the points outside the already-published blocks. What is
+  // left can sit on both sides of a published block, and one block may not
+  // span another, so each contiguous run is published as its own block.
+  const publishIgnoringOverlap = async (
+    args: HydrographPublishArgs,
+    blocks: PublishedBlockSpan[],
+    deploymentId: number | undefined
+  ) => {
+    const { runs, skippedCount } = splitAroundPublishedBlocks(
+      args.measurements,
+      blocks
+    )
+    const blockIds: number[] = []
+    let count = 0
 
     try {
-      applyPublishSuccess(await postCorrectedBlock(args, true), args)
+      for (const [index, run] of runs.entries()) {
+        const base = {
+          wellName: publishingWellName,
+          ...(runs.length > 1
+            ? { step: { current: index + 1, total: runs.length } }
+            : {}),
+        }
+        setPublishProgress(uploadingProgress(base, 0))
+        const data = await postCorrectedBlock(
+          { ...args, measurements: run },
+          false,
+          deploymentId,
+          (event) =>
+            setPublishProgress(uploadingProgress(base, uploadFraction(event)))
+        )
+        if (data.block?.id != null) blockIds.push(data.block.id)
+        count += data.observation_count ?? run.length
+      }
+
+      setPublishSuccess({
+        blockIds,
+        count,
+        skippedCount,
+        wellName: selectedWell?.name ?? '',
+      })
+      if (blockIds.length > 0) await refreshChartAfterWrite()
     } catch (error) {
-      setPublishError(
-        error instanceof Error ? error.message : 'Publishing failed.'
+      // A 409 here means the stored series changed after the overlap was
+      // detected, or unblocked readings sit in the gap; the server says which.
+      const reason = getApiErrorMessage(error, 'publishing failed')
+      failPublish(
+        blockIds.length > 0
+          ? `Published ${blockIds.length} of ${runs.length} blocks (${blockIds.join(', ')}) before stopping: ${reason}.`
+          : `Publishing failed: ${reason}.`
       )
+      if (blockIds.length > 0) invalidateStoredSeries()
+      return
+    } finally {
+      setPublishProgress(null)
     }
   }
+
+  const resolveOverlap = async (overlapMode: PublishOverlapMode) => {
+    if (!pendingOverlap) return
+    const { args, blocks, deploymentId } = pendingOverlap
+    setPendingOverlap(null)
+
+    if (overlapMode === 'ignore') {
+      await publishIgnoringOverlap(args, blocks, deploymentId)
+      return
+    }
+
+    const base = { wellName: publishingWellName }
+    setPublishProgress(uploadingProgress(base, 0))
+    try {
+      await applyPublishSuccess(
+        await postCorrectedBlock(args, true, deploymentId, (event) =>
+          setPublishProgress(uploadingProgress(base, uploadFraction(event)))
+        ),
+        args
+      )
+    } catch (error) {
+      failPublish(getApiErrorMessage(error, 'Publishing failed.'))
+    } finally {
+      setPublishProgress(null)
+    }
+  }
+
+  const confirmDeploymentChoice = () => {
+    if (!pendingDeploymentChoice || chosenDeploymentId === null) return
+    const { args } = pendingDeploymentChoice
+    setPendingDeploymentChoice(null)
+    void handlePublish(args, chosenDeploymentId)
+  }
+
+  const describeDeployment = (deployment: DeploymentLike) => {
+    const sensor = deployment.sensor
+    const label =
+      [
+        sensor?.name,
+        sensor?.model,
+        sensor?.serial_no && `S/N ${sensor.serial_no}`,
+      ]
+        .filter(Boolean)
+        .join(' · ') || 'Unnamed sensor'
+    const installed = deployment.installation_date?.slice(0, 10) ?? 'unknown'
+    const removed = deployment.removal_date?.slice(0, 10) ?? 'still installed'
+    return {
+      primary: `Deployment ${deployment.id} — ${label}`,
+      secondary: `Installed ${installed}, removed ${removed}`,
+    }
+  }
+
+  const pendingOverlapSkipCount = useMemo(
+    () =>
+      pendingOverlap
+        ? splitAroundPublishedBlocks(
+            pendingOverlap.args.measurements,
+            pendingOverlap.blocks
+          ).skippedCount
+        : 0,
+    [pendingOverlap]
+  )
 
   const applyExternalIngest = (
     { well, wellName, measurements, isDemo }: WellntelIngestResult,
@@ -655,7 +856,7 @@ export const HydrographCorrectionPage = () => {
           alignItems={{ xs: 'stretch', md: 'flex-start' }}
         >
           <Stack spacing={0.5}>
-            <OcotilloPageTitle title="Hydrograph Correction" />
+            <OcotilloPageTitle title="HydroSync" />
             <Typography variant="body2" color="text.secondary">
               Upload a transducer file first. Ocotillo will try to extract
               thing.name from the file and resolve the well automatically.
@@ -843,21 +1044,6 @@ export const HydrographCorrectionPage = () => {
           </Box>
         </Paper>
 
-        {publishSuccess ? (
-          <Alert severity="success" onClose={() => setPublishSuccess(null)}>
-            Published {publishSuccess.count} corrected observations
-            {publishSuccess.blockId !== null
-              ? ` (block ${publishSuccess.blockId})`
-              : ''}{' '}
-            to {publishSuccess.wellName}.
-          </Alert>
-        ) : null}
-        {publishError ? (
-          <Alert severity="error" onClose={() => setPublishError(null)}>
-            {publishError}
-          </Alert>
-        ) : null}
-
         {!parsedUpload ? (
           <Alert severity="info">
             Upload a transducer file to begin. If the file contains `thing.name`
@@ -896,6 +1082,9 @@ export const HydrographCorrectionPage = () => {
             initialUpload={parsedUpload}
             initialFileName={uploadedFileName}
             onPublish={handlePublish}
+            publishInProgress={
+              publishProgress !== null && publishProgress.operation !== 'delete'
+            }
             onDeleteStoredRange={
               canDeleteStoredData ? handleDeleteStoredRange : undefined
             }
@@ -906,30 +1095,137 @@ export const HydrographCorrectionPage = () => {
         )}
       </Stack>
 
+      <PublishStatusNotice
+        progress={publishProgress}
+        success={
+          publishSuccess
+            ? {
+                wellName: publishSuccess.wellName,
+                message: describePublishSuccess(publishSuccess),
+              }
+            : null
+        }
+        error={publishError}
+        onDismissSuccess={() => setPublishSuccess(null)}
+        onDismissError={() => setPublishError(null)}
+      />
+
       <Dialog
         open={Boolean(pendingOverlap)}
         onClose={() => setPendingOverlap(null)}
-        maxWidth="xs"
+        maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Replace existing blocks?</DialogTitle>
+        <DialogTitle>Overlaps published data for {publishingWellName}</DialogTitle>
         <DialogContent>
-          <Typography variant="body2">
-            The corrected time span overlaps existing transducer observation
-            {(pendingOverlap?.blockIds.length ?? 0) === 1
-              ? ' block '
-              : ' blocks '}
-            {pendingOverlap?.blockIds.length
-              ? pendingOverlap.blockIds.join(', ')
-              : '(ids unavailable)'}
-            . Replacing deletes those blocks and their observations in the
-            same transaction.
-          </Typography>
+          <Stack spacing={1.5}>
+            <Typography variant="body2">
+              The corrected series overlaps data already published to{' '}
+              <strong>{publishingWellName}</strong>. Nothing has been written
+              yet.
+            </Typography>
+            {pendingOverlap?.blocks.length ? (
+              <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                {pendingOverlap.blocks.map((block) => (
+                  <Typography component="li" variant="body2" key={block.id}>
+                    Block {block.id}: {block.startTime.toLocaleString()} –{' '}
+                    {block.endTime.toLocaleString()}
+                  </Typography>
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                The overlapping blocks could not be read from the server
+                response.
+              </Typography>
+            )}
+            <Typography variant="body2">
+              <strong>Overwrite existing points</strong> deletes those blocks
+              and their observations, then publishes the full corrected series,
+              in one transaction.
+            </Typography>
+            <Typography variant="body2">
+              <strong>Ignore already published points</strong> keeps the stored
+              data and publishes only the corrected observations outside it
+              {pendingOverlap?.blocks.length
+                ? ` (${pendingOverlapSkipCount} of ${pendingOverlap.args.measurements.length} would be ignored)`
+                : ''}
+              .
+            </Typography>
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPendingOverlap(null)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={confirmReplaceOverlap}>
-            Replace Existing Blocks
+          <Button
+            variant="outlined"
+            disabled={!pendingOverlap?.blocks.length}
+            onClick={() => resolveOverlap('ignore')}
+          >
+            Ignore Already Published Points
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => resolveOverlap('overwrite')}
+          >
+            Overwrite Existing Points
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(pendingDeploymentChoice)}
+        onClose={() => setPendingDeploymentChoice(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Which deployment at {publishingWellName} recorded this file?
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            {pendingDeploymentChoice?.candidates.length} deployments on{' '}
+            <strong>{publishingWellName}</strong> were installed for the whole span of the corrected series.
+            Choose the one whose sensor produced the file.
+          </Typography>
+          <RadioGroup
+            value={
+              chosenDeploymentId === null ? '' : String(chosenDeploymentId)
+            }
+            onChange={(event) =>
+              setChosenDeploymentId(Number(event.target.value))
+            }
+          >
+            {pendingDeploymentChoice?.candidates.map((deployment) => {
+              const { primary, secondary } = describeDeployment(deployment)
+              return (
+                <FormControlLabel
+                  key={deployment.id}
+                  value={String(deployment.id)}
+                  control={<Radio />}
+                  label={
+                    <Box>
+                      <Typography variant="body2">{primary}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {secondary}
+                      </Typography>
+                    </Box>
+                  }
+                />
+              )
+            })}
+          </RadioGroup>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingDeploymentChoice(null)}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={chosenDeploymentId === null}
+            onClick={confirmDeploymentChoice}
+          >
+            Publish to Deployment
           </Button>
         </DialogActions>
       </Dialog>

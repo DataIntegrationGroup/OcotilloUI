@@ -1,9 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import ReactECharts from 'echarts-for-react'
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  alpha,
   Alert,
   Box,
   Button,
@@ -26,6 +34,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  ToggleButton,
   Tooltip,
   Typography,
   useTheme,
@@ -34,17 +43,27 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import { DateTimePicker } from '@mui/x-date-pickers'
 import dayjs, { type Dayjs } from 'dayjs'
 import {
+  ChatBubbleOutline,
   ChevronLeft,
   ChevronRight,
   CleaningServices,
   Clear,
   CloudUpload,
+  CropFree,
+  Height,
   DeleteForever,
+  DeleteOutline,
   ExpandMore,
+  FitScreen,
+  HighlightAlt,
   OpenInNew,
+  PhotoCamera,
   Refresh,
   Straighten,
   TableRows,
+  ZoomIn,
+  ZoomOut,
+  ZoomOutMap,
 } from '@mui/icons-material'
 import {
   applyOffsetToRange,
@@ -52,22 +71,54 @@ import {
   buildCsvFromMeasurements,
   calculateSnapOffset,
   convertWaterHeadToDepthToWater,
+  describeSensorDepthAnchors,
   detectOverpressureClipping,
   interpolateSpuriousReflections,
   normalizePointId,
   parseObservationTimestamp,
   removeOffsetsAndZeros,
+  removeReadingsInRange,
   removeSpuriousReflections,
+  summarizeSeriesChange,
   type ReflectionDetectionMethod,
   type HydrographPoint,
   type HydrographRange,
   type ParsedHydrographUpload,
+  type SensorDepthAnchorBin,
+  type SeriesChangeSummary,
 } from './hydrographCorrection'
 import {
   DEFAULT_HYDROGRAPH_UI_MODE,
   isAtLeastMode,
+  SHOW_AUTOMATED_CLEAN,
   type HydrographUiMode,
 } from './hydrographUiMode'
+import {
+  clampTimeWindow,
+  type ChartPixel,
+  type DataZoomEventParams,
+  FULL_ZOOM_WINDOW,
+  formatAxisTick,
+  isChartZoomWheel,
+  keepZoomWheelOffPage,
+  padTimeWindow,
+  type PanelBand,
+  passPlainWheelToPage,
+  readZoomWindow,
+  resolveValueWheelTarget,
+  resolveZoomBox,
+  scaleValueRange,
+  scaleZoomWindow,
+  type SelectionVisibility,
+  selectionVisibility,
+  type TimeExtent,
+  type TimeWindow,
+  timeWindowFromZoomEvent,
+  useScrollportHeight,
+  useZoomBoxDrag,
+  type ValueRange,
+  valueZoomFactorFromWheel,
+} from './chartViewport'
 import {
   formatCollector,
   type ManualObservationFieldMetadata,
@@ -154,9 +205,11 @@ const SPLIT_HANDLE_WIDTH = 28
 
 // Stacked chart panels, in pixels. Every panel rides the same time axis, so
 // the layout is computed here rather than left to per-panel percentages.
-// The toolbox owns the top row and the legend a right gutter, so the two
-// never compete for the same space. Grids stop short of the gutter.
-const CHART_TOOLBAR_HEIGHT = 44
+// The legend owns a right gutter and the grids stop short of it. The chart
+// tools live in a pinned toolbar above the canvas rather than an ECharts
+// toolbox inside it, which scrolled off screen with the top of the chart.
+const CHART_TOP_PADDING = 16
+const CHART_TOOLBAR_HEIGHT = 48
 const CHART_LEGEND_GUTTER = 210
 const CHART_AXIS_FOOTER_HEIGHT = 76
 const CHART_PANEL_GAP = 16
@@ -178,6 +231,24 @@ type ChartPanel = keyof typeof CHART_PANEL_HEIGHTS
 // every edit, discarding the zoom window and the brushed selection with it.
 // Fixed positions make merge safe, and merge preserves both natively.
 const CHART_PANEL_ORDER = ['head', 'dtw', 'residual'] as const
+
+// Where the plot starts, in pixels from the left. Everything to its left is
+// the value axis labels, which also take the wheel for a value-only zoom.
+const CHART_GRID_LEFT = 100
+
+// Stack the panels top to bottom, each one a fixed height with a small gap, so
+// the whole column lines up on the shared axis at the bottom. A panel this
+// upload does not use keeps its slot at zero height, taking no space and no
+// gap.
+const layoutPanels = (visible: Record<ChartPanel, boolean>): PanelBand[] => {
+  let top = CHART_TOP_PADDING
+  return CHART_PANEL_ORDER.map((panel) => {
+    const height = visible[panel] ? CHART_PANEL_HEIGHTS[panel] : 0
+    const band = { top, height }
+    if (height > 0) top += height + CHART_PANEL_GAP
+    return band
+  })
+}
 const GRID_INDEX: Record<ChartPanel, number> = { head: 0, dtw: 1, residual: 2 }
 
 const RESIDUAL_STORED_SERIES = 'Residual: stored − manual'
@@ -187,9 +258,27 @@ const RESIDUAL_SERIES_NAMES = [
   RESIDUAL_CORRECTED_SERIES,
 ]
 
-// Speech bubble, for the toolbox button that turns the hover popup on/off.
-const TOOLTIP_TOGGLE_ICON =
-  'path://M4,3 L28,3 Q30,3 30,5 L30,19 Q30,21 28,21 L14,21 L8,27 L8,21 L4,21 Q2,21 2,19 L2,5 Q2,3 4,3 Z'
+// Zoom-button step: each press halves or doubles the visible span.
+const ZOOM_STEP = 2
+
+type ChartDragMode = 'pan' | 'select' | 'zoomBox' | 'zoomY'
+
+// The toolbar hint for what a drag on the chart does right now.
+const DRAG_MODE_HINT: Record<ChartDragMode, string> = {
+  pan: 'Drag to pan',
+  select: 'Drag to select a range',
+  zoomBox: 'Drag a box to zoom to it',
+  zoomY: 'Drag up or down to zoom the value axis',
+}
+
+// Appended to the selection chip. Every edit is scoped to the selection, so
+// losing sight of it behind a zoom is worth calling out.
+const SELECTION_VIEW_NOTE: Record<SelectionVisibility, string> = {
+  none: '',
+  visible: '',
+  partial: ' (partly out of view)',
+  hidden: ' (out of view)',
+}
 
 /** The subset of an ECharts tooltip callback param this chart formats. */
 interface TooltipParam {
@@ -582,6 +671,211 @@ const WorkbenchSection = ({
   </Accordion>
 )
 
+const formatSignedFeet = (value: number) =>
+  `${value > 0 ? '+' : ''}${value.toFixed(2)} ft`
+
+// The span a recalculation changes, for the preview and the outcome notice.
+const describeChangeSpan = (change: SeriesChangeSummary) =>
+  `${change.firstChangeTime?.toLocaleString() ?? ''} to ${change.lastChangeTime?.toLocaleString() ?? ''}`
+
+// Listing every interval would swamp the controls on a multi-year record;
+// the first few show the pattern and the count covers the rest.
+const MAX_PREVIEW_BINS = 5
+
+// Staged "Correct drift" change: says what applying it recalculates and
+// what it throws away, while the chart draws the recalculated trace.
+const DriftCorrectionPreview = ({
+  enabling,
+  preview,
+  onApply,
+  onCancel,
+}: {
+  enabling: boolean
+  preview: {
+    measurements: HydrographPoint[]
+    change: SeriesChangeSummary | null
+    rampedBins: SensorDepthAnchorBin[]
+    heldBins: SensorDepthAnchorBin[]
+    discardedEdits: string[]
+    error: string | null
+  }
+  onApply: () => void
+  onCancel: () => void
+}) => {
+  const { change, rampedBins, heldBins, discardedEdits, error } = preview
+
+  return (
+    <Alert
+      severity={error ? 'error' : 'warning'}
+      variant="outlined"
+      data-testid="drift-correction-preview"
+    >
+      <Stack spacing={0.75}>
+        <Typography variant="subtitle2">
+          Preview: drift correction {enabling ? 'on' : 'off'}
+        </Typography>
+        {error ? (
+          <Typography variant="body2">{error}</Typography>
+        ) : (
+          <>
+            <Typography variant="body2">
+              Recalculates depth to water for all {preview.measurements.length}{' '}
+              readings from the uploaded water head. The dashed preview trace on
+              the chart shows the result.
+            </Typography>
+            {change ? (
+              <Typography variant="body2">
+                {change.changedCount > 0
+                  ? `${change.changedCount} readings move from the current result, by up to ${change.maxAbsChange.toFixed(2)} ft${change.maxChangeTime ? ` (${change.maxChangeTime.toLocaleString()})` : ''}.`
+                  : 'No reading moves from the current result.'}
+                {change.addedCount > 0
+                  ? ` ${change.addedCount} readings removed by earlier edits come back.`
+                  : ''}
+              </Typography>
+            ) : null}
+            {change?.firstChangeTime && change.lastChangeTime ? (
+              <Typography variant="body2">
+                Affected range: {describeChangeSpan(change)}, shaded on the
+                chart.
+              </Typography>
+            ) : null}
+            {enabling && rampedBins.length > 0 ? (
+              <>
+                <Typography variant="body2">
+                  Sensor depth ramps between manuals:
+                </Typography>
+                <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                  {rampedBins.slice(0, MAX_PREVIEW_BINS).map((bin) => (
+                    <Typography
+                      component="li"
+                      variant="caption"
+                      key={bin.start.toISOString()}
+                    >
+                      {bin.start.toLocaleDateString()} to{' '}
+                      {bin.end.toLocaleDateString()}:{' '}
+                      {bin.startSensorDepth?.toFixed(2)} to{' '}
+                      {bin.endSensorDepth?.toFixed(2)} ft (drift{' '}
+                      {formatSignedFeet(bin.drift ?? 0)})
+                    </Typography>
+                  ))}
+                </Box>
+                {rampedBins.length > MAX_PREVIEW_BINS ? (
+                  <Typography variant="caption">
+                    and {rampedBins.length - MAX_PREVIEW_BINS} more intervals.
+                  </Typography>
+                ) : null}
+              </>
+            ) : null}
+            {enabling && rampedBins.length === 0 ? (
+              <Typography variant="body2">
+                No interval has a manual observation inside the record at both
+                ends, so there is no drift to correct.
+              </Typography>
+            ) : null}
+            {enabling && heldBins.length > 0 ? (
+              <Typography variant="body2">
+                {heldBins.length} interval
+                {heldBins.length === 1 ? ' has' : 's have'} a manual outside the
+                logged record and stay{heldBins.length === 1 ? 's' : ''}{' '}
+                constant.
+              </Typography>
+            ) : null}
+            <Typography variant="body2">
+              {discardedEdits.length > 0
+                ? `Applying discards ${discardedEdits.length} manual edit${discardedEdits.length === 1 ? '' : 's'}:`
+                : 'No manual edits to discard.'}
+            </Typography>
+            {discardedEdits.length > 0 ? (
+              <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                {discardedEdits.map((edit, index) => (
+                  <Typography
+                    component="li"
+                    variant="caption"
+                    // Log entries can repeat verbatim; position keeps keys
+                    // unique in this append-only list.
+                    key={index}
+                  >
+                    {edit}
+                  </Typography>
+                ))}
+              </Box>
+            ) : null}
+          </>
+        )}
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant="contained"
+            color="warning"
+            onClick={onApply}
+            disabled={Boolean(error)}
+          >
+            Apply
+          </Button>
+          <Button size="small" onClick={onCancel}>
+            Cancel
+          </Button>
+        </Stack>
+      </Stack>
+    </Alert>
+  )
+}
+
+// What applying a drift setting did, kept on screen after the preview closes
+// so there is no doubt whether the data changed.
+interface DriftCorrectionOutcomeState {
+  enabled: boolean
+  readingCount: number
+  change: SeriesChangeSummary | null
+  // Whether any interval had a manual inside the record at both ends; with
+  // none there is nothing to ramp between, so turning drift on moves nothing.
+  hadRampedInterval: boolean
+}
+
+const DriftCorrectionOutcome = ({
+  outcome,
+  onDismiss,
+}: {
+  outcome: DriftCorrectionOutcomeState
+  onDismiss: () => void
+}) => {
+  const { enabled, readingCount, change, hadRampedInterval } = outcome
+  const changed = (change?.changedCount ?? 0) > 0
+
+  return (
+    <Alert
+      severity={changed ? 'success' : 'info'}
+      variant="outlined"
+      onClose={onDismiss}
+      data-testid="drift-correction-outcome"
+    >
+      <Stack spacing={0.5}>
+        <Typography variant="subtitle2">
+          Drift correction {enabled ? 'on' : 'off'}:{' '}
+          {changed ? 'applied' : 'applied, no readings changed'}
+        </Typography>
+        {changed && change ? (
+          <Typography variant="body2">
+            {change.changedCount} of {readingCount} readings moved, by up to{' '}
+            {change.maxAbsChange.toFixed(2)} ft, from{' '}
+            {describeChangeSpan(change)}.{' '}
+            {enabled
+              ? 'Each interval now ramps between its two manual measurements, so the trace passes through both.'
+              : 'Each interval is back on the sensor depth at its closing manual measurement.'}
+          </Typography>
+        ) : (
+          <Typography variant="body2">
+            The series was recalculated and came out the same.{' '}
+            {enabled && !hadRampedInterval
+              ? 'No interval has a manual measurement inside the record at both ends, so there is no drift to correct.'
+              : 'The sensor depth is the same at both ends of every interval.'}
+          </Typography>
+        )}
+      </Stack>
+    </Alert>
+  )
+}
+
 export const OcotilloHydrographCorrectionWorkbench = ({
   thingName,
   manualObservations,
@@ -589,6 +883,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   initialUpload,
   initialFileName,
   onPublish,
+  publishInProgress = false,
   onDeleteStoredRange,
   mode = DEFAULT_HYDROGRAPH_UI_MODE,
   wellMetadata,
@@ -600,6 +895,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   initialUpload?: ParsedHydrographUpload | null
   initialFileName?: string | null
   onPublish?: (args: HydrographPublishArgs) => Promise<void>
+  /**
+   * A publish the caller is still writing after `onPublish` has returned —
+   * one resumed from its overlap or deployment dialog.
+   */
+  publishInProgress?: boolean
   /**
    * Permanently deletes the stored transducer observations inside the range.
    * Omitted when the session has no bound well, or when the signed-in user
@@ -615,6 +915,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const theme = useTheme()
   const chartRef = useRef<ReactECharts>(null)
   const chartContainerRef = useRef<HTMLDivElement>(null)
+  const workspaceRef = useRef<HTMLDivElement>(null)
   const splitRef = useRef<HTMLDivElement>(null)
   const resizeStateRef = useRef<{ startX: number; startWidth: number } | null>(
     null
@@ -622,6 +923,10 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [controlsWidth, setControlsWidth] = useState(DEFAULT_CONTROLS_WIDTH)
   const [controlsCollapsed, setControlsCollapsed] = useState(false)
   const [showTooltip, setShowTooltip] = useState(true)
+  // What dragging on the chart does: pan the view, paint a selection, or
+  // draw a box to zoom to.
+  const [dragMode, setDragMode] = useState<ChartDragMode>('pan')
+  const scrollportHeight = useScrollportHeight(splitRef)
 
   const [uploaded, setUploaded] = useState<ParsedHydrographUpload | null>(
     initialUpload ?? null
@@ -640,6 +945,24 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   // Mirror of the brushed selection, so the chart event handlers can compare
   // against it without closing over changing state.
   const selectedRangeRef = useRef<HydrographRange | null>(null)
+  // The zoom window as instants rather than percentages; see the layout
+  // effect after handleDataZoom. `null` is the full extent.
+  const zoomWindowRef = useRef<TimeWindow | null>(null)
+  // The upload the zoom was last reset for.
+  const zoomedUploadRef = useRef<ParsedHydrographUpload | null | undefined>(
+    undefined
+  )
+  const [isZoomed, setIsZoomed] = useState(false)
+  // Value axis ranges a zoom box pinned, by panel. A pinned axis holds still
+  // while the time window moves, so it cannot refit around an erroneous
+  // reading that scrolls into view. Unpinned axes fit the visible data.
+  const [valueWindows, setValueWindows] = useState<
+    Partial<Record<ChartPanel, ValueRange>>
+  >({})
+  // How much of the selection the zoom window shows, so the toolbar can say
+  // when the range every edit applies to has been zoomed out of view.
+  const [selectionView, setSelectionView] =
+    useState<SelectionVisibility>('none')
   const [selectedManualOption, setSelectedManualOption] =
     useState<ManualOption | null>(null)
   const [shiftAmount, setShiftAmount] = useState<number>(0.1)
@@ -654,6 +977,16 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [correctionLog, setCorrectionLog] = useState<string[]>([])
   const [isPublishing, setIsPublishing] = useState(false)
   const [correctDrift, setCorrectDrift] = useState(false)
+  // Drift setting the user has toggled to but not yet applied. Applying
+  // re-derives the working series from the upload, so the change is staged
+  // and previewed first rather than taking effect on the checkbox click.
+  const [pendingCorrectDrift, setPendingCorrectDrift] = useState<
+    boolean | null
+  >(null)
+  // The result of the last drift setting applied, until dismissed or
+  // superseded.
+  const [driftOutcome, setDriftOutcome] =
+    useState<DriftCorrectionOutcomeState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [qualityWarnings, setQualityWarnings] = useState<string[]>([])
   const [fileName, setFileName] = useState<string | null>(initialFileName ?? null)
@@ -669,11 +1002,23 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null)
 
+  // Deleting brushed readings from the working series. Local and undone by
+  // Reset to Original, so a plain confirmation is enough — unlike the typed
+  // one guarding stored data below.
+  const [isRemoveReadingsDialogOpen, setIsRemoveReadingsDialogOpen] =
+    useState(false)
+  // What the last deletion removed, until dismissed or superseded.
+  const [removeReadingsOutcome, setRemoveReadingsOutcome] = useState<
+    string | null
+  >(null)
+
   // Progressive disclosure. Simple mode is the pressure-transducer workflow
   // only, so the acoustic-logger tooling (reflections) and its tuning knobs
   // are gated behind the higher modes.
-  const showReflectionTools = isAtLeastMode(mode, 'intermediate')
-  const showThresholdFields = isAtLeastMode(mode, 'intermediate')
+  const showReflectionTools =
+    SHOW_AUTOMATED_CLEAN && isAtLeastMode(mode, 'intermediate')
+  const showThresholdFields =
+    SHOW_AUTOMATED_CLEAN && isAtLeastMode(mode, 'intermediate')
   const showDataTable = isAtLeastMode(mode, 'intermediate')
   const showReflectionTuning = isAtLeastMode(mode, 'advanced')
 
@@ -761,6 +1106,22 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       cancelAnimationFrame(frame)
       observer.disconnect()
     }
+  }, [])
+
+  // Plain wheel over the chart scrolls the page; Shift+wheel zooms it.
+  useEffect(() => {
+    const element = chartContainerRef.current
+    if (!element) return
+    return passPlainWheelToPage(element)
+  }, [])
+
+  // Shift+wheel anywhere in the workspace — the controls panel and everything
+  // around the chart card included — zooms the chart or nothing, never scrolls
+  // the page sideways.
+  useEffect(() => {
+    const element = workspaceRef.current
+    if (!element) return
+    return keepZoomWheelOffPage(element)
   }, [])
 
   // Dropping to a mode that hides a toggle must also disable it, otherwise a
@@ -905,6 +1266,91 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     [correctDrift]
   )
 
+  // What applying the staged drift setting would do: the recalculated
+  // series (drawn on the chart), how far it moves from the current result,
+  // the sensor-depth anchors it ramps between, and the manual edits a
+  // re-derive throws away.
+  const driftPreview = useMemo(() => {
+    if (pendingCorrectDrift === null || uploaded?.valueKind !== 'water_head') {
+      return null
+    }
+
+    try {
+      const measurements = convertWaterHeadToDepthToWater({
+        measurements: uploaded.measurements,
+        manualPoints,
+        correctDrift: pendingCorrectDrift,
+      })
+      const bins = describeSensorDepthAnchors(
+        uploaded.measurements,
+        manualPoints
+      )
+      return {
+        measurements,
+        change: summarizeSeriesChange(correctedMeasurements, measurements),
+        rampedBins: bins.filter((bin) => bin.drift !== null),
+        heldBins: bins.filter((bin) => bin.drift === null),
+        discardedEdits: correctionLog.slice(
+          baselineCorrectionLog(uploaded).length
+        ),
+        error: null,
+      }
+    } catch (previewError) {
+      return {
+        measurements: [],
+        change: null,
+        rampedBins: [],
+        heldBins: [],
+        discardedEdits: [],
+        error:
+          previewError instanceof Error
+            ? previewError.message
+            : 'Unable to preview the drift correction.',
+      }
+    }
+  }, [
+    baselineCorrectionLog,
+    correctedMeasurements,
+    correctionLog,
+    manualPoints,
+    pendingCorrectDrift,
+    uploaded,
+  ])
+
+  const applyDriftPreview = () => {
+    if (pendingCorrectDrift === null) return
+    // The preview already measured the candidate against the working series,
+    // which is exactly what applying replaces it with.
+    if (driftPreview && !driftPreview.error) {
+      setDriftOutcome({
+        enabled: pendingCorrectDrift,
+        readingCount: driftPreview.measurements.length,
+        change: driftPreview.change,
+        hadRampedInterval: driftPreview.rampedBins.length > 0,
+      })
+    }
+    // The derive effect picks up the new setting and rebuilds the working
+    // series and correction log from the upload.
+    setCorrectDrift(pendingCorrectDrift)
+    setPendingCorrectDrift(null)
+  }
+
+  // How many working readings the brushed selection would delete, counted
+  // with the same helper that removes them so the prompt cannot disagree
+  // with the result.
+  const selectedReadingCount = useMemo(
+    () =>
+      selectedRange
+        ? correctedMeasurements.length -
+          removeReadingsInRange(correctedMeasurements, selectedRange).length
+        : 0,
+    [correctedMeasurements, selectedRange]
+  )
+  // Deleting every reading would leave nothing to correct or publish.
+  const selectionCoversEveryReading =
+    selectedReadingCount > 0 &&
+    selectedReadingCount === correctedMeasurements.length
+
   const selectedRangeSuffix = () =>
     selectedRange
       ? `, ${selectedRange.startTime.toISOString()} to ${selectedRange.endTime.toISOString()}`
@@ -912,19 +1358,32 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
   useEffect(() => {
     setUploaded(initialUpload ?? null)
+    setPendingCorrectDrift(null)
+    setIsRemoveReadingsDialogOpen(false)
+    setRemoveReadingsOutcome(null)
     setFileName(initialFileName ?? null)
     // Written inline rather than through applySelectedRange so this effect
     // does not take a dependency that changes every render.
     selectedRangeRef.current = null
     setSelectedRange(null)
+    setSelectionView('none')
     setSelectedManualOption(null)
     // Merge keeps the zoom window across every other option change, which is
     // the point of it. A new upload is the one case that has to opt out: it
     // spans a different period, so the previous window would drop the user
-    // somewhere arbitrary in the new trace.
-    chartRef.current
-      ?.getEchartsInstance()
-      ?.dispatchAction({ type: 'dataZoom', start: 0, end: 100 })
+    // somewhere arbitrary in the new trace. This effect also re-runs when the
+    // manual measurements or the drift toggle change, and those must not
+    // throw away the view the user zoomed to.
+    if (zoomedUploadRef.current !== initialUpload) {
+      zoomedUploadRef.current = initialUpload
+      zoomWindowRef.current = null
+      setIsZoomed(false)
+      setValueWindows({})
+      setDriftOutcome(null)
+      chartRef.current
+        ?.getEchartsInstance()
+        ?.dispatchAction({ type: 'dataZoom', ...FULL_ZOOM_WINDOW })
+    }
 
     if (!initialUpload) {
       setRawUploadedMeasurements([])
@@ -987,12 +1446,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   const chartTextStyles = useMemo(
     () => ({
       legend: {
-        // Stacked down the right gutter, clear of the toolbox row above.
-        // Scrolling caps it at the gutter height rather than letting a long
-        // series list push into the panels.
+        // Stacked down the right gutter. Scrolling caps it at the gutter
+        // height rather than letting a long series list push into the panels.
         type: 'scroll',
         orient: 'vertical',
-        top: CHART_TOOLBAR_HEIGHT,
+        top: CHART_TOP_PADDING,
         right: 8,
         width: CHART_LEGEND_GUTTER - 24,
         textStyle: { color: theme.palette.text.primary },
@@ -1005,7 +1463,12 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         splitLine: { show: true, lineStyle: { color: theme.palette.divider } },
       },
       yAxis: {
-        axisLabel: { color: theme.palette.text.secondary },
+        axisLabel: {
+          color: theme.palette.text.secondary,
+          // The ends of a zoomed or pinned axis are wherever the pointer
+          // landed, so cap every label at two decimals.
+          formatter: formatAxisTick,
+        },
         nameTextStyle: {
           color: theme.palette.text.secondary,
           padding: [0, 0, 0, 6],
@@ -1041,12 +1504,59 @@ export const OcotilloHydrographCorrectionWorkbench = ({
 
   const chartHeight = useMemo(
     () =>
-      CHART_TOOLBAR_HEIGHT +
+      CHART_TOP_PADDING +
       shownPanels.reduce((total, panel) => total + CHART_PANEL_HEIGHTS[panel], 0) +
       CHART_PANEL_GAP * Math.max(0, shownPanels.length - 1) +
       CHART_AXIS_FOOTER_HEIGHT,
     [shownPanels]
   )
+
+  // Every panel must span the same instants, not each series' own extent.
+  // The head record usually covers one deployment while the DTW panel also
+  // carries years of stored observations, so without a shared domain the
+  // head trace would stretch across the full width and imply coverage it
+  // does not have.
+  //
+  // The extent is set explicitly even with a single panel, because the zoom
+  // tracking below resolves percentages against it and has to agree with
+  // what the axes actually use.
+  const timeAxisExtent = useMemo(() => {
+    const domain = [
+      headPoints ?? [],
+      manualPoints,
+      storedTransducerPoints,
+      rawUploadedMeasurements,
+      correctedMeasurements,
+    ]
+      .flat()
+      .reduce<TimeExtent | null>((current, point) => {
+        const time = point.time.getTime()
+        if (!current) return { min: time, max: time }
+        return {
+          min: Math.min(current.min, time),
+          max: Math.max(current.max, time),
+        }
+      }, null)
+
+    if (!domain) return null
+    if (shownPanels.length < 2) return domain
+
+    const tick = chooseSharedTimeTick(domain.max - domain.min)
+    return tick
+      ? {
+          min: snapTimeDomainStart(domain.min, tick),
+          max: domain.max,
+          interval: tick,
+        }
+      : domain
+  }, [
+    correctedMeasurements,
+    headPoints,
+    manualPoints,
+    rawUploadedMeasurements,
+    shownPanels.length,
+    storedTransducerPoints,
+  ])
 
   const chartOption = useMemo(() => {
     const lastShownIndex = CHART_PANEL_ORDER.reduce(
@@ -1177,6 +1687,38 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         lineStyle: { color: theme.palette.success.main, width: 3 },
         itemStyle: { color: theme.palette.success.main },
       },
+      {
+        name: 'Drift correction preview',
+        type: 'line',
+        showSymbol: false,
+        xAxisIndex: GRID_INDEX.dtw,
+        yAxisIndex: GRID_INDEX.dtw,
+        data: (driftPreview?.measurements ?? []).map((point) => [
+          point.time,
+          point.value,
+        ]),
+        lineStyle: {
+          color: theme.palette.warning.main,
+          width: 2,
+          type: 'dashed',
+        },
+        itemStyle: { color: theme.palette.warning.main },
+        // Shades the span the staged change would move.
+        markArea: {
+          silent: true,
+          itemStyle: { color: alpha(theme.palette.warning.main, 0.1) },
+          data:
+            driftPreview?.change?.firstChangeTime &&
+            driftPreview.change.lastChangeTime
+              ? [
+                  [
+                    { xAxis: driftPreview.change.firstChangeTime },
+                    { xAxis: driftPreview.change.lastChangeTime },
+                  ],
+                ]
+              : [],
+        },
+      },
     ]
 
     // Empty series stay in the option but not in the legend, which would
@@ -1184,45 +1726,6 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     const legendNames = series
       .filter((entry) => (entry.data as unknown[]).length > 0)
       .map((entry) => entry.name)
-
-    // Every panel must span the same instants, not each series' own extent.
-    // The head record usually covers one deployment while the DTW panel also
-    // carries years of stored observations, so without a shared domain the
-    // head trace would stretch across the full width and imply coverage it
-    // does not have.
-    const sharedTimeDomain =
-      shownPanels.length > 1
-        ? [
-            headPoints ?? [],
-            manualPoints,
-            storedTransducerPoints,
-            rawUploadedMeasurements,
-            correctedMeasurements,
-          ]
-            .flat()
-            .reduce<{ min: number; max: number } | null>((domain, point) => {
-              const time = point.time.getTime()
-              if (!domain) return { min: time, max: time }
-              return {
-                min: Math.min(domain.min, time),
-                max: Math.max(domain.max, time),
-              }
-            }, null)
-        : null
-
-    const sharedTick = sharedTimeDomain
-      ? chooseSharedTimeTick(sharedTimeDomain.max - sharedTimeDomain.min)
-      : null
-
-    const sharedExtent = sharedTimeDomain
-      ? {
-          min: sharedTick
-            ? snapTimeDomainStart(sharedTimeDomain.min, sharedTick)
-            : sharedTimeDomain.min,
-          max: sharedTimeDomain.max,
-          ...(sharedTick ? { interval: sharedTick } : {}),
-        }
-      : {}
 
     const panelYAxis: Record<ChartPanel, Record<string, unknown>> = {
       head: {
@@ -1240,48 +1743,17 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       },
     }
 
-    // Stack the panels top to bottom, each one a fixed height with a small
-    // gap, so the whole column lines up on the shared axis at the bottom. A
-    // panel this upload does not use keeps its slot at zero height, taking no
-    // space and no gap.
-    let panelTop = CHART_TOOLBAR_HEIGHT
-    const grids = CHART_PANEL_ORDER.map((panel) => {
-      const height = visiblePanels[panel] ? CHART_PANEL_HEIGHTS[panel] : 0
-      const grid = {
-        left: 100,
-        right: CHART_LEGEND_GUTTER,
-        top: panelTop,
-        height,
-      }
-      if (height > 0) panelTop += height + CHART_PANEL_GAP
-      return grid
-    })
+    const grids = layoutPanels(visiblePanels).map(({ top, height }) => ({
+      left: CHART_GRID_LEFT,
+      right: CHART_LEGEND_GUTTER,
+      top,
+      height,
+    }))
 
     return {
       animation: false,
       legend: { ...chartTextStyles.legend, data: legendNames },
       grid: grids,
-      toolbox: {
-        top: 0,
-        right: 8,
-        feature: {
-          myToggleTooltip: {
-            show: true,
-            title: showTooltip ? 'Hide hover popup' : 'Show hover popup',
-            icon: TOOLTIP_TOGGLE_ICON,
-            iconStyle: {
-              borderColor: showTooltip
-                ? theme.palette.primary.main
-                : theme.palette.text.secondary,
-            },
-            onclick: () => setShowTooltip((current) => !current),
-          },
-          dataZoom: [{ show: true }, { type: 'inside' }],
-          restore: {},
-          brush: { type: ['lineX', 'clear'] },
-          saveAsImage: {},
-        },
-      },
       tooltip: {
         show: showTooltip,
         trigger: 'axis',
@@ -1324,7 +1796,7 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         type: 'time',
         gridIndex: index,
         show: visiblePanels[panel],
-        ...sharedExtent,
+        ...(timeAxisExtent ?? {}),
         ...chartTextStyles.xAxis,
         // Only the bottom visible panel carries labels; the ones above would
         // just repeat them.
@@ -1337,6 +1809,9 @@ export const OcotilloHydrographCorrectionWorkbench = ({
         nameLocation: 'center',
         nameGap: 74,
         ...panelYAxis[panel],
+        // Null rather than absent, so a merge drops a pin that was released.
+        min: valueWindows[panel]?.min ?? null,
+        max: valueWindows[panel]?.max ?? null,
         ...chartTextStyles.yAxis,
       })),
       series,
@@ -1345,15 +1820,17 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     chartTextStyles,
     correctedMeasurements,
     deleteRange,
+    driftPreview,
     headPoints,
     highlightedManualPoint,
     manualPoints,
     rawUploadedMeasurements,
     residuals,
-    shownPanels.length,
     showTooltip,
     storedTransducerPoints,
     theme,
+    timeAxisExtent,
+    valueWindows,
     visiblePanels,
   ])
 
@@ -1466,7 +1943,42 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     // current selection without being re-created on every change.
     selectedRangeRef.current = range
     setSelectedRange(range)
+    setSelectionView(selectionVisibility(range, zoomWindowRef.current))
   }
+
+  const recordZoomWindow = (view: TimeWindow | null) => {
+    zoomWindowRef.current = view
+    setIsZoomed(view !== null)
+    setSelectionView(selectionVisibility(selectedRangeRef.current, view))
+  }
+
+  const handleDataZoom = (params: DataZoomEventParams) => {
+    if (!timeAxisExtent) return
+    const view = timeWindowFromZoomEvent(params, timeAxisExtent)
+    if (view !== undefined) recordZoomWindow(view)
+  }
+
+  // ECharts holds a wheel, drag or slider zoom as a percentage of the axis
+  // extent. Merge keeps that percentage across option updates, so any change
+  // that moved the extent — stored data arriving after the upload, a
+  // deletion, a correction past either end — slid the view onto a different
+  // period, often leaving only part of the intended range on screen. Putting
+  // the tracked instants back after each extent change keeps the view on the
+  // same stretch of time. A layout effect runs after echarts-for-react has
+  // applied the new option but before the browser paints the drifted window.
+  //
+  // At full extent there is nothing to restore: 0–100% already follows the
+  // extent as it grows.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs only when the extent changes; the window is read from its ref
+  useLayoutEffect(() => {
+    const view = zoomWindowRef.current
+    if (!timeAxisExtent || !view) return
+    const clamped = clampTimeWindow(view, timeAxisExtent)
+    chartRef.current
+      ?.getEchartsInstance()
+      ?.dispatchAction({ type: 'dataZoom', ...(clamped ?? FULL_ZOOM_WINDOW) })
+    recordZoomWindow(clamped)
+  }, [timeAxisExtent])
 
   // Clearing from outside the chart has to take the brush overlay with it,
   // otherwise the shaded band survives on a chart that no longer has a
@@ -1507,9 +2019,147 @@ export const OcotilloHydrographCorrectionWorkbench = ({
     applySelectedRange({ startTime, endTime })
   }
 
-  // Restore drops the chart's own brush; the mirrored state has to follow.
-  const handleChartRestore = () => {
-    applySelectedRange(null)
+  // Each mode button toggles between itself and panning. The brush takes the
+  // chart's global cursor, which inside zoom yields to while it is held; the
+  // zoom box works outside the chart, so it hands the cursor back.
+  const toggleDragMode = (mode: Exclude<ChartDragMode, 'pan'>) => {
+    const next: ChartDragMode = dragMode === mode ? 'pan' : mode
+    if ((next === 'select') !== (dragMode === 'select')) {
+      chartRef.current?.getEchartsInstance()?.dispatchAction({
+        type: 'takeGlobalCursor',
+        key: 'brush',
+        brushOption: {
+          brushType: next === 'select' ? 'lineX' : false,
+          brushMode: 'single',
+        },
+      })
+    }
+    setDragMode(next)
+  }
+
+  // The box sets the time window for every panel and, when it has height,
+  // pins the value axis of the panel it was drawn in; a value-only box pins
+  // the axis and leaves the time window alone. The brushed selection is left
+  // exactly as it was.
+  const zoomToBox = (start: ChartPixel, end: ChartPixel) => {
+    const chart = chartRef.current?.getEchartsInstance()
+    if (!chart) return
+    const box = resolveZoomBox(
+      start,
+      end,
+      chart,
+      CHART_PANEL_ORDER.length,
+      dragMode === 'zoomY' ? 'y' : 'both'
+    )
+    if (!box) return
+    // A value-only box has no time window, and the one on screen stays.
+    if (box.time) chart.dispatchAction({ type: 'dataZoom', ...box.time })
+    const value = box.value
+    if (value) {
+      const panel = CHART_PANEL_ORDER[box.gridIndex]
+      setValueWindows((current) => ({ ...current, [panel]: value }))
+    }
+  }
+
+  const zoomBoxRect = useZoomBoxDrag(
+    chartContainerRef,
+    dragMode === 'zoomBox' || dragMode === 'zoomY',
+    zoomToBox,
+    dragMode === 'zoomY' ? 'y' : 'both'
+  )
+
+  // Shift + wheel over a panel's axis labels zooms that panel's values around
+  // the reading under the pointer, leaving the time window alone. Over the
+  // plot the same gesture zooms time, so the labels read as "the axis under
+  // the pointer". The page never scrolls here: Shift + wheel is cancelled
+  // anywhere in the workspace.
+  const panelBands = useMemo(() => layoutPanels(visiblePanels), [visiblePanels])
+  useEffect(() => {
+    const element = chartContainerRef.current
+    if (!element) return
+
+    const handleWheel = (event: WheelEvent) => {
+      if (!isChartZoomWheel(event)) return
+      const chart = chartRef.current?.getEchartsInstance()
+      if (!chart) return
+
+      const bounds = element.getBoundingClientRect()
+      const target = resolveValueWheelTarget(
+        { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
+        panelBands,
+        chart,
+        CHART_GRID_LEFT
+      )
+      if (!target) return
+
+      event.preventDefault()
+      event.stopPropagation()
+      const factor = valueZoomFactorFromWheel(event)
+      if (factor === 1) return
+
+      const panel = CHART_PANEL_ORDER[target.gridIndex]
+      // Keep scaling the pin if there is one, so events that land before the
+      // chart has redrawn compound instead of repeating the same step.
+      setValueWindows((current) => ({
+        ...current,
+        [panel]: scaleValueRange(
+          current[panel] ?? target.range,
+          factor,
+          target.anchor
+        ),
+      }))
+    }
+
+    // Not passive, or preventDefault is ignored; capture, so the chart's own
+    // wheel handling never sees it.
+    element.addEventListener('wheel', handleWheel, {
+      passive: false,
+      capture: true,
+    })
+    return () =>
+      element.removeEventListener('wheel', handleWheel, { capture: true })
+  }, [panelBands])
+
+  const zoomBy = (factor: number) => {
+    const chart = chartRef.current?.getEchartsInstance()
+    if (!chart) return
+    const { start, end } = scaleZoomWindow(
+      readZoomWindow(chart.getOption()),
+      factor
+    )
+    chart.dispatchAction({ type: 'dataZoom', start, end })
+  }
+
+  const zoomToSelection = () => {
+    if (!selectedRange) return
+    chartRef.current?.getEchartsInstance()?.dispatchAction({
+      type: 'dataZoom',
+      ...padTimeWindow(selectedRange, timeAxisExtent),
+    })
+  }
+
+  // Reset always lands on one documented view: the full time extent of every
+  // series on the chart — the upload, stored transducer data and manual
+  // measurements — with every value axis fitted to its data again.
+  const resetZoom = () => {
+    chartRef.current
+      ?.getEchartsInstance()
+      ?.dispatchAction({ type: 'dataZoom', ...FULL_ZOOM_WINDOW })
+    recordZoomWindow(null)
+    setValueWindows({})
+  }
+
+  const saveChartImage = () => {
+    const chart = chartRef.current?.getEchartsInstance()
+    if (!chart) return
+    const anchor = document.createElement('a')
+    anchor.href = chart.getDataURL({
+      type: 'png',
+      pixelRatio: 2,
+      backgroundColor: theme.palette.background.paper,
+    })
+    anchor.download = `${normalizePointId(parsedPointId || thingName || 'hydrograph')}_hydrograph.png`
+    anchor.click()
   }
 
 
@@ -1553,6 +2203,23 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       ...log,
       `remove_offsets_zeros (threshold ${cleanThreshold}${selectedRangeSuffix()})`,
     ])
+  }
+
+  const confirmRemoveSelectedReadings = () => {
+    setIsRemoveReadingsDialogOpen(false)
+    if (!selectedRange || selectedReadingCount === 0) return
+
+    const remaining = correctedMeasurements.length - selectedReadingCount
+    setCorrectedMeasurements((current) =>
+      removeReadingsInRange(current, selectedRange)
+    )
+    setCorrectionLog((log) => [
+      ...log,
+      `delete_readings (${selectedReadingCount} readings${selectedRangeSuffix()})`,
+    ])
+    setRemoveReadingsOutcome(
+      `Deleted ${selectedReadingCount} reading${selectedReadingCount === 1 ? '' : 's'} between ${selectedRange.startTime.toLocaleString()} and ${selectedRange.endTime.toLocaleString()}. ${remaining} remain${remaining === 1 ? 's' : ''} to publish; the dashed raw trace still shows what was removed.`
+    )
   }
 
   const cleanSpuriousReflections = () => {
@@ -1618,8 +2285,11 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   // baseline conversion through the effect above.
   const resetCorrections = () => {
     setCorrectDrift(false)
+    setPendingCorrectDrift(null)
+    setDriftOutcome(null)
     setCorrectedMeasurements(rawUploadedMeasurements)
     setCorrectionLog(baselineCorrectionLog(uploaded))
+    setRemoveReadingsOutcome(null)
     clearBrushSelection()
     setSelectedManualOption(null)
     setError(null)
@@ -1713,7 +2383,14 @@ export const OcotilloHydrographCorrectionWorkbench = ({
   }
 
   return (
-    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+    // Clip rather than hide: `hidden` makes the Paper a scroll container,
+    // which would pin the sticky chart toolbar and controls to it instead of
+    // to the page.
+    <Paper
+      ref={workspaceRef}
+      elevation={2}
+      sx={{ borderRadius: 2, overflow: 'clip' }}
+    >
       <Box
         sx={{
           px: 2,
@@ -1727,25 +2404,14 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       >
         <Box>
           <Typography variant="body1" fontWeight="bold">
-            Hydrograph Correction Workspace
+            HydroSync Workspace
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Upload a logger file, compare it with Ocotillo measurements, and
             apply local alignment edits.
           </Typography>
         </Box>
-        {/* The brushed range scopes every edit, so it stays in the header
-            rather than moving into the collapsible detail panes. */}
         <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
-          {selectedRange ? (
-            <Chip
-              color="secondary"
-              label={`Selection: ${selectedRange.startTime.toLocaleString()} to ${selectedRange.endTime.toLocaleString()}`}
-              onDelete={clearBrushSelection}
-            />
-          ) : (
-            <Chip variant="outlined" label="Selection: entire uploaded trace" />
-          )}
           <Tooltip title="Discard every correction and restore the dataset as it was loaded.">
             <span>
               <Button
@@ -1789,9 +2455,21 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                 // several sections used to grow the column past the chart and
                 // lengthen the whole page, so reaching a tool meant scrolling
                 // the hydrograph off screen — exactly when it is needed.
+                // Pinned to the top of the page and capped to the visible
+                // height too, so the correction tools stay beside whatever
+                // part of the chart is in view.
                 // Only above lg: the stacked layout puts the chart below the
                 // controls anyway, where an inner scroll would just trap it.
-                maxHeight: { xs: 'none', lg: chartHeight + CHART_PANEL_GAP * 2 },
+                position: { xs: 'static', lg: 'sticky' },
+                top: 0,
+                alignSelf: { xs: 'stretch', lg: 'flex-start' },
+                maxHeight: {
+                  xs: 'none',
+                  lg: Math.min(
+                    chartHeight + CHART_TOOLBAR_HEIGHT + CHART_PANEL_GAP * 2,
+                    scrollportHeight ?? Number.POSITIVE_INFINITY
+                  ),
+                },
                 overflowY: { xs: 'visible', lg: 'auto' },
                 overflowX: 'hidden',
                 display: controlsCollapsed ? { xs: 'none', lg: 'block' } : 'block',
@@ -1846,27 +2524,56 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                     )}
                 </WorkbenchSection>
 
-                <WorkbenchSection title="Clean">
-                    {uploaded?.valueKind === 'water_head' ? (
+                <WorkbenchSection
+                  title={SHOW_AUTOMATED_CLEAN ? 'Clean' : 'Delete Readings'}
+                >
+                    {SHOW_AUTOMATED_CLEAN && uploaded?.valueKind === 'water_head' ? (
                       <>
                         <FormControlLabel
                           control={
                             <Checkbox
                               size="small"
-                              checked={correctDrift}
-                              onChange={(event) =>
-                                setCorrectDrift(event.target.checked)
-                              }
+                              checked={pendingCorrectDrift ?? correctDrift}
+                              onChange={(event) => {
+                                // A new staged change supersedes the last
+                                // outcome.
+                                setDriftOutcome(null)
+                                setPendingCorrectDrift(
+                                  event.target.checked === correctDrift
+                                    ? null
+                                    : event.target.checked
+                                )
+                              }}
                             />
                           }
                           label="Correct drift"
                         />
                         <Typography variant="caption" color="text.secondary">
-                          Water head is converted to depth to water using
-                          manual observations as sensor-depth anchors. Drift
-                          correction interpolates the sensor depth between
-                          anchors. Recomputing discards manual edits.
+                          Depth to water is sensor depth minus water head. The
+                          sensor depth is anchored at each manual observation
+                          (manual depth plus the head at that time). Off, each
+                          interval between two manuals uses the sensor depth
+                          at its closing manual. On, the sensor depth ramps
+                          linearly between the two manuals, so the trace
+                          passes through both. An interval with a manual
+                          outside the logged record stays constant either way.
+                          Toggling previews the result first; applying rebuilds
+                          the series from the upload.
                         </Typography>
+                        {driftPreview ? (
+                          <DriftCorrectionPreview
+                            enabling={pendingCorrectDrift === true}
+                            preview={driftPreview}
+                            onApply={applyDriftPreview}
+                            onCancel={() => setPendingCorrectDrift(null)}
+                          />
+                        ) : null}
+                        {driftOutcome ? (
+                          <DriftCorrectionOutcome
+                            outcome={driftOutcome}
+                            onDismiss={() => setDriftOutcome(null)}
+                          />
+                        ) : null}
                       </>
                     ) : null}
                     {showThresholdFields ? (
@@ -1880,21 +2587,56 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                         }
                       />
                     ) : null}
+                    {SHOW_AUTOMATED_CLEAN ? (
+                      <>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<CleaningServices />}
+                          onClick={cleanOffsetsAndZeros}
+                          disabled={correctedMeasurements.length === 0}
+                        >
+                          Remove Offsets/Zeros
+                        </Button>
+                        <Typography variant="caption" color="text.secondary">
+                          Offsets are sustained level shifts (sensor
+                          repositioning or cable slip): each step is detected
+                          from the medians around it and the trace after it is
+                          re-leveled. Zero readings (sensor out of water) are
+                          dropped.
+                        </Typography>
+                      </>
+                    ) : null}
                     <Button
                       variant="outlined"
+                      color="error"
                       size="small"
-                      startIcon={<CleaningServices />}
-                      onClick={cleanOffsetsAndZeros}
-                      disabled={correctedMeasurements.length === 0}
+                      startIcon={<DeleteOutline />}
+                      onClick={() => setIsRemoveReadingsDialogOpen(true)}
+                      disabled={
+                        selectedReadingCount === 0 ||
+                        selectionCoversEveryReading
+                      }
                     >
-                      Remove Offsets/Zeros
+                      Delete Selected Readings...
                     </Button>
                     <Typography variant="caption" color="text.secondary">
-                      Offsets are sustained level shifts (sensor repositioning
-                      or cable slip): each step is detected from the medians
-                      around it and the trace after it is re-leveled. Zero
-                      readings (sensor out of water) are dropped.
+                      {!selectedRange
+                        ? 'Select a range on the chart to delete the invalid readings inside it before correcting and publishing.'
+                        : selectionCoversEveryReading
+                          ? 'The selection covers every reading. Narrow it — deleting them all would leave nothing to publish.'
+                          : `${selectedReadingCount} of ${correctedMeasurements.length} readings fall inside the selection. Deleting removes them from this session only; Reset to Original restores them.`}
                     </Typography>
+                    {removeReadingsOutcome ? (
+                      <Alert
+                        severity="success"
+                        variant="outlined"
+                        onClose={() => setRemoveReadingsOutcome(null)}
+                        data-testid="remove-readings-outcome"
+                      >
+                        {removeReadingsOutcome}
+                      </Alert>
+                    ) : null}
                     {showReflectionTools ? (
                       <>
                         <TextField
@@ -2175,10 +2917,16 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       disabled={
                         !onPublish ||
                         correctedMeasurements.length === 0 ||
-                        isPublishing
+                        isPublishing ||
+                        publishInProgress ||
+                        isDeleting
                       }
                     >
-                      {isPublishing ? 'Publishing...' : 'Publish to Ocotillo'}
+                      {isPublishing || publishInProgress
+                        ? 'Publishing...'
+                        : thingName
+                          ? `Publish ${thingName} to Ocotillo`
+                          : 'Publish to Ocotillo'}
                     </Button>
                     {!onPublish ? (
                       <Typography variant="caption" color="text.secondary">
@@ -2249,13 +2997,186 @@ export const OcotilloHydrographCorrectionWorkbench = ({
               <Stack spacing={1.5}>
                 <Paper
                   variant="outlined"
-                  sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.paper' }}
+                  sx={{
+                    p: 1.5,
+                    pt: 0,
+                    borderRadius: 2,
+                    bgcolor: 'background.paper',
+                  }}
                 >
+                  {/* Pinned while the chart scrolls past, so zooming,
+                      selecting and the selection it scopes edits to are
+                      always in reach. */}
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    flexWrap="wrap"
+                    useFlexGap
+                    spacing={0.5}
+                    role="toolbar"
+                    aria-label="Chart tools"
+                    sx={{
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 2,
+                      minHeight: CHART_TOOLBAR_HEIGHT,
+                      py: 0.75,
+                      bgcolor: 'background.paper',
+                      borderBottom: 1,
+                      borderColor: 'divider',
+                    }}
+                  >
+                    {/* The well rides in the pinned toolbar so it stays in
+                        view while selecting, correcting and zooming. */}
+                    <Chip
+                      size="small"
+                      color="primary"
+                      label={`Well: ${thingName || 'Unknown'}`}
+                      sx={{ fontWeight: 600 }}
+                    />
+                    <Tooltip title="Drag on the chart to select a time range">
+                      <ToggleButton
+                        value="brush"
+                        size="small"
+                        selected={dragMode === 'select'}
+                        onChange={() => toggleDragMode('select')}
+                        aria-label="Select range"
+                      >
+                        <HighlightAlt fontSize="small" />
+                      </ToggleButton>
+                    </Tooltip>
+                    <Tooltip title="Drag a box on the chart to zoom to it. Its width sets the time range; its height fixes the value axis of the panel it is drawn in. The selection is not changed.">
+                      <ToggleButton
+                        value="zoomBox"
+                        size="small"
+                        selected={dragMode === 'zoomBox'}
+                        onChange={() => toggleDragMode('zoomBox')}
+                        aria-label="Zoom box"
+                      >
+                        <CropFree fontSize="small" />
+                      </ToggleButton>
+                    </Tooltip>
+                    <Tooltip title="Drag up or down on a panel to zoom its value axis, for a closer look at the residuals. The time range and the selection are not changed. Shift + scroll over the axis labels does the same.">
+                      <ToggleButton
+                        value="zoomY"
+                        size="small"
+                        selected={dragMode === 'zoomY'}
+                        onChange={() => toggleDragMode('zoomY')}
+                        aria-label="Zoom value axis"
+                      >
+                        <Height fontSize="small" />
+                      </ToggleButton>
+                    </Tooltip>
+                    {/* The brushed range scopes every edit, so it rides in
+                        the pinned toolbar rather than the collapsible
+                        detail panes. */}
+                    {selectedRange ? (
+                      <Chip
+                        color="secondary"
+                        size="small"
+                        label={`Selection: ${selectedRange.startTime.toLocaleString()} to ${selectedRange.endTime.toLocaleString()}${SELECTION_VIEW_NOTE[selectionView]}`}
+                        onDelete={clearBrushSelection}
+                      />
+                    ) : (
+                      <Chip
+                        variant="outlined"
+                        size="small"
+                        label="Selection: entire uploaded trace"
+                      />
+                    )}
+                    <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+                    <Tooltip title="Zoom in">
+                      <IconButton
+                        size="small"
+                        aria-label="Zoom in"
+                        onClick={() => zoomBy(1 / ZOOM_STEP)}
+                      >
+                        <ZoomIn fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Zoom out">
+                      <IconButton
+                        size="small"
+                        aria-label="Zoom out"
+                        onClick={() => zoomBy(ZOOM_STEP)}
+                      >
+                        <ZoomOut fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Zoom to selection">
+                      <span>
+                        <IconButton
+                          size="small"
+                          aria-label="Zoom to selection"
+                          onClick={zoomToSelection}
+                          disabled={!selectedRange}
+                        >
+                          <FitScreen fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="Reset zoom: show the full time range of every series on the chart and fit each value axis to its data">
+                      <IconButton
+                        size="small"
+                        aria-label="Reset zoom"
+                        onClick={resetZoom}
+                        color={
+                          isZoomed || Object.keys(valueWindows).length > 0
+                            ? 'primary'
+                            : 'default'
+                        }
+                      >
+                        <ZoomOutMap fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+                    <Tooltip
+                      title={
+                        showTooltip ? 'Hide hover popup' : 'Show hover popup'
+                      }
+                    >
+                      <ToggleButton
+                        value="tooltip"
+                        size="small"
+                        selected={showTooltip}
+                        onChange={() => setShowTooltip((current) => !current)}
+                        aria-label="Hover popup"
+                      >
+                        <ChatBubbleOutline fontSize="small" />
+                      </ToggleButton>
+                    </Tooltip>
+                    <Tooltip title="Save chart as image">
+                      <IconButton
+                        size="small"
+                        aria-label="Save chart as image"
+                        onClick={saveChartImage}
+                      >
+                        <PhotoCamera fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ ml: 'auto', pl: 1 }}
+                    >
+                      {DRAG_MODE_HINT[dragMode]} · Shift + scroll to zoom · Shift + scroll over the axis labels to zoom values
+                    </Typography>
+                  </Stack>
                   <Box
                     ref={chartContainerRef}
                     // Height follows the stacked panels so each one keeps its
                     // designed size instead of being squeezed.
-                    sx={{ height: chartHeight }}
+                    sx={{
+                      position: 'relative',
+                      height: chartHeight,
+                      // zrender sets its own cursor inline on its surface.
+                      ...(dragMode === 'zoomBox'
+                        ? { '&, & *': { cursor: 'crosshair !important' } }
+                        : {}),
+                      ...(dragMode === 'zoomY'
+                        ? { '&, & *': { cursor: 'row-resize !important' } }
+                        : {}),
+                    }}
                   >
                     <ReactECharts
                       ref={chartRef}
@@ -2263,10 +3184,23 @@ export const OcotilloHydrographCorrectionWorkbench = ({
                       style={{ width: '100%', height: '100%' }}
                       onEvents={{
                         brushSelected: handleBrushSelected,
+                        datazoom: handleDataZoom,
                         click: handleChartClick,
-                        restore: handleChartRestore,
                       }}
                     />
+                    {zoomBoxRect ? (
+                      <Box
+                        data-testid="zoom-box"
+                        sx={{
+                          position: 'absolute',
+                          ...zoomBoxRect,
+                          pointerEvents: 'none',
+                          border: 1,
+                          borderColor: 'primary.main',
+                          bgcolor: alpha(theme.palette.primary.main, 0.12),
+                        }}
+                      />
+                    ) : null}
                   </Box>
                 </Paper>
               </Stack>
@@ -2313,13 +3247,51 @@ export const OcotilloHydrographCorrectionWorkbench = ({
       </Box>
 
       <Dialog
+        open={isRemoveReadingsDialogOpen}
+        onClose={() => setIsRemoveReadingsDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete selected readings?</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5}>
+            <Typography variant="body2">
+              This deletes {selectedReadingCount} of{' '}
+              {correctedMeasurements.length} readings from the corrected trace,
+              between {selectedRange?.startTime.toLocaleString() ?? '—'} and{' '}
+              {selectedRange?.endTime.toLocaleString() ?? '—'}. They will not
+              be published.
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              The uploaded file and data already stored in Ocotillo are not
+              changed. Reset to Original restores the readings.
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsRemoveReadingsDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            startIcon={<DeleteOutline />}
+            onClick={confirmRemoveSelectedReadings}
+          >
+            Delete {selectedReadingCount} Reading
+            {selectedReadingCount === 1 ? '' : 's'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
         open={isDeleteDialogOpen}
         onClose={closeDeleteDialog}
         maxWidth="xs"
         fullWidth
       >
         <DialogTitle color="error.main">
-          Delete stored transducer data?
+          Delete stored transducer data from {thingName || 'this well'}?
         </DialogTitle>
         <DialogContent>
           <Stack spacing={1.5}>

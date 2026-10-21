@@ -223,7 +223,7 @@ export const ocotilloDataProvider: DataProvider = {
       throw error
     }
   },
-  custom: async ({ url, method, payload, headers }) => {
+  custom: async ({ url, method, payload, headers, meta }) => {
     const isFormData = payload instanceof FormData
 
     const config: AxiosRequestConfig = {
@@ -237,6 +237,11 @@ export const ocotilloDataProvider: DataProvider = {
 
     if (payload) {
       config.data = payload
+    }
+
+    // Lets a caller show how much of a large request body has gone up.
+    if (typeof meta?.onUploadProgress === 'function') {
+      config.onUploadProgress = meta.onUploadProgress
     }
 
     const response = await axiosInstance(config)

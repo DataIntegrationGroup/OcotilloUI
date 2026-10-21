@@ -33,9 +33,6 @@ export function EnvironmentBanner() {
       )}
     >
       <span className="uppercase">{label}</span>
-      {isStaging && (
-        <span className="opacity-80 font-normal normal-case">staging environment</span>
-      )}
     </div>
   )
 }

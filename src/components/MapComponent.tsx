@@ -9,6 +9,7 @@ import type {
 } from 'react-map-gl/maplibre'
 
 import DrawControl from './DrawControl'
+import { queryRenderedFeaturesSafely } from '@/utils/queryRenderedFeaturesSafely'
 
 import { ColorModeContext } from '@/contexts'
 import {
@@ -141,9 +142,8 @@ export const MapComponent = ({
   }
 
   const getCurrentPoints = (e: MapLayerMouseEvent): MapGeoJSONFeature[] => {
-    if (!mapRef?.current) return []
-
-    const features = mapRef.current.queryRenderedFeatures(e.point)
+    const map = mapRef?.current?.getMap?.()
+    const features = queryRenderedFeaturesSafely(map, e.point)
     return features.filter(
       (f: MapGeoJSONFeature): f is MapGeoJSONFeature => f.type === 'Feature'
     )
