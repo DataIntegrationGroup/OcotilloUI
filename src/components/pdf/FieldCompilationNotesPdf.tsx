@@ -419,6 +419,20 @@ const locationNotesText = (well: IWell) =>
 
 const contactEmail = (contact?: IContact) => contact?.emails?.[0]?.email ?? '-'
 
+// Wrap a long address onto several short lines react-pdf lays out cleanly, so the
+// single over-long token no longer gets hyphenated character-by-character. Lines are
+// separated by newlines (react-pdf's guaranteed hard break), which leaves no visible
+// gap and collapse back to one contiguous run on extraction. Short addresses stay on
+// a single line.
+const wrapEmail = (raw: string): string => {
+  if (!raw) return raw
+  const WIDTH = 24
+  if (raw.length <= WIDTH) return raw
+  const lines: string[] = []
+  for (let i = 0; i < raw.length; i += WIDTH) lines.push(raw.slice(i, i + WIDTH))
+  return lines.join('\n')
+}
+
 const contactAddress = (contact?: IContact) => {
   const address = contact?.addresses?.[0]
   return address ? formatAddress(address) : '-'
@@ -712,7 +726,7 @@ const FieldCompilationNotesPage = ({
                   </Text>
                   <Text style={styles.line}>
                     <Text style={styles.label}>Email: </Text>
-                    {contactEmail(primaryContact)}
+                    {wrapEmail(contactEmail(primaryContact))}
                   </Text>
                 </View>
                 <View style={[styles.contactColumn, styles.contactDetails]}>
@@ -725,7 +739,7 @@ const FieldCompilationNotesPage = ({
                   </Text>
                   <Text style={styles.line}>
                     <Text style={styles.label}>Email: </Text>
-                    {contactEmail(secondaryContact)}
+                    {wrapEmail(contactEmail(secondaryContact))}
                   </Text>
                 </View>
               </View>
