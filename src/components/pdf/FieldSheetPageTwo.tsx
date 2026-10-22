@@ -1,6 +1,7 @@
 import { Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
 
 import { PageFooter } from '@/components/pdf/layout'
+import { PRINT } from '@/components/pdf/printTokens'
 import { buildWeaverLocationUrl } from '@/utils/wellPublicUrls'
 
 /**
@@ -46,10 +47,12 @@ export type FieldSheetPageTwoData = {
 
 type Props = FieldSheetPageTwoData
 
-const accent = '#1a5276'
-const secondary = '#555'
-const body = '#333'
-const panel = '#f5f8fc'
+// Palette comes from the shared print tokens (printTokens.ts) so the field
+// sheet prints with exactly these values; this page is the design reference.
+const accent = PRINT.accent
+const secondary = PRINT.secondary
+const body = PRINT.body
+const panel = PRINT.panel
 
 /** Feet print with two decimals; a measurement of 35.1 is 35.10 on paper. */
 const feet = (value: number): string => value.toFixed(2)
