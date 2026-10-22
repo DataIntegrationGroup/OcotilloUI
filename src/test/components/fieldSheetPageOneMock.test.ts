@@ -3,7 +3,6 @@ import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
 import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
-import type { IPdfDensity } from '@/interfaces'
 import { buildFieldSheetPageOneFixture } from '@/mock/fieldSheetPageOne.fixture'
 
 /**
@@ -15,12 +14,10 @@ const ONE_PIXEL_PNG =
 
 const renderPageOne = async ({
   photos,
-  density = 'standard',
   notesPlacement = 'column',
 }: {
   photos: number
-  density?: IPdfDensity
-  notesPlacement?: 'column' | 'top'
+  notesPlacement?: 'column'
 }) => {
   const fixture = buildFieldSheetPageOneFixture({ photos })
   const blob = await pdf(
@@ -36,7 +33,6 @@ const renderPageOne = async ({
       sensorDeployments: fixture.sensorDeployments,
       hydrographImage: fixture.hydrographImage,
       sampleMethodsBySampleId: fixture.sampleMethodsBySampleId,
-      density,
       showDate: false,
       emptyPlaceholder: ' ',
       notesPlacement,
@@ -81,21 +77,11 @@ describe('field sheet page 1 mock-up', () => {
     expect(pageCount).toBe(1)
   })
 
-  it('keeps one page at every density step', async () => {
-    for (const density of ['comfortable', 'standard', 'compact'] as const) {
-      const { pageCount } = await renderPageOne({ photos: 5, density })
-
-      expect(pageCount, density).toBe(1)
-    }
-  })
-
-  it('keeps one page with the notes block at the top', async () => {
+  it('keeps one page with the pre-visit notes block', async () => {
     const column = await renderPageOne({ photos: 1, notesPlacement: 'column' })
-    const top = await renderPageOne({ photos: 1, notesPlacement: 'top' })
 
     expect(column.pageCount).toBe(1)
-    expect(top.pageCount).toBe(1)
-    expect(top.text).toContain('Field Notes')
+    expect(column.text).toContain('Pre-visit')
   })
 
   it('prints the template with no date stamp', async () => {

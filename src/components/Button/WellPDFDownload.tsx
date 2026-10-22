@@ -62,7 +62,6 @@ export const WellPDFDownloadButton = ({
           sensorDeployments={sensorDeployments}
           includeConfidentialContacts={canViewConfidential}
           hydrographImage={hydrographImage}
-          density={opts?.density ?? 'standard'}
           sampleMethodsBySampleId={sampleMethodsBySampleId(sample)}
         />
       ).toBlob()

@@ -22,17 +22,14 @@ import {
  * this page stops building (AC6). Every reviewer question is a query parameter so
  * a comment can carry a URL:
  *
- *   /mock/field-sheet/page-1?photos=5&notes=column
+ *   /mock/field-sheet/page-1?photos=5
  *
- * `photos` selects one of the four fixtures (0/1/3/5); `notes` is Q5 answered by
- * looking. There is deliberately no density control and no density parameter: the
- * 2026-10-20 ruling gives the sheet one type scale, so this page passes no `density`
- * prop and prints at the template's own scale (9 pt body — the dense leg of the old
- * table, AC2). The batch template renders at that same scale, and one scale is what
- * the sheet is supposed to have.
+ * `photos` selects one of the four fixtures (0/1/3/5). There is no density
+ * control and no density parameter: the sheet has one fixed style sheet, the
+ * dense one (8.5 pt body, 12/14 pt page padding, 5 pt section gaps). The older
+ * batch template (`well.tsx` / `createPdfStyles`) still carries its own density
+ * option; that stack is not this sheet.
  */
-type NotesPlacement = 'column' | 'top'
-
 const readPhotos = (raw: string | null): number => {
   const value = Number(raw)
 
@@ -43,13 +40,9 @@ const readPhotos = (raw: string | null): number => {
     : 5
 }
 
-const readNotes = (raw: string | null): NotesPlacement =>
-  raw === 'top' ? 'top' : 'column'
-
 export const FieldSheetPageOneMock = () => {
   const [params, setParams] = useSearchParams()
   const photos = readPhotos(params.get('photos'))
-  const notes = readNotes(params.get('notes'))
 
   const fixture = useMemo(
     () => buildFieldSheetPageOneFixture({ photos }),
@@ -97,21 +90,6 @@ export const FieldSheetPageOneMock = () => {
             ))}
           </ToggleButtonGroup>
         </Stack>
-
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Typography variant="caption" color="text.secondary">
-            Notes (Q5)
-          </Typography>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={notes}
-            onChange={(_, value) => value && setParam('notes', value)}
-          >
-            <ToggleButton value="column">photo column</ToggleButton>
-            <ToggleButton value="top">top block</ToggleButton>
-          </ToggleButtonGroup>
-        </Stack>
       </Stack>
 
       <Box
@@ -128,7 +106,6 @@ export const FieldSheetPageOneMock = () => {
             sampleMethodsBySampleId={fixture.sampleMethodsBySampleId}
             showDate={false}
             emptyPlaceholder=" "
-            notesPlacement={notes}
             firstPageOnly
           />
         </PDFViewer>
