@@ -9,7 +9,6 @@ import {
 import type { BaseRecord } from '@refinedev/core'
 import { useMemo } from 'react'
 import { usePrimaryAndSecondaryContact } from '@/hooks/usePrimaryAndSecondaryContact'
-import type { IPdfDensity } from '@/interfaces'
 import type { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
 import type { SensorDeploymentRow } from '@/utils'
 import {
@@ -19,74 +18,61 @@ import {
   sanitizeContacts,
 } from '@/utils'
 import { formatContactPhones } from './fieldCompilationPhoneFormatter'
-import { PageFooter } from './layout/PageFooter'
 import {
   FIELD_SHEET_NOTE_LINES,
   FIELD_SHEET_RULED_LINES,
   fieldSheetSlotPlan,
+  PHOTO_SLOT_CAP,
 } from './fieldSheetPageLayout'
-
-export const scaleForDensity = (
-  comfortable: number,
-  standard: number,
-  compact: number,
-  density: IPdfDensity = 'standard'
-) =>
-  density === 'compact'
-    ? compact
-    : density === 'comfortable'
-      ? comfortable
-      : standard
+import { PageFooter } from './layout/PageFooter'
+import { PRINT, PRINT_TYPE } from './printTokens'
 
 export type FieldCompilationStyles = ReturnType<
   typeof createFieldCompilationStyles
 >
 
-export const createFieldCompilationStyles = (
-  density: IPdfDensity = 'standard'
-) => {
-  const scale = (c: number, st: number, k: number) =>
-    scaleForDensity(c, st, k, density)
-
+export const createFieldCompilationStyles = () => {
   return StyleSheet.create({
     page: {
-      paddingTop: scale(18, 16, 12),
-      paddingBottom: scale(18, 16, 12),
-      paddingHorizontal: scale(22, 20, 14),
+      paddingTop: 12,
+      paddingBottom: 12,
+      paddingHorizontal: 14,
       backgroundColor: '#ffffff',
-      fontSize: scale(9.5, 9, 8.5),
-      color: '#111827',
+      fontSize: 8.5,
+      color: PRINT.body,
     },
     pageDate: {
       position: 'absolute',
       top: 16,
       right: 20,
-      fontSize: scale(9.5, 9, 8.5),
-      color: '#111827',
+      fontSize: 8.5,
+      color: PRINT.body,
     },
     footer: {
       position: 'absolute',
-      bottom: scale(12, 10, 8),
-      left: scale(22, 20, 14),
-      right: scale(22, 20, 14),
+      bottom: 8,
+      left: 14,
+      right: 14,
     },
     footerText: {
-      fontSize: scale(8, 7.5, 7),
-      color: '#6b7280',
+      fontSize: PRINT_TYPE.caption,
+      color: PRINT.secondary,
     },
     header: {
-      marginBottom: scale(10, 8, 6),
-      borderBottomWidth: 1,
-      borderBottomColor: '#d1d5db',
+      marginBottom: 6,
+      borderBottomWidth: 3,
+      borderBottomColor: PRINT.accent,
       paddingBottom: 6,
     },
     title: {
-      fontSize: 15,
+      fontSize: PRINT_TYPE.title,
       fontWeight: 700,
+      color: PRINT.accent,
       textAlign: 'center',
     },
     headerDate: {
-      fontSize: 9,
+      fontSize: PRINT_TYPE.label,
+      color: PRINT.secondary,
       textAlign: 'right',
       marginTop: 3,
     },
@@ -102,7 +88,9 @@ export const createFieldCompilationStyles = (
       width: '43%',
     },
     section: {
-      marginBottom: scale(9, 7, 5),
+      // One scale only: the 8 pt body text plus the navy header bands need the
+      // vertical budget, and Site Notes has to stay on page 1.
+      marginBottom: 5,
     },
     topGrid: {
       flexDirection: 'row',
@@ -118,6 +106,7 @@ export const createFieldCompilationStyles = (
     },
     label: {
       fontWeight: 700,
+      color: PRINT.accent,
     },
     contactsRow: {
       flexDirection: 'row',
@@ -131,8 +120,9 @@ export const createFieldCompilationStyles = (
       marginTop: 3,
     },
     sectionTitle: {
-      fontSize: 9,
+      fontSize: PRINT_TYPE.section,
       fontWeight: 700,
+      color: PRINT.accent,
       marginBottom: 2,
     },
     noteText: {
@@ -148,42 +138,50 @@ export const createFieldCompilationStyles = (
     },
     table: {
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: PRINT.hairline,
     },
     tableHeader: {
       flexDirection: 'row',
-      backgroundColor: '#f3f4f6',
+      backgroundColor: PRINT.accent,
       borderBottomWidth: 1,
-      borderBottomColor: '#d1d5db',
+      borderBottomColor: PRINT.accent,
     },
     tableRow: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      borderBottomColor: '#e5e7eb',
+      borderBottomColor: PRINT.hairline,
     },
     tableRowLast: {
       borderBottomWidth: 0,
     },
     cell: {
-      paddingVertical: 3,
+      paddingVertical: 2,
       paddingHorizontal: 3,
-      fontSize: 9,
+      fontSize: PRINT_TYPE.body,
+      color: PRINT.body,
       lineHeight: 1.1,
     },
     cellHeader: {
       fontWeight: 700,
-      fontSize: 9,
-      paddingVertical: 3,
+      fontSize: PRINT_TYPE.body,
+      color: PRINT.accentText,
+      // One scale means narrow columns may wrap ("DTW Below MP (ft)" at 8 pt in
+      // a 16.67 % column does); a tight leading keeps that wrap from costing a
+      // second line of page height.
+      lineHeight: 1.05,
+      paddingVertical: 2,
       paddingHorizontal: 3,
     },
     compactCell: {
-      fontSize: 7.5,
+      fontSize: PRINT_TYPE.caption,
       lineHeight: 1.05,
       paddingVertical: 2,
       paddingHorizontal: 2,
+      color: PRINT.body,
     },
     compactCellHeader: {
-      fontSize: 7.5,
+      fontSize: PRINT_TYPE.caption,
+      color: PRINT.accentText,
       paddingVertical: 2,
       paddingHorizontal: 2,
     },
@@ -196,42 +194,52 @@ export const createFieldCompilationStyles = (
     imageWrap: {
       width: '50%',
     },
-    imageWrapFull: {
-      width: '100%',
-    },
     image: {
       width: '100%',
       height: 140,
       objectFit: 'cover',
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: PRINT.hairline,
+      borderRadius: PRINT.radius,
     },
     imageLabel: {
       marginTop: 2,
-      fontSize: 7,
-      color: '#4b5563',
+      fontSize: PRINT_TYPE.caption,
+      color: PRINT.secondary,
+    },
+    photoCaption: {
+      marginTop: 2,
+      marginBottom: 4,
+      fontSize: PRINT_TYPE.caption,
+      color: PRINT.secondary,
     },
     notePad: {
       width: '50%',
       borderWidth: 1,
-      borderColor: '#e5e7eb',
+      borderColor: PRINT.hairline,
+      borderRadius: PRINT.radius,
       backgroundColor: '#ffffff',
     },
     notePadLine: {
       borderBottomWidth: 1,
-      borderBottomColor: '#f3f4f6',
+      borderBottomColor: PRINT.hairline,
       height: 16,
     },
     preVisitPad: {
       width: '100%',
-      paddingTop: scale(6, 5, 4),
-      paddingBottom: scale(6, 5, 4),
-      paddingLeft: scale(6, 5, 4),
-      paddingRight: scale(6, 5, 4),
+      backgroundColor: PRINT.panel,
+      borderLeftWidth: 4,
+      borderLeftColor: PRINT.accent,
+      borderRadius: PRINT.radius,
+      paddingTop: 2,
+      paddingBottom: 2,
+      paddingLeft: 6,
+      paddingRight: 6,
     },
     ruledSlot: {
       borderWidth: 1,
-      borderColor: '#e5e7eb',
+      borderColor: PRINT.hairline,
+      borderRadius: PRINT.radius,
       marginBottom: 8,
     },
     emptyImageState: {
@@ -290,24 +298,25 @@ export const createFieldCompilationStyles = (
       flex: 1,
     },
     cutMethodLabel: {
-      fontSize: 8,
+      fontSize: PRINT_TYPE.caption,
       fontWeight: 700,
+      color: PRINT.secondary,
       marginBottom: 3,
     },
     fillLine: {
       borderBottomWidth: 1,
-      borderBottomColor: '#6b7280',
+      borderBottomColor: PRINT.secondary,
       height: 16,
     },
     cutMethodTable: {
       borderWidth: 1,
-      borderColor: '#e5e7eb',
+      borderColor: PRINT.hairline,
       marginTop: 4,
     },
     cutMethodTableRow: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      borderBottomColor: '#e5e7eb',
+      borderBottomColor: PRINT.hairline,
     },
     cutMethodTableRowLast: {
       borderBottomWidth: 0,
@@ -316,10 +325,11 @@ export const createFieldCompilationStyles = (
       width: '22%',
       paddingVertical: 6,
       paddingHorizontal: 6,
-      fontSize: 8,
+      fontSize: PRINT_TYPE.caption,
       fontWeight: 700,
+      color: PRINT.body,
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: PRINT.hairline,
     },
     cutMethodTableValueCell: {
       width: '15.6%',
@@ -327,26 +337,31 @@ export const createFieldCompilationStyles = (
       paddingHorizontal: 4,
       paddingBottom: 0,
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: PRINT.hairline,
     },
     cutMethodTableValueCellLast: {
       borderRightWidth: 0,
     },
+    // Navy band with white text — the header treatment used by every table on
+    // the owner page, applied here so the write-in grid belongs to the family.
     cutMethodTableHeaderCell: {
       width: '15.6%',
       paddingVertical: 5,
       paddingHorizontal: 4,
-      fontSize: 8,
+      fontSize: PRINT_TYPE.caption,
       fontWeight: 700,
+      color: PRINT.accentText,
+      backgroundColor: PRINT.accent,
       textAlign: 'center',
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: PRINT.accent,
     },
     newMeasurementBox: {
       borderWidth: 1,
-      borderColor: '#d1d5db',
-      padding: scale(3, 3, 2),
-      marginBottom: scale(4, 3, 2),
+      borderColor: PRINT.hairline,
+      borderRadius: PRINT.radius,
+      padding: 2,
+      marginBottom: 2,
     },
     newMeasurementHeaderRow: {
       flexDirection: 'row',
@@ -355,13 +370,14 @@ export const createFieldCompilationStyles = (
       marginBottom: 1,
     },
     newMeasurementTitle: {
-      fontSize: 9,
+      fontSize: PRINT_TYPE.section,
       fontWeight: 700,
+      color: PRINT.accent,
     },
     newMeasurementPrev: {
-      fontSize: 8.5,
+      fontSize: PRINT_TYPE.body,
       fontWeight: 700,
-      color: '#111827',
+      color: PRINT.accent,
     },
     newMeasurementFieldRow: {
       flexDirection: 'row',
@@ -372,14 +388,15 @@ export const createFieldCompilationStyles = (
       flex: 1,
     },
     newMeasurementFieldLabel: {
-      fontSize: 7.5,
+      fontSize: PRINT_TYPE.caption,
       fontWeight: 700,
+      color: PRINT.secondary,
       marginBottom: 0,
     },
     // Shorter write-in line so the box stays compact on page 1 (BDMS-1504).
     newWriteLine: {
       borderBottomWidth: 1,
-      borderBottomColor: '#6b7280',
+      borderBottomColor: PRINT.hairline,
       height: 7,
     },
     // Thin hairline grid used only for the new write-in measurement grid. Keeps
@@ -387,26 +404,31 @@ export const createFieldCompilationStyles = (
     newGridRow: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      borderBottomColor: '#e5e7eb',
+      borderBottomColor: PRINT.hairline,
     },
+    // Navy band, white caption text: the same header treatment the owner page
+    // uses for its tables, so the sheet reads as one design family.
     newGridHeaderCell: {
       width: '20%',
       paddingVertical: 2,
       paddingHorizontal: 3,
-      fontSize: 7.5,
+      fontSize: PRINT_TYPE.caption,
       fontWeight: 700,
+      color: PRINT.accentText,
+      backgroundColor: PRINT.accent,
       textAlign: 'center',
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: PRINT.accent,
     },
     newGridLabelCell: {
       width: '20%',
       paddingVertical: 1,
       paddingHorizontal: 3,
-      fontSize: 7,
+      fontSize: PRINT_TYPE.caption,
       fontWeight: 700,
+      color: PRINT.body,
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: PRINT.hairline,
     },
     newGridValueCell: {
       width: '20%',
@@ -414,16 +436,17 @@ export const createFieldCompilationStyles = (
       paddingBottom: 0,
       paddingHorizontal: 2,
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: PRINT.hairline,
     },
     notesPad: {
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: PRINT.hairline,
+      borderRadius: PRINT.radius,
       paddingTop: 2,
     },
     notesPadLine: {
       borderBottomWidth: 1,
-      borderBottomColor: '#e5e7eb',
+      borderBottomColor: PRINT.hairline,
       height: 20,
     },
     blankPageBody: {
@@ -433,7 +456,7 @@ export const createFieldCompilationStyles = (
     },
     blankPageText: {
       fontSize: 12,
-      color: '#111827',
+      color: PRINT.body,
       textAlign: 'center',
     },
   })
@@ -487,7 +510,12 @@ const cutMethodRows = [
 // Page-1 New Measurement write-in grid (BDMS-1504 lane11). Five columns, four
 // labelled rows. Kept as a module const so the box JSX and the last-row rule
 // (cutMethodTableRowLast) agree on the row count.
-const newMeasurementGridRows = ['Hold', 'Cut', 'DTW Below MP (ft)', 'DTW BGS (ft)'] as const
+const newMeasurementGridRows = [
+  'Hold',
+  'Cut',
+  'DTW Below MP (ft)',
+  'DTW BGS (ft)',
+] as const
 
 type TableColumn<T> = {
   key: keyof T | string
@@ -573,13 +601,6 @@ const contactEmail = (contact?: IContact) => contact?.emails?.[0]?.email ?? '-'
 const contactAddress = (contact?: IContact) => {
   const address = contact?.addresses?.[0]
   return address ? formatAddress(address) : '-'
-}
-
-const equipmentNotesText = (rows: SensorDeploymentRow[]) => {
-  const notes = rows
-    .map((row) => row.notes?.trim())
-    .filter((note): note is string => Boolean(note && note !== '-'))
-  return notes.length > 0 ? Array.from(new Set(notes)).join('\n') : '-'
 }
 
 const splitSiteNote = (content?: string | null) => {
@@ -683,10 +704,6 @@ const PdfTable = <T extends Record<string, unknown>>({
               styles.cellHeader,
               ...(compact ? [styles.compactCellHeader] : []),
               { width: column.width },
-              // BDMS-1504 polish (task 1a): shrink ONLY the DTW header so it
-              // fits its percentage-width column on one line. Column widths and
-              // the other five headers are left untouched.
-              ...(column.key === 'dtw' ? [{ fontSize: 5.5 }] : []),
             ]}
           >
             {column.label}
@@ -747,7 +764,6 @@ const FieldCompilationNotesPage = ({
   hydrographImage,
   sampleMethodsBySampleId,
   includeConfidentialContacts,
-  density = 'standard',
   showDate = true,
   emptyPlaceholder = '—',
   notesPlacement = 'column',
@@ -762,14 +778,13 @@ const FieldCompilationNotesPage = ({
   hydrographImage?: string | null
   sampleMethodsBySampleId: Record<number, string>
   includeConfidentialContacts: boolean
-  density?: IPdfDensity
   showDate?: boolean
   emptyPlaceholder?: string
-  notesPlacement?: 'column' | 'top'
+  notesPlacement?: 'column'
   directionNotes?: string
   firstPageOnly?: boolean
 }) => {
-  const styles = useMemo(() => createFieldCompilationStyles(density), [density])
+  const styles = useMemo(() => createFieldCompilationStyles(), [])
 
   const visibleContacts = useMemo(
     () => sanitizeContacts(contacts, includeConfidentialContacts),
@@ -785,17 +800,23 @@ const FieldCompilationNotesPage = ({
     () => manualMeasurementRows(observations),
     [observations]
   )
-  const imageAssets = useMemo(
+  // Page 1 draws at most PHOTO_SLOT_CAP photographs. The full filtered list is
+  // kept separately because `imageAssets.length` can never exceed the cap, so a
+  // caption conditioned on it would never print — the 5-photo well silently lost
+  // photos 4 and 5 (Rob, GUI review 2026-10-22).
+  const photoAssets = useMemo(
     () =>
-      assets
-        .filter(
-          (asset: any) =>
-            asset?.signed_url &&
-            typeof asset?.mime_type === 'string' &&
-            asset.mime_type.startsWith('image/')
-        )
-        .slice(0, 3),
+      assets.filter(
+        (asset: any) =>
+          asset?.signed_url &&
+          typeof asset?.mime_type === 'string' &&
+          asset.mime_type.startsWith('image/')
+      ),
     [assets]
+  )
+  const imageAssets = useMemo(
+    () => photoAssets.slice(0, PHOTO_SLOT_CAP),
+    [photoAssets]
   )
   const { easting, northing } =
     well.current_location?.properties?.utm_coordinates ?? {}
@@ -837,21 +858,18 @@ const FieldCompilationNotesPage = ({
   return (
     <>
       <Page size="LETTER" style={styles.page}>
-        <PageFooter wellId={well.name} pageNumber={1} totalPages={2} styles={styles} />
+        <PageFooter
+          wellId={well.name}
+          pageNumber={1}
+          totalPages={firstPageOnly ? 1 : 2}
+          styles={styles}
+        />
         {showDate ? <Text style={styles.pageDate}>{exportDate}</Text> : null}
         <View style={styles.header}>
           <Text style={styles.title}>Field Compilation Notes</Text>
         </View>
         <View style={styles.content}>
           <View style={styles.leftColumn}>
-            {notesPlacement === 'top' ? (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Field Notes</Text>
-                <View style={styles.notePad}>
-                  {ruledLines('top', FIELD_SHEET_NOTE_LINES)}
-                </View>
-              </View>
-            ) : null}
             <View style={styles.topGrid}>
               <View style={styles.topGridColumn}>
                 <Text style={styles.line}>
@@ -1001,18 +1019,21 @@ const FieldCompilationNotesPage = ({
               </View>
               <View style={styles.newMeasurementFieldRow}>
                 <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Date: {exportDate}
-                  </Text>
+                  <Text style={styles.newMeasurementFieldLabel}>Date: </Text>
+                  {showDate ? (
+                    <Text style={styles.newMeasurementFieldLabel}>
+                      {exportDate}
+                    </Text>
+                  ) : (
+                    <View style={styles.newWriteLine} />
+                  )}
                 </View>
                 <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Time: </Text>
+                  <Text style={styles.newMeasurementFieldLabel}>Time: </Text>
                   <View style={styles.newWriteLine} />
                 </View>
                 <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Staff: </Text>
+                  <Text style={styles.newMeasurementFieldLabel}>Staff: </Text>
                   <View style={styles.fillLine} />
                 </View>
               </View>
@@ -1064,22 +1085,21 @@ const FieldCompilationNotesPage = ({
               </View>
               <View style={styles.newMeasurementFieldRow}>
                 <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Method: </Text>
+                  <Text style={styles.newMeasurementFieldLabel}>Method: </Text>
                   <View style={styles.fillLine} />
                 </View>
               </View>
               <View style={styles.newMeasurementFieldRow}>
                 <View style={styles.newMeasurementField}>
                   <Text style={styles.newMeasurementFieldLabel}>
-                    Level Status: </Text>
+                    Level Status:{' '}
+                  </Text>
                   <View style={styles.fillLine} />
                 </View>
               </View>
               <View style={styles.newMeasurementFieldRow}>
                 <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Notes: </Text>
+                  <Text style={styles.newMeasurementFieldLabel}>Notes: </Text>
                   <View style={styles.fillLine} />
                 </View>
               </View>
@@ -1130,24 +1150,22 @@ const FieldCompilationNotesPage = ({
                 key={asset.id ?? asset.signed_url}
                 style={styles.imageNoteRow}
               >
-                <View
-                  style={[
-                    styles.imageWrap,
-                    ...(notesPlacement === 'top' ? [styles.imageWrapFull] : []),
-                  ]}
-                >
+                <View style={styles.imageWrap}>
                   <Image src={asset.signed_url} style={styles.image} />
                   <Text style={styles.imageLabel}>
                     {asset.label || asset.name || ''}
                   </Text>
                 </View>
-                {notesPlacement === 'column' ? (
-                  <View style={styles.notePad}>
-                    {ruledLines('photo', FIELD_SHEET_NOTE_LINES)}
-                  </View>
-                ) : null}
+                <View style={styles.notePad}>
+                  {ruledLines('photo', FIELD_SHEET_NOTE_LINES)}
+                </View>
               </View>
             ))}
+            {photoAssets.length > slotPlan.photos ? (
+              <Text style={styles.photoCaption}>
+                top {slotPlan.photos} photos shown
+              </Text>
+            ) : null}
             {Array.from({ length: slotPlan.ruled }).map((_, index) => (
               <View key={`ruled-${index}`} style={styles.ruledSlot}>
                 {ruledLines(`ruled-${index}`, FIELD_SHEET_RULED_LINES)}
@@ -1281,7 +1299,6 @@ export const FieldCompilationNotesPdf = ({
   sampleMethodsBySampleId = {},
   includeConfidentialContacts = true,
   standalone = true,
-  density = 'standard',
   showDate = true,
   emptyPlaceholder = '—',
   notesPlacement = 'column',
@@ -1297,10 +1314,9 @@ export const FieldCompilationNotesPdf = ({
   sampleMethodsBySampleId?: Record<number, string>
   includeConfidentialContacts?: boolean
   standalone?: boolean
-  density?: IPdfDensity
   showDate?: boolean
   emptyPlaceholder?: string
-  notesPlacement?: 'column' | 'top'
+  notesPlacement?: 'column'
   directionNotes?: string
   firstPageOnly?: boolean
 }) => {
@@ -1314,7 +1330,6 @@ export const FieldCompilationNotesPdf = ({
       hydrographImage={hydrographImage}
       sampleMethodsBySampleId={sampleMethodsBySampleId}
       includeConfidentialContacts={includeConfidentialContacts}
-      density={density}
       showDate={showDate}
       emptyPlaceholder={emptyPlaceholder}
       notesPlacement={notesPlacement}
