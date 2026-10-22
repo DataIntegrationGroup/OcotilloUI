@@ -495,7 +495,7 @@ type TableColumn<T> = {
   width: string
 }
 
-const renderValue = (value: unknown, empty = '-') => {
+const renderValue = (value: unknown, empty = '—') => {
   if (value == null || value === '') return empty
   return String(value)
 }
@@ -503,7 +503,7 @@ const renderValue = (value: unknown, empty = '-') => {
 const formatNumeric = (
   value: number | null | undefined,
   fractionDigits = 2,
-  empty = '-'
+  empty = '—'
 ): string => {
   if (value == null || Number.isNaN(value)) return empty
   return value.toFixed(fractionDigits)
@@ -569,20 +569,6 @@ export const directionNotesValue = (directionNotes?: string | null): string => {
 }
 
 const contactEmail = (contact?: IContact) => contact?.emails?.[0]?.email ?? '-'
-
-// Wrap a long address onto several short lines react-pdf lays out cleanly, so the
-// single over-long token no longer gets hyphenated character-by-character. Lines are
-// separated by newlines (react-pdf's guaranteed hard break), which leaves no visible
-// gap and collapse back to one contiguous run on extraction. Short addresses stay on
-// a single line.
-const wrapEmail = (raw: string): string => {
-  if (!raw) return raw
-  const WIDTH = 24
-  if (raw.length <= WIDTH) return raw
-  const lines: string[] = []
-  for (let i = 0; i < raw.length; i += WIDTH) lines.push(raw.slice(i, i + WIDTH))
-  return lines.join('\n')
-}
 
 const contactAddress = (contact?: IContact) => {
   const address = contact?.addresses?.[0]
@@ -697,6 +683,10 @@ const PdfTable = <T extends Record<string, unknown>>({
               styles.cellHeader,
               ...(compact ? [styles.compactCellHeader] : []),
               { width: column.width },
+              // BDMS-1504 polish (task 1a): shrink ONLY the DTW header so it
+              // fits its percentage-width column on one line. Column widths and
+              // the other five headers are left untouched.
+              ...(column.key === 'dtw' ? [{ fontSize: 5.5 }] : []),
             ]}
           >
             {column.label}
@@ -759,7 +749,7 @@ const FieldCompilationNotesPage = ({
   includeConfidentialContacts,
   density = 'standard',
   showDate = true,
-  emptyPlaceholder = '-',
+  emptyPlaceholder = '—',
   notesPlacement = 'column',
   firstPageOnly = false,
   directionNotes = '',
@@ -847,7 +837,7 @@ const FieldCompilationNotesPage = ({
   return (
     <>
       <Page size="LETTER" style={styles.page}>
-        <PageFooter wellId={well.name} styles={styles} />
+        <PageFooter wellId={well.name} pageNumber={1} totalPages={2} styles={styles} />
         {showDate ? <Text style={styles.pageDate}>{exportDate}</Text> : null}
         <View style={styles.header}>
           <Text style={styles.title}>Field Compilation Notes</Text>
@@ -903,30 +893,30 @@ const FieldCompilationNotesPage = ({
               <View style={styles.contactsRow}>
                 <View style={[styles.contactColumn, styles.contactDetails]}>
                   <Text style={styles.line}>
-                    <Text style={styles.label}>Address: </Text>
-                    {contactAddress(primaryContact)}
-                  </Text>
-                  <Text style={styles.line}>
                     <Text style={styles.label}>Phone: </Text>
                     {formatContactPhones(primaryContact)}
                   </Text>
                   <Text style={styles.line}>
+                    <Text style={styles.label}>Address: </Text>
+                    {contactAddress(primaryContact)}
+                  </Text>
+                  <Text style={styles.line}>
                     <Text style={styles.label}>Email: </Text>
-                    {wrapEmail(contactEmail(primaryContact))}
+                    {contactEmail(primaryContact)}
                   </Text>
                 </View>
                 <View style={[styles.contactColumn, styles.contactDetails]}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Address: </Text>
-                    {contactAddress(secondaryContact)}
-                  </Text>
                   <Text style={styles.line}>
                     <Text style={styles.label}>Phone: </Text>
                     {formatContactPhones(secondaryContact)}
                   </Text>
                   <Text style={styles.line}>
+                    <Text style={styles.label}>Address: </Text>
+                    {contactAddress(secondaryContact)}
+                  </Text>
+                  <Text style={styles.line}>
                     <Text style={styles.label}>Email: </Text>
-                    {wrapEmail(contactEmail(secondaryContact))}
+                    {contactEmail(secondaryContact)}
                   </Text>
                 </View>
               </View>
@@ -1293,7 +1283,7 @@ export const FieldCompilationNotesPdf = ({
   standalone = true,
   density = 'standard',
   showDate = true,
-  emptyPlaceholder = '-',
+  emptyPlaceholder = '—',
   notesPlacement = 'column',
   firstPageOnly = false,
   directionNotes = '',
