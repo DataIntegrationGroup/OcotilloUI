@@ -205,7 +205,7 @@ export const FieldSheetPageTwo = ({
         </View>
         <View style={styles.linkRow}>
           {/* Plain-English lead-in for the printed link; a printed URL is read, not clicked. */}
-          <Text style={styles.linkLabel}>View your well data online:</Text>
+          <Text style={styles.linkLabel}>View your well data online: </Text>
           {/* The printed link comes from one builder; the hard-coded host is
               gone. Scheme is dropped because a printed URL is read, not clicked. */}
           <Text style={styles.linkUrl}>{printedLocationUrl(pointId)}</Text>
@@ -225,6 +225,7 @@ export const FieldSheetPageTwo = ({
     {/* Footer: `Well ID: <point id> | Page n` (ALIGNMENT A12). */}
     <PageFooter
       wellId={pointId}
+      totalPages={2}
       styles={{
         footer: styles.pageFooter,
         footerText: styles.pageFooterText,

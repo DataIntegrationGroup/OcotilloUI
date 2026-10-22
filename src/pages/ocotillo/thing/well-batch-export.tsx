@@ -42,6 +42,7 @@ import type {
   FieldSheetPageTwoMeasurement,
 } from '@/components/pdf/FieldSheetPageTwo'
 import { FieldSheetPageTwo } from '@/components/pdf/FieldSheetPageTwo'
+import { buildWeaverQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
 import { useAccessCapabilities } from '@/hooks'
 import {
   IObservation,
@@ -683,7 +684,7 @@ export const WellBatchExport = () => {
 
       return {
         siteName: String(well.site_name ?? well.name ?? ''),
-        pointId: `Well ${well.id}`,
+        pointId: String(well.name ?? ''),
         wellDepthFt:
           typeof well.well_depth === 'number' ? String(well.well_depth) : '',
         measurements: rows,
@@ -844,6 +845,17 @@ export const WellBatchExport = () => {
             })
           : {}
 
+      // Precompute QR data URLs before rendering (buildWeaverQrDataUrl is
+      // async and must not be called inside JSX). Feed each QR the SAME point id
+      // page 2 prints (the well's point id, e.g. "WL-0085") so the code and the
+      // printed link agree. Absent/failed entries leave the placeholder in place.
+      const qrDataById: Record<string, string> = {}
+      for (const bundle of bundlesForExport) {
+        const pointId = String(bundle.well.name ?? '')
+        const dataUrl = await buildWeaverQrDataUrl(pointId)
+        if (dataUrl) qrDataById[String(bundle.well.id)] = dataUrl
+      }
+
       const blob = await pdf(
         <OcotilloDocument
           title={baseFilename}
@@ -857,6 +869,7 @@ export const WellBatchExport = () => {
                     <FieldSheetPageTwo
                       key={`owner-${bundle.well.id}-${pageIndex}`}
                       {...buildOwnerPageData(bundle)}
+                      qrDataUrl={qrDataById[String(bundle.well.id)]}
                     />
                   ) : (
             <FieldCompilationNotesPdf

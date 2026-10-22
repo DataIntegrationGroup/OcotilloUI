@@ -76,3 +76,17 @@ export const sanitizeFilenamePart = (value: string) =>
 
 export const safeFilenamePrefix = (value: string) =>
   sanitizeFilenamePart(value) || 'FieldSheets_Batch'
+
+/**
+ * The ordered set of PDF pages a single well contributes to a batch file:
+ * page 1 (the field sheet) always, plus page 2 (the owner leave-behind /
+ * BDMS-1507 sheet) only when `includeOwnerPage` is true. Side-effect free so
+ * the two-page ruling is unit-testable without rendering react-pdf.
+ */
+export type WellBatchPage = 'field-sheet' | 'owner-leavebehind'
+
+export const pagesForWell = (
+  _well: IWell,
+  includeOwnerPage: boolean
+): WellBatchPage[] =>
+  includeOwnerPage ? ['field-sheet', 'owner-leavebehind'] : ['field-sheet']

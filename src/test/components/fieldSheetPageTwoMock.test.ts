@@ -4,14 +4,21 @@ import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
 import { FieldSheetPageTwo } from '@/components/pdf/FieldSheetPageTwo'
 import { buildFieldSheetPageTwoFixture } from '@/mock/fieldSheetPageTwo.fixture'
+import { buildWeaverQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
 
 /**
  * Page 2 of the BDMS-1507 sheet, rendered the way the review route renders it:
  * fixture only. Both OSE variants are checked — the OSE cell prints when present
  * and disappears entirely when `withOse` is false.
  */
-const renderPageTwo = async ({ withOse }: { withOse: boolean }) => {
-  const fixture = buildFieldSheetPageTwoFixture({ withOse })
+const renderPageTwo = async ({
+  withOse,
+  qrDataUrl,
+}: {
+  withOse: boolean
+  qrDataUrl?: string
+}) => {
+  const fixture = buildFieldSheetPageTwoFixture({ withOse, qrDataUrl })
   const blob = await pdf(
     createElement(
       Document,
@@ -21,6 +28,7 @@ const renderPageTwo = async ({ withOse }: { withOse: boolean }) => {
   ).toBlob()
 
   const data = new Uint8Array(await blob.arrayBuffer())
+  const stream = new TextDecoder('latin1').decode(data)
   const document = await pdfjsLib.getDocument({ data }).promise
   const pages: string[] = []
 
@@ -30,7 +38,11 @@ const renderPageTwo = async ({ withOse }: { withOse: boolean }) => {
     pages.push(textContent.items.map((item: any) => item.str).join(''))
   }
 
-  return { pageCount: document.numPages, text: pages.join('\n') }
+  return {
+    pageCount: document.numPages,
+    text: pages.join('\n'),
+    stream,
+  }
 }
 
 describe('field sheet page 2 mock-up', () => {
@@ -39,6 +51,25 @@ describe('field sheet page 2 mock-up', () => {
 
     expect(pageCount).toBeGreaterThanOrEqual(1)
     expect(text.length).toBeGreaterThan(0)
+  })
+
+  it('embeds a real QR image (not the placeholder) when qrDataUrl is supplied', async () => {
+    const dataUrl = await buildWeaverQrDataUrl('WL-0085')
+    // Sanity: the helper produces a decodable PNG we can actually embed.
+    expect(dataUrl).toBeTruthy()
+    if (!dataUrl) throw new Error('expected a real QR data URL for WL-0085')
+    expect(dataUrl).toMatch(/^data:image\/png;base64,/)
+
+    const { stream, text } = await renderPageTwo({
+      withOse: true,
+      qrDataUrl: dataUrl,
+    })
+
+    // The PNG is embedded as an image XObject — proof an image renders in the
+    // QR area, not just a label. (The placeholder path embeds no image.)
+    expect(stream).toContain('/Subtype /Image')
+    // The literal placeholder is gone wherever a real code now prints.
+    expect(text).not.toContain('[QR Code]')
   })
 
   it('prints the header, subtitle and info labels (OSE present)', async () => {
@@ -117,7 +148,7 @@ describe('field sheet page 2 mock-up', () => {
 
     // ALIGNMENT A12. Guards the absolute-position regressions found 2026-10-21:
     // `bottom` is ignored by react-pdf here and the footer silently vanished.
-    expect(text).toMatch(/Well ID: WL-0085 \| Page \d+/)
+    expect(text).toMatch(/Well ID: WL-0085 \| Page \d+ of 2/)
   })
 
   it('prints the staff line with data, not a literal', async () => {
