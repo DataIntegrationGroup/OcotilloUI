@@ -342,6 +342,80 @@ export const createFieldCompilationStyles = (
       borderRightWidth: 1,
       borderRightColor: '#e5e7eb',
     },
+    newMeasurementBox: {
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+      padding: scale(3, 3, 2),
+      marginBottom: scale(4, 3, 2),
+    },
+    newMeasurementHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 1,
+    },
+    newMeasurementTitle: {
+      fontSize: 9,
+      fontWeight: 700,
+    },
+    newMeasurementPrev: {
+      fontSize: 8.5,
+      fontWeight: 700,
+      color: '#111827',
+    },
+    newMeasurementFieldRow: {
+      flexDirection: 'row',
+      gap: 6,
+      marginBottom: 1,
+    },
+    newMeasurementField: {
+      flex: 1,
+    },
+    newMeasurementFieldLabel: {
+      fontSize: 7.5,
+      fontWeight: 700,
+      marginBottom: 0,
+    },
+    // Shorter write-in line so the box stays compact on page 1 (BDMS-1504).
+    newWriteLine: {
+      borderBottomWidth: 1,
+      borderBottomColor: '#6b7280',
+      height: 7,
+    },
+    // Thin hairline grid used only for the new write-in measurement grid. Keeps
+    // row/column separation without the heavy per-cell padding of cutMethod*.
+    newGridRow: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: '#e5e7eb',
+    },
+    newGridHeaderCell: {
+      width: '20%',
+      paddingVertical: 2,
+      paddingHorizontal: 3,
+      fontSize: 7.5,
+      fontWeight: 700,
+      textAlign: 'center',
+      borderRightWidth: 1,
+      borderRightColor: '#e5e7eb',
+    },
+    newGridLabelCell: {
+      width: '20%',
+      paddingVertical: 1,
+      paddingHorizontal: 3,
+      fontSize: 7,
+      fontWeight: 700,
+      borderRightWidth: 1,
+      borderRightColor: '#e5e7eb',
+    },
+    newGridValueCell: {
+      width: '20%',
+      paddingTop: 1,
+      paddingBottom: 0,
+      paddingHorizontal: 2,
+      borderRightWidth: 1,
+      borderRightColor: '#e5e7eb',
+    },
     notesPad: {
       borderWidth: 1,
       borderColor: '#d1d5db',
@@ -367,7 +441,7 @@ export const createFieldCompilationStyles = (
 
 const lastMeasurementsColumns = [
   { key: 'date', label: 'Date', width: '16.67%' },
-  { key: 'dtw', label: 'DTW (ft)', width: '16.67%' },
+  { key: 'dtw', label: 'DTW Below MP (ft)', width: '16.67%' },
   { key: 'mpHeight', label: 'MP Ht (ft)', width: '16.67%' },
   { key: 'method', label: 'Method', width: '16.67%' },
   { key: 'status', label: 'Level Status', width: '16.67%' },
@@ -409,6 +483,11 @@ const cutMethodRows = [
   'WL below MP',
   'MP Correction',
 ] as const
+
+// Page-1 New Measurement write-in grid (BDMS-1504 lane11). Five columns, four
+// labelled rows. Kept as a module const so the box JSX and the last-row rule
+// (cutMethodTableRowLast) agree on the row count.
+const newMeasurementGridRows = ['Hold', 'Cut', 'DTW Below MP (ft)', 'DTW BGS (ft)'] as const
 
 type TableColumn<T> = {
   key: keyof T | string
@@ -899,6 +978,108 @@ const FieldCompilationNotesPage = ({
               rows={measurements}
               compact
             />
+            {/* BDMS-1504 lane11: a write-in box for a new field reading, placed
+                after the Last Measurements table and before Installed Equipment.
+                The previous-reading callout reuses the newest row the Last
+                Measurements table already renders (measurements[0]); when there
+                is no reading the callout is omitted entirely — no label, no
+                dash. No tape/MP correction props reach this component, so the
+                corrections line is omitted rather than invented. */}
+            <View style={styles.newMeasurementBox}>
+              <View style={styles.newMeasurementHeaderRow}>
+                <Text style={styles.newMeasurementTitle}>New Measurement</Text>
+                {measurements[0] ? (
+                  <Text style={styles.newMeasurementPrev}>
+                    Previous DTW Below MP: {measurements[0].dtw} ft (
+                    {measurements[0].date})
+                  </Text>
+                ) : null}
+              </View>
+              <View style={styles.newMeasurementFieldRow}>
+                <View style={styles.newMeasurementField}>
+                  <Text style={styles.newMeasurementFieldLabel}>
+                    Date: {exportDate}
+                  </Text>
+                </View>
+                <View style={styles.newMeasurementField}>
+                  <Text style={styles.newMeasurementFieldLabel}>
+                    Time: </Text>
+                  <View style={styles.newWriteLine} />
+                </View>
+                <View style={styles.newMeasurementField}>
+                  <Text style={styles.newMeasurementFieldLabel}>
+                    Staff: </Text>
+                  <View style={styles.fillLine} />
+                </View>
+              </View>
+              <View style={styles.cutMethodTable}>
+                <View style={styles.cutMethodTableRow}>
+                  <Text style={styles.cutMethodTableLabelCell} />
+                  {cutMethodColumns.map((column, index) => (
+                    <Text
+                      key={column}
+                      style={[
+                        styles.cutMethodTableHeaderCell,
+                        ...(index === cutMethodColumns.length - 1
+                          ? [styles.cutMethodTableValueCellLast]
+                          : []),
+                      ]}
+                    >
+                      {column}
+                    </Text>
+                  ))}
+                </View>
+                {newMeasurementGridRows.map((rowLabel, rowIndex) => (
+                  <View
+                    key={rowLabel}
+                    style={[
+                      styles.cutMethodTableRow,
+                      ...(rowIndex === newMeasurementGridRows.length - 1
+                        ? [styles.cutMethodTableRowLast]
+                        : []),
+                    ]}
+                  >
+                    <Text style={styles.cutMethodTableLabelCell}>
+                      {rowLabel}
+                    </Text>
+                    {cutMethodColumns.map((column, index) => (
+                      <View
+                        key={`${rowLabel}-${column}`}
+                        style={[
+                          styles.cutMethodTableValueCell,
+                          ...(index === cutMethodColumns.length - 1
+                            ? [styles.cutMethodTableValueCellLast]
+                            : []),
+                        ]}
+                      >
+                        <View style={styles.fillLine} />
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
+              <View style={styles.newMeasurementFieldRow}>
+                <View style={styles.newMeasurementField}>
+                  <Text style={styles.newMeasurementFieldLabel}>
+                    Method: </Text>
+                  <View style={styles.fillLine} />
+                </View>
+              </View>
+              <View style={styles.newMeasurementFieldRow}>
+                <View style={styles.newMeasurementField}>
+                  <Text style={styles.newMeasurementFieldLabel}>
+                    Level Status: </Text>
+                  <View style={styles.fillLine} />
+                </View>
+              </View>
+              <View style={styles.newMeasurementFieldRow}>
+                <View style={styles.newMeasurementField}>
+                  <Text style={styles.newMeasurementFieldLabel}>
+                    Notes: </Text>
+                  <View style={styles.fillLine} />
+                </View>
+              </View>
+            </View>
             <PdfTable
               styles={styles}
               title="Installed Equipment"
