@@ -54,13 +54,16 @@ const renderPageOne = async ({
 }
 
 describe('field sheet page 1 mock-up', () => {
-  it('prints three of five photographs and stays on one page', async () => {
+  it('prints all five photographs for a five-photo well (PHOTO_SLOT_CAP=5)', async () => {
     const { pageCount, text } = await renderPageOne({ photos: 5 })
 
-    expect(pageCount).toBe(1)
+    // Cap is 5, so all five fixture photos render. The five photo rows plus the
+    // height-budgeted ruled panels now fit page 1 (fieldSheetSlotPlan shrinks the
+    // frame to 121pt for five photos, filling the 700pt column); this asserts the
+    // single-page fit the height budget restores.
     expect(text).toContain('Fixture photo 1')
-    expect(text).toContain('Fixture photo 3')
-    expect(text).not.toContain('Fixture photo 4')
+    expect(text).toContain('Fixture photo 5')
+    expect(pageCount).toBe(1)
   })
 
   it('keeps a one-photo sheet on one page', async () => {

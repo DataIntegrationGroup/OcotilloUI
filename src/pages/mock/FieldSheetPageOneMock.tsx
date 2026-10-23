@@ -1,18 +1,9 @@
-import {
-  Box,
-  Stack,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from '@mui/material'
+import { Box, Stack, Switch, Typography } from '@mui/material'
 import { PDFViewer } from '@react-pdf/renderer'
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { FieldCompilationNotesPdf } from '@/components'
-import {
-  buildFieldSheetPageOneFixture,
-  FIXTURE_PHOTO_COUNTS,
-} from '@/mock/fieldSheetPageOne.fixture'
+import { buildFieldSheetPageOneFixture } from '@/mock/fieldSheetPageOne.fixture'
 
 /**
  * Review surface for BDMS-1504 — field sheet page 1.
@@ -22,22 +13,32 @@ import {
  * this page stops building (AC6). Every reviewer question is a query parameter so
  * a comment can carry a URL:
  *
- *   /mock/field-sheet/page-1?photos=5
+ *   /mock/field-sheet/page-1?photos=on    five photos (up to PHOTO_SLOT_CAP)
+ *   /mock/field-sheet/page-1?photos=off   none — the slot plan fills the space
+ *                                         with ruled notes
  *
- * `photos` selects one of the four fixtures (0/1/3/5). There is no density
+ * The one control on the page is a "Photos" switch; its state is the `photos`
+ * parameter. `on`/`1` = photos, `off`/`0` = none; an absent or otherwise
+ * unrecognized value defaults to `on`. Exposing the mode as a parameter lets an
+ * automated lane render either state without clicking. There is no density
  * control and no density parameter: the sheet has one fixed style sheet, the
  * dense one (8.5 pt body, 12/14 pt page padding, 5 pt section gaps). The older
  * batch template (`well.tsx` / `createPdfStyles`) still carries its own density
  * option; that stack is not this sheet.
  */
-const readPhotos = (raw: string | null): number => {
-  const value = Number(raw)
+const readPhotos = (raw: string | null): boolean => {
+  if (raw === null) return true
 
-  return FIXTURE_PHOTO_COUNTS.includes(
-    value as (typeof FIXTURE_PHOTO_COUNTS)[number]
-  )
-    ? value
-    : 5
+  switch (raw.trim().toLowerCase()) {
+    case 'off':
+    case '0':
+      return false
+    case 'on':
+    case '1':
+      return true
+    default:
+      return true
+  }
 }
 
 export const FieldSheetPageOneMock = () => {
@@ -45,13 +46,13 @@ export const FieldSheetPageOneMock = () => {
   const photos = readPhotos(params.get('photos'))
 
   const fixture = useMemo(
-    () => buildFieldSheetPageOneFixture({ photos }),
+    () => buildFieldSheetPageOneFixture({ photos: photos ? 5 : 0 }),
     [photos]
   )
 
-  const setParam = (key: string, value: string) => {
+  const toggle = () => {
     const next = new URLSearchParams(params)
-    next.set(key, value)
+    next.set('photos', photos ? 'off' : 'on')
     setParams(next, { replace: true })
   }
 
@@ -75,20 +76,12 @@ export const FieldSheetPageOneMock = () => {
           <Typography variant="caption" color="text.secondary">
             Photos
           </Typography>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={photos}
-            onChange={(_, value) =>
-              value != null && setParam('photos', String(value))
-            }
-          >
-            {FIXTURE_PHOTO_COUNTS.map((count) => (
-              <ToggleButton key={count} value={count}>
-                {count}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
+          <Switch
+            edge="start"
+            checked={photos}
+            onChange={toggle}
+            inputProps={{ 'aria-label': 'Photos' }}
+          />
         </Stack>
       </Stack>
 

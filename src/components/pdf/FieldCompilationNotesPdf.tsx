@@ -192,7 +192,9 @@ export const createFieldCompilationStyles = () => {
       alignItems: 'stretch',
     },
     imageWrap: {
-      width: '50%',
+      // BDMS-1504: the photo is the rightmost (col-4) child and takes the
+      // outer 60% of the right column; the pad on its left is 40%.
+      width: '60%',
     },
     image: {
       width: '100%',
@@ -214,7 +216,9 @@ export const createFieldCompilationStyles = () => {
       color: PRINT.secondary,
     },
     notePad: {
-      width: '50%',
+      // BDMS-1504: left (col-3) child, 40% of the right column; it stretches
+      // to the photo frame height via imageNoteRow alignItems: stretch.
+      width: '40%',
       borderWidth: 1,
       borderColor: PRINT.hairline,
       borderRadius: PRINT.radius,
@@ -825,7 +829,7 @@ const FieldCompilationNotesPage = ({
   const show = (value: unknown) => renderValue(value, emptyPlaceholder)
   const num = (value: number | null | undefined, fractionDigits = 2) =>
     formatNumeric(value, fractionDigits, emptyPlaceholder)
-  const slotPlan = fieldSheetSlotPlan(imageAssets.length)
+  const slotPlan = fieldSheetSlotPlan(photoAssets.length)
   const ruledLines = (keyPrefix: string, count: number) =>
     Array.from({ length: count }).map((_, index) => (
       <View key={`${keyPrefix}-line-${index}`} style={styles.notePadLine} />
@@ -1145,19 +1149,33 @@ const FieldCompilationNotesPage = ({
           </View>
 
           <View style={styles.rightColumn}>
-            {imageAssets.slice(0, slotPlan.photos).map((asset: any) => (
+            {photoAssets.slice(0, slotPlan.photos).map((asset: any) => (
               <View
                 key={asset.id ?? asset.signed_url}
                 style={styles.imageNoteRow}
               >
+                {/* BDMS-1504: the ruled pad is now the left (col-3) child and
+                    the photograph the rightmost (col-4) child. imageNoteRow
+                    alignItems: stretch makes the pad match the frame height. */}
+                <View style={styles.notePad}>
+                  {ruledLines('photo', FIELD_SHEET_NOTE_LINES)}
+                </View>
                 <View style={styles.imageWrap}>
-                  <Image src={asset.signed_url} style={styles.image} />
+                  <Image
+                    src={asset.signed_url}
+                    style={[
+                      styles.image,
+                      {
+                        // Photo frame height comes from the column height
+                        // budget (fieldSheetSlotPlan); it shrinks only when five
+                        // frames alone overrun the 700pt column.
+                        height: slotPlan.frameHeight,
+                      },
+                    ]}
+                  />
                   <Text style={styles.imageLabel}>
                     {asset.label || asset.name || ''}
                   </Text>
-                </View>
-                <View style={styles.notePad}>
-                  {ruledLines('photo', FIELD_SHEET_NOTE_LINES)}
                 </View>
               </View>
             ))}
@@ -1171,6 +1189,11 @@ const FieldCompilationNotesPage = ({
                 {ruledLines(`ruled-${index}`, FIELD_SHEET_RULED_LINES)}
               </View>
             ))}
+            {slotPlan.tailLines > 0 ? (
+              <View style={styles.ruledSlot}>
+                {ruledLines('tail', slotPlan.tailLines)}
+              </View>
+            ) : null}
           </View>
         </View>
       </Page>

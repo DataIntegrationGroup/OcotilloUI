@@ -13,8 +13,6 @@
 import type { BaseRecord } from '@refinedev/core'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 
-export const FIXTURE_PHOTO_COUNTS = [0, 1, 3, 5] as const
-
 const PHOTO_POOL = [
   { file: 'ocotillo-spout.png', label: 'Well head' },
   { file: 'ocotillo-aquifer.png', label: 'Aquifer exposure' },
