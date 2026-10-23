@@ -87,6 +87,27 @@ export const createFieldCompilationStyles = () => {
     rightColumn: {
       width: '43%',
     },
+    // BDMS-1504 col-3 follow-up: the sheet is built as two vertical bands. The
+    // top band keeps the 57/43 split because photo rows 1-2 still carry a ruled
+    // pad; the lower band is the wider left table column plus a rail holding the
+    // photograph alone, so the tables take over the strip the pads used to own.
+    contentLower: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    leftColumnWide: {
+      flex: 1,
+      paddingRight: 2,
+    },
+    photoRail: {
+      // Measured from the committed render: the photograph is 144.5 pt wide,
+      // pinned to the right edge at x 453.1..597.6 pt.
+      width: 144,
+      alignItems: 'flex-end',
+    },
+    imageWrapRail: {
+      width: '100%',
+    },
     section: {
       // One scale only: the 8 pt body text plus the navy header bands need the
       // vertical budget, and Site Notes has to stay on page 1.
@@ -466,6 +487,14 @@ export const createFieldCompilationStyles = () => {
   })
 }
 
+/**
+ * BDMS-1504 col-3 follow-up (2026-10-23): the ruled note pad in col-3 exists
+ * only beside photo rows 1 and 2. From row 3 down the pad is gone — empty page
+ * is the intended result, not a substitute panel — and the left tables widen
+ * into that strip.
+ */
+const COL3_PAD_ROWS = 2
+
 const lastMeasurementsColumns = [
   { key: 'date', label: 'Date', width: '16.67%' },
   { key: 'dtw', label: 'DTW Below MP (ft)', width: '16.67%' },
@@ -834,6 +863,35 @@ const FieldCompilationNotesPage = ({
     Array.from({ length: count }).map((_, index) => (
       <View key={`${keyPrefix}-line-${index}`} style={styles.notePadLine} />
     ))
+  // BDMS-1504: one photo row, in either band. With a pad it is the old
+  // col-3 + col-4 pair inside the 43% column; without one it is the photograph
+  // alone at full rail width, still right-aligned and the same frame height.
+  const photoRow = (asset: any, withPad: boolean) => (
+    <View key={asset.id ?? asset.signed_url} style={styles.imageNoteRow}>
+      {withPad ? (
+        <View style={styles.notePad}>
+          {ruledLines('photo', FIELD_SHEET_NOTE_LINES)}
+        </View>
+      ) : null}
+      <View style={withPad ? styles.imageWrap : styles.imageWrapRail}>
+        <Image
+          src={asset.signed_url}
+          style={[
+            styles.image,
+            {
+              // Photo frame height comes from the column height budget
+              // (fieldSheetSlotPlan); it shrinks only when five frames alone
+              // overrun the 700pt column.
+              height: slotPlan.frameHeight,
+            },
+          ]}
+        />
+        <Text style={styles.imageLabel}>
+          {asset.label || asset.name || ''}
+        </Text>
+      </View>
+    </View>
+  )
   const siteNoteItems = [...(well.site_notes ?? well.notes ?? [])]
     .filter(Boolean)
     .map((note) => ({
@@ -859,144 +917,8 @@ const FieldCompilationNotesPage = ({
     }))
     .slice(0, 2)
 
-  return (
+  const tableSections = (
     <>
-      <Page size="LETTER" style={styles.page}>
-        <PageFooter
-          wellId={well.name}
-          pageNumber={1}
-          totalPages={firstPageOnly ? 1 : 2}
-          styles={styles}
-        />
-        {showDate ? <Text style={styles.pageDate}>{exportDate}</Text> : null}
-        <View style={styles.header}>
-          <Text style={styles.title}>Field Compilation Notes</Text>
-        </View>
-        <View style={styles.content}>
-          <View style={styles.leftColumn}>
-            <View style={styles.topGrid}>
-              <View style={styles.topGridColumn}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Point ID: </Text>
-                  {show(well.name)}
-                </Text>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Site Name: </Text>
-                  {siteNameFromAlternateIds(well)}
-                </Text>
-              </View>
-              <View style={styles.topGridColumn}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Easting: </Text>
-                  {num(easting, 0)}
-                </Text>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Northing: </Text>
-                  {num(northing, 0)}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.section}>
-              <View style={styles.contactsRow}>
-                <View style={styles.contactColumn}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Primary Contact: </Text>
-                    {show(primaryContact?.name)}
-                  </Text>
-                </View>
-                <View style={styles.contactColumn}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Secondary Contact: </Text>
-                    {show(secondaryContact?.name)}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.contactsRow}>
-                <View style={[styles.contactColumn, styles.contactDetails]}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Phone: </Text>
-                    {formatContactPhones(primaryContact)}
-                  </Text>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Address: </Text>
-                    {contactAddress(primaryContact)}
-                  </Text>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Email: </Text>
-                    {contactEmail(primaryContact)}
-                  </Text>
-                </View>
-                <View style={[styles.contactColumn, styles.contactDetails]}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Phone: </Text>
-                    {formatContactPhones(secondaryContact)}
-                  </Text>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Address: </Text>
-                    {contactAddress(secondaryContact)}
-                  </Text>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Email: </Text>
-                    {contactEmail(secondaryContact)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <NoteSection
-              styles={styles}
-              title="Location Notes"
-              value={locationNotesText(well)}
-            />
-            {/* Source open (BDMS-1509 Q17): display only. No parsing, no
-                inference — the string is supplied by the caller and never
-                derived from any other well field. */}
-            <NoteSection
-              styles={styles}
-              title="Direction notes"
-              value={directionNotesValue(directionNotes)}
-            />
-            <NoteSection
-              styles={styles}
-              title="Measurement Notes"
-              value={notesToText(well.measuring_notes ?? [])}
-            />
-            <NoteSection
-              styles={styles}
-              title="MP Description"
-              value={
-                well.measuring_point_description?.trim() || emptyPlaceholder
-              }
-            />
-
-            <View style={styles.section}>
-              <View style={styles.metricRow}>
-                <View style={styles.metricCell}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>MP Height: </Text>
-                    {`${num(well.measuring_point_height)} ${well.measuring_point_height_unit ?? ''}`.trim()}
-                  </Text>
-                </View>
-                <View style={styles.metricCell}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Well Depth: </Text>
-                    {`${num(well.well_depth)} ${well.well_depth_unit ?? ''}`.trim()}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* ALIGNMENT A5: a labelled write-on box the field hand fills in
-                before taking the reading. Ruled, not text — nothing prints
-                here from the database. */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Pre-visit Notes</Text>
-              <View style={styles.preVisitPad}>
-                {ruledLines('previsit', 3)}
-              </View>
-            </View>
-
             <PdfTable
               styles={styles}
               title="Last Measurements"
@@ -1146,56 +1068,195 @@ const FieldCompilationNotesPage = ({
               rows={siteNoteItems}
               compact
             />
-          </View>
+    </>
+  )
 
-          <View style={styles.rightColumn}>
-            {photoAssets.slice(0, slotPlan.photos).map((asset: any) => (
-              <View
-                key={asset.id ?? asset.signed_url}
-                style={styles.imageNoteRow}
-              >
-                {/* BDMS-1504: the ruled pad is now the left (col-3) child and
-                    the photograph the rightmost (col-4) child. imageNoteRow
-                    alignItems: stretch makes the pad match the frame height. */}
-                <View style={styles.notePad}>
-                  {ruledLines('photo', FIELD_SHEET_NOTE_LINES)}
+  const railTail = (
+    <>
+      {photoAssets.length > slotPlan.photos ? (
+        <Text style={styles.photoCaption}>
+          top {slotPlan.photos} photos shown
+        </Text>
+      ) : null}
+      {Array.from({ length: slotPlan.ruled }).map((_, index) => (
+        <View key={`ruled-${index}`} style={styles.ruledSlot}>
+          {ruledLines(`ruled-${index}`, FIELD_SHEET_RULED_LINES)}
+        </View>
+      ))}
+      {slotPlan.tailLines > 0 ? (
+        <View style={styles.ruledSlot}>
+          {ruledLines('tail', slotPlan.tailLines)}
+        </View>
+      ) : null}
+    </>
+  )
+  return (
+    <>
+      <Page size="LETTER" style={styles.page}>
+        <PageFooter
+          wellId={well.name}
+          pageNumber={1}
+          totalPages={firstPageOnly ? 1 : 2}
+          styles={styles}
+        />
+        {showDate ? <Text style={styles.pageDate}>{exportDate}</Text> : null}
+        <View style={styles.header}>
+          <Text style={styles.title}>Field Compilation Notes</Text>
+        </View>
+        <View style={styles.content}>
+          <View style={styles.leftColumn}>
+            <View style={styles.topGrid}>
+              <View style={styles.topGridColumn}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Point ID: </Text>
+                  {show(well.name)}
+                </Text>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Site Name: </Text>
+                  {siteNameFromAlternateIds(well)}
+                </Text>
+              </View>
+              <View style={styles.topGridColumn}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Easting: </Text>
+                  {num(easting, 0)}
+                </Text>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Northing: </Text>
+                  {num(northing, 0)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <View style={styles.contactsRow}>
+                <View style={styles.contactColumn}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Primary Contact: </Text>
+                    {show(primaryContact?.name)}
+                  </Text>
                 </View>
-                <View style={styles.imageWrap}>
-                  <Image
-                    src={asset.signed_url}
-                    style={[
-                      styles.image,
-                      {
-                        // Photo frame height comes from the column height
-                        // budget (fieldSheetSlotPlan); it shrinks only when five
-                        // frames alone overrun the 700pt column.
-                        height: slotPlan.frameHeight,
-                      },
-                    ]}
-                  />
-                  <Text style={styles.imageLabel}>
-                    {asset.label || asset.name || ''}
+                <View style={styles.contactColumn}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Secondary Contact: </Text>
+                    {show(secondaryContact?.name)}
                   </Text>
                 </View>
               </View>
-            ))}
-            {photoAssets.length > slotPlan.photos ? (
-              <Text style={styles.photoCaption}>
-                top {slotPlan.photos} photos shown
-              </Text>
-            ) : null}
-            {Array.from({ length: slotPlan.ruled }).map((_, index) => (
-              <View key={`ruled-${index}`} style={styles.ruledSlot}>
-                {ruledLines(`ruled-${index}`, FIELD_SHEET_RULED_LINES)}
+              <View style={styles.contactsRow}>
+                <View style={[styles.contactColumn, styles.contactDetails]}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Phone: </Text>
+                    {formatContactPhones(primaryContact)}
+                  </Text>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Address: </Text>
+                    {contactAddress(primaryContact)}
+                  </Text>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Email: </Text>
+                    {contactEmail(primaryContact)}
+                  </Text>
+                </View>
+                <View style={[styles.contactColumn, styles.contactDetails]}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Phone: </Text>
+                    {formatContactPhones(secondaryContact)}
+                  </Text>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Address: </Text>
+                    {contactAddress(secondaryContact)}
+                  </Text>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Email: </Text>
+                    {contactEmail(secondaryContact)}
+                  </Text>
+                </View>
               </View>
-            ))}
-            {slotPlan.tailLines > 0 ? (
-              <View style={styles.ruledSlot}>
-                {ruledLines('tail', slotPlan.tailLines)}
+            </View>
+
+            <NoteSection
+              styles={styles}
+              title="Location Notes"
+              value={locationNotesText(well)}
+            />
+            {/* Source open (BDMS-1509 Q17): display only. No parsing, no
+                inference — the string is supplied by the caller and never
+                derived from any other well field. */}
+            <NoteSection
+              styles={styles}
+              title="Direction notes"
+              value={directionNotesValue(directionNotes)}
+            />
+            <NoteSection
+              styles={styles}
+              title="Measurement Notes"
+              value={notesToText(well.measuring_notes ?? [])}
+            />
+            <NoteSection
+              styles={styles}
+              title="MP Description"
+              value={
+                well.measuring_point_description?.trim() || emptyPlaceholder
+              }
+            />
+
+            <View style={styles.section}>
+              <View style={styles.metricRow}>
+                <View style={styles.metricCell}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>MP Height: </Text>
+                    {`${num(well.measuring_point_height)} ${well.measuring_point_height_unit ?? ''}`.trim()}
+                  </Text>
+                </View>
+                <View style={styles.metricCell}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Well Depth: </Text>
+                    {`${num(well.well_depth)} ${well.well_depth_unit ?? ''}`.trim()}
+                  </Text>
+                </View>
               </View>
-            ) : null}
+            </View>
+
+            {/* ALIGNMENT A5: a labelled write-on box the field hand fills in
+                before taking the reading. Ruled, not text — nothing prints
+                here from the database. */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Pre-visit Notes</Text>
+              <View style={styles.preVisitPad}>
+                {ruledLines('previsit', 3)}
+              </View>
+            </View>
+            {/* Off mode (no photos): there is no photo band to split, so the
+                tables stay in this column as they always were. */}
+            {slotPlan.photos > 0 ? null : tableSections}
+          </View>
+
+          {/* Top band: photo rows 1-2 keep their col-3 pad beside the 57% left
+              column. */}
+          <View style={styles.rightColumn}>
+            {slotPlan.photos > 0
+              ? photoAssets
+                  .slice(0, COL3_PAD_ROWS)
+                  .map((asset: any) => photoRow(asset, true))
+              : railTail}
           </View>
         </View>
+
+        {/* Lower band: no pads, so the tables take the freed strip and the rail
+            holds the photograph alone. Skipped in off mode. */}
+        {slotPlan.photos > 0 ? (
+          <View style={styles.contentLower}>
+            <View style={styles.leftColumnWide}>{tableSections}</View>
+
+            <View style={styles.photoRail}>
+              {photoAssets
+                .slice(COL3_PAD_ROWS, slotPlan.photos)
+                .map((asset: any) => photoRow(asset, false))}
+              {railTail}
+            </View>
+          </View>
+        ) : null}
       </Page>
 
       {firstPageOnly ? null : (
