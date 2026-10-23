@@ -153,13 +153,8 @@ export function useWellListColumns(): ColumnDef<IWell, unknown>[] {
           label: WellListColumnLabels.type,
           description:
             'Infrastructure type from the controlled vocabulary (for example water well or geothermal well).',
-          filter: {
-            type: 'select',
-            options: [
-              { label: 'Water well', value: 'water well' },
-              { label: 'Geothermal well', value: 'geothermal well' },
-            ],
-          },
+          // No filter: the list reads thing/water-well, so every row is a water
+          // well and a type filter could only match all rows or none.
         },
       },
       {
