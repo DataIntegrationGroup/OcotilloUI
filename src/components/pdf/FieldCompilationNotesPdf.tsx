@@ -36,7 +36,7 @@ export const createFieldCompilationStyles = () => {
     page: {
       paddingTop: 12,
       paddingBottom: 12,
-      paddingHorizontal: 14,
+      paddingHorizontal: 12,
       backgroundColor: '#ffffff',
       fontSize: 8.5,
       color: PRINT.body,
@@ -44,15 +44,15 @@ export const createFieldCompilationStyles = () => {
     pageDate: {
       position: 'absolute',
       top: 16,
-      right: 20,
+      right: 18,
       fontSize: 8.5,
       color: PRINT.body,
     },
     footer: {
       position: 'absolute',
       bottom: 8,
-      left: 14,
-      right: 14,
+      left: 12,
+      right: 12,
     },
     footerText: {
       fontSize: PRINT_TYPE.caption,
@@ -60,9 +60,9 @@ export const createFieldCompilationStyles = () => {
     },
     header: {
       marginBottom: 6,
-      borderBottomWidth: 3,
+      borderBottomWidth: 2,
       borderBottomColor: PRINT.accent,
-      paddingBottom: 6,
+      paddingBottom: 9,
     },
     title: {
       fontSize: PRINT_TYPE.title,
