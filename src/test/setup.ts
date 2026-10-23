@@ -11,7 +11,17 @@ if (typeof Element !== 'undefined') {
   Element.prototype.releasePointerCapture ??= () => undefined
   Element.prototype.scrollIntoView ??= () => undefined
 }
-  
+
+// jsdom implements neither of these. maplibre-gl calls createObjectURL at
+// module load to start its worker, so any test that reaches MapComponent
+// throws during import — vitest then fails the run on the unhandled
+// rejection even though every test itself passes. Guarded because the API
+// contract tests run in the node environment, where there is no window.
+if (typeof window !== 'undefined') {
+  window.URL.createObjectURL ??= vi.fn(() => 'blob:test')
+  window.URL.revokeObjectURL ??= vi.fn()
+}
+
   // Mock the authentication provider (for node api contract tests)
   vi.mock('@/providers/authentik-provider', () => ({
     getAccessToken: vi.fn().mockResolvedValue('mock-token'),
