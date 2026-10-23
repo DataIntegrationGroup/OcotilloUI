@@ -1,35 +1,37 @@
 /**
  * Print design tokens for the field-compilation PDF.
  *
- * The owner page (`FieldSheetPageTwo.tsx`) is the reference design — Rob's call
- * on 2026-10-22: it follows the wireframe closely and uses the page better than
- * the wireframe did. Rather than let each sheet invent its own palette, the
- * owner page's vocabulary lives here and every sheet imports it.
+ * Source: mock-up palette measured at 300 dpi from
+ * `/Users/robbalch/Downloads/Field Compilation Sheet Wireframes.pdf` —
+ * see `NMBG/tasks/preview-compilation/audit/mockup/measure/MOCK-PALETTE-2026-10-23.md`.
  *
- * Values are the literal ones the owner page already printed with, measured
- * back out of the rendered PDF (`tools/pdf_tokens.py`) on 2026-10-22:
+ * The mock-up is the design Liz approved (Rob, 2026-10-23). These values are
+ * the literal hex codes sampled from the rendered mock-up page:
  *
- *   accent   #1a5276  table header bands, field labels, titles, 3 pt rules
- *   body     #333     table body text
- *   secondary #555    captions, footers, unit hints
- *   panel    #f5f8fc  info grid fill, zebra rows
- *   band     #f8f8f8  reserved/empty block fill
- *   hairline #ddd     table row separators, image and note borders
- *   radius   4        cards, grids, note pads
+ *   accent     #3f5e8c  thin rules, small accent marks (never a fill band)
+ *   accentText #ffffff  white-on-dark text (logo, legacy)
+ *   body       #2e3137  primary text
+ *   secondary  #88909c  captions, footers, unit hints
+ *   panel      #eef1f5  info grid fill, zebra rows
+ *   band       #f3f3f1  zebra / secondary band (warm neutral)
+ *   bandStrong #ececea  primary section-header band fill
+ *   hairline   #cdcfd0  table row separators, image and note borders
+ *   radius     4        cards, grids, note pads
  *
- * Type scale — the owner page's, promoted to the whole document. Nothing in the
+ * Type scale — the mock-up's, promoted to the whole document. Nothing in the
  * print path may render below `micro` (8) except the logo wordmark; the 5.5 pt
  * DTW header that AC2 flagged is retired by importing from here instead of
  * overriding at the call site.
  */
 export const PRINT = {
-  accent: '#1a5276',
+  accent: '#3f5e8c',
   accentText: '#ffffff',
-  body: '#333',
-  secondary: '#555',
-  panel: '#f5f8fc',
-  band: '#f8f8f8',
-  hairline: '#ddd',
+  body: '#2e3137',
+  secondary: '#88909c',
+  panel: '#eef1f5',
+  band: '#f3f3f1',
+  bandStrong: '#ececea',
+  hairline: '#cdcfd0',
   radius: 4,
 } as const
 

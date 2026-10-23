@@ -163,7 +163,7 @@ export const createFieldCompilationStyles = () => {
     },
     tableHeader: {
       flexDirection: 'row',
-      backgroundColor: PRINT.accent,
+      backgroundColor: PRINT.bandStrong,
       borderBottomWidth: 1,
       borderBottomColor: PRINT.accent,
     },
@@ -185,7 +185,7 @@ export const createFieldCompilationStyles = () => {
     cellHeader: {
       fontWeight: 700,
       fontSize: PRINT_TYPE.body,
-      color: PRINT.accentText,
+      color: PRINT.body,
       // One scale means narrow columns may wrap ("DTW Below MP (ft)" at 8 pt in
       // a 16.67 % column does); a tight leading keeps that wrap from costing a
       // second line of page height.
@@ -270,10 +270,10 @@ export const createFieldCompilationStyles = () => {
     emptyImageState: {
       borderWidth: 1,
       borderStyle: 'dashed',
-      borderColor: '#d1d5db',
+      borderColor: PRINT.hairline,
       padding: 12,
       textAlign: 'center',
-      color: '#6b7280',
+      color: PRINT.secondary,
       fontSize: 9,
     },
     pageTitle: {
@@ -291,15 +291,15 @@ export const createFieldCompilationStyles = () => {
     hydrographEmptyState: {
       borderWidth: 1,
       borderStyle: 'dashed',
-      borderColor: '#d1d5db',
+      borderColor: PRINT.hairline,
       padding: 16,
       textAlign: 'center',
-      color: '#6b7280',
+      color: PRINT.secondary,
       marginBottom: 12,
     },
     cutMethodBox: {
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: PRINT.hairline,
       padding: 10,
       marginBottom: 12,
     },
@@ -310,7 +310,7 @@ export const createFieldCompilationStyles = () => {
     },
     cutMethodHint: {
       fontSize: 8,
-      color: '#4b5563',
+      color: PRINT.body,
       marginBottom: 8,
       lineHeight: 1.2,
     },
