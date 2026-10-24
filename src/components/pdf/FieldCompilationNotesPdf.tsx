@@ -1224,7 +1224,14 @@ const FieldCompilationNotesPage = ({
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Pre-visit Notes</Text>
               <View style={styles.preVisitPad}>
-                {ruledLines('previsit', 3)}
+              <Text style={styles.cutMethodEquation}>
+                HOLD - CUT = Depth to Water (below MP)
+              </Text>
+              <Text style={styles.cutMethodHint}>
+                Cut method field entry for steel-tape measurements. Record HOLD,
+                record CUT, then subtract CUT from HOLD to get depth to water
+                below the measuring point (MP).
+              </Text>
               </View>
             </View>
             {/* Off mode (no photos): there is no photo band to split, so the
@@ -1258,117 +1265,6 @@ const FieldCompilationNotesPage = ({
           </View>
         ) : null}
       </Page>
-
-      {firstPageOnly ? null : (
-        <>
-          <Page size="LETTER" style={styles.page}>
-            {showDate ? (
-              <Text style={styles.pageDate}>{exportDate}</Text>
-            ) : null}
-            <Text style={styles.pageTitle}>
-              General Field Notes: {well.name}
-            </Text>
-            <View style={styles.cutMethodBox}>
-              <Text style={styles.cutMethodEquation}>
-                HOLD - CUT = Depth to Water (below MP)
-              </Text>
-              <Text style={styles.cutMethodHint}>
-                Cut method field entry for steel-tape measurements. Record HOLD,
-                record CUT, then subtract CUT from HOLD to get depth to water
-                below the measuring point (MP).
-              </Text>
-              <View style={styles.cutMethodTable}>
-                <View style={styles.cutMethodTableRow}>
-                  <Text style={styles.cutMethodTableLabelCell}>Field</Text>
-                  {cutMethodColumns.map((column, index) => (
-                    <Text
-                      key={column}
-                      style={[
-                        styles.cutMethodTableHeaderCell,
-                        ...(index === cutMethodColumns.length - 1
-                          ? [styles.cutMethodTableValueCellLast]
-                          : []),
-                      ]}
-                    >
-                      {column}
-                    </Text>
-                  ))}
-                </View>
-                {cutMethodRows.map((rowLabel, rowIndex) => (
-                  <View
-                    key={rowLabel}
-                    style={[
-                      styles.cutMethodTableRow,
-                      ...(rowIndex === cutMethodRows.length - 1
-                        ? [styles.cutMethodTableRowLast]
-                        : []),
-                    ]}
-                  >
-                    <Text style={styles.cutMethodTableLabelCell}>
-                      {rowLabel}
-                    </Text>
-                    {cutMethodColumns.map((column, index) => (
-                      <View
-                        key={`${rowLabel}-${column}`}
-                        style={[
-                          styles.cutMethodTableValueCell,
-                          ...(index === cutMethodColumns.length - 1
-                            ? [styles.cutMethodTableValueCellLast]
-                            : []),
-                        ]}
-                      >
-                        <View style={styles.fillLine} />
-                      </View>
-                    ))}
-                  </View>
-                ))}
-              </View>
-            </View>
-            <Text style={styles.sectionTitle}>General Field Notes</Text>
-            <View style={styles.notesPad}>
-              {Array.from({ length: 20 }).map((_, index) => (
-                <View
-                  key={`general-note-line-${index}`}
-                  style={styles.notesPadLine}
-                />
-              ))}
-            </View>
-          </Page>
-
-          <Page size="LETTER" style={styles.page}>
-            {showDate ? (
-              <Text style={styles.pageDate}>{exportDate}</Text>
-            ) : null}
-            <Text style={styles.pageTitle}>
-              Hydrograph and Manual Measurements: {well.name}
-            </Text>
-            {hydrographImage ? (
-              <Image src={hydrographImage} style={styles.hydrographImage} />
-            ) : (
-              <Text style={styles.hydrographEmptyState}>
-                Hydrograph unavailable for this well.
-              </Text>
-            )}
-            <PdfTable
-              styles={styles}
-              title="Manual Measurements"
-              columns={manualMeasurementColumns}
-              rows={manualMeasurements}
-            />
-          </Page>
-
-          <Page size="LETTER" style={styles.page}>
-            {showDate ? (
-              <Text style={styles.pageDate}>{exportDate}</Text>
-            ) : null}
-            <View style={styles.blankPageBody}>
-              <Text style={styles.blankPageText}>
-                This page is intentionally left blank
-              </Text>
-            </View>
-          </Page>
-        </>
-      )}
     </>
   )
 }
