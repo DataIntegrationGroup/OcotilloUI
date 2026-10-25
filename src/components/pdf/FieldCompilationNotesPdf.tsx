@@ -24,7 +24,7 @@ import {
   fieldSheetSlotPlan,
   PHOTO_SLOT_CAP,
 } from './fieldSheetPageLayout'
-import { PageFooter } from './layout/PageFooter'
+
 import { PRINT, PRINT_TYPE } from './printTokens'
 
 export type FieldCompilationStyles = ReturnType<
@@ -48,16 +48,7 @@ export const createFieldCompilationStyles = () => {
       fontSize: 8.5,
       color: PRINT.body,
     },
-    footer: {
-      position: 'absolute',
-      bottom: 8,
-      left: 12,
-      right: 12,
-    },
-    footerText: {
-      fontSize: PRINT_TYPE.caption,
-      color: PRINT.secondary,
-    },
+
     header: {
       marginBottom: 6,
       borderBottomWidth: 2,
@@ -1093,12 +1084,6 @@ const FieldCompilationNotesPage = ({
   return (
     <>
       <Page size="LETTER" style={styles.page}>
-        <PageFooter
-          wellId={well.name}
-          pageNumber={1}
-          totalPages={firstPageOnly ? 1 : 2}
-          styles={styles}
-        />
         {showDate ? <Text style={styles.pageDate}>{exportDate}</Text> : null}
         <View style={styles.header}>
           <Text style={styles.title}>Field Compilation Notes</Text>
