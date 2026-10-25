@@ -118,7 +118,7 @@ export const createFieldCompilationStyles = () => {
     },
     label: {
       fontWeight: 700,
-      color: PRINT.accent,
+      color: PRINT.body,
     },
     contactsRow: {
       flexDirection: 'row',
@@ -156,7 +156,7 @@ export const createFieldCompilationStyles = () => {
       flexDirection: 'row',
       backgroundColor: PRINT.bandStrong,
       borderBottomWidth: 1,
-      borderBottomColor: PRINT.accent,
+      borderBottomColor: PRINT.hairline,
     },
     tableRow: {
       flexDirection: 'row',
@@ -245,7 +245,7 @@ export const createFieldCompilationStyles = () => {
       width: '100%',
       backgroundColor: PRINT.panel,
       borderLeftWidth: 4,
-      borderLeftColor: PRINT.accent,
+      borderLeftColor: PRINT.hairline,
       borderRadius: PRINT.radius,
       paddingTop: 2,
       paddingBottom: 2,
@@ -366,11 +366,11 @@ export const createFieldCompilationStyles = () => {
       paddingHorizontal: 4,
       fontSize: PRINT_TYPE.caption,
       fontWeight: 700,
-      color: PRINT.accentText,
-      backgroundColor: PRINT.accent,
+      color: PRINT.body,
+      backgroundColor: PRINT.bandStrong,
       textAlign: 'center',
       borderRightWidth: 1,
-      borderRightColor: PRINT.accent,
+      borderRightColor: PRINT.hairline,
     },
     newMeasurementBox: {
       borderWidth: 1,
@@ -393,7 +393,7 @@ export const createFieldCompilationStyles = () => {
     newMeasurementPrev: {
       fontSize: PRINT_TYPE.body,
       fontWeight: 700,
-      color: PRINT.accent,
+      color: PRINT.body,
     },
     newMeasurementFieldRow: {
       flexDirection: 'row',
@@ -430,11 +430,11 @@ export const createFieldCompilationStyles = () => {
       paddingHorizontal: 3,
       fontSize: PRINT_TYPE.caption,
       fontWeight: 700,
-      color: PRINT.accentText,
-      backgroundColor: PRINT.accent,
+      color: PRINT.body,
+      backgroundColor: PRINT.bandStrong,
       textAlign: 'center',
       borderRightWidth: 1,
-      borderRightColor: PRINT.accent,
+      borderRightColor: PRINT.hairline,
     },
     newGridLabelCell: {
       width: '20%',
