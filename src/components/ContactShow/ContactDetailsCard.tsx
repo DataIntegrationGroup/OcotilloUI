@@ -13,7 +13,7 @@ export const ContactDetailsCard = ({ contact }: ContactDetailsCardProps) => {
 
   const hasContactInfo = phones.length > 0 || emails.length > 0
   const hasAddresses = addresses.length > 0
-  const hasMetadata = contact?.created_at || contact?.release_status
+  const hasMetadata = Boolean(contact?.created_at)
 
   const isEmpty = !contact?.name && !hasContactInfo && !hasAddresses && !hasMetadata
 
@@ -97,11 +97,6 @@ export const ContactDetailsCard = ({ contact }: ContactDetailsCardProps) => {
                 {contact?.created_at && (
                   <Typography variant="caption" color="text.secondary">
                     Created: {formatAppDateTime(contact.created_at as unknown as string)}
-                  </Typography>
-                )}
-                {contact?.release_status && (
-                  <Typography variant="caption" color="text.secondary">
-                    {contact.release_status}
                   </Typography>
                 )}
               </Stack>
