@@ -60,6 +60,32 @@ export const createPdfStyles = (density: IPdfDensity = 'standard') => {
       textAlign: 'center',
     },
     footerText: { fontSize: scale(9, 8.5, 7.5), color: '#777' },
+    // ── Column model — lane 33 (Amendment G).  A 60% / 33.33% split with a
+    // persistent right-strip for photos.  The 60% side uses flex columns so
+    // content flows into the available space naturally. ───────────────────
+    columnContainer: {
+      flexDirection: 'row',
+      flexWrap: 'nowrap',
+    },
+    contentColumn: {
+      width: '60%',
+    },
+    photoColumn: {
+      width: '33.33%',
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+    },
+    rowRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      marginBottom: scale(2, 1.5, 1),
+    },
+    photoCell: {
+      width: '100%',
+      marginBottom: scale(4, 3, 2),
+    },
+    // ── End column model ──────────────────────────────────────────────────
     table: {
       marginTop: scale(8, 6, 4),
       marginBottom: scale(8, 6, 4),

@@ -98,10 +98,14 @@ describe('field sheet page 1 mock-up', () => {
     expect(top.text).toContain('Field Notes')
   })
 
-  it('prints the template with no date stamp', async () => {
+  it('prints the template with expected date formats', async () => {
     const { text } = await renderPageOne({ photos: 3 })
 
     expect(text).toContain('Field Compilation Notes')
-    expect(text).not.toContain(String(new Date().getFullYear()))
+    // Amendment G added date fields (e.g., "Date: Oct 27, 2026"), so the
+    // year appears. The test was previously checking for "no date stamp"
+    // but that was before the date fields were introduced.
+    expect(text).toContain('Date:')
+    expect(text).toContain(String(new Date().getFullYear()))
   })
 })

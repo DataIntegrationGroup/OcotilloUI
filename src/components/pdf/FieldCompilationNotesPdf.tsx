@@ -18,6 +18,7 @@ import {
   formatAppDate,
   sanitizeContacts,
 } from '@/utils'
+import { PHOTO_SLOT_CAP } from './fieldSheetPageLayout'
 import { formatContactPhones } from './fieldCompilationPhoneFormatter'
 import { PageFooter } from './layout/PageFooter'
 import {
@@ -94,6 +95,33 @@ export const createFieldCompilationStyles = (
       flexDirection: 'row',
       gap: 10,
     },
+    // ── Column model — lane 33 (Amendment G).  A 60% / 33.33% split with a
+    // persistent right-strip for photos.  The 60% side uses flex columns so
+    // content flows into the available space naturally. ───────────────────
+    columnContainer: {
+      flexDirection: 'row',
+      flexWrap: 'nowrap',
+    },
+    contentColumn: {
+      width: '60%',
+      flexDirection: 'column',
+    },
+    photoColumn: {
+      width: '33.33%',
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+    },
+    rowRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      marginBottom: scale(2, 1.5, 1),
+    },
+    photoCell: {
+      width: '100%',
+      marginBottom: scale(4, 3, 2),
+    },
+    // ── End column model ──────────────────────────────────────────────────
     leftColumn: {
       width: '57%',
       paddingRight: 2,
@@ -469,10 +497,9 @@ const manualMeasurementColumns = [
   { key: 'status', label: 'Level Status', width: '36%' },
 ] as const
 
-const siteNoteColumns = [
-  { key: 'date', label: 'Date', width: '20%' },
-  { key: 'note', label: 'Note', width: '80%' },
-] as const
+// Site Notes is now a single field inside Last Measurements (lane 32),
+// not a separate table. The label column width is just for alignment.
+const siteNotesFieldLabel = 'Site Notes:' as const
 
 const cutMethodColumns = ['M1', 'M2', 'M3', 'M4', 'M5'] as const
 const cutMethodRows = [
@@ -582,24 +609,28 @@ const equipmentNotesText = (rows: SensorDeploymentRow[]) => {
   return notes.length > 0 ? Array.from(new Set(notes)).join('\n') : '-'
 }
 
-const splitSiteNote = (content?: string | null) => {
-  const normalized = content?.replace(/\s+/g, ' ').trim() ?? ''
-  if (!normalized) return null
-
-  const match = normalized.match(/^(\d{4}-\d{2}-\d{2})\s*:\s*(.+)$/)
-  if (!match) {
-    return {
-      date: '-',
-      sortDate: null,
-      note: normalized,
-    }
-  }
-
-  return {
-    date: formatAppDate(match[1]),
-    sortDate: new Date(`${match[1]}T12:00:00Z`).getTime(),
-    note: match[2].trim() || normalized,
-  }
+/**
+ * Site Notes field value — reads from the note array at
+ * `well.site_notes` (legacy) or `well.notes`, joined as a single
+ * text block. Falls back to `-` when empty.
+ *
+ * Note: `site_notes` at the top level is an array of NoteResponse
+ * (see `IThing.ts`). We format them as a single paragraph rather
+ * than a table (lane 32 merge).
+ */
+const siteNotesText = (well: IWell): string => {
+  const sn = (well.site_notes as any) || []
+  const nt = (well.notes as any) || []
+  const notes =
+    sn.length > 0
+      ? sn
+      : nt.length > 0
+        ? nt
+        : []
+  const lines = notes
+    .map((n: any) => n?.content?.trim())
+    .filter((c: string) => c)
+  return lines.length > 0 ? lines.join('\n') : '-'
 }
 
 const lastMeasurementsRows = (
@@ -782,15 +813,28 @@ const FieldCompilationNotesPage = ({
     [observations]
   )
   const imageAssets = useMemo(
-    () =>
-      assets
-        .filter(
-          (asset: any) =>
-            asset?.signed_url &&
-            typeof asset?.mime_type === 'string' &&
-            asset.mime_type.startsWith('image/')
-        )
-        .slice(0, 3),
+    () => {
+      const filtered =
+        assets
+          .filter(
+            (asset: any) =>
+              asset?.signed_url &&
+              typeof asset?.mime_type === 'string' &&
+              asset.mime_type.startsWith('image/')
+          )
+          .slice()
+      // Lane 33: sort newest-first (by created_at desc, then id desc), cap at 3
+      filtered.sort((a: any, b: any) => {
+        if (a.created_at && b.created_at) {
+          return (
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+          )
+        }
+        return (b.id as number ?? 0) - (a.id as number ?? 0)
+      })
+      return filtered.slice(0, 3)
+    },
     [assets]
   )
   const { easting, northing } =
@@ -805,31 +849,6 @@ const FieldCompilationNotesPage = ({
     Array.from({ length: count }).map((_, index) => (
       <View key={`${keyPrefix}-line-${index}`} style={styles.notePadLine} />
     ))
-  const siteNoteItems = [...(well.site_notes ?? well.notes ?? [])]
-    .filter(Boolean)
-    .map((note) => ({
-      parsed: splitSiteNote(note?.content),
-      createdAt: note?.created_at ? new Date(note.created_at).getTime() : 0,
-    }))
-    .filter(
-      (
-        value
-      ): value is {
-        parsed: { date: string; note: string; sortDate: number | null }
-        createdAt: number
-      } => Boolean(value.parsed)
-    )
-    .sort((a, b) => {
-      const aTime = a.parsed.sortDate ?? a.createdAt
-      const bTime = b.parsed.sortDate ?? b.createdAt
-      return bTime - aTime
-    })
-    .map((value) => ({
-      date: value.parsed.date,
-      note: value.parsed.note,
-    }))
-    .slice(0, 2)
-
   return (
     <>
       <Page size="LETTER" style={styles.page}>
@@ -838,8 +857,10 @@ const FieldCompilationNotesPage = ({
         <View style={styles.header}>
           <Text style={styles.title}>Field Compilation Notes</Text>
         </View>
-        <View style={styles.content}>
-          <View style={styles.leftColumn}>
+        {/* Lane 33 column model: 60% content + 33.33% photo strip */}
+        <View style={styles.columnContainer}>
+          {/* ── Content column (60%) ──────────────────────────────── */}
+          <View style={styles.contentColumn}>
             {notesPlacement === 'top' ? (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Field Notes</Text>
@@ -848,29 +869,107 @@ const FieldCompilationNotesPage = ({
                 </View>
               </View>
             ) : null}
-            <View style={styles.topGrid}>
-              <View style={styles.topGridColumn}>
+
+            {/* Row 1: 2-inner-column identity grid */}
+            <View style={styles.rowRow}>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.line}>
                   <Text style={styles.label}>Point ID: </Text>
                   {show(well.name)}
                 </Text>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Site Name: </Text>
-                  {siteNameFromAlternateIds(well)}
-                </Text>
               </View>
-              <View style={styles.topGridColumn}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Easting: </Text>
-                  {num(easting, 0)}
-                </Text>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.line}>
                   <Text style={styles.label}>Northing: </Text>
                   {num(northing, 0)}
                 </Text>
               </View>
             </View>
+            <View style={styles.rowRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Site Name: </Text>
+                  {siteNameFromAlternateIds(well)}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Easting: </Text>
+                  {num(easting, 0)}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.rowRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Primary Contact: </Text>
+                  {show(primaryContact?.name)}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Secondary Contact: </Text>
+                  {show(secondaryContact?.name)}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.rowRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Location Notes: </Text>
+                  {locationNotesText(well)}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>MP Height: </Text>
+                  {`${num(well.measuring_point_height)} ${well.measuring_point_height_unit ?? ''}`.trim()}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.rowRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Elevation: </Text>
+                  {num(well.current_location?.properties?.elevation, 0)}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Well Depth: </Text>
+                  {`${num(well.well_depth)} ${well.well_depth_unit ?? ''}`.trim()}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.rowRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.line}>
+                  <Text style={styles.label}>Last Measurements: </Text>
+                  {measurements[0]
+                    ? `${measurements[0].date} (${measurements[0].dtw} ft)`
+                    : emptyPlaceholder}
+                </Text>
+              </View>
+            </View>
 
+            {/* Site Notes merged into row 1 — no section header */}
+            {(() => {
+              const sn = siteNotesText(well)
+              return sn !== '-' ? (
+                <View style={styles.rowRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.line}>
+                      <Text style={styles.label}>Site Notes: </Text>
+                      {sn}
+                    </Text>
+                  </View>
+                </View>
+              ) : null
+            })()}
+
+            {/* ── Rows 2–7: flex columns that flow into 60% width ─── */}
+
+            {/* Row 2: Contact details */}
             <View style={styles.section}>
               <View style={styles.contactsRow}>
                 <View style={styles.contactColumn}>
@@ -918,14 +1017,7 @@ const FieldCompilationNotesPage = ({
               </View>
             </View>
 
-            <NoteSection
-              styles={styles}
-              title="Location Notes"
-              value={locationNotesText(well)}
-            />
-            {/* Source open (BDMS-1509 Q17): display only. No parsing, no
-                inference — the string is supplied by the caller and never
-                derived from any other well field. */}
+            {/* Row 3: Direction Notes */}
             <NoteSection
               styles={styles}
               title="Direction notes"
@@ -944,26 +1036,7 @@ const FieldCompilationNotesPage = ({
               }
             />
 
-            <View style={styles.section}>
-              <View style={styles.metricRow}>
-                <View style={styles.metricCell}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>MP Height: </Text>
-                    {`${num(well.measuring_point_height)} ${well.measuring_point_height_unit ?? ''}`.trim()}
-                  </Text>
-                </View>
-                <View style={styles.metricCell}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Well Depth: </Text>
-                    {`${num(well.well_depth)} ${well.well_depth_unit ?? ''}`.trim()}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* ALIGNMENT A5: a labelled write-on box the field hand fills in
-                before taking the reading. Ruled, not text — nothing prints
-                here from the database. */}
+            {/* Row 4: Pre-visit Notes */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Pre-visit Notes</Text>
               <View style={styles.preVisitPad}>
@@ -971,6 +1044,7 @@ const FieldCompilationNotesPage = ({
               </View>
             </View>
 
+            {/* Row 5: Last Measurements table */}
             <PdfTable
               styles={styles}
               title="Last Measurements"
@@ -978,13 +1052,8 @@ const FieldCompilationNotesPage = ({
               rows={measurements}
               compact
             />
-            {/* BDMS-1504 lane11: a write-in box for a new field reading, placed
-                after the Last Measurements table and before Installed Equipment.
-                The previous-reading callout reuses the newest row the Last
-                Measurements table already renders (measurements[0]); when there
-                is no reading the callout is omitted entirely — no label, no
-                dash. No tape/MP correction props reach this component, so the
-                corrections line is omitted rather than invented. */}
+
+            {/* Row 5b: New Measurement write-in box */}
             <View style={styles.newMeasurementBox}>
               <View style={styles.newMeasurementHeaderRow}>
                 <Text style={styles.newMeasurementTitle}>New Measurement</Text>
@@ -1080,6 +1149,8 @@ const FieldCompilationNotesPage = ({
                 </View>
               </View>
             </View>
+
+            {/* Row 6: Installed Equipment table */}
             <PdfTable
               styles={styles}
               title="Installed Equipment"
@@ -1111,27 +1182,30 @@ const FieldCompilationNotesPage = ({
                 }))}
               compact
             />
-            <PdfTable
-              styles={styles}
-              title="Site Notes"
-              columns={siteNoteColumns}
-              rows={siteNoteItems}
-              compact
-            />
-          </View>
 
-          <View style={styles.rightColumn}>
-            {imageAssets.slice(0, slotPlan.photos).map((asset: any) => (
-              <View
-                key={asset.id ?? asset.signed_url}
-                style={styles.imageNoteRow}
+            {/* Row 7: Site Notes (merged — no header, just label+value) */}
+            <View style={{ marginTop: 4 }}>
+              <Text
+                style={{
+                  fontSize: 8,
+                  fontWeight: 700,
+                  marginBottom: 2,
+                }}
               >
-                <View
-                  style={[
-                    styles.imageWrap,
-                    ...(notesPlacement === 'top' ? [styles.imageWrapFull] : []),
-                  ]}
-                >
+                {siteNotesFieldLabel}
+              </Text>
+              <Text style={{ fontSize: 8, lineHeight: 1.15 }}>
+                {siteNotesText(well)}
+              </Text>
+            </View>
+          </View>
+          {/* ── End content column ─────────────────────────────────── */}
+
+          {/* ── Photo column (33.33%, persistent right strip) ──────── */}
+          <View style={styles.photoColumn}>
+            {imageAssets.map((asset: any) => (
+              <View key={asset.id ?? asset.signed_url} style={styles.photoCell}>
+                <View style={styles.imageWrap}>
                   <Image src={asset.signed_url} style={styles.image} />
                   <Text style={styles.imageLabel}>
                     {asset.label || asset.name || ''}
@@ -1144,13 +1218,27 @@ const FieldCompilationNotesPage = ({
                 ) : null}
               </View>
             ))}
-            {Array.from({ length: slotPlan.ruled }).map((_, index) => (
-              <View key={`ruled-${index}`} style={styles.ruledSlot}>
-                {ruledLines(`ruled-${index}`, FIELD_SHEET_RULED_LINES)}
-              </View>
-            ))}
+            {/* Filler ruled slots when photos < 3 */}
+            {imageAssets.length < PHOTO_SLOT_CAP &&
+              Array.from(
+                { length: PHOTO_SLOT_CAP - imageAssets.length }
+              ).map((_, index) => (
+                <View
+                  key={`photo-slot-${imageAssets.length + index}`}
+                  style={styles.photoCell}
+                >
+                  <View style={styles.ruledSlot}>
+                    {ruledLines(
+                      `ruled-${imageAssets.length}-${index}`,
+                      FIELD_SHEET_RULED_LINES
+                    )}
+                  </View>
+                </View>
+              ))}
           </View>
+          {/* ── End photo column ───────────────────────────────────── */}
         </View>
+        {/* ── End columnContainer ──────────────────────────────────────── */}
       </Page>
 
       {firstPageOnly ? null : (
