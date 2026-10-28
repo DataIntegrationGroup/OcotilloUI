@@ -104,11 +104,11 @@ export const createFieldCompilationStyles = (
       flexGrow: 1,
     },
     contentColumn: {
-      width: '60%',
+      width: '59.33%',
       flexDirection: 'column',
     },
     photoColumn: {
-      width: '33.33%',
+      width: '40.67%',
       flexDirection: 'column',
       alignItems: 'flex-start',
     },
@@ -1215,30 +1215,8 @@ const FieldCompilationNotesPage = ({
                     {asset.label || asset.name || ''}
                   </Text>
                 </View>
-                {notesPlacement === 'column' ? (
-                  <View style={styles.notePad}>
-                    {ruledLines('photo', FIELD_SHEET_NOTE_LINES)}
-                  </View>
-                ) : null}
               </View>
             ))}
-            {/* Filler ruled slots when photos < 3 */}
-            {imageAssets.length < PHOTO_SLOT_CAP &&
-              Array.from(
-                { length: PHOTO_SLOT_CAP - imageAssets.length }
-              ).map((_, index) => (
-                <View
-                  key={`photo-slot-${imageAssets.length + index}`}
-                  style={styles.photoCell}
-                >
-                  <View style={styles.ruledSlot}>
-                    {ruledLines(
-                      `ruled-${imageAssets.length}-${index}`,
-                      FIELD_SHEET_RULED_LINES
-                    )}
-                  </View>
-                </View>
-              ))}
           </View>
           )}
           {/* ── End photo column ───────────────────────────────────── */}
