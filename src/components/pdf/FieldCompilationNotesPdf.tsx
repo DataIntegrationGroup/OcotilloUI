@@ -249,7 +249,7 @@ export const createFieldCompilationStyles = (
     notePadLine: {
       borderBottomWidth: 1,
       borderBottomColor: '#f3f4f6',
-      height: 16,
+      height: 10,
     },
     preVisitPad: {
       width: '100%',
@@ -868,7 +868,7 @@ const FieldCompilationNotesPage = ({
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Field Notes</Text>
                 <View style={styles.notePad}>
-                  {ruledLines('top', FIELD_SHEET_NOTE_LINES)}
+                  {ruledLines('top', 4)}
                 </View>
               </View>
             ) : null}
