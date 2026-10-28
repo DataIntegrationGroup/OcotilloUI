@@ -407,6 +407,7 @@ export const WellShowPdfPreview = () => {
                 includeConfidentialContacts={canViewConfidential}
                 density={currentOptions?.density ?? 'standard'}
                 sampleMethodsBySampleId={sampleMethodsBySampleId(sample)}
+                includeAssets={currentOptions?.includeAssets ?? true}
               />
             </PDFViewer>
           </Box>

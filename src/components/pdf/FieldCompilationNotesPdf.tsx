@@ -101,6 +101,7 @@ export const createFieldCompilationStyles = (
     columnContainer: {
       flexDirection: 'row',
       flexWrap: 'nowrap',
+      flexGrow: 1,
     },
     contentColumn: {
       width: '60%',
@@ -780,6 +781,7 @@ const FieldCompilationNotesPage = ({
   notesPlacement = 'column',
   firstPageOnly = false,
   directionNotes = '',
+  includeAssets = true,
 }: {
   well: IWell
   contacts: IContact[]
@@ -795,6 +797,7 @@ const FieldCompilationNotesPage = ({
   notesPlacement?: 'column' | 'top'
   directionNotes?: string
   firstPageOnly?: boolean
+  includeAssets?: boolean
 }) => {
   const styles = useMemo(() => createFieldCompilationStyles(density), [density])
 
@@ -1202,6 +1205,7 @@ const FieldCompilationNotesPage = ({
           {/* ── End content column ─────────────────────────────────── */}
 
           {/* ── Photo column (33.33%, persistent right strip) ──────── */}
+          {includeAssets && (
           <View style={styles.photoColumn}>
             {imageAssets.map((asset: any) => (
               <View key={asset.id ?? asset.signed_url} style={styles.photoCell}>
@@ -1236,6 +1240,7 @@ const FieldCompilationNotesPage = ({
                 </View>
               ))}
           </View>
+          )}
           {/* ── End photo column ───────────────────────────────────── */}
         </View>
         {/* ── End columnContainer ──────────────────────────────────────── */}
@@ -1371,6 +1376,7 @@ export const FieldCompilationNotesPdf = ({
   notesPlacement = 'column',
   firstPageOnly = false,
   directionNotes = '',
+  includeAssets = true,
 }: {
   well: IWell
   contacts: IContact[]
@@ -1387,6 +1393,7 @@ export const FieldCompilationNotesPdf = ({
   notesPlacement?: 'column' | 'top'
   directionNotes?: string
   firstPageOnly?: boolean
+  includeAssets?: boolean
 }) => {
   const pages = (
     <FieldCompilationNotesPage
@@ -1404,6 +1411,7 @@ export const FieldCompilationNotesPdf = ({
       notesPlacement={notesPlacement}
       firstPageOnly={firstPageOnly}
       directionNotes={directionNotes}
+      includeAssets={includeAssets}
     />
   )
 
