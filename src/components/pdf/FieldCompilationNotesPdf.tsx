@@ -99,6 +99,7 @@ export const createFieldCompilationStyles = (
     // persistent right-strip for photos.  The 60% side uses flex columns so
     // content flows into the available space naturally. ───────────────────
     columnContainer: {
+      width: '100%',
       flexDirection: 'row',
       flexWrap: 'nowrap',
     },
