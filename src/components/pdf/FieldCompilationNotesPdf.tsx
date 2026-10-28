@@ -135,6 +135,24 @@ export const createFieldCompilationStyles = (
     section: {
       marginBottom: scale(9, 7, 5),
     },
+    // ── Card-style section wrapper with subtle border and background ────
+    sectionCard: {
+      borderWidth: 1,
+      borderColor: '#e5e7eb',
+      borderRadius: 4,
+      backgroundColor: '#fafafa',
+      padding: 4,
+      marginBottom: scale(9, 7, 5),
+    },
+    sectionTitleBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    accentBar: {
+      width: 3,
+      borderRadius: 0.5,
+      backgroundColor: '#10b981',
+    },
     topGrid: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -225,7 +243,7 @@ export const createFieldCompilationStyles = (
       alignItems: 'stretch',
     },
     imageWrap: {
-      width: '50%',
+      width: '100%',
     },
     imageWrapFull: {
       width: '100%',
@@ -699,15 +717,20 @@ const PdfTable = <T extends Record<string, unknown>>({
   rows,
   compact = false,
   styles,
+  accentBarHeight = 9,
 }: {
   title: string
   columns: readonly TableColumn<T>[]
   rows: T[]
   compact?: boolean
   styles: FieldCompilationStyles
+  accentBarHeight?: number
 }) => (
-  <View style={styles.section}>
-    <Text style={styles.sectionTitle}>{title}</Text>
+  <View style={styles.sectionCard}>
+    <View style={styles.sectionTitleBar}>
+      <View style={[styles.accentBar, { height: accentBarHeight }]} />
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
     <View style={styles.table}>
       <View style={styles.tableHeader}>
         {columns.map((column) => (
@@ -757,13 +780,18 @@ const NoteSection = ({
   title,
   value,
   styles,
+  accentBarHeight = 9,
 }: {
   title: string
   value: string
   styles: FieldCompilationStyles
+  accentBarHeight?: number
 }) => (
-  <View style={styles.section}>
-    <Text style={styles.sectionTitle}>{title}</Text>
+  <View style={styles.sectionCard}>
+    <View style={styles.sectionTitleBar}>
+      <View style={[styles.accentBar, { height: accentBarHeight }]} />
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
     <Text style={styles.noteText}>{value}</Text>
   </View>
 )
@@ -857,7 +885,7 @@ const FieldCompilationNotesPage = ({
   return (
     <>
       <Page size="LETTER" style={styles.page}>
-        <PageFooter wellId={well.name} styles={styles} />
+        <PageFooter wellId={well.name} styles={styles} totalPages={firstPageOnly ? 1 : 4} />
         {showDate ? <Text style={styles.pageDate}>{exportDate}</Text> : null}
         <View style={styles.header}>
           <Text style={styles.title}>Field Compilation Notes</Text>

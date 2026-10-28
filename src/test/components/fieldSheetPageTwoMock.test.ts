@@ -117,7 +117,7 @@ describe('field sheet page 2 mock-up', () => {
 
     // ALIGNMENT A12. Guards the absolute-position regressions found 2026-10-21:
     // `bottom` is ignored by react-pdf here and the footer silently vanished.
-    expect(text).toMatch(/Well ID: WL-0085 \| Page \d+/)
+    expect(text).toMatch(/Well ID: WL-0085 \| \( \d+\/\d+ \)/)
   })
 
   it('prints the staff line with data, not a literal', async () => {

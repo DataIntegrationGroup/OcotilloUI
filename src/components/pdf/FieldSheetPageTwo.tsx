@@ -222,13 +222,14 @@ export const FieldSheetPageTwo = ({
       Visited by: {staffName} | {staffEmail} | {staffPhone}
     </Text>
 
-    {/* Footer: `Well ID: <point id> | Page n` (ALIGNMENT A12). */}
+    {/* Footer: `Well ID: <point id> | (n/N)` (ALIGNMENT A12). */}
     <PageFooter
       wellId={pointId}
       styles={{
         footer: styles.pageFooter,
         footerText: styles.pageFooterText,
       }}
+      totalPages={1}
     />
   </Page>
 )
