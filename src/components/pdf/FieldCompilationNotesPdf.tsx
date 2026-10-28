@@ -101,16 +101,17 @@ export const createFieldCompilationStyles = (
     columnContainer: {
       flexDirection: 'row',
       flexWrap: 'nowrap',
-      flexGrow: 1,
     },
     contentColumn: {
-      width: '59.33%',
+      flex: 3,
       flexDirection: 'column',
+      minWidth: 0,
     },
     photoColumn: {
-      width: '40.67%',
+      flex: 2,
       flexDirection: 'column',
       alignItems: 'flex-start',
+      minWidth: 0,
     },
     rowRow: {
       flexDirection: 'row',
@@ -955,22 +956,7 @@ const FieldCompilationNotesPage = ({
               </View>
             </View>
 
-            {/* Site Notes merged into row 1 — no section header */}
-            {(() => {
-              const sn = siteNotesText(well)
-              return sn !== '-' ? (
-                <View style={styles.rowRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.line}>
-                      <Text style={styles.label}>Site Notes: </Text>
-                      {sn}
-                    </Text>
-                  </View>
-                </View>
-              ) : null
-            })()}
-
-            {/* ── Rows 2–7: flex columns that flow into 60% width ─── */}
+            {/* ── Rows 2–7: flex columns that flow into content width ─── */}
 
             {/* Row 2: Contact details */}
             <View style={styles.section}>
@@ -1186,21 +1172,26 @@ const FieldCompilationNotesPage = ({
               compact
             />
 
-            {/* Row 7: Site Notes (merged — no header, just label+value) */}
-            <View style={{ marginTop: 4 }}>
-              <Text
-                style={{
-                  fontSize: 8,
-                  fontWeight: 700,
-                  marginBottom: 2,
-                }}
-              >
-                {siteNotesFieldLabel}
-              </Text>
-              <Text style={{ fontSize: 8, lineHeight: 1.15 }}>
-                {siteNotesText(well)}
-              </Text>
-            </View>
+            {/* ── Site Notes as bottom field inside Last Measurements table ── */}
+            {(() => {
+              const sn = siteNotesText(well)
+              return sn !== '-' ? (
+                <View style={[styles.table]}>
+                  <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
+                    <Text
+                      style={[styles.cell, { flex: 1, fontWeight: 700 }]}
+                    >
+                      {siteNotesFieldLabel}
+                    </Text>
+                    <Text
+                      style={[styles.cell, { flex: 5, lineHeight: 1.15 }]}
+                    >
+                      {sn}
+                    </Text>
+                  </View>
+                </View>
+              ) : null
+            })()}
           </View>
           {/* ── End content column ─────────────────────────────────── */}
 
