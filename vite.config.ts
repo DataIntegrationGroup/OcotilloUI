@@ -27,7 +27,6 @@ const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.296/pdf.wor
 function patchPdfWorker() {
   return {
     name: 'vite-patch-pdf-worker',
-    apply: 'serve' as const,
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = req.url || ''
@@ -58,7 +57,7 @@ function patchPdfWorker() {
             return
           }
 
-          const patched = full.replace(/['"]pdf\.worker\.mjs['"]/g, `'${PDFJS_CDN}'`)
+          const patched = full.replace(/['"](?:\.\/)?pdf\.worker\.mjs['"]/g, `'${PDFJS_CDN}'`)
           const buf = Buffer.from(patched)
 
           // Update Content-Length; don't overwrite Content-Type if already set
@@ -75,7 +74,7 @@ function patchPdfWorker() {
 
     /** Patch build output for production */
     generateBundle(_options, bundle) {
-      const regex = /['"]pdf\.worker\.mjs['"]/g
+      const regex = /['"](?:\.\/)?pdf\.worker\.mjs['"]/g
       for (const [filename, chunk] of Object.entries(bundle)) {
         if (chunk.type !== 'chunk') continue
         const code = chunk.code

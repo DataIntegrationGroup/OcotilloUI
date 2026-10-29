@@ -21,6 +21,20 @@ const App: React.FC = () => (
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        {/* TEMPORARY: example specimen pages — no auth needed */}
+        <Route path="/example/typography" element={<TypographyPage />} />
+        {import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview' ? (
+          <Route
+            path="/mock/field-sheet/page-1"
+            element={<FieldSheetPageOneMock />}
+          />
+        ) : null}
+        {import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview' ? (
+          <Route
+            path="/mock/field-sheet/page-2"
+            element={<FieldSheetPageTwoMock />}
+          />
+        ) : null}
         <Route
           path="/ogcapi"
           element={
@@ -79,20 +93,6 @@ const App: React.FC = () => (
             element={<ContentPage src="/content/report-a-bug.md" />}
           />
           <Route path="/settings" element={<SettingsPage />} />
-          {/* TEMPORARY: example specimen pages */}
-          <Route path="/example/typography" element={<TypographyPage />} />
-          {import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview' ? (
-            <Route
-              path="/mock/field-sheet/page-1"
-              element={<FieldSheetPageOneMock />}
-            />
-          ) : null}
-          {import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview' ? (
-            <Route
-              path="/mock/field-sheet/page-2"
-              element={<FieldSheetPageTwoMock />}
-            />
-          ) : null}
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
           <Route path="/geothermal/*" element={<GeothermalRoutes />} />
           <Route path="/st2/*" element={<ST2Routes />} />
