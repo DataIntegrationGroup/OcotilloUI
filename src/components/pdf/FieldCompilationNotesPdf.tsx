@@ -141,17 +141,24 @@ export const createFieldCompilationStyles = (
       borderColor: '#e5e7eb',
       borderRadius: 4,
       backgroundColor: '#fafafa',
-      padding: 4,
+      padding: 2,
       marginBottom: scale(9, 7, 5),
+      width: '100%',
+      flexShrink: 0,
     },
     sectionTitleBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      position: 'relative',
     },
     accentBar: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
       width: 3,
       borderRadius: 0.5,
       backgroundColor: '#10b981',
+    },
+    accentBarOffset: {
+      marginLeft: 5,
     },
     topGrid: {
       flexDirection: 'row',
@@ -254,6 +261,8 @@ export const createFieldCompilationStyles = (
       objectFit: 'cover',
       borderWidth: 1,
       borderColor: '#d1d5db',
+      borderRadius: 4,
+      backgroundColor: '#ffffff',
     },
     imageLabel: {
       marginTop: 2,
@@ -729,7 +738,9 @@ const PdfTable = <T extends Record<string, unknown>>({
   <View style={styles.sectionCard}>
     <View style={styles.sectionTitleBar}>
       <View style={[styles.accentBar, { height: accentBarHeight }]} />
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.accentBarOffset}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
     </View>
     <View style={styles.table}>
       <View style={styles.tableHeader}>
@@ -790,7 +801,9 @@ const NoteSection = ({
   <View style={styles.sectionCard}>
     <View style={styles.sectionTitleBar}>
       <View style={[styles.accentBar, { height: accentBarHeight }]} />
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.accentBarOffset}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
     </View>
     <Text style={styles.noteText}>{value}</Text>
   </View>
@@ -830,6 +843,9 @@ const FieldCompilationNotesPage = ({
   includeAssets?: boolean
 }) => {
   const styles = useMemo(() => createFieldCompilationStyles(density), [density])
+  // Accent bar height matches the section title fontSize (9 standard).
+  // Density-aware: compact uses 8.5, everything else uses 9.
+  const accentBarHeight = density === 'compact' ? 8.5 : 9
 
   const visibleContacts = useMemo(
     () => sanitizeContacts(contacts, includeConfidentialContacts),
@@ -896,99 +912,133 @@ const FieldCompilationNotesPage = ({
           <View style={styles.contentColumn}>
             {notesPlacement === 'top' ? (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Field Notes</Text>
+                <View style={styles.sectionTitleBar}>
+                  <View
+                    style={[
+                      styles.accentBar,
+                      { height: accentBarHeight },
+                    ]}
+                  />
+                  <View style={styles.accentBarOffset}>
+                    <Text style={styles.sectionTitle}>Field Notes</Text>
+                  </View>
+                </View>
                 <View style={styles.notePad}>
                   {ruledLines('top', 4)}
                 </View>
               </View>
             ) : null}
 
-            {/* Row 1: 2-inner-column identity grid */}
-            <View style={styles.rowRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Point ID: </Text>
-                  {show(well.name)}
-                </Text>
+            {/* ── Row 1: 2-inner-column identity grid ─────────────── */}
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleBar}>
+                <View
+                  style={[
+                    styles.accentBar,
+                    { height: accentBarHeight },
+                  ]}
+                />
+                <View style={styles.accentBarOffset}>
+                  <Text style={styles.sectionTitle}>Field Notes</Text>
+                </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Northing: </Text>
-                  {num(northing, 0)}
-                </Text>
+              <View style={styles.rowRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Point ID: </Text>
+                    {show(well.name)}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Northing: </Text>
+                    {num(northing, 0)}
+                  </Text>
+                </View>
               </View>
-            </View>
-            <View style={styles.rowRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Site Name: </Text>
-                  {siteNameFromAlternateIds(well)}
-                </Text>
+              <View style={styles.rowRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Site Name: </Text>
+                    {siteNameFromAlternateIds(well)}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Easting: </Text>
+                    {num(easting, 0)}
+                  </Text>
+                </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Easting: </Text>
-                  {num(easting, 0)}
-                </Text>
+              <View style={styles.rowRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Primary Contact: </Text>
+                    {show(primaryContact?.name)}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Secondary Contact: </Text>
+                    {show(secondaryContact?.name)}
+                  </Text>
+                </View>
               </View>
-            </View>
-            <View style={styles.rowRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Primary Contact: </Text>
-                  {show(primaryContact?.name)}
-                </Text>
+              <View style={styles.rowRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Location Notes: </Text>
+                    {locationNotesText(well)}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>MP Height: </Text>
+                    {`${num(well.measuring_point_height)} ${well.measuring_point_height_unit ?? ''}`.trim()}
+                  </Text>
+                </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Secondary Contact: </Text>
-                  {show(secondaryContact?.name)}
-                </Text>
+              <View style={styles.rowRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Elevation: </Text>
+                    {num(well.current_location?.properties?.elevation, 0)}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Well Depth: </Text>
+                    {`${num(well.well_depth)} ${well.well_depth_unit ?? ''}`.trim()}
+                  </Text>
+                </View>
               </View>
-            </View>
-            <View style={styles.rowRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Location Notes: </Text>
-                  {locationNotesText(well)}
-                </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>MP Height: </Text>
-                  {`${num(well.measuring_point_height)} ${well.measuring_point_height_unit ?? ''}`.trim()}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.rowRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Elevation: </Text>
-                  {num(well.current_location?.properties?.elevation, 0)}
-                </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Well Depth: </Text>
-                  {`${num(well.well_depth)} ${well.well_depth_unit ?? ''}`.trim()}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.rowRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.line}>
-                  <Text style={styles.label}>Last Measurements: </Text>
-                  {measurements[0]
-                    ? `${measurements[0].date} (${measurements[0].dtw} ft)`
-                    : emptyPlaceholder}
-                </Text>
+              <View style={styles.rowRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.line}>
+                    <Text style={styles.label}>Last Measurements: </Text>
+                    {measurements[0]
+                      ? `${measurements[0].date} (${measurements[0].dtw} ft)`
+                      : emptyPlaceholder}
+                  </Text>
+                </View>
               </View>
             </View>
 
             {/* ── Rows 2–7: flex columns that flow into content width ─── */}
 
             {/* Row 2: Contact details */}
-            <View style={styles.section}>
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleBar}>
+                <View
+                  style={[
+                    styles.accentBar,
+                    { height: accentBarHeight },
+                  ]}
+                />
+                <View style={styles.accentBarOffset}>
+                  <Text style={styles.sectionTitle}>Contact Details</Text>
+                </View>
+              </View>
               <View style={styles.contactsRow}>
                 <View style={styles.contactColumn}>
                   <Text style={styles.line}>
@@ -1035,54 +1085,110 @@ const FieldCompilationNotesPage = ({
               </View>
             </View>
 
-            {/* Row 3: Direction Notes */}
-            <NoteSection
-              styles={styles}
-              title="Direction notes"
-              value={directionNotesValue(directionNotes)}
-            />
-            <NoteSection
-              styles={styles}
-              title="Measurement Notes"
-              value={notesToText(well.measuring_notes ?? [])}
-            />
-            <NoteSection
-              styles={styles}
-              title="MP Description"
-              value={
-                well.measuring_point_description?.trim() || emptyPlaceholder
-              }
-            />
+            {/* Row 3: Observation */}
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleBar}>
+                <View
+                  style={[
+                    styles.accentBar,
+                    { height: accentBarHeight },
+                  ]}
+                />
+                <View style={styles.accentBarOffset}>
+                  <Text style={styles.sectionTitle}>Observation</Text>
+                </View>
+              </View>
+              <NoteSection
+                styles={styles}
+                title="Direction notes"
+                value={directionNotesValue(directionNotes)}
+                accentBarHeight={accentBarHeight}
+              />
+              <NoteSection
+                styles={styles}
+                title="Measurement Notes"
+                value={notesToText(well.measuring_notes ?? [])}
+                accentBarHeight={accentBarHeight}
+              />
+              <NoteSection
+                styles={styles}
+                title="MP Description"
+                value={
+                  well.measuring_point_description?.trim() || emptyPlaceholder
+                }
+                accentBarHeight={accentBarHeight}
+              />
+            </View>
 
-            {/* Row 4: Pre-visit Notes */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Pre-visit Notes</Text>
+            {/* Row 4: Site Preparation */}
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleBar}>
+                <View
+                  style={[
+                    styles.accentBar,
+                    { height: accentBarHeight },
+                  ]}
+                />
+                <View style={styles.accentBarOffset}>
+                  <Text style={styles.sectionTitle}>Site Preparation</Text>
+                </View>
+              </View>
               <View style={styles.preVisitPad}>
                 {ruledLines('previsit', 3)}
               </View>
             </View>
 
-            {/* Row 5: Last Measurements table */}
+            {/* Row 5: Previous Measurements table */}
             <PdfTable
               styles={styles}
-              title="Last Measurements"
+              title="Previous Measurements"
               columns={lastMeasurementsColumns}
               rows={measurements}
               compact
+              accentBarHeight={accentBarHeight}
             />
 
             {/* Row 5b: New Measurement write-in box */}
-            <View style={styles.newMeasurementBox}>
-              <View style={styles.newMeasurementHeaderRow}>
-                <Text style={styles.newMeasurementTitle}>New Measurement</Text>
-                {measurements[0] ? (
-                  <Text style={styles.newMeasurementPrev}>
-                    Previous DTW Below MP: {measurements[0].dtw} ft (
-                    {measurements[0].date})
-                  </Text>
-                ) : null}
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleBar}>
+                <View
+                  style={[
+                    styles.accentBar,
+                    { height: accentBarHeight },
+                  ]}
+                />
+                <View style={styles.accentBarOffset}>
+                  <Text style={styles.sectionTitle}>New Measurement</Text>
+                </View>
               </View>
-              <View style={styles.newMeasurementFieldRow}>
+              <View style={styles.newMeasurementBox}>
+                <View style={styles.newMeasurementHeaderRow}>
+                  <Text style={styles.newMeasurementTitle}>New Measurement</Text>
+                  {measurements[0] ? (
+                    <View style={styles.sectionCard}>
+                      <View style={styles.sectionTitleBar}>
+                        <View
+                          style={[
+                            styles.accentBar,
+                            { height: accentBarHeight },
+                          ]}
+                        />
+                        <View style={styles.accentBarOffset}>
+                          <Text style={styles.sectionTitle}>Previous DTW</Text>
+                        </View>
+                      </View>
+                      <View style={styles.newMeasurementHeaderRow}>
+                        <Text style={styles.newMeasurementFieldLabel}>
+                          {measurements[0].dtw} ft
+                        </Text>
+                        <Text style={styles.newMeasurementFieldLabel}>
+                          {measurements[0].date}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : null}
+                </View>
+                <View style={styles.newMeasurementFieldRow}>
                 <View style={styles.newMeasurementField}>
                   <Text style={styles.newMeasurementFieldLabel}>
                     Date: {exportDate}
@@ -1167,12 +1273,14 @@ const FieldCompilationNotesPage = ({
                 </View>
               </View>
             </View>
+            </View>
 
             {/* Row 6: Installed Equipment table */}
             <PdfTable
               styles={styles}
               title="Installed Equipment"
               columns={equipmentColumns}
+              accentBarHeight={accentBarHeight}
               rows={sensorDeployments
                 .slice()
                 .sort((a, b) => {
@@ -1309,14 +1417,27 @@ const FieldCompilationNotesPage = ({
                 ))}
               </View>
             </View>
-            <Text style={styles.sectionTitle}>General Field Notes</Text>
-            <View style={styles.notesPad}>
+            {/* General Field Notes — page 2 */}
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleBar}>
+                <View
+                  style={[
+                    styles.accentBar,
+                    { height: accentBarHeight },
+                  ]}
+                />
+                <View style={styles.accentBarOffset}>
+                  <Text style={styles.sectionTitle}>General Field Notes</Text>
+                </View>
+              </View>
+              <View style={styles.notesPad}>
               {Array.from({ length: 20 }).map((_, index) => (
                 <View
                   key={`general-note-line-${index}`}
                   style={styles.notesPadLine}
                 />
               ))}
+              </View>
             </View>
           </Page>
 
@@ -1354,6 +1475,8 @@ const FieldCompilationNotesPage = ({
           </Page>
         </>
       )}
+      {/* TODO: QR code — render as <Image source={qrUri} style={{width:50,height:50}}/> 
+          inside the Row 8 footer section, right-aligned */}
     </>
   )
 }

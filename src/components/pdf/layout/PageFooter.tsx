@@ -2,19 +2,12 @@ import { Text, View } from '@react-pdf/renderer'
 import type { ComponentProps } from 'react'
 
 /**
- * Fixed page footer — `Well ID: <point id> | (n/N)` (ALIGNMENT A12/B11).
+ * Fixed page footer — `(  n )` (ALIGNMENT A12/B11, lane 4).
  *
- * The legacy single-well footer (`layout/Footer.tsx`) prints `Page n` only and
- * is fed the well *name*; this one is fed the point id that page 1 prints as
- * `Point ID`.
- *
- * This react-pdf build's `render` gives `pageNumber` but no page count, so the
- * count is passed in by the caller. `totalPages` defaults to `1`. Omit
- * `pageNumber` and it takes the renderer's own number (right for page 1, wrong
- * for a page that prints second in someone else's document).
- *
- * Styles are passed in because the field sheet and the owner page each own a
- * style sheet; both provide `footer` (absolute) and `footerText`.
+ * Parenthetical page numbers with 3-digit padding: `(  1 )`, `(  2 )`, …
+ * Total page count is passed by the caller (react-pdf render gives
+ * `pageNumber` but no page count). Omit `pageNumber` and it takes the
+ * renderer's own number.
  */
 type PdfStyle = ComponentProps<typeof View>['style']
 
@@ -39,9 +32,10 @@ export const PageFooter = ({
     style={styles.footer}
     render={({ pageNumber: renderedPage }) => {
       const current = pageNumber ?? renderedPage
+      const numStr = String(current).padStart(3, ' ')
       return (
         <Text style={styles.footerText}>
-          {`Well ID: ${wellId} | ( ${current}/${totalPages} )`}
+          {`( ${numStr} )`}
         </Text>
       )
     }}
