@@ -6,6 +6,20 @@ import tailwindcss from '@tailwindcss/vite'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
 
+/**
+ * Vite esbuild plugin that patches react-pdf's hardcoded pdf.js worker reference.
+ *
+ * Vite pre-bundles all ESM dependencies into `node_modules/.vite/deps/` during
+ * dev mode.  My regular Vite `transform` hooks missed the bundled output because
+ * it has a path like `/node_modules/.vite/deps/react-pdf.js?v=…`, not
+ * `react-pdf/dist/index.js`.
+ *
+ * This esbuild plugin runs DURING dependency pre-bundling (before the bundle is
+ * written to disk), so we can replace the bare specifier `'pdf.worker.mjs'` with
+ * a CDN-hosted worker URL that the browser can actually fetch.
+ */
+const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.7.284/pdf.worker.min.mjs'
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
   const enableSourceMap =
@@ -30,6 +44,8 @@ export default defineConfig(({ mode }) => {
       dedupe: ['react', 'react-dom', 'scheduler', 'use-sync-external-store'],
     },
     plugins: [
+      pdfWorkerAlias(),
+      patchPdfWorker(),
       // Write dist/version.json at the end of each build so polling clients can
       // detect that a new version has been deployed. We write to dist/ only so
       // public/version.json (the dev placeholder) is never modified locally.

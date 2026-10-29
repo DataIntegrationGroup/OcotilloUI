@@ -40,6 +40,16 @@
     <meta property="og:image:height" content="48" />
 
     <title>Ocotillo</title>
+
+    <!-- Patch pdf.js worker URL globally before any module loads -->
+    <script>
+      window.pdfjsLib = window.pdfjsLib || {};
+      // react-pdf v10 sets GlobalWorkerOptions.workerSrc to 'pdf.worker.mjs' (bare spec),
+      // which Vite cannot resolve.  Overwrite with CDN-hosted worker matching our pdfjs-dist version.
+      window.pdfjsLib.GlobalWorkerOptions = {
+        workerSrc: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.7.284/pdf.worker.min.mjs'
+      };
+    </script>
   </head>
 
   <body>

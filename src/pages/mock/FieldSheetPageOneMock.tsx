@@ -4,10 +4,11 @@ import {
   ToggleButton,
   Typography,
 } from '@mui/material'
-import { PDFViewer } from '@react-pdf/renderer'
+
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { FieldCompilationNotesPdf } from '@/components'
+import { PdfCanvasViewer } from '@/components/pdf/PdfCanvasViewer'
 import {
   buildFieldSheetPageOneFixture,
   FIXTURE_PHOTO_COUNTS,
@@ -88,7 +89,7 @@ export const FieldSheetPageOneMock = () => {
       <Box
         sx={{ height: 'calc(100vh - 240px)', minHeight: 480, width: '100%' }}
       >
-        <PDFViewer width="100%" height="100%">
+        <PdfCanvasViewer width={900}>
           <FieldCompilationNotesPdf
             well={fixture.well}
             contacts={fixture.contacts}
@@ -103,7 +104,7 @@ export const FieldSheetPageOneMock = () => {
             showPhotos={showPhotos}
             firstPageOnly
           />
-        </PDFViewer>
+        </PdfCanvasViewer>
       </Box>
     </Box>
   )

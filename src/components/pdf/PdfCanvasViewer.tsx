@@ -11,11 +11,9 @@
  *     <FieldCompilationNotesPdf {...props} />
  *   </PdfCanvasViewer>
  *
- * Note: The pdf.js worker URL is configured globally via the `patch-pdfjs-worker`
- * Vite plugin (vite.config.ts), which injects a script tag that patches
- * GlobalWorkerOptions.workerSrc before any module evaluates. This is needed
- * because react-pdf imports pdfjs-dist at module load time and sets the
- * worker URL before any application code runs.
+ * Note: The pdf.js worker URL is patched globally by the `patchPdfWorker` Vite
+ * plugin (vite.config.ts) which replaces react-pdf's internal bare specifier
+ * with a CDN URL before any module evaluates.
  */
 
 import { pdf } from '@react-pdf/renderer'
