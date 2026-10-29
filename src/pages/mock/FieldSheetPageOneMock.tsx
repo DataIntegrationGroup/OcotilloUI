@@ -2,11 +2,10 @@ import {
   Box,
   Stack,
   ToggleButton,
-  ToggleButtonGroup,
   Typography,
 } from '@mui/material'
 import { PDFViewer } from '@react-pdf/renderer'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { FieldCompilationNotesPdf } from '@/components'
 import {
@@ -50,6 +49,7 @@ export const FieldSheetPageOneMock = () => {
   const [params, setParams] = useSearchParams()
   const photos = readPhotos(params.get('photos'))
   const notes = readNotes(params.get('notes'))
+  const [showPhotos, setShowPhotos] = useState(true)
 
   const fixture = useMemo(
     () => buildFieldSheetPageOneFixture({ photos }),
@@ -73,45 +73,16 @@ export const FieldSheetPageOneMock = () => {
         </Typography>
       </Stack>
 
-      <Stack
-        direction="row"
-        spacing={3}
-        sx={{ flexWrap: 'wrap', gap: 2, mb: 2, alignItems: 'center' }}
-      >
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Typography variant="caption" color="text.secondary">
-            Photos
-          </Typography>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={photos}
-            onChange={(_, value) =>
-              value != null && setParam('photos', String(value))
-            }
-          >
-            {FIXTURE_PHOTO_COUNTS.map((count) => (
-              <ToggleButton key={count} value={count}>
-                {count}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-        </Stack>
-
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Typography variant="caption" color="text.secondary">
-            Notes (Q5)
-          </Typography>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={notes}
-            onChange={(_, value) => value && setParam('notes', value)}
-          >
-            <ToggleButton value="column">photo column</ToggleButton>
-            <ToggleButton value="top">top block</ToggleButton>
-          </ToggleButtonGroup>
-        </Stack>
+      <Stack direction="row" spacing={1} sx={{ mb: 2, alignItems: 'center' }}>
+        <ToggleButton
+          size="small"
+          value="photos"
+          component="button"
+          selected={showPhotos}
+          onClick={() => setShowPhotos((p) => !p)}
+        >
+          📷 Photo
+        </ToggleButton>
       </Stack>
 
       <Box
@@ -128,7 +99,8 @@ export const FieldSheetPageOneMock = () => {
             sampleMethodsBySampleId={fixture.sampleMethodsBySampleId}
             showDate={false}
             emptyPlaceholder=" "
-            notesPlacement={notes}
+            notesPlacement="column"
+            showPhotos={showPhotos}
             firstPageOnly
           />
         </PDFViewer>
