@@ -817,6 +817,7 @@ const FieldCompilationNotesPage = ({
   firstPageOnly = false,
   directionNotes = '',
   includeAssets = true,
+  showPhotos = true,
 }: {
   well: IWell
   contacts: IContact[]
@@ -833,6 +834,7 @@ const FieldCompilationNotesPage = ({
   directionNotes?: string
   firstPageOnly?: boolean
   includeAssets?: boolean
+  showPhotos?: boolean
 }) => {
   const styles = useMemo(() => createFieldCompilationStyles(density), [density])
   // Accent bar height matches the section title fontSize (9 standard).
@@ -1311,7 +1313,7 @@ const FieldCompilationNotesPage = ({
           {/* ── End content column ─────────────────────────────────── */}
 
           {/* ── Photo column (33.33%, persistent right strip) ──────── */}
-          {includeAssets && imageAssets.length > 0 && (
+          {showPhotos && includeAssets && imageAssets.length > 0 && (
           <View style={styles.photoColumn}>
             {imageAssets.map((asset: any) => (
               <View key={asset.id ?? asset.signed_url} style={styles.photoCell}>
@@ -1474,6 +1476,7 @@ export const FieldCompilationNotesPdf = ({
   firstPageOnly = false,
   directionNotes = '',
   includeAssets = true,
+  showPhotos = true,
 }: {
   well: IWell
   contacts: IContact[]
@@ -1491,6 +1494,7 @@ export const FieldCompilationNotesPdf = ({
   directionNotes?: string
   firstPageOnly?: boolean
   includeAssets?: boolean
+  showPhotos?: boolean
 }) => {
   const pages = (
     <FieldCompilationNotesPage
