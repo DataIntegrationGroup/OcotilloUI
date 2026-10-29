@@ -75,7 +75,6 @@ export const createFieldCompilationStyles = (
       color: '#6b7280',
     },
     header: {
-      marginBottom: scale(10, 8, 6),
       borderBottomWidth: 1,
       borderBottomColor: '#d1d5db',
       paddingBottom: 6,
@@ -101,9 +100,10 @@ export const createFieldCompilationStyles = (
       width: '100%',
       flexDirection: 'row',
       flexWrap: 'nowrap',
+      gap: 10,
     },
     contentColumn: {
-      flex: 3,
+      flex: 2,
       flexDirection: 'column',
       minWidth: 0,
     },
