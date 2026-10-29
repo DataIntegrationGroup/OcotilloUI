@@ -13,10 +13,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.296/pdf.worker.min.mjs'
 
 /**
- * Vite plugin that intercepts pre-bundled dependency responses (from .vite/deps/)
- * and replaces `'pdf.worker.mjs'` → CDN URL in-flight. Pre-bundled deps are
- * served as static files by Vite's dev server, bypassing the normal transform
- * pipeline — so we fix them at the HTTP middleware layer.
+ * Vite plugin that patches `'pdf.worker.mjs'` → CDN URL in both dev and
+ * production builds.
+ *
+ * **Dev mode (serve)** — intercepts pre-bundled dependency responses at the
+ * HTTP middleware layer.  Pre-bundled deps are served as static files by
+ * Vite's dev server, bypassing the normal transform pipeline.
+ *
+ * **Production (build)** — patches generated JS chunks in `generateBundle`,
+ * replacing the relative worker path so nginx serves nothing and the browser
+ * loads the CDN-hosted worker instead.
  */
 function patchPdfWorker() {
   return {
@@ -65,6 +71,23 @@ function patchPdfWorker() {
 
         next()
       })
+    },
+
+    /** Patch build output for production */
+    generateBundle(_options, bundle) {
+      const regex = /['"]pdf\.worker\.mjs['"]/g
+      for (const [filename, chunk] of Object.entries(bundle)) {
+        if (chunk.type !== 'chunk') continue
+        const code = chunk.code
+        if (!code.includes('pdf.worker.mjs')) continue
+
+        const patched = code.replace(regex, `'${PDFJS_CDN}'`)
+        // Only write when the output actually changed — prevents unnecessary
+        // cache stamps from the `write-version-json` hook's closeBundle.
+        if (patched !== chunk.code) {
+          chunk.code = patched
+        }
+      }
     },
   }
 }
