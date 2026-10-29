@@ -100,7 +100,7 @@ export const createFieldCompilationStyles = (
       width: '100%',
       flexDirection: 'row',
       flexWrap: 'nowrap',
-      gap: 10,
+      gap: 2,
     },
     contentColumn: {
       flex: 2,
@@ -108,10 +108,11 @@ export const createFieldCompilationStyles = (
       minWidth: 0,
     },
     photoColumn: {
-      flex: 1.5,
+      flex: 1,
       flexDirection: 'column',
       alignItems: 'flex-start',
       minWidth: 0,
+      marginTop: 5,
     },
     rowRow: {
       flexDirection: 'row',
@@ -121,7 +122,7 @@ export const createFieldCompilationStyles = (
     },
     photoCell: {
       width: '100%',
-      marginBottom: scale(4, 3, 2),
+      marginBottom: 2,
     },
     // ── End column model ──────────────────────────────────────────────────
     leftColumn: {
