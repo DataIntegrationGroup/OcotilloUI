@@ -141,24 +141,20 @@ export const createFieldCompilationStyles = (
       borderColor: '#e5e7eb',
       borderRadius: 4,
       backgroundColor: '#fafafa',
-      padding: 2,
-      marginBottom: scale(9, 7, 5),
+      padding: 0,
+      marginBottom: scale(3, 2, 1),
       width: '100%',
       flexShrink: 0,
     },
     sectionTitleBar: {
-      position: 'relative',
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     accentBar: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
       width: 3,
       borderRadius: 0.5,
       backgroundColor: '#10b981',
-    },
-    accentBarOffset: {
-      marginLeft: 5,
+      marginRight: 5,
     },
     topGrid: {
       flexDirection: 'row',
@@ -278,19 +274,19 @@ export const createFieldCompilationStyles = (
     notePadLine: {
       borderBottomWidth: 1,
       borderBottomColor: '#f3f4f6',
-      height: 10,
+      height: 6,
     },
     preVisitPad: {
       width: '100%',
-      paddingTop: scale(6, 5, 4),
-      paddingBottom: scale(6, 5, 4),
-      paddingLeft: scale(6, 5, 4),
-      paddingRight: scale(6, 5, 4),
+      paddingTop: scale(3, 2, 1),
+      paddingBottom: scale(3, 2, 1),
+      paddingLeft: scale(3, 2, 1),
+      paddingRight: scale(3, 2, 1),
     },
     ruledSlot: {
       borderWidth: 1,
       borderColor: '#e5e7eb',
-      marginBottom: 8,
+      marginBottom: 4,
     },
     emptyImageState: {
       borderWidth: 1,
@@ -738,9 +734,7 @@ const PdfTable = <T extends Record<string, unknown>>({
   <View style={styles.sectionCard}>
     <View style={styles.sectionTitleBar}>
       <View style={[styles.accentBar, { height: accentBarHeight }]} />
-      <View style={styles.accentBarOffset}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-      </View>
+      <Text style={styles.sectionTitle}>{title}</Text>
     </View>
     <View style={styles.table}>
       <View style={styles.tableHeader}>
@@ -801,9 +795,7 @@ const NoteSection = ({
   <View style={styles.sectionCard}>
     <View style={styles.sectionTitleBar}>
       <View style={[styles.accentBar, { height: accentBarHeight }]} />
-      <View style={styles.accentBarOffset}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-      </View>
+      <Text style={styles.sectionTitle}>{title}</Text>
     </View>
     <Text style={styles.noteText}>{value}</Text>
   </View>
@@ -919,9 +911,7 @@ const FieldCompilationNotesPage = ({
                       { height: accentBarHeight },
                     ]}
                   />
-                  <View style={styles.accentBarOffset}>
-                    <Text style={styles.sectionTitle}>Field Notes</Text>
-                  </View>
+                  <Text style={styles.sectionTitle}>Field Notes</Text>
                 </View>
                 <View style={styles.notePad}>
                   {ruledLines('top', 4)}
@@ -938,9 +928,7 @@ const FieldCompilationNotesPage = ({
                     { height: accentBarHeight },
                   ]}
                 />
-                <View style={styles.accentBarOffset}>
-                  <Text style={styles.sectionTitle}>Field Notes</Text>
-                </View>
+                <Text style={styles.sectionTitle}>Field Notes</Text>
               </View>
               <View style={styles.rowRow}>
                 <View style={{ flex: 1 }}>
@@ -1035,9 +1023,7 @@ const FieldCompilationNotesPage = ({
                     { height: accentBarHeight },
                   ]}
                 />
-                <View style={styles.accentBarOffset}>
-                  <Text style={styles.sectionTitle}>Contact Details</Text>
-                </View>
+                <Text style={styles.sectionTitle}>Contact Details</Text>
               </View>
               <View style={styles.contactsRow}>
                 <View style={styles.contactColumn}>
@@ -1094,9 +1080,7 @@ const FieldCompilationNotesPage = ({
                     { height: accentBarHeight },
                   ]}
                 />
-                <View style={styles.accentBarOffset}>
-                  <Text style={styles.sectionTitle}>Observation</Text>
-                </View>
+                <Text style={styles.sectionTitle}>Observation</Text>
               </View>
               <NoteSection
                 styles={styles}
@@ -1129,9 +1113,7 @@ const FieldCompilationNotesPage = ({
                     { height: accentBarHeight },
                   ]}
                 />
-                <View style={styles.accentBarOffset}>
-                  <Text style={styles.sectionTitle}>Site Preparation</Text>
-                </View>
+                <Text style={styles.sectionTitle}>Site Preparation</Text>
               </View>
               <View style={styles.preVisitPad}>
                 {ruledLines('previsit', 3)}
@@ -1157,9 +1139,7 @@ const FieldCompilationNotesPage = ({
                     { height: accentBarHeight },
                   ]}
                 />
-                <View style={styles.accentBarOffset}>
-                  <Text style={styles.sectionTitle}>New Measurement</Text>
-                </View>
+                <Text style={styles.sectionTitle}>New Measurement</Text>
               </View>
               <View style={styles.newMeasurementBox}>
                 <View style={styles.newMeasurementHeaderRow}>
@@ -1173,9 +1153,7 @@ const FieldCompilationNotesPage = ({
                             { height: accentBarHeight },
                           ]}
                         />
-                        <View style={styles.accentBarOffset}>
-                          <Text style={styles.sectionTitle}>Previous DTW</Text>
-                        </View>
+                        <Text style={styles.sectionTitle}>Previous DTW</Text>
                       </View>
                       <View style={styles.newMeasurementHeaderRow}>
                         <Text style={styles.newMeasurementFieldLabel}>
@@ -1312,7 +1290,7 @@ const FieldCompilationNotesPage = ({
             {/* ── Site Notes as bottom field inside Last Measurements table ── */}
             {(() => {
               const sn = siteNotesText(well)
-              return sn !== '-' ? (
+              return (
                 <View style={[styles.table]}>
                   <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
                     <Text
@@ -1327,7 +1305,7 @@ const FieldCompilationNotesPage = ({
                     </Text>
                   </View>
                 </View>
-              ) : null
+              )
             })()}
           </View>
           {/* ── End content column ─────────────────────────────────── */}
@@ -1426,9 +1404,7 @@ const FieldCompilationNotesPage = ({
                     { height: accentBarHeight },
                   ]}
                 />
-                <View style={styles.accentBarOffset}>
-                  <Text style={styles.sectionTitle}>General Field Notes</Text>
-                </View>
+                <Text style={styles.sectionTitle}>General Field Notes</Text>
               </View>
               <View style={styles.notesPad}>
               {Array.from({ length: 20 }).map((_, index) => (
