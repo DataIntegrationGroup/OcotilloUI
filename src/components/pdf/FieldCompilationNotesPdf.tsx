@@ -53,7 +53,6 @@ export const createFieldCompilationStyles = (
     page: {
       paddingTop: scale(18, 16, 12),
       paddingBottom: scale(18, 16, 12),
-      paddingHorizontal: scale(22, 20, 14),
       backgroundColor: '#ffffff',
       fontSize: scale(9.5, 9, 8.5),
       color: '#111827',
@@ -1311,7 +1310,7 @@ const FieldCompilationNotesPage = ({
           {/* ── End content column ─────────────────────────────────── */}
 
           {/* ── Photo column (33.33%, persistent right strip) ──────── */}
-          {includeAssets && (
+          {includeAssets && imageAssets.length > 0 && (
           <View style={styles.photoColumn}>
             {imageAssets.map((asset: any) => (
               <View key={asset.id ?? asset.signed_url} style={styles.photoCell}>
