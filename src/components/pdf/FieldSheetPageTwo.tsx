@@ -132,7 +132,40 @@ export const FieldSheetPageTwo = ({
       </View>
     </View>
 
-    {/* 3. Hydrograph — the mock-up labels this with the series it will hold;
+    {/* 3. Previous DTW Below MP — renders the most-recent measurement */}
+    {measurements.length > 0 ? (
+      <View style={styles.previousDtwCard}>
+        <View style={styles.sectionTitleBar}>
+          <View
+            style={[
+              styles.accentBar,
+              { height: 6 },
+            ]}
+          />
+          <Text style={styles.previousDtwTitle}>Previous DTW Below MP</Text>
+        </View>
+        <View style={styles.previousDtwTable}>
+          <View style={[styles.row, styles.headerRow]}>
+            <Text style={[styles.cell, styles.headCell, styles.dateCell]}>
+              Date
+            </Text>
+            <Text style={[styles.cell, styles.headCell, styles.narrowCell]}>
+              DTW Below MP (ft)
+            </Text>
+          </View>
+          <View style={[styles.row, styles.zebraRow]}>
+            <Text style={[styles.cell, styles.dateCell]}>
+              {measurements[0].date}
+            </Text>
+            <Text style={[styles.cell, styles.narrowCell]}>
+              {feet(measurements[0].dtwFt)}
+            </Text>
+          </View>
+        </View>
+      </View>
+    ) : null}
+
+    {/* 4. Hydrograph — the mock-up labels this with the series it will hold;
         the date span comes from the readings printed below it, not a fixed
         range, and nothing at all prints when there are no readings. */}
     <View style={styles.hydrograph}>
@@ -141,7 +174,7 @@ export const FieldSheetPageTwo = ({
       </Text>
     </View>
 
-    {/* 4. Manual measurements table (View rows; react-pdf has no table elements) */}
+    {/* 5. Manual measurements table (View rows; react-pdf has no table elements) */}
     <View style={styles.table}>
       <View style={[styles.row, styles.headerRow]}>
         <Text style={[styles.cell, styles.headCell, styles.dateCell]}>
@@ -343,6 +376,40 @@ const styles = StyleSheet.create({
   },
   zebraRow: {
     backgroundColor: panel,
+  },
+  // Previous DTW card
+  previousDtwCard: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+    marginTop: 6,
+  },
+  sectionTitleBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 6,
+    paddingLeft: 10,
+    backgroundColor: '#f0f5f9',
+    borderTopWidth: 2,
+    borderTopColor: accent,
+  },
+  accentBar: {
+    width: 4,
+    backgroundColor: accent,
+    borderRadius: 2,
+  },
+  previousDtwTitle: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: accent,
+  },
+  previousDtwTable: {
+    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingBottom: 8,
   },
   // 5. Write-in measurement (baseline replaced by flex-end — react-pdf 4 bug)
   measurement: {

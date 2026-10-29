@@ -109,7 +109,7 @@ export const createFieldCompilationStyles = (
       minWidth: 0,
     },
     photoColumn: {
-      flex: 2,
+      flex: 1.5,
       flexDirection: 'column',
       alignItems: 'flex-start',
       minWidth: 0,
