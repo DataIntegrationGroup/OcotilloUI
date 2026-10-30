@@ -883,6 +883,7 @@ const FieldCompilationNotesPage = ({
   const { easting, northing } =
     well.current_location?.properties?.utm_coordinates ?? {}
   const exportDate = formatAppDate(new Date().toISOString())
+  const renderPageDate = () => <Text style={styles.pageDate}>{exportDate}</Text>
   // Page 1 prints empty fields on the mock-up; '-' would read as data.
   const show = (value: unknown) => renderValue(value, emptyPlaceholder)
   const num = (value: number | null | undefined, fractionDigits = 2) =>
@@ -896,7 +897,7 @@ const FieldCompilationNotesPage = ({
     <>
       <Page size="LETTER" style={styles.page}>
         <PageFooter wellId={well.name} styles={styles} totalPages={firstPageOnly ? 1 : 4} />
-        {showDate ? <Text style={styles.pageDate}>{exportDate}</Text> : null}
+        {showDate ? renderPageDate() : null}
         <View style={styles.header}>
           <Text style={styles.title}>Field Compilation Notes</Text>
         </View>
@@ -1336,7 +1337,7 @@ const FieldCompilationNotesPage = ({
         <>
           <Page size="LETTER" style={styles.page}>
             {showDate ? (
-              <Text style={styles.pageDate}>{exportDate}</Text>
+              renderPageDate()
             ) : null}
             <Text style={styles.pageTitle}>
               General Field Notes: {well.name}
@@ -1421,7 +1422,7 @@ const FieldCompilationNotesPage = ({
 
           <Page size="LETTER" style={styles.page}>
             {showDate ? (
-              <Text style={styles.pageDate}>{exportDate}</Text>
+              renderPageDate()
             ) : null}
             <Text style={styles.pageTitle}>
               Hydrograph and Manual Measurements: {well.name}
@@ -1443,7 +1444,7 @@ const FieldCompilationNotesPage = ({
 
           <Page size="LETTER" style={styles.page}>
             {showDate ? (
-              <Text style={styles.pageDate}>{exportDate}</Text>
+              renderPageDate()
             ) : null}
             <View style={styles.blankPageBody}>
               <Text style={styles.blankPageText}>
