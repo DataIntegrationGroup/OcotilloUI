@@ -17,10 +17,12 @@ const renderPageOne = async ({
   photos,
   density = 'standard',
   notesPlacement = 'column',
+  showDate = false,
 }: {
   photos: number
   density?: IPdfDensity
   notesPlacement?: 'column' | 'top'
+  showDate?: boolean
 }) => {
   const fixture = buildFieldSheetPageOneFixture({ photos })
   const blob = await pdf(
@@ -37,7 +39,7 @@ const renderPageOne = async ({
       hydrographImage: fixture.hydrographImage,
       sampleMethodsBySampleId: fixture.sampleMethodsBySampleId,
       density,
-      showDate: false,
+      showDate,
       emptyPlaceholder: ' ',
       notesPlacement,
       firstPageOnly: true,
@@ -102,10 +104,15 @@ describe('field sheet page 1 mock-up', () => {
     const { text } = await renderPageOne({ photos: 3 })
 
     expect(text).toContain('Field Compilation Notes')
-    // Amendment G added date fields (e.g., "Date: Oct 27, 2026"), so the
-    // year appears. The test was previously checking for "no date stamp"
-    // but that was before the date fields were introduced.
+    // Amendment G added "Date:" labels on page 1. Under this harness
+    // (showDate: false) the field is present but its value is empty, so no
+    // year is printed — that coverage lives in the showDate test below.
     expect(text).toContain('Date:')
+  })
+
+  it('prints the export date year when showDate is on', async () => {
+    const { text } = await renderPageOne({ photos: 3, showDate: true })
+
     expect(text).toContain(String(new Date().getFullYear()))
   })
 })
