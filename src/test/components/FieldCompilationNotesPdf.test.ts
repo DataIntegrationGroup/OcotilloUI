@@ -1,11 +1,14 @@
-import { createElement } from 'react'
 import { pdf } from '@react-pdf/renderer'
-import { describe, expect, it } from 'vitest'
 import { inflate } from 'pako'
-import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
-import type { IContact, IWell } from '@/interfaces/ocotillo'
-import { formatContactPhones } from '@/components/pdf/fieldCompilationPhoneFormatter'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
+import { createElement } from 'react'
+import { describe, expect, it } from 'vitest'
+import {
+  FieldCompilationNotesPdf,
+  scaleForDensity,
+} from '@/components/pdf/FieldCompilationNotesPdf'
+import { formatContactPhones } from '@/components/pdf/fieldCompilationPhoneFormatter'
+import type { IContact, IWell } from '@/interfaces/ocotillo'
 
 const makeContact = (phones: NonNullable<IContact['phones']>): IContact =>
   ({
@@ -188,5 +191,118 @@ describe('FieldCompilationNotesPdf', () => {
     expect(pages[1]).toContain('General Field Notes: Well-1')
     expect(pages[2]).toContain('Hydrograph unavailable for this well')
     expect(pages[3]).toContain('This page is intentionally left blank')
+  })
+})
+
+describe('site notes field (lane 32)', () => {
+  it('renders "-" when no site notes are present', async () => {
+    const well = makeWell() // site_notes: []
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well,
+        contacts: [],
+        assets: [],
+        observations: [],
+        sensorDeployments: [],
+        hydrographImage: null,
+      }) as any
+    ).toBlob()
+
+    const { text } = await extractPdfText(pdfBlob)
+    // The inline "Site Notes:" label must appear
+    expect(text).toContain('Site Notes:')
+    // And because there are no notes, it should show "-"
+    expect(text).toContain('-')
+  })
+
+  it('renders note content when site_notes are provided', async () => {
+    const well = makeWell()
+    ;(well as any).site_notes = [
+      {
+        id: 1,
+        note_type: 'Site Notes',
+        content: 'Dogs on property. Call ahead.',
+        created_at: '2026-04-02',
+        release_status: 'public',
+        target_id: 1,
+        target_table: 'thing',
+      },
+    ]
+
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well,
+        contacts: [],
+        assets: [],
+        observations: [],
+        sensorDeployments: [],
+        hydrographImage: null,
+      }) as any
+    ).toBlob()
+
+    const { text } = await extractPdfText(pdfBlob)
+    expect(text).toContain('Site Notes:')
+    expect(text).toContain('Dogs on property. Call ahead.')
+  })
+
+  it('falls back to well.notes when site_notes is absent', async () => {
+    const well = makeWell()
+    ;(well as any).site_notes = []
+    ;(well as any).notes = [
+      {
+        id: 2,
+        note_type: 'Other',
+        content: 'Fallback note content.',
+        created_at: '2026-03-01',
+        release_status: 'public',
+        target_id: 1,
+        target_table: 'thing',
+      },
+    ]
+
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well,
+        contacts: [],
+        assets: [],
+        observations: [],
+        sensorDeployments: [],
+        hydrographImage: null,
+      }) as any
+    ).toBlob()
+
+    const { text } = await extractPdfText(pdfBlob)
+    expect(text).toContain('Site Notes:')
+    expect(text).toContain('Fallback note content.')
+  })
+
+  it('shows "-" when both site_notes and notes are empty', async () => {
+    const well = makeWell()
+    ;(well as any).site_notes = []
+    ;(well as any).notes = []
+
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well,
+        contacts: [],
+        assets: [],
+        observations: [],
+        sensorDeployments: [],
+        hydrographImage: null,
+      }) as any
+    ).toBlob()
+
+    const { text } = await extractPdfText(pdfBlob)
+    expect(text).toContain('Site Notes:')
+    expect(text).toContain('-')
+  })
+})
+
+describe('scaleForDensity', () => {
+  it('orders compact < standard < comfortable and defaults to standard', () => {
+    expect(scaleForDensity(20, 16, 12, 'compact')).toBe(12)
+    expect(scaleForDensity(20, 16, 12, 'standard')).toBe(16)
+    expect(scaleForDensity(20, 16, 12, 'comfortable')).toBe(20)
+    expect(scaleForDensity(20, 16, 12)).toBe(16)
   })
 })

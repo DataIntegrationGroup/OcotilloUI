@@ -3,7 +3,7 @@ import { BaseRecord, useGo, useNotification } from '@refinedev/core'
 import { DownloadIcon, EyeIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router'
-import { WellPDF } from '@/components'
+import { FieldCompilationNotesPdf } from '@/components'
 import {
   CHEMISTRY_REPORT_DEFAULT_SECTIONS,
   downloadChemistryReport,
@@ -26,6 +26,7 @@ import { useAccessCapabilities, useWellChemistryReport } from '@/hooks'
 import { IPdfOptions } from '@/interfaces'
 import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
+import { sampleMethodsBySampleId } from '@/utils/sampleMethods'
 
 /** The kinds of PDF the well details page can produce. */
 export type WellReportType = 'field-sheet' | 'chemistry-report'
@@ -142,16 +143,16 @@ export const WellPDFActionsButton = ({
     const filename = buildPdfFilename(well)
 
     const blob = await pdf(
-      <WellPDF
+      <FieldCompilationNotesPdf
         well={well}
-        sample={sample}
         assets={assets}
         contacts={contacts}
         observations={observations}
         sensorDeployments={sensorDeployments}
         includeConfidentialContacts={canViewConfidential}
-        options={opts}
         hydrographImage={hydrographImage}
+        density={opts?.density ?? 'standard'}
+        sampleMethodsBySampleId={sampleMethodsBySampleId(sample)}
       />
     ).toBlob()
 
