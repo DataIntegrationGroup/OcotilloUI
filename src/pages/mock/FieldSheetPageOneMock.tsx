@@ -7,8 +7,8 @@ import {
 
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
+import { Document, PDFViewer } from '@react-pdf/renderer'
 import { FieldCompilationNotesPdf } from '@/components'
-import { PdfCanvasViewer } from '@/components/pdf/PdfCanvasViewer'
 import {
   buildFieldSheetPageOneFixture,
   FIXTURE_PHOTO_COUNTS,
@@ -34,6 +34,12 @@ import {
 type NotesPlacement = 'column' | 'top'
 
 const readPhotos = (raw: string | null): number => {
+  // A missing/blank `photos` param selects the full photo set: page 1 is a
+  // layout review and the fixture "supplies only the photographs", so what
+  // prints should be photos + layout. An explicit ?photos=0 still yields zero;
+  // any other explicit count (1/3/5) uses that value.
+  if (raw == null || raw === '' || Number.isNaN(Number(raw))) return 5
+
   const value = Number(raw)
 
   return FIXTURE_PHOTO_COUNTS.includes(
@@ -89,22 +95,25 @@ export const FieldSheetPageOneMock = () => {
       <Box
         sx={{ height: 'calc(100vh - 240px)', minHeight: 480, width: '100%' }}
       >
-        <PdfCanvasViewer width={900}>
-          <FieldCompilationNotesPdf
-            well={fixture.well}
-            contacts={fixture.contacts}
-            assets={fixture.assets}
-            observations={fixture.observations}
-            sensorDeployments={fixture.sensorDeployments}
-            hydrographImage={fixture.hydrographImage}
-            sampleMethodsBySampleId={fixture.sampleMethodsBySampleId}
-            showDate={false}
-            emptyPlaceholder=" "
-            notesPlacement="column"
-            showPhotos={showPhotos}
-            firstPageOnly
-          />
-        </PdfCanvasViewer>
+        <PDFViewer width="100%" height="100%">
+          <Document>
+            <FieldCompilationNotesPdf
+              standalone={false}
+              well={fixture.well}
+              contacts={fixture.contacts}
+              assets={fixture.assets}
+              observations={fixture.observations}
+              sensorDeployments={fixture.sensorDeployments}
+              hydrographImage={fixture.hydrographImage}
+              sampleMethodsBySampleId={fixture.sampleMethodsBySampleId}
+              showDate={false}
+              emptyPlaceholder=" "
+              notesPlacement="column"
+              showPhotos={showPhotos}
+              firstPageOnly
+            />
+          </Document>
+        </PDFViewer>
       </Box>
     </Box>
   )
