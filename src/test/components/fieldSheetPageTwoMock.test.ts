@@ -1,5 +1,5 @@
 import { Document, pdf } from '@react-pdf/renderer'
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
+import { extractPdfText } from '@/test/fixtures/pdfText'
 import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
 import { FieldSheetPageTwo } from '@/components/pdf/FieldSheetPageTwo'
@@ -20,17 +20,9 @@ const renderPageTwo = async ({ withOse }: { withOse: boolean }) => {
     ) as any
   ).toBlob()
 
-  const data = new Uint8Array(await blob.arrayBuffer())
-  const document = await pdfjsLib.getDocument({ data }).promise
-  const pages: string[] = []
+  const { pageCount, text } = await extractPdfText(blob)
 
-  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber++) {
-    const page = await document.getPage(pageNumber)
-    const textContent = await page.getTextContent()
-    pages.push(textContent.items.map((item: any) => item.str).join(''))
-  }
-
-  return { pageCount: document.numPages, text: pages.join('\n') }
+  return { pageCount, text }
 }
 
 describe('field sheet page 2 mock-up', () => {
