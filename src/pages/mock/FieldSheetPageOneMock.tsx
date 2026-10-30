@@ -96,7 +96,7 @@ export const FieldSheetPageOneMock = () => {
         sx={{ height: 'calc(100vh - 240px)', minHeight: 480, width: '100%' }}
       >
         <PDFViewer width="100%" height="100%">
-          <Document>
+          <Document key={showPhotos ? 'with-photos' : 'without-photos'}>
             <FieldCompilationNotesPdf
               standalone={false}
               well={fixture.well}
