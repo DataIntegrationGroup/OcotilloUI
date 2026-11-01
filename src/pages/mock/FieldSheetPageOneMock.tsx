@@ -80,7 +80,8 @@ export const FieldSheetPageOneMock = () => {
         </Typography>
       </Stack>
 
-      <Stack direction="row" spacing={1} sx={{ mb: 2, alignItems: 'center' }}>
+      {/* Move button outside the PDF container — react-pdf's iframe covers its parent */}
+      <Box sx={{ mb: 2 }}>
         <ToggleButton
           size="small"
           value="photos"
@@ -90,10 +91,10 @@ export const FieldSheetPageOneMock = () => {
         >
           📷 Photo
         </ToggleButton>
-      </Stack>
+      </Box>
 
       <Box
-        sx={{ height: 'calc(100vh - 240px)', minHeight: 480, width: '100%' }}
+        sx={{ height: 'calc(100vh - 280px)', minHeight: 480, width: '100%' }}
       >
         <PDFViewer width="100%" height="100%">
           <Document key={showPhotos ? 'with-photos' : 'without-photos'}>
