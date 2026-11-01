@@ -901,7 +901,7 @@ const FieldCompilationNotesPage = ({
         <View style={styles.header}>
           <Text style={styles.title}>Field Compilation Notes</Text>
         </View>
-        {/* Lane 33 column model: 60% content + 33.33% photo strip */}
+        {/* Lane 33 column model: 66.7% content (flex 2) + 33.3% photo strip (flex 1) */}
         <View style={[styles.columnContainer, { flexDirection: showPhotos ? 'row' : 'column' }]}>
           {/* ── Content column (60%) ──────────────────────────────── */}
           <View style={[styles.contentColumn, { flex: !showPhotos ? 1 : 2 }]}>
