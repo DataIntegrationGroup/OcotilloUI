@@ -904,7 +904,17 @@ const FieldCompilationNotesPage = ({
         {/* Lane 33 column model: 66.7% content (flex 2) + 33.3% photo strip (flex 1) */}
         <View style={[styles.columnContainer, { flexDirection: showPhotos ? 'row' : 'column' }]}>
           {/* ── Content column (60%) ──────────────────────────────── */}
-          <View style={[styles.contentColumn, { flex: !showPhotos ? 1 : 2 }]}>
+          <View
+            style={[
+              styles.contentColumn,
+              // Only share width with the strip in row mode. In column mode a
+              // zero-basis flex child of an auto-height column collapses to 0
+              // and its sections overlap — let it size to its content instead.
+              showPhotos
+                ? { flex: 2 }
+                : { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
+            ]}
+          >
             {notesPlacement === 'top' ? (
               <View style={styles.section}>
                 <View style={styles.sectionTitleBar}>
@@ -1514,6 +1524,7 @@ export const FieldCompilationNotesPdf = ({
       firstPageOnly={firstPageOnly}
       directionNotes={directionNotes}
       includeAssets={includeAssets}
+      showPhotos={showPhotos}
     />
   )
 
