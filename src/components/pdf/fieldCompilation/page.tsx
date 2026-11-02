@@ -1,6 +1,5 @@
 import {
   Document,
-  Image,
   Page,
   Text,
   View,
@@ -51,17 +50,17 @@ import {
   cutMethodRows,
   equipmentColumns,
   lastMeasurementsColumns,
-  manualMeasurementColumns,
   newMeasurementGridRows,
   siteNotesFieldLabel,
 } from './tables'
 
 
 // ── Imported helper components ──
-import { PdfTable } from '../layout/PdfTable'
 export type { TableColumn } from '../layout/PdfTable'
-import NoteSection from '../primitives/NoteSection'
 import { IdentityPage } from './pages/IdentityPage'
+import { GeneralNotesPage } from './pages/GeneralNotesPage'
+import { HydrographMeasurementsPage } from './pages/HydrographMeasurementsPage'
+import { BlankPage } from './pages/BlankPage'
 
 export const FieldCompilationNotesPage = ({
   well,
@@ -184,123 +183,28 @@ export const FieldCompilationNotesPage = ({
 
       {firstPageOnly ? null : (
         <>
-          <Page size="LETTER" style={styles.page}>
-            {showDate ? (
-              renderPageDate()
-            ) : null}
-            <Text style={styles.pageTitle}>
-              General Field Notes: {well.name}
-            </Text>
-            <View style={styles.cutMethodBox}>
-              <Text style={styles.cutMethodEquation}>
-                HOLD - CUT = Depth to Water (below MP)
-              </Text>
-              <Text style={styles.cutMethodHint}>
-                Cut method field entry for steel-tape measurements. Record HOLD,
-                record CUT, then subtract CUT from HOLD to get depth to water
-                below the measuring point (MP).
-              </Text>
-              <View style={styles.cutMethodTable}>
-                <View style={styles.cutMethodTableRow}>
-                  <Text style={styles.cutMethodTableLabelCell}>Field</Text>
-                  {cutMethodColumns.map((column, index) => (
-                    <Text
-                      key={column}
-                      style={[
-                        styles.cutMethodTableHeaderCell,
-                        ...(index === cutMethodColumns.length - 1
-                          ? [styles.cutMethodTableValueCellLast]
-                          : []),
-                      ]}
-                    >
-                      {column}
-                    </Text>
-                  ))}
-                </View>
-                {cutMethodRows.map((rowLabel, rowIndex) => (
-                  <View
-                    key={rowLabel}
-                    style={[
-                      styles.cutMethodTableRow,
-                      ...(rowIndex === cutMethodRows.length - 1
-                        ? [styles.cutMethodTableRowLast]
-                        : []),
-                    ]}
-                  >
-                    <Text style={styles.cutMethodTableLabelCell}>
-                      {rowLabel}
-                    </Text>
-                    {cutMethodColumns.map((column, index) => (
-                      <View
-                        key={`${rowLabel}-${column}`}
-                        style={[
-                          styles.cutMethodTableValueCell,
-                          ...(index === cutMethodColumns.length - 1
-                            ? [styles.cutMethodTableValueCellLast]
-                            : []),
-                        ]}
-                      >
-                        <View style={styles.fillLine} />
-                      </View>
-                    ))}
-                  </View>
-                ))}
-              </View>
-            </View>
-            {/* General Field Notes — page 2 */}
-            <View style={styles.sectionCard}>
-              <View style={styles.sectionTitleBar}>
-                <View
-                  style={[
-                    styles.accentBar,
-                    { height: accentBarHeight },
-                  ]}
-                />
-                <Text style={styles.sectionTitle}>General Field Notes</Text>
-              </View>
-              <View style={styles.notesPad}>
-              {Array.from({ length: 20 }).map((_, index) => (
-                <View
-                  key={`general-note-line-${index}`}
-                  style={styles.notesPadLine}
-                />
-              ))}
-              </View>
-            </View>
-          </Page>
+          <GeneralNotesPage
+            well={well}
+            styles={styles}
+            accentBarHeight={accentBarHeight}
+            renderPageDate={renderPageDate}
+            showDate={showDate}
+          />
 
-          <Page size="LETTER" style={styles.page}>
-            {showDate ? (
-              renderPageDate()
-            ) : null}
-            <Text style={styles.pageTitle}>
-              Hydrograph and Manual Measurements: {well.name}
-            </Text>
-            {hydrographImage ? (
-              <Image src={hydrographImage} style={styles.hydrographImage} />
-            ) : (
-              <Text style={styles.hydrographEmptyState}>
-                Hydrograph unavailable for this well.
-              </Text>
-            )}
-            <PdfTable
-              styles={styles}
-              title="Manual Measurements"
-              columns={manualMeasurementColumns}
-              rows={manualMeasurements}
-            />
-          </Page>
+          <HydrographMeasurementsPage
+            well={well}
+            styles={styles}
+            renderPageDate={renderPageDate}
+            showDate={showDate}
+            hydrographImage={hydrographImage}
+            manualMeasurements={manualMeasurements}
+          />
 
-          <Page size="LETTER" style={styles.page}>
-            {showDate ? (
-              renderPageDate()
-            ) : null}
-            <View style={styles.blankPageBody}>
-              <Text style={styles.blankPageText}>
-                This page is intentionally left blank
-              </Text>
-            </View>
-          </Page>
+          <BlankPage
+            styles={styles}
+            renderPageDate={renderPageDate}
+            showDate={showDate}
+          />
         </>
       )}
       {/* TODO: QR code — render as <Image source={qrUri} style={{width:50,height:50}}/> 
