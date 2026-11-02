@@ -1,6 +1,7 @@
 import { StyleSheet } from '@react-pdf/renderer'
 import type { IPdfDensity } from '@/interfaces'
 import { scaleForDensity } from './density'
+import { pdfTokens } from './tokens'
 
 export type FieldCompilationStyles = ReturnType<
   typeof createFieldCompilationStyles
@@ -16,16 +17,16 @@ export const createFieldCompilationStyles = (
     page: {
       paddingTop: scale(18, 16, 12),
       paddingBottom: scale(18, 16, 12),
-      backgroundColor: '#ffffff',
+      backgroundColor: pdfTokens.white,
       fontSize: scale(9.5, 9, 8.5),
-      color: '#111827',
+      color: pdfTokens.textPrimary,
     },
     pageDate: {
       position: 'absolute',
       top: 16,
       right: 20,
       fontSize: scale(9.5, 9, 8.5),
-      color: '#111827',
+      color: pdfTokens.textPrimary,
     },
     footer: {
       position: 'absolute',
@@ -35,11 +36,11 @@ export const createFieldCompilationStyles = (
     },
     footerText: {
       fontSize: scale(8, 7.5, 7),
-      color: '#6b7280',
+      color: pdfTokens.lineColor,
     },
     header: {
       borderBottomWidth: 1,
-      borderBottomColor: '#d1d5db',
+      borderBottomColor: pdfTokens.borderTable,
       paddingBottom: 6,
     },
     title: {
@@ -101,9 +102,9 @@ export const createFieldCompilationStyles = (
     // ── Card-style section wrapper with subtle border and background ────
     sectionCard: {
       borderWidth: 1,
-      borderColor: '#e5e7eb',
+      borderColor: pdfTokens.borderSection,
       borderRadius: 4,
-      backgroundColor: '#fafafa',
+      backgroundColor: pdfTokens.cardSurface,
       padding: 0,
       marginBottom: scale(3, 2, 1),
       width: '100%',
@@ -116,7 +117,7 @@ export const createFieldCompilationStyles = (
     accentBar: {
       width: 3,
       borderRadius: 0.5,
-      backgroundColor: '#10b981',
+      backgroundColor: pdfTokens.accentPrimary,
       marginRight: 5,
     },
     topGrid: {
@@ -163,18 +164,18 @@ export const createFieldCompilationStyles = (
     },
     table: {
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: pdfTokens.borderTable,
     },
     tableHeader: {
       flexDirection: 'row',
-      backgroundColor: '#f3f4f6',
+      backgroundColor: pdfTokens.bgHeader,
       borderBottomWidth: 1,
-      borderBottomColor: '#d1d5db',
+      borderBottomColor: pdfTokens.borderTable,
     },
     tableRow: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      borderBottomColor: '#e5e7eb',
+      borderBottomColor: pdfTokens.borderSection,
     },
     tableRowLast: {
       borderBottomWidth: 0,
@@ -219,24 +220,24 @@ export const createFieldCompilationStyles = (
       height: 140,
       objectFit: 'cover',
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: pdfTokens.borderTable,
       borderRadius: 4,
-      backgroundColor: '#ffffff',
+      backgroundColor: pdfTokens.white,
     },
     imageLabel: {
       marginTop: 2,
       fontSize: 7,
-      color: '#4b5563',
+      color: pdfTokens.textSecondary,
     },
     notePad: {
       width: '50%',
       borderWidth: 1,
-      borderColor: '#e5e7eb',
-      backgroundColor: '#ffffff',
+      borderColor: pdfTokens.borderSection,
+      backgroundColor: pdfTokens.white,
     },
     notePadLine: {
       borderBottomWidth: 1,
-      borderBottomColor: '#f3f4f6',
+      borderBottomColor: pdfTokens.bgHeader,
       height: 6,
     },
     preVisitPad: {
@@ -248,16 +249,16 @@ export const createFieldCompilationStyles = (
     },
     ruledSlot: {
       borderWidth: 1,
-      borderColor: '#e5e7eb',
+      borderColor: pdfTokens.borderSection,
       marginBottom: 4,
     },
     emptyImageState: {
       borderWidth: 1,
       borderStyle: 'dashed',
-      borderColor: '#d1d5db',
+      borderColor: pdfTokens.borderTable,
       padding: 12,
       textAlign: 'center',
-      color: '#6b7280',
+      color: pdfTokens.lineColor,
       fontSize: 9,
     },
     pageTitle: {
@@ -275,15 +276,15 @@ export const createFieldCompilationStyles = (
     hydrographEmptyState: {
       borderWidth: 1,
       borderStyle: 'dashed',
-      borderColor: '#d1d5db',
+      borderColor: pdfTokens.borderTable,
       padding: 16,
       textAlign: 'center',
-      color: '#6b7280',
+      color: pdfTokens.lineColor,
       marginBottom: 12,
     },
     cutMethodBox: {
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: pdfTokens.borderTable,
       padding: 10,
       marginBottom: 12,
     },
@@ -294,7 +295,7 @@ export const createFieldCompilationStyles = (
     },
     cutMethodHint: {
       fontSize: 8,
-      color: '#4b5563',
+      color: pdfTokens.textSecondary,
       marginBottom: 8,
       lineHeight: 1.2,
     },
@@ -313,18 +314,18 @@ export const createFieldCompilationStyles = (
     },
     fillLine: {
       borderBottomWidth: 1,
-      borderBottomColor: '#6b7280',
+      borderBottomColor: pdfTokens.lineColor,
       height: 16,
     },
     cutMethodTable: {
       borderWidth: 1,
-      borderColor: '#e5e7eb',
+      borderColor: pdfTokens.borderSection,
       marginTop: 4,
     },
     cutMethodTableRow: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      borderBottomColor: '#e5e7eb',
+      borderBottomColor: pdfTokens.borderSection,
     },
     cutMethodTableRowLast: {
       borderBottomWidth: 0,
@@ -336,7 +337,7 @@ export const createFieldCompilationStyles = (
       fontSize: 8,
       fontWeight: 700,
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: pdfTokens.borderSection,
     },
     cutMethodTableValueCell: {
       width: '15.6%',
@@ -344,7 +345,7 @@ export const createFieldCompilationStyles = (
       paddingHorizontal: 4,
       paddingBottom: 0,
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: pdfTokens.borderSection,
     },
     cutMethodTableValueCellLast: {
       borderRightWidth: 0,
@@ -357,11 +358,11 @@ export const createFieldCompilationStyles = (
       fontWeight: 700,
       textAlign: 'center',
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: pdfTokens.borderSection,
     },
     newMeasurementBox: {
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: pdfTokens.borderTable,
       padding: scale(3, 3, 2),
       marginBottom: scale(4, 3, 2),
     },
@@ -378,7 +379,7 @@ export const createFieldCompilationStyles = (
     newMeasurementPrev: {
       fontSize: 8.5,
       fontWeight: 700,
-      color: '#111827',
+      color: pdfTokens.textPrimary,
     },
     newMeasurementFieldRow: {
       flexDirection: 'row',
@@ -396,7 +397,7 @@ export const createFieldCompilationStyles = (
     // Shorter write-in line so the box stays compact on page 1 (BDMS-1504).
     newWriteLine: {
       borderBottomWidth: 1,
-      borderBottomColor: '#6b7280',
+      borderBottomColor: pdfTokens.lineColor,
       height: 7,
     },
     // Thin hairline grid used only for the new write-in measurement grid. Keeps
@@ -404,7 +405,7 @@ export const createFieldCompilationStyles = (
     newGridRow: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      borderBottomColor: '#e5e7eb',
+      borderBottomColor: pdfTokens.borderSection,
     },
     newGridHeaderCell: {
       width: '20%',
@@ -414,7 +415,7 @@ export const createFieldCompilationStyles = (
       fontWeight: 700,
       textAlign: 'center',
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: pdfTokens.borderSection,
     },
     newGridLabelCell: {
       width: '20%',
@@ -423,7 +424,7 @@ export const createFieldCompilationStyles = (
       fontSize: 7,
       fontWeight: 700,
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: pdfTokens.borderSection,
     },
     newGridValueCell: {
       width: '20%',
@@ -431,16 +432,16 @@ export const createFieldCompilationStyles = (
       paddingBottom: 0,
       paddingHorizontal: 2,
       borderRightWidth: 1,
-      borderRightColor: '#e5e7eb',
+      borderRightColor: pdfTokens.borderSection,
     },
     notesPad: {
       borderWidth: 1,
-      borderColor: '#d1d5db',
+      borderColor: pdfTokens.borderTable,
       paddingTop: 2,
     },
     notesPadLine: {
       borderBottomWidth: 1,
-      borderBottomColor: '#e5e7eb',
+      borderBottomColor: pdfTokens.borderSection,
       height: 20,
     },
     blankPageBody: {
@@ -450,7 +451,7 @@ export const createFieldCompilationStyles = (
     },
     blankPageText: {
       fontSize: 12,
-      color: '#111827',
+      color: pdfTokens.textPrimary,
       textAlign: 'center',
     },
   })
