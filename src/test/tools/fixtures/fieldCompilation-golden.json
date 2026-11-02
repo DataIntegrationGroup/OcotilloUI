@@ -1,0 +1,30 @@
+{
+  "A": {
+    "configName": "A",
+    "pageCount": 6,
+    "imageCount": 2,
+    "byteSize": 20958,
+    "byteHash": "63c2191a115e3821969e6ebd8fa56c8d98328467930c1d911fd9a01424fbb101"
+  },
+  "B": {
+    "configName": "B",
+    "pageCount": 5,
+    "imageCount": 0,
+    "byteSize": 18810,
+    "byteHash": "408eb90aa6f43d3f11f35431d0498a12dac583af8157fef81873b344c88be117"
+  },
+  "C": {
+    "configName": "C",
+    "pageCount": 5,
+    "imageCount": 2,
+    "byteSize": 20077,
+    "byteHash": "2a5635a45c05420a6396c38bce3b3e8792e2798ba910e3697b58972ffd22bd8b"
+  },
+  "D": {
+    "configName": "D",
+    "pageCount": 3,
+    "imageCount": 2,
+    "byteSize": 13361,
+    "byteHash": "f5b9a9ec2e6d0f796920c3adfc609ba4cd2b2907a1e79d9c03f99d810ad27969"
+  }
+}
