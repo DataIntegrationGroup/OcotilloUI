@@ -41,19 +41,8 @@ import {
   manualMeasurementRows,
 } from './format'
 
-/**
- * Direction notes region value (BDMS-1509). The data source is still open
- * (Q17), so this never parses or infers a direction from any other field — it
- * only forwards what the caller supplied, and collapses anything undefined,
- * null, or blank to an empty string. That keeps the label printing with nothing
- * beneath it (empty, not missing) and never returns a placeholder like 'N/A'
- * or '-'. Exported for tests and other display-only callers.
- */
-export const directionNotesValue = (directionNotes?: string | null): string => {
-  if (!directionNotes) return ''
-  const trimmed = directionNotes.trim()
-  return trimmed === '' ? '' : trimmed
-}
+import { directionNotesValue } from './format'
+export { directionNotesValue }
 
 // ── Column definitions (used by PdfTable — may be extracted further in Step 4) ──
 

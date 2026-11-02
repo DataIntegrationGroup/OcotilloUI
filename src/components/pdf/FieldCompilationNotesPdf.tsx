@@ -4,14 +4,10 @@ import type { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
 import type { SensorDeploymentRow } from '@/utils'
 
 /**
- * Direction notes region value (BDMS-1509). Re-exported for backward compatibility;
- * the canonical source is `page.tsx` now.
+ * Re-export of the canonical `directionNotesValue` definition from format.ts.
+ * Kept in the façade for backward compatibility with existing import paths.
  */
-export const directionNotesValue = (directionNotes?: string | null): string => {
-  if (!directionNotes) return ''
-  const trimmed = directionNotes.trim()
-  return trimmed === '' ? '' : trimmed
-}
+export { directionNotesValue } from './fieldCompilation/format'
 
 /**
  * PDF document wrapper — delegates to the full implementation in page.tsx which handles
