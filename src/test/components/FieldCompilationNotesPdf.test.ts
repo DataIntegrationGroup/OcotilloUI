@@ -3,10 +3,8 @@ import { inflate } from 'pako'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
-import {
-  FieldCompilationNotesPdf,
-  scaleForDensity,
-} from '@/components/pdf/FieldCompilationNotesPdf'
+import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
+import { scaleForDensity } from '@/components/pdf/fieldCompilation/density'
 import { formatContactPhones } from '@/components/pdf/fieldCompilationPhoneFormatter'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 
