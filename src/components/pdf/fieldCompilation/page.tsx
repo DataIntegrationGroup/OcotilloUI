@@ -93,27 +93,9 @@ const cutMethodRows = [
 const newMeasurementGridRows = ['Hold', 'Cut', 'DTW Below MP (ft)', 'DTW BGS (ft)'] as const
 
 // ── Imported helper components ──
-import { PdfTable } from './table'
-export type { TableColumn } from './table'
-const NoteSection = ({
-  title,
-  value,
-  styles,
-  accentBarHeight = 9,
-}: {
-  title: string
-  value: string
-  styles: FieldCompilationStyles
-  accentBarHeight?: number
-}) => (
-  <View style={styles.sectionCard}>
-    <View style={styles.sectionTitleBar}>
-      <View style={[styles.accentBar, { height: accentBarHeight }]} />
-      <Text style={styles.sectionTitle}>{title}</Text>
-    </View>
-    <Text style={styles.noteText}>{value}</Text>
-  </View>
-)
+import { PdfTable } from '../layout/PdfTable'
+export type { TableColumn } from '../layout/PdfTable'
+import NoteSection from '../primitives/NoteSection'
 
 export const FieldCompilationNotesPage = ({
   well,

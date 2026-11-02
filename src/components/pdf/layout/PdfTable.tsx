@@ -1,6 +1,6 @@
 import { Text, View } from '@react-pdf/renderer'
-import type { FieldCompilationStyles } from './styles'
-import { renderValue } from './format'
+import type { FieldCompilationStyles } from '../fieldCompilation/styles'
+import { renderValue } from '../fieldCompilation/format'
 
 /**
  * Generic table column definition for PdfTable.
