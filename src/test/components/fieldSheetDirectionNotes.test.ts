@@ -17,7 +17,7 @@ import { describe, expect, it } from 'vitest'
 import {
   directionNotesValue,
   FieldCompilationNotesPdf,
-} from '@/components/pdf/FieldCompilationNotesPdf'
+} from '@/components/pdf/fieldCompilation/page'
 import { makeContact, makeObservations, makeSensors, makeWell } from '@/test/fixtures/fieldCompilationPdfSample'
 import { buildSensorDeploymentRows } from '@/utils/SensorDeploymentRows'
 

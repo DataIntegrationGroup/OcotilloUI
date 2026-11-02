@@ -14,7 +14,7 @@ import { join } from 'node:path'
 import { createElement } from 'react'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
+import { FieldCompilationNotesPdf } from '@/components/pdf/fieldCompilation/page'
 import { buildSensorDeploymentRows } from '@/utils/SensorDeploymentRows'
 import { makeContact, makeObservations, makeSensors, makeWell } from '@/test/fixtures/fieldCompilationPdfSample'
 

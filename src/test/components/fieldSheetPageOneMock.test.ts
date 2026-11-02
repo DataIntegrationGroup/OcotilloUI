@@ -2,7 +2,7 @@ import { pdf } from '@react-pdf/renderer'
 import { extractPdfText } from '@/test/fixtures/pdfText'
 import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
-import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
+import { FieldCompilationNotesPdf } from '@/components/pdf/fieldCompilation/page'
 import type { IPdfDensity } from '@/interfaces'
 import { buildFieldSheetPageOneFixture } from '@/mock/fieldSheetPageOne.fixture'
 
