@@ -8,19 +8,20 @@
  */
 
 import { createHash } from 'node:crypto'
-import { mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { createElement } from 'react'
 import { renderToBuffer } from '@react-pdf/renderer'
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
 import { buildSensorDeploymentRows } from '@/utils/SensorDeploymentRows'
 import { makeContact, makeObservations, makeSensors, makeWell } from '@/test/fixtures/fieldCompilationPdfSample'
 
 // ─── Paths (workspace level, not inside repo) ─────────────────────────────
-const REPO_ROOT = process.env.OCTILLO_UI_ROOT || '/Users/robbalch/workspace/repos/OcotilloUI'
+const REPO_ROOT = process.cwd()
 const GOLDEN_JSON = join(REPO_ROOT, 'src/test/tools/fixtures/fieldCompilation-golden.json')
-const AUDIT_ROOT  = join('/Users/robbalch/workspace', 'NMBG', 'tasks', 'preview-compilation', 'audit', 'pdf-refactor-2026-11-01')
+const AUDIT_ROOT = process.env.PDF_AUDIT_ROOT || join(homedir(), 'workspace', 'NMBG', 'tasks', 'preview-compilation', 'audit', 'pdf-refactor-2026-11-01')
 const GOLDEN_DIR  = join(AUDIT_ROOT, 'golden')
 
 // ─── PHOTO_A fixture (4x4 red PNG — ~423 B in react-pdf output) ──────────
@@ -41,6 +42,10 @@ function normalise(buffer: Buffer): Buffer {
       .replace(/\(D:\d{14}Z\)/g, '(D:00000000000000Z)')
       // /ID trailers (two fields per file — both fields in one pattern)
       .replace(/\/ID \[<[0-9a-fA-F]{32}> <[0-9a-fA-F]{32}>\]/g, '/ID [<' + '0'.repeat(32) + '> <' + '0'.repeat(32) + '>]')
+      // Document title: buildPdfFilename() appends randomUUID().slice(0,8).
+      // It appears BOTH as the /Title info key and as a bare string object
+      // ("(<well>_1a2b3c4d.pdf)"), so match the token, not the key.
+      .replace(/_[0-9a-f]{8}\.pdf/g, '_00000000.pdf')
       // Title field with random 8-hex token (randomUUID().slice(0,8))
       .replace(/\/Title \([^)]+\)/g, '/Title (_00000000.pdf)'),
     'latin1'
@@ -51,18 +56,11 @@ function byteHash(buffer: Buffer): string {
   return createHash('sha256').update(normalise(buffer)).digest('hex')
 }
 
-// pageCount: count actual page objects in PDF stream
+// pageCount: count page objects only. "/Type /Pages" is the single page-tree
+// root, not a page — including it inflated every result by exactly 1.
 function pageCount(buffer: Buffer): number {
   const text = buffer.toString('latin1')
-  let count = 0
-  let idx = 0
-  while (true) {
-    idx = text.indexOf('/Type /Page', idx)
-    if (idx === -1) break
-    count++
-    idx += '/Type /Page'.length
-  }
-  return count
+  return (text.match(/\/Type\s*\/Page(?![s])/g) || []).length
 }
 
 // Count embedded images in PDF stream
@@ -101,6 +99,23 @@ interface CaptureResult {
   imageCount: number
   byteSize: number
   byteHash: string
+}
+
+// ─── Golden comparison (exact — no tolerance) ───────────────────────────
+// The normaliser strips every known non-deterministic field (/CreationDate,
+// /ID, random /Title token) and the render clock is pinned by the fake Date
+// timer below, so any remaining difference is a real content change.
+// Do not replace these with toBeCloseTo: a tolerance hides exactly the
+// sub-50-byte style regressions this gate exists to catch.
+function assertMatchesGolden(
+  result: CaptureResult,
+  golden: CaptureResult,
+  label: string
+) {
+  expect(result.byteSize, `${label}: byteSize drift`).toBe(golden.byteSize)
+  expect(result.byteHash, `${label}: byteHash drift`).toBe(golden.byteHash)
+  expect(result.pageCount, `${label}: pageCount drift`).toBe(golden.pageCount)
+  expect(result.imageCount, `${label}: imageCount drift`).toBe(golden.imageCount)
 }
 
 async function renderAndCapture(cfg: RenderConfig): Promise<CaptureResult> {
@@ -176,49 +191,36 @@ async function runAssertions(results: Map<string, CaptureResult>) {
   }
 
   // (c) Photos increase size; A ≠ C (standard vs compact)
-  expect(a.byteSize).toBeGreaterThan(b.byteSize, 'Photos add bytes')
-  expect(a.byteSize).not.toEqual(c.byteSize, 'Standard != Compact layout')
+  expect(a.byteSize, 'Photos add bytes').toBeGreaterThan(b.byteSize)
+  expect(a.byteSize, 'Standard != Compact layout').not.toEqual(c.byteSize)
 
   // Photo coverage: A/C/D must have images, B must not
-  expect(a.imageCount).toBeGreaterThanOrEqual(1, 'A has images')
-  expect(b.imageCount).toBe(0, 'B has no images')
-  expect(c.imageCount).toBeGreaterThanOrEqual(1, 'C has images')
-  expect(d.imageCount).toBeGreaterThanOrEqual(1, 'D has images')
+  expect(a.imageCount, 'A has images').toBeGreaterThanOrEqual(1)
+  expect(b.imageCount, 'B has no images').toBe(0)
+  expect(c.imageCount, 'C has images').toBeGreaterThanOrEqual(1)
+  expect(d.imageCount, 'D has images').toBeGreaterThanOrEqual(1)
 
   // pageCount: D firstPageOnly is smaller than full docs
-  expect(d.pageCount).toBeLessThan(a.pageCount, 'D firstPageOnly has fewer pages')
+  expect(d.pageCount, 'D firstPageOnly has fewer pages').toBeLessThan(a.pageCount)
 
-  // Verify golden exists and has correct structure (from previous committed golden)
-  const existingGolden = loadGolden()
-  if (existingGolden) {
-    // If golden exists, sizes should be within 1% tolerance (normalisation handles drift)
-    for (const name of ['A', 'B', 'C', 'D']) {
-      const goldenSize = (existingGolden as any)[name].byteSize
-      const currentResult = (results as any).get(name)
-      expect(currentResult.byteSize).toBeCloseTo(goldenSize, -2, `${name} size within tolerance`)
-    }
-  }
-
+  // Golden comparison is NOT done here — see the dedicated golden test below,
+  // which is the only place that may read or write golden.json.
   return results
 }
 
-// ─── D0 determinism (in-process — size stability) ────────────────────────
-// NOTE: react-pdf's PDF metadata (creationDate, internal IDs) may differ
-// between renders even after normalisation. We assert size stability as the
-// practical determinism gate. For strict byteHash equality across processes,
-// run golden regeneration with UPDATE_GOLDEN=1.
-async function verifyD0Determinism(results: Map<string, CaptureResult>) {
-  // Two renders of same config should produce same SIZE
-  const a1 = results.get('A')!
-  
-  // Re-render A to check size stability
-  const a2 = await renderAndCapture(CONFIGS[0])
-
-  expect(a2.byteSize).toBe(a1.byteSize, 'A byteSize must be stable across renders')
-  return { pass: true }
-}
-
 // ─── Main test suite ────────────────────────────────────────────────────
+// The renderer stamps "today" into the page text (formatAppDate) and into
+// /CreationDate. Without pinning the clock the golden is only valid on the
+// day it was written, which is why the previous golden churned on every run.
+// Fake ONLY Date so timers/promises inside react-pdf stay real.
+beforeAll(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-11-01T12:00:00.000Z'))
+})
+afterAll(() => {
+  vi.useRealTimers()
+})
+
 describe('fieldCompilation PDF golden-master gate', () => {
   it('renders four configs and validates content differences', async () => {
     const results = new Map<string, CaptureResult>()
@@ -235,22 +237,27 @@ describe('fieldCompilation PDF golden-master gate', () => {
     return results
   }, 60_000)
 
-  it('writes golden.json and verifies against it', async () => {
-    // Write golden from fresh renders
+  it('compares against committed golden (never writes unless UPDATE_GOLDEN=1)', async () => {
     const results = new Map<string, CaptureResult>()
     for (const cfg of CONFIGS) {
       results.set(cfg.name, await renderAndCapture(cfg))
     }
-    await writeGolden(results)
 
-    // Verify: re-render against committed golden
-    const golden = loadGolden()!
-    expect(Object.keys(golden).sort()).toEqual(['A', 'B', 'C', 'D'])
+    // Regeneration is an explicit, reviewed act: UPDATE_GOLDEN=1 npx vitest run <this file>
+    // The default path compares FIRST and never touches golden.json, so a green
+    // run can only mean the committed baseline already matched.
+    if (process.env.UPDATE_GOLDEN === '1') {
+      await writeGolden(results)
+      console.log('[golden] regenerated — review the diff before committing')
+      return
+    }
+
+    const golden = loadGolden()
+    expect(golden, 'golden.json missing — regenerate with UPDATE_GOLDEN=1').not.toBeNull()
+    expect(Object.keys(golden!).sort()).toEqual(['A', 'B', 'C', 'D'])
 
     for (const [name, res] of results) {
-      // Size should match within tolerance (hash may differ due to metadata drift)
-      const goldenSize = (golden as any)[name].byteSize
-      expect(res.byteSize).toBeCloseTo(goldenSize, -2, `${name} size matches golden`)
+      assertMatchesGolden(res, golden![name], name)
     }
   }, 60_000)
 
@@ -265,43 +272,41 @@ describe('fieldCompilation PDF golden-master gate', () => {
     const d1 = results.get('D')!
 
     const a2 = await renderAndCapture(CONFIGS[0])
-    const d2 = await renderAndCapture({ name: 'D', ...CONFIGS[3] })
+    const d2 = await renderAndCapture(CONFIGS[3])
 
-    // Size stability is the practical determinism gate
-    expect(a2.byteSize).toBe(a1.byteSize, 'A byteSize must be stable')
-    expect(d2.byteSize).toBe(d1.byteSize, 'D byteSize must be stable')
+    // Clock is pinned and the normaliser covers every drift field, so two
+    // renders must agree byte for byte — not merely on size.
+    assertMatchesGolden(a2, a1, 'A render 2')
+    assertMatchesGolden(d2, d1, 'D render 2')
   }, 60_000)
 })
 
-// ─── D2 Falsifiability (separate describe so it doesn't interfere) ────────
+// ─── D2 falsifiability ──────────────────────────────────────────────────
+// The gate earns its runtime only if a wrong result fails it. Instead of
+// tampering with the committed golden on disk (which risks leaving the repo
+// dirty), drive the comparator directly: a fresh render must MATCH the
+// golden, and perturbed copies of that same golden must FAIL.
 describe('D2 falsifiability', () => {
-  it('golden mismatch causes test failure', async () => {
+  it('matches the committed golden and rejects perturbed copies of it', async () => {
     const golden = loadGolden()
-    if (!golden || !golden['A']) {
-      console.log('[D2] No golden for A — skipping (commit golden.json first)')
-      return
-    }
+    expect(golden, 'golden.json missing — regenerate with UPDATE_GOLDEN=1').not.toBeNull()
 
-    // Backup, tamper, assert failure
-    const backupPath = GOLDEN_JSON + '.bak'
-    writeFileSync(backupPath, readFileSync(GOLDEN_JSON))
+    const res = await renderAndCapture(CONFIGS[0])
 
-    try {
-      const obj = JSON.parse(readFileSync(GOLDEN_JSON, 'utf-8')) as Record<string, any>
-      // Tamper one character in A's byteSize to cause mismatch
-      if (obj.A && typeof obj.A.byteSize === 'number') {
-        obj.A.byteSize = obj.A.byteSize + 1000
-      }
-      writeFileSync(GOLDEN_JSON, JSON.stringify(obj, null, 2))
+    // Positive control: if this does not pass, the checks below prove nothing.
+    assertMatchesGolden(res, golden!.A, 'A')
 
-      // Render and verify mismatch
-      const res = await renderAndCapture(CONFIGS[0])
-      expect(res.byteSize).not.toEqual(obj.A.byteSize)
-    } finally {
-      // Restore original golden
-      writeFileSync(GOLDEN_JSON, readFileSync(backupPath))
-      // Clean up bak
-      try { unlinkSync(backupPath) } catch {}
-    }
-  })
+    // One byte of size drift
+    expect(() => assertMatchesGolden(res, { ...golden!.A, byteSize: golden!.A.byteSize + 1 }, 'A'))
+      .toThrow(/byteSize drift/)
+
+    // Same size, different content
+    const flipped = golden!.A.byteHash.replace(/^./, (c) => (c === '0' ? '1' : '0'))
+    expect(() => assertMatchesGolden(res, { ...golden!.A, byteHash: flipped }, 'A'))
+      .toThrow(/byteHash drift/)
+
+    // A page silently dropped
+    expect(() => assertMatchesGolden(res, { ...golden!.A, pageCount: golden!.A.pageCount - 1 }, 'A'))
+      .toThrow(/pageCount drift/)
+  }, 60_000)
 })

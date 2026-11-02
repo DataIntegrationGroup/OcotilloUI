@@ -1,30 +1,30 @@
 {
   "A": {
     "configName": "A",
-    "pageCount": 6,
+    "pageCount": 5,
     "imageCount": 2,
     "byteSize": 20958,
-    "byteHash": "63c2191a115e3821969e6ebd8fa56c8d98328467930c1d911fd9a01424fbb101"
+    "byteHash": "901ef1367da4940ff713c042d9ec9321fbde9656ec40ab26edd6de80b94ac2cf"
   },
   "B": {
     "configName": "B",
-    "pageCount": 5,
+    "pageCount": 4,
     "imageCount": 0,
     "byteSize": 18810,
-    "byteHash": "408eb90aa6f43d3f11f35431d0498a12dac583af8157fef81873b344c88be117"
+    "byteHash": "68926ef24b986ce3ecc1f966dab7de57802dd8d66f42fed828ab1701f8d736da"
   },
   "C": {
     "configName": "C",
-    "pageCount": 5,
+    "pageCount": 4,
     "imageCount": 2,
     "byteSize": 20077,
-    "byteHash": "2a5635a45c05420a6396c38bce3b3e8792e2798ba910e3697b58972ffd22bd8b"
+    "byteHash": "ed90a07462d2cb1e2dba86103c04f82646cc471aa9931ce50169842944058436"
   },
   "D": {
     "configName": "D",
-    "pageCount": 3,
+    "pageCount": 2,
     "imageCount": 2,
     "byteSize": 13361,
-    "byteHash": "f5b9a9ec2e6d0f796920c3adfc609ba4cd2b2907a1e79d9c03f99d810ad27969"
+    "byteHash": "694d756ab0eb0d016a918ff614abe0ffa378876a023b952f07db92698f99ac8a"
   }
 }
