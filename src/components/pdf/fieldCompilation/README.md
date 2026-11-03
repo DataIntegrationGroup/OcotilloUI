@@ -25,7 +25,7 @@ src/components/pdf/
 | `table.tsx` | `PdfTable`, `TableColumn<T>` | Generic tabular data rendering with dynamic columns |
 | `section.tsx` | `NoteSection` | Title-accent bar + content card for sections |
 | `format.ts` | 14 helpers (`renderValue`, `formatNumeric`, `notesToText`, etc.) | Pure value transformations (no React dependencies) |
-| `styles.ts` | `createFieldCompilationStyles`, `FieldCompilationStyles` | Density-aware style generation |
+| `styles/` | `createFieldCompilationStyles`, `FieldCompilationStyles` | Density-aware style generation — 9 concern-scoped modules merged by one `StyleSheet.create` barrel in `index.ts` |
 
 ### Usage Patterns
 
