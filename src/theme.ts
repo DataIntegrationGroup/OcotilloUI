@@ -20,7 +20,7 @@ import { gray, zinc, white } from '@/palette'
  * Nine neutral values shared with the PDF pipeline (src/palette.ts, src/components/pdf/fieldCompilation/tokens.ts)
  * are now imported from src/palette.ts rather than defined here as hex literals.
  */
-const colors = {
+export const colors = {
   white: '#ffffff',
   black: '#000000',
 
