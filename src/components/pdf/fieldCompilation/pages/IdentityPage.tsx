@@ -215,7 +215,23 @@ export function IdentityPage({
               </View>
             </View>
 
-            {/* ── Rows 2–7: flex columns that flow into content width ─── */}
+            {/* Pre-visit Notes — moved below Field Notes */}
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionTitleBar}>
+                <View
+                  style={[
+                    styles.accentBar,
+                    { height: accentBarHeight },
+                  ]}
+                />
+                <Text style={styles.sectionTitle}>Pre-visit Notes</Text>
+              </View>
+              <View style={styles.preVisitPad}>
+                {ruledLines('previsit', 3)}
+              </View>
+            </View>
+
+            {/* ── Rows: flex columns that flow into content width ─── */}
 
             {/* Row 2: Contact details */}
             <View style={styles.sectionCard}>
@@ -293,21 +309,6 @@ export function IdentityPage({
               />
             </View>
 
-            {/* Row 4: Site Preparation */}
-            <View style={styles.sectionCard}>
-              <View style={styles.sectionTitleBar}>
-                <View
-                  style={[
-                    styles.accentBar,
-                    { height: accentBarHeight },
-                  ]}
-                />
-                <Text style={styles.sectionTitle}>Site Preparation</Text>
-              </View>
-              <View style={styles.preVisitPad}>
-                {ruledLines('previsit', 3)}
-              </View>
-            </View>
 
             {/* Row 5: Previous Measurements table */}
             <PdfTable
