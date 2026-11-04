@@ -213,16 +213,6 @@ export function IdentityPage({
                   </Text>
                 </View>
               </View>
-              <View style={styles.rowRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Last Measurements: </Text>
-                    {measurements[0]
-                      ? `${measurements[0].date} (${measurements[0].dtw} ft)`
-                      : emptyPlaceholder}
-                  </Text>
-                </View>
-              </View>
             </View>
 
             {/* ── Rows 2–7: flex columns that flow into content width ─── */}
