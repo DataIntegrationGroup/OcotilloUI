@@ -168,15 +168,12 @@ export function IdentityPage({
               </View>
               <View style={styles.rowRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Primary Contact: </Text>
-                    {show(primaryContact?.name)}
-                  </Text>
+                  <Text style={styles.line} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.line}>
-                    <Text style={styles.label}>Secondary Contact: </Text>
-                    {show(secondaryContact?.name)}
+                    <Text style={styles.label}>Elevation: </Text>
+                    {num(well.current_location?.properties?.elevation, 0)}
                   </Text>
                 </View>
               </View>
@@ -187,18 +184,26 @@ export function IdentityPage({
                     {locationNotesText(well)}
                   </Text>
                 </View>
+              </View>
+              <NoteSection
+                styles={styles}
+                title="Direction notes"
+                value={directionNotesValue(directionNotes)}
+                accentBarHeight={accentBarHeight}
+              />
+              <NoteSection
+                styles={styles}
+                title="MP Description"
+                value={
+                  well.measuring_point_description?.trim() || emptyPlaceholder
+                }
+                accentBarHeight={accentBarHeight}
+              />
+              <View style={styles.rowRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.line}>
                     <Text style={styles.label}>MP Height: </Text>
                     {`${num(well.measuring_point_height)} ${well.measuring_point_height_unit ?? ''}`.trim()}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.rowRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.line}>
-                    <Text style={styles.label}>Elevation: </Text>
-                    {num(well.current_location?.properties?.elevation, 0)}
                   </Text>
                 </View>
                 <View style={{ flex: 1 }}>
@@ -292,22 +297,8 @@ export function IdentityPage({
               </View>
               <NoteSection
                 styles={styles}
-                title="Direction notes"
-                value={directionNotesValue(directionNotes)}
-                accentBarHeight={accentBarHeight}
-              />
-              <NoteSection
-                styles={styles}
                 title="Measurement Notes"
                 value={notesToText(well.measuring_notes ?? [])}
-                accentBarHeight={accentBarHeight}
-              />
-              <NoteSection
-                styles={styles}
-                title="MP Description"
-                value={
-                  well.measuring_point_description?.trim() || emptyPlaceholder
-                }
                 accentBarHeight={accentBarHeight}
               />
             </View>
