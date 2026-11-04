@@ -342,7 +342,7 @@ export function IdentityPage({
                             { height: accentBarHeight },
                           ]}
                         />
-                        <Text style={styles.sectionTitle}>Previous DTW</Text>
+                        <Text style={styles.sectionTitle}>Previous DTW below MP</Text>
                       </View>
                       <View style={styles.newMeasurementHeaderRow}>
                         <Text style={styles.newMeasurementFieldLabel}>
