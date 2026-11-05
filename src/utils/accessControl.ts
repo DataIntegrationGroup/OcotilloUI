@@ -129,7 +129,9 @@ const resourcePolicies: Record<string, ResourcePolicy> = {
     show: editorRoles,
     delete: adminRoles,
   },
-  'ocotillo.thing-well-pdf-preview': { list: adminRoles, show: adminRoles },
+  // Editors produce the owner-facing field sheet, as they do the chemistry
+  // report beside it on the well page.
+  'ocotillo.thing-well-pdf-preview': { list: editorRoles, show: editorRoles },
   'ocotillo.thing-well-batch-export': { list: viewerRoles, show: viewerRoles },
   'ocotillo.thing-well-projects': { list: viewerRoles, show: viewerRoles },
   'ocotillo.asset-unassociated': {

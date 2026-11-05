@@ -91,6 +91,7 @@ const expectedAccessByScenario: Scenario[] = [
       'ocotillo.chemistry-report',
       'ocotillo.asset-unassociated',
       'ocotillo.thing-well-batch-export',
+      'ocotillo.thing-well-pdf-preview',
       'ocotillo.thing-well-projects',
     ],
   },
@@ -223,11 +224,18 @@ const specialResourceExpectations: Array<{
     expected: true,
   },
   {
-    name: 'AMP editor cannot access hidden PDF preview',
-    groups: ['AMP.Editor'],
+    name: 'AMP viewer cannot access the field sheet PDF preview',
+    groups: ['AMP.Viewer'],
     resource: 'ocotillo.thing-well-pdf-preview',
     action: 'show',
     expected: false,
+  },
+  {
+    name: 'AMP editor can access the field sheet PDF preview',
+    groups: ['AMP.Editor'],
+    resource: 'ocotillo.thing-well-pdf-preview',
+    action: 'show',
+    expected: true,
   },
   {
     name: 'AMP admin can access hidden PDF preview',
