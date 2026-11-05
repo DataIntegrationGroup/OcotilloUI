@@ -65,7 +65,6 @@ export const WellPDFActionsButton = ({
   const { open: notify } = useNotification()
   const {
     isLoading: isPermissionsLoading,
-    canManageAmp,
     canViewConfidential,
     canEditAmp,
   } = useAccessCapabilities()
@@ -74,8 +73,10 @@ export const WellPDFActionsButton = ({
     useState<WellReportType>('field-sheet')
   const [isGenerating, setIsGenerating] = useState(false)
 
-  // Offered to editors, matching the report route's own access policy.
-  const canOfferChemistryReport = canEditAmp
+  // Both reports are an editor's to produce, matching the field sheet preview
+  // and chemistry report routes' own access policies.
+  const canProduceReports = canEditAmp
+  const canOfferChemistryReport = canProduceReports
 
   const {
     reportYear,
@@ -113,13 +114,13 @@ export const WellPDFActionsButton = ({
   const previewDisabled =
     isPreviewLoading ||
     isPermissionsLoading ||
-    !canManageAmp ||
+    !canProduceReports ||
     isChemistryYearPending
 
   const downloadDisabled =
     isDownloadLoading ||
     isPermissionsLoading ||
-    !canManageAmp ||
+    !canProduceReports ||
     isGenerating ||
     isChemistryYearPending
 
