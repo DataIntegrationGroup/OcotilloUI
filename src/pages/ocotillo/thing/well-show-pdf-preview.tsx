@@ -53,7 +53,7 @@ export const WellShowPdfPreview = () => {
   const theme = useTheme()
   const [isViewerReady, setIsViewerReady] = useState(false)
   const [hydrographImage, setHydrographImage] = useState<string | null>(null)
-  const { canManageAmp, canViewConfidential } = useAccessCapabilities()
+  const { canEditAmp, canViewConfidential } = useAccessCapabilities()
 
   const { control, watch, reset } = useForm<IPdfOptions>({
     defaultValues: PDF_DEFAULT_VALUES,
@@ -239,7 +239,7 @@ export const WellShowPdfPreview = () => {
       headerProps={ocotilloCardHeaderProps}
       contentProps={{ sx: { pt: 1 } }}
       headerButtons={() =>
-        canManageAmp ? (
+        canEditAmp ? (
           <OcotilloHeaderButtons className="flex items-center gap-0">
             <WellPDFDownloadButton
               well={viewWell}
