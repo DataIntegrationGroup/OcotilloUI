@@ -73,10 +73,12 @@ export const WellPDFActionsButton = ({
     useState<WellReportType>('field-sheet')
   const [isGenerating, setIsGenerating] = useState(false)
 
-  // Both reports are an editor's to produce, matching the field sheet preview
-  // and chemistry report routes' own access policies.
-  const canProduceReports = canEditAmp
-  const canOfferChemistryReport = canProduceReports
+  // Each report carries its own gate, matching its route's access policy
+  // (`ocotillo.thing-well-pdf-preview`, `ocotillo.chemistry-report`). Both are
+  // an editor's today. The actions below check the selected report's flag, so
+  // changing one gate here moves the menu and the buttons together.
+  const canProduceFieldSheet = canEditAmp
+  const canProduceChemistryReport = canEditAmp
 
   const {
     reportYear,
@@ -89,7 +91,7 @@ export const WellPDFActionsButton = ({
   } = useWellChemistryReport({
     thingId: id,
     // Only worth asking once the report is on offer at all.
-    enabled: canOfferChemistryReport,
+    enabled: canProduceChemistryReport,
   })
 
   // A well with nothing on file has no report to give, so the option is shown
@@ -101,11 +103,16 @@ export const WellPDFActionsButton = ({
   // empty: the selection falls back instead of acting on a report that is no
   // longer on offer.
   const reportType: WellReportType =
-    selectedReportType === 'chemistry-report' && isChemistryUnavailable
+    selectedReportType === 'chemistry-report' &&
+    (!canProduceChemistryReport || isChemistryUnavailable)
       ? 'field-sheet'
       : selectedReportType
 
   const isChemistry = reportType === 'chemistry-report'
+
+  const canProduceSelectedReport = isChemistry
+    ? canProduceChemistryReport
+    : canProduceFieldSheet
 
   // Waiting on the year is the one thing that has to hold the actions back,
   // since acting early would report on the wrong one.
@@ -114,13 +121,13 @@ export const WellPDFActionsButton = ({
   const previewDisabled =
     isPreviewLoading ||
     isPermissionsLoading ||
-    !canProduceReports ||
+    !canProduceSelectedReport ||
     isChemistryYearPending
 
   const downloadDisabled =
     isDownloadLoading ||
     isPermissionsLoading ||
-    !canProduceReports ||
+    !canProduceSelectedReport ||
     isGenerating ||
     isChemistryYearPending
 
@@ -256,7 +263,7 @@ export const WellPDFActionsButton = ({
           <SelectItem value="field-sheet">
             {REPORT_TYPE_LABELS['field-sheet']}
           </SelectItem>
-          {canOfferChemistryReport ? (
+          {canProduceChemistryReport ? (
             <SelectItem
               value="chemistry-report"
               disabled={isChemistryUnavailable}
