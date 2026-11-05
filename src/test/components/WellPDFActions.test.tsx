@@ -174,8 +174,8 @@ describe('WellPDFActionsButton report type select', () => {
   it('withholds the chemistry report from users who cannot edit', () => {
     mockedUseAccessCapabilities.mockReturnValue({
       isLoading: false,
-      canManageAmp: true,
-      canViewConfidential: true,
+      canManageAmp: false,
+      canViewConfidential: false,
       canEditAmp: false,
     })
 
@@ -188,6 +188,42 @@ describe('WellPDFActionsButton report type select', () => {
     expect(mockedUseWellChemistryReport).toHaveBeenCalledWith(
       expect.objectContaining({ enabled: false })
     )
+  })
+
+  // BDMS-1552: an AMP.Editor was offered the chemistry report but both
+  // actions stayed greyed out, since they were gated on AMP.Admin.
+  it('lets an editor without admin preview and download either report', () => {
+    mockedUseAccessCapabilities.mockReturnValue({
+      isLoading: false,
+      canManageAmp: false,
+      canViewConfidential: true,
+      canEditAmp: true,
+    })
+
+    renderGroup()
+
+    expect(previewButton()).toBeEnabled()
+    expect(downloadButton()).toBeEnabled()
+
+    selectChemistryReport()
+
+    expect(reportTypeSelect()).toHaveValue('chemistry-report')
+    expect(previewButton()).toBeEnabled()
+    expect(downloadButton()).toBeEnabled()
+  })
+
+  it('holds both actions back from a viewer', () => {
+    mockedUseAccessCapabilities.mockReturnValue({
+      isLoading: false,
+      canManageAmp: false,
+      canViewConfidential: false,
+      canEditAmp: false,
+    })
+
+    renderGroup()
+
+    expect(previewButton()).toBeDisabled()
+    expect(downloadButton()).toBeDisabled()
   })
 
   it('generates the field sheet while it is the selected type', async () => {
