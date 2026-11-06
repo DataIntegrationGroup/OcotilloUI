@@ -15,6 +15,14 @@ export const layout = (scale: Scale) =>
       flexDirection: 'row',
       flexWrap: 'nowrap',
       gap: 2,
+      // Indent the rows+columns block (photo strip + all sections/tables) off
+      // both page edges so tables read as bordered cards, not edge-to-edge.
+      // Padding, not margin: this box is width:'100%', and Yoga adds margins
+      // OUTSIDE the width — so margins here would make the box 100% + 96pt and
+      // hang the right margin off the page, clipping the photo strip. Padding
+      // sits inside the 100%, so both edges inset symmetrically.
+      paddingLeft: scale(48, 36, 24),
+      paddingRight: scale(48, 36, 24),
     },
     contentColumn: {
       flex: 2,
