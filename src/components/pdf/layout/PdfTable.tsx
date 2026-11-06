@@ -3,12 +3,28 @@ import type { FieldCompilationStyles } from '../fieldCompilation/styles'
 import { renderValue } from '../fieldCompilation/format'
 
 /**
- * Generic table column definition for PdfTable.
+ * Generic PDF table column definition for PdfTable. `width` stays documented
+ * even though the render path no longer pins each cell to it — weightFromWidth
+ * turns it into a proportional flexGrow so cells share the bounded row width.
  */
 export type TableColumn<T> = {
   key: keyof T | string
   label: string
   width: string
+}
+
+/**
+ * Parse a percentage-based column weight (e.g. "16.67%") into a proportional
+ * grow weight used to fill the row. Keeping the trailing percentage as the
+ * weight preserves the intended per-column proportions while Yoga grows each
+ * child to fit the (now bounded) parent — so cells never overrun the right
+ * page edge even when the percentages sum past 100%, which a pinned
+ * { width } could not guarantee. flexBasis: 0 makes columns fill strictly by
+ * these weights instead of being skewed by per-cell text width.
+ */
+function weightFromWidth(width: string): number {
+  const parsed = Number.parseFloat(width)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
 }
 
 /**
@@ -43,7 +59,7 @@ export const PdfTable = <T extends Record<string, unknown>>({
             style={[
               styles.cellHeader,
               ...(compact ? [styles.compactCellHeader] : []),
-              { width: column.width },
+              { flexGrow: weightFromWidth(column.width), flexBasis: 0 },
             ]}
           >
             {column.label}
@@ -65,7 +81,7 @@ export const PdfTable = <T extends Record<string, unknown>>({
                 style={[
                   styles.cell,
                   ...(compact ? [styles.compactCell] : []),
-                  { width: column.width },
+                  { flexGrow: weightFromWidth(column.width), flexBasis: 0 },
                 ]}
               >
                 {rows.length > 0
