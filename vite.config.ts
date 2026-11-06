@@ -4,7 +4,92 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
 import { writeFileSync } from 'fs'
-import { resolve } from 'path'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+/** CDN-hosted pdf.js worker — must match the version in react-pdf's nested pdfjs-dist. */
+const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.296/pdf.worker.min.mjs'
+
+/**
+ * Vite plugin that patches `'pdf.worker.mjs'` → CDN URL in both dev and
+ * production builds.
+ *
+ * **Dev mode (serve)** — intercepts pre-bundled dependency responses at the
+ * HTTP middleware layer.  Pre-bundled deps are served as static files by
+ * Vite's dev server, bypassing the normal transform pipeline.
+ *
+ * **Production (build)** — patches generated JS chunks in `generateBundle`,
+ * replacing the relative worker path so nginx serves nothing and the browser
+ * loads the CDN-hosted worker instead.
+ */
+function patchPdfWorker() {
+  return {
+    name: 'vite-patch-pdf-worker',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = req.url || ''
+        if (req.method !== 'GET') return next()
+
+        // Vite serves pre-bundled deps at /@fs/<absolute>/node_modules/.vite/deps/
+        if (!url.includes('/.vite/deps/')) return next()
+
+        const originalEnd = res.end.bind(res)
+        const chunks: Buffer[] = []
+
+        // Override write to collect chunks
+        ;(res as any).write = function (chunk: Buffer | string): boolean {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+          return true
+        }
+
+        res.end = function (_chunk?: Buffer | string, _encoding?: BufferEncoding | (() => void), cb?: () => void): void {
+          if (_chunk) {
+            chunks.push(Buffer.isBuffer(_chunk) ? _chunk : Buffer.from(_chunk, _encoding as BufferEncoding))
+          }
+
+          const full = Buffer.concat(chunks).toString('utf-8')
+          if (!full.includes("pdf.worker.mjs")) {
+            // No patch needed — call through to original
+            res.end = originalEnd
+            res.end(_chunk, _encoding, cb)
+            return
+          }
+
+          const patched = full.replace(/['"](?:\.\/)?pdf\.worker\.mjs['"]/g, `'${PDFJS_CDN}'`)
+          const buf = Buffer.from(patched)
+
+          // Update Content-Length; don't overwrite Content-Type if already set
+          if (!res.getHeader('Content-Type')) {
+            res.setHeader('Content-Type', 'application/javascript')
+          }
+          res.setHeader('Content-Length', String(buf.byteLength))
+          originalEnd.call(res, buf as any, cb)
+        }
+
+        next()
+      })
+    },
+
+    /** Patch build output for production */
+    generateBundle(_options, bundle) {
+      const regex = /['"](?:\.\/)?pdf\.worker\.mjs['"]/g
+      for (const [filename, chunk] of Object.entries(bundle)) {
+        if (chunk.type !== 'chunk') continue
+        const code = chunk.code
+        if (!code.includes('pdf.worker.mjs')) continue
+
+        const patched = code.replace(regex, `'${PDFJS_CDN}'`)
+        // Only write when the output actually changed — prevents unnecessary
+        // cache stamps from the `write-version-json` hook's closeBundle.
+        if (patched !== chunk.code) {
+          chunk.code = patched
+        }
+      }
+    },
+  }
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
@@ -30,6 +115,7 @@ export default defineConfig(({ mode }) => {
       dedupe: ['react', 'react-dom', 'scheduler', 'use-sync-external-store'],
     },
     plugins: [
+      patchPdfWorker(),
       // Write dist/version.json at the end of each build so polling clients can
       // detect that a new version has been deployed. We write to dist/ only so
       // public/version.json (the dev placeholder) is never modified locally.
