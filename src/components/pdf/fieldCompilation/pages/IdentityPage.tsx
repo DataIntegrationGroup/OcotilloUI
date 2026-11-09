@@ -450,7 +450,14 @@ export function IdentityPage({
                 <View style={styles.newMeasurementField}>
                   <Text style={styles.newMeasurementFieldLabel}>
                     Notes: </Text>
-                  <View style={styles.fillLine} />
+                  {/* PR #428 item 13: three fill rows under Notes (was one).
+                      The stack keeps a 1 pt gap between the lines; width and
+                      left/right edges are unchanged from the single line. */}
+                  <View style={styles.notesLineStack}>
+                    <View style={styles.fillLine} />
+                    <View style={styles.fillLine} />
+                    <View style={styles.fillLine} />
+                  </View>
                 </View>
               </View>
             </View>
