@@ -64,7 +64,8 @@ const measure = async (blob: Blob, photoCount: number): Promise<PhotoGeometry> =
     for (let i = 0; i < ops.fnArray.length; i++) {
       if (
         ops.fnArray[i] === pdfjsLib.OPS.paintImageXObject ||
-        ops.fnArray[i] === pdfjsLib.OPS.paintJpegXObject
+        ops.fnArray[i] ===
+          (pdfjsLib.OPS as unknown as Record<string, number>).paintJpegXObject
       ) {
         imageCount++
       }

@@ -51,11 +51,13 @@ describe('gate: page 1 carries Site Notes inside Previous Measurements, last two
     const fixture = buildFieldSheetPageOneFixture({ photos: 3 })
     const well = {
       ...fixture.well,
+      // The gate only cares about content order and count; the surrounding
+      // note envelope is not what it asserts on.
       site_notes: [
         { content: NOTE_OLDEST },
         { content: NOTE_MIDDLE },
         { content: NOTE_NEWEST },
-      ],
+      ] as unknown as typeof fixture.well.site_notes,
     }
 
     const blob = await pdf(
