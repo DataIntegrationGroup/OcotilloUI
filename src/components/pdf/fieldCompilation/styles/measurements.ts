@@ -13,7 +13,10 @@ export const measurements = (scale: Scale) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 1,
+      // Extra bottom gap (was 1) so the Previous DTW label that now sits on its
+      // own line stays >=10pt below the box title, clear of it and above the
+      // Date/Time row at every photo width. Tuned against pr428 gate.
+      marginBottom: 3,
     },
     newMeasurementTitle: {
       fontSize: 9,

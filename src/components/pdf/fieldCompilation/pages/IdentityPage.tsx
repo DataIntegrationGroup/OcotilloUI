@@ -347,28 +347,30 @@ export function IdentityPage({
               <View style={styles.newMeasurementBox}>
                 <View style={styles.newMeasurementHeaderRow}>
                   <Text style={styles.newMeasurementTitle}>New Measurement</Text>
-                  {measurements[0] ? (
-                    <View style={styles.sectionCard}>
-                      <View style={styles.sectionTitleBar}>
-                        <View
-                          style={[
-                            styles.accentBar,
-                            { height: accentBarHeight },
-                          ]}
-                        />
-                        <Text style={styles.sectionTitle}>Previous DTW below MP</Text>
-                      </View>
-                      <View style={styles.newMeasurementHeaderRow}>
-                        <Text style={styles.newMeasurementFieldLabel}>
-                          {measurements[0].dtw} ft
-                        </Text>
-                        <Text style={styles.newMeasurementFieldLabel}>
-                          {measurements[0].date}
-                        </Text>
-                      </View>
-                    </View>
-                  ) : null}
                 </View>
+                {measurements[0] ? (
+                    <>
+                      {/* Previous DTW label on its own line; value + observation date below it,
+                      {/*  reusing the Date/Time/Staff column row so the value sits under Date
+                      {/*  and the date under Time - aligned at both photo widths. */}
+                      <Text style={styles.newMeasurementFieldLabel}>
+                        Previous DTW below MP
+                      </Text>
+                      <View style={styles.newMeasurementFieldRow}>
+                        <View style={styles.newMeasurementField}>
+                          <Text style={styles.newMeasurementFieldLabel}>
+                            {measurements[0].dtw} ft
+                          </Text>
+                        </View>
+                        <View style={styles.newMeasurementField}>
+                          <Text style={styles.newMeasurementFieldLabel}>
+                            {measurements[0].date}
+                          </Text>
+                        </View>
+                        <View style={styles.newMeasurementField} />
+                      </View>
+                    </>
+                ) : null}
                 <View style={styles.newMeasurementFieldRow}>
                 <View style={styles.newMeasurementField}>
                   <Text style={styles.newMeasurementFieldLabel}>
