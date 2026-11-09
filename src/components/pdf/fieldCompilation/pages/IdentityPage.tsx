@@ -26,6 +26,7 @@ import {
   equipmentNotesText,
   formatNumeric,
   locationNotesText,
+  lastTwoSiteNotes,
   notesToText,
   renderValue,
   siteNameFromAlternateIds,
@@ -311,14 +312,26 @@ export function IdentityPage({
 
 
             {/* Row 5: Previous Measurements table */}
-            <PdfTable
-              styles={styles}
-              title="Previous Measurements"
-              columns={lastMeasurementsColumns}
-              rows={measurements}
-              compact
-              accentBarHeight={accentBarHeight}
-            />
+            {(() => {
+              // Last two site notes, newest-first — one per measurement row so
+              // the newest note lands on the newest row (lastMeasurementsRows is
+              // already sorted desc by datetime). Fewer notes than rows leaves
+              // the extra cells blank.
+              const notes = lastTwoSiteNotes(well)
+              return (
+                <PdfTable
+                  styles={styles}
+                  title="Previous Measurements"
+                  columns={lastMeasurementsColumns}
+                  rows={measurements.map((row, i) => ({
+                    ...row,
+                    siteNotes: notes[i] ?? '',
+                  }))}
+                  compact
+                  accentBarHeight={accentBarHeight}
+                />
+              )
+            })()}
 
             {/* Row 5b: New Measurement write-in box */}
             <View style={styles.sectionCard}>
@@ -477,33 +490,13 @@ export function IdentityPage({
               compact
             />
 
-            {/* ── Site Notes as bottom field inside Last Measurements table ── */}
-            {(() => {
-              const sn = siteNotesText(well)
-              return (
-                <View style={[styles.table]}>
-                  <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
-                    <Text
-                      style={[styles.cell, { flex: 1, fontWeight: 700 }]}
-                    >
-                      {siteNotesFieldLabel}
-                    </Text>
-                    <Text
-                      style={[styles.cell, { flex: 5, lineHeight: 1.15 }]}
-                    >
-                      {sn}
-                    </Text>
-                  </View>
-                </View>
-              )
-            })()}
+            {/* ── End content column ─────────────────────────────────── */}
           </View>
-          {/* ── End content column ─────────────────────────────────── */}
 
           {/* ── Photo column (33.33%, persistent right strip) ──────── */}
           {showPhotos && includeAssets && imageAssets.length > 0 && (
           <View style={styles.photoColumn}>
-            {imageAssets.map((asset: any) => (
+            {imageAssets.slice(0, PHOTO_SLOT_CAP).map((asset: any) => (
               <View key={asset.id ?? asset.signed_url} style={styles.photoCell}>
                 <View style={styles.imageWrap}>
                   <Image src={asset.signed_url} style={styles.image} />

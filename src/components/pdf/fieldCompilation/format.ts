@@ -135,6 +135,31 @@ export const siteNotesText = (well: IWell): string => {
   return lines.length > 0 ? lines.join('\n') : '-'
 }
 
+/**
+ * The last two site notes, newest first — one entry per row so the newest note
+ * pairs with the newest measurement. Reads `well.site_notes`, falling back to
+ * `well.notes` (matching siteNotesText). Returns a short array: length 0 when
+ * there are no notes, 1 for a single note, 2 once two exist — never longer, so
+ * extra rows simply leave their cell blank (`renderValue` falls back via '-'
+ * only when the key is missing; callers treat '' as empty).
+ */
+export const lastTwoSiteNotes = (well: IWell): string[] => {
+  const sn = (well.site_notes as any) || []
+  const nt = (well.notes as any) || []
+  const notes =
+    sn.length > 0
+      ? sn
+      : nt.length > 0
+        ? nt
+        : []
+  const latest = notes
+    .map((n: any) => n?.content?.trim())
+    .filter((c: string) => c)
+    .slice(-2)
+    .reverse() // newest first, to pair with the newest measurement rows
+  return latest
+}
+
 // ── Measurement row builders ────────────────────────────────────────────────
 
 export const lastMeasurementsRows = (

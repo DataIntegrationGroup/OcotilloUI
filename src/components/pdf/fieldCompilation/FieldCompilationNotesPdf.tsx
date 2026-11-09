@@ -17,6 +17,7 @@ import {
   sanitizeContacts,
 } from '@/utils'
 import { PHOTO_SLOT_CAP } from '../fieldSheetPageLayout'
+import { registerNoHyphenation } from './hyphenation'
 import { formatContactPhones } from '../fieldCompilationPhoneFormatter'
 import { PageFooter } from '../layout/PageFooter'
 import {
@@ -61,6 +62,9 @@ import { IdentityPage } from './pages/IdentityPage'
 import { GeneralNotesPage } from './pages/GeneralNotesPage'
 import { HydrographMeasurementsPage } from './pages/HydrographMeasurementsPage'
 import { BlankPage } from './pages/BlankPage'
+
+// Wrap at spaces only; see hyphenation.ts (PR #428 item 10 — Site Notes wraps).
+registerNoHyphenation()
 
 export const FieldCompilationNotesPage = ({
   well,

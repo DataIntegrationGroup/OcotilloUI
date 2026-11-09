@@ -2,15 +2,20 @@
 // Moved verbatim out of page.tsx (C2a); no value changed.
 
 export const lastMeasurementsColumns = [
-  { key: 'date', label: 'Date', width: '16.67%' },
-  { key: 'dtw', label: 'DTW Below MP (ft)', width: '16.67%' },
-  { key: 'mpHeight', label: 'MP Ht (ft)', width: '16.67%' },
-  { key: 'method', label: 'Method', width: '16.67%' },
-  { key: 'status', label: 'Level Status', width: '16.67%' },
+  { key: 'date', label: 'Date', width: '13%' },
+  { key: 'dtw', label: 'DTW Below MP (ft)', width: '13%' },
+  { key: 'mpHeight', label: 'MP Ht (ft)', width: '8%' },
+  { key: 'method', label: 'Method', width: '11%' },
+  { key: 'status', label: 'Level Status', width: '12%' },
   // ALIGNMENT A7: the mock-up carries STAFF. No per-reading staff field
   // exists in the data model, so it prints the empty placeholder until one
   // does — the column is the argument for collecting it.
-  { key: 'staff', label: 'Staff', width: '16.67%' },
+  { key: 'staff', label: 'Staff', width: '8%' },
+  // ALIGNMENT A7 + PR#428 item 10/14: Site Notes joins the measurement rows as
+  // its own (last) column, showing only the two most recent notes — newest note
+  // paired with the newest row. Methods/Level Status keep enough width that
+  // their headers do not break mid-word.
+  { key: 'siteNotes', label: 'Site Notes', width: '35%' },
 ] as const
 
 export const equipmentColumns = [
