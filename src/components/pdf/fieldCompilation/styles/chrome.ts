@@ -10,18 +10,21 @@ export const chrome = (scale: Scale) =>
       fontSize: scale(9.5, 9, 8.5),
       color: pdfTokens.textPrimary,
     },
+    pageFrame: {
+      paddingHorizontal: scale(48, 36, 24),
+    },
     pageDate: {
       position: 'absolute',
       top: 16,
-      right: 20,
+      right: scale(48, 36, 24),
       fontSize: scale(9.5, 9, 8.5),
       color: pdfTokens.textPrimary,
     },
     footer: {
       position: 'absolute',
       bottom: scale(12, 10, 8),
-      left: scale(22, 20, 14),
-      right: scale(22, 20, 14),
+      left: scale(48, 36, 24),
+      right: scale(48, 36, 24),
     },
     footerText: {
       fontSize: scale(8, 7.5, 7),
@@ -35,7 +38,7 @@ export const chrome = (scale: Scale) =>
     title: {
       fontSize: 15,
       fontWeight: 700,
-      textAlign: 'center',
+      textAlign: 'left',
     },
     headerDate: {
       fontSize: 9,

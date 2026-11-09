@@ -193,6 +193,7 @@ export const FieldCompilationNotesPage = ({
             accentBarHeight={accentBarHeight}
             renderPageDate={renderPageDate}
             showDate={showDate}
+            firstPageOnly={firstPageOnly}
           />
 
           <HydrographMeasurementsPage
@@ -202,12 +203,15 @@ export const FieldCompilationNotesPage = ({
             showDate={showDate}
             hydrographImage={hydrographImage}
             manualMeasurements={manualMeasurements}
+            firstPageOnly={firstPageOnly}
           />
 
           <BlankPage
+            well={well}
             styles={styles}
             renderPageDate={renderPageDate}
             showDate={showDate}
+            firstPageOnly={firstPageOnly}
           />
         </>
       )}

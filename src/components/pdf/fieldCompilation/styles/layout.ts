@@ -17,12 +17,10 @@ export const layout = (scale: Scale) =>
       gap: 2,
       // Indent the rows+columns block (photo strip + all sections/tables) off
       // both page edges so tables read as bordered cards, not edge-to-edge.
-      // Padding, not margin: this box is width:'100%', and Yoga adds margins
-      // OUTSIDE the width — so margins here would make the box 100% + 96pt and
-      // hang the right margin off the page, clipping the photo strip. Padding
-      // sits inside the 100%, so both edges inset symmetrically.
-      paddingLeft: scale(48, 36, 24),
-      paddingRight: scale(48, 36, 24),
+      // The inset now comes from the pageFrame view that wraps this box on
+      // every page (styles.pageFrame); this box stays width:'100%' of that
+      // frame so page 1 is not double-inset. Padding lives in pageFrame, not
+      // here.
     },
     contentColumn: {
       flex: 2,

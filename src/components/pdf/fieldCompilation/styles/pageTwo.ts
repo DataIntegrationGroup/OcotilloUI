@@ -10,7 +10,7 @@ export const pageTwo = (scale: Scale) =>
     },
     hydrographImage: {
       width: '100%',
-      height: 250,
+      height: 396,
       objectFit: 'contain',
       marginBottom: 8,
       maxWidth: '100%',

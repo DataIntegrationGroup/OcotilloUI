@@ -92,8 +92,9 @@ export function IdentityPage({
 }): ReactElement {
   return (
       <Page size="LETTER" style={styles.page}>
-        <PageFooter wellId={well.name} styles={styles} totalPages={firstPageOnly ? 1 : 4} />
+        <PageFooter wellId={well.name} pageNumber={1} styles={styles} totalPages={firstPageOnly ? 1 : 4} />
         {showDate ? renderPageDate() : null}
+        <View style={styles.pageFrame}>
         <View style={styles.header}>
           <Text style={styles.title}>Field Compilation Notes</Text>
         </View>
@@ -533,6 +534,8 @@ export function IdentityPage({
           {/* ── End photo column ───────────────────────────────────── */}
         </View>
         {/* ── End columnContainer ──────────────────────────────────────── */}
+        </View>
+        {/* ── End pageFrame ─────────────────────────────────────────── */}
       </Page>
   )
 }
