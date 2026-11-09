@@ -506,6 +506,19 @@ export function IdentityPage({
                 </View>
               </View>
             ))}
+            {/* PR #428 item 1: with one or two photos the strip keeps the empty
+                slots as dashed frames captioned "No photo", so a tech can see
+                how many more photos the sheet expects. */}
+            {Array.from({
+              length: Math.max(0, PHOTO_SLOT_CAP - imageAssets.length),
+            }).map((_, slot) => (
+              <View key={`photo-slot-empty-${slot}`} style={styles.photoCell}>
+                <View style={styles.imageWrap}>
+                  <View style={styles.photoSlotPlaceholder} />
+                  <Text style={styles.imageLabel}>No photo</Text>
+                </View>
+              </View>
+            ))}
           </View>
           )}
           {/* ── End photo column ───────────────────────────────────── */}

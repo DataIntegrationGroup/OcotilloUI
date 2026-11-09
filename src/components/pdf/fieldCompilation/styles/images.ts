@@ -1,6 +1,13 @@
 import { pdfTokens } from '../tokens'
 import type { Scale } from './scale'
 
+/**
+ * Photo frame height in points. PR #428 item 1 ("make photos smaller"): 140 pt
+ * was too tall for the right strip and pushed the last measurement row down.
+ * 100 pt keeps three frames plus captions inside the strip.
+ */
+export const PHOTO_CELL_HEIGHT = 100
+
 export const images = (scale: Scale) =>
   ({
     photoCell: {
@@ -21,9 +28,18 @@ export const images = (scale: Scale) =>
     },
     image: {
       width: '100%',
-      height: 140,
+      height: PHOTO_CELL_HEIGHT,
       objectFit: 'cover',
       borderWidth: 1,
+      borderColor: pdfTokens.borderTable,
+      borderRadius: 4,
+      backgroundColor: pdfTokens.white,
+    },
+    photoSlotPlaceholder: {
+      width: '100%',
+      height: PHOTO_CELL_HEIGHT,
+      borderWidth: 1,
+      borderStyle: 'dashed',
       borderColor: pdfTokens.borderTable,
       borderRadius: 4,
       backgroundColor: pdfTokens.white,
