@@ -302,17 +302,32 @@ export const InternalCollectionsPanel = ({
                     >
                       Schema
                     </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Download fontSize="small" />}
-                      disabled={!row.id || downloadingId === row.id}
-                      onClick={() =>
-                        row.id && handleDownloadCsv(row.id, row.title)
+                    <Tooltip
+                      title={
+                        row.id === 'water_chemistry' || row.id === 'waterlevels'
+                          ? 'CSV export is currently unavailable for this dataset.'
+                          : ''
                       }
                     >
-                      {downloadingId === row.id ? 'Preparing...' : 'CSV'}
-                    </Button>
+                      <span>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<Download fontSize="small" />}
+                          disabled={
+                            !row.id ||
+                            row.id === 'water_chemistry' ||
+                            row.id === 'waterlevels' ||
+                            downloadingId === row.id
+                          }
+                          onClick={() =>
+                            row.id && handleDownloadCsv(row.id, row.title)
+                          }
+                        >
+                          {downloadingId === row.id ? 'Preparing...' : 'CSV'}
+                        </Button>
+                      </span>
+                    </Tooltip>
                   </Stack>
                 </TableCell>
               </TableRow>
