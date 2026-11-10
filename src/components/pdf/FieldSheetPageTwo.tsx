@@ -142,7 +142,7 @@ export const FieldSheetPageTwo = ({
               { height: 6 },
             ]}
           />
-          <Text style={styles.previousDtwTitle}>Previous DTW Below MP</Text>
+          <Text style={styles.previousDtwTitle}>Previous Depth to Water Below Ground Surface</Text>
         </View>
         <View style={styles.previousDtwTable}>
           <View style={[styles.row, styles.headerRow]}>
@@ -150,7 +150,7 @@ export const FieldSheetPageTwo = ({
               Date
             </Text>
             <Text style={[styles.cell, styles.headCell, styles.narrowCell]}>
-              DTW Below MP (ft)
+              Depth to Water Below Ground Surface (ft)
             </Text>
           </View>
           <View style={[styles.row, styles.zebraRow]}>

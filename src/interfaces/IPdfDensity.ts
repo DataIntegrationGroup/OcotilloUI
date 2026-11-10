@@ -1,7 +1,5 @@
-export type IPdfDensity = 'comfortable' | 'standard' | 'compact'
+export type IPdfDensity = 'comfortable'
 
 export const PDF_DENSITIES: IPdfDensity[] = [
-  'compact',
-  'standard',
   'comfortable',
 ] as const

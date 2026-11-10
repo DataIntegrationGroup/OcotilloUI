@@ -1,8 +1,5 @@
 import {
   ExpandMore,
-  TableRows,
-  ViewHeadline,
-  ViewStream,
 } from '@mui/icons-material'
 import {
   Accordion,
@@ -25,7 +22,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router'
 import {
   ControlledCheckbox,
-  ControlledRadioFormSelection,
   FieldCompilationNotesPdf,
   HydrographPngExporter,
   WellPDFDownloadButton,
@@ -37,17 +33,11 @@ import {
 } from '@/components/OcotilloPageHeader'
 import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
-import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
+import { IPdfOptions, optionalFields } from '@/interfaces'
 import { IWell } from '@/interfaces/ocotillo'
 import { IHydrographDatasource } from '@/interfaces/st2'
 import { getLabelFromOptionalPdfFieldKey } from '@/utils'
 import { sampleMethodsBySampleId } from '@/utils/sampleMethods'
-
-const densityIcons = {
-  compact: <ViewHeadline fontSize="small" />,
-  standard: <TableRows fontSize="small" />,
-  comfortable: <ViewStream fontSize="small" />,
-} as const
 
 export const WellShowPdfPreview = () => {
   const { id } = useParams()
@@ -83,15 +73,6 @@ export const WellShowPdfPreview = () => {
       return () => clearTimeout(timer)
     }
   }, [isLoading])
-
-  const densityOptions = PDF_DENSITIES.map((value) => ({
-    value,
-    label: value
-      .split('-')
-      .map((w) => w[0].toUpperCase() + w.slice(1))
-      .join(' '),
-    icon: densityIcons[value],
-  }))
 
   const hydrographDatasource = useMemo<IHydrographDatasource[]>(() => {
     if (!observations?.length) return []
@@ -330,12 +311,6 @@ export const WellShowPdfPreview = () => {
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-              <ControlledRadioFormSelection
-                name="density"
-                control={control}
-                label="Density:"
-                options={densityOptions}
-              />
               <Stack direction="column">
                 <Typography>Optional Fields:</Typography>
                 {optionalFields.map((fieldName) => (
@@ -405,7 +380,7 @@ export const WellShowPdfPreview = () => {
                 sensorDeployments={sensorDeployments}
                 hydrographImage={hydrographImage}
                 includeConfidentialContacts={canViewConfidential}
-                density={currentOptions?.density ?? 'standard'}
+                density={currentOptions?.density ?? 'comfortable'}
                 sampleMethodsBySampleId={sampleMethodsBySampleId(sample)}
                 includeAssets={currentOptions?.includeAssets ?? true}
               />

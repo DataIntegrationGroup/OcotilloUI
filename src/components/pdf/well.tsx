@@ -53,15 +53,15 @@ export const WellPDF = ({
   includeConfidentialContacts?: boolean
 }) => {
   const density: IPdfDensity =
-    options.density ?? PDF_DEFAULT_VALUES.density ?? 'standard'
-  const isDense = density === 'standard' || density === 'compact'
+    options.density ?? PDF_DEFAULT_VALUES.density ?? 'comfortable'
   const styles = useMemo(() => createPdfStyles(density), [density])
   const filename = useMemo(() => buildPdfFilename(well), [well?.id])
   const visibleContacts = useMemo(
     () => sanitizeContacts(contacts, includeConfidentialContacts),
     [contacts, includeConfidentialContacts]
   )
-  const showAdditionalOnFirstPage = density === 'compact'
+  const showAdditionalOnFirstPage = false
+  const isDense = false
 
   const mostRecentObservation = useMostRecentObservation(observations)
   const mostRecent = mostRecentObservation ?? {}
@@ -142,7 +142,7 @@ export const WellPDF = ({
     <View
       style={{
         width: `${colSpan * 50}%`,
-        marginBottom: density === 'compact' ? 1 : 1.5,
+        marginBottom: 1.5,
       }}
     >
       <Text style={styles.label}>{title}:</Text>

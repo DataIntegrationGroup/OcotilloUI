@@ -153,7 +153,7 @@ export const EquipmentCard = ({
               slots={{ toolbar: EquipmentToolbar }}
               pageSizeOptions={[10, 25, 50]}
               initialState={{
-                density: 'compact',
+                density: 'comfortable',
                 pagination: {
                   paginationModel: { pageSize: 10, page: 0 },
                 },
