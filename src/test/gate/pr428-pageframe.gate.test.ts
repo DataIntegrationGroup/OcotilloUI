@@ -4,13 +4,20 @@
  * Frozen gate. Written by the planner; the worker runs it and never edits it.
  *
  * What it decides: every page of the packet sits inside one margin frame whose
- * left edge is page 1's left edge (36 pt at standard density) and whose right
- * edge is page 1's right edge (576 pt), the page-1 title is left-aligned at
- * that edge, and every page carries its own `Well ID: X | ( n/4 )` footer.
+ * left edge is page 1's left edge (never left of 36 pt) and whose right edge is
+ * page 1's right edge (564 pt), the page-1 title is left-aligned at that edge,
+ * and every page carries its own `Well ID: X | ( n/4 )` footer.
  *
  * Why these assertions and not the constants: `scale(48,36,24)` means
  * comfortable/standard/compact, so hardcoding 48 would pass a page that does
  * not line up with page 1.
+ *
+ * Amendment 2026-11-10 (D25, Rob-approved): the right edge was pinned at 576,
+ * the standard-density value. D18 removed every density but the maximum, so
+ * `scaleForDensity` returns the comfortable argument unconditionally and the
+ * 36 branch is unreachable — every page measures 564.0. FRAME_RIGHT moves
+ * 612 - 36 -> 612 - 48; FRAME_LEFT stays a 36 pt lower bound (nothing renders
+ * left of it, so it remains a valid floor).
  */
 import { pdf } from '@react-pdf/renderer'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
@@ -34,9 +41,9 @@ const apply = (m: M, x: number, y: number) => [
   m[1] * x + m[3] * y + m[5],
 ]
 
-// Page-1 body box at standard density: 612 - 2 * 36.
+// Page-1 body box: 612 - 2 * 48 at the only density D18 ships (comfortable).
 const FRAME_LEFT = 36
-const FRAME_RIGHT = 612 - 36
+const FRAME_RIGHT = 612 - 48
 const TOL = 2
 
 type PageMeasure = {
@@ -211,7 +218,7 @@ describe('PR #428 page frame', () => {
   })
 
   it('the hydrograph box is half a page tall, full frame width', () => {
-    const styles = createFieldCompilationStyles('standard')
+    const styles = createFieldCompilationStyles('comfortable')
     const image = styles.hydrographImage as {
       width?: string | number
       height?: number
