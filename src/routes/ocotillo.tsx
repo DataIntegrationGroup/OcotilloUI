@@ -67,6 +67,7 @@ import {
   ThingIdLinkList,
   ThingIdLinkShow,
 } from '@/pages/ocotillo/thing-id-link'
+import { PacketPrintPage } from '@/pages/print/PacketPrintPage'
 import { WaterChemistryApp } from '@/pages/ocotillo/water-chemistry-app'
 import { WellInventoryForm } from '@/pages/ocotillo/well-inventory-form'
 import {
@@ -290,6 +291,11 @@ export const OcotilloRoutes = () => {
       <Route path="groundwater-level-form">
         <Route index element={<GroundwaterLevelForm />} />
       </Route>
+      {/* Print routes (Tailwind cards, captured to letter PDF) */}
+      <Route
+        path="print/packet/:thingId"
+        element={<PacketPrintPage />}
+      />
       <Route path="well-inventory-form" element={<WellInventoryForm />} />
       <Route path="*" element={<ErrorComponent />} />
     </Routes>
