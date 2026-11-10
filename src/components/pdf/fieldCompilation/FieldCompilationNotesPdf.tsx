@@ -75,7 +75,7 @@ export const FieldCompilationNotesPage = ({
   hydrographImage,
   sampleMethodsBySampleId,
   includeConfidentialContacts,
-  density = 'standard',
+  density = 'comfortable',
   showDate = true,
   emptyPlaceholder = '-',
   notesPlacement = 'column',
@@ -102,9 +102,8 @@ export const FieldCompilationNotesPage = ({
   showPhotos?: boolean
 }) => {
   const styles = useMemo(() => createFieldCompilationStyles(density), [density])
-  // Accent bar height matches the section title fontSize (9 standard).
-  // Density-aware: compact uses 8.5, everything else uses 9.
-  const accentBarHeight = density === 'compact' ? 8.5 : 9
+  // L9: only comfortable density exists; accent bar is always 9.
+  const accentBarHeight = 9
 
   const visibleContacts = useMemo(
     () => sanitizeContacts(contacts, includeConfidentialContacts),
@@ -231,7 +230,7 @@ export const FieldCompilationNotesPdf = ({
   sampleMethodsBySampleId = {},
   includeConfidentialContacts = true,
   standalone = true,
-  density = 'standard',
+  density = 'comfortable',
   showDate = true,
   emptyPlaceholder = '-',
   notesPlacement = 'column',

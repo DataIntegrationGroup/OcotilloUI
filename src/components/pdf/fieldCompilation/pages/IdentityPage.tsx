@@ -24,6 +24,7 @@ import {
   contactAddress,
   contactEmail,
   equipmentNotesText,
+  formatElevation,
   formatNumeric,
   locationNotesText,
   lastTwoSiteNotes,
@@ -174,8 +175,7 @@ export function IdentityPage({
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.line}>
-                    <Text style={styles.label}>Elevation: </Text>
-                    {num(well.current_location?.properties?.elevation, 0)}
+                    <Text style={styles.label}>Elevation: </Text>{formatElevation(well.current_location?.properties)}
                   </Text>
                 </View>
               </View>
@@ -292,27 +292,7 @@ export function IdentityPage({
               </View>
             </View>
 
-            {/* Row 3: Observation */}
-            <View style={styles.sectionCard}>
-              <View style={styles.sectionTitleBar}>
-                <View
-                  style={[
-                    styles.accentBar,
-                    { height: accentBarHeight },
-                  ]}
-                />
-                <Text style={styles.sectionTitle}>Observation</Text>
-              </View>
-              <NoteSection
-                styles={styles}
-                title="Measurement Notes"
-                value={notesToText(well.measuring_notes ?? [])}
-                accentBarHeight={accentBarHeight}
-              />
-            </View>
-
-
-            {/* Row 5: Previous Measurements table */}
+            {/* Row 5: Today's Measurement table */}
             {(() => {
               // Last two site notes, newest-first — one per measurement row so
               // the newest note lands on the newest row (lastMeasurementsRows is
@@ -322,9 +302,9 @@ export function IdentityPage({
               return (
                 <PdfTable
                   styles={styles}
-                  title="Previous Measurements"
+                  title="Today's Measurement"
                   columns={lastMeasurementsColumns}
-                  rows={measurements.map((row, i) => ({
+                  rows={measurements.slice(0, 1).map((row, i) => ({
                     ...row,
                     siteNotes: notes[i] ?? '',
                   }))}
@@ -334,7 +314,41 @@ export function IdentityPage({
               )
             })()}
 
-            {/* Row 5b: New Measurement write-in box */}
+            {/* Row 6: Installed Equipment table */}
+            <PdfTable
+              styles={styles}
+              title="Installed Equipment"
+              columns={equipmentColumns}
+              accentBarHeight={accentBarHeight}
+              rows={sensorDeployments
+                .slice()
+                .sort((a, b) => {
+                  const aTime = a.datetime_installed
+                    ? new Date(a.datetime_installed).getTime()
+                    : 0
+                  const bTime = b.datetime_installed
+                    ? new Date(b.datetime_installed).getTime()
+                    : 0
+                  return bTime - aTime
+                })
+                .slice(0, 2)
+                .map((row) => ({
+                  sensor_type: row.sensor_type,
+                  sensor_model: row.sensor_model,
+                  serial_no: row.serial_no,
+                  hanging_cable_length:
+                    row.hanging_cable_length != null
+                      ? String(row.hanging_cable_length)
+                      : '-',
+                  recording_interval_display:
+                    row.recording_interval_display ?? '-',
+                  datetime_installed: formatAppDate(row.datetime_installed),
+                  notes: row.notes?.trim() || '-',
+                }))}
+              compact
+            />
+
+            {/* Row 7: New Measurement write-in box */}
             <View style={styles.sectionCard}>
               <View style={styles.sectionTitleBar}>
                 <View
@@ -355,7 +369,7 @@ export function IdentityPage({
                       {/*  reusing the Date/Time/Staff column row so the value sits under Date
                       {/*  and the date under Time - aligned at both photo widths. */}
                       <Text style={styles.newMeasurementFieldLabel}>
-                        Previous DTW below MP
+                        Previous Depth to Water Below Ground Surface
                       </Text>
                       <View style={styles.newMeasurementFieldRow}>
                         <View style={styles.newMeasurementField}>
@@ -465,40 +479,6 @@ export function IdentityPage({
               </View>
             </View>
             </View>
-
-            {/* Row 6: Installed Equipment table */}
-            <PdfTable
-              styles={styles}
-              title="Installed Equipment"
-              columns={equipmentColumns}
-              accentBarHeight={accentBarHeight}
-              rows={sensorDeployments
-                .slice()
-                .sort((a, b) => {
-                  const aTime = a.datetime_installed
-                    ? new Date(a.datetime_installed).getTime()
-                    : 0
-                  const bTime = b.datetime_installed
-                    ? new Date(b.datetime_installed).getTime()
-                    : 0
-                  return bTime - aTime
-                })
-                .slice(0, 2)
-                .map((row) => ({
-                  sensor_type: row.sensor_type,
-                  sensor_model: row.sensor_model,
-                  serial_no: row.serial_no,
-                  hanging_cable_length:
-                    row.hanging_cable_length != null
-                      ? String(row.hanging_cable_length)
-                      : '-',
-                  recording_interval_display:
-                    row.recording_interval_display ?? '-',
-                  datetime_installed: formatAppDate(row.datetime_installed),
-                  notes: row.notes?.trim() || '-',
-                }))}
-              compact
-            />
 
             {/* ── End content column ─────────────────────────────────── */}
           </View>

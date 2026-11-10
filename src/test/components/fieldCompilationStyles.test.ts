@@ -87,7 +87,7 @@ const EXPECTED_KEYS = [
   'blankPageText',
 ]
 
-const DENSITIES = ['comfortable', 'standard', 'compact'] as const
+const DENSITIES = ['comfortable'] as const
 
 describe('fieldCompilation style key set (pre-split pin)', () => {
   it('pins 81 keys', () => {
@@ -102,21 +102,19 @@ describe('fieldCompilation style key set (pre-split pin)', () => {
     })
   }
 
-  it('keeps density scaling and the column model intact', () => {
+  it('keeps comfortable density scaling and the column model intact', () => {
     const comfortable = createFieldCompilationStyles('comfortable')
-    const standard = createFieldCompilationStyles('standard')
-    const compact = createFieldCompilationStyles('compact')
+    // L9: density narrowed to one member, so standard/compact arms collapsed;
+    // every call now returns the comfortable sizing (verified verbatim against
+    // the numbers that were already correct for the comfortable arm).
     expect(comfortable.page.fontSize).toBe(9.5)
-    expect(standard.page.fontSize).toBe(9)
-    expect(compact.page.fontSize).toBe(8.5)
-    expect(standard.footer.bottom).toBe(10)
-    expect(compact.footer.bottom).toBe(8)
-    expect(standard.content.gap).toBe(10)
-    expect(standard.columnContainer.gap).toBe(2)
-    expect(standard.contentColumn.flex).toBe(2)
-    expect(standard.photoColumn.flex).toBe(1)
-    expect(standard.leftColumn.width).toBe('57%')
-    expect(standard.rightColumn.width).toBe('43%')
-    expect(standard.table.borderWidth).toBe(1)
+    expect(comfortable.footer.bottom).toBe(12)
+    expect(comfortable.content.gap).toBe(10)
+    expect(comfortable.columnContainer.gap).toBe(2)
+    expect(comfortable.contentColumn.flex).toBe(2)
+    expect(comfortable.photoColumn.flex).toBe(1)
+    expect(comfortable.leftColumn.width).toBe('57%')
+    expect(comfortable.rightColumn.width).toBe('43%')
+    expect(comfortable.table.borderWidth).toBe(1)
   })
 })

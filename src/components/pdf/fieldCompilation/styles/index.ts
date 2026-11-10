@@ -12,7 +12,7 @@ import { table } from './table'
 import { writeIn } from './writeIn'
 
 export const createFieldCompilationStyles = (
-  density: IPdfDensity = 'standard'
+  density: IPdfDensity = 'comfortable'
 ) => {
   const scale = createScale(density)
   // Each module returns a plain literal ending in `as const`. Without it TS widens

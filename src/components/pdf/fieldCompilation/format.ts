@@ -38,6 +38,51 @@ export const formatNumeric = (
   return value.toFixed(fractionDigits)
 }
 
+/**
+ * Properties that make up a well's printed elevation. All three are optional
+ * so a caller can pass `well.current_location?.properties` directly; each part
+ * degrades independently.
+ */
+export type ElevationProperties = {
+  elevation?: number | null
+  elevation_unit?: string | null
+  vertical_datum?: string | null
+}
+
+/**
+ * Renders the well's printed elevation as `value ft (<datum>)`. The value
+ * prints at zero decimals grouped with US thousands separators, the unit
+ * defaults to `ft`, and the vertical datum is appended only when present. A
+ * missing/undefined/NaN elevation returns `empty`; a blank or absent datum drops
+ * the parentheses rather than printing `()` or `(undefined)`. Exported for tests
+ * and display-only callers.
+ */
+export const formatElevation = (
+  properties?: ElevationProperties | null,
+  empty = '-'
+): string => {
+  const elevation = properties?.elevation
+  if (elevation == null || Number.isNaN(elevation)) return empty
+
+  const value = Math.round(elevation).toLocaleString('en-US')
+  const datum = (properties?.vertical_datum ?? '').trim()
+  // A present unit prints trimmed (blank becomes `ft`); with no unit at all a
+  // datum supplies the default so it degrades to `<value> ft (<datum>)`. When
+  // neither is present only the grouped value prints.
+  let unit = ''
+  if (properties.elevation_unit != null) {
+    const t = String(properties.elevation_unit).trim()
+    unit = t === '' ? 'ft' : t
+  } else if (datum) {
+    unit = 'ft'
+  }
+  return datum
+    ? `${value} ${unit} (${datum})`
+    : unit === ''
+      ? value
+      : `${value} ${unit}`
+}
+
 // ── Text formatting helpers ─────────────────────────────────────────────────
 
 export const notesToText = (

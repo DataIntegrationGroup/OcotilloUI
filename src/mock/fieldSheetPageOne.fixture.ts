@@ -52,7 +52,9 @@ const emptyWell = (): IWell =>
     alternate_ids: [],
     site_notes: WELL_SITE_NOTES,
     notes: [],
-    current_location: null,
+    current_location: {
+      properties: { elevation: 6234, elevation_unit: 'ft', vertical_datum: 'NAVD88' },
+    } as never,
   }) as unknown as IWell
 
 // Oldest to newest; the sheet trims to the last two, so this also proves it.

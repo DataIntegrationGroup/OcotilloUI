@@ -10,6 +10,6 @@ export type Scale = (
 
 /** Build the density-bound `scale(c, st, k)` closure used by every style module. */
 export const createScale =
-  (density: IPdfDensity = 'standard'): Scale =>
+  (density: IPdfDensity = 'comfortable'): Scale =>
   (comfortable: number, standard: number, compact: number): number =>
     scaleForDensity(comfortable, standard, compact, density)

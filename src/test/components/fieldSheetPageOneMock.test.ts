@@ -15,7 +15,7 @@ const ONE_PIXEL_PNG =
 
 const renderPageOne = async ({
   photos,
-  density = 'standard',
+  density = 'comfortable',
   notesPlacement = 'column',
   showDate = false,
 }: {
@@ -75,12 +75,10 @@ describe('field sheet page 1 mock-up', () => {
     expect(pageCount).toBe(1)
   })
 
-  it('keeps one page at every density step', async () => {
-    for (const density of ['comfortable', 'standard', 'compact'] as const) {
-      const { pageCount } = await renderPageOne({ photos: 5, density })
+  it('keeps one page at the (now only) comfortable density step', async () => {
+    const { pageCount } = await renderPageOne({ photos: 5, density: 'comfortable' })
 
-      expect(pageCount, density).toBe(1)
-    }
+    expect(pageCount).toBe(1)
   })
 
   it('keeps one page with the notes block at the top', async () => {

@@ -297,10 +297,8 @@ describe('site notes field (lane 32)', () => {
 })
 
 describe('scaleForDensity', () => {
-  it('orders compact < standard < comfortable and defaults to standard', () => {
-    expect(scaleForDensity(20, 16, 12, 'compact')).toBe(12)
-    expect(scaleForDensity(20, 16, 12, 'standard')).toBe(16)
+  it('always returns the comfortable value once density narrows to one', () => {
     expect(scaleForDensity(20, 16, 12, 'comfortable')).toBe(20)
-    expect(scaleForDensity(20, 16, 12)).toBe(16)
+    expect(scaleForDensity(20, 16, 12)).toBe(20)
   })
 })
