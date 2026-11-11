@@ -2,26 +2,26 @@
 // Moved verbatim out of page.tsx (C2a); no value changed.
 
 export const lastMeasurementsColumns = [
-  { key: 'date', label: 'Date', width: '13%' },
-  { key: 'dtw', label: 'Depth to Water Below Ground Surface (ft)', width: '19%' },
-  { key: 'method', label: 'Method', width: '12%' },
+  { key: 'date', label: 'Date', width: '15%' },
+  { key: 'dtw', label: 'Depth to Water Below Ground Surface (ft)', width: '24%' },
+  { key: 'method', label: 'Method', width: '13%' },
   { key: 'status', label: 'Level Status', width: '13%' },
   // ALIGNMENT A7 + PR#428 item 10/14: Site Notes joins the measurement rows as
   // its own (last) column, showing only the two most recent notes — newest note
   // paired with the newest row. Methods/Level Status keep enough width that
   // their headers do not break mid-word.
-  { key: 'siteNotes', label: 'Site Notes', width: '43%' },
+  { key: 'siteNotes', label: 'Site Notes', width: '36%' },
 ] as const
 
 export const equipmentColumns = [
-  { key: 'sensor_type', label: 'Equipment Type', width: '14.29%' },
-  { key: 'sensor_model', label: 'Model', width: '14.29%' },
-  { key: 'serial_no', label: 'Serial No', width: '14.29%' },
-  { key: 'hanging_cable_length', label: 'Cable Length', width: '14.29%' },
-  { key: 'recording_interval_display', label: 'Rec Interval', width: '14.29%' },
-  { key: 'datetime_installed', label: 'Installed', width: '14.29%' },
+  { key: 'sensor_type', label: 'Equipment Type', width: '20%' },
+  { key: 'sensor_model', label: 'Model', width: '16%' },
+  { key: 'serial_no', label: 'Serial No', width: '14%' },
+  { key: 'hanging_cable_length', label: 'Cable Length', width: '14%' },
+  { key: 'recording_interval_display', label: 'Rec Interval', width: '14%' },
+  { key: 'datetime_installed', label: 'Installed', width: '14%' },
   // ALIGNMENT A8: notes join the row instead of a second table.
-  { key: 'notes', label: 'Notes', width: '14.29%' },
+  { key: 'notes', label: 'Notes', width: '8%' },
 ] as const
 
 export const manualMeasurementColumns = [

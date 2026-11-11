@@ -3,28 +3,21 @@
     "configName": "A",
     "pageCount": 4,
     "imageCount": 2,
-    "byteSize": 18113,
-    "byteHash": "12b2d31b0a2e4caa714298e92124fc57c2f34f8989bc8b49034158bdb300b7e9"
+    "byteSize": 16897,
+    "byteHash": "b7b8fe9cc91eb8be60f07d56235c2f8028cccf6b92b9fafdb81324416c7c4a1f"
   },
   "B": {
     "configName": "B",
     "pageCount": 4,
     "imageCount": 0,
-    "byteSize": 16830,
-    "byteHash": "0f3825ca7f75f43b85dc4a5245891b81709add80fc93236cf9393ab453a3f98e"
-  },
-  "C": {
-    "configName": "C",
-    "pageCount": 4,
-    "imageCount": 2,
-    "byteSize": 18091,
-    "byteHash": "273c1146037e0fd12ad7e050c3481b907c70df708f0597e4db2f5116723c98f1"
+    "byteSize": 15638,
+    "byteHash": "3d0286c227afc3fc0f6a81b1146ff2245c3d999efab464689f66111419ff18e0"
   },
   "D": {
     "configName": "D",
     "pageCount": 1,
     "imageCount": 2,
-    "byteSize": 12630,
-    "byteHash": "da77273dd2469238f44e7218334bd9373d4691277cc005f1e59290535a4917c5"
+    "byteSize": 11108,
+    "byteHash": "fa33d73a787a7065b2c68998a623b6fa06a051d6620aa7a3dd17dcd06550fa0a"
   }
 }

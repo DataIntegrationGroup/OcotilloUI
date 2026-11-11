@@ -60,7 +60,7 @@ function FieldSheet() {
         <Card className={cn('w-full', 'bg-card text-card-foreground ring-foreground/10')}>
           <CardContent className="p-[7pt]">
             <div className="text-[7pt] uppercase tracking-wide font-semibold text-slate-500">USGS ID</div>
-            <div className="mt-[2pt] text-[9.5pt] font-medium text-slate-900">{well.gis_notes ?? '—'}</div>
+            <div className="mt-[2pt] text-[9.5pt] font-medium text-slate-900">{(well as any).gis_notes ?? '—'}</div>
           </CardContent>
         </Card>
 
@@ -167,8 +167,8 @@ function OwnerSheet() {
         </CardContent>
       </Card>
 
-      {/* i. Identity block — four cells in one row */}
-      <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-[6pt] mb-[8pt]">
+      {/* i. Identity block — row 1: Site Name | Point ID; row 2: Well Depth | MP Ht; OSE # on its own row */}
+      <div className="grid grid-cols-[1fr_1fr] gap-[6pt] mb-[8pt]">
         <div className="ring-1 ring-slate-300 bg-card p-[7pt]">
           <div className="text-[7pt] uppercase tracking-wide text-slate-500">Site Name</div>
           <div className="mt-[2pt] text-[10pt] font-medium text-slate-900">{OWNER.siteName}</div>
@@ -177,15 +177,29 @@ function OwnerSheet() {
           <div className="text-[7pt] uppercase tracking-wide text-slate-500">Point ID</div>
           <div className="mt-[2pt] text-[10pt] font-medium text-slate-900">{OWNER.pointId}</div>
         </div>
+      </div>
+      <div className="grid grid-cols-[1fr_1fr] gap-[6pt] mb-[4pt]">
         <div className="ring-1 ring-slate-300 bg-card p-[7pt]">
           <div className="text-[7pt] uppercase tracking-wide text-slate-500">Well Depth</div>
           <div className="mt-[2pt] text-[10pt] font-medium text-slate-900">{OWNER.wellDepthFt != null ? `${OWNER.wellDepthFt.toFixed(1)} ft` : '—'}</div>
         </div>
         <div className="ring-1 ring-slate-300 bg-card p-[7pt]">
-          <div className="text-[7pt] uppercase tracking-wide text-slate-500">OSE #</div>
-          <div className="mt-[2pt] text-[10pt] font-medium text-slate-900">{OWNER.oseNumber ?? ''}</div>
+          <div className="text-[7pt] uppercase tracking-wide text-slate-500">MP Ht (ft)</div>
+          {OWNER.readings[0] && OWNER.readings[0].mpHtFt != null ? (
+            <div className="mt-[2pt] text-[10pt] font-medium text-slate-900">{`${(OWNER.readings[0].mpHtFt as number).toFixed(1)} ft`}</div>
+          ) : (
+            <div className="mt-[2pt] text-[10pt] font-medium text-slate-900">—</div>
+          )}
         </div>
       </div>
+      {OWNER.oseNumber != null && OWNER.oseNumber !== '' ? (
+        <div className="grid grid-cols-1 gap-[6pt] mb-[8pt]">
+          <div className="ring-1 ring-slate-300 bg-card p-[7pt]">
+            <div className="text-[7pt] uppercase tracking-wide text-slate-500">OSE #</div>
+            <div className="mt-[2pt] text-[10pt] font-medium text-slate-900">{OWNER.oseNumber}</div>
+          </div>
+        </div>
+      ) : null}
 
       {/* g. Hydrograph placeholder with axis labels + date range */}
       <Card className={cn('mb-[8pt]', 'bg-card text-card-foreground ring-foreground/10')}>
@@ -203,20 +217,18 @@ function OwnerSheet() {
         </CardContent>
       </Card>
 
-      {/* j. Readings table, fed by the well's own readings (newest first) */}
+      {/* j. Readings table, fed by the well's own readings (newest first). No MP Ht column here — it lives in the description grid per W4/D29. */}
       <div className="mb-[8pt]">
-        <div className="grid grid-cols-[26%_18%_18%_38%] bg-[#1c3f66] text-white text-[8.5pt] font-semibold">
+        <div className="grid grid-cols-[26%_44%_30%] bg-[#1c3f66] text-white text-[8.5pt] font-semibold">
           <div className="px-[5pt] py-[3pt]">Date</div>
           <div className="px-[5pt] py-[3pt]">Depth to Water Below Ground Surface (ft)</div>
-          <div className="px-[5pt] py-[3pt]">MP Ht (ft)</div>
           <div className="px-[5pt] py-[3pt]">Level Status</div>
         </div>
         {OWNER.readings.map((r, i) => (
-          <div key={i} className={`grid grid-cols-[26%_18%_18%_38%] text-[8.5pt] border-b border-slate-300${i % 2 === 1 ? ' bg-[#f7f9fb]' : ''}`}>
+          <div key={i} className={`grid grid-cols-[26%_44%_30%] text-[8.5pt] border-b border-slate-300${i % 2 === 1 ? ' bg-[#f7f9fb]' : ''}`}>
             <div className="px-[5pt] py-[2pt]">{r.dateLabel}</div>
-            <div className="px-[5pt] py-[2pt]">{r.dtwFt.toFixed(2)}</div>
-            <div className="px-[5pt] py-[2pt]">{r.mpHtFt == null ? '—' : r.mpHtFt.toFixed(1)}</div>
-            <div className="px-[5pt] py-[2pt]">{r.levelStatus}</div>
+            <div className="px-[5pt] py-[2pt]">{r.dtwFt?.toFixed(2)}</div>
+            <div className="px-[5pt] py-[2pt]">{r.levelStatus ?? ''}</div>
           </div>
         ))}
       </div>

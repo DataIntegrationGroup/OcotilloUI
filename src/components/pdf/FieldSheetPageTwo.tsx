@@ -121,15 +121,24 @@ export const FieldSheetPageTwo = ({
             {`${wellDepthFt}`}
           </Text>
         </View>
-        {oseNumber ? (
+        <View style={styles.infoCell}>
+          <Text style={styles.cellText}>
+            <Text style={styles.label}>MP Ht (ft): </Text>
+            {measurements[0] ? feet(measurements[0].mpHeightFt) : '—'}
+          </Text>
+        </View>
+      </View>
+      {/* OSE # moves to its own row, rendered only when present */}
+      {oseNumber ? (
+        <View style={styles.rowGrid}>
           <View style={styles.infoCell}>
             <Text style={styles.cellText}>
               <Text style={styles.label}>OSE #: </Text>
               {`${oseNumber}`}
             </Text>
           </View>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
     </View>
 
     {/* 3. Previous DTW Below MP — renders the most-recent measurement */}
@@ -180,13 +189,10 @@ export const FieldSheetPageTwo = ({
         <Text style={[styles.cell, styles.headCell, styles.dateCell]}>
           Date
         </Text>
-        <Text style={[styles.cell, styles.headCell, styles.narrowCell]}>
-          DTW (ft)
+        <Text style={[styles.cell, styles.headCell, styles.depthCell]}>
+          Depth to Water Below Ground Surface (ft)
         </Text>
-        <Text style={[styles.cell, styles.headCell, styles.narrowCell]}>
-          MP Ht (ft)
-        </Text>
-        <Text style={[styles.cell, styles.headCell, styles.wideCell]}>
+        <Text style={[styles.cell, styles.headCell, styles.levelCell]}>
           Level Status
         </Text>
       </View>
@@ -197,13 +203,10 @@ export const FieldSheetPageTwo = ({
         return (
           <View key={m.date} style={rowStyle}>
             <Text style={[styles.cell, styles.dateCell]}>{m.date}</Text>
-            <Text style={[styles.cell, styles.narrowCell]}>
+            <Text style={[styles.cell, styles.depthCell]}>
               {feet(m.dtwFt)}
             </Text>
-            <Text style={[styles.cell, styles.narrowCell]}>
-              {feet(m.mpHeightFt)}
-            </Text>
-            <Text style={[styles.cell, styles.wideCell]}>
+            <Text style={[styles.cell, styles.levelCell]}>
               {/* Empty reading status prints an em dash, never a hyphen. */}
               {m.levelStatus || '—'}
             </Text>
@@ -221,7 +224,7 @@ export const FieldSheetPageTwo = ({
       <View style={styles.measurementRule}>
         <Text style={styles.ruleLabel}>Date:</Text>
         {/* Owner-facing wording: plain English, not the internal "DTW" tag. */}
-        <Text style={styles.ruleLabel}>Depth to water (ft):</Text>
+        <Text style={styles.ruleLabel}>Depth to Water Below Ground Surface (ft):</Text>
         <Text style={styles.ruleFt}>ft</Text>
       </View>
     </View>
@@ -364,8 +367,9 @@ const styles = StyleSheet.create({
     color: body,
   },
   dateCell: { width: '26%' },
+  depthCell: { width: '44%' },
+  levelCell: { width: '30%' },
   narrowCell: { width: '18%' },
-  wideCell: { width: '38%' },
   headCell: {
     fontWeight: 600,
     color: '#fff',

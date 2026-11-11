@@ -314,7 +314,9 @@ export function IdentityPage({
               )
             })()}
 
-            {/* Row 6: Installed Equipment table */}
+            {/* Row 6: Installed Equipment table — spans full content box
+                below the photo frames (item 13), filling the strip's unused band. */}
+            <View style={{ alignSelf: 'flex-start', width: '516pt' }}>
             <PdfTable
               styles={styles}
               title="Installed Equipment"
@@ -347,6 +349,7 @@ export function IdentityPage({
                 }))}
               compact
             />
+            </View>
 
             {/* Row 7: New Measurement write-in box */}
             <View style={styles.sectionCard}>

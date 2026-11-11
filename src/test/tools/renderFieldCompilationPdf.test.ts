@@ -17,6 +17,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { FieldCompilationNotesPdf } from '@/components/pdf/fieldCompilation/page'
 import { buildSensorDeploymentRows } from '@/utils/SensorDeploymentRows'
 import { makeContact, makeObservations, makeSensors, makeWell } from '@/test/fixtures/fieldCompilationPdfSample'
+import { IPdfDensity } from '@/interfaces/IPdfDensity'
 
 // ─── Paths (workspace level, not inside repo) ─────────────────────────────
 const REPO_ROOT = process.cwd()
@@ -81,15 +82,14 @@ function imageCount(buffer: Buffer): number {
 interface RenderConfig {
   name: string
   showPhotos: boolean
-  density: 'standard' | 'compact'
+  density: IPdfDensity
   firstPageOnly: boolean
 }
 
 const CONFIGS: RenderConfig[] = [
-  { name: 'A', showPhotos: true,  density: 'standard',  firstPageOnly: false },
-  { name: 'B', showPhotos: false, density: 'standard',  firstPageOnly: false },
-  { name: 'C', showPhotos: true,  density: 'compact',   firstPageOnly: false },
-  { name: 'D', showPhotos: true,  density: 'standard',  firstPageOnly: true  },
+  { name: 'A', showPhotos: true,  density: 'comfortable', firstPageOnly: false },
+  { name: 'B', showPhotos: false, density: 'comfortable', firstPageOnly: false },
+  { name: 'D', showPhotos: true,  density: 'comfortable', firstPageOnly: true  },
 ]
 
 // ─── Render helper ──────────────────────────────────────────────────────
@@ -178,7 +178,7 @@ async function writeGolden(results: Map<string, CaptureResult>) {
 async function runAssertions(results: Map<string, CaptureResult>) {
   const a = results.get('A')!
   const b = results.get('B')!
-  const c = results.get('C')!
+  // Config C was dropped from the reflow set {A,B,D}; its assertions are folded into the A/B photo/no-photo checks above.
   const d = results.get('D')!
 
   // (b) All configs distinct sizes (normalisation handles drift fields)
@@ -190,14 +190,13 @@ async function runAssertions(results: Map<string, CaptureResult>) {
     hashes.add(res.byteHash)
   }
 
-  // (c) Photos increase size; A ≠ C (standard vs compact)
+  // (c) Photos increase size; A ≠ B (photo vs no-photo differ in size)
   expect(a.byteSize, 'Photos add bytes').toBeGreaterThan(b.byteSize)
-  expect(a.byteSize, 'Standard != Compact layout').not.toEqual(c.byteSize)
+  expect(a.byteSize, 'Photo vs no-photo layout differ').not.toEqual(b.byteSize)
 
-  // Photo coverage: A/C/D must have images, B must not
+  // Photo coverage: A/D show photos (have images), B does not
   expect(a.imageCount, 'A has images').toBeGreaterThanOrEqual(1)
   expect(b.imageCount, 'B has no images').toBe(0)
-  expect(c.imageCount, 'C has images').toBeGreaterThanOrEqual(1)
   expect(d.imageCount, 'D has images').toBeGreaterThanOrEqual(1)
 
   // pageCount: D firstPageOnly is smaller than full docs
@@ -254,7 +253,7 @@ describe('fieldCompilation PDF golden-master gate', () => {
 
     const golden = loadGolden()
     expect(golden, 'golden.json missing — regenerate with UPDATE_GOLDEN=1').not.toBeNull()
-    expect(Object.keys(golden!).sort()).toEqual(['A', 'B', 'C', 'D'])
+    expect(Object.keys(golden!).sort()).toEqual(['A', 'B', 'D'])
 
     for (const [name, res] of results) {
       assertMatchesGolden(res, golden![name], name)
@@ -272,7 +271,7 @@ describe('fieldCompilation PDF golden-master gate', () => {
     const d1 = results.get('D')!
 
     const a2 = await renderAndCapture(CONFIGS[0])
-    const d2 = await renderAndCapture(CONFIGS[3])
+    const d2 = await renderAndCapture(CONFIGS[2])
 
     // Clock is pinned and the normaliser covers every drift field, so two
     // renders must agree byte for byte — not merely on size.

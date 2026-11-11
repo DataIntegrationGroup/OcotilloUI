@@ -47,8 +47,8 @@ describe('L3 static surface — one builder, one table, no @react-pdf', () => {
     expect(read(ROUTE_FILE)).toMatch(/buildPacketData\s*\(/)
   })
 
-  it('pins the page-2 table grid 26 / 18 / 18 / 38', () => {
-    expect(read(ROUTE_FILE)).toMatch(/grid-cols-\[26%_18%_18%_38%\]/)
+  it('pins the page-2 table grid 26 / 44 / 30', () => {
+    expect(read(ROUTE_FILE)).toMatch(/grid-cols-\[26%_44%_30%\]/)
   })
 
   it('carries the contracted column headers verbatim (D23, D13)', () => {
@@ -108,7 +108,7 @@ describe.skipIf(isCI)('L3 artifact — the owner sheet prints the well’s readi
         .filter((f) => f.endsWith('.css'))
         .map((f) => read(path.join(cssDir, f)))
         .join('\n')
-      expect(css).toContain('26% 18% 18% 38%')
+      expect(css).toContain('26% 44% 30%')
 
       return (async () => {
         const doc = await pdfjs.getDocument({

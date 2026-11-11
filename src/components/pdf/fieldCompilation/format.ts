@@ -70,8 +70,8 @@ export const formatElevation = (
   // datum supplies the default so it degrades to `<value> ft (<datum>)`. When
   // neither is present only the grouped value prints.
   let unit = ''
-  if (properties.elevation_unit != null) {
-    const t = String(properties.elevation_unit).trim()
+  if (properties!.elevation_unit != null) {
+    const t = String(properties!.elevation_unit).trim()
     unit = t === '' ? 'ft' : t
   } else if (datum) {
     unit = 'ft'
