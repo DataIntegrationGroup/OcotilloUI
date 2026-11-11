@@ -108,7 +108,7 @@ export const WELL_MAP_CSV_COLUMN_HEADERS_EXPLICIT: readonly string[] = [
   WellListColumnLabels.longitude,
   WellMapCsvOnlyLabels.depthSource,
   WellMapCsvOnlyLabels.historicDepthToWater,
-  WellListColumnLabels.completed,
+  WellListColumnLabels.drillDate,
   WellMapCsvOnlyLabels.constructionMethod,
   WellMapCsvOnlyLabels.measuringPointHeight,
   WellMapCsvOnlyLabels.measuringPointDescription,
@@ -388,7 +388,7 @@ export function buildWellMapCsvValues(
       (well.historic_depth_to_water?.length ?? 0) > 0
         ? (well.historic_depth_to_water ?? []).join(', ')
         : '',
-    [WellListColumnLabels.completed]:
+    [WellListColumnLabels.drillDate]:
       formatAppDate(well.well_completion_date) || '',
     [WellMapCsvOnlyLabels.constructionMethod]: well.well_construction_method ?? '',
     [WellMapCsvOnlyLabels.measuringPointHeight]: String(

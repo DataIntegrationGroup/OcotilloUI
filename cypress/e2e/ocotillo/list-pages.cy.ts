@@ -37,6 +37,23 @@ describe('Ocotillo List Pages', () => {
     cy.contains('[role="columnheader"]', 'Monitoring').should('be.visible')
     cy.contains('[role="columnheader"]', 'Well Status').should('be.visible')
 
+    cy.get('.MuiDataGrid-virtualScroller').scrollTo('right')
+    cy.contains('[role="columnheader"]', 'Drill Date').should('be.visible')
+    cy.contains('[role="columnheader"]', 'Drill Date')
+      .trigger('mouseover')
+      .trigger('mousemove')
+    cy.contains('[role="tooltip"]', 'Reported drill date for this well.').should(
+      'be.visible'
+    )
+    cy.get('body').type('{esc}')
+
+    cy.get('[data-testid="grid-toolbar-filter-button"]').click()
+    cy.get('.MuiDataGrid-filterFormColumnInput').click()
+    cy.contains('[role="option"]', 'Drill Date').should('be.visible')
+    cy.contains('[role="option"]', 'Completed').should('not.exist')
+
+    cy.get('.MuiDataGrid-virtualScroller').scrollTo('left')
+
     cy.contains('[role="row"]', wellOne.name).should('be.visible')
     cy.contains('[role="row"]', wellTwo.name).should('be.visible')
     cy.contains(projectAlpha.name).should('be.visible')

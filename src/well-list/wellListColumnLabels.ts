@@ -17,7 +17,7 @@ export const WellListColumnLabels = {
   holeDepthFt: 'Hole Depth (ft)',
   firstVisit: 'First Visit',
   contacts: 'Contacts',
-  completed: 'Completed',
+  drillDate: 'Drill Date',
   driller: 'Driller',
   latitude: 'Latitude',
   longitude: 'Longitude',

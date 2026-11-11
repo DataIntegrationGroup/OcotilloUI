@@ -414,8 +414,8 @@ export const WellList: React.FC = () => {
       },
       {
         field: 'well_completion_date',
-        headerName: WellListColumnLabels.completed,
-        description: 'Reported date the well construction was completed.',
+        headerName: WellListColumnLabels.drillDate,
+        description: 'Reported drill date for this well.',
         width: 130,
         valueGetter: (v: string) => formatAppDate(v),
       },
