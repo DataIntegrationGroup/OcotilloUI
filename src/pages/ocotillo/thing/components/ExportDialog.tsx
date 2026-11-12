@@ -1,11 +1,14 @@
+import { Download, PictureAsPdf } from '@mui/icons-material'
 import {
   Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
+  FormControlLabel,
   LinearProgress,
   Table,
   TableBody,
@@ -15,7 +18,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { Download, PictureAsPdf } from '@mui/icons-material'
 
 export const ExportDialog = ({
   open,
@@ -27,6 +29,8 @@ export const ExportDialog = ({
   resolvedCount,
   filename,
   setFilename,
+  ownerPageOn,
+  setOwnerPageOn,
 }: {
   open: boolean
   onClose: () => void
@@ -37,6 +41,8 @@ export const ExportDialog = ({
   resolvedCount: number
   filename: string
   setFilename: (value: string) => void
+  ownerPageOn: boolean
+  setOwnerPageOn: (value: boolean) => void
 }) => {
   return (
     <Dialog
@@ -96,6 +102,18 @@ export const ExportDialog = ({
           onChange={(e) => setFilename(e.target.value)}
           disabled={isGenerating}
           helperText="The batch will be downloaded as a single PDF using this filename."
+        />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={ownerPageOn}
+              onChange={(e) => setOwnerPageOn(e.target.checked)}
+              disabled={isGenerating}
+            />
+          }
+          label="Include owner page (page 2 — landowner leave-behind)"
         />
 
         {isGenerating && (

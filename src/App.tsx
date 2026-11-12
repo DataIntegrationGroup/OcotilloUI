@@ -8,10 +8,12 @@ import { ContentPage, PublicContentPage } from '@/pages/content'
 import { TypographyPage } from '@/pages/example/TypographyPage'
 import { Home } from '@/pages/home'
 import { LandingPage } from '@/pages/landing'
+import { FieldSheetPageOneMock } from '@/pages/mock/FieldSheetPageOneMock'
+import { FieldSheetPageTwoMock } from '@/pages/mock/FieldSheetPageTwoMock'
 import { SettingsPage } from '@/pages/settings'
+import { SignupPage } from '@/pages/signup'
 import { GeothermalRoutes, OcotilloRoutes, ST2Routes } from '@/routes'
 import { settings } from '@/settings'
-import { SignupPage } from '@/pages/signup'
 
 const App: React.FC = () => (
   <BrowserRouter basename={settings.urlprefix}>
@@ -19,6 +21,20 @@ const App: React.FC = () => (
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        {/* TEMPORARY: example specimen pages — no auth needed */}
+        <Route path="/example/typography" element={<TypographyPage />} />
+        {import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview' ? (
+          <Route
+            path="/mock/field-sheet/page-1"
+            element={<FieldSheetPageOneMock />}
+          />
+        ) : null}
+        {import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'preview' ? (
+          <Route
+            path="/mock/field-sheet/page-2"
+            element={<FieldSheetPageTwoMock />}
+          />
+        ) : null}
         <Route
           path="/ogcapi"
           element={
@@ -77,8 +93,6 @@ const App: React.FC = () => (
             element={<ContentPage src="/content/report-a-bug.md" />}
           />
           <Route path="/settings" element={<SettingsPage />} />
-          {/* TEMPORARY: example specimen pages */}
-          <Route path="/example/typography" element={<TypographyPage />} />
           <Route path="/ocotillo/*" element={<OcotilloRoutes />} />
           <Route path="/geothermal/*" element={<GeothermalRoutes />} />
           <Route path="/st2/*" element={<ST2Routes />} />

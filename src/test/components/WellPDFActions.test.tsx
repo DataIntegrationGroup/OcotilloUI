@@ -41,7 +41,10 @@ vi.mock('@react-pdf/renderer', () => ({
   pdf: () => ({ toBlob: mockedToBlob }),
 }))
 
-vi.mock('@/components', () => ({ WellPDF: () => null }))
+vi.mock('@/components', () => ({
+  WellPDF: () => null,
+  FieldCompilationNotesPdf: () => null,
+}))
 
 vi.mock('@/components/pdf/chemistry', () => ({
   downloadChemistryReport: (args: unknown) =>

@@ -2,6 +2,7 @@ import { PaletteMode } from '@mui/material'
 import { createTheme } from '@mui/material/styles'
 import type {} from '@mui/x-data-grid/themeAugmentation'
 import { MUI_BREAKPOINT_VALUES } from '@/constants/breakpoints'
+import { gray, zinc, white } from '@/palette'
 
 /*
  * Full Tailwind v3 color palette as hex values.
@@ -15,8 +16,11 @@ import { MUI_BREAKPOINT_VALUES } from '@/constants/breakpoints'
  * the two systems are independent pipelines.
  *
  * Colors that feed the current Ocotillo palette are marked with ← used.
+ *
+ * Nine neutral values shared with the PDF pipeline (src/palette.ts, src/components/pdf/fieldCompilation/tokens.ts)
+ * are now imported from src/palette.ts rather than defined here as hex literals.
  */
-const colors = {
+export const colors = {
   white: '#ffffff',
   black: '#000000',
 
@@ -430,15 +434,15 @@ export const getTheme = (mode: PaletteMode) =>
         main: colors.teal[700],  // teal-700
         dark: colors.teal[900],  // teal-900
       },
-      divider: mode === 'dark' ? colors.zinc[700] : colors.stone[300],
+      divider: mode === 'dark' ? zinc[700] : zinc[300],
       background: {
-        default: mode === 'dark' ? colors.zinc[900] : colors.zinc[50],
-        paper: mode === 'dark' ? colors.zinc[700] : colors.white,
-        wrapper: mode === 'dark' ? colors.zinc[800] : colors.zinc[50],
+        default: mode === 'dark' ? zinc[900] : zinc[50],
+        paper: mode === 'dark' ? zinc[700] : white,
+        wrapper: mode === 'dark' ? zinc[800] : zinc[50],
       },
       text: {
-        primary: mode === 'dark' ? colors.slate[100] : colors.slate[900],
-        secondary: mode === 'dark' ? colors.slate[400] : colors.slate[500],
+        primary: mode === 'dark' ? zinc[100] : gray[900],
+        secondary: mode === 'dark' ? zinc[400] : gray[500],
       },
     },
 
