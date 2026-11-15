@@ -93,6 +93,10 @@
     /* Radius — shared by shadcn components (buttons, inputs, cards, etc.) */
     --radius: 0.375rem;
 
+    /* Packet print — navy header bars for section titles */
+    --packet-header: #1c3f66;
+    --packet-header-foreground: #ffffff;
+
     /* Sidebar — same background as app, slightly different accent for hovers */
     --sidebar: oklch(0.985 0 0); /* neutral-50, matches --background */
     --sidebar-foreground: oklch(0.195 0.026 264.182);
@@ -254,6 +258,10 @@
   --color-sand: var(--sand);
   --color-secondary-light: var(--secondary-light);
   --color-secondary-dark: var(--secondary-dark);
+
+  /* Packet print — navy header bar token */
+  --color-packet-header: var(--packet-header);
+  --color-packet-header-foreground: var(--packet-header-foreground);
 
   /* Canonical responsive breakpoints (see src/constants/breakpoints.ts) */
   --breakpoint-card: 160px;

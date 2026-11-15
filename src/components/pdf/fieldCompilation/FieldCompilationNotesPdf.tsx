@@ -62,6 +62,7 @@ import { IdentityPage } from './pages/IdentityPage'
 import { GeneralNotesPage } from './pages/GeneralNotesPage'
 import { HydrographMeasurementsPage } from './pages/HydrographMeasurementsPage'
 import { BlankPage } from './pages/BlankPage'
+import { OwnerSheetPage } from './pages/OwnerSheetPage'
 
 // Wrap at spaces only; see hyphenation.ts (PR #428 item 10 — Site Notes wraps).
 registerNoHyphenation()
@@ -77,12 +78,13 @@ export const FieldCompilationNotesPage = ({
   includeConfidentialContacts,
   density = 'comfortable',
   showDate = true,
-  emptyPlaceholder = '-',
+  emptyPlaceholder = '',
   notesPlacement = 'column',
   firstPageOnly = false,
   directionNotes = '',
   includeAssets = true,
   showPhotos = true,
+  qrDataUrl = null,
 }: {
   well: IWell
   contacts: IContact[]
@@ -100,6 +102,8 @@ export const FieldCompilationNotesPage = ({
   firstPageOnly?: boolean
   includeAssets?: boolean
   showPhotos?: boolean
+  /** PNG data URI QR for the owner sheet (page 2); null → the literal placeholder prints. */
+  qrDataUrl?: string | null
 }) => {
   const styles = useMemo(() => createFieldCompilationStyles(density), [density])
   // L9: only comfortable density exists; accent bar is always 9.
@@ -185,34 +189,17 @@ export const FieldCompilationNotesPage = ({
       />
 
       {firstPageOnly ? null : (
-        <>
-          <GeneralNotesPage
-            well={well}
-            styles={styles}
-            accentBarHeight={accentBarHeight}
-            renderPageDate={renderPageDate}
-            showDate={showDate}
-            firstPageOnly={firstPageOnly}
-          />
-
-          <HydrographMeasurementsPage
-            well={well}
-            styles={styles}
-            renderPageDate={renderPageDate}
-            showDate={showDate}
-            hydrographImage={hydrographImage}
-            manualMeasurements={manualMeasurements}
-            firstPageOnly={firstPageOnly}
-          />
-
-          <BlankPage
-            well={well}
-            styles={styles}
-            renderPageDate={renderPageDate}
-            showDate={showDate}
-            firstPageOnly={firstPageOnly}
-          />
-        </>
+        <OwnerSheetPage
+          well={well}
+          observations={observations}
+          hydrographImage={hydrographImage}
+          styles={styles}
+          renderPageDate={renderPageDate}
+          showDate={showDate}
+          pageNumber={2}
+          totalPages={2}
+          qrDataUrl={qrDataUrl}
+        />
       )}
       {/* TODO: QR code — render as <Image source={qrUri} style={{width:50,height:50}}/> 
           inside the Row 8 footer section, right-aligned */}
@@ -232,12 +219,13 @@ export const FieldCompilationNotesPdf = ({
   standalone = true,
   density = 'comfortable',
   showDate = true,
-  emptyPlaceholder = '-',
+  emptyPlaceholder = '',
   notesPlacement = 'column',
   firstPageOnly = false,
   directionNotes = '',
   includeAssets = true,
   showPhotos = true,
+  qrDataUrl = null,
 }: {
   well: IWell
   contacts: IContact[]
@@ -256,6 +244,8 @@ export const FieldCompilationNotesPdf = ({
   firstPageOnly?: boolean
   includeAssets?: boolean
   showPhotos?: boolean
+  /** PNG data URI QR for the owner sheet (page 2); null → the literal placeholder prints. */
+  qrDataUrl?: string | null
 }) => {
   const pages = (
     <FieldCompilationNotesPage
@@ -275,6 +265,7 @@ export const FieldCompilationNotesPdf = ({
       directionNotes={directionNotes}
       includeAssets={includeAssets}
       showPhotos={showPhotos}
+      qrDataUrl={qrDataUrl}
     />
   )
 

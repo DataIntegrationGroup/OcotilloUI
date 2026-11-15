@@ -31,7 +31,7 @@ export const table = (scale: Scale) =>
       fontWeight: 700,
       fontSize: 9,
       paddingVertical: 3,
-      paddingHorizontal: 3,
+      paddingHorizontal: 0,
     },
     compactCell: {
       fontSize: 7.5,
@@ -42,7 +42,7 @@ export const table = (scale: Scale) =>
     compactCellHeader: {
       fontSize: 7.5,
       paddingVertical: 2,
-      paddingHorizontal: 2,
+      paddingHorizontal: 0,
     },
     metricRow: {
       flexDirection: 'row',

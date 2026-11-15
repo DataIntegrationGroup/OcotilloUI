@@ -25,8 +25,7 @@
     "typecheck": "tsc",
     "mock:server:vitest": "prism mock openapi-auth.json --dynamic=false --port 4010",
     "mock:server:cypress": "prism mock openapi-auth.json --dynamic=true --port 4010 --seed 12345",
-    "openapi:generate": "npx @hey-api/openapi-ts",
-    "packet:pdf": "node scripts/packet-pdf.mjs"
+    "openapi:generate": "npx @hey-api/openapi-ts"
   },
   "browserslist": {
     "production": [

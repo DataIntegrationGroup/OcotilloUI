@@ -15,5 +15,5 @@ export const formatContactPhones = (contact?: IContact) => {
       })
       .filter((value): value is string => Boolean(value)) ?? []
 
-  return values.length > 0 ? values.join('\n') : '-'
+  return values.length > 0 ? values.join('\n') : ''
 }

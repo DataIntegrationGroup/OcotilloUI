@@ -13,7 +13,7 @@ export const formatContactPhones = (contacts: IContact[]) => {
   const phoneNumbers = contacts
     .flatMap((contact) => contact.phones ?? [])
     .filter(Boolean)
-  return phoneNumbers.length > 0 ? phoneNumbers.join(', ') : '-'
+  return phoneNumbers.length > 0 ? phoneNumbers.join(', ') : ''
 }
 
 // ── Pure value renderers ────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ export const formatContactPhones = (contacts: IContact[]) => {
 /**
  * Renders a value as string, falling back to emptyPlaceholder.
  */
-export const renderValue = (value: unknown, empty = '-') => {
+export const renderValue = (value: unknown, empty = '') => {
   if (value == null || value === '') return empty
   return String(value)
 }
@@ -32,9 +32,9 @@ export const renderValue = (value: unknown, empty = '-') => {
 export const formatNumeric = (
   value: number | null | undefined,
   fractionDigits = 2,
-  empty = '-'
+  empty = ''
 ): string => {
-  if (value == null || Number.isNaN(value)) return empty
+  if (value == null || Number.isNaN(value)) return ''
   return value.toFixed(fractionDigits)
 }
 
@@ -59,7 +59,7 @@ export type ElevationProperties = {
  */
 export const formatElevation = (
   properties?: ElevationProperties | null,
-  empty = '-'
+  empty = ''
 ): string => {
   const elevation = properties?.elevation
   if (elevation == null || Number.isNaN(elevation)) return empty
@@ -107,7 +107,7 @@ export const notesToText = (
     )
     .filter((value): value is string => Boolean(value))
 
-  if (values.length === 0) return '-'
+  if (values.length === 0) return ''
 
   return options?.compact ? values.join(' | ') : values.join('\n')
 }
@@ -136,7 +136,7 @@ export const siteNameFromAlternateIds = (well: IWell): string => {
         alt.alternate_organization?.toLowerCase() === 'nmbgmr'
     )?.alternate_id ?? null
 
-  return preferred ?? well.alternate_ids?.[0]?.alternate_id ?? '-'
+  return preferred ?? well.alternate_ids?.[0]?.alternate_id ?? ''
 }
 
 export const locationNotesText = (well: IWell) =>
@@ -146,24 +146,24 @@ export const locationNotesText = (well: IWell) =>
     )
   )
 
-export const contactEmail = (contact?: IContact) => contact?.emails?.[0]?.email ?? '-'
+export const contactEmail = (contact?: IContact) => contact?.emails?.[0]?.email ?? ''
 
 export const contactAddress = (contact?: IContact) => {
   const address = contact?.addresses?.[0]
-  return address ? formatAddress(address) : '-'
+  return address ? formatAddress(address) : ''
 }
 
 export const equipmentNotesText = (rows: SensorDeploymentRow[]) => {
   const notes = rows
     .map((row) => row.notes?.trim())
-    .filter((note): note is string => Boolean(note && note !== '-'))
-  return notes.length > 0 ? Array.from(new Set(notes)).join('\n') : '-'
+    .filter((note): note is string => Boolean(note && note !== '-' && note !== ''))
+  return notes.length > 0 ? Array.from(new Set(notes)).join('\n') : ''
 }
 
 /**
  * Site Notes field value — reads from the note array at
  * `well.site_notes` (legacy) or `well.notes`, joined as a single
- * text block. Falls back to `-` when empty.
+ * text block. Falls back to empty string when empty.
  */
 export const siteNotesText = (well: IWell): string => {
   const sn = (well.site_notes as any) || []
@@ -177,7 +177,7 @@ export const siteNotesText = (well: IWell): string => {
   const lines = notes
     .map((n: any) => n?.content?.trim())
     .filter((c: string) => c)
-  return lines.length > 0 ? lines.join('\n') : '-'
+  return lines.length > 0 ? lines.join('\n') : ''
 }
 
 /**
@@ -224,18 +224,18 @@ export const lastMeasurementsRows = (
       dtw:
         observation.depth_to_water_bgs != null
           ? formatNumeric(observation.depth_to_water_bgs)
-          : '-',
+          : '',
       mpHeight:
         observation.measuring_point_height != null
           ? formatNumeric(observation.measuring_point_height)
-          : '-',
+          : '',
       method:
         (observation.sample_id != null
           ? sampleMethodsBySampleId[observation.sample_id]
-          : null) ?? '-',
+          : null) ?? '',
       status:
-        observation.groundwater_level_reason ?? observation.level_status ?? '-',
-      staff: '-',
+        observation.groundwater_level_reason ?? observation.level_status ?? '',
+      staff: '',
     }))
 
 export const manualMeasurementRows = (
@@ -254,12 +254,12 @@ export const manualMeasurementRows = (
       dtw:
         observation.depth_to_water_bgs != null
           ? formatNumeric(observation.depth_to_water_bgs)
-          : '-',
+          : '',
       mpHeight:
         observation.measuring_point_height != null
           ? formatNumeric(observation.measuring_point_height)
-          : '-',
+          : '',
       status:
-        observation.groundwater_level_reason ?? observation.level_status ?? '-',
-      staff: '-',
+        observation.groundwater_level_reason ?? observation.level_status ?? '',
+      staff: '',
     }))

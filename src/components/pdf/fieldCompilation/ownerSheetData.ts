@@ -1,4 +1,5 @@
 import type { IObservation, IWell } from '@/interfaces/ocotillo'
+import { buildWeaverLocationUrl } from '@/utils/wellPublicUrls'
 
 /**
  * Page-2 (owner sheet) data. One builder, fed by the well's own observation
@@ -24,6 +25,14 @@ export type PacketData = {
   wellDepthFt: number | null
   oseNumber: string | null
   readings: PacketReading[]
+  /** Easting as printed on page 1 — thousands separators, no "ft", no datum. `—` when absent. */
+  easting: string
+  /** Northing as printed on page 1 — thousands separators, no "ft", no datum. `—` when absent. */
+  northing: string
+  /** Weaver location URL the owner scans/reads; null when the well has no point id. */
+  locationUrl: string | null
+  /** Synchronous SVG QR of that same URL, or null — the caller decides placeholder vs code. */
+  qrDataUrl: string | null
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -39,7 +48,12 @@ export function formatReadingDate(iso: string): string {
   return `${MONTHS[mi]} ${Number(d)}, ${y}`
 }
 
-export function buildPacketData(source: PacketSource): PacketData {
+export function buildPacketData(
+  source: PacketSource,
+  /** Pre-rendered bitmap QR (PNG data URI). The packet builder is synchronous, so the
+   *  caller supplies the async-generated bitmap; null → the page prints the literal. */
+  qrDataUrl: string | null = null
+): PacketData {
   const { well, observations } = source
 
   const readings: PacketReading[] = observations
@@ -64,12 +78,24 @@ export function buildPacketData(source: PacketSource): PacketData {
       }
     })
 
+  const pointRef = (well.name ?? '').trim() || String(well.id ?? '')
   const depth = well.well_depth
+
+  // NAD83 UTM metres from the well; page 1 prints with thousands separators,
+  // no "ft", no datum suffix. A record without UTM prints em-dash (never blank).
+  const utm = (well as { utm?: { easting?: number | null; northing?: number | null } }).utm ?? {}
+  const fmtUtm = (v: number | null | undefined): string =>
+    typeof v === 'number' && Number.isFinite(v) ? v.toLocaleString('en-US') : '—'
+
   return {
-    siteName: (well.site_name ?? '').trim() || (well.name ?? '').trim() || '—',
-    pointId: String(well.id ?? ''),
+    siteName: (well.site_name ?? '').trim() || pointRef || '—',
+    pointId: pointRef || '—',
     wellDepthFt: typeof depth === 'number' && Number.isFinite(depth) ? depth : null,
     oseNumber: null,
     readings,
+    easting: fmtUtm(utm.easting),
+    northing: fmtUtm(utm.northing),
+    locationUrl: buildWeaverLocationUrl(pointRef),
+    qrDataUrl,
   }
 }

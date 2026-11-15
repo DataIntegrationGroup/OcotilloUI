@@ -27,7 +27,6 @@ import {
   formatElevation,
   formatNumeric,
   locationNotesText,
-  lastTwoSiteNotes,
   notesToText,
   renderValue,
   siteNameFromAlternateIds,
@@ -35,12 +34,50 @@ import {
   directionNotesValue,
 } from '../format'
 import {
-  cutMethodColumns,
   equipmentColumns,
   lastMeasurementsColumns,
-  newMeasurementGridRows,
   siteNotesFieldLabel,
 } from '../tables'
+
+// ── Inline column definitions for the new Measurement tables ──
+
+const newMeasurementColumns = [
+  { key: 'date', label: 'Date', width: '10%' },
+  { key: 'time', label: 'Time', width: '5%' },
+  { key: 'staff', label: 'Staff', width: '7%' },
+  { key: 'prevDtw', label: 'Prev DTW (ft)', width: '28%' },
+  { key: 'method', label: 'Method', width: '22%' },
+  { key: 'status', label: 'Level Status', width: '28%' },
+] as const
+
+const measurementGridColumns = [
+  { key: 'measurement', label: 'Measurement', width: '30%' },
+  { key: 'm1', label: 'M1', width: '14%' },
+  { key: 'm2', label: 'M2', width: '14%' },
+  { key: 'm3', label: 'M3', width: '14%' },
+  { key: 'm4', label: 'M4', width: '14%' },
+  { key: 'm5', label: 'M5', width: '14%' },
+] as const
+
+// ── Inline row definitions for the M1–M5 write-in grid ──
+
+type MeasurementGridRow = {
+  measurement: string
+  m1: string
+  m2: string
+  m3: string
+  m4: string
+  m5: string
+}
+
+const measurementGridRows: MeasurementGridRow[] = [
+  { measurement: 'Time', m1: '', m2: '', m3: '', m4: '', m5: '' },
+  { measurement: 'Hold', m1: '', m2: '', m3: '', m4: '', m5: '' },
+  { measurement: 'Cut', m1: '', m2: '', m3: '', m4: '', m5: '' },
+  { measurement: 'Tape Correction', m1: '', m2: '', m3: '', m4: '', m5: '' },
+  { measurement: 'WL below MP', m1: '', m2: '', m3: '', m4: '', m5: '' },
+  { measurement: 'MP Correction', m1: '', m2: '', m3: '', m4: '', m5: '' },
+]
 
 // Page 1 of the field compilation packet. JSX moved verbatim out of
 // page.tsx 195-639 (C2b); the <Page> element wrapping it is the original.
@@ -93,7 +130,7 @@ export function IdentityPage({
 }): ReactElement {
   return (
       <Page size="LETTER" style={styles.page}>
-        <PageFooter wellId={well.name} pageNumber={1} styles={styles} totalPages={firstPageOnly ? 1 : 4} />
+        <PageFooter wellId={well.name} pageNumber={1} styles={styles} totalPages={firstPageOnly ? 1 : 2} />
         {showDate ? renderPageDate() : null}
         <View style={styles.pageFrame}>
         <View style={styles.header}>
@@ -197,7 +234,7 @@ export function IdentityPage({
                 styles={styles}
                 title="MP Description"
                 value={
-                  well.measuring_point_description?.trim() || emptyPlaceholder
+                  well.measuring_point_description?.trim() || ''
                 }
                 accentBarHeight={accentBarHeight}
               />
@@ -217,23 +254,7 @@ export function IdentityPage({
               </View>
             </View>
 
-            {/* Pre-visit Notes — moved below Field Notes */}
-            <View style={styles.sectionCard}>
-              <View style={styles.sectionTitleBar}>
-                <View
-                  style={[
-                    styles.accentBar,
-                    { height: accentBarHeight },
-                  ]}
-                />
-                <Text style={styles.sectionTitle}>Pre-visit Notes</Text>
-              </View>
-              <View style={styles.preVisitPad}>
-                {ruledLines('previsit', 3)}
-              </View>
-            </View>
 
-            {/* ── Rows: flex columns that flow into content width ─── */}
 
             {/* Row 2: Contact details */}
             <View style={styles.sectionCard}>
@@ -293,201 +314,27 @@ export function IdentityPage({
             </View>
 
             {/* Row 5: Today's Measurement table */}
-            {(() => {
-              // Last two site notes, newest-first — one per measurement row so
-              // the newest note lands on the newest row (lastMeasurementsRows is
-              // already sorted desc by datetime). Fewer notes than rows leaves
-              // the extra cells blank.
-              const notes = lastTwoSiteNotes(well)
-              return (
-                <PdfTable
-                  styles={styles}
-                  title="Today's Measurement"
-                  columns={lastMeasurementsColumns}
-                  rows={measurements.slice(0, 1).map((row, i) => ({
-                    ...row,
-                    siteNotes: notes[i] ?? '',
-                  }))}
-                  compact
-                  accentBarHeight={accentBarHeight}
-                />
-              )
-            })()}
-
-            {/* Row 6: Installed Equipment table — spans full content box
-                below the photo frames (item 13), filling the strip's unused band. */}
-            <View style={{ alignSelf: 'flex-start', width: '516pt' }}>
-            <PdfTable
-              styles={styles}
-              title="Installed Equipment"
-              columns={equipmentColumns}
-              accentBarHeight={accentBarHeight}
-              rows={sensorDeployments
-                .slice()
-                .sort((a, b) => {
-                  const aTime = a.datetime_installed
-                    ? new Date(a.datetime_installed).getTime()
-                    : 0
-                  const bTime = b.datetime_installed
-                    ? new Date(b.datetime_installed).getTime()
-                    : 0
-                  return bTime - aTime
-                })
-                .slice(0, 2)
-                .map((row) => ({
-                  sensor_type: row.sensor_type,
-                  sensor_model: row.sensor_model,
-                  serial_no: row.serial_no,
-                  hanging_cable_length:
-                    row.hanging_cable_length != null
-                      ? String(row.hanging_cable_length)
-                      : '-',
-                  recording_interval_display:
-                    row.recording_interval_display ?? '-',
-                  datetime_installed: formatAppDate(row.datetime_installed),
-                  notes: row.notes?.trim() || '-',
-                }))}
-              compact
-            />
-            </View>
-
-            {/* Row 7: New Measurement write-in box */}
-            <View style={styles.sectionCard}>
-              <View style={styles.sectionTitleBar}>
-                <View
-                  style={[
-                    styles.accentBar,
-                    { height: accentBarHeight },
-                  ]}
-                />
-                <Text style={styles.sectionTitle}>New Measurement</Text>
+            <>
+              <PdfTable
+                styles={styles}
+                title="Today's Measurement"
+                columns={lastMeasurementsColumns}
+                rows={measurements.slice(0, 1).map((row) => row)}
+                compact
+                accentBarHeight={accentBarHeight}
+              />
+              <View style={{ marginTop: 2, paddingHorizontal: 4, paddingVertical: 3, borderWidth: 1, borderTopWidth: 0, borderColor: 'transparent' }}>
+                <Text style={{}}>
+                  <Text style={{ fontWeight: 'bold' }}>{siteNotesFieldLabel} </Text>
+                  {siteNotesText(well)}
+                </Text>
               </View>
-              <View style={styles.newMeasurementBox}>
-                <View style={styles.newMeasurementHeaderRow}>
-                  <Text style={styles.newMeasurementTitle}>New Measurement</Text>
-                </View>
-                {measurements[0] ? (
-                    <>
-                      {/* Previous DTW label on its own line; value + observation date below it,
-                      {/*  reusing the Date/Time/Staff column row so the value sits under Date
-                      {/*  and the date under Time - aligned at both photo widths. */}
-                      <Text style={styles.newMeasurementFieldLabel}>
-                        Previous Depth to Water Below Ground Surface
-                      </Text>
-                      <View style={styles.newMeasurementFieldRow}>
-                        <View style={styles.newMeasurementField}>
-                          <Text style={styles.newMeasurementFieldLabel}>
-                            {measurements[0].dtw} ft
-                          </Text>
-                        </View>
-                        <View style={styles.newMeasurementField}>
-                          <Text style={styles.newMeasurementFieldLabel}>
-                            {measurements[0].date}
-                          </Text>
-                        </View>
-                        <View style={styles.newMeasurementField} />
-                      </View>
-                    </>
-                ) : null}
-                <View style={styles.newMeasurementFieldRow}>
-                <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Date: {showDate ? exportDate : ''}
-                  </Text>
-                </View>
-                <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Time: </Text>
-                  <View style={styles.newWriteLine} />
-                </View>
-                <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Staff: </Text>
-                  <View style={styles.fillLine} />
-                </View>
-              </View>
-              <View style={styles.cutMethodTable}>
-                <View style={styles.cutMethodTableRow}>
-                  <Text style={styles.cutMethodTableLabelCell} />
-                  {cutMethodColumns.map((column, index) => (
-                    <Text
-                      key={column}
-                      style={[
-                        styles.cutMethodTableHeaderCell,
-                        ...(index === cutMethodColumns.length - 1
-                          ? [styles.cutMethodTableValueCellLast]
-                          : []),
-                      ]}
-                    >
-                      {column}
-                    </Text>
-                  ))}
-                </View>
-                {newMeasurementGridRows.map((rowLabel, rowIndex) => (
-                  <View
-                    key={rowLabel}
-                    style={[
-                      styles.cutMethodTableRow,
-                      ...(rowIndex === newMeasurementGridRows.length - 1
-                        ? [styles.cutMethodTableRowLast]
-                        : []),
-                    ]}
-                  >
-                    <Text style={styles.cutMethodTableLabelCell}>
-                      {rowLabel}
-                    </Text>
-                    {cutMethodColumns.map((column, index) => (
-                      <View
-                        key={`${rowLabel}-${column}`}
-                        style={[
-                          styles.cutMethodTableValueCell,
-                          ...(index === cutMethodColumns.length - 1
-                            ? [styles.cutMethodTableValueCellLast]
-                            : []),
-                        ]}
-                      >
-                        <View style={styles.fillLine} />
-                      </View>
-                    ))}
-                  </View>
-                ))}
-              </View>
-              <View style={styles.newMeasurementFieldRow}>
-                <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Method: </Text>
-                  <View style={styles.fillLine} />
-                </View>
-              </View>
-              <View style={styles.newMeasurementFieldRow}>
-                <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Level Status: </Text>
-                  <View style={styles.fillLine} />
-                </View>
-              </View>
-              <View style={styles.newMeasurementFieldRow}>
-                <View style={styles.newMeasurementField}>
-                  <Text style={styles.newMeasurementFieldLabel}>
-                    Notes: </Text>
-                  {/* PR #428 item 13: three fill rows under Notes (was one).
-                      The stack keeps a 1 pt gap between the lines; width and
-                      left/right edges are unchanged from the single line. */}
-                  <View style={styles.notesLineStack}>
-                    <View style={styles.fillLine} />
-                    <View style={styles.fillLine} />
-                    <View style={styles.fillLine} />
-                  </View>
-                </View>
-              </View>
-            </View>
-            </View>
-
-            {/* ── End content column ─────────────────────────────────── */}
+            </>
           </View>
+          {/* ── End contentColumn (top block only) ─────────────────── */}
 
           {/* ── Photo column (33.33%, persistent right strip) ──────── */}
-          {showPhotos && includeAssets && imageAssets.length > 0 && (
+          {showPhotos && includeAssets && (
           <View style={styles.photoColumn}>
             {imageAssets.slice(0, PHOTO_SLOT_CAP).map((asset: any) => (
               <View key={asset.id ?? asset.signed_url} style={styles.photoCell}>
@@ -516,9 +363,83 @@ export function IdentityPage({
           )}
           {/* ── End photo column ───────────────────────────────────── */}
         </View>
-        {/* ── End columnContainer ──────────────────────────────────────── */}
+        {/* ── End columnContainer (top row: content + photos) ─── */}
+
+        {/* ── Full-width block below top row (Rows 6–7 + Notes) ── */}
+        <View style={{ width: '100%' }}>
+          {/* Row 6: Installed Equipment */}
+          <PdfTable
+            styles={styles}
+            title="Installed Equipment"
+            columns={equipmentColumns}
+            accentBarHeight={accentBarHeight}
+            rows={sensorDeployments
+              .slice()
+              .sort((a, b) => {
+                const aTime = a.datetime_installed
+                  ? new Date(a.datetime_installed).getTime()
+                  : 0
+                const bTime = b.datetime_installed
+                  ? new Date(b.datetime_installed).getTime()
+                  : 0
+                return bTime - aTime
+              })
+              .slice(0, 2)
+              .map((row) => ({
+                sensor_type: row.sensor_type,
+                sensor_model: row.sensor_model,
+                serial_no: row.serial_no,
+                hanging_cable_length:
+                  row.hanging_cable_length != null
+                    ? String(row.hanging_cable_length)
+                    : '',
+                recording_interval_display:
+                  row.recording_interval_display ?? '',
+                datetime_installed: formatAppDate(row.datetime_installed),
+                notes: row.notes?.trim() || '',
+              }))}
+            compact
+          />
+
+          {/* Row 7: New Measurement — two PdfTables + notes */}
+          {/* Table A: one-row data entry (Date pre-filled) */}
+          <PdfTable
+            styles={styles}
+            title="New Measurement"
+            columns={newMeasurementColumns}
+            rows={[{
+              date: showDate ? exportDate : '',
+              time: '',
+              staff: '',
+              prevDtw: '',
+              method: '',
+              status: '',
+            }]}
+            accentBarHeight={accentBarHeight}
+          />
+
+          {/* Table B: M1–M5 write-in grid */}
+          <PdfTable
+            styles={styles}
+            title=""
+            columns={measurementGridColumns}
+            rows={measurementGridRows}
+            accentBarHeight={0}
+          />
+
+          {/* Notes: three stacked fill lines, each prefixed with a visible "Notes:" label */}
+          <View style={styles.notesLineStack}>
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <View key={`note-row-${idx}`} style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                <Text style={[styles.label, { marginRight: 2 }]}>Notes: </Text>
+                <View style={[styles.fillLine, { flexGrow: 1 }]} />
+              </View>
+            ))}
+          </View>
         </View>
-        {/* ── End pageFrame ─────────────────────────────────────────── */}
+        {/* ── End full-width block (Rows 6–7 + Notes) ───── */}
+      </View>
+      {/* ── End pageFrame ─────────────────────────────────────────── */}
       </Page>
   )
 }

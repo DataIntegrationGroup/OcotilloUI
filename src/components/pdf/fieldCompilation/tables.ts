@@ -2,15 +2,10 @@
 // Moved verbatim out of page.tsx (C2a); no value changed.
 
 export const lastMeasurementsColumns = [
-  { key: 'date', label: 'Date', width: '15%' },
-  { key: 'dtw', label: 'Depth to Water Below Ground Surface (ft)', width: '24%' },
-  { key: 'method', label: 'Method', width: '13%' },
-  { key: 'status', label: 'Level Status', width: '13%' },
-  // ALIGNMENT A7 + PR#428 item 10/14: Site Notes joins the measurement rows as
-  // its own (last) column, showing only the two most recent notes — newest note
-  // paired with the newest row. Methods/Level Status keep enough width that
-  // their headers do not break mid-word.
-  { key: 'siteNotes', label: 'Site Notes', width: '36%' },
+  { key: 'date', label: 'Date', width: '16%' },
+  { key: 'dtw', label: 'Depth to Water Below Ground Surface (ft)', width: '40%' },
+  { key: 'method', label: 'Method', width: '22%' },
+  { key: 'status', label: 'Level Status', width: '22%' },
 ] as const
 
 export const equipmentColumns = [
@@ -31,8 +26,8 @@ export const manualMeasurementColumns = [
   { key: 'status', label: 'Level Status', width: '36%' },
 ] as const
 
-// Site Notes is now a single field inside Last Measurements (lane 32),
-// not a separate table. The label column width is just for alignment.
+// Site Notes is the previous-visit notes (same content as the retired
+// Pre-visit Notes pad), rendered as a single field below the measurement rows.
 export const siteNotesFieldLabel = 'Site Notes:' as const
 
 export const cutMethodColumns = ['M1', 'M2', 'M3', 'M4', 'M5'] as const

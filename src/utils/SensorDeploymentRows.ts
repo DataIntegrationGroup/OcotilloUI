@@ -75,16 +75,16 @@ export function buildSensorDeploymentRows(
     ...r,
     sensor_id: r.sensor?.id ?? null,
     sensor_name:
-      r.sensor?.name?.trim() || (r.isUnattached ? '(unattached)' : '-'),
-    sensor_model: r.sensor?.model?.trim() || '-',
-    sensor_type: r.sensor?.sensor_type?.trim() || '-',
-    serial_no: r.sensor?.serial_no?.trim() || '-',
+      r.sensor?.name?.trim() || (r.isUnattached ? '(unattached)' : ''),
+    sensor_model: r.sensor?.model?.trim() || '',
+    sensor_type: r.sensor?.sensor_type?.trim() || '',
+    serial_no: r.sensor?.serial_no?.trim() || '',
     datetime_installed: r.installation_date ?? null,
     datetime_removed: r.removal_date ?? null,
     recording_interval_display:
       r.recording_interval != null
         ? `${r.recording_interval} ${r.recording_interval_units ?? ''}`.trim()
         : null,
-    notes: r?.sensor?.notes?.trim() || '-',
+    notes: r?.sensor?.notes?.trim() || '',
   }))
 }

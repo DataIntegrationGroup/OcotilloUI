@@ -1,14 +1,9 @@
 import { useMemo } from 'react'
 import { useList, useOne } from '@refinedev/core'
 import { useDataGrid } from '@refinedev/mui'
-import {
-  IAsset,
-  IContact,
-  ISample,
-  ISensor,
-  IWell,
-} from '@/interfaces/ocotillo'
+import { IAsset, IContact, ISample, IWell } from '@/interfaces/ocotillo'
 import { useSensorDeploymentRows } from './useSensorDeploymentRows'
+import { useWellDetails } from './useWellDetails'
 import { SensorDeploymentRow } from '@/utils'
 
 type WellPdfThingId = string | number | undefined
@@ -30,15 +25,15 @@ export const useWellPdfData = ({
   sensorDeployments?: readonly SensorDeploymentRow[]
   sample?: ISample
 }) => {
-  const { result: fetchedWell, query: wellQuery } = useOne<IWell>({
-    resource: 'thing-well',
-    id: thingId,
-    queryOptions: {
-      enabled: Boolean(thingId && !initialWell),
-    },
-  })
+  // One call: GET thing/water-well/{id}/details carries the well plus its
+  // contacts, sensors, deployments, well screens and field events.
+  const {
+    well: detailsWell,
+    data: details,
+    query: wellDetailsQuery,
+  } = useWellDetails(thingId)
 
-  const well = initialWell ?? fetchedWell
+  const well = initialWell ?? detailsWell
 
   const { dataGridProps: observationsDataGridProps } = useDataGrid({
     resource: 'observation/groundwater-level',
@@ -67,42 +62,9 @@ export const useWellPdfData = ({
     },
   })
 
-  const { result: fetchedContacts, query: contactQuery } = useList<IContact>({
-    resource: 'contact',
-    dataProviderName: 'ocotillo',
-    meta: { params: { thing_id: thingId } },
-    queryOptions: {
-      enabled: Boolean(thingId && !initialContacts),
-    },
-  })
-
-  const { dataGridProps: sensorDataGridProps } = useDataGrid<ISensor>({
-    resource: 'sensor',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: {
-        thing_id: thingId,
-      },
-    },
-    queryOptions: {
-      enabled: Boolean(thingId && !initialSensorDeployments),
-      gcTime: 10 * 60 * 1000,
-      staleTime: 5 * 60 * 1000,
-    },
-  })
-
-  const { dataGridProps: deploymentsDataGridProps } = useDataGrid({
-    resource: thingId ? `thing/${thingId}/deployment` : undefined,
-    dataProviderName: 'ocotillo',
-    queryOptions: {
-      enabled: Boolean(thingId && !initialSensorDeployments),
-      gcTime: 10 * 60 * 1000,
-      staleTime: 5 * 60 * 1000,
-    },
-  })
-
-  const fetchedSensors = sensorDataGridProps?.rows ?? []
-  const fetchedDeployments = deploymentsDataGridProps?.rows ?? []
+  const fetchedContacts = details?.contacts ?? []
+  const fetchedSensors = details?.sensors ?? []
+  const fetchedDeployments = details?.deployments ?? []
 
   const sampleId = useMemo(() => {
     return (
@@ -138,36 +100,21 @@ export const useWellPdfData = ({
     fetchedSensorDeployments
 
   const assets = (initialAssets as IAsset[]) ?? fetchedAssets?.data ?? []
-  const contacts =
-    (initialContacts as IContact[]) ?? fetchedContacts?.data ?? []
+  const contacts = (initialContacts as IContact[]) ?? fetchedContacts
 
   const isLoading =
-    wellQuery.isLoading ||
+    wellDetailsQuery.isLoading ||
     observationsDataGridProps.loading ||
     assetQuery.isLoading ||
-    contactQuery.isLoading ||
-    (!initialSensorDeployments &&
-      (sensorDataGridProps.loading || deploymentsDataGridProps.loading)) ||
     (hasSampleId && sampleQuery.isLoading)
 
   let progress: number = 0
 
   if (thingId) {
     const steps: { weight: number; done: boolean }[] = [
-      { weight: 15, done: initialWell ? true : !wellQuery.isLoading },
-      { weight: 30, done: !observationsDataGridProps.loading },
-      { weight: 15, done: initialAssets ? true : !assetQuery.isLoading },
-      { weight: 15, done: initialContacts ? true : !contactQuery.isLoading },
-      {
-        weight: 10,
-        done: initialSensorDeployments ? true : !sensorDataGridProps.loading,
-      },
-      {
-        weight: 10,
-        done: initialSensorDeployments
-          ? true
-          : !deploymentsDataGridProps.loading,
-      },
+      { weight: 40, done: initialWell ? true : !wellDetailsQuery.isLoading },
+      { weight: 35, done: !observationsDataGridProps.loading },
+      { weight: 20, done: initialAssets ? true : !assetQuery.isLoading },
       { weight: 5, done: !hasSampleId || !sampleQuery.isLoading },
     ]
 
@@ -187,6 +134,9 @@ export const useWellPdfData = ({
     contacts,
     sample,
     sensorDeployments,
+    wellScreens: details?.well_screens ?? [],
+    fieldEvents: details?.field_events ?? [],
+    firstFieldEvent: details?.first_field_event ?? null,
     isLoading,
     progress,
   }

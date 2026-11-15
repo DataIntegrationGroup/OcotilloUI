@@ -11,7 +11,6 @@ import { LandingPage } from '@/pages/landing'
 import { SettingsPage } from '@/pages/settings'
 import { SignupPage } from '@/pages/signup'
 import { GeothermalRoutes, OcotilloRoutes, ST2Routes } from '@/routes'
-import { PacketPrintPage } from '@/pages/print/PacketPrintPage'
 import { settings } from '@/settings'
 
 const App: React.FC = () => (
@@ -62,23 +61,6 @@ const App: React.FC = () => (
         >
           <Route path="/callback" element={<Callback />} />
           <Route path="/login" element={<Login />} />
-        </Route>
-        {/* Print routes render as a bare document OUTSIDE AppShell so the
-            packet paginates into stacked letter sheets (no sider/header/footer,
-            no flex column shrinking the sheet) — same parent group style used by
-            the authenticated routes below. */}
-        <Route
-          path="/ocotillo/print/packet/:thingId"
-          element={
-            <Authenticated key="print-routes" redirectOnFail="/login">
-              <Outlet />
-            </Authenticated>
-          }
-        >
-          <Route
-            path="/ocotillo/print/packet/:thingId"
-            element={<PacketPrintPage />}
-          />
         </Route>
         <Route
           element={

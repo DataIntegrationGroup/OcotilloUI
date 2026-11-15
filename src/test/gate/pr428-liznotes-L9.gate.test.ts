@@ -16,7 +16,6 @@
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { describe, expect, it } from 'vitest'
 
 const ROOT = process.cwd()
@@ -32,11 +31,6 @@ const ACTIONS = p('src/components/Button/WellPDFActions.tsx')
 const EQUIPMENT = p('src/components/WellShow/Equipment.tsx')
 const STYLES = p('src/utils/CreatePdfStyles.ts')
 const PDF_DIR = p('src/components/pdf')
-
-const OUT_DIR = '/Users/robbalch/workspace/jobs/nmbg-liznotes-20261109/L9'
-const OUT_PDF = path.join(OUT_DIR, 'packet-after-density.pdf')
-
-const isCI = process.env.CI === 'true' || process.env.CI === '1'
 
 /** every .ts/.tsx file under a directory */
 const walk = (dir: string, acc: string[] = []): string[] => {
@@ -123,36 +117,4 @@ describe('L9 static — one density, and no way to pick another', () => {
     const densityErrors = errors.filter((l) => /density|IPdfDensity|comfortable|compact/i.test(l))
     expect(densityErrors, `density type errors:\n${densityErrors.join('\n')}`).toEqual([])
   })
-})
-
-describe.skipIf(isCI)('L9 artifact — the app still builds and the packet still prints', () => {
-  it(
-    'writes a two-page 612x792 packet after the narrowing',
-    () => {
-      fs.mkdirSync(OUT_DIR, { recursive: true })
-      execFileSync('npm', ['run', 'packet:pdf', '--', '--mock', '--out', OUT_PDF], {
-        cwd: ROOT,
-        stdio: 'pipe',
-        timeout: 600_000,
-        env: { ...process.env, CI: '' },
-      })
-
-      expect(fs.existsSync(OUT_PDF), `no PDF at ${OUT_PDF}`).toBe(true)
-      expect(fs.statSync(OUT_PDF).size).toBeGreaterThan(20_000)
-
-      return (async () => {
-        const doc = await pdfjs.getDocument({ data: new Uint8Array(fs.readFileSync(OUT_PDF)) }).promise
-        expect(doc.numPages).toBe(2)
-        for (let i = 1; i <= doc.numPages; i++) {
-          const page = await doc.getPage(i)
-          const vp = page.getViewport({ scale: 1 })
-          expect(vp.width, `page ${i} width`).toBeGreaterThan(611)
-          expect(vp.width, `page ${i} width`).toBeLessThan(613)
-          expect(vp.height, `page ${i} height`).toBeGreaterThan(791)
-          expect(vp.height, `page ${i} height`).toBeLessThan(793)
-        }
-      })()
-    },
-    660_000
-  )
 })
