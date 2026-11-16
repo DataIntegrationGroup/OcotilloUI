@@ -32,12 +32,13 @@ import {
 import { getContactDisplayName } from '@/utils/contactDisplayName'
 
 /**
- * Contacts list. Rows select rather than navigate: selecting a contact opens
- * the email, phone and address cards below the table for anyone cleared to see
- * confidential details, and the name cell links through to the contact page.
+ * Contacts list. Authorized users can expand several rows at once to compare
+ * email, phone and address details, while the name cell links to the contact
+ * page.
  */
 
-const CONTACTS_PAGE_SIZE = 50
+const CONTACTS_PAGE_SIZE = 20
+const CONTACTS_PAGE_SIZE_OPTIONS = [20, 50, 100]
 const NO_VALUE = '—'
 
 const pickPrimary = <T,>(
@@ -54,8 +55,8 @@ export const ContactList: React.FC = () => {
   }, [])
 
   const { canViewConfidential } = useAccessCapabilities()
-  const [selectedContactId, setSelectedContactId] = useState<number | null>(
-    null
+  const [expandedContactIds, setExpandedContactIds] = useState<Set<number>>(
+    () => new Set()
   )
 
   const Link = useLink()
@@ -241,22 +242,40 @@ export const ContactList: React.FC = () => {
         table={table}
         isLoading={refineTable.tableQuery.isLoading}
         emptyMessage="No contacts match these filters."
-        isRowSelected={(contact) => contact.id === selectedContactId}
-        onRowClick={(contact) => {
-          setSelectedContactId(contact.id)
-          captureEvent('contacts_row_clicked', { contact_id: contact.id })
-        }}
+        {...(canViewConfidential
+          ? {
+              isRowExpanded: (contact: IContact) =>
+                expandedContactIds.has(contact.id),
+              onExpandedRowChange: (contact: IContact, expanded: boolean) => {
+                setExpandedContactIds((current) => {
+                  const next = new Set(current)
+                  if (expanded) next.add(contact.id)
+                  else next.delete(contact.id)
+                  return next
+                })
+                captureEvent('contacts_row_expanded', {
+                  contact_id: contact.id,
+                  expanded,
+                })
+              },
+              getExpandedRowLabel: getContactDisplayName,
+              renderExpandedRow: (contact: IContact) => (
+                <div className="grid gap-4 p-4 md:grid-cols-2">
+                  <EmailInfoCard contactId={contact.id} />
+                  <PhoneInfoCard contactId={contact.id} />
+                  <div className="md:col-span-2">
+                    <AddressInfoCard contactId={contact.id} />
+                  </div>
+                </div>
+              ),
+            }
+          : {})}
       />
 
-      <DataTablePagination table={table} />
-
-      {selectedContactId && canViewConfidential ? (
-        <div className="flex flex-col gap-4">
-          <EmailInfoCard contactId={selectedContactId} />
-          <PhoneInfoCard contactId={selectedContactId} />
-          <AddressInfoCard contactId={selectedContactId} />
-        </div>
-      ) : null}
+      <DataTablePagination
+        table={table}
+        pageSizeOptions={CONTACTS_PAGE_SIZE_OPTIONS}
+      />
     </ListPageShell>
   )
 }

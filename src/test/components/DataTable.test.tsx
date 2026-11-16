@@ -55,6 +55,35 @@ function Harness({
   return <DataTable table={table} {...props} />
 }
 
+function ExpandableHarness() {
+  const [expandedIds, setExpandedIds] = React.useState<Set<number>>(
+    () => new Set()
+  )
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => String(row.id),
+  })
+
+  return (
+    <DataTable
+      table={table}
+      isRowExpanded={(row) => expandedIds.has(row.id)}
+      onExpandedRowChange={(row, expanded) => {
+        setExpandedIds((current) => {
+          const next = new Set(current)
+          if (expanded) next.add(row.id)
+          else next.delete(row.id)
+          return next
+        })
+      }}
+      getExpandedRowLabel={(row) => row.name}
+      renderExpandedRow={(row) => <span>Details for {row.name}</span>}
+    />
+  )
+}
+
 describe('DataTable', () => {
   it('renders a row per record with the column cells', () => {
     render(<Harness />)
@@ -125,5 +154,29 @@ describe('DataTable', () => {
 
     expect(firstRow).not.toHaveAttribute('data-state', 'selected')
     expect(secondRow).toHaveAttribute('data-state', 'selected')
+  })
+
+  it('expands multiple records without triggering row navigation', async () => {
+    const user = userEvent.setup()
+    navigate.mockClear()
+    render(<ExpandableHarness />)
+
+    const firstToggle = screen.getByRole('button', {
+      name: 'Expand details for Well A',
+    })
+    await user.click(firstToggle)
+    await user.click(
+      screen.getByRole('button', { name: 'Expand details for Well B' })
+    )
+
+    expect(screen.getByText('Details for Well A')).toBeInTheDocument()
+    expect(screen.getByText('Details for Well B')).toBeInTheDocument()
+    expect(firstToggle).toHaveAttribute('aria-expanded', 'true')
+
+    await user.click(firstToggle)
+
+    expect(screen.queryByText('Details for Well A')).not.toBeInTheDocument()
+    expect(screen.getByText('Details for Well B')).toBeInTheDocument()
+    expect(navigate).not.toHaveBeenCalled()
   })
 })

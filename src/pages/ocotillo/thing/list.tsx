@@ -80,7 +80,8 @@ export const SpringList: React.FC = () => {
   )
 }
 
-const WELLS_PAGE_SIZE = 50
+const WELLS_PAGE_SIZE = 20
+const WELLS_PAGE_SIZE_OPTIONS = [20, 50, 100]
 
 /**
  * Wells list. Uses the shadcn DataTable over Refine's `useTable`: paging,
@@ -298,7 +299,10 @@ export const WellList: React.FC = () => {
         }
       />
 
-      <DataTablePagination table={table} />
+      <DataTablePagination
+        table={table}
+        pageSizeOptions={WELLS_PAGE_SIZE_OPTIONS}
+      />
     </ListPageShell>
   )
 }

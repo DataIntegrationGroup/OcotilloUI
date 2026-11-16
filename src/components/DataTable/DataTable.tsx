@@ -1,5 +1,6 @@
 import { flexRender, type Table as TanstackTable } from '@tanstack/react-table'
-import type { MouseEvent } from 'react'
+import { ChevronRightIcon } from 'lucide-react'
+import { Fragment, type MouseEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import {
   isNewWindowClick,
@@ -14,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 /**
@@ -37,6 +39,14 @@ export interface DataTableProps<TData> {
   /** Runs before navigation. Use for analytics. */
   onRowClick?: (row: TData) => void
   isRowSelected?: (row: TData) => boolean
+  /** Renders content in a full-width row below an expanded record. */
+  renderExpandedRow?: (row: TData) => ReactNode
+  /** Whether the record's detail row is currently visible. */
+  isRowExpanded?: (row: TData) => boolean
+  /** Receives the record and its next expanded state after its toggle is used. */
+  onExpandedRowChange?: (row: TData, expanded: boolean) => void
+  /** Accessible record name used in the expand/collapse button label. */
+  getExpandedRowLabel?: (row: TData) => string
   skeletonRowCount?: number
   className?: string
 }
@@ -48,11 +58,18 @@ export function DataTable<TData>({
   rowHref,
   onRowClick,
   isRowSelected,
+  renderExpandedRow,
+  isRowExpanded,
+  onExpandedRowChange,
+  getExpandedRowLabel,
   skeletonRowCount = 8,
   className,
 }: DataTableProps<TData>) {
   const navigate = useNavigate()
   const visibleColumnCount = table.getVisibleLeafColumns().length
+  const hasExpandableRows = Boolean(
+    renderExpandedRow && isRowExpanded && onExpandedRowChange
+  )
 
   const handleRowClick = (
     event: MouseEvent<HTMLTableRowElement>,
@@ -82,6 +99,11 @@ export function DataTable<TData>({
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
+              {hasExpandableRows ? (
+                <TableHead className="w-10">
+                  <span className="sr-only">Details</span>
+                </TableHead>
+              ) : null}
               {headerGroup.headers.map((header) => {
                 const meta = header.column.columnDef.meta
                 const sorted = header.column.getIsSorted()
@@ -118,6 +140,7 @@ export function DataTable<TData>({
           {isLoading ? (
             Array.from({ length: skeletonRowCount }).map((_, rowIndex) => (
               <TableRow key={`skeleton-${rowIndex}`}>
+                {hasExpandableRows ? <TableCell /> : null}
                 {table.getVisibleLeafColumns().map((column) => (
                   <TableCell key={column.id}>
                     <Skeleton className="h-4 w-full max-w-40" />
@@ -128,48 +151,90 @@ export function DataTable<TData>({
           ) : rows.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={visibleColumnCount}
+                colSpan={visibleColumnCount + (hasExpandableRows ? 1 : 0)}
                 className="h-24 text-center text-muted-foreground"
               >
                 {emptyMessage}
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={
-                  isRowSelected?.(row.original) ? 'selected' : undefined
-                }
-                onClick={(event) => handleRowClick(event, row.original)}
-                onAuxClick={(event) => {
-                  // Middle click: open elsewhere without following the row.
-                  if (event.button === 1) handleRowClick(event, row.original)
-                }}
-                className={cn(
-                  rowHref || onRowClick ? 'cursor-pointer' : undefined
-                )}
-              >
-                {row.getVisibleCells().map((cell) => {
-                  const meta = cell.column.columnDef.meta
+            rows.map((row) => {
+              const expanded = isRowExpanded?.(row.original) ?? false
+              const rowLabel = getExpandedRowLabel?.(row.original) ?? 'record'
 
-                  return (
-                    <TableCell
-                      key={cell.id}
-                      className={cn(
-                        meta?.align ? ALIGNMENT_CLASS[meta.align] : undefined,
-                        meta?.cellClassName
-                      )}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  )
-                })}
-              </TableRow>
-            ))
+              return (
+                <Fragment key={row.id}>
+                  <TableRow
+                    data-state={
+                      isRowSelected?.(row.original) ? 'selected' : undefined
+                    }
+                    onClick={(event) => handleRowClick(event, row.original)}
+                    onAuxClick={(event) => {
+                      // Middle click: open elsewhere without following the row.
+                      if (event.button === 1)
+                        handleRowClick(event, row.original)
+                    }}
+                    className={cn(
+                      rowHref || onRowClick ? 'cursor-pointer' : undefined
+                    )}
+                  >
+                    {hasExpandableRows ? (
+                      <TableCell className="w-10">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-expanded={expanded}
+                          aria-label={`${expanded ? 'Collapse' : 'Expand'} details for ${rowLabel}`}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onExpandedRowChange?.(row.original, !expanded)
+                          }}
+                        >
+                          <ChevronRightIcon
+                            className={cn(
+                              'transition-transform',
+                              expanded ? 'rotate-90' : undefined
+                            )}
+                            aria-hidden
+                          />
+                        </Button>
+                      </TableCell>
+                    ) : null}
+                    {row.getVisibleCells().map((cell) => {
+                      const meta = cell.column.columnDef.meta
+
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            meta?.align
+                              ? ALIGNMENT_CLASS[meta.align]
+                              : undefined,
+                            meta?.cellClassName
+                          )}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      )
+                    })}
+                  </TableRow>
+                  {expanded ? (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell
+                        colSpan={visibleColumnCount + 1}
+                        className="whitespace-normal p-0"
+                      >
+                        {renderExpandedRow?.(row.original)}
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </Fragment>
+              )
+            })
           )}
         </TableBody>
       </Table>
