@@ -190,7 +190,7 @@ export function useWellListColumns(): ColumnDef<IWell, unknown>[] {
           if (groups.length === 0) return NO_VALUE
 
           return (
-            <div className="flex flex-wrap items-center">
+            <div className="flex flex-nowrap items-center whitespace-nowrap">
               {groups.map((group, index) => (
                 <span key={group.id}>
                   {index > 0 && ', '}
@@ -218,6 +218,10 @@ export function useWellListColumns(): ColumnDef<IWell, unknown>[] {
           description:
             'Projects linked to this well. A well may belong to more than one. Filter matches any linked project name. Sort uses the alphabetically first project name.',
           filter: { type: 'text' },
+          // Keep linked project names on one line. The table already scrolls
+          // horizontally when needed, which is easier to scan than taller rows.
+          headClassName: 'min-w-80',
+          cellClassName: 'min-w-80 whitespace-nowrap',
         },
       },
       {
