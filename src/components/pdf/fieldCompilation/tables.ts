@@ -2,28 +2,28 @@
 // Moved verbatim out of page.tsx (C2a); no value changed.
 
 export const lastMeasurementsColumns = [
-  { key: 'date', label: 'Date', width: '16%' },
-  { key: 'dtw', label: 'Depth to Water Below Ground Surface (ft)', width: '40%' },
-  { key: 'method', label: 'Method', width: '22%' },
-  { key: 'status', label: 'Level Status', width: '22%' },
+  { key: 'date', label: 'Date' },
+  { key: 'dtw', label: 'Depth to Water Below Ground Surface (ft)' },
+  { key: 'method', label: 'Method' },
+  { key: 'status', label: 'Level Status' },
 ] as const
 
 export const equipmentColumns = [
-  { key: 'sensor_type', label: 'Equipment Type', width: '20%' },
-  { key: 'sensor_model', label: 'Model', width: '16%' },
-  { key: 'serial_no', label: 'Serial No', width: '14%' },
-  { key: 'hanging_cable_length', label: 'Cable Length', width: '14%' },
-  { key: 'recording_interval_display', label: 'Rec Interval', width: '14%' },
-  { key: 'datetime_installed', label: 'Installed', width: '14%' },
+  { key: 'sensor_type', label: 'Equipment Type' },
+  { key: 'sensor_model', label: 'Model' },
+  { key: 'serial_no', label: 'Serial No' },
+  { key: 'hanging_cable_length', label: 'Cable Length' },
+  { key: 'recording_interval_display', label: 'Rec Interval' },
+  { key: 'datetime_installed', label: 'Installed' },
   // ALIGNMENT A8: notes join the row instead of a second table.
-  { key: 'notes', label: 'Notes', width: '8%' },
+  { key: 'notes', label: 'Notes' },
 ] as const
 
 export const manualMeasurementColumns = [
-  { key: 'date', label: 'Date', width: '22%' },
-  { key: 'dtw', label: 'DTW (ft)', width: '26%' },
-  { key: 'mpHeight', label: 'MP Ht (ft)', width: '16%' },
-  { key: 'status', label: 'Level Status', width: '36%' },
+  { key: 'date', label: 'Date' },
+  { key: 'dtw', label: 'DTW (ft)' },
+  { key: 'mpHeight', label: 'MP Ht (ft)' },
+  { key: 'status', label: 'Level Status' },
 ] as const
 
 // Site Notes is the previous-visit notes (same content as the retired

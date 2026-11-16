@@ -42,21 +42,21 @@ import {
 // ── Inline column definitions for the new Measurement tables ──
 
 const newMeasurementColumns = [
-  { key: 'date', label: 'Date', width: '10%' },
-  { key: 'time', label: 'Time', width: '5%' },
-  { key: 'staff', label: 'Staff', width: '7%' },
-  { key: 'prevDtw', label: 'Prev DTW (ft)', width: '28%' },
-  { key: 'method', label: 'Method', width: '22%' },
-  { key: 'status', label: 'Level Status', width: '28%' },
+  { key: 'date', label: 'Date' },
+  { key: 'time', label: 'Time' },
+  { key: 'staff', label: 'Staff' },
+  { key: 'prevDtw', label: 'Prev DTW (ft)' },
+  { key: 'method', label: 'Method' },
+  { key: 'status', label: 'Level Status' },
 ] as const
 
 const measurementGridColumns = [
-  { key: 'measurement', label: 'Measurement', width: '30%' },
-  { key: 'm1', label: 'M1', width: '14%' },
-  { key: 'm2', label: 'M2', width: '14%' },
-  { key: 'm3', label: 'M3', width: '14%' },
-  { key: 'm4', label: 'M4', width: '14%' },
-  { key: 'm5', label: 'M5', width: '14%' },
+  { key: 'measurement', label: 'Measurement' },
+  { key: 'm1', label: 'M1' },
+  { key: 'm2', label: 'M2' },
+  { key: 'm3', label: 'M3' },
+  { key: 'm4', label: 'M4' },
+  { key: 'm5', label: 'M5' },
 ] as const
 
 // ── Inline row definitions for the M1–M5 write-in grid ──

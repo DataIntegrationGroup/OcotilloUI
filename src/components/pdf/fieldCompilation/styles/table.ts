@@ -24,23 +24,23 @@ export const table = (scale: Scale) =>
     cell: {
       paddingVertical: 3,
       paddingHorizontal: 3,
-      fontSize: 9,
+      fontSize: 7.5,
       lineHeight: 1.1,
     },
     cellHeader: {
       fontWeight: 700,
-      fontSize: 9,
+      fontSize: 7.5,
       paddingVertical: 3,
       paddingHorizontal: 0,
     },
     compactCell: {
-      fontSize: 7.5,
+      fontSize: 6.5,
       lineHeight: 1.05,
       paddingVertical: 2,
       paddingHorizontal: 2,
     },
     compactCellHeader: {
-      fontSize: 7.5,
+      fontSize: 6.5,
       paddingVertical: 2,
       paddingHorizontal: 0,
     },

@@ -3,28 +3,16 @@ import type { FieldCompilationStyles } from '../fieldCompilation/styles'
 import { renderValue } from '../fieldCompilation/format'
 
 /**
- * Generic PDF table column definition for PdfTable. `width` stays documented
- * even though the render path no longer pins each cell to it — weightFromWidth
- * turns it into a proportional flexGrow so cells share the bounded row width.
+ * Generic PDF table column definition for PdfTable. `width` is ignored by the
+ * render path — every column takes an identical share of the row via
+ * flexGrow:1, flexBasis:0 — but it stays in the type (optional) so existing
+ * callers that still pass a width string keep type-checking. Omit or ignore it.
  */
 export type TableColumn<T> = {
   key: keyof T | string
   label: string
-  width: string
-}
-
-/**
- * Parse a percentage-based column weight (e.g. "16.67%") into a proportional
- * grow weight used to fill the row. Keeping the trailing percentage as the
- * weight preserves the intended per-column proportions while Yoga grows each
- * child to fit the (now bounded) parent — so cells never overrun the right
- * page edge even when the percentages sum past 100%, which a pinned
- * { width } could not guarantee. flexBasis: 0 makes columns fill strictly by
- * these weights instead of being skewed by per-cell text width.
- */
-function weightFromWidth(width: string): number {
-  const parsed = Number.parseFloat(width)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
+  /** @deprecated ignored by PdfTable; every column renders at equal width. */
+  width?: string
 }
 
 /** Returns true if every non-empty cell value parses as a finite number. */
@@ -145,7 +133,7 @@ export const PdfTable = <T extends Record<string, unknown>>({
               style={[
                 compact ? styles.compactCellHeader : styles.cellHeader,
                 {
-                  flexGrow: weightFromWidth(column.width),
+                  flexGrow: 1,
                   flexBasis: 0,
                   color: '#ffffff',
                   fontWeight: '700',
@@ -187,7 +175,7 @@ export const PdfTable = <T extends Record<string, unknown>>({
                 const statusSty = isStatusCell ? statusStyle(val) : undefined
 
                 let textStyle: any = {
-                  flexGrow: weightFromWidth(column.width),
+                  flexGrow: 1,
                   flexBasis: 0,
                   paddingVertical: compact ? 2 : 3,
                   paddingHorizontal: compact ? 2 : 3,

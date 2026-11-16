@@ -114,28 +114,28 @@ export function OwnerSheetPage({
           </Text>
         </View>
 
-        {/* ── Hydrograph (tighter height to fit readings table below) ───── */}
-        <View style={{ flexDirection: 'row', width: '100%', height: 140, marginBottom: 4 }}>
+        {/* ── Hydrograph (standalone full-width container; fixed 396pt height,
+             held whether or not an image exists) ───── */}
+        <View style={{ width: '100%', marginBottom: 6 }}>
           {/* Y-axis label — placed horizontally at the top of the hydrograph area.
               react-pdf's Text does not accept transform (TS2769), so a rotated vertical
               axis label is not feasible here. This horizontal label stays inside the frame
               and reads naturally below the title. */}
-          <Text style={{ fontSize: 7, color: NAVY, fontWeight: 500, marginBottom: 1 }}>
+          <Text style={{ fontSize: 7, color: NAVY, fontWeight: 500, marginBottom: 3 }}>
             Depth to Water Below Ground Surface (ft)
           </Text>
-          {/* Hydrograph image or placeholder — flex:1 fills remaining width below the label. */}
-          <View style={{ flex: 1, height: 124 }}>
+          {/* Hydrograph image or placeholder — own standalone container whose height is
+              fixed at 396pt and held whether or not an image exists. */}
+          <View style={hydrographImage ? styles.hydrographFrame : styles.hydrographFrameEmpty}>
             {hydrographImage ? (
-              <Image src={hydrographImage} style={{ width: '100%', height: 124, objectFit: 'contain' }} />
+              <Image src={hydrographImage} style={styles.hydrographGraphic} />
             ) : (
-              <Text style={{ borderWidth: 1, borderStyle: 'dashed', borderColor: BORDER, padding: 16, textAlign: 'center', fontSize: 7, color: '#6b7280' }}>
-                No hydrograph available for this well.
-              </Text>
+              <Text style={styles.hydrographEmptyText}>No hydrograph available for this well.</Text>
             )}
           </View>
         </View>
 
-        {/* ── Readings table: 26 / 18 / 18 / 38 ──────────────────────── */}
+        {/* ── Readings table: equal width (1 / 1 / 1 / 1) ─────────────── */}
         <Table readings={data.readings} />
 
         {/* Page footer always sits at the very bottom inside chrome's frame */}
@@ -182,19 +182,19 @@ function Card({ title, value }: { title: string; value: string }) {
   )
 }
 
-/** Four-column readings table (26 / 18 / 18 / 38). No column overflows or bumps its neighbour because each uses a proportional flex weight with zero basis. */
+/** Four-column readings table — all columns get equal width (flexGrow:1, flexBasis:0). No column overflows or bumps its neighbour because each uses a proportional flex weight with zero basis. */
 function Table({ readings }: { readings: PacketReading[] }) {
   const cols = [
-    { label: 'Date', w: 26 },
-    { label: 'Depth to Water Below Ground Surface (ft)', w: 18 },
-    { label: 'MP Ht (ft)', w: 18 },
-    { label: 'Level Status', w: 38 },
+    { label: 'Date', w: 1 },
+    { label: 'Depth to Water Below Ground Surface (ft)', w: 1 },
+    { label: 'MP Ht (ft)', w: 1 },
+    { label: 'Level Status', w: 1 },
   ] as const
   return (
     <View style={{ borderWidth: 0.5, borderColor: BORDER, width: '100%' }}>
       <View style={{ flexDirection: 'row' }}>
         {cols.map((c) => (
-          <Text key={c.label} style={{ flexBasis: 0, flexGrow: c.w, paddingVertical: 2, paddingHorizontal: 3, backgroundColor: NAVY, color: '#fff', fontSize: 7, fontWeight: 700 }}>{c.label}</Text>
+          <Text key={c.label} style={{ flexBasis: 0, flexGrow: c.w, paddingVertical: 2, paddingHorizontal: 3, backgroundColor: NAVY, color: '#fff', fontSize: 6, fontWeight: 700 }}>{c.label}</Text>
         ))}
       </View>
       {readings.length > 0 ? readings.map((r, i) => (

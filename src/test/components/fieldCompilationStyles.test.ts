@@ -85,14 +85,25 @@ const EXPECTED_KEYS = [
   'notesPadLine',
   'blankPageBody',
   'blankPageText',
+  // Added after the pre-split baseline (intentional, each landed with a layout change):
+  // pageFrame + notesLineStack + photoSlotPlaceholder (page-1 reflow / zero-photo slots),
+  // hydrographFrame / hydrographFrameEmpty / hydrographGraphic / hydrographEmptyText
+  // (2026-11-15 page-2 fixed-height hydrograph container).
+  'pageFrame',
+  'notesLineStack',
+  'photoSlotPlaceholder',
+  'hydrographFrame',
+  'hydrographFrameEmpty',
+  'hydrographGraphic',
+  'hydrographEmptyText',
 ]
 
 const DENSITIES = ['comfortable'] as const
 
 describe('fieldCompilation style key set (pre-split pin)', () => {
-  it('pins 81 keys', () => {
-    expect(EXPECTED_KEYS).toHaveLength(81)
-    expect(new Set(EXPECTED_KEYS).size).toBe(81)
+  it('pins 88 keys', () => {
+    expect(EXPECTED_KEYS).toHaveLength(88)
+    expect(new Set(EXPECTED_KEYS).size).toBe(88)
   })
 
   for (const density of DENSITIES) {
