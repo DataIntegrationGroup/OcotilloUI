@@ -372,30 +372,44 @@ export const WellBatchExport = () => {
         )
       )
 
-      const sampleMethodsBySampleId =
+      const samples: Array<readonly [number, ISample]> =
         sampleIds.length > 0
-          ? Object.fromEntries(
-              (
-                await Promise.allSettled(
-                  sampleIds.map((sampleId) =>
-                    ocotilloDataProvider.getOne<ISample>({
-                      resource: 'ocotillo.sample',
-                      id: sampleId,
-                    })
-                  )
+          ? (
+              await Promise.allSettled(
+                sampleIds.map((sampleId) =>
+                  ocotilloDataProvider.getOne<ISample>({
+                    resource: 'ocotillo.sample',
+                    id: sampleId,
+                  })
                 )
               )
-                .map((result, index) => {
-                  if (result.status !== 'fulfilled') return null
-                  const sample = result.value.data as ISample
-                  return [
-                    sampleIds[index],
-                    sample.sample_method?.trim() || '-',
-                  ] as const
-                })
-                .filter(Boolean) as Array<readonly [number, string]>
             )
-          : {}
+              .map((result, index) =>
+                result.status === 'fulfilled'
+                  ? ([sampleIds[index], result.value.data as ISample] as const)
+                  : null
+              )
+              .filter((entry): entry is readonly [number, ISample] => entry !== null)
+          : []
+
+      const sampleMethodsBySampleId = Object.fromEntries(
+        samples.map(([sampleId, sample]) => [
+          sampleId,
+          sample.sample_method?.trim() || '-',
+        ])
+      )
+
+      // Staff = the sampler, else the visit's field-event participants.
+      const staffBySampleId = Object.fromEntries(
+        samples.map(([sampleId, sample]) => [
+          sampleId,
+          sample.sampler_name?.trim() ||
+            (sample.field_event?.field_event_participants ?? [])
+              .map((p) => p.participant?.name?.trim())
+              .filter(Boolean)
+              .join(', '),
+        ])
+      )
 
       return {
         well: wellDetails.well,
@@ -407,6 +421,7 @@ export const WellBatchExport = () => {
           (wellDetails.sensors ?? []) as SensorLike[]
         ),
         sampleMethodsBySampleId,
+        staffBySampleId,
       }
     },
     [ocotilloDataProvider]
@@ -688,6 +703,7 @@ export const WellBatchExport = () => {
               observations: [],
               sensorDeployments: [],
               sampleMethodsBySampleId: {},
+              staffBySampleId: {},
             }
           })
 
@@ -782,6 +798,7 @@ export const WellBatchExport = () => {
               sensorDeployments={bundle.sensorDeployments}
               hydrographImage={hydrographImages[bundle.well.id] ?? null}
               sampleMethodsBySampleId={bundle.sampleMethodsBySampleId}
+              staffBySampleId={bundle.staffBySampleId}
               standalone={false}
               includeConfidentialContacts={canViewConfidential}
             />

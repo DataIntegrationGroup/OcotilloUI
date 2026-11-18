@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { BaseRecord, useNotification } from '@refinedev/core'
-import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
-import { WellPDF } from '@/components'
+import { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
+import { FieldCompilationNotesPdf, WellPDF } from '@/components'
+import { buildWeaverQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
 import { pdf } from '@react-pdf/renderer'
 import { DownloadIcon } from 'lucide-react'
@@ -16,7 +17,6 @@ export const WellPDFDownloadButton = ({
   observations,
   assets,
   contacts,
-  sample,
   sensorDeployments = [],
   options,
   hydrographImage,
@@ -26,7 +26,6 @@ export const WellPDFDownloadButton = ({
   observations: readonly Partial<Omit<IObservation, 'created_at'>>[]
   assets: BaseRecord[]
   contacts: IContact[]
-  sample?: Partial<ISample>
   sensorDeployments?: SensorDeploymentRow[]
   options?: IPdfOptions
   hydrographImage?: string | null
@@ -51,18 +50,19 @@ export const WellPDFDownloadButton = ({
     try {
       setIsGenerating(true)
       const filename = buildPdfFilename(well)
+      // Same value the page-2 URL line prints (buildWeaverLocationUrl(well.name)).
+      const qrDataUrl = (await buildWeaverQrDataUrl(well.name)) ?? undefined
 
       const blob = await pdf(
-        <WellPDF
+        <FieldCompilationNotesPdf
           well={well}
-          sample={sample}
           assets={assets}
           contacts={contacts}
           observations={observations}
           sensorDeployments={sensorDeployments}
           includeConfidentialContacts={canViewConfidential}
-          options={opts}
           hydrographImage={hydrographImage}
+          qrDataUrl={qrDataUrl}
         />
       ).toBlob()
 

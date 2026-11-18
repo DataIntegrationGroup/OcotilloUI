@@ -17,4 +17,6 @@ export type WellBundle = {
   observations: readonly Partial<IObservation>[]
   sensorDeployments: SensorDeploymentRow[]
   sampleMethodsBySampleId: Record<number, string>
+  /** Staff on the visit behind each of the latest samples (field sheet · Staff). */
+  staffBySampleId: Record<number, string>
 }

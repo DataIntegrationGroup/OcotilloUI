@@ -3,7 +3,8 @@ import { BaseRecord, useGo, useNotification } from '@refinedev/core'
 import { DownloadIcon, EyeIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router'
-import { WellPDF } from '@/components'
+import { FieldCompilationNotesPdf, WellPDF } from '@/components'
+import { buildWeaverQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
 import {
   CHEMISTRY_REPORT_DEFAULT_SECTIONS,
   downloadChemistryReport,
@@ -24,7 +25,7 @@ import {
 import { PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { useAccessCapabilities, useWellChemistryReport } from '@/hooks'
 import { IPdfOptions } from '@/interfaces'
-import { IContact, IObservation, ISample, IWell } from '@/interfaces/ocotillo'
+import { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
 
 /** The kinds of PDF the well details page can produce. */
@@ -42,7 +43,6 @@ type WellPDFActionsButtonProps = {
   observations: readonly Partial<Omit<IObservation, 'created_at'>>[]
   assets: BaseRecord[]
   contacts: IContact[]
-  sample?: Partial<ISample>
   sensorDeployments?: SensorDeploymentRow[]
   options?: IPdfOptions
   hydrographImage?: string | null
@@ -55,7 +55,6 @@ export const WellPDFActionsButton = ({
   observations,
   assets,
   contacts,
-  sample,
   sensorDeployments = [],
   options,
   hydrographImage,
@@ -148,18 +147,19 @@ export const WellPDFActionsButton = ({
 
   const handleDownloadFieldSheet = async (opts: IPdfOptions) => {
     const filename = buildPdfFilename(well)
+    // Same value the page-2 URL line prints (buildWeaverLocationUrl(well.name)).
+    const qrDataUrl = (await buildWeaverQrDataUrl(well.name)) ?? undefined
 
     const blob = await pdf(
-      <WellPDF
+      <FieldCompilationNotesPdf
         well={well}
-        sample={sample}
         assets={assets}
         contacts={contacts}
         observations={observations}
         sensorDeployments={sensorDeployments}
         includeConfidentialContacts={canViewConfidential}
-        options={opts}
         hydrographImage={hydrographImage}
+        qrDataUrl={qrDataUrl}
       />
     ).toBlob()
 

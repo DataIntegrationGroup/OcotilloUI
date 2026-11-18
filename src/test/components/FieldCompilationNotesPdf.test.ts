@@ -1,5 +1,5 @@
 import { createElement } from 'react'
-import { pdf } from '@react-pdf/renderer'
+import { Document, pdf } from '@react-pdf/renderer'
 import { describe, expect, it } from 'vitest'
 import { inflate } from 'pako'
 import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
@@ -172,6 +172,152 @@ describe('FieldCompilationNotesPdf', () => {
     const pdfBlob = await pdf(
       createElement(FieldCompilationNotesPdf, {
         well: makeWell(),
+        contacts: [makeContact([])],
+        assets: [],
+        observations: [],
+        sensorDeployments: [],
+        hydrographImage: null,
+      }) as any
+    ).toBlob()
+
+    const { pageCount, pages } = await extractPdfText(pdfBlob)
+
+    // Document is now exactly 2 pages (was 4):
+    // Page 1 = Sheet 1 header + left column + right images
+    // Page 2 = Sheet 2: Owner Leave-Behind (well info, hydrograph box, recent readings, QR/contact footer)
+    expect(pageCount).toBe(2)
+
+    // --- Page 1 (field sheet; labels follow OcotilloMockups/field-notes-mockup.html) ---
+    expect(pages[0]).toContain('Field Compilation Notes')
+    expect(pages[0]).toMatch(/Printed \d{2}\/\d{2}\/\d{4}/)
+    expect(pages[0]).toContain('Well-1')
+    expect(pages[0]).toContain('SITE-1')
+    // Contacts (Primary / Secondary cards)
+    expect(pages[0]).toContain('Test Contact')
+    // Ruled blocks + MP description
+    expect(pages[0]).toContain('Location Notes')
+    expect(pages[0]).toContain('Directions')
+    expect(pages[0]).toContain('Top of casing')
+    // Last Measurements table header (th text is uppercased by textTransform)
+    expect(pages[0]).toContain('DATE')
+    expect(pages[0]).toContain('DTW BELOW MP (FT)')
+    expect(pages[0]).toContain('MP HT (FT)')
+    expect(pages[0]).toContain('METHOD')
+    expect(pages[0]).toContain('LEVEL STATUS')
+    expect(pages[0]).toContain('STAFF')
+    expect(pages[0]).toContain('Site Notes')
+    // Installed Equipment (7 columns, Notes is the 7th)
+    expect(pages[0]).toContain('EQUIPMENT TYPE')
+    expect(pages[0]).toContain('NOTES')
+    // New Measurement write-in grid
+    expect(pages[0]).toContain('M5')
+    expect(pages[0]).toContain('Tape Correction (ft)')
+    expect(pages[0]).toContain('DTW BGS (ft)')
+    // Empty values print blank, never a dash placeholder
+    expect(pages[0]).not.toMatch(/(^|\s)-(\s|$)/)
+
+    // --- Page 2 (Sheet 2: Owner Leave-Behind) ---
+    // Header + info rows
+    expect(pages[1]).toContain('Your Well: SITE-1')
+    expect(pages[1]).toContain('Healy Collaborative Groundwater Monitoring Network')
+    expect(pages[1]).toContain('Site Name')
+    expect(pages[1]).toContain('Point ID')
+    expect(pages[1]).toContain('Well Depth')
+    // Hydrograph box — no observations, no image
+    expect(pages[1]).toContain('Hydrograph unavailable')
+    expect(pages[1]).toContain('Depth to Water')
+    // Recent readings table header columns (space before paren drops in react-pdf extraction)
+    expect(pages[1]).toContain('DATE')
+    expect(pages[1]).toContain('DEPTH TO WATER BELOW GROUND')
+    expect(pages[1]).toContain('MP HEIGHT (FT)')
+    expect(pages[1]).toContain('LEVEL STATUS')
+    // Page 2 never abbreviates to DTW
+    expect(pages[1]).not.toContain('DTW')
+    // Footer: QR placeholder and contact
+    expect(pages[1]).toContain('QR')
+    expect(pages[1]).toContain('See your well data online')
+    expect(pages[1]).toContain('For questions?')
+    expect(pages[1]).toContain('New Mexico Bureau of Geology')
+  })
+
+  it ('does not render the old retired sheet-2 content (HOLD - CUT / General Field Notes)', async () => {
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well: makeWell(),
+        contacts: [],
+        assets: [],
+        observations: [],
+        sensorDeployments: [],
+        hydrographImage: null,
+      }) as any
+    ).toBlob()
+
+    const { pageCount, pages } = await extractPdfText(pdfBlob)
+    expect(pageCount).toBe(2)
+    expect(pages[1]).not.toContain('HOLD - CUT')
+    expect(pages[1]).not.toContain('General Field Notes:')
+  })
+
+  it ('shows QR placeholder and "Hydrograph unavailable" when no image or qrDataUrl', async () => {
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well: makeWell(),
+        contacts: [],
+        assets: [],
+        observations: [],
+        sensorDeployments: [],
+        hydrographImage: null,
+      }) as any
+    ).toBlob()
+
+    const { pageCount, pages } = await extractPdfText(pdfBlob)
+    expect(pageCount).toBe(2)
+    expect(pages[1]).toContain('QR')
+    expect(pages[1]).toContain('Hydrograph unavailable')
+  })
+
+  it ('renders hydrograph image when provided', async () => {
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well: makeWell(),
+        contacts: [],
+        assets: [],
+        observations: [{ observation_datetime: '2024-06-01T00:00:00Z' }] as any[],
+        sensorDeployments: [],
+        hydrographImage: '/hydro.png',
+      }) as any
+    ).toBlob()
+
+    const { pageCount, pages } = await extractPdfText(pdfBlob)
+
+    expect(pageCount).toBe(2)
+    // Hydrograph heading with year range appears on page 2
+    expect(pages[1]).toContain('Depth to Water')
+  })
+
+  it('renders hydrograph image when provided', async () => {
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well: makeWell(),
+        contacts: [],
+        assets: [],
+        observations: [{ observation_datetime: '2024-06-01T00:00:00Z' }] as any[],
+        sensorDeployments: [],
+        hydrographImage: '/hydro.png',
+      }) as any
+    ).toBlob()
+
+    const { pageCount, pages } = await extractPdfText(pdfBlob)
+
+    expect(pageCount).toBe(2)
+    // Depth to Water heading with year range appears on page 2
+    expect(pages[1]).toContain('Depth to Water')
+  })
+
+  it('renders empty states when no assets / observations / sensor data', async () => {
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well: makeWell(),
         contacts: [],
         assets: [],
         observations: [],
@@ -182,11 +328,76 @@ describe('FieldCompilationNotesPdf', () => {
 
     const { pageCount, pages } = await extractPdfText(pdfBlob)
 
-    expect(pageCount).toBe(4)
+    expect(pageCount).toBe(2)
+    // No images: no frames and no stack caption are drawn
+    expect(pages[0]).not.toContain('Top 3 photos shown')
+  })
 
+  it('renders with confidential contacts excluded', async () => {
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well: makeWell(),
+        contacts: [
+          { ...makeContact([]), release_status: 'confidential' } as any,
+        ],
+        assets: [],
+        observations: [],
+        sensorDeployments: [],
+        hydrographImage: null,
+        includeConfidentialContacts: false,
+      }) as any
+    ).toBlob()
+
+    const { pageCount } = await extractPdfText(pdfBlob)
+
+    expect(pageCount).toBe(2)
+  })
+
+  it('renders with empty fields when well has no data', async () => {
+    const pdfBlob = await pdf(
+      createElement(FieldCompilationNotesPdf, {
+        well: {
+          ...makeWell(),
+          alternate_ids: [],
+          current_location: { properties: {} },
+          measuring_notes: [],
+          measuring_point_description: '',
+          site_notes: [],
+          notes: [],
+        } as any,
+        contacts: [],
+        assets: [],
+        observations: [],
+        sensorDeployments: [],
+        hydrographImage: null,
+      }) as any
+    ).toBlob()
+
+    const { pageCount } = await extractPdfText(pdfBlob)
+
+    expect(pageCount).toBe(2)
+  })
+
+  it('standalone={false} embeds only the field sheet (owner page stays behind the flag)', async () => {
+    const pdfBlob = await pdf(
+      createElement(
+        Document,
+        null,
+        createElement(FieldCompilationNotesPdf, {
+          well: makeWell(),
+          contacts: [],
+          assets: [],
+          observations: [],
+          sensorDeployments: [],
+          hydrographImage: null,
+          standalone: false,
+        }) as any
+      ) as any
+    ).toBlob()
+
+    const { pageCount, pages } = await extractPdfText(pdfBlob)
+    expect(pageCount).toBe(1)
     expect(pages[0]).toContain('Field Compilation Notes')
-    expect(pages[1]).toContain('General Field Notes: Well-1')
-    expect(pages[2]).toContain('Hydrograph unavailable for this well')
-    expect(pages[3]).toContain('This page is intentionally left blank')
+    expect(pages[0]).not.toContain('Your Well')
   })
 })

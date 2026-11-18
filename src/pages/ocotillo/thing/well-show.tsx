@@ -17,7 +17,6 @@ import {
   IWell,
   IWellDetails,
   IObservation,
-  ISample,
   ISensor,
   IWellScreen,
 } from '@/interfaces/ocotillo'
@@ -511,7 +510,6 @@ export const WellShow = () => {
                 observations={recentObservations}
                 assets={assets}
                 contacts={contacts}
-                sample={latestSample as Partial<ISample> | undefined}
                 sensorDeployments={sensorDeployments}
               />
             ) : null}

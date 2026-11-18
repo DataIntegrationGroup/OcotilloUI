@@ -41,7 +41,7 @@ vi.mock('@react-pdf/renderer', () => ({
   pdf: () => ({ toBlob: mockedToBlob }),
 }))
 
-vi.mock('@/components', () => ({ WellPDF: () => null }))
+vi.mock('@/components', () => ({ WellPDF: () => null, FieldCompilationNotesPdf: () => null }))
 
 vi.mock('@/components/pdf/chemistry', () => ({
   downloadChemistryReport: (args: unknown) =>
@@ -52,6 +52,12 @@ vi.mock('@/components/pdf/chemistry', () => ({
     waterLevels: false,
     continuousMonitoring: false,
   },
+}))
+
+// The field sheet's page-2 QR is encoded before pdf(); stub the encoder so the
+// download path stays on the same tick as before (no real qrcode/canvas work).
+vi.mock('@/components/pdf/chemistry/wellQrCode', () => ({
+  buildWeaverQrDataUrl: async () => null,
 }))
 
 vi.mock('@/hooks', () => ({

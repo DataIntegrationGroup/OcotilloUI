@@ -21,11 +21,12 @@ import {
   ViewStream,
 } from '@mui/icons-material'
 import { PDFViewer } from '@react-pdf/renderer'
+import { buildWeaverQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
 import {
   ControlledCheckbox,
   ControlledRadioFormSelection,
+  FieldCompilationNotesPdf,
   HydrographPngExporter,
-  WellPDF,
   WellPDFDownloadButton,
   WellShowTitle,
 } from '@/components'
@@ -67,7 +68,6 @@ export const WellShowPdfPreview = () => {
     observations,
     assets,
     contacts,
-    sample,
     sensorDeployments,
     isLoading,
     progress: pdfDataProgress,
@@ -212,6 +212,19 @@ export const WellShowPdfPreview = () => {
     setHydrographImage(null)
   }, [id, hydrographOption])
 
+  // Page-2 QR: same value the printed URL line uses (buildWeaverLocationUrl(well.name)).
+  const [qrDataUrl, setQrDataUrl] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    let cancelled = false
+    setQrDataUrl(undefined)
+    buildWeaverQrDataUrl(viewWell?.name).then((url) => {
+      if (!cancelled) setQrDataUrl(url ?? undefined)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [viewWell?.name])
+
   const progress = isLoading
     ? Math.min(pdfDataProgress, 75)
     : !isViewerReady
@@ -247,7 +260,6 @@ export const WellShowPdfPreview = () => {
               observations={observations}
               assets={assets}
               contacts={contacts}
-              sample={sample}
               sensorDeployments={sensorDeployments}
               options={currentOptions}
               hydrographImage={hydrographImage}
@@ -396,16 +408,15 @@ export const WellShowPdfPreview = () => {
             }}
           >
             <PDFViewer width="100%" height="100%">
-              <WellPDF
+              <FieldCompilationNotesPdf
                 well={viewWell}
-                sample={sample}
                 assets={assets}
                 contacts={contacts}
                 observations={observations}
                 sensorDeployments={sensorDeployments}
-                options={currentOptions}
                 hydrographImage={hydrographImage}
                 includeConfidentialContacts={canViewConfidential}
+                qrDataUrl={qrDataUrl}
               />
             </PDFViewer>
           </Box>
