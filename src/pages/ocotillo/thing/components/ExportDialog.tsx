@@ -1,11 +1,13 @@
 import {
   Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
+  FormControlLabel,
   LinearProgress,
   Table,
   TableBody,
@@ -27,6 +29,8 @@ export const ExportDialog = ({
   resolvedCount,
   filename,
   setFilename,
+  includeOwnerPage,
+  setIncludeOwnerPage,
 }: {
   open: boolean
   onClose: () => void
@@ -37,6 +41,8 @@ export const ExportDialog = ({
   resolvedCount: number
   filename: string
   setFilename: (value: string) => void
+  includeOwnerPage: boolean
+  setIncludeOwnerPage: (value: boolean) => void
 }) => {
   return (
     <Dialog
@@ -97,6 +103,32 @@ export const ExportDialog = ({
           disabled={isGenerating}
           helperText="The batch will be downloaded as a single PDF using this filename."
         />
+
+        <Typography
+          variant="overline"
+          sx={{ color: 'primary.main', display: 'block', mt: 2, mb: 0.5 }}
+        >
+          Options
+        </Typography>
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={includeOwnerPage}
+              onChange={(e) => setIncludeOwnerPage(e.target.checked)}
+              disabled={isGenerating}
+            />
+          }
+          label="Include owner leave-behind page"
+        />
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ display: 'block', ml: 4.25, mt: -0.5 }}
+        >
+          Adds a second, owner-facing page after each field sheet. Off by default
+          so batch exports stay one page per well.
+        </Typography>
 
         {isGenerating && (
           <Box sx={{ mt: 2 }}>

@@ -427,4 +427,39 @@ describe('FieldCompilationNotesPdf', () => {
     expect(on.pageCount).toBe(2)
     expect(on.pages[1]).toContain('Your Well')
   })
+
+  it('includeOwnerPage adds the owner page per well in a batch document (batch export toggle)', async () => {
+    const render = async (includeOwnerPage: boolean) =>
+      extractPdfText(
+        await pdf(
+          createElement(
+            Document,
+            null,
+            ...[1, 2].map((id) =>
+              createElement(FieldCompilationNotesPdf, {
+                key: id,
+                well: { ...makeWell(), id },
+                contacts: [],
+                assets: [],
+                observations: [],
+                sensorDeployments: [],
+                hydrographImage: null,
+                standalone: false,
+                includeOwnerPage,
+              } as any)
+            )
+          ) as any
+        ).toBlob()
+      )
+
+    const off = await render(false)
+    expect(off.pageCount).toBe(2)
+    expect(off.pages[0]).toContain('Field Compilation Notes')
+    expect(off.pages[0]).not.toContain('Your Well')
+
+    const on = await render(true)
+    expect(on.pageCount).toBe(4)
+    expect(on.pages[1]).toContain('Your Well')
+    expect(on.pages[3]).toContain('Your Well')
+  })
 })

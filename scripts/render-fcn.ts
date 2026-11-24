@@ -11,6 +11,7 @@
  *   node_modules/.bin/vite-node scripts/render-fcn.ts <out.pdf>
  *   FCN_FIXTURE=empty node_modules/.bin/vite-node scripts/render-fcn.ts <out.pdf>
  *   FCN_FIXTURE=batch node_modules/.bin/vite-node scripts/render-fcn.ts <out.pdf>
+ *   FCN_OWNER_PAGE=1 …        adds the owner leave-behind page (batch toggle on)
  */
 
 import { readFile, writeFile } from 'node:fs/promises'
@@ -224,6 +225,7 @@ async function main(): Promise<void> {
           hydrographImage: hydrograph,
           sampleMethodsBySampleId: { 101: 'Steel tape', 102: 'Electric tape' },
           qrDataUrl: (await buildWeaverQrDataUrl(makeWell().name)) ?? undefined,
+          includeOwnerPage: process.env.FCN_OWNER_PAGE === '1',
         }) as any
   )
 
@@ -244,6 +246,8 @@ async function main(): Promise<void> {
         sampleMethodsBySampleId: { 101: 'Steel tape', 102: 'Electric tape' },
         staffBySampleId: { 101: 'JT', 102: 'MA' },
         standalone: false,
+        // Mirrors the batch export's "Include owner leave-behind page" toggle.
+        includeOwnerPage: process.env.FCN_OWNER_PAGE === '1',
         includeConfidentialContacts: true,
       } as any)
     )

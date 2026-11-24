@@ -123,6 +123,7 @@ export const WellBatchExport = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [progress, setProgress] = useState(0)
   const [filename, setFilename] = useState(buildBatchFilename())
+  const [includeOwnerPage, setIncludeOwnerPage] = useState(false)
   const [hydrographBundles, setHydrographBundles] = useState<WellBundle[]>([])
   const [hydrographImagesByWellId, setHydrographImagesByWellId] = useState<
     Record<number, string>
@@ -800,6 +801,7 @@ export const WellBatchExport = () => {
               sampleMethodsBySampleId={bundle.sampleMethodsBySampleId}
               staffBySampleId={bundle.staffBySampleId}
               standalone={false}
+              includeOwnerPage={includeOwnerPage}
               includeConfidentialContacts={canViewConfidential}
             />
           ))}
@@ -1130,6 +1132,8 @@ export const WellBatchExport = () => {
         resolvedCount={resolvedIds.length}
         filename={filename}
         setFilename={setFilename}
+        includeOwnerPage={includeOwnerPage}
+        setIncludeOwnerPage={setIncludeOwnerPage}
       />
     </List>
   )
