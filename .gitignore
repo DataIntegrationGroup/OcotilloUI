@@ -43,3 +43,4 @@ cypress/downloads/*
 # Claude Code: personal/ephemeral files (shared config like launch.json stays tracked)
 .claude/settings.local.json
 .claude/worktrees/
+PAGE_1_PARITY_TODO.md

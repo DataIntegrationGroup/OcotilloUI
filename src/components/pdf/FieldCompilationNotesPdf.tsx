@@ -16,7 +16,9 @@ export const FieldCompilationNotesPdf = ({
   staffBySampleId = {},
   includeConfidentialContacts = true,
   standalone = true,
+  includeOwnerPage = standalone,
   qrDataUrl,
+  hotlinePhone,
 }: {
   well: IWell
   contacts: IContact[]
@@ -34,7 +36,15 @@ export const FieldCompilationNotesPdf = ({
    * export); the owner page stays behind this flag.
    */
   standalone?: boolean
+  /**
+   * Page 2 (owner leave-behind). Defaults to `standalone`, so batch embeds
+   * (standalone={false}) stay field-sheet-only; the preview's Owner Sheet
+   * toggle sets it explicitly.
+   */
+  includeOwnerPage?: boolean
   qrDataUrl?: string
+  /** 24-hour line on page 2; falls back to the page's placeholder number. */
+  hotlinePhone?: string
 }) => {
   const pages = (
     <FieldCompilationNotesPage
@@ -48,7 +58,8 @@ export const FieldCompilationNotesPdf = ({
       staffBySampleId={staffBySampleId}
       includeConfidentialContacts={includeConfidentialContacts}
       qrDataUrl={qrDataUrl}
-      includeOwnerPage={standalone}
+      includeOwnerPage={includeOwnerPage}
+      hotlinePhone={hotlinePhone}
     />
   )
 

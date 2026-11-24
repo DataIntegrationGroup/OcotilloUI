@@ -21,6 +21,13 @@ import type { IContact, IWell } from '@/interfaces/ocotillo'
 import { FieldCompilationNotesPdf } from '../src/components/pdf/FieldCompilationNotesPdf'
 import { OcotilloDocument } from '../src/components/pdf/OcotilloDocument'
 import { buildWeaverQrDataUrl } from '../src/components/pdf/chemistry/wellQrCode'
+import { exec } from 'node:child_process'
+import { promisify } from 'node:util'
+import path from 'node:path'
+import fs from 'node:fs/promises'
+
+const execAsync = promisify(exec)
+
 
 // ─── Fixture — the mockup's WL-0217 sample (OcotilloMockups/field-notes-mockup.html)
 //     so the render is directly comparable to the approved sheet. Fixture only:
@@ -88,6 +95,7 @@ const makeWell = (): IWell =>
       },
     ],
     current_location: {
+      geometry: { type: 'Point', coordinates: [-102.59333, 34.30155, 2117.75] },
       properties: {
         utm_coordinates: { easting: 721486, northing: 3798214 },
         elevation: 6948,
@@ -249,6 +257,24 @@ async function main(): Promise<void> {
   await writeFile(outPath, buffer)
 
   console.log(`Wrote ${buffer.length} bytes -> ${outPath}`)
+
+  // --png: 1:1 page images for visual comparison against the approved mockup.
+  if (process.argv.includes('--png')) {
+    const base = outPath.replace(/\.pdf$/i, '')
+    // -sep "" turns the default `-N` suffix into `N`, so pages land as <out>-p1.png.
+    // Clear rasters left by an earlier render of the same base: a stale -p3.png
+    // made the printed page count disagree with pdfinfo.
+    for (const stale of await fs.readdir(path.dirname(outPath))) {
+      if (stale.startsWith(path.basename(base) + '-p') && stale.endsWith('.png')) {
+        await fs.unlink(path.join(path.dirname(outPath), stale))
+      }
+    }
+    await execAsync(`pdftoppm -png -r 96 -sep "" "${outPath}" "${base}-p"`)
+    const pngs = (await fs.readdir(path.dirname(outPath)))
+      .filter((name) => name.startsWith(path.basename(base) + '-p') && name.endsWith('.png'))
+      .sort()
+    console.log(`Rasterised ${pngs.length} page(s): ${pngs.join(', ')}`)
+  }
 }
 
 main().catch((err) => {

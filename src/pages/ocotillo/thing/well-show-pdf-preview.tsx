@@ -1,53 +1,24 @@
-import {
-  Accordion,
-  AccordionActions,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
-  Button,
-  Divider,
-  LinearProgress,
-  Skeleton,
-  Stack,
-  Typography,
-  useTheme,
-} from '@mui/material'
+import { Box, LinearProgress, Skeleton, useTheme } from '@mui/material'
 import { Show } from '@refinedev/mui'
 import { useParams } from 'react-router'
-import {
-  ExpandMore,
-  TableRows,
-  ViewHeadline,
-  ViewStream,
-} from '@mui/icons-material'
 import { PDFViewer } from '@react-pdf/renderer'
 import { buildWeaverQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
 import {
-  ControlledCheckbox,
-  ControlledRadioFormSelection,
   FieldCompilationNotesPdf,
   HydrographPngExporter,
   WellPDFDownloadButton,
   WellShowTitle,
 } from '@/components'
 import { useEffect, useMemo, useState } from 'react'
-import { IPdfOptions, optionalFields, PDF_DENSITIES } from '@/interfaces'
-import { useForm } from '@refinedev/react-hook-form'
-import { PDF_DEFAULT_VALUES, PDF_SINGLE_PAGE_OPTION } from '@/config'
-import { getLabelFromOptionalPdfFieldKey } from '@/utils'
+import { PDF_DEFAULT_VALUES } from '@/config'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import { IWell } from '@/interfaces/ocotillo'
-import { IHydrographDatasource } from '@/interfaces/st2'
+import { IPdfOptions } from '@/interfaces'
+import type { IHydrographDatasource, IHydrographOptions } from '@/interfaces/st2'
 import {
   ocotilloCardHeaderProps,
   OcotilloHeaderButtons,
 } from '@/components/OcotilloPageHeader'
-
-const densityIcons = {
-  compact: <ViewHeadline fontSize="small" />,
-  standard: <TableRows fontSize="small" />,
-  comfortable: <ViewStream fontSize="small" />,
-} as const
 
 export const WellShowPdfPreview = () => {
   const { id } = useParams()
@@ -56,13 +27,10 @@ export const WellShowPdfPreview = () => {
   const [hydrographImage, setHydrographImage] = useState<string | null>(null)
   const { canEditAmp, canViewConfidential } = useAccessCapabilities()
 
-  const { control, watch, reset } = useForm<IPdfOptions>({
-    defaultValues: PDF_DEFAULT_VALUES,
-    mode: 'onChange', // update on every change → live preview
-    warnWhenUnsavedChanges: false,
-  })
-
-  const currentOptions = watch()
+  // No on-screen PDF options remain: the field-compilation template takes document
+  // props, not IPdfOptions. The hydrograph still reads the same chart defaults; the
+  // chart keys were only ever set by the removed export-options panel, so they stay unset.
+  const currentOptions: IPdfOptions & Partial<IHydrographOptions> = PDF_DEFAULT_VALUES
   const {
     well,
     observations,
@@ -83,14 +51,6 @@ export const WellShowPdfPreview = () => {
     }
   }, [isLoading])
 
-  const densityOptions = PDF_DENSITIES.map((value) => ({
-    value,
-    label: value
-      .split('-')
-      .map((w) => w[0].toUpperCase() + w.slice(1))
-      .join(' '),
-    icon: densityIcons[value],
-  }))
 
   const hydrographDatasource = useMemo<IHydrographDatasource[]>(() => {
     if (!observations?.length) return []
@@ -261,127 +221,12 @@ export const WellShowPdfPreview = () => {
               assets={assets}
               contacts={contacts}
               sensorDeployments={sensorDeployments}
-              options={currentOptions}
               hydrographImage={hydrographImage}
             />
           </OcotilloHeaderButtons>
         ) : null
       }
     >
-      <Box sx={{ mb: 2 }}>
-        <Accordion
-          defaultExpanded
-          disableGutters
-          variant="outlined"
-          sx={{
-            p: 1,
-            borderRadius: 2,
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
-            backgroundImage: 'none',
-            boxShadow: (theme) =>
-              theme.palette.mode === 'dark'
-                ? '0 1px 3px rgba(0,0,0,0.35)'
-                : '0 1px 3px rgba(0,0,0,0.08)',
-
-            '&::before': {
-              display: 'none',
-            },
-
-            '&.Mui-expanded': {
-              my: 0,
-            },
-
-            '& .MuiAccordionSummary-root': {
-              borderRadius: 1.5,
-              minHeight: 56,
-              px: 1.5,
-              transition: 'background-color 0.2s ease',
-            },
-
-            '& .MuiAccordionSummary-root:hover': {
-              bgcolor: 'action.hover',
-            },
-
-            '& .MuiAccordionSummary-root.Mui-expanded': {
-              minHeight: 56,
-            },
-
-            '& .MuiAccordionSummary-content': {
-              my: 0,
-            },
-
-            '& .MuiAccordionSummary-expandIconWrapper': {
-              color: 'text.secondary',
-            },
-
-            '& .MuiAccordionDetails-root': {
-              pt: 1,
-              px: 2,
-              pb: 2,
-              color: 'text.primary',
-            },
-
-            '& .MuiDivider-root': {
-              px: 2,
-              pt: 0,
-              borderTop: '1px solid',
-              borderColor: 'text.secondary',
-            },
-          }}
-        >
-          <AccordionSummary
-            expandIcon={<ExpandMore />}
-            aria-controls="density-content"
-            id="density-header"
-          >
-            <Typography variant="subtitle1" fontWeight="medium">
-              PDF Export Options
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-              <ControlledRadioFormSelection
-                name="density"
-                control={control}
-                label="Density:"
-                options={densityOptions}
-              />
-              <Stack direction="column">
-                <Typography>Optional Fields:</Typography>
-                {optionalFields.map((fieldName) => (
-                  <ControlledCheckbox
-                    key={fieldName}
-                    control={control}
-                    name={fieldName}
-                    label={getLabelFromOptionalPdfFieldKey(fieldName)}
-                    labelPlacement="end"
-                  />
-                ))}
-              </Stack>
-            </Box>
-
-            <Divider sx={{ mt: 2, mb: 2.5 }} />
-
-            <Typography variant="caption" color="text.secondary">
-              Changes are applied live to the preview below.
-            </Typography>
-          </AccordionDetails>
-          <AccordionActions sx={{ mt: -6.5 }}>
-            <Button
-              variant="contained"
-              onClick={() => {
-                reset(PDF_SINGLE_PAGE_OPTION)
-              }}
-            >
-              Single Page Mode
-            </Button>
-            <Button variant="text" onClick={() => reset(PDF_DEFAULT_VALUES)}>
-              Reset
-            </Button>
-          </AccordionActions>
-        </Accordion>
-      </Box>
       <Box sx={{ width: '100%', height: '90vh', position: 'relative' }}>
         {(isLoading ||
           !isViewerReady ||
@@ -426,13 +271,18 @@ export const WellShowPdfPreview = () => {
         <HydrographPngExporter
           datasource={hydrographDatasource}
           options={{
-            ...currentOptions,
+            useNormalization: currentOptions.useNormalization,
+            useElevation: currentOptions.useElevation,
+            useCompact: currentOptions.useCompact,
+            dataZoom: currentOptions.dataZoom,
+            showToolbox: currentOptions.showToolbox,
+            invertYAxis: currentOptions.invertYAxis,
             // Extends the x-axis range to create blank space on the right side of the chart.
             // This does NOT change the groundwater measurements; it only shifts the
             // plotted data left so hydrologists have room to annotate the printed hydrograph.
             rightPaddingPercent: 30,
           }}
-          refreshKey={`${id}-${JSON.stringify(currentOptions)}`}
+          refreshKey={`${id}`}
           onPngReady={setHydrographImage}
         />
       )}

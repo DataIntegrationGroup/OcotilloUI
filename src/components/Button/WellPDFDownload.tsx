@@ -7,8 +7,6 @@ import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
 import { pdf } from '@react-pdf/renderer'
 import { DownloadIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { IPdfOptions } from '@/interfaces'
-import { PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { useAccessCapabilities } from '@/hooks'
 
 export const WellPDFDownloadButton = ({
@@ -18,8 +16,8 @@ export const WellPDFDownloadButton = ({
   assets,
   contacts,
   sensorDeployments = [],
-  options,
   hydrographImage,
+  includeOwnerPage,
 }: {
   well: IWell
   isLoading: boolean
@@ -27,8 +25,9 @@ export const WellPDFDownloadButton = ({
   assets: BaseRecord[]
   contacts: IContact[]
   sensorDeployments?: SensorDeploymentRow[]
-  options?: IPdfOptions
   hydrographImage?: string | null
+  /** Page 2 (owner leave-behind) — the preview's Owner Sheet toggle. */
+  includeOwnerPage?: boolean
 }) => {
   const { open: notify } = useNotification()
   const {
@@ -44,7 +43,7 @@ export const WellPDFDownloadButton = ({
   const disabled =
     isLoading || isPermissionsLoading || !canEditAmp || isGenerating
 
-  const handleDownload = async (opts: IPdfOptions) => {
+  const handleDownload = async () => {
     if (!id) return
 
     try {
@@ -63,6 +62,7 @@ export const WellPDFDownloadButton = ({
           includeConfidentialContacts={canViewConfidential}
           hydrographImage={hydrographImage}
           qrDataUrl={qrDataUrl}
+          includeOwnerPage={includeOwnerPage}
         />
       ).toBlob()
 
@@ -94,7 +94,7 @@ export const WellPDFDownloadButton = ({
       variant="outline"
       size="sm"
       disabled={disabled}
-      onClick={() => handleDownload(options ?? PDF_SINGLE_PAGE_OPTION)}
+      onClick={handleDownload}
     >
       <DownloadIcon />
       {isGenerating ? 'Generating…' : 'Download PDF'}

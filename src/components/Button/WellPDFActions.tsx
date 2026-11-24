@@ -22,9 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { PDF_SINGLE_PAGE_OPTION } from '@/config'
 import { useAccessCapabilities, useWellChemistryReport } from '@/hooks'
-import { IPdfOptions } from '@/interfaces'
 import { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
 
@@ -44,7 +42,6 @@ type WellPDFActionsButtonProps = {
   assets: BaseRecord[]
   contacts: IContact[]
   sensorDeployments?: SensorDeploymentRow[]
-  options?: IPdfOptions
   hydrographImage?: string | null
 }
 
@@ -56,7 +53,6 @@ export const WellPDFActionsButton = ({
   assets,
   contacts,
   sensorDeployments = [],
-  options,
   hydrographImage,
 }: WellPDFActionsButtonProps) => {
   const go = useGo()
@@ -145,7 +141,7 @@ export const WellPDFActionsButton = ({
     go({ to: `/ocotillo/well/pdf-preview/${id}`, type: 'push' })
   }
 
-  const handleDownloadFieldSheet = async (opts: IPdfOptions) => {
+  const handleDownloadFieldSheet = async () => {
     const filename = buildPdfFilename(well)
     // Same value the page-2 URL line prints (buildWeaverLocationUrl(well.name)).
     const qrDataUrl = (await buildWeaverQrDataUrl(well.name)) ?? undefined
@@ -208,14 +204,14 @@ export const WellPDFActionsButton = ({
     })
   }
 
-  const handleDownload = async (opts: IPdfOptions) => {
+  const handleDownload = async () => {
     if (!well?.id) return
 
     try {
       setIsGenerating(true)
       const filename = isChemistry
         ? await handleDownloadChemistryReport(reportYear)
-        : await handleDownloadFieldSheet(opts)
+        : await handleDownloadFieldSheet()
 
       notify?.({
         message: isChemistry
@@ -297,7 +293,7 @@ export const WellPDFActionsButton = ({
               size="sm"
               className="rounded-none border-0 px-2.5 shadow-none"
               disabled={downloadDisabled}
-              onClick={() => handleDownload(options ?? PDF_SINGLE_PAGE_OPTION)}
+              onClick={() => handleDownload()}
               aria-label={
                 isGenerating
                   ? 'Generating PDF'

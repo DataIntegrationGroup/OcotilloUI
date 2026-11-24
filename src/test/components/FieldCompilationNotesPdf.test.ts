@@ -201,11 +201,12 @@ describe('FieldCompilationNotesPdf', () => {
     // Last Measurements table header (th text is uppercased by textTransform)
     expect(pages[0]).toContain('DATE')
     expect(pages[0]).toContain('DTW BELOW MP (FT)')
-    expect(pages[0]).toContain('MP HT (FT)')
+    // No `MP HT (FT)` column: OcotilloMockups 1220a81 dropped it from the Last Measurements
+    // grid (Date · DTW Below MP (ft) · Method · Level Status · Staff · Site Notes).
     expect(pages[0]).toContain('METHOD')
     expect(pages[0]).toContain('LEVEL STATUS')
     expect(pages[0]).toContain('STAFF')
-    expect(pages[0]).toContain('Site Notes')
+    expect(pages[0]).toContain('SITE NOTES')
     // Installed Equipment (7 columns, Notes is the 7th)
     expect(pages[0]).toContain('EQUIPMENT TYPE')
     expect(pages[0]).toContain('NOTES')
@@ -399,5 +400,31 @@ describe('FieldCompilationNotesPdf', () => {
     expect(pageCount).toBe(1)
     expect(pages[0]).toContain('Field Compilation Notes')
     expect(pages[0]).not.toContain('Your Well')
+  })
+
+  it('includeOwnerPage gates page 2 on the standalone document (preview Owner Sheet toggle)', async () => {
+    const render = async (includeOwnerPage: boolean) =>
+      extractPdfText(
+        await pdf(
+          createElement(FieldCompilationNotesPdf, {
+            well: makeWell(),
+            contacts: [],
+            assets: [],
+            observations: [],
+            sensorDeployments: [],
+            hydrographImage: null,
+            includeOwnerPage,
+          }) as any
+        ).toBlob()
+      )
+
+    const off = await render(false)
+    expect(off.pageCount).toBe(1)
+    expect(off.pages[0]).toContain('Field Compilation Notes')
+    expect(off.pages[0]).not.toContain('Your Well')
+
+    const on = await render(true)
+    expect(on.pageCount).toBe(2)
+    expect(on.pages[1]).toContain('Your Well')
   })
 })

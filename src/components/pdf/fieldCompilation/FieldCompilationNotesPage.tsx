@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from 'react'
+import { ComponentProps, ReactNode } from 'react'
 import { Image, Page, Text, View, Svg, Rect, Path } from '@react-pdf/renderer'
 import type { BaseRecord } from '@refinedev/core'
 import type { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
@@ -10,13 +10,6 @@ import { formatPhone } from '@/utils/FormatPhone'
 import { buildWeaverLocationUrl } from '@/utils/wellPublicUrls'
 import { FCN_TOKENS, RULE_PITCH, fcnStyles as s } from './styles'
 
-/*
- * Field Compilation Notes — react-pdf port of
- * repos/OcotilloMockups/field-notes-mockup.html (page 1 = field sheet,
- * page 2 = owner leave-behind). Pure and synchronous: no hooks, no fetching.
- * Empty values print blank — never "-", "None" or "N/A".
- */
-
 type PdfStyle = NonNullable<ComponentProps<typeof View>['style']>
 type Row = Record<string, string>
 
@@ -24,7 +17,6 @@ type Row = Record<string, string>
 
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/
 
-/** MM/DD/YYYY in the app timezone (mockup format), '' when missing/invalid. */
 export const formatSheetDate = (value: string | Date | null | undefined): string => {
   if (!value) return ''
   let d: Date
@@ -49,15 +41,20 @@ const isNum = (v: unknown): v is number => typeof v === 'number' && !Number.isNa
 
 const fixed = (v: unknown, digits = 2): string => (isNum(v) ? v.toFixed(digits) : '')
 
-/** Integers grouped by thousands (6,948); non-integers left as-is. */
 const grouped = (v: unknown): string => {
   if (!isNum(v)) return ''
   const str = Number.isInteger(v) ? String(v) : v.toFixed(2)
   return str.includes('.') ? str : str.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
-/** UTM coordinates print as plain integers (mockup: 721486, 3798214). */
 const plainInt = (v: unknown): string => (isNum(v) ? v.toFixed(0) : '')
+
+/**
+ * Bureau 24-hour line. No API field carries it yet, so this is the placeholder
+ * the sheet prints; the real number is expected to come from the database
+ * (Rob, 2026-11-22). Callers can override with the `hotlinePhone` prop.
+ */
+export const FCN_HOTLINE_PHONE = '(575) 555-0199'
 
 const text = (v: unknown): string => {
   if (v == null) return ''
@@ -108,7 +105,6 @@ const newestFirst = (observations: readonly Partial<IObservation>[]) =>
         new Date(b.observation_datetime!).getTime() - new Date(a.observation_datetime!).getTime()
     )
 
-/** DTW below MP = depth below ground surface + MP height (both must exist). */
 const dtwBelowMp = (o: Partial<IObservation>): number | null =>
   isNum(o.depth_to_water_bgs) && isNum(o.measuring_point_height)
     ? o.depth_to_water_bgs + o.measuring_point_height
@@ -119,7 +115,7 @@ const levelStatusOf = (o: Partial<IObservation>): string =>
 
 const recIntervalHours = (row: SensorDeploymentRow): string => {
   const units = row.recording_interval_units ?? ''
-  if (row.recording_interval != null && row.recording_interval !== '' && /^h(ou)?rs?$|^hours?$/i.test(units.trim()))
+  if (row.recording_interval != null && row.recording_interval !== '' && /^h(ou)?rs?|^hours?$/i.test(units.trim()))
     return text(row.recording_interval)
   return text(row.recording_interval_display)
 }
@@ -142,16 +138,17 @@ const Kv = ({ k, v, style }: { k: string; v: string; style?: PdfStyle }) => (
   </View>
 )
 
-const Band = ({ children }: { children: ReactNode }) => <Text style={s.band}>{children}</Text>
+const Band = ({ children, type }: { children: ReactNode; type?: 'site' | 'previsit' }) => (
+  <Text style={type === 'previsit' ? [s.band, s.preVisitBand] : s.band}>{children}</Text>
+)
 
-type Col = { label: string; key: string; num?: boolean; tint?: 'stat' | 'note' }
+type Col = { label: string; key: string; num?: boolean; tint?: 'stat' | 'note'; flex?: number }
 
-/** `.tbl` — equal-width columns, hairline rules, zebra body, blank-safe. */
 const Tbl = ({ cols, rows, style }: { cols: Col[]; rows: Row[]; style?: PdfStyle }) => (
   <View style={style ? [s.tbl, style].flat() : s.tbl}>
     <View style={s.tblRow}>
       {cols.map((c, i) => (
-        <View key={c.key} style={i === cols.length - 1 ? [s.th, s.thEnd] : s.th}>
+        <View key={c.key} style={[i === cols.length - 1 ? [s.th, s.thEnd] : s.th, { flex: c.flex }]}>
           <Text style={c.num ? [s.thText, s.num] : s.thText}>{c.label}</Text>
         </View>
       ))}
@@ -163,7 +160,7 @@ const Tbl = ({ cols, rows, style }: { cols: Col[]; rows: Row[]; style?: PdfStyle
           if (r % 2 === 1) cell.push(s.z)
           if (c.tint) cell.push(s[c.tint])
           return (
-            <View key={c.key} style={cell}>
+            <View key={c.key} style={[cell, { flex: c.flex }]}>
               <Text style={c.num ? [s.tdText, s.num] : s.tdText}>{row[c.key] ?? ''}</Text>
             </View>
           )
@@ -173,7 +170,6 @@ const Tbl = ({ cols, rows, style }: { cols: Col[]; rows: Row[]; style?: PdfStyle
   </View>
 )
 
-/** `.ruled-field` — label left, text on 12 pt ruled lines (min `lines`). */
 const RuledField = ({ label, value, lines }: { label: string; value: string; lines: number }) => (
   <View style={[s.ruledField, s.fnMainItem]} wrap={false}>
     <Text style={s.ruledLabel}>{label}</Text>
@@ -188,7 +184,6 @@ const RuledField = ({ label, value, lines }: { label: string; value: string; lin
 
 // ─── Page 1 sections ────────────────────────────────────────────────────────
 
-/** 1 · `.hdr1` — title left, numeric print date right, 2 pt ink rule. */
 const Hdr1 = ({ printed }: { printed: string }) => (
   <View style={[s.hdr1, s.p1Block]}>
     <Text style={s.hdr1Title}>Field Compilation Notes</Text>
@@ -196,20 +191,23 @@ const Hdr1 = ({ printed }: { printed: string }) => (
   </View>
 )
 
-/** 2a · `.ident` — Point ID / Site Name | Easting / Northing | Elevation (ft). */
 const Ident = ({ well }: { well: IWell }) => {
   const props = well.current_location?.properties
   const utm: { easting?: number | null; northing?: number | null } =
     props?.utm_coordinates ?? {}
+  const coords = well.current_location?.geometry?.coordinates as [number, number, number] | undefined
+
   return (
     <View style={[s.ident, s.fnMainItem]}>
       <View style={[s.identCol, s.identColGap]}>
         <Kv k="Point ID" v={text(well.name)} style={s.identRowGap} />
         <Kv k="Site Name" v={siteNameOf(well)} />
+        <Kv k="Latitude" v={coords ? coords[1].toFixed(5) : ''} />
       </View>
       <View style={[s.identCol, s.identColGap]}>
         <Kv k="Easting" v={plainInt(utm.easting)} style={s.identRowGap} />
         <Kv k="Northing" v={plainInt(utm.northing)} />
+        <Kv k="Longitude" v={coords ? coords[0].toFixed(5) : ''} />
       </View>
       <View style={s.identCol}>
         <Kv k="Elevation (ft)" v={grouped(props?.elevation)} />
@@ -218,35 +216,43 @@ const Ident = ({ well }: { well: IWell }) => {
   )
 }
 
-/** 2b · `.contacts` — Primary (Name, Phone, Mobile) | Secondary (Name, Phone). */
 const Contacts = ({ primary, secondary }: { primary?: IContact; secondary?: IContact }) => (
   <View style={[s.contacts, s.fnMainItem]}>
     <View style={[s.card, s.cardGap]}>
       <Text style={s.cardHead}>Primary Contact</Text>
       <Kv k="Name" v={text(primary?.name)} style={s.cardRow} />
+      <Kv k="Role / Relationship" v={text(primary?.role)} style={s.cardRow} />
       <Kv k="Phone" v={phoneOf(primary)} style={s.cardRow} />
-      <Kv k="Mobile" v={mobileOf(primary)} />
     </View>
     <View style={s.card}>
       <Text style={s.cardHead}>Secondary Contact</Text>
       <Kv k="Name" v={text(secondary?.name)} style={s.cardRow} />
+      <Kv k="Role / Relationship" v={text(secondary?.role)} style={s.cardRow} />
       <Kv k="Phone" v={phoneOf(secondary)} />
     </View>
   </View>
 )
 
-/** 3 · ruled blocks, in mockup order and min heights (48/48/24/12/12 pt). */
 const RuledBlocks = ({ well }: { well: IWell }) => (
   <>
-    <RuledField label="Location Notes" value={locationNotesOfType(well, 'General')} lines={4} />
-    <RuledField label="Directions" value={locationNotesOfType(well, 'Directions')} lines={4} />
+    {/* No Pre-Visit note type exists in the backend yet, so this field prints
+        blank by design — it is where pre-visit notes will go once recorded
+        (Rob, 2026-11-22). */}
+    <RuledField label="Pre-Visit Notes" value="" lines={3} />
+    <RuledField label="Location Notes" value={locationNotesOfType(well, 'General')} lines={3} />
+    <RuledField label="Directions" value={locationNotesOfType(well, 'Directions')} lines={3} />
     <RuledField label="MP Description" value={text(well.measuring_point_description)} lines={2} />
-    <RuledField label="MP Height (ft)" value={fixed(well.measuring_point_height)} lines={1} />
-    <RuledField label="Well Depth (ft)" value={fixed(well.well_depth)} lines={1} />
+    <View style={s.rfPair}>
+      <View style={s.rfPairCellLeft}>
+        <RuledField label="Well Depth (ft)" value={fixed(well.well_depth)} lines={1} />
+      </View>
+      <View style={s.rfPairCellRight}>
+        <RuledField label="MP Height (ft)" value={fixed(well.measuring_point_height)} lines={1} />
+      </View>
+    </View>
   </>
 )
 
-/** 4 · `.photos` — up to three framed images, filename + description, stack caption. */
 const Photos = ({ images }: { images: BaseRecord[] }) => (
   <View style={s.photos}>
     {images.map((asset: any, i) => {
@@ -258,23 +264,23 @@ const Photos = ({ images }: { images: BaseRecord[] }) => (
             <Image src={asset.signed_url} style={s.photoImage} />
           </View>
           <View style={s.capCol}>
-            <Text style={s.capName}>{name}</Text>
             <Text style={s.cap}>{label && label !== name ? label : ''}</Text>
           </View>
         </View>
       )
     })}
-    {images.length > 0 ? <Text style={s.stackcap}>Top 3 photos shown</Text> : null}
   </View>
 )
 
+// Proportions mirror the mockup grid (0.9fr 1.1fr 0.8fr 0.9fr 0.7fr 2.4fr) — the
+// wider DTW column is what keeps "DTW BELOW MP (FT)" on one line.
 const LAST_COLS: Col[] = [
-  { key: 'date', label: 'Date' },
-  { key: 'dtw', label: 'DTW Below MP (ft)', num: true },
-  { key: 'mp', label: 'MP Ht (ft)', num: true },
-  { key: 'method', label: 'Method' },
-  { key: 'status', label: 'Level Status', tint: 'stat' },
-  { key: 'staff', label: 'Staff' },
+  { key: 'date', label: 'Date', flex: 0.9 },
+  { key: 'dtw', label: 'DTW Below MP (ft)', num: true, flex: 1.1 },
+  { key: 'method', label: 'Method', flex: 0.8 },
+  { key: 'status', label: 'Level Status', tint: 'stat', flex: 0.9 },
+  { key: 'staff', label: 'Staff', flex: 0.7 },
+  { key: 'siteNotes', label: 'Site Notes', flex: 2.4, tint: 'note' },
 ]
 
 const EQUIP_COLS: Col[] = [
@@ -287,44 +293,18 @@ const EQUIP_COLS: Col[] = [
   { key: 'notes', label: 'Notes', tint: 'note' },
 ]
 
-/** 5a · Last Measurements — 6 equal columns, ≤2 rows newest first, then Site Notes field. */
-const LastMeasurements = ({ rows, siteNotes }: { rows: Row[]; siteNotes: string }) => (
+/** 5a · Last Measurements — 6 columns with proportional Site Notes. */
+const LastMeasurements = ({ rows }: { rows: Row[] }) => (
   <View style={[s.sect, s.p1Block]} wrap={false}>
     <Band>Last Measurements</Band>
     <Tbl cols={LAST_COLS} rows={rows} />
-    <View style={s.sitenotes}>
-      <View style={s.sitenotesK}>
-        <Text style={s.sitenotesKText}>Site Notes</Text>
-      </View>
-      <View style={s.sitenotesV}>
-        <Text style={s.tdText}>{siteNotes}</Text>
-      </View>
-    </View>
   </View>
 )
 
-/** 5b · Installed Equipment — 7 equal columns, ≤2 rows newest first. */
 const InstalledEquipment = ({ rows }: { rows: Row[] }) => (
   <View style={[s.sect, s.p1Block]} wrap={false}>
     <Band>Installed Equipment</Band>
     <Tbl cols={EQUIP_COLS} rows={rows} />
-  </View>
-)
-
-const NM_ROWS = [
-  'Hold (ft)',
-  'Cut (ft)',
-  'Tape Correction (ft)',
-  'WL Below MP (ft)',
-  'MP Correction (ft)',
-  'DTW Below MP (ft)',
-  'DTW BGS (ft)',
-]
-
-const WCell = ({ label, tall, last }: { label: string; tall?: boolean; last?: boolean }) => (
-  <View style={last ? s.wcell : [s.wcell, s.wcellGap]}>
-    <Text style={s.wLabel}>{label}</Text>
-    <View style={tall ? [s.wbox, s.wboxTall] : s.wbox} />
   </View>
 )
 
@@ -364,9 +344,26 @@ const NewMeasurement = ({ previous }: { previous: string }) => (
       <View style={s.wrow}>
         <WCell label="Method" tall />
         <WCell label="Level Status" tall />
-        <WCell label="Measurement Notes" tall last />
+        <WCell label="General Notes" tall last />
       </View>
     </View>
+  </View>
+)
+
+const NM_ROWS = [
+  'Hold (ft)',
+  'Cut (ft)',
+  'Tape Correction (ft)',
+  'WL Below MP (ft)',
+  'MP Correction (ft)',
+  'DTW Below MP (ft)',
+  'DTW BGS (ft)',
+]
+
+const WCell = ({ label, tall, last }: { label: string; tall?: boolean; last?: boolean }) => (
+  <View style={last ? s.wcell : [s.wcell, s.wcellGap]}>
+    <Text style={s.wLabel}>{label}</Text>
+    <View style={tall ? [s.wbox, s.wboxTall] : s.wbox} />
   </View>
 )
 
@@ -389,7 +386,7 @@ export const buildFieldSheetModel = ({
   observations: readonly Partial<IObservation>[]
   sensorDeployments: SensorDeploymentRow[]
   sampleMethodsBySampleId: Record<number, string>
-  staffBySampleId: Record<number, string>
+  staffBySampleId?: Record<string, string>
   includeConfidentialContacts: boolean
   printedAt?: Date
 }) => {
@@ -397,18 +394,16 @@ export const buildFieldSheetModel = ({
   const { primaryContact, secondaryContact } = pickPrimaryAndSecondaryContact(visible)
   const ordered = newestFirst(observations)
 
-  const lastRows: Row[] = ordered.slice(0, 2).map((o) => ({
-    date: formatSheetDate(o.observation_datetime),
-    dtw: fixed(dtwBelowMp(o)),
-    mp: fixed(o.measuring_point_height),
-    method: o.sample_id != null ? text(sampleMethodsBySampleId[o.sample_id]) : '',
-    status: levelStatusOf(o),
-    // Batch passes staffBySampleId; the single-well paths (preview, download)
-    // carry the visit's staff on the observation row itself.
-    staff:
-      (o.sample_id != null ? text(staffBySampleId[o.sample_id]) : '') ||
-      text((o as { water_level_measuring_staff?: string | null }).water_level_measuring_staff),
-  }))
+  const lastRows: Row[] = ordered.slice(0, 2).map((o) => {
+    return {
+      date: formatSheetDate(o.observation_datetime),
+      dtw: fixed(dtwBelowMp(o)),
+      method: o.sample_id != null ? text(sampleMethodsBySampleId[o.sample_id]) : '',
+      status: levelStatusOf(o),
+      staff: (o.sample_id != null ? text(staffBySampleId?.[String(o.sample_id)]) : '') || text((o as any).water_level_measuring_staff),
+      siteNotes: '', // Handled separately by Site Notes field
+    }
+  })
 
   const latest = ordered[0]
   const latestDtw = latest ? dtwBelowMp(latest) : null
@@ -418,11 +413,7 @@ export const buildFieldSheetModel = ({
       : ''
 
   const equipmentRows: Row[] = [...sensorDeployments]
-    .sort(
-      (a, b) =>
-        (b.datetime_installed ? new Date(b.datetime_installed).getTime() : 0) -
-        (a.datetime_installed ? new Date(a.datetime_installed).getTime() : 0)
-    )
+    .sort((a, b) => (b.datetime_installed ? new Date(b.datetime_installed).getTime() : 0) - (a.datetime_installed ? new Date(a.datetime_installed).getTime() : 0))
     .slice(0, 2)
     .map((row) => ({
       type: text(row.sensor_type),
@@ -444,10 +435,7 @@ export const buildFieldSheetModel = ({
     .join('\n')
 
   const images = assets
-    .filter(
-      (asset: any) =>
-        asset?.signed_url && typeof asset?.mime_type === 'string' && asset.mime_type.startsWith('image/')
-    )
+    .filter((asset: any) => asset?.signed_url && typeof asset?.mime_type === 'string' && asset.mime_type.startsWith('image/'))
     .slice(0, 3)
 
   const readings: Row[] = ordered.slice(0, 10).map((o) => ({
@@ -506,19 +494,19 @@ const OwnerPage = ({
   model,
   hydrographImage,
   qrDataUrl,
+  hotlinePhone,
 }: {
   well: IWell
   model: ReturnType<typeof buildFieldSheetModel>
   hydrographImage?: string | null
   qrDataUrl?: string
+  hotlinePhone?: string
 }) => {
   const siteName = siteNameOf(well)
-  const ose = oseOf(well)
   const depth = fixed(well.well_depth)
   const weaverUrl = buildWeaverLocationUrl(well.name)
   return (
     <Page size="LETTER" style={s.page}>
-      {/* .hdr2 — logo, "Your Well: <site name>", network, 3 pt accent rule */}
       <View style={[s.hdr2, s.p2Block]}>
         <Logo />
         <View style={{ flex: 1 }}>
@@ -527,23 +515,16 @@ const OwnerPage = ({
         </View>
       </View>
 
-      {/* .fn-info — R1 Site Name | Point ID; R2 Well Depth | OSE # (reflows when OSE absent) */}
       <View style={[s.fnInfo, s.p2Block]}>
-        <View style={[s.fnInfoRow, s.fnInfoRowGap]}>
-          <InfoKv k="Site Name" v={siteName} gap />
-          <InfoKv k="Point ID" v={text(well.name)} />
-        </View>
+        <View style={s.fnInfoRow}><InfoKv k="Site Name" v={siteName} gap /><InfoKv k="Point ID" v={text(well.name)} /></View>
         <View style={s.fnInfoRow}>
-          <InfoKv k="Well Depth" v={depth ? `${depth} ft` : ''} gap={Boolean(ose)} />
-          {ose ? <InfoKv k="OSE #" v={ose} /> : null}
+          <InfoKv k="Well Depth" v={depth ? `${depth} ft` : ''} />
+          <InfoKv k="OSE #" v="" />
         </View>
       </View>
 
-      {/* .hydbox — fixed height whether or not an image exists */}
       <View style={[s.hydbox, s.p2Block]} wrap={false}>
-        <Text style={s.hydTitle}>
-          {model.yearSpan ? `Depth to Water · ${model.yearSpan}` : 'Depth to Water'}
-        </Text>
+        <Text style={s.hydTitle}>{model.yearSpan ? `Depth to Water · ${model.yearSpan}` : 'Depth to Water'}</Text>
         {hydrographImage ? (
           <Image src={hydrographImage} style={s.hydImage} />
         ) : (
@@ -553,10 +534,8 @@ const OwnerPage = ({
         )}
       </View>
 
-      {/* readings — 4 equal columns, spelled-out header, ≤10 rows */}
       <Tbl cols={READING_COLS} rows={model.readings} style={s.p2Block} />
 
-      {/* .foot — QR + Weaver URL | For questions?; team inbox ↔ owner email */}
       <View style={s.foot} wrap={false}>
         <View style={s.footR1}>
           <View style={s.qrblk}>
@@ -564,9 +543,7 @@ const OwnerPage = ({
             {qrDataUrl ? (
               <Image src={qrDataUrl} style={s.qrImage} />
             ) : (
-              <View style={s.qrPlaceholder}>
-                <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: FCN_TOKENS.muted }}>QR</Text>
-              </View>
+              <View style={s.qrPlaceholder}><Text style={{ fontSize: 7 }}>QR</Text></View>
             )}
             <Text style={s.qrUrl}>{weaverUrl ? weaverUrl.replace(/^https?:\/\//, '') : ''}</Text>
           </View>
@@ -574,23 +551,19 @@ const OwnerPage = ({
             <Text style={s.askQ}>For questions?</Text>
             <Text style={s.askLine}>New Mexico Bureau of Geology &amp; Mineral Resources</Text>
             <Text style={s.askLine}>801 Leroy Place, Socorro, NM 87801</Text>
-            {/* No 24-hour-line field exists on the well/contact data path, so the
-                value prints blank rather than a placeholder number. */}
             <Text style={s.askLine}>
               <Text style={s.k}>24-hour line</Text>
+              {hotlinePhone ? `  ${hotlinePhone}` : ''}
             </Text>
           </View>
         </View>
         <View style={s.emails}>
           <Text style={s.emailText}>ocotillo-nmbg@nmt.edu</Text>
-          <Text style={s.emailText}>{emailOf(model.primaryContact)}</Text>
         </View>
       </View>
     </Page>
   )
 }
-
-// ─── Document pages ─────────────────────────────────────────────────────────
 
 export interface FieldCompilationNotesPageProps {
   well: IWell
@@ -600,12 +573,12 @@ export interface FieldCompilationNotesPageProps {
   sensorDeployments: SensorDeploymentRow[]
   hydrographImage?: string | null
   sampleMethodsBySampleId: Record<number, string>
-  /** Staff on the visit that produced each sample (Last Measurements · Staff). */
-  staffBySampleId?: Record<number, string>
+  staffBySampleId?: Record<string, string>
   includeConfidentialContacts: boolean
   qrDataUrl?: string
-  /** Page 2 (owner leave-behind). Off → the field sheet only. */
   includeOwnerPage?: boolean
+  /** 24-hour line printed on page 2; defaults to FCN_HOTLINE_PHONE. */
+  hotlinePhone?: string
 }
 
 const FieldCompilationNotesPage = ({
@@ -616,10 +589,11 @@ const FieldCompilationNotesPage = ({
   sensorDeployments,
   hydrographImage,
   sampleMethodsBySampleId,
-  staffBySampleId = {},
+  staffBySampleId,
   includeConfidentialContacts,
+  includeOwnerPage,
   qrDataUrl,
-  includeOwnerPage = true,
+  hotlinePhone = FCN_HOTLINE_PHONE,
 }: FieldCompilationNotesPageProps) => {
   const m = buildFieldSheetModel({
     well,
@@ -627,14 +601,13 @@ const FieldCompilationNotesPage = ({
     assets,
     observations,
     sensorDeployments,
-    sampleMethodsBySampleId: sampleMethodsBySampleId ?? {},
+    sampleMethodsBySampleId,
     staffBySampleId,
     includeConfidentialContacts,
   })
 
   return (
     <>
-      {/* ═══════ PAGE 1 — Field Compilation Notes (field sheet) ═══════ */}
       <Page size="LETTER" style={s.page}>
         <Hdr1 printed={m.printed} />
         <View style={s.top}>
@@ -645,14 +618,20 @@ const FieldCompilationNotesPage = ({
           </View>
           <Photos images={m.images} />
         </View>
-        <LastMeasurements rows={m.lastRows} siteNotes={m.siteNotes} />
+        <LastMeasurements rows={m.lastRows} />
         <InstalledEquipment rows={m.equipmentRows} />
         <NewMeasurement previous={m.previous} />
       </Page>
 
-      {includeOwnerPage ? (
-        <OwnerPage well={well} model={m} hydrographImage={hydrographImage} qrDataUrl={qrDataUrl} />
-      ) : null}
+      {includeOwnerPage !== false && (
+        <OwnerPage
+          well={well}
+          model={m}
+          hydrographImage={hydrographImage}
+          qrDataUrl={qrDataUrl}
+          hotlinePhone={hotlinePhone}
+        />
+      )}
     </>
   )
 }
