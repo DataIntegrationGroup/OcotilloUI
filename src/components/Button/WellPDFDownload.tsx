@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { BaseRecord, useNotification } from '@refinedev/core'
 import { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
 import { FieldCompilationNotesPdf, WellPDF } from '@/components'
-import { buildWeaverQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
+import {
+  buildWeaverQrDataUrl,
+  buildWellMapsQrDataUrl,
+} from '@/components/pdf/chemistry/wellQrCode'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
 import { pdf } from '@react-pdf/renderer'
 import { DownloadIcon } from 'lucide-react'
@@ -26,7 +29,7 @@ export const WellPDFDownloadButton = ({
   contacts: IContact[]
   sensorDeployments?: SensorDeploymentRow[]
   hydrographImage?: string | null
-  /** Page 2 (owner leave-behind) — the preview's Owner Sheet toggle. */
+  /** Page 2 (owner leave-behind) — single-well downloads include it. */
   includeOwnerPage?: boolean
 }) => {
   const { open: notify } = useNotification()
@@ -50,7 +53,11 @@ export const WellPDFDownloadButton = ({
       setIsGenerating(true)
       const filename = buildPdfFilename(well)
       // Same value the page-2 URL line prints (buildWeaverLocationUrl(well.name)).
-      const qrDataUrl = (await buildWeaverQrDataUrl(well.name)) ?? undefined
+      // Page 1: Google Maps at the well coordinates; page 2: Weaver well page.
+      const [qrDataUrl, mapsQrDataUrl] = await Promise.all([
+        buildWeaverQrDataUrl(well.name).then((url) => url ?? undefined),
+        buildWellMapsQrDataUrl(well),
+      ])
 
       const blob = await pdf(
         <FieldCompilationNotesPdf
@@ -62,6 +69,7 @@ export const WellPDFDownloadButton = ({
           includeConfidentialContacts={canViewConfidential}
           hydrographImage={hydrographImage}
           qrDataUrl={qrDataUrl}
+          mapsQrDataUrl={mapsQrDataUrl}
           includeOwnerPage={includeOwnerPage}
         />
       ).toBlob()

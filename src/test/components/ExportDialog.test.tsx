@@ -4,10 +4,10 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ExportDialog } from '@/pages/ocotillo/thing/components/ExportDialog'
 
-// BDMS-1508 AC3: the batch export dialog offers an owner leave-behind page
-// per well, off by default so existing batches stay one page per well.
-const renderDialog = (props: Partial<Parameters<typeof ExportDialog>[0]> = {}) => {
-  const setIncludeOwnerPage = vi.fn()
+// BDMS-1508: the Owner Sheet toggle exists on both export surfaces, matching
+// the wells PDF preview mockup. A batch starts with it off; each well's field
+// sheet is page 1 and the owner page, when on, follows as page 2.
+const renderDialog = (props: Partial<Parameters<typeof ExportDialog>[0]> = {}) =>
   render(
     <ExportDialog
       open
@@ -20,34 +20,30 @@ const renderDialog = (props: Partial<Parameters<typeof ExportDialog>[0]> = {}) =
       filename="batch.pdf"
       setFilename={vi.fn()}
       includeOwnerPage={false}
-      setIncludeOwnerPage={setIncludeOwnerPage}
+      setIncludeOwnerPage={vi.fn()}
       {...props}
     />
   )
-  return { setIncludeOwnerPage }
-}
 
-describe('ExportDialog owner page toggle', () => {
-  it('renders unchecked by default and reports the change', async () => {
-    const { setIncludeOwnerPage } = renderDialog()
-    const checkbox = screen.getByRole('checkbox', {
-      name: /include owner leave-behind page/i,
-    })
-    expect(checkbox).not.toBeChecked()
-    expect(
-      screen.getByText(/adds a second, owner-facing page after each field sheet/i)
-    ).toBeInTheDocument()
-
-    await userEvent.click(checkbox)
-    expect(setIncludeOwnerPage).toHaveBeenCalledWith(true)
+describe('ExportDialog batch export options', () => {
+  it('lists the wells being exported', () => {
+    renderDialog()
+    expect(screen.getByText('WL-0217')).toBeInTheDocument()
+    expect(screen.getByText('Export Summary')).toBeInTheDocument()
   })
 
-  it('reflects the on state and locks while generating', () => {
-    renderDialog({ includeOwnerPage: true, isGenerating: true })
-    const checkbox = screen.getByRole('checkbox', {
-      name: /include owner leave-behind page/i,
-    })
-    expect(checkbox).toBeChecked()
-    expect(checkbox).toBeDisabled()
+  it('offers the owner sheet toggle, off by default', () => {
+    renderDialog()
+    const checkbox = screen.getByRole('checkbox')
+    expect(checkbox).not.toBeChecked()
+    expect(screen.getByText('Owner Sheet')).toBeInTheDocument()
+    expect(screen.getByText(/adds page 2/i)).toBeInTheDocument()
+  })
+
+  it('reports a toggle to the parent', async () => {
+    const setIncludeOwnerPage = vi.fn()
+    renderDialog({ setIncludeOwnerPage })
+    await userEvent.click(screen.getByRole('checkbox'))
+    expect(setIncludeOwnerPage).toHaveBeenCalledWith(true)
   })
 })

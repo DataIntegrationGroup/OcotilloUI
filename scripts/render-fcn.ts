@@ -11,7 +11,7 @@
  *   node_modules/.bin/vite-node scripts/render-fcn.ts <out.pdf>
  *   FCN_FIXTURE=empty node_modules/.bin/vite-node scripts/render-fcn.ts <out.pdf>
  *   FCN_FIXTURE=batch node_modules/.bin/vite-node scripts/render-fcn.ts <out.pdf>
- *   FCN_OWNER_PAGE=1 …        adds the owner leave-behind page (batch toggle on)
+ *   FCN_OWNER_PAGE=0 …        single fixture without the owner page (default: on)
  */
 
 import { readFile, writeFile } from 'node:fs/promises'
@@ -21,7 +21,7 @@ import { renderToBuffer } from '@react-pdf/renderer'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import { FieldCompilationNotesPdf } from '../src/components/pdf/FieldCompilationNotesPdf'
 import { OcotilloDocument } from '../src/components/pdf/OcotilloDocument'
-import { buildWeaverQrDataUrl } from '../src/components/pdf/chemistry/wellQrCode'
+import { buildWeaverQrDataUrl, buildWellMapsQrDataUrl } from '../src/components/pdf/chemistry/wellQrCode'
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
 import path from 'node:path'
@@ -62,6 +62,21 @@ const makeContacts = (): IContact[] => [
   } as unknown as IContact,
 ]
 
+// Page-2 footer field staff (mockup: "Field staff Ethan Mamer · (575) 555-0148"
+// + ethan.mamer@nmt.edu). Kept out of `contacts` on purpose: the mockup holds the
+// well's Secondary Contact blank, so the technician must not become a contact.
+const makeFieldStaff = (): IContact =>
+  ({
+    id: 2,
+    name: 'Ethan Mamer',
+    contact_type: 'Staff',
+    created_at: new Date('2026-01-01T00:00:00Z'),
+    release_status: 'public',
+    role: 'Field Technician',
+    phones: [phone(3, 'Mobile', '5755550148')],
+    emails: [{ id: 1, email: 'ethan.mamer@nmt.edu' }],
+  }) as unknown as IContact
+
 const note = (id: number, note_type: string, content: string) => ({
   id,
   note_type,
@@ -91,8 +106,8 @@ const makeWell = (): IWell =>
         created_at: '2026-01-01T00:00:00Z',
         release_status: 'public',
         alternate_id: 'G-04218-POD1',
-        alternate_organization: 'OSE',
-        relation: 'same_as',
+        alternate_organization: 'NMOSE',
+        relation: 'OSEPOD',
       },
     ],
     current_location: {
@@ -106,7 +121,7 @@ const makeWell = (): IWell =>
         ],
       },
     },
-    site_notes: [],
+    site_notes: [note(3, 'Site', 'Casing cap replaced 10/21; gate chain repaired.')],
     notes: [],
     measuring_notes: [],
     measuring_point_description:
@@ -149,8 +164,10 @@ const makeObservations = () =>
     groundwater_level_reason: null,
     // only the two most recent readings carry a sample (method / staff lookups)
     sample_id: i === SERIES.length - 1 ? 102 : i === SERIES.length - 2 ? 101 : undefined,
-    // single-well paths: staff on the row (well-show.tsx → water_level_measuring_staff)
-    water_level_measuring_staff: i === SERIES.length - 1 ? 'MA' : i === SERIES.length - 2 ? 'JT' : undefined,
+    // single-well paths: staff on the row (well-show.tsx → water_level_measuring_staff).
+    // Full names, not initials (mockup: history Staff shows names).
+    water_level_measuring_staff:
+      i === SERIES.length - 1 ? 'Ethan Mamer' : i === SERIES.length - 2 ? 'Jordan Tate' : undefined,
   }))
 
 const makeSensorDeployments = () =>
@@ -225,7 +242,10 @@ async function main(): Promise<void> {
           hydrographImage: hydrograph,
           sampleMethodsBySampleId: { 101: 'Steel tape', 102: 'Electric tape' },
           qrDataUrl: (await buildWeaverQrDataUrl(makeWell().name)) ?? undefined,
-          includeOwnerPage: process.env.FCN_OWNER_PAGE === '1',
+          mapsQrDataUrl: (await buildWellMapsQrDataUrl(makeWell())) ?? undefined,
+          fieldStaffContact: makeFieldStaff(),
+          // Single-well preview/download: owner leave-behind on by default.
+          includeOwnerPage: process.env.FCN_OWNER_PAGE === '0' ? false : undefined,
         }) as any
   )
 
@@ -246,7 +266,7 @@ async function main(): Promise<void> {
         sampleMethodsBySampleId: { 101: 'Steel tape', 102: 'Electric tape' },
         staffBySampleId: { 101: 'JT', 102: 'MA' },
         standalone: false,
-        // Mirrors the batch export's "Include owner leave-behind page" toggle.
+        // Batch: owner page off by default, switchable per the mockup.
         includeOwnerPage: process.env.FCN_OWNER_PAGE === '1',
         includeConfidentialContacts: true,
       } as any)

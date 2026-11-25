@@ -4,7 +4,10 @@ import { DownloadIcon, EyeIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { FieldCompilationNotesPdf, WellPDF } from '@/components'
-import { buildWeaverQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
+import {
+  buildWeaverQrDataUrl,
+  buildWellMapsQrDataUrl,
+} from '@/components/pdf/chemistry/wellQrCode'
 import {
   CHEMISTRY_REPORT_DEFAULT_SECTIONS,
   downloadChemistryReport,
@@ -144,7 +147,11 @@ export const WellPDFActionsButton = ({
   const handleDownloadFieldSheet = async () => {
     const filename = buildPdfFilename(well)
     // Same value the page-2 URL line prints (buildWeaverLocationUrl(well.name)).
-    const qrDataUrl = (await buildWeaverQrDataUrl(well.name)) ?? undefined
+    // Page 1: Google Maps at the well coordinates; page 2: Weaver well page.
+    const [qrDataUrl, mapsQrDataUrl] = await Promise.all([
+      buildWeaverQrDataUrl(well.name).then((url) => url ?? undefined),
+      buildWellMapsQrDataUrl(well),
+    ])
 
     const blob = await pdf(
       <FieldCompilationNotesPdf
@@ -156,6 +163,7 @@ export const WellPDFActionsButton = ({
         includeConfidentialContacts={canViewConfidential}
         hydrographImage={hydrographImage}
         qrDataUrl={qrDataUrl}
+        mapsQrDataUrl={mapsQrDataUrl}
       />
     ).toBlob()
 

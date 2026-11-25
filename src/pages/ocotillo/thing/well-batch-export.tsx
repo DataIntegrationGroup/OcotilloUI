@@ -38,6 +38,7 @@ import {
   OcotilloDocument,
 } from '@/components'
 import { pdf } from '@react-pdf/renderer'
+import { buildWellMapsQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
 import {
   type DeploymentLike,
   type SensorLike,
@@ -123,6 +124,7 @@ export const WellBatchExport = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [progress, setProgress] = useState(0)
   const [filename, setFilename] = useState(buildBatchFilename())
+  // Off for a batch by default, switchable per the field-notes mockup.
   const [includeOwnerPage, setIncludeOwnerPage] = useState(false)
   const [hydrographBundles, setHydrographBundles] = useState<WellBundle[]>([])
   const [hydrographImagesByWellId, setHydrographImagesByWellId] = useState<
@@ -752,6 +754,15 @@ export const WellBatchExport = () => {
         return next
       })
 
+      // Page-1 Google Maps QR per well, built alongside the hydrograph wait
+      // (one pass, not a second sequential one).
+      const mapsQrPromise = Promise.all(
+        bundlesForExport.map(
+          async (bundle) =>
+            [bundle.well.id, await buildWellMapsQrDataUrl(bundle.well)] as const
+        )
+      ).then((entries) => Object.fromEntries(entries) as Record<number, string | null>)
+
       const hydrographImages =
         neededHydrographs.length > 0
           ? await new Promise<Record<number, string>>((resolve) => {
@@ -784,6 +795,8 @@ export const WellBatchExport = () => {
             })
           : {}
 
+      const mapsQrByWellId = await mapsQrPromise
+
       const blob = await pdf(
         <OcotilloDocument
           title={baseFilename}
@@ -800,6 +813,7 @@ export const WellBatchExport = () => {
               hydrographImage={hydrographImages[bundle.well.id] ?? null}
               sampleMethodsBySampleId={bundle.sampleMethodsBySampleId}
               staffBySampleId={bundle.staffBySampleId}
+              mapsQrDataUrl={mapsQrByWellId[bundle.well.id] ?? null}
               standalone={false}
               includeOwnerPage={includeOwnerPage}
               includeConfidentialContacts={canViewConfidential}

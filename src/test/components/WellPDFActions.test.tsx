@@ -54,10 +54,12 @@ vi.mock('@/components/pdf/chemistry', () => ({
   },
 }))
 
-// The field sheet's page-2 QR is encoded before pdf(); stub the encoder so the
+// The field sheet's QRs (page-1 maps, page-2 well) are encoded before pdf(); stub the encoder so the
 // download path stays on the same tick as before (no real qrcode/canvas work).
 vi.mock('@/components/pdf/chemistry/wellQrCode', () => ({
   buildWeaverQrDataUrl: async () => null,
+  // page-1 Google Maps QR (same stub contract as the page-2 one)
+  buildWellMapsQrDataUrl: async () => null,
 }))
 
 vi.mock('@/hooks', () => ({

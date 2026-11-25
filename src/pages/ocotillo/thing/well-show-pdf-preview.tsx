@@ -2,7 +2,10 @@ import { Box, LinearProgress, Skeleton, useTheme } from '@mui/material'
 import { Show } from '@refinedev/mui'
 import { useParams } from 'react-router'
 import { PDFViewer } from '@react-pdf/renderer'
-import { buildWeaverQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
+import {
+  buildGoogleMapsQrDataUrl,
+  buildWeaverQrDataUrl,
+} from '@/components/pdf/chemistry/wellQrCode'
 import {
   FieldCompilationNotesPdf,
   HydrographPngExporter,
@@ -11,6 +14,7 @@ import {
 } from '@/components'
 import { useEffect, useMemo, useState } from 'react'
 import { PDF_DEFAULT_VALUES } from '@/config'
+import { ReportRail } from './components/ReportRail'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import { IWell } from '@/interfaces/ocotillo'
 import { IPdfOptions } from '@/interfaces'
@@ -25,6 +29,9 @@ export const WellShowPdfPreview = () => {
   const theme = useTheme()
   const [isViewerReady, setIsViewerReady] = useState(false)
   const [hydrographImage, setHydrographImage] = useState<string | null>(null)
+  // Owner sheet (page 2) sits behind the Report rail toggle, as in the mockup.
+  // A single well's preview is expected to include it, so it starts on.
+  const [includeOwnerPage, setIncludeOwnerPage] = useState(true)
   const { canEditAmp, canViewConfidential } = useAccessCapabilities()
 
   // No on-screen PDF options remain: the field-compilation template takes document
@@ -185,6 +192,23 @@ export const WellShowPdfPreview = () => {
     }
   }, [viewWell?.name])
 
+  // Page-1 QR: Google Maps at the well coordinates (ident block).
+  const [mapsQrDataUrl, setMapsQrDataUrl] = useState<string | null>(null)
+  const mapsCoords = viewWell?.current_location?.geometry?.coordinates
+  const [mapsLon, mapsLat] = Array.isArray(mapsCoords)
+    ? (mapsCoords as number[])
+    : []
+  useEffect(() => {
+    let cancelled = false
+    setMapsQrDataUrl(null)
+    buildGoogleMapsQrDataUrl(mapsLat, mapsLon).then((url) => {
+      if (!cancelled) setMapsQrDataUrl(url)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [mapsLat, mapsLon])
+
   const progress = isLoading
     ? Math.min(pdfDataProgress, 75)
     : !isViewerReady
@@ -222,50 +246,66 @@ export const WellShowPdfPreview = () => {
               contacts={contacts}
               sensorDeployments={sensorDeployments}
               hydrographImage={hydrographImage}
+              includeOwnerPage={includeOwnerPage}
             />
           </OcotilloHeaderButtons>
         ) : null
       }
     >
-      <Box sx={{ width: '100%', height: '90vh', position: 'relative' }}>
-        {(isLoading ||
-          !isViewerReady ||
-          (hydrographDatasource.length > 0 && !hydrographImage)) && (
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 2,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <LinearProgress variant="determinate" value={progress} />
-            <Skeleton variant="rectangular" height="100%" />
-          </Box>
-        )}
-        {!isLoading && (
-          <Box
-            sx={{
-              opacity: isViewerReady ? 1 : 0,
-              transition: 'opacity 0.4s ease-in-out',
-              width: '100%',
-              height: '100%',
-            }}
-          >
-            <PDFViewer width="100%" height="100%">
-              <FieldCompilationNotesPdf
-                well={viewWell}
-                assets={assets}
-                contacts={contacts}
-                observations={observations}
-                sensorDeployments={sensorDeployments}
-                hydrographImage={hydrographImage}
-                includeConfidentialContacts={canViewConfidential}
-                qrDataUrl={qrDataUrl}
-              />
-            </PDFViewer>
-          </Box>
-        )}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 2,
+          width: '100%',
+        }}
+      >
+        <Box sx={{ flex: 1, minWidth: 0, height: '90vh', position: 'relative' }}>
+          {(isLoading ||
+            !isViewerReady ||
+            (hydrographDatasource.length > 0 && !hydrographImage)) && (
+            <Box
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 2,
+                bgcolor: 'background.paper',
+              }}
+            >
+              <LinearProgress variant="determinate" value={progress} />
+              <Skeleton variant="rectangular" height="100%" />
+            </Box>
+          )}
+          {!isLoading && (
+            <Box
+              sx={{
+                opacity: isViewerReady ? 1 : 0,
+                transition: 'opacity 0.4s ease-in-out',
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              <PDFViewer width="100%" height="100%">
+                <FieldCompilationNotesPdf
+                  well={viewWell}
+                  assets={assets}
+                  contacts={contacts}
+                  observations={observations}
+                  sensorDeployments={sensorDeployments}
+                  hydrographImage={hydrographImage}
+                  includeConfidentialContacts={canViewConfidential}
+                  includeOwnerPage={includeOwnerPage}
+                  qrDataUrl={qrDataUrl}
+                  mapsQrDataUrl={mapsQrDataUrl}
+                />
+              </PDFViewer>
+            </Box>
+          )}
+        </Box>
+        <ReportRail
+          includeOwnerPage={includeOwnerPage}
+          onToggleOwnerPage={setIncludeOwnerPage}
+        />
       </Box>
       {!isLoading && hydrographDatasource.length > 0 && (
         <HydrographPngExporter

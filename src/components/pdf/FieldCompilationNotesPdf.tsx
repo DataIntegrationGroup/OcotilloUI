@@ -18,6 +18,8 @@ export const FieldCompilationNotesPdf = ({
   standalone = true,
   includeOwnerPage = standalone,
   qrDataUrl,
+  mapsQrDataUrl,
+  fieldStaffContact,
   hotlinePhone,
 }: {
   well: IWell
@@ -37,12 +39,24 @@ export const FieldCompilationNotesPdf = ({
    */
   standalone?: boolean
   /**
-   * Page 2 (owner leave-behind). Defaults to `standalone`, so batch embeds
-   * (standalone={false}) stay field-sheet-only; the preview's Owner Sheet
-   * toggle sets it explicitly.
+   * Page 2 (owner leave-behind). Defaults to `standalone`: the single-well
+   * preview and download include it, batch embeds start without it. Both
+   * surfaces expose an Owner Sheet toggle (mockup: wells PDF preview rail,
+   * batch export dialog) that sets this explicitly.
    */
   includeOwnerPage?: boolean
   qrDataUrl?: string
+  /**
+   * Page-1 QR beside the ident grid: Google Maps at the well coordinates
+   * (buildGoogleMapsQrDataUrl). Omitted/empty -> no image, layout unchanged.
+   */
+  mapsQrDataUrl?: string | null
+  /**
+   * Page-2 footer field staff (full name · phone · email). Optional: when omitted
+   * the page falls back to the staff named on the latest measurement, matched
+   * against the well's loaded contacts.
+   */
+  fieldStaffContact?: IContact
   /** 24-hour line on page 2; falls back to the page's placeholder number. */
   hotlinePhone?: string
 }) => {
@@ -58,6 +72,8 @@ export const FieldCompilationNotesPdf = ({
       staffBySampleId={staffBySampleId}
       includeConfidentialContacts={includeConfidentialContacts}
       qrDataUrl={qrDataUrl}
+      mapsQrDataUrl={mapsQrDataUrl}
+      fieldStaffContact={fieldStaffContact}
       includeOwnerPage={includeOwnerPage}
       hotlinePhone={hotlinePhone}
     />

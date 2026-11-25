@@ -104,31 +104,26 @@ export const ExportDialog = ({
           helperText="The batch will be downloaded as a single PDF using this filename."
         />
 
-        <Typography
-          variant="overline"
-          sx={{ color: 'primary.main', display: 'block', mt: 2, mb: 0.5 }}
-        >
-          Options
-        </Typography>
-        <FormControlLabel
-          control={
-            <Checkbox
-              size="small"
-              checked={includeOwnerPage}
-              onChange={(e) => setIncludeOwnerPage(e.target.checked)}
-              disabled={isGenerating}
-            />
-          }
-          label="Include owner leave-behind page"
-        />
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ display: 'block', ml: 4.25, mt: -0.5 }}
-        >
-          Adds a second, owner-facing page after each field sheet. Off by default
-          so batch exports stay one page per well.
-        </Typography>
+        <Box sx={{ mt: 1 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={includeOwnerPage}
+                onChange={(e) => setIncludeOwnerPage(e.target.checked)}
+                disabled={isGenerating}
+              />
+            }
+            label="Owner Sheet"
+          />
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', ml: 4 }}
+          >
+            Adds page 2 after each well&apos;s field sheet.
+          </Typography>
+        </Box>
 
         {isGenerating && (
           <Box sx={{ mt: 2 }}>

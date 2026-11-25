@@ -56,6 +56,9 @@ const plainInt = (v: unknown): string => (isNum(v) ? v.toFixed(0) : '')
  */
 export const FCN_HOTLINE_PHONE = '(575) 555-0199'
 
+/** Team / data-research address on page 2 — a fixed literal, never looked up. */
+export const FCN_TEAM_EMAIL = 'ocotillo-nmbg@nmt.edu'
+
 const text = (v: unknown): string => {
   if (v == null) return ''
   const str = String(v).trim()
@@ -72,7 +75,7 @@ const siteNameOf = (well: IWell): string =>
   )
 
 const oseOf = (well: IWell): string =>
-  text(well.alternate_ids?.find((alt) => alt.alternate_organization === 'OSE')?.alternate_id)
+  text(well.alternate_ids?.find((alt) => alt.alternate_organization === 'NMOSE')?.alternate_id)
 
 type NoteLike = { content?: string | null; note_type?: string | null } | null | undefined
 
@@ -144,12 +147,31 @@ const Band = ({ children, type }: { children: ReactNode; type?: 'site' | 'previs
 
 type Col = { label: string; key: string; num?: boolean; tint?: 'stat' | 'note'; flex?: number }
 
-const Tbl = ({ cols, rows, style }: { cols: Col[]; rows: Row[]; style?: PdfStyle }) => (
-  <View style={style ? [s.tbl, style].flat() : s.tbl}>
+const Tbl = ({ cols, rows, style }: { cols: Col[]; rows: Row[]; style?: PdfStyle }) => {
+  // Mockup tables are CSS grids: tracks are exact fr shares of the row width.
+  // Flex-grow over `flexBasis: 0` instead distributes only the space left after
+  // each cell's padding/border, so the tracks drift right by up to 10 pt.
+  const fr = cols.reduce((sum, c) => sum + (c.flex ?? 1), 0)
+  const track = (c: Col): PdfStyle => ({
+    width: `${((((c.flex ?? 1) / fr) * 100)).toFixed(4)}%`,
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
+    minWidth: 0,
+  })
+  return (
+    <View style={style ? [s.tbl, style].flat() : s.tbl}>
     <View style={s.tblRow}>
       {cols.map((c, i) => (
-        <View key={c.key} style={[i === cols.length - 1 ? [s.th, s.thEnd] : s.th, { flex: c.flex }]}>
-          <Text style={c.num ? [s.thText, s.num] : s.thText}>{c.label}</Text>
+        <View
+          key={c.key}
+          style={[
+            i === cols.length - 1 ? [s.th, s.thEnd] : s.th,
+            c.num ? s.thNum : {},
+            track(c),
+          ]}
+        >
+          <Text style={c.num ? [s.thText, s.thNumText] : s.thText}>{c.label}</Text>
         </View>
       ))}
     </View>
@@ -160,18 +182,22 @@ const Tbl = ({ cols, rows, style }: { cols: Col[]; rows: Row[]; style?: PdfStyle
           if (r % 2 === 1) cell.push(s.z)
           if (c.tint) cell.push(s[c.tint])
           return (
-            <View key={c.key} style={[cell, { flex: c.flex }]}>
+            <View
+              key={c.key}
+              style={[cell, track(c)]}
+            >
               <Text style={c.num ? [s.tdText, s.num] : s.tdText}>{row[c.key] ?? ''}</Text>
             </View>
           )
         })}
       </View>
     ))}
-  </View>
-)
+    </View>
+  )
+}
 
 const RuledField = ({ label, value, lines }: { label: string; value: string; lines: number }) => (
-  <View style={[s.ruledField, s.fnMainItem]} wrap={false}>
+  <View style={s.ruledField} wrap={false}>
     <Text style={s.ruledLabel}>{label}</Text>
     <View style={[s.ruledArea, { minHeight: lines * RULE_PITCH }]}>
       {Array.from({ length: 14 }).map((_, i) => (
@@ -191,43 +217,49 @@ const Hdr1 = ({ printed }: { printed: string }) => (
   </View>
 )
 
-const Ident = ({ well }: { well: IWell }) => {
+const Ident = ({ well, mapsQrDataUrl }: { well: IWell; mapsQrDataUrl?: string | null }) => {
   const props = well.current_location?.properties
   const utm: { easting?: number | null; northing?: number | null } =
     props?.utm_coordinates ?? {}
   const coords = well.current_location?.geometry?.coordinates as [number, number, number] | undefined
 
+  // Mockup `.ident-grid`: three equal tracks filled row-major, Site Name spanning
+  // the full width; `.idqr` (52 pt Google Maps QR) sits to the right of the grid.
   return (
-    <View style={[s.ident, s.fnMainItem]}>
-      <View style={[s.identCol, s.identColGap]}>
-        <Kv k="Point ID" v={text(well.name)} style={s.identRowGap} />
-        <Kv k="Site Name" v={siteNameOf(well)} />
-        <Kv k="Latitude" v={coords ? coords[1].toFixed(5) : ''} />
+    <View style={s.ident}>
+      <View style={s.identGrid}>
+        <View style={[s.identRow, s.identRowGap]}>
+          <Kv k="Point ID" v={text(well.name)} style={[s.identCol, s.identColGap]} />
+          <Kv k="Easting" v={plainInt(utm.easting)} style={[s.identCol, s.identColGap]} />
+          <Kv k="Northing" v={plainInt(utm.northing)} style={s.identCol} />
+        </View>
+        <View style={[s.identRow, s.identRowGap]}>
+          <Kv k="Site Name" v={siteNameOf(well)} style={s.identCol} />
+        </View>
+        <View style={s.identRow}>
+          <Kv k="Elevation (ft)" v={grouped(props?.elevation)} style={[s.identCol, s.identColGap]} />
+          <Kv k="Longitude" v={coords ? coords[0].toFixed(5) : ''} style={[s.identCol, s.identColGap]} />
+          <Kv k="Latitude" v={coords ? coords[1].toFixed(5) : ''} style={s.identCol} />
+        </View>
       </View>
-      <View style={[s.identCol, s.identColGap]}>
-        <Kv k="Easting" v={plainInt(utm.easting)} style={s.identRowGap} />
-        <Kv k="Northing" v={plainInt(utm.northing)} />
-        <Kv k="Longitude" v={coords ? coords[0].toFixed(5) : ''} />
-      </View>
-      <View style={s.identCol}>
-        <Kv k="Elevation (ft)" v={grouped(props?.elevation)} />
-      </View>
+      {mapsQrDataUrl ? <Image src={mapsQrDataUrl} style={s.idqr} /> : null}
     </View>
   )
 }
 
 const Contacts = ({ primary, secondary }: { primary?: IContact; secondary?: IContact }) => (
-  <View style={[s.contacts, s.fnMainItem]}>
+  <View style={s.contacts}>
     <View style={[s.card, s.cardGap]}>
       <Text style={s.cardHead}>Primary Contact</Text>
-      <Kv k="Name" v={text(primary?.name)} style={s.cardRow} />
-      <Kv k="Role / Relationship" v={text(primary?.role)} style={s.cardRow} />
-      <Kv k="Phone" v={phoneOf(primary)} style={s.cardRow} />
+      <Kv k="Name" v={text(primary?.name)} />
+      <Kv k="Role / Relationship" v={text(primary?.role)} />
+      <Kv k="Phone" v={phoneOf(primary)} />
+      {mobileOf(primary) ? <Kv k="Mobile" v={mobileOf(primary)} /> : null}
     </View>
     <View style={s.card}>
       <Text style={s.cardHead}>Secondary Contact</Text>
-      <Kv k="Name" v={text(secondary?.name)} style={s.cardRow} />
-      <Kv k="Role / Relationship" v={text(secondary?.role)} style={s.cardRow} />
+      <Kv k="Name" v={text(secondary?.name)} />
+      <Kv k="Role / Relationship" v={text(secondary?.role)} />
       <Kv k="Phone" v={phoneOf(secondary)} />
     </View>
   </View>
@@ -269,6 +301,7 @@ const Photos = ({ images }: { images: BaseRecord[] }) => (
         </View>
       )
     })}
+    {images.length > 0 ? <Text style={s.stackcap}>Top 3 photos shown</Text> : null}
   </View>
 )
 
@@ -316,7 +349,6 @@ const NewMeasurement = ({ previous }: { previous: string }) => (
       <Text style={[s.prev, s.nmItem]}>{previous}</Text>
       <View style={[s.wrow, s.nmItem]}>
         <WCell label="Date (MM/DD/YYYY)" />
-        <WCell label="Time (24 h)" />
         <WCell label="Staff" last />
       </View>
       <View style={[s.mgrid, s.nmItem]}>
@@ -358,12 +390,21 @@ const NM_ROWS = [
   'MP Correction (ft)',
   'DTW Below MP (ft)',
   'DTW BGS (ft)',
+  'Time (24 h)',
 ]
 
 const WCell = ({ label, tall, last }: { label: string; tall?: boolean; last?: boolean }) => (
   <View style={last ? s.wcell : [s.wcell, s.wcellGap]}>
     <Text style={s.wLabel}>{label}</Text>
     <View style={tall ? [s.wbox, s.wboxTall] : s.wbox} />
+  </View>
+)
+
+// Mockup `.wf.inl`: bold label with a 12 pt rule filling the rest of the cell.
+const WInline = ({ label, last }: { label: string; last?: boolean }) => (
+  <View style={last ? s.wInlineCell : [s.wInlineCell, s.wInlineGap]}>
+    <Text style={s.wInlineLabel}>{label}</Text>
+    <View style={s.wRule} />
   </View>
 )
 
@@ -406,6 +447,20 @@ export const buildFieldSheetModel = ({
   })
 
   const latest = ordered[0]
+
+  // Page-2 named staff: the staff shown for the latest measurement, matched by
+  // name against the contacts already loaded for this well. No match -> no
+  // email / mobile (blank, never guessed).
+  const latestStaff = lastRows[0]?.staff ?? ''
+  const staffContact = latestStaff
+    ? visible.find((c) => text(c?.name) === latestStaff)
+    : undefined
+  const fieldStaff = {
+    name: latestStaff,
+    mobile: mobileOf(staffContact),
+    email: emailOf(staffContact),
+  }
+
   const latestDtw = latest ? dtwBelowMp(latest) : null
   const previous =
     latest && latestDtw != null
@@ -434,6 +489,10 @@ export const buildFieldSheetModel = ({
     .map((n) => (n.parsed!.date ? `${n.parsed!.date}  ${n.parsed!.note}` : n.parsed!.note))
     .join('\n')
 
+  // Site notes belong to the site, not to an observation: the newest row
+  // carries them, older rows stay blank.
+  if (siteNotes && lastRows[0]) lastRows[0] = { ...lastRows[0], siteNotes }
+
   const images = assets
     .filter((asset: any) => asset?.signed_url && typeof asset?.mime_type === 'string' && asset.mime_type.startsWith('image/'))
     .slice(0, 3)
@@ -459,6 +518,7 @@ export const buildFieldSheetModel = ({
     images,
     readings,
     yearSpan,
+    fieldStaff,
   }
 }
 
@@ -475,18 +535,19 @@ const Logo = () => (
   </Svg>
 )
 
-const InfoKv = ({ k, v, gap }: { k: string; v: string; gap?: boolean }) => (
-  <View style={gap ? [s.fnInfoKv, s.fnInfoKvGap] : s.fnInfoKv}>
+const InfoKv = ({ k, v, gap, flex }: { k: string; v: string; gap?: boolean; flex?: number }) => (
+  <View style={[gap ? [s.fnInfoKv, s.fnInfoKvGap] : s.fnInfoKv, flex != null ? { flex } : {}].flat()}>
     <Text style={s.fnInfoK}>{k}</Text>
     <Text style={s.fnInfoV}>{v}</Text>
   </View>
 )
 
+// Mockup `.tbl` grid is `1.1fr 1.4fr 1fr`; MP Height is a well attribute (header
+// + page-2 info block), not a per-reading column, so the table stays 3 columns.
 const READING_COLS: Col[] = [
-  { key: 'date', label: 'Date' },
-  { key: 'bgs', label: 'Depth to water below ground surface (ft)', num: true },
-  { key: 'mp', label: 'MP Height (ft)', num: true },
-  { key: 'status', label: 'Level Status', tint: 'stat' },
+  { key: 'date', label: 'Date', flex: 1.1 },
+  { key: 'bgs', label: 'Depth to water below ground surface (ft)', num: true, flex: 1.4 },
+  { key: 'status', label: 'Level Status', tint: 'stat', flex: 1 },
 ]
 
 const OwnerPage = ({
@@ -495,15 +556,27 @@ const OwnerPage = ({
   hydrographImage,
   qrDataUrl,
   hotlinePhone,
+  fieldStaffContact,
 }: {
   well: IWell
   model: ReturnType<typeof buildFieldSheetModel>
   hydrographImage?: string | null
   qrDataUrl?: string
   hotlinePhone?: string
+  /** Backend-resolved staff contact for this well; when present it wins over
+   *  the name match against the well's loaded contacts. */
+  fieldStaffContact?: IContact
 }) => {
   const siteName = siteNameOf(well)
   const depth = fixed(well.well_depth)
+  const mpHeight = fixed(well.measuring_point_height)
+  const fieldStaff = fieldStaffContact
+    ? {
+        name: text(fieldStaffContact.name) || model.fieldStaff.name,
+        mobile: mobileOf(fieldStaffContact),
+        email: emailOf(fieldStaffContact),
+      }
+    : model.fieldStaff
   const weaverUrl = buildWeaverLocationUrl(well.name)
   return (
     <Page size="LETTER" style={s.page}>
@@ -516,10 +589,17 @@ const OwnerPage = ({
       </View>
 
       <View style={[s.fnInfo, s.p2Block]}>
-        <View style={s.fnInfoRow}><InfoKv k="Site Name" v={siteName} gap /><InfoKv k="Point ID" v={text(well.name)} /></View>
+        {/* Mockup `.fn-info .row`: 1.05fr 0.975fr 0.975fr tracks. OSE # has no
+            backend field on this path, so it prints blank. */}
         <View style={s.fnInfoRow}>
-          <InfoKv k="Well Depth" v={depth ? `${depth} ft` : ''} />
-          <InfoKv k="OSE #" v="" />
+          <InfoKv k="Site Name" v={siteName} gap flex={1.05} />
+          <InfoKv k="Well Depth" v={depth ? `${depth} ft` : ''} gap flex={0.975} />
+          <InfoKv k="MP Height" v={mpHeight ? `${mpHeight} ft` : ''} flex={0.975} />
+        </View>
+        <View style={s.fnInfoRow}>
+          <InfoKv k="Point ID" v={text(well.name)} gap flex={1.05} />
+          <InfoKv k="OSE #" v={oseOf(well)} gap flex={0.975} />
+          <View style={{ flex: 0.975 }} />
         </View>
       </View>
 
@@ -551,6 +631,12 @@ const OwnerPage = ({
             <Text style={s.askQ}>For questions?</Text>
             <Text style={s.askLine}>New Mexico Bureau of Geology &amp; Mineral Resources</Text>
             <Text style={s.askLine}>801 Leroy Place, Socorro, NM 87801</Text>
+            {fieldStaff.name ? (
+              <Text style={s.askLine}>
+                <Text style={s.k}>Field staff</Text>
+                {`  ${fieldStaff.name}${fieldStaff.mobile ? ` · ${fieldStaff.mobile}` : ''}`}
+              </Text>
+            ) : null}
             <Text style={s.askLine}>
               <Text style={s.k}>24-hour line</Text>
               {hotlinePhone ? `  ${hotlinePhone}` : ''}
@@ -558,7 +644,8 @@ const OwnerPage = ({
           </View>
         </View>
         <View style={s.emails}>
-          <Text style={s.emailText}>ocotillo-nmbg@nmt.edu</Text>
+          <Text style={s.emailText}>{FCN_TEAM_EMAIL}</Text>
+          {fieldStaff.email ? <Text style={s.emailText}>{fieldStaff.email}</Text> : null}
         </View>
       </View>
     </Page>
@@ -576,9 +663,13 @@ export interface FieldCompilationNotesPageProps {
   staffBySampleId?: Record<string, string>
   includeConfidentialContacts: boolean
   qrDataUrl?: string
+  /** Page-1 Google Maps QR (ident block). Empty -> not drawn. */
+  mapsQrDataUrl?: string | null
   includeOwnerPage?: boolean
   /** 24-hour line printed on page 2; defaults to FCN_HOTLINE_PHONE. */
   hotlinePhone?: string
+  /** Backend-resolved staff contact for page 2; wins over the name match. */
+  fieldStaffContact?: IContact
 }
 
 const FieldCompilationNotesPage = ({
@@ -593,7 +684,9 @@ const FieldCompilationNotesPage = ({
   includeConfidentialContacts,
   includeOwnerPage,
   qrDataUrl,
+  mapsQrDataUrl,
   hotlinePhone = FCN_HOTLINE_PHONE,
+  fieldStaffContact,
 }: FieldCompilationNotesPageProps) => {
   const m = buildFieldSheetModel({
     well,
@@ -612,7 +705,7 @@ const FieldCompilationNotesPage = ({
         <Hdr1 printed={m.printed} />
         <View style={s.top}>
           <View style={s.fnMain}>
-            <Ident well={well} />
+            <Ident well={well} mapsQrDataUrl={mapsQrDataUrl} />
             <Contacts primary={m.primaryContact} secondary={m.secondaryContact} />
             <RuledBlocks well={well} />
           </View>
@@ -630,6 +723,7 @@ const FieldCompilationNotesPage = ({
           hydrographImage={hydrographImage}
           qrDataUrl={qrDataUrl}
           hotlinePhone={hotlinePhone}
+          fieldStaffContact={fieldStaffContact}
         />
       )}
     </>

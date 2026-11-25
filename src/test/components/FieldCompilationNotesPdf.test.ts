@@ -230,7 +230,6 @@ describe('FieldCompilationNotesPdf', () => {
     // Recent readings table header columns (space before paren drops in react-pdf extraction)
     expect(pages[1]).toContain('DATE')
     expect(pages[1]).toContain('DEPTH TO WATER BELOW GROUND')
-    expect(pages[1]).toContain('MP HEIGHT (FT)')
     expect(pages[1]).toContain('LEVEL STATUS')
     // Page 2 never abbreviates to DTW
     expect(pages[1]).not.toContain('DTW')
@@ -402,7 +401,7 @@ describe('FieldCompilationNotesPdf', () => {
     expect(pages[0]).not.toContain('Your Well')
   })
 
-  it('includeOwnerPage gates page 2 on the standalone document (preview Owner Sheet toggle)', async () => {
+  it('includeOwnerPage gates page 2 on the standalone document (single-well preview)', async () => {
     const render = async (includeOwnerPage: boolean) =>
       extractPdfText(
         await pdf(
@@ -428,7 +427,7 @@ describe('FieldCompilationNotesPdf', () => {
     expect(on.pages[1]).toContain('Your Well')
   })
 
-  it('includeOwnerPage adds the owner page per well in a batch document (batch export toggle)', async () => {
+  it('includeOwnerPage adds the owner page per well when a parent document opts in', async () => {
     const render = async (includeOwnerPage: boolean) =>
       extractPdfText(
         await pdf(
