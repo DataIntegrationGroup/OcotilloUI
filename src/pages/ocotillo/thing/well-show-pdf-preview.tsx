@@ -1,5 +1,6 @@
 import { Box, LinearProgress, Skeleton, useTheme } from '@mui/material'
 import { Show } from '@refinedev/mui'
+import { useDataProvider } from '@refinedev/core'
 import { useParams } from 'react-router'
 import { PDFViewer } from '@react-pdf/renderer'
 import {
@@ -15,6 +16,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { PDF_DEFAULT_VALUES } from '@/config'
 import { ReportRail } from './components/ReportRail'
+import { fetchSampleMaps, latestSampleIds } from './useSampleMaps'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import { IWell } from '@/interfaces/ocotillo'
 import { IPdfOptions } from '@/interfaces'
@@ -209,6 +211,29 @@ export const WellShowPdfPreview = () => {
     }
   }, [mapsLat, mapsLon])
 
+  // Last Measurements · Method / Staff: same sample lookup the batch export
+  // uses (useSampleMaps.fetchSampleMaps), keyed on the two newest sample ids.
+  const dataProvider = useDataProvider()
+  const [sampleMaps, setSampleMaps] = useState<{
+    sampleMethodsBySampleId: Record<number, string>
+    staffBySampleId: Record<number, string>
+  }>({ sampleMethodsBySampleId: {}, staffBySampleId: {} })
+  const sampleIdsKey = latestSampleIds(observations ?? []).join(',')
+  useEffect(() => {
+    let cancelled = false
+    if (!sampleIdsKey) {
+      setSampleMaps({ sampleMethodsBySampleId: {}, staffBySampleId: {} })
+      return
+    }
+    fetchSampleMaps(dataProvider('ocotillo'), observations ?? []).then((maps) => {
+      if (!cancelled) setSampleMaps(maps)
+    })
+    return () => {
+      cancelled = true
+    }
+    // Refetch only when the newest readings' samples change.
+  }, [sampleIdsKey])
+
   const progress = isLoading
     ? Math.min(pdfDataProgress, 75)
     : !isViewerReady
@@ -247,6 +272,8 @@ export const WellShowPdfPreview = () => {
               sensorDeployments={sensorDeployments}
               hydrographImage={hydrographImage}
               includeOwnerPage={includeOwnerPage}
+              sampleMethodsBySampleId={sampleMaps.sampleMethodsBySampleId}
+              staffBySampleId={sampleMaps.staffBySampleId}
             />
           </OcotilloHeaderButtons>
         ) : null
@@ -295,6 +322,8 @@ export const WellShowPdfPreview = () => {
                   hydrographImage={hydrographImage}
                   includeConfidentialContacts={canViewConfidential}
                   includeOwnerPage={includeOwnerPage}
+                  sampleMethodsBySampleId={sampleMaps.sampleMethodsBySampleId}
+                  staffBySampleId={sampleMaps.staffBySampleId}
                   qrDataUrl={qrDataUrl}
                   mapsQrDataUrl={mapsQrDataUrl}
                 />

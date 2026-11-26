@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { useSampleMaps } from '../../pages/ocotillo/thing/useSampleMaps'
+import {
+  buildSampleMaps,
+  fetchSampleMaps,
+  latestSampleIds,
+  useSampleMaps,
+} from '../../pages/ocotillo/thing/useSampleMaps'
 
 describe('useSampleMaps', () => {
   const mockDataProvider = vi.fn()
@@ -86,5 +91,59 @@ describe('useSampleMaps', () => {
 
     expect(sampleMethodsBySampleId).toEqual({ 1: 'M1', 2: 'M2' })
     expect(staffBySampleId).toEqual({ 1: 'S1', 2: 'S2' })
+  })
+})
+
+describe('fetchSampleMaps / buildSampleMaps (FCN Last Measurements · Method / Staff)', () => {
+  it('fetches the samples behind the two newest readings and maps method + staff', async () => {
+    const samples: Record<number, any> = {
+      7: { sample_method: 'Electric tape', sampler_name: 'EM', contact: { name: 'Ethan Mamer' } },
+      6: { sample_method: 'Steel tape', sampler_name: 'Jordan Tate' },
+      5: { sample_method: 'Old', sampler_name: 'Old' },
+    }
+    const getOne = vi.fn(async ({ id }: { resource: string; id: number }) => ({ data: samples[id] }))
+
+    const maps = await fetchSampleMaps({ getOne }, [
+      { observation_datetime: '2024-01-01T00:00:00Z', sample_id: 5 },
+      { observation_datetime: '2026-10-21T00:00:00Z', sample_id: 7 },
+      { observation_datetime: '2026-04-14T00:00:00Z', sample_id: 6 },
+    ])
+
+    expect(getOne.mock.calls.map(([p]) => p)).toEqual([
+      { resource: 'ocotillo.sample', id: 7 },
+      { resource: 'ocotillo.sample', id: 6 },
+    ])
+    expect(maps.sampleMethodsBySampleId).toEqual({ 7: 'Electric tape', 6: 'Steel tape' })
+    // contact full name wins over sampler_name initials; sampler_name is the fallback
+    expect(maps.staffBySampleId).toEqual({ 7: 'Ethan Mamer', 6: 'Jordan Tate' })
+  })
+
+  it('skips failed fetches and falls back to field-event participants for staff', async () => {
+    const getOne = vi.fn(async ({ id }: { resource: string; id: number }) => {
+      if (id === 2) throw new Error('boom')
+      return {
+        data: {
+          sample_method: '',
+          field_event: { field_event_participants: [{ participant: { name: 'A B' } }] },
+        },
+      }
+    })
+    const maps = await fetchSampleMaps({ getOne }, [
+      { observation_datetime: '2026-01-02T00:00:00Z', sample_id: 1 },
+      { observation_datetime: '2026-01-01T00:00:00Z', sample_id: 2 },
+    ])
+    expect(maps.sampleMethodsBySampleId).toEqual({ 1: '-' })
+    expect(maps.staffBySampleId).toEqual({ 1: 'A B' })
+  })
+
+  it('latestSampleIds ignores readings without a sample', () => {
+    expect(
+      latestSampleIds([
+        { observation_datetime: '2026-01-03T00:00:00Z' },
+        { observation_datetime: '2026-01-02T00:00:00Z', sample_id: 9 },
+        { observation_datetime: '2026-01-01T00:00:00Z', sample_id: 8 },
+      ])
+    ).toEqual([9])
+    expect(buildSampleMaps([]).staffBySampleId).toEqual({})
   })
 })

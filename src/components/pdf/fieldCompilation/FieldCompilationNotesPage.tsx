@@ -74,8 +74,11 @@ const siteNameOf = (well: IWell): string =>
     )?.alternate_id ?? well.alternate_ids?.[0]?.alternate_id
   )
 
-const oseOf = (well: IWell): string =>
-  text(well.alternate_ids?.find((alt) => alt.alternate_organization === 'NMOSE')?.alternate_id)
+// Same pick as well-show.tsx (NMOSE + OSEPOD); any NMOSE id is the fallback.
+const oseOf = (well: IWell): string => {
+  const ose = (well.alternate_ids ?? []).filter((alt) => alt?.alternate_organization === 'NMOSE')
+  return text((ose.find((alt) => alt.relation === 'OSEPOD') ?? ose[0])?.alternate_id)
+}
 
 type NoteLike = { content?: string | null; note_type?: string | null } | null | undefined
 
@@ -439,7 +442,9 @@ export const buildFieldSheetModel = ({
     return {
       date: formatSheetDate(o.observation_datetime),
       dtw: fixed(dtwBelowMp(o)),
-      method: o.sample_id != null ? text(sampleMethodsBySampleId[o.sample_id]) : '',
+      // Sample lookup first (preview / batch); well-show rows already carry the
+      // sample's method as `water_level_method` (well-show.tsx recentObservations).
+      method: (o.sample_id != null ? text(sampleMethodsBySampleId[o.sample_id]) : '') || text((o as any).water_level_method),
       status: levelStatusOf(o),
       staff: (o.sample_id != null ? text(staffBySampleId?.[String(o.sample_id)]) : '') || text((o as any).water_level_measuring_staff),
       siteNotes: '', // Handled separately by Site Notes field

@@ -26,7 +26,6 @@ import { List, useAutocomplete } from '@refinedev/mui'
 import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import {
   IObservation,
-  ISample,
   IWell,
   IWellDetails,
   WellBundle,
@@ -54,6 +53,7 @@ import { useAccessCapabilities } from '@/hooks'
 import type { IHydrographDatasource } from '@/interfaces/st2'
 import { BatchRouteMap } from './components/BatchRouteMap'
 import { ExportDialog } from './components/ExportDialog'
+import { fetchSampleMaps } from './useSampleMaps'
 const TOKEN_RESOLVE_CONCURRENCY = 5
 const TOKEN_RESOLVE_PAGE_SIZE = 200
 const TOKEN_RESOLVE_MAX_PAGES = 20
@@ -360,58 +360,11 @@ export const WellBatchExport = () => {
         ),
       ])
 
-      const sampleIds = Array.from(
-        new Set(
-          [...observations]
-            .filter((observation) => observation.observation_datetime)
-            .sort(
-              (a, b) =>
-                new Date(b.observation_datetime!).getTime() -
-                new Date(a.observation_datetime!).getTime()
-            )
-            .slice(0, 2)
-            .map((observation) => observation.sample_id)
-            .filter((sampleId): sampleId is number => typeof sampleId === 'number')
-        )
-      )
-
-      const samples: Array<readonly [number, ISample]> =
-        sampleIds.length > 0
-          ? (
-              await Promise.allSettled(
-                sampleIds.map((sampleId) =>
-                  ocotilloDataProvider.getOne<ISample>({
-                    resource: 'ocotillo.sample',
-                    id: sampleId,
-                  })
-                )
-              )
-            )
-              .map((result, index) =>
-                result.status === 'fulfilled'
-                  ? ([sampleIds[index], result.value.data as ISample] as const)
-                  : null
-              )
-              .filter((entry): entry is readonly [number, ISample] => entry !== null)
-          : []
-
-      const sampleMethodsBySampleId = Object.fromEntries(
-        samples.map(([sampleId, sample]) => [
-          sampleId,
-          sample.sample_method?.trim() || '-',
-        ])
-      )
-
-      // Staff = the sampler, else the visit's field-event participants.
-      const staffBySampleId = Object.fromEntries(
-        samples.map(([sampleId, sample]) => [
-          sampleId,
-          sample.sampler_name?.trim() ||
-            (sample.field_event?.field_event_participants ?? [])
-              .map((p) => p.participant?.name?.trim())
-              .filter(Boolean)
-              .join(', '),
-        ])
+      // Method / staff for the two newest readings — shared with the
+      // single-well preview (useSampleMaps.fetchSampleMaps).
+      const { sampleMethodsBySampleId, staffBySampleId } = await fetchSampleMaps(
+        ocotilloDataProvider,
+        observations
       )
 
       return {

@@ -21,6 +21,8 @@ export const WellPDFDownloadButton = ({
   sensorDeployments = [],
   hydrographImage,
   includeOwnerPage,
+  sampleMethodsBySampleId,
+  staffBySampleId,
 }: {
   well: IWell
   isLoading: boolean
@@ -31,6 +33,9 @@ export const WellPDFDownloadButton = ({
   hydrographImage?: string | null
   /** Page 2 (owner leave-behind) — single-well downloads include it. */
   includeOwnerPage?: boolean
+  /** Last Measurements · Method / Staff (useSampleMaps.fetchSampleMaps). */
+  sampleMethodsBySampleId?: Record<number, string>
+  staffBySampleId?: Record<number, string>
 }) => {
   const { open: notify } = useNotification()
   const {
@@ -71,6 +76,8 @@ export const WellPDFDownloadButton = ({
           qrDataUrl={qrDataUrl}
           mapsQrDataUrl={mapsQrDataUrl}
           includeOwnerPage={includeOwnerPage}
+          sampleMethodsBySampleId={sampleMethodsBySampleId}
+          staffBySampleId={staffBySampleId}
         />
       ).toBlob()
 

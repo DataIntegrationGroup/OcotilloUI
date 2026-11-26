@@ -3,6 +3,7 @@ import { Document, pdf } from '@react-pdf/renderer'
 import { describe, expect, it } from 'vitest'
 import { inflate } from 'pako'
 import { FieldCompilationNotesPdf } from '@/components/pdf/FieldCompilationNotesPdf'
+import { buildFieldSheetModel } from '@/components/pdf/fieldCompilation/FieldCompilationNotesPage'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import { formatContactPhones } from '@/components/pdf/fieldCompilationPhoneFormatter'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
@@ -460,5 +461,92 @@ describe('FieldCompilationNotesPdf', () => {
     expect(on.pageCount).toBe(4)
     expect(on.pages[1]).toContain('Your Well')
     expect(on.pages[3]).toContain('Your Well')
+  })
+
+  describe('real-data wiring (single-well + batch paths)', () => {
+    const readings = [
+      { observation_datetime: '2026-10-21T17:00:00Z', depth_to_water_bgs: 39.52, measuring_point_height: 2.1, sample_id: 102 },
+      { observation_datetime: '2026-04-14T17:00:00Z', depth_to_water_bgs: 39.18, measuring_point_height: 2.1, sample_id: 101 },
+    ]
+
+    it('prints Last Measurements · Method / Staff from the sample maps (preview + batch)', async () => {
+      const pdfBlob = await pdf(
+        createElement(FieldCompilationNotesPdf, {
+          well: makeWell(),
+          contacts: [],
+          assets: [],
+          observations: readings as any[],
+          sensorDeployments: [],
+          hydrographImage: null,
+          sampleMethodsBySampleId: { 101: 'Steel tape', 102: 'Electric tape' },
+          staffBySampleId: { 101: 'Jordan Tate', 102: 'Ethan Mamer' },
+        }) as any
+      ).toBlob()
+      const { pageCount, pages } = await extractPdfText(pdfBlob)
+      expect(pageCount).toBe(2)
+      expect(pages[0]).toContain('Electric tape')
+      expect(pages[0]).toContain('Steel tape')
+      expect(pages[0]).toContain('Ethan Mamer')
+      expect(pages[0]).toContain('Jordan Tate')
+      // page-2 Field staff follows the latest reading's staff
+      expect(pages[1]).toContain('Ethan Mamer')
+    })
+
+    it('falls back to the well-show row fields when no sample maps are passed', () => {
+      const m = buildFieldSheetModel({
+        well: makeWell(),
+        contacts: [],
+        assets: [],
+        observations: readings.map((r, i) => ({
+          ...r,
+          water_level_method: i === 0 ? 'Electric tape' : 'Steel tape',
+          water_level_measuring_staff: i === 0 ? 'Ethan Mamer' : 'Jordan Tate',
+        })) as any[],
+        sensorDeployments: [],
+        sampleMethodsBySampleId: {},
+        includeConfidentialContacts: true,
+      })
+      expect(m.lastRows.map((r) => [r.method, r.staff])).toEqual([
+        ['Electric tape', 'Ethan Mamer'],
+        ['Steel tape', 'Jordan Tate'],
+      ])
+    })
+
+    it('sample-map values win over the row fields; "-" maps print blank', () => {
+      const m = buildFieldSheetModel({
+        well: makeWell(),
+        contacts: [],
+        assets: [],
+        observations: [{ ...readings[0], water_level_method: 'Row method' }] as any[],
+        sensorDeployments: [],
+        sampleMethodsBySampleId: { 102: 'Electric tape' },
+        staffBySampleId: { 102: '-' },
+        includeConfidentialContacts: true,
+      })
+      expect(m.lastRows[0].method).toBe('Electric tape')
+      expect(m.lastRows[0].staff).toBe('')
+    })
+
+    it('OSE # prefers the NMOSE OSEPOD id (well-show precedence)', async () => {
+      const well = makeWell()
+      well.alternate_ids = [
+        ...(well.alternate_ids ?? []),
+        { id: 11, alternate_id: 'RA-00001', alternate_organization: 'NMOSE', relation: 'same_as' },
+        { id: 12, alternate_id: 'G-04218-POD1', alternate_organization: 'NMOSE', relation: 'OSEPOD' },
+      ] as any
+      const pdfBlob = await pdf(
+        createElement(FieldCompilationNotesPdf, {
+          well,
+          contacts: [],
+          assets: [],
+          observations: [],
+          sensorDeployments: [],
+          hydrographImage: null,
+        }) as any
+      ).toBlob()
+      const { pages } = await extractPdfText(pdfBlob)
+      expect(pages[1]).toContain('G-04218-POD1')
+      expect(pages[1]).not.toContain('RA-00001')
+    })
   })
 })
