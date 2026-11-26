@@ -1,9 +1,14 @@
 import { pdf } from '@react-pdf/renderer'
-import { BaseRecord, useGo, useNotification } from '@refinedev/core'
+import {
+  BaseRecord,
+  useDataProvider,
+  useGo,
+  useNotification,
+} from '@refinedev/core'
 import { DownloadIcon, EyeIcon } from 'lucide-react'
-import { useState } from 'react'
+import { Component, ReactNode, useCallback, useRef, useState } from 'react'
 import { useParams } from 'react-router'
-import { FieldCompilationNotesPdf, WellPDF } from '@/components'
+import { FieldCompilationNotesPdf, HydrographPngExporter } from '@/components'
 import {
   buildWeaverQrDataUrl,
   buildWellMapsQrDataUrl,
@@ -27,7 +32,46 @@ import {
 } from '@/components/ui/tooltip'
 import { useAccessCapabilities, useWellChemistryReport } from '@/hooks'
 import { IContact, IObservation, IWell } from '@/interfaces/ocotillo'
+import type { IPdfOptions } from '@/interfaces'
+import type { IHydrographDatasource, IHydrographOptions } from '@/interfaces/st2'
 import { buildPdfFilename, SensorDeploymentRow } from '@/utils'
+import { PDF_DEFAULT_VALUES } from '@/config'
+import { fetchSampleMaps } from '@/pages/ocotillo/thing/useSampleMaps'
+import {
+  buildFieldSheetHydrographOptions,
+  buildHydrographDatasource,
+} from '@/pages/ocotillo/thing/hydrographDatasource'
+
+/** Hard cap on the offscreen hydrograph export; past it page 2 prints without one. */
+export const HYDROGRAPH_EXPORT_TIMEOUT_MS = 4000
+
+// Same chart options the preview exports with (stable, so the exporter's
+// effect is not re-armed on every render while a download waits).
+const FIELD_SHEET_HYDROGRAPH_OPTIONS = buildFieldSheetHydrographOptions(
+  PDF_DEFAULT_VALUES as IPdfOptions & Partial<IHydrographOptions>
+)
+
+const EMPTY_SAMPLE_MAPS = {
+  sampleMethodsBySampleId: {} as Record<number, string>,
+  staffBySampleId: {} as Record<number, string>,
+}
+
+/** A chart that throws while exporting must not take the button down. */
+class HydrographExportBoundary extends Component<
+  { onError: () => void; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  componentDidCatch() {
+    this.props.onError()
+  }
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
 
 /** The kinds of PDF the well details page can produce. */
 export type WellReportType = 'field-sheet' | 'chemistry-report'
@@ -70,6 +114,39 @@ export const WellPDFActionsButton = ({
   const [selectedReportType, setSelectedReportType] =
     useState<WellReportType>('field-sheet')
   const [isGenerating, setIsGenerating] = useState(false)
+  const dataProvider = useDataProvider()
+
+  // Offscreen hydrograph for the field-sheet download: mounted only while a
+  // download waits on it (the well page has no chart surface of its own).
+  const [hydrographJob, setHydrographJob] = useState<{
+    key: number
+    datasource: IHydrographDatasource[]
+  } | null>(null)
+  const finishHydrograph = useRef<((png: string | null) => void) | null>(null)
+  const handleHydrographPng = useCallback(
+    (png: string) => finishHydrograph.current?.(png),
+    []
+  )
+  const handleHydrographError = useCallback(
+    () => finishHydrograph.current?.(null),
+    []
+  )
+
+  const exportHydrographPng = (datasource: IHydrographDatasource[]) =>
+    datasource.length === 0
+      ? Promise.resolve<string | null>(null)
+      : new Promise<string | null>((resolve) => {
+          let timer: ReturnType<typeof setTimeout> | undefined
+          const finish = (png: string | null) => {
+            if (timer) clearTimeout(timer)
+            finishHydrograph.current = null
+            setHydrographJob(null)
+            resolve(png)
+          }
+          timer = setTimeout(() => finish(null), HYDROGRAPH_EXPORT_TIMEOUT_MS)
+          finishHydrograph.current = finish
+          setHydrographJob({ key: Date.now(), datasource })
+        })
 
   // Each report carries its own gate, matching its route's access policy
   // (`ocotillo.thing-well-pdf-preview`, `ocotillo.chemistry-report`). Both are
@@ -148,10 +225,21 @@ export const WellPDFActionsButton = ({
     const filename = buildPdfFilename(well)
     // Same value the page-2 URL line prints (buildWeaverLocationUrl(well.name)).
     // Page 1: Google Maps at the well coordinates; page 2: Weaver well page.
-    const [qrDataUrl, mapsQrDataUrl] = await Promise.all([
-      buildWeaverQrDataUrl(well.name).then((url) => url ?? undefined),
-      buildWellMapsQrDataUrl(well),
-    ])
+    // Method / Staff: the same sample lookup the preview makes; a failed
+    // lookup prints those cells blank rather than blocking the download.
+    // Hydrograph: an explicit image wins, else export one offscreen (capped).
+    const [qrDataUrl, mapsQrDataUrl, sampleMaps, pageTwoHydrograph] =
+      await Promise.all([
+        buildWeaverQrDataUrl(well.name).then((url) => url ?? undefined),
+        buildWellMapsQrDataUrl(well),
+        (async () =>
+          fetchSampleMaps(dataProvider('ocotillo'), observations))().catch(
+          () => EMPTY_SAMPLE_MAPS
+        ),
+        hydrographImage
+          ? Promise.resolve(hydrographImage)
+          : exportHydrographPng(buildHydrographDatasource(well, observations)),
+      ])
 
     const blob = await pdf(
       <FieldCompilationNotesPdf
@@ -161,7 +249,9 @@ export const WellPDFActionsButton = ({
         observations={observations}
         sensorDeployments={sensorDeployments}
         includeConfidentialContacts={canViewConfidential}
-        hydrographImage={hydrographImage}
+        hydrographImage={pageTwoHydrograph}
+        sampleMethodsBySampleId={sampleMaps.sampleMethodsBySampleId}
+        staffBySampleId={sampleMaps.staffBySampleId}
         qrDataUrl={qrDataUrl}
         mapsQrDataUrl={mapsQrDataUrl}
       />
@@ -249,6 +339,7 @@ export const WellPDFActionsButton = ({
       : 'Download field sheet'
 
   return (
+    <>
     <div className="inline-flex items-stretch rounded-lg border border-border bg-background overflow-hidden shadow-xs">
       <Select
         value={reportType}
@@ -315,5 +406,19 @@ export const WellPDFActionsButton = ({
         <TooltipContent side="bottom">{downloadTooltip}</TooltipContent>
       </Tooltip>
     </div>
+    {hydrographJob ? (
+      <HydrographExportBoundary
+        key={hydrographJob.key}
+        onError={handleHydrographError}
+      >
+        <HydrographPngExporter
+          datasource={hydrographJob.datasource}
+          options={FIELD_SHEET_HYDROGRAPH_OPTIONS}
+          refreshKey={hydrographJob.key}
+          onPngReady={handleHydrographPng}
+        />
+      </HydrographExportBoundary>
+    ) : null}
+    </>
   )
 }

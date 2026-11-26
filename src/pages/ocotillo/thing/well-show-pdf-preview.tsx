@@ -17,6 +17,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { PDF_DEFAULT_VALUES } from '@/config'
 import { ReportRail } from './components/ReportRail'
 import { fetchSampleMaps, latestSampleIds } from './useSampleMaps'
+import {
+  buildFieldSheetHydrographOptions,
+  buildHydrographDatasource,
+} from './hydrographDatasource'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import { IWell } from '@/interfaces/ocotillo'
 import { IPdfOptions } from '@/interfaces'
@@ -61,32 +65,10 @@ export const WellShowPdfPreview = () => {
   }, [isLoading])
 
 
-  const hydrographDatasource = useMemo<IHydrographDatasource[]>(() => {
-    if (!observations?.length) return []
-
-    const data = observations
-      .filter((o) => o.observation_datetime && typeof o.value === 'number')
-      .map((o) => ({
-        phenomenonTime: o.observation_datetime,
-        result: Number(o.depth_to_water_bgs),
-      }))
-      .sort(
-        (a, b) =>
-          new Date(a.phenomenonTime).getTime() -
-          new Date(b.phenomenonTime).getTime()
-      )
-
-    if (!data.length) return []
-
-    return [
-      {
-        id: Number(well?.id ?? 0),
-        name: well?.name ?? 'Depth to Water',
-        style: 'scatter',
-        data,
-      },
-    ]
-  }, [observations, well])
+  const hydrographDatasource = useMemo<IHydrographDatasource[]>(
+    () => buildHydrographDatasource(well, observations),
+    [observations, well]
+  )
 
   const hydrographOption = useMemo(() => {
     if (!observations?.length) return null
@@ -339,18 +321,7 @@ export const WellShowPdfPreview = () => {
       {!isLoading && hydrographDatasource.length > 0 && (
         <HydrographPngExporter
           datasource={hydrographDatasource}
-          options={{
-            useNormalization: currentOptions.useNormalization,
-            useElevation: currentOptions.useElevation,
-            useCompact: currentOptions.useCompact,
-            dataZoom: currentOptions.dataZoom,
-            showToolbox: currentOptions.showToolbox,
-            invertYAxis: currentOptions.invertYAxis,
-            // Extends the x-axis range to create blank space on the right side of the chart.
-            // This does NOT change the groundwater measurements; it only shifts the
-            // plotted data left so hydrologists have room to annotate the printed hydrograph.
-            rightPaddingPercent: 30,
-          }}
+          options={buildFieldSheetHydrographOptions(currentOptions)}
           refreshKey={`${id}`}
           onPngReady={setHydrographImage}
         />

@@ -23,6 +23,9 @@ const mockedFetchContinuous = vi.fn()
 const mockedUseAccessCapabilities = vi.fn()
 const mockedUseWellChemistryReport = vi.fn()
 const mockedToBlob = vi.fn()
+const mockedPdf = vi.fn()
+const mockedGetOne = vi.fn()
+const hydrographExport = { mode: 'ready' as 'ready' | 'silent' }
 
 vi.mock('@refinedev/core', async () => {
   const actual =
@@ -32,16 +35,33 @@ vi.mock('@refinedev/core', async () => {
     ...actual,
     useGo: () => mockedGo,
     useNotification: () => ({ open: mockedNotify }),
+    useDataProvider: () => () => ({ getOne: mockedGetOne }),
   }
 })
 
 vi.mock('react-router', () => ({ useParams: () => ({ id: '7834' }) }))
 
 vi.mock('@react-pdf/renderer', () => ({
-  pdf: () => ({ toBlob: mockedToBlob }),
+  pdf: (element: unknown) => {
+    mockedPdf(element)
+    return { toBlob: mockedToBlob }
+  },
 }))
 
-vi.mock('@/components', () => ({ WellPDF: () => null, FieldCompilationNotesPdf: () => null }))
+vi.mock('@/components', async () => {
+  const { useEffect } = await vi.importActual<typeof import('react')>('react')
+  return {
+    WellPDF: () => null,
+    FieldCompilationNotesPdf: () => null,
+    // Offscreen chart stand-in: 'ready' hands back a PNG, 'silent' never does.
+    HydrographPngExporter: ({ onPngReady }: { onPngReady: (png: string) => void }) => {
+      useEffect(() => {
+        if (hydrographExport.mode === 'ready') onPngReady('data:image/png;base64,HYD')
+      }, [onPngReady])
+      return null
+    },
+  }
+})
 
 vi.mock('@/components/pdf/chemistry', () => ({
   downloadChemistryReport: (args: unknown) =>
@@ -379,5 +399,83 @@ describe('WellPDFActionsButton report type select', () => {
 
     expect(previewButton()).toBeDisabled()
     expect(downloadButton()).toBeDisabled()
+  })
+
+  describe('field-sheet download carries real data', () => {
+    const readings = [
+      { observation_datetime: '2026-10-21T17:00:00Z', value: 41.62, depth_to_water_bgs: 39.52, measuring_point_height: 2.1, sample_id: 102 },
+      { observation_datetime: '2026-04-14T17:00:00Z', value: 41.28, depth_to_water_bgs: 39.18, measuring_point_height: 2.1, sample_id: 101 },
+    ]
+    const samples: Record<number, object> = {
+      101: { sample_method: 'Steel tape', contact: { name: 'Jordan Tate' } },
+      102: { sample_method: 'Electric tape', contact: { name: 'Ethan Mamer' } },
+    }
+
+    const renderWithReadings = () =>
+      render(
+        <TooltipProvider>
+          <WellPDFActionsButton
+            isPreviewLoading={false}
+            isDownloadLoading={false}
+            well={well}
+            observations={readings as any}
+            assets={[]}
+            contacts={[]}
+          />
+        </TooltipProvider>
+      )
+
+    const lastPdfProps = () => (mockedPdf.mock.calls.at(-1)?.[0] as { props: any }).props
+
+    beforeEach(() => {
+      hydrographExport.mode = 'ready'
+      mockedPdf.mockClear()
+      mockedGetOne.mockReset()
+      mockedGetOne.mockImplementation(async ({ id }: { id: number }) => ({ data: samples[id] }))
+    })
+
+    it('passes non-empty sample maps and the exported hydrograph to the sheet', async () => {
+      renderWithReadings()
+      await act(async () => {
+        fireEvent.click(downloadButton())
+      })
+      await waitFor(() => expect(mockedToBlob).toHaveBeenCalled())
+
+      expect(mockedGetOne).toHaveBeenCalledWith({ resource: 'ocotillo.sample', id: 102 })
+      const props = lastPdfProps()
+      expect(props.sampleMethodsBySampleId).toEqual({ 101: 'Steel tape', 102: 'Electric tape' })
+      expect(props.staffBySampleId).toEqual({ 101: 'Jordan Tate', 102: 'Ethan Mamer' })
+      expect(props.hydrographImage).toBe('data:image/png;base64,HYD')
+    })
+
+    it('still downloads, without a hydrograph, when the chart never exports (4 s cap)', async () => {
+      hydrographExport.mode = 'silent'
+      vi.useFakeTimers()
+      try {
+        renderWithReadings()
+        await act(async () => {
+          fireEvent.click(downloadButton())
+        })
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(4000)
+        })
+        expect(mockedToBlob).toHaveBeenCalled()
+        expect(lastPdfProps().hydrographImage).toBeNull()
+        expect(lastPdfProps().staffBySampleId).toEqual({ 101: 'Jordan Tate', 102: 'Ethan Mamer' })
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('still downloads with blank Method / Staff when the sample lookup fails', async () => {
+      mockedGetOne.mockRejectedValue(new Error('offline'))
+      renderWithReadings()
+      await act(async () => {
+        fireEvent.click(downloadButton())
+      })
+      await waitFor(() => expect(mockedToBlob).toHaveBeenCalled())
+      expect(lastPdfProps().sampleMethodsBySampleId).toEqual({})
+      expect(lastPdfProps().staffBySampleId).toEqual({})
+    })
   })
 })
