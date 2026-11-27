@@ -20,6 +20,7 @@ export const FieldCompilationNotesPdf = ({
   qrDataUrl,
   mapsQrDataUrl,
   fieldStaffContact,
+  yearSpan,
   hotlinePhone,
 }: {
   well: IWell
@@ -57,6 +58,8 @@ export const FieldCompilationNotesPdf = ({
    * against the well's loaded contacts.
    */
   fieldStaffContact?: IContact
+  /** Chart-title year span from the full history (useWellCompilationData). */
+  yearSpan?: string
   /** 24-hour line on page 2; falls back to the page's placeholder number. */
   hotlinePhone?: string
 }) => {
@@ -74,6 +77,7 @@ export const FieldCompilationNotesPdf = ({
       qrDataUrl={qrDataUrl}
       mapsQrDataUrl={mapsQrDataUrl}
       fieldStaffContact={fieldStaffContact}
+      yearSpan={yearSpan}
       includeOwnerPage={includeOwnerPage}
       hotlinePhone={hotlinePhone}
     />

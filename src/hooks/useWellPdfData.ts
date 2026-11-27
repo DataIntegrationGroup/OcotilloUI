@@ -9,6 +9,7 @@ import {
   IWell,
 } from '@/interfaces/ocotillo'
 import { useSensorDeploymentRows } from './useSensorDeploymentRows'
+import { useWellCompilationData } from './useWellCompilationData'
 import { SensorDeploymentRow } from '@/utils'
 
 type WellPdfThingId = string | number | undefined
@@ -40,23 +41,17 @@ export const useWellPdfData = ({
 
   const well = initialWell ?? fetchedWell
 
-  const { dataGridProps: observationsDataGridProps } = useDataGrid({
-    resource: 'observation/groundwater-level',
-    dataProviderName: 'ocotillo',
-    meta: {
-      params: { thing_id: thingId },
-    },
-    queryOptions: {
-      enabled: Boolean(thingId && !initialObservations),
-      gcTime: 10 * 60 * 1000,
-      staleTime: 5 * 60 * 1000,
-    },
-  })
+  // Rows, chart series and year span come from the compilation adapter — the
+  // same model the well page's Download and the batch export print. (The old
+  // paged observation/groundwater-level list here capped the preview at the
+  // provider's default page size.)
+  const compilation = useWellCompilationData(
+    initialObservations ? undefined : thingId,
+    well
+  )
 
   const observations =
-    (initialObservations as any[]) ??
-    (observationsDataGridProps?.rows as any[]) ??
-    []
+    (initialObservations as any[]) ?? (compilation.rows as any[])
 
   const { result: fetchedAssets, query: assetQuery } = useList<IAsset>({
     resource: 'asset',
@@ -143,7 +138,7 @@ export const useWellPdfData = ({
 
   const isLoading =
     wellQuery.isLoading ||
-    observationsDataGridProps.loading ||
+    (!initialObservations && compilation.isLoading) ||
     assetQuery.isLoading ||
     contactQuery.isLoading ||
     (!initialSensorDeployments &&
@@ -155,7 +150,7 @@ export const useWellPdfData = ({
   if (thingId) {
     const steps: { weight: number; done: boolean }[] = [
       { weight: 15, done: initialWell ? true : !wellQuery.isLoading },
-      { weight: 30, done: !observationsDataGridProps.loading },
+      { weight: 30, done: initialObservations ? true : !compilation.isLoading },
       { weight: 15, done: initialAssets ? true : !assetQuery.isLoading },
       { weight: 15, done: initialContacts ? true : !contactQuery.isLoading },
       {
@@ -183,6 +178,9 @@ export const useWellPdfData = ({
   return {
     well,
     observations,
+    /** Full-history chart series and year span (compilation adapter). */
+    chartSeries: compilation.chartSeries,
+    yearSpan: compilation.yearSpan,
     assets,
     contacts,
     sample,

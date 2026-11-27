@@ -28,6 +28,14 @@ interface HydrographProps {
   refresh?: number
   options?: IHydrographOptions
   onEvents?: any
+  /**
+   * Called by echarts-for-react after `setOption` has run (and after
+   * `onEvents` are bound), with the live ECharts instance. The first paint is
+   * already on the canvas at this point — the place to export a static chart
+   * (`animation: false` below means its only `finished` fires inside
+   * `setOption`, before any `onEvents` handler exists).
+   */
+  onChartReady?: (instance: any) => void
   sx?: object
   chartStyle?: CSSProperties
 }
@@ -40,7 +48,10 @@ export type HydrographHandle = {
 }
 
 export const Hydrograph = forwardRef<HydrographHandle, HydrographProps>(
-  ({ datasource, refresh, options, onEvents, sx, chartStyle }, ref) => {
+  (
+    { datasource, refresh, options, onEvents, onChartReady, sx, chartStyle },
+    ref
+  ) => {
     const theme = useTheme()
     const chartRef = useRef<ReactECharts>(null)
 
@@ -195,6 +206,7 @@ export const Hydrograph = forwardRef<HydrographHandle, HydrographProps>(
           option={chartOption}
           style={{ width: '100%', height: '100%', ...chartStyle }}
           onEvents={onEvents}
+          onChartReady={onChartReady}
         />
       </Box>
     )

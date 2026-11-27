@@ -17,6 +17,15 @@ const well = {
   name: 'WL-0217',
   current_location: { geometry: { coordinates: [-102.59333, 34.30155, 0] } },
 }
+// Chart series / year span: full history from the compilation adapter.
+const chartSeries = [
+  {
+    id: 217,
+    name: 'WL-0217',
+    style: 'scatter',
+    data: [{ phenomenonTime: '2018-04-17T17:00:00Z', result: 37.9 }],
+  },
+]
 const observations = [
   { observation_datetime: '2026-10-21T17:00:00Z', value: 41.62, depth_to_water_bgs: 39.52, sample_id: 102 },
   { observation_datetime: '2026-04-14T17:00:00Z', value: 41.28, depth_to_water_bgs: 39.18, sample_id: 101 },
@@ -55,12 +64,13 @@ vi.mock('@/hooks', () => ({
     assets: [],
     contacts: [],
     sensorDeployments: [],
+    chartSeries,
+    yearSpan: '2018–2026',
     isLoading: false,
     progress: 100,
   }),
 }))
-vi.mock('@/components', async () => {
-  const { useEffect } = await vi.importActual<typeof import('react')>('react')
+vi.mock('@/components', () => {
   return {
     FieldCompilationNotesPdf: (props: any) => {
       pdfProps.push(props)
@@ -71,13 +81,18 @@ vi.mock('@/components', async () => {
       return null
     },
     WellShowTitle: () => null,
+  }
+})
+
+// The awaited builder (hydrographPdf.useHydrographPdf) mounts this; the real
+// one reports on ECharts' `finished` event.
+vi.mock('@/components/HydrographPngExporter', async () => {
+  const { useEffect } = await vi.importActual<typeof import('react')>('react')
+  return {
     HydrographPngExporter: ({ onPngReady }: { onPngReady: (png: string) => void }) => {
-      // Like the real exporter: the PNG arrives on a timer, after the parent's
-      // mount effects (which reset the image) have run.
       useEffect(() => {
-        const t = setTimeout(() => onPngReady('data:image/png;base64,HYD'), 100)
-        return () => clearTimeout(t)
-      }, [onPngReady])
+        onPngReady('data:image/png;base64,HYD')
+      }, [])
       return null
     },
   }
@@ -106,5 +121,7 @@ describe('WellShowPdfPreview → FieldCompilationNotesPdf', () => {
       102: 'Electric tape',
     })
     expect(mockedGetOne).toHaveBeenCalledWith({ resource: 'ocotillo.sample', id: 102 })
+    // chart title range: the adapter's full-history span, not the printed rows
+    expect(last.yearSpan).toBe('2018–2026')
   })
 })

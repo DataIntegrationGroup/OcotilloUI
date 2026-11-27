@@ -9,9 +9,10 @@ type HydrographObservation = {
 }
 
 /**
- * Field-sheet hydrograph series (page 2). Pure: shared by the PDF preview and
- * the well page's Download so both draw the same chart. Rows need a datetime
- * and a numeric `value`; points plot `depth_to_water_bgs`, oldest first.
+ * Field-sheet hydrograph series (page 2) — the one builder, used through the
+ * compilation adapter (useWellCompilationData) by the preview, the well page's
+ * Download and the batch export. Rows need a datetime and a numeric
+ * `depth_to_water_bgs`; points plot that depth, oldest first.
  */
 export const buildHydrographDatasource = (
   well: HydrographWell,
@@ -20,7 +21,9 @@ export const buildHydrographDatasource = (
   if (!observations?.length) return []
 
   const data = observations
-    .filter((o) => o.observation_datetime && typeof o.value === 'number')
+    .filter(
+      (o) => o.observation_datetime && typeof o.depth_to_water_bgs === 'number'
+    )
     .map((o) => ({
       phenomenonTime: o.observation_datetime,
       result: Number(o.depth_to_water_bgs),

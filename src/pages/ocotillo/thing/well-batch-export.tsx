@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Autocomplete,
@@ -27,15 +27,10 @@ import { AppBreadcrumb } from '@/components/AppBreadcrumb'
 import {
   IObservation,
   IWell,
-  IWellDetails,
   WellBundle,
   WellChipState,
 } from '@/interfaces/ocotillo'
-import {
-  FieldCompilationNotesPdf,
-  HydrographPngExporter,
-  OcotilloDocument,
-} from '@/components'
+import { OcotilloDocument } from '@/components'
 import { pdf } from '@react-pdf/renderer'
 import { buildWellMapsQrDataUrl } from '@/components/pdf/chemistry/wellQrCode'
 import {
@@ -50,47 +45,21 @@ import {
   safeFilenamePrefix,
 } from '@/utils'
 import { useAccessCapabilities } from '@/hooks'
-import type { IHydrographDatasource } from '@/interfaces/st2'
 import { BatchRouteMap } from './components/BatchRouteMap'
+import { BatchWellSheet } from './BatchWellSheet'
 import { ExportDialog } from './components/ExportDialog'
 import { fetchSampleMaps } from './useSampleMaps'
+import { fetchWellCompilationData } from '@/hooks/useWellCompilationData'
+import {
+  hydrographImageOf,
+  useHydrographPdf,
+} from '@/components/pdf/fieldCompilation/hydrographPdf'
 const TOKEN_RESOLVE_CONCURRENCY = 5
 const TOKEN_RESOLVE_PAGE_SIZE = 200
 const TOKEN_RESOLVE_MAX_PAGES = 20
 const BUNDLE_FETCH_CONCURRENCY = 4
 const BUNDLE_RESOURCE_PAGE_SIZE = 100
 const BUNDLE_RESOURCE_MAX_PAGES = 20
-
-const buildHydrographDatasource = (
-  bundle: Pick<WellBundle, 'well' | 'observations'>
-): IHydrographDatasource[] => {
-  const data = bundle.observations
-    .filter(
-      (observation) =>
-        observation.observation_datetime &&
-        typeof observation.depth_to_water_bgs === 'number'
-    )
-    .map((observation) => ({
-      phenomenonTime: new Date(observation.observation_datetime as string),
-      result: Number(observation.depth_to_water_bgs),
-    }))
-    .sort(
-      (a, b) =>
-        new Date(a.phenomenonTime).getTime() -
-        new Date(b.phenomenonTime).getTime()
-    )
-
-  if (data.length === 0) return []
-
-  return [
-    {
-      id: Number(bundle.well.id ?? 0),
-      name: bundle.well.name ?? 'Depth to Water',
-      style: 'scatter',
-      data,
-    },
-  ]
-}
 
 export const WellBatchExport = () => {
   const { open: notify } = useNotification()
@@ -126,11 +95,8 @@ export const WellBatchExport = () => {
   const [filename, setFilename] = useState(buildBatchFilename())
   // Off for a batch by default, switchable per the field-notes mockup.
   const [includeOwnerPage, setIncludeOwnerPage] = useState(false)
-  const [hydrographBundles, setHydrographBundles] = useState<WellBundle[]>([])
-  const [hydrographImagesByWellId, setHydrographImagesByWellId] = useState<
-    Record<number, string>
-  >({})
-  const hydrographImagesRef = useRef<Record<number, string>>({})
+  // Page-2 hydrographs: the shared awaited builder, one well at a time.
+  const hydrograph = useHydrographPdf()
 
   const upsertWells = useCallback((wells: readonly IWell[]) => {
     if (wells.length === 0) return
@@ -161,10 +127,6 @@ export const WellBatchExport = () => {
       return changed ? Array.from(nextById.values()) : prev
     })
   }, [])
-
-  useEffect(() => {
-    hydrographImagesRef.current = hydrographImagesByWellId
-  }, [hydrographImagesByWellId])
 
   const mapWithConcurrency = useCallback(
     async <T, R>(
@@ -306,15 +268,13 @@ export const WellBatchExport = () => {
 
   const fetchBundle = useCallback(
     async (wellId: number): Promise<WellBundle> => {
-      if (!ocotilloDataProvider.custom) {
-        throw new Error('Ocotillo data provider custom method is not available')
-      }
-
-      const detailsResult = await ocotilloDataProvider.custom<IWellDetails>({
-        url: `thing/water-well/${wellId}/details`,
-        method: 'get',
-      })
-      const wellDetails = detailsResult.data
+      // Details (field events → printed rows) + full observation history
+      // (chart series, year span) through the compilation adapter — the same
+      // model the preview and the well page's Download print.
+      const { details: wellDetails, model } = await fetchWellCompilationData(
+        ocotilloDataProvider as any,
+        wellId
+      )
 
       const fetchThingResource = async <T extends BaseRecord>(resource: string) => {
         let page = 1
@@ -347,18 +307,11 @@ export const WellBatchExport = () => {
         return rows
       }
 
-      const [assets, observations] = await Promise.all([
-        fetchThingResource<BaseRecord>('asset').catch((error) => {
-          console.warn(`Failed to load assets for well ${wellId}`, error)
-          return [] as BaseRecord[]
-        }),
-        fetchThingResource<Partial<IObservation>>('observation/groundwater-level').catch(
-          (error) => {
-            console.warn(`Failed to load observations for well ${wellId}`, error)
-            return [] as Partial<IObservation>[]
-          }
-        ),
-      ])
+      const assets = await fetchThingResource<BaseRecord>('asset').catch((error) => {
+        console.warn(`Failed to load assets for well ${wellId}`, error)
+        return [] as BaseRecord[]
+      })
+      const observations = model.rows as Partial<IObservation>[]
 
       // Method / staff for the two newest readings — shared with the
       // single-well preview (useSampleMaps.fetchSampleMaps).
@@ -378,6 +331,8 @@ export const WellBatchExport = () => {
         ),
         sampleMethodsBySampleId,
         staffBySampleId,
+        chartSeries: model.chartSeries,
+        yearSpan: model.yearSpan,
       }
     },
     [ocotilloDataProvider]
@@ -660,6 +615,8 @@ export const WellBatchExport = () => {
               sensorDeployments: [],
               sampleMethodsBySampleId: {},
               staffBySampleId: {},
+              chartSeries: [],
+              yearSpan: '',
             }
           })
 
@@ -694,19 +651,6 @@ export const WellBatchExport = () => {
         return
       }
 
-      const neededHydrographs = bundlesForExport.filter(
-        (bundle) => buildHydrographDatasource(bundle).length > 0
-      )
-
-      setHydrographBundles(neededHydrographs)
-      setHydrographImagesByWellId((prev) => {
-        const next = { ...prev }
-        neededHydrographs.forEach((bundle) => {
-          delete next[bundle.well.id]
-        })
-        return next
-      })
-
       // Page-1 Google Maps QR per well, built alongside the hydrograph wait
       // (one pass, not a second sequential one).
       const mapsQrPromise = Promise.all(
@@ -716,37 +660,14 @@ export const WellBatchExport = () => {
         )
       ).then((entries) => Object.fromEntries(entries) as Record<number, string | null>)
 
-      const hydrographImages =
-        neededHydrographs.length > 0
-          ? await new Promise<Record<number, string>>((resolve) => {
-              const startedAt = Date.now()
-
-              const poll = () => {
-                const current = hydrographImagesRef.current
-                const ready = neededHydrographs.every(
-                  (bundle) =>
-                    typeof current[bundle.well.id] === 'string' &&
-                    current[bundle.well.id].length > 0
-                )
-
-                if (ready || Date.now() - startedAt > 8000) {
-                  resolve(
-                    Object.fromEntries(
-                      neededHydrographs.map((bundle) => [
-                        bundle.well.id,
-                        current[bundle.well.id] ?? '',
-                      ])
-                    )
-                  )
-                  return
-                }
-
-                window.setTimeout(poll, 100)
-              }
-
-              poll()
-            })
-          : {}
+      // One awaited build per well (sequential: the builder owns a single
+      // off-screen chart). A failed build prints "Hydrograph unavailable".
+      const hydrographImages: Record<number, string | null> = {}
+      for (const bundle of bundlesForExport) {
+        hydrographImages[bundle.well.id] = hydrographImageOf(
+          await hydrograph.build(bundle.chartSeries)
+        )
+      }
 
       const mapsQrByWellId = await mapsQrPromise
 
@@ -756,18 +677,11 @@ export const WellBatchExport = () => {
           subject="Batch Well Field Data Report"
         >
           {bundlesForExport.map((bundle) => (
-            <FieldCompilationNotesPdf
+            <BatchWellSheet
               key={bundle.well.id}
-              well={bundle.well}
-              contacts={bundle.contacts}
-              assets={bundle.assets}
-              observations={bundle.observations}
-              sensorDeployments={bundle.sensorDeployments}
+              bundle={bundle}
               hydrographImage={hydrographImages[bundle.well.id] ?? null}
-              sampleMethodsBySampleId={bundle.sampleMethodsBySampleId}
-              staffBySampleId={bundle.staffBySampleId}
               mapsQrDataUrl={mapsQrByWellId[bundle.well.id] ?? null}
-              standalone={false}
               includeOwnerPage={includeOwnerPage}
               includeConfidentialContacts={canViewConfidential}
             />
@@ -795,7 +709,6 @@ export const WellBatchExport = () => {
         message: 'Batch PDF generation failed',
       })
     } finally {
-      setHydrographBundles([])
       setIsGenerating(false)
       setProgress(0)
     }
@@ -829,30 +742,7 @@ export const WellBatchExport = () => {
       }}
       contentProps={{ sx: { pt: 1 } }}
     >
-      {hydrographBundles.map((bundle) => {
-        const datasource = buildHydrographDatasource(bundle)
-        if (datasource.length === 0) return null
-
-        return (
-          <HydrographPngExporter
-            key={`${bundle.well.id}-${bundle.observations.length}`}
-            datasource={datasource}
-            options={{
-              rightPaddingPercent: 30,
-            }}
-            refreshKey={`${bundle.well.id}-${bundle.observations.length}-${bundle.observations[0]?.observation_datetime ?? ''}`}
-            onPngReady={(pngDataUrl) => {
-              setHydrographImagesByWellId((prev) => {
-                if (prev[bundle.well.id] === pngDataUrl) return prev
-                return {
-                  ...prev,
-                  [bundle.well.id]: pngDataUrl,
-                }
-              })
-            }}
-          />
-        )
-      })}
+      {hydrograph.element}
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 680px', gap: 3 }}>
         <Stack spacing={2}>
           <Paper elevation={0}>

@@ -30,6 +30,7 @@ import {
   useWellDetails,
 } from '@/hooks'
 import { WELL_SHOW_TWO_COLUMN_MIN_PX } from '@/constants/breakpoints'
+import { buildCompilationRows } from '@/hooks/useWellCompilationData'
 import {
   CoreWellInfoCard,
   InteractiveSatelliteMapCard,
@@ -49,7 +50,6 @@ import {
   WellShowTitle,
   OwnerPermissionsCard,
   MonitoringInfoCard,
-  WaterLevelObservationRow,
   ChemistryCard,
 } from '@/components'
 import {
@@ -145,40 +145,12 @@ export const WellShow = () => {
     detailsQuery.data?.first_field_event?.field_event_participants ??
     EMPTY_PARTICIPANTS
 
-  const recentObservations = useMemo<
-    Partial<WaterLevelObservationRow>[]
-  >(() => {
-    return fieldEvents
-      .flatMap((event) =>
-        (event.field_activities ?? []).flatMap((activity) =>
-          (activity.samples ?? []).flatMap((sample) =>
-            (sample.observations ?? []).map(
-              (observation): Partial<WaterLevelObservationRow> => ({
-                ...observation,
-                depth_to_water_bgs: observation.depth_to_water_bgs ?? undefined,
-                measuring_point_height:
-                  observation.measuring_point_height ?? undefined,
-                value: observation.value ?? undefined,
-                water_level_method: sample.sample_method ?? undefined,
-                water_level_status:
-                  observation.groundwater_level_reason ?? undefined,
-                water_level_measuring_staff: sample.contact?.name ?? undefined,
-                water_level_notes:
-                  sample.notes ?? activity.notes ?? event.notes ?? undefined,
-                water_level_data_quality:
-                  observation.nma_data_quality ?? undefined,
-              })
-            )
-          )
-        )
-      )
-      .filter((obs) => obs.observation_datetime != null)
-      .sort((a, b) => {
-        const dateA = new Date(a.observation_datetime!).getTime()
-        const dateB = new Date(b.observation_datetime!).getTime()
-        return dateB - dateA
-      })
-  }, [fieldEvents])
+  // Field-event rows from the compilation adapter — the same rows the PDF
+  // preview, the Download and the batch export print.
+  const recentObservations = useMemo(
+    () => buildCompilationRows(fieldEvents),
+    [fieldEvents]
+  )
 
   const latestSample = useMemo(() => {
     const newestEvent = fieldEvents[0]

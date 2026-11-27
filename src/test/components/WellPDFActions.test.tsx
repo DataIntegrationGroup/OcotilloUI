@@ -25,6 +25,10 @@ const mockedUseWellChemistryReport = vi.fn()
 const mockedToBlob = vi.fn()
 const mockedPdf = vi.fn()
 const mockedGetOne = vi.fn()
+// Full observation history (chart series / year span) and the well details
+// (field events → printed rows) — both read through the compilation adapter.
+const mockedGetList = vi.fn()
+const mockedCustom = vi.fn()
 const hydrographExport = { mode: 'ready' as 'ready' | 'silent' }
 
 vi.mock('@refinedev/core', async () => {
@@ -35,7 +39,11 @@ vi.mock('@refinedev/core', async () => {
     ...actual,
     useGo: () => mockedGo,
     useNotification: () => ({ open: mockedNotify }),
-    useDataProvider: () => () => ({ getOne: mockedGetOne }),
+    useDataProvider: () => () => ({
+      getOne: mockedGetOne,
+      getList: mockedGetList,
+      custom: mockedCustom,
+    }),
   }
 })
 
@@ -48,16 +56,21 @@ vi.mock('@react-pdf/renderer', () => ({
   },
 }))
 
-vi.mock('@/components', async () => {
+vi.mock('@/components', () => ({
+  WellPDF: () => null,
+  FieldCompilationNotesPdf: () => null,
+}))
+
+// Offscreen chart stand-in (driven by hydrographPdf.useHydrographPdf): 'ready'
+// signals completion with a PNG, 'silent' never completes.
+vi.mock('@/components/HydrographPngExporter', async () => {
   const { useEffect } = await vi.importActual<typeof import('react')>('react')
   return {
-    WellPDF: () => null,
-    FieldCompilationNotesPdf: () => null,
-    // Offscreen chart stand-in: 'ready' hands back a PNG, 'silent' never does.
     HydrographPngExporter: ({ onPngReady }: { onPngReady: (png: string) => void }) => {
       useEffect(() => {
         if (hydrographExport.mode === 'ready') onPngReady('data:image/png;base64,HYD')
-      }, [onPngReady])
+        // once per mounted job, like the real `finished` signal
+      }, [])
       return null
     },
   }
@@ -127,23 +140,35 @@ vi.mock('@/components/ui/select', () => ({
   ),
 }))
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WellPDFActionsButton } from '@/components/Button/WellPDFActions'
+import { HYDROGRAPH_PDF_TIMEOUT_MS } from '@/components/pdf/fieldCompilation/hydrographPdf'
 import { TooltipProvider } from '@/components/ui/tooltip'
+
+const withQueryClient = (ui: React.ReactElement) => (
+  <QueryClientProvider
+    client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+  >
+    {ui}
+  </QueryClientProvider>
+)
 
 const well = { id: 7834, name: 'SA-0231' } as IWell
 
 const renderGroup = () =>
   render(
-    <TooltipProvider>
-      <WellPDFActionsButton
-        isPreviewLoading={false}
-        isDownloadLoading={false}
-        well={well}
-        observations={[]}
-        assets={[]}
-        contacts={[]}
-      />
-    </TooltipProvider>
+    withQueryClient(
+      <TooltipProvider>
+        <WellPDFActionsButton
+          isPreviewLoading={false}
+          isDownloadLoading={false}
+          well={well}
+          observations={[]}
+          assets={[]}
+          contacts={[]}
+        />
+      </TooltipProvider>
+    )
   )
 
 const reportTypeSelect = () => screen.getByLabelText('Report type')
@@ -161,6 +186,9 @@ describe('WellPDFActionsButton report type select', () => {
     URL.createObjectURL = vi.fn(() => 'blob:pdf')
     URL.revokeObjectURL = vi.fn()
     mockedToBlob.mockResolvedValue(new Blob())
+    mockedGetList.mockResolvedValue({ data: [], total: 0 })
+    // No details yet: the sheet falls back to the rows the page passed in.
+    mockedCustom.mockResolvedValue({ data: undefined })
     mockedDownloadChemistryReport.mockResolvedValue(
       'chemistry-report-SA-0231-2024.pdf'
     )
@@ -413,16 +441,18 @@ describe('WellPDFActionsButton report type select', () => {
 
     const renderWithReadings = () =>
       render(
-        <TooltipProvider>
-          <WellPDFActionsButton
-            isPreviewLoading={false}
-            isDownloadLoading={false}
-            well={well}
-            observations={readings as any}
-            assets={[]}
-            contacts={[]}
-          />
-        </TooltipProvider>
+        withQueryClient(
+          <TooltipProvider>
+            <WellPDFActionsButton
+              isPreviewLoading={false}
+              isDownloadLoading={false}
+              well={well}
+              observations={readings as any}
+              assets={[]}
+              contacts={[]}
+            />
+          </TooltipProvider>
+        )
       )
 
     const lastPdfProps = () => (mockedPdf.mock.calls.at(-1)?.[0] as { props: any }).props
@@ -432,6 +462,8 @@ describe('WellPDFActionsButton report type select', () => {
       mockedPdf.mockClear()
       mockedGetOne.mockReset()
       mockedGetOne.mockImplementation(async ({ id }: { id: number }) => ({ data: samples[id] }))
+      // full history: what the chart series is built from
+      mockedGetList.mockResolvedValue({ data: readings, total: readings.length })
     })
 
     it('passes non-empty sample maps and the exported hydrograph to the sheet', async () => {
@@ -448,7 +480,7 @@ describe('WellPDFActionsButton report type select', () => {
       expect(props.hydrographImage).toBe('data:image/png;base64,HYD')
     })
 
-    it('still downloads, without a hydrograph, when the chart never exports (4 s cap)', async () => {
+    it('still downloads, without a hydrograph, when the chart never completes (backstop timeout)', async () => {
       hydrographExport.mode = 'silent'
       vi.useFakeTimers()
       try {
@@ -457,7 +489,7 @@ describe('WellPDFActionsButton report type select', () => {
           fireEvent.click(downloadButton())
         })
         await act(async () => {
-          await vi.advanceTimersByTimeAsync(4000)
+          await vi.advanceTimersByTimeAsync(HYDROGRAPH_PDF_TIMEOUT_MS)
         })
         expect(mockedToBlob).toHaveBeenCalled()
         expect(lastPdfProps().hydrographImage).toBeNull()

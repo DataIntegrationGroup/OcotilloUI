@@ -12,24 +12,27 @@ describe('buildHydrographDatasource', () => {
     expect(buildHydrographDatasource(well, undefined)).toEqual([])
   })
 
-  it('drops rows without a datetime or a numeric value, sorts oldest first', () => {
+  it('drops rows without a datetime or a numeric depth, sorts oldest first', () => {
     const [series] = buildHydrographDatasource(well, [
       { observation_datetime: '2026-10-21T17:00:00Z', value: 41.62, depth_to_water_bgs: 39.52 },
       { observation_datetime: null, value: 40, depth_to_water_bgs: 38 },
-      { observation_datetime: '2025-01-01T00:00:00Z', value: null, depth_to_water_bgs: 37 },
+      { observation_datetime: '2025-01-01T00:00:00Z', value: 39, depth_to_water_bgs: null },
+      // `value` is not what is plotted: a numeric depth keeps the row
+      { observation_datetime: '2025-06-01T00:00:00Z', value: null, depth_to_water_bgs: 38.5 },
       { observation_datetime: '2026-04-14T17:00:00Z', value: 41.28, depth_to_water_bgs: 39.18 },
     ])
     expect(series.id).toBe(217)
     expect(series.name).toBe('WL-0217')
     expect(series.style).toBe('scatter')
     expect(series.data).toEqual([
+      { phenomenonTime: '2025-06-01T00:00:00Z', result: 38.5 },
       { phenomenonTime: '2026-04-14T17:00:00Z', result: 39.18 },
       { phenomenonTime: '2026-10-21T17:00:00Z', result: 39.52 },
     ])
   })
 
   it('returns [] when every row is dropped, and names an unnamed well', () => {
-    expect(buildHydrographDatasource(well, [{ observation_datetime: '2026-01-01' }])).toEqual([])
+    expect(buildHydrographDatasource(well, [{ observation_datetime: '2026-01-01', value: 1 }])).toEqual([])
     const [series] = buildHydrographDatasource(null, [
       { observation_datetime: '2026-01-01T00:00:00Z', value: 1, depth_to_water_bgs: 1 },
     ])

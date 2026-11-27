@@ -3,6 +3,7 @@ import type { IContact } from './IContact'
 import type { IObservation } from './IObservation'
 import type { IWell } from './IWell'
 import type { SensorDeploymentRow } from '@/utils'
+import type { IHydrographDatasource } from '@/interfaces/st2'
 
 export type WellChipState = {
   query: string
@@ -19,4 +20,8 @@ export type WellBundle = {
   sampleMethodsBySampleId: Record<number, string>
   /** Staff on the visit behind each of the latest samples (field sheet · Staff). */
   staffBySampleId: Record<number, string>
+  /** Full-history chart series (compilation adapter). */
+  chartSeries: IHydrographDatasource[]
+  /** Full-history year span for the chart title (compilation adapter). */
+  yearSpan: string
 }

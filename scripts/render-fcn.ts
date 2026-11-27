@@ -11,6 +11,8 @@
  *   node_modules/.bin/vite-node scripts/render-fcn.ts <out.pdf>
  *   FCN_FIXTURE=empty node_modules/.bin/vite-node scripts/render-fcn.ts <out.pdf>
  *   FCN_FIXTURE=batch node_modules/.bin/vite-node scripts/render-fcn.ts <out.pdf>
+ *   FCN_FIXTURE=null-reason …  newest reading has no level status (reason and level_status null)
+ *   FCN_FIXTURE=no-mp …        newest reading has no per-observation measuring_point_height
  *   FCN_OWNER_PAGE=0 …        single fixture without the owner page (default: on)
  */
 
@@ -20,8 +22,10 @@ import { createElement } from 'react'
 import { renderToBuffer } from '@react-pdf/renderer'
 import type { IContact, IWell } from '@/interfaces/ocotillo'
 import { FieldCompilationNotesPdf } from '../src/components/pdf/FieldCompilationNotesPdf'
+import { BatchWellSheet } from '../src/pages/ocotillo/thing/BatchWellSheet'
 import { OcotilloDocument } from '../src/components/pdf/OcotilloDocument'
 import { buildWeaverQrDataUrl, buildWellMapsQrDataUrl } from '../src/components/pdf/chemistry/wellQrCode'
+import { buildWellCompilationModel } from '../src/hooks/useWellCompilationData'
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
 import path from 'node:path'
@@ -146,29 +150,86 @@ const makeAssets = () =>
   }))
 
 // Depth below ground surface, oldest first (the mockup's hydrograph series).
-const SERIES: Array<[string, number, string?]> = [
-  ['2018-04-17', 37.9], ['2018-10-23', 38.3], ['2019-04-16', 37.6], ['2019-10-22', 38.4],
-  ['2020-04-21', 38.1], ['2020-10-20', 38.9], ['2021-04-20', 38.5], ['2021-10-19', 39.0],
-  ['2022-04-20', 38.6], ['2022-10-19', 39.4, 'Site was pumped recently'], ['2023-04-18', 38.8],
-  ['2023-10-24', 39.3], ['2024-04-16', 38.9], ['2024-10-15', 39.6], ['2025-04-22', 38.94],
-  ['2025-10-28', 39.71, 'Site was pumped recently'], ['2026-04-14', 39.18], ['2026-10-21', 39.52],
+// Every level status is carried by the row itself (lexicon `level_status`
+// values) — there is no default: a null here prints as an empty cell.
+const NA = 'Water level not affected'
+const PUMPED = 'Site was pumped recently'
+const SERIES: Array<[string, number, string | null]> = [
+  ['2018-04-17', 37.9, NA], ['2018-10-23', 38.3, NA], ['2019-04-16', 37.6, NA], ['2019-10-22', 38.4, NA],
+  ['2020-04-21', 38.1, NA], ['2020-10-20', 38.9, NA], ['2021-04-20', 38.5, NA], ['2021-10-19', 39.0, NA],
+  ['2022-04-20', 38.6, NA], ['2022-10-19', 39.4, PUMPED], ['2023-04-18', 38.8, NA],
+  ['2023-10-24', 39.3, NA], ['2024-04-16', 38.9, NA], ['2024-10-15', 39.6, NA], ['2025-04-22', 38.94, NA],
+  ['2025-10-28', 39.71, PUMPED], ['2026-04-14', 39.18, NA], ['2026-10-21', 39.52, NA],
 ]
 
+const FIXTURE = process.env.FCN_FIXTURE ?? 'single'
+
+/**
+ * Plain observations, oldest first — the full history the chart series and
+ * the year span come from. FCN_FIXTURE=null-reason / no-mp blank the newest
+ * reading's status / per-observation MP height.
+ */
 const makeObservations = () =>
-  SERIES.map(([date, bgs, status], i) => ({
-    id: 5000 + i,
-    observation_datetime: `${date}T17:00:00Z`,
-    depth_to_water_bgs: bgs,
-    measuring_point_height: 2.1,
-    level_status: status ?? 'Water level not affected',
-    groundwater_level_reason: null,
-    // only the two most recent readings carry a sample (method / staff lookups)
-    sample_id: i === SERIES.length - 1 ? 102 : i === SERIES.length - 2 ? 101 : undefined,
-    // single-well paths: staff on the row (well-show.tsx → water_level_measuring_staff).
-    // Full names, not initials (mockup: history Staff shows names).
-    water_level_measuring_staff:
-      i === SERIES.length - 1 ? 'Ethan Mamer' : i === SERIES.length - 2 ? 'Jordan Tate' : undefined,
-  }))
+  SERIES.map(([date, bgs, status], i) => {
+    const newest = i === SERIES.length - 1
+    return {
+      id: 5000 + i,
+      observation_datetime: `${date}T17:00:00Z`,
+      value: bgs + 2.1,
+      depth_to_water_bgs: bgs,
+      measuring_point_height: newest && FIXTURE === 'no-mp' ? null : 2.1,
+      groundwater_level_reason: newest && FIXTURE === 'null-reason' ? null : status,
+      level_status: null,
+      // only the two most recent readings carry a sample (method / staff lookups)
+      sample_id: newest ? 102 : i === SERIES.length - 2 ? 101 : 1000 + i,
+    }
+  })
+
+/**
+ * The same readings as the API's details payload: one field event per visit,
+ * newest first, each with a sample (method, staff contact) holding the
+ * observation. The sheet's printed rows come from these via the adapter.
+ */
+const makeFieldEvents = () =>
+  makeObservations()
+    .map((observation, i) => {
+      const newest = i === SERIES.length - 1
+      const second = i === SERIES.length - 2
+      return {
+        id: 7000 + i,
+        event_date: observation.observation_datetime,
+        notes: null,
+        field_activities: [
+          {
+            id: 8000 + i,
+            notes: null,
+            samples: [
+              {
+                id: observation.sample_id,
+                sample_method: newest ? 'Electric tape' : second ? 'Steel tape' : null,
+                // Full names, not initials (mockup: history Staff shows names).
+                contact: newest
+                  ? { name: 'Ethan Mamer' }
+                  : second
+                    ? { name: 'Jordan Tate' }
+                    : null,
+                notes: null,
+                observations: [observation],
+              },
+            ],
+          },
+        ],
+      }
+    })
+    .reverse()
+
+/** Rows / chart series / year span exactly as the app derives them. */
+const makeModel = (well: IWell) =>
+  buildWellCompilationModel({
+    well,
+    fieldEvents: makeFieldEvents() as any,
+    history: makeObservations() as any,
+  })
 
 const makeSensorDeployments = () =>
   [
@@ -212,7 +273,11 @@ async function main(): Promise<void> {
     .catch(() => null)
 
   // FCN_FIXTURE=empty renders a well with nothing on file (blank-rendering check).
-  const sparse = process.env.FCN_FIXTURE === 'empty'
+  const sparse = FIXTURE === 'empty'
+  const model = makeModel(makeWell())
+  console.log(
+    `fixture=${FIXTURE} yearSpan=${sparse ? '' : model.yearSpan} rows=${sparse ? 0 : model.rows.length}`
+  )
 
   const doc = createElement(
     FieldCompilationNotesPdf,
@@ -237,7 +302,8 @@ async function main(): Promise<void> {
           well: makeWell(),
           contacts: makeContacts(),
           assets: makeAssets(),
-          observations: makeObservations(),
+          observations: model.rows,
+          yearSpan: model.yearSpan,
           sensorDeployments: makeSensorDeployments(),
           hydrographImage: hydrograph,
           sampleMethodsBySampleId: { 101: 'Steel tape', 102: 'Electric tape' },
@@ -255,17 +321,22 @@ async function main(): Promise<void> {
     OcotilloDocument,
     { title: 'batch', subject: 'Batch Well Field Data Report' },
     ...[makeWell(), { ...makeWell(), id: 218, name: 'WL-0218' }].map((well) =>
-      createElement(FieldCompilationNotesPdf, {
+      createElement(BatchWellSheet, {
         key: well.id,
-        well,
-        contacts: makeContacts(),
-        assets: makeAssets(),
-        observations: makeObservations().map(({ water_level_measuring_staff: _s, ...o }) => o),
-        sensorDeployments: makeSensorDeployments(),
+        // Same surface well-batch-export.tsx renders: the sheet's own adapter,
+        // not the shared component, so this render proves the adapter path.
+        bundle: {
+          well,
+          contacts: makeContacts(),
+          assets: makeAssets(),
+          observations: makeModel(well).rows,
+          yearSpan: makeModel(well).yearSpan,
+          sensorDeployments: makeSensorDeployments(),
+          sampleMethodsBySampleId: { 101: 'Steel tape', 102: 'Electric tape' },
+          staffBySampleId: { 101: 'JT', 102: 'MA' },
+          chartSeries: [],
+        },
         hydrographImage: hydrograph,
-        sampleMethodsBySampleId: { 101: 'Steel tape', 102: 'Electric tape' },
-        staffBySampleId: { 101: 'JT', 102: 'MA' },
-        standalone: false,
         // Batch: owner page off by default, switchable per the mockup.
         includeOwnerPage: process.env.FCN_OWNER_PAGE === '1',
         includeConfidentialContacts: true,
@@ -275,7 +346,7 @@ async function main(): Promise<void> {
 
   // react-pdf v4 `renderToBuffer` returns a Node Buffer on the Node renderer.
   const buffer = await renderToBuffer(
-    (process.env.FCN_FIXTURE === 'batch' ? batchDoc : doc) as any
+    (FIXTURE === 'batch' ? batchDoc : doc) as any
   )
 
   await writeFile(outPath, buffer)

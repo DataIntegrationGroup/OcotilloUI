@@ -8,6 +8,7 @@ import { APP_TIMEZONE } from '@/config/time'
 import { pickPrimaryAndSecondaryContact } from '@/hooks/usePrimaryAndSecondaryContact'
 import { formatPhone } from '@/utils/FormatPhone'
 import { buildWeaverLocationUrl } from '@/utils/wellPublicUrls'
+import { levelStatusOf, yearSpanOf } from '@/hooks/useWellCompilationData'
 import { FCN_TOKENS, RULE_PITCH, fcnStyles as s } from './styles'
 
 type PdfStyle = NonNullable<ComponentProps<typeof View>['style']>
@@ -115,9 +116,6 @@ const dtwBelowMp = (o: Partial<IObservation>): number | null =>
   isNum(o.depth_to_water_bgs) && isNum(o.measuring_point_height)
     ? o.depth_to_water_bgs + o.measuring_point_height
     : null
-
-const levelStatusOf = (o: Partial<IObservation>): string =>
-  text(o.groundwater_level_reason ?? o.level_status)
 
 const recIntervalHours = (row: SensorDeploymentRow): string => {
   const units = row.recording_interval_units ?? ''
@@ -422,6 +420,7 @@ export const buildFieldSheetModel = ({
   sampleMethodsBySampleId,
   staffBySampleId,
   includeConfidentialContacts,
+  yearSpan: historyYearSpan,
   printedAt = new Date(),
 }: {
   well: IWell
@@ -432,6 +431,8 @@ export const buildFieldSheetModel = ({
   sampleMethodsBySampleId: Record<number, string>
   staffBySampleId?: Record<string, string>
   includeConfidentialContacts: boolean
+  /** Year span of the full observation history (adapter); else the rows'. */
+  yearSpan?: string
   printedAt?: Date
 }) => {
   const visible = sanitizeContacts(contacts, includeConfidentialContacts)
@@ -509,8 +510,9 @@ export const buildFieldSheetModel = ({
     status: levelStatusOf(o),
   }))
 
-  const years = ordered.map((o) => new Date(o.observation_datetime!).getFullYear())
-  const yearSpan = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : ''
+  // Chart title range: the full history the chart plots, not the printed
+  // window. Callers without the adapter (render harness) fall back to the rows.
+  const yearSpan = historyYearSpan ?? yearSpanOf(ordered)
 
   return {
     printed: formatSheetDate(printedAt),
@@ -675,6 +677,8 @@ export interface FieldCompilationNotesPageProps {
   hotlinePhone?: string
   /** Backend-resolved staff contact for page 2; wins over the name match. */
   fieldStaffContact?: IContact
+  /** Full-history year span from the compilation adapter (chart title). */
+  yearSpan?: string
 }
 
 const FieldCompilationNotesPage = ({
@@ -692,6 +696,7 @@ const FieldCompilationNotesPage = ({
   mapsQrDataUrl,
   hotlinePhone = FCN_HOTLINE_PHONE,
   fieldStaffContact,
+  yearSpan,
 }: FieldCompilationNotesPageProps) => {
   const m = buildFieldSheetModel({
     well,
@@ -702,6 +707,7 @@ const FieldCompilationNotesPage = ({
     sampleMethodsBySampleId,
     staffBySampleId,
     includeConfidentialContacts,
+    yearSpan,
   })
 
   return (

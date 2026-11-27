@@ -1,4 +1,4 @@
-import { Box, LinearProgress, Skeleton, useTheme } from '@mui/material'
+import { Box, LinearProgress, Skeleton } from '@mui/material'
 import { Show } from '@refinedev/mui'
 import { useDataProvider } from '@refinedev/core'
 import { useParams } from 'react-router'
@@ -9,22 +9,19 @@ import {
 } from '@/components/pdf/chemistry/wellQrCode'
 import {
   FieldCompilationNotesPdf,
-  HydrographPngExporter,
   WellPDFDownloadButton,
   WellShowTitle,
 } from '@/components'
-import { useEffect, useMemo, useState } from 'react'
-import { PDF_DEFAULT_VALUES } from '@/config'
+import { useEffect, useState } from 'react'
 import { ReportRail } from './components/ReportRail'
 import { fetchSampleMaps, latestSampleIds } from './useSampleMaps'
 import {
-  buildFieldSheetHydrographOptions,
-  buildHydrographDatasource,
-} from './hydrographDatasource'
+  hydrographImageOf,
+  useHydrographPdf,
+  type HydrographPdfResult,
+} from '@/components/pdf/fieldCompilation/hydrographPdf'
 import { useAccessCapabilities, useWellPdfData } from '@/hooks'
 import { IWell } from '@/interfaces/ocotillo'
-import { IPdfOptions } from '@/interfaces'
-import type { IHydrographDatasource, IHydrographOptions } from '@/interfaces/st2'
 import {
   ocotilloCardHeaderProps,
   OcotilloHeaderButtons,
@@ -32,24 +29,27 @@ import {
 
 export const WellShowPdfPreview = () => {
   const { id } = useParams()
-  const theme = useTheme()
   const [isViewerReady, setIsViewerReady] = useState(false)
-  const [hydrographImage, setHydrographImage] = useState<string | null>(null)
+  // Page-2 hydrograph: one awaited build per chart series (null = pending).
+  const hydrograph = useHydrographPdf()
+  const [hydrographResult, setHydrographResult] =
+    useState<HydrographPdfResult | null>(null)
+  const hydrographImage = hydrographImageOf(hydrographResult)
   // Owner sheet (page 2) sits behind the Report rail toggle, as in the mockup.
   // A single well's preview is expected to include it, so it starts on.
   const [includeOwnerPage, setIncludeOwnerPage] = useState(true)
   const { canEditAmp, canViewConfidential } = useAccessCapabilities()
 
-  // No on-screen PDF options remain: the field-compilation template takes document
-  // props, not IPdfOptions. The hydrograph still reads the same chart defaults; the
-  // chart keys were only ever set by the removed export-options panel, so they stay unset.
-  const currentOptions: IPdfOptions & Partial<IHydrographOptions> = PDF_DEFAULT_VALUES
+  // No on-screen PDF options remain; the hydrograph's chart options live with the
+  // builder (hydrographPdf.ts FIELD_SHEET_HYDROGRAPH_OPTIONS, same defaults).
   const {
     well,
     observations,
     assets,
     contacts,
     sensorDeployments,
+    chartSeries,
+    yearSpan,
     isLoading,
     progress: pdfDataProgress,
   } = useWellPdfData({
@@ -65,103 +65,19 @@ export const WellShowPdfPreview = () => {
   }, [isLoading])
 
 
-  const hydrographDatasource = useMemo<IHydrographDatasource[]>(
-    () => buildHydrographDatasource(well, observations),
-    [observations, well]
-  )
-
-  const hydrographOption = useMemo(() => {
-    if (!observations?.length) return null
-
-    const pts = observations
-      .filter((o) => o.observation_datetime && typeof o.value === 'number')
-      .map((o) => [
-        new Date(o.observation_datetime!).getTime(),
-        Number(o.value),
-      ])
-      .sort((a, b) => a[0] - b[0])
-
-    const yaxisTitle = currentOptions?.useNormalization
-      ? 'Normalized Depth To Water Below Ground Surface (ft)'
-      : currentOptions?.useElevation
-        ? 'Groundwater Elevation Above Sea Level (ft)'
-        : currentOptions?.useCompact
-          ? 'Compact Depth To Water Below Ground Surface (ft)'
-          : 'Depth To Water Below Ground Surface (ft)'
-
-    return {
-      animation: false,
-      backgroundColor: theme.palette.background.paper,
-
-      toolbox: currentOptions?.showToolbox
-        ? {
-            feature: {
-              dataZoom: [{ show: true }, { type: 'inside' }],
-              restore: {},
-              saveAsImage: {},
-              dataView: { show: true },
-              brush: { type: ['lineX', 'clear'] },
-            },
-          }
-        : undefined,
-
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'cross', animation: false },
-        backgroundColor: theme.palette.background.paper,
-        textStyle: { color: theme.palette.text.primary },
-      },
-
-      dataZoom: [{ type: 'inside' }],
-
-      xAxis: {
-        type: 'time',
-        splitLine: { show: true },
-        axisLabel: { color: theme.palette.text.secondary },
-      },
-
-      yAxis: {
-        type: 'value',
-        inverse: currentOptions?.invertYAxis ?? true,
-        name: yaxisTitle,
-        nameLocation: 'center',
-        nameGap: 50,
-        scale: true,
-        axisLabel: { color: theme.palette.text.secondary },
-        splitLine: { show: true },
-      },
-
-      brush: { outOfBrush: { colorAlpha: 0.25 } },
-
-      // match your theme-ish palette; for single series you can keep just one
-      color: ['#0277BD'],
-
-      series: [
-        {
-          type: 'scatter',
-          name: 'Depth to Water',
-          data: pts,
-          symbol: 'circle',
-          symbolSize: 8,
-          clip: false,
-        },
-      ],
-    }
-  }, [
-    observations,
-    currentOptions?.invertYAxis,
-    currentOptions?.useNormalization,
-    currentOptions?.useElevation,
-    currentOptions?.useCompact,
-    currentOptions?.dataZoom,
-    currentOptions?.showToolbox,
-    theme,
-  ])
-
+  // Chart series and year span: full observation history, via the same
+  // compilation adapter the Download and the batch export use.
   useEffect(() => {
-    // reset image when inputs change so you don't keep old chart
-    setHydrographImage(null)
-  }, [id, hydrographOption])
+    if (isLoading) return
+    let cancelled = false
+    setHydrographResult(null)
+    hydrograph.build(chartSeries).then((result) => {
+      if (!cancelled) setHydrographResult(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [isLoading, chartSeries, hydrograph.build])
 
   // Page-2 QR: same value the printed URL line uses (buildWeaverLocationUrl(well.name)).
   const [qrDataUrl, setQrDataUrl] = useState<string | undefined>(undefined)
@@ -220,7 +136,7 @@ export const WellShowPdfPreview = () => {
     ? Math.min(pdfDataProgress, 75)
     : !isViewerReady
       ? 90
-      : hydrographDatasource.length > 0 && !hydrographImage
+      : hydrographResult === null
         ? 95
         : 100
 
@@ -272,7 +188,7 @@ export const WellShowPdfPreview = () => {
         <Box sx={{ flex: 1, minWidth: 0, height: '90vh', position: 'relative' }}>
           {(isLoading ||
             !isViewerReady ||
-            (hydrographDatasource.length > 0 && !hydrographImage)) && (
+            hydrographResult === null) && (
             <Box
               sx={{
                 position: 'absolute',
@@ -308,6 +224,7 @@ export const WellShowPdfPreview = () => {
                   staffBySampleId={sampleMaps.staffBySampleId}
                   qrDataUrl={qrDataUrl}
                   mapsQrDataUrl={mapsQrDataUrl}
+                  yearSpan={yearSpan}
                 />
               </PDFViewer>
             </Box>
@@ -318,14 +235,7 @@ export const WellShowPdfPreview = () => {
           onToggleOwnerPage={setIncludeOwnerPage}
         />
       </Box>
-      {!isLoading && hydrographDatasource.length > 0 && (
-        <HydrographPngExporter
-          datasource={hydrographDatasource}
-          options={buildFieldSheetHydrographOptions(currentOptions)}
-          refreshKey={`${id}`}
-          onPngReady={setHydrographImage}
-        />
-      )}
+      {hydrograph.element}
     </Show>
   )
 }
